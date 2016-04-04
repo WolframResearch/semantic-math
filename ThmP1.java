@@ -1,6 +1,5 @@
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.ListIterator;
 
 /* 
@@ -49,16 +48,16 @@ public class ThmP1 {
 		//pos should preserve connective words, or stays or
 		posMap = new HashMap<String, String>();
 		posMap.put("disjoint", "adj"); posMap.put("perfect", "adj");
-		posMap.put("finite", "adj"); posMap.put("linear", "adj");
+		posMap.put("finite", "adj"); posMap.put("linear", "adj"); posMap.put("invertible", "adj");
 		//posMap.put("every", "every");		
 		//prepositions
 		posMap.put("or", "or"); posMap.put("and", "and"); 
 		posMap.put("is", "is"); posMap.put("at", "pre"); posMap.put("if", "if");
-		posMap.put("then", "then"); posMap.put("between", "between"); 
+		posMap.put("then", "then"); posMap.put("between", "pre"); 
 		//between... -> between, and...->and, between_and->between_and
 		
 		
-		posMap.put("in", "pre");
+		posMap.put("in", "pre"); posMap.put("from", "pre"); posMap.put("to", "pre");
 		posMap.put("on", "pre"); posMap.put("let", "let"); posMap.put("be", "be");
 		
 		//verbs, verbs map does not support -ing form, ie divide->dividing
@@ -75,7 +74,7 @@ public class ThmP1 {
 		mathObjMap = new HashMap<String, String>();
 		mathObjMap.put("characteristic", "mathObj");
 		mathObjMap.put("Fp", "mathObj"); mathObjMap.put("transformation", "mathObj");
-		mathObjMap.put("ring", "mathObj"); 
+		mathObjMap.put("ring", "mathObj"); mathObjMap.put("matrix", "mathObj"); 
 		mathObjMap.put("field", "mathObj"); mathObjMap.put("function", "mathObj");
 		//composite math objects
 		mathObjMap.put("field", "COMP");
@@ -85,7 +84,7 @@ public class ThmP1 {
 		
 		//put in template matching, prepositions, of, by, with
 		
-		//conjunctions, and, or
+		//conjunctions, and, or, for
 		anchorMap = new HashMap<String, String>();	
 		
 		//anchors, contains   of, with
@@ -111,22 +110,29 @@ public class ThmP1 {
 		structMap.put("if_assert", "ifstate");		
 		structMap.put("then_assert", "thenstate");
 		
+		//expression, e.g. a map from A to B
+		//structMap.put("ent", "expr");
 		structMap.put("ifstate_thenstate", "ifthen");
 		structMap.put("has_ent", "hasent");	
 		structMap.put("or_ent", "orent"); structMap.put("ent_orent", "or");
 		structMap.put("or_symb", "orsymb"); structMap.put("symb_orsymb", "or");
 		structMap.put("or_assert", "orass"); structMap.put("ent_orass", "or");
-		structMap.put("or_is", "assert");
-		structMap.put("assert_orass", "or");
-		structMap.put("ent_adj", "ent"); structMap.put("ent_ppt", "ent");		
+		structMap.put("or_is", "assert"); structMap.put("assert_orass", "or");
+		structMap.put("ent_adj", "ent"); structMap.put("ent_ppt", "ent");
+		//e.g. between A and B.
+		structMap.put("pre_and", "prep"); structMap.put("pre_or", "prep");
 		
 		//preposition_entity, eg "over field", "on ...". Create new child in this case
 		//latter ent child of first ent
-		structMap.put("pre_ent", "preent"); structMap.put("ent_preent", "newchild");
+		//structMap.put("pre_ent", "preent");
+		structMap.put("pre_ent", "prep"); structMap.put("ent_prep", "newchild");
+		structMap.put("pre_symb", "prep"); 
 		//participle: called
 		structMap.put("parti_ent", "partient"); structMap.put("ent_partient", "newchild");
-		structMap.put("from_   ", "from"); structMap.put("to_...   ", "to"); structMap.put("fromto", "newchild");
-
+		
+		//structMap.put("from   ", "wildcard"); structMap.put("to", "wildcard"); structMap.put("fromto", "newchild");
+		///////////////////combine preposition with whatever comes
+		
 		//verb_ent, not including past tense verbs, only present tense
 		structMap.put("verb_ent", "verbent"); structMap.put("ent_verbent", "assert");
 		structMap.put("verb_symb", "verbphrase"); structMap.put("symb_verbphrase", "assert");
@@ -369,8 +375,8 @@ public class ThmP1 {
 					Pair nextPair = pairs.get(index + 1);
 					if(nextPair.pos().matches("\\d+$")){
 						pairs.get(index).set_pos(nextPair.pos());
-						Struct prevStruct = mathEntList.get(Integer.valueOf(nextPair.pos()));	
-						tempStruct.add_previous(prevStruct, "of"); 
+						Struct childStruct = mathEntList.get(Integer.valueOf(nextPair.pos()));	
+						tempStruct.add_child(childStruct, "of"); 
 						//set to null instead of removing, to keep indices right
 						mathEntList.set(Integer.valueOf(nextPair.pos()), null);
 						
@@ -527,33 +533,49 @@ public class ThmP1 {
 					//name: or. combined ex: or_adj (returns ent), or_ent (ent)
 					String combined = type1 + "_" + type2;
 					
+					//////////////***********search for tokens larger than immediate ones
+					//in case A_or_A or A_and_A set the mx element right below to null
+					//to set precedence, so A won't be grouped to others later
+					if(i > 0 && i + 1 < len 
+							&& (type1.matches("or|and") && type2.equals(mx.get(i-1).get(i-1).type()) )){	
+						//type is expression, eg "a and b"
+						StructA<Struct, Struct> parentStruct = 
+								new StructA<Struct, Struct>(mx.get(i-1).get(i-1), struct2, type1);
+							
+						mx.get(i-1).set(j, parentStruct);
+						mx.get(i+1).set(j, null);
+						break;
+					}
+					
 					if(structMap.containsKey(combined)){
 						String newType = structMap.get(combined);
-						
-						//in case A_or_A set the mx element right below to null
-						//to set precedence, so A won't be grouped to others later
-						if(i > 0 && (type1.equals("or") || type2.equals(mx.get(i-1).get(i-1)))){
-							mx.get(i+1).set(j, null);
-						}
-						
+				
 						//newChild means to fuse second entity into first one
 						
-						if(newType.equals("newChild")){
+						if(newType.equals("newchild")){
 							//struct1 should be of type StructH to receive a child
 							//assert ensures rule correctness
 							assert struct1 instanceof StructH;
-							((StructH<?>)struct1).add_previous(struct2, type1);
 							
-							mx.get(i).set(j, struct1);
-
+							//get a deep copy of this StructH, since added children may not 
+							//get used eventually
+							Struct newStruct = struct1.copy();
+							//add to child relation, usually a preposition, eg "from", "over"
+							
+							String childRelation = mx.get(k+1).get(k+1).prev1().toString();
+							((StructH<?>)newStruct).add_child(struct2, childRelation);
+							
+							mx.get(i).set(j, newStruct);
+							
 						}else{
-							//symbol only occurs in StructA /////ugly downcast
-							//if symbol and a given name to some entity							
+							//symbol only occurs in StructA /////remove downcast!
+							//if symbol and a given name to some entity
+							//use "called" to relate entities
 							if(type1.equals("symb") ){
 								String entKey = ((StructA<String,?>)struct1).prev1();
 								if(namesMap.containsKey(entKey)){
 									StructH<HashMap<String, String>> entity = namesMap.get(entKey);
-			
+									
 									//modify type of struct1 and add struct to mx
 									struct1.set_type(entity.struct().get("type"));
 								}
@@ -566,7 +588,7 @@ public class ThmP1 {
 							mx.get(i).set(j, parentStruct);
 							
 						}
-						
+						//found a grammar rule match, move on to next mx column
 						break;
 					}
 					
@@ -618,13 +640,16 @@ public class ThmP1 {
 			
 			System.out.print(struct.toString());
 			
-			ArrayList<Struct> prev = ((StructH<?>)struct).previous();
-			if(prev == null || prev.size() == 0)
+			ArrayList<Struct> children = ((StructH<?>)struct).children();
+			//ArrayList<String> childRelation = ((StructH<?>)struct).childRelation();
+			
+			if(children == null || children.size() == 0)
 				return;
 			
 			System.out.print("[");
-			for(int i = 0; i < prev.size(); i++){
-				dfs(prev.get(i));
+			for(int i = 0; i < children.size(); i++){
+				//System.out.print(childRelation.get(i) + " ");
+				dfs(children.get(i));
 			}
 			System.out.print("]");
 		}
@@ -655,11 +680,13 @@ public class ThmP1 {
 		//String[] strAr = p1.preprocess("field F extend field F".split(" "));
 		
 		//String[] strAr = p1.preprocess("a field or ring is a ring".split(" "));
-		String[] strAr = p1.preprocess("let T be any linear transformation ".split(" "));
-		
+		//String[] strAr = p1.preprocess("let T be any linear transformation ".split(" "));
+		String[] strAr = "let f be an invertible linear transformation between V and W ".split(" ");
+		//String[] strAr = "a linear transformation between V and W ".split(" ");
+
 		//String[] strAr = p1.preprocess("if field is ring then ring is ring".split(" "));
 		
-		p1.parse(p1.tokenize(strAr));
+		p1.parse(p1.tokenize(p1.preprocess(strAr)));
 		//p1.parse(p1.tokenize(p1.preprocess("characteristic of Fp is p".split(" "))));
 		
 		
