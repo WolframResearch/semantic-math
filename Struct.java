@@ -40,8 +40,18 @@ public class Struct {
 	public String toString(){
 		return "";
 	}
+
+	public void set_prev1(String str){
+	}
+	
+	public void set_prev2(String str){
+	}
 	
 	public Object prev1(){
+		return null;
+	}
+	
+	public Object prev2(){
 		return null;
 	}
 	

@@ -19,11 +19,13 @@ public class StructA<A, B> extends Struct{
 		return this.prev1;		
 	}
 	
+	@Override
 	public B prev2(){
 		return this.prev2;		
 	}
 
 	//use carefully: must know the declared type
+	/////get rid of @suppresswarnings
 	@SuppressWarnings("unchecked")
 	public void set_prev1(Object prev1){
 		this.prev1 = (A)prev1;		
@@ -44,6 +46,13 @@ public class StructA<A, B> extends Struct{
 		this.type = type;		
 	}
 	
+	//public void set_prev1(A str){
+	//}
+	
+	@Override
+	public void set_prev2(String str){
+	}
+
 	public String type1(){
 		return this.type1;		
 	}
