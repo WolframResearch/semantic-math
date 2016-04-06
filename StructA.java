@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 
 public class StructA<A, B> extends Struct{
 
@@ -66,5 +67,12 @@ public class StructA<A, B> extends Struct{
 		String str = " type: " + this.type + " ";
 		
 		return str;
+	}
+	
+	@Override
+	public Integer test(ArrayList<Number> b){
+		Object obj = new Object();
+		Integer i = 3;
+		return i;
 	}
 }

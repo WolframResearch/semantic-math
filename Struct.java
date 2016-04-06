@@ -1,4 +1,6 @@
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /*
  * Struct to contain entities in sentence
@@ -57,5 +59,9 @@ public class Struct {
 	
 	public void test(String obj){
 		
+	}
+	
+	public Number test(ArrayList<Number> b){
+		return 3;
 	}
 }

@@ -39,6 +39,7 @@ public class ThmP1 {
 		adjMap = new HashMap<String, String>();
 		//value is regex string to be matched
 		adjMap.put("semidefinite", "positive|negative");
+		adjMap.put("independent", "linearly");
 		
 		fluffMap = new HashMap<String, String>();
 		fluffMap.put("the", "the");
@@ -49,7 +50,7 @@ public class ThmP1 {
 		posMap = new HashMap<String, String>();
 		posMap.put("disjoint", "adj"); posMap.put("perfect", "adj");
 		posMap.put("finite", "adj"); posMap.put("linear", "adj"); posMap.put("invertible", "adj");
-		posMap.put("independent", "adj");
+		posMap.put("independent", "adj"); posMap.put("many", "adj");
 		//posMap.put("every", "every");		
 		//prepositions
 		posMap.put("or", "or"); posMap.put("and", "and"); 
@@ -57,16 +58,17 @@ public class ThmP1 {
 		posMap.put("then", "then"); posMap.put("between", "pre"); 
 		//between... -> between, and...->and, between_and->between_and
 		
-		
 		posMap.put("in", "pre"); posMap.put("from", "pre"); posMap.put("to", "pre");
 		posMap.put("on", "pre"); posMap.put("let", "let"); posMap.put("be", "be");
 		posMap.put("of", "pre"); //of is primarily used as anchor
+		posMap.put("their", "pre"); ////////////////
 		
 		//verbs, verbs map does not support -ing form, ie divide->dividing
 		//3rd person singular form that ends in "es" are checked with 
 		//the "es" stripped
 		posMap.put("divide", "verb"); posMap.put("extend", "verb");	
-		posMap.put("consist", "verb");
+		posMap.put("consist", "verb"); posMap.put("call", "verb");
+		posMap.put("are", "verb"); ////////////***
 		
 		//build in quantifiers into structures, forall (indicated
 		//by for all, has)
@@ -79,13 +81,13 @@ public class ThmP1 {
 		mathObjMap.put("Fp", "mathObj"); mathObjMap.put("transformation", "mathObj");
 		mathObjMap.put("ring", "mathObj"); mathObjMap.put("matrix", "mathObj"); 
 		mathObjMap.put("field", "mathObj"); mathObjMap.put("function", "mathObj");
-		mathObjMap.put("basis", "mathObj");
+		mathObjMap.put("basis", "mathObj"); mathObjMap.put("sum", "mathObj");
 		//composite math objects
 		mathObjMap.put("field", "COMP"); mathObjMap.put("space", "COMP");
 		mathObjMap.put("vector space", "mathObj");
 		mathObjMap.put("finite field", "mathObj"); mathObjMap.put("vector field", "mathObj");
 		mathObjMap.put("vector", "mathObj"); mathObjMap.put("angle", "mathObj");
-
+		mathObjMap.put("zero", "mathObj"); ///////////****
 		
 		//put in template matching, prepositions, of, by, with
 		
@@ -130,8 +132,9 @@ public class ThmP1 {
 		//structMap.put("pre_ent", "preent");
 		structMap.put("pre_ent", "prep"); structMap.put("ent_prep", "newchild");
 		structMap.put("pre_symb", "prep"); 
-		//participle: called
+		//participle: called, need to take care of "said" etc
 		structMap.put("parti_ent", "partient"); structMap.put("ent_partient", "newchild");
+		structMap.put("parti_adj", "phrase"); 
 		
 		//structMap.put("from   ", "wildcard"); structMap.put("to", "wildcard"); structMap.put("fromto", "newchild");
 		///////////////combine preposition with whatever comes
@@ -139,9 +142,10 @@ public class ThmP1 {
 		//verb_ent, not including past tense verbs, only present tense
 		structMap.put("verb_ent", "verbent"); structMap.put("ent_verbent", "assert");
 		
-		structMap.put("verb_pre", "verb");
+		structMap.put("verb_pre", "verb"); structMap.put("verb_phrase", "verb_phrase");
 		structMap.put("verb_symb", "verbphrase"); structMap.put("symb_verbphrase", "assert");
 		structMap.put("let_symb", "let"); structMap.put("be_ent", "be"); structMap.put("let_be", "letbe");
+		structMap.put("assert_if", "assert"); structMap.put("adverb_adj", "adj"); ///****************
 		
 		//for adding combinations to structMap
 		ArrayList<String> structs = new ArrayList<String>();
@@ -190,17 +194,24 @@ public class ThmP1 {
 		ArrayList<Pair> pairs = new ArrayList<Pair>();		
 		boolean addIndex = true; //whether to add to pairIndex
 		int pairIndex = 0;
-		for(int i = 0; i < str.length; i++){			
+		for(int i = 0; i < str.length; i++){	
 			
+			String curWord = str[i];
 			int strlen = str[i].length();
+						
+			//primitive way to handle plural forms: if ends in "s"
+			String singular = "";
+			if(curWord.charAt(strlen-1) == 's'){
+				singular = curWord.substring(0, strlen-1);
+			}
 			
-			if(mathObjMap.containsKey(str[i])){
-				String newObj = str[i];
+			if(mathObjMap.containsKey(curWord) || 
+					mathObjMap.containsKey(singular)){				
 				int k = 1;
 				
 				//if composite math noun, eg "finite field"
-				while(i-k > -1 && mathObjMap.containsKey(str[i-k] +" "+ newObj) &&
-						mathObjMap.get(str[i-k] +" "+ newObj).equals("mathObj")){
+				while(i-k > -1 && mathObjMap.containsKey(str[i-k] +" "+ curWord) &&
+						mathObjMap.get(str[i-k] +" "+ curWord).equals("mathObj")){
 					
 					//remove previous pair from pairs if it has new match
 					//pairs.size should be > 0, ie previous word should be classified already
@@ -210,26 +221,26 @@ public class ThmP1 {
 						addIndex = false;
 					}
 					
-					newObj = str[i-k] + " " + newObj;
+					curWord = str[i-k] + " " + curWord;
 					k++;
 				}
-				Pair pair = new Pair(newObj, "mathObj");
+				Pair pair = new Pair(curWord, "mathObj");
 				pairs.add(pair);
 				mathIndexList.add(pairs.size()-1);
 				
 			}
-			else if(anchorMap.containsKey(str[i])){
-				Pair pair = new Pair(str[i], "anchor");
+			else if(anchorMap.containsKey(curWord)){
+				Pair pair = new Pair(curWord, "anchor");
 				anchorList.add(pairIndex);
 				pairs.add(pair);
 			}
 			//if adjective
-			else if(posMap.containsKey(str[i])){
-				Pair pair = new Pair(str[i], posMap.get(str[i]));
+			else if(posMap.containsKey(curWord)){
+				Pair pair = new Pair(curWord, posMap.get(str[i]));
 				pairs.add(pair);
 			}
 			//check again for verbs ending in 'es' & 's'			
-			else if(str[i].charAt(strlen-1) == 's'){
+			else if(curWord.charAt(strlen-1) == 's'){
 				
 				if(posMap.containsKey(str[i].substring(0, strlen-1)) &&
 						posMap.get(str[i].substring(0, strlen-1)).equals("verb")){					
@@ -243,12 +254,12 @@ public class ThmP1 {
 				}
 			}
 			//adverbs that end with -ly that haven't been screened off before
-			else if(strlen > 1 && str[i].substring(strlen-2, strlen).equals("ly")){
+			else if(strlen > 1 && curWord.substring(strlen-2, strlen).equals("ly")){
 				Pair pair = new Pair(str[i], "adverb");
 				pairs.add(pair);
 			}
 			//participles and gerunds. Need special list for words such as "given"
-			else if(strlen > 1 && str[i].substring(strlen-2, strlen).equals("ed")
+			else if(strlen > 1 && curWord.substring(strlen-2, strlen).equals("ed")
 					&& posMap.containsKey(str[i].substring(0, strlen-2))
 					&& posMap.get(str[i].substring(0, strlen-2)).equals("verb") ){
 				//if next word is "by"
@@ -256,14 +267,14 @@ public class ThmP1 {
 				Pair pair = new Pair(str[i], "parti");
 				pairs.add(pair);
 			}
-			else if(strlen > 2 && str[i].substring(strlen-3, strlen).equals("ing")
+			else if(strlen > 2 && curWord.substring(strlen-3, strlen).equals("ing")
 					&& posMap.containsKey(str[i].substring(0, strlen-2))
 					//... take care of verbs ending in "e"
 					&& posMap.get(str[i].substring(0, strlen-3)).equals("verb") ){
 				Pair pair = new Pair(str[i], "gerund");
 				pairs.add(pair);
 			}
-			else if(str[i].matches("[a-zA-Z]")){
+			else if(curWord.matches("[a-zA-Z]")){
 				//variable/symbols
 	
 				Pair pair = new Pair(str[i], "symb");
@@ -271,7 +282,7 @@ public class ThmP1 {
 				
 			}
 			//Get numbers. Incorporate written-out numbers, eg "two"
-			else if(str[i].matches("^//d+$")){
+			else if(curWord.matches("^//d+$")){
 				Pair pair = new Pair(str[i], "num");
 				pairs.add(pair);
 			}else{ //try to minimize this case.
@@ -497,8 +508,7 @@ public class ThmP1 {
 	 * parse using structMap, get big structures such as "is", "has"
 	 * Chart parser.
 	 */
-	//@SuppressWarnings("unchecked")
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("unchecked") //remove!
 	public void parse(ArrayList<Struct> inputList ){
 		int len = inputList.size();
 		
@@ -588,7 +598,7 @@ public class ThmP1 {
 							//if symbol and a given name to some entity
 							//use "called" to relate entities
 							if(type1.equals("symb") ){
-								String entKey = ((StructA<String,?>)struct1).prev1();
+								String entKey = (String)struct1.prev1();
 								if(namesMap.containsKey(entKey)){
 									StructH<HashMap<String, String>> entity = namesMap.get(entKey);
 									struct1.set_prev2(entity.struct().get("type"));
@@ -605,7 +615,7 @@ public class ThmP1 {
 								
 								if( mx.get(i+1).get(k).type().equals("symb") &&
 										mx.get(k+2).get(j).type().equals("ent") ){
-									
+
 									namesMap.put(mx.get(i+1).get(k).prev1().toString(), 
 											(StructH<HashMap<String,String>>)mx.get(k+2).get(j) );
 									
@@ -635,8 +645,13 @@ public class ThmP1 {
 		System.out.println();
 		
 	}
+
 	
-	@SuppressWarnings("unchecked") //don't do this!!
+	//input is string
+	public void dfs(String str){
+		System.out.print(str);
+	}
+	
 	public void dfs(Struct struct){
 		//don't like instanceof here
 		if(struct instanceof StructA){
@@ -649,16 +664,16 @@ public class ThmP1 {
 				//((StructA<Struct, ?>)struct).prev1().type();
 				//if(!((StructA<Struct, ?>)struct).prev1().type().equals(struct.type())){
 				
-
-					dfs(((StructA<Struct, ?>)struct).prev1());
-					System.out.print(", ");
-				
+				dfs((Struct)struct.prev1());				
 			}			
-						
+			
+			if(struct.prev2() != null && !struct.prev2().equals(""))
+				System.out.print(", ");
+			
 			if(((StructA<?, ?>)struct).prev2() instanceof Struct){
 				//avoid printing is[is], ie case when parent has same type as child
-				if(!((StructA<?, Struct>)struct).prev2().type().equals(struct.type()))
-					dfs(((StructA<?, Struct>)struct).prev2());
+				//if(!((StructA<?, Struct>)struct).prev2().type().equals(struct.type()))
+					dfs((Struct)struct.prev2());
 			}			
 			
 			if(struct.prev1() instanceof String){
@@ -689,6 +704,7 @@ public class ThmP1 {
 			System.out.print("]");
 		}
 	}	
+	
 	
 	/*
 	 * Preprocess. Remove fluff words. The, a, 
@@ -721,7 +737,8 @@ public class ThmP1 {
 		//String[] strAr = "a linear transformation between V and W ".split(" ");
 		//String[] strAr2 = "f is an invertible matrix".split(" ");
 		//String[] strAr = p1.preprocess("if a field is ring then ring is ring".split(" "));
-		String[] strAr = p1.preprocess("a basis of a vector space consist of a set of linear independent vector ".split(" "));
+		//String[] strAr = p1.preprocess("a basis of a vector space consist of a set of linearly independent vectors".split(" "));
+		String[] strAr = p1.preprocess("finitely many vectors are called linearly independent".split(" "));
 		
 		p1.parse(p1.tokenize(p1.preprocess(strAr))); //p1.parse(p1.tokenize(p1.preprocess(strAr2)));
 		
