@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.ListIterator;
 
 /* 
@@ -640,17 +641,33 @@ public class ThmP1 {
 			}			
 		}
 		
+		//string together the most parsed pieces
+		LinkedList<Struct> parsedStructList = new LinkedList<Struct>();
+		int i = 0, j = len - 1;
+		while(j > 0){
+			i = 0;
+			while(mx.get(i).get(j) == null){
+				i++;
+			}
+			
+			parsedStructList.add(0, mx.get(i).get(j));
+			//a singleton on the diagonal
+			if(i == j){
+				j--;
+			}else{
+				j = i;
+			}
+		}
+		
 		//print out the system
-		dfs(mx.get(0).get(len-1));		
+		for(int k = 0; k < parsedStructList.size(); k++){
+			dfs(parsedStructList.get(k));		
+			System.out.print(" -- ");
+		}
 		System.out.println();
 		
 	}
 
-	
-	//input is string
-	public void dfs(String str){
-		System.out.print(str);
-	}
 	
 	public void dfs(Struct struct){
 		//don't like instanceof here
@@ -703,8 +720,7 @@ public class ThmP1 {
 			}
 			System.out.print("]");
 		}
-	}	
-	
+	}		
 	
 	/*
 	 * Preprocess. Remove fluff words. The, a, 
