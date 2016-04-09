@@ -9,7 +9,10 @@ import java.util.ListIterator;
 
 public class ThmP1 {
 	
-	private static HashMap<String, ArrayList<String>> entityMap;
+	//should all be StructH's, since these are ent's
+	private HashMap<String, Struct> namesMap;
+
+	//private static HashMap<String, ArrayList<String>> entityMap = Maps.entityMap;
 	//map of structures, for all, disj,  etc
 	private static HashMap<String, String> structMap;
 	private static HashMap<String, String> anchorMap;
@@ -23,141 +26,20 @@ public class ThmP1 {
 	//value is regex string to be matched
 	private static HashMap<String, String> adjMap;
 	
-	private HashMap<String, StructH<HashMap<String, String>>> namesMap;
 	
 	//part of speech, last resort after looking up entity property maps
 	//private static HashMap<String, String> pos;
 	
-	/* build hashmap
-	 * 
-	 */
-	public static void buildMap(){
-		entityMap = new HashMap<String, ArrayList<String>>();
-		ArrayList<String> ppt = new ArrayList<String>();
-		ppt.add("characteristic"); 
-		entityMap.put("Field", ppt);		
-		
-		adjMap = new HashMap<String, String>();
-		//value is regex string to be matched
-		adjMap.put("semidefinite", "positive|negative");
-		adjMap.put("independent", "linearly");
-		
-		fluffMap = new HashMap<String, String>();
-		fluffMap.put("the", "the");
-		fluffMap.put("a", "a");
-		
-		//most should already be filtered in entity/property
-		//pos should preserve connective words, or stays or
-		posMap = new HashMap<String, String>();
-		posMap.put("disjoint", "adj"); posMap.put("perfect", "adj");
-		posMap.put("finite", "adj"); posMap.put("linear", "adj"); posMap.put("invertible", "adj");
-		posMap.put("independent", "adj"); posMap.put("many", "adj");
-		//posMap.put("every", "every");		
-		//prepositions
-		posMap.put("or", "or"); posMap.put("and", "and"); 
-		posMap.put("is", "is"); posMap.put("at", "pre"); posMap.put("if", "if");
-		posMap.put("then", "then"); posMap.put("between", "pre"); 
-		//between... -> between, and...->and, between_and->between_and
-		
-		posMap.put("in", "pre"); posMap.put("from", "pre"); posMap.put("to", "pre");
-		posMap.put("on", "pre"); posMap.put("let", "let"); posMap.put("be", "be");
-		posMap.put("of", "pre"); //of is primarily used as anchor
-		posMap.put("their", "pre"); ////////////////
-		
-		//verbs, verbs map does not support -ing form, ie divide->dividing
-		//3rd person singular form that ends in "es" are checked with 
-		//the "es" stripped
-		posMap.put("divide", "verb"); posMap.put("extend", "verb");	
-		posMap.put("consist", "verb"); posMap.put("call", "verb");
-		posMap.put("are", "verb"); ////////////***
-		
-		//build in quantifiers into structures, forall (indicated
-		//by for all, has)
-		//entityMap.put("for all", null); //change null, use regex
-		//entityMap.put("there exists", null); 
-		
-		//map for math objects
-		mathObjMap = new HashMap<String, String>();
-		mathObjMap.put("characteristic", "mathObj"); mathObjMap.put("set", "mathObj");
-		mathObjMap.put("Fp", "mathObj"); mathObjMap.put("transformation", "mathObj");
-		mathObjMap.put("ring", "mathObj"); mathObjMap.put("matrix", "mathObj"); 
-		mathObjMap.put("field", "mathObj"); mathObjMap.put("function", "mathObj");
-		mathObjMap.put("basis", "mathObj"); mathObjMap.put("sum", "mathObj");
-		//composite math objects
-		mathObjMap.put("field", "COMP"); mathObjMap.put("space", "COMP");
-		mathObjMap.put("vector space", "mathObj");
-		mathObjMap.put("finite field", "mathObj"); mathObjMap.put("vector field", "mathObj");
-		mathObjMap.put("vector", "mathObj"); mathObjMap.put("angle", "mathObj");
-		mathObjMap.put("zero", "mathObj"); ///////////****
-		
-		//put in template matching, prepositions, of, by, with
-		
-		//conjunctions, and, or, for
-		anchorMap = new HashMap<String, String>();	
-		
-		//anchors, contains   of, with
-		anchorMap = new HashMap<String, String>();		
-		anchorMap.put("of", "of");
-		anchorMap.put("that is", "that is"); //careful with spaces		
-		//local "or", ie or of the same types
-		//anchorMap.put("or", "or"); 		
-		
-		//struct map, statement/global structures
-		//can be written as, 
-		structMap = new HashMap<String, String>();	
-		structMap.put("for all", "forall");		
-		structMap.put("is", "is");  //these not necessary any more
-		structMap.put("are", "are"); structMap.put("has", "has");
-		
-		//"is" implies assertion 
-		structMap.put("is_symb", "is"); structMap.put("is_int", "is");
-		structMap.put("is_ent", "is"); structMap.put("is_or", "is");
-		structMap.put("ent_is", "assert");
-		structMap.put("symb_is", "assert"); structMap.put("if_assert", "ifstate");		
-		structMap.put("then_assert", "thenstate");
-		
-		//expression, e.g. a map from A to B
-		//structMap.put("ent", "expr");
-		structMap.put("ifstate_thenstate", "ifthen");
-		structMap.put("has_ent", "hasent");	
-		structMap.put("or_ent", "orent"); structMap.put("ent_orent", "or");
-		structMap.put("or_symb", "orsymb"); structMap.put("symb_orsymb", "or");
-		structMap.put("or_assert", "orass"); structMap.put("ent_orass", "or");
-		structMap.put("or_is", "assert"); structMap.put("assert_orass", "or");
-		structMap.put("ent_adj", "ent"); structMap.put("ent_ppt", "ent");
-		//e.g. between A and B.
-		structMap.put("pre_and", "prep"); structMap.put("pre_or", "prep");
-		
-		//preposition_entity, eg "over field", "on ...". Create new child in this case
-		//latter ent child of first ent
-		//structMap.put("pre_ent", "preent");
-		structMap.put("pre_ent", "prep"); structMap.put("ent_prep", "newchild");
-		structMap.put("pre_symb", "prep"); 
-		//participle: called, need to take care of "said" etc
-		structMap.put("parti_ent", "partient"); structMap.put("ent_partient", "newchild");
-		structMap.put("parti_adj", "phrase"); 
-		
-		//structMap.put("from   ", "wildcard"); structMap.put("to", "wildcard"); structMap.put("fromto", "newchild");
-		///////////////combine preposition with whatever comes
-		
-		//verb_ent, not including past tense verbs, only present tense
-		structMap.put("verb_ent", "verbent"); structMap.put("ent_verbent", "assert");
-		
-		structMap.put("verb_pre", "verb"); structMap.put("verb_phrase", "verb_phrase");
-		structMap.put("verb_symb", "verbphrase"); structMap.put("symb_verbphrase", "assert");
-		structMap.put("let_symb", "let"); structMap.put("be_ent", "be"); structMap.put("let_be", "letbe");
-		structMap.put("assert_if", "assert"); structMap.put("adverb_adj", "adj"); ///****************
-		
-		//for adding combinations to structMap
-		ArrayList<String> structs = new ArrayList<String>();
-		structs.add("has");
-		
-		//for loop constructing more structs to put in maps, e.g. entityhas, entityis
-		for(int i = 0; i < structs.size(); i++){
-			//entityhas, vs forall
-			
-		}
 
+	public static void buildMap(){
+		Maps.buildMap();
+		
+		structMap = Maps.structMap;
+		anchorMap = Maps.anchorMap;
+		posMap = Maps.posMap;
+		fluffMap = Maps.fluffMap;
+		mathObjMap = Maps.mathObjMap;
+		adjMap = Maps.adjMap;
 	}
 	
 	//keywords: given, with, 
@@ -189,7 +71,7 @@ public class ThmP1 {
 		//list of given names, like F in "field F", for bookkeeping later
 		//hashmap contains <name, entity> pairs
 		//need to incorporate multi-letter names, like sigma
-		namesMap = new HashMap<String, StructH<HashMap<String, String>>>();
+		namesMap = new HashMap<String, Struct>();
 
 		//list of each word with their initial type, adj, noun, 
 		ArrayList<Pair> pairs = new ArrayList<Pair>();		
@@ -218,7 +100,13 @@ public class ThmP1 {
 					//pairs.size should be > 0, ie previous word should be classified already
 					if(pairs.size() > 0 && 
 							pairs.get(pairs.size()-1).word().equals(str[i-k])){
+						
+						//remove from mathIndexList if already counted
+						if(mathObjMap.containsKey(pairs.get(pairs.size()-1).word())){
+							mathIndexList.remove(mathIndexList.size()-1);
+						}
 						pairs.remove(pairs.size()-1);
+						
 						addIndex = false;
 					}
 					
@@ -230,6 +118,7 @@ public class ThmP1 {
 				mathIndexList.add(pairs.size()-1);
 				
 			}
+			
 			else if(anchorMap.containsKey(curWord)){
 				Pair pair = new Pair(curWord, "anchor");
 				anchorList.add(pairIndex);
@@ -237,22 +126,35 @@ public class ThmP1 {
 			}
 			//if adjective
 			else if(posMap.containsKey(curWord)){
-				Pair pair = new Pair(curWord, posMap.get(str[i]));
+				Pair pair = new Pair(curWord, posMap.get(curWord));
+				
+				int pairsSize = pairs.size();
+				//if adverb-adj pair, eg clearly good
+				if(pairs.size() > 0 && posMap.get(curWord).equals("adj") && 
+						pairs.get(pairsSize-1).pos().equals("adverb") ){
+					curWord = pairs.get(pairsSize-1).word() + " " + curWord;
+					//remove previous Pair
+					pairs.remove(pairsSize - 1);
+					pair = new Pair(curWord, "adj");
+				}
+				
 				pairs.add(pair);
 			}
 			//check again for verbs ending in 'es' & 's'			
-			else if(curWord.charAt(strlen-1) == 's'){
+			else if(curWord.charAt(strlen-1) == 's' &&
+					posMap.containsKey(str[i].substring(0, strlen-1)) &&
+					posMap.get(str[i].substring(0, strlen-1)).equals("verb")){
+					
+				Pair pair = new Pair(str[i], "verb");
+				pairs.add(pair);					
+			}
+			else if(curWord.charAt(strlen-1) == 's' &&
+					str[i].charAt(str[i].length()-2) == 'e' &&
+					posMap.containsKey(str[i].substring(0, strlen-2)) &&
+					posMap.get(str[i].substring(0, strlen-2)).equals("verb")){
+				Pair pair = new Pair(str[i], "verb");
+				pairs.add(pair);					
 				
-				if(posMap.containsKey(str[i].substring(0, strlen-1)) &&
-						posMap.get(str[i].substring(0, strlen-1)).equals("verb")){					
-					Pair pair = new Pair(str[i], "verb");
-					pairs.add(pair);
-				}else if(str[i].charAt(str[i].length()-2) == 'e' &&
-						posMap.containsKey(str[i].substring(0, strlen-2)) &&
-						posMap.get(str[i].substring(0, strlen-2)).equals("verb")){
-					Pair pair = new Pair(str[i], "verb");
-					pairs.add(pair);					
-				}
 			}
 			//adverbs that end with -ly that haven't been screened off before
 			else if(strlen > 1 && curWord.substring(strlen-2, strlen).equals("ly")){
@@ -287,8 +189,9 @@ public class ThmP1 {
 				Pair pair = new Pair(str[i], "num");
 				pairs.add(pair);
 			}else{ //try to minimize this case.
-				//defluffing: not recognized phrases are not added
+				
 				System.out.println("word not in dictionary: " + str[i]);
+				pairs.add(new Pair(curWord, ""));
 			}
 			
 			if(addIndex){
@@ -370,7 +273,7 @@ public class ThmP1 {
 			k = 1;
 			while(index+k < pairs.size() && pairs.get(index + k).pos().equals("adj") ){				
 				///implement same as above
-
+				
 				tempMap.put(pairs.get(index - k).word(), "ppt");
 				pairs.get(index + k).set_pos(String.valueOf(j));
 				k++;
@@ -408,8 +311,7 @@ public class ThmP1 {
 				
 			}//if the previous token is not an ent
 			else{
-				//set anchor to its normal part of speech word, like "of" to pre
-				
+				//set anchor to its normal part of speech word, like "of" to pre				
 				pairs.get(index).set_pos(posMap.get(anchor));
 			}
 
@@ -445,12 +347,12 @@ public class ThmP1 {
 				//current word hasn't classified into an ent
 				//////
 				
+				int structListSize = structList.size();
 				
-				//combine adverbs into verbs, look 2 phrases before
-				if(curPair.pos().equals("adverb")){
-					int structListSize = structList.size();
+				//combine adverbs into verbs/adjectives, look 2 phrases before
+				if(curPair.pos().equals("adverb")){					
 					
-					if(structListSize > 1 && structList.get(structListSize-2).type().equals("verb")){
+					if(structListSize > 1 && structList.get(structListSize-2).type().matches("verb")){
 						StructA<?, ?> verbStruct = (StructA<?, ?>)structList.get(structListSize-2);
 						//verbStruct should not have prev2, also prev2 type should be String
 						verbStruct.set_prev2(curPair.word());
@@ -460,12 +362,24 @@ public class ThmP1 {
 						StructA<?, ?> verbStruct = (StructA<?, ?>)structList.get(structListSize-1);
 						verbStruct.set_prev2(curPair.word());						
 						continue;
-					}
+					}					
 				}
+				
+				String curWord = curPair.word();
 				
 				//is leaf if prev2 is empty string ""
 				StructA<String, String> newStruct = 
-						new StructA<String, String>(curPair.word(), "", curPair.pos());				
+						new StructA<String, String>(curWord, "", curPair.pos());
+				
+				if(curPair.pos().equals("adj")){
+					if(structListSize > 0 && structList.get(structListSize-1).type().equals("adverb")){
+						Struct adverbStruct = structList.get(structListSize-1);
+						//adverbStruct.set_prev2(curPair.word());
+						newStruct.set_prev2(adverbStruct);
+						//remove the adverb Struct
+						structList.remove(structListSize - 1); 
+					}
+				}												
 				
 				structList.add(newStruct);
 				
@@ -509,9 +423,11 @@ public class ThmP1 {
 	 * parse using structMap, get big structures such as "is", "has"
 	 * Chart parser.
 	 */
-	@SuppressWarnings("unchecked") //remove!
 	public void parse(ArrayList<Struct> inputList ){
 		int len = inputList.size();
+		
+		//track the most recent entity for use for pronouns		
+		Struct recentEnt = null;
 		
 		ArrayList<ArrayList<Struct>> mx = 
 				new ArrayList<ArrayList<Struct>>(len);	
@@ -553,6 +469,24 @@ public class ThmP1 {
 					//combine/reduce types, like or_ppt, for_ent, in_ent
 					String type1 = struct1.type();
 					String type2 = struct2.type();
+					
+					if(type1.equals("ent")){
+						recentEnt = struct1;
+					}
+					
+					//if pronoun, refers to most recent ent
+					if(type1.equals("pro") && struct1.prev2() != null &&
+							struct1.prev2().equals("")){
+						if(recentEnt != null){
+							String tempName = recentEnt.struct().get("name");
+							String name = tempName != null ? tempName : "";
+							struct1.set_prev2(name);
+						}						
+					}
+					
+					if(type2.equals("ent")){
+						recentEnt = struct2;
+					}
 					//look up combined in struct table, like or_ent
 					//get value as name for new hash table, table with prev field
 					//new type? entity, with extra ppt
@@ -589,8 +523,10 @@ public class ThmP1 {
 							//add to child relation, usually a preposition, eg "from", "over"
 							//could also be verb, "consist", "lies"
 							String childRelation = mx.get(k+1).get(k+1).prev1().toString();
+							//why does this cast not trigger unchecked warning??
 							((StructH<?>)newStruct).add_child(struct2, childRelation);
 							//////////////////////////////////
+							recentEnt = newStruct;
 							
 							mx.get(i).set(j, newStruct);
 							
@@ -601,7 +537,7 @@ public class ThmP1 {
 							if(type1.equals("symb") ){
 								String entKey = (String)struct1.prev1();
 								if(namesMap.containsKey(entKey)){
-									StructH<HashMap<String, String>> entity = namesMap.get(entKey);
+									Struct entity = namesMap.get(entKey);
 									struct1.set_prev2(entity.struct().get("type"));
 									
 									//modify type of struct1 and add struct to mx
@@ -618,9 +554,9 @@ public class ThmP1 {
 										mx.get(k+2).get(j).type().equals("ent") ){
 
 									namesMap.put(mx.get(i+1).get(k).prev1().toString(), 
-											(StructH<HashMap<String,String>>)mx.get(k+2).get(j) );
+											mx.get(k+2).get(j) );
 									
-									((StructH<HashMap<String,String>>)mx.get(k+2).get(j)).
+									mx.get(k+2).get(j).
 									struct().put("called", mx.get(i+1).get(k).prev1().toString());
 								}
 							}
@@ -644,10 +580,14 @@ public class ThmP1 {
 		//string together the most parsed pieces
 		LinkedList<Struct> parsedStructList = new LinkedList<Struct>();
 		int i = 0, j = len - 1;
-		while(j > 0){
+		while(j > -1){
 			i = 0;
 			while(mx.get(i).get(j) == null){
 				i++;
+				//some diagonal elements can be set to null on purpose 
+				if(i >= j){
+					continue;
+				}
 			}
 			
 			parsedStructList.add(0, mx.get(i).get(j));
@@ -655,7 +595,7 @@ public class ThmP1 {
 			if(i == j){
 				j--;
 			}else{
-				j = i;
+				j = i - 1;
 			}
 		}
 		
@@ -667,7 +607,6 @@ public class ThmP1 {
 		System.out.println();
 		
 	}
-
 	
 	public void dfs(Struct struct){
 		//don't like instanceof here
@@ -684,13 +623,14 @@ public class ThmP1 {
 				dfs((Struct)struct.prev1());				
 			}			
 			
-			if(struct.prev2() != null && !struct.prev2().equals(""))
-				System.out.print(", ");
+			//if(struct.prev2() != null && !struct.prev2().equals(""))
+			//	System.out.print(", ");
 			
 			if(((StructA<?, ?>)struct).prev2() instanceof Struct){
 				//avoid printing is[is], ie case when parent has same type as child
 				//if(!((StructA<?, Struct>)struct).prev2().type().equals(struct.type()))
-					dfs((Struct)struct.prev2());
+				System.out.print(", ");
+				dfs((Struct)struct.prev2());
 			}			
 			
 			if(struct.prev1() instanceof String){
@@ -736,31 +676,5 @@ public class ThmP1 {
 		return wordList.toArray(new String[0]);
 	}
 	
-	
-	//the char of F_p is p
-	public static void main(String[] args){
-		ThmP1.buildMap();
-		
-		ThmP1 p1 = new ThmP1();
-		//String[] strAr = p1.preprocess("a disjoint or perfect field is a field".split(" "));
-		//String[] strAr = p1.preprocess("quadratic extension has degree 2".split(" "));
-		//String[] strAr = p1.preprocess("finite field is field".split(" "));
-		//String[] strAr = p1.preprocess("field F extend field F".split(" "));
-		
-		//String[] strAr = p1.preprocess("a field or ring is a ring".split(" "));
-		//String[] strAr = p1.preprocess("let T be any linear transformation ".split(" "));
-		//String[] strAr = "let f be a linear transformation between V and W ".split(" ");
-		//String[] strAr = "a linear transformation between V and W ".split(" ");
-		//String[] strAr2 = "f is an invertible matrix".split(" ");
-		//String[] strAr = p1.preprocess("if a field is ring then ring is ring".split(" "));
-		//String[] strAr = p1.preprocess("a basis of a vector space consist of a set of linearly independent vectors".split(" "));
-		String[] strAr = p1.preprocess("finitely many vectors are called linearly independent".split(" "));
-		
-		p1.parse(p1.tokenize(p1.preprocess(strAr))); //p1.parse(p1.tokenize(p1.preprocess(strAr2)));
-		
-		//p1.parse(p1.tokenize(p1.preprocess("characteristic of Fp is p".split(" "))));
-		
-		
-	}
 	
 }

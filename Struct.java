@@ -1,3 +1,4 @@
+import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -37,6 +38,11 @@ public class Struct {
 	//to be overridden
 	public String type(){
 		return "";
+	}
+	
+	//filler method to be overriden
+	public HashMap<String, String> struct(){
+		return new HashMap<String, String>();
 	}
 	
 	public String toString(){

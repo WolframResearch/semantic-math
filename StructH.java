@@ -1,9 +1,10 @@
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 
 public class StructH<H> extends Struct{
 
-	private H struct; //hashmap
+	private HashMap<String, String> struct; //hashmap
 	//ent (entity) is only structure that uses hashmap
 	private String type; //ent, adj, etc
 	private boolean hasChild = false;
@@ -13,7 +14,7 @@ public class StructH<H> extends Struct{
 	//parent
 	//private Struct parent;
 	
-	public StructH(H struct, String type){
+	public StructH(HashMap<String, String> struct, String type){
 	
 		this.struct = struct;
 		this.type = type;
@@ -29,7 +30,7 @@ public class StructH<H> extends Struct{
 		this.childRelation = new ArrayList<String>();
 	}
 	
-	public void set_struct(H struct){
+	public void set_struct(HashMap<String, String> struct){
 		this.struct = struct;
 	}
 	
@@ -70,7 +71,8 @@ public class StructH<H> extends Struct{
 		return childRelation;		
 	}
 	
-	public H struct(){		
+	@Override
+	public HashMap<String, String> struct(){		
 		return this.struct;		
 	}
 	

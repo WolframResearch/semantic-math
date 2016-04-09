@@ -4,7 +4,7 @@ public class StructA<A, B> extends Struct{
 
 	private A prev1; 
 	private B prev2; 
-	private String type; //or, and, ent, adj etc
+	private String type; //or, and, adj, pro etc, not ent
 	private String type1; //type of prev1, , al, string etc
 	private String type2; //type of prev2
 	
@@ -36,6 +36,11 @@ public class StructA<A, B> extends Struct{
 	public void set_prev2(Object prev2){
 		this.prev2 = (B)prev2;		
 	}
+
+	@SuppressWarnings("unchecked")
+	public void set_prev2(String prev2){
+		this.prev2 = (B)prev2;	
+	}
 	
 	@Override
 	public String type(){
@@ -50,9 +55,6 @@ public class StructA<A, B> extends Struct{
 	//public void set_prev1(A str){
 	//}
 	
-	@Override
-	public void set_prev2(String str){
-	}
 
 	public String type1(){
 		return this.type1;		
