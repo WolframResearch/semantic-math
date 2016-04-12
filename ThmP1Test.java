@@ -27,7 +27,7 @@ public class ThmP1Test {
 			strAr = "suppose f is measurable and finite on E, and E has finite measure".split(" ");
 			strAr = "the number of conjugacy class of the symmetric group is equal to the number of partitions of n".split(" ");
 			String st = "let H be a normal subgroup of the group G. G acts on H as automorphisms of H.";
-			st = "the number of conjugacy class of the symmetric group is equal to the number of partitions of n";
+			//st = "the number of conjugacy class of the symmetric group is equal to the number of partitions of n";
 			//st = "let G be a group, then G is a group";
 			
 			//String[] strAr = p1.preprocess("F is a extension over Q".split(" "));

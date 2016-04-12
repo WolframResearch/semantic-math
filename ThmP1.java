@@ -580,6 +580,8 @@ public class ThmP1 {
 								}
 							}
 							
+							//change struct2 if applicable
+							
 							if(type2.equals("symb") ){
 								String entKey = (String)struct2.prev1();
 								if(namesMap.containsKey(entKey)){
@@ -589,11 +591,11 @@ public class ThmP1 {
 									//modify type of struct2 
 									struct2.set_type(entity.type());
 								}
-							}
+							} 
 							
 							//add to namesMap if letbe defines a name for an ent
 							if(newType.equals("letbe") && mx.get(i+1).get(k) != null && mx.get(k+2).get(j) != null){
-								//temporary patch!   Rewrite StructA to avoid cast
+								//temporary patch   Rewrite StructA to avoid cast
 								//assert(struct1 instanceof StructA); assert(struct2 instanceof StructA);
 								//get previous nodes								
 								
