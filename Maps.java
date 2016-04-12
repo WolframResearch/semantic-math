@@ -52,6 +52,7 @@ public class Maps {
 		posMap.put("for", "pre_COMP"); //can be composite word, use first pos if composite not in posmap
 		posMap.put("measurable", "adj"); posMap.put("nondecreasing", "adj");
 		posMap.put("positive", "adj"); posMap.put("negative", "adj");
+		posMap.put("normal", "adj"); 
 		
 		//determiners
 		posMap.put("each", "det"); posMap.put("each", "det"); 
@@ -67,10 +68,12 @@ public class Maps {
 		//between... -> between, and...->and, between_and->between_and
 		
 		posMap.put("in", "pre"); posMap.put("from", "pre"); posMap.put("to", "pre");
+		
+		posMap.put("equal", "verb_COMP"); posMap.put("equal to", "pre");
 		posMap.put("on", "pre"); posMap.put("let", "let"); posMap.put("be", "be");
 		posMap.put("of", "pre"); //of is primarily used as anchor
 		posMap.put("over", "pre"); posMap.put("with", "pre");
-		posMap.put("by", "pre"); 
+		posMap.put("by", "pre"); posMap.put("as", "pre"); 
 		
 		//pronouns
 		posMap.put("their", "pro"); posMap.put("it", "pro"); posMap.put("we", "pro"); 
@@ -86,7 +89,7 @@ public class Maps {
 		posMap.put("consist", "verb"); posMap.put("call", "verb");
 		posMap.put("are", "verb"); ////////////***
 		posMap.put("have", "verb"); posMap.put("obtain", "verb");
-		posMap.put("replace", "verb");
+		posMap.put("replace", "verb"); posMap.put("act", "verb");
 		
 		//build in quantifiers into structures, forall (indicated
 		//by for all, has)
@@ -114,7 +117,8 @@ public class Maps {
 		mathObjMap.put("entry", "mathObj"); mathObjMap.put("cycle decomposition", "mathObj");
 		mathObjMap.put("measure", "mathObj"); mathObjMap.put("sequence", "mathObj");
 		mathObjMap.put("integer", "mathObj"); mathObjMap.put("class", "COMP");
-		mathObjMap.put("conjugacy class", "mathObj");
+		mathObjMap.put("conjugacy class", "mathObj"); mathObjMap.put("subgroup", "mathObj");
+		mathObjMap.put("automorphism", "mathObj");
 		
 		//put in template matching, prepositions, of, by, with
 		
@@ -124,7 +128,7 @@ public class Maps {
 		//anchors, contains   of, with
 		anchorMap = new HashMap<String, String>();		
 		anchorMap.put("of", "of");
-		anchorMap.put("that is", "that is"); //careful with spaces		
+		//anchorMap.put("that is", "that is"); //careful with spaces		
 		//local "or", ie or of the same types
 		//anchorMap.put("or", "or"); 		
 		
@@ -180,8 +184,7 @@ public class Maps {
 		structMap.put("if_assert", "If"); structMap.put("assert_If", "assert"); 
 		structMap.put("hyp_assert", "hypo"); structMap.put("hyp_ent", "hypo");
 		structMap.put("hyp_symb", "hypo"); structMap.put("rpro_ent", "rproent");
-		structMap.put("ent_rproent", "newchild"); structMap.put("anchor_symb", "anchorphrase");
-		structMap.put("ent_anchorphrase", "ent");
+		structMap.put("ent_rproent", "newchild"); 
 		
 		structMap.put("adverb_adj", "adj"); ///****************
 		

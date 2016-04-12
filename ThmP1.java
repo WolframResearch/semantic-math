@@ -10,7 +10,7 @@ import java.util.ListIterator;
 public class ThmP1 {
 	
 	//should all be StructH's, since these are ent's
-	private HashMap<String, Struct> namesMap;
+	private static HashMap<String, Struct> namesMap;
 
 	//private static HashMap<String, ArrayList<String>> entityMap = Maps.entityMap;
 	//map of structures, for all, disj,  etc
@@ -40,12 +40,17 @@ public class ThmP1 {
 		fluffMap = Maps.fluffMap;
 		mathObjMap = Maps.mathObjMap;
 		adjMap = Maps.adjMap;
+		
+		//list of given names, like F in "field F", for bookkeeping later
+		//hashmap contains <name, entity> pairs
+		//need to incorporate multi-letter names, like sigma
+		namesMap = new HashMap<String, Struct>();
 	}
 	
 	//keywords: given, with, 
 	// has, is, 
 	//if ... then
-	public ArrayList<Struct> tokenize(String[] str){
+	public static ArrayList<Struct> tokenize(String[] str){
 		//go through list twice, build hashmaps second time		
 		
 		//tokenize first. compound words?
@@ -68,10 +73,6 @@ public class ThmP1 {
 		//list of indices of anchor words, e.g. "of"
 		ArrayList<Integer> anchorList = new ArrayList<Integer>();
 		
-		//list of given names, like F in "field F", for bookkeeping later
-		//hashmap contains <name, entity> pairs
-		//need to incorporate multi-letter names, like sigma
-		namesMap = new HashMap<String, Struct>();
 
 		//list of each word with their initial type, adj, noun, 
 		ArrayList<Pair> pairs = new ArrayList<Pair>();		
@@ -313,7 +314,7 @@ public class ThmP1 {
 		}
 		
 		//combine anchors into entities. Such as "of," "has"
-		for(int j = 0; j < anchorList.size(); j++){
+		for(int j = anchorList.size()-1; j > -1; j--){
 			int index = anchorList.get(j);
 			String anchor = pairs.get(index).word();			
 			
@@ -334,17 +335,18 @@ public class ThmP1 {
 							tempStruct.add_child(childStruct, "of"); 
 							//set to null instead of removing, to keep indices right
 							mathEntList.set(Integer.valueOf(nextPair.pos()), null);
+						}//if the previous token is not an ent
+						else{
+							//set anchor to its normal part of speech word, like "of" to pre				
+							pairs.get(index).set_pos(posMap.get("of"));
 						}
 					}
 	
-					break;				
+					break;
 				}
 				
-			}//if the previous token is not an ent
-			else{
-				//set anchor to its normal part of speech word, like "of" to pre				
-				pairs.get(index).set_pos(posMap.get(anchor));
 			}
+			
 
 		} 		
 		
@@ -454,7 +456,7 @@ public class ThmP1 {
 	 * parse using structMap, get big structures such as "is", "has"
 	 * Chart parser.
 	 */
-	public void parse(ArrayList<Struct> inputList ){
+	public static void parse(ArrayList<Struct> inputList ){
 		int len = inputList.size();
 		
 		//track the most recent entity for use for pronouns		
@@ -571,12 +573,24 @@ public class ThmP1 {
 								String entKey = (String)struct1.prev1();
 								if(namesMap.containsKey(entKey)){
 									Struct entity = namesMap.get(entKey);
-									struct1.set_prev2(entity.struct().get("type"));
+									struct1.set_prev2(entity.struct().get("name"));
 									
-									//modify type of struct1 and add struct to mx
-									struct1.set_type(entity.struct().get("type"));
+									//modify type of struct1 
+									struct1.set_type(entity.type());
 								}
 							}
+							
+							if(type2.equals("symb") ){
+								String entKey = (String)struct2.prev1();
+								if(namesMap.containsKey(entKey)){
+									Struct entity = namesMap.get(entKey);
+									struct2.set_prev2(entity.struct().get("name"));
+									
+									//modify type of struct2 
+									struct2.set_type(entity.type());
+								}
+							}
+							
 							//add to namesMap if letbe defines a name for an ent
 							if(newType.equals("letbe") && mx.get(i+1).get(k) != null && mx.get(k+2).get(j) != null){
 								//temporary patch!   Rewrite StructA to avoid cast
@@ -641,7 +655,7 @@ public class ThmP1 {
 		
 	}
 	
-	public void dfs(Struct struct){
+	public static void dfs(Struct struct){
 		//don't like instanceof here
 		if(struct instanceof StructA){
 			
@@ -699,7 +713,7 @@ public class ThmP1 {
 	 * Preprocess. Remove fluff words. The, a, 
 	 * Remove endings, -ing, -s
 	 */
-	public String[] preprocess(String[] str){
+	public static String[] preprocess(String[] str){
 		ArrayList<String> wordList = new ArrayList<String>();
 		for(int i = 0; i < str.length; i++){
 			if(!fluffMap.containsKey(str[i])){
