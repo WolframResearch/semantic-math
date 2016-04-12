@@ -84,7 +84,7 @@ public class ThmP1 {
 						
 			//primitive way to handle plural forms: if ends in "s"
 			String singular = "";
-			if(curWord.charAt(strlen-1) == 's'){
+			if(strlen > 0 && curWord.charAt(strlen-1) == 's'){
 				singular = curWord.substring(0, strlen-1);
 			}
 			
@@ -126,7 +126,33 @@ public class ThmP1 {
 			}
 			//if adjective
 			else if(posMap.containsKey(curWord)){
-				Pair pair = new Pair(curWord, posMap.get(curWord));
+								
+				//composite words, such as "for all",
+				String temp = curWord, pos = curWord;
+				String tempPos = posMap.get(temp);
+				
+				while(tempPos.length() > 4 &&
+						tempPos.substring(tempPos.length()-4, tempPos.length()).equals("COMP") 
+						&& i < str.length-1){
+					
+					curWord = temp;
+					temp = temp + " " + str[i+1];
+					if(!posMap.containsKey(temp)){
+						break;
+					}
+					tempPos = posMap.get(temp);
+					i++;
+				}				
+				
+				Pair pair;
+				if(posMap.containsKey(temp)){
+					pos = posMap.get(temp);
+					pair = new Pair(temp, pos);
+
+				}else{
+					pos = posMap.get(curWord);
+					pair = new Pair(curWord, pos);
+				}
 				
 				int pairsSize = pairs.size();
 				//if adverb-adj pair, eg clearly good
@@ -141,14 +167,14 @@ public class ThmP1 {
 				pairs.add(pair);
 			}
 			//check again for verbs ending in 'es' & 's'			
-			else if(curWord.charAt(strlen-1) == 's' &&
+			else if(strlen > 0 && curWord.charAt(strlen-1) == 's' &&
 					posMap.containsKey(str[i].substring(0, strlen-1)) &&
 					posMap.get(str[i].substring(0, strlen-1)).equals("verb")){
 					
 				Pair pair = new Pair(str[i], "verb");
 				pairs.add(pair);					
 			}
-			else if(curWord.charAt(strlen-1) == 's' &&
+			else if(strlen > 0 && curWord.charAt(strlen-1) == 's' &&
 					str[i].charAt(str[i].length()-2) == 'e' &&
 					posMap.containsKey(str[i].substring(0, strlen-2)) &&
 					posMap.get(str[i].substring(0, strlen-2)).equals("verb")){
@@ -170,10 +196,12 @@ public class ThmP1 {
 				Pair pair = new Pair(str[i], "parti");
 				pairs.add(pair);
 			}
-			else if(strlen > 2 && curWord.substring(strlen-3, strlen).equals("ing")
-					&& posMap.containsKey(str[i].substring(0, strlen-2))
-					//... take care of verbs ending in "e"
-					&& posMap.get(str[i].substring(0, strlen-3)).equals("verb") ){
+			else if(strlen > 2 && curWord.substring(strlen-3, strlen).equals("ing")					
+					&& (posMap.containsKey(curWord.substring(0, strlen-3))
+							&& posMap.get(curWord.substring(0, strlen-3)).equals("verb") 
+							//verbs ending in "e"
+							|| (posMap.containsKey(curWord.substring(0, strlen-3)+'e') 
+									&& posMap.get(curWord.substring(0, strlen-3)+'e').equals("verb")))){
 				Pair pair = new Pair(str[i], "gerund");
 				pairs.add(pair);
 			}
@@ -237,12 +265,13 @@ public class ThmP1 {
 			//combine multiple adjectives into entities
 			//...get more than adj ... multi-word descriptions
 			//set the pos as the current index in mathEntList		
-			
-			while(index-k > -1 && pairs.get(index - k).pos().equals("adj") ){
+			//adjectives or determiners
+			while(index-k > -1 && pairs.get(index - k).pos().matches("adj|det") ){
 				String curWord = pairs.get(index - k).word();
 				//look for composite adj (two for now)
 				if(index-k-1 > -1 && adjMap.containsKey(curWord)){
 					//if composite adj
+					//////////develop adjMap further
 					if(pairs.get(index-k-1).word().matches(adjMap.get(curWord))){
 						curWord = pairs.get(index-k-1).word() + " " + curWord;
 						//mark pos field to indicate entity
@@ -296,6 +325,7 @@ public class ThmP1 {
 				//combine entities, like in case of "of"
 				switch(anchor){
 				case "of":	
+					//ent of ent
 					if(index + 1 < pairs.size()){
 						Pair nextPair = pairs.get(index + 1);
 						if(nextPair.pos().matches("\\d+$")){
@@ -306,6 +336,7 @@ public class ThmP1 {
 							mathEntList.set(Integer.valueOf(nextPair.pos()), null);
 						}
 					}
+	
 					break;				
 				}
 				
@@ -523,8 +554,10 @@ public class ThmP1 {
 							//add to child relation, usually a preposition, eg "from", "over"
 							//could also be verb, "consist", "lies"
 							String childRelation = mx.get(k+1).get(k+1).prev1().toString();
-							//why does this cast not trigger unchecked warning??
-							((StructH<?>)newStruct).add_child(struct2, childRelation);
+							if(struct1 instanceof StructH){
+								//why does this cast not trigger unchecked warning??
+								((StructH<?>)newStruct).add_child(struct2, childRelation);
+							}
 							//////////////////////////////////
 							recentEnt = newStruct;
 							

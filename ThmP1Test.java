@@ -23,7 +23,10 @@ public class ThmP1Test {
 			//String[] strAr = p1.preprocess("finitely many vectors are called linearly independent if their sum is zero".split(" "));
 			//String[] strAr = p1.preprocess("elements in symmetric group are conjugate if they have the same cycle type".split(" "));
 			String[] strAr = p1.preprocess("A is equal to the number of partitions".split(" "));
-
+			strAr = "for all x x is a number".split(" ");
+			strAr = "suppose f is measurable and finite on E, and E has finite measure".split(" ");
+			strAr = "the number of conjugacy class of the symmetric group is equal to the number of partitions of n".split(" ");
+			
 			//String[] strAr = p1.preprocess("F is a extension over Q".split(" "));
 			p1.parse(p1.tokenize(p1.preprocess(strAr))); //p1.parse(p1.tokenize(p1.preprocess(strAr2)));
 			

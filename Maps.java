@@ -48,21 +48,36 @@ public class Maps {
 		posMap.put("independent", "adj"); posMap.put("many", "adj");
 		//posMap.put("every", "every");		
 		posMap.put("same", "adj"); posMap.put("conjugate", "adj"); posMap.put("symmetric", "adj");
-		posMap.put("equal", "adj");
+		posMap.put("equal", "adj"); posMap.put("all", "adj"); 
+		posMap.put("for", "pre_COMP"); //can be composite word, use first pos if composite not in posmap
+		posMap.put("measurable", "adj"); posMap.put("nondecreasing", "adj");
+		posMap.put("positive", "adj"); posMap.put("negative", "adj");
+		
+		//determiners
+		posMap.put("each", "det"); posMap.put("each", "det"); 
+		
+		//parts of speech
+		posMap.put("for every", "hyp"); posMap.put("suppose", "hyp");		
+		posMap.put("for all", "hyp");
 		
 		//prepositions
 		posMap.put("or", "or"); posMap.put("and", "and"); 
-		posMap.put("is", "is"); posMap.put("at", "pre"); posMap.put("if", "if");
+		posMap.put("is", "verb"); posMap.put("at", "pre"); posMap.put("if", "if");
 		posMap.put("then", "then"); posMap.put("between", "pre"); 
 		//between... -> between, and...->and, between_and->between_and
 		
 		posMap.put("in", "pre"); posMap.put("from", "pre"); posMap.put("to", "pre");
 		posMap.put("on", "pre"); posMap.put("let", "let"); posMap.put("be", "be");
 		posMap.put("of", "pre"); //of is primarily used as anchor
-		posMap.put("over", "pre");
+		posMap.put("over", "pre"); posMap.put("with", "pre");
+		posMap.put("by", "pre"); 
+		
 		//pronouns
 		posMap.put("their", "pro"); posMap.put("it", "pro"); posMap.put("we", "pro"); 
-		posMap.put("they", "pro");
+		posMap.put("they", "pro"); 
+		//relative pronouns
+		posMap.put("whose", "rpro"); posMap.put("which", "rpro"); posMap.put("that", "rpro");
+		posMap.put("whom", "rpro");
 		
 		//verbs, verbs map does not support -ing form, ie divide->dividing
 		//3rd person singular form that ends in "es" are checked with 
@@ -70,7 +85,8 @@ public class Maps {
 		posMap.put("divide", "verb"); posMap.put("extend", "verb");	
 		posMap.put("consist", "verb"); posMap.put("call", "verb");
 		posMap.put("are", "verb"); ////////////***
-		posMap.put("have", "verb");
+		posMap.put("have", "verb"); posMap.put("obtain", "verb");
+		posMap.put("replace", "verb");
 		
 		//build in quantifiers into structures, forall (indicated
 		//by for all, has)
@@ -94,7 +110,11 @@ public class Maps {
 		mathObjMap.put("field extension", "mathObj"); mathObjMap.put("element", "mathObj");
 		mathObjMap.put("group", "COMP"); mathObjMap.put("symmetric group", "mathObj");
 		mathObjMap.put("type", "COMP"); mathObjMap.put("cycle type", "mathObj");
-		mathObjMap.put("cycle", "mathObj");
+		mathObjMap.put("cycle", "mathObj"); mathObjMap.put("decomposition", "COMP");
+		mathObjMap.put("entry", "mathObj"); mathObjMap.put("cycle decomposition", "mathObj");
+		mathObjMap.put("measure", "mathObj"); mathObjMap.put("sequence", "mathObj");
+		mathObjMap.put("integer", "mathObj"); mathObjMap.put("class", "COMP");
+		mathObjMap.put("conjugacy class", "mathObj");
 		
 		//put in template matching, prepositions, of, by, with
 		
@@ -111,7 +131,7 @@ public class Maps {
 		//struct map, statement/global structures
 		//can be written as, 
 		structMap = new HashMap<String, String>();	
-		structMap.put("for all", "forall");		
+		//structMap.put("for all", "forall");		
 		structMap.put("is", "is");  //these not necessary any more
 		structMap.put("are", "are"); structMap.put("has", "has");
 		
@@ -138,8 +158,9 @@ public class Maps {
 		//preposition_entity, eg "over field", "on ...". Create new child in this case
 		//latter ent child of first ent
 		//structMap.put("pre_ent", "preent");
+		//prep stands for "pre phrase"
 		structMap.put("pre_ent", "prep"); structMap.put("ent_prep", "newchild");
-		structMap.put("pre_symb", "prep"); 
+		structMap.put("pre_symb", "prep"); structMap.put("parti_prep", "phrase");
 		//participle: called, need to take care of "said" etc
 		structMap.put("parti_ent", "partient"); structMap.put("ent_partient", "newchild");
 		structMap.put("parti_adj", "phrase"); 
@@ -148,12 +169,19 @@ public class Maps {
 		///////////////combine preposition with whatever comes
 		
 		//verb_ent, not including past tense verbs, only present tense
-		structMap.put("verb_ent", "verbphrase"); structMap.put("verb_adj", "verbphrase");		
+		structMap.put("verb_ent", "verbphrase"); structMap.put("verb_adj", "verbphrase");	
+		structMap.put("verb_and", "verbphrase");
 		structMap.put("verb_pre", "verb"); structMap.put("verb_phrase", "verbphrase");
 		structMap.put("verb_symb", "verbphrase"); structMap.put("symb_verbphrase", "assert");
 		structMap.put("ent_verbphrase", "assert"); structMap.put("pro_verbphrase", "assert");
+		structMap.put("verb_assert", "verbphrase");
+		
 		structMap.put("let_symb", "let"); structMap.put("be_ent", "be"); structMap.put("let_be", "letbe");
 		structMap.put("if_assert", "If"); structMap.put("assert_If", "assert"); 
+		structMap.put("hyp_assert", "hypo"); structMap.put("hyp_ent", "hypo");
+		structMap.put("hyp_symb", "hypo"); structMap.put("rpro_ent", "rproent");
+		structMap.put("ent_rproent", "newchild"); structMap.put("anchor_symb", "anchorphrase");
+		structMap.put("ent_anchorphrase", "ent");
 		
 		structMap.put("adverb_adj", "adj"); ///****************
 		
