@@ -1,7 +1,5 @@
 import java.util.HashMap;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 /*
  * Struct to contain entities in sentence

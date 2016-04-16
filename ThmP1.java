@@ -560,7 +560,7 @@ public class ThmP1 {
 								//why does this cast not trigger unchecked warning??
 								((StructH<?>)newStruct).add_child(struct2, childRelation);
 							}
-							//////////////////////////////////
+							////////////////////////
 							recentEnt = newStruct;
 							
 							mx.get(i).set(j, newStruct);
@@ -576,7 +576,7 @@ public class ThmP1 {
 									struct1.set_prev2(entity.struct().get("name"));
 									
 									//modify type of struct1 
-									struct1.set_type(entity.type());
+									//struct1.set_type(entity.type());
 								}
 							}
 							
@@ -589,9 +589,10 @@ public class ThmP1 {
 									struct2.set_prev2(entity.struct().get("name"));
 									
 									//modify type of struct2 
-									struct2.set_type(entity.type());
+									//struct2.set_type(entity.type());
 								}
 							} 
+							
 							
 							//add to namesMap if letbe defines a name for an ent
 							if(newType.equals("letbe") && mx.get(i+1).get(k) != null && mx.get(k+2).get(j) != null){
