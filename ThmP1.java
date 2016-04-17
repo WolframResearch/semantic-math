@@ -47,24 +47,13 @@ public class ThmP1 {
 		namesMap = new HashMap<String, Struct>();
 	}
 	
-	//keywords: given, with, 
-	// has, is, 
-	//if ... then
+	/**
+	 * 
+	 * @param str string to be tokenized
+	 * @return
+	 */
 	public static ArrayList<Struct> tokenize(String[] str){
-		//go through list twice, build hashmaps second time		
 		
-		//tokenize first. compound words?
-		//find the prepositions
-		
-		//find if, conditionals, 
-		//first run through sentence, find structure
-		//if.. then, something... is/has...
-		
-		//EntityProperty's found so far
-		//...will include properties like symbol name in hashtable
-		//hashmap contains, e.g. (char, p)
-
-		//....let ... be, given... 
 		//.....change to arraylist of Pairs, create Pair class
 		//LinkedHashMap<String, String> linkedMap = new LinkedHashMap<String, String>();
 		
@@ -210,11 +199,10 @@ public class ThmP1 {
 				//variable/symbols
 	
 				Pair pair = new Pair(str[i], "symb");
-				pairs.add(pair);
-				
+				pairs.add(pair);				
 			}
 			//Get numbers. Incorporate written-out numbers, eg "two"
-			else if(curWord.matches("^//d+$")){
+			else if(curWord.matches("^\\d+$")){
 				Pair pair = new Pair(str[i], "num");
 				pairs.add(pair);
 			}else{ //try to minimize this case.
@@ -268,6 +256,7 @@ public class ThmP1 {
 			//set the pos as the current index in mathEntList		
 			//adjectives or determiners
 			while(index-k > -1 && pairs.get(index - k).pos().matches("adj|det") ){
+				
 				String curWord = pairs.get(index - k).word();
 				//look for composite adj (two for now)
 				if(index-k-1 > -1 && adjMap.containsKey(curWord)){
@@ -301,10 +290,10 @@ public class ThmP1 {
 			
 			//look forwards
 			k = 1;
-			while(index+k < pairs.size() && pairs.get(index + k).pos().equals("adj") ){				
+			while(index+k < pairs.size() && pairs.get(index + k).pos().matches("adj|num") ){				
 				///implement same as above
 				
-				tempMap.put(pairs.get(index - k).word(), "ppt");
+				tempMap.put(pairs.get(index + k).word(), "ppt");
 				pairs.get(index + k).set_pos(String.valueOf(j));
 				k++;
 			}			
@@ -335,16 +324,16 @@ public class ThmP1 {
 							tempStruct.add_child(childStruct, "of"); 
 							//set to null instead of removing, to keep indices right
 							mathEntList.set(Integer.valueOf(nextPair.pos()), null);
-						}//if the previous token is not an ent
-						else{
-							//set anchor to its normal part of speech word, like "of" to pre				
-							pairs.get(index).set_pos(posMap.get("of"));
 						}
 					}
 	
 					break;
 				}
 				
+			}//if the previous token is not an ent
+			else{
+				//set anchor to its normal part of speech word, like "of" to pre				
+				pairs.get(index).set_pos(posMap.get(anchor));
 			}
 			
 
@@ -417,16 +406,10 @@ public class ThmP1 {
 				structList.add(newStruct);
 				
 			}
-			
-			//add entity to entitiesFound
-			//empty ppt map, to be added to later
-			
+					
 			//use last noun as entity, if bunch of different nouns in sequence
 			//unless compound noun
-			
-			//look in hash map the longest possible entity (most descriptive)
-			//like field vs field extension					
-			
+		
 			//if property found, combine to make entity property
 			//...try multiple entities instead of first one found
 			//add to list of properties 
@@ -435,14 +418,8 @@ public class ThmP1 {
 			//also templating, "is" is a big hint word
 			//add as property					
 			
-			//tokens.add("");
-			
 		}
-		
-		//categorize each term		
-		
-		//have to look ahead
-		//return arraylist of hashmaps
+
 		return structList;
 	}
 	
@@ -459,7 +436,10 @@ public class ThmP1 {
 	public static void parse(ArrayList<Struct> inputList ){
 		int len = inputList.size();
 		
-		//track the most recent entity for use for pronouns		
+		//first Struct
+		Struct firstEnt = null;
+		boolean foundFirstEnt = false;
+		//track the most recent entity for use for pronouns				
 		Struct recentEnt = null;
 		
 		ArrayList<ArrayList<Struct>> mx = 
@@ -471,7 +451,7 @@ public class ThmP1 {
 					mx.get(l).add(null);
 				}
 		}
-		
+		outerloop:
 		for(int j = 0; j < len; j++){
 			
 			//fill in diagonal elements
@@ -517,6 +497,10 @@ public class ThmP1 {
 					}					
 					
 					if(type1.equals("ent")){
+						if(!foundFirstEnt){
+							firstEnt = struct1;
+							foundFirstEnt = true;
+						}
 						recentEnt = struct1;
 					}
 					
@@ -531,15 +515,68 @@ public class ThmP1 {
 					}
 					
 					if(type2.equals("ent")){
+						if(!foundFirstEnt){
+							firstEnt = struct1;
+							foundFirstEnt = true;
+						}
 						recentEnt = struct2;
-					}
+					}					
+					
 					//look up combined in struct table, like or_ent
 					//get value as name for new hash table, table with prev field
 					//new type? entity, with extra ppt
 					//name: or. combined ex: or_adj (returns ent), or_ent (ent)
 					String combined = type1 + "_" + type2;
 					
-					//////////////search for tokens larger than immediate ones
+					//handle "is called" -- "verb_parti"
+					if(combined.matches("verb_parti") 
+							&& struct1.prev1().toString().matches("is")
+							&& struct2.prev1().toString().matches("called")){
+						String called = "";
+						int l = j + 1;
+						while(l < len){
+							Struct nextStruct = inputList.get(l);
+							if(nextStruct instanceof StructA){
+								called += nextStruct.prev1();
+							}else{
+								called += nextStruct.struct().get("name");
+							}
+							
+							if(l != len - 1)
+								called += " ";
+							l++;
+						}
+						
+						//////////////////////////******* use first ent??
+						if(firstEnt != null){
+							StructA<Struct, String> parentStruct = 
+									new StructA<Struct, String>(recentEnt, called, "def");
+							
+							mx.get(0).set(len - 1, parentStruct);
+							
+							//add to mathObj map
+							int q = 0;
+							String[] calledArray = called.split(" ");
+							String curWord = "";
+							
+							while(q < calledArray.length - 1){
+								curWord += calledArray[q];
+								//if(q != calledArray.length - 1)
+								curWord += " ";
+								
+								mathObjMap.put(curWord, "COMP");	
+								q++;
+							}
+							curWord += calledArray[calledArray.length - 1];
+							mathObjMap.put(curWord, "mathObj");
+							
+							//recentEnt is defined to be called
+							namesMap.put(called, recentEnt);
+							break outerloop;
+						}
+					}
+					
+					//search for tokens larger than immediate ones
 					//in case A_or_A or A_and_A set the mx element right below to null
 					//to set precedence, so A won't be grouped to others later
 					if(i > 0 && i + 1 < len 
@@ -559,7 +596,8 @@ public class ThmP1 {
 						int l = 2;
 						boolean stopLoop = false;
 						while( i-l > -1 && i + 1 < len ){
-							if(type2.equals(mx.get(i-l).get(i-1).type())){
+							if(mx.get(i-l).get(i-1) != null && 
+									type2.equals(mx.get(i-l).get(i-1).type())){
 								String newType = type1.matches("or") ? "disj" : "conj";
 								//type is expression, eg "a and b"
 								StructA<Struct, Struct> parentStruct = 
@@ -613,8 +651,6 @@ public class ThmP1 {
 									Struct entity = namesMap.get(entKey);
 									struct1.set_prev2(entity.struct().get("name"));
 									
-									//modify type of struct1 
-									//struct1.set_type(entity.type());
 								}
 							}
 							
@@ -625,12 +661,9 @@ public class ThmP1 {
 								if(namesMap.containsKey(entKey)){
 									Struct entity = namesMap.get(entKey);
 									struct2.set_prev2(entity.struct().get("name"));
-									
-									//modify type of struct2 
-									//struct2.set_type(entity.type());
+				
 								}
-							} 
-							
+							} 							
 							
 							//add to namesMap if letbe defines a name for an ent
 							if(newType.equals("letbe") && mx.get(i+1).get(k) != null && mx.get(k+2).get(j) != null){
@@ -674,7 +707,7 @@ public class ThmP1 {
 				i++;
 				//some diagonal elements can be set to null on purpose 
 				if(i >= j){
-					continue;
+					break;
 				}
 			}
 			
@@ -689,8 +722,9 @@ public class ThmP1 {
 		
 		//print out the system
 		for(int k = 0; k < parsedStructList.size(); k++){
-			dfs(parsedStructList.get(k));		
-			System.out.print(" -- ");
+			dfs(parsedStructList.get(k));
+			if(k != parsedStructList.size() - 1) 
+				System.out.print(" -- ");
 		}
 		System.out.println();
 		

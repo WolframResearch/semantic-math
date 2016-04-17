@@ -37,7 +37,7 @@ public class Maps {
 		adjMap.put("independent", "linearly");
 		
 		fluffMap = new HashMap<String, String>();
-		fluffMap.put("the", "the");
+		fluffMap.put("the", "the"); fluffMap.put("an", "an");
 		fluffMap.put("a", "a");
 		
 		//most should already be filtered in entity/property
@@ -48,11 +48,15 @@ public class Maps {
 		posMap.put("independent", "adj"); posMap.put("many", "adj");
 		//posMap.put("every", "every");		
 		posMap.put("same", "adj"); posMap.put("conjugate", "adj"); posMap.put("symmetric", "adj");
-		posMap.put("equal", "adj"); posMap.put("all", "adj"); 
+		posMap.put("equal", "adj"); posMap.put("all", "adj"); posMap.put("isomorphic", "adj");
 		posMap.put("for", "pre_COMP"); //can be composite word, use first pos if composite not in posmap
 		posMap.put("measurable", "adj"); posMap.put("nondecreasing", "adj");
-		posMap.put("positive", "adj"); posMap.put("negative", "adj");
-		posMap.put("normal", "adj"); 
+		posMap.put("positive", "adj"); posMap.put("negative", "adj"); posMap.put("abelian", "adj");
+		posMap.put("normal", "adj"); posMap.put("cyclic", "adj"); posMap.put("dimensional", "adj");
+		posMap.put("odd", "adj"); posMap.put("even", "adj");
+		
+		//nouns that are not mathObj
+		posMap.put("property", "noun"); posMap.put("power", "noun"); 
 		
 		//determiners
 		posMap.put("each", "det"); posMap.put("each", "det"); 
@@ -73,14 +77,15 @@ public class Maps {
 		posMap.put("on", "pre"); posMap.put("let", "let"); posMap.put("be", "be");
 		posMap.put("of", "pre"); //of is primarily used as anchor
 		posMap.put("over", "pre"); posMap.put("with", "pre");
-		posMap.put("by", "pre"); posMap.put("as", "pre"); 
+		posMap.put("by", "pre"); posMap.put("as", "pre"); posMap.put("such", "pre"); 
+		posMap.put("such that", "rpro"); posMap.put("so", "pre"); 
 		
 		//pronouns
 		posMap.put("their", "pro"); posMap.put("it", "pro"); posMap.put("we", "pro"); 
 		posMap.put("they", "pro"); 
 		//relative pronouns
 		posMap.put("whose", "rpro"); posMap.put("which", "rpro"); posMap.put("that", "rpro");
-		posMap.put("whom", "rpro");
+		posMap.put("whom", "rpro"); 
 		
 		//verbs, verbs map does not support -ing form, ie divide->dividing
 		//3rd person singular form that ends in "es" are checked with 
@@ -112,6 +117,7 @@ public class Maps {
 		mathObjMap.put("zero", "mathObj"); mathObjMap.put("extension", "COMP"); ///////////****
 		mathObjMap.put("field extension", "mathObj"); mathObjMap.put("element", "mathObj");
 		mathObjMap.put("group", "COMP"); mathObjMap.put("symmetric group", "mathObj");
+		mathObjMap.put("automorphism group", "mathObj"); mathObjMap.put("abelian group", "mathObj");
 		mathObjMap.put("type", "COMP"); mathObjMap.put("cycle type", "mathObj");
 		mathObjMap.put("cycle", "mathObj"); mathObjMap.put("decomposition", "COMP");
 		mathObjMap.put("entry", "mathObj"); mathObjMap.put("cycle decomposition", "mathObj");
@@ -119,6 +125,8 @@ public class Maps {
 		mathObjMap.put("integer", "mathObj"); mathObjMap.put("class", "COMP");
 		mathObjMap.put("conjugacy class", "mathObj"); mathObjMap.put("subgroup", "mathObj");
 		mathObjMap.put("automorphism", "mathObj"); mathObjMap.put("order", "mathObj");
+		mathObjMap.put("conjugation", "mathObj"); mathObjMap.put("prime", "mathObj"); 
+		
 		
 		//put in template matching, prepositions, of, by, with
 		
@@ -157,7 +165,7 @@ public class Maps {
 		structMap.put("or_is", "assert"); structMap.put("assert_orass", "or");
 		structMap.put("ent_adj", "ent"); structMap.put("ent_ppt", "ent");
 		//e.g. between A and B.
-		structMap.put("pre_and", "prep"); structMap.put("pre_or", "prep");
+		//structMap.put("pre_conj", "prep"); structMap.put("pre_disj", "prep");
 		
 		//preposition_entity, eg "over field", "on ...". Create new child in this case
 		//latter ent child of first ent
@@ -165,19 +173,23 @@ public class Maps {
 		//prep stands for "pre phrase"
 		structMap.put("pre_ent", "prep"); structMap.put("ent_prep", "newchild");
 		structMap.put("pre_symb", "prep"); structMap.put("parti_prep", "phrase");
+		structMap.put("pre_phrase", "prep"); structMap.put("pre_nounphrase", "prep");
+		structMap.put("noun_prep", "nounphrase");
 		//participle: called, need to take care of "said" etc
 		structMap.put("parti_ent", "partient"); structMap.put("ent_partient", "newchild");
 		structMap.put("parti_adj", "phrase"); 
 		
 		//structMap.put("from   ", "wildcard"); structMap.put("to", "wildcard"); structMap.put("fromto", "newchild");
-		///////////////combine preposition with whatever comes
+		////////////combine preposition with whatever comes
 		
 		//verb_ent, not including past tense verbs, only present tense
 		structMap.put("verb_ent", "verbphrase"); structMap.put("verb_adj", "verbphrase");	
-		structMap.put("verb_and", "verbphrase");
+		structMap.put("verb_and", "verbphrase"); structMap.put("verb_nounphrase", "verbphrase");
 		structMap.put("verb_pre", "verb"); structMap.put("verb_phrase", "verbphrase");
+		structMap.put("verb_partient", "verbphrase");
 		structMap.put("verb_symb", "verbphrase"); structMap.put("symb_verbphrase", "assert");
 		structMap.put("ent_verbphrase", "assert"); structMap.put("pro_verbphrase", "assert");
+		structMap.put("nounphrase_verbphrase", "assert");
 		structMap.put("verb_assert", "verbphrase"); structMap.put("verbphrase_prep", "verbphrase");
 		structMap.put("disj_verbphrase", "assert"); structMap.put("conj_verbphrase", "assert");
 		
@@ -185,7 +197,11 @@ public class Maps {
 		structMap.put("if_assert", "If"); structMap.put("assert_If", "assert"); 
 		structMap.put("hyp_assert", "hypo"); structMap.put("hyp_ent", "hypo");
 		structMap.put("hyp_symb", "hypo"); structMap.put("rpro_ent", "rproent");
-		structMap.put("ent_rproent", "newchild"); 
+		structMap.put("ent_rproent", "newchild"); structMap.put("rpro_verbphrase", "phrase");
+		structMap.put("rpro_assert", "phrase"); 
+		
+		//eg "property that a is b"
+		structMap.put("noun_phrase", "nounphrase"); structMap.put("ent_phrase", "newchild");
 		
 		structMap.put("adverb_adj", "adj"); ///****************
 		

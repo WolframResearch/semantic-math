@@ -29,10 +29,14 @@ public class ThmP1Test {
 			String st = "let H be a normal subgroup of the group G. G acts on H as automorphisms of H.";
 			st = "conjugate elements and conjugate subgroups have the same order";
 			st = "A is a group and is a subgroup";
-			st = "Let G be a group, conjugation by g is called an inner automorphism of G";
+			st = "let G be a group, conjugation by g is called a automorphism of G";
+			st = "if p is an odd prime and n is an integer, then the automorphism group of the cyclic group of order p is cyclic";
+			st = "let p be a prime and let V be an abelian group, with the property that b is c, then V is an n dimensional vector space over the finite field";
+			st = "the automorphism group of the cyclic group of order 2 is isomorphic to Z";
 			//st = "the number of conjugacy class of the symmetric group is equal to the number of partitions of n";
 			//st = "let G be a group, then G is a group";
-			
+			st = "let G be a group and let p be a prime, a group of order that is a power of p is called a p group";
+			st = "a group of order that is a power of p is called a p group. A subgroup of G that is p group is called a p subgroup.";
 			//String[] strAr = p1.preprocess("F is a extension over Q".split(" "));
 			
 			strAr = st.split("\\,|\\.");

@@ -4,7 +4,7 @@ public class StructA<A, B> extends Struct{
 
 	private A prev1; 
 	private B prev2; 
-	private String type; //or, and, adj, pro etc, not ent
+	private String type; //or, and, adj, pro etc, cannot ent
 	private String type1; //type of prev1, , al, string etc
 	private String type2; //type of prev2
 	
