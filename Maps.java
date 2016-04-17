@@ -118,7 +118,7 @@ public class Maps {
 		mathObjMap.put("measure", "mathObj"); mathObjMap.put("sequence", "mathObj");
 		mathObjMap.put("integer", "mathObj"); mathObjMap.put("class", "COMP");
 		mathObjMap.put("conjugacy class", "mathObj"); mathObjMap.put("subgroup", "mathObj");
-		mathObjMap.put("automorphism", "mathObj");
+		mathObjMap.put("automorphism", "mathObj"); mathObjMap.put("order", "mathObj");
 		
 		//put in template matching, prepositions, of, by, with
 		
@@ -179,6 +179,7 @@ public class Maps {
 		structMap.put("verb_symb", "verbphrase"); structMap.put("symb_verbphrase", "assert");
 		structMap.put("ent_verbphrase", "assert"); structMap.put("pro_verbphrase", "assert");
 		structMap.put("verb_assert", "verbphrase"); structMap.put("verbphrase_prep", "verbphrase");
+		structMap.put("disj_verbphrase", "assert"); structMap.put("conj_verbphrase", "assert");
 		
 		structMap.put("let_symb", "let"); structMap.put("be_ent", "be"); structMap.put("let_be", "letbe");
 		structMap.put("if_assert", "If"); structMap.put("assert_If", "assert"); 

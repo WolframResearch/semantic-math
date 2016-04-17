@@ -503,6 +503,19 @@ public class ThmP1 {
 					String type1 = struct1.type();
 					String type2 = struct2.type();
 					
+					//for types such as conj_verbphrase
+					String[] split1 = type1.split("_");
+					
+					if(split1.length > 1){
+						type1 = split1[1];
+					}
+					
+					String[] split2 = type2.split("_");
+					
+					if(split2.length > 1){
+						type2 = split2[1];
+					}					
+					
 					if(type1.equals("ent")){
 						recentEnt = struct1;
 					}
@@ -531,14 +544,39 @@ public class ThmP1 {
 					//to set precedence, so A won't be grouped to others later
 					if(i > 0 && i + 1 < len 
 							&& (type1.matches("or|and") && type2.equals(mx.get(i-1).get(i-1).type()) )){	
+						String newType = type1.matches("or") ? "disj" : "conj";
 						//type is expression, eg "a and b"
+						//new type: conj_verbphrase
 						StructA<Struct, Struct> parentStruct = 
-								new StructA<Struct, Struct>(mx.get(i-1).get(i-1), struct2, type1);
+								new StructA<Struct, Struct>(mx.get(i-1).get(i-1), 
+										struct2, newType + "_" + type2);
 							
+						//set parent struct in row above
 						mx.get(i-1).set(j, parentStruct);
 						mx.get(i+1).set(j, null);
 						break;
+					}else if((type1.matches("or|and")  )){
+						int l = 2;
+						boolean stopLoop = false;
+						while( i-l > -1 && i + 1 < len ){
+							if(type2.equals(mx.get(i-l).get(i-1).type())){
+								String newType = type1.matches("or") ? "disj" : "conj";
+								//type is expression, eg "a and b"
+								StructA<Struct, Struct> parentStruct = 
+										new StructA<Struct, Struct>(mx.get(i-l).get(i-1), 
+												struct2, newType + "_" + type2);
+								
+								mx.get(i-l).set(j, parentStruct);
+								mx.get(i+1).set(j, null);
+								stopLoop = true;
+								break;	
+							}
+							
+							if( stopLoop ) break;
+							l++;
+						}
 					}
+					
 					
 					if(structMap.containsKey(combined)){
 						String newType = structMap.get(combined);

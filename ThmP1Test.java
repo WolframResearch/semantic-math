@@ -27,6 +27,9 @@ public class ThmP1Test {
 			strAr = "suppose f is measurable and finite on E, and E has finite measure".split(" ");
 			strAr = "the number of conjugacy class of the symmetric group is equal to the number of partitions of n".split(" ");
 			String st = "let H be a normal subgroup of the group G. G acts on H as automorphisms of H.";
+			st = "conjugate elements and conjugate subgroups have the same order";
+			st = "A is a group and is a subgroup";
+			st = "Let G be a group, conjugation by g is called an inner automorphism of G";
 			//st = "the number of conjugacy class of the symmetric group is equal to the number of partitions of n";
 			//st = "let G be a group, then G is a group";
 			
