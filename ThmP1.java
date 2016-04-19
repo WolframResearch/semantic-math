@@ -78,7 +78,7 @@ public class ThmP1 {
 				singular = curWord.substring(0, strlen-1);
 			}
 			
-			if(mathObjMap.containsKey(curWord) || 
+			if(Maps.mathObjMap.containsKey(curWord) || 
 					mathObjMap.containsKey(singular)){				
 				int k = 1;
 				
@@ -179,8 +179,13 @@ public class ThmP1 {
 			}
 			//participles and gerunds. Need special list for words such as "given"
 			else if(strlen > 1 && curWord.substring(strlen-2, strlen).equals("ed")
-					&& posMap.containsKey(str[i].substring(0, strlen-2))
-					&& posMap.get(str[i].substring(0, strlen-2)).equals("verb") ){
+					&& (
+							posMap.containsKey(str[i].substring(0, strlen-2)) 
+							&& posMap.get(str[i].substring(0, strlen-2)).equals("verb")
+							|| 	
+							posMap.containsKey(str[i].substring(0, strlen-1))
+							&& posMap.get(str[i].substring(0, strlen-1)).equals("verb")
+						)){
 				//if next word is "by"
 				
 				Pair pair = new Pair(str[i], "parti");
@@ -324,6 +329,10 @@ public class ThmP1 {
 							tempStruct.add_child(childStruct, "of"); 
 							//set to null instead of removing, to keep indices right
 							mathEntList.set(Integer.valueOf(nextPair.pos()), null);
+						}//if the previous token is not an ent
+						else{
+							//set anchor to its normal part of speech word, like "of" to pre				
+							pairs.get(index).set_pos(posMap.get(anchor));
 						}
 					}
 	
@@ -528,29 +537,44 @@ public class ThmP1 {
 					//name: or. combined ex: or_adj (returns ent), or_ent (ent)
 					String combined = type1 + "_" + type2;
 					
-					//handle "is called" -- "verb_parti"
+					//handle "is called" -- "verb_parti", also "is defined"
+					//for definitions
 					if(combined.matches("verb_parti") 
-							&& struct1.prev1().toString().matches("is")
-							&& struct2.prev1().toString().matches("called")){
+							&& struct1.prev1().toString().matches("is|are|be")
+							&& struct2.prev1().toString().matches("called|defined|said|denoted")){
 						String called = "";
 						int l = j + 1;
+						//whether definition has started, ie "is called subgroup of G"
+						boolean defStarted = false;
 						while(l < len){
-							Struct nextStruct = inputList.get(l);
-							if(nextStruct instanceof StructA){
-								called += nextStruct.prev1();
-							}else{
-								called += nextStruct.struct().get("name");
-							}
 							
-							if(l != len - 1)
-								called += " ";
+							Struct nextStruct = inputList.get(l);
+							if(!nextStruct.type().matches("pre|prep|be|verb")){
+							defStarted = true;
+							
+							if(nextStruct instanceof StructA){
+									called += nextStruct.prev1();
+								}else{
+									called += nextStruct.struct().get("name");
+								}
+								
+								if(l != len - 1) called += " ";								
+								
+							}//reached end of newly defined word, now more usual sentence
+							//ie move from "subgroup" to "of G"
+							else if(defStarted){
+								//remove last added space
+								called = called.trim();
+								break;
+							}
 							l++;
 						}
 						
-						//////////////////////////******* use first ent??
+						/////////////////******* be careful to use first ent
+						
 						if(firstEnt != null){
 							StructA<Struct, String> parentStruct = 
-									new StructA<Struct, String>(recentEnt, called, "def");
+									new StructA<Struct, String>(firstEnt, called, "def");
 							
 							mx.get(0).set(len - 1, parentStruct);
 							
@@ -573,7 +597,7 @@ public class ThmP1 {
 							//recentEnt is defined to be called
 							namesMap.put(called, recentEnt);
 							break outerloop;
-						}
+						} 
 					}
 					
 					//search for tokens larger than immediate ones
@@ -626,9 +650,16 @@ public class ThmP1 {
 							//assert ensures rule correctness
 							assert struct1 instanceof StructH;
 							
-							//get a deep copy of this StructH, since added children may not 
-							//get used eventually
+							//get a (semi)deep copy of this StructH, since later-added children may not 
+							//get used eventually, ie hard to remove children added during mx building 
+							//that are not picked up by the eventual parse 
 							Struct newStruct = struct1.copy();
+							
+							//update firstEnt so to have the right children
+							if(firstEnt == struct1){
+								firstEnt = newStruct;
+							}
+							
 							//add to child relation, usually a preposition, eg "from", "over"
 							//could also be verb, "consist", "lies"
 							String childRelation = mx.get(k+1).get(k+1).prev1().toString();
@@ -636,13 +667,13 @@ public class ThmP1 {
 								//why does this cast not trigger unchecked warning??
 								((StructH<?>)newStruct).add_child(struct2, childRelation);
 							}
-							////////////////////////
+							//
 							recentEnt = newStruct;
 							
 							mx.get(i).set(j, newStruct);
 							
 						}else{
-							//symbol only occurs in StructA /////remove downcast!
+							
 							//if symbol and a given name to some entity
 							//use "called" to relate entities
 							if(type1.equals("symb") ){
@@ -654,8 +685,7 @@ public class ThmP1 {
 								}
 							}
 							
-							//change struct2 if applicable
-							
+							//change struct2 if applicable							
 							if(type2.equals("symb") ){
 								String entKey = (String)struct2.prev1();
 								if(namesMap.containsKey(entKey)){

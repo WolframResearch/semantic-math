@@ -11,6 +11,10 @@ public class Maps {
 	//protected static HashMap<String, ArrayList<String>> entityMap;
 	//map of structures, for all, disj,  etc
 	protected static HashMap<String, String> structMap;
+	//structMap for the second run, grammars that shouldn't be 
+	//used in first run, like ent_verb: there exists
+	protected static HashMap<String, String> structMap2;
+
 	protected static HashMap<String, String> anchorMap;
 	//parts of speech map, e.g. "open", "adj"
 	protected static HashMap<String, String> posMap;
@@ -84,17 +88,21 @@ public class Maps {
 		posMap.put("their", "pro"); posMap.put("it", "pro"); posMap.put("we", "pro"); 
 		posMap.put("they", "pro"); 
 		//relative pronouns
-		posMap.put("whose", "rpro"); posMap.put("which", "rpro"); posMap.put("that", "rpro");
-		posMap.put("whom", "rpro"); 
+		posMap.put("whose", "rpro"); posMap.put("which", "rpro"); posMap.put("that", "rpro_COMP");
+		posMap.put("whom", "rpro"); posMap.put("that is", "pre");
 		
 		//verbs, verbs map does not support -ing form, ie divide->dividing
 		//3rd person singular form that ends in "es" are checked with 
 		//the "es" stripped
-		posMap.put("divide", "verb"); posMap.put("extend", "verb");	
+		posMap.put("divide", "verb"); posMap.put("extend", "verb");	posMap.put("exist", "verb");
 		posMap.put("consist", "verb"); posMap.put("call", "verb");
 		posMap.put("are", "verb"); ////////////***
 		posMap.put("have", "verb"); posMap.put("obtain", "verb");
-		posMap.put("replace", "verb"); posMap.put("act", "verb");
+		posMap.put("replace", "verb"); posMap.put("act", "verb"); 
+		posMap.put("denote", "verb"); posMap.put("define", "verb");
+		
+		//special participles
+		posMap.put("given", "parti");
 		
 		//build in quantifiers into structures, forall (indicated
 		//by for all, has)
@@ -184,7 +192,7 @@ public class Maps {
 		
 		//verb_ent, not including past tense verbs, only present tense
 		structMap.put("verb_ent", "verbphrase"); structMap.put("verb_adj", "verbphrase");	
-		structMap.put("verb_and", "verbphrase"); structMap.put("verb_nounphrase", "verbphrase");
+		structMap.put("verb_num", "verbphrase"); structMap.put("verb_nounphrase", "verbphrase");
 		structMap.put("verb_pre", "verb"); structMap.put("verb_phrase", "verbphrase");
 		structMap.put("verb_partient", "verbphrase");
 		structMap.put("verb_symb", "verbphrase"); structMap.put("symb_verbphrase", "assert");
@@ -204,6 +212,10 @@ public class Maps {
 		structMap.put("noun_phrase", "nounphrase"); structMap.put("ent_phrase", "newchild");
 		
 		structMap.put("adverb_adj", "adj"); ///****************
+		
+		
+		//grammar rules for 2nd run
+		structMap2.put("ent_verb", "assert");
 		
 		//for adding combinations to structMap
 		ArrayList<String> structs = new ArrayList<String>();

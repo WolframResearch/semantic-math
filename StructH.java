@@ -34,7 +34,7 @@ public class StructH<H> extends Struct{
 		this.struct = struct;
 	}
 	
-	//make semi-deep copy, same struct, but children are deep copy
+	//make semi-deep copy, points to same struct, but children are deep copy
 	@Override
 	public StructH<H> copy(){
 		StructH<H> newStructH = new StructH<H>(this.struct, this.type);

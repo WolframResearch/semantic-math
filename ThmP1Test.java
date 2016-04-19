@@ -36,8 +36,14 @@ public class ThmP1Test {
 			//st = "the number of conjugacy class of the symmetric group is equal to the number of partitions of n";
 			//st = "let G be a group, then G is a group";
 			st = "let G be a group and let p be a prime, a group of order that is a power of p is called a p group";
-			st = "a group of order that is a power of p is called a p group. A subgroup of G that is p group is called a p subgroup.";
-			//String[] strAr = p1.preprocess("F is a extension over Q".split(" "));
+			st = "a group with order that is a power of p is called a p group. a subgroup of G that is a p group is called a p subgroup. p subgroup.";
+			st = "a group with order that is a power of p is defined to be a p subgroup of G";
+			st = "the p subgroups of G are denoted by Syl";
+			st = "a subgroup of order a power of p is called a p subgroup, the number of p subgroup of G is 2"; //or "of the form p^k"
+			st = "the number of p subgroup of G is 2";
+			st = "subgroups of G exist";
+			
+			//String[] strAr = p1.preprocess("F is a extension over Q".split(" "));			
 			
 			strAr = st.split("\\,|\\.");
 			for(int i = 0; i < strAr.length; i++){
