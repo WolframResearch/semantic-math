@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.ListIterator;
 
 /* 
@@ -25,7 +26,10 @@ public class ThmP1 {
 	//map for composite adjectives, eg positive semidefinite
 	//value is regex string to be matched
 	private static HashMap<String, String> adjMap;
+	private static HashMap<String, Double> probMap;
 	
+	//list of parts of speech, ent, verb etc
+	private static ArrayList<String> posList;
 	
 	//part of speech, last resort after looking up entity property maps
 	//private static HashMap<String, String> pos;
@@ -40,7 +44,8 @@ public class ThmP1 {
 		fluffMap = Maps.fluffMap;
 		mathObjMap = Maps.mathObjMap;
 		adjMap = Maps.adjMap;
-		
+		probMap = Maps.probMap;
+		posList = Maps.posList;
 		//list of given names, like F in "field F", for bookkeeping later
 		//hashmap contains <name, entity> pairs
 		//need to incorporate multi-letter names, like sigma
@@ -432,18 +437,47 @@ public class ThmP1 {
 		return structList;
 	}
 	
-	//or, of are names, their types are struct
-	//use arraylist of hashmaps. each hashmap has name (field, or), 
-	//type (entity, struct, ppt), 
-	//called (F), 
-	//child,  ppt (char p, alg closed, in G), 
-	
 	/* Takes in LinkedHashMap of entities/ppt, and connectives
-	 * parse using structMap, get big structures such as "is", "has"
+	 * parse using structMap, and obtain sentence structures
 	 * Chart parser.
 	 */
 	public static void parse(ArrayList<Struct> inputList ){
 		int len = inputList.size();
+		 
+		//If phrase isn't in dictionary, ie has type "", then use probMap to 
+		//postulate type, if possible
+		Struct curStruct;
+		double bestCurProb = 0;
+		String prevType = "", nextType = "", tempCurType = "", bestCurType = "";
+
+		int posListSz = posList.size();		
+		
+		for(int index = 0; index < len; index++){
+			 curStruct = inputList.get(index);
+			 if(curStruct.type().equals("")){
+				 
+				 prevType = inputList.get(index - 1).type();
+				 nextType = inputList.get(index + 1).type();				
+				 
+				 //iterate through list of types, ent, verb etc				 
+				 for(int k = 0; k < posListSz; k++){
+					 tempCurType = posList.get(k);
+					 
+					 prevType = index > 0 ?
+							 prevType + "_" + tempCurType : "FIRST";
+					 nextType = index < len - 1 ?
+							 tempCurType + "_" + nextType : "LAST";
+					 
+					 if(probMap.get(prevType) != null && probMap.get(nextType) != null){
+						 if(probMap.get(prevType) * probMap.get(prevType) > bestCurProb){
+							bestCurProb = probMap.get(prevType) * probMap.get(prevType);
+							bestCurType = tempCurType;
+						 }
+					 }
+				 }
+				 curStruct.set_type(bestCurType);
+			 }
+		 }
 		
 		//first Struct
 		Struct firstEnt = null;
@@ -460,6 +494,7 @@ public class ThmP1 {
 					mx.get(l).add(null);
 				}
 		}
+		
 		outerloop:
 		for(int j = 0; j < len; j++){
 			
@@ -560,7 +595,8 @@ public class ThmP1 {
 								
 								if(l != len - 1) called += " ";								
 								
-							}//reached end of newly defined word, now more usual sentence
+							}
+							//reached end of newly defined word, now more usual sentence
 							//ie move from "subgroup" to "of G"
 							else if(defStarted){
 								//remove last added space
@@ -570,7 +606,7 @@ public class ThmP1 {
 							l++;
 						}
 						
-						/////////////////******* be careful to use first ent
+						////////////////******* be careful to use first ent
 						
 						if(firstEnt != null){
 							StructA<Struct, String> parentStruct = 
@@ -667,7 +703,7 @@ public class ThmP1 {
 								//why does this cast not trigger unchecked warning??
 								((StructH<?>)newStruct).add_child(struct2, childRelation);
 							}
-							//
+							
 							recentEnt = newStruct;
 							
 							mx.get(i).set(j, newStruct);
@@ -728,7 +764,7 @@ public class ThmP1 {
 			}			
 		}
 		
-		//string together the most parsed pieces
+		//string together the parsed pieces
 		LinkedList<Struct> parsedStructList = new LinkedList<Struct>();
 		int i = 0, j = len - 1;
 		while(j > -1){
@@ -750,6 +786,11 @@ public class ThmP1 {
 			}
 		}
 		
+		//if not full parse, try to make into full parse by fishing out the 
+		//essential sentence structure, and discarding the phrases still not
+		//labeled after 2nd round
+		parse2(parsedStructList);
+		
 		//print out the system
 		for(int k = 0; k < parsedStructList.size(); k++){
 			dfs(parsedStructList.get(k));
@@ -758,6 +799,17 @@ public class ThmP1 {
 		}
 		System.out.println();
 		
+	}
+	
+	/**
+	 * if not full parse, try to make into full parse by fishing out the 
+		essential sentence structure, and discarding the phrases still not
+		labeled after 2nd round 
+
+	 * @param parsedStructList is list output by first round of parsing
+	 */
+	public static void parse2(List<Struct> inputList){
+
 	}
 	
 	public static void dfs(Struct struct){
@@ -769,7 +821,6 @@ public class ThmP1 {
 			System.out.print("[");
 			//don't know type at compile time			
 			if(struct.prev1() instanceof Struct){
-				//((StructA<Struct, ?>)struct).prev1().type();
 				//if(!((StructA<Struct, ?>)struct).prev1().type().equals(struct.type())){
 				
 				dfs((Struct)struct.prev1());				

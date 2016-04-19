@@ -15,6 +15,10 @@ public class Maps {
 	//used in first run, like ent_verb: there exists
 	protected static HashMap<String, String> structMap2;
 
+	//probability hashmap for pairs of phrase constructs
+	//vs noun_verb high prob, verb_verb low prob
+	protected static HashMap<String, Double> probMap;
+	
 	protected static HashMap<String, String> anchorMap;
 	//parts of speech map, e.g. "open", "adj"
 	protected static HashMap<String, String> posMap;
@@ -26,6 +30,9 @@ public class Maps {
 	//value is regex string to be matched
 	protected static HashMap<String, String> adjMap;
 	
+	//list of parts of speech, ent, verb etc
+	protected static ArrayList<String> posList;
+
 	/* build hashmap
 	 * 
 	 */
@@ -58,6 +65,9 @@ public class Maps {
 		posMap.put("positive", "adj"); posMap.put("negative", "adj"); posMap.put("abelian", "adj");
 		posMap.put("normal", "adj"); posMap.put("cyclic", "adj"); posMap.put("dimensional", "adj");
 		posMap.put("odd", "adj"); posMap.put("even", "adj");
+		
+		//adverbs. Adverbs of the form "adj-ly" are detected by code
+		posMap.put("there", "adverb");
 		
 		//nouns that are not mathObj
 		posMap.put("property", "noun"); posMap.put("power", "noun"); 
@@ -160,7 +170,6 @@ public class Maps {
 		structMap.put("is_ent", "is"); structMap.put("is_or", "is");
 		structMap.put("ent_is", "assert");
 		structMap.put("symb_is", "assert"); structMap.put("if_assert", "ifstate");	
-		structMap.put("iff_assert", "ifstate");
 		structMap.put("then_assert", "thenstate");
 		
 		//expression, e.g. a map from A to B
@@ -211,13 +220,24 @@ public class Maps {
 		//eg "property that a is b"
 		structMap.put("noun_phrase", "nounphrase"); structMap.put("ent_phrase", "newchild");
 		
-		structMap.put("adverb_adj", "adj"); ///****************
+		structMap.put("adverb_adj", "adj"); ///*******
 		
 		
 		//grammar rules for 2nd run
-		structMap2.put("ent_verb", "assert");
+		structMap2 = new HashMap<String, String>();
+		structMap2.put("ent_verb", "assert"); structMap2.put("ent_verb", "assert");
+		
+		//probability map for pair constructs. 
+		//need to gather/compute prob from labeled data
+		//used in round 1 parsing
+		probMap = new HashMap<String, Double>();
+		probMap.put("FIRST", 1.); probMap.put("LAST", 1.);
+		probMap.put("ent_verb", .8); probMap.put("ent_pre", .8);
+		probMap.put("pre_ent", .8); probMap.put("verb_ent", .6);
+		probMap.put("adj_ent", .9);
 		
 		//for adding combinations to structMap
+		/*
 		ArrayList<String> structs = new ArrayList<String>();
 		structs.add("has");
 		
@@ -225,7 +245,10 @@ public class Maps {
 		for(int i = 0; i < structs.size(); i++){
 			//entityhas, vs forall
 			
-		}
+		}  */
+		
+		posList = new ArrayList<String>();
+		posList.add("ent"); /////////////////
 		
 	}
 	

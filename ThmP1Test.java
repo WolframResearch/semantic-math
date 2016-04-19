@@ -42,6 +42,7 @@ public class ThmP1Test {
 			st = "a subgroup of order a power of p is called a p subgroup, the number of p subgroup of G is 2"; //or "of the form p^k"
 			st = "the number of p subgroup of G is 2";
 			st = "subgroups of G exist";
+			st = "there exists a finite semiring with order 11";
 			
 			//String[] strAr = p1.preprocess("F is a extension over Q".split(" "));			
 			
