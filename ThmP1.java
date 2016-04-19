@@ -227,6 +227,46 @@ public class ThmP1 {
 			addIndex = true;
 		}
 		
+		//If phrase isn't in dictionary, ie has type "", then use probMap to 
+		//postulate type, if possible
+		Pair curpair;
+		int len = pairs.size();
+		
+		double bestCurProb = 0;
+		String prevType = "", nextType = "", tempCurType = "", bestCurType = "";
+
+		int posListSz = posList.size();		
+		
+		for(int index = 0; index < len; index++){
+			 curpair = pairs.get(index);
+			 if(curpair.pos().equals("")){
+				 
+				 prevType = pairs.get(index - 1).pos();
+				 nextType = pairs.get(index + 1).pos();				
+				 
+				 //iterate through list of types, ent, verb etc				 
+				 for(int k = 0; k < posListSz; k++){
+					 tempCurType = posList.get(k);
+					 
+					 prevType = index > 0 ?
+							 prevType + "_" + tempCurType : "FIRST";
+					 nextType = index < len - 1 ?
+							 tempCurType + "_" + nextType : "LAST";
+					 
+					 if(probMap.get(prevType) != null && probMap.get(nextType) != null){
+						 if(probMap.get(prevType) * probMap.get(prevType) > bestCurProb){
+							bestCurProb = probMap.get(prevType) * probMap.get(prevType);
+							bestCurType = tempCurType;
+						 }
+					 }
+				 }
+				 pairs.get(index).set_pos(bestCurType);
+				 
+				 if(bestCurType.equals("ent"))
+					 mathIndexList.add(index);
+			 }
+		 }
+		
 		//map of math entities, has mathObj + ppt's
 		ArrayList<StructH<HashMap<String, String>>> mathEntList = 
 				new ArrayList<StructH<HashMap<String, String>>>();
@@ -444,40 +484,6 @@ public class ThmP1 {
 	public static void parse(ArrayList<Struct> inputList ){
 		int len = inputList.size();
 		 
-		//If phrase isn't in dictionary, ie has type "", then use probMap to 
-		//postulate type, if possible
-		Struct curStruct;
-		double bestCurProb = 0;
-		String prevType = "", nextType = "", tempCurType = "", bestCurType = "";
-
-		int posListSz = posList.size();		
-		
-		for(int index = 0; index < len; index++){
-			 curStruct = inputList.get(index);
-			 if(curStruct.type().equals("")){
-				 
-				 prevType = inputList.get(index - 1).type();
-				 nextType = inputList.get(index + 1).type();				
-				 
-				 //iterate through list of types, ent, verb etc				 
-				 for(int k = 0; k < posListSz; k++){
-					 tempCurType = posList.get(k);
-					 
-					 prevType = index > 0 ?
-							 prevType + "_" + tempCurType : "FIRST";
-					 nextType = index < len - 1 ?
-							 tempCurType + "_" + nextType : "LAST";
-					 
-					 if(probMap.get(prevType) != null && probMap.get(nextType) != null){
-						 if(probMap.get(prevType) * probMap.get(prevType) > bestCurProb){
-							bestCurProb = probMap.get(prevType) * probMap.get(prevType);
-							bestCurType = tempCurType;
-						 }
-					 }
-				 }
-				 curStruct.set_type(bestCurType);
-			 }
-		 }
 		
 		//first Struct
 		Struct firstEnt = null;
