@@ -1,3 +1,5 @@
+package thmp;
+
 /*
  * Test class for ThmP1
  */
@@ -42,6 +44,9 @@ public class ThmP1Test {
 			st = "a subgroup of order a power of p is called a p subgroup, the number of p subgroup of G is 2"; //or "of the form p^k"
 			st = "the number of p subgroup of G is 2";
 			st = "subgroups of G exist";
+			st = "Z for prime p are the only abelian simple groups";
+			st = "Z for prime p are the only abelian simple groups";
+			//st = "a nontrivial group is simple if it contains no nontrivial normal subgroups";
 			
 			//String[] strAr = p1.preprocess("F is a extension over Q".split(" "));			
 			

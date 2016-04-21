@@ -1,3 +1,4 @@
+package thmp;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -57,13 +58,19 @@ public class Maps {
 		posMap.put("measurable", "adj"); posMap.put("nondecreasing", "adj");
 		posMap.put("positive", "adj"); posMap.put("negative", "adj"); posMap.put("abelian", "adj");
 		posMap.put("normal", "adj"); posMap.put("cyclic", "adj"); posMap.put("dimensional", "adj");
-		posMap.put("odd", "adj"); posMap.put("even", "adj");
+		posMap.put("odd", "adj"); posMap.put("even", "adj"); posMap.put("simple", "adj"); 
+		posMap.put("nontrivial", "adj"); posMap.put("only", "adj");
 		
-		//nouns that are not mathObj
-		posMap.put("property", "noun"); posMap.put("power", "noun"); 
+		//adverbs qualify verbs, adj, noun phrases, determiners, clauses etc
+		posMap.put("does", "verb_COMP"); posMap.put("do", "verb_COMP"); posMap.put("does not", "not");
+		posMap.put("do not", "not"); posMap.put("not", "adverb");
 		
-		//determiners
-		posMap.put("each", "det"); posMap.put("each", "det"); 
+		//nouns that are not mathObj, only put not-so-relevant terms here
+		posMap.put("property", "noun");  
+		
+		//determiners qualify nouns or noun phrases
+		posMap.put("each", "det"); posMap.put("this", "det"); posMap.put("both", "det"); 
+		posMap.put("no", "det");
 		
 		//parts of speech
 		posMap.put("for every", "hyp"); posMap.put("suppose", "hyp");		
@@ -95,14 +102,14 @@ public class Maps {
 		//3rd person singular form that ends in "es" are checked with 
 		//the "es" stripped
 		posMap.put("divide", "verb"); posMap.put("extend", "verb");	posMap.put("exist", "verb");
-		posMap.put("consist", "verb"); posMap.put("call", "verb");
+		posMap.put("consist", "verb"); posMap.put("call", "verb"); posMap.put("contain", "verb");
 		posMap.put("are", "verb"); ////////////***
-		posMap.put("have", "verb"); posMap.put("obtain", "verb");
+		posMap.put("have", "verb"); posMap.put("obtain", "verb"); 
 		posMap.put("replace", "verb"); posMap.put("act", "verb"); 
 		posMap.put("denote", "verb"); posMap.put("define", "verb");
 		
 		//special participles
-		posMap.put("given", "parti");
+		posMap.put("given", "parti"); posMap.put("been", "parti"); 
 		
 		//build in quantifiers into structures, forall (indicated
 		//by for all, has)
@@ -134,7 +141,7 @@ public class Maps {
 		mathObjMap.put("conjugacy class", "mathObj"); mathObjMap.put("subgroup", "mathObj");
 		mathObjMap.put("automorphism", "mathObj"); mathObjMap.put("order", "mathObj");
 		mathObjMap.put("conjugation", "mathObj"); mathObjMap.put("prime", "mathObj"); 
-		
+		mathObjMap.put("power", "mathObj"); 
 		
 		//put in template matching, prepositions, of, by, with
 		
@@ -172,6 +179,8 @@ public class Maps {
 		structMap.put("or_assert", "orass"); structMap.put("ent_orass", "or");
 		structMap.put("or_is", "assert"); structMap.put("assert_orass", "or");
 		structMap.put("ent_adj", "ent"); structMap.put("ent_ppt", "ent");
+		
+		
 		//e.g. between A and B.
 		//structMap.put("pre_conj", "prep"); structMap.put("pre_disj", "prep");
 		
@@ -215,6 +224,7 @@ public class Maps {
 		
 		
 		//grammar rules for 2nd run
+		structMap2 = new HashMap<String, String>();
 		structMap2.put("ent_verb", "assert");
 		
 		//for adding combinations to structMap
