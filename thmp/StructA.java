@@ -74,7 +74,6 @@ public class StructA<A, B> extends Struct{
 	
 	@Override
 	public Integer test(ArrayList<Number> b){
-		Object obj = new Object();
 		Integer i = 3;
 		return i;
 	}

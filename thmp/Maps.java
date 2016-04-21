@@ -55,7 +55,7 @@ public class Maps {
 		//most should already be filtered in entity/property
 		//pos should preserve connective words, or stays or
 		posMap = new HashMap<String, String>();
-		posMap.put("disjoint", "adj"); posMap.put("perfect", "adj");
+		posMap.put("disjoint", "adj"); posMap.put("perfect", "adj"); posMap.put("equivalent", "adj");
 		posMap.put("finite", "adj"); posMap.put("linear", "adj"); posMap.put("invertible", "adj");
 		posMap.put("independent", "adj"); posMap.put("many", "adj");
 		//posMap.put("every", "every");		
@@ -66,7 +66,7 @@ public class Maps {
 		posMap.put("positive", "adj"); posMap.put("negative", "adj"); posMap.put("abelian", "adj");
 		posMap.put("normal", "adj"); posMap.put("cyclic", "adj"); posMap.put("dimensional", "adj");
 		posMap.put("odd", "adj"); posMap.put("even", "adj"); posMap.put("any", "adj");
-		posMap.put("simple", "adj"); 
+		posMap.put("simple", "adj"); posMap.put("unique", "adj"); 
 		posMap.put("nontrivial", "adj"); posMap.put("only", "adj");
 		
 		//adverbs. Adverbs of the form "adj-ly" are detected by code
@@ -77,7 +77,7 @@ public class Maps {
 		posMap.put("do not", "not"); posMap.put("not", "adverb");
 		
 		//nouns that are not mathObj, only put not-so-relevant terms here
-		posMap.put("property", "noun");  
+		posMap.put("property", "noun"); posMap.put("form", "noun_COMP");  
 		
 		//determiners qualify nouns or noun phrases
 		posMap.put("each", "det"); posMap.put("this", "det"); posMap.put("both", "det"); 
@@ -99,8 +99,8 @@ public class Maps {
 		posMap.put("on", "pre"); posMap.put("let", "let"); posMap.put("be", "be");
 		posMap.put("of", "pre"); //of is primarily used as anchor
 		posMap.put("over", "pre"); posMap.put("with", "pre");
-		posMap.put("by", "pre"); posMap.put("as", "pre"); posMap.put("such", "pre"); 
-		posMap.put("such that", "rpro"); posMap.put("so", "pre"); 
+		posMap.put("by", "pre"); posMap.put("as", "pre"); posMap.put("such", "pre_COMP"); 
+		posMap.put("such that", "hyp"); posMap.put("so", "pre"); 
 		
 		//pronouns
 		posMap.put("their", "pro"); posMap.put("it", "pro"); posMap.put("we", "pro"); 
@@ -115,8 +115,8 @@ public class Maps {
 		posMap.put("divide", "verb"); posMap.put("extend", "verb");	posMap.put("exist", "verb");
 		posMap.put("consist", "verb"); posMap.put("call", "verb"); posMap.put("contain", "verb");
 		posMap.put("are", "verb"); ////////////***
-		posMap.put("have", "verb"); posMap.put("obtain", "verb"); 
-		posMap.put("replace", "verb"); posMap.put("act", "verb"); 
+		posMap.put("have", "verb"); posMap.put("obtain", "verb"); posMap.put("generate", "verb");
+		posMap.put("replace", "verb"); posMap.put("act", "verb"); posMap.put("follow", "verb"); 
 		posMap.put("denote", "verb"); posMap.put("define", "verb");
 		
 		//special participles
@@ -132,7 +132,7 @@ public class Maps {
 		mathObjMap.put("characteristic", "mathObj"); mathObjMap.put("set", "mathObj");
 		mathObjMap.put("Fp", "mathObj"); mathObjMap.put("transformation", "mathObj");
 		mathObjMap.put("ring", "mathObj"); mathObjMap.put("matrix", "mathObj"); 
-		mathObjMap.put("function", "mathObj");
+		mathObjMap.put("function", "mathObj"); mathObjMap.put("bilinear form", "mathObj");
 		mathObjMap.put("basis", "mathObj"); mathObjMap.put("sum", "mathObj");
 		mathObjMap.put("number", "mathObj"); mathObjMap.put("partition", "mathObj");
 		//composite math objects
@@ -191,7 +191,7 @@ public class Maps {
 		structMap.put("or_assert", "orass"); structMap.put("ent_orass", "or");
 		structMap.put("or_is", "assert"); structMap.put("assert_orass", "or");
 		structMap.put("ent_adj", "ent"); structMap.put("ent_ppt", "ent");
-		
+		structMap.put("ent_ent", "ent");
 		
 		//e.g. between A and B.
 		//structMap.put("pre_conj", "prep"); structMap.put("pre_disj", "prep");
@@ -203,16 +203,21 @@ public class Maps {
 		structMap.put("pre_ent", "prep"); structMap.put("ent_prep", "newchild");
 		structMap.put("pre_symb", "prep"); structMap.put("parti_prep", "phrase");
 		structMap.put("pre_phrase", "prep"); structMap.put("pre_nounphrase", "prep");
-		structMap.put("noun_prep", "nounphrase");
+		structMap.put("noun_prep", "nounphrase"); structMap.put("noun_verbphrase", "assert");
+		structMap.put("pre_noun", "prep"); structMap.put("gerund_verbphrase", "assert");
 		//participle: called, need to take care of "said" etc
 		structMap.put("parti_ent", "partient"); structMap.put("ent_partient", "newchild");
-		structMap.put("parti_adj", "phrase"); 
+		//phrases: been there, x in X, 
+		structMap.put("parti_adj", "phrase"); structMap.put("symb_prep", "phrase");
 		
+		structMap.put("pre_noun", "np"); //nounphrase
+
 		//structMap.put("from   ", "wildcard"); structMap.put("to", "wildcard"); structMap.put("fromto", "newchild");
 		////////////combine preposition with whatever comes
 		
 		//verb_ent, not including past tense verbs, only present tense
-		structMap.put("verb_ent", "verbphrase"); structMap.put("verb_adj", "verbphrase");	
+		structMap.put("verb_ent", "verbphrase"); structMap.put("verb_adj", "verbphrase");
+		structMap.put("verb_np", "verbphrase");
 		structMap.put("verb_num", "verbphrase"); structMap.put("verb_nounphrase", "verbphrase");
 		structMap.put("verb_pre", "verb"); structMap.put("verb_phrase", "verbphrase");
 		structMap.put("verb_partient", "verbphrase");
@@ -225,6 +230,7 @@ public class Maps {
 		structMap.put("let_symb", "let"); structMap.put("be_ent", "be"); structMap.put("let_be", "letbe");
 		structMap.put("if_assert", "If"); structMap.put("assert_If", "assert"); 
 		structMap.put("hyp_assert", "hypo"); structMap.put("hyp_ent", "hypo");
+		structMap.put("hyp_phrase", "hypo");
 		structMap.put("hyp_symb", "hypo"); structMap.put("rpro_ent", "rproent");
 		structMap.put("ent_rproent", "newchild"); structMap.put("rpro_verbphrase", "phrase");
 		structMap.put("rpro_assert", "phrase"); 
@@ -242,7 +248,7 @@ public class Maps {
 		//need to gather/compute prob from labeled data
 		//used in round 1 parsing
 		probMap = new HashMap<String, Double>();
-		probMap.put("FIRST", 1.); probMap.put("LAST", 1.);
+		probMap.put("FIRST", 1.); probMap.put("LAST", 1.); probMap.put("ent_anchor", .85);
 		probMap.put("ent_verb", .8); probMap.put("ent_pre", .8);
 		probMap.put("pre_ent", .8); probMap.put("verb_ent", .6);
 		probMap.put("adj_ent", .9);

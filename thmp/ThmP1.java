@@ -36,7 +36,6 @@ public class ThmP1 {
 	//part of speech, last resort after looking up entity property maps
 	//private static HashMap<String, String> pos;
 	
-
 	public static void buildMap(){
 		Maps.buildMap();
 		
@@ -86,12 +85,15 @@ public class ThmP1 {
 			}
 			
 			if(Maps.mathObjMap.containsKey(curWord) || 
-					mathObjMap.containsKey(singular)){				
+					mathObjMap.containsKey(singular)){	
+				
+				String tempWord = mathObjMap.containsKey(singular) ? 
+						singular : curWord;
 				int k = 1;
 				
 				//if composite math noun, eg "finite field"
-				while(i-k > -1 && mathObjMap.containsKey(str[i-k] +" "+ curWord) &&
-						mathObjMap.get(str[i-k] +" "+ curWord).equals("mathObj")){
+				while(i-k > -1 && mathObjMap.containsKey(str[i-k] +" "+ tempWord) &&
+						mathObjMap.get(str[i-k] +" "+ tempWord).equals("mathObj")){
 					
 					//remove previous pair from pairs if it has new match
 					//pairs.size should be > 0, ie previous word should be classified already
@@ -107,6 +109,7 @@ public class ThmP1 {
 						addIndex = false;
 					}
 					
+					tempWord = str[i-k] + " " + tempWord;
 					curWord = str[i-k] + " " + curWord;
 					k++;
 				}
@@ -322,6 +325,13 @@ public class ThmP1 {
 				String givenName = pairs.get(index+2).word();
 				tempMap.put("called", givenName);
 				namesMap.put(givenName, tempStructH);
+			}
+			//look left one place
+			if(index > 0 && pairs.get(index-1).pos().equals("symb")){
+				pairs.get(index-1).set_pos(String.valueOf(j));
+				String givenName = pairs.get(index-1).word();
+				tempMap.put("called", givenName);
+				namesMap.put(givenName, tempStructH);				
 			}			
 			
 			//look to left and right
