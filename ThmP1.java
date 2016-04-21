@@ -142,10 +142,12 @@ public class ThmP1 {
 				Pair pair;
 				if(posMap.containsKey(temp)){
 					pos = posMap.get(temp);
+					pos = pos.split("_")[0];
 					pair = new Pair(temp, pos);
 
 				}else{
 					pos = posMap.get(curWord);
+					pos = pos.split("_")[0];
 					pair = new Pair(curWord, pos);
 				}
 				
@@ -241,8 +243,10 @@ public class ThmP1 {
 			 curpair = pairs.get(index);
 			 if(curpair.pos().equals("")){
 				 
-				 prevType = pairs.get(index - 1).pos();
-				 nextType = pairs.get(index + 1).pos();				
+				 prevType = index > 0 ?
+						 pairs.get(index - 1).pos() : "";
+				 nextType = index < len - 1 ?
+						 pairs.get(index + 1).pos() : "";				
 				 
 				 //iterate through list of types, ent, verb etc				 
 				 for(int k = 0; k < posListSz; k++){
@@ -811,11 +815,11 @@ public class ThmP1 {
 	 * if not full parse, try to make into full parse by fishing out the 
 		essential sentence structure, and discarding the phrases still not
 		labeled after 2nd round 
-
+	 *
 	 * @param parsedStructList is list output by first round of parsing
 	 */
 	public static void parse2(List<Struct> inputList){
-
+		
 	}
 	
 	public static void dfs(Struct struct){

@@ -64,7 +64,7 @@ public class Maps {
 		posMap.put("measurable", "adj"); posMap.put("nondecreasing", "adj");
 		posMap.put("positive", "adj"); posMap.put("negative", "adj"); posMap.put("abelian", "adj");
 		posMap.put("normal", "adj"); posMap.put("cyclic", "adj"); posMap.put("dimensional", "adj");
-		posMap.put("odd", "adj"); posMap.put("even", "adj");
+		posMap.put("odd", "adj"); posMap.put("even", "adj"); posMap.put("any", "adj");
 		
 		//adverbs. Adverbs of the form "adj-ly" are detected by code
 		posMap.put("there", "adverb");
@@ -135,6 +135,8 @@ public class Maps {
 		mathObjMap.put("zero", "mathObj"); mathObjMap.put("extension", "COMP"); ///////////****
 		mathObjMap.put("field extension", "mathObj"); mathObjMap.put("element", "mathObj");
 		mathObjMap.put("group", "COMP"); mathObjMap.put("symmetric group", "mathObj");
+		mathObjMap.put("p group", "mathObj"); mathObjMap.put("p subgroup", "mathObj");
+		mathObjMap.put("subgroup", "COMP");
 		mathObjMap.put("automorphism group", "mathObj"); mathObjMap.put("abelian group", "mathObj");
 		mathObjMap.put("type", "COMP"); mathObjMap.put("cycle type", "mathObj");
 		mathObjMap.put("cycle", "mathObj"); mathObjMap.put("decomposition", "COMP");
@@ -220,8 +222,7 @@ public class Maps {
 		//eg "property that a is b"
 		structMap.put("noun_phrase", "nounphrase"); structMap.put("ent_phrase", "newchild");
 		
-		structMap.put("adverb_adj", "adj"); ///*******
-		
+		structMap.put("adverb_adj", "adj"); ///*******		
 		
 		//grammar rules for 2nd run
 		structMap2 = new HashMap<String, String>();

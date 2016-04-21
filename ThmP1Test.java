@@ -5,6 +5,7 @@ public class ThmP1Test {
 
 	//the char of F_p is p
 		public static void main(String[] args){
+			
 			ThmP1.buildMap();
 			
 			//ThmP1 p1 = new ThmP1();
@@ -43,6 +44,8 @@ public class ThmP1Test {
 			st = "the number of p subgroup of G is 2";
 			st = "subgroups of G exist";
 			st = "there exists a finite semiring with order 11";
+			st = "n is the index in G of the normalizer for any p subgroup";
+			st = "let G be a group of order p, where p is a prime not dividing m";
 			
 			//String[] strAr = p1.preprocess("F is a extension over Q".split(" "));			
 			
