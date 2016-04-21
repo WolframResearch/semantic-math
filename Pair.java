@@ -1,3 +1,6 @@
+
+package thmp;
+
 /*
  * Pair of strings
  */
@@ -16,7 +19,6 @@ public class Pair {
 	public String word(){
 		return word;
 	}
-
 	
 	public String pos(){
 		return pos;
@@ -30,4 +32,9 @@ public class Pair {
 	public String toString(){
 		return "[" + this.word + ", " + this.pos + "]";
 	}
+	
+	public void set_word(String newWord){
+		this.word = newWord;
+	}
+
 }

@@ -1,3 +1,5 @@
+package thmp;
+
 /*
  * Test class for ThmP1
  */
@@ -46,6 +48,9 @@ public class ThmP1Test {
 			st = "there exists a finite semiring with order 11";
 			st = "n is the index in G of the normalizer for any p subgroup";
 			st = "let G be a group of order p, where p is a prime not dividing m";
+			st = "Z for prime p are the only abelian simple groups";
+			st = "Z for prime p are the only abelian simple groups";
+			//st = "a nontrivial group is simple if it contains no nontrivial normal subgroups";
 			
 			//String[] strAr = p1.preprocess("F is a extension over Q".split(" "));			
 			

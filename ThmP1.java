@@ -1,3 +1,5 @@
+package thmp;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -119,7 +121,7 @@ public class ThmP1 {
 				anchorList.add(pairIndex);
 				pairs.add(pair);
 			}
-			//if adjective
+			//check part of speech
 			else if(posMap.containsKey(curWord)){
 								
 				//composite words, such as "for all",
@@ -144,7 +146,6 @@ public class ThmP1 {
 					pos = posMap.get(temp);
 					pos = pos.split("_")[0];
 					pair = new Pair(temp, pos);
-
 				}else{
 					pos = posMap.get(curWord);
 					pos = pos.split("_")[0];
@@ -152,7 +153,9 @@ public class ThmP1 {
 				}
 				
 				int pairsSize = pairs.size();
-				//if adverb-adj pair, eg clearly good
+				
+				
+				//if adverb-adj pair, eg "clearly good"
 				if(pairs.size() > 0 && posMap.get(curWord).equals("adj") && 
 						pairs.get(pairsSize-1).pos().equals("adverb") ){
 					curWord = pairs.get(pairsSize-1).word() + " " + curWord;
@@ -227,6 +230,24 @@ public class ThmP1 {
 				pairIndex++;
 			}
 			addIndex = true;
+			
+			int pairsSize = pairs.size();
+			Pair pair = pairs.get(pairsSize - 1);
+			
+			//combine "no" and "not" with verbs
+			if(pair.pos().equals("verb")){
+				if(pairs.size() > -1 && (pairs.get(pairsSize-2).word().matches("not|no") 
+						|| pairs.get(pairsSize-2).pos().matches("not") ) ){
+					pair.set_word("not " + pair.word());
+					pairs.remove(pairsSize - 2);
+				}
+				
+				if(i + 1 < str.length && str[i+1].matches("not|no")){
+					pair.set_word("not " + pair.word());
+					i++;
+				}
+			}
+			
 		}
 		
 		//If phrase isn't in dictionary, ie has type "", then use probMap to 
@@ -393,7 +414,6 @@ public class ThmP1 {
 				//set anchor to its normal part of speech word, like "of" to pre				
 				pairs.get(index).set_pos(posMap.get(anchor));
 			}
-			
 
 		} 		
 		

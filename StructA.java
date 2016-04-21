@@ -1,3 +1,4 @@
+package thmp;
 import java.util.ArrayList;
 
 public class StructA<A, B> extends Struct{
