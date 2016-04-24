@@ -53,9 +53,10 @@ public class StructH<H> extends Struct{
 		childRelation.add("");
 	}
 
-	public void add_child(Struct prev, String relation){
+	@Override
+	public void add_child(Struct child, String relation){
 		hasChild = true;
-		children.add(prev);
+		children.add(child);
 		childRelation.add(relation);
 	}
 	
@@ -63,6 +64,7 @@ public class StructH<H> extends Struct{
 		return hasChild;		
 	}
 	
+	@Override
 	public ArrayList<Struct> children(){
 		return children;		
 	}

@@ -39,6 +39,15 @@ public class Struct {
 		return "";
 	}
 	
+	//to be overwritten in StructH
+	public ArrayList<Struct> children(){
+		return new ArrayList<Struct>();		
+	}
+	
+	//to be overwritten in StructH
+	public void add_child(Struct child, String relation){		
+	}
+	
 	//filler method to be overriden
 	public HashMap<String, String> struct(){
 		return new HashMap<String, String>();

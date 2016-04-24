@@ -340,7 +340,7 @@ public class ThmP1 {
 			//...get more than adj ... multi-word descriptions
 			//set the pos as the current index in mathEntList		
 			//adjectives or determiners
-			while(index-k > -1 && pairs.get(index - k).pos().matches("adj|det") ){
+			while(index-k > -1 && pairs.get(index - k).pos().matches("adj|det|num") ){
 				
 				String curWord = pairs.get(index - k).word();
 				//look for composite adj (two for now)
@@ -409,13 +409,15 @@ public class ThmP1 {
 							tempStruct.add_child(childStruct, "of"); 
 							//set to null instead of removing, to keep indices right
 							mathEntList.set(Integer.valueOf(nextPair.pos()), null);
-						}//if the previous token is not an ent
+						}	
+												
+						//if the previous token is not an ent
 						else{
 							//set anchor to its normal part of speech word, like "of" to pre				
 							pairs.get(index).set_pos(posMap.get(anchor));
 						}
 					}
-	
+					
 					break;
 				}
 				
@@ -535,9 +537,11 @@ public class ThmP1 {
 				}
 		}
 		
+		boolean skipCol = false;
 		outerloop:
 		for(int j = 0; j < len; j++){
 			
+			skipCol = false;
 			//fill in diagonal elements
 			mx.get(j).set(j, inputList.get(j));
 			
@@ -612,9 +616,22 @@ public class ThmP1 {
 					//name: or. combined ex: or_adj (returns ent), or_ent (ent)
 					String combined = type1 + "_" + type2;
 					
+					//handle pattern ent_of_symb
+					if(combined.matches("ent_pre") 
+							&& struct2.prev1() != null 
+							&& struct2.prev1().toString().matches("of")
+							&& j + 1 < len 
+							&& inputList.get(j+1).type().equals("symb") ){
+						//create new child
+						struct1.add_child(inputList.get(j+1), "of") ;
+						
+						mx.get(i).set(j+1, struct1);
+						skipCol = true;
+					}
+					
 					//handle "is called" -- "verb_parti", also "is defined"
 					//for definitions
-					if(combined.matches("verb_parti") 
+					else if(combined.matches("verb_parti") 
 							&& struct1.prev1().toString().matches("is|are|be")
 							&& struct2.prev1().toString().matches("called|defined|said|denoted")){
 						String called = "";
@@ -761,7 +778,7 @@ public class ThmP1 {
 								}
 							}
 							
-							//change struct2 if applicable							
+							//update struct2 with name if applicable							
 							if(type2.equals("symb") ){
 								String entKey = (String)struct2.prev1();
 								if(namesMap.containsKey(entKey)){
@@ -769,6 +786,7 @@ public class ThmP1 {
 									struct2.set_prev2(entity.struct().get("name"));
 				
 								}
+								
 							} 							
 							
 							//add to namesMap if letbe defines a name for an ent
@@ -801,7 +819,9 @@ public class ThmP1 {
 					
 				}
 				
-			}			
+			}		
+			if(skipCol)
+				j++;
 		}
 		
 		//string together the parsed pieces

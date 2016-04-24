@@ -66,7 +66,8 @@ public class Maps {
 		posMap.put("positive", "adj"); posMap.put("negative", "adj"); posMap.put("abelian", "adj");
 		posMap.put("normal", "adj"); posMap.put("cyclic", "adj"); posMap.put("dimensional", "adj");
 		posMap.put("odd", "adj"); posMap.put("even", "adj"); posMap.put("any", "adj");
-		posMap.put("simple", "adj"); posMap.put("unique", "adj"); 
+		posMap.put("simple", "adj"); posMap.put("unique", "adj"); posMap.put("more", "adj_COMP");
+		posMap.put("more than", "pre"); 
 		posMap.put("nontrivial", "adj"); posMap.put("only", "adj");
 		
 		//adverbs. Adverbs of the form "adj-ly" are detected by code
@@ -117,7 +118,7 @@ public class Maps {
 		posMap.put("are", "verb"); ////////////***
 		posMap.put("have", "verb"); posMap.put("obtain", "verb"); posMap.put("generate", "verb");
 		posMap.put("replace", "verb"); posMap.put("act", "verb"); posMap.put("follow", "verb"); 
-		posMap.put("denote", "verb"); posMap.put("define", "verb");
+		posMap.put("denote", "verb"); posMap.put("define", "verb"); posMap.put("has", "verb");
 		
 		//special participles
 		posMap.put("given", "parti"); posMap.put("been", "parti"); 
@@ -212,6 +213,9 @@ public class Maps {
 		
 		structMap.put("pre_noun", "np"); //nounphrase
 
+		//involving nums
+		structMap.put("pre_num", "prep");
+		
 		//structMap.put("from   ", "wildcard"); structMap.put("to", "wildcard"); structMap.put("fromto", "newchild");
 		////////////combine preposition with whatever comes
 		

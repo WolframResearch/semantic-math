@@ -1,6 +1,11 @@
 package thmp;
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 /**
@@ -12,16 +17,18 @@ import java.util.Scanner;
  */
 public class ThmInput {
 
-	public static void main(String[] args) throws FileNotFoundException{
+	public static void main(String[] args) throws IOException{
 		File file = new File("commAlg.txt");
 		Scanner sc = new Scanner(file);
+		Path fileTo = Paths.get("thmFile.txt");
+		ArrayList<String> thms = new ArrayList<String>();
 		
 		String newThm = "";
 		boolean inThm = false;
 		while(sc.hasNextLine()){
 			String line = sc.nextLine();
 			
-			if(line.matches("\\begin{definition}|\\begin{lemma}")){
+			if(line.matches("\\\\begin\\{definition\\}|\\\\begin\\{lemma\\}")){
 				newThm = "";
 				inThm = true;
 			}
@@ -29,14 +36,17 @@ public class ThmInput {
 			if(inThm)
 				newThm = newThm + " " + line;
 			
-			if(line.matches("\\end{definition}|\\end{lemma}")){
+			if(line.matches("\\\\end\\{definition\\}|\\end\\{lemma\\}")){
 				inThm = false;
-				//write newThm to file
-				
+				newThm += "\n";
+				thms.add(newThm);
 			}
 			
 		}
-		
+
+		//write list of theorems to file
+		Files.write(fileTo, thms, Charset.forName("UTF-8"));
+
 		sc.close();
 	}
 }

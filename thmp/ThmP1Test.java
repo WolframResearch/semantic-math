@@ -22,7 +22,7 @@ public class ThmP1Test {
 			//String[] strAr = "a linear transformation between V and W ".split(" ");
 			//String[] strAr2 = "f is an invertible matrix".split(" ");
 			//String[] strAr = p1.preprocess("if a field is ring then ring is ring".split(" "));
-			//String[] strAr = p1.preprocess("a basis of a vector space consist of a set of linearly independent vectors".split(" "));
+			//String[] strAr = p1.preprocess("a basis of a vector space consists of a set of linearly independent vectors".split(" "));
 			//String[] strAr = p1.preprocess("finitely many vectors are called linearly independent if their sum is zero".split(" "));
 			//String[] strAr = p1.preprocess("elements in symmetric group are conjugate if they have the same cycle type".split(" "));
 			String[] strAr = ThmP1.preprocess("A is equal to the number of partitions".split(" "));
@@ -58,11 +58,12 @@ public class ThmP1Test {
 			st = "if X is any subset of G such that x is a power of p for all x in X, "
 					+ "then X is a p group";
 			st = "if the order of G is 60 and G has more than 1 p subgroup, then G is simple";
-			//st = "a nontrivial group is simple if it contains no nontrivial normal subgroups";
+			st = "a nontrivial group is simple if it contains no nontrivial normal subgroups";
+			st = "";
 			
 			//String[] strAr = p1.preprocess("F is a extension over Q".split(" "));			
 			
-			strAr = st.split("\\,|\\.");
+			strAr = st.split("\\,|\\.|\\!");
 			for(int i = 0; i < strAr.length; i++){
 				ThmP1.parse(ThmP1.tokenize(ThmP1.preprocess(strAr[i].trim().split(" ")))); //p1.parse(p1.tokenize(p1.preprocess(strAr2)));
 			}
