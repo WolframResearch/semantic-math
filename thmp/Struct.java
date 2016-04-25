@@ -43,6 +43,11 @@ public class Struct {
 	public ArrayList<Struct> children(){
 		return new ArrayList<Struct>();		
 	}
+
+	//to be overwritten in StructH
+	public ArrayList<String> childRelation(){
+		return new ArrayList<String>();		
+	}
 	
 	//to be overwritten in StructH
 	public void add_child(Struct child, String relation){		

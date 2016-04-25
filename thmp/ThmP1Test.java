@@ -59,7 +59,7 @@ public class ThmP1Test {
 					+ "then X is a p group";
 			st = "if the order of G is 60 and G has more than 1 p subgroup, then G is simple";
 			st = "a nontrivial group is simple if it contains no nontrivial normal subgroups";
-			st = "";
+			//st = "";
 			
 			//String[] strAr = p1.preprocess("F is a extension over Q".split(" "));			
 			

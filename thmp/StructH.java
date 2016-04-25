@@ -69,6 +69,7 @@ public class StructH<H> extends Struct{
 		return children;		
 	}
 	
+	@Override
 	public ArrayList<String> childRelation(){
 		return childRelation;		
 	}

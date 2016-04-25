@@ -910,8 +910,8 @@ public class ThmP1 {
 			
 			System.out.print(struct.toString());
 			
-			ArrayList<Struct> children = ((StructH<?>)struct).children();
-			ArrayList<String> childRelation = ((StructH<?>)struct).childRelation();
+			ArrayList<Struct> children = struct.children();
+			ArrayList<String> childRelation = struct.childRelation();
 			
 			if(children == null || children.size() == 0)
 				return;
