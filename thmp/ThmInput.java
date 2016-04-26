@@ -18,9 +18,9 @@ import java.util.Scanner;
 public class ThmInput {
 
 	public static void main(String[] args) throws IOException{
-		File file = new File("commAlg.txt");
+		File file = new File("commAlg2.txt");
 		Scanner sc = new Scanner(file);
-		Path fileTo = Paths.get("thmFile.txt");
+		Path fileTo = Paths.get("thmFile2.txt");
 		ArrayList<String> thms = new ArrayList<String>();
 		
 		String newThm = "";
@@ -28,22 +28,22 @@ public class ThmInput {
 		while(sc.hasNextLine()){
 			String line = sc.nextLine();
 			
-			if(line.matches("\\\\begin\\{definition\\}|\\\\begin\\{lemma\\}")){
-				newThm = "";
+			if(line.matches("(\\\\begin\\{definition\\})|(\\\\begin\\{lemma\\})")){				
+				newThm = line;				
+				line = sc.nextLine();
 				inThm = true;
 			}
 			
-			if(inThm)
-				newThm = newThm + " " + line;
-			
-			if(line.matches("\\\\end\\{definition\\}|\\end\\{lemma\\}")){
+			if(line.matches("(\\\\end\\{definition\\})|(\\\\end\\{lemma\\})")){
 				inThm = false;
 				newThm += "\n";
 				thms.add(newThm);
 			}
 			
+			if(inThm)
+				newThm = newThm + " " + line;
 		}
-
+		
 		//write list of theorems to file
 		Files.write(fileTo, thms, Charset.forName("UTF-8"));
 

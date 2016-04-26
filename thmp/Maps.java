@@ -67,8 +67,8 @@ public class Maps {
 		posMap.put("normal", "adj"); posMap.put("cyclic", "adj"); posMap.put("dimensional", "adj");
 		posMap.put("odd", "adj"); posMap.put("even", "adj"); posMap.put("any", "adj");
 		posMap.put("simple", "adj"); posMap.put("unique", "adj"); posMap.put("more", "adj_COMP");
-		posMap.put("more than", "pre"); 
-		posMap.put("nontrivial", "adj"); posMap.put("only", "adj");
+		posMap.put("more than", "pre"); posMap.put("nilpotent", "adj"); posMap.put("most", "adj"); 
+		posMap.put("nontrivial", "adj"); posMap.put("only", "adj"); 
 		
 		//adverbs. Adverbs of the form "adj-ly" are detected by code
 		posMap.put("there", "adverb");
@@ -89,8 +89,8 @@ public class Maps {
 		posMap.put("for all", "hyp");
 		
 		//prepositions
-		posMap.put("or", "or"); posMap.put("and", "and"); 
-		posMap.put("is", "verb"); posMap.put("at", "pre"); posMap.put("if", "if");
+		posMap.put("or", "or"); posMap.put("and", "and"); posMap.put("at most", "pre");
+		posMap.put("is", "verb"); posMap.put("at", "pre_COMP"); posMap.put("if", "if");
 		posMap.put("then", "then"); posMap.put("between", "pre"); 
 		//between... -> between, and...->and, between_and->between_and
 		
@@ -155,7 +155,10 @@ public class Maps {
 		mathObjMap.put("conjugacy class", "mathObj"); mathObjMap.put("subgroup", "mathObj");
 		mathObjMap.put("automorphism", "mathObj"); mathObjMap.put("order", "mathObj");
 		mathObjMap.put("conjugation", "mathObj"); mathObjMap.put("prime", "mathObj"); 
-		mathObjMap.put("power", "mathObj"); 
+		mathObjMap.put("power", "mathObj"); mathObjMap.put("nilpotence", "mathObj"); 
+		
+		
+		mathObjMap.put("tex", "mathObj"); //TEMPORARY
 		
 		//put in template matching, prepositions, of, by, with
 		

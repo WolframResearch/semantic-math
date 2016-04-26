@@ -21,10 +21,6 @@ public class Struct {
 		this.type = type;
 	}
 	*/
-
-	public Struct(){
-		
-	}
 	
 	//to be overridden
 	public void set_type(String type){		
@@ -78,6 +74,10 @@ public class Struct {
 	
 	public void test(String obj){
 		
+	}
+	
+	public String present(){
+		return "";
 	}
 	
 	public Number test(ArrayList<Number> b){

@@ -60,6 +60,8 @@ public class ThmP1Test {
 			st = "if the order of G is 60 and G has more than 1 p subgroup, then G is simple";
 			st = "a nontrivial group is simple if it contains no nontrivial normal subgroups";
 			//st = "";
+			st = "if a group G is abelian, then it is nilpotent";
+			st = "let p be a prime and let P be a group of order p, then P is nilpotent of nilpotence class at most d";
 			
 			//String[] strAr = p1.preprocess("F is a extension over Q".split(" "));			
 			

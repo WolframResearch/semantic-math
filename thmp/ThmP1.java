@@ -597,6 +597,8 @@ public class ThmP1 {
 							struct1.prev2().equals("")){
 						if(recentEnt != null){
 							String tempName = recentEnt.struct().get("name");
+							//if(recentEnt.struct().get("called") != null )
+								//tempName = recentEnt.struct().get("called");
 							String name = tempName != null ? tempName : "";
 							struct1.set_prev2(name);
 						}						
@@ -859,6 +861,9 @@ public class ThmP1 {
 		}
 		System.out.println();
 		
+		//ParseToWL.parseToWL(mx.get(0).get(len-1));		
+		//System.out.println();
+
 	}
 	
 	/**
