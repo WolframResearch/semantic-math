@@ -2,6 +2,11 @@ package thmp;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 /**
@@ -19,7 +24,8 @@ public class ProcessInput {
 		
 		File inputFile = new File("thmFile2.txt");
 		Scanner sc = new Scanner(inputFile);		
-		
+		Path noTex = Paths.get("noTex.txt");
+		String noTexString = null;
 		
 		while(sc.hasNextLine()){
 			String thm = sc.nextLine();
@@ -40,13 +46,20 @@ public class ProcessInput {
 			String[] meat = thm.split("\\\\label\\{([a-zA-Z]|-)*\\} ");
 			if(meat.length > 1){
 				thm = meat[1];
-				System.out.println(thm);
+				//System.out.println(thm);
 				//thm.replaceAll("$[^$]\\$", "tex");
-				System.out.println(thm.replaceAll("(\\$[^$]+\\$)|(\\$\\$[^$]+\\$\\$)", "tex"));
+				String tempThm = thm.replaceAll("(\\$[^$]+\\$)|(\\$\\$[^$]+\\$\\$)", "tex").
+						replaceAll("\\\\begin\\{[^}]*\\}|\\\\end\\{[^}]*\\}|\\\\item|\\{\\\\it|\\}", "") + "\n";
+				
+				noTexString += tempThm;
+				//System.out.println(thm.replaceAll("(\\$[^$]+\\$)|(\\$\\$[^$]+\\$\\$)", "tex"));
 				
 			}
 			
+			ArrayList<String> noTexStringList = new ArrayList<String>();
+			noTexStringList.add(noTexString);
 			
+			Files.write(noTex, noTexStringList, Charset.forName("UTF-8"));
 		}
 		
 		sc.close();

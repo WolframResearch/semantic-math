@@ -62,7 +62,7 @@ public class ThmP1Test {
 			//st = "";
 			st = "if a group G is abelian, then it is nilpotent";
 			st = "let p be a prime and let P be a group of order p, then P is nilpotent of nilpotence class at most d";
-			
+			st = "Suppose that tex and tex are finite ring maps. Then tex is finite";
 			//String[] strAr = p1.preprocess("F is a extension over Q".split(" "));			
 			
 			strAr = st.split("\\,|\\.|\\!");
