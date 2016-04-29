@@ -66,8 +66,7 @@ public class ThmP1 {
 		//list of indices of "proper" math objects, e.g. "field", but not e.g. "pair" 
 		ArrayList<Integer> mathIndexList = new ArrayList<Integer>();
 		//list of indices of anchor words, e.g. "of"
-		ArrayList<Integer> anchorList = new ArrayList<Integer>();
-		
+		ArrayList<Integer> anchorList = new ArrayList<Integer>();		
 
 		//list of each word with their initial type, adj, noun, 
 		ArrayList<Pair> pairs = new ArrayList<Pair>();		
@@ -83,12 +82,13 @@ public class ThmP1 {
 			if(strlen > 0 && curWord.charAt(strlen-1) == 's'){
 				singular = curWord.substring(0, strlen-1);
 			}
-			
+						
 			if(Maps.mathObjMap.containsKey(curWord) || 
 					mathObjMap.containsKey(singular)){	
 				
 				String tempWord = mathObjMap.containsKey(singular) ? 
 						singular : curWord;
+				int pairsSize = pairs.size();
 				int k = 1;
 				
 				//if composite math noun, eg "finite field"
@@ -98,21 +98,30 @@ public class ThmP1 {
 					//remove previous pair from pairs if it has new match
 					//pairs.size should be > 0, ie previous word should be classified already
 					if(pairs.size() > 0 && 
-							pairs.get(pairs.size()-1).word().equals(str[i-k])){
+							pairs.get(pairsSize-1).word().equals(str[i-k])){
 						
 						//remove from mathIndexList if already counted
 						if(mathObjMap.containsKey(pairs.get(pairs.size()-1).word())){
 							mathIndexList.remove(mathIndexList.size()-1);
 						}
-						pairs.remove(pairs.size()-1);
+						pairs.remove(pairsSize-1);
 						
 						addIndex = false;
-					}
+					}										
 					
 					tempWord = str[i-k] + " " + tempWord;
 					curWord = str[i-k] + " " + curWord;
 					k++;
 				}
+				
+				//if previous Pair is also an ent, fuse them
+				pairsSize = pairs.size();
+				if(pairs.size() > 0 && 
+						pairs.get(pairsSize-1).pos().matches("mathObj")){
+					pairs.get(pairsSize-1).set_word(pairs.get(pairsSize-1).word() + " " + curWord);					
+					continue;
+				}				
+				
 				Pair pair = new Pair(curWord, "mathObj");
 				pairs.add(pair);
 				mathIndexList.add(pairs.size()-1);
@@ -155,8 +164,7 @@ public class ThmP1 {
 					pair = new Pair(curWord, pos);
 				}
 				
-				int pairsSize = pairs.size();
-				
+				int pairsSize = pairs.size();				
 				
 				//if adverb-adj pair, eg "clearly good"
 				if(pairs.size() > 0 && posMap.get(curWord).equals("adj") && 
@@ -223,7 +231,7 @@ public class ThmP1 {
 			else if(curWord.matches("^\\d+$")){
 				Pair pair = new Pair(str[i], "num");
 				pairs.add(pair);
-			}else{ //try to minimize this case.
+			}else if(!curWord.equals(" ")){ //try to minimize this case.
 				
 				System.out.println("word not in dictionary: " + str[i]);
 				pairs.add(new Pair(curWord, ""));

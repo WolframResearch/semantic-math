@@ -49,7 +49,7 @@ public class ProcessInput {
 				//System.out.println(thm);
 				//thm.replaceAll("$[^$]\\$", "tex");
 				String tempThm = thm.replaceAll("(\\$[^$]+\\$)|(\\$\\$[^$]+\\$\\$)", "tex").
-						replaceAll("\\\\begin\\{[^}]*\\}|\\\\end\\{[^}]*\\}|\\\\item|\\{\\\\it|\\}", "") + "\n";
+						replaceAll("\\\\begin\\{[^}]*\\}|\\\\end\\{[^}]*\\}|\\\\cite\\[[^]]*|\\\\item|\\{\\\\it|\\}", "") + "\n";
 				
 				noTexString += tempThm;
 				//System.out.println(thm.replaceAll("(\\$[^$]+\\$)|(\\$\\$[^$]+\\$\\$)", "tex"));

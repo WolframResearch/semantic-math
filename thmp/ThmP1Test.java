@@ -1,12 +1,16 @@
 package thmp;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Scanner;
+
 /*
  * Test class for ThmP1
  */
 public class ThmP1Test {
 
 	//the char of F_p is p
-		public static void main(String[] args){
+		public static void main(String[] args) throws IOException{
 			
 			ThmP1.buildMap();
 			
@@ -62,14 +66,20 @@ public class ThmP1Test {
 			//st = "";
 			st = "if a group G is abelian, then it is nilpotent";
 			st = "let p be a prime and let P be a group of order p, then P is nilpotent of nilpotence class at most d";
-			st = "Suppose that tex and tex are finite ring maps. Then tex is finite";
+			st = "suppose that tex and tex are finite ring maps. then tex is finite";
 			//String[] strAr = p1.preprocess("F is a extension over Q".split(" "));			
 			
-			strAr = st.split("\\,|\\.|\\!");
-			for(int i = 0; i < strAr.length; i++){
-				ThmP1.parse(ThmP1.tokenize(ThmP1.preprocess(strAr[i].trim().split(" ")))); //p1.parse(p1.tokenize(p1.preprocess(strAr2)));
+			Scanner sc = new Scanner(new File("noTex.txt"));
+			
+			while(sc.hasNextLine()){
+				st = sc.nextLine().toLowerCase();
+				strAr = st.split("\\,|\\.|\\!");
+				for(int i = 0; i < strAr.length; i++){
+					ThmP1.parse(ThmP1.tokenize(ThmP1.preprocess(strAr[i].trim().split(" ")))); //p1.parse(p1.tokenize(p1.preprocess(strAr2)));
+				}
 			}
 			
+			sc.close();
 			//p1.parse(p1.tokenize(p1.preprocess("characteristic of Fp is p".split(" "))));
 						
 		}

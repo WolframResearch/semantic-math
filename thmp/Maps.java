@@ -54,6 +54,18 @@ public class Maps {
 		
 		//most should already be filtered in entity/property
 		//pos should preserve connective words, or stays or
+		String[] verbs = {"present"};
+		
+		ArrayList<String[]> posList = new ArrayList<String[]>();
+		
+		for(int i = 0; i < verbs.length; i++){
+			posList.add(new String[]{verbs[i], "verb"});
+		}
+		
+		for(int i = 0; i < posList.size(); i++){
+			posMap.put(posList.get(i)[0], posList.get(i)[1]);
+		}
+		
 		posMap = new HashMap<String, String>();
 		posMap.put("disjoint", "adj"); posMap.put("perfect", "adj"); posMap.put("equivalent", "adj");
 		posMap.put("finite", "adj"); posMap.put("linear", "adj"); posMap.put("invertible", "adj");
@@ -68,7 +80,9 @@ public class Maps {
 		posMap.put("odd", "adj"); posMap.put("even", "adj"); posMap.put("any", "adj");
 		posMap.put("simple", "adj"); posMap.put("unique", "adj"); posMap.put("more", "adj_COMP");
 		posMap.put("more than", "pre"); posMap.put("nilpotent", "adj"); posMap.put("most", "adj"); 
-		posMap.put("nontrivial", "adj"); posMap.put("only", "adj"); 
+		posMap.put("nontrivial", "adj"); posMap.put("only", "adj"); posMap.put("commutative", "adj"); 
+		posMap.put("canonical", "adj"); posMap.put("exact", "adj"); posMap.put("injective", "adj"); 
+		posMap.put("surjective", "adj"); posMap.put("last", "adj"); 
 		
 		//adverbs. Adverbs of the form "adj-ly" are detected by code
 		posMap.put("there", "adverb");
@@ -156,7 +170,8 @@ public class Maps {
 		mathObjMap.put("automorphism", "mathObj"); mathObjMap.put("order", "mathObj");
 		mathObjMap.put("conjugation", "mathObj"); mathObjMap.put("prime", "mathObj"); 
 		mathObjMap.put("power", "mathObj"); mathObjMap.put("nilpotence", "mathObj"); 
-		
+		mathObjMap.put("map", "mathObj"); mathObjMap.put("diagram", "mathObj_COMP");
+		mathObjMap.put("commutative diagram", "mathObj"); mathObjMap.put("module", "mathObj"); 
 		
 		mathObjMap.put("tex", "mathObj"); //TEMPORARY
 		
@@ -217,16 +232,32 @@ public class Maps {
 		structMap.put("pre_noun", "np"); //nounphrase
 
 		//involving nums
-		structMap.put("pre_num", "prep");
+		structMap.put("pre_num", "prep");		
+		
+		String[] ents = {"quotient", "ideal", "filtration"};
+		
+		ArrayList<String[]> entList = new ArrayList<String[]>();
+		
+		for(int i = 0; i < ents.length; i++){
+			if(ents[i].split("_").length > 1){
+				//composite
+				entList.add(new String[]{ents[i].split("_")[0], "mathObj_COMP"});
+			}else{
+				entList.add(new String[]{ents[i], "mathObj"});
+			}
+		}
+		
+		for(int i = 0; i < entList.size(); i++){
+			mathObjMap.put(entList.get(i)[0], entList.get(i)[1]);
+		}
 		
 		//structMap.put("from   ", "wildcard"); structMap.put("to", "wildcard"); structMap.put("fromto", "newchild");
-		////////////combine preposition with whatever comes
-		
+		////////////combine preposition with whatever comes				
 		//verb_ent, not including past tense verbs, only present tense
 		structMap.put("verb_ent", "verbphrase"); structMap.put("verb_adj", "verbphrase");
 		structMap.put("verb_np", "verbphrase");
 		structMap.put("verb_num", "verbphrase"); structMap.put("verb_nounphrase", "verbphrase");
-		structMap.put("verb_pre", "verb"); structMap.put("verb_phrase", "verbphrase");
+		structMap.put("verb_pre", "verbphrase"); structMap.put("verb_phrase", "verbphrase");
 		structMap.put("verb_partient", "verbphrase");
 		structMap.put("verb_symb", "verbphrase"); structMap.put("symb_verbphrase", "assert");
 		structMap.put("ent_verbphrase", "assert"); structMap.put("pro_verbphrase", "assert");
@@ -271,8 +302,7 @@ public class Maps {
 			
 		}  */
 		
-		posList = new ArrayList<String>();
-		posList.add("ent"); /////////////////
+		
 		
 	}
 	
