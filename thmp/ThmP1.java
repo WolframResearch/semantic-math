@@ -207,9 +207,21 @@ public class ThmP1 {
 							posMap.containsKey(str[i].substring(0, strlen-1))
 							&& posMap.get(str[i].substring(0, strlen-1)).equals("verb")
 						)){
-				//if next word is "by"
 				
-				Pair pair = new Pair(str[i], "parti");
+				//if next word is "by", then 
+				String curPos = "parti";
+				
+				if(str.length > i && str[i+1].equals("by") ){
+					curPos = "pre";					
+					curWord = curWord + " by";
+					i++;
+				}
+				//if next word is entity, then adj
+				else if(str.length > i && mathObjMap.containsKey(str[i+1])){
+					curPos = "adj";
+				}
+				
+				Pair pair = new Pair(curWord, curPos);
 				pairs.add(pair);
 			}
 			else if(strlen > 2 && curWord.substring(strlen-3, strlen).equals("ing")					
@@ -231,10 +243,13 @@ public class ThmP1 {
 			else if(curWord.matches("^\\d+$")){
 				Pair pair = new Pair(str[i], "num");
 				pairs.add(pair);
-			}else if(!curWord.equals(" ")){ //try to minimize this case.
+			}else if(!curWord.matches(" ")){ //try to minimize this case.
 				
-				System.out.println("word not in dictionary: " + str[i]);
+				System.out.println("word not in dictionary: " + curWord);
 				pairs.add(new Pair(curWord, ""));
+			}else{ //curWord doesn't count
+				
+				continue;
 			}
 			
 			if(addIndex){
@@ -411,15 +426,15 @@ public class ThmP1 {
 					//ent of ent
 					if(index + 1 < pairs.size()){
 						Pair nextPair = pairs.get(index + 1);
+						
 						if(nextPair.pos().matches("\\d+$")){
 							pairs.get(index).set_pos(nextPair.pos());
 							Struct childStruct = mathEntList.get(Integer.valueOf(nextPair.pos()));	
 							tempStruct.add_child(childStruct, "of"); 
 							//set to null instead of removing, to keep indices right
-							mathEntList.set(Integer.valueOf(nextPair.pos()), null);
-						}	
-												
-						//if the previous token is not an ent
+							mathEntList.set(Integer.valueOf(nextPair.pos()), null);		
+							
+						}	//if the previous token is not an ent
 						else{
 							//set anchor to its normal part of speech word, like "of" to pre				
 							pairs.get(index).set_pos(posMap.get(anchor));
@@ -447,6 +462,8 @@ public class ThmP1 {
 		//use anchors (of, with) to gather terms together into entities
 		while(pairsIter.hasNext() ){						
 			Pair curPair = pairsIter.next();
+			
+			if(curPair.pos() == null) continue;
 			
 			if(curPair.pos().matches("^\\d+$")){
 				
@@ -717,7 +734,8 @@ public class ThmP1 {
 							
 						//set parent struct in row above
 						mx.get(i-1).set(j, parentStruct);
-						mx.get(i+1).set(j, null);
+						//set the next token to "", so not classified again with others
+						//mx.get(i+1).set(j, null);
 						break;
 					}else if((type1.matches("or|and")  )){
 						int l = 2;
@@ -732,7 +750,7 @@ public class ThmP1 {
 												struct2, newType + "_" + type2);
 								
 								mx.get(i-l).set(j, parentStruct);
-								mx.get(i+1).set(j, null);
+								//mx.get(i+1).set(j, null);
 								stopLoop = true;
 								break;	
 							}

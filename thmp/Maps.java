@@ -50,23 +50,42 @@ public class Maps {
 		
 		fluffMap = new HashMap<String, String>();
 		fluffMap.put("the", "the"); fluffMap.put("an", "an");
-		fluffMap.put("a", "a");
+		fluffMap.put("a", "a"); fluffMap.put("moreover,", "moreover,");
+		
+		//list of parts of speech
+		posList = new ArrayList<String>();
+		posList.add("ent"); posList.add("verb"); posList.add("adj");
+		posList.add("adverb"); posList.add("pre"); 
+		
+		String[] ents = {"quotient", "ideal", "filtration", "combination", "surjection",
+				"presentation", "tex-module", "polynomial", "isomorphism", "composition",
+				"kernel", "system", "colimit"};
 		
 		//most should already be filtered in entity/property
 		//pos should preserve connective words, or stays or
-		String[] verbs = {"present"};
+		String[] verbs = {"present", "mean"};
 		
-		ArrayList<String[]> posList = new ArrayList<String[]>();
+		String[] adjs = {"first", "successive", "some", "transitive", "reflexive", "together",
+				"empty"};
+		
+		String[] adverbs = {""};
+		
+		ArrayList<String[]> pList = new ArrayList<String[]>();
 		
 		for(int i = 0; i < verbs.length; i++){
-			posList.add(new String[]{verbs[i], "verb"});
+			pList.add(new String[]{verbs[i], "verb"});
 		}
 		
-		for(int i = 0; i < posList.size(); i++){
-			posMap.put(posList.get(i)[0], posList.get(i)[1]);
-		}
+		for(int i = 0; i < adjs.length; i++){ pList.add(new String[]{adjs[i], "adj"}); }
+		
+		for(int i = 0; i < adverbs.length; i++){ pList.add(new String[]{adverbs[i], "adverb"}); }
 		
 		posMap = new HashMap<String, String>();
+
+		for(int i = 0; i < pList.size(); i++){
+			posMap.put(pList.get(i)[0], pList.get(i)[1]);
+		}
+		
 		posMap.put("disjoint", "adj"); posMap.put("perfect", "adj"); posMap.put("equivalent", "adj");
 		posMap.put("finite", "adj"); posMap.put("linear", "adj"); posMap.put("invertible", "adj");
 		posMap.put("independent", "adj"); posMap.put("many", "adj");
@@ -133,6 +152,7 @@ public class Maps {
 		posMap.put("have", "verb"); posMap.put("obtain", "verb"); posMap.put("generate", "verb");
 		posMap.put("replace", "verb"); posMap.put("act", "verb"); posMap.put("follow", "verb"); 
 		posMap.put("denote", "verb"); posMap.put("define", "verb"); posMap.put("has", "verb");
+		
 		
 		//special participles
 		posMap.put("given", "parti"); posMap.put("been", "parti"); 
@@ -234,7 +254,6 @@ public class Maps {
 		//involving nums
 		structMap.put("pre_num", "prep");		
 		
-		String[] ents = {"quotient", "ideal", "filtration"};
 		
 		ArrayList<String[]> entList = new ArrayList<String[]>();
 		
@@ -255,7 +274,7 @@ public class Maps {
 		////////////combine preposition with whatever comes				
 		//verb_ent, not including past tense verbs, only present tense
 		structMap.put("verb_ent", "verbphrase"); structMap.put("verb_adj", "verbphrase");
-		structMap.put("verb_np", "verbphrase");
+		structMap.put("verb_np", "verbphrase"); structMap.put("verb_prep", "verbphrase");
 		structMap.put("verb_num", "verbphrase"); structMap.put("verb_nounphrase", "verbphrase");
 		structMap.put("verb_pre", "verbphrase"); structMap.put("verb_phrase", "verbphrase");
 		structMap.put("verb_partient", "verbphrase");
@@ -266,6 +285,7 @@ public class Maps {
 		structMap.put("disj_verbphrase", "assert"); structMap.put("conj_verbphrase", "assert");
 		
 		structMap.put("let_symb", "let"); structMap.put("be_ent", "be"); structMap.put("let_be", "letbe");
+		structMap.put("let_ent", "let");
 		structMap.put("if_assert", "If"); structMap.put("assert_If", "assert"); 
 		structMap.put("hyp_assert", "hypo"); structMap.put("hyp_ent", "hypo");
 		structMap.put("hyp_phrase", "hypo");
@@ -277,6 +297,7 @@ public class Maps {
 		structMap.put("noun_phrase", "nounphrase"); structMap.put("ent_phrase", "newchild");
 		
 		structMap.put("adverb_adj", "adj"); ///*******		
+		structMap.put("adverb_verbphrase", "assert");
 		
 		//grammar rules for 2nd run
 		structMap2 = new HashMap<String, String>();

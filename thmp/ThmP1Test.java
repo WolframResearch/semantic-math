@@ -67,15 +67,17 @@ public class ThmP1Test {
 			st = "if a group G is abelian, then it is nilpotent";
 			st = "let p be a prime and let P be a group of order p, then P is nilpotent of nilpotence class at most d";
 			st = "suppose that tex and tex are finite ring maps. then tex is finite";
+			st = "there exist integers tex and polynomials tex and an isomorphism of tex-algebras tex";
 			//String[] strAr = p1.preprocess("F is a extension over Q".split(" "));			
-			
+			ThmP1.parse(ThmP1.tokenize(ThmP1.preprocess(st.split(" "))));
+					
 			Scanner sc = new Scanner(new File("noTex.txt"));
 			
 			while(sc.hasNextLine()){
 				st = sc.nextLine().toLowerCase();
 				strAr = st.split("\\,|\\.|\\!");
 				for(int i = 0; i < strAr.length; i++){
-					ThmP1.parse(ThmP1.tokenize(ThmP1.preprocess(strAr[i].trim().split(" ")))); //p1.parse(p1.tokenize(p1.preprocess(strAr2)));
+					//ThmP1.parse(ThmP1.tokenize(ThmP1.preprocess(strAr[i].trim().split(" ")))); //p1.parse(p1.tokenize(p1.preprocess(strAr2)));
 				}
 			}
 			
