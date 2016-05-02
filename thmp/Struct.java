@@ -65,11 +65,11 @@ public class Struct {
 	}
 	
 	public Object prev1(){
-		return null;
+		return "";
 	}
 	
 	public Object prev2(){
-		return null;
+		return "";
 	}
 	
 	public void test(String obj){

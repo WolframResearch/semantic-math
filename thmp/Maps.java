@@ -1,6 +1,8 @@
 package thmp;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map.Entry;
 
 /* contains the dictionaries and hashmaps 
  * used as vocabulary and rules in parsing
@@ -50,7 +52,7 @@ public class Maps {
 		
 		fluffMap = new HashMap<String, String>();
 		fluffMap.put("the", "the"); fluffMap.put("an", "an");
-		fluffMap.put("a", "a"); fluffMap.put("moreover,", "moreover,");
+		fluffMap.put("a", "a"); fluffMap.put("moreover", "moreover");
 		
 		//list of parts of speech
 		posList = new ArrayList<String>();
@@ -59,26 +61,64 @@ public class Maps {
 		
 		String[] ents = {"quotient", "ideal", "filtration", "combination", "surjection",
 				"presentation", "tex-module", "polynomial", "isomorphism", "composition",
-				"kernel", "system", "colimit"};
+				"kernel", "system", "colimit", "tex-algebra", "projection"};
 		
 		//most should already be filtered in entity/property
 		//pos should preserve connective words, or stays or
-		String[] verbs = {"present", "mean"};
+		String[] verbs = {"present", "mean", "say", "order", "direct", "index"};
 		
 		String[] adjs = {"first", "successive", "some", "transitive", "reflexive", "together",
-				"empty"};
+				"empty", "short", "natural"};
 		
-		String[] adverbs = {""};
+		String[] adverbs = {};
+				
+		String[] nouns = {"family", "notion", "permanence", "property", "inclusion", "relation",
+				"row", "notion"};
 		
-		ArrayList<String[]> pList = new ArrayList<String[]>();
+		//list of all the String arrays above
+		//ArrayList<String[]> posArraysList = new ArrayList<String[]>();
+		//partsOfSpeech must be ordered the same way as posArraysList
 		
-		for(int i = 0; i < verbs.length; i++){
+		HashMap<String, String[]> posArraysMap = new HashMap<String, String[]>();
+		posArraysMap.put("mathObj", ents); posArraysMap.put("adverb", adverbs);
+		posArraysMap.put("verb", verbs); posArraysMap.put("noun", nouns);
+		posArraysMap.put("adj", adjs);
+				
+		ArrayList<String[]> pList = new ArrayList<String[]>(); //pos List
+		
+		Iterator<Entry<String, String[]>> posArraysMapIter = posArraysMap.entrySet().iterator();
+		
+		while(posArraysMapIter.hasNext()){
+			Entry<String, String[]> curEntry = posArraysMapIter.next();
+			
+			String curPos = curEntry.getKey();
+			String[] curArray = curEntry.getValue();
+			String tempPos = curPos;
+			String tempWord;
+			String[] tempArray;
+			
+			for(int j = 0; j < curArray.length; j++){
+				//if _COMP				
+				tempWord = curArray[j];
+				tempArray = curArray[j].split("_");
+				if(tempArray.length > 1 && tempArray[tempArray.length-1].equals("COMP")){
+					tempPos = curPos + "_" + "COMP";
+					tempWord = tempArray[0];
+				}
+				pList.add(new String[]{tempWord, tempPos});
+				
+			}
+		}
+		
+		/* for(int i = 0; i < verbs.length; i++){
 			pList.add(new String[]{verbs[i], "verb"});
 		}
 		
 		for(int i = 0; i < adjs.length; i++){ pList.add(new String[]{adjs[i], "adj"}); }
 		
 		for(int i = 0; i < adverbs.length; i++){ pList.add(new String[]{adverbs[i], "adverb"}); }
+		for(int i = 0; i < nouns.length; i++){ pList.add(new String[]{nouns[i], "noun"}); }
+		*/
 		
 		posMap = new HashMap<String, String>();
 
@@ -89,7 +129,7 @@ public class Maps {
 		posMap.put("disjoint", "adj"); posMap.put("perfect", "adj"); posMap.put("equivalent", "adj");
 		posMap.put("finite", "adj"); posMap.put("linear", "adj"); posMap.put("invertible", "adj");
 		posMap.put("independent", "adj"); posMap.put("many", "adj");
-		//posMap.put("every", "every");		
+		posMap.put("every", "adj");		
 		posMap.put("same", "adj"); posMap.put("conjugate", "adj"); posMap.put("symmetric", "adj");
 		posMap.put("equal", "adj"); posMap.put("all", "adj"); posMap.put("isomorphic", "adj");
 		posMap.put("for", "pre_COMP"); //can be composite word, use first pos if composite not in posmap
@@ -104,7 +144,7 @@ public class Maps {
 		posMap.put("surjective", "adj"); posMap.put("last", "adj"); 
 		
 		//adverbs. Adverbs of the form "adj-ly" are detected by code
-		posMap.put("there", "adverb");
+		posMap.put("there", "det");
 		
 		//adverbs qualify verbs, adj, noun phrases, determiners, clauses etc
 		posMap.put("does", "verb_COMP"); posMap.put("do", "verb_COMP"); posMap.put("does not", "not");
@@ -118,7 +158,7 @@ public class Maps {
 		posMap.put("no", "det");
 		
 		//parts of speech
-		posMap.put("for every", "hyp"); posMap.put("suppose", "hyp");		
+		posMap.put("for every", "hyp"); posMap.put("suppose", "hyp"); posMap.put("assume", "hyp");		
 		posMap.put("for all", "hyp");
 		
 		//prepositions
@@ -134,7 +174,7 @@ public class Maps {
 		posMap.put("of", "pre"); //of is primarily used as anchor
 		posMap.put("over", "pre"); posMap.put("with", "pre");
 		posMap.put("by", "pre"); posMap.put("as", "pre"); posMap.put("such", "pre_COMP"); 
-		posMap.put("such that", "hyp"); posMap.put("so", "pre"); 
+		posMap.put("such that", "hyp"); posMap.put("so", "pre"); posMap.put("where", "hyp");
 		
 		//pronouns
 		posMap.put("their", "pro"); posMap.put("it", "pro"); posMap.put("we", "pro"); 
@@ -155,7 +195,7 @@ public class Maps {
 		
 		
 		//special participles
-		posMap.put("given", "parti"); posMap.put("been", "parti"); 
+		posMap.put("given", "hyp"); posMap.put("been", "parti"); 
 		
 		//build in quantifiers into structures, forall (indicated
 		//by for all, has)
@@ -278,6 +318,7 @@ public class Maps {
 		structMap.put("verb_num", "verbphrase"); structMap.put("verb_nounphrase", "verbphrase");
 		structMap.put("verb_pre", "verbphrase"); structMap.put("verb_phrase", "verbphrase");
 		structMap.put("verb_partient", "verbphrase");
+		structMap.put("det_verbphrase", "assert");
 		structMap.put("verb_symb", "verbphrase"); structMap.put("symb_verbphrase", "assert");
 		structMap.put("ent_verbphrase", "assert"); structMap.put("pro_verbphrase", "assert");
 		structMap.put("nounphrase_verbphrase", "assert");

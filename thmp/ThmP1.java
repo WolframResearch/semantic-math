@@ -75,14 +75,31 @@ public class ThmP1 {
 		for(int i = 0; i < str.length; i++){	
 			
 			String curWord = str[i];
+			
+			if(curWord.matches("^\\s*$")) continue;
+			
+			//strip away special chars '(', ')', etc
+			curWord = curWord.replaceAll("\\(|\\)", "");
+			str[i] = curWord;
+			
 			int strlen = str[i].length();
 						
 			//primitive way to handle plural forms: if ends in "s"
 			String singular = "";
+			String singular2 = ""; //ending in "ies"
+			String singular3 = ""; //ending in "es"
 			if(strlen > 0 && curWord.charAt(strlen-1) == 's'){
 				singular = curWord.substring(0, strlen-1);
 			}
-						
+			
+			if(strlen > 3 && curWord.substring(strlen-3, strlen).equals("ies")){
+				singular2 = curWord.substring(0, strlen-3) + 'y';
+			}
+			
+			if(strlen > 2 && curWord.substring(strlen-2, strlen).equals("es") ){
+				singular = curWord.substring(0, strlen-2);
+			}
+			
 			if(Maps.mathObjMap.containsKey(curWord) || 
 					mathObjMap.containsKey(singular)){	
 				
@@ -127,15 +144,18 @@ public class ThmP1 {
 				mathIndexList.add(pairs.size()-1);
 				
 			}
-			
+				
 			else if(anchorMap.containsKey(curWord)){
-				Pair pair = new Pair(curWord, "anchor");
-				anchorList.add(pairIndex);
+				Pair pair = new Pair(curWord, "anchor");				
+				//anchorList.add(pairIndex);
 				pairs.add(pair);
+				
+				int pairsSize = pairs.size();
+				anchorList.add(pairsSize - 1);
 			}
 			//check part of speech
-			else if(posMap.containsKey(curWord)){
-								
+			else if(posMap.containsKey(curWord)){								
+				
 				//composite words, such as "for all",
 				String temp = curWord, pos = curWord;
 				String tempPos = posMap.get(temp);
@@ -173,10 +193,35 @@ public class ThmP1 {
 					//remove previous Pair
 					pairs.remove(pairsSize - 1);
 					pair = new Pair(curWord, "adj");
+					addIndex = false;
 				}
 				
 				pairs.add(pair);
 			}
+			//if plural form of noun
+			else if(posMap.containsKey(singular) && posMap.get(singular).equals("noun")
+				|| posMap.containsKey(singular2) && posMap.get(singular2).equals("noun")
+				|| posMap.containsKey(singular3) && posMap.get(singular3).equals("noun"))
+			{
+				pairs.add(new Pair(curWord, "noun"));
+			}
+			//classify words with dashes; eg sesqui-linear
+			else if(curWord.split("-").length > 1){
+				String[] splitWords = curWord.split("-");
+				String lastTerm = splitWords[splitWords.length-1];
+
+				if(posMap.containsKey(lastTerm)){
+					
+					Pair pair = new Pair(curWord, posMap.get(lastTerm).split("_")[0]);
+					pairs.add(pair);
+				}//if lastTerm is entity, eg A-module
+				else if( mathObjMap.containsKey(lastTerm) ){
+					
+					Pair pair = new Pair(curWord, "mathObj");
+					pairs.add(pair);
+					mathIndexList.add(pairs.size()-1);
+				}
+			} 
 			//check again for verbs ending in 'es' & 's'			
 			else if(strlen > 0 && curWord.charAt(strlen-1) == 's' &&
 					posMap.containsKey(str[i].substring(0, strlen-1)) &&
@@ -216,8 +261,15 @@ public class ThmP1 {
 					curWord = curWord + " by";
 					i++;
 				}
-				//if next word is entity, then adj
+				
+				//if next word is entity, then adj								
 				else if(str.length > i && mathObjMap.containsKey(str[i+1])){
+					int pairsSize = pairs.size();
+					//combine with adverb if previous one is adverb
+					if( pairsSize > 0 && pairs.get(pairsSize-1).pos().equals("adverb") ){
+						curWord = pairs.get(pairsSize-1).word() + " " + curWord;
+						pairs.remove(pairsSize-1);
+					}
 					curPos = "adj";
 				}
 				
@@ -256,6 +308,7 @@ public class ThmP1 {
 				pairIndex++;
 			}
 			addIndex = true;
+			
 			
 			int pairsSize = pairs.size();
 			Pair pair = pairs.get(pairsSize - 1);
@@ -543,8 +596,7 @@ public class ThmP1 {
 	 * Chart parser.
 	 */
 	public static void parse(ArrayList<Struct> inputList ){
-		int len = inputList.size();
-		 
+		int len = inputList.size();		 
 		
 		//first Struct
 		Struct firstEnt = null;
@@ -760,7 +812,9 @@ public class ThmP1 {
 						}
 					}
 					
+					//create new child if " of "" "
 					
+					//reduce
 					if(structMap.containsKey(combined)){
 						String newType = structMap.get(combined);
 				
@@ -885,11 +939,13 @@ public class ThmP1 {
 			if(k != parsedStructList.size() - 1) 
 				System.out.print(" -- ");
 		}
-		System.out.println();
+		System.out.println(); 
 		
-		//ParseToWL.parseToWL(mx.get(0).get(len-1));		
-		//System.out.println();
-
+		if(mx.size() > 0){
+			System.out.println("WL: ");
+			ParseToWL.parseToWL(mx.get(0).get(len-1));		
+			System.out.println(); System.out.println("Java:");
+		}
 	}
 	
 	/**

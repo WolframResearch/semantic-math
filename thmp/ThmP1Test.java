@@ -69,12 +69,16 @@ public class ThmP1Test {
 			st = "suppose that tex and tex are finite ring maps. then tex is finite";
 			st = "there exist integers tex and polynomials tex and an isomorphism of tex-algebras tex";
 			//String[] strAr = p1.preprocess("F is a extension over Q".split(" "));			
+			st = "a  system tex of tex-modules over tex consists of a family of tex-modules tex indexed by tex and a family of tex-module maps tex such that for all tex tex";	
+			st = "A is B";
 			ThmP1.parse(ThmP1.tokenize(ThmP1.preprocess(st.split(" "))));
-					
+
 			Scanner sc = new Scanner(new File("noTex.txt"));
 			
 			while(sc.hasNextLine()){
 				st = sc.nextLine().toLowerCase();
+				if(st.matches("^\\s*$")) continue;
+				
 				strAr = st.split("\\,|\\.|\\!");
 				for(int i = 0; i < strAr.length; i++){
 					//ThmP1.parse(ThmP1.tokenize(ThmP1.preprocess(strAr[i].trim().split(" ")))); //p1.parse(p1.tokenize(p1.preprocess(strAr2)));

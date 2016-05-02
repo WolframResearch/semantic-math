@@ -10,18 +10,22 @@ import java.util.ArrayList;
 
 public class ParseToWL {
 	
+	private static boolean inAssert = false;
+	private static String assertVerb = "";
+	private static boolean showPrev1 = true;
+	
 	/**
 	 * 
 	 * @param headStruct is head of a parse
 	 */
 	public static void parseToWL(Struct headStruct){
 		
-		if(headStruct == null) return;
+		if(headStruct == null) return;		
 		
 		//if structH
 		if( headStruct.struct().size() > 0 ){
 			//System.out.print(" [");
-
+			
 			System.out.print(headStruct.present());		
 			
 			ArrayList<Struct> children = headStruct.children();
@@ -48,7 +52,7 @@ public class ParseToWL {
 		else { //if structA
 			
 			//System.out.print(headStruct.type());
-			boolean showParen = false, showPrev1 = true;
+			boolean showParen = false; //showPrev1 = true;
 			
 			String type = headStruct.type();
 			switch(headStruct.type()){
@@ -57,11 +61,18 @@ public class ParseToWL {
 					((Struct)headStruct.prev2()).prev1().equals("is") ){
 					
 				}
+				inAssert = true;
 				break;
 			case "verbphrase":
-				type = "";
+				if(inAssert ){
+					//showPrev1 = false;
+				}
+				type = "";				
 				break;
-			case "verb":				
+			case "verb":	
+				if(inAssert ){
+					assertVerb = headStruct.prev1().toString();
+				}
 				type = "";
 				break;
 			case "if":
@@ -90,10 +101,10 @@ public class ParseToWL {
 			if(headStruct.prev1() != null && showPrev1){
 				if(headStruct.prev1() instanceof Struct){
 					parseToWL((Struct)headStruct.prev1());
-
+					//if(showPrev1) showPrev1 = false;
 				}
 				else if(headStruct.prev1() instanceof String && !headStruct.prev1().equals("")){
-				
+					
 					System.out.print(headStruct.prev1());
 				}
 				if(headStruct.prev2() != null && headStruct.prev2().equals("") && showParen){
@@ -110,6 +121,11 @@ public class ParseToWL {
 						System.out.print(" ");
 					parseToWL((Struct)headStruct.prev2());
 					if(showParen) System.out.print("]");
+					
+					if(headStruct.type().equals("assert")){
+						System.out.print(", "+ assertVerb);
+						inAssert = false;
+					}
 				}
 				else if(headStruct.prev2() instanceof String && !headStruct.prev2().equals("")){
 					if(showParen)
