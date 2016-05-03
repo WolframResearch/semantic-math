@@ -97,7 +97,7 @@ public class ThmP1 {
 			}
 			
 			if(strlen > 2 && curWord.substring(strlen-2, strlen).equals("es") ){
-				singular = curWord.substring(0, strlen-2);
+				singular3 = curWord.substring(0, strlen-2);
 			}
 			
 			if(Maps.mathObjMap.containsKey(curWord) || 
@@ -207,15 +207,28 @@ public class ThmP1 {
 			}
 			//classify words with dashes; eg sesqui-linear
 			else if(curWord.split("-").length > 1){
-				String[] splitWords = curWord.split("-");
+				String[] splitWords = curWord.split("-");	
+			
 				String lastTerm = splitWords[splitWords.length-1];
-
-				if(posMap.containsKey(lastTerm)){
+				String lastTermS1 = singular.matches("") ? "" : singular.split("-")[splitWords.length-1];
+				String lastTermS2 = singular2.matches("") ? "" : singular2.split("-")[splitWords.length-1];
+				String lastTermS3 = singular3.matches("") ? "" : singular3.split("-")[splitWords.length-1];
+				
+				String searchKey = "";
+				if(posMap.containsKey(lastTerm)) searchKey = lastTerm;
+				else if(posMap.containsKey(lastTermS1)) searchKey = lastTermS1;
+				else if(posMap.containsKey(lastTermS2)) searchKey = lastTermS2;
+				else if(posMap.containsKey(lastTermS3)) searchKey = lastTermS3;
+				
+				if(!searchKey.equals("")){
 					
-					Pair pair = new Pair(curWord, posMap.get(lastTerm).split("_")[0]);
+					Pair pair = new Pair(curWord, posMap.get(searchKey).split("_")[0]);
 					pairs.add(pair);
 				}//if lastTerm is entity, eg A-module
-				else if( mathObjMap.containsKey(lastTerm) ){
+				if( mathObjMap.containsKey(lastTerm) 
+						|| mathObjMap.containsKey(lastTermS1)
+						|| mathObjMap.containsKey(lastTermS2)
+						|| mathObjMap.containsKey(lastTermS3)){
 					
 					Pair pair = new Pair(curWord, "mathObj");
 					pairs.add(pair);
@@ -603,6 +616,9 @@ public class ThmP1 {
 		boolean foundFirstEnt = false;
 		//track the most recent entity for use for pronouns				
 		Struct recentEnt = null;
+		//index for recentEnt, ensure we don't count later structs
+		//for pronouns
+		int recentEntIndex = -1;
 		
 		ArrayList<ArrayList<Struct>> mx = 
 				new ArrayList<ArrayList<Struct>>(len);	
@@ -667,12 +683,13 @@ public class ThmP1 {
 							foundFirstEnt = true;
 						}
 						recentEnt = struct1;
+						recentEntIndex = j;
 					}
 					
 					//if pronoun, refers to most recent ent
 					if(type1.equals("pro") && struct1.prev2() != null &&
 							struct1.prev2().equals("")){
-						if(recentEnt != null){
+						if(recentEnt != null && recentEntIndex < j){
 							String tempName = recentEnt.struct().get("name");
 							//if(recentEnt.struct().get("called") != null )
 								//tempName = recentEnt.struct().get("called");
@@ -687,6 +704,7 @@ public class ThmP1 {
 							foundFirstEnt = true;
 						}
 						recentEnt = struct2;
+						recentEntIndex = j;
 					}					
 					
 					//look up combined in struct table, like or_ent
@@ -844,6 +862,7 @@ public class ThmP1 {
 							}
 							
 							recentEnt = newStruct;
+							recentEntIndex = j;
 							
 							mx.get(i).set(j, newStruct);
 							
@@ -943,7 +962,9 @@ public class ThmP1 {
 		
 		if(mx.size() > 0){
 			System.out.println("WL: ");
-			ParseToWL.parseToWL(mx.get(0).get(len-1));		
+			ParseToWL.parseToWL(mx.get(0).get(len-1));
+			System.out.println();
+			ParseToWL.processParse();
 			System.out.println(); System.out.println("Java:");
 		}
 	}

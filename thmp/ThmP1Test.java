@@ -70,7 +70,10 @@ public class ThmP1Test {
 			st = "there exist integers tex and polynomials tex and an isomorphism of tex-algebras tex";
 			//String[] strAr = p1.preprocess("F is a extension over Q".split(" "));			
 			st = "a  system tex of tex-modules over tex consists of a family of tex-modules tex indexed by tex and a family of tex-module maps tex such that for all tex tex";	
-			st = "A is B";
+			st = "a field extends a field";
+			st = "it extend a field";
+			st = "A  system tex of tex-modules over tex consists of a family of tex-modules tex";
+			
 			ThmP1.parse(ThmP1.tokenize(ThmP1.preprocess(st.split(" "))));
 
 			Scanner sc = new Scanner(new File("noTex.txt"));
@@ -87,7 +90,7 @@ public class ThmP1Test {
 			
 			sc.close();
 			//p1.parse(p1.tokenize(p1.preprocess("characteristic of Fp is p".split(" "))));
-						
+			
 		}
 		
 }
