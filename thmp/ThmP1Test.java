@@ -72,7 +72,7 @@ public class ThmP1Test {
 			st = "a  system tex of tex-modules over tex consists of a family of tex-modules tex indexed by tex and a family of tex-module maps tex such that for all tex tex";	
 			st = "a field extends a field";
 			st = "it extend a field";
-			st = "A  system tex of tex-modules over tex consists of a family of tex-modules tex";
+			st = "A  system tex of tex-modules over tex consists of a tex of tex-modules tex";
 			
 			ThmP1.parse(ThmP1.tokenize(ThmP1.preprocess(st.split(" "))));
 
@@ -82,9 +82,10 @@ public class ThmP1Test {
 				st = sc.nextLine().toLowerCase();
 				if(st.matches("^\\s*$")) continue;
 				
+				System.out.println(st + "\n");
 				strAr = st.split("\\,|\\.|\\!");
-				for(int i = 0; i < strAr.length; i++){
-					//ThmP1.parse(ThmP1.tokenize(ThmP1.preprocess(strAr[i].trim().split(" ")))); //p1.parse(p1.tokenize(p1.preprocess(strAr2)));
+				for(int i = 0; i < strAr.length; i++){					
+					ThmP1.parse(ThmP1.tokenize(ThmP1.preprocess(strAr[i].trim().split(" ")))); //p1.parse(p1.tokenize(p1.preprocess(strAr2)));
 				}
 			}
 			

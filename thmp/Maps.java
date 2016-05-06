@@ -290,7 +290,8 @@ public class Maps {
 		structMap.put("parti_adj", "phrase"); structMap.put("symb_prep", "phrase");
 		
 		structMap.put("pre_noun", "np"); //nounphrase
-
+		structMap.put("adj_noun", "noun");
+		
 		//involving nums
 		structMap.put("pre_num", "prep");		
 		
