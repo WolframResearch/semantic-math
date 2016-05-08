@@ -657,7 +657,7 @@ public class ThmP1 {
 
 			for (int i = j - 1; i >= 0; i--) {
 				for (int k = j - 1; k >= i; k--) {
-					// i,k, and k+1,j
+					// pairs (i,k), and (k+1,j)
 
 					Struct struct1 = mx.get(i).get(k);
 					Struct struct2 = mx.get(k + 1).get(j);
@@ -848,9 +848,7 @@ public class ThmP1 {
 								break;
 							l++;
 						}
-					}
-
-					// create new child if " of "" "
+					}					
 
 					// reduce
 					if (structMap.containsKey(combined)) {
@@ -870,12 +868,12 @@ public class ThmP1 {
 							// added during mx building
 							// that are not picked up by the eventual parse
 							Struct newStruct = struct1.copy();
-
+							
 							// update firstEnt so to have the right children
 							if (firstEnt == struct1) {
 								firstEnt = newStruct;
 							}
-
+							
 							// add to child relation, usually a preposition, eg
 							// "from", "over"
 							// could also be verb, "consist", "lies"
@@ -898,7 +896,7 @@ public class ThmP1 {
 								struct2.set_prev1(adj + " " + struct2.prev1());
 								mx.get(i).set(j, struct2);
 							}
-						} //throw away fluffy phrases by marking their type as FLUFF
+						}
 						
 						else {
 							
@@ -1032,9 +1030,6 @@ public class ThmP1 {
 			System.out.print("[");
 			// don't know type at compile time
 			if (struct.prev1() instanceof Struct) {
-				// if(!((StructA<Struct,
-				// ?>)struct).prev1().type().equals(struct.type())){
-
 				dfs((Struct) struct.prev1());
 			}
 
@@ -1044,8 +1039,6 @@ public class ThmP1 {
 			if (((StructA<?, ?>) struct).prev2() instanceof Struct) {
 				// avoid printing is[is], ie case when parent has same type as
 				// child
-				// if(!((StructA<?,
-				// Struct>)struct).prev2().type().equals(struct.type()))
 				System.out.print(", ");
 				dfs((Struct) struct.prev2());
 			}

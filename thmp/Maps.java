@@ -289,7 +289,7 @@ public class Maps {
 		//phrases: been there, x in X, 
 		structMap.put("parti_adj", "phrase"); structMap.put("symb_prep", "phrase");
 		
-		structMap.put("pre_noun", "np"); //nounphrase
+		structMap.put("pre_noun", "ppt"); //nounphrase
 		structMap.put("adj_noun", "noun");
 		
 		//involving nums
@@ -337,6 +337,7 @@ public class Maps {
 		
 		//eg "property that a is b"
 		structMap.put("noun_phrase", "nounphrase"); structMap.put("ent_phrase", "newchild");
+		structMap.put("ent_ppt", "newchild");
 		
 		structMap.put("adverb_adj", "adj"); ///*******		
 		structMap.put("adverb_verbphrase", "assert");

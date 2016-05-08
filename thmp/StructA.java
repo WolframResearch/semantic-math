@@ -34,6 +34,11 @@ public class StructA<A, B> extends Struct{
 	}
 	
 	@SuppressWarnings("unchecked")
+	public void set_prev1(String prev1){	
+		this.prev1 = (A)prev1;
+	}
+	
+	@SuppressWarnings("unchecked")
 	public void set_prev2(Object prev2){
 		this.prev2 = (B)prev2;		
 	}

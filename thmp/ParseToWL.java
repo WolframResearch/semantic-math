@@ -18,19 +18,18 @@ public class ParseToWL {
 	
 	public static void parseToWL(Struct headStruct){
 		parseString = "";
-		parseToWL(headStruct, true);
+		parseToWL(headStruct, true, false);
 	}
 	/**
 	 * 
 	 * @param headStruct is head of a parse
 	 */
-	public static void parseToWL(Struct headStruct, boolean showPrev1){
+	public static void parseToWL(Struct headStruct, boolean showPrev1, boolean inChild){
 		
 		if(headStruct == null) return;		
 		boolean showprev1 = showPrev1;
 		//if structH
 		if( headStruct.struct().size() > 0 ){
-			//System.out.print(" [");
 			
 			System.out.print(headStruct.present());		
 			parseString += headStruct.present();
@@ -41,21 +40,15 @@ public class ParseToWL {
 			if( children != null && children.size() > 0 ){
 				for(int i = 0; i < children.size(); i++){
 					switch(childRelation.get(i)){
-					case "of":
-						System.out.print(", ");
-						parseString += ", ";
-						parseToWL(children.get(i), showprev1);
-						break;
 					
 					default:
-						System.out.print(childRelation.get(i) + " ");
-						parseString += childRelation.get(i) + " ";
-						parseToWL(children.get(i), showprev1);
-						//System.out.print(" ]");
+						System.out.print(", " + childRelation.get(i) + " ");
+						parseString += ", " + childRelation.get(i) + " ";
+						parseToWL(children.get(i), showPrev1, true);
 					}
 				}
 			}
-			System.out.print("]");
+			System.out.print("}");
 			parseString += "]";
 		}
 		else { //if structA
@@ -102,68 +95,68 @@ public class ParseToWL {
 				showprev1 = false;
 				break;
 			case "adj": type = ""; break;
+			case "ppt": type = ""; showprev1 = false; break;
 			case "let": type = ""; showprev1 = false; break;
+			case "prep": type = ""; showprev1 = false; break;
 			default:
 				showParen = true;
 					
 			}
 			
-			System.out.print(type);
-			parseString += type;
-			if(showParen ) System.out.print("[");
-			parseString += "[";
+			if(showPrev1){
+				System.out.print(type);
+				parseString += type;
+			}
+			if(showprev1){
+				System.out.print("[");
+				parseString += "[";
+			}
 			
 			if(headStruct.prev1() != null){
 				if(headStruct.prev1() instanceof Struct){
-					parseToWL((Struct)headStruct.prev1(), showprev1);
+					parseToWL((Struct)headStruct.prev1(), showprev1, false);
 				}
-				else if(headStruct.prev1() instanceof String && !headStruct.prev1().equals("")){
+				else if(headStruct.prev1() instanceof String && !headStruct.prev1().equals("") && showprev1){
 					
 					System.out.print(headStruct.prev1());
 					parseString += headStruct.prev1();
 				}
-				if(headStruct.prev2() != null && headStruct.prev2().equals("") && showParen){
-					System.out.print("]");
+				if(headStruct.prev2() != null && headStruct.prev2().equals("") && showPrev1){
+					System.out.print("*]*");
 					parseString += "]";
+				}
+				if(headStruct.prev2() != null && !headStruct.prev2().equals("") && showprev1){
+					System.out.print(", ");
+					parseString += ", ";
 				}
 			}
 			
 			if(headStruct.prev2() != null){
 				
 				if(headStruct.prev2() instanceof Struct){
-					//if(showParen)
-					System.out.print(", ");
-					parseString += ", ";
+					
 					if(!showParen){
 						System.out.print(" ");
 						parseString += " ";
 					}
-					parseToWL((Struct)headStruct.prev2(), showprev1);
-					//if(showParen) System.out.print("]");
+					parseToWL((Struct)headStruct.prev2(), showPrev1, false);
 					
 					if(headStruct.type().equals("assert")){
 						System.out.print(", "+ assertVerb + "]");
 						parseString += ", "+ assertVerb + "]";
 						inAssert = false;
 					}
+					if(!showprev1 && !(headStruct.prev2() instanceof StructH) && !inChild)
+						System.out.print("^]");
+					if(showprev1 && (headStruct.prev2() instanceof StructH))
+						System.out.print("`]");
 				}
-				else if(headStruct.prev2() instanceof String && !headStruct.prev2().equals("")){
-						System.out.print(", ");
-						parseString += ", ";
-					
+				else if(headStruct.prev2() instanceof String && !headStruct.prev2().equals("")){						
 				
 					System.out.print(headStruct.prev2());
 					parseString += headStruct.prev2();
-					//if(showParen) System.out.print("]");
+					if(showprev1) System.out.print("~]");
 				}
-			}
-			
-			//if(headStruct.prev2() != null && headStruct.prev2().equals("") && showParen){
-			//	System.out.print("]");
-			//}
-			if(!showprev1) {
-				System.out.print("]");
-				parseString += "]";
 			}
 		}
 	}
@@ -171,7 +164,9 @@ public class ParseToWL {
 	public static void processParse(){
 		//System.out.println(parseString);
 		parseString = parseString.replaceAll("\\[\\],\\s", "");
-		parseString = parseString.replaceAll(",\\s\\]", "]");
+		
+		parseString = parseString.replaceAll(",\\s\\]", "]").
+				replaceAll(",\\s,\\s", ", ");
 		System.out.println("***");
 		System.out.println(parseString);
 		System.out.println("***");

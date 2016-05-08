@@ -67,14 +67,16 @@ public class ThmP1Test {
 			st = "if a group G is abelian, then it is nilpotent";
 			st = "let p be a prime and let P be a group of order p, then P is nilpotent of nilpotence class at most d";
 			st = "suppose that tex and tex are finite ring maps. then tex is finite";
-			st = "there exist integers tex and polynomials tex and an isomorphism of tex-algebras tex";
 			//String[] strAr = p1.preprocess("F is a extension over Q".split(" "));			
 			st = "a  system tex of tex-modules over tex consists of a family of tex-modules tex indexed by tex and a family of tex-module maps tex such that for all tex tex";	
 			st = "a field extends a field";
 			st = "it extend a field";
-			st = "A  system tex of tex-modules over tex consists of a tex of tex-modules tex";
+			//st = "A  system tex of tex-modules over tex consists of a tex of tex-modules tex";
+			//st = "given a commutative diagram tex of abelian groups of family";
+			//st = "given a commutative diagram of rows";
+			//st = "given a commutative diagram ";
 			
-			ThmP1.parse(ThmP1.tokenize(ThmP1.preprocess(st.split(" "))));
+			//ThmP1.parse(ThmP1.tokenize(ThmP1.preprocess(st.split(" "))));
 
 			Scanner sc = new Scanner(new File("noTex.txt"));
 			
@@ -82,7 +84,7 @@ public class ThmP1Test {
 				st = sc.nextLine().toLowerCase();
 				if(st.matches("^\\s*$")) continue;
 				
-				System.out.println(st + "\n");
+				//System.out.println(st + "\n");
 				strAr = st.split("\\,|\\.|\\!");
 				for(int i = 0; i < strAr.length; i++){					
 					ThmP1.parse(ThmP1.tokenize(ThmP1.preprocess(strAr[i].trim().split(" ")))); //p1.parse(p1.tokenize(p1.preprocess(strAr2)));

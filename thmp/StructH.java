@@ -101,7 +101,7 @@ public class StructH<H> extends Struct{
 	
 	public String present(){
 		String str = this.type.equals("ent") ? "MathObj" : this.type;
-		str += "[";
+		str += "{";
 		Iterator<Entry<String, String>> structIter = struct.entrySet().iterator();
 		String name = "", called = "", ppt = "";
 		
