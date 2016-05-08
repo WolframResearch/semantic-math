@@ -879,8 +879,8 @@ public class ThmP1 {
 							// could also be verb, "consist", "lies"
 							String childRelation = mx.get(k + 1).get(k + 1).prev1().toString();
 							if (struct1 instanceof StructH) {
-								// why does this cast not trigger unchecked
-								// warning??
+								// why does this cast not trigger unchecked 
+								//(cause can throw Exceptions)								
 								((StructH<?>) newStruct).add_child(struct2, childRelation);
 							}
 
@@ -992,21 +992,24 @@ public class ThmP1 {
 		parse2(parsedStructList);
 
 		// print out the system
-		for (int k = 0; k < parsedStructList.size(); k++) {
+		int parsedStructListSize = parsedStructList.size();
+		for (int k = 0; k < parsedStructListSize; k++) {
 			dfs(parsedStructList.get(k));
-			if (k != parsedStructList.size() - 1)
+			if (k < parsedStructListSize - 1)
 				System.out.print(" -- ");
 		}
 		System.out.println();
 
-		if (mx.size() > 0) {
+		for (int k = 0; k < parsedStructListSize; k++) {
+			Struct head = parsedStructList.get(k);
+			
 			System.out.println("WL: ");
-			ParseToWL.parseToWL(mx.get(0).get(len - 1));
+			ParseToWL.parseToWL(head);
 			System.out.println();
 			ParseToWL.processParse();
 			System.out.println();
-			System.out.println("Java:");
 		}
+		
 	}
 
 	/**
@@ -1073,7 +1076,7 @@ public class ThmP1 {
 	}
 
 	/*
-	 * Preprocess. Remove fluff words. The, a, Remove endings, -ing, -s
+	 * Preprocess. Remove fluff words. the, a, an
 	 */
 	public static String[] preprocess(String[] str) {
 		ArrayList<String> wordList = new ArrayList<String>();

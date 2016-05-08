@@ -72,11 +72,10 @@ public class Struct {
 		return "";
 	}
 	
-	public void test(String obj){
-		
+	public void test(String obj){		
 	}
 	
-	public String present(){
+	public String present(String str){
 		return "";
 	}
 	

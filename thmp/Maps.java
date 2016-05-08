@@ -73,7 +73,7 @@ public class Maps {
 		String[] adverbs = {};
 				
 		String[] nouns = {"family", "notion", "permanence", "property", "inclusion", "relation",
-				"row", "notion"};
+				"row", "notion", "inclusion"};
 		
 		//list of all the String arrays above
 		//ArrayList<String[]> posArraysList = new ArrayList<String[]>();
@@ -163,7 +163,9 @@ public class Maps {
 		
 		//prepositions
 		posMap.put("or", "or"); posMap.put("and", "and"); posMap.put("at most", "pre");
-		posMap.put("is", "verb"); posMap.put("at", "pre_COMP"); posMap.put("if", "if");
+		posMap.put("is", "verb"); posMap.put("at", "pre_COMP"); posMap.put("if", "if_COMP");
+		posMap.put("if and", "if_COMP"); posMap.put("if and only", "if_COMP"); 
+		posMap.put("if and only if", "iff");
 		posMap.put("then", "then"); posMap.put("between", "pre"); 
 		//between... -> between, and...->and, between_and->between_and
 		
@@ -175,13 +177,15 @@ public class Maps {
 		posMap.put("over", "pre"); posMap.put("with", "pre");
 		posMap.put("by", "pre"); posMap.put("as", "pre"); posMap.put("such", "pre_COMP"); 
 		posMap.put("such that", "hyp"); posMap.put("so", "pre"); posMap.put("where", "hyp");
+		posMap.put("which is", "hyp"); posMap.put("which are", "hyp"); posMap.put("that is", "hyp");
+		posMap.put("that are", "hyp");
 		
 		//pronouns
 		posMap.put("their", "pro"); posMap.put("it", "pro"); posMap.put("we", "pro"); 
 		posMap.put("they", "pro"); 
 		//relative pronouns
-		posMap.put("whose", "rpro"); posMap.put("which", "rpro"); posMap.put("that", "rpro_COMP");
-		posMap.put("whom", "rpro"); posMap.put("that is", "pre");
+		posMap.put("whose", "rpro"); posMap.put("which", "rpro_COMP"); posMap.put("that", "rpro_COMP");
+		posMap.put("whom", "rpro"); 
 		
 		//verbs, verbs map does not support -ing form, ie divide->dividing
 		//3rd person singular form that ends in "es" are checked with 
@@ -259,6 +263,7 @@ public class Maps {
 		structMap.put("is_ent", "is"); structMap.put("is_or", "is");
 		structMap.put("ent_is", "assert");
 		structMap.put("symb_is", "assert"); structMap.put("if_assert", "ifstate");	
+		structMap.put("iff_assert", "ifstate");
 		structMap.put("then_assert", "thenstate");
 		
 		//expression, e.g. a map from A to B
@@ -318,7 +323,7 @@ public class Maps {
 		structMap.put("verb_np", "verbphrase"); structMap.put("verb_prep", "verbphrase");
 		structMap.put("verb_num", "verbphrase"); structMap.put("verb_nounphrase", "verbphrase");
 		structMap.put("verb_pre", "verbphrase"); structMap.put("verb_phrase", "verbphrase");
-		structMap.put("verb_partient", "verbphrase");
+		structMap.put("verb_partient", "verbphrase"); structMap.put("verb_noun", "verbphrase");
 		structMap.put("det_verbphrase", "assert");
 		structMap.put("verb_symb", "verbphrase"); structMap.put("symb_verbphrase", "assert");
 		structMap.put("ent_verbphrase", "assert"); structMap.put("pro_verbphrase", "assert");
@@ -328,7 +333,8 @@ public class Maps {
 		
 		structMap.put("let_symb", "let"); structMap.put("be_ent", "be"); structMap.put("let_be", "letbe");
 		structMap.put("let_ent", "let");
-		structMap.put("if_assert", "If"); structMap.put("assert_If", "assert"); 
+		structMap.put("if_assert", "If"); structMap.put("assert_If", "assert");
+		structMap.put("assert_iff", "assert"); 
 		structMap.put("hyp_assert", "hypo"); structMap.put("hyp_ent", "hypo");
 		structMap.put("hyp_phrase", "hypo");
 		structMap.put("hyp_symb", "hypo"); structMap.put("rpro_ent", "rproent");

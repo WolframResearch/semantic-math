@@ -6,7 +6,7 @@ public class StructA<A, B> extends Struct{
 	private A prev1; 
 	private B prev2; 
 	private String type; //or, and, adj, pro etc, cannot ent
-	private String type1; //type of prev1, , al, string etc
+	private String type1; //type of prev1, , al, string etc. Is this used??
 	private String type2; //type of prev2
 	
 	public StructA(A prev1, B prev2, String type){
@@ -61,7 +61,6 @@ public class StructA<A, B> extends Struct{
 	//public void set_prev1(A str){
 	//}
 	
-
 	public String type1(){
 		return this.type1;		
 	}
@@ -74,6 +73,37 @@ public class StructA<A, B> extends Struct{
 	public String toString(){
 		String str = " type: " + this.type + " ";
 		
+		return str;
+	}
+	
+	//used by present() in StructH; right now no need
+	//to go deeper into prev1/prev2
+	@Override
+	public String present(String str){
+		//str += this.type + "[";
+		str += "[";
+		
+		if(prev1 != null && !prev1.equals("")){
+			if(prev1 instanceof Struct){
+				str = ((Struct) prev1).present(str);
+				
+			}else if(prev1 instanceof String){
+				if(!type.matches("pre")){
+					str += prev1;
+				}
+			}			
+		}
+		
+		if(prev2 != null && !prev2.equals("")){
+			if(prev2 instanceof Struct){
+				str = ((Struct) prev2).present(str);
+			}else if(prev2 instanceof String){
+				str += ", " + prev2;
+			}
+		}
+		
+		//str += "]";
+		str += "]";
 		return str;
 	}
 	

@@ -13,6 +13,7 @@ public class StructH<H> extends Struct{
 	private ArrayList<Struct> children; 
 	//relation to child, eg "of," "enjoyed"
 	private ArrayList<String> childRelation;	
+	
 	//parent
 	//private Struct parent;
 	
@@ -99,8 +100,10 @@ public class StructH<H> extends Struct{
 		return str;
 	}
 	
-	public String present(){
-		String str = this.type.equals("ent") ? "MathObj" : this.type;
+	//similar to toString(). Presents StructH as a String
+	@Override
+	public String present(String str){
+		str += this.type.equals("ent") ? "MathObj" : this.type;
 		str += "{";
 		Iterator<Entry<String, String>> structIter = struct.entrySet().iterator();
 		String name = "", called = "", ppt = "";
@@ -116,15 +119,27 @@ public class StructH<H> extends Struct{
 			else if(entry.getKey().matches("called") ){
 				called = entry.getValue();
 			}
-		}
+		}		
 		
 		name = called.length() > 0 ? name + ", ": name;
-		called = !called.equals("") || !(ppt.length() == 0) ? called : called + ", ";
+		called = !(ppt.length() == 0) ? called + ", " : called;
 		ppt = ppt.length() > 2 ? ppt.substring(0, ppt.length() - 2) : ppt;
 		
 		str += name + called + ppt;
 		
-		str += " }";
+		if(children.size() > 0) str += ", ";
+		
+		//iterate through children		
+		int childrenSize = children.size();
+		for(int i = 0; i < childrenSize; i++){
+			str += childRelation.get(i) + " ";
+			Struct child = children.get(i);
+			str = child.present(str);	
+			if(i < childrenSize - 1)
+				str += ", ";
+		}
+		
+		str += "}";
 
 		return str;
 	}
