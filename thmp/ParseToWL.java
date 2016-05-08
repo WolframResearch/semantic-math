@@ -18,13 +18,13 @@ public class ParseToWL {
 	
 	public static void parseToWL(Struct headStruct){
 		parseString = "";
-		parseToWL(headStruct, true, false);
+		parseToWL(headStruct, true);
 	}
 	/**
 	 * 
 	 * @param headStruct is head of a parse
 	 */
-	public static void parseToWL(Struct headStruct, boolean showPrev1, boolean inChild){
+	public static void parseToWL(Struct headStruct, boolean showPrev1){
 		
 		if(headStruct == null) return;		
 		boolean showprev1 = showPrev1;
@@ -33,7 +33,7 @@ public class ParseToWL {
 			
 			System.out.print(headStruct.present());		
 			parseString += headStruct.present();
-			
+			/*
 			ArrayList<Struct> children = headStruct.children();
 			ArrayList<String> childRelation = headStruct.childRelation();				
 			
@@ -50,6 +50,7 @@ public class ParseToWL {
 			}
 			System.out.print("}");
 			parseString += "]";
+			*/
 		}
 		else { //if structA
 			
@@ -114,7 +115,7 @@ public class ParseToWL {
 			
 			if(headStruct.prev1() != null){
 				if(headStruct.prev1() instanceof Struct){
-					parseToWL((Struct)headStruct.prev1(), showprev1, false);
+					parseToWL((Struct)headStruct.prev1(), showprev1);
 				}
 				else if(headStruct.prev1() instanceof String && !headStruct.prev1().equals("") && showprev1){
 					
@@ -139,16 +140,15 @@ public class ParseToWL {
 						System.out.print(" ");
 						parseString += " ";
 					}
-					parseToWL((Struct)headStruct.prev2(), showPrev1, false);
+					parseToWL((Struct)headStruct.prev2(), showPrev1);
 					
 					if(headStruct.type().equals("assert")){
-						System.out.print(", "+ assertVerb + "]");
-						parseString += ", "+ assertVerb + "]";
+						System.out.print(", "+ assertVerb );
+						parseString += ", "+ assertVerb;
 						inAssert = false;
 					}
-					if(!showprev1 && !(headStruct.prev2() instanceof StructH) && !inChild)
-						System.out.print("^]");
-					if(showprev1 && (headStruct.prev2() instanceof StructH))
+					
+					if(showprev1 )
 						System.out.print("`]");
 				}
 				else if(headStruct.prev2() instanceof String && !headStruct.prev2().equals("")){						

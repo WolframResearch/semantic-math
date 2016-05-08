@@ -124,7 +124,7 @@ public class StructH<H> extends Struct{
 		
 		str += name + called + ppt;
 		
-		//str += " ]";
+		str += " }";
 
 		return str;
 	}

@@ -71,7 +71,7 @@ public class ThmP1Test {
 			st = "a  system tex of tex-modules over tex consists of a family of tex-modules tex indexed by tex and a family of tex-module maps tex such that for all tex tex";	
 			st = "a field extends a field";
 			st = "it extend a field";
-			//st = "A  system tex of tex-modules over tex consists of a tex of tex-modules tex";
+			st = "A  system tex of tex-modules over tex consists of a tex of tex-modules tex";
 			//st = "given a commutative diagram tex of abelian groups of family";
 			//st = "given a commutative diagram of rows";
 			//st = "given a commutative diagram ";
