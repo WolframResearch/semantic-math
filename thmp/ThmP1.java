@@ -879,11 +879,11 @@ public class ThmP1 {
 							// could also be verb, "consist", "lies"
 							String childRelation = mx.get(k + 1).get(k + 1).prev1().toString();
 							if (struct1 instanceof StructH) {
-								// why does this cast not trigger unchecked 
-								//(cause can throw Exceptions)								
+								// why does this cast not trigger unchecked warning		
+								//cause wildcard!
 								((StructH<?>) newStruct).add_child(struct2, childRelation);
 							}
-
+							
 							recentEnt = newStruct;
 							recentEntIndex = j;
 
@@ -1035,10 +1035,9 @@ public class ThmP1 {
 			if (struct.prev1() instanceof Struct) {
 				dfs((Struct) struct.prev1());
 			}
-
+			
 			// if(struct.prev2() != null && !struct.prev2().equals(""))
 			// System.out.print(", ");
-
 			if (((StructA<?, ?>) struct).prev2() instanceof Struct) {
 				// avoid printing is[is], ie case when parent has same type as
 				// child

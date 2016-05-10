@@ -77,6 +77,7 @@ public class ParseToWL {
 			case "rpro": type = ""; break;	
 			case "hyp": type = ""; break;
 			case "adj": type = ""; break;
+			case "det": type = ""; break;
 			case "ppt": type = ""; showprev1 = false; break;
 			case "let": type = ""; showprev1 = false; break;
 			case "be": type = ""; showprev1 = false; break;
