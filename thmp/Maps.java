@@ -67,10 +67,12 @@ public class Maps {
 		//pos should preserve connective words, or stays or
 		String[] verbs = {"present", "mean", "say", "order", "direct", "index"};
 		
-		String[] adjs = {"first", "successive", "some", "transitive", "reflexive", "together",
+		String[] adjs = {"first", "successive", "some", "transitive", "reflexive", "together_COMP",
 				"empty", "short", "natural"};
 		
 		String[] adverbs = {};
+		
+		String[] pres = {"together with"};
 				
 		String[] nouns = {"family", "notion", "permanence", "property", "inclusion", "relation",
 				"row", "notion", "inclusion"};
@@ -82,7 +84,7 @@ public class Maps {
 		HashMap<String, String[]> posArraysMap = new HashMap<String, String[]>();
 		posArraysMap.put("mathObj", ents); posArraysMap.put("adverb", adverbs);
 		posArraysMap.put("verb", verbs); posArraysMap.put("noun", nouns);
-		posArraysMap.put("adj", adjs);
+		posArraysMap.put("adj", adjs); posArraysMap.put("pre", pres);
 				
 		ArrayList<String[]> pList = new ArrayList<String[]>(); //pos List
 		
@@ -274,8 +276,8 @@ public class Maps {
 		structMap.put("or_symb", "orsymb"); structMap.put("symb_orsymb", "or");
 		structMap.put("or_assert", "orass"); structMap.put("ent_orass", "or");
 		structMap.put("or_is", "assert"); structMap.put("assert_orass", "or");
-		structMap.put("ent_adj", "ent"); structMap.put("ent_ppt", "ent");
-		structMap.put("ent_ent", "ent");
+		structMap.put("ent_ppt", "newchild");
+		//structMap.put("ent_ent", "ent");
 		
 		//e.g. between A and B.
 		//structMap.put("pre_conj", "prep"); structMap.put("pre_disj", "prep");
@@ -291,6 +293,7 @@ public class Maps {
 		structMap.put("pre_noun", "prep"); structMap.put("gerund_verbphrase", "assert");
 		//participle: called, need to take care of "said" etc
 		structMap.put("parti_ent", "partient"); structMap.put("ent_partient", "newchild");
+		structMap.put("ent_hypo", "newchild");
 		//phrases: been there, x in X, 
 		structMap.put("parti_adj", "phrase"); structMap.put("symb_prep", "phrase");
 		
@@ -329,14 +332,16 @@ public class Maps {
 		structMap.put("ent_verbphrase", "assert"); structMap.put("pro_verbphrase", "assert");
 		structMap.put("nounphrase_verbphrase", "assert");
 		structMap.put("verb_assert", "verbphrase"); structMap.put("verbphrase_prep", "verbphrase");
+		structMap.put("partiby_ent", "phrase"); structMap.put("partiby_noun", "phrase");
+		structMap.put("verb_partiby", "verb");
 		structMap.put("disj_verbphrase", "assert"); structMap.put("conj_verbphrase", "assert");
 		
 		structMap.put("let_symb", "let"); structMap.put("be_ent", "be"); structMap.put("let_be", "letbe");
 		structMap.put("let_ent", "let");
 		structMap.put("if_assert", "If"); structMap.put("assert_If", "assert");
-		structMap.put("assert_iff", "assert"); 
+		structMap.put("assert_iff", "assert"); structMap.put("hyp_hyp", "hyp");
 		structMap.put("hyp_assert", "hypo"); structMap.put("hyp_ent", "hypo");
-		structMap.put("hyp_phrase", "hypo");
+		structMap.put("hyp_phrase", "hypo"); structMap.put("hyp_adj", "hypo");
 		structMap.put("hyp_symb", "hypo"); structMap.put("rpro_ent", "rproent");
 		structMap.put("ent_rproent", "newchild"); structMap.put("rpro_verbphrase", "phrase");
 		structMap.put("rpro_assert", "phrase"); 

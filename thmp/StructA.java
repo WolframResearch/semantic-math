@@ -81,14 +81,21 @@ public class StructA<A, B> extends Struct{
 	@Override
 	public String present(String str){
 		//str += this.type + "[";
-		str += "[";
+		boolean showprev1 = true;
+		if(this.type.matches("hyp") && this.prev1 instanceof String
+				&& !((String)this.prev1).matches("for all|for every")){
+			showprev1 = false;
+		}
+		
+		str += this.type.matches("conj_.*") ? this.type + "[" : "[";
+		//str += "[";
 		
 		if(prev1 != null && !prev1.equals("")){
 			if(prev1 instanceof Struct){
 				str = ((Struct) prev1).present(str);
 				
-			}else if(prev1 instanceof String){
-				if(!type.matches("pre")){
+			}else if(prev1 instanceof String && showprev1){
+				if(!type.matches("pre|partiby")){
 					str += prev1;
 				}
 			}			
@@ -96,7 +103,7 @@ public class StructA<A, B> extends Struct{
 		
 		if(prev2 != null && !prev2.equals("")){
 			if(prev2 instanceof Struct){
-				str = ((Struct) prev2).present(str);
+				str = ((Struct) prev2).present(str + ", ");
 			}else if(prev2 instanceof String){
 				str += ", " + prev2;
 			}

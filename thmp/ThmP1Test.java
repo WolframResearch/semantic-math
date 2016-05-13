@@ -80,19 +80,31 @@ public class ThmP1Test {
 			//st = "given a commutative diagram of rows";
 			//st = "given a commutative diagram ";
 			//st = "tex is of  finite presentation if there exist integers tex and polynomials tex and an isomorphism of tex-algebras tex";
-			st = "a ring is a field if it is a field";
-			ThmP1.parse(ThmP1.tokenize(ThmP1.preprocess(st.split(" |\\."))));
+			st = "a ring is a field, if it is a field";
+			st = "a system tex of tex-modules over tex consists of a family of tex-"
+					+ "modules tex indexed by tex and a family of tex-"
+					+ "module maps tex such that for all tex tex.";
+			//st = "family of fields indexed by tex and a family of tex-module maps such that for all tex";
+			st = "a  partially ordered set is a set tex together with a relation tex which is transitive  and reflexive.";
+			st = "a  directed set tex is a partially ordered set tex such that tex is not empty and such that tex, there exists tex with tex";
+			st = "there exists tex with tex";
+			//st = "a field that is a field extension";			
+			//st = "a  partially ordered set is a set tex together with a relation tex which is transitive  and reflexive";
+			//st = " a set tex together with a relation tex which is transitive  and reflexive";
 
+			
+			ThmP1.parse(ThmP1.tokenize(ThmP1.preprocess(st.split(" |\\.|\\,"))));
+			
 			Scanner sc = new Scanner(new File("noTex.txt"));
 			
 			while(sc.hasNextLine()){
 				st = sc.nextLine().toLowerCase().replaceAll("\\([^)]*\\)", "");
 				if(st.matches("^\\s*$")) continue;
 				
-				System.out.println(st + "\n");
+				//System.out.println(st + "\n");
 				strAr = st.split("\\,|\\.|\\!");
 				for(int i = 0; i < strAr.length; i++){					
-					ThmP1.parse(ThmP1.tokenize(ThmP1.preprocess(strAr[i].trim().split(" ")))); //p1.parse(p1.tokenize(p1.preprocess(strAr2)));
+					//ThmP1.parse(ThmP1.tokenize(ThmP1.preprocess(strAr[i].trim().split(" ")))); //p1.parse(p1.tokenize(p1.preprocess(strAr2)));
 				}
 			}
 			

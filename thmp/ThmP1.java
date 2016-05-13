@@ -78,7 +78,7 @@ public class ThmP1 {
 		// list of each word with their initial type, adj, noun,
 		ArrayList<Pair> pairs = new ArrayList<Pair>();
 		boolean addIndex = true; // whether to add to pairIndex
-		int pairIndex = 0;
+		//int pairIndex = 0;
 		for (int i = 0; i < str.length; i++) {
 
 			String curWord = str[i];
@@ -270,8 +270,9 @@ public class ThmP1 {
 				// if next word is "by", then
 				String curPos = "parti";
 
+				//if next word is "by"
 				if (str.length > i && str[i + 1].equals("by")) {
-					curPos = "pre";
+					curPos = "partiby";
 					curWord = curWord + " by";
 					i++;
 				}
@@ -316,9 +317,9 @@ public class ThmP1 {
 				continue;
 			}
 
-			if (addIndex) {
-				pairIndex++;
-			}
+			//if (addIndex) {
+			//	pairIndex++;
+			//}
 			addIndex = true;
 
 			int pairsSize = pairs.size();
@@ -328,12 +329,16 @@ public class ThmP1 {
 			if (pair.pos().equals("verb")) {
 				if (pairs.size() > -1 && (pairs.get(pairsSize - 2).word().matches("not|no")
 						|| pairs.get(pairsSize - 2).pos().matches("not"))) {
-					pair.set_word("not " + pair.word());
+					String newWord = pair.word().matches("is|are") 
+							? "not" : "not " + pair.word();
+					pair.set_word(newWord);
 					pairs.remove(pairsSize - 2);
 				}
 
 				if (i + 1 < str.length && str[i + 1].matches("not|no")) {
-					pair.set_word("not " + pair.word());
+					String newWord = pair.word().matches("is|are") 
+							? "not" : "not " + pair.word();
+					pair.set_word(newWord);
 					i++;
 				}
 			}
@@ -381,7 +386,7 @@ public class ThmP1 {
 		// map of math entities, has mathObj + ppt's
 		ArrayList<StructH<HashMap<String, String>>> mathEntList = new ArrayList<StructH<HashMap<String, String>>>();
 
-		// second run, combine adj with math nouns
+		// second run, combine adj with math ent's
 		for (int j = 0; j < mathIndexList.size(); j++) {
 
 			int index = mathIndexList.get(j);
@@ -414,6 +419,13 @@ public class ThmP1 {
 				String givenName = pairs.get(index - 1).word();
 				tempMap.put("called", givenName);
 				namesMap.put(givenName, tempStructH);
+			}
+			
+			//combine nouns with ent's right after, ie noun_ent
+			if (index > 0 && pairs.get(index - 1).pos().matches("noun")) {
+				pairs.get(index - 1).set_pos(String.valueOf(j));
+				String prevNoun = pairs.get(index-1).word();				
+				tempMap.put("name", tempMap.get("name") + " " + prevNoun);
 			}
 
 			// look to left and right
@@ -468,8 +480,8 @@ public class ThmP1 {
 
 			tempStructH.set_struct(tempMap);
 			mathEntList.add(tempStructH);
-		}
-
+		}		
+		
 		// combine anchors into entities. Such as "of," "has"
 		for (int j = anchorList.size() - 1; j > -1; j--) {
 			int index = anchorList.get(j);
@@ -503,12 +515,11 @@ public class ThmP1 {
 						StructH<HashMap<String, String>> tempStruct = mathEntList.get(mathObjIndex);
 						
 						String entName = tempStruct.struct().get("name");
-						tempStruct.struct().put("name", prevPair.word() + " " + entName);
+						tempStruct.struct().put("name", prevPair.word() + " of " + entName);
 						
 						pairs.get(index).set_pos(nextPair.pos());
-						prevPair.set_pos(nextPair.pos());
+						prevPair.set_pos(nextPair.pos());						
 						
-						//pairs.remove(index-1);
 						
 					} //special case: "of form"
 					
@@ -540,8 +551,6 @@ public class ThmP1 {
 		// arraylist of structs
 		ArrayList<Struct> structList = new ArrayList<Struct>();
 
-		// Iterator<StructH<HashMap<String, String>>> mathEntIter =
-		// mathEntList.iterator();
 		ListIterator<Pair> pairsIter = pairs.listIterator();
 
 		String prevPos = "-1";
@@ -568,7 +577,6 @@ public class ThmP1 {
 
 			} else {
 				// current word hasn't classified into an ent
-				//////
 
 				int structListSize = structList.size();
 
@@ -596,7 +604,6 @@ public class ThmP1 {
 				if (curPair.pos().equals("adj")) {
 					if (structListSize > 0 && structList.get(structListSize - 1).type().equals("adverb")) {
 						Struct adverbStruct = structList.get(structListSize - 1);
-						// adverbStruct.set_prev2(curPair.word());
 						newStruct.set_prev2(adverbStruct);
 						// remove the adverb Struct
 						structList.remove(structListSize - 1);
@@ -691,8 +698,10 @@ public class ThmP1 {
 					if (split2.length > 1) {
 						type2 = split2[1];
 					}
-
-					if (type1.equals("ent")) {
+					
+					//if recentEntIndex < j, it was deliberately skipped 
+					//in a previous pair when it was the 2nd struct 
+					if (type1.equals("ent") && (!(recentEntIndex < j) || !foundFirstEnt) ) {
 						if (!foundFirstEnt) {
 							firstEnt = struct1;
 							foundFirstEnt = true;
@@ -700,8 +709,11 @@ public class ThmP1 {
 						recentEnt = struct1;
 						recentEntIndex = j;
 					}
-
-					// if pronoun, refers to most recent ent
+					
+					// if pronoun, now refers to most recent ent
+					// should refer to ent that's the object of previous assertion,
+					// sentence, or "complete" phrase
+					// Note that different pronouns might need diferent rules 
 					if (type1.equals("pro") && struct1.prev2() != null && struct1.prev2().equals("")) {
 						if (recentEnt != null && recentEntIndex < j) {
 							String tempName = recentEnt.struct().get("name");
@@ -712,7 +724,7 @@ public class ThmP1 {
 						}
 					}
 
-					if (type2.equals("ent")) {
+					if (type2.equals("ent") && !(type1.matches("verb|pre"))) {
 						if (!foundFirstEnt) {
 							firstEnt = struct1;
 							foundFirstEnt = true;
@@ -744,7 +756,7 @@ public class ThmP1 {
 							mx.get(i).set(j, struct1);
 						}
 					}
-
+					
 					// handle "is called" -- "verb_parti", also "is defined"
 					// for definitions
 					else if (combined.matches("verb_parti") && struct1.prev1().toString().matches("is|are|be")
@@ -782,7 +794,7 @@ public class ThmP1 {
 						}
 
 						//////////////// ******* be careful to use first ent
-
+						//record the symbol/given name associated to an ent
 						if (firstEnt != null) {
 							StructA<Struct, String> parentStruct = new StructA<Struct, String>(firstEnt, called, "def");
 
@@ -803,8 +815,8 @@ public class ThmP1 {
 							}
 							curWord += calledArray[calledArray.length - 1];
 							mathObjMap.put(curWord, "mathObj");
-
-							// recentEnt is defined to be called
+							
+							// recentEnt is defined to be "called"
 							namesMap.put(called, recentEnt);
 							break outerloop;
 						}
@@ -880,9 +892,9 @@ public class ThmP1 {
 							String childRelation = mx.get(k + 1).get(k + 1).prev1().toString();
 							if (struct1 instanceof StructH) {
 								// why does this cast not trigger unchecked warning		
-								//cause wildcard!
+								// cause wildcard!
 								((StructH<?>) newStruct).add_child(struct2, childRelation);
-							}
+							}							
 							
 							recentEnt = newStruct;
 							recentEntIndex = j;

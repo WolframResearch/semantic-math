@@ -75,13 +75,20 @@ public class ParseToWL {
 				break;
 			case "iff": type = ""; break;	
 			case "rpro": type = ""; break;	
-			case "hyp": type = ""; break;
+			case "hyp": 
+				type = "";
+				if(headStruct.prev1() != null && headStruct.prev1() instanceof String
+						&& !((String)headStruct.prev1()).matches("for every|for all") ){
+					showprev1 = false;
+				}
+				break;
 			case "adj": type = ""; break;
 			case "det": type = ""; break;
 			case "ppt": type = ""; showprev1 = false; break;
 			case "let": type = ""; showprev1 = false; break;
 			case "be": type = ""; showprev1 = false; break;
-			case "prep": type = ""; showprev1 = false; break;
+			case "prep": type = ""; break;
+			case "pre": type = ""; break;
 			default:
 					
 			}
