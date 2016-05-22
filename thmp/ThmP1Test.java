@@ -99,7 +99,10 @@ public class ThmP1Test {
 			st = "systems of $f$-modules over the same partially ordered set.";
 			st = "$f$-modules over set.";
 			st = "for any three \\$r\\$-modules \\$m, n, p\\$, \\$\\$  \\$\\$";
-			st = " we denote tex as $s$";
+			st = "let $r$ be a ring, let $m$ and $n$ be $r$-modules. ";
+			st = "m is finitely presented";
+			st = "an abelian group $n$ is called an  $$-bimodule} if it is both an $a$-module and a $b$-module, and the actions "
+					+ "$a to end$ and $b to end$ are compatible in the sense that $b = a$ for all $a in a, bin b, xin n$. usually we denote it as $_an_b$.";
 			
 			strAr = ThmP1.preprocess(st);
 			for(int i = 0; i < strAr.length; i++){
@@ -109,7 +112,7 @@ public class ThmP1Test {
 			Scanner sc = new Scanner(new File("noTex3.txt"));
 			
 			while(sc.hasNextLine()){
-				//st = sc.nextLine().toLowerCase().replaceAll("\\([^)]*\\)", "");
+				st = sc.nextLine().toLowerCase().replaceAll("\\([^)]*\\)", "");
 				if(st.matches("^\\s*$")) continue;
 				
 				//System.out.println(st + "\n");

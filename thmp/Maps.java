@@ -36,6 +36,9 @@ public class Maps {
 	//value is regex string to be matched
 	protected static HashMap<String, String> adjMap;
 	
+	//replace string with a break, usully a comma
+	protected static ArrayList<String> breakList;
+	
 	//list of parts of speech, ent, verb etc
 	protected static ArrayList<String> posList;
 
@@ -159,7 +162,7 @@ public class Maps {
 		posMap.put("property", "noun"); posMap.put("form", "noun_COMP");  
 		
 		//determiners qualify nouns or noun phrases
-		posMap.put("each", "det"); posMap.put("this", "det"); posMap.put("both", "det"); 
+		posMap.put("each", "adj"); posMap.put("this", "det"); posMap.put("both", "det"); 
 		posMap.put("no", "det");
 		
 		//parts of speech
@@ -181,7 +184,7 @@ public class Maps {
 		posMap.put("of", "pre"); //of is primarily used as anchor
 		posMap.put("over", "pre"); posMap.put("with", "pre");
 		posMap.put("by", "pre"); posMap.put("as", "pre"); posMap.put("such", "pre_COMP"); 
-		posMap.put("such that", "hyp"); posMap.put("so", "pre"); posMap.put("where", "hyp");
+		posMap.put("such that", "hyp"); posMap.put("where", "hyp");
 		posMap.put("which is", "hyp"); posMap.put("which are", "hyp"); posMap.put("that is", "hyp");
 		posMap.put("that are", "hyp");
 		
@@ -291,8 +294,8 @@ public class Maps {
 		//prep stands for "pre phrase"
 		structMap.put("pre_ent", "prep"); structMap.put("ent_prep", "newchild");
 		structMap.put("pre_symb", "prep"); structMap.put("parti_prep", "phrase");
-		structMap.put("pre_phrase", "prep"); structMap.put("pre_nounphrase", "prep");
-		structMap.put("noun_prep", "nounphrase"); structMap.put("noun_verbphrase", "assert");
+		structMap.put("pre_phrase", "prep"); structMap.put("pre_np", "prep");
+		structMap.put("noun_prep", "np"); structMap.put("noun_verbphrase", "assert");
 		structMap.put("pre_noun", "prep"); structMap.put("gerund_verbphrase", "assert");
 		//participle: called, need to take care of "said" etc
 		structMap.put("parti_ent", "partient"); structMap.put("ent_partient", "newchild");
@@ -301,7 +304,7 @@ public class Maps {
 		structMap.put("parti_adj", "phrase"); structMap.put("symb_prep", "phrase");
 		
 		structMap.put("pre_noun", "ppt"); //nounphrase
-		structMap.put("adj_noun", "noun");
+		structMap.put("adj_noun", "noun"); structMap.put("gerund_noun", "np");
 		
 		//involving nums
 		structMap.put("pre_num", "prep");		
@@ -326,14 +329,15 @@ public class Maps {
 		////////////combine preposition with whatever comes				
 		//verb_ent, not including past tense verbs, only present tense
 		structMap.put("verb_ent", "verbphrase"); structMap.put("verb_adj", "verbphrase");
+		structMap.put("verb_pro", "verbphrase");  
 		structMap.put("verb_np", "verbphrase"); structMap.put("verb_prep", "verbphrase");
-		structMap.put("verb_num", "verbphrase"); structMap.put("verb_nounphrase", "verbphrase");
+		structMap.put("verb_num", "verbphrase"); structMap.put("verb_np", "verbphrase");
 		structMap.put("verb_pre", "verbphrase"); structMap.put("verb_phrase", "verbphrase");
 		structMap.put("verb_partient", "verbphrase"); structMap.put("verb_noun", "verbphrase");
 		structMap.put("det_verbphrase", "assert");
 		structMap.put("verb_symb", "verbphrase"); structMap.put("symb_verbphrase", "assert");
 		structMap.put("ent_verbphrase", "assert"); structMap.put("pro_verbphrase", "assert");
-		structMap.put("nounphrase_verbphrase", "assert");
+		structMap.put("np_verbphrase", "assert");
 		structMap.put("verb_assert", "verbphrase"); structMap.put("verbphrase_prep", "verbphrase");
 		structMap.put("partiby_ent", "phrase"); structMap.put("partiby_noun", "phrase");
 		structMap.put("verb_partiby", "verb");
@@ -350,7 +354,7 @@ public class Maps {
 		structMap.put("rpro_assert", "phrase"); 
 		
 		//eg "property that a is b"
-		structMap.put("noun_phrase", "nounphrase"); structMap.put("ent_phrase", "newchild");
+		structMap.put("noun_phrase", "np"); structMap.put("ent_phrase", "newchild");
 		structMap.put("ent_ppt", "newchild");
 		
 		structMap.put("adverb_adj", "adj"); ///*******		
@@ -387,19 +391,53 @@ public class Maps {
 	 * dictionaries according to classification in the text
 	 * @throws FileNotFoundException 
 	 */
-	public static void main(String[] args) throws FileNotFoundException{
+	public static void readLexicon() throws FileNotFoundException{
 		File file = new File("lexicon.txt");
 		Scanner sc = new Scanner(file);
 		String[] lineAr;
+		String pos, word = "";
 		
 		while(sc.hasNextLine()){
 			String nextLine = sc.nextLine();
 			lineAr = nextLine.split(" ");
-			//format: "new_word pos"
+			if(lineAr.length < 2)
+				continue;
+			else if(lineAr.length == 2){
+				word = lineAr[0];
+				pos = lineAr[1];
+			}//compound first word, e.g "comm alg"
+			else{
+				word = lineAr[0];
+				pos = lineAr[1];
+				/*int i = 0;
+				//create capturing group!
+				
+				//faster than .matches, .contains, or .substring
+				if(word.length() > 1 && word.charAt(0) == '\'' && word.charAt(1) == '\'' ){
+					
+				}
+				while(){
+					
+				} */
+				
+			}			
 			
-			//incorporate comp!
-			posMap.put(lineAr[0], lineAr[1]);
-
+			//format: "new_word pos"
+			switch(pos){
+			case "ent":
+				mathObjMap.put(word, "mathObj");
+				break;
+			case "ent_comp":
+				mathObjMap.put(word, "mathObj_COMP");
+				break;
+			case "fluff":
+				fluffMap.put(word, word);
+			case "break_comp":
+				
+				break;
+			default:
+				posMap.put(word, pos);
+			}
 		}
 		sc.close();
 	}

@@ -1,6 +1,7 @@
 package thmp;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -53,9 +54,9 @@ public class ThmP1 {
 	// part of speech, last resort after looking up entity property maps
 	// private static HashMap<String, String> pos;
 
-	public static void buildMap() {
+	public static void buildMap() throws FileNotFoundException {
 		Maps.buildMap();
-
+		Maps.readLexicon();
 		structMap = Maps.structMap;
 		anchorMap = Maps.anchorMap;
 		posMap = Maps.posMap;
@@ -106,6 +107,7 @@ public class ThmP1 {
 			//instead of str[i]
 			str[i] = curWord; 
 
+			String type = "mathObj";
 			int strlen = str[i].length();
 
 			//detect latex expressions, mark them as "mathObj" for now
@@ -132,11 +134,14 @@ public class ThmP1 {
 					}
 					if(i < stringLength && str[i].charAt(str[i].length() - 1) == '$')
 						latexExpr += " " + str[i];
+				}else if(curWord.matches("\\$[^$]\\$")){
+					type = "symb";
 				}
 				
-				Pair pair = new Pair(latexExpr, "mathObj");
-				pairs.add(pair);				
-				mathIndexList.add(pairs.size() - 1);
+				Pair pair = new Pair(latexExpr, type);
+				pairs.add(pair);		
+				if(type.equals("mathObj"))
+					mathIndexList.add(pairs.size() - 1);
 				
 				continue;
 			}
@@ -214,7 +219,7 @@ public class ThmP1 {
 				String temp = curWord, pos = curWord;
 				String tempPos = posMap.get(temp);
 
-				while (tempPos.length() > 4 && tempPos.substring(tempPos.length() - 4, tempPos.length()).equals("COMP")
+				while (tempPos.length() > 4 && tempPos.substring(tempPos.length() - 4, tempPos.length()).matches("COMP|comp")
 						&& i < str.length - 1) {
 
 					curWord = temp;
@@ -318,17 +323,33 @@ public class ThmP1 {
 
 				// if next word is "by", then
 				String curPos = "parti";
-
+				int pairsSize = pairs.size();
 				//if next word is "by"
 				if (str.length > i + 1 && str[i + 1].equals("by")) {
 					curPos = "partiby";
 					curWord = curWord + " by";
 					i++;
 				}
-
+				//previous word is "is, are", then group with previous word to verb
+				//e.g. "is called"
+				else if(pairsSize > 0 && pairs.get(pairsSize - 1).word().matches("is|are")){
+					
+					curWord = pairs.get(pairsSize - 1).word() + " " + curWord;
+					pairs.remove(pairsSize - 1);
+					
+					curPos = "verb";
+				}
+				//if previous word is adj, "finitely presented"
+				else if(pairsSize > 0 && pairs.get(pairsSize - 1).pos().equals("adverb")){
+					
+					curWord = pairs.get(pairsSize - 1).word() + " " + curWord;
+					pairs.remove(pairsSize - 1);
+					
+					curPos = "adj";
+				}
 				// if next word is entity, then adj
 				else if (str.length > i + 1 && mathObjMap.containsKey(str[i + 1])) {
-					int pairsSize = pairs.size();
+					
 					// combine with adverb if previous one is adverb
 					if (pairsSize > 0 && pairs.get(pairsSize - 1).pos().equals("adverb")) {
 						curWord = pairs.get(pairsSize - 1).word() + " " + curWord;
@@ -792,8 +813,7 @@ public class ThmP1 {
 					}
 
 					// look up combined in struct table, like or_ent
-					// get value as name for new hash table, table with prev
-					// field
+					// get value as name for new hash table, table with prev field
 					// new type? entity, with extra ppt
 					// name: or. combined ex: or_adj (returns ent), or_ent (ent)
 					String combined = type1 + "_" + type2;
@@ -851,7 +871,7 @@ public class ThmP1 {
 							l++;
 						}
 
-						//////////////// ******* be careful to use first ent
+						// ******* be careful using first ent
 						//record the symbol/given name associated to an ent
 						if (firstEnt != null) {
 							StructA<Struct, String> parentStruct = new StructA<Struct, String>(firstEnt, called, "def");
@@ -972,7 +992,7 @@ public class ThmP1 {
 							
 							// if symbol and a given name to some entity
 							// use "called" to relate entities
-							if (type1.equals("symb")) {
+							if (type1.equals("symb") && struct1.prev1() instanceof String) {
 								String entKey = (String) struct1.prev1();
 								if (namesMap.containsKey(entKey)) {
 									Struct entity = namesMap.get(entKey);
@@ -982,13 +1002,16 @@ public class ThmP1 {
 							}
 
 							// update struct2 with name if applicable
-							if (type2.equals("symb")) {
+							// type could have been stripped down from conj_symb
+							if (type2.equals("symb") && struct2.prev1() instanceof String) {
+								
 								String entKey = (String) struct2.prev1();
+								
 								if (namesMap.containsKey(entKey)) {
 									Struct entity = namesMap.get(entKey);
 									struct2.set_prev2(entity.struct().get("name"));
 
-								}
+								}								
 
 							}
 

@@ -71,7 +71,8 @@ public class StructA<A, B> extends Struct{
 	
 	@Override
 	public String toString(){
-		String str = " type: " + this.type + " ";
+		String str = " type: " + this.type 				
+				+ ", " + this.prev1;
 		
 		return str;
 	}
