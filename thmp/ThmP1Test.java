@@ -29,7 +29,7 @@ public class ThmP1Test {
 			//String[] strAr = p1.preprocess("a basis of a vector space consists of a set of linearly independent vectors".split(" "));
 			//String[] strAr = p1.preprocess("finitely many vectors are called linearly independent if their sum is zero".split(" "));
 			//String[] strAr = p1.preprocess("elements in symmetric group are conjugate if they have the same cycle type".split(" "));
-			String[] strAr = ThmP1.preprocess("A is equal to the number of partitions".split(" "));
+			String[] strAr; 
 			strAr = "for all x x is a number".split(" ");
 			strAr = "suppose f is measurable and finite on E, and E has finite measure".split(" ");
 			strAr = "the number of conjugacy class of the symmetric group is equal to the number of partitions of n".split(" ");
@@ -87,28 +87,43 @@ public class ThmP1Test {
 			//st = "family of fields indexed by tex and a family of tex-module maps such that for all tex";
 			st = "a  partially ordered set is a set tex together with a relation tex which is transitive  and reflexive.";
 			st = "a  directed set tex is a partially ordered set tex such that tex is not empty and such that tex, there exists tex with tex";
-			st = "there exists tex with tex";
+			//st = "there exists tex with tex";
 			//st = "a field that is a field extension";			
 			//st = "a  partially ordered set is a set tex together with a relation tex which is transitive  and reflexive";
 			//st = " a set tex together with a relation tex which is transitive  and reflexive";
-
+			st = "Let tex be a ring. Let tex a multiplicative subset. Let tex, tex be tex-modules. Assume all the elements of tex act as automorphisms on tex. "
+					+ "Then the canonical map tex induced by the localization map, is an isomorphism.";
+			st = "Let tex be a ring. Let tex be a multiplicative subset. Let tex be an tex-module. Then tex where the partial ordering on tex is given by "
+					+ "tex for some tex in which case the map tex is given by tex.";
+			st = "let $(m_i, \\mu_{ij})$, $(n_i, \nu_{ij})$ be systems of $r$-modules over the same partially ordered set.";
+			st = "systems of $f$-modules over the same partially ordered set.";
+			st = "$f$-modules over set.";
+			st = "for any three \\$r\\$-modules \\$m, n, p\\$, \\$\\$  \\$\\$";
+			st = " we denote tex as $s$";
 			
-			ThmP1.parse(ThmP1.tokenize(ThmP1.preprocess(st.split(" |\\.|\\,"))));
+			strAr = ThmP1.preprocess(st);
+			for(int i = 0; i < strAr.length; i++){
+				ThmP1.parse(ThmP1.tokenize(strAr[i].toLowerCase().trim().split(" |\\.|\\,")));				
+			}
 			
-			Scanner sc = new Scanner(new File("noTex.txt"));
+			Scanner sc = new Scanner(new File("noTex3.txt"));
 			
 			while(sc.hasNextLine()){
-				st = sc.nextLine().toLowerCase().replaceAll("\\([^)]*\\)", "");
+				//st = sc.nextLine().toLowerCase().replaceAll("\\([^)]*\\)", "");
 				if(st.matches("^\\s*$")) continue;
 				
 				//System.out.println(st + "\n");
-				strAr = st.split("\\,|\\.|\\!");
+				strAr = ThmP1.preprocess(st);
+				
 				for(int i = 0; i < strAr.length; i++){					
-					//ThmP1.parse(ThmP1.tokenize(ThmP1.preprocess(strAr[i].trim().split(" ")))); //p1.parse(p1.tokenize(p1.preprocess(strAr2)));
+					//ThmP1.parse(ThmP1.tokenize(strAr[i].trim().split(" |\\.|\\,"))); //p1.parse(p1.tokenize(p1.preprocess(strAr2)));
 				}
 			}
 			
+			ThmP1.writeUnknownWordsToFile();
+			ThmP1.writeParsedExprToFile();
 			sc.close();
+			
 			//p1.parse(p1.tokenize(p1.preprocess("characteristic of Fp is p".split(" "))));
 			
 		}

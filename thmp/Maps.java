@@ -1,7 +1,10 @@
 package thmp;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Scanner;
 import java.util.Map.Entry;
 
 /* contains the dictionaries and hashmaps 
@@ -61,21 +64,21 @@ public class Maps {
 		
 		String[] ents = {"quotient", "ideal", "filtration", "combination", "surjection",
 				"presentation", "tex-module", "polynomial", "isomorphism", "composition",
-				"kernel", "system", "colimit", "tex-algebra", "projection"};
+				"kernel", "system", "colimit", "tex-algebra", "projection", "subset"};
 		
 		//most should already be filtered in entity/property
 		//pos should preserve connective words, or stays or
 		String[] verbs = {"present", "mean", "say", "order", "direct", "index"};
 		
 		String[] adjs = {"first", "successive", "some", "transitive", "reflexive", "together_COMP",
-				"empty", "short", "natural"};
+				"empty", "short", "natural", "partial", "multiplicative"};
 		
 		String[] adverbs = {};
 		
 		String[] pres = {"together with"};
 				
 		String[] nouns = {"family", "notion", "permanence", "property", "inclusion", "relation",
-				"row", "notion", "inclusion"};
+				"row", "notion", "inclusion", "case"};
 		
 		//list of all the String arrays above
 		//ArrayList<String[]> posArraysList = new ArrayList<String[]>();
@@ -377,9 +380,28 @@ public class Maps {
 			
 		}  */
 		
-		
-		
 	}
 	
+	/**
+	 * reads in list of words not in dictionary yet, puts them in appropriate
+	 * dictionaries according to classification in the text
+	 * @throws FileNotFoundException 
+	 */
+	public static void main(String[] args) throws FileNotFoundException{
+		File file = new File("lexicon.txt");
+		Scanner sc = new Scanner(file);
+		String[] lineAr;
+		
+		while(sc.hasNextLine()){
+			String nextLine = sc.nextLine();
+			lineAr = nextLine.split(" ");
+			//format: "new_word pos"
+			
+			//incorporate comp!
+			posMap.put(lineAr[0], lineAr[1]);
+
+		}
+		sc.close();
+	}
 	
 }

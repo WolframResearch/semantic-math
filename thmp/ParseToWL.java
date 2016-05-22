@@ -13,13 +13,16 @@ public class ParseToWL {
 	private static boolean inAssert = false;
 	private static String assertVerb = "";
 	//private static boolean showPrev1 = true;
-	public static String parseString = "";
+	public static String parseString = "";	
 	
-	
-	public static void parseToWL(Struct headStruct){
+	public static String parseToWL(Struct headStruct){
 		parseString = "";
 		parseToWL(headStruct, true);
+		System.out.println();
+		processParse();
+		return parseString;
 	}
+	
 	/**
 	 * 
 	 * @param headStruct is head of a parse

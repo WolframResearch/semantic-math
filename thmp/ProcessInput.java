@@ -17,8 +17,7 @@ import java.util.Scanner;
  */
 
 public class ProcessInput {
-
-	//  
+	
 	//
 	public static void main(String[] args) throws IOException{
 		
@@ -47,9 +46,10 @@ public class ProcessInput {
 				thm = meat[1];
 				//System.out.println(thm);
 				//thm.replaceAll("$[^$]\\$", "tex");
-				String tempThm = thm.replaceAll("(\\$[^$]+\\$)|(\\$\\$[^$]+\\$\\$)", "tex").
-						replaceAll("\\\\begin\\{[^}]*\\}|\\\\end\\{[^}]*\\}|\\\\cite\\[[^]]*|\\\\item|\\{\\\\it|\\}"
-								+ "|\\\\ref\\{[^}]*\\}", "") + "\n";
+				//replaceAll("(\\$[^$]+\\$)|(\\$\\$[^$]+\\$\\$)", "tex").
+				String tempThm = thm.
+						replaceAll("\\\\begin\\{[^}]*\\}|\\\\end\\{[^}]*\\}|\\\\cite\\{[^}]*\\}|\\\\item|\\{\\\\it"
+								+ "|\\\\ref\\{[^}]*\\}", "").replaceAll("\\\\align\\{[^}]*\\}", "$$") + "\n";
 				
 				noTexString += tempThm;
 				//System.out.println(thm.replaceAll("(\\$[^$]+\\$)|(\\$\\$[^$]+\\$\\$)", "tex"));

@@ -1,5 +1,11 @@
 package thmp;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -37,6 +43,13 @@ public class ThmP1 {
 	//fluff type, skip when adding to parsed ArrayList
 	private static String FLUFF = "Fluff";
 	
+	//private static final File unknownWordsFile;
+	private static final Path unknownWordsFile = Paths.get("unknownWords.txt");
+	private static final Path parsedExprFile = Paths.get("parsedExpr.txt");
+	
+	private static final List<String> unknownWords = new ArrayList<String>();
+	private static final List<String> parsedExpr = new ArrayList<String>();
+	
 	// part of speech, last resort after looking up entity property maps
 	// private static HashMap<String, String> pos;
 
@@ -62,8 +75,9 @@ public class ThmP1 {
 	 * @param str
 	 *            string to be tokenized
 	 * @return
+	 * @throws IOException 
 	 */
-	public static ArrayList<Struct> tokenize(String[] str) {
+	public static ArrayList<Struct> tokenize(String[] str) throws IOException {
 
 		// .....change to arraylist of Pairs, create Pair class
 		// LinkedHashMap<String, String> linkedMap = new LinkedHashMap<String,
@@ -88,10 +102,45 @@ public class ThmP1 {
 
 			// strip away special chars '(', ')', etc
 			curWord = curWord.replaceAll("\\(|\\)", "");
-			str[i] = curWord;
+			//remove this and ensure curWord is used subsequently 
+			//instead of str[i]
+			str[i] = curWord; 
 
 			int strlen = str[i].length();
 
+			//detect latex expressions, mark them as "mathObj" for now
+			if(curWord.charAt(0) == '$'){
+				String latexExpr = curWord;
+				int stringLength = str.length;
+				
+				if(i < stringLength-1 && !curWord.matches("\\$[^$]+\\$[^\\s]*") &&
+						(curWord.charAt(strlen - 1) != '$' 
+						|| strlen == 2)){
+					i++;
+					curWord = str[i];
+					if(i < stringLength-1 && curWord.equals("")){
+						curWord = str[++i];
+					}
+					while(i < stringLength && curWord.charAt(curWord.length() - 1) != '$'){
+						latexExpr += " " + curWord;
+						i++;
+						
+						if(i == stringLength) break;
+						
+						curWord = i<stringLength-1 && str[i].equals("") ? str[++i] : str[i];							
+						
+					}
+					if(i < stringLength && str[i].charAt(str[i].length() - 1) == '$')
+						latexExpr += " " + str[i];
+				}
+				
+				Pair pair = new Pair(latexExpr, "mathObj");
+				pairs.add(pair);				
+				mathIndexList.add(pairs.size() - 1);
+				
+				continue;
+			}
+			
 			// primitive way to handle plural forms: if ends in "s"
 			String singular = "";
 			String singular2 = ""; // ending in "ies"
@@ -247,7 +296,7 @@ public class ThmP1 {
 
 				Pair pair = new Pair(str[i], "verb");
 				pairs.add(pair);
-			} else if (strlen > 0 && curWord.charAt(strlen - 1) == 's' && str[i].charAt(str[i].length() - 2) == 'e'
+			} else if (strlen > 1 && curWord.charAt(strlen - 1) == 's' && str[i].charAt(str[i].length() - 2) == 'e'
 					&& posMap.containsKey(str[i].substring(0, strlen - 2))
 					&& posMap.get(str[i].substring(0, strlen - 2)).equals("verb")) {
 				Pair pair = new Pair(str[i], "verb");
@@ -271,14 +320,14 @@ public class ThmP1 {
 				String curPos = "parti";
 
 				//if next word is "by"
-				if (str.length > i && str[i + 1].equals("by")) {
+				if (str.length > i + 1 && str[i + 1].equals("by")) {
 					curPos = "partiby";
 					curWord = curWord + " by";
 					i++;
 				}
 
 				// if next word is entity, then adj
-				else if (str.length > i && mathObjMap.containsKey(str[i + 1])) {
+				else if (str.length > i + 1 && mathObjMap.containsKey(str[i + 1])) {
 					int pairsSize = pairs.size();
 					// combine with adverb if previous one is adverb
 					if (pairsSize > 0 && pairs.get(pairsSize - 1).pos().equals("adverb")) {
@@ -312,6 +361,11 @@ public class ThmP1 {
 
 				System.out.println("word not in dictionary: " + curWord);
 				pairs.add(new Pair(curWord, ""));
+				
+				//write unknown words to file		
+				unknownWords.add(curWord);
+				
+				
 			} else { // curWord doesn't count
 
 				continue;
@@ -323,28 +377,32 @@ public class ThmP1 {
 			addIndex = true;
 
 			int pairsSize = pairs.size();
-			Pair pair = pairs.get(pairsSize - 1);
+			
+			if(pairsSize > 0){
+				Pair pair = pairs.get(pairsSize - 1);
 
-			// combine "no" and "not" with verbs
-			if (pair.pos().equals("verb")) {
-				if (pairs.size() > -1 && (pairs.get(pairsSize - 2).word().matches("not|no")
-						|| pairs.get(pairsSize - 2).pos().matches("not"))) {
-					String newWord = pair.word().matches("is|are") 
-							? "not" : "not " + pair.word();
-					pair.set_word(newWord);
-					pairs.remove(pairsSize - 2);
-				}
-
-				if (i + 1 < str.length && str[i + 1].matches("not|no")) {
-					String newWord = pair.word().matches("is|are") 
-							? "not" : "not " + pair.word();
-					pair.set_word(newWord);
-					i++;
+				// combine "no" and "not" with verbs
+				if (pair.pos().equals("verb")) {
+					if (pairs.size() > 1 && (pairs.get(pairsSize - 2).word().matches("not|no")
+							|| pairs.get(pairsSize - 2).pos().matches("not"))) {
+						String newWord = pair.word().matches("is|are") 
+								? "not" : "not " + pair.word();
+						pair.set_word(newWord);
+						pairs.remove(pairsSize - 2);
+					}
+					
+					if (i + 1 < str.length && str[i + 1].matches("not|no")) {
+						String newWord = pair.word().matches("is|are") 
+								? "not" : "not " + pair.word();
+						pair.set_word(newWord);
+						i++;
+					}
 				}
 			}
 
 		}
 
+		
 		// If phrase isn't in dictionary, ie has type "", then use probMap to
 		// postulate type, if possible
 		Pair curpair;
@@ -1016,14 +1074,29 @@ public class ThmP1 {
 			Struct head = parsedStructList.get(k);
 			
 			System.out.println("WL: ");
-			ParseToWL.parseToWL(head);
-			System.out.println();
-			ParseToWL.processParse();
+			String parsedString = ParseToWL.parseToWL(head);
+			parsedExpr.add(parsedString);
 			System.out.println();
 		}
 		
 	}
 
+	/**
+	 * write unknown words to file to classify them
+	 * @throws IOException
+	 */
+	public static void writeUnknownWordsToFile() throws IOException{
+		Files.write(unknownWordsFile, unknownWords, Charset.forName("UTF-8"));
+	}
+	
+	/**
+	 * write unknown words to file to classify them
+	 * @throws IOException
+	 */
+	public static void writeParsedExprToFile() throws IOException{
+		Files.write(parsedExprFile, parsedExpr, Charset.forName("UTF-8"));
+	}
+	
 	/**
 	 * if not full parse, try to make into full parse by fishing out the
 	 * essential sentence structure, and discarding the phrases still not
@@ -1086,17 +1159,47 @@ public class ThmP1 {
 		}
 	}
 
-	/*
+	/**
 	 * Preprocess. Remove fluff words. the, a, an
+	 * @param str is string of all input to be processed
+	 * @return array of sentence Strings
 	 */
-	public static String[] preprocess(String[] str) {
-		ArrayList<String> wordList = new ArrayList<String>();
-		for (int i = 0; i < str.length; i++) {
-			if (!fluffMap.containsKey(str[i])) {
-				wordList.add(str[i]);
+	public static String[] preprocess(String inputStr) {
+		
+		ArrayList<String> sentenceList = new ArrayList<String>();
+		String[] wordsArray = inputStr.split(" ");
+		int wordsArrayLen = wordsArray.length;
+		
+		String newSentence = "";		
+		String curWord;
+		
+		boolean inTex = false; //in latex expression?
+		
+		for (int i = 0; i < wordsArrayLen; i++) {
+			
+			curWord = wordsArray[i];
+			
+			if(curWord.matches("\\$.*") && !curWord.matches("\\$[^$]+\\$.*") ){
+				
+				inTex = true;
+			}else if(curWord.matches("[^$]*\\$") || curWord.matches("\\$[^$]+\\$.*")){
+				inTex = false;
 			}
+
+			if (!fluffMap.containsKey(curWord)){
+				newSentence += " " + curWord;
+			}
+			if(curWord.matches("[^.,!]*[.|,|!]{1}") || i == wordsArrayLen-1){
+				
+				if(!inTex){
+					sentenceList.add(newSentence);
+					newSentence = "";
+				}
+			}
+			
+			
 		}
-		return wordList.toArray(new String[0]);
+		return sentenceList.toArray(new String[0]);
 	}
 
 }
