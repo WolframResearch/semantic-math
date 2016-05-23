@@ -106,7 +106,7 @@ public class StructH<H> extends Struct{
 		str += this.type.equals("ent") ? "MathObj" : this.type;
 		str += "{";
 		Iterator<Entry<String, String>> structIter = struct.entrySet().iterator();
-		String name = "", called = "", ppt = "";
+		String name = "", called = "", ppt = "", tex = "";
 		
 		while(structIter.hasNext()){
 			Entry<String, String> entry = structIter.next();
@@ -119,13 +119,17 @@ public class StructH<H> extends Struct{
 			else if(entry.getKey().matches("called") ){
 				called = entry.getValue();
 			}
+			else if(entry.getKey().matches("tex") ){
+				tex = entry.getValue();
+			}
 		}		
 		
-		name = called.length() > 0 ? name + ", ": name;
+		name = tex.length() > 0 ? name + ", ": name;
+		tex = called.length() > 0 ? tex + ", ": tex;
 		called = !(ppt.length() == 0) ? called + ", " : called;
-		ppt = ppt.length() > 2 ? ppt.substring(0, ppt.length() - 2) : ppt;
+		ppt = ppt.length() > 2 ? ppt.substring(0, ppt.length() - 2) : ppt;		
 		
-		str += name + called + ppt;
+		str += name + tex + called + ppt;
 		
 		if(children.size() > 0) str += ", ";
 		

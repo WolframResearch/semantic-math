@@ -37,21 +37,21 @@ public class Struct {
 	
 	//to be overwritten in StructH
 	public ArrayList<Struct> children(){
-		return new ArrayList<Struct>();		
+		return null;		
 	}
 
 	//to be overwritten in StructH
 	public ArrayList<String> childRelation(){
-		return new ArrayList<String>();		
+		return null;		
 	}
 	
 	//to be overwritten in StructH
 	public void add_child(Struct child, String relation){		
 	}
 	
-	//filler method to be overriden
+	// to be overriden
 	public HashMap<String, String> struct(){
-		return new HashMap<String, String>();
+		return null;
 	}
 	
 	public String toString(){

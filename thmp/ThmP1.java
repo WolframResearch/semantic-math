@@ -476,6 +476,17 @@ public class ThmP1 {
 			HashMap<String, String> tempMap = new HashMap<String, String>();
 			tempMap.put("name", mathObj);
 
+			//if next pair is also ent, and is latex expression
+			if(j < mathIndexList.size()-1 && mathIndexList.get(j+1) == index+1){
+				Pair nextPair = pairs.get(index+1);
+				String name = nextPair.word();
+				if(name.contains("$")){
+					tempMap.put("tex", name);
+					nextPair.set_pos(String.valueOf(j));
+					mathIndexList.remove(j+1);
+				}								
+			}
+			
 			// look right two places in pairs, if symbol found, add it to
 			// namesMap
 			// if it's the given name for an ent.
@@ -752,15 +763,6 @@ public class ThmP1 {
 						continue;
 					}
 
-					// look ahead 2 places for "is," "has" or general verb
-					// precedence rules for or/and etc
-					/*
-					 * if(struct1.type().matches("or|and") ){ for(int l = 1; l <
-					 * 3; l++){ if(j+l < len &&
-					 * inputList.get(j+l).type().matches("is|has") ){ continue;
-					 * } } }
-					 */
-
 					// combine/reduce types, like or_ppt, for_ent, in_ent
 					String type1 = struct1.type();
 					String type2 = struct2.type();
@@ -803,6 +805,7 @@ public class ThmP1 {
 						}
 					}
 
+					
 					if (type2.equals("ent") && !(type1.matches("verb|pre"))) {
 						if (!foundFirstEnt) {
 							firstEnt = struct1;
@@ -1202,10 +1205,10 @@ public class ThmP1 {
 			
 			curWord = wordsArray[i];
 			
-			if(curWord.matches("\\$.*") && !curWord.matches("\\$[^$]+\\$.*") ){
-				
+			if(!inTex && curWord.matches("\\$.*") && !curWord.matches("\\$[^$]+\\$.*")){				
 				inTex = true;
-			}else if(curWord.matches("[^$]*\\$") || curWord.matches("\\$[^$]+\\$.*")){
+			}else if(inTex && curWord.contains("$")){
+			//}else if(curWord.matches("[^$]*\\$|\\$[^$]+\\$.*") ){
 				inTex = false;
 			}
 
@@ -1218,8 +1221,7 @@ public class ThmP1 {
 					sentenceList.add(newSentence);
 					newSentence = "";
 				}
-			}
-			
+			}			
 			
 		}
 		return sentenceList.toArray(new String[0]);

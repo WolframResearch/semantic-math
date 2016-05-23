@@ -340,7 +340,7 @@ public class Maps {
 		structMap.put("np_verbphrase", "assert");
 		structMap.put("verb_assert", "verbphrase"); structMap.put("verbphrase_prep", "verbphrase");
 		structMap.put("partiby_ent", "phrase"); structMap.put("partiby_noun", "phrase");
-		structMap.put("verb_partiby", "verb");
+		structMap.put("verb_partiby", "verb"); structMap.put("partiby_symb", "phrase");
 		structMap.put("disj_verbphrase", "assert"); structMap.put("conj_verbphrase", "assert");
 		
 		structMap.put("let_symb", "let"); structMap.put("be_ent", "be"); structMap.put("let_be", "letbe");

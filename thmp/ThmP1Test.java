@@ -103,6 +103,10 @@ public class ThmP1Test {
 			st = "m is finitely presented";
 			st = "an abelian group $n$ is called an  $$-bimodule} if it is both an $a$-module and a $b$-module, and the actions "
 					+ "$a to end$ and $b to end$ are compatible in the sense that $b = a$ for all $a in a, bin b, xin n$. usually we denote it as $_an_b$.";
+			st = "a system $$ of $r$-modules over $i$ consists of a family of $r$-modules ${m_i}_{i in i}$ indexed by $i$ and a family of $r$-module maps ${mu_{ij} : m_i to m_j}_{i leq j}$, such that for all $i leq j leq k$,";
+			st = "a system $S$ of $r$-modules over $i$ consists of a family of $R$-modules ${m_i}_{i in i}$ indexed by $i$ and a family of $R$-module maps ${mu_{ij} : m_i to m_j}_{i leq j}$.";
+			//st = "maps ${mu_{ij}: m_i to m_j}_{i leq j}$.";
+			
 			
 			strAr = ThmP1.preprocess(st);
 			for(int i = 0; i < strAr.length; i++){

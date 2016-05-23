@@ -32,7 +32,7 @@ public class ParseToWL {
 		if(headStruct == null) return;		
 		boolean showprev1 = showPrev1;
 		//if structH
-		if( headStruct.struct().size() > 0 ){
+		if( headStruct.struct() != null && headStruct.struct().size() > 0 ){
 			
 			System.out.print(headStruct.present(""));		
 			parseString += headStruct.present("");
