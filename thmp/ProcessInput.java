@@ -8,6 +8,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Processes theorems/lemmas/defs read in from file
@@ -47,10 +49,15 @@ public class ProcessInput {
 				//System.out.println(thm);
 				//thm.replaceAll("$[^$]\\$", "tex");
 				//replaceAll("(\\$[^$]+\\$)|(\\$\\$[^$]+\\$\\$)", "tex").
-				String tempThm = thm.replaceAll("\\\\align\\{[^}]*\\}|\\\\begin\\{equ[^}]*\\}|\\\\end\\{equ[^}]*\\}", "$$")
-						.replaceAll("\\\\begin\\{[^}]*\\}|\\\\end\\{[^}]*\\}|\\\\cite\\{[^}]*\\}|\\\\item|\\{\\\\it"
-								+ "|\\\\ref\\{[^}]*\\}", "")
+				//use capturing groups to capture text inside {\it ... }
+				//replace the others with non-captureing groups to speed up
+				String tempThm = thm.replaceAll("\\\\align\\{[^}]*\\}|\\\\begin\\{equ[^}]*\\}|\\\\end\\{equ[^}]*\\}", "\\$\\$")
+						.replaceAll("\\\\begin\\{[^}]*\\}|\\\\end\\{[^}]*\\}|\\\\cite\\{[^}]*\\}|\\\\item"
+								+ "|\\\\ref\\{[^}]*\\}", "").replaceAll("\\{\\\\it([^}]*)\\}", "$1")
 						 + "\n";
+				/*Pattern regex = Pattern.compile("\\{\\\\it([^}]*)\\}");
+				Matcher matcher = regex.matcher(tempThm);
+				tempThm = matcher.replaceAll("$1"); */
 				
 				noTexString += tempThm;
 				//System.out.println(thm.replaceAll("(\\$[^$]+\\$)|(\\$\\$[^$]+\\$\\$)", "tex"));

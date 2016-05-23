@@ -487,8 +487,7 @@ public class ThmP1 {
 				}								
 			}
 			
-			// look right two places in pairs, if symbol found, add it to
-			// namesMap
+			// look right two places in pairs, if symbol found, add it to namesMap
 			// if it's the given name for an ent.
 			int pairsSize = pairs.size();
 			if (index + 1 < pairsSize && pairs.get(index + 1).pos().equals("symb")) {
@@ -1196,6 +1195,7 @@ public class ThmP1 {
 		String[] wordsArray = inputStr.split(" ");
 		int wordsArrayLen = wordsArray.length;
 		
+		//use StringBuilder!
 		String newSentence = "";		
 		String curWord;
 		
@@ -1212,9 +1212,24 @@ public class ThmP1 {
 				inTex = false;
 			}
 
+			//fluff words all start in posMap
+			while(posMap.containsKey(curWord)){
+				String pos = posMap.get(curWord);
+				String[] posAr = pos.split("_");
+				//potentially a fluff word
+				if(posAr[posAr.length-1].equals("comp")){
+					
+					curWord += wordsArray[++i];
+				}				
+			}
+			
+			//if composite fluff word
 			if (!fluffMap.containsKey(curWord)){
+				String 
+			}else{
 				newSentence += " " + curWord;
 			}
+			
 			if(curWord.matches("[^.,!]*[.|,|!]{1}") || i == wordsArrayLen-1){
 				
 				if(!inTex){

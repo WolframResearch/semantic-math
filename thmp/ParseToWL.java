@@ -38,7 +38,7 @@ public class ParseToWL {
 			parseString += headStruct.present("");
 		}
 		else { //if structA
-						
+			
 			String type = headStruct.type();
 			
 			switch(headStruct.type()){

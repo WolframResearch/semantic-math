@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.Map.Entry;
 
 /* contains the dictionaries and hashmaps 
@@ -395,7 +397,7 @@ public class Maps {
 		File file = new File("lexicon.txt");
 		Scanner sc = new Scanner(file);
 		String[] lineAr;
-		String pos, word = "";
+		String pos = "", word = "", replacement = "";
 		
 		while(sc.hasNextLine()){
 			String nextLine = sc.nextLine();
@@ -405,24 +407,22 @@ public class Maps {
 			else if(lineAr.length == 2){
 				word = lineAr[0];
 				pos = lineAr[1];
-			}//compound first word, e.g "comm alg"
+			}
+			//compound first word, e.g "comm alg"
 			else{
-				word = lineAr[0];
-				pos = lineAr[1];
-				/*int i = 0;
-				//create capturing group!
-				
-				//faster than .matches, .contains, or .substring
-				if(word.length() > 1 && word.charAt(0) == '\'' && word.charAt(1) == '\'' ){
-					
+				Pattern pattern = Pattern.compile("(\".*\")(\\s[^\\s]+\\s)(\".*\")");
+				Matcher matcher = pattern.matcher(nextLine);
+				//what about partial finds?
+				if(matcher.find()){
+					word = matcher.group(1);
+					pos = matcher.group(2);
+					replacement = matcher.group(3);
 				}
-				while(){
-					
-				} */
 				
 			}			
 			
 			//format: "new_word pos"
+			//if fluff word: "new_word fluff replacement", eg "to be" fluff "as"
 			switch(pos){
 			case "ent":
 				mathObjMap.put(word, "mathObj");
@@ -431,9 +431,8 @@ public class Maps {
 				mathObjMap.put(word, "mathObj_COMP");
 				break;
 			case "fluff":
-				fluffMap.put(word, word);
-			case "break_comp":
-				
+				replacement = replacement.equals("") ? word : replacement; 
+				fluffMap.put(word, replacement);		
 				break;
 			default:
 				posMap.put(word, pos);
