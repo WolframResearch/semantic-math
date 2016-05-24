@@ -108,9 +108,11 @@ public class ParseToWL {
 			if(headStruct.prev1() != null){
 				if(headStruct.prev1() instanceof Struct){
 					parseToWL((Struct)headStruct.prev1(), showprev1);
+					//the false already propagated downwards
+					//if(inAssert) showprev1 = true;
 				}
-				else if(headStruct.prev1() instanceof String && !headStruct.prev1().equals("") && showprev1){
-					
+				else if(headStruct.prev1() instanceof String && !headStruct.prev1().equals("") 
+						&& showprev1){					
 					System.out.print(headStruct.prev1());
 					parseString += headStruct.prev1();
 				}
@@ -122,6 +124,7 @@ public class ParseToWL {
 					System.out.print(", ");
 					parseString += ", ";
 				}
+				//if(headStruct.prev1() instanceof Struct && inAssert) showprev1 = true;
 			}
 			
 			if(headStruct.prev2() != null){

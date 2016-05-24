@@ -1196,10 +1196,12 @@ public class ThmP1 {
 		int wordsArrayLen = wordsArray.length;
 		
 		//use StringBuilder!
-		String newSentence = "";		
+		StringBuilder sentenceBuilder = new StringBuilder();
+		//String newSentence = "";		
 		String curWord;
 		
 		boolean inTex = false; //in latex expression?
+		boolean madeReplacement = false;
 		
 		for (int i = 0; i < wordsArrayLen; i++) {
 			
@@ -1212,29 +1214,43 @@ public class ThmP1 {
 				inTex = false;
 			}
 
-			//fluff words all start in posMap
-			while(posMap.containsKey(curWord)){
+			//fluff phrases all start in posMap			
+			if(posMap.containsKey(curWord)){
 				String pos = posMap.get(curWord);
 				String[] posAr = pos.split("_");
-				//potentially a fluff word
-				if(posAr[posAr.length-1].equals("comp")){
-					
-					curWord += wordsArray[++i];
+				String tempWord = curWord;
+				
+				int j = i;
+					//potentially a fluff phrase
+				if(posAr[posAr.length-1].equals("comp") && j < wordsArrayLen-1){
+					//keep reading in string characters, until there is no match				
+					tempWord += " " + wordsArray[++j];
+						
+					while(posMap.containsKey(tempWord) && j < wordsArrayLen-1){
+						tempWord += " " + wordsArray[++j];
+					}
+						
+					String replacement = fluffMap.get(tempWord);
+					if(replacement != null){
+						sentenceBuilder.append(replacement);
+						madeReplacement = true;
+						i = j;
+					}
+						//curWord += wordsArray[++i];
 				}				
 			}
 			
 			//if composite fluff word
-			if (!fluffMap.containsKey(curWord)){
-				String 
-			}else{
-				newSentence += " " + curWord;
+			if (!madeReplacement && !fluffMap.containsKey(curWord)){
+			
+				sentenceBuilder.append(" " + curWord);
 			}
 			
 			if(curWord.matches("[^.,!]*[.|,|!]{1}") || i == wordsArrayLen-1){
 				
 				if(!inTex){
-					sentenceList.add(newSentence);
-					newSentence = "";
+					sentenceList.add(sentenceBuilder.toString());
+					sentenceBuilder.setLength(0);
 				}
 			}			
 			

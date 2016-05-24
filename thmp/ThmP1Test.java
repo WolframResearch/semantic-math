@@ -105,12 +105,15 @@ public class ThmP1Test {
 					+ "$a to end$ and $b to end$ are compatible in the sense that $b = a$ for all $a in a, bin b, xin n$. usually we denote it as $_an_b$.";
 			st = "a system $$ of $r$-modules over $i$ consists of a family of $r$-modules ${m_i}_{i in i}$ indexed by $i$ and a family of $r$-module maps ${mu_{ij} : m_i to m_j}_{i leq j}$, such that for all $i leq j leq k$,";
 			st = "a system $S$ of $r$-modules over $i$ consists of a family of $R$-modules ${m_i}_{i in i}$ indexed by $i$ and a family of $R$-module maps ${mu_{ij} : m_i to m_j}_{i leq j}$.";
-			//st = "maps ${mu_{ij}: m_i to m_j}_{i leq j}$.";
-			
+			st = "an abelian group can be written as a direct sum of cyclic groups";
+			st = "a finitely generated abelian group is isomorphic to a direct sum of cyclic groups";
+			st = "b is isomorphic to c";
+			st = "functor is unique";
+			st = "functor is unique to b";
 			
 			strAr = ThmP1.preprocess(st);
 			for(int i = 0; i < strAr.length; i++){
-				//ThmP1.parse(ThmP1.tokenize(strAr[i].toLowerCase().trim().split(" |\\.|\\,")));				
+				ThmP1.parse(ThmP1.tokenize(strAr[i].toLowerCase().trim().split(" |\\.|\\,")));				
 			}
 			
 			Scanner sc = new Scanner(new File("noTex3.txt"));
@@ -119,11 +122,11 @@ public class ThmP1Test {
 				st = sc.nextLine().toLowerCase().replaceAll("\\([^)]*\\)", "");
 				if(st.matches("^\\s*$")) continue;
 				
-				System.out.println(st + "\n");
+				//System.out.println(st + "\n");
 				strAr = ThmP1.preprocess(st);
 				
 				for(int i = 0; i < strAr.length; i++){					
-					ThmP1.parse(ThmP1.tokenize(strAr[i].trim().split(" |\\.|\\,"))); //p1.parse(p1.tokenize(p1.preprocess(strAr2)));
+					//ThmP1.parse(ThmP1.tokenize(strAr[i].trim().split(" |\\.|\\,"))); //p1.parse(p1.tokenize(p1.preprocess(strAr2)));
 				}
 			}
 			

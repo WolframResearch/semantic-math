@@ -205,11 +205,10 @@ public class Maps {
 		posMap.put("are", "verb"); ////////////***
 		posMap.put("have", "verb"); posMap.put("obtain", "verb"); posMap.put("generate", "verb");
 		posMap.put("replace", "verb"); posMap.put("act", "verb"); posMap.put("follow", "verb"); 
-		posMap.put("denote", "verb"); posMap.put("define", "verb"); posMap.put("has", "verb");
-		
+		posMap.put("denote", "verb"); posMap.put("define", "verb"); posMap.put("has", "verb");		
 		
 		//special participles
-		posMap.put("given", "hyp"); posMap.put("been", "parti"); 
+		posMap.put("given", "hyp"); posMap.put("been", "parti"); posMap.put("written", "parti"); 
 		
 		//build in quantifiers into structures, forall (indicated
 		//by for all, has)
@@ -222,7 +221,8 @@ public class Maps {
 		mathObjMap.put("Fp", "mathObj"); mathObjMap.put("transformation", "mathObj");
 		mathObjMap.put("ring", "mathObj"); mathObjMap.put("matrix", "mathObj"); 
 		mathObjMap.put("function", "mathObj"); mathObjMap.put("bilinear form", "mathObj");
-		mathObjMap.put("basis", "mathObj"); mathObjMap.put("sum", "mathObj");
+		mathObjMap.put("basis", "mathObj"); mathObjMap.put("sum", "COMP");
+		mathObjMap.put("direct sum", "mathObj");
 		mathObjMap.put("number", "mathObj"); mathObjMap.put("partition", "mathObj");
 		//composite math objects
 		mathObjMap.put("field", "COMP"); mathObjMap.put("space", "COMP");
