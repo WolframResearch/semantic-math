@@ -165,10 +165,11 @@ public class ParseToWL {
 	
 	public static void processParse(){
 		//System.out.println(parseString);
+		//Expensive operations! Try faster ways, maybe Pattern matchers
 		parseString = parseString.replaceAll("\\[\\],\\s|\\[\\]", "");
 		
 		parseString = parseString.replaceAll(",\\s\\]", "]").
-				replaceAll(",\\s,\\s", ", ");
+				replaceAll(",\\s,\\s", ", ").replaceAll("\\[([a-zA-Z]*)\\]", "$1");
 		System.out.println(parseString);
 	}
 	

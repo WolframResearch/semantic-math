@@ -108,12 +108,12 @@ public class ThmP1Test {
 			st = "an abelian group can be written as a direct sum of cyclic groups";
 			st = "a finitely generated abelian group is isomorphic to a direct sum of cyclic groups";
 			//st = "b is isomorphic to c";
-			//st = "functor is unique"; //try to parse "unique and field"
+			st = "functor is unique"; //try to parse "unique and field"
 			//st = "ring is unique to ring";
 			
 			strAr = ThmP1.preprocess(st);
 			for(int i = 0; i < strAr.length; i++){
-				ThmP1.parse(ThmP1.tokenize(strAr[i].toLowerCase().trim().split(" |\\.|\\,")));				
+				//ThmP1.parse(ThmP1.tokenize(strAr[i].toLowerCase().trim().split(" |\\.|\\,")));				
 			}
 			
 			Scanner sc = new Scanner(new File("noTex3.txt"));
@@ -122,11 +122,11 @@ public class ThmP1Test {
 				st = sc.nextLine().toLowerCase().replaceAll("\\([^)]*\\)", "");
 				if(st.matches("^\\s*$")) continue;
 				
-				//System.out.println(st + "\n");
+				System.out.println(st + "\n");
 				strAr = ThmP1.preprocess(st);
 				
 				for(int i = 0; i < strAr.length; i++){					
-					//ThmP1.parse(ThmP1.tokenize(strAr[i].trim().split(" |\\.|\\,"))); //p1.parse(p1.tokenize(p1.preprocess(strAr2)));
+					ThmP1.parse(ThmP1.tokenize(strAr[i].trim().split(" |\\.|\\,"))); //p1.parse(p1.tokenize(p1.preprocess(strAr2)));
 				}
 			}
 			
