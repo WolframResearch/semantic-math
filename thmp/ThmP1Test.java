@@ -109,20 +109,25 @@ public class ThmP1Test {
 			st = "a finitely generated abelian group is isomorphic to a direct sum of cyclic groups";
 			//st = "b is isomorphic to c";
 			st = "functor is unique"; //try to parse "unique and field"
-			//st = "ring is unique to ring";
+			st = "a ring called $ring, ,       ring$ ";
+			st = "Let $j$ be a set. "; /////
+			//st = "$s$ is a set"; /////
+			//st = " For any $R$-multilinear mapping $f : M_1times ldots times M_r to P$ there exists a unique $R$-module homomorphism $f' : T to P$ such that $f'circ g = f$. Such a module $T$ is unique up to unique isomorphism."
+			//		+ "We denote it $M_1 otimes_R ldots otimes_R M_r$ and we denote the universal multilinear map $(m_1, ldots, m_r) mapsto m_1 otimes otimes m_r$";
 			
 			strAr = ThmP1.preprocess(st);
 			for(int i = 0; i < strAr.length; i++){
-				//ThmP1.parse(ThmP1.tokenize(strAr[i].toLowerCase().trim().split(" |\\.|\\,")));				
+				ThmP1.parse(ThmP1.tokenize(strAr[i].toLowerCase().trim().split(" ") ));				
 			}
 			
 			Scanner sc = new Scanner(new File("noTex3.txt"));
 			
 			while(sc.hasNextLine()){
-				st = sc.nextLine().toLowerCase().replaceAll("\\([^)]*\\)", "");
+				String nextLine = sc.nextLine();
+				st = nextLine.toLowerCase().replaceAll("\\([^)]*\\)", "");
 				if(st.matches("^\\s*$")) continue;
 				
-				System.out.println(st + "\n");
+				System.out.println(nextLine + "\n");
 				strAr = ThmP1.preprocess(st);
 				
 				for(int i = 0; i < strAr.length; i++){					

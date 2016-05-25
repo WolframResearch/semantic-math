@@ -83,10 +83,11 @@ public class ParseToWL {
 				break;
 			case "iff": type = ""; break;	
 			case "rpro": type = ""; break;	
+			case "hypo": type = ""; break;
 			case "hyp": 
 				type = "";
 				if(headStruct.prev1() != null && headStruct.prev1() instanceof String
-						&& !((String)headStruct.prev1()).matches("for every|for all") ){
+						&& !((String)headStruct.prev1()).matches("for every|for all|for each") ){
 					showprev1 = false;
 				}
 				break;
@@ -169,7 +170,7 @@ public class ParseToWL {
 		parseString = parseString.replaceAll("\\[\\],\\s|\\[\\]", "");
 		
 		parseString = parseString.replaceAll(",\\s\\]", "]").
-				replaceAll(",\\s,\\s", ", ").replaceAll("\\[([a-zA-Z]*)\\]", "$1");
+				replaceAll(",\\s,\\s", ", ").replaceAll("\\[([a-zA-Z]*)\\],", "$1,");
 		System.out.println(parseString);
 	}
 	

@@ -108,32 +108,35 @@ public class ThmP1 {
 			str[i] = curWord; 
 
 			String type = "mathObj";
-			int strlen = str[i].length();
-
+			int wordlen = str[i].length();
+			
 			//detect latex expressions, mark them as "mathObj" for now
 			if(curWord.charAt(0) == '$'){
 				String latexExpr = curWord;
 				int stringLength = str.length;
 				
 				if(i < stringLength-1 && !curWord.matches("\\$[^$]+\\$[^\\s]*") &&
-						(curWord.charAt(strlen - 1) != '$' 
-						|| strlen == 2)){
+						(curWord.charAt(wordlen - 1) != '$' 
+						|| wordlen == 2)){
 					i++;
 					curWord = str[i];
 					if(i < stringLength-1 && curWord.equals("")){
 						curWord = str[++i];
 					}
-					while(i < stringLength && curWord.charAt(curWord.length() - 1) != '$'){
+					while(i < stringLength && curWord.length() > 0 && curWord.charAt(curWord.length() - 1) != '$'){
 						latexExpr += " " + curWord;
 						i++;
 						
 						if(i == stringLength) break;
 						
-						curWord = i<stringLength-1 && str[i].equals("") ? str[++i] : str[i];							
+						curWord = i < stringLength-1 && str[i].equals("") ? str[++i] : str[i];							
 						
 					}
-					if(i < stringLength && str[i].charAt(str[i].length() - 1) == '$')
+					if(i < stringLength){
+					int tempWordlen = str[i].length();
+					if(tempWordlen > 0 && str[i].charAt(tempWordlen - 1) == '$')
 						latexExpr += " " + str[i];
+					}
 				}else if(curWord.matches("\\$[^$]\\$")){
 					type = "symb";
 				}
@@ -150,16 +153,16 @@ public class ThmP1 {
 			String singular = "";
 			String singular2 = ""; // ending in "ies"
 			String singular3 = ""; // ending in "es"
-			if (strlen > 0 && curWord.charAt(strlen - 1) == 's') {
-				singular = curWord.substring(0, strlen - 1);
+			if (wordlen > 0 && curWord.charAt(wordlen - 1) == 's') {
+				singular = curWord.substring(0, wordlen - 1);
 			}
 
-			if (strlen > 3 && curWord.substring(strlen - 3, strlen).equals("ies")) {
-				singular2 = curWord.substring(0, strlen - 3) + 'y';
+			if (wordlen > 3 && curWord.substring(wordlen - 3, wordlen).equals("ies")) {
+				singular2 = curWord.substring(0, wordlen - 3) + 'y';
 			}
 
-			if (strlen > 2 && curWord.substring(strlen - 2, strlen).equals("es")) {
-				singular3 = curWord.substring(0, strlen - 2);
+			if (wordlen > 2 && curWord.substring(wordlen - 2, wordlen).equals("es")) {
+				singular3 = curWord.substring(0, wordlen - 2);
 			}
 
 			if (Maps.mathObjMap.containsKey(curWord) || mathObjMap.containsKey(singular)) {
@@ -295,31 +298,31 @@ public class ThmP1 {
 				}
 			}
 			// check again for verbs ending in 'es' & 's'
-			else if (strlen > 0 && curWord.charAt(strlen - 1) == 's'
-					&& posMap.containsKey(str[i].substring(0, strlen - 1))
-					&& posMap.get(str[i].substring(0, strlen - 1)).equals("verb")) {
+			else if (wordlen > 0 && curWord.charAt(wordlen - 1) == 's'
+					&& posMap.containsKey(str[i].substring(0, wordlen - 1))
+					&& posMap.get(str[i].substring(0, wordlen - 1)).equals("verb")) {
 
 				Pair pair = new Pair(str[i], "verb");
 				pairs.add(pair);
-			} else if (strlen > 1 && curWord.charAt(strlen - 1) == 's' && str[i].charAt(str[i].length() - 2) == 'e'
-					&& posMap.containsKey(str[i].substring(0, strlen - 2))
-					&& posMap.get(str[i].substring(0, strlen - 2)).equals("verb")) {
+			} else if (wordlen > 1 && curWord.charAt(wordlen - 1) == 's' && str[i].charAt(str[i].length() - 2) == 'e'
+					&& posMap.containsKey(str[i].substring(0, wordlen - 2))
+					&& posMap.get(str[i].substring(0, wordlen - 2)).equals("verb")) {
 				Pair pair = new Pair(str[i], "verb");
 				pairs.add(pair);
 
 			}
 			// adverbs that end with -ly that haven't been screened off before
-			else if (strlen > 1 && curWord.substring(strlen - 2, strlen).equals("ly")) {
+			else if (wordlen > 1 && curWord.substring(wordlen - 2, wordlen).equals("ly")) {
 				Pair pair = new Pair(str[i], "adverb");
 				pairs.add(pair);
 			}
 			// participles and gerunds. Need special list for words such as
 			// "given"
-			else if (strlen > 1 && curWord.substring(strlen - 2, strlen).equals("ed")
-					&& (posMap.containsKey(str[i].substring(0, strlen - 2))
-							&& posMap.get(str[i].substring(0, strlen - 2)).equals("verb")
-							|| posMap.containsKey(str[i].substring(0, strlen - 1))
-									&& posMap.get(str[i].substring(0, strlen - 1)).equals("verb"))) {
+			else if (wordlen > 1 && curWord.substring(wordlen - 2, wordlen).equals("ed")
+					&& (posMap.containsKey(str[i].substring(0, wordlen - 2))
+							&& posMap.get(str[i].substring(0, wordlen - 2)).equals("verb")
+							|| posMap.containsKey(str[i].substring(0, wordlen - 1))
+									&& posMap.get(str[i].substring(0, wordlen - 1)).equals("verb"))) {
 
 				// if next word is "by", then
 				String curPos = "parti";
@@ -360,12 +363,12 @@ public class ThmP1 {
 
 				Pair pair = new Pair(curWord, curPos);
 				pairs.add(pair);
-			} else if (strlen > 2 && curWord.substring(strlen - 3, strlen).equals("ing")
-					&& (posMap.containsKey(curWord.substring(0, strlen - 3))
-							&& posMap.get(curWord.substring(0, strlen - 3)).equals("verb")
+			} else if (wordlen > 2 && curWord.substring(wordlen - 3, wordlen).equals("ing")
+					&& (posMap.containsKey(curWord.substring(0, wordlen - 3))
+							&& posMap.get(curWord.substring(0, wordlen - 3)).equals("verb")
 							// verbs ending in "e"
-							|| (posMap.containsKey(curWord.substring(0, strlen - 3) + 'e')
-									&& posMap.get(curWord.substring(0, strlen - 3) + 'e').equals("verb")))) {
+							|| (posMap.containsKey(curWord.substring(0, wordlen - 3) + 'e')
+									&& posMap.get(curWord.substring(0, wordlen - 3) + 'e').equals("verb")))) {
 				Pair pair = new Pair(str[i], "gerund");
 				pairs.add(pair);
 			} else if (curWord.matches("[a-zA-Z]")) {
@@ -1186,13 +1189,14 @@ public class ThmP1 {
 
 	/**
 	 * Preprocess. Remove fluff words. the, a, an
-	 * @param str is string of all input to be processed
+	 * @param str is string of all input to be processed. 
 	 * @return array of sentence Strings
 	 */
 	public static String[] preprocess(String inputStr) {
 		
 		ArrayList<String> sentenceList = new ArrayList<String>();
-		String[] wordsArray = inputStr.split(" ");
+		
+		String[] wordsArray = inputStr.replaceAll("([^.,!:]*)([.|,|:|!]{1})", "$1 $2").split("\\s+");
 		int wordsArrayLen = wordsArray.length;
 		
 		//use StringBuilder!
@@ -1205,7 +1209,7 @@ public class ThmP1 {
 		
 		for (int i = 0; i < wordsArrayLen; i++) {
 			
-			curWord = wordsArray[i];
+			curWord = wordsArray[i];					
 			
 			if(!inTex && curWord.matches("\\$.*") && !curWord.matches("\\$[^$]+\\$.*")){				
 				inTex = true;
@@ -1236,24 +1240,24 @@ public class ThmP1 {
 						madeReplacement = true;
 						i = j;
 					}
-						//curWord += wordsArray[++i];
+					//curWord += wordsArray[++i];
 				}				
 			}
 			
 			//if composite fluff word
-			if (!madeReplacement && !fluffMap.containsKey(curWord)){
-			
+			if (!madeReplacement && !curWord.matches("\\.|,|!") && !fluffMap.containsKey(curWord)){
+				
 				sentenceBuilder.append(" " + curWord);
-			}
-			
-			if(curWord.matches("[^.,!]*[.|,|!]{1}") || i == wordsArrayLen-1){
+			}			
+				
+			if(curWord.matches("\\.|,|!") || i == wordsArrayLen-1){
 				
 				if(!inTex){
 					sentenceList.add(sentenceBuilder.toString());
 					sentenceBuilder.setLength(0);
 				}
-			}			
-			
+			}
+
 		}
 		return sentenceList.toArray(new String[0]);
 	}

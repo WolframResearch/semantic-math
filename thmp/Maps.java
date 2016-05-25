@@ -169,7 +169,7 @@ public class Maps {
 		
 		//parts of speech
 		posMap.put("for every", "hyp"); posMap.put("suppose", "hyp"); posMap.put("assume", "hyp");		
-		posMap.put("for all", "hyp");
+		posMap.put("for all", "hyp"); posMap.put("for each", "hyp");
 		
 		//prepositions
 		posMap.put("or", "or"); posMap.put("and", "and"); posMap.put("at most", "pre");
@@ -208,7 +208,8 @@ public class Maps {
 		posMap.put("denote", "verb"); posMap.put("define", "verb"); posMap.put("has", "verb");		
 		
 		//special participles
-		posMap.put("given", "hyp"); posMap.put("been", "parti"); posMap.put("written", "parti"); 
+		posMap.put("given", "parti_COMP"); posMap.put("been", "parti"); posMap.put("written", "parti"); 
+		posMap.put("given by", "partiby");
 		
 		//build in quantifiers into structures, forall (indicated
 		//by for all, has)
@@ -273,7 +274,7 @@ public class Maps {
 		structMap.put("is_ent", "is"); structMap.put("is_or", "is");
 		structMap.put("ent_is", "assert");
 		structMap.put("symb_is", "assert"); structMap.put("if_assert", "ifstate");	
-		structMap.put("iff_assert", "ifstate");
+		structMap.put("iff_assert", "ifstate"); structMap.put("if_hypo", "If");
 		structMap.put("then_assert", "thenstate");
 		
 		//expression, e.g. a map from A to B
