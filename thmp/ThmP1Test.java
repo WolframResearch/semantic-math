@@ -107,9 +107,9 @@ public class ThmP1Test {
 			st = "a system $S$ of $r$-modules over $i$ consists of a family of $R$-modules ${m_i}_{i in i}$ indexed by $i$ and a family of $R$-module maps ${mu_{ij} : m_i to m_j}_{i leq j}$.";
 			st = "an abelian group can be written as a direct sum of cyclic groups";
 			st = "a finitely generated abelian group is isomorphic to a direct sum of cyclic groups";
-			st = "b is isomorphic to c";
-			st = "functor is unique";
-			st = "functor is unique to b";
+			//st = "b is isomorphic to c";
+			//st = "functor is unique"; //try to parse "unique and field"
+			//st = "ring is unique to ring";
 			
 			strAr = ThmP1.preprocess(st);
 			for(int i = 0; i < strAr.length; i++){

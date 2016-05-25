@@ -29,8 +29,11 @@ public class ParseToWL {
 	 */
 	public static void parseToWL(Struct headStruct, boolean showPrev1){
 		
+		//used to tell the caller whether the verb is collected or not in asserts
+		//boolean showPrev1Return = showPrev1;
 		if(headStruct == null) return;		
 		boolean showprev1 = showPrev1;
+		
 		//if structH
 		if( headStruct.struct() != null && headStruct.struct().size() > 0 ){
 			
@@ -50,7 +53,8 @@ public class ParseToWL {
 				inAssert = true;
 				break;
 			case "verbphrase":
-				if(inAssert ){
+				if(inAssert && headStruct.prev1() instanceof Struct 
+						&& ((Struct)headStruct.prev1()).type().equals("verb") ){
 					showprev1 = false;
 				}
 				type = "";				
@@ -58,6 +62,7 @@ public class ParseToWL {
 			case "verb":	
 				if(inAssert ){
 					assertVerb = headStruct.prev1().toString();
+					//showPrev1Return = true;
 				}
 				showprev1 = false;
 				type = "";
@@ -116,7 +121,7 @@ public class ParseToWL {
 					System.out.print(headStruct.prev1());
 					parseString += headStruct.prev1();
 				}
-				if(headStruct.prev2() != null && headStruct.prev2().equals("") && showPrev1){
+				if(headStruct.prev2() != null && headStruct.prev2().equals("") && showPrev1){////
 					System.out.print("*]*");
 					parseString += "]";
 				}
@@ -131,11 +136,12 @@ public class ParseToWL {
 				
 				if(headStruct.prev2() instanceof Struct){
 					
-					parseToWL((Struct)headStruct.prev2(), showPrev1);
+					parseToWL((Struct)headStruct.prev2(), showPrev1);////
 					
 					if(headStruct.type().equals("assert")){
 						System.out.print(", "+ assertVerb );
 						parseString += ", "+ assertVerb;
+						//showPrev1Return = true;
 						inAssert = false;
 					}
 					
