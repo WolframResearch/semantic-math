@@ -114,6 +114,10 @@ public class ThmP1Test {
 			//st = "$s$ is a set"; /////
 			//st = " For any $R$-multilinear mapping $f : M_1times ldots times M_r to P$ there exists a unique $R$-module homomorphism $f' : T to P$ such that $f'circ g = f$. Such a module $T$ is unique up to unique isomorphism."
 			//		+ "We denote it $M_1 otimes_R ldots otimes_R M_r$ and we denote the universal multilinear map $(m_1, ldots, m_r) mapsto m_1 otimes otimes m_r$";
+			st = "field satisfying this property";
+			//st = "there exists a field";
+			//st = "both pairs are perfect";
+			//st = "F is a field and $F = 4$";
 			
 			strAr = ThmP1.preprocess(st);
 			for(int i = 0; i < strAr.length; i++){
@@ -124,14 +128,15 @@ public class ThmP1Test {
 			
 			while(sc.hasNextLine()){
 				String nextLine = sc.nextLine();
-				st = nextLine.toLowerCase().replaceAll("\\([^)]*\\)", "");
+				//replaceAll("\\([^)]*\\)", "")
+				st = nextLine.toLowerCase();
 				if(st.matches("^\\s*$")) continue;
 				
-				System.out.println(nextLine + "\n");
+				//System.out.println(nextLine + "\n");
 				strAr = ThmP1.preprocess(st);
 				
 				for(int i = 0; i < strAr.length; i++){					
-					ThmP1.parse(ThmP1.tokenize(strAr[i].trim().split(" |\\.|\\,"))); //p1.parse(p1.tokenize(p1.preprocess(strAr2)));
+					//ThmP1.parse(ThmP1.tokenize(strAr[i].trim().split(" "))); //p1.parse(p1.tokenize(p1.preprocess(strAr2)));
 				}
 			}
 			

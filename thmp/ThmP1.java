@@ -132,10 +132,16 @@ public class ThmP1 {
 						curWord = i < stringLength-1 && str[i].equals("") ? str[++i] : str[i];							
 						
 					}
+					
 					if(i < stringLength){
 					int tempWordlen = str[i].length();
+					
 					if(tempWordlen > 0 && str[i].charAt(tempWordlen - 1) == '$')
 						latexExpr += " " + str[i];
+					}
+					
+					if(latexExpr.matches("[^=]+=.+|[^\\\\cong]+\\\\cong.+")){
+						type = "assert";
 					}
 				}else if(curWord.matches("\\$[^$]\\$")){
 					type = "symb";
@@ -425,7 +431,6 @@ public class ThmP1 {
 			}
 
 		}
-
 		
 		// If phrase isn't in dictionary, ie has type "", then use probMap to
 		// postulate type, if possible
@@ -672,10 +677,10 @@ public class ThmP1 {
 
 				int structListSize = structList.size();
 
-				// combine adverbs into verbs/adjectives, look 2 phrases before
+				// combine adverbs into verbs/adjectives, look 2 words before
 				if (curPair.pos().equals("adverb")) {
 
-					if (structListSize > 1 && structList.get(structListSize - 2).type().matches("verb")) {
+					if (structListSize > 1 && structList.get(structListSize - 2).type().equals("verb")) {
 						StructA<?, ?> verbStruct = (StructA<?, ?>) structList.get(structListSize - 2);
 						// verbStruct should not have prev2, also prev2 type
 						// should be String
@@ -686,7 +691,7 @@ public class ThmP1 {
 						verbStruct.set_prev2(curPair.word());
 						continue;
 					}
-				}
+				}				
 
 				String curWord = curPair.word();
 
@@ -700,6 +705,13 @@ public class ThmP1 {
 						// remove the adverb Struct
 						structList.remove(structListSize - 1);
 					}
+				}
+				//combine det into nouns and verbs, change 
+				else if (curPair.pos().equals("noun") && structListSize > 0
+						&& structList.get(structListSize - 1).type().equals("det")){
+					String det = (String)structList.get(structListSize - 1).prev1();
+					newStruct.set_prev2(det);
+					structList.remove(structListSize - 1);
 				}
 
 				structList.add(newStruct);

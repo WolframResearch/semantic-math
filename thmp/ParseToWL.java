@@ -46,9 +46,11 @@ public class ParseToWL {
 			
 			switch(headStruct.type()){
 			case "assert":
-				if(headStruct.prev1() != null &&
-					((Struct)headStruct.prev2()).prev1().equals("is") ){
+				if(headStruct.prev1() != null 
+				&& headStruct.prev2() instanceof Struct
+				&& ((Struct)headStruct.prev2()).prev1().equals("is") ){
 					//possibly recurse right here for this special case
+					//make "Is[]" special assert per jose's request
 				}
 				inAssert = true;
 				break;

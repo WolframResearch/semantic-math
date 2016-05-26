@@ -307,7 +307,8 @@ public class Maps {
 		structMap.put("parti_adj", "phrase"); structMap.put("symb_prep", "phrase");
 		
 		structMap.put("pre_noun", "ppt"); //nounphrase
-		structMap.put("adj_noun", "noun"); structMap.put("gerund_noun", "np");
+		structMap.put("adj_noun", "noun"); structMap.put("gerund_noun", "gerundp"); //gerundphrase
+		structMap.put("ent_gerundp", "newchild");
 		
 		//involving nums
 		structMap.put("pre_num", "prep");		
@@ -337,13 +338,14 @@ public class Maps {
 		structMap.put("verb_num", "verbphrase"); structMap.put("verb_np", "verbphrase");
 		structMap.put("verb_pre", "verbphrase"); structMap.put("verb_phrase", "verbphrase");
 		structMap.put("verb_partient", "verbphrase"); structMap.put("verb_noun", "verbphrase");
-		structMap.put("det_verbphrase", "assert");
+		structMap.put("det_verbphrase", "assert"); structMap.put("verb_parti", "verbphrase");
 		structMap.put("verb_symb", "verbphrase"); structMap.put("symb_verbphrase", "assert");
 		structMap.put("ent_verbphrase", "assert"); structMap.put("pro_verbphrase", "assert");
 		structMap.put("np_verbphrase", "assert");
 		structMap.put("verb_assert", "verbphrase"); structMap.put("verbphrase_prep", "verbphrase");
 		structMap.put("partiby_ent", "phrase"); structMap.put("partiby_noun", "phrase");
 		structMap.put("verb_partiby", "verb"); structMap.put("partiby_symb", "phrase");
+		structMap.put("be_parti", "verb"); structMap.put("be_partiby", "verb");
 		structMap.put("disj_verbphrase", "assert"); structMap.put("conj_verbphrase", "assert");
 		
 		structMap.put("let_symb", "let"); structMap.put("be_ent", "be"); structMap.put("let_be", "letbe");
