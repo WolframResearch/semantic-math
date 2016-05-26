@@ -1,0 +1,73 @@
+filter verb
+morphism ent
+complex ent_comp
+CW complex ent
+homology ent
+category ent_comp
+satisfy verb
+assumption noun
+categories ent_comp
+lemma noun
+take verb
+analogue noun
+hold verb
+situation noun
+closed adj
+under pre
+multiplication noun
+localization ent
+respect verb
+submodule ent_comp
+indeed fluff
+one adj
+can verb
+take verb
+inverse ent
+image ent
+exactness
+three adj
+mapping
+view verb
+cartesian adj
+product ent
+said parti
+into pre
+also pre
+so fluff
+universal adj
+property noun
+mapping ent
+other adj
+word noun
+induce verb
+commute verb
+moreover
+two adj
+done parti
+pair noun
+bilinear adj
+mapping
+universal
+property noun
+mapping noun
+homomorphism ent_comp
+up pre
+action ent
+compatible adj
+in pre_comp
+"in sense" comp
+"in sense that" fluff ", " 
+"in the" comp
+"in the sense" fluff ", "
+to pre_comp
+"to be" fluff "as"
+other adj
+word noun
+functor ent
+right adj
+tensor verb
+term noun
+original adj
+right adj
+preserve verb
+exactness noun
