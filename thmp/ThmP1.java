@@ -101,8 +101,8 @@ public class ThmP1 {
 			if (curWord.matches("^\\s*$"))
 				continue;
 
-			// strip away special chars '(', ')', etc
-			curWord = curWord.replaceAll("\\(|\\)", "");
+			// strip away special chars '(', ')', etc ///should not remove........
+			//curWord = curWord.replaceAll("\\(|\\)", "");
 			//remove this and ensure curWord is used subsequently 
 			//instead of str[i]
 			str[i] = curWord; 
@@ -117,7 +117,7 @@ public class ThmP1 {
 				
 				if(i < stringLength-1 && !curWord.matches("\\$[^$]+\\$[^\\s]*") &&
 						(curWord.charAt(wordlen - 1) != '$' 
-						|| wordlen == 2)){
+						|| wordlen == 2 || wordlen == 1)){
 					i++;
 					curWord = str[i];
 					if(i < stringLength-1 && curWord.equals("")){
@@ -337,6 +337,12 @@ public class ThmP1 {
 				if (str.length > i + 1 && str[i + 1].equals("by")) {
 					curPos = "partiby";
 					curWord = curWord + " by";
+					//if previous word is a verb, combine to form verb
+					if(pairsSize > 0 && pairs.get(pairsSize-1).pos().equals("verb")){
+						curWord = pairs.get(pairsSize-1).pos() + " " + curWord;
+						curPos = "verb";
+						pairs.remove(pairsSize-1);
+					}
 					i++;
 				}
 				//previous word is "is, are", then group with previous word to verb
@@ -375,7 +381,10 @@ public class ThmP1 {
 							// verbs ending in "e"
 							|| (posMap.containsKey(curWord.substring(0, wordlen - 3) + 'e')
 									&& posMap.get(curWord.substring(0, wordlen - 3) + 'e').equals("verb")))) {
-				Pair pair = new Pair(str[i], "gerund");
+				if(i < str.length - 1 && posMap.containsKey(str[i+1]) && posMap.get(str[i+1]).equals("pre") ){
+					curWord = curWord + str[++i];
+				}
+				Pair pair = new Pair(curWord, "gerund");
 				pairs.add(pair);
 			} else if (curWord.matches("[a-zA-Z]")) {
 				// variable/symbols
@@ -706,6 +715,16 @@ public class ThmP1 {
 						structList.remove(structListSize - 1);
 					}
 				}
+				
+				else if (curPair.pos().equals("gerund")) {//////////////////////////////
+					if (structListSize >       0 && structList.get(structListSize   ).type().equals("pre")) {
+						Struct adverbStruct = structList.get(structListSize - 1);
+						newStruct.set_prev2(adverbStruct);
+						// remove the adverb Struct
+						structList.remove(structListSize - 1);
+					}
+				}
+				
 				//combine det into nouns and verbs, change 
 				else if (curPair.pos().equals("noun") && structListSize > 0
 						&& structList.get(structListSize - 1).type().equals("det")){
@@ -1241,7 +1260,7 @@ public class ThmP1 {
 				if(posAr[posAr.length-1].equals("comp") && j < wordsArrayLen-1){
 					//keep reading in string characters, until there is no match				
 					tempWord += " " + wordsArray[++j];
-						
+					
 					while(posMap.containsKey(tempWord) && j < wordsArrayLen-1){
 						tempWord += " " + wordsArray[++j];
 					}
@@ -1256,17 +1275,20 @@ public class ThmP1 {
 				}				
 			}
 			
-			//if composite fluff word
+			//if composite fluff word ?? already taken care of
 			if (!madeReplacement && !curWord.matches("\\.|,|!") && !fluffMap.containsKey(curWord)){
-				
+			//if (!curWord.matches("\\.|,|!") && !fluffMap.containsKey(curWord)){				
 				sentenceBuilder.append(" " + curWord);
 			}			
-				
+			madeReplacement = false;
+			
 			if(curWord.matches("\\.|,|!") || i == wordsArrayLen-1){
 				
 				if(!inTex){
 					sentenceList.add(sentenceBuilder.toString());
 					sentenceBuilder.setLength(0);
+				}else{
+					sentenceBuilder.append(curWord);
 				}
 			}
 

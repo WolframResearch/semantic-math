@@ -413,7 +413,7 @@ public class Maps {
 			}
 			//compound first word, e.g "comm alg"
 			else{
-				Pattern pattern = Pattern.compile("(\".*\")(\\s[^\\s]+\\s)(\".*\")");
+				Pattern pattern = Pattern.compile("\"(.*)\" ([^\\s]+) \"(.*)\"");
 				Matcher matcher = pattern.matcher(nextLine);
 				//what about partial finds?
 				if(matcher.find()){

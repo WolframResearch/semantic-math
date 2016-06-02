@@ -114,14 +114,18 @@ public class ThmP1Test {
 			//st = "$s$ is a set"; /////
 			//st = " For any $R$-multilinear mapping $f : M_1times ldots times M_r to P$ there exists a unique $R$-module homomorphism $f' : T to P$ such that $f'circ g = f$. Such a module $T$ is unique up to unique isomorphism."
 			//		+ "We denote it $M_1 otimes_R ldots otimes_R M_r$ and we denote the universal multilinear map $(m_1, ldots, m_r) mapsto m_1 otimes otimes m_r$";
-			st = "field satisfying this property";
+			//st = "field satisfying this property";
+			st = "$(A, B)$-bimodule";
+			st = "in the sense that F is a field";
+			st = "there exists a pair consisting of $F, G$";
 			//st = "there exists a field";
 			//st = "both pairs are perfect";
 			//st = "F is a field and $F = 4$";
-			
-			strAr = ThmP1.preprocess(st);
+			//Maps.readLexicon();
+		
+			strAr = ThmP1.preprocess(st.toLowerCase());
 			for(int i = 0; i < strAr.length; i++){
-				ThmP1.parse(ThmP1.tokenize(strAr[i].toLowerCase().trim().split(" ") ));				
+				ThmP1.parse(ThmP1.tokenize(strAr[i].trim().split(" ") ));				
 			}
 			
 			Scanner sc = new Scanner(new File("noTex3.txt"));

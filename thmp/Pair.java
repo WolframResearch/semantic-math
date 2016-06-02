@@ -15,7 +15,7 @@ public class Pair {
 		this.word = word;
 		this.pos = pos;
 	}
-	
+			
 	public String word(){
 		return word;
 	}
