@@ -1,0 +1,1 @@
+For $A$-module $M$, $B$-module $P$ and $(A, B)$-bimodule $N$, the modules $(M \otimes_A N)\otimes_B P$ and $M \otimes_A(N \otimes_B P)$ can both be given $(A, B)$-bimodule structure, and moreover $$ (M \otimes_A N)\otimes_B P \cong M \otimes_A(N \otimes_B P). $$

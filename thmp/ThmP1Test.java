@@ -128,19 +128,18 @@ public class ThmP1Test {
 				ThmP1.parse(ThmP1.tokenize(strAr[i].trim().split(" ") ));				
 			}
 			
-			Scanner sc = new Scanner(new File("noTex3.txt"));
+			Scanner sc = new Scanner(new File("src/thmp/data/noTex3.txt"));
 			
 			while(sc.hasNextLine()){
 				String nextLine = sc.nextLine();
-				//replaceAll("\\([^)]*\\)", "")
 				st = nextLine.toLowerCase();
 				if(st.matches("^\\s*$")) continue;
 				
-				//System.out.println(nextLine + "\n");
+				System.out.println(nextLine + "\n");
 				strAr = ThmP1.preprocess(st);
 				
 				for(int i = 0; i < strAr.length; i++){					
-					//ThmP1.parse(ThmP1.tokenize(strAr[i].trim().split(" "))); //p1.parse(p1.tokenize(p1.preprocess(strAr2)));
+					ThmP1.parse(ThmP1.tokenize(strAr[i].trim().split(" "))); //p1.parse(p1.tokenize(p1.preprocess(strAr2)));
 				}
 			}
 			

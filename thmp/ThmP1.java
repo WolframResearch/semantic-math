@@ -45,8 +45,8 @@ public class ThmP1 {
 	private static String FLUFF = "Fluff";
 	
 	//private static final File unknownWordsFile;
-	private static final Path unknownWordsFile = Paths.get("unknownWords.txt");
-	private static final Path parsedExprFile = Paths.get("parsedExpr.txt");
+	private static final Path unknownWordsFile = Paths.get("src/thmp/data/unknownWords.txt");
+	private static final Path parsedExprFile = Paths.get("src/thmp/data/parsedExpr.txt");
 	
 	private static final List<String> unknownWords = new ArrayList<String>();
 	private static final List<String> parsedExpr = new ArrayList<String>();
@@ -254,14 +254,18 @@ public class ThmP1 {
 				int pairsSize = pairs.size();
 
 				// if adverb-adj pair, eg "clearly good"
-				if (pairs.size() > 0 && posMap.get(curWord).equals("adj")
-						&& pairs.get(pairsSize - 1).pos().equals("adverb")) {
-					curWord = pairs.get(pairsSize - 1).word() + " " + curWord;
-					// remove previous Pair
-					pairs.remove(pairsSize - 1);
-					pair = new Pair(curWord, "adj");
-					addIndex = false;
+				// And combine adj_adj to adj, eg right exact
+				if (pairs.size() > 0 && posMap.get(curWord).equals("adj")){
+						if(pairs.get(pairsSize - 1).pos().matches("adverb|adj")){ 
+							curWord = pairs.get(pairsSize - 1).word() + " " + curWord;
+							// remove previous Pair
+							pairs.remove(pairsSize - 1);
+							pair = new Pair(curWord, "adj");
+							addIndex = false;
+						}				
+						
 				}
+				
 
 				pairs.add(pair);
 			}
@@ -381,10 +385,13 @@ public class ThmP1 {
 							// verbs ending in "e"
 							|| (posMap.containsKey(curWord.substring(0, wordlen - 3) + 'e')
 									&& posMap.get(curWord.substring(0, wordlen - 3) + 'e').equals("verb")))) {
+				String curType = "gerund";
 				if(i < str.length - 1 && posMap.containsKey(str[i+1]) && posMap.get(str[i+1]).equals("pre") ){
-					curWord = curWord + str[++i];
-				}
-				Pair pair = new Pair(curWord, "gerund");
+					//eg "consisting of" functions as pre, 
+					curWord = curWord + " " + str[++i];
+					curType = "pre";
+				}				
+				Pair pair = new Pair(curWord, curType);
 				pairs.add(pair);
 			} else if (curWord.matches("[a-zA-Z]")) {
 				// variable/symbols
@@ -506,6 +513,7 @@ public class ThmP1 {
 			
 			// look right two places in pairs, if symbol found, add it to namesMap
 			// if it's the given name for an ent.
+			// Combine gerund with ent
 			int pairsSize = pairs.size();
 			if (index + 1 < pairsSize && pairs.get(index + 1).pos().equals("symb")) {
 				pairs.get(index + 1).set_pos(String.valueOf(j));
@@ -528,7 +536,7 @@ public class ThmP1 {
 			}
 			
 			//combine nouns with ent's right after, ie noun_ent
-			if (index > 0 && pairs.get(index - 1).pos().matches("noun")) {
+			else if (index > 0 && pairs.get(index - 1).pos().matches("noun")) {
 				pairs.get(index - 1).set_pos(String.valueOf(j));
 				String prevNoun = pairs.get(index-1).word();				
 				tempMap.put("name", tempMap.get("name") + " " + prevNoun);
@@ -716,14 +724,15 @@ public class ThmP1 {
 					}
 				}
 				
-				else if (curPair.pos().equals("gerund")) {//////////////////////////////
-					if (structListSize >       0 && structList.get(structListSize   ).type().equals("pre")) {
-						Struct adverbStruct = structList.get(structListSize - 1);
-						newStruct.set_prev2(adverbStruct);
+				/* else if (curPair.pos().equals("pre")) {//////////////////////////////
+					if (structListSize >     0 && structList.get(structListSize - 1).type().equals("gerund")) {
+						Struct gerundStruct = structList.get(structListSize - 1);
+						
+						newStruct.set_prev2(adverbStruct); ////////////
 						// remove the adverb Struct
 						structList.remove(structListSize - 1);
 					}
-				}
+				} */
 				
 				//combine det into nouns and verbs, change 
 				else if (curPair.pos().equals("noun") && structListSize > 0
@@ -737,10 +746,6 @@ public class ThmP1 {
 
 			}
 
-			// use last noun as entity, if bunch of different nouns in sequence
-			// unless compound noun
-
-			// if property found, combine to make entity property
 			// ...try multiple entities instead of first one found
 			// add to list of properties
 			// if adjective, group with nearest entity
@@ -976,6 +981,15 @@ public class ThmP1 {
 						}
 					}					
 
+					//potentially change assert to latex expr
+					if(type2.equals("assert") 
+							&& struct2.prev1() instanceof String 
+							&& ((String)struct2.prev1()).charAt(0) == '$' 
+							&& !structMap.containsKey(combined)){
+						struct2.set_type("expr");
+						combined = type1 + "_" + "expr";
+					}
+					
 					// reduce
 					if (structMap.containsKey(combined)) {
 						String newType = structMap.get(combined);

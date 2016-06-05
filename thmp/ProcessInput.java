@@ -23,9 +23,9 @@ public class ProcessInput {
 	//
 	public static void main(String[] args) throws IOException{
 		
-		File inputFile = new File("thmFile3.txt");
+		File inputFile = new File("src/thmp/data/thmFile3.txt");
 		Scanner sc = new Scanner(inputFile);		
-		Path noTex = Paths.get("noTex3.txt");
+		Path noTex = Paths.get("src/thmp/data/noTex3.txt");
 		String noTexString = null;
 		
 		while(sc.hasNextLine()){

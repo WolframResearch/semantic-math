@@ -18,9 +18,9 @@ import java.util.Scanner;
 public class ThmInput {
 
 	public static void main(String[] args) throws IOException{
-		File file = new File("commAlg3.txt");
+		File file = new File("src/thmp/data/commAlg3.txt");
 		Scanner sc = new Scanner(file);
-		Path fileTo = Paths.get("thmFile3.txt");
+		Path fileTo = Paths.get("src/thmp/data/thmFile3.txt");
 		ArrayList<String> thms = new ArrayList<String>();
 		
 		String newThm = "";

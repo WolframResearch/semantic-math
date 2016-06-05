@@ -1,0 +1,397 @@
+{
+\begin
+
+\begin{definition}
+\label{definition-module-finite-type}
+Let $R$ be a ring. Let $M$ be an $R$-module.
+\begin{enumerate}
+\item We say $M$ is a {\it finite $R$-module}, or a {\it finitely generated
+$R$-module} if there exist $n \in \mathbf{N}$ and $x_1, \ldots, x_n \in M$
+such that every element of $M$ is a $R$-linear combination of the $x_i$.
+Equivalently, this means there exists a surjection
+$R^{\oplus n} \to M$ for some $n \in \mathbf{N}$.
+\item We say $M$ is a {\it finitely presented $R$-module} or an
+{\it $R$-module of finite presentation} if there exist integers
+$n, m \in \mathbf{N}$ and an exact sequence
+$$
+R^{\oplus m} \longrightarrow R^{\oplus n} \longrightarrow M \longrightarrow 0
+$$
+\end{enumerate}
+\end{definition}
+
+\noindent
+Informally, $M$ is a finitely presented $R$-module if and only if
+it is finitely generated and the module of relations among these
+generators is finitely generated as well.
+A choice of an exact sequence as in the definition is called a
+{\it presentation} of $M$.
+
+\begin{lemma}
+\label{lemma-lift-map}
+Let $R$ be a ring. Let $\alpha : R^{\oplus n} \to M$ and $\beta : N \to M$ be
+module maps. If $\Im(\alpha) \subset \Im(\beta)$, then there
+exists an $R$-module map $\gamma : R^{\oplus n} \to N$ such that
+$\alpha = \beta \circ \gamma$.
+\end{lemma}
+
+\begin{proof}
+Let $e_i = (0, \ldots, 0, 1, 0, \ldots, 0)$ be the $i$th basis vector
+of $R^{\oplus n}$. Let $x_i \in N$ be an element with
+$\alpha(e_i) = \beta(x_i)$ which exists by assumption. Set
+$\gamma(a_1, \ldots, a_n) = \sum a_i x_i$. By construction
+$\alpha = \beta \circ \gamma$.
+\end{proof}
+
+\begin{lemma}
+\label{lemma-extension}
+Let $R$ be a ring.
+Let
+$$
+0 \to M_1 \to M_2 \to M_3 \to 0
+$$
+be a short exact sequence of $R$-modules.
+\begin{enumerate}
+\item If $M_1$ and $M_3$ are finite $R$-modules, then $M_2$ is a finite
+$R$-module.
+\item If $M_1$ and $M_3$ are finitely presented $R$-modules, then $M_2$
+is a finitely presented $R$-module.
+\item If $M_2$ is a finite $R$-module, then $M_3$ is a finite $R$-module.
+\item If $M_2$ is a finitely presented $R$-module and $M_1$ is a
+finite $R$-module, then $M_3$ is a finitely presented $R$-module.
+\item If $M_3$ is a finitely presented $R$-module and $M_2$ is a finite
+$R$-module, then $M_1$ is a finite $R$-module.
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+Proof of (1). If $x_1, \ldots, x_n$ are generators of $M_1$ and
+$y_1, \ldots, y_m \in M_2$ are elements whose images in $M_3$ are
+generators of $M_3$, then $x_1, \ldots, x_n, y_1, \ldots, y_m$
+generate $M_2$.
+
+\medskip\noindent
+Part (3) is immediate from the definition.
+
+\medskip\noindent
+Proof of (5). Assume $M_3$ is finitely presented and $M_2$ finite.
+Choose a presentation
+$$
+R^{\oplus m} \to R^{\oplus n} \to M_3 \to 0
+$$
+By Lemma \ref{lemma-lift-map} there exists a map
+$R^{\oplus n} \to M_2$ such that
+the solid diagram
+$$
+\xymatrix{
+& R^{\oplus m} \ar[r] \ar@{..>}[d] & R^{\oplus n} \ar[r] \ar[d] &
+M_3 \ar[r] \ar[d]^{\text{id}} & 0 \\
+0 \ar[r] & M_1 \ar[r] & M_2 \ar[r] & M_3 \ar[r] & 0
+}
+$$
+commutes. This produces the dotted arrow. By the snake lemma
+(Lemma \ref{lemma-snake}) we see that we get an isomorphism
+$$
+\Coker(R^{\oplus m} \to M_1)
+\cong
+\Coker(R^{\oplus n} \to M_2)
+$$
+In particular we conclude that $\Coker(R^{\oplus m} \to M_1)$
+is a finite $R$-module. Since $\Im(R^{\oplus m} \to M_1)$
+is finite by (3), we see that $M_1$ is finite by part (1).
+
+\medskip\noindent
+Proof of (4). Assume $M_2$ is finitely presented and $M_1$ is finite.
+Choose a presentation $R^{\oplus m} \to R^{\oplus n} \to M_2 \to 0$.
+Choose a surjection $R^{\oplus k} \to M_1$. By Lemma \ref{lemma-lift-map}
+there exists a factorization $R^{\oplus k} \to R^{\oplus n} \to M_2$
+of the composition $R^{\oplus k} \to M_1 \to M_2$. Then
+$R^{\oplus k + m} \to R^{\oplus n} \to M_3 \to 0$
+is a presentation.
+
+\medskip\noindent
+Proof of (2). Assume that $M_1$ and $M_3$ are finitely presented.
+The argument in the proof of part (1) produces a commutative diagram
+$$
+\xymatrix{
+0 \ar[r] & R^{\oplus n} \ar[d] \ar[r] & R^{\oplus n + m} \ar[d] \ar[r] &
+R^{\oplus m} \ar[d] \ar[r] & 0 \\
+0 \ar[r] & M_1 \ar[r] & M_2 \ar[r] & M_3 \ar[r] & 0
+}
+$$
+with surjective vertical arrows. By the snake lemma we obtain a short
+exact sequence
+$$
+0 \to \Ker(R^{\oplus n} \to M_1) \to
+\Ker(R^{\oplus n + m} \to M_2) \to
+\Ker(R^{\oplus m} \to M_3) \to 0
+$$
+By part (5) we see that the outer two modules are finite. Hence the
+middle one is finite too. By (4) we see that $M_2$ is of finite presentation.
+\end{proof}
+
+\begin{lemma}
+\label{lemma-trivial-filter-finite-module}
+\begin{slogan}
+Finite modules have filtrations such that successive quotients are
+cyclic modules.
+\end{slogan}
+Let $R$ be a ring, and let $M$ be a finite $R$-module.
+There exists a filtration by $R$-submodules
+$$
+0 = M_0 \subset M_1 \subset \ldots \subset M_n = M
+$$
+such that each quotient $M_i/M_{i-1}$ is isomorphic
+to $R/I_i$ for some ideal $I_i$ of $R$.
+\end{lemma}
+
+\begin{proof}
+By induction on the number of generators of $M$. Let
+$x_1, \ldots, x_r \in M$ be a minimal number of generators.
+Let $M' = Rx_1 \subset M$. Then $M/M'$ has $r - 1$ generators
+and the induction hypothesis applies. And clearly $M' \cong R/I_1$
+with $I_1 = \{f \in R \mid fx_1 = 0\}$.
+\end{proof}
+
+\begin{lemma}
+\label{lemma-finite-over-subring}
+Let $R \to S$ be a ring map.
+Let $M$ be an $S$-module.
+If $M$ is finite as an $R$-module, then $M$ is finite as an $S$-module.
+\end{lemma}
+
+\begin{proof}
+In fact, any $R$-generating set of $M$ is also an $S$-generating set of
+$M$, since the $R$-module structure is induced by the image of $R$ in $S$.
+\end{proof}
+
+
+
+\section{Ring maps of finite type and of finite presentation}
+\label{section-finite-type}
+
+\begin{definition}
+\label{definition-finite-type}
+Let $R \to S$ be a ring map.
+\begin{enumerate}
+\item We say $R \to S$ is of {\it finite type}, or that {\it $S$ is a finite
+type $R$-algebra} if there exists an $n \in \mathbf{N}$ and an surjection
+of $R$-algebras $R[x_1, \ldots, x_n] \to S$.
+\item We say $R \to S$ is of {\it finite presentation} if there
+exist integers $n, m \in \mathbf{N}$ and polynomials
+$f_1, \ldots, f_m \in R[x_1, \ldots, x_n]$
+and an isomorphism of $R$-algebras
+$R[x_1, \ldots, x_n]/(f_1, \ldots, f_m) \cong S$.
+\end{enumerate}
+\end{definition}
+
+\noindent
+Informally, $R \to S$ is of finite presentation if and only if
+$S$ is finitely generated as an $R$-algebra
+and the ideal of relations among the generators is finitely generated.
+A choice of a surjection $R[x_1, \ldots, x_n] \to S$ as in the definition
+is sometimes called a {\it presentation} of $S$.
+
+\begin{lemma}
+\label{lemma-compose-finite-type}
+The notions finite type and finite presentation have the following
+permanence properties.
+\begin{enumerate}
+\item A composition of ring maps of finite type is of finite type.
+\item A composition of ring maps of finite presentation is of finite
+presentation.
+\item Given $R \to S' \to S$ with $R \to S$ of finite type,
+then $S' \to S$ is of finite type.
+\item Given $R \to S' \to S$, with $R \to S$ of finite presentation,
+and $R \to S'$ of finite type, then $S' \to S$ is of finite presentation.
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+We only prove the last assertion.
+Write $S = R[x_1, \ldots, x_n]/(f_1, \ldots, f_m)$
+and $S' = R[y_1, \ldots, y_a]/I$. Say that the class
+$\bar y_i$ of $y_i$ maps
+to $h_i \bmod (f_1, \ldots, f_m)$ in $S$.
+Then it is clear that
+$S = S'[x_1, \ldots, x_n]/(f_1, \ldots, f_m,
+h_1 - \bar y_1, \ldots, h_a - \bar y_a)$.
+\end{proof}
+
+\begin{lemma}
+\label{lemma-finite-presentation-independent}
+Let $R \to S$ be a ring map of finite presentation.
+For any surjection $\alpha : R[x_1, \ldots, x_n] \to S$ the
+kernel of $\alpha$ is a finitely generated ideal in $R[x_1, \ldots, x_n]$.
+\end{lemma}
+
+\begin{proof}
+Write $S = R[y_1, \ldots, y_m]/(f_1, \ldots, f_k)$.
+Choose $g_i \in R[y_1, \ldots, y_m]$ which are lifts
+of $\alpha(x_i)$. Then we see that $S = R[x_i, y_j]/(f_j, x_i - g_i)$.
+Choose $h_j \in R[x_1, \ldots, x_n]$ such that $\alpha(h_j)$
+corresponds to $y_j \bmod (f_1, \ldots, f_k)$. Consider
+the map $\psi : R[x_i, y_j] \to R[x_i]$, $x_i \mapsto x_i$,
+$y_j \mapsto h_j$. Then the kernel of $\alpha$
+is the image of $(f_j, x_i - g_i)$ under $\psi$ and we win.
+\end{proof}
+
+\begin{lemma}
+\label{lemma-finitely-presented-over-subring}
+Let $R \to S$ be a ring map.
+Let $M$ be an $S$-module.
+Assume $R \to S$ is of finite type and
+$M$ is finitely presented as an $R$-module.
+Then $M$ is finitely presented as an $S$-module.
+\end{lemma}
+
+\begin{proof}
+This is similar to the proof of part (4) of
+Lemma \ref{lemma-compose-finite-type}.
+We may assume $S = R[x_1, \ldots, x_n]/J$.
+Choose $y_1, \ldots, y_m \in M$ which generate $M$ as an $R$-module
+and choose relations $\sum a_{ij} y_j = 0$, $i = 1, \ldots, t$ which
+generate the kernel of $R^{\oplus m} \to M$. For any
+$i = 1, \ldots, n$ and $j = 1, \ldots, m$ write
+$$
+x_i y_j = \sum a_{ijk} y_k
+$$
+for some $a_{ijk} \in R$. Consider the $S$-module $N$ generated by
+$y_1, \ldots, y_m$ subject to the relations
+$\sum a_{ij} y_j = 0$, $i = 1, \ldots, t$ and
+$x_i y_j = \sum a_{ijk} y_k$, $i = 1, \ldots, n$ and $j = 1, \ldots, m$.
+Then $N$ has a presentation
+$$
+S^{\oplus nm + t} \longrightarrow S^{\oplus m} \longrightarrow N
+\longrightarrow 0
+$$
+By construction there is a surjective map $\varphi : N \to M$.
+To finish the proof we show $\varphi$ is injective.
+Suppose $z = \sum b_j y_j \in N$ for some $b_j \in S$.
+We may think of $b_j$ as a polynomial in $x_1, \ldots, x_n$
+with coefficients in $R$.
+By applying the relations of the form $x_i y_j = \sum a_{ijk} y_k$
+we can inductively lower the degree of the polynomials.
+Hence we see that $z = \sum c_j y_j$ for some $c_j \in R$.
+Hence if $\varphi(z) = 0$ then the vector $(c_1, \ldots, c_m)$
+is an $R$-linear combination of the vectors $(a_{i1}, \ldots, a_{im})$
+and we conclude that $z = 0$ as desired.
+\end{proof}
+
+
+
+
+
+\section{Finite ring maps}
+\label{section-finite}
+
+\begin{definition}
+\label{definition-finite-ring-map}
+Let $\varphi : R \to S$ be a ring map. We say $\varphi : R \to S$ is
+{\it finite} if $S$ is finite as an $R$-module.
+\end{definition}
+
+\begin{lemma}
+\label{lemma-finite-module-over-finite-extension}
+Let $R \to S$ be a finite ring map.
+Let $M$ be an $S$-module.
+Then $M$ is finite as an $R$-module if and only if $M$ is finite
+as an $S$-module.
+\end{lemma}
+
+\begin{proof}
+One of the implications follows from
+Lemma \ref{lemma-finite-over-subring}.
+To see the other assume that $M$ is finite as an $S$-module.
+Pick $x_1, \ldots, x_n \in S$ which generate $S$ as an $R$-module.
+Pick $y_1, \ldots, y_m \in M$ which generate $M$ as an $S$-module.
+Then $x_i y_j$ generate $M$ as an $R$-module.
+\end{proof}
+
+\begin{lemma}
+\label{lemma-finite-transitive}
+Suppose that $R \to S$ and $S \to T$ are finite ring maps.
+Then $R \to T$ is finite.
+\end{lemma}
+
+\begin{proof}
+If $t_i$ generate $T$ as an $S$-module and $s_j$ generate $S$ as an
+$R$-module, then $t_i s_j$ generate $T$ as an $R$-module.
+(Also follows from
+Lemma \ref{lemma-finite-module-over-finite-extension}.)
+\end{proof}
+
+\noindent
+For more information on finite ring maps, please see
+Section \ref{section-finite-ring-extensions}.
+
+
+\section{Colimits}
+\label{section-colimits}
+
+\noindent
+Some of the material in this section overlaps with the general
+discussion on colimits in
+Categories, Sections \ref{categories-section-limits} --
+\ref{categories-section-posets-limits}.
+
+\begin{definition}
+\label{definition-directed-set}
+A {\it partially ordered set} is a set $I$ together with a relation
+$\leq$ which is transitive (if $i \leq j$ and $j \leq k$
+then $i \leq k$) and reflexive ($i \leq i$ for all $i \in I$).
+A {\it directed set} $(I, \leq)$
+is a partially ordered set $(I, \leq)$ such that
+$I$ is not empty and such that $\forall i, j \in I$,
+there exists $k \in I$ with $i \leq k, j \leq k$.
+\end{definition}
+
+\noindent
+It is customary to drop the $\leq$ from the notation when talking
+about a partially ordered set (that is, one speaks of
+the partially ordered set $I$ rather than of the
+partially ordered set $(I, \leq)$).
+This is the same as the notion defined in Categories,
+Section \ref{categories-section-posets-limits}.
+
+\medskip\noindent
+The notion ``partially ordered set'' is commonly abbreviated as ``poset''.
+
+\begin{definition}
+\label{definition-directed-system}
+Let $(I, \leq)$ be a partially ordered set.
+A {\it system $(M_i, \mu_{ij})$ of $R$-modules over $I$}
+consists of a family of $R$-modules $\{M_i\}_{i\in I}$ indexed
+by $I$ and a family of $R$-module maps $\{\mu_{ij} : M_i \to M_j\}_{i \leq j}$
+such that for all $i \leq j \leq k$
+$$
+\mu_{ii} = \text{id}_{M_i}\quad
+\mu_{ik} = \mu_{jk}\circ \mu_{ij}
+$$
+We say $(M_i, \mu_{ij})$ is a {\it directed system} if $I$ is a directed set.
+\end{definition}
+
+\noindent
+This is the same as the notion defined in Categories,
+Definition \ref{categories-definition-system-over-poset}
+and Section \ref{categories-section-posets-limits}.
+We refer to Categories, Definition \ref{categories-definition-colimit}
+for the definition of a colimit of a diagram/system in any
+category.
+
+\begin{lemma}
+\label{lemma-colimit}
+Let $(M_i, \mu_{ij})$ be a system of $R$-modules over the
+partially ordered set $I$.
+The colimit of the system $(M_i, \mu_{ij})$ is the quotient $R$-module
+$(\bigoplus_{i\in I} M_i) /Q$ where $Q$ is the
+$R$-submodule generated by all elements
+$$
+\iota_i(x_i) - \iota_j(\mu_{ij}(x_i))
+$$
+where $\iota_i : M_i \to \bigoplus_{i\in I} M_i$
+is the natural inclusion. We denote the colimit
+$M = \colim_i M_i$. We denote
+$\pi : \bigoplus_{i\in I} M_i \to M$ the
+projection map and
+$\phi_i = \pi \circ \iota_i : M_i \to M$.
+\end{lemma}
