@@ -123,14 +123,20 @@ public class ThmP1 {
 					if(i < stringLength-1 && curWord.equals("")){
 						curWord = str[++i];
 					}
-					while(i < stringLength && curWord.length() > 0 && curWord.charAt(curWord.length() - 1) != '$'){
+					
+					else if(curWord.matches("[^$]*\\$.*")){
 						latexExpr += " " + curWord;
-						i++;
-						
-						if(i == stringLength) break;
-						
-						curWord = i < stringLength-1 && str[i].equals("") ? str[++i] : str[i];							
-						
+					}else{
+						while(i < stringLength && curWord.length() > 0 
+								&& curWord.charAt(curWord.length() - 1) != '$'){
+							latexExpr += " " + curWord;
+							i++;
+							
+							if(i == stringLength) break;
+							
+							curWord = i < stringLength-1 && str[i].equals("") ? str[++i] : str[i];							
+							
+						}
 					}
 					
 					if(i < stringLength){
@@ -145,6 +151,15 @@ public class ThmP1 {
 					}
 				}else if(curWord.matches("\\$[^$]\\$")){
 					type = "symb";
+				}
+				//go with the pos of the last word
+				else if(curWord.matches("\\$[^$]+\\$[^-\\s]*-[^\\s]*")){
+					String[] curWordAr = curWord.split("-");
+					String tempWord = curWordAr[curWordAr.length-1];
+					String tempPos = posMap.get(tempWord);
+					if(tempPos != null){
+						type = tempPos;
+					}
 				}
 				
 				Pair pair = new Pair(latexExpr, type);
@@ -833,7 +848,11 @@ public class ThmP1 {
 					// should refer to ent that's the object of previous assertion,
 					// sentence, or "complete" phrase
 					// Note that different pronouns might need diferent rules 
-					if (type1.equals("pro") && struct1.prev2() != null && struct1.prev2().equals("")) {
+					if (type1.equals("pro")
+							&& struct1.prev1() instanceof String
+							&& ((String)struct1.prev1()).matches("it|they")
+							&& struct1.prev2() != null 
+							&& struct1.prev2().equals("")) {
 						if (recentEnt != null && recentEntIndex < j) {
 							String tempName = recentEnt.struct().get("name");
 							// if(recentEnt.struct().get("called") != null )
@@ -1139,7 +1158,7 @@ public class ThmP1 {
 		for (int k = 0; k < parsedStructListSize; k++) {
 			dfs(parsedStructList.get(k));
 			if (k < parsedStructListSize - 1)
-				System.out.print(" -- ");
+				System.out.print(" ,  ");
 		}
 		System.out.println();
 
@@ -1251,6 +1270,7 @@ public class ThmP1 {
 		
 		boolean inTex = false; //in latex expression?
 		boolean madeReplacement = false;
+		boolean toLowerCase = true;
 		
 		for (int i = 0; i < wordsArrayLen; i++) {
 			
@@ -1260,7 +1280,10 @@ public class ThmP1 {
 				inTex = true;
 			}else if(inTex && curWord.contains("$")){
 			//}else if(curWord.matches("[^$]*\\$|\\$[^$]+\\$.*") ){
-				inTex = false;
+				inTex = false;						
+				toLowerCase = false;				
+			}else if(curWord.matches("\\$[^$]+\\$.*")){
+				toLowerCase = false;
 			}
 
 			//fluff phrases all start in posMap			
@@ -1281,7 +1304,7 @@ public class ThmP1 {
 						
 					String replacement = fluffMap.get(tempWord);
 					if(replacement != null){
-						sentenceBuilder.append(replacement);
+						sentenceBuilder.append(" " + replacement.toLowerCase());
 						madeReplacement = true;
 						i = j;
 					}
@@ -1291,8 +1314,13 @@ public class ThmP1 {
 			
 			//if composite fluff word ?? already taken care of
 			if (!madeReplacement && !curWord.matches("\\.|,|!") && !fluffMap.containsKey(curWord)){
-			//if (!curWord.matches("\\.|,|!") && !fluffMap.containsKey(curWord)){				
-				sentenceBuilder.append(" " + curWord);
+			//if (!curWord.matches("\\.|,|!") && !fluffMap.containsKey(curWord)){	
+				if(inTex || !toLowerCase){
+					sentenceBuilder.append(" " + curWord);
+					toLowerCase = true;
+				}
+				else
+					sentenceBuilder.append(" " + curWord.toLowerCase());
 			}			
 			madeReplacement = false;
 			

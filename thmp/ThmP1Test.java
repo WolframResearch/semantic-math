@@ -118,12 +118,18 @@ public class ThmP1Test {
 			st = "$(A, B)$-bimodule";
 			st = "in the sense that F is a field";
 			st = "there exists a pair consisting of $F, G$";
+			st = "this function is $R$-linear";
+			st = "in other words, F is field";
+			st = "tensoring each term is perfect";
+			st = "group is $R$-module if it is both F and B";
+			st = "abelian group $N$ is called an  $(A, B)$-bimodule if it is both an $A$-module and a $B$-module";
+			st = "$A, B$-module is perfect";
 			//st = "there exists a field";
 			//st = "both pairs are perfect";
 			//st = "F is a field and $F = 4$";
 			//Maps.readLexicon();
 		
-			strAr = ThmP1.preprocess(st.toLowerCase());
+			strAr = ThmP1.preprocess(st);
 			for(int i = 0; i < strAr.length; i++){
 				ThmP1.parse(ThmP1.tokenize(strAr[i].trim().split(" ") ));				
 			}
@@ -132,15 +138,17 @@ public class ThmP1Test {
 			
 			while(sc.hasNextLine()){
 				String nextLine = sc.nextLine();
-				st = nextLine.toLowerCase();
+				st = nextLine;
 				if(st.matches("^\\s*$")) continue;
 				
-				System.out.println(nextLine + "\n");
+				//System.out.println(nextLine + "\n");
+				//array of sentences separated by . , or !
 				strAr = ThmP1.preprocess(st);
 				
 				for(int i = 0; i < strAr.length; i++){					
-					ThmP1.parse(ThmP1.tokenize(strAr[i].trim().split(" "))); //p1.parse(p1.tokenize(p1.preprocess(strAr2)));
+					//ThmP1.parse(ThmP1.tokenize(strAr[i].trim().split(" "))); //p1.parse(p1.tokenize(p1.preprocess(strAr2)));
 				}
+				//System.out.println();
 			}
 			
 			ThmP1.writeUnknownWordsToFile();

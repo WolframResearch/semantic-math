@@ -80,7 +80,10 @@ public class ParseToWL {
 				type = "then";
 				break;
 			case "pro": type = ""; break;
+			case "partiby": type = ""; break;
 			case "noun": type = ""; break;
+			case "gerund": type = ""; break;
+			case "csubj": type = ""; break;
 			case "then":
 				showprev1 = false;
 				break;

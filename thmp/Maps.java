@@ -59,8 +59,8 @@ public class Maps {
 		adjMap.put("independent", "linearly");
 		
 		fluffMap = new HashMap<String, String>();
-		fluffMap.put("the", "the"); fluffMap.put("an", "an");
-		fluffMap.put("a", "a"); fluffMap.put("moreover", "moreover");
+		fluffMap.put("the", ""); fluffMap.put("an", "");
+		fluffMap.put("a", ""); fluffMap.put("moreover", "");
 		
 		//list of parts of speech
 		posList = new ArrayList<String>();
@@ -173,13 +173,13 @@ public class Maps {
 		
 		//prepositions
 		posMap.put("or", "or"); posMap.put("and", "and"); posMap.put("at most", "pre");
-		posMap.put("is", "verb"); posMap.put("at", "pre_COMP"); posMap.put("if", "if_COMP");
+		posMap.put("is", "verb_comp"); posMap.put("at", "pre_COMP"); posMap.put("if", "if_COMP");
 		posMap.put("if and", "if_COMP"); posMap.put("if and only", "if_COMP"); 
 		posMap.put("if and only if", "iff");
 		posMap.put("then", "then"); posMap.put("between", "pre"); 
 		//between... -> between, and...->and, between_and->between_and
 		
-		posMap.put("in", "pre"); posMap.put("from", "pre"); posMap.put("to", "pre");
+		posMap.put("in", "pre_comp"); posMap.put("from", "pre"); posMap.put("to", "pre");
 		
 		posMap.put("equal", "verb_COMP"); posMap.put("equal to", "pre");
 		posMap.put("on", "pre"); posMap.put("let", "let"); posMap.put("be", "be");
@@ -348,6 +348,7 @@ public class Maps {
 		structMap.put("partiby_expr", "phrase"); 
 		structMap.put("be_parti", "verb"); structMap.put("be_partiby", "verb");
 		structMap.put("disj_verbphrase", "assert"); structMap.put("conj_verbphrase", "assert");
+		structMap.put("csubj_verbphrase", "assert");
 		
 		structMap.put("let_symb", "let"); structMap.put("be_ent", "be"); structMap.put("let_be", "letbe");
 		structMap.put("let_ent", "let");
@@ -357,7 +358,8 @@ public class Maps {
 		structMap.put("hyp_phrase", "hypo"); structMap.put("hyp_adj", "hypo");
 		structMap.put("hyp_symb", "hypo"); structMap.put("rpro_ent", "rproent");
 		structMap.put("ent_rproent", "newchild"); structMap.put("rpro_verbphrase", "phrase");
-		structMap.put("rpro_assert", "phrase"); 
+		structMap.put("rpro_assert", "phrase"); structMap.put("gerund_noun", "csubj"); 
+		structMap.put("gerund_ent", "csubj"); 
 		
 		//eg "property that a is b"
 		structMap.put("noun_phrase", "np"); structMap.put("ent_phrase", "newchild");
