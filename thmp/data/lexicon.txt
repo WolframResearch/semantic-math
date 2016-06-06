@@ -77,3 +77,4 @@ term noun
 original adj
 preserve verb
 exactness noun
+structure noun

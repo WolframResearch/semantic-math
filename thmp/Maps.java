@@ -298,6 +298,7 @@ public class Maps {
 		structMap.put("pre_ent", "prep"); structMap.put("ent_prep", "newchild");
 		structMap.put("pre_symb", "prep"); structMap.put("parti_prep", "phrase");
 		structMap.put("pre_phrase", "prep"); structMap.put("pre_np", "prep");
+		structMap.put("csubj_prep", "csubj");
 		structMap.put("noun_prep", "np"); structMap.put("noun_verbphrase", "assert");
 		structMap.put("pre_noun", "prep"); structMap.put("gerund_verbphrase", "assert");
 		//participle: called, need to take care of "said" etc
@@ -359,7 +360,7 @@ public class Maps {
 		structMap.put("hyp_symb", "hypo"); structMap.put("rpro_ent", "rproent");
 		structMap.put("ent_rproent", "newchild"); structMap.put("rpro_verbphrase", "phrase");
 		structMap.put("rpro_assert", "phrase"); structMap.put("gerund_noun", "csubj"); 
-		structMap.put("gerund_ent", "csubj"); 
+		structMap.put("gerund_ent", "csubj"); //structMap.put("gerund_np", "csubj"); 
 		
 		//eg "property that a is b"
 		structMap.put("noun_phrase", "np"); structMap.put("ent_phrase", "newchild");

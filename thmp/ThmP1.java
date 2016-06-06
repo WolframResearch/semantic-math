@@ -964,41 +964,59 @@ public class ThmP1 {
 					// in case A_or_A or A_and_A set the mx element right below
 					// to null
 					// to set precedence, so A won't be grouped to others later
-					if (i > 0 && i + 1 < len
-							&& (type1.matches("or|and") && type2.equals(mx.get(i - 1).get(i - 1).type()))) {
-						String newType = type1.matches("or") ? "disj" : "conj";
-						// type is expression, eg "a and b"
-						// new type: conj_verbphrase
-						StructA<Struct, Struct> parentStruct = new StructA<Struct, Struct>(mx.get(i - 1).get(i - 1),
-								struct2, newType + "_" + type2);
-
-						// set parent struct in row above
-						mx.get(i - 1).set(j, parentStruct);
-						// set the next token to "", so not classified again
-						// with others
-						// mx.get(i+1).set(j, null);
-						break;
-					} else if ((type1.matches("or|and"))) {
-						int l = 2;
-						boolean stopLoop = false;
-						while (i - l > -1 && i + 1 < len) {
-							if (mx.get(i - l).get(i - 1) != null && type2.equals(mx.get(i - l).get(i - 1).type())) {
-								String newType = type1.matches("or") ? "disj" : "conj";
-								// type is expression, eg "a and b"
-								StructA<Struct, Struct> parentStruct = new StructA<Struct, Struct>(
-										mx.get(i - l).get(i - 1), struct2, newType + "_" + type2);
-
-								mx.get(i - l).set(j, parentStruct);
-								// mx.get(i+1).set(j, null);
-								stopLoop = true;
-								break;
+					// and if the next word is a verb, it is not singular
+					// ie F and G is isomorphic
+					String potentialType;
+					
+					
+						if (i > 0 && i + 1 < len
+								&& (type1.matches("or|and") 
+										&& type2.equals(mx.get(i - 1).get(i - 1).type()))
+								
+								) {
+							
+							if(type1.equals("and") && i+2 == len 
+									|| (i+2 < len && mx.get(i - 1).get(i - 1).type().equals("verb") 
+											&& mx.get(i - 1).get(i - 1).type().equals("verb") ghdh )){
+								
+								
+								//skip rest of if
 							}
-
-							if (stopLoop)
-								break;
-							l++;
-						}
-					}					
+							
+							String newType = type1.matches("or") ? "disj" : "conj";
+							// type is expression, eg "a and b"
+							// new type: conj_verbphrase
+							StructA<Struct, Struct> parentStruct = new StructA<Struct, Struct>(mx.get(i - 1).get(i - 1),
+									struct2, newType + "_" + type2);
+	
+							// set parent struct in row above
+							mx.get(i - 1).set(j, parentStruct);
+							// set the next token to "", so not classified again
+							// with others
+							// mx.get(i+1).set(j, null);
+							break;
+						} else if ((type1.matches("or|and"))) {
+							int l = 2;
+							boolean stopLoop = false;
+							while (i - l > -1 && i + 1 < len) {
+								if (mx.get(i - l).get(i - 1) != null && type2.equals(mx.get(i - l).get(i - 1).type())) {
+									String newType = type1.matches("or") ? "disj" : "conj";
+									// type is expression, eg "a and b"
+									StructA<Struct, Struct> parentStruct = new StructA<Struct, Struct>(
+											mx.get(i - l).get(i - 1), struct2, newType + "_" + type2);
+	
+									mx.get(i - l).set(j, parentStruct);
+									// mx.get(i+1).set(j, null);
+									stopLoop = true;
+									break;
+								}
+	
+								if (stopLoop)
+									break;
+								l++;
+							}
+							
+					}
 
 					//potentially change assert to latex expr
 					if(type2.equals("assert") 

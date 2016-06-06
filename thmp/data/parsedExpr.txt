@@ -1,1 +1,1 @@
-assert[MathObj{$A, B$-module}, perfect, is]
+assert[conj_symb[symbf, symb[g]], [[canonically isomorphic], [to, symb[h]]], is]

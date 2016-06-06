@@ -124,6 +124,9 @@ public class ThmP1Test {
 			st = "group is $R$-module if it is both F and B";
 			st = "abelian group $N$ is called an  $(A, B)$-bimodule if it is both an $A$-module and a $B$-module";
 			st = "$A, B$-module is perfect";
+			st = "tensoring each term in the original right exact sequence preserves the exactness";
+			st = "tensoring each term in the original right exact sequence preserves the exactness";
+			st = "F and G is canonically isomorphic to H";
 			//st = "there exists a field";
 			//st = "both pairs are perfect";
 			//st = "F is a field and $F = 4$";
