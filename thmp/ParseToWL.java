@@ -69,6 +69,13 @@ public class ParseToWL {
 				showprev1 = false;
 				type = "";
 				break;
+			case "vbs":	
+				if(inAssert ){
+					assertVerb = headStruct.prev1().toString();
+				}
+				showprev1 = false;
+				type = "";
+				break;
 			case "if":
 				showprev1 = false;
 				break;
@@ -177,7 +184,7 @@ public class ParseToWL {
 		
 		parseString = parseString.replaceAll(",\\s\\]", "]").
 				replaceAll(",\\s,\\s", ", ").replaceAll("\\[([a-zA-Z]*)\\],", "$1,");
-		System.out.println(parseString);
+		System.out.print(parseString + ", ");
 	}
 	
 }

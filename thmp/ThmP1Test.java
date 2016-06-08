@@ -127,6 +127,16 @@ public class ThmP1Test {
 			st = "tensoring each term in the original right exact sequence preserves the exactness";
 			st = "tensoring each term in the original right exact sequence preserves the exactness";
 			st = "F and G is canonically isomorphic to H";
+			st = "In other words, this is a field";
+			st = "a field, a ring, and a group";
+			st = "a field is said to be a ring";
+			st = "for a multiplicative subset $S$ of $R$ we have a field";
+			st = "for a multiplicative subset $S$ of $R$";
+			st = "for subset S of R and for subset F of J";
+			st = "group of groups of F"; //NPE!!
+			st = "for subset S of A";
+			st = "for field of F"; //......
+			
 			//st = "there exists a field";
 			//st = "both pairs are perfect";
 			//st = "F is a field and $F = 4$";
@@ -134,7 +144,7 @@ public class ThmP1Test {
 		
 			strAr = ThmP1.preprocess(st);
 			for(int i = 0; i < strAr.length; i++){
-				ThmP1.parse(ThmP1.tokenize(strAr[i].trim().split(" ") ));				
+				ThmP1.process(strAr[i].trim() );				
 			}
 			
 			Scanner sc = new Scanner(new File("src/thmp/data/noTex3.txt"));
@@ -145,11 +155,12 @@ public class ThmP1Test {
 				if(st.matches("^\\s*$")) continue;
 				
 				//System.out.println(nextLine + "\n");
-				//array of sentences separated by . , or !
+				//array of sentences separated by . or !
 				strAr = ThmP1.preprocess(st);
 				
 				for(int i = 0; i < strAr.length; i++){					
-					//ThmP1.parse(ThmP1.tokenize(strAr[i].trim().split(" "))); //p1.parse(p1.tokenize(p1.preprocess(strAr2)));
+					//ThmP1.parse(ThmP1.tokenize(strAr[i].trim())); //p1.parse(p1.tokenize(p1.preprocess(strAr2)));
+					//ThmP1.process(sentence);
 				}
 				//System.out.println();
 			}

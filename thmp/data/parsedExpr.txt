@@ -1,1 +1,1 @@
-assert[conj_symb[symbf, symb[g]], [[canonically isomorphic], [to, symb[h]]], is]
+[for]

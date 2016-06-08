@@ -173,7 +173,7 @@ public class Maps {
 		
 		//prepositions
 		posMap.put("or", "or"); posMap.put("and", "and"); posMap.put("at most", "pre");
-		posMap.put("is", "verb_comp"); posMap.put("at", "pre_COMP"); posMap.put("if", "if_COMP");
+		posMap.put("is", "vbs_comp"); posMap.put("at", "pre_COMP"); posMap.put("if", "if_COMP");
 		posMap.put("if and", "if_COMP"); posMap.put("if and only", "if_COMP"); 
 		posMap.put("if and only if", "iff");
 		posMap.put("then", "then"); posMap.put("between", "pre"); 
@@ -205,7 +205,7 @@ public class Maps {
 		posMap.put("are", "verb"); ////////////***
 		posMap.put("have", "verb"); posMap.put("obtain", "verb"); posMap.put("generate", "verb");
 		posMap.put("replace", "verb"); posMap.put("act", "verb"); posMap.put("follow", "verb"); 
-		posMap.put("denote", "verb"); posMap.put("define", "verb"); posMap.put("has", "verb");		
+		posMap.put("denote", "verb"); posMap.put("define", "verb"); posMap.put("has", "vbs");		
 		
 		//special participles
 		posMap.put("given", "parti_COMP"); posMap.put("been", "parti"); posMap.put("written", "parti"); 
@@ -266,10 +266,8 @@ public class Maps {
 		//can be written as, 
 		structMap = new HashMap<String, String>();	
 		//structMap.put("for all", "forall");		
-		structMap.put("is", "is");  //these not necessary any more
-		structMap.put("are", "are"); structMap.put("has", "has");
 		
-		//"is" implies assertion 
+		//"is" implies assertion <--remove this case, "is" should be interpreted as verb
 		structMap.put("is_symb", "is"); structMap.put("is_int", "is");
 		structMap.put("is_ent", "is"); structMap.put("is_or", "is");
 		structMap.put("ent_is", "assert");
@@ -334,19 +332,30 @@ public class Maps {
 		////////////combine preposition with whatever comes				
 		//verb_ent, not including past tense verbs, only present tense
 		structMap.put("verb_ent", "verbphrase"); structMap.put("verb_adj", "verbphrase");
-		structMap.put("verb_pro", "verbphrase");  
+		structMap.put("verb_pro", "verbphrase"); structMap.put("verb_symb", "verbphrase");
 		structMap.put("verb_np", "verbphrase"); structMap.put("verb_prep", "verbphrase");
 		structMap.put("verb_num", "verbphrase"); structMap.put("verb_np", "verbphrase");
 		structMap.put("verb_pre", "verbphrase"); structMap.put("verb_phrase", "verbphrase");
 		structMap.put("verb_partient", "verbphrase"); structMap.put("verb_noun", "verbphrase");
 		structMap.put("det_verbphrase", "assert"); structMap.put("verb_parti", "verbphrase");
-		structMap.put("verb_symb", "verbphrase"); structMap.put("symb_verbphrase", "assert");
+		 
+		structMap.put("vbs_ent", "verbphrase"); structMap.put("vbs_adj", "verbphrase");
+		structMap.put("vbs_pro", "verbphrase");  structMap.put("vbs_symb", "verbphrase"); 
+		structMap.put("vbs_np", "verbphrase"); structMap.put("vbs_prep", "verbphrase");
+		structMap.put("vbs_num", "verbphrase"); structMap.put("vbs_np", "verbphrase");
+		structMap.put("vbs_pre", "verbphrase"); structMap.put("vbs_phrase", "verbphrase");
+		structMap.put("vbs_partient", "verbphrase"); structMap.put("vbs_noun", "verbphrase");
+		structMap.put("det_verbphrase", "assert"); structMap.put("vbs_parti", "verbphrase");
+		
+		
+		structMap.put("symb_verbphrase", "assert");
 		structMap.put("ent_verbphrase", "assert"); structMap.put("pro_verbphrase", "assert");
 		structMap.put("np_verbphrase", "assert");
-		structMap.put("verb_assert", "verbphrase"); structMap.put("verbphrase_prep", "verbphrase");
+		structMap.put("verb_assert", "verbphrase"); structMap.put("vbs_assert", "verbphrase");
+		structMap.put("verbphrase_prep", "verbphrase"); structMap.put("vbs_partiby", "verb");
 		structMap.put("partiby_ent", "phrase"); structMap.put("partiby_noun", "phrase");
 		structMap.put("verb_partiby", "verb"); structMap.put("partiby_symb", "phrase");
-		structMap.put("partiby_expr", "phrase"); 
+		structMap.put("partiby_expr", "phrase"); 		
 		structMap.put("be_parti", "verb"); structMap.put("be_partiby", "verb");
 		structMap.put("disj_verbphrase", "assert"); structMap.put("conj_verbphrase", "assert");
 		structMap.put("csubj_verbphrase", "assert");
@@ -379,7 +388,7 @@ public class Maps {
 		probMap = new HashMap<String, Double>();
 		probMap.put("FIRST", 1.); probMap.put("LAST", 1.); probMap.put("ent_anchor", .85);
 		probMap.put("ent_verb", .8); probMap.put("ent_pre", .8);
-		probMap.put("pre_ent", .8); probMap.put("verb_ent", .6);
+		probMap.put("pre_ent", .8); probMap.put("verb_ent", .6); probMap.put("vbs_ent", .6);
 		probMap.put("adj_ent", .9);
 		
 		//for adding combinations to structMap

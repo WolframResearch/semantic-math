@@ -37,6 +37,8 @@ public class ThmP1 {
 	// value is regex string to be matched
 	private static HashMap<String, String> adjMap;
 	private static HashMap<String, Double> probMap;
+	//split a sentence into parts, separated by commas, semicolons etc
+	//private String[] subSentences;
 
 	// list of parts of speech, ent, verb etc
 	private static ArrayList<String> posList;
@@ -72,13 +74,28 @@ public class ThmP1 {
 	}
 
 	/**
+	 * Tokenizes by splitting into comma-separated strings
+	 * 
+	 * @param str	A full sentence.
+	 * @return
+	 */
+	public static void process(String sentence) throws IOException{
+		String[] subSentences = sentence.split(",|;");
+		int subSentLen = subSentences.length;
+		for(int i = 0; i < subSentLen; i++){
+			parse(tokenize(subSentences[i]));
+		}
+		System.out.println();
+	}
+	
+	/**
 	 * 
 	 * @param str
 	 *            string to be tokenized
 	 * @return
 	 * @throws IOException 
 	 */
-	public static ArrayList<Struct> tokenize(String[] str) throws IOException {
+	public static ArrayList<Struct> tokenize(String sentence) throws IOException {
 
 		// .....change to arraylist of Pairs, create Pair class
 		// LinkedHashMap<String, String> linkedMap = new LinkedHashMap<String,
@@ -93,6 +110,9 @@ public class ThmP1 {
 		// list of each word with their initial type, adj, noun,
 		ArrayList<Pair> pairs = new ArrayList<Pair>();
 		boolean addIndex = true; // whether to add to pairIndex
+		//unfortunate naming
+		String[] str = sentence.split(" ");
+		
 		//int pairIndex = 0;
 		for (int i = 0; i < str.length; i++) {
 
@@ -357,7 +377,7 @@ public class ThmP1 {
 					curPos = "partiby";
 					curWord = curWord + " by";
 					//if previous word is a verb, combine to form verb
-					if(pairsSize > 0 && pairs.get(pairsSize-1).pos().equals("verb")){
+					if(pairsSize > 0 && pairs.get(pairsSize-1).pos().matches("verb|vbs")){
 						curWord = pairs.get(pairsSize-1).pos() + " " + curWord;
 						curPos = "verb";
 						pairs.remove(pairsSize-1);
@@ -396,10 +416,10 @@ public class ThmP1 {
 				pairs.add(pair);
 			} else if (wordlen > 2 && curWord.substring(wordlen - 3, wordlen).equals("ing")
 					&& (posMap.containsKey(curWord.substring(0, wordlen - 3))
-							&& posMap.get(curWord.substring(0, wordlen - 3)).equals("verb")
+							&& posMap.get(curWord.substring(0, wordlen - 3)).matches("verb|vbs")
 							// verbs ending in "e"
 							|| (posMap.containsKey(curWord.substring(0, wordlen - 3) + 'e')
-									&& posMap.get(curWord.substring(0, wordlen - 3) + 'e').equals("verb")))) {
+									&& posMap.get(curWord.substring(0, wordlen - 3) + 'e').matches("verb|vbs")))) {
 				String curType = "gerund";
 				if(i < str.length - 1 && posMap.containsKey(str[i+1]) && posMap.get(str[i+1]).equals("pre") ){
 					//eg "consisting of" functions as pre, 
@@ -443,7 +463,7 @@ public class ThmP1 {
 				Pair pair = pairs.get(pairsSize - 1);
 
 				// combine "no" and "not" with verbs
-				if (pair.pos().equals("verb")) {
+				if (pair.pos().matches("verb|vbs")) {
 					if (pairs.size() > 1 && (pairs.get(pairsSize - 2).word().matches("not|no")
 							|| pairs.get(pairsSize - 2).pos().matches("not"))) {
 						String newWord = pair.word().matches("is|are") 
@@ -462,6 +482,8 @@ public class ThmP1 {
 			}
 
 		}
+		
+		
 		
 		// If phrase isn't in dictionary, ie has type "", then use probMap to
 		// postulate type, if possible
@@ -536,7 +558,7 @@ public class ThmP1 {
 				tempMap.put("called", givenName);
 				namesMap.put(givenName, tempStructH);
 
-			} else if ((pairsSize + 2 < pairsSize && pairs.get(index + 2).pos().equals("symb"))) {
+			} else if ((index + 2 < pairsSize && pairs.get(index + 2).pos().equals("symb"))) {
 				pairs.get(index + 2).set_pos(String.valueOf(j));
 				String givenName = pairs.get(index + 2).word();
 				tempMap.put("called", givenName);
@@ -553,7 +575,13 @@ public class ThmP1 {
 			//combine nouns with ent's right after, ie noun_ent
 			else if (index > 0 && pairs.get(index - 1).pos().matches("noun")) {
 				pairs.get(index - 1).set_pos(String.valueOf(j));
-				String prevNoun = pairs.get(index-1).word();				
+				String prevNoun = pairs.get(index - 1).word();				
+				tempMap.put("name", prevNoun + " " + tempMap.get("name"));
+			}
+			//and combine ent_noun together
+			else if (index + 1 < pairsSize && pairs.get(index + 1).pos().matches("noun")) {
+				pairs.get(index + 1).set_pos(String.valueOf(j));
+				String prevNoun = pairs.get(index + 1).word();				
 				tempMap.put("name", tempMap.get("name") + " " + prevNoun);
 			}
 
@@ -653,7 +681,7 @@ public class ThmP1 {
 					} //special case: "of form"
 					
 					//if verb_of: "consists of" -> verb 
-					else if(prevPair.pos().matches("verb")){
+					else if(prevPair.pos().matches("verb|vbs")){
 						String prevWord = prevPair.word();
 						prevPair.set_word(prevWord + " of");
 						pairs.remove(index);
@@ -712,13 +740,13 @@ public class ThmP1 {
 				// combine adverbs into verbs/adjectives, look 2 words before
 				if (curPair.pos().equals("adverb")) {
 
-					if (structListSize > 1 && structList.get(structListSize - 2).type().equals("verb")) {
+					if (structListSize > 1 && structList.get(structListSize - 2).type().matches("verb|vbs")) {
 						StructA<?, ?> verbStruct = (StructA<?, ?>) structList.get(structListSize - 2);
 						// verbStruct should not have prev2, also prev2 type
 						// should be String
 						verbStruct.set_prev2(curPair.word());
 						continue;
-					} else if (structListSize > 0 && structList.get(structListSize - 1).type().equals("verb")) {
+					} else if (structListSize > 0 && structList.get(structListSize - 1).type().matches("verb|vbs")) {
 						StructA<?, ?> verbStruct = (StructA<?, ?>) structList.get(structListSize - 1);
 						verbStruct.set_prev2(curPair.word());
 						continue;
@@ -966,22 +994,26 @@ public class ThmP1 {
 					// to set precedence, so A won't be grouped to others later
 					// and if the next word is a verb, it is not singular
 					// ie F and G is isomorphic
-					String potentialType;
 					
-					
-						if (i > 0 && i + 1 < len
-								&& (type1.matches("or|and") 
-										&& type2.equals(mx.get(i - 1).get(i - 1).type()))
-								
-								) {
+					////////%%%%%%%%%%% NPE for "subset F of G and subset G of H"
+					//because G gets null'ed out after "of". Need better strategy!
+					//should probably be j? j is column #.
+					if (i > 0 && i + 1 < len
+							&& (type1.matches("or|and") 
+									&& mx.get(i - 1).get(i - 1) != null
+									&& type2.equals(mx.get(i - 1).get(i - 1).type()))								
+							) {
 							
-							if(type1.equals("and") && i+2 == len 
-									|| (i+2 < len && mx.get(i - 1).get(i - 1).type().equals("verb") 
-											&& mx.get(i - 1).get(i - 1).type().equals("verb") ghdh )){
-								
-								
-								//skip rest of if
-							}
+							// In case of conj, only proceed if next word is not a singular verb.
+							// Single case with complicated logic, so it's easier more readable to write
+							// if(this case){ }then{do_something} over if(not this case){do_something}
+							Struct nextStruct = j+1 < len ? inputList.get(j + 1) : null;
+							if(nextStruct != null && type1.equals("and") 
+									&& nextStruct.prev1() instanceof String
+									&& isSingularVerb((String)nextStruct.prev1()) ){
+																
+								//skip rest in this case
+							} else{
 							
 							String newType = type1.matches("or") ? "disj" : "conj";
 							// type is expression, eg "a and b"
@@ -994,7 +1026,9 @@ public class ThmP1 {
 							// set the next token to "", so not classified again
 							// with others
 							// mx.get(i+1).set(j, null);
+							//already classified, no need to keep reduce with mx manipulations
 							break;
+						}
 						} else if ((type1.matches("or|and"))) {
 							int l = 2;
 							boolean stopLoop = false;
@@ -1015,7 +1049,7 @@ public class ThmP1 {
 									break;
 								l++;
 							}
-							
+						
 					}
 
 					//potentially change assert to latex expr
@@ -1192,6 +1226,38 @@ public class ThmP1 {
 	}
 
 	/**
+	 * Returns true iff word is a singular verb 
+	 * (meaning associated to singular subj, eg "gives")
+	 * @param word		word to be checked
+	 * @return
+	 */
+	private static boolean isSingularVerb(String word){
+		// did not find singular verbs that don't end in "s"
+		int wordLen = word.length();
+		
+		if(wordLen < 2 || word.charAt(wordLen - 1) != 's')
+			return false;
+		
+		//strip away 's'
+		String pos = posMap.get(word.substring(0, wordLen-2));
+		if(pos != null && pos.matches("verb|verb_comp") ){
+			return true;
+		}
+		//strip away es if applicable
+		else if(wordLen > 2 && word.charAt(wordLen - 2) == 'e'){
+			pos = posMap.get(word.substring(0, wordLen-3));
+			if(pos != null && pos.matches("verb|verb_comp"))
+				return true;
+		}
+		//could be special singular form, eg "is"
+		else if((pos = posMap.get(word)) != null
+				&& pos.matches("vbs|vbs_comp")){
+			return true;
+		}
+		return false;
+	}
+	
+	/**
 	 * write unknown words to file to classify them
 	 * @throws IOException
 	 */
@@ -1304,9 +1370,10 @@ public class ThmP1 {
 				toLowerCase = false;
 			}
 
-			//fluff phrases all start in posMap			
-			if(posMap.containsKey(curWord)){
-				String pos = posMap.get(curWord);
+			//fluff phrases all start in posMap		
+			String curWordLower = curWord.toLowerCase();
+			if(posMap.containsKey(curWordLower)){
+				String pos = posMap.get(curWordLower);
 				String[] posAr = pos.split("_");
 				String tempWord = curWord;
 				
@@ -1316,13 +1383,13 @@ public class ThmP1 {
 					//keep reading in string characters, until there is no match				
 					tempWord += " " + wordsArray[++j];
 					
-					while(posMap.containsKey(tempWord) && j < wordsArrayLen-1){
+					while(posMap.containsKey(tempWord.toLowerCase()) && j < wordsArrayLen-1){
 						tempWord += " " + wordsArray[++j];
 					}
-						
-					String replacement = fluffMap.get(tempWord);
+					
+					String replacement = fluffMap.get(tempWord.toLowerCase());
 					if(replacement != null){
-						sentenceBuilder.append(" " + replacement.toLowerCase());
+						sentenceBuilder.append(" " + replacement);
 						madeReplacement = true;
 						i = j;
 					}
@@ -1331,7 +1398,7 @@ public class ThmP1 {
 			}
 			
 			//if composite fluff word ?? already taken care of
-			if (!madeReplacement && !curWord.matches("\\.|,|!") && !fluffMap.containsKey(curWord)){
+			if (!madeReplacement && !curWord.matches("\\.|!") && !fluffMap.containsKey(curWord)){
 			//if (!curWord.matches("\\.|,|!") && !fluffMap.containsKey(curWord)){	
 				if(inTex || !toLowerCase){
 					sentenceBuilder.append(" " + curWord);
