@@ -133,9 +133,11 @@ public class ThmP1Test {
 			st = "for a multiplicative subset $S$ of $R$ we have a field";
 			st = "for a multiplicative subset $S$ of $R$";
 			st = "for subset S of R and for subset F of J";
-			st = "group of groups of F"; //NPE!!
-			st = "for subset S of A";
-			st = "for field of F"; //......
+			st = "group of F of F"; 
+			//st = "for subset S of A";
+			//st = "for field of F"; //......
+			//st = "for field";
+			//st = "for field extension of G";
 			
 			//st = "there exists a field";
 			//st = "both pairs are perfect";

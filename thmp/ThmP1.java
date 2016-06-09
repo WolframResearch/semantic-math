@@ -548,7 +548,7 @@ public class ThmP1 {
 				}								
 			}
 			
-			// look right two places in pairs, if symbol found, add it to namesMap
+			// look right one place in pairs, if symbol found, add it to namesMap
 			// if it's the given name for an ent.
 			// Combine gerund with ent
 			int pairsSize = pairs.size();
@@ -558,12 +558,12 @@ public class ThmP1 {
 				tempMap.put("called", givenName);
 				namesMap.put(givenName, tempStructH);
 
-			} else if ((index + 2 < pairsSize && pairs.get(index + 2).pos().equals("symb"))) {
+			} /*else if ((index + 2 < pairsSize && pairs.get(index + 2).pos().equals("symb"))) {
 				pairs.get(index + 2).set_pos(String.valueOf(j));
 				String givenName = pairs.get(index + 2).word();
 				tempMap.put("called", givenName);
 				namesMap.put(givenName, tempStructH);
-			}
+			} */
 			// look left one place
 			if (index > 0 && pairs.get(index - 1).pos().equals("symb")) {
 				pairs.get(index - 1).set_pos(String.valueOf(j));
@@ -662,8 +662,9 @@ public class ThmP1 {
 						Struct childStruct = mathEntList.get(Integer.valueOf(nextPair.pos()));
 						tempStruct.add_child(childStruct, "of");
 						// set to null instead of removing, to keep indices
-						// right
-						mathEntList.set(Integer.valueOf(nextPair.pos()), null);
+						// right. If nextPair.pos != prevPair.pos().
+						if(nextPair.pos() != prevPair.pos())
+							mathEntList.set(Integer.valueOf(nextPair.pos()), null);
 
 					} // "noun of ent". 
 					else if(prevPair.pos().matches("noun") && nextPair.pos().matches("\\d+$")) {
@@ -827,15 +828,27 @@ public class ThmP1 {
 		}
 
 		boolean skipCol = false;
+		//which row to start at for the next column
+		int startRow = -1;
 		outerloop: for (int j = 0; j < len; j++) {
-
-			skipCol = false;
+			
 			// fill in diagonal elements
 			mx.get(j).set(j, inputList.get(j));
 
-			for (int i = j - 1; i >= 0; i--) {
+			//startRow should actually always be < j
+			int i = j - 1;
+			if(startRow != -1 && startRow < j){
+				if(startRow == 0){
+					startRow = -1;
+					continue;
+				}
+				i = startRow - 1;
+				startRow = -1;
+			}
+			for (; i >= 0; i--) {
+
 				for (int k = j - 1; k >= i; k--) {
-					// pairs (i,k), and (k+1,j)
+					// pairs are (i,k), and (k+1,j)
 
 					Struct struct1 = mx.get(i).get(k);
 					Struct struct2 = mx.get(k + 1).get(j);
@@ -915,6 +928,7 @@ public class ThmP1 {
 
 						mx.get(i).set(j + 1, struct1);
 						skipCol = true;
+						startRow = i;
 					}
 					else if(combined.equals("pro_verb")){
 						if(struct1.prev1().equals("we") && struct2.prev1().equals("say")){								
@@ -1169,8 +1183,8 @@ public class ThmP1 {
 				}
 
 			}
-			if (skipCol)
-				j++;
+			//if (skipCol)
+				//j++;
 		}
 
 		// string together the parsed pieces
