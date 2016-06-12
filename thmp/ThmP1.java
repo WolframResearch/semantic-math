@@ -79,14 +79,15 @@ public class ThmP1 {
 	 * @param str	A full sentence.
 	 * @return
 	 */
-	public static void process(String sentence) throws IOException{
-		String[] subSentences = sentence.split(",|;");
+	/*public static void process(String sentence) throws IOException{
+		//can't just split! Might be in latex expression
+		String[] subSentences = sentence.split(",|;|:");
 		int subSentLen = subSentences.length;
 		for(int i = 0; i < subSentLen; i++){
 			parse(tokenize(subSentences[i]));
 		}
 		System.out.println();
-	}
+	} */
 	
 	/**
 	 * 
@@ -118,7 +119,7 @@ public class ThmP1 {
 
 			String curWord = str[i];
 
-			if (curWord.matches("^\\s*$"))
+			if (curWord.matches("^\\s*,*$"))
 				continue;
 
 			// strip away special chars '(', ')', etc ///should not remove........
@@ -481,9 +482,7 @@ public class ThmP1 {
 				}
 			}
 
-		}
-		
-		
+		}			
 		
 		// If phrase isn't in dictionary, ie has type "", then use probMap to
 		// postulate type, if possible
@@ -491,8 +490,9 @@ public class ThmP1 {
 		int len = pairs.size();
 
 		double bestCurProb = 0;
-		String prevType = "", nextType = "", tempCurType = "", bestCurType = "";
-
+		String prevType = "", nextType = "", tempCurType = "", tempPrevType = "",
+				tempNextType = "", bestCurType = "";
+		
 		int posListSz = posList.size();
 
 		for (int index = 0; index < len; index++) {
@@ -501,24 +501,29 @@ public class ThmP1 {
 
 				prevType = index > 0 ? pairs.get(index - 1).pos() : "";
 				nextType = index < len - 1 ? pairs.get(index + 1).pos() : "";
-
+				
+				prevType = prevType.equals("anchor") ? "pre" : prevType; 
+				nextType = nextType.equals("anchor") ? "pre" : nextType; 
+				
 				// iterate through list of types, ent, verb etc
 				for (int k = 0; k < posListSz; k++) {
 					tempCurType = posList.get(k);
-
-					prevType = index > 0 ? prevType + "_" + tempCurType : "FIRST";
-					nextType = index < len - 1 ? tempCurType + "_" + nextType : "LAST";
-
-					if (probMap.get(prevType) != null && probMap.get(nextType) != null) {
-						if (probMap.get(prevType) * probMap.get(prevType) > bestCurProb) {
-							bestCurProb = probMap.get(prevType) * probMap.get(prevType);
+					
+					// FIRST/LAST indicate positions
+					tempPrevType = index > 0 ? prevType + "_" + tempCurType : "FIRST";
+					tempNextType = index < len - 1 ? tempCurType + "_" + nextType : "LAST";
+					
+					if (probMap.get(tempPrevType) != null && probMap.get(tempNextType) != null) {
+						double score = probMap.get(tempPrevType) * probMap.get(tempNextType);
+						if (score > bestCurProb) {
+							bestCurProb = score;
 							bestCurType = tempCurType;
 						}
 					}
 				}
 				pairs.get(index).set_pos(bestCurType);
 
-				if (bestCurType.equals("ent"))
+				if (bestCurType.equals("mathObj"))
 					mathIndexList.add(index);
 			}
 		}
@@ -710,7 +715,7 @@ public class ThmP1 {
 		ArrayList<Struct> structList = new ArrayList<Struct>();
 
 		ListIterator<Pair> pairsIter = pairs.listIterator();
-
+		
 		String prevPos = "-1";
 		// use anchors (of, with) to gather terms together into entities
 		while (pairsIter.hasNext()) {
@@ -1029,7 +1034,7 @@ public class ThmP1 {
 								//skip rest in this case
 							} else{
 							
-							String newType = type1.matches("or") ? "disj" : "conj";
+							String newType = type1.equals("or") ? "disj" : "conj";
 							// type is expression, eg "a and b"
 							// new type: conj_verbphrase
 							StructA<Struct, Struct> parentStruct = new StructA<Struct, Struct>(mx.get(i - 1).get(i - 1),
@@ -1043,6 +1048,7 @@ public class ThmP1 {
 							//already classified, no need to keep reduce with mx manipulations
 							break;
 						}
+							//this case can be combined with if statement above, use single while loop
 						} else if ((type1.matches("or|and"))) {
 							int l = 2;
 							boolean stopLoop = false;
@@ -1123,8 +1129,7 @@ public class ThmP1 {
 							}
 						}
 						
-						else {
-							
+						else {							
 							// if symbol and a given name to some entity
 							// use "called" to relate entities
 							if (type1.equals("symb") && struct1.prev1() instanceof String) {
@@ -1177,6 +1182,7 @@ public class ThmP1 {
 
 						}
 						// found a grammar rule match, move on to next mx column
+						// *****actually, should keep going and keep scores!
 						break;
 					}
 
@@ -1188,7 +1194,8 @@ public class ThmP1 {
 		}
 
 		// string together the parsed pieces
-		LinkedList<Struct> parsedStructList = new LinkedList<Struct>();
+		// ArrayList (better at get/set) or LinkedList (better at add/remove)? 
+		List<Struct> parsedStructList = new ArrayList<Struct>();
 		int i = 0, j = len - 1;
 		while (j > -1) {
 			i = 0;
@@ -1226,17 +1233,16 @@ public class ThmP1 {
 			if (k < parsedStructListSize - 1)
 				System.out.print(" ,  ");
 		}
-		System.out.println();
-
+		
+		System.out.println("\nWL: ");
 		for (int k = 0; k < parsedStructListSize; k++) {
-			Struct head = parsedStructList.get(k);
+			Struct head = parsedStructList.get(k);			
 			
-			System.out.println("WL: ");
 			String parsedString = ParseToWL.parseToWL(head);
 			parsedExpr.add(parsedString);
-			System.out.println();
+			System.out.print(parsedString + " \n ** ");
 		}
-		
+		System.out.println("%%%%%\n");
 	}
 
 	/**
@@ -1369,10 +1375,23 @@ public class ThmP1 {
 		boolean inTex = false; //in latex expression?
 		boolean madeReplacement = false;
 		boolean toLowerCase = true;
+		boolean inParen = false; //in parenthetical remark?
 		
 		for (int i = 0; i < wordsArrayLen; i++) {
 			
 			curWord = wordsArray[i];					
+			
+			if(!inTex){
+				if(inParen || curWord.matches("\\([^)]*\\)")){					
+					continue;
+				}else if(curWord.matches("\\([^)]*")){
+					inParen = true;
+					continue;
+				}else if(inParen && curWord.matches("[^)]*)")){
+					inParen = false;
+					continue;
+				}			
+			}
 			
 			if(!inTex && curWord.matches("\\$.*") && !curWord.matches("\\$[^$]+\\$.*")){				
 				inTex = true;
@@ -1412,7 +1431,7 @@ public class ThmP1 {
 			}
 			
 			//if composite fluff word ?? already taken care of
-			if (!madeReplacement && !curWord.matches("\\.|!") && !fluffMap.containsKey(curWord)){
+			if (!madeReplacement && !curWord.matches("\\.|,|!") && !fluffMap.containsKey(curWord.toLowerCase())){
 			//if (!curWord.matches("\\.|,|!") && !fluffMap.containsKey(curWord)){	
 				if(inTex || !toLowerCase){
 					sentenceBuilder.append(" " + curWord);
@@ -1423,8 +1442,8 @@ public class ThmP1 {
 			}			
 			madeReplacement = false;
 			
-			if(curWord.matches("\\.|,|!") || i == wordsArrayLen-1){
-				
+			if(curWord.matches("\\.|,|:|!") || i == wordsArrayLen-1){
+
 				if(!inTex){
 					sentenceList.add(sentenceBuilder.toString());
 					sentenceBuilder.setLength(0);

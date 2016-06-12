@@ -134,6 +134,15 @@ public class ThmP1Test {
 			st = "for a multiplicative subset $S$ of $R$";
 			st = "for subset S of R and for subset F of J";
 			st = "group of F of F"; 
+			st = "given a field , call it F";
+			st = "Usually we call field F";
+			//st = "for any $R$-linear mapping, there exists a map";
+			st = "group of pure ideals";
+			st = "then $R$ is a regular local ring";
+			st = "if $R_1, R_3$ are rings";
+			st = "this is a (perfect) field";
+			st = "this field is perfect and every field is good"; ///*****
+			st = "$R$ is Noetherian and every $R$ algebra of finite type is catenary.";
 			//st = "for subset S of A";
 			//st = "for field of F"; //......
 			//st = "for field";
@@ -146,10 +155,10 @@ public class ThmP1Test {
 		
 			strAr = ThmP1.preprocess(st);
 			for(int i = 0; i < strAr.length; i++){
-				ThmP1.process(strAr[i].trim() );				
+				ThmP1.parse(ThmP1.tokenize(strAr[i].trim() ));				
 			}
 			
-			Scanner sc = new Scanner(new File("src/thmp/data/noTex3.txt"));
+			Scanner sc = new Scanner(new File("src/thmp/data/noTex4.txt"));
 			
 			while(sc.hasNextLine()){
 				String nextLine = sc.nextLine();
@@ -161,14 +170,13 @@ public class ThmP1Test {
 				strAr = ThmP1.preprocess(st);
 				
 				for(int i = 0; i < strAr.length; i++){					
-					//ThmP1.parse(ThmP1.tokenize(strAr[i].trim())); //p1.parse(p1.tokenize(p1.preprocess(strAr2)));
-					//ThmP1.process(sentence);
+					//ThmP1.parse(ThmP1.tokenize(strAr[i].trim())); //p1.parse(p1.tokenize(p1.preprocess(strAr2)));					
 				}
 				//System.out.println();
 			}
 			
-			ThmP1.writeUnknownWordsToFile();
-			ThmP1.writeParsedExprToFile();
+			//ThmP1.writeUnknownWordsToFile();
+			//ThmP1.writeParsedExprToFile();
 			sc.close();
 			
 			//p1.parse(p1.tokenize(p1.preprocess("characteristic of Fp is p".split(" "))));

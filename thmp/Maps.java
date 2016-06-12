@@ -64,8 +64,9 @@ public class Maps {
 		
 		//list of parts of speech
 		posList = new ArrayList<String>();
-		posList.add("ent"); posList.add("verb"); posList.add("adj");
-		posList.add("adverb"); posList.add("pre"); 
+		posList.add("mathObj"); posList.add("verb"); posList.add("adj");
+		posList.add("adverb"); posList.add("pre"); posList.add("vbs"); 
+		//posList.add("noun"); 
 		
 		String[] ents = {"quotient", "ideal", "filtration", "combination", "surjection",
 				"presentation", "tex-module", "polynomial", "isomorphism", "composition",
@@ -169,7 +170,7 @@ public class Maps {
 		
 		//parts of speech
 		posMap.put("for every", "hyp"); posMap.put("suppose", "hyp"); posMap.put("assume", "hyp");		
-		posMap.put("for all", "hyp"); posMap.put("for each", "hyp");
+		posMap.put("for all", "hyp"); posMap.put("for each", "hyp"); posMap.put("for any", "hyp");
 		
 		//prepositions
 		posMap.put("or", "or"); posMap.put("and", "and"); posMap.put("at most", "pre");
@@ -296,7 +297,7 @@ public class Maps {
 		structMap.put("pre_ent", "prep"); structMap.put("ent_prep", "newchild");
 		structMap.put("pre_symb", "prep"); structMap.put("parti_prep", "phrase");
 		structMap.put("pre_phrase", "prep"); structMap.put("pre_np", "prep");
-		structMap.put("csubj_prep", "csubj");
+		structMap.put("pre_expr", "prep"); structMap.put("csubj_prep", "csubj");
 		structMap.put("noun_prep", "np"); structMap.put("noun_verbphrase", "assert");
 		structMap.put("pre_noun", "prep"); structMap.put("gerund_verbphrase", "assert");
 		//participle: called, need to take care of "said" etc
@@ -363,6 +364,7 @@ public class Maps {
 		structMap.put("let_symb", "let"); structMap.put("be_ent", "be"); structMap.put("let_be", "letbe");
 		structMap.put("let_ent", "let");
 		structMap.put("if_assert", "If"); structMap.put("assert_If", "assert");
+		structMap.put("assert_hypo", "assert");
 		structMap.put("assert_iff", "assert"); structMap.put("hyp_hyp", "hyp");
 		structMap.put("hyp_assert", "hypo"); structMap.put("hyp_ent", "hypo");
 		structMap.put("hyp_phrase", "hypo"); structMap.put("hyp_adj", "hypo");
@@ -385,11 +387,21 @@ public class Maps {
 		//probability map for pair constructs. 
 		//need to gather/compute prob from labeled data
 		//used in round 1 parsing
+		//"FIRST"/"LAST" indicate positions in sentence.
 		probMap = new HashMap<String, Double>();
-		probMap.put("FIRST", 1.); probMap.put("LAST", 1.); probMap.put("ent_anchor", .85);
-		probMap.put("ent_verb", .8); probMap.put("ent_pre", .8);
-		probMap.put("pre_ent", .8); probMap.put("verb_ent", .6); probMap.put("vbs_ent", .6);
-		probMap.put("adj_ent", .9);
+		probMap.put("FIRST", 1.); probMap.put("LAST", 1.); 
+		//ent_
+		probMap.put("mathObj_anchor", .85);
+		probMap.put("mathObj_verb", .8); probMap.put("mathObj_pre", .8);
+		
+		//pre_
+		probMap.put("pre_mathObj", .8); probMap.put("pre_adj", .6); probMap.put("pre_mathObj", .6); 
+		
+		//verb_
+		probMap.put("verb_mathObj", .6); probMap.put("vbs_mathObj", .6); //probMap.put("verb_adj", .6);
+		
+		//adj_
+		probMap.put("adj_mathObj", .9); 
 		
 		//for adding combinations to structMap
 		/*
