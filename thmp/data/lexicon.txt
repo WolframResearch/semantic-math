@@ -131,3 +131,4 @@ flat adj
 faithful adj
 grade noun
 topological adj
+proper adj

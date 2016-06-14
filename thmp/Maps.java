@@ -306,6 +306,11 @@ public class Maps {
 		//phrases: been there, x in X, 
 		structMap.put("parti_adj", "phrase"); structMap.put("symb_prep", "phrase");
 		
+		//////////
+		structMap.put("symb_adj", new String(""));
+		//symb_adj
+		//noun_symb should be combined in code
+		
 		structMap.put("pre_noun", "ppt"); //nounphrase
 		structMap.put("adj_noun", "noun"); structMap.put("gerund_noun", "gerundp"); //gerundphrase
 		structMap.put("ent_gerundp", "newchild");

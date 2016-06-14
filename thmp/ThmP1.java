@@ -560,23 +560,25 @@ public class ThmP1 {
 			if (index + 1 < pairsSize && pairs.get(index + 1).pos().equals("symb")) {
 				pairs.get(index + 1).set_pos(String.valueOf(j));
 				String givenName = pairs.get(index + 1).word();
-				tempMap.put("called", givenName);
-				namesMap.put(givenName, tempStructH);
-
+				tempMap.put("called", givenName);				
+				// do not overwrite previously named symbol
+				//if(!namesMap.containsKey(givenName))
+				//	namesMap.put(givenName, tempStructH);
+				
 			} /*else if ((index + 2 < pairsSize && pairs.get(index + 2).pos().equals("symb"))) {
 				pairs.get(index + 2).set_pos(String.valueOf(j));
 				String givenName = pairs.get(index + 2).word();
 				tempMap.put("called", givenName);
 				namesMap.put(givenName, tempStructH);
 			} */
-			// look left one place
+			// look left one place			
 			if (index > 0 && pairs.get(index - 1).pos().equals("symb")) {
 				pairs.get(index - 1).set_pos(String.valueOf(j));
 				String givenName = pairs.get(index - 1).word();
-				tempMap.put("called", givenName);
-				namesMap.put(givenName, tempStructH);
-			}
-			
+				//combine the symbol with ent's name together
+				tempMap.put("name", givenName + " " + tempMap.get("name"));
+				
+			} 			
 			//combine nouns with ent's right after, ie noun_ent
 			else if (index > 0 && pairs.get(index - 1).pos().matches("noun")) {
 				pairs.get(index - 1).set_pos(String.valueOf(j));
@@ -619,16 +621,20 @@ public class ThmP1 {
 			}
 
 			// combine multiple adj connected by "and/or"
-			while (index - k - 1 > -1 && pairs.get(index - k).pos().matches("or|and")) {
-				if (pairs.get(index - k - 1).pos().equals("adj")) {
+			// hacky way: check if index-k-2 is a verb, only combine adj's if not
+			// eg " " 
+			if (index - k - 2 > -1 && pairs.get(index - k).pos().matches("or|and")
+					&& pairs.get(index - k - 1).pos().equals("adj")) {
+				String tempPos = posMap.get(pairs.get(index - k - 2).word());
+				if (tempPos != null && !tempPos.matches("verb|vbs|verb_comp|vbs_comp")) {
 					// set pos() of or/and to the right index
 					pairs.get(index - k).set_pos(String.valueOf(j));
 					String curWord = pairs.get(index - k - 1).word();
 					tempMap.put(curWord, "ppt");
 					pairs.get(index - k - 1).set_pos(String.valueOf(j));
-				}
-				k++;
-			}
+					
+				}				
+			} 
 
 			// look forwards
 			k = 1;
@@ -861,7 +867,7 @@ public class ThmP1 {
 					if (struct1 == null || struct2 == null) {
 						continue;
 					}
-
+					
 					// combine/reduce types, like or_ppt, for_ent, in_ent
 					String type1 = struct1.type();
 					String type2 = struct2.type();
@@ -907,7 +913,6 @@ public class ThmP1 {
 							struct1.set_prev2(name);
 						}
 					}
-
 					
 					if (type2.equals("ent") && !(type1.matches("verb|pre"))) {
 						if (!foundFirstEnt) {
@@ -941,6 +946,29 @@ public class ThmP1 {
 							mx.get(i).set(j, struct1);
 						}
 					}
+					
+					if(combined.equals("adj_ent")){ //****implement if necessary.
+						//update struct
+						if(struct2 instanceof StructH){
+							//should be StructH
+							Struct newStruct = struct2.copy();
+							String newPpt = "";
+							if(struct1.type().equals("conj_adj")){
+								if(struct1.prev1() instanceof Struct){
+									newPpt += ((Struct)struct1.prev1()).prev1();								
+								}
+								if(struct1.prev2() instanceof Struct){
+									newPpt += ((Struct)struct1.prev2()).prev1();								
+								}
+							}else{
+								//check if String and cast instead
+								newPpt += struct1.prev1();
+							}
+							newStruct.struct().put(newPpt, "ppt");
+							mx.get(i).set(j, newStruct);
+							continue outerloop;
+						}
+					}					
 					
 					// handle "is called" -- "verb_parti", also "is defined"
 					// for definitions
@@ -1003,7 +1031,7 @@ public class ThmP1 {
 							
 							// recentEnt is defined to be "called"
 							namesMap.put(called, recentEnt);
-							break outerloop;
+							continue outerloop;
 						}
 					}
 
@@ -1079,6 +1107,12 @@ public class ThmP1 {
 							&& !structMap.containsKey(combined)){
 						struct2.set_type("expr");
 						combined = type1 + "_" + "expr";
+					}
+					//update namesMap 
+					if(type1.equals("ent") && struct1 instanceof StructH){
+						String called = struct1.struct().get("called");
+						if(called != null)
+							namesMap.put(called, struct1);
 					}
 					
 					// reduce
@@ -1442,7 +1476,7 @@ public class ThmP1 {
 			}			
 			madeReplacement = false;
 			
-			if(curWord.matches("\\.|,|:|!") || i == wordsArrayLen-1){
+			if(curWord.matches("\\.|,|!") || i == wordsArrayLen-1){
 
 				if(!inTex){
 					sentenceList.add(sentenceBuilder.toString());

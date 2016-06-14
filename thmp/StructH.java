@@ -37,10 +37,11 @@ public class StructH<H> extends Struct{
 		this.struct = struct;
 	}
 	
-	//make semi-deep copy, points to same struct, but children are deep copy
+	//make deep copy, struct and children children are copied
 	@Override
 	public StructH<H> copy(){
-		StructH<H> newStructH = new StructH<H>(this.struct, this.type);
+		HashMap<String, String> structCopy = new HashMap<String, String>(this.struct);
+		StructH<H> newStructH = new StructH<H>(structCopy, this.type);
 		
 		for(int i = 0; i < this.children.size(); i++){
 			newStructH.add_child(this.children.get(i), this.childRelation.get(i));
