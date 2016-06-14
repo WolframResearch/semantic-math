@@ -5,6 +5,9 @@ public class StructA<A, B> extends Struct{
 
 	private A prev1; 
 	private B prev2; 
+	//score for this structA, to indicate likelihood of relation in Rule
+	//Ranges over (0, 1]. 1 by default
+	private double score;
 	private String type; //or, and, adj, pro etc, cannot ent
 	private String type1; //type of prev1, , al, string etc. Is this used??
 	private String type2; //type of prev2
@@ -14,6 +17,12 @@ public class StructA<A, B> extends Struct{
 		this.prev1 = prev1;		
 		this.prev2 = prev2;
 		this.type = type; 
+		this.score = 1;
+	}
+	
+	@Override
+	public double score(){
+		return this.score;
 	}
 	
 	@Override
@@ -68,7 +77,12 @@ public class StructA<A, B> extends Struct{
 	public String type2(){
 		return this.type2;		
 	}
-	
+
+	@Override
+	public void set_score(double score){
+		this.score = score;
+	}
+
 	@Override
 	public String toString(){
 		String str = " type: " + this.type 				

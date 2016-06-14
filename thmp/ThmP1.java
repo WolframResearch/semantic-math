@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
@@ -25,7 +26,7 @@ public class ThmP1 {
 	// private static HashMap<String, ArrayList<String>> entityMap =
 	// Maps.entityMap;
 	// map of structures, for all, disj, etc
-	private static HashMap<String, String> structMap;
+	private static HashMap<String, Rule> structMap;
 	private static HashMap<String, String> anchorMap;
 	// parts of speech map, e.g. "open", "adj"
 	private static HashMap<String, String> posMap;
@@ -829,13 +830,25 @@ public class ThmP1 {
 		// for pronouns
 		int recentEntIndex = -1;
 
-		ArrayList<ArrayList<Struct>> mx = new ArrayList<ArrayList<Struct>>(len);
+		// A matrix of List's. Dimenions of first two Lists are same: square matrix
+		ArrayList<ArrayList<ArrayList<Struct>>> mx = new ArrayList<ArrayList<ArrayList<Struct>>>(len);		
 
 		for (int l = 0; l < len; l++) {
-			mx.add(new ArrayList<Struct>(len));
-			for (int i = 0; i < len; i++) {
-				mx.get(l).add(null);
+			ArrayList<ArrayList<Struct>> tempList = new ArrayList<ArrayList<Struct>>();
+			
+			for (int i = 0; i < len; i++){
+				//initialize Lists now so no need to repeatedly check if null later				
+				tempList.add(new ArrayList<Struct>());
 			}
+			
+			mx.add(tempList);
+			/*
+			mx.add(new ArrayList<Struct>(len));
+			
+			for (int i = 0; i < len; i++) {
+				// add len number of null's
+				mx.get(l).get(i) .add(null);
+			} */
 		}
 
 		boolean skipCol = false;
@@ -844,9 +857,13 @@ public class ThmP1 {
 		outerloop: for (int j = 0; j < len; j++) {
 			
 			// fill in diagonal elements
-			mx.get(j).set(j, inputList.get(j));
-
-			//startRow should actually always be < j
+			ArrayList<Struct> diagonalStruct = new ArrayList<Struct>();
+			
+			diagonalStruct.add(inputList.get(j));
+			mx.get(j).set(j, diagonalStruct);
+			//mx.get(j).set(j, inputList.get(j));
+			
+			//startRow should actually *always* be < j
 			int i = j - 1;
 			if(startRow != -1 && startRow < j){
 				if(startRow == 0){
@@ -861,14 +878,29 @@ public class ThmP1 {
 				for (int k = j - 1; k >= i; k--) {
 					// pairs are (i,k), and (k+1,j)
 
-					Struct struct1 = mx.get(i).get(k);
-					Struct struct2 = mx.get(k + 1).get(j);
+					List<Struct> structList1 = mx.get(i).get(k);
+					List<Struct> structList2 = mx.get(k + 1).get(j);
 
-					if (struct1 == null || struct2 == null) {
+					//Struct struct1 = mx.get(i).get(k);
+					//Struct struct2 = mx.get(k + 1).get(j);
+
+					if (structList1 == null || structList2 == null) {
 						continue;
 					}
 					
-					// combine/reduce types, like or_ppt, for_ent, in_ent
+					//need to refactor to make methods more modular!
+					
+					Iterator<Struct> structList1Iter = structList1.iterator();
+					Iterator<Struct> structList2Iter = structList2.iterator();
+					
+					while(structList1Iter.hasNext()){
+						
+						Struct struct1 = structList1Iter.next();
+						
+						while(structList2Iter.hasNext()){
+							Struct struct2 = structList2Iter.next();
+
+							// combine/reduce types, like or_ppt, for_ent, in_ent
 					String type1 = struct1.type();
 					String type2 = struct2.type();
 
@@ -936,14 +968,16 @@ public class ThmP1 {
 						// create new child
 						struct1.add_child(inputList.get(j + 1), "of");
 
-						mx.get(i).set(j + 1, struct1);
+						//mx.get(i).set(j + 1, struct1);
+						mx.get(i).get(j+1).add(struct1);
 						skipCol = true;
 						startRow = i;
 					}
 					else if(combined.equals("pro_verb")){
 						if(struct1.prev1().equals("we") && struct2.prev1().equals("say")){								
 							struct1.set_type(FLUFF);
-							mx.get(i).set(j, struct1);
+							//mx.get(i).set(j, struct1);
+							mx.get(i).get(j).add(struct1);
 						}
 					}
 					
@@ -965,7 +999,8 @@ public class ThmP1 {
 								newPpt += struct1.prev1();
 							}
 							newStruct.struct().put(newPpt, "ppt");
-							mx.get(i).set(j, newStruct);
+							//mx.get(i).set(j, newStruct);
+							mx.get(i).get(j).add(newStruct);
 							continue outerloop;
 						}
 					}					
@@ -1011,7 +1046,8 @@ public class ThmP1 {
 						if (firstEnt != null) {
 							StructA<Struct, String> parentStruct = new StructA<Struct, String>(firstEnt, called, "def");
 
-							mx.get(0).set(len - 1, parentStruct);
+							//mx.get(0).set(len - 1, parentStruct);
+							mx.get(0).get(len-1).add(struct1);
 
 							// add to mathObj map
 							int q = 0;
@@ -1115,111 +1151,16 @@ public class ThmP1 {
 							namesMap.put(called, struct1);
 					}
 					
-					// reduce
+					//reduce if structMap contains combined
 					if (structMap.containsKey(combined)) {
-						String newType = structMap.get(combined);
-
-						// newChild means to fuse second entity into first one
-
-						if (newType.equals("newchild")) {
-							// struct1 should be of type StructH to receive a
-							// child
-							// assert ensures rule correctness
-							assert struct1 instanceof StructH;
-
-							// get a (semi)deep copy of this StructH, since
-							// later-added children may not
-							// get used eventually, ie hard to remove children
-							// added during mx building
-							// that are not picked up by the eventual parse
-							Struct newStruct = struct1.copy();
-							
-							// update firstEnt so to have the right children
-							if (firstEnt == struct1) {
-								firstEnt = newStruct;
-							}
-							
-							// add to child relation, usually a preposition, eg
-							// "from", "over"
-							// could also be verb, "consist", "lies"
-							String childRelation = mx.get(k + 1).get(k + 1).prev1().toString();
-							if (struct1 instanceof StructH) {
-								// why does this cast not trigger unchecked warning		
-								// cause wildcard!
-								((StructH<?>) newStruct).add_child(struct2, childRelation);
-							}							
-							
-							recentEnt = newStruct;
-							recentEntIndex = j;
-
-							mx.get(i).set(j, newStruct);
-
-						} else if(newType.equals("noun")){
-							if(type1.matches("adj") && type2.matches("noun")){
-								//combine adj and noun
-								String adj = (String)struct1.prev1();
-								struct2.set_prev1(adj + " " + struct2.prev1());
-								mx.get(i).set(j, struct2);
-							}
-						}
-						
-						else {							
-							// if symbol and a given name to some entity
-							// use "called" to relate entities
-							if (type1.equals("symb") && struct1.prev1() instanceof String) {
-								String entKey = (String) struct1.prev1();
-								if (namesMap.containsKey(entKey)) {
-									Struct entity = namesMap.get(entKey);
-									struct1.set_prev2(entity.struct().get("name"));
-
-								}
-							}
-
-							// update struct2 with name if applicable
-							// type could have been stripped down from conj_symb
-							if (type2.equals("symb") && struct2.prev1() instanceof String) {
-								
-								String entKey = (String) struct2.prev1();
-								
-								if (namesMap.containsKey(entKey)) {
-									Struct entity = namesMap.get(entKey);
-									struct2.set_prev2(entity.struct().get("name"));
-
-								}								
-
-							}
-
-							// add to namesMap if letbe defines a name for an
-							// ent
-							if (newType.equals("letbe") && mx.get(i + 1).get(k) != null
-									&& mx.get(k + 2).get(j) != null) {
-								// temporary patch Rewrite StructA to avoid cast
-								// assert(struct1 instanceof StructA);
-								// assert(struct2 instanceof StructA);
-								// get previous nodes
-
-								if (mx.get(i + 1).get(k).type().equals("symb")
-										&& mx.get(k + 2).get(j).type().equals("ent")) {
-
-									namesMap.put(mx.get(i + 1).get(k).prev1().toString(), mx.get(k + 2).get(j));
-
-									mx.get(k + 2).get(j).struct().put("called",
-											mx.get(i + 1).get(k).prev1().toString());
-								}
-							}
-
-							// create new StructA and put in mx
-							StructA<Struct, Struct> parentStruct = new StructA<Struct, Struct>(struct1, struct2,
-									newType);
-
-							mx.get(i).set(j, parentStruct);
-
-						}
-						// found a grammar rule match, move on to next mx column
-						// *****actually, should keep going and keep scores!
-						break;
+						reduce();
 					}
-
+					
+						
+						} //listIter1
+					} //listIter2
+					
+					//for (int k = j - 1; k >= i; k--) { ends here
 				}
 
 			}
@@ -1309,6 +1250,116 @@ public class ThmP1 {
 			return true;
 		}
 		return false;
+	}
+	
+	/**
+	 * reduce if structMap contains combined
+	 */
+	public static void reduce(){
+		// reduce
+		
+			String newType = structMap.get(combined).relation();
+			
+			// newChild means to fuse second entity into first one
+			
+			if (newType.equals("newchild")) {
+				// struct1 should be of type StructH to receive a
+				// child
+				// assert ensures rule correctness
+				assert struct1 instanceof StructH;
+
+				// get a (semi)deep copy of this StructH, since
+				// later-added children may not
+				// get used eventually, ie hard to remove children
+				// added during mx building
+				// that are not picked up by the eventual parse
+				Struct newStruct = struct1.copy();
+				
+				// update firstEnt so to have the right children
+				if (firstEnt == struct1) {
+					firstEnt = newStruct;
+				}
+				
+				// add to child relation, usually a preposition, eg
+				// "from", "over"
+				// could also be verb, "consist", "lies"
+				String childRelation = mx.get(k + 1).get(k + 1).prev1().toString();
+				if (struct1 instanceof StructH) {
+					// why does this cast not trigger unchecked warning		
+					// Because wildcard!
+					((StructH<?>) newStruct).add_child(struct2, childRelation);
+				}							
+				
+				recentEnt = newStruct;
+				recentEntIndex = j;
+
+				mx.get(i).set(j, newStruct);
+
+			} else if(newType.equals("noun")){
+				if(type1.matches("adj") && type2.matches("noun")){
+					//combine adj and noun
+					String adj = (String)struct1.prev1();
+					struct2.set_prev1(adj + " " + struct2.prev1());
+					mx.get(i).set(j, struct2);
+				}
+			}
+			
+			else {							
+				// if symbol and a given name to some entity
+				// use "called" to relate entities
+				if (type1.equals("symb") && struct1.prev1() instanceof String) {
+					String entKey = (String) struct1.prev1();
+					if (namesMap.containsKey(entKey)) {
+						Struct entity = namesMap.get(entKey);
+						struct1.set_prev2(entity.struct().get("name"));
+
+					}
+				}
+
+				// update struct2 with name if applicable
+				// type could have been stripped down from conj_symb
+				if (type2.equals("symb") && struct2.prev1() instanceof String) {
+					
+					String entKey = (String) struct2.prev1();
+					
+					if (namesMap.containsKey(entKey)) {
+						Struct entity = namesMap.get(entKey);
+						struct2.set_prev2(entity.struct().get("name"));
+
+					}								
+
+				}
+
+				// add to namesMap if letbe defines a name for an
+				// ent
+				if (newType.equals("letbe") && mx.get(i + 1).get(k) != null
+						&& mx.get(k + 2).get(j) != null) {
+					// temporary patch Rewrite StructA to avoid cast
+					// assert(struct1 instanceof StructA);
+					// assert(struct2 instanceof StructA);
+					// get previous nodes
+
+					if (mx.get(i + 1).get(k).type().equals("symb")
+							&& mx.get(k + 2).get(j).type().equals("ent")) {
+
+						namesMap.put(mx.get(i + 1).get(k).prev1().toString(), mx.get(k + 2).get(j));
+
+						mx.get(k + 2).get(j).struct().put("called",
+								mx.get(i + 1).get(k).prev1().toString());
+					}
+				}
+
+				// create new StructA and put in mx
+				StructA<Struct, Struct> parentStruct = new StructA<Struct, Struct>(struct1, struct2,
+						newType);
+
+				mx.get(i).set(j, parentStruct);
+
+			}
+			// found a grammar rule match, move on to next mx column
+			// *****actually, should keep going and keep scores!
+			break;
+		
 	}
 	
 	/**

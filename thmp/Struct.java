@@ -22,6 +22,15 @@ public class Struct {
 	}
 	*/
 	
+	//returns probability of relation in Rule
+	public double score(){
+		return 1;
+	}
+	
+	public void set_score(double score){
+		
+	}
+	
 	//to be overridden
 	public void set_type(String type){		
 	}

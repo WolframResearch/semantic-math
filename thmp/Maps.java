@@ -16,9 +16,11 @@ import java.util.Map.Entry;
 
 public class Maps {
 
+	//make all maps private!
+	
 	//protected static HashMap<String, ArrayList<String>> entityMap;
 	//map of structures, for all, disj,  etc
-	protected static HashMap<String, String> structMap;
+	protected static HashMap<String, Rule> structMap;
 	//structMap for the second run, grammars that shouldn't be 
 	//used in first run, like ent_verb: there exists
 	protected static HashMap<String, String> structMap2;
@@ -265,59 +267,59 @@ public class Maps {
 		
 		//struct map, statement/global structures
 		//can be written as, 
-		structMap = new HashMap<String, String>();	
+		//structMap = new HashMap<String, String>();	
+		structMap = new HashMap<String, Rule>();
 		//structMap.put("for all", "forall");		
 		
 		//"is" implies assertion <--remove this case, "is" should be interpreted as verb
-		structMap.put("is_symb", "is"); structMap.put("is_int", "is");
-		structMap.put("is_ent", "is"); structMap.put("is_or", "is");
-		structMap.put("ent_is", "assert");
-		structMap.put("symb_is", "assert"); structMap.put("if_assert", "ifstate");	
-		structMap.put("iff_assert", "ifstate"); structMap.put("if_hypo", "If");
-		structMap.put("then_assert", "thenstate");
+		structMap.put("is_symb", new Rule("is", 1)); structMap.put("is_int", new Rule("is", 1));
+		structMap.put("is_ent", new Rule("is", 1)); structMap.put("is_or", new Rule("is", 1));
+		structMap.put("ent_is", new Rule("assert", 1));
+		structMap.put("symb_is", new Rule("assert", 1)); structMap.put("if_assert", new Rule("ifstate", 1));	
+		structMap.put("iff_assert", new Rule("ifstate", 1)); structMap.put("if_hypo", new Rule("If", 1));
+		structMap.put("then_assert", new Rule("thenstate", 1));
 		
 		//expression, e.g. a map from A to B
-		//structMap.put("ent", "expr");
-		structMap.put("ifstate_thenstate", "ifthen");
-		structMap.put("has_ent", "hasent");	
-		structMap.put("or_ent", "orent"); structMap.put("ent_orent", "or");
-		structMap.put("or_symb", "orsymb"); structMap.put("symb_orsymb", "or");
-		structMap.put("or_assert", "orass"); structMap.put("ent_orass", "or");
-		structMap.put("or_is", "assert"); structMap.put("assert_orass", "or");
-		structMap.put("ent_ppt", "newchild");
-		//structMap.put("ent_ent", "ent");
+		//structMap.put("ent", new Rule("expr", 1));
+		structMap.put("ifstate_thenstate", new Rule("ifthen", 1));
+		structMap.put("has_ent", new Rule("hasent", 1));	
+		structMap.put("or_ent", new Rule("orent", 1)); structMap.put("ent_orent", new Rule("or", 1));
+		structMap.put("or_symb", new Rule("orsymb", 1)); structMap.put("symb_orsymb", new Rule("or", 1));
+		structMap.put("or_assert", new Rule("orass", 1)); structMap.put("ent_orass", new Rule("or", 1));
+		structMap.put("or_is", new Rule("assert", 1)); structMap.put("assert_orass", new Rule("or", 1));
+		structMap.put("ent_ppt", new Rule("newchild", 1));
+		//structMap.put("ent_ent", new Rule("ent", 1));
 		
 		//e.g. between A and B.
-		//structMap.put("pre_conj", "prep"); structMap.put("pre_disj", "prep");
+		//structMap.put("pre_conj", new Rule("prep", 1)); structMap.put("pre_disj", new Rule("prep", 1));
 		
 		//preposition_entity, eg "over field", "on ...". Create new child in this case
 		//latter ent child of first ent
-		//structMap.put("pre_ent", "preent");
+		//structMap.put("pre_ent", new Rule("preent", 1));
 		//prep stands for "pre phrase"
-		structMap.put("pre_ent", "prep"); structMap.put("ent_prep", "newchild");
-		structMap.put("pre_symb", "prep"); structMap.put("parti_prep", "phrase");
-		structMap.put("pre_phrase", "prep"); structMap.put("pre_np", "prep");
-		structMap.put("pre_expr", "prep"); structMap.put("csubj_prep", "csubj");
-		structMap.put("noun_prep", "np"); structMap.put("noun_verbphrase", "assert");
-		structMap.put("pre_noun", "prep"); structMap.put("gerund_verbphrase", "assert");
+		structMap.put("pre_ent", new Rule("prep", 1)); structMap.put("ent_prep", new Rule("newchild", 1));
+		structMap.put("pre_symb", new Rule("prep", 1)); structMap.put("parti_prep", new Rule("phrase", 1));
+		structMap.put("pre_phrase", new Rule("prep", 1)); structMap.put("pre_np", new Rule("prep", 1));
+		structMap.put("pre_expr", new Rule("prep", 1)); structMap.put("csubj_prep", new Rule("csubj", 1));
+		structMap.put("noun_prep", new Rule("np", 1)); structMap.put("noun_verbphrase", new Rule("assert", 1));
+		structMap.put("pre_noun", new Rule("prep", 1)); structMap.put("gerund_verbphrase", new Rule("assert", 1));
 		//participle: called, need to take care of "said" etc
-		structMap.put("parti_ent", "partient"); structMap.put("ent_partient", "newchild");
-		structMap.put("ent_hypo", "newchild");
+		structMap.put("parti_ent", new Rule("partient", 1)); structMap.put("ent_partient", new Rule("newchild", 1));
+		structMap.put("ent_hypo", new Rule("newchild", 1));
 		//phrases: been there, x in X, 
-		structMap.put("parti_adj", "phrase"); structMap.put("symb_prep", "phrase");
+		structMap.put("parti_adj", new Rule("phrase", 1)); structMap.put("symb_prep", new Rule("phrase", 1));
 		
 		//////////
-		structMap.put("symb_adj", new String(""));
+		structMap.put("symb_adj", new Rule(""));
 		//symb_adj
 		//noun_symb should be combined in code
 		
-		structMap.put("pre_noun", "ppt"); //nounphrase
-		structMap.put("adj_noun", "noun"); structMap.put("gerund_noun", "gerundp"); //gerundphrase
-		structMap.put("ent_gerundp", "newchild");
+		structMap.put("pre_noun", new Rule("ppt", 1)); //nounphrase
+		structMap.put("adj_noun", new Rule("noun", 1)); structMap.put("gerund_noun", new Rule("gerundp", 1)); //gerundphrase
+		structMap.put("ent_gerundp", new Rule("newchild", 1));
 		
 		//involving nums
-		structMap.put("pre_num", "prep");		
-		
+		structMap.put("pre_num", new Rule("prep", 1));	
 		
 		ArrayList<String[]> entList = new ArrayList<String[]>();
 		
@@ -337,53 +339,54 @@ public class Maps {
 		//structMap.put("from   ", "wildcard"); structMap.put("to", "wildcard"); structMap.put("fromto", "newchild");
 		////////////combine preposition with whatever comes				
 		//verb_ent, not including past tense verbs, only present tense
-		structMap.put("verb_ent", "verbphrase"); structMap.put("verb_adj", "verbphrase");
-		structMap.put("verb_pro", "verbphrase"); structMap.put("verb_symb", "verbphrase");
-		structMap.put("verb_np", "verbphrase"); structMap.put("verb_prep", "verbphrase");
-		structMap.put("verb_num", "verbphrase"); structMap.put("verb_np", "verbphrase");
-		structMap.put("verb_pre", "verbphrase"); structMap.put("verb_phrase", "verbphrase");
-		structMap.put("verb_partient", "verbphrase"); structMap.put("verb_noun", "verbphrase");
-		structMap.put("det_verbphrase", "assert"); structMap.put("verb_parti", "verbphrase");
+		structMap.put("verb_ent", new Rule("verbphrase", 1)); structMap.put("verb_adj", new Rule("verbphrase", 1));
+		structMap.put("verb_pro", new Rule("verbphrase", 1)); structMap.put("verb_symb", new Rule("verbphrase", 1));
+		structMap.put("verb_np", new Rule("verbphrase", 1)); structMap.put("verb_prep", new Rule("verbphrase", 1));
+		structMap.put("verb_num", new Rule("verbphrase", 1)); structMap.put("verb_np", new Rule("verbphrase", 1));
+		structMap.put("verb_pre", new Rule("verbphrase", 1)); structMap.put("verb_phrase", new Rule("verbphrase", 1));
+		structMap.put("verb_partient", new Rule("verbphrase", 1)); structMap.put("verb_noun", new Rule("verbphrase", 1));
+		structMap.put("det_verbphrase", new Rule("assert", 1)); structMap.put("verb_parti", new Rule("verbphrase", 1));
 		 
-		structMap.put("vbs_ent", "verbphrase"); structMap.put("vbs_adj", "verbphrase");
-		structMap.put("vbs_pro", "verbphrase");  structMap.put("vbs_symb", "verbphrase"); 
-		structMap.put("vbs_np", "verbphrase"); structMap.put("vbs_prep", "verbphrase");
-		structMap.put("vbs_num", "verbphrase"); structMap.put("vbs_np", "verbphrase");
-		structMap.put("vbs_pre", "verbphrase"); structMap.put("vbs_phrase", "verbphrase");
-		structMap.put("vbs_partient", "verbphrase"); structMap.put("vbs_noun", "verbphrase");
-		structMap.put("det_verbphrase", "assert"); structMap.put("vbs_parti", "verbphrase");
+		structMap.put("vbs_ent", new Rule("verbphrase", 1)); structMap.put("vbs_adj", new Rule("verbphrase", 1));
+		structMap.put("vbs_pro", new Rule("verbphrase", 1));  structMap.put("vbs_symb", new Rule("verbphrase", 1)); 
+		structMap.put("vbs_np", new Rule("verbphrase", 1)); structMap.put("vbs_prep", new Rule("verbphrase", 1));
+		structMap.put("vbs_num", new Rule("verbphrase", 1)); structMap.put("vbs_np", new Rule("verbphrase", 1));
+		structMap.put("vbs_pre", new Rule("verbphrase", 1)); structMap.put("vbs_phrase", new Rule("verbphrase", 1));
+		structMap.put("vbs_partient", new Rule("verbphrase", 1)); structMap.put("vbs_noun", new Rule("verbphrase", 1));
+		structMap.put("det_verbphrase", new Rule("assert", 1)); structMap.put("vbs_parti", new Rule("verbphrase", 1));
 		
 		
-		structMap.put("symb_verbphrase", "assert");
-		structMap.put("ent_verbphrase", "assert"); structMap.put("pro_verbphrase", "assert");
-		structMap.put("np_verbphrase", "assert");
-		structMap.put("verb_assert", "verbphrase"); structMap.put("vbs_assert", "verbphrase");
-		structMap.put("verbphrase_prep", "verbphrase"); structMap.put("vbs_partiby", "verb");
-		structMap.put("partiby_ent", "phrase"); structMap.put("partiby_noun", "phrase");
-		structMap.put("verb_partiby", "verb"); structMap.put("partiby_symb", "phrase");
-		structMap.put("partiby_expr", "phrase"); 		
-		structMap.put("be_parti", "verb"); structMap.put("be_partiby", "verb");
-		structMap.put("disj_verbphrase", "assert"); structMap.put("conj_verbphrase", "assert");
-		structMap.put("csubj_verbphrase", "assert");
+		structMap.put("symb_verbphrase", new Rule("assert", 1));
+		structMap.put("ent_verbphrase", new Rule("assert", 1)); structMap.put("pro_verbphrase", new Rule("assert", 1));
+		structMap.put("np_verbphrase", new Rule("assert", 1));
+		structMap.put("verb_assert", new Rule("verbphrase", 1)); structMap.put("vbs_assert", new Rule("verbphrase", 1));
+		structMap.put("verbphrase_prep", new Rule("verbphrase", 1)); structMap.put("vbs_partiby", new Rule("verb", 1));
+		structMap.put("partiby_ent", new Rule("phrase", 1)); structMap.put("partiby_noun", new Rule("phrase", 1));
+		structMap.put("verb_partiby", new Rule("verb", 1)); structMap.put("partiby_symb", new Rule("phrase", 1));
+		structMap.put("partiby_expr", new Rule("phrase", 1)); 		
+		structMap.put("be_parti", new Rule("verb", 1)); structMap.put("be_partiby", new Rule("verb", 1));
+		structMap.put("disj_verbphrase", new Rule("assert", 1)); structMap.put("conj_verbphrase", new Rule("assert", 1));
+		structMap.put("csubj_verbphrase", new Rule("assert", 1));
 		
-		structMap.put("let_symb", "let"); structMap.put("be_ent", "be"); structMap.put("let_be", "letbe");
-		structMap.put("let_ent", "let");
-		structMap.put("if_assert", "If"); structMap.put("assert_If", "assert");
-		structMap.put("assert_hypo", "assert");
-		structMap.put("assert_iff", "assert"); structMap.put("hyp_hyp", "hyp");
-		structMap.put("hyp_assert", "hypo"); structMap.put("hyp_ent", "hypo");
-		structMap.put("hyp_phrase", "hypo"); structMap.put("hyp_adj", "hypo");
-		structMap.put("hyp_symb", "hypo"); structMap.put("rpro_ent", "rproent");
-		structMap.put("ent_rproent", "newchild"); structMap.put("rpro_verbphrase", "phrase");
-		structMap.put("rpro_assert", "phrase"); structMap.put("gerund_noun", "csubj"); 
-		structMap.put("gerund_ent", "csubj"); //structMap.put("gerund_np", "csubj"); 
+		structMap.put("let_symb", new Rule("let", 1)); structMap.put("be_ent", new Rule("be", 1)); structMap.put("let_be", new Rule("letbe", 1));
+		structMap.put("let_ent", new Rule("let", 1));
+		structMap.put("if_assert", new Rule("If", 1)); structMap.put("assert_If", new Rule("assert", 1));
+		structMap.put("assert_hypo", new Rule("assert", 1));
+		structMap.put("assert_iff", new Rule("assert", 1)); structMap.put("hyp_hyp", new Rule("hyp", 1));
+		structMap.put("hyp_assert", new Rule("hypo", 1)); structMap.put("hyp_ent", new Rule("hypo", 1));
+		structMap.put("hyp_phrase", new Rule("hypo", 1)); structMap.put("hyp_adj", new Rule("hypo", 1));
+		structMap.put("hyp_symb", new Rule("hypo", 1)); structMap.put("rpro_ent", new Rule("rproent", 1));
+		structMap.put("ent_rproent", new Rule("newchild", 1)); structMap.put("rpro_verbphrase", new Rule("phrase", 1));
+		structMap.put("rpro_assert", new Rule("phrase", 1)); structMap.put("gerund_noun", new Rule("csubj", 1)); 
+		structMap.put("gerund_ent", new Rule("csubj", 1)); //structMap.put("gerund_np", new Rule("csubj", 1)); 
 		
 		//eg "property that a is b"
-		structMap.put("noun_phrase", "np"); structMap.put("ent_phrase", "newchild");
-		structMap.put("ent_ppt", "newchild");
+		structMap.put("noun_phrase", new Rule("np", 1)); structMap.put("ent_phrase", new Rule("newchild", 1));
+		structMap.put("ent_ppt", new Rule("newchild", 1));
 		
-		structMap.put("adverb_adj", "adj"); ///*******		
-		structMap.put("adverb_verbphrase", "assert");
+		structMap.put("adverb_adj", new Rule("adj", 1)); ///*******		
+		structMap.put("adverb_verbphrase", new Rule("assert", 1));
+			
 		
 		//grammar rules for 2nd run
 		structMap2 = new HashMap<String, String>();
