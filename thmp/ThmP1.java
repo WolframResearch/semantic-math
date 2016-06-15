@@ -1083,14 +1083,16 @@ public class ThmP1 {
 					//should probably be j? j is column #.
 					
 					// iterate through the List at position (i-1, i-1)
-					Iterator<Struct> structIter = mx.get(i-1).get(i-1).iterator();
-							while(structIter.hasNext()){
-								Struct cdStruct = structIter.next();
+					if(mx.get(i-1).get(i-1).size() > 0){
+						Iterator<Struct> iMinusOnestructIter = mx.get(i-1).get(i-1).iterator();
+
+						while(iMinusOnestructIter.hasNext()){
+								Struct iMinusOneStruct = iMinusOnestructIter.next();
 								
 					if (i > 0 && i + 1 < len
 							&& (type1.matches("or|and") 
-									&& mx.get(i - 1).get(i - 1) != null
-									&& type2.equals(mx.get(i - 1).get(i - 1).type()))								
+									
+									&& type2.equals(iMinusOneStruct.type()))								
 							) {
 							
 							// In case of conj, only proceed if next word is not a singular verb.
@@ -1108,11 +1110,12 @@ public class ThmP1 {
 							// type is expression, eg "a and b"
 							// new type: conj_verbphrase
 							
-							StructA<Struct, Struct> parentStruct = new StructA<Struct, Struct>(mx.get(i - 1).get(i - 1),
+							StructA<Struct, Struct> parentStruct = new StructA<Struct, Struct>(iMinusOneStruct,
 									struct2, newType + "_" + type2);
 							
 							// set parent struct in row above
-							mx.get(i - 1).set(j, parentStruct);
+							//mx.get(i - 1).set(j, parentStruct);
+							mx.get(i - 1).get(j).add(parentStruct);
 							// set the next token to "", so not classified again
 							// with others
 							// mx.get(i+1).set(j, null);
@@ -1124,13 +1127,14 @@ public class ThmP1 {
 							int l = 2;
 							boolean stopLoop = false;
 							while (i - l > -1 && i + 1 < len) {
-								if (mx.get(i - l).get(i - 1) != null && type2.equals(mx.get(i - l).get(i - 1).type())) {
+								if (mx.get(i - l).get(i - 1) != null     && type2.equals(mx.get(i - l).get(i - 1).type())) {
 									String newType = type1.matches("or") ? "disj" : "conj";
 									// type is expression, eg "a and b"
 									StructA<Struct, Struct> parentStruct = new StructA<Struct, Struct>(
-											mx.get(i - l).get(i - 1), struct2, newType + "_" + type2);
-	
-									mx.get(i - l).set(j, parentStruct);
+											iMinusOneStruct, struct2, newType + "_" + type2);
+									
+									mx.get(i - l).get(j).add(parentStruct);
+									//mx.get(i - l).set(j, parentStruct);
 									// mx.get(i+1).set(j, null);
 									stopLoop = true;
 									break;
@@ -1143,7 +1147,7 @@ public class ThmP1 {
 						
 					}
 						}
-
+					}
 					//potentially change assert to latex expr
 					if(type2.equals("assert") 
 							&& struct2.prev1() instanceof String 
@@ -1161,7 +1165,7 @@ public class ThmP1 {
 					
 					//reduce if structMap contains combined
 					if (structMap.containsKey(combined)) {
-						reduce();
+						reduce(mx, );
 					}
 					
 						
@@ -1263,7 +1267,10 @@ public class ThmP1 {
 	/**
 	 * reduce if structMap contains combined
 	 */
-	public static void reduce(){
+	public static void reduce(ArrayList<ArrayList<ArrayList<Struct>>> mx, 
+			String combined, Struct struct1, Struct struct2,
+			Struct firstEnt, Struct recentEnt, int recentEntIndex,
+			int i, int j, int k, String type1, String type2){
 		// reduce
 		
 			String newType = structMap.get(combined).relation();
@@ -1301,7 +1308,8 @@ public class ThmP1 {
 				recentEnt = newStruct;
 				recentEntIndex = j;
 
-				mx.get(i).set(j, newStruct);
+				//mx.get(i).set(j, newStruct);
+				mx.get(i).get(j).add(newStruct);
 
 			} else if(newType.equals("noun")){
 				if(type1.matches("adj") && type2.matches("noun")){
@@ -1356,10 +1364,10 @@ public class ThmP1 {
 								mx.get(i + 1).get(k).prev1().toString());
 					}
 				}
-
+				
 				// create new StructA and put in mx
 				StructA<Struct, Struct> parentStruct = new StructA<Struct, Struct>(struct1, struct2,
-						newType);
+						newType, mx.get(i).get(j));
 
 				mx.get(i).set(j, parentStruct);
 
@@ -1370,46 +1378,92 @@ public class ThmP1 {
 		
 	}
 	
+	/**
+	 * Entry point for depth first first.
+	 * Initialize score mx of List's of MatrixPathNodes
+	 * @param structList, the head, at mx position (len-1, len-1)
+	 * @return
+	 */
+	public static double ArrayDFS(ArrayList<Struct> structList){
+		ArrayList<MatrixPathNode> mxPathNodeList = new ArrayList<MatrixPathNode>();
+		//fill in the list of MatrixPathNode's from structList
+		int structListSz = structList.size();
+		for(int i = 0; i < structListSz; i++){
+			Struct curStruct = structList.get(i);
+			double ownScore = curStruct.score();
+			//create appropriate right and left Node's
+			
+			//scoreSoFar is ownScore
+			//left and right Nodes to be filled in 
+			MatrixPathNode curMxPathNode = new MatrixPathNode(i, ownScore, ownScore,
+					curStruct
+					);
+			
+			//put path into corresponding Struct, total score that is: 
+			//the sum of the score so far, and the max score along any path 
+			//down from here
+			double pathScore = ArrayDFS(curMxPathNode);
+			curStruct.set_maxPathScore(pathScore);
+			
+		}
+		
+	}
+	
 	/**depth-first-search with arrays construct
 	 * Keep track of path via tree of MatrixPathNode's,
 	 * and the scores thus far through the tree
-	 * @param structList
+	 * @param mxPathNode  MatrixPathNode, containing current Struct
 	 * @return score
 	 */
 	//combine iteration of arraylist and recursion	
-	public static double ArrayDFS(ArrayList<Struct> structList, double scoreSoFar) {
+	public static double ArrayDFS(MatrixPathNode mxPathNode) {
 		
-		Iterator<Struct> structListIter = structList.iterator();
+		Struct mxPathNodeStruct = mxPathNode.curStruct();
+		List<Struct> structList = mxPathNodeStruct.structList();
+		double scoreSoFar = mxPathNode.scoreSoFar();
+
+		//Iterator<Struct> structListIter = structList.iterator();
+		int structListSz = structList.size();
 		
-		while(structListIter.hasNext()){
+		for(int i = 0; i < structListSz; i++){
 			
-			Struct struct = structListIter.next();
-			
+			Struct struct = structList.get(i);			
+			double structScore = struct.score();
 			
 		// don't like instanceof here
 		if (struct instanceof StructA) {
 			
-			System.out.print(struct.type());
-
-			System.out.print("[");
+			//System.out.print(struct.type());
+			//System.out.print("[");
 			// don't know type at compile time
 			if (struct.prev1() instanceof Struct) {
-				dfs((Struct) struct.prev1());
+				//create new MatrixPathNode, 
+				//int index, double ownScore, double scoreSoFar,
+				
+				
+				//leftMxPathNode corresponds to Struct struct.prev1()
+				MatrixPathNode leftMxPathNode = new MatrixPathNode(i, structScore,
+						structScore + scoreSoFar,
+						(Struct) struct.prev1());
+				ArrayDFS(leftMxPathNode);
+				
 			}
 			
-			// if(struct.prev2() != null && !struct.prev2().equals(""))
-			// System.out.print(", ");
-			if (((StructA<?, ?>) struct).prev2() instanceof Struct) {
+			// 
+			if ( struct.prev2() instanceof Struct) {
 				// avoid printing is[is], ie case when parent has same type as
 				// child
-				System.out.print(", ");
-				dfs((Struct) struct.prev2());
+				//System.out.print(", ");
+				//dfs((Struct) struct.prev2());
+				
 			}
 
+			//reached leaf
 			if (struct.prev1() instanceof String) {
 				System.out.print(struct.prev1());
 			}
 			if (struct.prev2() instanceof String) {
+				
 				if (!struct.prev2().equals(""))
 					System.out.print(", ");
 				System.out.print(struct.prev2());

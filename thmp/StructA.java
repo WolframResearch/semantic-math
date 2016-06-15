@@ -1,8 +1,13 @@
 package thmp;
 import java.util.ArrayList;
+import java.util.List;
 
 public class StructA<A, B> extends Struct{
 
+	//a Struct can correspond to many MatrixPathNode's, but each MatrixPathNode 
+	//corresponds to one unique Struct.
+	//I.e. one-to-many map between Struct's and MatrixPathNode's
+	
 	private A prev1; 
 	private B prev2; 
 	//score for this structA, to indicate likelihood of relation in Rule
@@ -11,6 +16,11 @@ public class StructA<A, B> extends Struct{
 	private String type; //or, and, adj, pro etc, cannot ent
 	private String type1; //type of prev1, , al, string etc. Is this used??
 	private String type2; //type of prev2
+	//list of Struct at mx element, to which this Struct belongs
+	//pointer to mx.get(i).get(j)
+	private List<Struct> structList;
+	private double maxPathScore;
+	private List<MatrixPathNode> mxPathNodeList;
 	
 	public StructA(A prev1, B prev2, String type){
 		
@@ -18,6 +28,30 @@ public class StructA<A, B> extends Struct{
 		this.prev2 = prev2;
 		this.type = type; 
 		this.score = 1;
+	}
+	
+	public StructA(A prev1, B prev2, String type, ArrayList<Struct> structList,
+			ArrayList<MatrixPathNode> mxPathNodeList){		
+		this.prev1 = prev1;		
+		this.prev2 = prev2;
+		this.type = type; 
+		this.score = 1;
+		this.structList = structList;
+		this.mxPathNodeList = mxPathNodeList;
+	}
+
+	public List<Struct> structList(){
+		return this.structList;
+	}
+	
+	@Override
+	public double maxPathScore(){
+		return this.maxPathScore;
+	}
+	
+	@Override
+	public void set_maxPathScore(double pathScore){
+		this.maxPathScore = pathScore;
 	}
 	
 	@Override

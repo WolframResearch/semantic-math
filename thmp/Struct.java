@@ -1,5 +1,6 @@
 package thmp;
 import java.util.HashMap;
+import java.util.List;
 import java.util.ArrayList;
 
 /*
@@ -24,7 +25,19 @@ public class Struct {
 	
 	//returns probability of relation in Rule
 	public double score(){
-		return 1;
+		return 0;
+	}
+	
+	public double maxPathScore(){
+		return 0;
+	}
+	
+	public void set_maxPathScore(double pathScore){
+		
+	}
+	
+	public List<Struct> structList(){
+		return null;
 	}
 	
 	public void set_score(double score){

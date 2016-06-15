@@ -9,26 +9,64 @@ package thmp;
  */
 public class MatrixPathNode {
 
-	// 
-	private MatrixPathNode leftNode;
-	private MatrixPathNode rightNode;
+	// reference back to Struct to get the two chilren nodes
+	//private MatrixPathNode leftNode;
+	//private MatrixPathNode rightNode;
+	private Struct curStruct;
+	//private StructList structList;
 	// the position in the matrix mx, pair of numbers
-	private int[] mxPosition;
+	//don't need mxPosition
+	//private int[] mxPosition;
+	
 	// index in the List in each mx entry
 	private int listIndex;
-	double ownScore;
+	//should get this from curStruct!
+	private double ownScore;
 	// score so far along the path
-	double scoreSoFar;
+	private double scoreSoFar;
 	
-	
-	public MatrixPathNode(int[] pos, int index, double ownScore, double scoreSoFar,
-			MatrixPathNode leftNode, MatrixPathNode rightNode){
-		this.mxPosition = pos;
+	//must set leftNode and rightNode, and structList later
+	/*public MatrixPathNode(int index, double ownScore, double scoreSoFar,
+			Struct curStruct
+			){
 		this.listIndex = index;
-		this.leftNode = leftNode;
-		this.rightNode = rightNode;
 		this.ownScore = ownScore;
 		this.scoreSoFar = scoreSoFar;
+		this.curStruct = curStruct;
+	} */
+	
+	/**
+	 * 
+	 * @param index
+	 * @param ownScore
+	 * @param scoreSoFar
+	 * @param leftNode
+	 * @param rightNode
+	 * @param curStruct is Struct corresponding to this mxEntry
+	 * @param structList is List of Struct's in the mx entry
+	 */
+	public MatrixPathNode(int index, double ownScore, double scoreSoFar,
+			Struct curStruct){
+		//this.mxPosition = pos;
+		this.listIndex = index;
+		//this.leftNode = leftNode;
+		//this.rightNode = rightNode;
+		this.ownScore = ownScore;
+		this.scoreSoFar = scoreSoFar;
+		this.curStruct = curStruct;
+		//this.structList = structList;
+	}
+	
+	/*public StructList structList() {
+		return structList;
+	} */
+	
+	public double scoreSoFar() {
+		return scoreSoFar;
+	}
+	
+	public Struct curStruct() {
+		return curStruct;
 	}
 	
 	/**
