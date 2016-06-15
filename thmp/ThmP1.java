@@ -1081,6 +1081,12 @@ public class ThmP1 {
 					////////%%%%%%%%%%% NPE for "subset F of G and subset G of H"
 					//because G gets null'ed out after "of". Need better strategy!
 					//should probably be j? j is column #.
+					
+					// iterate through the List at position (i-1, i-1)
+					Iterator<Struct> structIter = mx.get(i-1).get(i-1).iterator();
+							while(structIter.hasNext()){
+								Struct cdStruct = structIter.next();
+								
 					if (i > 0 && i + 1 < len
 							&& (type1.matches("or|and") 
 									&& mx.get(i - 1).get(i - 1) != null
@@ -1101,9 +1107,10 @@ public class ThmP1 {
 							String newType = type1.equals("or") ? "disj" : "conj";
 							// type is expression, eg "a and b"
 							// new type: conj_verbphrase
+							
 							StructA<Struct, Struct> parentStruct = new StructA<Struct, Struct>(mx.get(i - 1).get(i - 1),
 									struct2, newType + "_" + type2);
-	
+							
 							// set parent struct in row above
 							mx.get(i - 1).set(j, parentStruct);
 							// set the next token to "", so not classified again
@@ -1135,6 +1142,7 @@ public class ThmP1 {
 							}
 						
 					}
+						}
 
 					//potentially change assert to latex expr
 					if(type2.equals("assert") 
@@ -1358,8 +1366,74 @@ public class ThmP1 {
 			}
 			// found a grammar rule match, move on to next mx column
 			// *****actually, should keep going and keep scores!
-			break;
+			//break;
 		
+	}
+	
+	/**depth-first-search with arrays construct
+	 * Keep track of path via tree of MatrixPathNode's,
+	 * and the scores thus far through the tree
+	 * @param structList
+	 * @return score
+	 */
+	//combine iteration of arraylist and recursion	
+	public static double ArrayDFS(ArrayList<Struct> structList, double scoreSoFar) {
+		
+		Iterator<Struct> structListIter = structList.iterator();
+		
+		while(structListIter.hasNext()){
+			
+			Struct struct = structListIter.next();
+			
+			
+		// don't like instanceof here
+		if (struct instanceof StructA) {
+			
+			System.out.print(struct.type());
+
+			System.out.print("[");
+			// don't know type at compile time
+			if (struct.prev1() instanceof Struct) {
+				dfs((Struct) struct.prev1());
+			}
+			
+			// if(struct.prev2() != null && !struct.prev2().equals(""))
+			// System.out.print(", ");
+			if (((StructA<?, ?>) struct).prev2() instanceof Struct) {
+				// avoid printing is[is], ie case when parent has same type as
+				// child
+				System.out.print(", ");
+				dfs((Struct) struct.prev2());
+			}
+
+			if (struct.prev1() instanceof String) {
+				System.out.print(struct.prev1());
+			}
+			if (struct.prev2() instanceof String) {
+				if (!struct.prev2().equals(""))
+					System.out.print(", ");
+				System.out.print(struct.prev2());
+			}
+
+			System.out.print("]");
+		} else if (struct instanceof StructH) {
+
+			System.out.print(struct.toString());
+
+			ArrayList<Struct> children = struct.children();
+			ArrayList<String> childRelation = struct.childRelation();
+
+			if (children == null || children.size() == 0)
+				return;
+
+			System.out.print("[");
+			for (int i = 0; i < children.size(); i++) {
+				System.out.print(childRelation.get(i) + " ");
+				dfs(children.get(i));
+			}
+			System.out.print("]");
+		}
+		}
 	}
 	
 	/**
