@@ -831,14 +831,15 @@ public class ThmP1 {
 		int recentEntIndex = -1;
 
 		// A matrix of List's. Dimenions of first two Lists are same: square matrix
-		ArrayList<ArrayList<ArrayList<Struct>>> mx = new ArrayList<ArrayList<ArrayList<Struct>>>(len);		
+		ArrayList<ArrayList<StructList>> mx = new ArrayList<ArrayList<StructList>>(len);		
 
 		for (int l = 0; l < len; l++) {
-			ArrayList<ArrayList<Struct>> tempList = new ArrayList<ArrayList<Struct>>();
+			ArrayList<StructList> tempList = new ArrayList<StructList>();
 			
 			for (int i = 0; i < len; i++){
-				//initialize Lists now so no need to repeatedly check if null later				
-				tempList.add(new ArrayList<Struct>());
+				//initialize Lists now so no need to repeatedly check if null later	
+				//but does use more space! Need to revisist.
+				tempList.add(new StructList());
 			}
 			
 			mx.add(tempList);
@@ -857,10 +858,11 @@ public class ThmP1 {
 		outerloop: for (int j = 0; j < len; j++) {
 			
 			// fill in diagonal elements
-			ArrayList<Struct> diagonalStruct = new ArrayList<Struct>();
+			//ArrayList<Struct> diagonalStruct = new ArrayList<Struct>();
 			
-			diagonalStruct.add(inputList.get(j));
-			mx.get(j).set(j, diagonalStruct);
+			//mx.get(j).set(j, diagonalStruct);
+			mx.get(j).get(j).add(inputList.get(j));
+			
 			//mx.get(j).set(j, inputList.get(j));
 			
 			//startRow should actually *always* be < j
@@ -878,20 +880,20 @@ public class ThmP1 {
 				for (int k = j - 1; k >= i; k--) {
 					// pairs are (i,k), and (k+1,j)
 
-					List<Struct> structList1 = mx.get(i).get(k);
-					List<Struct> structList2 = mx.get(k + 1).get(j);
-
+					StructList structList1 = mx.get(i).get(k);
+					StructList structList2 = mx.get(k + 1).get(j);
+					
 					//Struct struct1 = mx.get(i).get(k);
 					//Struct struct2 = mx.get(k + 1).get(j);
-
+					
 					if (structList1 == null || structList2 == null) {
 						continue;
 					}
 					
 					//need to refactor to make methods more modular!
 					
-					Iterator<Struct> structList1Iter = structList1.iterator();
-					Iterator<Struct> structList2Iter = structList2.iterator();
+					Iterator<Struct> structList1Iter = structList1.structList().iterator();
+					Iterator<Struct> structList2Iter = structList2.structList().iterator();
 					
 					while(structList1Iter.hasNext()){
 						
@@ -1083,11 +1085,13 @@ public class ThmP1 {
 					//should probably be j? j is column #.
 					
 					// iterate through the List at position (i-1, i-1)
-					if(mx.get(i-1).get(i-1).size() > 0){
-						Iterator<Struct> iMinusOnestructIter = mx.get(i-1).get(i-1).iterator();
-
-						while(iMinusOnestructIter.hasNext()){
-								Struct iMinusOneStruct = iMinusOnestructIter.next();
+					List<Struct> iMinusOneStructList = mx.get(i-1).get(i-1).structList();
+					if(iMinusOneStructList.size() > 0){
+						
+						//Iterator<Struct> iMinusOnestructIter = mx.get(i-1).get(i-1).iterator();
+						
+						for( Struct iMinusOneStruct : iMinusOneStructList ){
+								
 								
 					if (i > 0 && i + 1 < len
 							&& (type1.matches("or|and") 
@@ -1121,17 +1125,28 @@ public class ThmP1 {
 							// mx.get(i+1).set(j, null);
 							//already classified, no need to keep reduce with mx manipulations
 							break;
-						}
-							//this case can be combined with if statement above, use single while loop
-						} else if ((type1.matches("or|and"))) {
+							}
+					}
+						}//this case can be combined with if statement above, use single while loop
+					} else if ((type1.matches("or|and"))) {
 							int l = 2;
 							boolean stopLoop = false;
+							
+							
 							while (i - l > -1 && i + 1 < len) {
-								if (mx.get(i - l).get(i - 1) != null     && type2.equals(mx.get(i - l).get(i - 1).type())) {
+								List<Struct> structArrayList = mx.get(i - l).get(i - 1).structList();
+								
+								int structArrayListSz = structArrayList.size();
+								if(structArrayListSz == 0) continue;
+								
+								//iterate over Structs at (i-l, i-1)
+								for(int p = 0; p < structArrayListSz; p++){
+									Struct p_struct = structArrayList.get(p);
+								if (type2.equals(p_struct.type())) {
 									String newType = type1.matches("or") ? "disj" : "conj";
 									// type is expression, eg "a and b"
 									StructA<Struct, Struct> parentStruct = new StructA<Struct, Struct>(
-											iMinusOneStruct, struct2, newType + "_" + type2);
+											p_struct, struct2, newType + "_" + type2);
 									
 									mx.get(i - l).get(j).add(parentStruct);
 									//mx.get(i - l).set(j, parentStruct);
@@ -1139,15 +1154,16 @@ public class ThmP1 {
 									stopLoop = true;
 									break;
 								}
-	
+								}
 								if (stopLoop)
 									break;
 								l++;
 							}
 						
-					}
+						
+					
 						}
-					}
+					
 					//potentially change assert to latex expr
 					if(type2.equals("assert") 
 							&& struct2.prev1() instanceof String 
@@ -1165,7 +1181,8 @@ public class ThmP1 {
 					
 					//reduce if structMap contains combined
 					if (structMap.containsKey(combined)) {
-						reduce(mx, );
+						reduce(mx, combined, struct1, struct2, firstEnt, recentEnt, 
+								recentEntIndex, i, j, k, type1, type2);
 					}
 					
 						
@@ -1193,6 +1210,8 @@ public class ThmP1 {
 					break;
 				}
 			}
+			
+			//tempStruct
 			
 			Struct tempStruct = mx.get(i).get(j);
 			
@@ -1267,7 +1286,7 @@ public class ThmP1 {
 	/**
 	 * reduce if structMap contains combined
 	 */
-	public static void reduce(ArrayList<ArrayList<ArrayList<Struct>>> mx, 
+	public static void reduce(ArrayList<ArrayList<StructList>> mx, 
 			String combined, Struct struct1, Struct struct2,
 			Struct firstEnt, Struct recentEnt, int recentEntIndex,
 			int i, int j, int k, String type1, String type2){
@@ -1298,7 +1317,14 @@ public class ThmP1 {
 				// add to child relation, usually a preposition, eg
 				// "from", "over"
 				// could also be verb, "consist", "lies"
-				String childRelation = mx.get(k + 1).get(k + 1).prev1().toString();
+				
+				List<Struct> kPlus1StructArrayList = mx.get(k + 1).get(k + 1).structList();
+				
+				//diagonal element can have only 1 Struct in its structList
+				String childRelation = kPlus1StructArrayList.get(0).prev1().toString();
+				
+				//String childRelation = mx.get(k + 1).get(k + 1).prev1().toString();
+				
 				if (struct1 instanceof StructH) {
 					// why does this cast not trigger unchecked warning		
 					// Because wildcard!
@@ -1316,7 +1342,8 @@ public class ThmP1 {
 					//combine adj and noun
 					String adj = (String)struct1.prev1();
 					struct2.set_prev1(adj + " " + struct2.prev1());
-					mx.get(i).set(j, struct2);
+					//mx.get(i).set(j, struct2);
+					mx.get(i).get(j).add(struct2);
 				}
 			}
 			
@@ -1369,8 +1396,8 @@ public class ThmP1 {
 				StructA<Struct, Struct> parentStruct = new StructA<Struct, Struct>(struct1, struct2,
 						newType, mx.get(i).get(j));
 
-				mx.get(i).set(j, parentStruct);
-
+				//mx.get(i).set(j, parentStruct);
+				mx.get(i).get(j).add(parentStruct);
 			}
 			// found a grammar rule match, move on to next mx column
 			// *****actually, should keep going and keep scores!
@@ -1384,12 +1411,22 @@ public class ThmP1 {
 	 * @param structList, the head, at mx position (len-1, len-1)
 	 * @return
 	 */
-	public static double ArrayDFS(ArrayList<Struct> structList){
+	public static double ArrayDFS(StructList structList){
 		ArrayList<MatrixPathNode> mxPathNodeList = new ArrayList<MatrixPathNode>();
 		//fill in the list of MatrixPathNode's from structList
-		int structListSz = structList.size();
+		
+		//highest score encountered so far in list
+		double highestDownScore = 1;
+		
+		int highestDownScoreIndex = 0;
+		
+		List<Struct> structArList = structList.structList();
+		
+		int structListSz = structArList.size();
+		
 		for(int i = 0; i < structListSz; i++){
-			Struct curStruct = structList.get(i);
+			Struct curStruct = structArList.get(i);
+			
 			double ownScore = curStruct.score();
 			//create appropriate right and left Node's
 			
@@ -1403,31 +1440,54 @@ public class ThmP1 {
 			//the sum of the score so far, and the max score along any path 
 			//down from here
 			double pathScore = ArrayDFS(curMxPathNode);
-			curStruct.set_maxPathScore(pathScore);
 			
+			curStruct.set_maxDownPathScore(pathScore);
+			
+			if(pathScore > highestDownScore){
+				highestDownScore = pathScore;
+				highestDownScoreIndex = i;
+			}
 		}
 		
+		structList.set_highestDownScoreIndex(highestDownScoreIndex);
+		return highestDownScore;
 	}
 	
 	/**depth-first-search with arrays construct
 	 * Keep track of path via tree of MatrixPathNode's,
 	 * and the scores thus far through the tree
-	 * @param mxPathNode  MatrixPathNode, containing current Struct
+	 * @param mxPathNode  MatrixPathNode, corresponding to current Struct
 	 * @return score
 	 */
 	//combine iteration of arraylist and recursion	
 	public static double ArrayDFS(MatrixPathNode mxPathNode) {
 		
 		Struct mxPathNodeStruct = mxPathNode.curStruct();
-		List<Struct> structList = mxPathNodeStruct.structList();
-		double scoreSoFar = mxPathNode.scoreSoFar();
-
-		//Iterator<Struct> structListIter = structList.iterator();
-		int structListSz = structList.size();
+		StructList structList = mxPathNodeStruct.StructList();
 		
-		for(int i = 0; i < structListSz; i++){
+		//highest down score encountered so far in list
+		double highestDownScore = 1;
+		
+		int highestDownScoreIndex = structList.highestDownScoreIndex();
+		//Iterator<Struct> structListIter = structList.iterator();
+		
+		//maintain index in list of highest score
+		//don't iterate through if scores already computed
+		if(highestDownScoreIndex != -1){
+			List<Struct> structArList = structList.structList();
 			
-			Struct struct = structList.get(i);			
+			int structListSz = structArList.size();
+			//int tempHighestDownScoreIndex = 0;
+			
+			//score so far along this path corresponding to this Node (not Struct!)
+			double scoreSoFar = mxPathNode.scoreSoFar();
+			
+		for(int i = 0; i < structListSz; i++){
+			//highest score down from this Struct
+			double tempDownScore = 1;
+			
+			Struct struct = structArList.get(i);			
+			
 			double structScore = struct.score();
 			
 		// don't like instanceof here
@@ -1438,14 +1498,13 @@ public class ThmP1 {
 			// don't know type at compile time
 			if (struct.prev1() instanceof Struct) {
 				//create new MatrixPathNode, 
-				//int index, double ownScore, double scoreSoFar,
-				
+				//int index, double ownScore, double scoreSoFar,				
 				
 				//leftMxPathNode corresponds to Struct struct.prev1()
 				MatrixPathNode leftMxPathNode = new MatrixPathNode(i, structScore,
 						structScore + scoreSoFar,
-						(Struct) struct.prev1());
-				ArrayDFS(leftMxPathNode);
+						(Struct)struct.prev1());
+				tempDownScore *= ArrayDFS(leftMxPathNode);
 				
 			}
 			
@@ -1455,13 +1514,18 @@ public class ThmP1 {
 				// child
 				//System.out.print(", ");
 				//dfs((Struct) struct.prev2());
-				
+				//construct new MatrixPathNode for right child
+				MatrixPathNode rightMxPathNode = new MatrixPathNode(i, structScore,
+						structScore*scoreSoFar,
+						(Struct)struct.prev2());
+				tempDownScore *= ArrayDFS(rightMxPathNode)*structScore;
 			}
-
-			//reached leaf
+			
+			//reached leaf. Add score to mxPathNode being passed in, return own score
 			if (struct.prev1() instanceof String) {
 				System.out.print(struct.prev1());
-			}
+				
+			}			
 			if (struct.prev2() instanceof String) {
 				
 				if (!struct.prev2().equals(""))
@@ -1472,22 +1536,46 @@ public class ThmP1 {
 			System.out.print("]");
 		} else if (struct instanceof StructH) {
 
-			System.out.print(struct.toString());
-
-			ArrayList<Struct> children = struct.children();
+			//System.out.print(struct.toString());
+			ArrayList<Struct> childrenStructList = struct.children();
 			ArrayList<String> childRelation = struct.childRelation();
 
-			if (children == null || children.size() == 0)
-				return;
+			if (childrenStructList == null || childrenStructList.size() == 0)
+				return 0;
 
-			System.out.print("[");
-			for (int i = 0; i < children.size(); i++) {
-				System.out.print(childRelation.get(i) + " ");
-				dfs(children.get(i));
+			//System.out.print("[");
+			for (int j = 0; j < childrenStructList.size(); j++) {
+				//System.out.print(childRelation.get(j) + " ");
+				//dfs(childrenStructList.get(j));
+				
+				Struct childStruct = childrenStructList.get(j);
+				
+				double curStructScore = childStruct.score();
+				//create MatrixPathNode for each child Struct
+				MatrixPathNode childMxPathNode = new MatrixPathNode(curStructScore,
+					scoreSoFar, childStruct);
+				
+				tempDownScore *= ArrayDFS(childMxPathNode);
 			}
 			System.out.print("]");
 		}
+		if(tempDownScore > highestDownScore){
+			highestDownScore = tempDownScore;
+			highestDownScoreIndex = i;
 		}
+		
+		mxPathNodeStruct.set_maxDownPathScore(tempDownScore);
+		
+		}//end for loop through structList
+		
+		//set highestDownScoreIndex
+		structList.set_highestDownScoreIndex(highestDownScoreIndex);
+		}else{
+			highestDownScoreIndex = structList.highestDownScoreIndex();
+			highestDownScore = structList.structList().get(highestDownScoreIndex).maxDownPathScore();
+			
+		}
+		return highestDownScore;
 	}
 	
 	/**

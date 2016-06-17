@@ -28,15 +28,15 @@ public class Struct {
 		return 0;
 	}
 	
-	public double maxPathScore(){
+	public double maxDownPathScore(){
 		return 0;
 	}
 	
-	public void set_maxPathScore(double pathScore){
+	public void set_maxDownPathScore(double pathScore){
 		
 	}
 	
-	public List<Struct> structList(){
+	public StructList StructList(){
 		return null;
 	}
 	

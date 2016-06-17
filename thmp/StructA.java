@@ -18,8 +18,8 @@ public class StructA<A, B> extends Struct{
 	private String type2; //type of prev2
 	//list of Struct at mx element, to which this Struct belongs
 	//pointer to mx.get(i).get(j)
-	private List<Struct> structList;
-	private double maxPathScore;
+	private StructList structList;
+	private double maxDownPathScore;
 	private List<MatrixPathNode> mxPathNodeList;
 	
 	public StructA(A prev1, B prev2, String type){
@@ -30,28 +30,36 @@ public class StructA<A, B> extends Struct{
 		this.score = 1;
 	}
 	
-	public StructA(A prev1, B prev2, String type, ArrayList<Struct> structList,
-			ArrayList<MatrixPathNode> mxPathNodeList){		
+	public StructA(A prev1, B prev2, String type, StructList structList){		
 		this.prev1 = prev1;		
 		this.prev2 = prev2;
 		this.type = type; 
 		this.score = 1;
 		this.structList = structList;
-		this.mxPathNodeList = mxPathNodeList;
+		this.mxPathNodeList = new ArrayList<MatrixPathNode>();
 	}
 
-	public List<Struct> structList(){
+	@Override
+	public StructList StructList(){
 		return this.structList;
 	}
 	
 	@Override
-	public double maxPathScore(){
-		return this.maxPathScore;
+	public double maxDownPathScore(){
+		return this.maxDownPathScore;
 	}
 	
+	/**
+	 * This sets the max path score among any mxPathNode's that
+	 * pass here. *down* score or total path score??
+	 * 
+	 * These scores will in turn be selected for the max score 
+	 * inside the StructList this Struct is on.
+	 * @param pathScore
+	 */
 	@Override
-	public void set_maxPathScore(double pathScore){
-		this.maxPathScore = pathScore;
+	public void set_maxDownPathScore(double pathScore){
+		this.maxDownPathScore = pathScore;
 	}
 	
 	@Override

@@ -18,7 +18,8 @@ public class MatrixPathNode {
 	//don't need mxPosition
 	//private int[] mxPosition;
 	
-	// index in the List in each mx entry
+	// index of struct in the structList in each mx entry
+	// don't really need this yet, will keep til later
 	private int listIndex;
 	//should get this from curStruct!
 	private double ownScore;
@@ -49,6 +50,17 @@ public class MatrixPathNode {
 			Struct curStruct){
 		//this.mxPosition = pos;
 		this.listIndex = index;
+		//this.leftNode = leftNode;
+		//this.rightNode = rightNode;
+		this.ownScore = ownScore;
+		this.scoreSoFar = scoreSoFar;
+		this.curStruct = curStruct;
+		//this.structList = structList;
+	}
+	
+	public MatrixPathNode(double ownScore, double scoreSoFar,
+			Struct curStruct){
+		//this.mxPosition = pos;
 		//this.leftNode = leftNode;
 		//this.rightNode = rightNode;
 		this.ownScore = ownScore;
