@@ -24,6 +24,7 @@ public class MatrixPathNode {
 	//should get this from curStruct!
 	private double ownScore;
 	// score so far along the path
+	// don't need this, it's computed along in the DFS
 	private double scoreSoFar;
 	
 	//must set leftNode and rightNode, and structList later
@@ -46,25 +47,25 @@ public class MatrixPathNode {
 	 * @param curStruct is Struct corresponding to this mxEntry
 	 * @param structList is List of Struct's in the mx entry
 	 */
-	public MatrixPathNode(int index, double ownScore, double scoreSoFar,
+	public MatrixPathNode(int index, double ownScore,
 			Struct curStruct){
 		//this.mxPosition = pos;
 		this.listIndex = index;
 		//this.leftNode = leftNode;
 		//this.rightNode = rightNode;
 		this.ownScore = ownScore;
-		this.scoreSoFar = scoreSoFar;
+		//this.scoreSoFar = scoreSoFar;
 		this.curStruct = curStruct;
 		//this.structList = structList;
 	}
 	
-	public MatrixPathNode(double ownScore, double scoreSoFar,
+	public MatrixPathNode(double ownScore,
 			Struct curStruct){
 		//this.mxPosition = pos;
 		//this.leftNode = leftNode;
 		//this.rightNode = rightNode;
 		this.ownScore = ownScore;
-		this.scoreSoFar = scoreSoFar;
+		//this.scoreSoFar = scoreSoFar;
 		this.curStruct = curStruct;
 		//this.structList = structList;
 	}
@@ -84,44 +85,45 @@ public class MatrixPathNode {
 	/**
 	 * @return the leftNode
 	 */
-	public MatrixPathNode getLeftNode() {
+	/*public MatrixPathNode getLeftNode() {
 		return leftNode;
-	}
+	} */
 
 	/**
 	 * @param leftNode the leftNode to set
 	 */
-	public void setLeftNode(MatrixPathNode leftNode) {
+	/*public void setLeftNode(MatrixPathNode leftNode) {
 		this.leftNode = leftNode;
-	}
+	} */
 
 	/**
 	 * @return the rightNode
 	 */
+	/*
 	public MatrixPathNode getRightNode() {
 		return rightNode;
 	}
 
 	/**
 	 * @param rightNode the rightNode to set
-	 */
+	 
 	public void setRightNode(MatrixPathNode rightNode) {
 		this.rightNode = rightNode;
-	}
+	} */
 
 	/**
 	 * @return the mxPosition
-	 */
+	 *//*
 	public int[] getMxPosition() {
 		return mxPosition;
-	}
+	} */
 
 	/**
 	 * @param mxPosition the mxPosition to set
-	 */
+	 */ /*
 	public void setMxPosition(int[] mxPosition) {
 		this.mxPosition = mxPosition;
-	}
+	} */
 
 	/**
 	 * @return the listIndex

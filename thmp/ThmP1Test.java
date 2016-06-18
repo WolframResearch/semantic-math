@@ -144,8 +144,13 @@ public class ThmP1Test {
 			st = "this field is perfect and every field is good"; ///*****
 			//st = "$R$ is Noetherian and every R algebra is catenary.";
 			st = "A ring $R$ is said to be  universally catenary if $R$ is Noetherian and every $R$ algebra of finite type is catenary.";
-			st = "let $A : R$ be a ring";
+			
+			//st = "let $A : R$ be a ring";
 			st = "A maximal ideal $I$ with $I$ proper";
+			//st = "field are perfect and fields are rings";
+			//st = "fields are fields and fields are rings";
+			
+			
 			//st = "this topological and perfect field";
 			//st = "for subset S of A";
 			//st = "for field of F"; //......

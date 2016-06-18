@@ -13,6 +13,9 @@ public class StructH<H> extends Struct{
 	private ArrayList<Struct> children; 
 	//relation to child, eg "of," "enjoyed"
 	private ArrayList<String> childRelation;	
+	private double score;
+	private double maxDownPathScore;
+	private StructList structList;
 	
 	//parent
 	//private Struct parent;
@@ -23,6 +26,17 @@ public class StructH<H> extends Struct{
 		this.type = type;
 		this.children = new ArrayList<Struct>();
 		this.childRelation = new ArrayList<String>();
+		this.score = 1;
+	}
+	
+	public StructH(HashMap<String, String> struct, String type, StructList structList){
+		
+		this.struct = struct;
+		this.type = type;
+		this.children = new ArrayList<Struct>();
+		this.childRelation = new ArrayList<String>();
+		this.score = 1;
+		this.structList = structList;
 	}
 
 	//when is this used??
@@ -31,17 +45,48 @@ public class StructH<H> extends Struct{
 		this.type = type;
 		this.children = new ArrayList<Struct>();
 		this.childRelation = new ArrayList<String>();
+		this.score = 1;
 	}
 	
 	public void set_struct(HashMap<String, String> struct){
 		this.struct = struct;
+	}
+
+	@Override
+	public void set_structList(StructList structList){
+		this.structList = structList;
+	}
+	
+	@Override
+	public StructList StructList(){
+		return this.structList;
+	}
+	
+	@Override
+	public void set_maxDownPathScore(double pathScore){
+		this.maxDownPathScore = pathScore;
+	}
+	
+	@Override
+	public double maxDownPathScore(){
+		return this.maxDownPathScore;
+	}
+	
+	@Override
+	public double score(){
+		return this.score;
+	}
+	
+	@Override
+	public void set_score(double score){
+		this.score = score;
 	}
 	
 	//make deep copy, struct and children children are copied
 	@Override
 	public StructH<H> copy(){
 		HashMap<String, String> structCopy = new HashMap<String, String>(this.struct);
-		StructH<H> newStructH = new StructH<H>(structCopy, this.type);
+		StructH<H> newStructH = new StructH<H>(structCopy, this.type, this.structList);
 		
 		for(int i = 0; i < this.children.size(); i++){
 			newStructH.add_child(this.children.get(i), this.childRelation.get(i));

@@ -310,7 +310,11 @@ public class Maps {
 		structMap.put("parti_adj", new Rule("phrase", 1)); structMap.put("symb_prep", new Rule("phrase", 1));
 		
 		//////////
-		structMap.put("symb_adj", new Rule(""));
+		structMap.put("symb_adj", new Rule("phrase", 0.7));
+		
+		structMap.put("ent_pre", new Rule("exp1", .1)); structMap.put("exp1_phrase", new Rule("exp2", .1));
+
+		
 		//symb_adj
 		//noun_symb should be combined in code
 		

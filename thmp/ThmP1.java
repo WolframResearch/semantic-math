@@ -38,22 +38,22 @@ public class ThmP1 {
 	// value is regex string to be matched
 	private static HashMap<String, String> adjMap;
 	private static HashMap<String, Double> probMap;
-	//split a sentence into parts, separated by commas, semicolons etc
-	//private String[] subSentences;
+	// split a sentence into parts, separated by commas, semicolons etc
+	// private String[] subSentences;
 
 	// list of parts of speech, ent, verb etc
 	private static ArrayList<String> posList;
 
-	//fluff type, skip when adding to parsed ArrayList
+	// fluff type, skip when adding to parsed ArrayList
 	private static String FLUFF = "Fluff";
-	
-	//private static final File unknownWordsFile;
+
+	// private static final File unknownWordsFile;
 	private static final Path unknownWordsFile = Paths.get("src/thmp/data/unknownWords.txt");
 	private static final Path parsedExprFile = Paths.get("src/thmp/data/parsedExpr.txt");
-	
+
 	private static final List<String> unknownWords = new ArrayList<String>();
 	private static final List<String> parsedExpr = new ArrayList<String>();
-	
+
 	// part of speech, last resort after looking up entity property maps
 	// private static HashMap<String, String> pos;
 
@@ -77,25 +77,24 @@ public class ThmP1 {
 	/**
 	 * Tokenizes by splitting into comma-separated strings
 	 * 
-	 * @param str	A full sentence.
+	 * @param str
+	 *            A full sentence.
 	 * @return
 	 */
-	/*public static void process(String sentence) throws IOException{
-		//can't just split! Might be in latex expression
-		String[] subSentences = sentence.split(",|;|:");
-		int subSentLen = subSentences.length;
-		for(int i = 0; i < subSentLen; i++){
-			parse(tokenize(subSentences[i]));
-		}
-		System.out.println();
-	} */
-	
+	/*
+	 * public static void process(String sentence) throws IOException{ //can't
+	 * just split! Might be in latex expression String[] subSentences =
+	 * sentence.split(",|;|:"); int subSentLen = subSentences.length; for(int i
+	 * = 0; i < subSentLen; i++){ parse(tokenize(subSentences[i])); }
+	 * System.out.println(); }
+	 */
+
 	/**
 	 * 
 	 * @param str
 	 *            string to be tokenized
 	 * @return
-	 * @throws IOException 
+	 * @throws IOException
 	 */
 	public static ArrayList<Struct> tokenize(String sentence) throws IOException {
 
@@ -112,10 +111,10 @@ public class ThmP1 {
 		// list of each word with their initial type, adj, noun,
 		ArrayList<Pair> pairs = new ArrayList<Pair>();
 		boolean addIndex = true; // whether to add to pairIndex
-		//unfortunate naming
+		// unfortunate naming
 		String[] str = sentence.split(" ");
-		
-		//int pairIndex = 0;
+
+		// int pairIndex = 0;
 		for (int i = 0; i < str.length; i++) {
 
 			String curWord = str[i];
@@ -123,75 +122,76 @@ public class ThmP1 {
 			if (curWord.matches("^\\s*,*$"))
 				continue;
 
-			// strip away special chars '(', ')', etc ///should not remove........
-			//curWord = curWord.replaceAll("\\(|\\)", "");
-			//remove this and ensure curWord is used subsequently 
-			//instead of str[i]
-			str[i] = curWord; 
+			// strip away special chars '(', ')', etc ///should not
+			// remove........
+			// curWord = curWord.replaceAll("\\(|\\)", "");
+			// remove this and ensure curWord is used subsequently
+			// instead of str[i]
+			str[i] = curWord;
 
 			String type = "mathObj";
 			int wordlen = str[i].length();
-			
-			//detect latex expressions, mark them as "mathObj" for now
-			if(curWord.charAt(0) == '$'){
+
+			// detect latex expressions, mark them as "mathObj" for now
+			if (curWord.charAt(0) == '$') {
 				String latexExpr = curWord;
 				int stringLength = str.length;
-				
-				if(i < stringLength-1 && !curWord.matches("\\$[^$]+\\$[^\\s]*") &&
-						(curWord.charAt(wordlen - 1) != '$' 
-						|| wordlen == 2 || wordlen == 1)){
+
+				if (i < stringLength - 1 && !curWord.matches("\\$[^$]+\\$[^\\s]*")
+						&& (curWord.charAt(wordlen - 1) != '$' || wordlen == 2 || wordlen == 1)) {
 					i++;
 					curWord = str[i];
-					if(i < stringLength-1 && curWord.equals("")){
+					if (i < stringLength - 1 && curWord.equals("")) {
 						curWord = str[++i];
 					}
-					
-					else if(curWord.matches("[^$]*\\$.*")){
+
+					else if (curWord.matches("[^$]*\\$.*")) {
 						latexExpr += " " + curWord;
-					}else{
-						while(i < stringLength && curWord.length() > 0 
-								&& curWord.charAt(curWord.length() - 1) != '$'){
+					} else {
+						while (i < stringLength && curWord.length() > 0
+								&& curWord.charAt(curWord.length() - 1) != '$') {
 							latexExpr += " " + curWord;
 							i++;
-							
-							if(i == stringLength) break;
-							
-							curWord = i < stringLength-1 && str[i].equals("") ? str[++i] : str[i];							
-							
+
+							if (i == stringLength)
+								break;
+
+							curWord = i < stringLength - 1 && str[i].equals("") ? str[++i] : str[i];
+
 						}
 					}
-					
-					if(i < stringLength){
-					int tempWordlen = str[i].length();
-					
-					if(tempWordlen > 0 && str[i].charAt(tempWordlen - 1) == '$')
-						latexExpr += " " + str[i];
+
+					if (i < stringLength) {
+						int tempWordlen = str[i].length();
+
+						if (tempWordlen > 0 && str[i].charAt(tempWordlen - 1) == '$')
+							latexExpr += " " + str[i];
 					}
-					
-					if(latexExpr.matches("[^=]+=.+|[^\\\\cong]+\\\\cong.+")){
+
+					if (latexExpr.matches("[^=]+=.+|[^\\\\cong]+\\\\cong.+")) {
 						type = "assert";
 					}
-				}else if(curWord.matches("\\$[^$]\\$")){
+				} else if (curWord.matches("\\$[^$]\\$")) {
 					type = "symb";
 				}
-				//go with the pos of the last word
-				else if(curWord.matches("\\$[^$]+\\$[^-\\s]*-[^\\s]*")){
+				// go with the pos of the last word
+				else if (curWord.matches("\\$[^$]+\\$[^-\\s]*-[^\\s]*")) {
 					String[] curWordAr = curWord.split("-");
-					String tempWord = curWordAr[curWordAr.length-1];
+					String tempWord = curWordAr[curWordAr.length - 1];
 					String tempPos = posMap.get(tempWord);
-					if(tempPos != null){
+					if (tempPos != null) {
 						type = tempPos;
 					}
 				}
-				
+
 				Pair pair = new Pair(latexExpr, type);
-				pairs.add(pair);		
-				if(type.equals("mathObj"))
+				pairs.add(pair);
+				if (type.equals("mathObj"))
 					mathIndexList.add(pairs.size() - 1);
-				
+
 				continue;
 			}
-			
+
 			// primitive way to handle plural forms: if ends in "s"
 			String singular = "";
 			String singular2 = ""; // ending in "ies"
@@ -265,7 +265,8 @@ public class ThmP1 {
 				String temp = curWord, pos = curWord;
 				String tempPos = posMap.get(temp);
 
-				while (tempPos.length() > 4 && tempPos.substring(tempPos.length() - 4, tempPos.length()).matches("COMP|comp")
+				while (tempPos.length() > 4
+						&& tempPos.substring(tempPos.length() - 4, tempPos.length()).matches("COMP|comp")
 						&& i < str.length - 1) {
 
 					curWord = temp;
@@ -292,17 +293,16 @@ public class ThmP1 {
 
 				// if adverb-adj pair, eg "clearly good"
 				// And combine adj_adj to adj, eg right exact
-				if (pairs.size() > 0 && posMap.get(curWord).equals("adj")){
-						if(pairs.get(pairsSize - 1).pos().matches("adverb|adj")){ 
-							curWord = pairs.get(pairsSize - 1).word() + " " + curWord;
-							// remove previous Pair
-							pairs.remove(pairsSize - 1);
-							pair = new Pair(curWord, "adj");
-							addIndex = false;
-						}				
-						
+				if (pairs.size() > 0 && posMap.get(curWord).equals("adj")) {
+					if (pairs.get(pairsSize - 1).pos().matches("adverb|adj")) {
+						curWord = pairs.get(pairsSize - 1).word() + " " + curWord;
+						// remove previous Pair
+						pairs.remove(pairsSize - 1);
+						pair = new Pair(curWord, "adj");
+						addIndex = false;
+					}
+
 				}
-				
 
 				pairs.add(pair);
 			}
@@ -374,38 +374,39 @@ public class ThmP1 {
 				// if next word is "by", then
 				String curPos = "parti";
 				int pairsSize = pairs.size();
-				//if next word is "by"
+				// if next word is "by"
 				if (str.length > i + 1 && str[i + 1].equals("by")) {
 					curPos = "partiby";
 					curWord = curWord + " by";
-					//if previous word is a verb, combine to form verb
-					if(pairsSize > 0 && pairs.get(pairsSize-1).pos().matches("verb|vbs")){
-						curWord = pairs.get(pairsSize-1).pos() + " " + curWord;
+					// if previous word is a verb, combine to form verb
+					if (pairsSize > 0 && pairs.get(pairsSize - 1).pos().matches("verb|vbs")) {
+						curWord = pairs.get(pairsSize - 1).pos() + " " + curWord;
 						curPos = "verb";
-						pairs.remove(pairsSize-1);
+						pairs.remove(pairsSize - 1);
 					}
 					i++;
 				}
-				//previous word is "is, are", then group with previous word to verb
-				//e.g. "is called"
-				else if(pairsSize > 0 && pairs.get(pairsSize - 1).word().matches("is|are")){
-					
+				// previous word is "is, are", then group with previous word to
+				// verb
+				// e.g. "is called"
+				else if (pairsSize > 0 && pairs.get(pairsSize - 1).word().matches("is|are")) {
+
 					curWord = pairs.get(pairsSize - 1).word() + " " + curWord;
 					pairs.remove(pairsSize - 1);
-					
+
 					curPos = "verb";
 				}
-				//if previous word is adj, "finitely presented"
-				else if(pairsSize > 0 && pairs.get(pairsSize - 1).pos().equals("adverb")){
-					
+				// if previous word is adj, "finitely presented"
+				else if (pairsSize > 0 && pairs.get(pairsSize - 1).pos().equals("adverb")) {
+
 					curWord = pairs.get(pairsSize - 1).word() + " " + curWord;
 					pairs.remove(pairsSize - 1);
-					
+
 					curPos = "adj";
 				}
 				// if next word is entity, then adj
 				else if (str.length > i + 1 && mathObjMap.containsKey(str[i + 1])) {
-					
+
 					// combine with adverb if previous one is adverb
 					if (pairsSize > 0 && pairs.get(pairsSize - 1).pos().equals("adverb")) {
 						curWord = pairs.get(pairsSize - 1).word() + " " + curWord;
@@ -423,11 +424,11 @@ public class ThmP1 {
 							|| (posMap.containsKey(curWord.substring(0, wordlen - 3) + 'e')
 									&& posMap.get(curWord.substring(0, wordlen - 3) + 'e').matches("verb|vbs")))) {
 				String curType = "gerund";
-				if(i < str.length - 1 && posMap.containsKey(str[i+1]) && posMap.get(str[i+1]).equals("pre") ){
-					//eg "consisting of" functions as pre, 
+				if (i < str.length - 1 && posMap.containsKey(str[i + 1]) && posMap.get(str[i + 1]).equals("pre")) {
+					// eg "consisting of" functions as pre,
 					curWord = curWord + " " + str[++i];
 					curType = "pre";
-				}				
+				}
 				Pair pair = new Pair(curWord, curType);
 				pairs.add(pair);
 			} else if (curWord.matches("[a-zA-Z]")) {
@@ -444,56 +445,52 @@ public class ThmP1 {
 
 				System.out.println("word not in dictionary: " + curWord);
 				pairs.add(new Pair(curWord, ""));
-				
-				//write unknown words to file		
+
+				// write unknown words to file
 				unknownWords.add(curWord);
-				
-				
+
 			} else { // curWord doesn't count
 
 				continue;
 			}
 
-			//if (addIndex) {
-			//	pairIndex++;
-			//}
+			// if (addIndex) {
+			// pairIndex++;
+			// }
 			addIndex = true;
 
 			int pairsSize = pairs.size();
-			
-			if(pairsSize > 0){
+
+			if (pairsSize > 0) {
 				Pair pair = pairs.get(pairsSize - 1);
 
 				// combine "no" and "not" with verbs
 				if (pair.pos().matches("verb|vbs")) {
 					if (pairs.size() > 1 && (pairs.get(pairsSize - 2).word().matches("not|no")
 							|| pairs.get(pairsSize - 2).pos().matches("not"))) {
-						String newWord = pair.word().matches("is|are") 
-								? "not" : "not " + pair.word();
+						String newWord = pair.word().matches("is|are") ? "not" : "not " + pair.word();
 						pair.set_word(newWord);
 						pairs.remove(pairsSize - 2);
 					}
-					
+
 					if (i + 1 < str.length && str[i + 1].matches("not|no")) {
-						String newWord = pair.word().matches("is|are") 
-								? "not" : "not " + pair.word();
+						String newWord = pair.word().matches("is|are") ? "not" : "not " + pair.word();
 						pair.set_word(newWord);
 						i++;
 					}
 				}
 			}
 
-		}			
-		
+		}
+
 		// If phrase isn't in dictionary, ie has type "", then use probMap to
 		// postulate type, if possible
 		Pair curpair;
 		int len = pairs.size();
 
 		double bestCurProb = 0;
-		String prevType = "", nextType = "", tempCurType = "", tempPrevType = "",
-				tempNextType = "", bestCurType = "";
-		
+		String prevType = "", nextType = "", tempCurType = "", tempPrevType = "", tempNextType = "", bestCurType = "";
+
 		int posListSz = posList.size();
 
 		for (int index = 0; index < len; index++) {
@@ -502,18 +499,18 @@ public class ThmP1 {
 
 				prevType = index > 0 ? pairs.get(index - 1).pos() : "";
 				nextType = index < len - 1 ? pairs.get(index + 1).pos() : "";
-				
-				prevType = prevType.equals("anchor") ? "pre" : prevType; 
-				nextType = nextType.equals("anchor") ? "pre" : nextType; 
-				
+
+				prevType = prevType.equals("anchor") ? "pre" : prevType;
+				nextType = nextType.equals("anchor") ? "pre" : nextType;
+
 				// iterate through list of types, ent, verb etc
 				for (int k = 0; k < posListSz; k++) {
 					tempCurType = posList.get(k);
-					
+
 					// FIRST/LAST indicate positions
 					tempPrevType = index > 0 ? prevType + "_" + tempCurType : "FIRST";
 					tempNextType = index < len - 1 ? tempCurType + "_" + nextType : "LAST";
-					
+
 					if (probMap.get(tempPrevType) != null && probMap.get(tempNextType) != null) {
 						double score = probMap.get(tempPrevType) * probMap.get(tempNextType);
 						if (score > bestCurProb) {
@@ -543,53 +540,55 @@ public class ThmP1 {
 			HashMap<String, String> tempMap = new HashMap<String, String>();
 			tempMap.put("name", mathObj);
 
-			//if next pair is also ent, and is latex expression
-			if(j < mathIndexList.size()-1 && mathIndexList.get(j+1) == index+1){
-				Pair nextPair = pairs.get(index+1);
+			// if next pair is also ent, and is latex expression
+			if (j < mathIndexList.size() - 1 && mathIndexList.get(j + 1) == index + 1) {
+				Pair nextPair = pairs.get(index + 1);
 				String name = nextPair.word();
-				if(name.contains("$")){
+				if (name.contains("$")) {
 					tempMap.put("tex", name);
 					nextPair.set_pos(String.valueOf(j));
-					mathIndexList.remove(j+1);
-				}								
+					mathIndexList.remove(j + 1);
+				}
 			}
-			
-			// look right one place in pairs, if symbol found, add it to namesMap
+
+			// look right one place in pairs, if symbol found, add it to
+			// namesMap
 			// if it's the given name for an ent.
 			// Combine gerund with ent
 			int pairsSize = pairs.size();
 			if (index + 1 < pairsSize && pairs.get(index + 1).pos().equals("symb")) {
 				pairs.get(index + 1).set_pos(String.valueOf(j));
 				String givenName = pairs.get(index + 1).word();
-				tempMap.put("called", givenName);				
-				// do not overwrite previously named symbol
-				//if(!namesMap.containsKey(givenName))
-				//	namesMap.put(givenName, tempStructH);
-				
-			} /*else if ((index + 2 < pairsSize && pairs.get(index + 2).pos().equals("symb"))) {
-				pairs.get(index + 2).set_pos(String.valueOf(j));
-				String givenName = pairs.get(index + 2).word();
 				tempMap.put("called", givenName);
-				namesMap.put(givenName, tempStructH);
-			} */
-			// look left one place			
+				// do not overwrite previously named symbol
+				// if(!namesMap.containsKey(givenName))
+				// namesMap.put(givenName, tempStructH);
+
+			} /*
+				 * else if ((index + 2 < pairsSize && pairs.get(index +
+				 * 2).pos().equals("symb"))) { pairs.get(index +
+				 * 2).set_pos(String.valueOf(j)); String givenName =
+				 * pairs.get(index + 2).word(); tempMap.put("called",
+				 * givenName); namesMap.put(givenName, tempStructH); }
+				 */
+			// look left one place
 			if (index > 0 && pairs.get(index - 1).pos().equals("symb")) {
 				pairs.get(index - 1).set_pos(String.valueOf(j));
 				String givenName = pairs.get(index - 1).word();
-				//combine the symbol with ent's name together
+				// combine the symbol with ent's name together
 				tempMap.put("name", givenName + " " + tempMap.get("name"));
-				
-			} 			
-			//combine nouns with ent's right after, ie noun_ent
+
+			}
+			// combine nouns with ent's right after, ie noun_ent
 			else if (index > 0 && pairs.get(index - 1).pos().matches("noun")) {
 				pairs.get(index - 1).set_pos(String.valueOf(j));
-				String prevNoun = pairs.get(index - 1).word();				
+				String prevNoun = pairs.get(index - 1).word();
 				tempMap.put("name", prevNoun + " " + tempMap.get("name"));
 			}
-			//and combine ent_noun together
+			// and combine ent_noun together
 			else if (index + 1 < pairsSize && pairs.get(index + 1).pos().matches("noun")) {
 				pairs.get(index + 1).set_pos(String.valueOf(j));
-				String prevNoun = pairs.get(index + 1).word();				
+				String prevNoun = pairs.get(index + 1).word();
 				tempMap.put("name", tempMap.get("name") + " " + prevNoun);
 			}
 
@@ -622,8 +621,9 @@ public class ThmP1 {
 			}
 
 			// combine multiple adj connected by "and/or"
-			// hacky way: check if index-k-2 is a verb, only combine adj's if not
-			// eg " " 
+			// hacky way: check if index-k-2 is a verb, only combine adj's if
+			// not
+			// eg " "
 			if (index - k - 2 > -1 && pairs.get(index - k).pos().matches("or|and")
 					&& pairs.get(index - k - 1).pos().equals("adj")) {
 				String tempPos = posMap.get(pairs.get(index - k - 2).word());
@@ -633,9 +633,9 @@ public class ThmP1 {
 					String curWord = pairs.get(index - k - 1).word();
 					tempMap.put(curWord, "ppt");
 					pairs.get(index - k - 1).set_pos(String.valueOf(j));
-					
-				}				
-			} 
+
+				}
+			}
 
 			// look forwards
 			k = 1;
@@ -649,8 +649,8 @@ public class ThmP1 {
 
 			tempStructH.set_struct(tempMap);
 			mathEntList.add(tempStructH);
-		}		
-		
+		}
+
 		// combine anchors into entities. Such as "of," "has"
 		for (int j = anchorList.size() - 1; j > -1; j--) {
 			int index = anchorList.get(j);
@@ -660,49 +660,47 @@ public class ThmP1 {
 			switch (anchor) {
 			case "of":
 				// the expression before this anchor is an entity
-				if (index > 0  && index + 1 < pairs.size()) {
-					
+				if (index > 0 && index + 1 < pairs.size()) {
+
 					Pair nextPair = pairs.get(index + 1);
 					Pair prevPair = pairs.get(index - 1);
-
+					//should handle later with grammar rules in mx!
 					// ent of ent
 					if (prevPair.pos().matches("\\d+$") && nextPair.pos().matches("\\d+$")) {
 						int mathObjIndex = Integer.valueOf(prevPair.pos());
 						StructH<HashMap<String, String>> tempStruct = mathEntList.get(mathObjIndex);
-						
+
 						pairs.get(index).set_pos(nextPair.pos());
 						Struct childStruct = mathEntList.get(Integer.valueOf(nextPair.pos()));
 						tempStruct.add_child(childStruct, "of");
 						// set to null instead of removing, to keep indices
 						// right. If nextPair.pos != prevPair.pos().
-						if(nextPair.pos() != prevPair.pos())
+						if (nextPair.pos() != prevPair.pos())
 							mathEntList.set(Integer.valueOf(nextPair.pos()), null);
 
-					} // "noun of ent". 
-					else if(prevPair.pos().matches("noun") && nextPair.pos().matches("\\d+$")) {
+					} // "noun of ent".
+					else if (prevPair.pos().matches("noun") && nextPair.pos().matches("\\d+$")) {
 						int mathObjIndex = Integer.valueOf(nextPair.pos());
-						//Combine the something into the ent
+						// Combine the something into the ent
 						StructH<HashMap<String, String>> tempStruct = mathEntList.get(mathObjIndex);
-						
+
 						String entName = tempStruct.struct().get("name");
 						tempStruct.struct().put("name", prevPair.word() + " of " + entName);
-						
+
 						pairs.get(index).set_pos(nextPair.pos());
-						prevPair.set_pos(nextPair.pos());						
-						
-						
-					} //special case: "of form"
-					
-					//if verb_of: "consists of" -> verb 
-					else if(prevPair.pos().matches("verb|vbs")){
+						prevPair.set_pos(nextPair.pos());
+
+					} // special case: "of form"
+
+					// if verb_of: "consists of" -> verb
+					else if (prevPair.pos().matches("verb|vbs")) {
 						String prevWord = prevPair.word();
 						prevPair.set_word(prevWord + " of");
 						pairs.remove(index);
-					}					
-					else {
+					} else {
 						// set anchor to its normal part of speech word, like
 						// "of" to pre
-						
+
 						pairs.get(index).set_pos(posMap.get(anchor));
 					}
 
@@ -722,7 +720,7 @@ public class ThmP1 {
 		ArrayList<Struct> structList = new ArrayList<Struct>();
 
 		ListIterator<Pair> pairsIter = pairs.listIterator();
-		
+
 		String prevPos = "-1";
 		// use anchors (of, with) to gather terms together into entities
 		while (pairsIter.hasNext()) {
@@ -764,7 +762,7 @@ public class ThmP1 {
 						verbStruct.set_prev2(curPair.word());
 						continue;
 					}
-				}				
+				}
 
 				String curWord = curPair.word();
 
@@ -779,21 +777,21 @@ public class ThmP1 {
 						structList.remove(structListSize - 1);
 					}
 				}
-				
-				/* else if (curPair.pos().equals("pre")) {//////////////////////////////
-					if (structListSize >     0 && structList.get(structListSize - 1).type().equals("gerund")) {
-						Struct gerundStruct = structList.get(structListSize - 1);
-						
-						newStruct.set_prev2(adverbStruct); ////////////
-						// remove the adverb Struct
-						structList.remove(structListSize - 1);
-					}
-				} */
-				
-				//combine det into nouns and verbs, change 
+
+				/*
+				 * else if (curPair.pos().equals("pre"))
+				 * {////////////////////////////// if (structListSize > 0 &&
+				 * structList.get(structListSize - 1).type().equals("gerund")) {
+				 * Struct gerundStruct = structList.get(structListSize - 1);
+				 * 
+				 * newStruct.set_prev2(adverbStruct); //////////// // remove the
+				 * adverb Struct structList.remove(structListSize - 1); } }
+				 */
+
+				// combine det into nouns and verbs, change
 				else if (curPair.pos().equals("noun") && structListSize > 0
-						&& structList.get(structListSize - 1).type().equals("det")){
-					String det = (String)structList.get(structListSize - 1).prev1();
+						&& structList.get(structListSize - 1).type().equals("det")) {
+					String det = (String) structList.get(structListSize - 1).prev1();
 					newStruct.set_prev2(det);
 					structList.remove(structListSize - 1);
 				}
@@ -830,45 +828,49 @@ public class ThmP1 {
 		// for pronouns
 		int recentEntIndex = -1;
 
-		// A matrix of List's. Dimenions of first two Lists are same: square matrix
-		ArrayList<ArrayList<StructList>> mx = new ArrayList<ArrayList<StructList>>(len);		
+		// A matrix of List's. Dimenions of first two Lists are same: square
+		// matrix
+		ArrayList<ArrayList<StructList>> mx = new ArrayList<ArrayList<StructList>>(len);
 
 		for (int l = 0; l < len; l++) {
 			ArrayList<StructList> tempList = new ArrayList<StructList>();
-			
-			for (int i = 0; i < len; i++){
-				//initialize Lists now so no need to repeatedly check if null later	
-				//but does use more space! Need to revisist.
+
+			for (int i = 0; i < len; i++) {
+				// initialize Lists now so no need to repeatedly check if null
+				// later
+				// but does use more space! Need to revisist.
 				tempList.add(new StructList());
 			}
-			
+
 			mx.add(tempList);
 			/*
-			mx.add(new ArrayList<Struct>(len));
-			
-			for (int i = 0; i < len; i++) {
-				// add len number of null's
-				mx.get(l).get(i) .add(null);
-			} */
+			 * mx.add(new ArrayList<Struct>(len));
+			 * 
+			 * for (int i = 0; i < len; i++) { // add len number of null's
+			 * mx.get(l).get(i) .add(null); }
+			 */
 		}
 
 		boolean skipCol = false;
-		//which row to start at for the next column
+		// which row to start at for the next column
 		int startRow = -1;
 		outerloop: for (int j = 0; j < len; j++) {
-			
+
 			// fill in diagonal elements
-			//ArrayList<Struct> diagonalStruct = new ArrayList<Struct>();
+			// ArrayList<Struct> diagonalStruct = new ArrayList<Struct>();
+
+			// mx.get(j).set(j, diagonalStruct);
+			Struct diagonalStruct = inputList.get(j);
+			diagonalStruct.set_structList(mx.get(j).get(j));
 			
-			//mx.get(j).set(j, diagonalStruct);
-			mx.get(j).get(j).add(inputList.get(j));
+			mx.get(j).get(j).add(diagonalStruct);
+
+			// mx.get(j).set(j, inputList.get(j));
 			
-			//mx.get(j).set(j, inputList.get(j));
-			
-			//startRow should actually *always* be < j
+			// startRow should actually *always* be < j
 			int i = j - 1;
-			if(startRow != -1 && startRow < j){
-				if(startRow == 0){
+			if (startRow != -1 && startRow < j) {
+				if (startRow == 0) {
 					startRow = -1;
 					continue;
 				}
@@ -882,342 +884,388 @@ public class ThmP1 {
 
 					StructList structList1 = mx.get(i).get(k);
 					StructList structList2 = mx.get(k + 1).get(j);
-					
-					//Struct struct1 = mx.get(i).get(k);
-					//Struct struct2 = mx.get(k + 1).get(j);
-					
-					if (structList1 == null || structList2 == null) {
+
+					// Struct struct1 = mx.get(i).get(k);
+					// Struct struct2 = mx.get(k + 1).get(j);
+
+					if (structList1 == null || structList2 == null || structList1.size() == 0
+							|| structList2.size() == 0) {
 						continue;
 					}
-					
-					//need to refactor to make methods more modular!
-					
+
+					// need to refactor to make methods more modular!
+
 					Iterator<Struct> structList1Iter = structList1.structList().iterator();
 					Iterator<Struct> structList2Iter = structList2.structList().iterator();
-					
-					while(structList1Iter.hasNext()){
-						
+
+					while (structList1Iter.hasNext()) {
+
 						Struct struct1 = structList1Iter.next();
-						
-						while(structList2Iter.hasNext()){
+
+						while (structList2Iter.hasNext()) {
 							Struct struct2 = structList2Iter.next();
 
-							// combine/reduce types, like or_ppt, for_ent, in_ent
-					String type1 = struct1.type();
-					String type2 = struct2.type();
+							// combine/reduce types, like or_ppt, for_ent,
+							// in_ent
+							String type1 = struct1.type();
+							String type2 = struct2.type();
 
-					// for types such as conj_verbphrase
-					String[] split1 = type1.split("_");
+							// for types such as conj_verbphrase
+							String[] split1 = type1.split("_");
 
-					if (split1.length > 1) {
-						type1 = split1[1];
-					}
+							if (split1.length > 1) {
+								type1 = split1[1];
+							}
 
-					String[] split2 = type2.split("_");
+							String[] split2 = type2.split("_");
 
-					if (split2.length > 1) {
-						type2 = split2[1];
-					}
-					
-					//if recentEntIndex < j, it was deliberately skipped 
-					//in a previous pair when it was the 2nd struct 
-					if (type1.equals("ent") && (!(recentEntIndex < j) || !foundFirstEnt) ) {
-						if (!foundFirstEnt) {
-							firstEnt = struct1;
-							foundFirstEnt = true;
-						}
-						recentEnt = struct1;
-						recentEntIndex = j;
-					}
-					
-					// if pronoun, now refers to most recent ent
-					// should refer to ent that's the object of previous assertion,
-					// sentence, or "complete" phrase
-					// Note that different pronouns might need diferent rules 
-					if (type1.equals("pro")
-							&& struct1.prev1() instanceof String
-							&& ((String)struct1.prev1()).matches("it|they")
-							&& struct1.prev2() != null 
-							&& struct1.prev2().equals("")) {
-						if (recentEnt != null && recentEntIndex < j) {
-							String tempName = recentEnt.struct().get("name");
-							// if(recentEnt.struct().get("called") != null )
-							// tempName = recentEnt.struct().get("called");
-							String name = tempName != null ? tempName : "";
-							struct1.set_prev2(name);
-						}
-					}
-					
-					if (type2.equals("ent") && !(type1.matches("verb|pre"))) {
-						if (!foundFirstEnt) {
-							firstEnt = struct1;
-							foundFirstEnt = true;
-						}
-						recentEnt = struct2;
-						recentEntIndex = j;
-					}
+							if (split2.length > 1) {
+								type2 = split2[1];
+							}
 
-					// look up combined in struct table, like or_ent
-					// get value as name for new hash table, table with prev field
-					// new type? entity, with extra ppt
-					// name: or. combined ex: or_adj (returns ent), or_ent (ent)
-					String combined = type1 + "_" + type2;
-					
-					// handle pattern ent_of_symb
-					if (combined.matches("ent_pre") && struct2.prev1() != null
-							&& struct2.prev1().toString().matches("of") && j + 1 < len
-							&& inputList.get(j + 1).type().equals("symb")) {
-						// create new child
-						struct1.add_child(inputList.get(j + 1), "of");
-
-						//mx.get(i).set(j + 1, struct1);
-						mx.get(i).get(j+1).add(struct1);
-						skipCol = true;
-						startRow = i;
-					}
-					else if(combined.equals("pro_verb")){
-						if(struct1.prev1().equals("we") && struct2.prev1().equals("say")){								
-							struct1.set_type(FLUFF);
-							//mx.get(i).set(j, struct1);
-							mx.get(i).get(j).add(struct1);
-						}
-					}
-					
-					if(combined.equals("adj_ent")){ //****implement if necessary.
-						//update struct
-						if(struct2 instanceof StructH){
-							//should be StructH
-							Struct newStruct = struct2.copy();
-							String newPpt = "";
-							if(struct1.type().equals("conj_adj")){
-								if(struct1.prev1() instanceof Struct){
-									newPpt += ((Struct)struct1.prev1()).prev1();								
+							// if recentEntIndex < j, it was deliberately
+							// skipped
+							// in a previous pair when it was the 2nd struct
+							if (type1.equals("ent") && (!(recentEntIndex < j) || !foundFirstEnt)) {
+								if (!foundFirstEnt) {
+									firstEnt = struct1;
+									foundFirstEnt = true;
 								}
-								if(struct1.prev2() instanceof Struct){
-									newPpt += ((Struct)struct1.prev2()).prev1();								
+								recentEnt = struct1;
+								recentEntIndex = j;
+							}
+
+							// if pronoun, now refers to most recent ent
+							// should refer to ent that's the object of previous
+							// assertion,
+							// sentence, or "complete" phrase
+							// Note that different pronouns might need diferent
+							// rules
+							if (type1.equals("pro") && struct1.prev1() instanceof String
+									&& ((String) struct1.prev1()).matches("it|they") && struct1.prev2() != null
+									&& struct1.prev2().equals("")) {
+								if (recentEnt != null && recentEntIndex < j) {
+									String tempName = recentEnt.struct().get("name");
+									// if(recentEnt.struct().get("called") !=
+									// null )
+									// tempName =
+									// recentEnt.struct().get("called");
+									String name = tempName != null ? tempName : "";
+									struct1.set_prev2(name);
 								}
-							}else{
-								//check if String and cast instead
-								newPpt += struct1.prev1();
 							}
-							newStruct.struct().put(newPpt, "ppt");
-							//mx.get(i).set(j, newStruct);
-							mx.get(i).get(j).add(newStruct);
-							continue outerloop;
-						}
-					}					
-					
-					// handle "is called" -- "verb_parti", also "is defined"
-					// for definitions
-					else if (combined.matches("verb_parti") && struct1.prev1().toString().matches("is|are|be")
-							&& struct2.prev1().toString().matches("called|defined|said|denoted")) {
-						String called = "";
-						int l = j + 1;
-						// whether definition has started, ie "is called
-						// subgroup of G"
-						boolean defStarted = false;
-						while (l < len) {
 
-							Struct nextStruct = inputList.get(l);
-							if (!nextStruct.type().matches("pre|prep|be|verb")) {
-								defStarted = true;
+							if (type2.equals("ent") && !(type1.matches("verb|pre"))) {
+								if (!foundFirstEnt) {
+									firstEnt = struct1;
+									foundFirstEnt = true;
+								}
+								recentEnt = struct2;
+								recentEntIndex = j;
+							}
 
-								if (nextStruct instanceof StructA) {
-									called += nextStruct.prev1();
-								} else {
-									called += nextStruct.struct().get("name");
+							// look up combined in struct table, like or_ent
+							// get value as name for new hash table, table with
+							// prev field
+							// new type? entity, with extra ppt
+							// name: or. combined ex: or_adj (returns ent),
+							// or_ent (ent)
+							String combined = type1 + "_" + type2;
+
+							// handle pattern ent_of_symb
+							if (combined.matches("ent_pre") && struct2.prev1() != null
+									&& struct2.prev1().toString().matches("of") && j + 1 < len
+									&& inputList.get(j + 1).type().equals("symb")) {
+								// create new child
+								struct1.add_child(inputList.get(j + 1), "of");
+
+								// mx.get(i).set(j + 1, struct1);
+								mx.get(i).get(j + 1).add(struct1);
+								skipCol = true;
+								startRow = i;
+							} else if (combined.equals("pro_verb")) {
+								if (struct1.prev1().equals("we") && struct2.prev1().equals("say")) {
+									struct1.set_type(FLUFF);
+									// mx.get(i).set(j, struct1);
+									mx.get(i).get(j).add(struct1);
+								}
+							}
+
+							if (combined.equals("adj_ent")) {
+								// update struct
+								if (struct2 instanceof StructH) {
+									// should be StructH
+									Struct newStruct = struct2.copy();
+									String newPpt = "";
+									if (struct1.type().equals("conj_adj")) {
+										if (struct1.prev1() instanceof Struct) {
+											newPpt += ((Struct) struct1.prev1()).prev1();
+										}
+										if (struct1.prev2() instanceof Struct) {
+											newPpt += ((Struct) struct1.prev2()).prev1();
+										}
+									} else {
+										// check if String and cast instead
+										newPpt += struct1.prev1();
+									}
+									newStruct.struct().put(newPpt, "ppt");
+									// mx.get(i).set(j, newStruct);
+									mx.get(i).get(j).add(newStruct);
+									continue outerloop;
+								}
+							}
+
+							// handle "is called" -- "verb_parti", also "is
+							// defined"
+							// for definitions
+							else if (combined.matches("verb_parti") && struct1.prev1().toString().matches("is|are|be")
+									&& struct2.prev1().toString().matches("called|defined|said|denoted")) {
+								String called = "";
+								int l = j + 1;
+								// whether definition has started, ie "is called
+								// subgroup of G"
+								boolean defStarted = false;
+								while (l < len) {
+
+									Struct nextStruct = inputList.get(l);
+									if (!nextStruct.type().matches("pre|prep|be|verb")) {
+										defStarted = true;
+
+										if (nextStruct instanceof StructA) {
+											called += nextStruct.prev1();
+										} else {
+											called += nextStruct.struct().get("name");
+										}
+
+										if (l != len - 1)
+											called += " ";
+
+									}
+									// reached end of newly defined word, now
+									// more usual sentence
+									// ie move from "subgroup" to "of G"
+									else if (defStarted) {
+										// remove last added space
+										called = called.trim();
+										break;
+									}
+									l++;
 								}
 
-								if (l != len - 1)
-									called += " ";
+								// ******* be careful using first ent
+								// record the symbol/given name associated to an
+								// ent
+								if (firstEnt != null) {
+									StructA<Struct, String> parentStruct = new StructA<Struct, String>(firstEnt, called,
+											"def", mx.get(0).get(len - 1));
 
+									// mx.get(0).set(len - 1, parentStruct);
+									mx.get(0).get(len - 1).add(parentStruct);
+
+									// add to mathObj map
+									int q = 0;
+									String[] calledArray = called.split(" ");
+									String curWord = "";
+
+									while (q < calledArray.length - 1) {
+										curWord += calledArray[q];
+										// if(q != calledArray.length - 1)
+										curWord += " ";
+
+										mathObjMap.put(curWord, "COMP");
+										q++;
+									}
+									curWord += calledArray[calledArray.length - 1];
+									mathObjMap.put(curWord, "mathObj");
+
+									// recentEnt is defined to be "called"
+									namesMap.put(called, recentEnt);
+									continue outerloop;
+								}
 							}
-							// reached end of newly defined word, now more usual
-							// sentence
-							// ie move from "subgroup" to "of G"
-							else if (defStarted) {
-								// remove last added space
-								called = called.trim();
-								break;
-							}
-							l++;
-						}
 
-						// ******* be careful using first ent
-						//record the symbol/given name associated to an ent
-						if (firstEnt != null) {
-							StructA<Struct, String> parentStruct = new StructA<Struct, String>(firstEnt, called, "def");
+							// search for tokens larger than immediate ones
+							// in case A_or_A or A_and_A set the mx element
+							// right below
+							// to null
+							// to set precedence, so A won't be grouped to
+							// others later
+							// and if the next word is a verb, it is not
+							// singular
+							// ie F and G is isomorphic
 
-							//mx.get(0).set(len - 1, parentStruct);
-							mx.get(0).get(len-1).add(struct1);
+							//////// %%%%%%%%%%% NPE for "subset F of G and
+							//////// subset G of H"
+							// because G gets null'ed out after "of". Need
+							//////// better strategy!
+							// should probably be j? j is column #.
 
-							// add to mathObj map
-							int q = 0;
-							String[] calledArray = called.split(" ");
-							String curWord = "";
-
-							while (q < calledArray.length - 1) {
-								curWord += calledArray[q];
-								// if(q != calledArray.length - 1)
-								curWord += " ";
-
-								mathObjMap.put(curWord, "COMP");
-								q++;
-							}
-							curWord += calledArray[calledArray.length - 1];
-							mathObjMap.put(curWord, "mathObj");
-							
-							// recentEnt is defined to be "called"
-							namesMap.put(called, recentEnt);
-							continue outerloop;
-						}
-					}
-
-					// search for tokens larger than immediate ones
-					// in case A_or_A or A_and_A set the mx element right below
-					// to null
-					// to set precedence, so A won't be grouped to others later
-					// and if the next word is a verb, it is not singular
-					// ie F and G is isomorphic
-					
-					////////%%%%%%%%%%% NPE for "subset F of G and subset G of H"
-					//because G gets null'ed out after "of". Need better strategy!
-					//should probably be j? j is column #.
-					
-					// iterate through the List at position (i-1, i-1)
-					List<Struct> iMinusOneStructList = mx.get(i-1).get(i-1).structList();
-					if(iMinusOneStructList.size() > 0){
-						
-						//Iterator<Struct> iMinusOnestructIter = mx.get(i-1).get(i-1).iterator();
-						
-						for( Struct iMinusOneStruct : iMinusOneStructList ){
+							// iterate through the List at position (i-1, i-1)
+							if (i > 0 && i + 1 < len) {
 								
-								
-					if (i > 0 && i + 1 < len
-							&& (type1.matches("or|and") 
-									
-									&& type2.equals(iMinusOneStruct.type()))								
-							) {
-							
-							// In case of conj, only proceed if next word is not a singular verb.
-							// Single case with complicated logic, so it's easier more readable to write
-							// if(this case){ }then{do_something} over if(not this case){do_something}
-							Struct nextStruct = j+1 < len ? inputList.get(j + 1) : null;
-							if(nextStruct != null && type1.equals("and") 
-									&& nextStruct.prev1() instanceof String
-									&& isSingularVerb((String)nextStruct.prev1()) ){
-																
-								//skip rest in this case
-							} else{
-							
-							String newType = type1.equals("or") ? "disj" : "conj";
-							// type is expression, eg "a and b"
-							// new type: conj_verbphrase
-							
-							StructA<Struct, Struct> parentStruct = new StructA<Struct, Struct>(iMinusOneStruct,
-									struct2, newType + "_" + type2);
-							
-							// set parent struct in row above
-							//mx.get(i - 1).set(j, parentStruct);
-							mx.get(i - 1).get(j).add(parentStruct);
-							// set the next token to "", so not classified again
-							// with others
-							// mx.get(i+1).set(j, null);
-							//already classified, no need to keep reduce with mx manipulations
-							break;
-							}
-					}
-						}//this case can be combined with if statement above, use single while loop
-					} else if ((type1.matches("or|and"))) {
-							int l = 2;
-							boolean stopLoop = false;
-							
-							
-							while (i - l > -1 && i + 1 < len) {
-								List<Struct> structArrayList = mx.get(i - l).get(i - 1).structList();
-								
-								int structArrayListSz = structArrayList.size();
-								if(structArrayListSz == 0) continue;
-								
-								//iterate over Structs at (i-l, i-1)
-								for(int p = 0; p < structArrayListSz; p++){
-									Struct p_struct = structArrayList.get(p);
-								if (type2.equals(p_struct.type())) {
-									String newType = type1.matches("or") ? "disj" : "conj";
-									// type is expression, eg "a and b"
-									StructA<Struct, Struct> parentStruct = new StructA<Struct, Struct>(
-											p_struct, struct2, newType + "_" + type2);
-									
-									mx.get(i - l).get(j).add(parentStruct);
-									//mx.get(i - l).set(j, parentStruct);
-									// mx.get(i+1).set(j, null);
-									stopLoop = true;
-									break;
+								/*
+								List<Struct> iMinusOneStructList = mx.get(i - 1).get(i - 1).structList();
+
+								if (type1.matches("or|and") && iMinusOneStructList.size() > 0) {
+
+									// Iterator<Struct> iMinusOnestructIter =
+									// mx.get(i-1).get(i-1).iterator();
+
+									for (Struct iMinusOneStruct : iMinusOneStructList) {
+
+										if(type1.matches("and"))
+											System.out.print("debug");
+										if (type2.equals(iMinusOneStruct.type())) {
+
+											// In case of conj, only proceed if
+											// next
+											// word is not a singular verb.
+											// Single case with complicated
+											// logic,
+											// so it's easier more readable to
+											// write
+											// if(this case){
+											// }then{do_something}
+											// over if(not this
+											// case){do_something}
+											Struct nextStruct = j + 1 < len ? inputList.get(j + 1) : null;
+											if (nextStruct != null && type1.equals("and")
+													&& nextStruct.prev1() instanceof String
+													&& isSingularVerb((String) nextStruct.prev1())) {
+
+												// skip rest in this case
+											} else {
+
+												String newType = type1.equals("or") ? "disj" : "conj";
+												// type is expression, eg "a and
+												// b"
+												// new type: conj_verbphrase
+
+												StructA<Struct, Struct> parentStruct = new StructA<Struct, Struct>(
+														iMinusOneStruct, struct2, newType + "_" + type2, 
+														mx.get(i-1).get(j));
+
+												// set parent struct in row
+												// above
+												// mx.get(i - 1).set(j,
+												// parentStruct);
+												mx.get(i - 1).get(j).add(parentStruct);
+												// set the next token to "", so
+												// not
+												// classified again
+												// with others
+												// mx.get(i+1).set(j, null);
+												// already classified, no need
+												// to
+												// keep reduce with mx
+												// manipulations												
+												break;
+											}
+										}
+									} // this case can be combined with if
+										// statement
+										// above, use single while loop
+								} else  */
+									if (type1.matches("or|and")) {
+									int l = 1;
+									boolean stopLoop = false;
+
+									searchConjLoop: while (i - l > -1 && i + 1 < len) {
+
+										List<Struct> structArrayList = mx.get(i - l).get(i - 1).structList();
+
+										int structArrayListSz = structArrayList.size();
+										if (structArrayListSz == 0)
+											continue;
+
+										// iterate over Structs at (i-l, i-1)
+										for (int p = 0; p < structArrayListSz; p++) {
+											Struct p_struct = structArrayList.get(p);
+											if (type2.equals(p_struct.type())) {
+												String newType = type1.matches("or") ? "disj" : "conj";
+												// type is expression, eg "a and
+												// b".
+												// Come up with a scoring system
+												// for and/or!
+												StructA<Struct, Struct> parentStruct = new StructA<Struct, Struct>(
+														p_struct, struct2, newType + "_" + type2, mx.get(i - l).get(j));
+
+												mx.get(i - l).get(j).add(parentStruct);
+												// mx.get(i - l).set(j,
+												// parentStruct);
+												// mx.get(i+1).set(j, null);
+												stopLoop = true;
+												break searchConjLoop;
+											}
+										}
+										//if (stopLoop)
+											//break;
+										l++;
+									}
+
 								}
-								}
-								if (stopLoop)
-									break;
-								l++;
 							}
-						
-						
-					
-						}
-					
-					//potentially change assert to latex expr
-					if(type2.equals("assert") 
-							&& struct2.prev1() instanceof String 
-							&& ((String)struct2.prev1()).charAt(0) == '$' 
-							&& !structMap.containsKey(combined)){
-						struct2.set_type("expr");
-						combined = type1 + "_" + "expr";
-					}
-					//update namesMap 
-					if(type1.equals("ent") && struct1 instanceof StructH){
-						String called = struct1.struct().get("called");
-						if(called != null)
-							namesMap.put(called, struct1);
-					}
-					
-					//reduce if structMap contains combined
-					if (structMap.containsKey(combined)) {
-						reduce(mx, combined, struct1, struct2, firstEnt, recentEnt, 
-								recentEntIndex, i, j, k, type1, type2);
-					}
-					
-						
-						} //listIter1
-					} //listIter2
-					
-					//for (int k = j - 1; k >= i; k--) { ends here
+
+							// potentially change assert to latex expr
+							if (type2.equals("assert") && struct2.prev1() instanceof String
+									&& ((String) struct2.prev1()).charAt(0) == '$'
+									&& !structMap.containsKey(combined)) {
+								struct2.set_type("expr");
+								combined = type1 + "_" + "expr";
+							}
+							// update namesMap
+							if (type1.equals("ent") && struct1 instanceof StructH) {
+								String called = struct1.struct().get("called");
+								if (called != null)
+									namesMap.put(called, struct1);
+							}
+
+							// reduce if structMap contains combined
+							if (structMap.containsKey(combined)) {
+								reduce(mx, combined, struct1, struct2, firstEnt, recentEnt, recentEntIndex, i, j, k,
+										type1, type2);
+							}
+
+						} // listIter1
+					} // listIter2
+
+					// for (int k = j - 1; k >= i; k--) { ends here
 				}
 
 			}
-			//if (skipCol)
-				//j++;
+			// if (skipCol)
+			// j++;
 		}
 
 		// string together the parsed pieces
-		// ArrayList (better at get/set) or LinkedList (better at add/remove)? 
-		List<Struct> parsedStructList = new ArrayList<Struct>();
+		// ArrayList (better at get/set) or LinkedList (better at add/remove)?
+		//iterating over all headStruct
+		StructList headStructList = mx.get(0).get(len-1);
+		int headStructListSz = headStructList.size();
+		System.out.println("headStructListSz " + headStructListSz );
+		
+		for(int u = 0; u < headStructListSz; u++){
+			
+		List<StructList> parsedStructList = new ArrayList<StructList>();
+
 		int i = 0, j = len - 1;
 		while (j > -1) {
 			i = 0;
-			while (mx.get(i).get(j) == null) {
+			while (mx.get(i).get(j).size() == 0) {
 				i++;
 				// some diagonal elements can be set to null on purpose
 				if (i >= j) {
 					break;
 				}
 			}
-			
-			//tempStruct
-			
-			Struct tempStruct = mx.get(i).get(j);
-			
-			//if not null or fluff
-			if(tempStruct != null && !tempStruct.type().equals(FLUFF)){
-				parsedStructList.add(0, tempStruct);
+
+			StructList tempStructList = mx.get(i).get(j);
+
+			// if not null or fluff.
+			// What kind of fluff can trickle down here??
+			// for the check !tempStruct.type().equals(FLUFF)
+			if (tempStructList.size() > 0) {
+				parsedStructList.add(0, tempStructList);
 			}
 			// a singleton on the diagonal
 			if (i == j) {
@@ -1230,370 +1278,408 @@ public class ThmP1 {
 		// if not full parse, try to make into full parse by fishing out the
 		// essential sentence structure, and discarding the phrases still not
 		// labeled after 2nd round
-		parse2(parsedStructList);
+		// parse2(parsedStructList);
 
 		// print out the system
 		int parsedStructListSize = parsedStructList.size();
+
 		for (int k = 0; k < parsedStructListSize; k++) {
-			dfs(parsedStructList.get(k));
+			int highestScoreIndex = ArrayDFS(parsedStructList.get(k));
+			
+			Struct kHeadStruct = parsedStructList.get(k).structList().get(highestScoreIndex);
+			dfs(kHeadStruct);
 			if (k < parsedStructListSize - 1)
 				System.out.print(" ,  ");
 		}
+	}
 		
-		System.out.println("\nWL: ");
-		for (int k = 0; k < parsedStructListSize; k++) {
-			Struct head = parsedStructList.get(k);			
-			
-			String parsedString = ParseToWL.parseToWL(head);
-			parsedExpr.add(parsedString);
-			System.out.print(parsedString + " \n ** ");
-		}
-		System.out.println("%%%%%\n");
+		//print out scores
+		/*StructList headStructList = mx.get(0).get(len-1);
+		int headStructListSz = headStructList.size();
+		System.out.println("headStructListSz " + headStructListSz );
+		for(int u = 0; u < headStructListSz; u++){
+			System.out.println(headStructList.structList().get(u) );
+		} */
+		
+		/*
+		 * System.out.println("\nWL: "); StructList headStructList = mx.get(len
+		 * - 1).get(len - 1); //should pick out best parse before WL and just
+		 * parse to WL for that particular parse!
+		 * 
+		 * for(int q = 0; q < headStructList.size(); q++){ for (int k = 0; k <
+		 * parsedStructListSize; k++) {
+		 * 
+		 * Struct head = parsedStructList.get(k);
+		 * 
+		 * String parsedString = ParseToWL.parseToWL(head);
+		 * parsedExpr.add(parsedString); System.out.print(parsedString +
+		 * " \n ** "); } System.out.println("WL parse " + k + " done\n"); }
+		 * System.out.println("%%%%%\n");
+		 */
 	}
 
 	/**
-	 * Returns true iff word is a singular verb 
-	 * (meaning associated to singular subj, eg "gives")
-	 * @param word		word to be checked
+	 * Returns true iff word is a singular verb (meaning associated to singular
+	 * subj, eg "gives")
+	 * 
+	 * @param word
+	 *            word to be checked
 	 * @return
 	 */
-	private static boolean isSingularVerb(String word){
+	private static boolean isSingularVerb(String word) {
 		// did not find singular verbs that don't end in "s"
 		int wordLen = word.length();
-		
-		if(wordLen < 2 || word.charAt(wordLen - 1) != 's')
+
+		if (wordLen < 2 || word.charAt(wordLen - 1) != 's')
 			return false;
-		
-		//strip away 's'
-		String pos = posMap.get(word.substring(0, wordLen-2));
-		if(pos != null && pos.matches("verb|verb_comp") ){
+
+		// strip away 's'
+		String pos = posMap.get(word.substring(0, wordLen - 2));
+		if (pos != null && pos.matches("verb|verb_comp")) {
 			return true;
 		}
-		//strip away es if applicable
-		else if(wordLen > 2 && word.charAt(wordLen - 2) == 'e'){
-			pos = posMap.get(word.substring(0, wordLen-3));
-			if(pos != null && pos.matches("verb|verb_comp"))
+		// strip away es if applicable
+		else if (wordLen > 2 && word.charAt(wordLen - 2) == 'e') {
+			pos = posMap.get(word.substring(0, wordLen - 3));
+			if (pos != null && pos.matches("verb|verb_comp"))
 				return true;
 		}
-		//could be special singular form, eg "is"
-		else if((pos = posMap.get(word)) != null
-				&& pos.matches("vbs|vbs_comp")){
+		// could be special singular form, eg "is"
+		else if ((pos = posMap.get(word)) != null && pos.matches("vbs|vbs_comp")) {
 			return true;
 		}
 		return false;
 	}
-	
+
 	/**
 	 * reduce if structMap contains combined
 	 */
-	public static void reduce(ArrayList<ArrayList<StructList>> mx, 
-			String combined, Struct struct1, Struct struct2,
-			Struct firstEnt, Struct recentEnt, int recentEntIndex,
-			int i, int j, int k, String type1, String type2){
+	public static void reduce(ArrayList<ArrayList<StructList>> mx, String combined, Struct struct1, Struct struct2,
+			Struct firstEnt, Struct recentEnt, int recentEntIndex, int i, int j, int k, String type1, String type2) {
 		// reduce
-		
-			String newType = structMap.get(combined).relation();
-			
-			// newChild means to fuse second entity into first one
-			
-			if (newType.equals("newchild")) {
-				// struct1 should be of type StructH to receive a
-				// child
-				// assert ensures rule correctness
-				assert struct1 instanceof StructH;
 
-				// get a (semi)deep copy of this StructH, since
-				// later-added children may not
-				// get used eventually, ie hard to remove children
-				// added during mx building
-				// that are not picked up by the eventual parse
-				Struct newStruct = struct1.copy();
-				
-				// update firstEnt so to have the right children
-				if (firstEnt == struct1) {
-					firstEnt = newStruct;
-				}
-				
-				// add to child relation, usually a preposition, eg
-				// "from", "over"
-				// could also be verb, "consist", "lies"
-				
-				List<Struct> kPlus1StructArrayList = mx.get(k + 1).get(k + 1).structList();
-				
-				//diagonal element can have only 1 Struct in its structList
-				String childRelation = kPlus1StructArrayList.get(0).prev1().toString();
-				
-				//String childRelation = mx.get(k + 1).get(k + 1).prev1().toString();
-				
-				if (struct1 instanceof StructH) {
-					// why does this cast not trigger unchecked warning		
-					// Because wildcard!
-					((StructH<?>) newStruct).add_child(struct2, childRelation);
-				}							
-				
-				recentEnt = newStruct;
-				recentEntIndex = j;
+		Rule newRule = structMap.get(combined);
+		String newType = newRule.relation();
+		double newScore = newRule.prob();
 
-				//mx.get(i).set(j, newStruct);
-				mx.get(i).get(j).add(newStruct);
+		// newChild means to fuse second entity into first one
 
-			} else if(newType.equals("noun")){
-				if(type1.matches("adj") && type2.matches("noun")){
-					//combine adj and noun
-					String adj = (String)struct1.prev1();
-					struct2.set_prev1(adj + " " + struct2.prev1());
-					//mx.get(i).set(j, struct2);
-					mx.get(i).get(j).add(struct2);
+		if (newType.equals("newchild")) {
+			// struct1 should be of type StructH to receive a
+			// child
+			// assert ensures rule correctness
+			assert struct1 instanceof StructH;
+
+			// get a (semi)deep copy of this StructH, since
+			// later-added children may not
+			// get used eventually, ie hard to remove children
+			// added during mx building
+			// that are not picked up by the eventual parse
+			Struct newStruct = struct1.copy();
+
+			// update firstEnt so to have the right children
+			if (firstEnt == struct1) {
+				firstEnt = newStruct;
+			}
+
+			// add to child relation, usually a preposition, eg
+			// "from", "over"
+			// could also be verb, "consist", "lies"
+
+			List<Struct> kPlus1StructArrayList = mx.get(k + 1).get(k + 1).structList();
+
+			// diagonal element can have only 1 Struct in its structList
+			String childRelation = kPlus1StructArrayList.get(0).prev1().toString();
+
+			// String childRelation = mx.get(k + 1).get(k +
+			// 1).prev1().toString();
+
+			if (struct1 instanceof StructH) {
+				// why does this cast not trigger unchecked warning
+				// Because wildcard!
+				((StructH<?>) newStruct).add_child(struct2, childRelation);
+			}
+
+			recentEnt = newStruct;
+			recentEntIndex = j;
+
+			// mx.get(i).set(j, newStruct);
+			mx.get(i).get(j).add(newStruct);
+
+		} else if (newType.equals("noun")) {
+			if (type1.matches("adj") && type2.matches("noun")) {
+				// combine adj and noun
+				String adj = (String) struct1.prev1();
+				struct2.set_prev1(adj + " " + struct2.prev1());
+				// mx.get(i).set(j, struct2);
+				mx.get(i).get(j).add(struct2);
+			}
+		}
+
+		else {
+			// if symbol and a given name to some entity
+			// use "called" to relate entities
+			if (type1.equals("symb") && struct1.prev1() instanceof String) {
+				String entKey = (String) struct1.prev1();
+				if (namesMap.containsKey(entKey)) {
+					Struct entity = namesMap.get(entKey);
+					struct1.set_prev2(entity.struct().get("name"));
+
 				}
 			}
-			
-			else {							
-				// if symbol and a given name to some entity
-				// use "called" to relate entities
-				if (type1.equals("symb") && struct1.prev1() instanceof String) {
-					String entKey = (String) struct1.prev1();
-					if (namesMap.containsKey(entKey)) {
-						Struct entity = namesMap.get(entKey);
-						struct1.set_prev2(entity.struct().get("name"));
 
-					}
-				}
+			// update struct2 with name if applicable
+			// type could have been stripped down from conj_symb
+			if (type2.equals("symb") && struct2.prev1() instanceof String) {
 
-				// update struct2 with name if applicable
-				// type could have been stripped down from conj_symb
-				if (type2.equals("symb") && struct2.prev1() instanceof String) {
-					
-					String entKey = (String) struct2.prev1();
-					
-					if (namesMap.containsKey(entKey)) {
-						Struct entity = namesMap.get(entKey);
-						struct2.set_prev2(entity.struct().get("name"));
+				String entKey = (String) struct2.prev1();
 
-					}								
+				if (namesMap.containsKey(entKey)) {
+					Struct entity = namesMap.get(entKey);
+					struct2.set_prev2(entity.struct().get("name"));
 
 				}
 
-				// add to namesMap if letbe defines a name for an
-				// ent
-				if (newType.equals("letbe") && mx.get(i + 1).get(k) != null
-						&& mx.get(k + 2).get(j) != null) {
-					// temporary patch Rewrite StructA to avoid cast
-					// assert(struct1 instanceof StructA);
-					// assert(struct2 instanceof StructA);
-					// get previous nodes
-
-					if (mx.get(i + 1).get(k).type().equals("symb")
-							&& mx.get(k + 2).get(j).type().equals("ent")) {
-
-						namesMap.put(mx.get(i + 1).get(k).prev1().toString(), mx.get(k + 2).get(j));
-
-						mx.get(k + 2).get(j).struct().put("called",
-								mx.get(i + 1).get(k).prev1().toString());
-					}
-				}
-				
-				// create new StructA and put in mx
-				StructA<Struct, Struct> parentStruct = new StructA<Struct, Struct>(struct1, struct2,
-						newType, mx.get(i).get(j));
-
-				//mx.get(i).set(j, parentStruct);
-				mx.get(i).get(j).add(parentStruct);
 			}
-			// found a grammar rule match, move on to next mx column
-			// *****actually, should keep going and keep scores!
-			//break;
-		
+
+			// add to namesMap if letbe defines a name for an
+			// ent
+			if (newType.equals("letbe") && mx.get(i + 1).get(k).size() > 0 && mx.get(k + 2).get(j).size() > 0) {
+				// temporary patch Rewrite StructA to avoid cast
+				// assert(struct1 instanceof StructA);
+				// assert(struct2 instanceof StructA);
+				// get previous nodes
+
+				// now need to iterate through structList's for these two
+				// Structs
+				List<Struct> tempSymStructList = mx.get(i + 1).get(k).structList();
+				List<Struct> tempEntStructList = mx.get(k + 2).get(j).structList();
+
+				ploop: for (int p = 0; p < tempSymStructList.size(); p++) {
+					Struct tempSymStruct = tempSymStructList.get(p);
+
+					if (tempSymStruct.type().equals("symb")) {
+
+						for (int q = 0; q < tempSymStructList.size(); q++) {
+
+							Struct tempEntStruct = tempEntStructList.get(q);
+							if (tempEntStruct.type().equals("ent")) {
+
+								// assumes that symb is a leaf struct! Need to
+								// make more robust
+								namesMap.put(tempSymStruct.prev1().toString(), tempEntStruct);
+
+								tempEntStruct.struct().put("called", tempSymStruct.prev1().toString());
+								break ploop;
+							}
+						}
+					}
+				}
+			}
+
+			// create new StructA and put in mx, along with score for
+			// struct1_struct2 combo
+			StructA<Struct, Struct> parentStruct = new StructA<Struct, Struct>(struct1, struct2, newType, newScore,
+					mx.get(i).get(j));
+
+			// mx.get(i).set(j, parentStruct);
+			mx.get(i).get(j).add(parentStruct);
+		}
+		// found a grammar rule match, move on to next mx column
+		// *****actually, should keep going and keep scores!
+		// break;
+
 	}
-	
+
 	/**
-	 * Entry point for depth first first.
-	 * Initialize score mx of List's of MatrixPathNodes
-	 * @param structList, the head, at mx position (len-1, len-1)
+	 * Entry point for depth first first. Initialize score mx of List's of
+	 * MatrixPathNodes
+	 * 
+	 * @param structList,
+	 *            the head, at mx position (len-1, len-1)
 	 * @return
 	 */
-	public static double ArrayDFS(StructList structList){
-		ArrayList<MatrixPathNode> mxPathNodeList = new ArrayList<MatrixPathNode>();
-		//fill in the list of MatrixPathNode's from structList
-		
-		//highest score encountered so far in list
+	public static int ArrayDFS(StructList structList) {
+		// ArrayList<MatrixPathNode> mxPathNodeList = new
+		// ArrayList<MatrixPathNode>();
+		// fill in the list of MatrixPathNode's from structList
+
+		// highest score encountered so far in list
 		double highestDownScore = 1;
-		
+
 		int highestDownScoreIndex = 0;
-		
+
 		List<Struct> structArList = structList.structList();
-		
+
 		int structListSz = structArList.size();
-		
-		for(int i = 0; i < structListSz; i++){
+
+		for (int i = 0; i < structListSz; i++) {
 			Struct curStruct = structArList.get(i);
-			
+
 			double ownScore = curStruct.score();
-			//create appropriate right and left Node's
-			
-			//scoreSoFar is ownScore
-			//left and right Nodes to be filled in 
-			MatrixPathNode curMxPathNode = new MatrixPathNode(i, ownScore, ownScore,
-					curStruct
-					);
-			
-			//put path into corresponding Struct, total score that is: 
-			//the sum of the score so far, and the max score along any path 
-			//down from here
+			// create appropriate right and left Node's
+
+			MatrixPathNode curMxPathNode = new MatrixPathNode(i, ownScore, curStruct);
+
+			// put path into corresponding Struct, the score along the path
+			// down from here
 			double pathScore = ArrayDFS(curMxPathNode);
-			
 			curStruct.set_maxDownPathScore(pathScore);
-			
-			if(pathScore > highestDownScore){
+
+			if (pathScore > highestDownScore) {
 				highestDownScore = pathScore;
 				highestDownScoreIndex = i;
 			}
+			System.out.println("pathScore: " + pathScore);
 		}
-		
+
 		structList.set_highestDownScoreIndex(highestDownScoreIndex);
-		return highestDownScore;
+		return highestDownScoreIndex;
 	}
-	
-	/**depth-first-search with arrays construct
-	 * Keep track of path via tree of MatrixPathNode's,
-	 * and the scores thus far through the tree
-	 * @param mxPathNode  MatrixPathNode, corresponding to current Struct
+
+	/**
+	 * depth-first-search with arrays construct Keep track of path via tree of
+	 * MatrixPathNode's, and the scores thus far through the tree
+	 * 
+	 * @param mxPathNode
+	 *            MatrixPathNode, corresponding to current Struct
 	 * @return score
 	 */
-	//combine iteration of arraylist and recursion	
+	// combine iteration of arraylist and recursion
 	public static double ArrayDFS(MatrixPathNode mxPathNode) {
-		
+
 		Struct mxPathNodeStruct = mxPathNode.curStruct();
 		StructList structList = mxPathNodeStruct.StructList();
-		
-		//highest down score encountered so far in list
-		double highestDownScore = 1;
+
+		// highest down score encountered so far in list
+		double highestDownScore = 0;
+		//System.out.println(mxPathNodeStruct);
+		//if structList == null at this point, it means the Struct is leaf, so can return
+		if(structList == null)
+			return 1;
 		
 		int highestDownScoreIndex = structList.highestDownScoreIndex();
-		//Iterator<Struct> structListIter = structList.iterator();
-		
-		//maintain index in list of highest score
-		//don't iterate through if scores already computed
-		if(highestDownScoreIndex != -1){
+		// Iterator<Struct> structListIter = structList.iterator();
+
+		// maintain index in list of highest score
+		// don't iterate through if scores already computed
+		if (highestDownScoreIndex == -1) {
 			List<Struct> structArList = structList.structList();
-			
+
 			int structListSz = structArList.size();
-			//int tempHighestDownScoreIndex = 0;
-			
-			//score so far along this path corresponding to this Node (not Struct!)
-			double scoreSoFar = mxPathNode.scoreSoFar();
-			
-		for(int i = 0; i < structListSz; i++){
-			//highest score down from this Struct
-			double tempDownScore = 1;
-			
-			Struct struct = structArList.get(i);			
-			
-			double structScore = struct.score();
-			
-		// don't like instanceof here
-		if (struct instanceof StructA) {
-			
-			//System.out.print(struct.type());
-			//System.out.print("[");
-			// don't know type at compile time
-			if (struct.prev1() instanceof Struct) {
-				//create new MatrixPathNode, 
-				//int index, double ownScore, double scoreSoFar,				
-				
-				//leftMxPathNode corresponds to Struct struct.prev1()
-				MatrixPathNode leftMxPathNode = new MatrixPathNode(i, structScore,
-						structScore + scoreSoFar,
-						(Struct)struct.prev1());
-				tempDownScore *= ArrayDFS(leftMxPathNode);
-				
-			}
-			
-			// 
-			if ( struct.prev2() instanceof Struct) {
-				// avoid printing is[is], ie case when parent has same type as
-				// child
-				//System.out.print(", ");
-				//dfs((Struct) struct.prev2());
-				//construct new MatrixPathNode for right child
-				MatrixPathNode rightMxPathNode = new MatrixPathNode(i, structScore,
-						structScore*scoreSoFar,
-						(Struct)struct.prev2());
-				tempDownScore *= ArrayDFS(rightMxPathNode)*structScore;
-			}
-			
-			//reached leaf. Add score to mxPathNode being passed in, return own score
-			if (struct.prev1() instanceof String) {
-				System.out.print(struct.prev1());
-				
-			}			
-			if (struct.prev2() instanceof String) {
-				
-				if (!struct.prev2().equals(""))
-					System.out.print(", ");
-				System.out.print(struct.prev2());
-			}
+			// int tempHighestDownScoreIndex = 0;
 
-			System.out.print("]");
-		} else if (struct instanceof StructH) {
+			// score so far along this path corresponding to this Node (not
+			// Struct!)
+			// double scoreSoFar = mxPathNode.scoreSoFar();
 
-			//System.out.print(struct.toString());
-			ArrayList<Struct> childrenStructList = struct.children();
-			ArrayList<String> childRelation = struct.childRelation();
+			for (int i = 0; i < structListSz; i++) {
+				// highest score down from this Struct
+				double tempDownScore = 1;
 
-			if (childrenStructList == null || childrenStructList.size() == 0)
-				return 0;
+				Struct struct = structArList.get(i);
 
-			//System.out.print("[");
-			for (int j = 0; j < childrenStructList.size(); j++) {
-				//System.out.print(childRelation.get(j) + " ");
-				//dfs(childrenStructList.get(j));
-				
-				Struct childStruct = childrenStructList.get(j);
-				
-				double curStructScore = childStruct.score();
-				//create MatrixPathNode for each child Struct
-				MatrixPathNode childMxPathNode = new MatrixPathNode(curStructScore,
-					scoreSoFar, childStruct);
-				
-				tempDownScore *= ArrayDFS(childMxPathNode);
-			}
-			System.out.print("]");
-		}
-		if(tempDownScore > highestDownScore){
-			highestDownScore = tempDownScore;
-			highestDownScoreIndex = i;
-		}
-		
-		mxPathNodeStruct.set_maxDownPathScore(tempDownScore);
-		
-		}//end for loop through structList
-		
-		//set highestDownScoreIndex
-		structList.set_highestDownScoreIndex(highestDownScoreIndex);
-		}else{
+				double structScore = struct.score();
+
+				// don't like instanceof here
+				if (struct instanceof StructA) {
+
+					// System.out.print(struct.type());
+					// System.out.print("[");
+					// don't know type at compile time
+					if (struct.prev1() instanceof Struct) {
+						// create new MatrixPathNode,
+						// int index, double ownScore, double scoreSoFar,
+
+						// leftMxPathNode corresponds to Struct struct.prev1()
+						MatrixPathNode leftMxPathNode = new MatrixPathNode(i, structScore, (Struct) struct.prev1());
+						tempDownScore *= ArrayDFS(leftMxPathNode);
+					}
+
+					//
+					if (struct.prev2() instanceof Struct) {
+						// System.out.print(", ");
+						// dfs((Struct) struct.prev2());
+						// construct new MatrixPathNode for right child
+						MatrixPathNode rightMxPathNode = new MatrixPathNode(i, structScore, (Struct) struct.prev2());
+						tempDownScore *= ArrayDFS(rightMxPathNode) * structScore;
+					}
+
+					// reached leaf. Add score to mxPathNode being passed in,
+					// return own score
+					if (struct.prev1() instanceof String) {
+						// System.out.print(struct.prev1());
+						// do nothing because String leaves don't count towards
+						// score
+					}
+					if (struct.prev2() instanceof String) {
+
+						// if (!struct.prev2().equals(""))
+						// System.out.print(", ");
+						// System.out.print(struct.prev2());
+					}
+
+					// System.out.print("]");
+				} else if (struct instanceof StructH) {
+
+					// System.out.print(struct.toString());
+					ArrayList<Struct> childrenStructList = struct.children();
+
+					if (childrenStructList == null || childrenStructList.size() == 0)
+						return 1;
+
+					// System.out.print("[");
+					for (int j = 0; j < childrenStructList.size(); j++) {
+						// System.out.print(childRelation.get(j) + " ");
+						// dfs(childrenStructList.get(j));
+
+						Struct childStruct = childrenStructList.get(j);
+
+						double curStructScore = childStruct.score();
+						// create MatrixPathNode for each child Struct
+						MatrixPathNode childMxPathNode = new MatrixPathNode(curStructScore, childStruct);
+
+						tempDownScore *= ArrayDFS(childMxPathNode);
+					}
+					// System.out.print("]");
+				}
+				if (tempDownScore > highestDownScore) {
+					highestDownScore = tempDownScore;
+					highestDownScoreIndex = i;
+				}
+
+				mxPathNodeStruct.set_maxDownPathScore(tempDownScore);
+
+			} // end for loop through structList
+
+			// set highestDownScoreIndex
+			structList.set_highestDownScoreIndex(highestDownScoreIndex);
+		} else {
 			highestDownScoreIndex = structList.highestDownScoreIndex();
 			highestDownScore = structList.structList().get(highestDownScoreIndex).maxDownPathScore();
-			
+
 		}
 		return highestDownScore;
 	}
-	
+
 	/**
 	 * write unknown words to file to classify them
+	 * 
 	 * @throws IOException
 	 */
-	public static void writeUnknownWordsToFile() throws IOException{
+	public static void writeUnknownWordsToFile() throws IOException {
 		Files.write(unknownWordsFile, unknownWords, Charset.forName("UTF-8"));
 	}
-	
+
 	/**
 	 * write unknown words to file to classify them
+	 * 
 	 * @throws IOException
 	 */
-	public static void writeParsedExprToFile() throws IOException{
+	public static void writeParsedExprToFile() throws IOException {
 		Files.write(parsedExprFile, parsedExpr, Charset.forName("UTF-8"));
 	}
-	
+
 	/**
 	 * if not full parse, try to make into full parse by fishing out the
 	 * essential sentence structure, and discarding the phrases still not
@@ -1617,7 +1703,7 @@ public class ThmP1 {
 			if (struct.prev1() instanceof Struct) {
 				dfs((Struct) struct.prev1());
 			}
-			
+
 			// if(struct.prev2() != null && !struct.prev2().equals(""))
 			// System.out.print(", ");
 			if (((StructA<?, ?>) struct).prev2() instanceof Struct) {
@@ -1658,97 +1744,100 @@ public class ThmP1 {
 
 	/**
 	 * Preprocess. Remove fluff words. the, a, an
-	 * @param str is string of all input to be processed. 
+	 * 
+	 * @param str
+	 *            is string of all input to be processed.
 	 * @return array of sentence Strings
 	 */
 	public static String[] preprocess(String inputStr) {
-		
+
 		ArrayList<String> sentenceList = new ArrayList<String>();
-		
+
 		String[] wordsArray = inputStr.replaceAll("([^.,!:]*)([.|,|:|!]{1})", "$1 $2").split("\\s+");
 		int wordsArrayLen = wordsArray.length;
-		
-		//use StringBuilder!
+
+		// use StringBuilder!
 		StringBuilder sentenceBuilder = new StringBuilder();
-		//String newSentence = "";		
+		// String newSentence = "";
 		String curWord;
-		
-		boolean inTex = false; //in latex expression?
+
+		boolean inTex = false; // in latex expression?
 		boolean madeReplacement = false;
 		boolean toLowerCase = true;
-		boolean inParen = false; //in parenthetical remark?
-		
+		boolean inParen = false; // in parenthetical remark?
+
 		for (int i = 0; i < wordsArrayLen; i++) {
-			
-			curWord = wordsArray[i];					
-			
-			if(!inTex){
-				if(inParen || curWord.matches("\\([^)]*\\)")){					
+
+			curWord = wordsArray[i];
+
+			if (!inTex) {
+				if (inParen || curWord.matches("\\([^)]*\\)")) {
 					continue;
-				}else if(curWord.matches("\\([^)]*")){
+				} else if (curWord.matches("\\([^)]*")) {
 					inParen = true;
 					continue;
-				}else if(inParen && curWord.matches("[^)]*)")){
+				} else if (inParen && curWord.matches("[^)]*)")) {
 					inParen = false;
 					continue;
-				}			
+				}
 			}
-			
-			if(!inTex && curWord.matches("\\$.*") && !curWord.matches("\\$[^$]+\\$.*")){				
+
+			if (!inTex && curWord.matches("\\$.*") && !curWord.matches("\\$[^$]+\\$.*")) {
 				inTex = true;
-			}else if(inTex && curWord.contains("$")){
-			//}else if(curWord.matches("[^$]*\\$|\\$[^$]+\\$.*") ){
-				inTex = false;						
-				toLowerCase = false;				
-			}else if(curWord.matches("\\$[^$]+\\$.*")){
+			} else if (inTex && curWord.contains("$")) {
+				// }else if(curWord.matches("[^$]*\\$|\\$[^$]+\\$.*") ){
+				inTex = false;
+				toLowerCase = false;
+			} else if (curWord.matches("\\$[^$]+\\$.*")) {
 				toLowerCase = false;
 			}
 
-			//fluff phrases all start in posMap		
+			// fluff phrases all start in posMap
 			String curWordLower = curWord.toLowerCase();
-			if(posMap.containsKey(curWordLower)){
+			if (posMap.containsKey(curWordLower)) {
 				String pos = posMap.get(curWordLower);
 				String[] posAr = pos.split("_");
 				String tempWord = curWord;
-				
+
 				int j = i;
-					//potentially a fluff phrase
-				if(posAr[posAr.length-1].equals("comp") && j < wordsArrayLen-1){
-					//keep reading in string characters, until there is no match				
+				// potentially a fluff phrase
+				if (posAr[posAr.length - 1].equals("comp") && j < wordsArrayLen - 1) {
+					// keep reading in string characters, until there is no
+					// match
 					tempWord += " " + wordsArray[++j];
-					
-					while(posMap.containsKey(tempWord.toLowerCase()) && j < wordsArrayLen-1){
+
+					while (posMap.containsKey(tempWord.toLowerCase()) && j < wordsArrayLen - 1) {
 						tempWord += " " + wordsArray[++j];
 					}
-					
+
 					String replacement = fluffMap.get(tempWord.toLowerCase());
-					if(replacement != null){
+					if (replacement != null) {
 						sentenceBuilder.append(" " + replacement);
 						madeReplacement = true;
 						i = j;
 					}
-					//curWord += wordsArray[++i];
-				}				
+					// curWord += wordsArray[++i];
+				}
 			}
-			
-			//if composite fluff word ?? already taken care of
-			if (!madeReplacement && !curWord.matches("\\.|,|!") && !fluffMap.containsKey(curWord.toLowerCase())){
-			//if (!curWord.matches("\\.|,|!") && !fluffMap.containsKey(curWord)){	
-				if(inTex || !toLowerCase){
+
+			// if composite fluff word ?? already taken care of
+			if (!madeReplacement && !curWord.matches("\\.|,|!") && !fluffMap.containsKey(curWord.toLowerCase())) {
+				// if (!curWord.matches("\\.|,|!") &&
+				// !fluffMap.containsKey(curWord)){
+				if (inTex || !toLowerCase) {
 					sentenceBuilder.append(" " + curWord);
 					toLowerCase = true;
-				}
-				else
+				} else
 					sentenceBuilder.append(" " + curWord.toLowerCase());
-			}			
+			}
 			madeReplacement = false;
-			
-			if(curWord.matches("\\.|,|!") || i == wordsArrayLen-1){
 
-				if(!inTex){
+			if (curWord.matches("\\.|,|!") || i == wordsArrayLen - 1) {
+
+				if (!inTex) {
 					sentenceList.add(sentenceBuilder.toString());
 					sentenceBuilder.setLength(0);
-				}else{
+				} else {
 					sentenceBuilder.append(curWord);
 				}
 			}

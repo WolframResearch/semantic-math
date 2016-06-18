@@ -20,23 +20,46 @@ public class StructA<A, B> extends Struct{
 	//pointer to mx.get(i).get(j)
 	private StructList structList;
 	private double maxDownPathScore;
-	private List<MatrixPathNode> mxPathNodeList;
+	//don't need mxPathNodeList. The path down from this Struct should 
+	//be unique. It's the parents' paths to here that can differ
+	//private List<MatrixPathNode> mxPathNodeList;
 	
-	public StructA(A prev1, B prev2, String type){
-		
-		this.prev1 = prev1;		
-		this.prev2 = prev2;
-		this.type = type; 
-		this.score = 1;
-	}
-	
+	//is this ever needed?
 	public StructA(A prev1, B prev2, String type, StructList structList){		
 		this.prev1 = prev1;		
 		this.prev2 = prev2;
 		this.type = type; 
 		this.score = 1;
 		this.structList = structList;
-		this.mxPathNodeList = new ArrayList<MatrixPathNode>();
+	}
+	
+	public StructA(A prev1, B prev2, String type){		
+		this.prev1 = prev1;		
+		this.prev2 = prev2;
+		this.type = type; 
+		this.score = 1;
+	}
+	
+	/**
+	 * 
+	 * @param prev1
+	 * @param prev2
+	 * @param type
+	 * @param structList   pointer to list of Struct's containing this.
+	 */
+	public StructA(A prev1, B prev2, String type, double score, StructList structList){		
+		this.prev1 = prev1;		
+		this.prev2 = prev2;
+		this.type = type; 
+		this.score = 1;
+		this.structList = structList;
+		this.score = score;
+		//this.mxPathNodeList = new ArrayList<MatrixPathNode>();
+	}
+
+	@Override
+	public void set_structList(StructList structList){
+		this.structList = structList;
 	}
 
 	@Override

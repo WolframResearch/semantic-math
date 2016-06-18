@@ -22,7 +22,10 @@ public class Struct {
 		this.type = type;
 	}
 	*/
-	
+
+	public void set_structList(StructList structList){
+	}
+
 	//returns probability of relation in Rule
 	public double score(){
 		return 0;
