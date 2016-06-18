@@ -37,39 +37,23 @@ public class MatrixPathNode {
 		this.curStruct = curStruct;
 	} */
 	
+	
 	/**
-	 * 
-	 * @param index
-	 * @param ownScore
-	 * @param scoreSoFar
-	 * @param leftNode
-	 * @param rightNode
-	 * @param curStruct is Struct corresponding to this mxEntry
+	 *  * @param curStruct is Struct corresponding to this mxEntry
 	 * @param structList is List of Struct's in the mx entry
+	 * @param curStruct
 	 */
-	public MatrixPathNode(int index, double ownScore,
-			Struct curStruct){
-		//this.mxPosition = pos;
-		this.listIndex = index;
-		//this.leftNode = leftNode;
-		//this.rightNode = rightNode;
-		this.ownScore = ownScore;
-		//this.scoreSoFar = scoreSoFar;
-		this.curStruct = curStruct;
-		//this.structList = structList;
-	}
-	
-	public MatrixPathNode(double ownScore,
+	public MatrixPathNode(
 			Struct curStruct){
 		//this.mxPosition = pos;
 		//this.leftNode = leftNode;
 		//this.rightNode = rightNode;
-		this.ownScore = ownScore;
 		//this.scoreSoFar = scoreSoFar;
 		this.curStruct = curStruct;
+		this.ownScore = curStruct.score();
 		//this.structList = structList;
 	}
-	
+
 	/*public StructList structList() {
 		return structList;
 	} */

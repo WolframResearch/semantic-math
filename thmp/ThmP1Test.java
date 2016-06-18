@@ -141,16 +141,21 @@ public class ThmP1Test {
 			st = "then $R$ is a regular local ring";
 			st = "if $R_1, R_3$ are rings";
 			st = "this is a (perfect) field";
-			st = "this field is perfect and every field is good"; ///*****
-			//st = "$R$ is Noetherian and every R algebra is catenary.";
-			st = "A ring $R$ is said to be  universally catenary if $R$ is Noetherian and every $R$ algebra of finite type is catenary.";
+			//st = "this field is perfect and every field is good"; ///*****
+			st = "$R$ is Noetherian and every R algebra is catenary.";
+			//st = "A ring $R$ is said to be  universally catenary if $R$ is Noetherian and every $R$ algebra of finite type is catenary.";
 			
 			//st = "let $A : R$ be a ring";
 			st = "A maximal ideal $I$ with $I$ proper";
+			st = "ideal with $I$ proper";
+			st = "Let $x_1, ldots, x_c in mathfrak m$ be elements";
+			st = "Then $$ x_1, ldots, x_c text{ is a regular sequence }Leftrightarrow dim(R(x_1, ldots, x_c)) = dim(R) - c $$ If so $x_1, ldots, x_c$ can be extended to a regular sequence of length $dim(R)$ and each quotient $R/(x_1, ldots, x_i)$ is a Cohen-Macaulay ring of dimension $dim(R) - i$";
+			st = "Then $$ x_1, ldots, x_c text{ is a regular sequence }Leftrightarrow dim(R(x_1, ldots, x_c)) = dim(R) - c $$ If so $x_1, ldots, x_c$ can be extended to a regular sequence of length $dim(R)$";
+			st = "a field is a ring and each quotient $R/(x_1, ldots, x_i)$ is a Cohen-Macaulay ring of dimension $dim(R) - i$";
+			
 			//st = "field are perfect and fields are rings";
-			//st = "fields are fields and fields are rings";
-			
-			
+			//st = "fields are fields and fields are rings";			
+			//st = "assume there exists a module with $M = R$";
 			//st = "this topological and perfect field";
 			//st = "for subset S of A";
 			//st = "for field of F"; //......

@@ -31,6 +31,10 @@ public class Struct {
 		return 0;
 	}
 	
+	public int numUnits(){
+		return 1;
+	}
+	
 	public double maxDownPathScore(){
 		return 0;
 	}

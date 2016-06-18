@@ -664,7 +664,7 @@ public class ThmP1 {
 
 					Pair nextPair = pairs.get(index + 1);
 					Pair prevPair = pairs.get(index - 1);
-					//should handle later with grammar rules in mx!
+					// should handle later with grammar rules in mx!
 					// ent of ent
 					if (prevPair.pos().matches("\\d+$") && nextPair.pos().matches("\\d+$")) {
 						int mathObjIndex = Integer.valueOf(prevPair.pos());
@@ -766,7 +766,7 @@ public class ThmP1 {
 
 				String curWord = curPair.word();
 
-				// is leaf if prev2 is empty string ""
+				// is leaf of prev2 is empty string ""
 				StructA<String, String> newStruct = new StructA<String, String>(curWord, "", curPair.pos());
 
 				if (curPair.pos().equals("adj")) {
@@ -862,11 +862,11 @@ public class ThmP1 {
 			// mx.get(j).set(j, diagonalStruct);
 			Struct diagonalStruct = inputList.get(j);
 			diagonalStruct.set_structList(mx.get(j).get(j));
-			
+
 			mx.get(j).get(j).add(diagonalStruct);
 
 			// mx.get(j).set(j, inputList.get(j));
-			
+
 			// startRow should actually *always* be < j
 			int i = j - 1;
 			if (startRow != -1 && startRow < j) {
@@ -1102,71 +1102,59 @@ public class ThmP1 {
 
 							// iterate through the List at position (i-1, i-1)
 							if (i > 0 && i + 1 < len) {
-								
+
 								/*
-								List<Struct> iMinusOneStructList = mx.get(i - 1).get(i - 1).structList();
-
-								if (type1.matches("or|and") && iMinusOneStructList.size() > 0) {
-
-									// Iterator<Struct> iMinusOnestructIter =
-									// mx.get(i-1).get(i-1).iterator();
-
-									for (Struct iMinusOneStruct : iMinusOneStructList) {
-
-										if(type1.matches("and"))
-											System.out.print("debug");
-										if (type2.equals(iMinusOneStruct.type())) {
-
-											// In case of conj, only proceed if
-											// next
-											// word is not a singular verb.
-											// Single case with complicated
-											// logic,
-											// so it's easier more readable to
-											// write
-											// if(this case){
-											// }then{do_something}
-											// over if(not this
-											// case){do_something}
-											Struct nextStruct = j + 1 < len ? inputList.get(j + 1) : null;
-											if (nextStruct != null && type1.equals("and")
-													&& nextStruct.prev1() instanceof String
-													&& isSingularVerb((String) nextStruct.prev1())) {
-
-												// skip rest in this case
-											} else {
-
-												String newType = type1.equals("or") ? "disj" : "conj";
-												// type is expression, eg "a and
-												// b"
-												// new type: conj_verbphrase
-
-												StructA<Struct, Struct> parentStruct = new StructA<Struct, Struct>(
-														iMinusOneStruct, struct2, newType + "_" + type2, 
-														mx.get(i-1).get(j));
-
-												// set parent struct in row
-												// above
-												// mx.get(i - 1).set(j,
-												// parentStruct);
-												mx.get(i - 1).get(j).add(parentStruct);
-												// set the next token to "", so
-												// not
-												// classified again
-												// with others
-												// mx.get(i+1).set(j, null);
-												// already classified, no need
-												// to
-												// keep reduce with mx
-												// manipulations												
-												break;
-											}
-										}
-									} // this case can be combined with if
-										// statement
-										// above, use single while loop
-								} else  */
-									if (type1.matches("or|and")) {
+								 * List<Struct> iMinusOneStructList = mx.get(i -
+								 * 1).get(i - 1).structList();
+								 * 
+								 * if (type1.matches("or|and") &&
+								 * iMinusOneStructList.size() > 0) {
+								 * 
+								 * // Iterator<Struct> iMinusOnestructIter = //
+								 * mx.get(i-1).get(i-1).iterator();
+								 * 
+								 * for (Struct iMinusOneStruct :
+								 * iMinusOneStructList) {
+								 * 
+								 * if(type1.matches("and"))
+								 * System.out.print("debug"); if
+								 * (type2.equals(iMinusOneStruct.type())) {
+								 * 
+								 * // In case of conj, only proceed if // next
+								 * // word is not a singular verb. // Single
+								 * case with complicated // logic, // so it's
+								 * easier more readable to // write // if(this
+								 * case){ // }then{do_something} // over if(not
+								 * this // case){do_something} Struct nextStruct
+								 * = j + 1 < len ? inputList.get(j + 1) : null;
+								 * if (nextStruct != null && type1.equals("and")
+								 * && nextStruct.prev1() instanceof String &&
+								 * isSingularVerb((String) nextStruct.prev1()))
+								 * {
+								 * 
+								 * // skip rest in this case } else {
+								 * 
+								 * String newType = type1.equals("or") ? "disj"
+								 * : "conj"; // type is expression, eg "a and //
+								 * b" // new type: conj_verbphrase
+								 * 
+								 * StructA<Struct, Struct> parentStruct = new
+								 * StructA<Struct, Struct>( iMinusOneStruct,
+								 * struct2, newType + "_" + type2,
+								 * mx.get(i-1).get(j));
+								 * 
+								 * // set parent struct in row // above //
+								 * mx.get(i - 1).set(j, // parentStruct);
+								 * mx.get(i - 1).get(j).add(parentStruct); //
+								 * set the next token to "", so // not //
+								 * classified again // with others //
+								 * mx.get(i+1).set(j, null); // already
+								 * classified, no need // to // keep reduce with
+								 * mx // manipulations break; } } } // this case
+								 * can be combined with if // statement //
+								 * above, use single while loop } else
+								 */
+								if (type1.matches("or|and")) {
 									int l = 1;
 									boolean stopLoop = false;
 
@@ -1182,24 +1170,41 @@ public class ThmP1 {
 										for (int p = 0; p < structArrayListSz; p++) {
 											Struct p_struct = structArrayList.get(p);
 											if (type2.equals(p_struct.type())) {
+												
+												// In case of conj, only proceed if // next
+												  // word is not a singular verb. // Single case with complicated 
+												// logic, // so it's easier more readable to // write // if(this
+												//case){ // }then{do_something} // over if(not
+												 // this // case){do_something} 
+												 Struct nextStruct = j + 1 < len ? inputList.get(j + 1) : null;
+												  if (nextStruct != null && type1.equals("and")
+												  && nextStruct.prev1() instanceof String &&
+												  isSingularVerb((String) nextStruct.prev1())){
+													 
+												 }else{
+												
 												String newType = type1.matches("or") ? "disj" : "conj";
 												// type is expression, eg "a and
 												// b".
 												// Come up with a scoring system
 												// for and/or!
+												//should work a score in to conj/disj! The longer the conj/disj the higher
 												StructA<Struct, Struct> parentStruct = new StructA<Struct, Struct>(
 														p_struct, struct2, newType + "_" + type2, mx.get(i - l).get(j));
 
+												//parentStruct.set_maxDownPathScore();
+												
 												mx.get(i - l).get(j).add(parentStruct);
 												// mx.get(i - l).set(j,
 												// parentStruct);
 												// mx.get(i+1).set(j, null);
 												stopLoop = true;
 												break searchConjLoop;
+												 }
 											}
 										}
-										//if (stopLoop)
-											//break;
+										// if (stopLoop)
+										// break;
 										l++;
 									}
 
@@ -1226,10 +1231,10 @@ public class ThmP1 {
 										type1, type2);
 							}
 
-						} // listIter1
-					} // listIter2
+						} // loop listIter1 ends here
+					} // loop listIter2 ends here
 
-					// for (int k = j - 1; k >= i; k--) { ends here
+					// loop for (int k = j - 1; k >= i; k--) { ends here
 				}
 
 			}
@@ -1239,69 +1244,81 @@ public class ThmP1 {
 
 		// string together the parsed pieces
 		// ArrayList (better at get/set) or LinkedList (better at add/remove)?
-		//iterating over all headStruct
-		StructList headStructList = mx.get(0).get(len-1);
+		// iterating over all headStruct
+		StructList headStructList = mx.get(0).get(len - 1);
 		int headStructListSz = headStructList.size();
-		System.out.println("headStructListSz " + headStructListSz );
-		
-		for(int u = 0; u < headStructListSz; u++){
-			
-		List<StructList> parsedStructList = new ArrayList<StructList>();
+		System.out.println("headStructListSz " + headStructListSz);
 
-		int i = 0, j = len - 1;
-		while (j > -1) {
-			i = 0;
-			while (mx.get(i).get(j).size() == 0) {
-				i++;
-				// some diagonal elements can be set to null on purpose
-				if (i >= j) {
-					break;
+		if (headStructListSz > 0) {
+			//System.out.println("index of highest score: " + ArrayDFS(headStructList));
+			for (int u = 0; u < headStructListSz; u++) {
+				Struct uHeadStruct = headStructList.structList().get(u);
+				
+				dfs(uHeadStruct);
+				System.out.println(uHeadStruct.maxDownPathScore());
+				System.out.println(uHeadStruct.numUnits());
+			}
+		} 
+		// if no full parse:
+		else {
+			List<StructList> parsedStructList = new ArrayList<StructList>();
+
+			int i = 0, j = len - 1;
+			while (j > -1) {
+				i = 0;
+				while (mx.get(i).get(j).size() == 0) {
+					i++;
+					// some diagonal elements can be set to null on purpose
+					if (i >= j) {
+						break;
+					}
+				}
+
+				StructList tempStructList = mx.get(i).get(j);
+
+				// if not null or fluff.
+				// What kind of fluff can trickle down here??
+				// for the check !tempStruct.type().equals(FLUFF)
+				if (tempStructList.size() > 0) {
+					parsedStructList.add(0, tempStructList);
+				}
+				// a singleton on the diagonal
+				if (i == j) {
+					j--;
+				} else {
+					j = i - 1;
 				}
 			}
 
-			StructList tempStructList = mx.get(i).get(j);
+			// if not full parse, try to make into full parse by fishing out the
+			// essential sentence structure, and discarding the phrases still
+			// not
+			// labeled after 2nd round
+			// parse2(parsedStructList);
 
-			// if not null or fluff.
-			// What kind of fluff can trickle down here??
-			// for the check !tempStruct.type().equals(FLUFF)
-			if (tempStructList.size() > 0) {
-				parsedStructList.add(0, tempStructList);
-			}
-			// a singleton on the diagonal
-			if (i == j) {
-				j--;
-			} else {
-				j = i - 1;
+			// print out the system
+			int parsedStructListSize = parsedStructList.size();
+
+			for (int k = 0; k < parsedStructListSize; k++) {
+				//int highestScoreIndex = ArrayDFS(parsedStructList.get(k));
+				int highestScoreIndex = 0;
+				
+				Struct kHeadStruct = parsedStructList.get(k).structList().get(highestScoreIndex);
+				dfs(kHeadStruct);
+				if (k < parsedStructListSize - 1)
+					System.out.print(" ,  ");
 			}
 		}
-
-		// if not full parse, try to make into full parse by fishing out the
-		// essential sentence structure, and discarding the phrases still not
-		// labeled after 2nd round
-		// parse2(parsedStructList);
-
-		// print out the system
-		int parsedStructListSize = parsedStructList.size();
-
-		for (int k = 0; k < parsedStructListSize; k++) {
-			int highestScoreIndex = ArrayDFS(parsedStructList.get(k));
-			
-			Struct kHeadStruct = parsedStructList.get(k).structList().get(highestScoreIndex);
-			dfs(kHeadStruct);
-			if (k < parsedStructListSize - 1)
-				System.out.print(" ,  ");
-		}
-	}
-		
-		//print out scores
-		/*StructList headStructList = mx.get(0).get(len-1);
-		int headStructListSz = headStructList.size();
-		System.out.println("headStructListSz " + headStructListSz );
-		for(int u = 0; u < headStructListSz; u++){
-			System.out.println(headStructList.structList().get(u) );
-		} */
-		
+		// print out scores
 		/*
+		 * StructList headStructList = mx.get(0).get(len-1); int
+		 * headStructListSz = headStructList.size(); System.out.println(
+		 * "headStructListSz " + headStructListSz ); for(int u = 0; u <
+		 * headStructListSz; u++){
+		 * System.out.println(headStructList.structList().get(u) ); }
+		 */
+
+		/*  Don't delete this part!
 		 * System.out.println("\nWL: "); StructList headStructList = mx.get(len
 		 * - 1).get(len - 1); //should pick out best parse before WL and just
 		 * parse to WL for that particular parse!
@@ -1356,12 +1373,12 @@ public class ThmP1 {
 	 */
 	public static void reduce(ArrayList<ArrayList<StructList>> mx, String combined, Struct struct1, Struct struct2,
 			Struct firstEnt, Struct recentEnt, int recentEntIndex, int i, int j, int k, String type1, String type2) {
-		// reduce
-
+		
 		Rule newRule = structMap.get(combined);
 		String newType = newRule.relation();
 		double newScore = newRule.prob();
-
+		double newDownPathScore = struct1.maxDownPathScore() * struct2.maxDownPathScore() * newScore;
+		
 		// newChild means to fuse second entity into first one
 
 		if (newType.equals("newchild")) {
@@ -1402,7 +1419,9 @@ public class ThmP1 {
 
 			recentEnt = newStruct;
 			recentEntIndex = j;
-
+						
+			struct2.set_maxDownPathScore( newDownPathScore );
+			
 			// mx.get(i).set(j, newStruct);
 			mx.get(i).get(j).add(newStruct);
 
@@ -1411,6 +1430,7 @@ public class ThmP1 {
 				// combine adj and noun
 				String adj = (String) struct1.prev1();
 				struct2.set_prev1(adj + " " + struct2.prev1());
+				struct2.set_maxDownPathScore( struct2.maxDownPathScore()*newScore );
 				// mx.get(i).set(j, struct2);
 				mx.get(i).get(j).add(struct2);
 			}
@@ -1437,13 +1457,10 @@ public class ThmP1 {
 				if (namesMap.containsKey(entKey)) {
 					Struct entity = namesMap.get(entKey);
 					struct2.set_prev2(entity.struct().get("name"));
-
 				}
-
 			}
 
-			// add to namesMap if letbe defines a name for an
-			// ent
+			// add to namesMap if letbe defines a name for an ent
 			if (newType.equals("letbe") && mx.get(i + 1).get(k).size() > 0 && mx.get(k + 2).get(j).size() > 0) {
 				// temporary patch Rewrite StructA to avoid cast
 				// assert(struct1 instanceof StructA);
@@ -1479,9 +1496,11 @@ public class ThmP1 {
 
 			// create new StructA and put in mx, along with score for
 			// struct1_struct2 combo
+			double parentDownPathScore = struct1.maxDownPathScore() * struct2.maxDownPathScore() * newScore;
+			int parentNumUnits = struct1.numUnits() + struct2.numUnits();
 			StructA<Struct, Struct> parentStruct = new StructA<Struct, Struct>(struct1, struct2, newType, newScore,
-					mx.get(i).get(j));
-
+					mx.get(i).get(j), parentDownPathScore, parentNumUnits);
+			
 			// mx.get(i).set(j, parentStruct);
 			mx.get(i).get(j).add(parentStruct);
 		}
@@ -1505,8 +1524,7 @@ public class ThmP1 {
 		// fill in the list of MatrixPathNode's from structList
 
 		// highest score encountered so far in list
-		double highestDownScore = 1;
-
+		double highestDownScore = 0;
 		int highestDownScoreIndex = 0;
 
 		List<Struct> structArList = structList.structList();
@@ -1519,7 +1537,7 @@ public class ThmP1 {
 			double ownScore = curStruct.score();
 			// create appropriate right and left Node's
 
-			MatrixPathNode curMxPathNode = new MatrixPathNode(i, ownScore, curStruct);
+			MatrixPathNode curMxPathNode = new MatrixPathNode(curStruct);
 
 			// put path into corresponding Struct, the score along the path
 			// down from here
@@ -1553,11 +1571,12 @@ public class ThmP1 {
 
 		// highest down score encountered so far in list
 		double highestDownScore = 0;
-		//System.out.println(mxPathNodeStruct);
-		//if structList == null at this point, it means the Struct is leaf, so can return
-		if(structList == null)
+		// System.out.println(mxPathNodeStruct);
+		// if structList == null at this point, it means the Struct is leaf, so
+		// can return
+		if (structList == null)
 			return 1;
-		
+
 		int highestDownScoreIndex = structList.highestDownScoreIndex();
 		// Iterator<Struct> structListIter = structList.iterator();
 
@@ -1574,12 +1593,12 @@ public class ThmP1 {
 			// double scoreSoFar = mxPathNode.scoreSoFar();
 
 			for (int i = 0; i < structListSz; i++) {
-				// highest score down from this Struct
-				double tempDownScore = 1;
 
 				Struct struct = structArList.get(i);
 
 				double structScore = struct.score();
+				// highest score down from this Struct
+				double tempDownScore = structScore;
 
 				// don't like instanceof here
 				if (struct instanceof StructA) {
@@ -1592,7 +1611,7 @@ public class ThmP1 {
 						// int index, double ownScore, double scoreSoFar,
 
 						// leftMxPathNode corresponds to Struct struct.prev1()
-						MatrixPathNode leftMxPathNode = new MatrixPathNode(i, structScore, (Struct) struct.prev1());
+						MatrixPathNode leftMxPathNode = new MatrixPathNode((Struct) struct.prev1());
 						tempDownScore *= ArrayDFS(leftMxPathNode);
 					}
 
@@ -1601,8 +1620,8 @@ public class ThmP1 {
 						// System.out.print(", ");
 						// dfs((Struct) struct.prev2());
 						// construct new MatrixPathNode for right child
-						MatrixPathNode rightMxPathNode = new MatrixPathNode(i, structScore, (Struct) struct.prev2());
-						tempDownScore *= ArrayDFS(rightMxPathNode) * structScore;
+						MatrixPathNode rightMxPathNode = new MatrixPathNode((Struct) struct.prev2());
+						tempDownScore *= ArrayDFS(rightMxPathNode);
 					}
 
 					// reached leaf. Add score to mxPathNode being passed in,
@@ -1613,7 +1632,7 @@ public class ThmP1 {
 						// score
 					}
 					if (struct.prev2() instanceof String) {
-
+						
 						// if (!struct.prev2().equals(""))
 						// System.out.print(", ");
 						// System.out.print(struct.prev2());
@@ -1625,9 +1644,9 @@ public class ThmP1 {
 					// System.out.print(struct.toString());
 					ArrayList<Struct> childrenStructList = struct.children();
 
-					if (childrenStructList == null || childrenStructList.size() == 0)
-						return 1;
-
+					if (childrenStructList != null && childrenStructList.size() > 0){
+						//return 1;
+					
 					// System.out.print("[");
 					for (int j = 0; j < childrenStructList.size(); j++) {
 						// System.out.print(childRelation.get(j) + " ");
@@ -1635,12 +1654,13 @@ public class ThmP1 {
 
 						Struct childStruct = childrenStructList.get(j);
 
-						double curStructScore = childStruct.score();
+						//double curStructScore = childStruct.score();
 						// create MatrixPathNode for each child Struct
-						MatrixPathNode childMxPathNode = new MatrixPathNode(curStructScore, childStruct);
+						MatrixPathNode childMxPathNode = new MatrixPathNode(childStruct);
 
 						tempDownScore *= ArrayDFS(childMxPathNode);
 					}
+				}
 					// System.out.print("]");
 				}
 				if (tempDownScore > highestDownScore) {

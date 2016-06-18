@@ -19,7 +19,13 @@ public class StructA<A, B> extends Struct{
 	//list of Struct at mx element, to which this Struct belongs
 	//pointer to mx.get(i).get(j)
 	private StructList structList;
-	private double maxDownPathScore;
+	//includes this/current Struct's score!
+	private double DOWNPATHSCOREDEFAULT = 1;
+	private double maxDownPathScore = DOWNPATHSCOREDEFAULT;
+	
+	//number of units down from this Struct , used for tie-breaking.
+	//StructH counts as one unit. Lower numUnits wins.
+	private int numUnits;
 	//don't need mxPathNodeList. The path down from this Struct should 
 	//be unique. It's the parents' paths to here that can differ
 	//private List<MatrixPathNode> mxPathNodeList;
@@ -30,6 +36,7 @@ public class StructA<A, B> extends Struct{
 		this.prev2 = prev2;
 		this.type = type; 
 		this.score = 1;
+		this.numUnits = 1;
 		this.structList = structList;
 	}
 	
@@ -37,6 +44,7 @@ public class StructA<A, B> extends Struct{
 		this.prev1 = prev1;		
 		this.prev2 = prev2;
 		this.type = type; 
+		this.numUnits = 1;
 		this.score = 1;
 	}
 	
@@ -47,16 +55,44 @@ public class StructA<A, B> extends Struct{
 	 * @param type
 	 * @param structList   pointer to list of Struct's containing this.
 	 */
+	/*
 	public StructA(A prev1, B prev2, String type, double score, StructList structList){		
 		this.prev1 = prev1;		
 		this.prev2 = prev2;
 		this.type = type; 
-		this.score = 1;
 		this.structList = structList;
 		this.score = score;
+		this.numUnits = 1;
+		//this.mxPathNodeList = new ArrayList<MatrixPathNode>();
+	} */
+
+	/**
+	 * 
+	 * @param prev1
+	 * @param prev2
+	 * @param type
+	 * @param score
+	 * @param structList  pointer to list of Struct's containing this.
+	 * @param downPathScore 
+	 * @param numUnits
+	 */
+	public StructA(A prev1, B prev2, String type, double score, StructList structList, 
+			double downPathScore, int numUnits){		
+		this.prev1 = prev1;		
+		this.prev2 = prev2;
+		this.type = type; 
+		this.structList = structList;
+		this.score = score;
+		this.maxDownPathScore = downPathScore;
+		this.numUnits = numUnits;
 		//this.mxPathNodeList = new ArrayList<MatrixPathNode>();
 	}
-
+	
+	@Override
+	public int numUnits(){
+		return this.numUnits;
+	}
+	
 	@Override
 	public void set_structList(StructList structList){
 		this.structList = structList;

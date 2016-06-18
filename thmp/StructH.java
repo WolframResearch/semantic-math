@@ -14,8 +14,10 @@ public class StructH<H> extends Struct{
 	//relation to child, eg "of," "enjoyed"
 	private ArrayList<String> childRelation;	
 	private double score;
-	private double maxDownPathScore;
+	private double DOWNPATHSCOREDEFAULT = 1;
+	private double maxDownPathScore = DOWNPATHSCOREDEFAULT;
 	private StructList structList;
+	private int NUMUNITS = 1;
 	
 	//parent
 	//private Struct parent;
@@ -29,8 +31,9 @@ public class StructH<H> extends Struct{
 		this.score = 1;
 	}
 	
-	public StructH(HashMap<String, String> struct, String type, StructList structList){
-		
+	public StructH(HashMap<String, String> struct, String type, 
+			StructList structList, double downPathScore){
+		this.maxDownPathScore = downPathScore;
 		this.struct = struct;
 		this.type = type;
 		this.children = new ArrayList<Struct>();
@@ -82,11 +85,17 @@ public class StructH<H> extends Struct{
 		this.score = score;
 	}
 	
+	@Override
+	public int numUnits(){
+		return NUMUNITS;
+	}
+	
 	//make deep copy, struct and children children are copied
 	@Override
 	public StructH<H> copy(){
 		HashMap<String, String> structCopy = new HashMap<String, String>(this.struct);
-		StructH<H> newStructH = new StructH<H>(structCopy, this.type, this.structList);
+		StructH<H> newStructH = new StructH<H>(structCopy, this.type, this.structList,
+				this.maxDownPathScore);
 		
 		for(int i = 0; i < this.children.size(); i++){
 			newStructH.add_child(this.children.get(i), this.childRelation.get(i));
