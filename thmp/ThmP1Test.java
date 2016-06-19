@@ -150,8 +150,11 @@ public class ThmP1Test {
 			st = "ideal with $I$ proper";
 			st = "Let $x_1, ldots, x_c in mathfrak m$ be elements";
 			st = "Then $$ x_1, ldots, x_c text{ is a regular sequence }Leftrightarrow dim(R(x_1, ldots, x_c)) = dim(R) - c $$ If so $x_1, ldots, x_c$ can be extended to a regular sequence of length $dim(R)$ and each quotient $R/(x_1, ldots, x_i)$ is a Cohen-Macaulay ring of dimension $dim(R) - i$";
-			st = "Then $$ x_1, ldots, x_c text{ is a regular sequence }Leftrightarrow dim(R(x_1, ldots, x_c)) = dim(R) - c $$ If so $x_1, ldots, x_c$ can be extended to a regular sequence of length $dim(R)$";
-			st = "a field is a ring and each quotient $R/(x_1, ldots, x_i)$ is a Cohen-Macaulay ring of dimension $dim(R) - i$";
+			//st = "Then $$ x_1, ldots, x_c text{ is a regular sequence }Leftrightarrow dim(R(x_1, ldots, x_c)) = dim(R) - c $$ If so $x_1, ldots, x_c$ can be extended to a regular sequence of length $dim(R)$";
+			//st = "a field is a ring and each quotient $R/(x_1, ldots, x_i)$ is a Cohen-Macaulay ring of dimension $dim(R) - i$";
+			//st = "a field is a ring and a field is a ring and a field is a ring";
+			//st = "a field is a ring and a field is a ring";
+			st = "this can be written as F";
 			
 			//st = "field are perfect and fields are rings";
 			//st = "fields are fields and fields are rings";			

@@ -369,6 +369,9 @@ public class Maps {
 		structMap.put("verb_partiby", new Rule("verb", 1)); structMap.put("partiby_symb", new Rule("phrase", 1));
 		structMap.put("partiby_expr", new Rule("phrase", 1)); 		
 		structMap.put("be_parti", new Rule("verb", 1)); structMap.put("be_partiby", new Rule("verb", 1));
+		structMap.put("be_parti", new Rule("be_parti", .8)); structMap.put("can_be_parti", new Rule("verb", 1));
+		
+		
 		structMap.put("disj_verbphrase", new Rule("assert", 1)); structMap.put("conj_verbphrase", new Rule("assert", 1));
 		structMap.put("csubj_verbphrase", new Rule("assert", 1));
 		
