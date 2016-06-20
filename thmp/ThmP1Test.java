@@ -155,7 +155,13 @@ public class ThmP1Test {
 			//st = "a field is a ring and a field is a ring and a field is a ring";
 			//st = "a field is a ring and a field is a ring";
 			st = "this can be written as F";
-			
+			st = "this can be done";
+			st = "this gives a field";
+			st = "this sentence is a run-on";
+			st = "for all but finitely many ideals $I$ ";
+			//st = "topological ideal";
+			//st = "$I$ proper";
+			//st = "Pure ideals are determined by their vanishing locus.";
 			//st = "field are perfect and fields are rings";
 			//st = "fields are fields and fields are rings";			
 			//st = "assume there exists a module with $M = R$";

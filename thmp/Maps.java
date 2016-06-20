@@ -4,9 +4,17 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Multimap;
+
 import java.util.Map.Entry;
 
 /* contains the dictionaries and hashmaps 
@@ -20,7 +28,9 @@ public class Maps {
 	
 	//protected static HashMap<String, ArrayList<String>> entityMap;
 	//map of structures, for all, disj,  etc
-	protected static HashMap<String, Rule> structMap;
+	//protected static HashMap<String, Rule> structMap;
+	protected static Multimap<String, Rule> structMap;
+	
 	//structMap for the second run, grammars that shouldn't be 
 	//used in first run, like ent_verb: there exists
 	protected static HashMap<String, String> structMap2;
@@ -40,12 +50,53 @@ public class Maps {
 	//value is regex string to be matched
 	protected static HashMap<String, String> adjMap;
 	
+	// implmented via ImmutableMultimap. String is trigger word.
+	private static final ImmutableListMultimap<String, FixedPhrase> fixedPhraseMMap ;
+	
 	//replace string with a break, usully a comma
 	protected static ArrayList<String> breakList;
 	
 	//list of parts of speech, ent, verb etc
 	protected static ArrayList<String> posList;
 
+	// build fixedPhraseMap
+	static
+	{
+		
+		ImmutableListMultimap.Builder<String, FixedPhrase> fixedPhraseMMapBuilder = ImmutableListMultimap.<String, FixedPhrase>builder();
+		//should read in from file
+		File file = new File("src/thmp/data/fixedPhrases.txt");
+		
+		try {
+			Scanner sc = new Scanner(file);
+			
+			while(sc.hasNext()){
+				String line = sc.nextLine();
+				String[] fixedPhraseData = line.split("\\s*\\|\\s*");
+				
+				if(fixedPhraseData.length < 3) continue;
+				
+				String trigger = fixedPhraseData[0];
+				String triggerRegex = fixedPhraseData[1];
+				String pos = fixedPhraseData[2];
+				
+				fixedPhraseMMapBuilder.put(trigger, new FixedPhrase(triggerRegex, pos));
+			}
+			sc.close();			
+		} catch (FileNotFoundException e) {
+			
+			e.printStackTrace();
+		}		
+		
+		
+		fixedPhraseMMap = fixedPhraseMMapBuilder.build();
+	}
+	
+	// Getter methods
+	public static ImmutableListMultimap<String, FixedPhrase> fixedPhraseMap(){
+		return fixedPhraseMMap;
+	}
+	
 	/* build hashmap
 	 * 
 	 */
@@ -53,7 +104,9 @@ public class Maps {
 		//entityMap = new HashMap<String, ArrayList<String>>();
 		//ArrayList<String> ppt = new ArrayList<String>();
 		//ppt.add("characteristic"); 
-		//entityMap.put("Field", ppt);		
+		//entityMap.put("Field", ppt);
+		
+		
 		
 		adjMap = new HashMap<String, String>();
 		//value is regex string to be matched
@@ -268,7 +321,8 @@ public class Maps {
 		//struct map, statement/global structures
 		//can be written as, 
 		//structMap = new HashMap<String, String>();	
-		structMap = new HashMap<String, Rule>();
+		//structMap = new HashMap<String, Rule>();
+		structMap = ArrayListMultimap.<String, Rule>create();
 		//structMap.put("for all", "forall");		
 		
 		//"is" implies assertion <--remove this case, "is" should be interpreted as verb
@@ -357,7 +411,7 @@ public class Maps {
 		structMap.put("vbs_num", new Rule("verbphrase", 1)); structMap.put("vbs_np", new Rule("verbphrase", 1));
 		structMap.put("vbs_pre", new Rule("verbphrase", 1)); structMap.put("vbs_phrase", new Rule("verbphrase", 1));
 		structMap.put("vbs_partient", new Rule("verbphrase", 1)); structMap.put("vbs_noun", new Rule("verbphrase", 1));
-		structMap.put("det_verbphrase", new Rule("assert", 1)); structMap.put("vbs_parti", new Rule("verbphrase", 1));
+		structMap.put("vbs_parti", new Rule("verbphrase", 1));
 		
 		
 		structMap.put("symb_verbphrase", new Rule("assert", 1));
@@ -369,8 +423,8 @@ public class Maps {
 		structMap.put("verb_partiby", new Rule("verb", 1)); structMap.put("partiby_symb", new Rule("phrase", 1));
 		structMap.put("partiby_expr", new Rule("phrase", 1)); 		
 		structMap.put("be_parti", new Rule("verb", 1)); structMap.put("be_partiby", new Rule("verb", 1));
-		structMap.put("be_parti", new Rule("be_parti", .8)); structMap.put("can_be_parti", new Rule("verb", 1));
-		
+		structMap.put("be_parti", new Rule("be_parti", .8)); structMap.put("verb_be_parti", new Rule("verb", 1));
+		structMap.put("det_verb", new Rule("assert", .5));
 		
 		structMap.put("disj_verbphrase", new Rule("assert", 1)); structMap.put("conj_verbphrase", new Rule("assert", 1));
 		structMap.put("csubj_verbphrase", new Rule("assert", 1));
@@ -430,6 +484,7 @@ public class Maps {
 		}  */
 		
 	}
+
 	
 	/**
 	 * reads in list of words not in dictionary yet, puts them in appropriate

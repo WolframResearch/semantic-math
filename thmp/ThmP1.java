@@ -8,11 +8,19 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
+import java.util.regex.Matcher;
+
+import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Multimap;
 
 /* 
  * contains hashtable of entities (keys) and properties (values)
@@ -26,7 +34,7 @@ public class ThmP1 {
 	// private static HashMap<String, ArrayList<String>> entityMap =
 	// Maps.entityMap;
 	// map of structures, for all, disj, etc
-	private static HashMap<String, Rule> structMap;
+	private static Multimap<String, Rule> structMap;
 	private static HashMap<String, String> anchorMap;
 	// parts of speech map, e.g. "open", "adj"
 	private static HashMap<String, String> posMap;
@@ -53,10 +61,12 @@ public class ThmP1 {
 
 	private static final List<String> unknownWords = new ArrayList<String>();
 	private static final List<String> parsedExpr = new ArrayList<String>();
-
+	private static final ImmutableListMultimap<String, FixedPhrase> fixedPhraseMap = Maps.fixedPhraseMap();
+	
 	// part of speech, last resort after looking up entity property maps
 	// private static HashMap<String, String> pos;
 
+	//convert to static block!
 	public static void buildMap() throws FileNotFoundException {
 		Maps.buildMap();
 		Maps.readLexicon();
@@ -72,6 +82,7 @@ public class ThmP1 {
 		// hashmap contains <name, entity> pairs
 		// need to incorporate multi-letter names, like sigma
 		namesMap = new HashMap<String, Struct>();
+		
 	}
 
 	/**
@@ -113,9 +124,9 @@ public class ThmP1 {
 		boolean addIndex = true; // whether to add to pairIndex
 		// unfortunate naming
 		String[] str = sentence.split(" ");
-
+		
 		// int pairIndex = 0;
-		for (int i = 0; i < str.length; i++) {
+		strloop: for (int i = 0; i < str.length; i++) {
 
 			String curWord = str[i];
 
@@ -191,7 +202,46 @@ public class ThmP1 {
 
 				continue;
 			}
-
+			// check for trigger words
+			else if(i < str.length - 1){
+				String potentialTrigger = curWord + " " + str[i+1];
+				
+				if(fixedPhraseMap.containsKey(potentialTrigger)){
+					
+					// need multimap!! same trigger could apply to many phrases
+					// do first two words instead of 1, e.g. "for all" instead of just "for"
+					// since compound words contain at least 2 words
+					List<FixedPhrase> fixedPhraseList = fixedPhraseMap.get(potentialTrigger);
+					
+					Iterator<FixedPhrase> fixedPhraseListIter = fixedPhraseList.iterator();
+					while(fixedPhraseListIter.hasNext()){
+						FixedPhrase fixedPhrase = fixedPhraseListIter.next();
+					int numWordsDown = fixedPhrase.numWordsDown();
+					// don't really need this check
+					//  ... could have many pos!
+				
+					//String joined = StringUtils.join(Arrays.copyOfRange(str, i, str.length) );
+					String joined = "";
+					int k = i;
+					while(k < str.length && k - i < numWordsDown){
+						//String joined = String.join(Arrays.copyOfRange(str, i, str.length) );
+						joined += str[k] + " ";
+						k++;
+					}
+					Matcher matcher = fixedPhrase.phrasePattern().matcher(joined.trim());
+					if(matcher.matches()){
+						Pair phrasePair = new Pair(joined.trim(), fixedPhrase.pos());
+						pairs.add(phrasePair);
+						i += numWordsDown - 1;
+						
+						continue strloop;
+					}
+					
+				}
+				
+			}
+			}
+			
 			// primitive way to handle plural forms: if ends in "s"
 			String singular = "";
 			String singular2 = ""; // ending in "ies"
@@ -818,7 +868,9 @@ public class ThmP1 {
 	 */
 	public static void parse(ArrayList<Struct> inputList) {
 		int len = inputList.size();
-
+		//shouldn't be 0?!
+		if(len == 0) return;
+		
 		// first Struct
 		Struct firstEnt = null;
 		boolean foundFirstEnt = false;
@@ -911,15 +963,19 @@ public class ThmP1 {
 							String type2 = struct2.type();
 
 							// for types such as conj_verbphrase
+							
 							String[] split1 = type1.split("_");
 
-							if (split1.length > 1) {
+							if (split1.length > 1 && split1[0].matches("conj|disj")) {
+							//if (split1.length > 1) {
 								type1 = split1[1];
 							}
 
 							String[] split2 = type2.split("_");
 
-							if (split2.length > 1) {
+							if (split2.length > 1 && split2[0].matches("conj|disj")) {
+							//if (split2.length > 1) {
+
 								type2 = split2[1];
 							}
 
@@ -1239,8 +1295,13 @@ public class ThmP1 {
 
 							// reduce if structMap contains combined
 							if (structMap.containsKey(combined)) {
-								reduce(mx, combined, struct1, struct2, firstEnt, recentEnt, recentEntIndex, i, j, k,
+								Collection<Rule> ruleCol = structMap.get(combined);
+								Iterator<Rule> ruleColIter = ruleCol.iterator();
+								while(ruleColIter.hasNext()){
+									Rule ruleColNext = ruleColIter.next();
+									reduce(mx, ruleColNext, struct1, struct2, firstEnt, recentEnt, recentEntIndex, i, j, k,
 										type1, type2);
+								}
 							}
 
 						} // loop listIter1 ends here
@@ -1392,10 +1453,9 @@ public class ThmP1 {
 	/**
 	 * reduce if structMap contains combined
 	 */
-	public static void reduce(ArrayList<ArrayList<StructList>> mx, String combined, Struct struct1, Struct struct2,
+	public static void reduce(ArrayList<ArrayList<StructList>> mx, Rule newRule, Struct struct1, Struct struct2,
 			Struct firstEnt, Struct recentEnt, int recentEntIndex, int i, int j, int k, String type1, String type2) {
 
-		Rule newRule = structMap.get(combined);
 		String newType = newRule.relation();
 		double newScore = newRule.prob();
 		double newDownPathScore = struct1.maxDownPathScore() * struct2.maxDownPathScore() * newScore;
@@ -1441,7 +1501,7 @@ public class ThmP1 {
 			recentEnt = newStruct;
 			recentEntIndex = j;
 
-			struct2.set_maxDownPathScore(newDownPathScore);
+			newStruct.set_maxDownPathScore(newDownPathScore);
 
 			// mx.get(i).set(j, newStruct);
 			mx.get(i).get(j).add(newStruct);
