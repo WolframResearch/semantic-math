@@ -55,6 +55,7 @@ public class ParseToWL {
 					//make "Is[]" special assert per jose's request
 				}
 				inAssert = true;
+				type = "Assert";
 				break;
 			case "verbphrase":
 				if(inAssert && headStruct.prev1() instanceof Struct 
@@ -92,14 +93,15 @@ public class ParseToWL {
 			case "parti": type = ""; break;
 			case "partiby": type = ""; break;
 			case "noun": type = ""; break;
-			case "gerund": type = ""; break;
+			case "amod": type = ""; break;
+			case "letbe": type = "Given"; break;
 			//case "csubj": type = ""; break;
 			case "then":
 				showprev1 = false;
 				break;
 			case "iff": type = ""; break;	
 			case "rpro": type = ""; break;	
-			case "hypo": type = ""; break;
+			case "hypo": type = "Given"; break;
 			case "hyp": 
 				type = "";
 				if(headStruct.prev1() != null && headStruct.prev1() instanceof String

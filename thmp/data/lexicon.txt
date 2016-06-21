@@ -14,6 +14,7 @@ hold verb
 situation noun
 closed adj
 under pre
+Cohen-Macaulay adj
 multilinear adj
 multiplication noun
 localization ent

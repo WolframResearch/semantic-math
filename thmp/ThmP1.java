@@ -62,11 +62,11 @@ public class ThmP1 {
 	private static final List<String> unknownWords = new ArrayList<String>();
 	private static final List<String> parsedExpr = new ArrayList<String>();
 	private static final ImmutableListMultimap<String, FixedPhrase> fixedPhraseMap = Maps.fixedPhraseMap();
-	
+
 	// part of speech, last resort after looking up entity property maps
 	// private static HashMap<String, String> pos;
 
-	//convert to static block!
+	// convert to static block!
 	public static void buildMap() throws FileNotFoundException {
 		Maps.buildMap();
 		Maps.readLexicon();
@@ -82,7 +82,7 @@ public class ThmP1 {
 		// hashmap contains <name, entity> pairs
 		// need to incorporate multi-letter names, like sigma
 		namesMap = new HashMap<String, Struct>();
-		
+
 	}
 
 	/**
@@ -124,7 +124,7 @@ public class ThmP1 {
 		boolean addIndex = true; // whether to add to pairIndex
 		// unfortunate naming
 		String[] str = sentence.split(" ");
-		
+
 		// int pairIndex = 0;
 		strloop: for (int i = 0; i < str.length; i++) {
 
@@ -203,45 +203,50 @@ public class ThmP1 {
 				continue;
 			}
 			// check for trigger words
-			else if(i < str.length - 1){
-				String potentialTrigger = curWord + " " + str[i+1];
-				
-				if(fixedPhraseMap.containsKey(potentialTrigger)){
-					
+			else if (i < str.length - 1) {
+				String potentialTrigger = curWord + " " + str[i + 1];
+
+				if (fixedPhraseMap.containsKey(potentialTrigger)) {
+
 					// need multimap!! same trigger could apply to many phrases
-					// do first two words instead of 1, e.g. "for all" instead of just "for"
+					// do first two words instead of 1, e.g. "for all" instead
+					// of just "for"
 					// since compound words contain at least 2 words
 					List<FixedPhrase> fixedPhraseList = fixedPhraseMap.get(potentialTrigger);
-					
+
 					Iterator<FixedPhrase> fixedPhraseListIter = fixedPhraseList.iterator();
-					while(fixedPhraseListIter.hasNext()){
+					while (fixedPhraseListIter.hasNext()) {
 						FixedPhrase fixedPhrase = fixedPhraseListIter.next();
-					int numWordsDown = fixedPhrase.numWordsDown();
-					// don't really need this check
-					//  ... could have many pos!
-				
-					//String joined = StringUtils.join(Arrays.copyOfRange(str, i, str.length) );
-					String joined = "";
-					int k = i;
-					while(k < str.length && k - i < numWordsDown){
-						//String joined = String.join(Arrays.copyOfRange(str, i, str.length) );
-						joined += str[k] + " ";
-						k++;
+						int numWordsDown = fixedPhrase.numWordsDown();
+						// don't really need this check
+						// ... could have many pos!
+
+						// String joined =
+						// StringUtils.join(Arrays.copyOfRange(str, i,
+						// str.length) );
+						String joined = "";
+						int k = i;
+						while (k < str.length && k - i < numWordsDown) {
+							// String joined =
+							// String.join(Arrays.copyOfRange(str, i,
+							// str.length) );
+							joined += str[k] + " ";
+							k++;
+						}
+						Matcher matcher = fixedPhrase.phrasePattern().matcher(joined.trim());
+						if (matcher.matches()) {
+							Pair phrasePair = new Pair(joined.trim(), fixedPhrase.pos());
+							pairs.add(phrasePair);
+							i += numWordsDown - 1;
+
+							continue strloop;
+						}
+
 					}
-					Matcher matcher = fixedPhrase.phrasePattern().matcher(joined.trim());
-					if(matcher.matches()){
-						Pair phrasePair = new Pair(joined.trim(), fixedPhrase.pos());
-						pairs.add(phrasePair);
-						i += numWordsDown - 1;
-						
-						continue strloop;
-					}
-					
+
 				}
-				
 			}
-			}
-			
+
 			// primitive way to handle plural forms: if ends in "s"
 			String singular = "";
 			String singular2 = ""; // ending in "ies"
@@ -430,8 +435,8 @@ public class ThmP1 {
 					curWord = curWord + " by";
 					// if previous word is a verb, combine to form verb
 					if (pairsSize > 0 && pairs.get(pairsSize - 1).pos().matches("verb|vbs")) {
-						curWord = pairs.get(pairsSize - 1).pos() + " " + curWord;
-						curPos = "verb";
+						curWord = pairs.get(pairsSize - 1).word() + " " + curWord;
+						curPos = "auxpass"; // passive auxiliary
 						pairs.remove(pairsSize - 1);
 					}
 					i++;
@@ -444,7 +449,7 @@ public class ThmP1 {
 					curWord = pairs.get(pairsSize - 1).word() + " " + curWord;
 					pairs.remove(pairsSize - 1);
 
-					curPos = "verb";
+					curPos = "auxpass";
 				}
 				// if previous word is adj, "finitely presented"
 				else if (pairsSize > 0 && pairs.get(pairsSize - 1).pos().equals("adverb")) {
@@ -475,9 +480,16 @@ public class ThmP1 {
 									&& posMap.get(curWord.substring(0, wordlen - 3) + 'e').matches("verb|vbs")))) {
 				String curType = "gerund";
 				if (i < str.length - 1 && posMap.containsKey(str[i + 1]) && posMap.get(str[i + 1]).equals("pre")) {
-					// eg "consisting of" functions as pre,
+					// eg "consisting of" functions as pre
 					curWord = curWord + " " + str[++i];
 					curType = "pre";
+				} else if (i < str.length - 1 && (mathObjMap.containsKey(str[i+1]) ||
+						posMap.containsKey(str[i + 1]) && posMap.get(str[i + 1]).matches("noun"))) 
+				{
+					// eg "vanishing locus" functions as amod: adjectivial
+					// modifier
+					//curWord = curWord + " " + str[++i];
+					curType = "amod";
 				}
 				Pair pair = new Pair(curWord, curType);
 				pairs.add(pair);
@@ -868,9 +880,10 @@ public class ThmP1 {
 	 */
 	public static void parse(ArrayList<Struct> inputList) {
 		int len = inputList.size();
-		//shouldn't be 0?!
-		if(len == 0) return;
-		
+		// shouldn't be 0?!
+		if (len == 0)
+			return;
+
 		// first Struct
 		Struct firstEnt = null;
 		boolean foundFirstEnt = false;
@@ -963,18 +976,18 @@ public class ThmP1 {
 							String type2 = struct2.type();
 
 							// for types such as conj_verbphrase
-							
+
 							String[] split1 = type1.split("_");
 
 							if (split1.length > 1 && split1[0].matches("conj|disj")) {
-							//if (split1.length > 1) {
+								// if (split1.length > 1) {
 								type1 = split1[1];
 							}
 
 							String[] split2 = type2.split("_");
 
 							if (split2.length > 1 && split2[0].matches("conj|disj")) {
-							//if (split2.length > 1) {
+								// if (split2.length > 1) {
 
 								type2 = split2[1];
 							}
@@ -1297,10 +1310,10 @@ public class ThmP1 {
 							if (structMap.containsKey(combined)) {
 								Collection<Rule> ruleCol = structMap.get(combined);
 								Iterator<Rule> ruleColIter = ruleCol.iterator();
-								while(ruleColIter.hasNext()){
+								while (ruleColIter.hasNext()) {
 									Rule ruleColNext = ruleColIter.next();
-									reduce(mx, ruleColNext, struct1, struct2, firstEnt, recentEnt, recentEntIndex, i, j, k,
-										type1, type2);
+									reduce(mx, ruleColNext, struct1, struct2, firstEnt, recentEnt, recentEntIndex, i, j,
+											k, type1, type2);
 								}
 							}
 
@@ -1336,7 +1349,7 @@ public class ThmP1 {
 				parsedExpr.add(parsedString);
 				System.out.print(parsedString + " \n ** ");
 
-				//System.out.println("%%%%%\n");
+				// System.out.println("%%%%%\n");
 			}
 		}
 		// if no full parse:
@@ -1488,13 +1501,13 @@ public class ThmP1 {
 
 			// diagonal element can have only 1 Struct in its structList
 			String childRelation = kPlus1StructArrayList.get(0).prev1().toString();
-
+			
 			// String childRelation = mx.get(k + 1).get(k +
 			// 1).prev1().toString();
 
 			if (struct1 instanceof StructH) {
 				// why does this cast not trigger unchecked warning
-				// Because wildcard!
+				// Because wildcard.
 				((StructH<?>) newStruct).add_child(struct2, childRelation);
 			}
 
@@ -1506,7 +1519,30 @@ public class ThmP1 {
 			// mx.get(i).set(j, newStruct);
 			mx.get(i).get(j).add(newStruct);
 
-		} else if (newType.equals("noun")) {
+		} 
+		else if (newType.equals("addstruct")){
+			// add struct2 content to struct1.struct, depending on type2
+			if(type2.equals("expr")){
+				Struct newStruct = struct1.copy();
+
+				// update firstEnt so to have the right children
+				if (firstEnt == struct1) {
+					firstEnt = newStruct;
+				}
+
+				if (struct1 instanceof StructH && struct2.prev1() instanceof String) {
+					((StructH<?>) newStruct).struct().put("tex", (String)struct2.prev1());
+				}
+				
+				recentEnt = newStruct;
+				recentEntIndex = j;
+				
+				newStruct.set_maxDownPathScore(newDownPathScore);
+
+				mx.get(i).get(j).add(newStruct);
+			}
+		}
+		else if (newType.equals("noun")) {
 			if (type1.matches("adj") && type2.matches("noun")) {
 				// combine adj and noun
 				String adj = (String) struct1.prev1();
@@ -1515,8 +1551,7 @@ public class ThmP1 {
 				// mx.get(i).set(j, struct2);
 				mx.get(i).get(j).add(struct2);
 			}
-		}
-
+		} 
 		else {
 			// if symbol and a given name to some entity
 			// use "called" to relate entities
@@ -1539,10 +1574,14 @@ public class ThmP1 {
 					Struct entity = namesMap.get(entKey);
 					struct2.set_prev2(entity.struct().get("name"));
 				}
+			} 
+			
+			if(newType.equals("assert_prep")){
+				//make 2nd type into "hypo"
+				struct2.set_type("hypo");
 			}
-
 			// add to namesMap if letbe defines a name for an ent
-			if (newType.equals("letbe") && mx.get(i + 1).get(k).size() > 0 && mx.get(k + 2).get(j).size() > 0) {
+			else if (newType.equals("letbe") && mx.get(i + 1).get(k).size() > 0 && mx.get(k + 2).get(j).size() > 0) {
 				// temporary patch Rewrite StructA to avoid cast
 				// assert(struct1 instanceof StructA);
 				// assert(struct2 instanceof StructA);

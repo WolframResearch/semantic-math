@@ -159,6 +159,16 @@ public class ThmP1Test {
 			st = "this gives a field";
 			st = "this sentence is a run-on";
 			st = "for all but finitely many ideals $I$ ";
+			st = "Pure ideals are determined by their vanishing locus.";
+			st = "for all but finitely many I";
+			st = "if $R$ is a Noetherian ring and $M$ is a Cohen-Macaulay $R$-module with $text{Supp}(M) = Spec(R)$";
+			st = "ring is topological if and only if ring is topological";
+			st = "there exists a field with $F$ maximal and $K$ free"; //<-- revisit!
+			st = "A Noetherian ring $R$ is called  Cohen-Macaulay if all its local rings are Cohen-Macaulay.";
+			st = "a field with extension $Q_2$ ";
+			//st = "for every $s in S$ we have a group";
+			//st = "vanishing locus";
+			//st = "fields are determined ";
 			//st = "topological ideal";
 			//st = "$I$ proper";
 			//st = "Pure ideals are determined by their vanishing locus.";
