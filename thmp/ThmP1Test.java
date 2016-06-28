@@ -1,6 +1,7 @@
 package thmp;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Scanner;
 
@@ -8,11 +9,21 @@ import java.util.Scanner;
  * Test class for ThmP1
  */
 public class ThmP1Test {
+	
+	static{
+		Maps.buildMap();
+		try {
+			Maps.readLexicon();
+			Maps.readFixedPhrases();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
 
 	//the char of F_p is p
 		public static void main(String[] args) throws IOException{
 			
-			ThmP1.buildMap();
+			//ThmP1.buildMap();
 			
 			//ThmP1 p1 = new ThmP1();
 			//String[] strAr = p1.preprocess("a disjoint or perfect field is a field".split(" "));
@@ -165,7 +176,9 @@ public class ThmP1Test {
 			st = "ring is topological if and only if ring is topological";
 			st = "there exists a field with $F$ maximal and $K$ free"; //<-- revisit!
 			st = "A Noetherian ring $R$ is called  Cohen-Macaulay if all its local rings are Cohen-Macaulay.";
-			st = "a field with extension $Q_2$ ";
+			//st = "a field with extension $Q_2$ ";
+			//st = "if $R$ is noetherian, $M$ is also noetherian";
+			//st = "this is not coherent"; 
 			//st = "for every $s in S$ we have a group";
 			//st = "vanishing locus";
 			//st = "fields are determined ";

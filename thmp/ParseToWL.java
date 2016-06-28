@@ -99,6 +99,7 @@ public class ParseToWL {
 			case "then":
 				showprev1 = false;
 				break;
+			case "Then": showprev1 = false; break;
 			case "iff": type = ""; break;	
 			case "rpro": type = ""; break;	
 			case "hypo": type = "Given"; break;

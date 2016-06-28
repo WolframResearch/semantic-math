@@ -60,16 +60,21 @@ public class ThmP1 {
 	private static final Path parsedExprFile = Paths.get("src/thmp/data/parsedExpr.txt");
 
 	private static final List<String> unknownWords = new ArrayList<String>();
-	private static final List<String> parsedExpr = new ArrayList<String>();
-	private static final ImmutableListMultimap<String, FixedPhrase> fixedPhraseMap = Maps.fixedPhraseMap();
+	private static final List<ParsedPair> parsedExpr = new ArrayList<ParsedPair>();
+	private static final ImmutableListMultimap<String, FixedPhrase> fixedPhraseMap;
 
 	// part of speech, last resort after looking up entity property maps
 	// private static HashMap<String, String> pos;
 
-	// convert to static block!
-	public static void buildMap() throws FileNotFoundException {
-		Maps.buildMap();
-		Maps.readLexicon();
+	static{
+		/*Maps.buildMap();
+		try {
+			Maps.readLexicon();
+			Maps.readFixedPhrases();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}*/
+		fixedPhraseMap = Maps.fixedPhraseMap();
 		structMap = Maps.structMap;
 		anchorMap = Maps.anchorMap;
 		posMap = Maps.posMap;
@@ -84,7 +89,44 @@ public class ThmP1 {
 		namesMap = new HashMap<String, Struct>();
 
 	}
+	
+	/**
+	 * Class consisting of a parsed String and its score
+	 */
+	public static class ParsedPair{
+		private String parsedStr;
+		private double score;
+		//long form or WL-like expr. Useful for "under the hood"
+		//can be "long" or "wl". Change to enum?
+		private String form;
+		//parsedExprSz used to group parse components together 
+		//when full parse is unavailable
+		//private int counter;
+		
+		public ParsedPair(String parsedStr, double score, String form){
+			this.parsedStr = parsedStr;
+			this.score = score;
+			this.form = form;
+		}
+		
+		public String parsedStr(){
+			return this.parsedStr;
+		}
+		
+		public double score(){
+			return this.score;
+		}
 
+		public String form(){
+			return this.form;
+		}
+
+		@Override
+		public String toString(){
+			return this.parsedStr + " " + String.valueOf(score);
+		}
+	}
+	
 	/**
 	 * Tokenizes by splitting into comma-separated strings
 	 * 
@@ -530,13 +572,15 @@ public class ThmP1 {
 				if (pair.pos().matches("verb|vbs")) {
 					if (pairs.size() > 1 && (pairs.get(pairsSize - 2).word().matches("not|no")
 							|| pairs.get(pairsSize - 2).pos().matches("not"))) {
-						String newWord = pair.word().matches("is|are") ? "not" : "not " + pair.word();
+						//String newWord = pair.word().matches("is|are") ? "not" : "not " + pair.word();
+						String newWord = pair.word() + " " + pairs.get(pairsSize - 2).word();
 						pair.set_word(newWord);
 						pairs.remove(pairsSize - 2);
 					}
 
 					if (i + 1 < str.length && str[i + 1].matches("not|no")) {
-						String newWord = pair.word().matches("is|are") ? "not" : "not " + pair.word();
+						//String newWord = pair.word().matches("is|are") ? "not" : "not " + pair.word();
+						String newWord = pair.word() + " " + str[i+1];
 						pair.set_word(newWord);
 						i++;
 					}
@@ -880,7 +924,7 @@ public class ThmP1 {
 	 */
 	public static void parse(ArrayList<Struct> inputList) {
 		int len = inputList.size();
-		// shouldn't be 0?!
+		// shouldn't be 0 to start with?!
 		if (len == 0)
 			return;
 
@@ -1334,25 +1378,32 @@ public class ThmP1 {
 		StructList headStructList = mx.get(0).get(len - 1);
 		int headStructListSz = headStructList.size();
 		System.out.println("headStructListSz " + headStructListSz);
-
-		if (headStructListSz > 0) {
+		
+		StringBuilder parsedSB = new StringBuilder();
+		if (headStructListSz > 0) {			
 			// System.out.println("index of highest score: " +
 			// ArrayDFS(headStructList));
 			for (int u = 0; u < headStructListSz; u++) {
 				Struct uHeadStruct = headStructList.structList().get(u);
+				
+				dfs(uHeadStruct, parsedSB);
 
-				dfs(uHeadStruct);
-				System.out.println(uHeadStruct.maxDownPathScore());
+				double maxDownPathScore = uHeadStruct.maxDownPathScore();
+				
+				parsedExpr.add(new ParsedPair(parsedSB.toString(), maxDownPathScore, "long"));
+				
+				System.out.println(maxDownPathScore);
 				System.out.println(uHeadStruct.numUnits());
 
 				String parsedString = ParseToWL.parseToWL(uHeadStruct);
-				parsedExpr.add(parsedString);
+				parsedExpr.add(new ParsedPair(parsedString, maxDownPathScore, "wl"));
 				System.out.print(parsedString + " \n ** ");
-
+				
+				parsedSB.setLength(0);
 				// System.out.println("%%%%%\n");
 			}
 		}
-		// if no full parse:
+		// if no full parse. Also add to parsedExpr List.
 		else {
 			List<StructList> parsedStructList = new ArrayList<StructList>();
 
@@ -1389,28 +1440,34 @@ public class ThmP1 {
 			// labeled after 2nd round
 			// parse2(parsedStructList);
 
-			// print out the system
+			// print out the components
 			int parsedStructListSize = parsedStructList.size();
-
+			String totalParsedString = "";
+			double totalScore = 1; //product of component scores
+			
 			for (int k = 0; k < parsedStructListSize; k++) {
 				// int highestScoreIndex = ArrayDFS(parsedStructList.get(k));
-				int highestScoreIndex = 0;
+				int highestScoreIndex = 0; ///**********
 
 				Struct kHeadStruct = parsedStructList.get(k).structList().get(highestScoreIndex);
-				dfs(kHeadStruct);
-				if (k < parsedStructListSize - 1)
-					System.out.print(" ,  ");
+				dfs(kHeadStruct, parsedSB);
+				
+				//only getting first component parse. Should use priority queue instead of list?
+				//or at least get highest score
+				totalScore *= kHeadStruct.maxDownPathScore();
+				String parsedString = ParseToWL.parseToWL(kHeadStruct);
+								
+				if (k < parsedStructListSize - 1){
+					totalParsedString += parsedString + "; ";
+					System.out.print(";  ");
+					parsedSB.append("; ");
+				}
 			}
+			parsedExpr.add(new ParsedPair(parsedSB.toString(), totalScore, "long"));
 
-			for (int k = 0; k < parsedStructListSize; k++) {
-
-				Struct head = parsedStructList.get(k).structList().get(0);
-
-				String parsedString = ParseToWL.parseToWL(head);
-				parsedExpr.add(parsedString);
-				System.out.print(parsedString + " \n ** ");
-			}
-
+			//System.out.println(totalParsedString + "; ");
+			parsedExpr.add(new ParsedPair(totalParsedString, totalScore, "wl"));
+			
 			System.out.println("%%%%%\n");
 		}
 		// print out scores
@@ -1654,11 +1711,11 @@ public class ThmP1 {
 		for (int i = 0; i < structListSz; i++) {
 			Struct curStruct = structArList.get(i);
 
-			double ownScore = curStruct.score();
+			//double ownScore = curStruct.score();
 			// create appropriate right and left Node's
 
 			MatrixPathNode curMxPathNode = new MatrixPathNode(curStruct);
-
+			
 			// put path into corresponding Struct, the score along the path
 			// down from here
 			double pathScore = ArrayDFS(curMxPathNode);
@@ -1812,12 +1869,29 @@ public class ThmP1 {
 	}
 
 	/**
-	 * write unknown words to file to classify them
-	 * 
+	 * write unknown words to file to classify them.
+	 * Resets parsedExpr List by clearing.
 	 * @throws IOException
 	 */
-	public static void writeParsedExprToFile() throws IOException {
-		Files.write(parsedExprFile, parsedExpr, Charset.forName("UTF-8"));
+	public static void writeParsedExprToFile() throws IOException {		
+		List<String> parsedExprStringList = new ArrayList<String>();
+		for(ParsedPair parsedPair : parsedExpr){
+			parsedExprStringList.add(parsedPair.toString());
+		}
+		Files.write(parsedExprFile, parsedExprStringList, Charset.forName("UTF-8"));
+		parsedExpr.clear();
+	}
+	
+	/**
+	 * @return the List of parsed expressions, with different scores.
+	 * Resets parsedExpr by clearing.
+	 * Defensively copies List and returns copy.
+	 */
+	public static List<ParsedPair> getParsedExpr(){
+		List<ParsedPair> parsedExprCopy = new ArrayList<ParsedPair>(parsedExpr);
+		
+		parsedExpr.clear();
+		return parsedExprCopy;
 	}
 
 	/**
@@ -1832,16 +1906,19 @@ public class ThmP1 {
 
 	}
 
-	public static void dfs(Struct struct) {
+	public static void dfs(Struct struct, StringBuilder parsedSB) {
 		// don't like instanceof here
 		if (struct instanceof StructA) {
 
 			System.out.print(struct.type());
-
+			parsedSB.append(struct.type());
+			
 			System.out.print("[");
+			parsedSB.append("[");
+			
 			// don't know type at compile time
 			if (struct.prev1() instanceof Struct) {
-				dfs((Struct) struct.prev1());
+				dfs((Struct) struct.prev1(), parsedSB);
 			}
 
 			// if(struct.prev2() != null && !struct.prev2().equals(""))
@@ -1850,22 +1927,29 @@ public class ThmP1 {
 				// avoid printing is[is], ie case when parent has same type as
 				// child
 				System.out.print(", ");
-				dfs((Struct) struct.prev2());
+				parsedSB.append(", ");
+				dfs((Struct) struct.prev2(), parsedSB);
 			}
 
 			if (struct.prev1() instanceof String) {
 				System.out.print(struct.prev1());
+				parsedSB.append(struct.prev1());
 			}
 			if (struct.prev2() instanceof String) {
-				if (!struct.prev2().equals(""))
+				if (!struct.prev2().equals("")){
 					System.out.print(", ");
+					parsedSB.append(", ");
+				}
 				System.out.print(struct.prev2());
+				parsedSB.append(struct.prev2());
 			}
 
 			System.out.print("]");
+			parsedSB.append("]");
 		} else if (struct instanceof StructH) {
 
 			System.out.print(struct.toString());
+			parsedSB.append(struct.toString());
 
 			ArrayList<Struct> children = struct.children();
 			ArrayList<String> childRelation = struct.childRelation();
@@ -1874,11 +1958,16 @@ public class ThmP1 {
 				return;
 
 			System.out.print("[");
+			parsedSB.append("[");
+
 			for (int i = 0; i < children.size(); i++) {
 				System.out.print(childRelation.get(i) + " ");
-				dfs(children.get(i));
+				parsedSB.append(childRelation.get(i) + " ");
+
+				dfs(children.get(i), parsedSB);
 			}
 			System.out.print("]");
+			parsedSB.append("]");
 		}
 	}
 
@@ -1896,7 +1985,6 @@ public class ThmP1 {
 		String[] wordsArray = inputStr.replaceAll("([^.,!:]*)([.|,|:|!]{1})", "$1 $2").split("\\s+");
 		int wordsArrayLen = wordsArray.length;
 
-		// use StringBuilder!
 		StringBuilder sentenceBuilder = new StringBuilder();
 		// String newSentence = "";
 		String curWord;

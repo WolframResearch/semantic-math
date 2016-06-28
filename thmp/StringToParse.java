@@ -8,7 +8,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Scanner;
+
+import thmp.ThmP1.ParsedPair;
 
 /**
  * Reads in String and parses it
@@ -19,54 +23,49 @@ import java.util.Scanner;
 
 public class StringToParse {
 	
-	/*static{
+	static{
+		Maps.buildMap();
 		try {
-			ThmP1.buildMap();
+			Maps.readLexicon();
+			Maps.readFixedPhrases();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
-	}*/
+	}
 	
 	public static void main(String[] args) throws IOException{
-		/*
-		String str = "";
+		
+		String str;
 		String[] strAr;
-		for(int i = 0; i < args.length; i++){
-			str += args[i] + " ";
-		}
-		
-		strAr = ThmP1.preprocess(str);
-		
-		for(int i = 0; i < strAr.length; i++){
-			//ThmP1.parse(ThmP1.tokenize(strAr[i].trim() ));				
-		}
-		*/
-		File structMapFile = new File("structMap.txt");
+	
+		/*File structMapFile = new File("structMap.txt");
 		Path writeToFile = Paths.get("structMapTo.txt");
 		ArrayList<String> updatedStructsList = new ArrayList<String>();
-		
-		//Scanner sc = new Scanner(System.in);
-		Scanner sc = new Scanner(structMapFile);
+		*/
+		Scanner sc = new Scanner(System.in);
+		//Scanner sc = new Scanner(structMapFile);
 		
 		while(sc.hasNextLine()){
-			String nextLine = sc.nextLine();
-			
-			nextLine = nextLine.replaceAll("put\\((\"[^\"]*\"), (\"[^\"]*\")\\)", 
+			/*nextLine = nextLine.replaceAll("put\\((\"[^\"]*\"), (\"[^\"]*\")\\)", 
 					"put\\($1, new Rule\\($2, 1\\)\\)");
 			
-			updatedStructsList.add(nextLine);			
+			updatedStructsList.add(nextLine);	*/		
 			
-			/*
+			
 			str = sc.nextLine();
 			strAr = ThmP1.preprocess(str);
 			
 			for(int i = 0; i < strAr.length; i++){
 				ThmP1.parse(ThmP1.tokenize(strAr[i].trim() ));				
 			}
-			*/
+			
+			List<ParsedPair> parsedList = ThmP1.getParsedExpr();
+			for(ParsedPair parsedExpr : parsedList){
+				System.out.println(parsedExpr);
+			}
 		}
 		
-		Files.write(writeToFile, updatedStructsList, Charset.forName("UTF-8"));
+		//Files.write(writeToFile, updatedStructsList, Charset.forName("UTF-8"));
 		
 		sc.close();
 	}
