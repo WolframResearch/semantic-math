@@ -193,7 +193,9 @@ public class ThmP1Test {
 			//st = "for field of F"; //......
 			//st = "for field";
 			//st = "for field extension of G";
-			
+			st = "Let $x$ be an element of $R^n$";
+			st = "Let G be a group and p be a prime";
+			st = "let G be a field and R be a ring";
 			//st = "there exists a field";
 			//st = "both pairs are perfect";
 			//st = "F is a field and $F = 4$";

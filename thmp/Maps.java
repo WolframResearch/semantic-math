@@ -62,6 +62,15 @@ public class Maps {
 
 	// list of parts of speech, ent, verb etc
 	protected static ArrayList<String> posList;
+	
+	static{
+		buildMap();
+	}
+	
+	public static void initializeWithResource(BufferedReader fixedPhraseBuffer, BufferedReader lexiconBuffer) throws IOException{
+		readFixedPhrases(fixedPhraseBuffer);
+    	readLexicon(lexiconBuffer);	 
+	}
 	/*
 	// build fixedPhraseMap
 	static {
@@ -135,7 +144,7 @@ public class Maps {
 	 * Read in files using stream
 	 * @throws IOException
 	 */
-	public static void readFixedPhrases(BufferedReader fixedPhraseReader) throws IOException {
+	private static void readFixedPhrases(BufferedReader fixedPhraseReader) throws IOException {
 		ImmutableListMultimap.Builder<String, FixedPhrase> fixedPhraseMMapBuilder = ImmutableListMultimap
 				.<String, FixedPhrase> builder();
 		// should read in from file
@@ -593,6 +602,7 @@ public class Maps {
 		//////////// combine preposition with whatever comes
 		// verb_ent, not including past tense verbs, only present tense
 		structMap.put("verb_ent", new Rule("verbphrase", 1));
+		structMap.put("be_ent", new Rule("verbphrase", .7));
 		structMap.put("verb_adj", new Rule("verbphrase", 1));
 		structMap.put("verb_pro", new Rule("verbphrase", 1));
 		structMap.put("verb_symb", new Rule("verbphrase", 1));
@@ -657,6 +667,7 @@ public class Maps {
 
 		structMap.put("let_symb", new Rule("let", 1));
 		structMap.put("be_ent", new Rule("be", 1));
+		structMap.put("let_assert", new Rule("letbe", 1));
 		structMap.put("let_be", new Rule("letbe", 1));
 		structMap.put("let_ent", new Rule("let", 1));
 		structMap.put("if_assert", new Rule("If", 1));
@@ -793,7 +804,7 @@ public class Maps {
 	 * Reads from BufferedReader
 	 * @throws FileNotFoundException
 	 */
-	public static void readLexicon(BufferedReader lexiconReader) throws IOException {
+	private static void readLexicon(BufferedReader lexiconReader) throws IOException {
 		String[] lineAr;
 		String pos = "", word = "", replacement = "";
 		String nextLine;

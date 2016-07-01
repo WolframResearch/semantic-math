@@ -1269,7 +1269,7 @@ public class ThmP1 {
 								 */
 								if (type1.matches("or|and")) {
 									int l = 1;
-									boolean stopLoop = false;
+									//boolean stopLoop = false;
 
 									searchConjLoop: while (i - l > -1 && i + 1 < len) {
 
@@ -1316,14 +1316,16 @@ public class ThmP1 {
 													StructA<Struct, Struct> parentStruct = new StructA<Struct, Struct>(
 															p_struct, struct2, newType + "_" + type2,
 															mx.get(i - l).get(j));
-
-													// parentStruct.set_maxDownPathScore();
+													//types are same, so scores should be same, so should only be punished once
+													//use score instead of product
+													double maxDownPathScore = p_struct.maxDownPathScore();
+													parentStruct.set_maxDownPathScore(maxDownPathScore);
 
 													mx.get(i - l).get(j).add(parentStruct);
 													// mx.get(i - l).set(j,
 													// parentStruct);
 													// mx.get(i+1).set(j, null);
-													stopLoop = true;
+													//stopLoop = true;
 													break searchConjLoop;
 												}
 											}
