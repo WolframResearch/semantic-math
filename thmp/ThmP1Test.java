@@ -200,7 +200,10 @@ public class ThmP1Test {
 			//st = "both pairs are perfect";
 			//st = "F is a field and $F = 4$";
 			//Maps.readLexicon();
-		
+			st = "this is less than C";
+			st = "inverse image of B in M";
+
+			st = "for some submodule $MM$, where $MM$ is a submodule of N";
 			strAr = ThmP1.preprocess(st);
 			for(int i = 0; i < strAr.length; i++){
 				ThmP1.parse(ThmP1.tokenize(strAr[i].trim() ));				

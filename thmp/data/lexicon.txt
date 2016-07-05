@@ -13,6 +13,10 @@ analogue noun
 hold verb
 situation noun
 closed adj
+great adj
+small adj
+symb symb
+than pre
 under pre
 Cohen-Macaulay adj
 multilinear adj
