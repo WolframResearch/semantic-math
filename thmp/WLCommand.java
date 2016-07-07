@@ -1,7 +1,9 @@
 package thmp;
 
 import java.util.List;
+import java.util.Map;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 
 /**
@@ -37,8 +39,7 @@ public class WLCommand {
 	private ListMultimap<WLCommandComponent, Struct> commandsMap;  // e.g. element
 	//need to keep track how filled the bucket is
 	//
-	private Hashmap<WLCommandComponent, Integer> commandsCountMap;
-	
+	private Map<WLCommandComponent, Integer> commandsCountMap;
 	private String triggerWord;
 	//which WL expression to turn into using map components and how.
 	//need to keep references to Structs in commandsMap
@@ -47,9 +48,11 @@ public class WLCommand {
 	private List<PosTerm> posTermList;
 
 	/**
-	 * Whether this WLCommand has all the posTerms it needs yet.
+	 * Track the number of components left in this WLCommand.
+	 * Used to determine whether this WLCommand has all the commandComponents it needs yet.
+	 * Command is satisfied if componentCounter is 0.
 	 */
-	private boolean isSatisfied;
+	private int componentCounter;
 	
 	/**
 	 * PosTerm stores a part of speech term, and the position in commandsMap
@@ -61,7 +64,7 @@ public class WLCommand {
 		 * posTerm can be the terms that are used in structMap, 
 		 * eg ent, symb, entsymb (either ent or symb works), pre, etc
 		 */
-		private String posTerm;
+		private WLCommandComponent commandComponent;
 		
 		/**
 		 * position of the relevant term inside a list in commandsMap.
@@ -70,13 +73,13 @@ public class WLCommand {
 		 */
 		private int positionInCommand;
 		
-		public PosTerm(String posTerm, int position){
-			this.posTerm = posTerm;
+		public PosTerm(WLCommandComponent commandComponent, int position){
+			this.commandComponent = commandComponent;
 			this.positionInCommand = position;
 		}
 		
-		public String posTerm(){
-			return this.posTerm;
+		public WLCommandComponent commandComponent(){
+			return this.commandComponent;
 		}
 		
 		public int positionInCommand(){
@@ -98,11 +101,11 @@ public class WLCommand {
 	 * Static factory pattern.
 	 * @param commands   Multimap of WLCommandComponent and the quantity needed for a WLCommand
 	 */
-	public static WLCommand create(ListMultimap<WLCommandComponent, Integer> commandsCount){
+	public static WLCommand create(Map<WLCommandComponent, Integer> commandsCountMap){
 		//defensively copy?? Even though not external-facing
 		WLCommand curCommand = new WLCommand();
-		
-		curCommand.commandsCountMap = commandsCount;
+		curCommand.commandsMap = ArrayListMultimap.create();	
+		curCommand.commandsCountMap = commandsCountMap;		
 		
 		return curCommand;
 	}
@@ -112,37 +115,91 @@ public class WLCommand {
 	 * Should be called after being satisfied. 
 	 * @return String form of the resulting WLCommand
 	 */
-	public static String build(){
+	public static String build(WLCommand curCommand){
+		if(curCommand.componentCounter > 0) return "";
+		ListMultimap<WLCommandComponent, Struct> commandsMap = curCommand.commandsMap;
+		//counts should now be all 0
+		Map<WLCommandComponent, Integer> commandsCountMap = curCommand.commandsCountMap;
+		List<PosTerm> posTermList = curCommand.posTermList;
+		String commandString = "";
 		
+		for(PosTerm term : posTermList){
+			WLCommandComponent commandComponent = term.commandComponent;
+			List<Struct> curCommandComponentList = commandsMap.get(commandComponent);
+			int componentIndex = term.positionInCommand;
+			if(componentIndex >= curCommandComponentList.size()){
+				System.out.println("positionInCommand >= list size. Should not happen!");
+				continue;
+			}
+			//not just toString, need to figure out good way to present it
+			String nextWord = curCommandComponentList.get(componentIndex).toString();
+			commandString += nextWord + " ";
+		}
+		return commandString;
 	}
 	
 	/**
-	 * 
-	 * @return whether the command is now satisfied
+	 * @param curCommand	WLCommand we are adding PosTerm to
+	 * @param newComponent  The WLCommandComponent we are adding to curCommand
+	 * @param newSrtuct 	Pointer to a Struct
+	 * @return 				Whether the command is now satisfied
+	 * Adds Struct to commandsMap.
+	 * Add to commandsMap only if component is required as indicated by commandsCountMap.
+	 * BUT: what if the Struct just added isn't the one needed?
+	 * If the name could be several optional ones, eg "in" or "of", so use regex .match("in|of")
 	 */
-	public static boolean addPosTerm(PosTerm newTerm){
-		posTermMap
+	public static boolean addComponent(WLCommand curCommand, 
+			Struct newStruct){
+		
+		//need to iterate through the keys of countMap instead of just getting, 
+		//because .hashcode won't find it for us
+		
+		for(WLCommandComponent commandComponent : curCommand.commandsCountMap.keySet()){
+			//if key.name .matches()
+			//be careful with type, could be conj_, all sorts of stuff
+			String structType = newStruct.type();
+			String structName = newStruct instanceof StructH ? newStruct.struct().get("name") : 
+				newStruct.prev1() instanceof String ? (String)newStruct.prev1() : null;
+			
+			if(newStruct.type().matches(commandComponent.posTerm) 
+					&& structName != null 
+					&& structName.matches(commandComponent.name)){
+				
+			}
+		}
+		
+		int curCommandCount = curCommand.commandsCountMap.get(newComponent);
+		
+		//if map doesn't contain newComponent, null !> 0		
+		if(curCommandCount > 0){
+			curCommand.commandsMap.put(newComponent, newStruct);
+			//here newComponent must have been in the original required set
+			curCommand.commandsCountMap.put(newComponent, curCommandCount - 1);
+			//use counter to track whether map is satisfied
+			curCommand.componentCounter--;
+			
+		}
+		//shouldn't be < 0
+		return curCommand.componentCounter < 1;
 	}
 
 	/**
-	 * Is this command (commandsMap) satisfied. 
-	 * @return
+	 * @return Is this command (commandsMap) satisfied. 
+	 * 
 	 */
-	public static boolean isSatisfied(){
-		
+	public static boolean isSatisfied(WLCommand curCommand){
+		return curCommand.componentCounter == 0;
 	}
 	
 	/**
 	 * 
-	 *
 	 */
 	public static class WLCommandComponent{
 		//types should be consistent with types in Map
 		//eg ent, symb, pre, etc
 		private String posTerm;
 		//eg "of". name could be wildcard *
-		private String name;
-		
+		private String name;		
 		
 		public WLCommandComponent(String posTerm, String name){
 			this.posTerm = posTerm;
@@ -153,9 +210,19 @@ public class WLCommand {
 			return this.posTerm;
 		}
 		
+		/**
+		 * 
+		 */
 		@Override
 		public boolean equals(Object obj){
+			if(!(obj instanceof WLCommandComponent)) return false;
 			
+			WLCommandComponent other = (WLCommandComponent)obj;
+			//should not be able to access   .posTerm directly!
+			if(!this.posTerm.equals(other.posTerm)) return false;
+			if(!this.name.equals(other.name)) return false;
+			
+			return true;
 		}
 		
 		@Override
