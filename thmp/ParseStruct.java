@@ -33,6 +33,7 @@ public class ParseStruct {
 		this.parseStructMap = ArrayListMultimap.create();
 		this.structMap = ArrayListMultimap.create();
 		this.headStruct = headStruct;
+		
 		//how about just point to the same tree?
 		//this.map = ArrayListMultimap.create(subParseTree);
 	}
@@ -55,6 +56,10 @@ public class ParseStruct {
 	
 	public String name(){
 		return this.name;
+	}
+	
+	public Struct headStruct(){
+		return this.headStruct;
 	}
 	
 	public ParseStructType type(){

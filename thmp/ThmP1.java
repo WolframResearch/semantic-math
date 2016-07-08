@@ -1389,7 +1389,15 @@ public class ThmP1 {
 				Struct uHeadStruct = headStructList.structList().get(u);
 				
 				dfs(uHeadStruct, parsedSB);
-
+				//******
+				System.out.println("\n START ParseStruct DFS");
+				StringBuilder parseStructSB = new StringBuilder();
+				ParseStructType parseStructType = ParseStructType.getType(uHeadStruct.type());
+				ParseStruct headParseStruct = new ParseStruct(parseStructType, "", uHeadStruct);
+				ParseToWLTree.dfs(uHeadStruct, parseStructSB, headParseStruct, 0);
+				System.out.println("\n DONE ParseStruct DFS");
+				//*******
+				
 				double maxDownPathScore = uHeadStruct.maxDownPathScore();
 				
 				parsedExpr.add(new ParsedPair(parsedSB.toString(), maxDownPathScore, "long"));
