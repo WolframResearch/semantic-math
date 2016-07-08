@@ -2,6 +2,7 @@ package thmp;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -40,7 +41,7 @@ public class WLCommand {
 	//need to keep track how filled the bucket is
 	//
 	private Map<WLCommandComponent, Integer> commandsCountMap;
-	private String triggerWord;
+	private String triggerWord; 
 	//which WL expression to turn into using map components and how.
 	//need to keep references to Structs in commandsMap
 	// List of PosTerm with its position, {entsymb, 0}, {\[Element], -1}, {entsymb,2}
@@ -71,19 +72,19 @@ public class WLCommand {
 		 * Ie the order it shows up in in the built-out command.
 		 * -1 if it's a WL command, eg \[Element].
 		 */
-		private int positionInCommand;
+		private int positionInMap;
 		
 		public PosTerm(WLCommandComponent commandComponent, int position){
 			this.commandComponent = commandComponent;
-			this.positionInCommand = position;
+			this.positionInMap = position;
 		}
 		
 		public WLCommandComponent commandComponent(){
 			return this.commandComponent;
 		}
 		
-		public int positionInCommand(){
-			return this.positionInCommand;
+		public int positionInMap(){
+			return this.positionInMap;
 		}
 	}
 	
@@ -126,9 +127,9 @@ public class WLCommand {
 		for(PosTerm term : posTermList){
 			WLCommandComponent commandComponent = term.commandComponent;
 			List<Struct> curCommandComponentList = commandsMap.get(commandComponent);
-			int componentIndex = term.positionInCommand;
+			int componentIndex = term.positionInMap;
 			if(componentIndex >= curCommandComponentList.size()){
-				System.out.println("positionInCommand >= list size. Should not happen!");
+				System.out.println("positionInMap >= list size. Should not happen!");
 				continue;
 			}
 			//not just toString, need to figure out good way to present it
@@ -150,36 +151,36 @@ public class WLCommand {
 	 */
 	public static boolean addComponent(WLCommand curCommand, 
 			Struct newStruct){
-		
+		//if key.name .matches()
+		//be careful with type, could be conj_, all sorts of stuff
+		String structType = newStruct.type();
+		String structName = newStruct instanceof StructH ? newStruct.struct().get("name") : 
+			newStruct.prev1() instanceof String ? (String)newStruct.prev1() : null;
+			
 		//need to iterate through the keys of countMap instead of just getting, 
 		//because .hashcode won't find it for us
 		
-		for(WLCommandComponent commandComponent : curCommand.commandsCountMap.keySet()){
-			//if key.name .matches()
-			//be careful with type, could be conj_, all sorts of stuff
-			String structType = newStruct.type();
-			String structName = newStruct instanceof StructH ? newStruct.struct().get("name") : 
-				newStruct.prev1() instanceof String ? (String)newStruct.prev1() : null;
+		for(Entry<WLCommandComponent, Integer> commandComponentEntry : curCommand.commandsCountMap.entrySet()){
+			WLCommandComponent commandComponent = commandComponentEntry.getKey();
+			int commandComponentCount = commandComponentEntry.getValue();
 			
-			if(newStruct.type().matches(commandComponent.posTerm) 
+			if(structType.matches(commandComponent.posTerm) 
+					&& commandComponentCount > 0
 					&& structName != null 
 					&& structName.matches(commandComponent.name)){
+				//put commandComponent into commandsMap
+				//if map doesn't contain newComponent, null !> 0		
+				
+				curCommand.commandsMap.put(commandComponent, newStruct);
+				//here newComponent must have been in the original required set
+				curCommand.commandsCountMap.put(commandComponent, commandComponentCount - 1);
+				//use counter to track whether map is satisfied
+				curCommand.componentCounter--;
 				
 			}
-		}
+		}			
 		
-		int curCommandCount = curCommand.commandsCountMap.get(newComponent);
-		
-		//if map doesn't contain newComponent, null !> 0		
-		if(curCommandCount > 0){
-			curCommand.commandsMap.put(newComponent, newStruct);
-			//here newComponent must have been in the original required set
-			curCommand.commandsCountMap.put(newComponent, curCommandCount - 1);
-			//use counter to track whether map is satisfied
-			curCommand.componentCounter--;
-			
-		}
-		//shouldn't be < 0
+		//shouldn't be < 0!
 		return curCommand.componentCounter < 1;
 	}
 
@@ -188,7 +189,8 @@ public class WLCommand {
 	 * 
 	 */
 	public static boolean isSatisfied(WLCommand curCommand){
-		return curCommand.componentCounter == 0;
+		//shouldn't be < 0!
+		return curCommand.componentCounter < 1;
 	}
 	
 	/**
@@ -198,8 +200,8 @@ public class WLCommand {
 		//types should be consistent with types in Map
 		//eg ent, symb, pre, etc
 		private String posTerm;
-		//eg "of". name could be wildcard *
-		private String name;		
+		//eg "of". Regex expression to be matched, eg .* to match anything
+		private String name;
 		
 		public WLCommandComponent(String posTerm, String name){
 			this.posTerm = posTerm;
