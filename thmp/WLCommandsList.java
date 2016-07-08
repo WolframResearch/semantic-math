@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 
 import thmp.WLCommand.PosTerm;
 import thmp.WLCommand.WLCommandComponent;
@@ -20,22 +21,31 @@ public class WLCommandsList {
 	/**
 	 * Map, keys are trigger words, values are pointers to WLCommand's
 	 */
-	private static ImmutableMap<String, WLCommand> WLCommandMap;
+	private static ImmutableMultimap<String, WLCommand> WLCommandMap; //need builder for this in static initializer
 	
 	/**
 	 * should read in data from file instead of calling addCommand.
 	 * Need 
 	 */
 	static{
+		//builder for WLComamndMap, 
+		ImmutableMultimap.Builder<String, WLCommand> WLCommandMapBuilder = ImmutableMultimap.builder();
+		
 		//create(Map<WLCommandComponent, Integer> commandsCountMap)
 		//The words go in order they are expected to appear in sentence.
 		//In int array, 1 means to use in posList in final command, 0 means don't use.
 		//eg "of" in "element of" is not used, but should be there to determine if a command is satisfied.
-		//all Strings go into commandsMap, but only those with 1 goes to PosList
-		//"symb|ent" "pre, of" "symb|ent"
-		addCommand(new String[]{"symb|ent", "pre, of", "symb|ent"},
-				new int[]{1, 0, 1}, "element");		
+		//all Strings go into commandsMap, but only those with true goes to PosList
+		//"symb|ent" "pre, of" "symb|ent"; All regexes to be matched
+		//type and name are always specified, if name left empty, will become wildcard. 
+		//type and name uniquely specify a WLCommand, for the same command, use custom position if it's specified 
+		//(by an int, 4 comma-separated strings total), use default order otherwise (3 such strings). 
+		//name being -1 indicates WL command.
+		//-1 indicates WL command
+		WLCommandMapBuilder.put("element", addCommand(new String[]{"symb|ent, , true", "pre, of, false", 
+				"\\[Element], -1, true", "symb|ent, , true"}));		
 		
+		WLCommandMap = WLCommandMapBuilder.build();
 	}
 	
 	/**
@@ -43,34 +53,66 @@ public class WLCommandsList {
 	 * Specifically, create commandsCountMap with WLCommandComponent and supplied integer. 
 	 * @param 
 	 */
-	/////name should be there!
-	public static void addCommand(String[] posStringAr, String[] nameStringAr, int[] useAr, String triggerWord){
+	/////name should be there already!
+	public static WLCommand addCommand(String[] commandStringAr){
 		ImmutableMap<WLCommandComponent, Integer> commandsCountMap;
-		Map<WLCommandComponent, Integer> map  = new HashMap<WLCommandComponent, Integer>();
-		assert(posStringAr.length == useAr.length);
-		assert(nameStringAr.length == useAr.length);
+		//used to build commandsCountMap
+		Map<WLCommandComponent, Integer> commandsCountPreMap  = new HashMap<WLCommandComponent, Integer>();		
 		
-		for(int i = 0; i < posStringAr.length; i++){
-			//those are regexes to be matched
-			String posStr = posStringAr[i];
-			String nameStr = posStringAr[i];
-			int toUse = useAr[i];
+		List<PosTerm> posList = new ArrayList<PosTerm>();
+		//total number of components, it's sum of all entries in ComponentCountMap,
+		//minus the number of WL commands.
+		int componentCounter = 0;
+		//assert(commandStringAr.length == useAr.length);
+		
+		for(int i = 0; i < commandStringAr.length; i++){
+			
+			//those are regexes to be matched			
+			String commandStr = commandStringAr[i];
+			
+			String[] commandStrParts = commandStr.split(",") ;
+			
+			String posStr = commandStrParts[0];
+			//String nameStr = commandStrParts.length > 2 ? commandStrParts[1] : "*";
+			String nameStr = commandStrParts[1];
+			
+			//int toUse = commandStrParts.length > 2 ? Integer.valueOf(commandStrParts[2]) : Integer.valueOf(commandStrParts[1]);
+			boolean useInPosList = Boolean.valueOf(commandStrParts[2]);
+			
 			//process command and create WLCommandComponent and PosList
 			WLCommandComponent commandComponent = new WLCommandComponent(posStr, nameStr);
-			List<PosTerm> posList = new ArrayList<PosTerm>();
-			int curOcc = map.get(commandComponent);
 			
-			if(toUse == 1){
-				int posInMap = curOcc; ///////////////
-				PosTerm curTerm = new PosTerm(commandComponent, curOcc);
+			//how many have we added so far
+			Integer temp;
+			int curOcc = (temp=commandsCountPreMap.get(commandComponent)) == null ? 0 : temp;
+			
+			if(useInPosList){
+				int positionInMap = curOcc;
+				//check length of commandStrParts to see if custom order is required
+				if(commandStrParts.length > 3){
+					positionInMap = Integer.valueOf(commandStrParts[3]);
+				}				
+				//check if WL command, ie if name is "-1", in which case put -1 as 
+				//posInMap in PosTerm
+				else if(Integer.valueOf(nameStr) == -1){
+					positionInMap = -1;
+					componentCounter--;
+				}
+				
+				//curOcc is the position inside the list in commandsMap.
+				//but sometimes want to switch order of occurence in final command and order 
+				//in original sentence
+				PosTerm curTerm = new PosTerm(commandComponent, positionInMap);
 				posList.add(curTerm);
 			}			
 			
-			map.put(commandComponent, curOcc+1);
-			
+			commandsCountPreMap.put(commandComponent, curOcc+1);
+			componentCounter++;
 		}
 		
-		commandsCountMap = ImmutableMap.copyOf(map);
+		commandsCountMap = ImmutableMap.copyOf(commandsCountPreMap);
+		return WLCommand.create(commandsCountMap, posList, componentCounter);
+		
 	}
 	
 }

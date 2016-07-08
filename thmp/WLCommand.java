@@ -41,7 +41,7 @@ public class WLCommand {
 	//need to keep track how filled the bucket is
 	//
 	private Map<WLCommandComponent, Integer> commandsCountMap;
-	private String triggerWord; 
+	//private String triggerWord; 
 	//which WL expression to turn into using map components and how.
 	//need to keep references to Structs in commandsMap
 	// List of PosTerm with its position, {entsymb, 0}, {\[Element], -1}, {entsymb,2}
@@ -101,13 +101,16 @@ public class WLCommand {
 	/**
 	 * Static factory pattern.
 	 * @param commands   Multimap of WLCommandComponent and the quantity needed for a WLCommand
+	 * Also need posList
 	 */
-	public static WLCommand create(Map<WLCommandComponent, Integer> commandsCountMap){
+	public static WLCommand create(Map<WLCommandComponent, Integer> commandsCountMap, 
+			List<PosTerm> posList, int componentCounter){
 		//defensively copy?? Even though not external-facing
 		WLCommand curCommand = new WLCommand();
 		curCommand.commandsMap = ArrayListMultimap.create();	
 		curCommand.commandsCountMap = commandsCountMap;		
-		
+		curCommand.posTermList = posList;
+		curCommand.componentCounter = componentCounter;
 		return curCommand;
 	}
 	
@@ -128,12 +131,21 @@ public class WLCommand {
 			WLCommandComponent commandComponent = term.commandComponent;
 			List<Struct> curCommandComponentList = commandsMap.get(commandComponent);
 			int componentIndex = term.positionInMap;
+			
 			if(componentIndex >= curCommandComponentList.size()){
 				System.out.println("positionInMap >= list size. Should not happen!");
 				continue;
 			}
-			//not just toString, need to figure out good way to present it
-			String nextWord = curCommandComponentList.get(componentIndex).toString();
+			
+			String nextWord;			
+			//-1 if WL command
+			if(componentIndex != -1){
+				//not just toString, need to figure out good way to present it
+				nextWord = curCommandComponentList.get(componentIndex).toString();
+			}else{
+				nextWord = term.commandComponent.posTerm;
+			}
+			
 			commandString += nextWord + " ";
 		}
 		return commandString;
@@ -220,6 +232,9 @@ public class WLCommand {
 			if(!(obj instanceof WLCommandComponent)) return false;
 			
 			WLCommandComponent other = (WLCommandComponent)obj;
+			//here comparing posTerm and name as Strings rather than 
+			//matching as regexes; This is ok since the only times we 
+			//look up we have the original Pos terms
 			//should not be able to access   .posTerm directly!
 			if(!this.posTerm.equals(other.posTerm)) return false;
 			if(!this.name.equals(other.name)) return false;
@@ -231,7 +246,7 @@ public class WLCommand {
 		public int hashCode(){
 			//this does not produce uniform distribution! Need to do some shifting
 			int hashcode = this.posTerm.hashCode();
-			hashcode += this.name.hashCode();
+			hashcode += 19 * hashcode + this.name.hashCode();
 			return hashcode;
 		}
 	}
