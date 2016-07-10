@@ -51,6 +51,7 @@ public class ParseToWLTree {
 	public static void dfs(Struct struct, StringBuilder parsedSB, ParseStruct headParseStruct, int numSpaces) {
 		structDeque = new ArrayDeque<Struct>();
 		WLCommandList = new ArrayList<WLCommand>();
+		dfs(struct, parsedSB, headParseStruct, numSpaces, structDeque, WLCommandList);
 	}
 	
 	/**
@@ -67,8 +68,7 @@ public class ParseToWLTree {
 		//index used to keep track of where in Deque this stuct is
 		//to pop off at correct index later
 		int structDequeIndex = structDeque.size();
-		//add struct to stack
-		structDeque.add(struct);
+		
 		//if trigger a WLCommand, 
 		boolean isTrigger = false;
 		Collection<WLCommand> triggeredCol = null;
@@ -80,46 +80,91 @@ public class ParseToWLTree {
 			triggeredCol = WLCommandMap.get(struct.struct().get("name"));
 		}
 		
-		if(triggeredCol != null && !triggeredCol.isEmpty()){		
-			
+		//Need to copy the WLCommands! So not to modify the ones in WLCommandMap
+		
+		if(triggeredCol != null && !triggeredCol.isEmpty()){			
 			//is trigger, add all commands in list 
 			//WLCommand curCommand;
 			for(WLCommand curCommand : triggeredCol){
-				WLCommandList.add(curCommand);
+				
 				//backtrack until either stop words (ones that trigger ParseStructs) are reached
 				//or until commands prior to triggerWordIndex are filled
 				List<PosTerm> posTermList = WLCommand.posTermList(curCommand);
 				int triggerWordIndex = WLCommand.triggerWordIndex(curCommand);
+				//whether terms prior to trigger word are satisfied
+				boolean curCommandSat = true;
+				//list of structs waiting to be inserted to curCommand via addComponent
+				//temporary list instead of adding directly, since the terms prior need 
+				//to be added backwards (always add at beginning), and list will not be 
+				//added if !curCommandSat.
+				List<Struct> waitingStructList = new ArrayList<Struct>();
+				//array of booleans to keep track of which deque Struct's have been used
+				boolean[] usedStructsBool = new boolean[structDeque.size()];
 				
-				int curStructDequeIndex = structDequeIndex;
-				//iterate through Deque backwards
-				Iterator<Struct> dequeIter = structDeque.descendingIterator();
-				while(dequeIter.hasNext()){
+				//start from the word before the trigger word
+				//iterate through posTermList
+				posTermListLoop: for(int i = triggerWordIndex - 1; i > -1; i--){
+					WLCommandComponent curCommandComponent = posTermList.get(i).commandComponent();
 					
+					//int curStructDequeIndex = structDequeIndex;
+					//iterate through Deque backwards
+					Iterator<Struct> dequeReverseIter = structDeque.descendingIterator();
+					int dequeIterCounter = structDeque.size() - 1;
+					
+					while(dequeReverseIter.hasNext()){
 					//for each struct in deque, go through list to match
 					//Need a way to tell if all filled
-					Struct curStructInDeque = dequeIter.next();
-					for(int i = triggerWordIndex - 1; i > -1; i--){
-						WLCommandComponent curCommandComponent = posTermList.get(i).commandComponent();
+						Struct curStructInDeque = dequeReverseIter.next();
+						//avoid repeating this: 
+						String nameStr = "";
+						if(curStructInDeque instanceof StructA && curStructInDeque.prev1() instanceof String){
+							nameStr = (String)curStructInDeque.prev1();
+						}else if(curStructInDeque instanceof StructH){
+							nameStr = curStructInDeque.struct().get("name");
+						}
+						
 						if(curStructInDeque.type().matches(curCommandComponent.posTerm())
-								){
+								&& nameStr.matches(curCommandComponent.name()) 
+								&& !usedStructsBool[dequeIterCounter]){
 							//&& curStructInDeque.name().matches(curCommandComponent.name())
 							//see if name matches, if match, move on, continue outer loop
-							//need a way to mark structs already matched! to avoid infinite loop
+							//need a way to mark structs already matched! 
 							
-							//add struct to matching Component if found a match!
+							//add struct to the matching Component if found a match!							
+							//add at beginning since iterating backwards
+							waitingStructList.add(0, curStructInDeque);
 							
+							usedStructsBool[dequeIterCounter] = true;
+							continue posTermListLoop;
 						}
+						dequeIterCounter--;
 					}
-					
+					curCommandSat = false;
+					//done iterating through deque, but no match found; curCommand cannot be satisfied
+					break;
+				}
+				//curCommand's terms before trigger word are satisfied. 
+				if(curCommandSat){
+					for(Struct curStruct : waitingStructList){
+						WLCommand.addComponent(curCommand, curStruct);
+					}
+					WLCommandList.add(curCommand);
 				}
 			}
 			
 			isTrigger = true;
 			
 		}
-		
-		
+		//cur struct does not trigger
+		else{
+			//add struct to stack
+			structDeque.add(struct);
+			//add struct to all WLCommands in WLCommandList
+			//check if satisfied
+			for(WLCommand curCommand : WLCommandList){
+				boolean commandSat = WLCommand.addComponent(curCommand, struct);
+			}
+		}
 		
 		// use visitor pattern!		
 		if (struct instanceof StructA) {
