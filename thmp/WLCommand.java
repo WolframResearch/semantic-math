@@ -49,6 +49,12 @@ public class WLCommand {
 	private List<PosTerm> posTermList;
 
 	/**
+	 * Index of trigger word in posTermList.
+	 * (expand to list to include multiple trigger words?)
+	 */
+	private int triggerWordIndex;
+	
+	/**
 	 * Track the number of components left in this WLCommand.
 	 * Used to determine whether this WLCommand has all the commandComponents it needs yet.
 	 * Command is satisfied if componentCounter is 0.
@@ -74,9 +80,15 @@ public class WLCommand {
 		 */
 		private int positionInMap;
 		
-		public PosTerm(WLCommandComponent commandComponent, int position){
+		/**
+		 * Whether or not to include in the built String created by build()
+		 */
+		private boolean includeInBuiltString;		
+		
+		public PosTerm(WLCommandComponent commandComponent, int position, boolean includeInBuiltString){
 			this.commandComponent = commandComponent;
 			this.positionInMap = position;
+			this.includeInBuiltString = includeInBuiltString;
 		}
 		
 		public WLCommandComponent commandComponent(){
@@ -85,6 +97,10 @@ public class WLCommand {
 		
 		public int positionInMap(){
 			return this.positionInMap;
+		}
+		
+		public boolean includeInBuiltString(){
+			return this.includeInBuiltString;
 		}
 	}
 	
@@ -104,13 +120,14 @@ public class WLCommand {
 	 * Also need posList
 	 */
 	public static WLCommand create(Map<WLCommandComponent, Integer> commandsCountMap, 
-			List<PosTerm> posList, int componentCounter){
+			List<PosTerm> posList, int componentCounter, int triggerWordIndex){
 		//defensively copy?? Even though not external-facing
 		WLCommand curCommand = new WLCommand();
 		curCommand.commandsMap = ArrayListMultimap.create();	
 		curCommand.commandsCountMap = commandsCountMap;		
 		curCommand.posTermList = posList;
 		curCommand.componentCounter = componentCounter;
+		curCommand.triggerWordIndex = triggerWordIndex;
 		return curCommand;
 	}
 	
@@ -128,6 +145,9 @@ public class WLCommand {
 		String commandString = "";
 		
 		for(PosTerm term : posTermList){
+			
+			if(!term.includeInBuiltString) continue;
+			
 			WLCommandComponent commandComponent = term.commandComponent;
 			List<Struct> curCommandComponentList = commandsMap.get(commandComponent);
 			int componentIndex = term.positionInMap;
@@ -153,7 +173,7 @@ public class WLCommand {
 	
 	/**
 	 * @param curCommand	WLCommand we are adding PosTerm to
-	 * @param newComponent  The WLCommandComponent we are adding to curCommand
+	 * 
 	 * @param newSrtuct 	Pointer to a Struct
 	 * @return 				Whether the command is now satisfied
 	 * Adds Struct to commandsMap.
@@ -167,7 +187,7 @@ public class WLCommand {
 		//be careful with type, could be conj_, all sorts of stuff
 		String structType = newStruct.type();
 		String structName = newStruct instanceof StructH ? newStruct.struct().get("name") : 
-			newStruct.prev1() instanceof String ? (String)newStruct.prev1() : null;
+			newStruct.prev1() instanceof String ? (String)newStruct.prev1() : "";
 			
 		//need to iterate through the keys of countMap instead of just getting, 
 		//because .hashcode won't find it for us
@@ -177,8 +197,7 @@ public class WLCommand {
 			int commandComponentCount = commandComponentEntry.getValue();
 			
 			if(structType.matches(commandComponent.posTerm) 
-					&& commandComponentCount > 0
-					&& structName != null 
+					&& commandComponentCount > 0 
 					&& structName.matches(commandComponent.name)){
 				//put commandComponent into commandsMap
 				//if map doesn't contain newComponent, null !> 0		
@@ -196,6 +215,23 @@ public class WLCommand {
 		return curCommand.componentCounter < 1;
 	}
 
+	/**
+	 * 
+	 * @param curCommand
+	 * @return posTermList of current command
+	 */
+	public static List<PosTerm> posTermList(WLCommand curCommand){
+		return curCommand.posTermList;
+	}
+	
+	/**
+	 * 
+	 * @return
+	 */
+	public static int triggerWordIndex(WLCommand curCommand){
+		return curCommand.triggerWordIndex;
+	}
+	
 	/**
 	 * @return Is this command (commandsMap) satisfied. 
 	 * 
@@ -222,6 +258,10 @@ public class WLCommand {
 		
 		public String posTerm(){
 			return this.posTerm;
+		}
+		
+		public String name(){
+			return this.name;
 		}
 		
 		/**

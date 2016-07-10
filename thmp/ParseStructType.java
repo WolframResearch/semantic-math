@@ -13,13 +13,13 @@ public enum ParseStructType {
 	// NONE means shoud retain original type
 	THM, DEF, HYP, PPT, RES, STM, NONE;
 
-	public static ParseStructType getType(String s) {
+	public static ParseStructType getType(String typeStr) {
 		ParseStructType type;
-		switch (s) {
+		switch (typeStr) {
 		case "letbe":
 			type = HYP;
 			break;
-		case "hyp":
+		case "hypo":
 			type = HYP;
 			break;
 		default:

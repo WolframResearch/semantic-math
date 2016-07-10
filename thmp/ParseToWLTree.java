@@ -1,9 +1,19 @@
 package thmp;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.Iterator;
+import java.util.List;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Multimap;
+
+import thmp.WLCommand.PosTerm;
+import thmp.WLCommand.WLCommandComponent;
 
 /**
  * Parses to WL Tree. Using more WL-like structures.
@@ -13,7 +23,36 @@ import com.google.common.collect.ListMultimap;
  *
  */
 public class ParseToWLTree {
-
+	
+	/**
+	 * Deque used as Stack to store the Struct's that's being processed. 
+	 * Pop off after all required terms in a WL command are met.
+	 * Each level keeps a reference to some index of the deque.
+	 */
+	private static Deque<Struct> structDeque;	
+	
+	/**
+	 * List to keep track all triggered WLCommands
+	 */
+	private static List<WLCommand> WLCommandList;
+	
+	/**
+	 * Trigger word lookup
+	 */
+	private static final Multimap<String, WLCommand> WLCommandMap = WLCommandsList.WLCommandMap();
+	
+	/**
+	 * Entry point for depth first search.
+	 * @param struct
+	 * @param parsedSB
+	 * @param headParseStruct
+	 * @param numSpaces
+	 */
+	public static void dfs(Struct struct, StringBuilder parsedSB, ParseStruct headParseStruct, int numSpaces) {
+		structDeque = new ArrayDeque<Struct>();
+		WLCommandList = new ArrayList<WLCommand>();
+	}
+	
 	/**
 	 * Searches through parse tree and matches with ParseStruct's.
 	 * Convert to visitor pattern!
@@ -23,16 +62,89 @@ public class ParseToWLTree {
 	 * @param headStruct the nearest ParseStruct that's collecting parses
 	 * @param numSpaces is the number of spaces to print. Increment space if number is 
 	 */
-	public static void dfs(Struct struct, StringBuilder parsedSB, ParseStruct headParseStruct, int numSpaces) {
+	public static void dfs(Struct struct, StringBuilder parsedSB, ParseStruct headParseStruct, int numSpaces,
+			Deque<Struct> structDeque, List<WLCommand> WLCommandList) {
+		//index used to keep track of where in Deque this stuct is
+		//to pop off at correct index later
+		int structDequeIndex = structDeque.size();
+		//add struct to stack
+		structDeque.add(struct);
+		//if trigger a WLCommand, 
+		boolean isTrigger = false;
+		Collection<WLCommand> triggeredCol = null;
+
+		if (struct instanceof StructA && struct.prev1() instanceof String) {
+			triggeredCol = WLCommandMap.get((String)struct.prev1());			
+		}else if(struct instanceof StructH){
+			//null should be a valid key for Multimap
+			triggeredCol = WLCommandMap.get(struct.struct().get("name"));
+		}
+		
+		if(triggeredCol != null && !triggeredCol.isEmpty()){		
+			
+			//is trigger, add all commands in list 
+			//WLCommand curCommand;
+			for(WLCommand curCommand : triggeredCol){
+				WLCommandList.add(curCommand);
+				//backtrack until either stop words (ones that trigger ParseStructs) are reached
+				//or until commands prior to triggerWordIndex are filled
+				List<PosTerm> posTermList = WLCommand.posTermList(curCommand);
+				int triggerWordIndex = WLCommand.triggerWordIndex(curCommand);
+				
+				int curStructDequeIndex = structDequeIndex;
+				//iterate through Deque backwards
+				Iterator<Struct> dequeIter = structDeque.descendingIterator();
+				while(dequeIter.hasNext()){
+					
+					//for each struct in deque, go through list to match
+					//Need a way to tell if all filled
+					Struct curStructInDeque = dequeIter.next();
+					for(int i = triggerWordIndex - 1; i > -1; i--){
+						WLCommandComponent curCommandComponent = posTermList.get(i).commandComponent();
+						if(curStructInDeque.type().matches(curCommandComponent.posTerm())
+								){
+							//&& curStructInDeque.name().matches(curCommandComponent.name())
+							//see if name matches, if match, move on, continue outer loop
+							//need a way to mark structs already matched! to avoid infinite loop
+							
+							//add struct to matching Component if found a match!
+							
+						}
+					}
+					
+				}
+			}
+			
+			isTrigger = true;
+			
+		}
+		
+		
+		
 		// use visitor pattern!		
 		if (struct instanceof StructA) {
 			//create ParseStruct's
 			//the type T will depend on children. The type depends on struct's type
 			//figure out types now, fill in later to ParseStruct later. 
 			
-			ParseStructType parseStructType = ParseStructType.getType(struct.type());
+			//ParseStructType parseStructType = ParseStructType.getType(struct.type());
 			//ListMultimap<ParseStructType, ParseStruct> subParseTree = ArrayListMultimap.create();
 			//ParseStruct parseStruct;
+			ParseStruct curHeadParseStruct = headParseStruct;
+			/*boolean checkParseStructType0 = checkParseStructType(parseStructType);
+			if(checkParseStructType0){
+				curHeadParseStruct = new ParseStruct(parseStructType, "", struct);
+				headParseStruct.addToSubtree(parseStructType, curHeadParseStruct);
+				//set to "" so to not print duplicates
+				//struct.set_prev1("");
+				
+				numSpaces++;
+				String space = "";
+				for(int i = 0; i < numSpaces; i++) space += " ";
+				System.out.print("\n " + space + struct.type() + ":>");
+				parsedSB.append("\n" + space);	
+			}		*/
+			
 			/*
 			if(struct.type().matches("hyp|let") ){
 				//create new ParseStruct
@@ -55,53 +167,67 @@ public class ParseToWLTree {
 			
 			// don't know type at compile time
 			if (struct.prev1() instanceof Struct) {
-				ParseStruct curHeadParseStruct = headParseStruct;
+				//ParseStruct curHeadParseStruct = headParseStruct;
 				//check if need to create new ParseStruct
-				if(checkParseStructType(parseStructType)){
+				String prev1Type = ((Struct)struct.prev1()).type();
+				ParseStructType parseStructType = ParseStructType.getType(prev1Type);
+				boolean checkParseStructType = checkParseStructType(parseStructType);
+				if(checkParseStructType){
 					curHeadParseStruct = new ParseStruct(parseStructType, "", (Struct)struct.prev1());
 					headParseStruct.addToSubtree(parseStructType, curHeadParseStruct);
-					//set 
-					struct.set_prev1("");
+					//set to "" so to not print duplicates
+					//struct.set_prev1("");
 					
 					numSpaces++;
 					String space = "";
 					for(int i = 0; i < numSpaces; i++) space += " ";
-					System.out.println(space);
-					parsedSB.append("\n" + space);	
+					//System.out.println(space);
+					System.out.print("\n " + space + prev1Type + ":>");
+					parsedSB.append("\n " + space + prev1Type + ":>");	
 				}				
 				//pass along headStruct, unless created new one here
 				dfs((Struct) struct.prev1(), parsedSB, curHeadParseStruct, numSpaces);
-				String space = "";
-				for(int i = 0; i < numSpaces; i++) space += " ";
-				System.out.println(space);
+				if(checkParseStructType){
+					String space = "";
+					for(int i = 0; i < numSpaces; i++) space += " ";
+					System.out.println(space);
+				}
 			}
 			
 			// if(struct.prev2() != null && !struct.prev2().equals(""))
 			// System.out.print(", ");
 			if (struct.prev2() instanceof Struct) {
-				// avoid printing is[is], ie case when parent has same type as
-				// child
-				ParseStruct curHeadParseStruct = headParseStruct;
-				//check if need to create new ParseStruct
-				if(checkParseStructType(parseStructType)){
-					curHeadParseStruct = new ParseStruct(parseStructType, "", (Struct)struct.prev2());
-					headParseStruct.addToSubtree(parseStructType, curHeadParseStruct);
-					struct.set_prev2("");
-					
-					numSpaces++;
-					String space = "";
-					for(int i = 0; i < numSpaces; i++) space += " ";
-					System.out.print("\n " + space + struct.type() + ":>");
-					parsedSB.append("\n" + space + struct.type() + ":>");	
-				}
 				
 				System.out.print(", ");
 				parsedSB.append(", ");
 				
+				// avoid printing is[is], ie case when parent has same type as
+				// child
+				String prev2Type = ((Struct)struct.prev2()).type();
+				ParseStructType parseStructType = ParseStructType.getType(prev2Type);
+				curHeadParseStruct = headParseStruct;
+				//check if need to create new ParseStruct
+				boolean checkParseStructType = checkParseStructType(parseStructType);
+				if(checkParseStructType){
+					curHeadParseStruct = new ParseStruct(parseStructType, "", (Struct)struct.prev2());
+					headParseStruct.addToSubtree(parseStructType, curHeadParseStruct);
+					//struct.set_prev2("");
+					
+					numSpaces++;
+					String space = "";
+					for(int i = 0; i < numSpaces; i++) space += " ";
+					System.out.print("\n " + space + prev2Type + ":>");
+					parsedSB.append("\n" + space + prev2Type + ":>");	
+				}
+				
+				
 				dfs((Struct) struct.prev2(), parsedSB, curHeadParseStruct, numSpaces);
-				String space = "";
-				for(int i = 0; i < numSpaces; i++) space += " ";
-				System.out.println(space);
+				if(checkParseStructType){
+					struct.set_prev2("");
+					String space = "";
+					for(int i = 0; i < numSpaces; i++) space += " ";
+					System.out.println(space);
+				}
 			}
 
 			if (struct.prev1() instanceof String) {
@@ -120,6 +246,11 @@ public class ParseToWLTree {
 			System.out.print("]");
 			parsedSB.append("]");
 			
+			/*if(checkParseStructType0){
+				String space = "";
+				for(int i = 0; i < numSpaces; i++) space += " ";
+				System.out.println(space);
+			}*/
 			//create new parseStruct to put in tree
 			//if Struct (leaf) and not ParseStruct (overall head), done with subtree and return
 			

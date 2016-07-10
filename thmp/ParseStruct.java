@@ -50,6 +50,11 @@ public class ParseStruct {
 		this.structMap.put(type, struct);
 	}
 	
+	/**
+	 * 
+	 * @param type
+	 * @param subStruct	Struct to be added to this ParseStruct 
+	 */
 	public void addToSubtree(ParseStructType type, ParseStruct subStruct){
 		this.parseStructMap.put(type, subStruct);
 	}

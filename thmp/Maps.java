@@ -109,7 +109,6 @@ public class Maps {
 				.<String, FixedPhrase> builder();
 		// read in from file
 		File file = new File("src/thmp/data/fixedPhrases.txt");
-		System.out.println("cur working dir in Maps.java: " + System.getProperty("user.dir"));
 		try {
 			Scanner sc = new Scanner(file);
 
@@ -559,7 +558,7 @@ public class Maps {
 		// participle: called, need to take care of "said" etc
 		structMap.put("parti_ent", new Rule("partient", 1));
 		structMap.put("ent_partient", new Rule("newchild", 1));
-		structMap.put("ent_hypo", new Rule("newchild", 1));
+		structMap.put("ent_hypo", new Rule("newchild", .9));
 		// phrases: been there, x in X,
 		structMap.put("parti_adj", new Rule("phrase", 1));
 		structMap.put("symb_prep", new Rule("phrase", 1));
