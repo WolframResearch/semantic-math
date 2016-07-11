@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
@@ -28,6 +29,7 @@ public class ParseToWLTree {
 	 * Deque used as Stack to store the Struct's that's being processed. 
 	 * Pop off after all required terms in a WL command are met.
 	 * Each level keeps a reference to some index of the deque.
+	 * 
 	 */
 	private static Deque<Struct> structDeque;	
 	
@@ -69,6 +71,9 @@ public class ParseToWLTree {
 		//to pop off at correct index later
 		int structDequeIndex = structDeque.size();
 		
+		//list of commands satisfied at this level
+		List<WLCommand> satisfiedCommands = new ArrayList<WLCommand>();
+		
 		//if trigger a WLCommand, 
 		boolean isTrigger = false;
 		Collection<WLCommand> triggeredCol = null;
@@ -80,15 +85,16 @@ public class ParseToWLTree {
 			triggeredCol = WLCommandMap.get(struct.struct().get("name"));
 		}
 		
-		//Need to copy the WLCommands! So not to modify the ones in WLCommandMap
-		
 		if(triggeredCol != null && !triggeredCol.isEmpty()){			
 			//is trigger, add all commands in list 
 			//WLCommand curCommand;
-			for(WLCommand curCommand : triggeredCol){
+			for(WLCommand curCommandInCol : triggeredCol){
+				//Copy the WLCommands! So not to modify the ones in WLCommandMap
+				WLCommand curCommand = WLCommand.copy(curCommandInCol);
 				
-				//backtrack until either stop words (ones that trigger ParseStructs) are reached
-				//or until commands prior to triggerWordIndex are filled
+				//backtrack until either stop words (ones that trigger ParseStructs) are reached.
+				//or the beginning of structDeque is reached.
+				//or until commands prior to triggerWordIndex are filled.
 				List<PosTerm> posTermList = WLCommand.posTermList(curCommand);
 				int triggerWordIndex = WLCommand.triggerWordIndex(curCommand);
 				//whether terms prior to trigger word are satisfied
@@ -104,7 +110,8 @@ public class ParseToWLTree {
 				//start from the word before the trigger word
 				//iterate through posTermList
 				posTermListLoop: for(int i = triggerWordIndex - 1; i > -1; i--){
-					WLCommandComponent curCommandComponent = posTermList.get(i).commandComponent();
+					PosTerm curPosTerm = posTermList.get(i);
+					WLCommandComponent curCommandComponent = curPosTerm.commandComponent();
 					
 					//int curStructDequeIndex = structDequeIndex;
 					//iterate through Deque backwards
@@ -133,6 +140,7 @@ public class ParseToWLTree {
 							//add struct to the matching Component if found a match!							
 							//add at beginning since iterating backwards
 							waitingStructList.add(0, curStructInDeque);
+							curPosTerm.set_posTermStruct(curStructInDeque);
 							
 							usedStructsBool[dequeIterCounter] = true;
 							continue posTermListLoop;
@@ -155,7 +163,8 @@ public class ParseToWLTree {
 			isTrigger = true;
 			
 		}
-		//cur struct does not trigger
+		//cur struct does not trigger, trigger words should not be added to the 
+		//accumulating list WLCommandList. 
 		else{
 			//add struct to stack
 			structDeque.add(struct);
@@ -163,6 +172,14 @@ public class ParseToWLTree {
 			//check if satisfied
 			for(WLCommand curCommand : WLCommandList){
 				boolean commandSat = WLCommand.addComponent(curCommand, struct);
+				//if commandSat, 
+				//remove all the waiting, triggered commands for now, except current struct,
+				//
+				//Use the one triggered first, which comes first in WLCommandList.
+				//But what if a longer WLCommand later fits better? Like "derivative of f wrt x"
+				if(commandSat){
+					satisfiedCommands.add(curCommand);
+				}
 			}
 		}
 		
@@ -231,7 +248,7 @@ public class ParseToWLTree {
 					parsedSB.append("\n " + space + prev1Type + ":>");	
 				}				
 				//pass along headStruct, unless created new one here
-				dfs((Struct) struct.prev1(), parsedSB, curHeadParseStruct, numSpaces);
+				dfs((Struct) struct.prev1(), parsedSB, curHeadParseStruct, numSpaces, structDeque, WLCommandList);
 				if(checkParseStructType){
 					String space = "";
 					for(int i = 0; i < numSpaces; i++) space += " ";
@@ -265,8 +282,7 @@ public class ParseToWLTree {
 					parsedSB.append("\n" + space + prev2Type + ":>");	
 				}
 				
-				
-				dfs((Struct) struct.prev2(), parsedSB, curHeadParseStruct, numSpaces);
+				dfs((Struct) struct.prev2(), parsedSB, curHeadParseStruct, numSpaces, structDeque, WLCommandList);
 				if(checkParseStructType){
 					struct.set_prev2("");
 					String space = "";
@@ -317,12 +333,42 @@ public class ParseToWLTree {
 			for (int i = 0; i < children.size(); i++) {
 				System.out.print(childRelation.get(i) + " ");
 				parsedSB.append(childRelation.get(i) + " ");
-
-				dfs(children.get(i), parsedSB, headParseStruct, numSpaces);
+				Struct childRelationStruct = new StructA<String, String>(childRelation.get(i), "", "pre");
+				//add child relation as Struct
+				structDeque.add(childRelationStruct);
+				//add struct to all WLCommands in WLCommandList
+				//check if satisfied
+				for(WLCommand curCommand : WLCommandList){
+					boolean commandSat = WLCommand.addComponent(curCommand, childRelationStruct);
+					//add struct to posTerm to posTermList ////////////
+					/////
+					if(commandSat){
+						satisfiedCommands.add(curCommand);
+					}
+				}
+				//
+				dfs(children.get(i), parsedSB, headParseStruct, numSpaces, structDeque, WLCommandList);
 			}
 			System.out.print("]");
 			parsedSB.append("]");
 		}
+		
+		//build the commands now after dfs into subtree
+		for(WLCommand curCommand : satisfiedCommands){
+			String curCommandString = WLCommand.build(curCommand);
+			//set WLCommandStr in this Struct
+			//need to find first Struct in posTermList
+			List<PosTerm> posTermList = WLCommand.posTermList(curCommand);
+			//to get the parent Struct of the first Struct
+			Struct posTermStruct = posTermList.get(0).posTermStruct(); 
+			//******posTermStruct null!
+			
+			Struct parentStruct = posTermStruct.parentStruct();
+			
+			parentStruct.set_WLCommandStr(curCommandString);
+			System.out.println(curCommandString);
+		}
+		
 	}
 	
 	/**

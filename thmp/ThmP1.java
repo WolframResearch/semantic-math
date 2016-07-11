@@ -1171,7 +1171,8 @@ public class ThmP1 {
 								if (firstEnt != null) {
 									StructA<Struct, String> parentStruct = new StructA<Struct, String>(firstEnt, called,
 											"def", mx.get(0).get(len - 1));
-
+									firstEnt.set_parentStruct(parentStruct);
+									
 									// mx.get(0).set(len - 1, parentStruct);
 									mx.get(0).get(len - 1).add(parentStruct);
 
@@ -1316,6 +1317,8 @@ public class ThmP1 {
 													StructA<Struct, Struct> parentStruct = new StructA<Struct, Struct>(
 															p_struct, struct2, newType + "_" + type2,
 															mx.get(i - l).get(j));
+													p_struct.set_parentStruct(parentStruct);
+													struct2.set_parentStruct(parentStruct);
 													//types are same, so scores should be same, so should only be punished once
 													//use score instead of product
 													double maxDownPathScore = p_struct.maxDownPathScore();
@@ -1687,7 +1690,9 @@ public class ThmP1 {
 			int parentNumUnits = struct1.numUnits() + struct2.numUnits();
 			StructA<Struct, Struct> parentStruct = new StructA<Struct, Struct>(struct1, struct2, newType, newScore,
 					mx.get(i).get(j), parentDownPathScore, parentNumUnits);
-
+			struct1.set_parentStruct(parentStruct);
+			struct2.set_parentStruct(parentStruct);
+			
 			// mx.get(i).set(j, parentStruct);
 			mx.get(i).get(j).add(parentStruct);
 		}

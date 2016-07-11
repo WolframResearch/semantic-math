@@ -26,11 +26,29 @@ public class Struct {
 	public void set_structList(StructList structList){
 	}
 
+	/**
+	 * Set parent pointer of this struct
+	 * 
+	 */
+	public void set_parentStruct(Struct parent){		
+	}
+	
+	public Struct parentStruct(){
+		return null;
+	}
+	
 	//returns probability of relation in Rule
 	public double score(){
 		return 0;
 	}
 	
+	public void set_WLCommandStr(String WLCommandStr){
+	}
+
+	public String WLCommandStr(){
+		return "";
+	}
+
 	public int numUnits(){
 		return 1;
 	}

@@ -43,8 +43,10 @@ public class WLCommandsList {
 		//(by an int, 4 comma-separated strings total), use default order otherwise (3 such strings). 
 		//name being -1 indicates WL command.
 		//-1 indicates WL command
-		WLCommandMapBuilder.put("element", addCommand(new String[]{"symb|ent, , true", "\\[Element], -1, true", 
+		WLCommandMapBuilder.put("element", addCommand(new String[]{"symb|ent, , true", "\\[Element], WL, true", 
 				"pre, of, false", "symb|ent, , true"}));		
+		WLCommandMapBuilder.put("derivative", addCommand(new String[]{"Derivative, WL, true", "pre, of, false", 
+				"symb|ent, , true"}));
 		
 		WLCommandMap = WLCommandMapBuilder.build();
 	}
@@ -74,12 +76,12 @@ public class WLCommandsList {
 			
 			String[] commandStrParts = commandStr.split(",") ;
 			
-			String posStr = commandStrParts[0].equals("") ? "." : commandStrParts[0];
+			String posStr = commandStrParts[0].matches("\\s") ? ".*" : commandStrParts[0].trim();
 			//String nameStr = commandStrParts.length > 2 ? commandStrParts[1] : "*";
-			String nameStr = commandStrParts[1].equals("") ? ".*" : commandStrParts[1];
+			String nameStr = commandStrParts[1].matches("\\s") ? ".*" : commandStrParts[1].trim();
 			
 			//int toUse = commandStrParts.length > 2 ? Integer.valueOf(commandStrParts[2]) : Integer.valueOf(commandStrParts[1]);
-			boolean useInPosList = Boolean.valueOf(commandStrParts[2]);
+			boolean useInPosList = Boolean.valueOf(commandStrParts[2].trim());
 			
 			//process command and create WLCommandComponent and PosList
 			WLCommandComponent commandComponent = new WLCommandComponent(posStr, nameStr);
@@ -96,7 +98,7 @@ public class WLCommandsList {
 				}				
 				//check if WL command, ie if name is "-1", in which case put -1 as 
 				//posInMap in PosTerm
-				else if(Integer.valueOf(nameStr) == -1){
+				else if(nameStr.equals("WL")){
 					positionInMap = -1;
 					componentCounter--;
 					triggerWordIndex = i;

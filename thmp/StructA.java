@@ -10,6 +10,7 @@ public class StructA<A, B> extends Struct{
 	
 	private A prev1; 
 	private B prev2; 
+	private Struct parentStruct;
 	//score for this structA, to indicate likelihood of relation in Rule
 	//Ranges over (0, 1]. 1 by default
 	private double score;
@@ -18,6 +19,8 @@ public class StructA<A, B> extends Struct{
 	private String type2; //type of prev2
 	//list of Struct at mx element, to which this Struct belongs
 	//pointer to mx.get(i).get(j)
+	//if not null, means this is head of some parsed WLCommand. 
+	private String WLCommandStr;
 	private StructList structList;
 	//includes this/current Struct's score!
 	private double DOWNPATHSCOREDEFAULT = 1;
@@ -46,6 +49,20 @@ public class StructA<A, B> extends Struct{
 		this.type = type; 
 		this.numUnits = 1;
 		this.score = 1;
+	}
+	
+	/**
+	 * Set parent pointer
+	 * @param parent	parent Struct
+	 */
+	@Override
+	public void set_parentStruct(Struct parent){
+		this.parentStruct = parent;
+	}
+	
+	@Override
+	public Struct parentStruct(){
+		return this.parentStruct;
 	}
 	
 	/**
@@ -92,6 +109,21 @@ public class StructA<A, B> extends Struct{
 	public int numUnits(){
 		return this.numUnits;
 	}
+	
+	@Override
+	public void set_WLCommandStr(String WLCommandStr){
+		this.WLCommandStr = WLCommandStr;
+	}
+	
+	/**
+	 * Retrieves the WLCommandStr
+	 * @return
+	 */
+	@Override
+	public String WLCommandStr(){
+		return this.WLCommandStr;
+	}
+
 	
 	@Override
 	public void set_structList(StructList structList){
@@ -143,6 +175,7 @@ public class StructA<A, B> extends Struct{
 		this.prev1 = (A)prev1;		
 	}
 	
+	//***this is terrible! Cannot just cast String
 	@SuppressWarnings("unchecked")
 	public void set_prev1(String prev1){	
 		this.prev1 = (A)prev1;

@@ -1,10 +1,13 @@
 package thmp;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ListMultimap;
 
 /**
@@ -74,6 +77,12 @@ public class WLCommand {
 		private WLCommandComponent commandComponent;
 		
 		/**
+		 * Struct filling the current posTerm. Have to be careful eg for "of",
+		 * which often is not a Struct itself, just part of a Struct
+		 */
+		private Struct posTermStruct;
+		
+		/**
 		 * position of the relevant term inside a list in commandsMap.
 		 * Ie the order it shows up in in the built-out command.
 		 * -1 if it's a WL command, eg \[Element].
@@ -91,8 +100,28 @@ public class WLCommand {
 			this.includeInBuiltString = includeInBuiltString;
 		}
 		
+		@Override
+		public String toString(){
+			return "{" + this.commandComponent + ", " + this.positionInMap + "}";
+		}
+		
 		public WLCommandComponent commandComponent(){
 			return this.commandComponent;
+		}
+		
+		/**
+		 * @return the Struct corresponding to this posTerm
+		 */
+		public Struct posTermStruct(){
+			return this.posTermStruct;
+		}
+		
+		/**
+		 * Set posTermStruct
+		 * @param posTermStruct
+		 */
+		public void set_posTermStruct(Struct posTermStruct){
+			this.posTermStruct = posTermStruct;
 		}
 		
 		public int positionInMap(){
@@ -129,6 +158,21 @@ public class WLCommand {
 		curCommand.componentCounter = componentCounter;
 		curCommand.triggerWordIndex = triggerWordIndex;
 		return curCommand;
+	}
+	
+	/**
+	 * @param curCommand To be copied
+	 * @return Deep copy of curCommand
+	 */
+	public static WLCommand copy(WLCommand curCommand){	
+		WLCommand newCommand = new WLCommand();
+		newCommand.commandsMap = ArrayListMultimap.create(curCommand.commandsMap) ;
+		newCommand.commandsCountMap = new HashMap<WLCommandComponent, Integer>(curCommand.commandsCountMap) ; 
+		//ImmutableMap.copyOf(curCommand.commandsCountMap);
+		newCommand.posTermList = new ArrayList<PosTerm>(curCommand.posTermList);
+		newCommand.componentCounter = curCommand.componentCounter;
+		newCommand.triggerWordIndex = curCommand.triggerWordIndex;
+		return newCommand;
 	}
 	
 	/**
@@ -207,7 +251,7 @@ public class WLCommand {
 				curCommand.commandsCountMap.put(commandComponent, commandComponentCount - 1);
 				//use counter to track whether map is satisfied
 				curCommand.componentCounter--;
-				
+				break;
 			}
 		}			
 		
@@ -262,6 +306,11 @@ public class WLCommand {
 		
 		public String name(){
 			return this.name;
+		}
+		
+		@Override
+		public String toString(){
+			return "{" + this.posTerm + ", " + this.name + "}";
 		}
 		
 		/**

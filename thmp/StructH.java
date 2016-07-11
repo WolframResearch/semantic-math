@@ -9,6 +9,8 @@ public class StructH<H> extends Struct{
 	private HashMap<String, String> struct; //hashmap
 	//ent (entity) is only structure that uses hashmap
 	private String type; //ent, adj, etc
+	private String WLCommandStr;
+	private Struct parentStruct;
 	private boolean hasChild = false;
 	private ArrayList<Struct> children; 
 	//relation to child, eg "of," "enjoyed"
@@ -49,6 +51,34 @@ public class StructH<H> extends Struct{
 		this.children = new ArrayList<Struct>();
 		this.childRelation = new ArrayList<String>();
 		this.score = 1;
+	}
+	
+	/**
+	 * Set parent pointer
+	 * @param parent	parent Struct
+	 */
+	@Override
+	public void set_parentStruct(Struct parent){
+		this.parentStruct = parent;
+	}
+	
+	@Override
+	public Struct parentStruct(){
+		return this.parentStruct;
+	}
+	
+	@Override
+	public void set_WLCommandStr(String WLCommandStr){
+		this.WLCommandStr = WLCommandStr;
+	}
+	
+	/**
+	 * Retrieves the WLCommandStr
+	 * @return
+	 */
+	@Override
+	public String WLCommandStr(){
+		return this.WLCommandStr;
 	}
 	
 	public void set_struct(HashMap<String, String> struct){
