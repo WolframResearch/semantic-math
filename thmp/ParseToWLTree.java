@@ -111,6 +111,9 @@ public class ParseToWLTree {
 				//iterate through posTermList
 				posTermListLoop: for(int i = triggerWordIndex - 1; i > -1; i--){
 					PosTerm curPosTerm = posTermList.get(i);
+					//auxilliary term
+					if(curPosTerm.positionInMap() == -1) continue;
+					
 					WLCommandComponent curCommandComponent = curPosTerm.commandComponent();
 					
 					//int curStructDequeIndex = structDequeIndex;
@@ -158,30 +161,27 @@ public class ParseToWLTree {
 					}
 					WLCommandList.add(curCommand);
 				}
-			}
-			
-			isTrigger = true;
-			
+			}			
+			isTrigger = true;			
 		}
-		//cur struct does not trigger, trigger words should not be added to the 
-		//accumulating list WLCommandList. 
-		else{
-			//add struct to stack
+		
+			//add struct to stack, even if trigger Struct
 			structDeque.add(struct);
 			//add struct to all WLCommands in WLCommandList
 			//check if satisfied
 			for(WLCommand curCommand : WLCommandList){
 				boolean commandSat = WLCommand.addComponent(curCommand, struct);
+				
 				//if commandSat, 
 				//remove all the waiting, triggered commands for now, except current struct,
-				//
 				//Use the one triggered first, which comes first in WLCommandList.
 				//But what if a longer WLCommand later fits better? Like "derivative of f wrt x"
 				if(commandSat){
 					satisfiedCommands.add(curCommand);
 				}
 			}
-		}
+		
+		
 		
 		// use visitor pattern!		
 		if (struct instanceof StructA) {
@@ -333,15 +333,18 @@ public class ParseToWLTree {
 			for (int i = 0; i < children.size(); i++) {
 				System.out.print(childRelation.get(i) + " ");
 				parsedSB.append(childRelation.get(i) + " ");
+				
 				Struct childRelationStruct = new StructA<String, String>(childRelation.get(i), "", "pre");
+				childRelationStruct.set_parentStruct(struct);
+				
 				//add child relation as Struct
 				structDeque.add(childRelationStruct);
 				//add struct to all WLCommands in WLCommandList
 				//check if satisfied
 				for(WLCommand curCommand : WLCommandList){
 					boolean commandSat = WLCommand.addComponent(curCommand, childRelationStruct);
-					//add struct to posTerm to posTermList ////////////
-					/////
+					////add struct to posTerm to posTermList! ////////////
+					
 					if(commandSat){
 						satisfiedCommands.add(curCommand);
 					}
@@ -359,16 +362,89 @@ public class ParseToWLTree {
 			//set WLCommandStr in this Struct
 			//need to find first Struct in posTermList
 			List<PosTerm> posTermList = WLCommand.posTermList(curCommand);
-			//to get the parent Struct of the first Struct
-			Struct posTermStruct = posTermList.get(0).posTermStruct(); 
-			//******posTermStruct null!
+			//to get the parent Struct of the first non-WL Struct
+			
+			int i = 0;
+			while(posTermList.get(i).commandComponent().name().matches("WL|AUX")) i++;
+			
+			PosTerm firstPosTerm = posTermList.get(i);
+			//Struct posTermStruct = posTermList.get(0).posTermStruct(); 
+			List<Struct> posTermStructList = WLCommand.getStructList(curCommand, firstPosTerm.commandComponent());
+			//System.out.println(firstPosTerm);
+			Struct posTermStruct = posTermStructList.get(0);
 			
 			Struct parentStruct = posTermStruct.parentStruct();
 			
-			parentStruct.set_WLCommandStr(curCommandString);
+			parentStruct.append_WLCommandStr(curCommandString);
 			System.out.println(curCommandString);
 		}
 		
+	}
+	
+	/**
+	 * DFS for collecting the WLCommandStr's, instead of using the default 
+	 * representations of the Struct's. To achieve a presentation that's closer
+	 * to WL commands.
+	 * @param struct
+	 * @param parsedSB
+	 */
+	public static void dfs(Struct struct, StringBuilder parsedSB, boolean shouldPrint) {
+
+		if(struct.WLCommandStr() != null){
+			parsedSB.append(struct.WLCommandStr());
+			shouldPrint = false;
+		} 
+		
+		if (struct instanceof StructA) {
+			
+			if(shouldPrint) parsedSB.append(struct.type());			
+			
+			if(shouldPrint) parsedSB.append("[");
+			
+			// don't know type at compile time
+			if (struct.prev1() instanceof Struct) {
+				dfs((Struct) struct.prev1(), parsedSB, shouldPrint);
+			}
+
+			// if(struct.prev2() != null && !struct.prev2().equals(""))
+			// System.out.print(", ");
+			if (((StructA<?, ?>) struct).prev2() instanceof Struct) {
+				// avoid printing is[is], ie case when parent has same type as
+				// child
+				if(shouldPrint) parsedSB.append(", ");
+				dfs((Struct) struct.prev2(), parsedSB, shouldPrint);
+			}
+
+			if (struct.prev1() instanceof String) {
+				if(shouldPrint) parsedSB.append(struct.prev1());
+			}
+			if (struct.prev2() instanceof String) {
+				if (!struct.prev2().equals("")){
+					if(shouldPrint) parsedSB.append(", ");
+				}
+				if(shouldPrint) parsedSB.append(struct.prev2());
+			}
+
+			if(shouldPrint) parsedSB.append("]");
+		} else if (struct instanceof StructH) {
+
+			if(shouldPrint) parsedSB.append(struct.toString());
+
+			ArrayList<Struct> children = struct.children();
+			ArrayList<String> childRelation = struct.childRelation();
+
+			if (children == null || children.size() == 0)
+				return;
+
+			if(shouldPrint) parsedSB.append("[");
+
+			for (int i = 0; i < children.size(); i++) {
+				if(shouldPrint) parsedSB.append(childRelation.get(i) + " ");
+
+				dfs(children.get(i), parsedSB, shouldPrint);
+			}
+			if(shouldPrint) parsedSB.append("]");
+		}
 	}
 	
 	/**

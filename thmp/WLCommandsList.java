@@ -40,14 +40,16 @@ public class WLCommandsList {
 		//"symb|ent" "pre, of" "symb|ent"; All regexes to be matched
 		//type and name are always specified, if name left empty, will become wildcard. 
 		//type and name uniquely specify a WLCommand, for the same command, use custom position if it's specified 
-		//(by an int, 4 comma-separated strings total), use default order otherwise (3 such strings). 
+		//(by an int, 4 comma-separated strings total), use default order otherwise (3 comma-separated strings). 
 		//name being -1 indicates WL command.
 		//-1 indicates WL command
+		//Just a String represents an auxilliary String, eg just a bracket.
 		WLCommandMapBuilder.put("element", addCommand(new String[]{"symb|ent, , true", "\\[Element], WL, true", 
 				"pre, of, false", "symb|ent, , true"}));		
-		WLCommandMapBuilder.put("derivative", addCommand(new String[]{"Derivative, WL, true", "pre, of, false", 
-				"symb|ent, , true"}));
-		
+		WLCommandMapBuilder.put("derivative", addCommand(new String[]{"Derivative, WL, true", "[", "pre, of, false", 
+				"symb|ent, , true", "]"}));
+		WLCommandMapBuilder.put("log", addCommand(new String[]{"Log, WL, true", "[", "pre, of, false", 
+				"symb|ent, , true", "]"}));
 		WLCommandMap = WLCommandMapBuilder.build();
 	}
 	
@@ -74,11 +76,20 @@ public class WLCommandsList {
 			//those are regexes to be matched			
 			String commandStr = commandStringAr[i];
 			
-			String[] commandStrParts = commandStr.split(",") ;
+			String[] commandStrParts = commandStr.split(",") ;			
 			
-			String posStr = commandStrParts[0].matches("\\s") ? ".*" : commandStrParts[0].trim();
+			//auxilliary String like brackets. Just put in posTermList, don't put in commandsMap
+			if(commandStrParts.length == 1){
+				String posStr = commandStrParts[0];
+				String nameStr = "AUX"; //auxilliary string
+				WLCommandComponent commandComponent = new WLCommandComponent(posStr, nameStr);
+				PosTerm curTerm = new PosTerm(commandComponent, -1, true);
+				posList.add(curTerm);
+			}else{
+			
+				String posStr = commandStrParts[0].matches("\\s") ? ".*" : commandStrParts[0].trim();
 			//String nameStr = commandStrParts.length > 2 ? commandStrParts[1] : "*";
-			String nameStr = commandStrParts[1].matches("\\s") ? ".*" : commandStrParts[1].trim();
+				String nameStr = commandStrParts[1].matches("\\s") ? ".*" : commandStrParts[1].trim();
 			
 			//int toUse = commandStrParts.length > 2 ? Integer.valueOf(commandStrParts[2]) : Integer.valueOf(commandStrParts[1]);
 			boolean useInPosList = Boolean.valueOf(commandStrParts[2].trim());
@@ -110,9 +121,11 @@ public class WLCommandsList {
 				PosTerm curTerm = new PosTerm(commandComponent, positionInMap, useInPosList);
 				posList.add(curTerm);
 			//}			
+			//PosTerm(WLCommandComponent commandComponent, int position, boolean includeInBuiltString){
 			
 			commandsCountPreMap.put(commandComponent, curOcc+1);
 			componentCounter++;
+			}
 		}
 		
 		commandsCountMap = ImmutableMap.copyOf(commandsCountPreMap);

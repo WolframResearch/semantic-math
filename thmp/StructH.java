@@ -68,8 +68,9 @@ public class StructH<H> extends Struct{
 	}
 	
 	@Override
-	public void set_WLCommandStr(String WLCommandStr){
-		this.WLCommandStr = WLCommandStr;
+	public void append_WLCommandStr(String WLCommandStr){
+		this.WLCommandStr = this.WLCommandStr == null ? "" : this.WLCommandStr;
+		this.WLCommandStr += " " + WLCommandStr;
 	}
 	
 	/**
@@ -183,6 +184,17 @@ public class StructH<H> extends Struct{
 		str += this.struct; //struct is hashmap for structH
 		
 		return str;
+	}
+	
+	/**
+	 * Simple toString to return the bare minimum to identify this Struct.
+	 * To be used in ParseToWLTree.
+	 * @return
+	 */
+	@Override
+	public String simpleToString(){
+		String name = this.struct.get("name");
+		return name == null ? this.type : name;
 	}
 	
 	//similar to toString(). Presents StructH as a String

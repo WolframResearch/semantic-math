@@ -65,6 +65,12 @@ public class StructA<A, B> extends Struct{
 		return this.parentStruct;
 	}
 	
+	@Override
+	public String simpleToString(){
+		A name = this.prev1;
+		return name instanceof String ? (String)name : this.type;
+	}
+	
 	/**
 	 * 
 	 * @param prev1
@@ -111,8 +117,9 @@ public class StructA<A, B> extends Struct{
 	}
 	
 	@Override
-	public void set_WLCommandStr(String WLCommandStr){
-		this.WLCommandStr = WLCommandStr;
+	public void append_WLCommandStr(String WLCommandStr){
+		this.WLCommandStr = this.WLCommandStr == null ? "" : this.WLCommandStr;
+		this.WLCommandStr += " " + WLCommandStr;
 	}
 	
 	/**

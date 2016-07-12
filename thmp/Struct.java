@@ -42,7 +42,13 @@ public class Struct {
 		return 0;
 	}
 	
-	public void set_WLCommandStr(String WLCommandStr){
+	//Simple toString to return the bare minimum to identify this Struct.
+	//To be used in ParseToWLTree.
+	public String simpleToString(){
+		return "";
+	}
+	
+	public void append_WLCommandStr(String WLCommandStr){
 	}
 
 	public String WLCommandStr(){

@@ -2,9 +2,11 @@ package thmp;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMap;
@@ -186,6 +188,7 @@ public class WLCommand {
 		//counts should now be all 0
 		Map<WLCommandComponent, Integer> commandsCountMap = curCommand.commandsCountMap;
 		List<PosTerm> posTermList = curCommand.posTermList;
+		//use StringBuilder!
 		String commandString = "";
 		
 		for(PosTerm term : posTermList){
@@ -193,19 +196,19 @@ public class WLCommand {
 			if(!term.includeInBuiltString) continue;
 			
 			WLCommandComponent commandComponent = term.commandComponent;
-			List<Struct> curCommandComponentList = commandsMap.get(commandComponent);
-			int componentIndex = term.positionInMap;
 			
-			if(componentIndex >= curCommandComponentList.size()){
-				System.out.println("positionInMap >= list size. Should not happen!");
-				continue;
-			}
+			int positionInMap = term.positionInMap;
 			
 			String nextWord;			
-			//-1 if WL command
-			if(componentIndex != -1){
-				//not just toString, need to figure out good way to present it
-				nextWord = curCommandComponentList.get(componentIndex).toString();
+			//-1 if WL command or auxilliary String
+			if(positionInMap != -1){
+				List<Struct> curCommandComponentList = commandsMap.get(commandComponent);
+				if(positionInMap >= curCommandComponentList.size()){
+					System.out.println("positionInMap >= list size. Should not happen!");
+					continue;
+				}
+				//simple way to present it
+				nextWord = curCommandComponentList.get(positionInMap).simpleToString();
 			}else{
 				nextWord = term.commandComponent.posTerm;
 			}
@@ -216,13 +219,13 @@ public class WLCommand {
 	}
 	
 	/**
+	 * Adds new Struct to commandsMap.
 	 * @param curCommand	WLCommand we are adding PosTerm to
-	 * 
 	 * @param newSrtuct 	Pointer to a Struct
 	 * @return 				Whether the command is now satisfied
-	 * Adds Struct to commandsMap.
+	 * 
 	 * Add to commandsMap only if component is required as indicated by commandsCountMap.
-	 * BUT: what if the Struct just added isn't the one needed?
+	 * BUT: what if the Struct just added isn't the one needed? Keep adding.
 	 * If the name could be several optional ones, eg "in" or "of", so use regex .match("in|of")
 	 */
 	public static boolean addComponent(WLCommand curCommand, 
@@ -260,7 +263,50 @@ public class WLCommand {
 	}
 
 	/**
-	 * 
+	 * Removes the struct from its corresponding Component list in commandsMap.
+	 * Typically used when a command has been satisfied, and its structs should be
+	 * removed from other WLCommands in WLCommandList in ParseToWLTree that are partially built.
+	 * @param curCommand	WLCommand to be removed from.
+	 * @param curStruct		Struct to be removed.
+	 * @return		Whether newStruct is found and removed.
+	 */
+	public static boolean removeComponent(WLCommand curCommand, 
+			Struct curStruct){
+		//need to iterate through the keys of countMap instead of just getting, 
+		//because .hashcode won't find it for us		
+		for(WLCommandComponent commandComponent : curCommand.commandsMap.keySet()){
+			
+			List<Struct> structSet = curCommand.commandsMap.get(commandComponent);
+			
+			Iterator<Struct> structSetIter = structSet.iterator();
+			
+			while(structSetIter.hasNext()){
+				Struct curComponentStruct = structSetIter.next();
+				//only reference equality need to be checked, as it's always the reference to the 
+				//particular Struct that's added
+				if(curComponentStruct == curStruct){
+					structSetIter.remove();
+					curCommand.componentCounter++;
+					int commandComponentCount = curCommand.commandsCountMap.get(commandComponent);
+					curCommand.commandsCountMap.put(commandComponent, commandComponentCount + 1);
+					return true;
+				}
+			}			
+		}			
+		return false;
+	}
+	
+	/**
+	 * Retrieves list of Structs from commandsMap with key component.
+	 * @param component		key to retrieve List with
+	 * @param curCommand	is current command
+	 * @return List in commandsMap
+	 */
+	public static List<Struct> getStructList(WLCommand curCommand, WLCommandComponent component){
+		return curCommand.commandsMap.get(component);
+	}
+	
+	/**
 	 * @param curCommand
 	 * @return posTermList of current command
 	 */

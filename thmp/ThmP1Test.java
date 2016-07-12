@@ -206,6 +206,7 @@ public class ThmP1Test {
 			st = "where $m$ is an element of $M$";
 			st = "if $m$ is an integer where $m$ is an element of $M$";
 			st = "take the derivative of f";
+			st = "take the log of derivative of f";
 			strAr = ThmP1.preprocess(st);
 			for(int i = 0; i < strAr.length; i++){
 				ThmP1.parse(ThmP1.tokenize(strAr[i].trim() ));				

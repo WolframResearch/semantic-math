@@ -777,8 +777,9 @@ public class ThmP1 {
 						StructH<HashMap<String, String>> tempStruct = mathEntList.get(mathObjIndex);
 
 						pairs.get(index).set_pos(nextPair.pos());
-						Struct childStruct = mathEntList.get(Integer.valueOf(nextPair.pos()));
+						Struct childStruct = mathEntList.get(Integer.valueOf(nextPair.pos()));						
 						tempStruct.add_child(childStruct, "of");
+						
 						// set to null instead of removing, to keep indices
 						// right. If nextPair.pos != prevPair.pos().
 						if (nextPair.pos() != prevPair.pos())
@@ -1090,8 +1091,26 @@ public class ThmP1 {
 									&& struct2.prev1().toString().matches("of") && j + 1 < len
 									&& inputList.get(j + 1).type().equals("symb")) {
 								// create new child
-								struct1.add_child(inputList.get(j + 1), "of");
-
+								///
+								List<Struct> childrenList = struct1.children();
+								boolean childAdded = false;
+								//iterate backwards, want the latest-added child that fits
+								int childrenListSize = childrenList.size();
+								for(int p = childrenListSize - 1; p > -1; p--){
+									Struct child = childrenList.get(p);
+									if(child.type().equals("ent") && child instanceof StructH){
+										child.add_child(inputList.get(j + 1), "of");
+										inputList.get(j + 1).set_parentStruct(child);
+										childAdded = true;
+										break;
+									}
+								}
+								if(!childAdded){
+									//((StructH<?>) newStruct).add_child(struct2, childRelation);
+									struct1.add_child(inputList.get(j + 1), "of");
+									inputList.get(j + 1).set_parentStruct(struct1);
+								}
+								
 								// mx.get(i).set(j + 1, struct1);
 								mx.get(i).get(j + 1).add(struct1);
 								skipCol = true;
@@ -1233,29 +1252,7 @@ public class ThmP1 {
 								 * if(type1.matches("and"))
 								 * System.out.print("debug"); if
 								 * (type2.equals(iMinusOneStruct.type())) {
-								 * 
-								 * // In case of conj, only proceed if // next
-								 * // word is not a singular verb. // Single
-								 * case with complicated // logic, // so it's
-								 * easier more readable to // write // if(this
-								 * case){ // }then{do_something} // over if(not
-								 * this // case){do_something} Struct nextStruct
-								 * = j + 1 < len ? inputList.get(j + 1) : null;
-								 * if (nextStruct != null && type1.equals("and")
-								 * && nextStruct.prev1() instanceof String &&
-								 * isSingularVerb((String) nextStruct.prev1()))
-								 * {
-								 * 
-								 * // skip rest in this case } else {
-								 * 
-								 * String newType = type1.equals("or") ? "disj"
-								 * : "conj"; // type is expression, eg "a and //
-								 * b" // new type: conj_verbphrase
-								 * 
-								 * StructA<Struct, Struct> parentStruct = new
-								 * StructA<Struct, Struct>( iMinusOneStruct,
-								 * struct2, newType + "_" + type2,
-								 * mx.get(i-1).get(j));
+								 *							
 								 * 
 								 * // set parent struct in row // above //
 								 * mx.get(i - 1).set(j, // parentStruct);
@@ -1399,6 +1396,10 @@ public class ThmP1 {
 				ParseStruct headParseStruct = new ParseStruct(parseStructType, "", uHeadStruct);
 				ParseToWLTree.dfs(uHeadStruct, parseStructSB, headParseStruct, 0);
 				System.out.println("\n DONE ParseStruct DFS");
+				StringBuilder wlSB = new StringBuilder();
+				ParseToWLTree.dfs(uHeadStruct, wlSB, true);
+				System.out.println(wlSB);
+				System.out.println("DONE Just WL commands DFS");
 				//*******
 				
 				double maxDownPathScore = uHeadStruct.maxDownPathScore();
@@ -1578,7 +1579,24 @@ public class ThmP1 {
 			if (struct1 instanceof StructH) {
 				// why does this cast not trigger unchecked warning
 				// Because wildcard.
-				((StructH<?>) newStruct).add_child(struct2, childRelation);
+				//if already has child that's pre_ent, attach to that child
+				List<Struct> childrenList = newStruct.children();
+				boolean childAdded = false;
+				//iterate backwards, want the latest-added child that fits
+				int childrenListSize = childrenList.size();
+				for(int p = childrenListSize - 1; p > -1; p--){
+					Struct child = childrenList.get(p);
+					if(child.type().equals("ent") && child instanceof StructH){
+						child.add_child(struct2, childRelation);
+						struct2.set_parentStruct(child);
+						childAdded = true;
+						break;
+					}
+				}
+				if(!childAdded){ 
+					((StructH<?>) newStruct).add_child(struct2, childRelation); 
+					struct2.set_parentStruct(newStruct);
+				}
 			}
 
 			recentEnt = newStruct;
