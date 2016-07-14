@@ -204,9 +204,15 @@ public class ThmP1Test {
 			st = "inverse image of B in M";
 			st = "for some submodule $MM$, where $MM$ is a submodule of N";
 			st = "where $m$ is an element of $M$";
-			st = "if $m$ is an integer where $m$ is an element of $M$";
-			st = "take the derivative of f";
+			//st = "if $m$ is an integer where $m$ is an element of $M$";
+			//st = "take the derivative of f";
 			st = "take the log of derivative of f";
+			st = "let f be an element of a field";
+			st = "take the union of subsets of F";
+			st = "$m$ is an element of $M$";
+			st = "where $MM$ is a element of N";
+			st = "let S be the union of derivatives of functions";
+			
 			strAr = ThmP1.preprocess(st);
 			for(int i = 0; i < strAr.length; i++){
 				ThmP1.parse(ThmP1.tokenize(strAr[i].trim() ));				

@@ -21,6 +21,7 @@ under pre
 Cohen-Macaulay adj
 multilinear adj
 multiplication noun
+union ent
 localization ent
 respect verb
 submodule ent_comp

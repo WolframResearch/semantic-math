@@ -10,6 +10,7 @@ public class StructH<H> extends Struct{
 	//ent (entity) is only structure that uses hashmap
 	private String type; //ent, adj, etc
 	private String WLCommandStr;
+	//parentStruct is *not* unique! Depends on which DFS path we take.
 	private Struct parentStruct;
 	private boolean hasChild = false;
 	private ArrayList<Struct> children; 
@@ -71,6 +72,11 @@ public class StructH<H> extends Struct{
 	public void append_WLCommandStr(String WLCommandStr){
 		this.WLCommandStr = this.WLCommandStr == null ? "" : this.WLCommandStr;
 		this.WLCommandStr += " " + WLCommandStr;
+	}
+	
+	@Override
+	public void clear_WLCommandStr(){
+		this.WLCommandStr = null;
 	}
 	
 	/**
@@ -193,8 +199,58 @@ public class StructH<H> extends Struct{
 	 */
 	@Override
 	public String simpleToString(){
-		String name = this.struct.get("name");
-		return name == null ? this.type : name;
+		if(this.WLCommandStr != null){
+			return this.WLCommandStr;
+		}
+		//String name = this.struct.get("name");
+		//return name == null ? this.type : name;
+		return this.simpleToString2("");
+	}
+	
+	//auxilliary method for simpleToString and StructA.simpleToString
+	public String simpleToString2(String str){
+		str += this.type.equals("ent") ? "MathObj" : this.type;
+		str += "{";
+		Iterator<Entry<String, String>> structIter = struct.entrySet().iterator();
+		String name = "", called = "", ppt = "", tex = "";
+		
+		while(structIter.hasNext()){
+			Entry<String, String> entry = structIter.next();
+			if(entry.getValue().matches("ppt") ){
+				ppt += entry.getKey() + ", ";
+			}
+			else if(entry.getKey().matches("name") ){
+				name = entry.getValue();
+			}
+			else if(entry.getKey().matches("called") ){
+				called = entry.getValue();
+			}
+			else if(entry.getKey().matches("tex") ){
+				tex = entry.getValue();
+			}
+		}		
+		
+		name = tex.length() > 0 ? name + ", ": name;
+		tex = called.length() > 0 ? tex + ", ": tex;
+		called = !(ppt.length() == 0) ? called + ", " : called;
+		ppt = ppt.length() > 2 ? ppt.substring(0, ppt.length() - 2) : ppt;		
+		
+		str += name + tex + called + ppt;
+				
+		//iterate through children		
+		int childrenSize = children.size();
+		for(int i = 0; i < childrenSize; i++){			
+			Struct child = children.get(i);
+			if(child.WLCommandStr() != null)
+				continue;
+			str += ", ";
+			//str += childRelation.get(i) + " ";			
+			str = child.simpleToString2(str);	
+		}
+		
+		str += "}";
+
+		return str;
 	}
 	
 	//similar to toString(). Presents StructH as a String

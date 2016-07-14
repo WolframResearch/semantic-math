@@ -48,7 +48,17 @@ public class Struct {
 		return "";
 	}
 	
+	public String simpleToString2(String str){
+		return "";
+	}
+	
 	public void append_WLCommandStr(String WLCommandStr){
+	}
+
+	/**
+	 * Sets WLCommandStr to null.
+	 */
+	public void clear_WLCommandStr(){
 	}
 
 	public String WLCommandStr(){

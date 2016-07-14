@@ -22,13 +22,26 @@ public class WLCommandsList {
 	/**
 	 * Map, keys are trigger words, values are pointers to WLCommand's
 	 */
-	private static ImmutableMultimap<String, WLCommand> WLCommandMap; //need builder for this in static initializer
+	private static final ImmutableMultimap<String, WLCommand> WLCommandMap; //builder for this in static initializer
+	/**
+	 * ImmutableMultimap of which strings lead to which trigger words.
+	 * It's a many-to-many mapping: one string can lead to many, and many 
+	 * can lead to one, trigger word. Strings that don't have entries 
+	 * should subsequently look up in WLCommandMap directly.
+	 */
+	private static final ImmutableMultimap<String, String> triggerWordLookupMap;
 	
 	/**
 	 * should read in data from file instead of calling addCommand.
-	 * Need 
+	 * 
 	 */
 	static{
+		ImmutableMultimap.Builder<String, String> triggerWordLookupMapBuilder = ImmutableMultimap.builder();
+		triggerWordLookupMapBuilder.put("be", "is");
+		triggerWordLookupMapBuilder.put("are", "is");
+		
+		triggerWordLookupMap = triggerWordLookupMapBuilder.build();
+		
 		//builder for WLComamndMap, 
 		ImmutableMultimap.Builder<String, WLCommand> WLCommandMapBuilder = ImmutableMultimap.builder();
 		
@@ -44,19 +57,33 @@ public class WLCommandsList {
 		//name being -1 indicates WL command.
 		//-1 indicates WL command
 		//Just a String represents an auxilliary String, eg just a bracket.
+		//3rd element could be true/false (includes/not includes in command), or trigger (trigger word, but not 
+		//included in final command, so indicates false)
 		WLCommandMapBuilder.put("element", addCommand(new String[]{"symb|ent, , true", "\\[Element], WL, true", 
 				"pre, of, false", "symb|ent, , true"}));		
 		WLCommandMapBuilder.put("derivative", addCommand(new String[]{"Derivative, WL, true", "[", "pre, of, false", 
 				"symb|ent, , true", "]"}));
 		WLCommandMapBuilder.put("log", addCommand(new String[]{"Log, WL, true", "[", "pre, of, false", 
 				"symb|ent, , true", "]"}));
+		WLCommandMapBuilder.put("union", addCommand(new String[]{"Union, WL, true", "[", "pre, of, false", 
+				"symb|ent, , true", "]"}));
+		WLCommandMapBuilder.put("is", addCommand(new String[]{"symb|ent, , true", "verb|vbs, is|are|be, trigger",
+				 "\\[Element]", "symb|ent, , true"}));
+		WLCommandMapBuilder.put("subset", addCommand(new String[]{"Subset, WL, true", "[", "pre, of, false", 
+				"symb|ent, , true", "]"}));
+		
+		//logical operators
+		WLCommandMapBuilder.put("and", addCommand(new String[]{"Subset, WL, true", "[", "pre, of, false", 
+				"symb|ent, , true", "]"}));
+		
 		WLCommandMap = WLCommandMapBuilder.build();
+		
 	}
 	
 	/**
 	 * Create WLCommands using input data and add them to an immutable list.
 	 * Specifically, create commandsCountMap with WLCommandComponent and supplied integer. 
-	 * @param 
+	 * @param commandStringAr	Array of command Strings
 	 */
 	/////name should be there already!
 	public static WLCommand addCommand(String[] commandStringAr){
@@ -87,9 +114,9 @@ public class WLCommandsList {
 				posList.add(curTerm);
 			}else{
 			
-				String posStr = commandStrParts[0].matches("\\s") ? ".*" : commandStrParts[0].trim();
+				String posStr = commandStrParts[0].matches("\\s*") ? ".*" : commandStrParts[0].trim();
 			//String nameStr = commandStrParts.length > 2 ? commandStrParts[1] : "*";
-				String nameStr = commandStrParts[1].matches("\\s") ? ".*" : commandStrParts[1].trim();
+				String nameStr = commandStrParts[1].matches("\\s*") ? ".*" : commandStrParts[1].trim();
 			
 			//int toUse = commandStrParts.length > 2 ? Integer.valueOf(commandStrParts[2]) : Integer.valueOf(commandStrParts[1]);
 			boolean useInPosList = Boolean.valueOf(commandStrParts[2].trim());
@@ -112,6 +139,10 @@ public class WLCommandsList {
 				else if(nameStr.equals("WL")){
 					positionInMap = -1;
 					componentCounter--;
+					triggerWordIndex = i;
+				}
+				
+				if(commandStrParts[2].trim().matches("trigger")){
 					triggerWordIndex = i;
 				}
 				

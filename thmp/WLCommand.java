@@ -228,8 +228,7 @@ public class WLCommand {
 	 * BUT: what if the Struct just added isn't the one needed? Keep adding.
 	 * If the name could be several optional ones, eg "in" or "of", so use regex .match("in|of")
 	 */
-	public static boolean addComponent(WLCommand curCommand, 
-			Struct newStruct){
+	public static boolean addComponent(WLCommand curCommand, Struct newStruct){
 		//if key.name .matches()
 		//be careful with type, could be conj_, all sorts of stuff
 		String structType = newStruct.type();
@@ -329,6 +328,11 @@ public class WLCommand {
 	public static boolean isSatisfied(WLCommand curCommand){
 		//shouldn't be < 0!
 		return curCommand.componentCounter < 1;
+	}
+	
+	@Override
+	public String toString(){
+		return this.commandsCountMap.toString();
 	}
 	
 	/**

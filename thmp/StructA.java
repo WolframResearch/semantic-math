@@ -10,6 +10,7 @@ public class StructA<A, B> extends Struct{
 	
 	private A prev1; 
 	private B prev2; 
+	//parentStruct is *not* unique! Depends on which DFS path we take.
 	private Struct parentStruct;
 	//score for this structA, to indicate likelihood of relation in Rule
 	//Ranges over (0, 1]. 1 by default
@@ -67,8 +68,39 @@ public class StructA<A, B> extends Struct{
 	
 	@Override
 	public String simpleToString(){
+		if(this.WLCommandStr != null){
+			return this.WLCommandStr;
+		}
 		A name = this.prev1;
-		return name instanceof String ? (String)name : this.type;
+		return name instanceof String ? (String)name : this.toString();
+	}
+	
+	//auxilliary method for simpleToString and called inside StructH.simpleToString2
+	public String simpleToString2(String str){
+		if(this.WLCommandStr != null) return "";
+		
+		str += this.type.matches("conj_.*") ? this.type : "";
+		
+		if(this.prev1 != null && !prev1.equals("")){
+			if(prev1 instanceof Struct && ((Struct) prev1).WLCommandStr() != null){
+				str = ((Struct) prev1).simpleToString2(str);
+				
+			}else if(prev1 instanceof String){
+				if(!type.matches("pre|partiby")){
+					str += prev1;
+				}
+			}			
+		}
+		
+		if(prev2 != null && !prev2.equals("")){
+			if(prev2 instanceof Struct && ((Struct) prev2).WLCommandStr() != null){
+				str = ((Struct) prev2).simpleToString2(str + ", ");
+			}else if(prev2 instanceof String){
+				str += ", " + prev2;
+			}
+		}
+		
+		return str;
 	}
 	
 	/**
@@ -120,6 +152,11 @@ public class StructA<A, B> extends Struct{
 	public void append_WLCommandStr(String WLCommandStr){
 		this.WLCommandStr = this.WLCommandStr == null ? "" : this.WLCommandStr;
 		this.WLCommandStr += " " + WLCommandStr;
+	}
+	
+	@Override
+	public void clear_WLCommandStr(){
+		this.WLCommandStr = null;
 	}
 	
 	/**
@@ -185,6 +222,8 @@ public class StructA<A, B> extends Struct{
 	//***this is terrible! Cannot just cast String
 	@SuppressWarnings("unchecked")
 	public void set_prev1(String prev1){	
+		if(!(prev1 instanceof String)) 
+			System.out.println("Cannot cast String to " + this.prev1.getClass() + "!");
 		this.prev1 = (A)prev1;
 	}
 	
