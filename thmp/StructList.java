@@ -30,6 +30,20 @@ public class StructList {
 		return this.structList;
 	}	
 	
+	/**
+	 * Shallow copy of this.structList, as structList is a list
+	 * of pointers to Struct's, so even deep copy would only be
+	 * copying pointers and not Struct's being pointed to.
+	 * @return
+	 */
+	public StructList copy(){
+		StructList newStructlist = new StructList();
+		//newStructlist.structList.addAll(this.structList);
+		newStructlist.structList = this.structList;
+		newStructlist.highestDownScoreIndex = this.highestDownScoreIndex;
+		return newStructlist;
+	}
+	
 	public int size(){
 		return structList.size();
 	}

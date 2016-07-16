@@ -211,32 +211,9 @@ public class StructH<H> extends Struct{
 	public String simpleToString2(String str){
 		str += this.type.equals("ent") ? "MathObj" : this.type;
 		str += "{";
-		Iterator<Entry<String, String>> structIter = struct.entrySet().iterator();
-		String name = "", called = "", ppt = "", tex = "";
 		
-		while(structIter.hasNext()){
-			Entry<String, String> entry = structIter.next();
-			if(entry.getValue().matches("ppt") ){
-				ppt += entry.getKey() + ", ";
-			}
-			else if(entry.getKey().matches("name") ){
-				name = entry.getValue();
-			}
-			else if(entry.getKey().matches("called") ){
-				called = entry.getValue();
-			}
-			else if(entry.getKey().matches("tex") ){
-				tex = entry.getValue();
-			}
-		}		
+		append_name_pptStr(str);
 		
-		name = tex.length() > 0 ? name + ", ": name;
-		tex = called.length() > 0 ? tex + ", ": tex;
-		called = !(ppt.length() == 0) ? called + ", " : called;
-		ppt = ppt.length() > 2 ? ppt.substring(0, ppt.length() - 2) : ppt;		
-		
-		str += name + tex + called + ppt;
-				
 		//iterate through children		
 		int childrenSize = children.size();
 		for(int i = 0; i < childrenSize; i++){			
@@ -253,11 +230,11 @@ public class StructH<H> extends Struct{
 		return str;
 	}
 	
-	//similar to toString(). Presents StructH as a String
-	@Override
-	public String present(String str){
-		str += this.type.equals("ent") ? "MathObj" : this.type;
-		str += "{";
+	/**
+	 * Append name, ppt, called, tex info to the String passed in.
+	 * @param str String to be appended to
+	 */
+	private void append_name_pptStr(String str){
 		Iterator<Entry<String, String>> structIter = struct.entrySet().iterator();
 		String name = "", called = "", ppt = "", tex = "";
 		
@@ -283,6 +260,15 @@ public class StructH<H> extends Struct{
 		ppt = ppt.length() > 2 ? ppt.substring(0, ppt.length() - 2) : ppt;		
 		
 		str += name + tex + called + ppt;
+	}
+	
+	//similar to toString(). Presents StructH as a String
+	@Override
+	public String present(String str){
+		str += this.type.equals("ent") ? "MathObj" : this.type;
+		str += "{";
+		
+		append_name_pptStr(str);
 		
 		if(children.size() > 0) str += ", ";
 		
@@ -300,9 +286,22 @@ public class StructH<H> extends Struct{
 
 		return str;
 	}
-	
-	public void test(Object obj){
-		
+
+	@Override
+	public void set_prev1(String str) {
+		// TODO 		
 	}
 
+	@Override
+	public Object prev1() {
+		// TODO 
+		return null;
+	}
+
+	@Override
+	public Object prev2() {
+		// TODO 
+		return null;
+	}
+	
 }

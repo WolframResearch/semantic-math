@@ -5,6 +5,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Scanner;
 
+import com.wolfram.alpha.parser.preparser.TexConverter;
+
 /*
  * Test class for ThmP1
  */
@@ -211,11 +213,16 @@ public class ThmP1Test {
 			st = "take the union of subsets of F";
 			st = "$m$ is an element of $M$";
 			st = "where $MM$ is a element of N";
-			st = "let S be the union of derivatives of functions";
+			st = "let S be the union of elements of a field";
+			//st = "";
 			
+			//System.out.println("from TexConverter: " + TexConverter.convert("let $m \\subset M$ be an element"));
+
 			strAr = ThmP1.preprocess(st);
 			for(int i = 0; i < strAr.length; i++){
-				ThmP1.parse(ThmP1.tokenize(strAr[i].trim() ));				
+				//alternate commented out line to enable tex converter
+				//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim()) ));
+				ThmP1.parse(ThmP1.tokenize(strAr[i].trim()));				
 			}
 			
 			Scanner sc = new Scanner(new File("src/thmp/data/noTex4.txt"));

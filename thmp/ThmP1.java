@@ -29,28 +29,28 @@ import com.google.common.collect.Multimap;
 public class ThmP1 {
 
 	// should all be StructH's, since these are ent's
-	private static HashMap<String, Struct> namesMap;
+	private static final Map<String, Struct> namesMap;
 
 	// private static HashMap<String, ArrayList<String>> entityMap =
 	// Maps.entityMap;
 	// map of structures, for all, disj, etc
-	private static Multimap<String, Rule> structMap;
-	private static HashMap<String, String> anchorMap;
+	private static final Multimap<String, Rule> structMap;
+	private static final Map<String, String> anchorMap;
 	// parts of speech map, e.g. "open", "adj"
-	private static HashMap<String, String> posMap;
+	private static final Map<String, String> posMap;
 	// fluff words, e.g. "the", "a"
-	private static HashMap<String, String> fluffMap;
+	private static final Map<String, String> fluffMap;
 
-	private static HashMap<String, String> mathObjMap;
+	private static final Map<String, String> mathObjMap;
 	// map for composite adjectives, eg positive semidefinite
 	// value is regex string to be matched
-	private static HashMap<String, String> adjMap;
-	private static HashMap<String, Double> probMap;
+	private static final Map<String, String> adjMap;
+	private static final Map<String, Double> probMap;
 	// split a sentence into parts, separated by commas, semicolons etc
 	// private String[] subSentences;
 
 	// list of parts of speech, ent, verb etc
-	private static ArrayList<String> posList;
+	private static List<String> posList;
 
 	// fluff type, skip when adding to parsed ArrayList
 	private static String FLUFF = "Fluff";
@@ -1984,8 +1984,8 @@ public class ThmP1 {
 			System.out.print(struct.toString());
 			parsedSB.append(struct.toString());
 
-			ArrayList<Struct> children = struct.children();
-			ArrayList<String> childRelation = struct.childRelation();
+			List<Struct> children = struct.children();
+			List<String> childRelation = struct.childRelation();
 
 			if (children == null || children.size() == 0)
 				return;

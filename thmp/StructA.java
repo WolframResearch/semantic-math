@@ -1,6 +1,7 @@
 package thmp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class StructA<A, B> extends Struct{
 
@@ -17,7 +18,7 @@ public class StructA<A, B> extends Struct{
 	private double score;
 	private String type; //or, and, adj, pro etc, cannot ent
 	private String type1; //type of prev1, , al, string etc. Is this used??
-	private String type2; //type of prev2
+	private String type2; //type of prev2. Also not used!
 	//list of Struct at mx element, to which this Struct belongs
 	//pointer to mx.get(i).get(j)
 	//if not null, means this is head of some parsed WLCommand. 
@@ -33,6 +34,8 @@ public class StructA<A, B> extends Struct{
 	//don't need mxPathNodeList. The path down from this Struct should 
 	//be unique. It's the parents' paths to here that can differ
 	//private List<MatrixPathNode> mxPathNodeList;
+	
+	
 	
 	//is this ever needed?
 	public StructA(A prev1, B prev2, String type, StructList structList){		
@@ -50,6 +53,30 @@ public class StructA<A, B> extends Struct{
 		this.type = type; 
 		this.numUnits = 1;
 		this.score = 1;
+	}
+	
+	//this method should never be called on StructA
+	//Would be safer to remove from abstract class, cast
+	//the Struct to StructH in ThmP1, and call struct() on that.
+	//That way ClassCastException will be generated instead of
+	//problems down the road by caused by null.
+	public Map<String, String> struct(){		
+		return null;
+	}
+	
+	/**
+	 * Shallow copy. 
+	 */
+	public StructA<A, B> copy(){
+		//shallow copy of structlist
+		StructList copiedStructlist = this.structList.copy();
+		StructA<A, B> newStruct = new StructA<A, B>(this.prev1, this.prev2, 
+				this.type, copiedStructlist);
+		newStruct.maxDownPathScore = this.maxDownPathScore;
+		newStruct.numUnits = this.numUnits;
+		newStruct.score = this.score;
+		newStruct.WLCommandStr = this.WLCommandStr;
+		return newStruct;
 	}
 	
 	/**
@@ -310,8 +337,20 @@ public class StructA<A, B> extends Struct{
 	}
 	
 	@Override
-	public Integer test(ArrayList<Number> b){
-		Integer i = 3;
-		return i;
+	public ArrayList<Struct> children() {
+		// TODO 
+		return null;
+	}
+
+	@Override
+	public List<String> childRelation() {
+		// TODO 
+		return null;
+	}
+
+	@Override
+	public void add_child(Struct child, String relation) {
+		// TODO 
+		
 	}
 }

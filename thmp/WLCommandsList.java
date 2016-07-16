@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
@@ -36,7 +37,7 @@ public class WLCommandsList {
 	 * 
 	 */
 	static{
-		ImmutableMultimap.Builder<String, String> triggerWordLookupMapBuilder = ImmutableMultimap.builder();
+		ImmutableListMultimap.Builder<String, String> triggerWordLookupMapBuilder = ImmutableListMultimap.builder();
 		triggerWordLookupMapBuilder.put("be", "is");
 		triggerWordLookupMapBuilder.put("are", "is");
 		
@@ -166,9 +167,16 @@ public class WLCommandsList {
 	
 	/**
 	 * 
-	 * @return	ImmutableMap
+	 * @return	ImmutableMap WLCommandMap
 	 */
 	public static Multimap<String, WLCommand> WLCommandMap(){
 		return WLCommandMap;
+	}
+	
+	/**
+	 * @return ImmutableMap triggerWordLookupMap
+	 */
+	public static Multimap<String, String> triggerWordLookupMap(){
+		return triggerWordLookupMap;
 	}
 }

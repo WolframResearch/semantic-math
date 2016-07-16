@@ -10,6 +10,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 
@@ -39,7 +40,12 @@ public class ParseToWLTree {
 	private static List<WLCommand> WLCommandList;
 	
 	/**
-	 * Trigger word lookup
+	 * Trigger words transmission map.
+	 */
+	private static final Multimap<String, String> triggerWordLookupMap = WLCommandsList.triggerWordLookupMap();
+	
+	/**
+	 * Trigger word lookup map.
 	 */
 	private static final Multimap<String, WLCommand> WLCommandMap = WLCommandsList.WLCommandMap();
 	
@@ -95,11 +101,24 @@ public class ParseToWLTree {
 		boolean isTrigger = false;
 		Collection<WLCommand> triggeredCol = null;
 
+		String triggerKeyWord = "";
+		
 		if (struct instanceof StructA && struct.prev1() instanceof String) {
-			triggeredCol = WLCommandMap.get((String)struct.prev1());			
+			triggerKeyWord = (String)struct.prev1();			
 		}else if(struct instanceof StructH){
-			//null should be a valid key for Multimap
-			triggeredCol = WLCommandMap.get(struct.struct().get("name"));
+			triggerKeyWord = struct.struct().get("name");
+		}
+		
+		triggeredCol = WLCommandMap.get(triggerKeyWord);
+		
+		if(triggeredCol != null && triggeredCol.isEmpty()
+				&& triggerWordLookupMap.containsKey(triggerKeyWord)){
+			//look up again with fetched list of keywords
+			
+			Collection<String> col= triggerWordLookupMap.get(triggerKeyWord);
+			for(String s : col){
+				triggeredCol.addAll(WLCommandMap.get(s));
+			}
 		}
 		
 		if(triggeredCol != null && !triggeredCol.isEmpty()){			
@@ -336,8 +355,8 @@ public class ParseToWLTree {
 			System.out.print(struct.toString());
 			parsedSB.append(struct.toString());
 
-			ArrayList<Struct> children = struct.children();
-			ArrayList<String> childRelation = struct.childRelation();
+			List<Struct> children = struct.children();
+			List<String> childRelation = struct.childRelation();
 
 			//if (children == null || children.size() == 0)
 				//return;
@@ -471,8 +490,8 @@ public class ParseToWLTree {
 
 			if(shouldPrint) parsedSB.append(struct.toString());
 
-			ArrayList<Struct> children = struct.children();
-			ArrayList<String> childRelation = struct.childRelation();
+			List<Struct> children = struct.children();
+			List<String> childRelation = struct.childRelation();
 
 			if (children == null || children.size() == 0)
 				return;

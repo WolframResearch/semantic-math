@@ -1,6 +1,7 @@
 package thmp;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.ArrayList;
 
 /*
@@ -8,7 +9,7 @@ import java.util.ArrayList;
  * to be parsed
  */
 
-public class Struct {
+public abstract class Struct {
 
 	/*
 	public Struct(K struct, String type){
@@ -23,126 +24,74 @@ public class Struct {
 	}
 	*/
 
-	public void set_structList(StructList structList){
-	}
+	public abstract void set_structList(StructList structList);
 
 	/**
 	 * Set parent pointer of this struct
-	 * 
 	 */
-	public void set_parentStruct(Struct parent){		
-	}
+	public abstract void set_parentStruct(Struct parent);
 	
-	public Struct parentStruct(){
-		return null;
-	}
+	public abstract Struct parentStruct();
 	
 	//returns probability of relation in Rule
-	public double score(){
-		return 0;
-	}
+	public abstract double score();
 	
 	//Simple toString to return the bare minimum to identify this Struct.
 	//To be used in ParseToWLTree.
-	public String simpleToString(){
-		return "";
-	}
+	public abstract String simpleToString();
 	
-	public String simpleToString2(String str){
-		return "";
-	}
+	public abstract String simpleToString2(String str);
 	
-	public void append_WLCommandStr(String WLCommandStr){
-	}
+	public abstract void append_WLCommandStr(String WLCommandStr);
 
 	/**
 	 * Sets WLCommandStr to null.
 	 */
-	public void clear_WLCommandStr(){
-	}
+	public abstract void clear_WLCommandStr();
 
-	public String WLCommandStr(){
-		return "";
-	}
+	public abstract String WLCommandStr();
 
-	public int numUnits(){
-		return 1;
-	}
+	public abstract int numUnits();
 	
-	public double maxDownPathScore(){
-		return 0;
-	}
+	public abstract double maxDownPathScore();
 	
-	public void set_maxDownPathScore(double pathScore){
-		
-	}
+	public abstract void set_maxDownPathScore(double pathScore);
 	
-	public StructList StructList(){
-		return null;
-	}
+	public abstract StructList StructList();
 	
-	public void set_score(double score){
-		
-	}
+	public abstract void set_score(double score);
 	
 	//to be overridden
-	public void set_type(String type){		
-	}
+	public abstract void set_type(String type);
 	
-	public Struct copy(){
-		return this;
-	}
+	public abstract Struct copy();
 	
 	//to be overridden
-	public String type(){
-		return "";
-	}
+	public abstract String type();
 	
 	//to be overwritten in StructH
-	public ArrayList<Struct> children(){
-		return null;		
-	}
+	public abstract ArrayList<Struct> children();
 
 	//to be overwritten in StructH
-	public ArrayList<String> childRelation(){
-		return null;		
-	}
+	public abstract List<String> childRelation();
 	
 	//to be overwritten in StructH
-	public void add_child(Struct child, String relation){		
-	}
+	public abstract void add_child(Struct child, String relation);
 	
 	// to be overriden
-	public HashMap<String, String> struct(){
-		return null;
-	}
+	public abstract Map<String, String> struct();
 	
-	public String toString(){
-		return "";
-	}
+	public abstract String toString();
 
-	public void set_prev1(String str){
+	public abstract void set_prev1(String str);
+	
+	public void set_prev2(String str){		
 	}
 	
-	public void set_prev2(String str){
-	}
+	public abstract Object prev1();
 	
-	public Object prev1(){
-		return "";
-	}
+	public abstract Object prev2();
+		
+	public abstract String present(String str);
 	
-	public Object prev2(){
-		return "";
-	}
-	
-	public void test(String obj){		
-	}
-	
-	public String present(String str){
-		return "";
-	}
-	
-	public Number test(ArrayList<Number> b){
-		return 3;
-	}
 }
