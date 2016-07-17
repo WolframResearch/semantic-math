@@ -221,6 +221,7 @@ public class ThmP1Test {
 			st = "$f = \\sum i$ is a function";
 			st = "given an element of a set S";
 			st = "f is a function with radius of convergence r";
+			
 			//System.out.println("from TexConverter: " + TexConverter.convert("let $m \\subset M$ be an element"));			
 			
 			strAr = ThmP1.preprocess(st);

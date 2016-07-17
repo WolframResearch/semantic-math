@@ -27,12 +27,12 @@ import thmp.WLCommand.WLCommandComponent;
 public class ParseToWLTree {
 	
 	/**
-	 * Deque used as Stack to store the Struct's that's being processed. 
+	 * ArrayList used as Stack to store the Struct's that's being processed. 
 	 * Pop off after all required terms in a WL command are met.
 	 * Each level keeps a reference to some index of the deque.
 	 * 
 	 */
-	private static Deque<Struct> structDeque;	
+	private static List<Struct> structDeque;	
 	
 	/**
 	 * List to keep track all triggered WLCommands
@@ -57,7 +57,7 @@ public class ParseToWLTree {
 	 * @param numSpaces
 	 */
 	public static void dfs(Struct struct, StringBuilder parsedSB, ParseStruct headParseStruct, int numSpaces) {
-		structDeque = new ArrayDeque<Struct>();
+		structDeque = new ArrayList<Struct>();
 		WLCommandList = new ArrayList<WLCommand>();
 		dfs(struct, parsedSB, headParseStruct, numSpaces, structDeque, WLCommandList);
 	}
@@ -97,7 +97,7 @@ public class ParseToWLTree {
 	 * @param numSpaces is the number of spaces to print. Increment space if number is 
 	 */
 	public static void dfs(Struct struct, StringBuilder parsedSB, ParseStruct headParseStruct, int numSpaces,
-			Deque<Struct> structDeque, List<WLCommand> WLCommandList) {
+			List<Struct> structDeque, List<WLCommand> WLCommandList) {
 		//index used to keep track of where in Deque this stuct is
 		//to pop off at correct index later
 		int structDequeIndex = structDeque.size();
@@ -169,6 +169,8 @@ public class ParseToWLTree {
 
 				//start from the word before the trigger word
 				//iterate through posTermList
+				//start index for next iteration of posTermListLoop
+				int structDequeStartIndex = structDeque.size() - 1;
 				posTermListLoop: for(int i = triggerWordIndex - 1; i > -1; i--){
 					PosTerm curPosTerm = posTermList.get(i);
 					//auxilliary term
@@ -178,13 +180,13 @@ public class ParseToWLTree {
 					
 					//int curStructDequeIndex = structDequeIndex;
 					//iterate through Deque backwards
-					Iterator<Struct> dequeReverseIter = structDeque.descendingIterator();
+					//Iterator<Struct> dequeReverseIter = structDeque.descendingIterator();
 					int dequeIterCounter = structDeque.size() - 1;
 					
-					while(dequeReverseIter.hasNext()){
+					for(int k = structDequeStartIndex; k > -1; k--){
 					//for each struct in deque, go through list to match
 					//Need a way to tell if all filled
-						Struct curStructInDeque = dequeReverseIter.next();
+						Struct curStructInDeque = structDeque.get(k);
 						//avoid repeating this: 
 						String nameStr = "";
 						if(curStructInDeque instanceof StructA && curStructInDeque.prev1() instanceof String){
@@ -209,6 +211,7 @@ public class ParseToWLTree {
 							curPosTerm.set_posTermStruct(curStructInDeque);
 							
 							usedStructsBool[dequeIterCounter] = true;
+							structDequeStartIndex = k - 1;
 							continue posTermListLoop;
 						}
 						dequeIterCounter--;
