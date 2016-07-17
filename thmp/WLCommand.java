@@ -180,9 +180,12 @@ public class WLCommand {
 	/**
 	 * Builds the WLCommand from commandsMap & posTermList after it's satisfied.
 	 * Should be called after being satisfied. 
+	 * @param curCommand command being built
+	 * @param structToAppendCommandStr Struct to append the built CommandStr to.
+	 * Right now not using this struct value, just to set previousBuiltStruct to not be null.
 	 * @return String form of the resulting WLCommand
 	 */
-	public static String build(WLCommand curCommand){
+	public static String build(WLCommand curCommand, Struct structToAppendCommandStr){
 		if(curCommand.componentCounter > 0) return "";
 		ListMultimap<WLCommandComponent, Struct> commandsMap = curCommand.commandsMap;
 		//counts should now be all 0
@@ -207,8 +210,17 @@ public class WLCommand {
 					System.out.println("positionInMap >= list size. Should not happen!");
 					continue;
 				}
-				//simple way to present it
-				nextWord = curCommandComponentList.get(positionInMap).simpleToString();
+				
+				Struct nextStruct = curCommandComponentList.get(positionInMap);
+				if(nextStruct.previousBuiltStruct() != null){ 
+					//set to null for next parse dfs iteration
+					nextStruct.set_previousBuiltStruct(null);
+					continue;					
+				}
+				//simple way to present the Struct
+				nextWord = nextStruct.simpleToString();
+				//set to the head struct the currently built command will be appended to
+				nextStruct.set_previousBuiltStruct(structToAppendCommandStr);
 			}else{
 				nextWord = term.commandComponent.posTerm;
 			}

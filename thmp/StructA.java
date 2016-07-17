@@ -24,6 +24,11 @@ public class StructA<A, B> extends Struct{
 	//if not null, means this is head of some parsed WLCommand. 
 	private String WLCommandStr;
 	private int WLCommandStrVisitedCount;
+	//pointer to the head of a previously built Struct that already
+	//contains this Struct, so no need to build this Struct again into the current 
+	//WLCommand in build(), remember to reset to null after iterating through
+	private Struct previousBuiltStruct;
+	
 	private StructList structList;
 	//includes this/current Struct's score!
 	private double DOWNPATHSCOREDEFAULT = 1;
@@ -35,7 +40,6 @@ public class StructA<A, B> extends Struct{
 	//don't need mxPathNodeList. The path down from this Struct should 
 	//be unique. It's the parents' paths to here that can differ
 	//private List<MatrixPathNode> mxPathNodeList;
-	
 	
 	
 	//is this ever needed?
@@ -180,6 +184,14 @@ public class StructA<A, B> extends Struct{
 	@Override
 	public int numUnits(){
 		return this.numUnits;
+	}
+	
+	public Struct previousBuiltStruct(){
+		return this.previousBuiltStruct;
+	}
+	
+	public void set_previousBuiltStruct(Struct previousBuiltStruct){
+		this.previousBuiltStruct = previousBuiltStruct;
 	}
 	
 	@Override

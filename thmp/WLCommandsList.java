@@ -72,6 +72,8 @@ public class WLCommandsList {
 				"symb|ent, , true", "]"}));
 		WLCommandMapBuilder.put("union", addCommand(new String[]{"Union, WL, true", "[", "pre, of, false", 
 				"symb|ent, , true", "]"}));
+		//label a term to use to trigger a mathObj, communicate to posList, posList dynamically builds command
+		//using TriggerMathObj.
 		WLCommandMapBuilder.put("is", addCommand(new String[]{"symb|ent, , true", "verb|vbs, is|are|be, trigger",
 				 "\\[Element]", "symb|ent, , true"}));
 		WLCommandMapBuilder.put("subset", addCommand(new String[]{"Subset, WL, true", "[", "pre, of, false", 

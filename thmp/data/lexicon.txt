@@ -16,6 +16,11 @@ closed adj
 great adj
 small adj
 symb symb
+derivative ent
+log ent
+root ent
+radius ent
+convergence ent
 than pre
 under pre
 Cohen-Macaulay adj

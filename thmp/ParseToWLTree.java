@@ -108,21 +108,25 @@ public class ParseToWLTree {
 		//add struct to all WLCommands in WLCommandList
 		//check if satisfied. 
 		//Skip if immediate parents are conj or disj, ie already been added
-		if(struct.parentStruct() == null || 
-				(struct.parentStruct() != null && !struct.parentStruct().type().matches("conj.*|disj.*"))){
-		Iterator<WLCommand> WLCommandListIter = WLCommandList.iterator();
-		while(WLCommandListIter.hasNext()){
-			WLCommand curCommand = WLCommandListIter.next();
-			boolean commandSat = WLCommand.addComponent(curCommand, struct);
-			
-			//if commandSat, remove all the waiting, triggered commands for now, except current struct,
-			//Use the one triggered first, which comes first in WLCommandList.
-			//But what if a longer WLCommand later fits better? Like "derivative of f wrt x"
-			if(commandSat){
-				satisfiedCommands.add(curCommand);
-				WLCommandListIter.remove();
+		if (struct.parentStruct() == null 
+				|| (struct.parentStruct() != null && !struct.parentStruct().type().matches("conj.*|disj.*"))) {
+
+			Iterator<WLCommand> WLCommandListIter = WLCommandList.iterator();
+			while (WLCommandListIter.hasNext()) {
+				WLCommand curCommand = WLCommandListIter.next();
+				boolean commandSat = WLCommand.addComponent(curCommand, struct);
+
+				// if commandSat, remove all the waiting, triggered commands for
+				// now, except current struct,
+				// Use the one triggered first, which comes first in
+				// WLCommandList.
+				// But what if a longer WLCommand later fits better? Like
+				// "derivative of f wrt x"
+				if (commandSat) {
+					satisfiedCommands.add(curCommand);
+					WLCommandListIter.remove();
+				}
 			}
-		}
 		}
 		
 		
@@ -239,10 +243,9 @@ public class ParseToWLTree {
 		}
 		
 			//add struct to stack, even if trigger Struct
-		if(struct.parentStruct() == null || 
-				(struct.parentStruct() != null && !struct.parentStruct().type().matches("conj.*|disj.*"))){
+		//if(struct.parentStruct() == null || (struct.parentStruct() != null && !struct.parentStruct().type().matches("conj.*|disj.*"))){
 			structDeque.add(struct);
-		}
+		//}
 		
 		// use visitor pattern!		
 		if (struct instanceof StructA) {
@@ -433,7 +436,7 @@ public class ParseToWLTree {
 		
 		//build the commands now after dfs into subtree
 		for(WLCommand curCommand : satisfiedCommands){
-			String curCommandString = WLCommand.build(curCommand);
+			
 			//set WLCommandStr in this Struct
 			//need to find first Struct in posTermList
 			List<PosTerm> posTermList = WLCommand.posTermList(curCommand);
@@ -461,6 +464,8 @@ public class ParseToWLTree {
 					(parentStruct == null ? structToAppendCommandStr : parentStruct) : 
 						(grandparentStruct instanceof StructH ? parentStruct : grandparentStruct));
 
+			String curCommandString = WLCommand.build(curCommand, structToAppendCommandStr);
+			
 			structToAppendCommandStr.append_WLCommandStr(curCommandString);
 			//parentStruct.append_WLCommandStr(curCommandString);
 			//System.out.println(curCommandString);

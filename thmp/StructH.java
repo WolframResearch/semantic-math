@@ -13,6 +13,10 @@ public class StructH<H> extends Struct{
 	//the number of times this WLCommandStr has been visited.
 	//To not repeat, print only when this is even
 	private int WLCommandStrVisitedCount;
+	//pointer to the head of a previously built Struct that already
+	//contains this Struct, so no need to build this Struct again into the current 
+	//WLCommand in build(), remember to reset to null after iterating through
+	private Struct previousBuiltStruct;
 	//parentStruct is *not* unique! Depends on which DFS path we take.
 	private Struct parentStruct;
 	private boolean hasChild = false;
@@ -199,8 +203,16 @@ public class StructH<H> extends Struct{
 		return this.WLCommandStrVisitedCount;
 	}
 	
+	public Struct previousBuiltStruct(){
+		return this.previousBuiltStruct;
+	}
+	
+	public void set_previousBuiltStruct(Struct previousBuiltStruct){
+		this.previousBuiltStruct = previousBuiltStruct;
+	}
+	
 	/**
-	 * Simple toString to return the bare minimum to identify this Struct.
+	 * Simple toString to return the bare minimum to presetn this Struct.
 	 * To be used in ParseToWLTree.
 	 * @return
 	 */
