@@ -10,6 +10,9 @@ public class StructH<H> extends Struct{
 	//ent (entity) is only structure that uses hashmap
 	private String type; //ent, adj, etc
 	private String WLCommandStr;
+	//the number of times this WLCommandStr has been visited.
+	//To not repeat, print only when this is even
+	private int WLCommandStrVisitedCount;
 	//parentStruct is *not* unique! Depends on which DFS path we take.
 	private Struct parentStruct;
 	private boolean hasChild = false;
@@ -87,7 +90,7 @@ public class StructH<H> extends Struct{
 	public String WLCommandStr(){
 		return this.WLCommandStr;
 	}
-	
+		
 	public void set_struct(HashMap<String, String> struct){
 		this.struct = struct;
 	}
@@ -192,6 +195,10 @@ public class StructH<H> extends Struct{
 		return str;
 	}
 	
+	public int WLCommandStrVisitedCount(){
+		return this.WLCommandStrVisitedCount;
+	}
+	
 	/**
 	 * Simple toString to return the bare minimum to identify this Struct.
 	 * To be used in ParseToWLTree.
@@ -199,6 +206,7 @@ public class StructH<H> extends Struct{
 	 */
 	@Override
 	public String simpleToString(){
+		this.WLCommandStrVisitedCount++;
 		if(this.WLCommandStr != null){
 			return this.WLCommandStr;
 		}
@@ -212,7 +220,7 @@ public class StructH<H> extends Struct{
 		str += this.type.equals("ent") ? "MathObj" : this.type;
 		str += "{";
 		
-		append_name_pptStr(str);
+		str += append_name_pptStr();
 		
 		//iterate through children		
 		int childrenSize = children.size();
@@ -234,7 +242,7 @@ public class StructH<H> extends Struct{
 	 * Append name, ppt, called, tex info to the String passed in.
 	 * @param str String to be appended to
 	 */
-	private void append_name_pptStr(String str){
+	private String append_name_pptStr(){
 		Iterator<Entry<String, String>> structIter = struct.entrySet().iterator();
 		String name = "", called = "", ppt = "", tex = "";
 		
@@ -259,7 +267,7 @@ public class StructH<H> extends Struct{
 		called = !(ppt.length() == 0) ? called + ", " : called;
 		ppt = ppt.length() > 2 ? ppt.substring(0, ppt.length() - 2) : ppt;		
 		
-		str += name + tex + called + ppt;
+		return name + tex + called + ppt;
 	}
 	
 	//similar to toString(). Presents StructH as a String
@@ -268,7 +276,7 @@ public class StructH<H> extends Struct{
 		str += this.type.equals("ent") ? "MathObj" : this.type;
 		str += "{";
 		
-		append_name_pptStr(str);
+		str += append_name_pptStr();
 		
 		if(children.size() > 0) str += ", ";
 		

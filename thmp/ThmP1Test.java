@@ -214,10 +214,15 @@ public class ThmP1Test {
 			st = "$m$ is an element of $M$";
 			st = "where $MM$ is a element of N";
 			st = "let S be the union of elements of a field";
-			//st = "";
+			st = "let $a$ or $b$ be elements of a field";
+			st = "let $s \\subset S$ be an element of a set";
+			//st = " B or C is true";
+			//st = "take the log of derivative of f";
+			st = "$f = \\sum i$ is a function";
+			st = "given an element of a set S";
+			st = "f is a function with radius of convergence r";
+			//System.out.println("from TexConverter: " + TexConverter.convert("let $m \\subset M$ be an element"));			
 			
-			//System.out.println("from TexConverter: " + TexConverter.convert("let $m \\subset M$ be an element"));
-
 			strAr = ThmP1.preprocess(st);
 			for(int i = 0; i < strAr.length; i++){
 				//alternate commented out line to enable tex converter

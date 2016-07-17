@@ -23,6 +23,7 @@ public class StructA<A, B> extends Struct{
 	//pointer to mx.get(i).get(j)
 	//if not null, means this is head of some parsed WLCommand. 
 	private String WLCommandStr;
+	private int WLCommandStrVisitedCount;
 	private StructList structList;
 	//includes this/current Struct's score!
 	private double DOWNPATHSCOREDEFAULT = 1;
@@ -93,23 +94,29 @@ public class StructA<A, B> extends Struct{
 		return this.parentStruct;
 	}
 	
+	public int WLCommandStrVisitedCount(){
+		return this.WLCommandStrVisitedCount;
+	}
+	
 	@Override
 	public String simpleToString(){
+		//been built into one command already
+		this.WLCommandStrVisitedCount++;
 		if(this.WLCommandStr != null){
 			return this.WLCommandStr;
 		}
 		A name = this.prev1;
-		return name instanceof String ? (String)name : this.toString();
+		return name instanceof String ? (String)name : this.simpleToString2("");
 	}
 	
 	//auxilliary method for simpleToString and called inside StructH.simpleToString2
 	public String simpleToString2(String str){
 		if(this.WLCommandStr != null) return "";
 		
-		str += this.type.matches("conj_.*") ? this.type : "";
-		
+		str += this.type.matches("conj_.*|disj_.*") ? this.type.split("_")[0] +  " " : "";		
+
 		if(this.prev1 != null && !prev1.equals("")){
-			if(prev1 instanceof Struct && ((Struct) prev1).WLCommandStr() != null){
+			if(prev1 instanceof Struct && ((Struct) prev1).WLCommandStr() == null){
 				str = ((Struct) prev1).simpleToString2(str);
 				
 			}else if(prev1 instanceof String){
@@ -120,7 +127,7 @@ public class StructA<A, B> extends Struct{
 		}
 		
 		if(prev2 != null && !prev2.equals("")){
-			if(prev2 instanceof Struct && ((Struct) prev2).WLCommandStr() != null){
+			if(prev2 instanceof Struct && ((Struct) prev2).WLCommandStr() == null){
 				str = ((Struct) prev2).simpleToString2(str + ", ");
 			}else if(prev2 instanceof String){
 				str += ", " + prev2;

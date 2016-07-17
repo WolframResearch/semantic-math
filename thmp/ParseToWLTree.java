@@ -61,6 +61,31 @@ public class ParseToWLTree {
 		WLCommandList = new ArrayList<WLCommand>();
 		dfs(struct, parsedSB, headParseStruct, numSpaces, structDeque, WLCommandList);
 	}
+		
+	/**
+	 * Get the triggered collection 
+	 * @param struct
+	 */
+	private static Collection<WLCommand> get_triggerCol(String triggerKeyWord){
+		
+		Collection<WLCommand> triggeredCol;
+
+		triggeredCol = WLCommandMap.get(triggerKeyWord);
+		
+		if(triggeredCol.isEmpty()){
+			if(triggerWordLookupMap.containsKey(triggerKeyWord)){
+				
+				triggeredCol = new ArrayList<WLCommand>();
+			//look up again with fetched list of keywords
+			
+			Collection<String> col= triggerWordLookupMap.get(triggerKeyWord);
+			for(String s : col){
+				triggeredCol.addAll(WLCommandMap.get(s));
+			}
+			}
+		}
+		return triggeredCol;
+	}
 	
 	/**
 	 * Searches through parse tree and matches with ParseStruct's.
@@ -81,14 +106,16 @@ public class ParseToWLTree {
 		List<WLCommand> satisfiedCommands = new ArrayList<WLCommand>();
 		
 		//add struct to all WLCommands in WLCommandList
-		//check if satisfied
+		//check if satisfied. 
+		//Skip if immediate parents are conj or disj, ie already been added
+		if(struct.parentStruct() == null || 
+				(struct.parentStruct() != null && !struct.parentStruct().type().matches("conj.*|disj.*"))){
 		Iterator<WLCommand> WLCommandListIter = WLCommandList.iterator();
 		while(WLCommandListIter.hasNext()){
 			WLCommand curCommand = WLCommandListIter.next();
 			boolean commandSat = WLCommand.addComponent(curCommand, struct);
 			
-			//if commandSat, 
-			//remove all the waiting, triggered commands for now, except current struct,
+			//if commandSat, remove all the waiting, triggered commands for now, except current struct,
 			//Use the one triggered first, which comes first in WLCommandList.
 			//But what if a longer WLCommand later fits better? Like "derivative of f wrt x"
 			if(commandSat){
@@ -96,32 +123,29 @@ public class ParseToWLTree {
 				WLCommandListIter.remove();
 			}
 		}
+		}
 		
-		//if trigger a WLCommand, 
-		boolean isTrigger = false;
-		Collection<WLCommand> triggeredCol = null;
-
+		
 		String triggerKeyWord = "";
-		
 		if (struct instanceof StructA && struct.prev1() instanceof String) {
 			triggerKeyWord = (String)struct.prev1();			
 		}else if(struct instanceof StructH){
 			triggerKeyWord = struct.struct().get("name");
 		}
 		
-		triggeredCol = WLCommandMap.get(triggerKeyWord);
-		
-		if(triggeredCol != null && triggeredCol.isEmpty()
-				&& triggerWordLookupMap.containsKey(triggerKeyWord)){
-			//look up again with fetched list of keywords
-			
-			Collection<String> col= triggerWordLookupMap.get(triggerKeyWord);
-			for(String s : col){
-				triggeredCol.addAll(WLCommandMap.get(s));
-			}
+		//if trigger a WLCommand, 
+		boolean isTrigger = false;
+		Collection<WLCommand> triggeredCol = get_triggerCol(triggerKeyWord);
+
+		if(triggeredCol.isEmpty() && triggerKeyWord.length() > 1 
+				&& triggerKeyWord.charAt(triggerKeyWord.length() - 1) == 's'){
+				//need to write out all other cases, like ending in "es"
+				String triggerWordSingular = triggerKeyWord.substring(0, triggerKeyWord.length() - 1);
+				triggeredCol = get_triggerCol(triggerWordSingular);
+				
 		}
 		
-		if(triggeredCol != null && !triggeredCol.isEmpty()){			
+		if(!triggeredCol.isEmpty()){			
 			//is trigger, add all commands in list 
 			//WLCommand curCommand;
 			for(WLCommand curCommandInCol : triggeredCol){
@@ -169,7 +193,10 @@ public class ParseToWLTree {
 							nameStr = curStructInDeque.struct().get("name");
 						}
 						
-						if(curStructInDeque.type().matches(curCommandComponent.posTerm())
+						String curStructInDequeType = curStructInDeque.type().matches("conj_.*|disj_.*") ?
+								curStructInDeque.type().split("_")[1] : curStructInDeque.type();
+						
+						if(curStructInDequeType.matches(curCommandComponent.posTerm())
 								&& nameStr.matches(curCommandComponent.name()) 
 								&& !usedStructsBool[dequeIterCounter]){
 							//&& curStructInDeque.name().matches(curCommandComponent.name())
@@ -209,8 +236,11 @@ public class ParseToWLTree {
 		}
 		
 			//add struct to stack, even if trigger Struct
+		if(struct.parentStruct() == null || 
+				(struct.parentStruct() != null && !struct.parentStruct().type().matches("conj.*|disj.*"))){
 			structDeque.add(struct);
-			
+		}
+		
 		// use visitor pattern!		
 		if (struct instanceof StructA) {
 			//create ParseStruct's
@@ -443,8 +473,8 @@ public class ParseToWLTree {
 	 * @param parsedSB
 	 */
 	public static void dfs(Struct struct, StringBuilder parsedSB, boolean shouldPrint) {
-
-		if(struct.WLCommandStr() != null){
+		//don't append if already incorporated into a higher command
+		if(struct.WLCommandStr() != null && struct.WLCommandStrVisitedCount() < 1){
 			parsedSB.append(struct.WLCommandStr());
 			shouldPrint = false;
 			//reset WLCommandStr back to null, so next 

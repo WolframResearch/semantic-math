@@ -220,10 +220,11 @@ public class ThmP1 {
 						if (tempWordlen > 0 && str[i].charAt(tempWordlen - 1) == '$')
 							latexExpr += " " + str[i];
 					}
-
-					if (latexExpr.matches("[^=]+=.+|[^\\\\cong]+\\\\cong.+")) {
+					/*
+					if (latexExpr.matches("[^=]+=.+|[^\\\\cong]+\\\\cong.+")
+							&& (i+1 == stringLength || i+1 < stringLength && !posMap.get(str[i+1] ).matches("verb|vbs")) ) {
 						type = "assert";
-					}
+					} */
 				} else if (curWord.matches("\\$[^$]\\$")) {
 					type = "symb";
 				}

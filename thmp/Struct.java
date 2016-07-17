@@ -10,6 +10,8 @@ import java.util.ArrayList;
  */
 
 public abstract class Struct {
+	//remove this 
+	//public int WLCommandStrVisitedCount;
 
 	/*
 	public Struct(K struct, String type){
@@ -24,6 +26,8 @@ public abstract class Struct {
 	}
 	*/
 
+	public abstract int WLCommandStrVisitedCount();
+	
 	public abstract void set_structList(StructList structList);
 
 	/**

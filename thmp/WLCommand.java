@@ -231,7 +231,10 @@ public class WLCommand {
 	public static boolean addComponent(WLCommand curCommand, Struct newStruct){
 		//if key.name .matches()
 		//be careful with type, could be conj_, all sorts of stuff
-		String structType = newStruct.type();
+		String structPreType = newStruct.type();
+		String structType = structPreType.matches("conj_.*|disj_.*") ?
+				structPreType.split("_")[1] : structPreType;
+		
 		String structName = newStruct instanceof StructH ? newStruct.struct().get("name") : 
 			newStruct.prev1() instanceof String ? (String)newStruct.prev1() : "";
 			

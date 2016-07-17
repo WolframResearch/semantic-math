@@ -40,6 +40,7 @@ public class WLCommandsList {
 		ImmutableListMultimap.Builder<String, String> triggerWordLookupMapBuilder = ImmutableListMultimap.builder();
 		triggerWordLookupMapBuilder.put("be", "is");
 		triggerWordLookupMapBuilder.put("are", "is");
+		//triggerWordLookupMapBuilder.put("radius", "is");
 		
 		triggerWordLookupMap = triggerWordLookupMapBuilder.build();
 		
@@ -56,12 +57,15 @@ public class WLCommandsList {
 		//type and name uniquely specify a WLCommand, for the same command, use custom position if it's specified 
 		//(by an int, 4 comma-separated strings total), use default order otherwise (3 comma-separated strings). 
 		//name being -1 indicates WL command.
-		//-1 indicates WL command
+		//-1 indicates WL command.
+		//indicate trigger word in sentence, if not WL command. Ensure position of trigger word is correct. 
 		//Just a String represents an auxilliary String, eg just a bracket.
 		//3rd element could be true/false (includes/not includes in command), or trigger (trigger word, but not 
 		//included in final command, so indicates false)
 		WLCommandMapBuilder.put("element", addCommand(new String[]{"symb|ent, , true", "\\[Element], WL, true", 
-				"pre, of, false", "symb|ent, , true"}));		
+				"pre, of, false", "symb|ent, , true"}));	
+		WLCommandMapBuilder.put("element", addCommand(new String[]{"parti, , false", "x", "\\[Element], WL, true", 
+				"pre, of, false", "symb|ent, , true"}));
 		WLCommandMapBuilder.put("derivative", addCommand(new String[]{"Derivative, WL, true", "[", "pre, of, false", 
 				"symb|ent, , true", "]"}));
 		WLCommandMapBuilder.put("log", addCommand(new String[]{"Log, WL, true", "[", "pre, of, false", 
@@ -72,6 +76,10 @@ public class WLCommandsList {
 				 "\\[Element]", "symb|ent, , true"}));
 		WLCommandMapBuilder.put("subset", addCommand(new String[]{"Subset, WL, true", "[", "pre, of, false", 
 				"symb|ent, , true", "]"}));
+		//$f=\sum i$ with radius of convergence $r$
+		WLCommandMapBuilder.put("convergence", addCommand(new String[]{"symb|ent, , true", "\\subset", ", radius, false", 
+				", convergence, trigger", "Function['radius' ",
+				 "]"}));
 		
 		//logical operators
 		WLCommandMapBuilder.put("and", addCommand(new String[]{"Subset, WL, true", "[", "pre, of, false", 
@@ -145,6 +153,9 @@ public class WLCommandsList {
 				
 				if(commandStrParts[2].trim().matches("trigger")){
 					triggerWordIndex = i;
+					componentCounter--;
+
+					//positionInMap = -1;
 				}
 				
 				//curOcc is the position inside the list in commandsMap.
