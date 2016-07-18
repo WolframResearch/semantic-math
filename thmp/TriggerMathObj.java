@@ -66,6 +66,7 @@ public class TriggerMathObj {
 		addKeywordToMathObj(new String[]{"convergence", "function"}, keywordList, keyDictBuilder, mathObjMMap);
 		addKeywordToMathObj(new String[]{"ideal", "ring"}, keywordList, keyDictBuilder, mathObjMMap);
 		addKeywordToMathObj(new String[]{"zero", "ring", "function"}, keywordList, keyDictBuilder, mathObjMMap);
+		addKeywordToMathObj(new String[]{"function", "function"}, keywordList, keyDictBuilder, mathObjMMap);
 		
 		//mathObjMultimap = ImmutableMultimap.copyOf(mathObjMMap);
 		
@@ -120,15 +121,10 @@ public class TriggerMathObj {
 		}
 	}
 	
-	/**
-	 * Use keywordDict to create a vector. Apply mathObjMx to it on the right.
-	 * @param triggerTerms List of trigger terms to fetch an element.
-	 * @return List of likely MathObj, anything which matched > 0 keywords.
-	 */
-	public static List<String> get_MathObj(List<String> triggerTerms){
+	private static int[] getInnerProducts(List<String> triggerTerms){
 		//create vector
 		int[] triggerTermsVec = new int[keywordDict.keySet().size()];
-		List<String> triggeredMathObjList = new ArrayList<String>();
+		//List<String> triggeredMathObjList = new ArrayList<String>();
 		
 		for(String term : triggerTerms){
 			Integer rowIndex = keywordDict.get(term);
@@ -136,9 +132,21 @@ public class TriggerMathObj {
 				triggerTermsVec[rowIndex] = 1;
 			}
 		}
+		return applyMathObjMx(triggerTermsVec);
+	}
+	
+	/**
+	 * Use keywordDict to create a vector. Apply mathObjMx to it on the right.
+	 * @param triggerTerms List of trigger terms to fetch an element.
+	 * @return List of likely MathObj, anything which matched > 0 keywords.
+	 */
+	public static List<String> get_MathObj(List<String> triggerTerms){
+		//create vector
+		//int[] triggerTermsVec = getTriggerTermsVec(triggerTerms);
+		List<String> triggeredMathObjList = new ArrayList<String>();
 		
 		//apply mathObjMx on right
-		int[] innerProducts = applyMathObjMx(triggerTermsVec);
+		int[] innerProducts = getInnerProducts(triggerTerms);
 		
 		for(int i = 0; i < innerProducts.length; i++){
 			if(innerProducts[i] > 0){
@@ -147,6 +155,27 @@ public class TriggerMathObj {
 		}
 		return triggeredMathObjList;
 	}
+	
+	/**
+	 * Get the mathObj with highest inner product
+	 * @param triggerTerms
+	 * @return
+	 */
+	public static String get_HighestMathObj(List<String> triggerTerms){		
+		
+		int[] innerProducts = getInnerProducts(triggerTerms);
+		String highestMathObj = "";
+		int max = 0;
+		
+		for(int i = 0; i < innerProducts.length; i++){
+			if(innerProducts[i] > max){
+				max = innerProducts[i];
+				highestMathObj = mathObjList.get(i);
+			}
+		}
+		return highestMathObj;
+	}
+	
 	/**
 	 * 
 	 * @param triggerTermsVec
@@ -166,4 +195,46 @@ public class TriggerMathObj {
 		}
 		return innerProducts;
 	}	
+	
+	/**
+	 * Get list of triggers from Struct.
+	 * One string for now, the one with highest inner product.
+	 * @param struct
+	 * @return
+	 */
+	public static String get_mathObjFromStruct(Struct struct){
+		//recursively find all relevant strings
+		//if structH, use name of element and name of children
+		if(struct instanceof StructA) return "";
+		
+		List<String> triggerTermList = new ArrayList<String>();
+		String name = struct.struct().get("name");		
+		if(name != null){
+			triggerTermList.add(name);
+		}
+		
+		getChildrenNames(struct, triggerTermList);
+		
+		String highestMathObj = get_HighestMathObj(triggerTermList);
+		
+		String namePpt = ((StructH<?>)struct).append_name_pptStr();
+		
+		String r = highestMathObj.matches("") ? "MathObj" : highestMathObj;
+		
+		return r + "[" + namePpt + "]";
+	}
+	
+	private static void getChildrenNames(Struct struct, List<String> childrenNameList){
+		//note for StructA, has_child == false
+		if(struct instanceof StructA || !struct.has_child()) return; 
+		List<Struct> children = struct.children();
+		for(Struct child : children){
+			String namePpt = ((StructH<?>)child).append_name_pptStr();			
+			childrenNameList.add(namePpt);
+			getChildrenNames(child, childrenNameList);
+		}
+		
+	}
+	
+	
 }

@@ -48,6 +48,8 @@ public abstract class Struct {
 	//returns probability of relation in Rule
 	public abstract double score();
 	
+	public abstract boolean has_child();
+	
 	//Simple toString to return the bare minimum to identify this Struct.
 	//To be used in ParseToWLTree.
 	public abstract String simpleToString();

@@ -482,7 +482,9 @@ public class ParseToWLTree {
 	 */
 	public static void dfs(Struct struct, StringBuilder parsedSB, boolean shouldPrint) {
 		//don't append if already incorporated into a higher command
+		//System.out.print(struct.WLCommandStrVisitedCount());
 		if(struct.WLCommandStr() != null && struct.WLCommandStrVisitedCount() < 1){
+		//if(struct.WLCommandStr() != null ){
 			parsedSB.append(struct.WLCommandStr());
 			shouldPrint = false;
 			//reset WLCommandStr back to null, so next 

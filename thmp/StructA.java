@@ -257,6 +257,10 @@ public class StructA<A, B> extends Struct{
 		return this.score;
 	}
 	
+	public boolean has_child(){
+		return false;
+	}
+	
 	@Override
 	public A prev1(){
 		return this.prev1;		

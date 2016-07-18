@@ -94,12 +94,18 @@ public class WLCommand {
 		/**
 		 * Whether or not to include in the built String created by build()
 		 */
-		private boolean includeInBuiltString;		
+		private boolean includeInBuiltString;
+		/**
+		 * Whether this term should be used to trigger TriggerMathObj system
+		 */
+		private boolean triggerMathObj;
 		
-		public PosTerm(WLCommandComponent commandComponent, int position, boolean includeInBuiltString){
+		public PosTerm(WLCommandComponent commandComponent, int position, boolean includeInBuiltString,
+				boolean triggerMathObj){
 			this.commandComponent = commandComponent;
 			this.positionInMap = position;
 			this.includeInBuiltString = includeInBuiltString;
+			this.triggerMathObj = triggerMathObj;
 		}
 		
 		@Override
@@ -132,6 +138,10 @@ public class WLCommand {
 		
 		public boolean includeInBuiltString(){
 			return this.includeInBuiltString;
+		}
+		
+		public boolean triggerMathObj(){
+			return this.triggerMathObj;
 		}
 	}
 	
@@ -223,8 +233,17 @@ public class WLCommand {
 					nextStruct.set_posteriorBuiltStruct(null);
 					continue;					
 				} */
+				
+				//check if need to trigger triggerMathObj
+				if(term.triggerMathObj){
+					nextWord = TriggerMathObj.get_mathObjFromStruct(nextStruct);
+					if(nextWord.equals("")){
+						nextWord = nextStruct.simpleToString();
+					}
+				}else{
+					nextWord = nextStruct.simpleToString();
+				}
 				//simple way to present the Struct
-				nextWord = nextStruct.simpleToString();
 				//set to the head struct the currently built command will be appended to
 				nextStruct.set_previousBuiltStruct(structToAppendCommandStr);
 				structToAppendCommandStr.set_posteriorBuiltStruct(nextStruct);

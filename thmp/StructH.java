@@ -163,7 +163,7 @@ public class StructH<H> extends Struct{
 		childRelation.add(relation);
 	}
 	
-	public boolean has_previous(){
+	public boolean has_child(){
 		return hasChild;		
 	}
 	
@@ -264,7 +264,7 @@ public class StructH<H> extends Struct{
 	 * Append name, ppt, called, tex info to the String passed in.
 	 * @param str String to be appended to
 	 */
-	private String append_name_pptStr(){
+	public String append_name_pptStr(){
 		Iterator<Entry<String, String>> structIter = struct.entrySet().iterator();
 		String name = "", called = "", ppt = "", tex = "";
 		
