@@ -27,8 +27,12 @@ public abstract class Struct {
 	*/
 
 	public abstract Struct previousBuiltStruct();
+
+	public abstract Struct posteriorBuiltStruct();
 	
 	public abstract void set_previousBuiltStruct(Struct previousBuiltStruct);
+	
+	public abstract void set_posteriorBuiltStruct(Struct posteriorBuiltStruct);
 	
 	public abstract int WLCommandStrVisitedCount();
 	

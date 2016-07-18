@@ -217,10 +217,17 @@ public class WLCommand {
 					nextStruct.set_previousBuiltStruct(null);
 					continue;					
 				}
+				
+				/*if(nextStruct.posteriorBuiltStruct() != null){ 
+					//set to null for next parse dfs iteration
+					nextStruct.set_posteriorBuiltStruct(null);
+					continue;					
+				} */
 				//simple way to present the Struct
 				nextWord = nextStruct.simpleToString();
 				//set to the head struct the currently built command will be appended to
 				nextStruct.set_previousBuiltStruct(structToAppendCommandStr);
+				structToAppendCommandStr.set_posteriorBuiltStruct(nextStruct);
 			}else{
 				nextWord = term.commandComponent.posTerm;
 			}

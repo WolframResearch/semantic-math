@@ -80,7 +80,7 @@ public class TriggerMathObj {
 	
 	public static void addKeywordToMathObj(String[] keywords, List<String> keywordList,
 			ImmutableMap.Builder<String, Integer> keyDictBuilder,
-			Multimap<String, String> mathObjPreMap){
+			Multimap<String, String> mathObjMMap){
 		if(keywords.length == 0) return;
 		
 		String keyword = keywords[0];
@@ -89,8 +89,8 @@ public class TriggerMathObj {
 		
 		keywordList.add(keywords[0]);
 		
-		for(int i = 0; i < keywords.length; i++){
-			mathObjPreMap.put(keywords[i], keyword);					
+		for(int i = 1; i < keywords.length; i++){
+			mathObjMMap.put(keywords[i], keyword);					
 		}
 	}
 	
@@ -132,9 +132,8 @@ public class TriggerMathObj {
 		
 		for(String term : triggerTerms){
 			Integer rowIndex = keywordDict.get(term);
-			///*******see what returns if key not present??
 			if(rowIndex != null){
-				triggerTermsVec[rowIndex] = 0;
+				triggerTermsVec[rowIndex] = 1;
 			}
 		}
 		
@@ -162,7 +161,7 @@ public class TriggerMathObj {
 		
 		for(int i = 0; i < mathObjNum; i++){
 			for(int j = 0; j < keywordNum; j++){
-				innerProducts[i] = mathObjMx[i][j] * triggerTermsVec[j];
+				innerProducts[i] += mathObjMx[j][i] * triggerTermsVec[j];
 			}
 		}
 		return innerProducts;

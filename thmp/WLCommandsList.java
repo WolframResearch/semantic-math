@@ -62,6 +62,7 @@ public class WLCommandsList {
 		//Just a String represents an auxilliary String, eg just a bracket.
 		//3rd element could be true/false (includes/not includes in command), or trigger (trigger word, but not 
 		//included in final command, so indicates false)
+		//5th element used for defining custom order for now, 4th term defines whether to trigger TriggerMathObj term
 		WLCommandMapBuilder.put("element", addCommand(new String[]{"symb|ent, , true", "\\[Element], WL, true", 
 				"pre, of, false", "symb|ent, , true"}));	
 		WLCommandMapBuilder.put("element", addCommand(new String[]{"parti, , false", "x", "\\[Element], WL, true", 
@@ -80,8 +81,14 @@ public class WLCommandsList {
 				"symb|ent, , true", "]"}));
 		//$f=\sum i$ with radius of convergence $r$
 		WLCommandMapBuilder.put("convergence", addCommand(new String[]{"symb|ent, , true", "\\subset", ", radius, false", 
-				", convergence, trigger", "Function['radius' ",
+				", convergence, trigger", "Function[ 'radius' ",
 				 "]"}));
+		
+		//trigger TriggerMathObj
+		WLCommandMapBuilder.put("is", addCommand(new String[]{"symb|ent, , true", "verb|vbs, is|are|be, trigger",
+				 "\\[Element]", "symb|ent, , true, TriggerMathObj"}));
+		//label string if to be used as trigger ent/symb, then use these words as trigger system
+		//function with radius of convergence 		
 		
 		//logical operators
 		WLCommandMapBuilder.put("and", addCommand(new String[]{"Subset, WL, true", "[", "pre, of, false", 
@@ -142,8 +149,8 @@ public class WLCommandsList {
 			//if(useInPosList){
 				int positionInMap = curOcc;
 				//check length of commandStrParts to see if custom order is required
-				if(commandStrParts.length > 3){
-					positionInMap = Integer.valueOf(commandStrParts[3]);
+				if(commandStrParts.length > 4){
+					positionInMap = Integer.valueOf(commandStrParts[4]);
 				}				
 				//check if WL command, ie if name is "-1", in which case put -1 as 
 				//posInMap in PosTerm

@@ -28,7 +28,7 @@ public class StructA<A, B> extends Struct{
 	//contains this Struct, so no need to build this Struct again into the current 
 	//WLCommand in build(), remember to reset to null after iterating through
 	private Struct previousBuiltStruct;
-	
+	private Struct posteriorBuiltStruct;
 	private StructList structList;
 	//includes this/current Struct's score!
 	private double DOWNPATHSCOREDEFAULT = 1;
@@ -104,6 +104,7 @@ public class StructA<A, B> extends Struct{
 	
 	@Override
 	public String simpleToString(){
+		//if(this.posteriorBuiltStruct != null) return "";
 		//been built into one command already
 		this.WLCommandStrVisitedCount++;
 		if(this.WLCommandStr != null){
@@ -190,8 +191,16 @@ public class StructA<A, B> extends Struct{
 		return this.previousBuiltStruct;
 	}
 	
+	public Struct posteriorBuiltStruct(){
+		return this.posteriorBuiltStruct;
+	}
+	
 	public void set_previousBuiltStruct(Struct previousBuiltStruct){
 		this.previousBuiltStruct = previousBuiltStruct;
+	}
+	
+	public void set_posteriorBuiltStruct(Struct posteriorBuiltStruct){
+		this.posteriorBuiltStruct = posteriorBuiltStruct;
 	}
 	
 	@Override

@@ -219,9 +219,9 @@ public class ThmP1Test {
 			//st = " B or C is true";
 			//st = "take the log of derivative of f";
 			st = "$f = \\sum i$ is a function";
-			st = "given an element of a set S";
-			st = "f is a function with radius of convergence r and finitely many roots";
-			st = "f is a function with roots and radius of convergence r";
+			//st = "given an element of a set $S$";
+			//st = "f is a function with radius of convergence r and finitely many roots";
+			st = "f is a function with radius of convergence r";
 			//st = "the derivative is $f=s$";
 			
 			//System.out.println("from TexConverter: " + TexConverter.convert("let $m \\subset M$ be an element"));			

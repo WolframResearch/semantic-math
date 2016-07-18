@@ -17,6 +17,7 @@ public class StructH<H> extends Struct{
 	//contains this Struct, so no need to build this Struct again into the current 
 	//WLCommand in build(), remember to reset to null after iterating through
 	private Struct previousBuiltStruct;
+	private Struct posteriorBuiltStruct;
 	//parentStruct is *not* unique! Depends on which DFS path we take.
 	private Struct parentStruct;
 	private boolean hasChild = false;
@@ -207,8 +208,16 @@ public class StructH<H> extends Struct{
 		return this.previousBuiltStruct;
 	}
 	
+	public Struct posteriorBuiltStruct(){
+		return this.posteriorBuiltStruct;
+	}
+	
 	public void set_previousBuiltStruct(Struct previousBuiltStruct){
 		this.previousBuiltStruct = previousBuiltStruct;
+	}
+	
+	public void set_posteriorBuiltStruct(Struct posteriorBuiltStruct){
+		this.posteriorBuiltStruct = posteriorBuiltStruct;
 	}
 	
 	/**
@@ -218,6 +227,7 @@ public class StructH<H> extends Struct{
 	 */
 	@Override
 	public String simpleToString(){
+		//if(this.posteriorBuiltStruct != null) return "";
 		this.WLCommandStrVisitedCount++;
 		if(this.WLCommandStr != null){
 			return this.WLCommandStr;
