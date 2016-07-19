@@ -93,8 +93,8 @@ public class WLCommandsList {
 		// label a term to use to trigger a mathObj, communicate to posList,
 		// posList dynamically builds command
 		// using TriggerMathObj.
-		//WLCommandMapBuilder.put("is", addCommand(new String[] { "symb|ent, , true", "verb|vbs, is|are|be, trigger",
-		//		"\\[Element]", "symb|ent, , true" }));
+		WLCommandMapBuilder.put("is", addCommand(new String[] { "symb|ent, , true", "verb|vbs, is|are|be, trigger",
+				"\\[Element], WL, true", "symb|ent, , true" }));
 		WLCommandMapBuilder.put("subset",
 				addCommand(new String[] { "Subset, WL, true", "[", "pre, of, false", "symb|ent, , true", "]" }));
 		// $f=\sum i$ with radius of convergence $r$
@@ -136,7 +136,7 @@ public class WLCommandsList {
 		// minus the number of WL commands.
 		int componentCounter = 0;
 		// assert(commandStringAr.length == useAr.length);
-		int triggerWordIndex = 0;
+		int triggerWordIndex = -1;
 
 		for (int i = 0; i < commandStringAr.length; i++) {
 
@@ -187,7 +187,10 @@ public class WLCommandsList {
 				else if (nameStr.equals("WL")) {
 					positionInMap = WLCOMMANDINDEX;
 					componentCounter--;
-					triggerWordIndex = i;
+					//triggerWordIndex hasn't been touched
+					if(triggerWordIndex == -1){
+						triggerWordIndex = i;
+					}
 				}
 
 				if (commandStrParts[2].trim().matches("trigger")) {
@@ -211,6 +214,11 @@ public class WLCommandsList {
 			}
 		}
 
+		//shouldn't be invoked, as every command should have a trigger word
+		if(triggerWordIndex == -1){
+			triggerWordIndex = 0;
+		}
+		
 		commandsCountMap = ImmutableMap.copyOf(commandsCountPreMap);
 		return WLCommand.create(commandsCountMap, posList, componentCounter, triggerWordIndex);
 		
