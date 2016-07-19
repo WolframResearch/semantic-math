@@ -13,11 +13,17 @@ public class StructH<H> extends Struct{
 	//the number of times this WLCommandStr has been visited.
 	//To not repeat, print only when this is even
 	private int WLCommandStrVisitedCount;
+	//WLCommand associated with this Struct, should have corresponding WLCommandStr.
+	//Perhaps group the WLCommandStr with this into the WLCommand?
+	private WLCommand WLCommand;
 	//pointer to the head of a previously built Struct that already
 	//contains this Struct, so no need to build this Struct again into the current 
 	//WLCommand in build(), remember to reset to null after iterating through
 	private Struct previousBuiltStruct;
 	private Struct posteriorBuiltStruct;
+	//the head Struct (to append to) of a WLCommand this Struct currently belongs to.
+	//Not intrinsic to this Struct!
+	private Struct structToAppendCommandStr;
 	//parentStruct is *not* unique! Depends on which DFS path we take.
 	private Struct parentStruct;
 	private boolean hasChild = false;
@@ -218,6 +224,30 @@ public class StructH<H> extends Struct{
 	
 	public void set_posteriorBuiltStruct(Struct posteriorBuiltStruct){
 		this.posteriorBuiltStruct = posteriorBuiltStruct;
+	}
+	
+	public Struct structToAppendCommandStr(){
+		return this.structToAppendCommandStr;
+	}
+	
+	public void set_structToAppendCommandStr(Struct structToAppendCommandStr){
+		this.structToAppendCommandStr = structToAppendCommandStr;
+	}
+	
+	/**
+	 * Set the WLCommand.
+	 * @param newCommand
+	 */
+	public void set_WLCommand(WLCommand newCommand){
+		this.WLCommand = newCommand;
+	}
+	
+	/**
+	 * Retrieves corrsponding WLCommand.
+	 * @return
+	 */
+	public WLCommand WLCommand(){
+		return this.WLCommand;
 	}
 	
 	/**

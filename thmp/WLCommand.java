@@ -67,6 +67,20 @@ public class WLCommand {
 	private int componentCounter;
 	
 	/**
+	 * Total number of Struct's that count towards final command.
+	 * Equal to componentCounter, but does not go down.
+	 */
+	private int totalComponentCount;
+	
+	/**
+	 * Counter to keep track of which Structs, with which the current Struct this WLCommand
+	 * instance is associated to (has this struct as StructWLCommandStr), are associated with
+	 * another head. If this number is > totalComponentCount/2, do not use this WLCommand.
+	 * Only set to totalComponentCount when WLCommand first copied.
+	 */
+	private int structsWithOtherHeadCount;
+	
+	/**
 	 * PosTerm stores a part of speech term, and the position in commandsMap
 	 * it occurs, to build a WLCommand, ie turn triggered phrases into WL commands.
 	 * 
@@ -80,7 +94,7 @@ public class WLCommand {
 		
 		/**
 		 * Struct filling the current posTerm. Have to be careful eg for "of",
-		 * which often is not a Struct itself, just part of a Struct
+		 * which often is not a Struct itself, just part of a Struct.
 		 */
 		private Struct posTermStruct;
 		
@@ -168,6 +182,8 @@ public class WLCommand {
 		curCommand.commandsCountMap = commandsCountMap;		
 		curCommand.posTermList = posList;
 		curCommand.componentCounter = componentCounter;
+		curCommand.totalComponentCount = componentCounter;
+		
 		curCommand.triggerWordIndex = triggerWordIndex;
 		return curCommand;
 	}
@@ -184,6 +200,8 @@ public class WLCommand {
 		newCommand.posTermList = new ArrayList<PosTerm>(curCommand.posTermList);
 		newCommand.componentCounter = curCommand.componentCounter;
 		newCommand.triggerWordIndex = curCommand.triggerWordIndex;
+		newCommand.totalComponentCount = curCommand.totalComponentCount;
+		newCommand.structsWithOtherHeadCount = curCommand.totalComponentCount;
 		return newCommand;
 	}
 	
@@ -204,17 +222,32 @@ public class WLCommand {
 		//use StringBuilder!
 		String commandString = "";
 		
+		//make WLCommand refer to list of WLCommands rather than just one??
+		structToAppendCommandStr.set_WLCommand(curCommand);
+		
 		for(PosTerm term : posTermList){
 			
-			if(!term.includeInBuiltString) continue;
-			
+			if(!term.includeInBuiltString){ 
+				//set its head Struct to structToAppendCommandStr,
+				Struct nextStruct = term.posTermStruct;
+				if(nextStruct != null){
+					if(nextStruct.structToAppendCommandStr() == null){
+						nextStruct.set_structToAppendCommandStr(structToAppendCommandStr);					
+					}else{
+						//already been assigned to a different head
+						nextStruct.structToAppendCommandStr().WLCommand().structsWithOtherHeadCount--;
+						nextStruct.set_structToAppendCommandStr(structToAppendCommandStr);
+					}
+				}
+				continue;
+			}
 			WLCommandComponent commandComponent = term.commandComponent;
 			
 			int positionInMap = term.positionInMap;
 			
 			String nextWord;			
 			//-1 if WL command or auxilliary String
-			if(positionInMap != -1){
+			if(positionInMap != WLCommandsList.AUXINDEX && positionInMap != WLCommandsList.WLCOMMANDINDEX){
 				List<Struct> curCommandComponentList = commandsMap.get(commandComponent);
 				if(positionInMap >= curCommandComponentList.size()){
 					System.out.println("positionInMap >= list size. Should not happen!");
@@ -224,6 +257,8 @@ public class WLCommand {
 				Struct nextStruct = curCommandComponentList.get(positionInMap);
 				if(nextStruct.previousBuiltStruct() != null){ 
 					//set to null for next parse dfs iteration
+					//****it should be better to not set to null here, but 
+					// set to null altogether after entire dfs iteration
 					nextStruct.set_previousBuiltStruct(null);
 					continue;					
 				}
@@ -247,6 +282,37 @@ public class WLCommand {
 				//set to the head struct the currently built command will be appended to
 				nextStruct.set_previousBuiltStruct(structToAppendCommandStr);
 				structToAppendCommandStr.set_posteriorBuiltStruct(nextStruct);
+				
+				
+				if(nextStruct.structToAppendCommandStr() == null){
+					nextStruct.set_structToAppendCommandStr(structToAppendCommandStr);					
+				}else{
+					//already been assigned to a different head
+					nextStruct.structToAppendCommandStr().WLCommand().structsWithOtherHeadCount--;
+					nextStruct.set_structToAppendCommandStr(structToAppendCommandStr);
+				}
+				
+			}else if(positionInMap == WLCommandsList.WLCOMMANDINDEX){
+				
+				nextWord = term.commandComponent.posTerm;
+				//in case of WLCommand eg \\[ELement]
+				//this list should contain Structs that corresponds to a WLCommand
+				List<Struct> curCommandComponentList = commandsMap.get(commandComponent);
+				//set the previousBuiltStruct.
+				//should have size > 0 always
+				if(curCommandComponentList.size() > 0){
+					Struct nextStruct = curCommandComponentList.get(0);
+					nextStruct.set_previousBuiltStruct(structToAppendCommandStr);
+					structToAppendCommandStr.set_posteriorBuiltStruct(nextStruct);
+					
+					if(nextStruct.structToAppendCommandStr() == null){
+						nextStruct.set_structToAppendCommandStr(structToAppendCommandStr);					
+					}else{
+						//already been assigned to a different head
+						nextStruct.structToAppendCommandStr().WLCommand().structsWithOtherHeadCount--;
+						nextStruct.set_structToAppendCommandStr(structToAppendCommandStr);
+					}
+				}				
 			}else{
 				nextWord = term.commandComponent.posTerm;
 			}
@@ -360,6 +426,22 @@ public class WLCommand {
 	 */
 	public static int triggerWordIndex(WLCommand curCommand){
 		return curCommand.triggerWordIndex;
+	}
+	
+	public static int structsWithOtherHeadCount(WLCommand curCommand){
+		return curCommand.structsWithOtherHeadCount;
+	}
+	
+	public static void set_structsWithOtherHeadCount(WLCommand curCommand, int newCount){
+		 curCommand.structsWithOtherHeadCount = newCount;
+	}
+	
+	public static int totalComponentCount(WLCommand curCommand){
+		return curCommand.totalComponentCount;
+	}
+	
+	public static void set_totalComponentCount(WLCommand curCommand, int newCount){
+		 curCommand.totalComponentCount = newCount;
 	}
 	
 	/**

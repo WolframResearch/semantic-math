@@ -483,9 +483,14 @@ public class ParseToWLTree {
 	public static void dfs(Struct struct, StringBuilder parsedSB, boolean shouldPrint) {
 		//don't append if already incorporated into a higher command
 		//System.out.print(struct.WLCommandStrVisitedCount());
-		if(struct.WLCommandStr() != null && struct.WLCommandStrVisitedCount() < 1){
-		//if(struct.WLCommandStr() != null ){
-			parsedSB.append(struct.WLCommandStr());
+		//WLComamnd() should not be null if WLCommandStr is not null
+		if(struct.WLCommandStr() != null && struct.WLCommandStrVisitedCount() < 1
+				 ){
+			if(WLCommand.structsWithOtherHeadCount(struct.WLCommand()) 
+				== WLCommand.totalComponentCount(struct.WLCommand())){
+				//if(struct.WLCommandStr() != null ){
+				parsedSB.append(struct.WLCommandStr());
+			}
 			shouldPrint = false;
 			//reset WLCommandStr back to null, so next 
 			//dfs path can create it from scratch

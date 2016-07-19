@@ -219,8 +219,8 @@ public class ThmP1Test {
 			//st = " B or C is true";
 			//st = "take the log of derivative of f";
 			st = "$f = \\sum i$ is radius r";
-			st = "there exists a universal property";
-			st = "f is an element of a set";
+			//st = "there exists a universal property";
+			//st = "f is an element of a set";
 			//st = "given an element of a set $S$";
 			//st = "f is a function with radius of convergence r and finitely many roots";
 			//st = "f is a function with radius of convergence r";

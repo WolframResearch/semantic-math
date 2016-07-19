@@ -23,12 +23,19 @@ public class StructA<A, B> extends Struct{
 	//pointer to mx.get(i).get(j)
 	//if not null, means this is head of some parsed WLCommand. 
 	private String WLCommandStr;
+	//WLCommand associated with this Struct, should have corresponding WLCommandStr.
+	//Perhaps group the WLCommandStr with this into the WLCommand?
+	private WLCommand WLCommand;
+	//how many times this Struct has been part of a WLCommand.
 	private int WLCommandStrVisitedCount;
 	//pointer to the head of a previously built Struct that already
 	//contains this Struct, so no need to build this Struct again into the current 
 	//WLCommand in build(), remember to reset to null after iterating through
 	private Struct previousBuiltStruct;
 	private Struct posteriorBuiltStruct;
+	//the head Struct (to append to) of a WLCommand this Struct currently belongs to.
+	//Not intrinsic to this Struct!
+	private Struct structToAppendCommandStr;
 	private StructList structList;
 	//includes this/current Struct's score!
 	private double DOWNPATHSCOREDEFAULT = 1;
@@ -100,6 +107,22 @@ public class StructA<A, B> extends Struct{
 	
 	public int WLCommandStrVisitedCount(){
 		return this.WLCommandStrVisitedCount;
+	}
+	
+	/**
+	 * Set the WLCommand.
+	 * @param newCommand
+	 */
+	public void set_WLCommand(WLCommand newCommand){
+		this.WLCommand = newCommand;
+	}
+	
+	/**
+	 * Retrieves corrsponding WLCommand.
+	 * @return
+	 */
+	public WLCommand WLCommand(){
+		return this.WLCommand;
 	}
 	
 	@Override
@@ -201,6 +224,14 @@ public class StructA<A, B> extends Struct{
 	
 	public void set_posteriorBuiltStruct(Struct posteriorBuiltStruct){
 		this.posteriorBuiltStruct = posteriorBuiltStruct;
+	}
+	
+	public Struct structToAppendCommandStr(){
+		return this.structToAppendCommandStr;
+	}
+	
+	public void set_structToAppendCommandStr(Struct structToAppendCommandStr){
+		this.structToAppendCommandStr = structToAppendCommandStr;
 	}
 	
 	@Override

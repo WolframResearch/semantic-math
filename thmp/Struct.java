@@ -34,6 +34,10 @@ public abstract class Struct {
 	
 	public abstract void set_posteriorBuiltStruct(Struct posteriorBuiltStruct);
 	
+	public abstract Struct structToAppendCommandStr();
+
+	public abstract void set_structToAppendCommandStr(Struct structToAppendCommandStr);
+	
 	public abstract int WLCommandStrVisitedCount();
 	
 	public abstract void set_structList(StructList structList);
@@ -64,7 +68,11 @@ public abstract class Struct {
 	public abstract void clear_WLCommandStr();
 
 	public abstract String WLCommandStr();
-
+	
+	public abstract void set_WLCommand(WLCommand newCommand);
+	
+	public abstract WLCommand WLCommand();
+	
 	public abstract int numUnits();
 	
 	public abstract double maxDownPathScore();

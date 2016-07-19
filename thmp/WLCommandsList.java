@@ -23,12 +23,8 @@ public class WLCommandsList {
 	/**
 	 * Map, keys are trigger words, values are pointers to WLCommand's
 	 */
-	private static final ImmutableMultimap<String, WLCommand> WLCommandMap; // builder
-																			// for
-																			// this
-																			// in
-																			// static
-																			// initializer
+	private static final ImmutableMultimap<String, WLCommand> WLCommandMap; 
+	
 	/**
 	 * ImmutableMultimap of which strings lead to which trigger words. It's a
 	 * many-to-many mapping: one string can lead to many, and many can lead to
@@ -38,7 +34,12 @@ public class WLCommandsList {
 	private static final ImmutableMultimap<String, String> triggerWordLookupMap;
 
 	/**
-	 * should read in data from file instead of calling addCommand.
+	 * Final constants used to indicate WLCommand/Aux String as posIndex in PosList.
+	 */
+	public static final int WLCOMMANDINDEX = -1;
+	public static final int AUXINDEX = -2;
+	
+	/**
 	 * 
 	 */
 	static {
@@ -102,7 +103,7 @@ public class WLCommandsList {
 		
 		// trigger TriggerMathObj
 		WLCommandMapBuilder.put("is", addCommand(new String[] { "symb|ent, , true", "verb|vbs, is|are|be, trigger",
-				"\\[Element]", "symb|ent, , true, TriggerMathObj" }));
+				"\\[Element], WL, true", "symb|ent, , true, TriggerMathObj" }));
 		// label string if to be used as trigger ent/symb, then use these words
 		// as trigger system
 		// function with radius of convergence
@@ -150,7 +151,7 @@ public class WLCommandsList {
 				String posStr = commandStrParts[0];
 				String nameStr = "AUX"; // auxilliary string
 				WLCommandComponent commandComponent = new WLCommandComponent(posStr, nameStr);
-				PosTerm curTerm = new PosTerm(commandComponent, -1, true, false);
+				PosTerm curTerm = new PosTerm(commandComponent, AUXINDEX, true, false);
 				posList.add(curTerm);
 			} else {
 
@@ -181,11 +182,10 @@ public class WLCommandsList {
 						positionInMap = Integer.valueOf(commandStrParts[4]);
 					}
 				}
-				// check if WL command, ie if name is "-1", in which case put -1
-				// as
-				// posInMap in PosTerm
+				// check if WL command, ie if name is "-2", in which case put -2
+				// as posInMap in PosTerm
 				else if (nameStr.equals("WL")) {
-					positionInMap = -1;
+					positionInMap = WLCOMMANDINDEX;
 					componentCounter--;
 					triggerWordIndex = i;
 				}
@@ -213,7 +213,7 @@ public class WLCommandsList {
 
 		commandsCountMap = ImmutableMap.copyOf(commandsCountPreMap);
 		return WLCommand.create(commandsCountMap, posList, componentCounter, triggerWordIndex);
-
+		
 	}
 
 	/**
