@@ -94,16 +94,16 @@ public class WLCommandsList {
 		// posList dynamically builds command
 		// using TriggerMathObj.
 		WLCommandMapBuilder.put("is", addCommand(new String[] { "symb|ent, , true", "verb|vbs, is|are|be, trigger",
-				"\\[Element], WL, true", "symb|ent, , true" }));
+				"\\[Element]", "symb|ent, , true" }));
 		WLCommandMapBuilder.put("subset",
-				addCommand(new String[] { "Subset, WL, true", "[", "pre, of, false", "symb|ent, , true", "]" }));
+				addCommand(new String[] { "Subset, WL-subset, true", "[", "pre, of, false", "symb|ent, , true", "]" }));
 		// $f=\sum i$ with radius of convergence $r$
 		WLCommandMapBuilder.put("convergence", addCommand(new String[] { "symb|ent, , true", "\\subset",
 				", radius, false", ", convergence, trigger", "Function[ 'radius' ", "]" }));
 		
 		// trigger TriggerMathObj
 		WLCommandMapBuilder.put("is", addCommand(new String[] { "symb|ent, , true", "verb|vbs, is|are|be, trigger",
-				"\\[Element], WL, true", "symb|ent, , true, TriggerMathObj" }));
+				"\\[Element]", "symb|ent, , true, TriggerMathObj" }));
 		// label string if to be used as trigger ent/symb, then use these words
 		// as trigger system
 		// function with radius of convergence
@@ -184,13 +184,14 @@ public class WLCommandsList {
 				}
 				// check if WL command, ie if name is "-2", in which case put -2
 				// as posInMap in PosTerm
-				else if (nameStr.equals("WL")) {
+				else if (nameStr.matches("WL.*")) {
 					positionInMap = WLCOMMANDINDEX;
 					componentCounter--;
 					//triggerWordIndex hasn't been touched
 					if(triggerWordIndex == -1){
 						triggerWordIndex = i;
 					}
+					
 				}
 
 				if (commandStrParts[2].trim().matches("trigger")) {

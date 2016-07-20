@@ -204,12 +204,12 @@ public class ParseToWLTree {
 						
 						if(curStructInDequeType.matches(curCommandComponent.posTerm())
 								&& nameStr.matches(curCommandComponent.name()) 
-								&& !usedStructsBool[dequeIterCounter]){
+								&& !usedStructsBool[dequeIterCounter] ){
 							//&& curStructInDeque.name().matches(curCommandComponent.name())
 							//see if name matches, if match, move on, continue outer loop
 							//need a way to mark structs already matched! 
 							
-							//add struct to the matching Component if found a match!							
+							//add struct to the matching Component if found a match							
 							//add at beginning since iterating backwards
 							waitingStructList.add(0, curStructInDeque);
 							curPosTerm.set_posTermStruct(curStructInDeque);
@@ -487,7 +487,7 @@ public class ParseToWLTree {
 		if(struct.WLCommandStr() != null && struct.WLCommandStrVisitedCount() < 1
 				 ){
 			if(WLCommand.structsWithOtherHeadCount(struct.WLCommand()) 
-				== WLCommand.totalComponentCount(struct.WLCommand())){
+				> WLCommand.totalComponentCount(struct.WLCommand()) -2){
 				//if(struct.WLCommandStr() != null ){
 				parsedSB.append(struct.WLCommandStr());
 			}
@@ -562,5 +562,28 @@ public class ParseToWLTree {
 		if(type == ParseStructType.NONE)
 			createNew = false;
 		return createNew;
+	}
+	
+	public static class WLCommandWrapper{
+		/**
+		 * Wraps around a WLCommand to put in list in each Struct,
+		 * contains a WLCommand instance, and its index in list,
+		 * in order the commands are built: inner -> outer, earlier ->
+		 * later.
+		 */
+		private WLCommand curCommand;
+		private int listIndex;
+		
+		public WLCommandWrapper(WLCommand curCommand){
+			this.curCommand = curCommand;
+		}
+		
+		public void set_listIndex(int index){
+			this.listIndex = index;
+		}
+		
+		public int listIndex(){
+			return this.listIndex;
+		}
 	}
 }

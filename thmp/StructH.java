@@ -3,6 +3,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
+import static thmp.ParseToWLTree.WLCommandWrapper;
 
 public class StructH<H> extends Struct{
 
@@ -24,6 +25,7 @@ public class StructH<H> extends Struct{
 	//the head Struct (to append to) of a WLCommand this Struct currently belongs to.
 	//Not intrinsic to this Struct!
 	private Struct structToAppendCommandStr;
+	private WLCommandWrapper WLCommandWrapper;
 	//parentStruct is *not* unique! Depends on which DFS path we take.
 	private Struct parentStruct;
 	private boolean hasChild = false;
@@ -238,16 +240,16 @@ public class StructH<H> extends Struct{
 	 * Set the WLCommand.
 	 * @param newCommand
 	 */
-	public void set_WLCommand(WLCommand newCommand){
-		this.WLCommand = newCommand;
+	public void set_WLCommandWrapper(WLCommandWrapper newCommandWrapper){
+		this.WLCommandWrapper = newCommandWrapper;
 	}
 	
 	/**
 	 * Retrieves corrsponding WLCommand.
 	 * @return
 	 */
-	public WLCommand WLCommand(){
-		return this.WLCommand;
+	public WLCommandWrapper WLCommandWrapper(){
+		return this.WLCommandWrapper;
 	}
 	
 	/**

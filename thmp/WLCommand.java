@@ -81,6 +81,12 @@ public class WLCommand {
 	private int structsWithOtherHeadCount;
 	
 	/**
+	 * Index in list of WLCommand in Struct that 
+	 * *Not* intrinsic to a WLCommand instance, create custom wrapper to put around this?
+	 */
+	//private int s;
+	
+	/**
 	 * PosTerm stores a part of speech term, and the position in commandsMap
 	 * it occurs, to build a WLCommand, ie turn triggered phrases into WL commands.
 	 * 
@@ -221,13 +227,15 @@ public class WLCommand {
 		List<PosTerm> posTermList = curCommand.posTermList;
 		//use StringBuilder!
 		String commandString = "";
+		//the latest Struct to be touched, for determining if an aux String should be displayed
+		boolean prevStructHeaded = true;
 		
 		//make WLCommand refer to list of WLCommands rather than just one??
 		structToAppendCommandStr.set_WLCommand(curCommand);
 		
 		for(PosTerm term : posTermList){
 			
-			if(!term.includeInBuiltString){ 
+			if(!term.includeInBuiltString){ 				
 				//set its head Struct to structToAppendCommandStr,
 				Struct nextStruct = term.posTermStruct;
 				if(nextStruct != null){
@@ -245,7 +253,7 @@ public class WLCommand {
 			
 			int positionInMap = term.positionInMap;
 			
-			String nextWord;			
+			String nextWord = "";			
 			//-1 if WL command or auxilliary String
 			if(positionInMap != WLCommandsList.AUXINDEX && positionInMap != WLCommandsList.WLCOMMANDINDEX){
 				List<Struct> curCommandComponentList = commandsMap.get(commandComponent);
@@ -255,12 +263,13 @@ public class WLCommand {
 				}
 				
 				Struct nextStruct = curCommandComponentList.get(positionInMap);
+				//prevStruct = nextStruct;				
 				if(nextStruct.previousBuiltStruct() != null){ 
 					//set to null for next parse dfs iteration
 					//****it should be better to not set to null here, but 
 					// set to null altogether after entire dfs iteration
-					nextStruct.set_previousBuiltStruct(null);
-					continue;					
+					nextStruct.set_previousBuiltStruct(null);						
+					continue;	
 				}
 				
 				/*if(nextStruct.posteriorBuiltStruct() != null){ 
@@ -281,15 +290,15 @@ public class WLCommand {
 				//simple way to present the Struct
 				//set to the head struct the currently built command will be appended to
 				nextStruct.set_previousBuiltStruct(structToAppendCommandStr);
-				structToAppendCommandStr.set_posteriorBuiltStruct(nextStruct);
-				
+				structToAppendCommandStr.set_posteriorBuiltStruct(nextStruct);				
 				
 				if(nextStruct.structToAppendCommandStr() == null){
-					nextStruct.set_structToAppendCommandStr(structToAppendCommandStr);					
+					nextStruct.set_structToAppendCommandStr(structToAppendCommandStr);	
+					prevStructHeaded = false;
 				}else{
 					//already been assigned to a different head
 					nextStruct.structToAppendCommandStr().WLCommand().structsWithOtherHeadCount--;
-					nextStruct.set_structToAppendCommandStr(structToAppendCommandStr);
+					nextStruct.set_structToAppendCommandStr(structToAppendCommandStr);					
 				}
 				
 			}else if(positionInMap == WLCommandsList.WLCOMMANDINDEX){
@@ -299,8 +308,8 @@ public class WLCommand {
 				//this list should contain Structs that corresponds to a WLCommand
 				List<Struct> curCommandComponentList = commandsMap.get(commandComponent);
 				//set the previousBuiltStruct.
-				//should have size > 0 always
-				if(curCommandComponentList.size() > 0){
+				//should have size > 0 always <--nope! if element is not a true WLCommand, like an auxilliary string
+				if(curCommandComponentList.size() > 0){					
 					Struct nextStruct = curCommandComponentList.get(0);
 					nextStruct.set_previousBuiltStruct(structToAppendCommandStr);
 					structToAppendCommandStr.set_posteriorBuiltStruct(nextStruct);
@@ -313,12 +322,18 @@ public class WLCommand {
 						nextStruct.set_structToAppendCommandStr(structToAppendCommandStr);
 					}
 				}				
-			}else{
-				nextWord = term.commandComponent.posTerm;
+			}else {
+				//if(prevStruct != null && prevStruct.structToAppendCommandStr() == null )
+				//auxilliary Strings, eg "[", "\[Element]"	
+				if(!prevStructHeaded){
+					nextWord = term.commandComponent.posTerm;
+				}
+				//System.out.print("nextWord : " + nextWord + "prevStruct: " + prevStructHeaded);
 			}
 			
 			commandString += nextWord + " ";
 		}
+		System.out.print("BUILT COMMAND: " + commandString);
 		return commandString;
 	}
 	
@@ -348,20 +363,33 @@ public class WLCommand {
 		for(Entry<WLCommandComponent, Integer> commandComponentEntry : curCommand.commandsCountMap.entrySet()){
 			WLCommandComponent commandComponent = commandComponentEntry.getKey();
 			int commandComponentCount = commandComponentEntry.getValue();
+			String commandComponentPosTerm = commandComponent.posTerm;
+			String commandComponentName = commandComponent.name;
 			
-			if(structType.matches(commandComponent.posTerm) 
+			//if WL expr matches, add Struct to that component, eg \[Element]			
+			if(commandComponentName.matches("WL.*") ){
+				String[] nameAr = commandComponentName.split("-");
+				if(nameAr.length > 1 && commandComponentCount > 0
+						&& structName.matches(nameAr[1])){
+					curCommand.commandsMap.put(commandComponent, newStruct);
+					//here newComponent must have been in the original required set
+					curCommand.commandsCountMap.put(commandComponent, commandComponentCount - 1);					
+					break;
+				}
+			}					
+			else if(structType.matches(commandComponentPosTerm) 
 					&& commandComponentCount > 0 
-					&& structName.matches(commandComponent.name)){
+					&& structName.matches(commandComponentName)){
 				//put commandComponent into commandsMap
-				//if map doesn't contain newComponent, null !> 0		
-				
+				//if map doesn't contain newComponent, null !> 0						
 				curCommand.commandsMap.put(commandComponent, newStruct);
 				//here newComponent must have been in the original required set
 				curCommand.commandsCountMap.put(commandComponent, commandComponentCount - 1);
 				//use counter to track whether map is satisfied
 				curCommand.componentCounter--;
 				break;
-			}
+			}//else if(commandComponent.posTerm.equals("WL") && commandComponentCount > 0){}
+			
 		}			
 		
 		//shouldn't be < 0!
