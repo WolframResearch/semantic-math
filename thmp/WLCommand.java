@@ -12,6 +12,8 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ListMultimap;
 
+import thmp.ParseToWLTree.WLCommandWrapper;
+
 /**
  * WL command, containing the components that need to be hashed. 
  * For commands where multiple types could fit, e.g. ent or symb,
@@ -212,6 +214,31 @@ public class WLCommand {
 	}
 	
 	/**
+	 * Update the wrapper list, and current struct passed in.
+	 * @param nextStruct
+	 * @param structToAppendCommandStr
+	 * @return Whether nextStruct already has associated head.
+	 */
+	private static boolean updateWrapper(Struct nextStruct, Struct structToAppendCommandStr){
+		List<WLCommandWrapper> nextStructWrapperList = nextStruct.WLCommandWrapperList();
+		boolean prevStructHeaded = true; 
+		if (nextStructWrapperList != null) {
+			// in this case structToAppendCommandStr should not be
+			// null either
+			Struct headStruct = nextStruct.structToAppendCommandStr();
+			// set the headCount of the last wrapper object
+			List<WLCommandWrapper> headStructWrapperList = headStruct.WLCommandWrapperList();
+			int wrapperListSz = headStructWrapperList.size();
+			WLCommand lastWrapperCommand = headStructWrapperList.get(wrapperListSz-1).WLCommand();						
+			lastWrapperCommand.structsWithOtherHeadCount--;
+			System.out.println("Wraper Counte: " + lastWrapperCommand.structsWithOtherHeadCount);
+		}else{
+			prevStructHeaded = false;
+		}
+		nextStruct.set_structToAppendCommandStr(structToAppendCommandStr);
+		return prevStructHeaded;
+	}
+	/**
 	 * Builds the WLCommand from commandsMap & posTermList after it's satisfied.
 	 * Should be called after being satisfied. 
 	 * @param curCommand command being built
@@ -230,15 +257,23 @@ public class WLCommand {
 		//the latest Struct to be touched, for determining if an aux String should be displayed
 		boolean prevStructHeaded = true;
 		
-		//make WLCommand refer to list of WLCommands rather than just one??
-		structToAppendCommandStr.set_WLCommand(curCommand);
+		//make WLCommand refer to list of WLCommands rather than just one.
+		//Wrapper used here during build().
+		WLCommandWrapper curCommandWrapper = structToAppendCommandStr.add_WLCommandWrapper(curCommand);
+		//structToAppendCommandStr.set_WLCommand(curCommand);
 		
 		for(PosTerm term : posTermList){
 			
 			if(!term.includeInBuiltString){ 				
 				//set its head Struct to structToAppendCommandStr,
 				Struct nextStruct = term.posTermStruct;
+				//get WLCommandWrapperList
 				if(nextStruct != null){
+					updateWrapper(nextStruct, structToAppendCommandStr);
+				
+				//if(nextStruct != null){
+				//if != null, some Wrappers have been added, so already associated to some commands.
+				/*if(nextStructWrapperList != null){						
 					if(nextStruct.structToAppendCommandStr() == null){
 						nextStruct.set_structToAppendCommandStr(structToAppendCommandStr);					
 					}else{
@@ -246,6 +281,10 @@ public class WLCommand {
 						nextStruct.structToAppendCommandStr().WLCommand().structsWithOtherHeadCount--;
 						nextStruct.set_structToAppendCommandStr(structToAppendCommandStr);
 					}
+				} */
+					// if != null, some Wrappers have been added, so already
+					// associated to some commands.					
+					
 				}
 				continue;
 			}
@@ -269,7 +308,7 @@ public class WLCommand {
 					//****it should be better to not set to null here, but 
 					// set to null altogether after entire dfs iteration
 					nextStruct.set_previousBuiltStruct(null);						
-					continue;	
+					//continue;	
 				}
 				
 				/*if(nextStruct.posteriorBuiltStruct() != null){ 
@@ -292,14 +331,14 @@ public class WLCommand {
 				nextStruct.set_previousBuiltStruct(structToAppendCommandStr);
 				structToAppendCommandStr.set_posteriorBuiltStruct(nextStruct);				
 				
-				if(nextStruct.structToAppendCommandStr() == null){
-					nextStruct.set_structToAppendCommandStr(structToAppendCommandStr);	
+				prevStructHeaded = updateWrapper(nextStruct, structToAppendCommandStr);
+				/*if(nextStruct.structToAppendCommandStr() == null){						
 					prevStructHeaded = false;
 				}else{
 					//already been assigned to a different head
-					nextStruct.structToAppendCommandStr().WLCommand().structsWithOtherHeadCount--;
-					nextStruct.set_structToAppendCommandStr(structToAppendCommandStr);					
+					nextStruct.structToAppendCommandStr().WLCommand().structsWithOtherHeadCount--;									
 				}
+				nextStruct.set_structToAppendCommandStr(structToAppendCommandStr); */
 				
 			}else if(positionInMap == WLCommandsList.WLCOMMANDINDEX){
 				
@@ -314,13 +353,14 @@ public class WLCommand {
 					nextStruct.set_previousBuiltStruct(structToAppendCommandStr);
 					structToAppendCommandStr.set_posteriorBuiltStruct(nextStruct);
 					
-					if(nextStruct.structToAppendCommandStr() == null){
+					updateWrapper(nextStruct, structToAppendCommandStr);
+					/*if(nextStruct.structToAppendCommandStr() == null){
 						nextStruct.set_structToAppendCommandStr(structToAppendCommandStr);					
 					}else{
 						//already been assigned to a different head
 						nextStruct.structToAppendCommandStr().WLCommand().structsWithOtherHeadCount--;
 						nextStruct.set_structToAppendCommandStr(structToAppendCommandStr);
-					}
+					} */
 				}				
 			}else {
 				//if(prevStruct != null && prevStruct.structToAppendCommandStr() == null )
@@ -334,6 +374,8 @@ public class WLCommand {
 			commandString += nextWord + " ";
 		}
 		System.out.print("BUILT COMMAND: " + commandString);
+		
+		curCommandWrapper.append_WLCommandStr(commandString);
 		return commandString;
 	}
 	

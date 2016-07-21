@@ -2,6 +2,7 @@ package thmp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map.Entry;
 import static thmp.ParseToWLTree.WLCommandWrapper;
 
@@ -14,9 +15,11 @@ public class StructH<H> extends Struct{
 	//the number of times this WLCommandStr has been visited.
 	//To not repeat, print only when this is even
 	private int WLCommandStrVisitedCount;
-	//WLCommand associated with this Struct, should have corresponding WLCommandStr.
-	//Perhaps group the WLCommandStr with this into the WLCommand?
-	private WLCommand WLCommand;
+	//List of WLCommandWrapper associated with this Struct, should have 
+	//corresponding WLCommandStr. Each Wrapper contains its index in list.
+	//private WLCommand WLCommand;
+	private List<WLCommandWrapper> WLCommandWrapperList;
+
 	//pointer to the head of a previously built Struct that already
 	//contains this Struct, so no need to build this Struct again into the current 
 	//WLCommand in build(), remember to reset to null after iterating through
@@ -25,7 +28,6 @@ public class StructH<H> extends Struct{
 	//the head Struct (to append to) of a WLCommand this Struct currently belongs to.
 	//Not intrinsic to this Struct!
 	private Struct structToAppendCommandStr;
-	private WLCommandWrapper WLCommandWrapper;
 	//parentStruct is *not* unique! Depends on which DFS path we take.
 	private Struct parentStruct;
 	private boolean hasChild = false;
@@ -83,7 +85,7 @@ public class StructH<H> extends Struct{
 	public Struct parentStruct(){
 		return this.parentStruct;
 	}
-	
+	/*
 	@Override
 	public void append_WLCommandStr(String WLCommandStr){
 		this.WLCommandStr = this.WLCommandStr == null ? "" : this.WLCommandStr;
@@ -95,15 +97,12 @@ public class StructH<H> extends Struct{
 		this.WLCommandStr = null;
 	}
 	
-	/**
-	 * Retrieves the WLCommandStr
-	 * @return
-	 */
 	@Override
 	public String WLCommandStr(){
 		return this.WLCommandStr;
 	}
-		
+	*/
+	
 	public void set_struct(HashMap<String, String> struct){
 		this.struct = struct;
 	}
@@ -237,23 +236,42 @@ public class StructH<H> extends Struct{
 	}
 	
 	/**
-	 * Set the WLCommand.
+	 * Set the WLCommandWrapper.
 	 * @param newCommand
 	 */
-	public void set_WLCommandWrapper(WLCommandWrapper newCommandWrapper){
+	/*public void set_WLCommandWrapper(WLCommandWrapper newCommandWrapper){
 		this.WLCommandWrapper = newCommandWrapper;
+	} */
+	
+	public List<WLCommandWrapper> WLCommandWrapperList(){
+		return this.WLCommandWrapperList;
 	}
 	
 	/**
-	 * Retrieves corrsponding WLCommand.
+	 * Retrieves corresponding WLCommandWrapper.
 	 * @return
 	 */
-	public WLCommandWrapper WLCommandWrapper(){
-		return this.WLCommandWrapper;
+	public WLCommand WLCommandWrapper(WLCommandWrapper curCommandWrapper){
+		return this.WLCommandWrapperList.get(curCommandWrapper.listIndex()).WLCommand();
+	}
+
+	/**
+	 * Create WLCommandWrapper from WLCommand.
+	 * Add it to list of WLCommandWrappers.
+	 * @return
+	 */
+	public WLCommandWrapper add_WLCommandWrapper(WLCommand curCommand){		
+		if(this.WLCommandWrapperList == null){
+			this.WLCommandWrapperList = new ArrayList<WLCommandWrapper>();
+		}
+		int listIndex = this.WLCommandWrapperList.size();
+		WLCommandWrapper curCommandWrapper = new WLCommandWrapper(curCommand, listIndex);
+		this.WLCommandWrapperList.add(curCommandWrapper);
+		return curCommandWrapper;
 	}
 	
 	/**
-	 * Simple toString to return the bare minimum to presetn this Struct.
+	 * Simple toString to return the bare minimum to present this Struct.
 	 * To be used in ParseToWLTree.
 	 * @return
 	 */
@@ -261,9 +279,18 @@ public class StructH<H> extends Struct{
 	public String simpleToString(){
 		//if(this.posteriorBuiltStruct != null) return "";
 		this.WLCommandStrVisitedCount++;
-		if(this.WLCommandStr != null){
+		// instead of checking WLCommandStr, check if wrapperList is null
+		// ie if any command has been assigned to this Struct yet. If yes,
+		// get the last one (might want the one with highest commandsWithOtherHead
+		// later.
+		/*if(this.WLCommandStr != null){
 			return this.WLCommandStr;
-		}
+		} */
+		if(this.WLCommandWrapperList != null){
+			int wrapperListSz = WLCommandWrapperList.size();
+			//wrapperListSz should be > 0, since list is created when first wrapper is added
+			return WLCommandWrapperList.get(wrapperListSz - 1).WLCommandStr();			
+		}		
 		//String name = this.struct.get("name");
 		//return name == null ? this.type : name;
 		return this.simpleToString2("");
@@ -280,7 +307,7 @@ public class StructH<H> extends Struct{
 		int childrenSize = children.size();
 		for(int i = 0; i < childrenSize; i++){			
 			Struct child = children.get(i);
-			if(child.WLCommandStr() != null)
+			if(child.WLCommandWrapperList() != null)
 				continue;
 			str += ", ";
 			//str += childRelation.get(i) + " ";			

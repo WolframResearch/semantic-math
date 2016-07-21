@@ -1,8 +1,9 @@
 package thmp;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
+
+import thmp.ParseToWLTree.WLCommandWrapper;
 
 /*
  * Struct to contain entities in sentence
@@ -60,18 +61,18 @@ public abstract class Struct {
 	
 	public abstract String simpleToString2(String str);
 	
-	public abstract void append_WLCommandStr(String WLCommandStr);
+	//public abstract void append_WLCommandStr(String WLCommandStr);
 
 	/**
 	 * Sets WLCommandStr to null.
 	 */
-	public abstract void clear_WLCommandStr();
-
-	public abstract String WLCommandStr();
+	//public abstract void clear_WLCommandStr();
 	
-	public abstract void set_WLCommand(WLCommand newCommand);
+	//public abstract String WLCommandStr();
 	
-	public abstract WLCommand WLCommand();
+	public abstract WLCommandWrapper add_WLCommandWrapper(WLCommand newCommand);
+	
+	public abstract List<WLCommandWrapper> WLCommandWrapperList();
 	
 	public abstract int numUnits();
 	

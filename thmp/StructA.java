@@ -3,6 +3,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import thmp.ParseToWLTree.WLCommandWrapper;
+
 public class StructA<A, B> extends Struct{
 
 	//a Struct can correspond to many MatrixPathNode's, but each MatrixPathNode 
@@ -22,10 +24,10 @@ public class StructA<A, B> extends Struct{
 	//list of Struct at mx element, to which this Struct belongs
 	//pointer to mx.get(i).get(j)
 	//if not null, means this is head of some parsed WLCommand. 
-	private String WLCommandStr;
+	//private String WLCommandStr;
 	//WLCommand associated with this Struct, should have corresponding WLCommandStr.
 	//Perhaps group the WLCommandStr with this into the WLCommand?
-	private WLCommand WLCommand;
+	private List<WLCommandWrapper> WLCommandWrapperList;
 	//how many times this Struct has been part of a WLCommand.
 	private int WLCommandStrVisitedCount;
 	//pointer to the head of a previously built Struct that already
@@ -87,7 +89,7 @@ public class StructA<A, B> extends Struct{
 		newStruct.maxDownPathScore = this.maxDownPathScore;
 		newStruct.numUnits = this.numUnits;
 		newStruct.score = this.score;
-		newStruct.WLCommandStr = this.WLCommandStr;
+		//newStruct.WLCommandStr = this.WLCommandStr;
 		return newStruct;
 	}
 	
@@ -108,43 +110,61 @@ public class StructA<A, B> extends Struct{
 	public int WLCommandStrVisitedCount(){
 		return this.WLCommandStrVisitedCount;
 	}
-	
-	/**
-	 * Set the WLCommand.
-	 * @param newCommand
-	 */
-	public void set_WLCommand(WLCommand newCommand){
-		this.WLCommand = newCommand;
+
+	public List<WLCommandWrapper> WLCommandWrapperList(){
+		return this.WLCommandWrapperList;
 	}
 	
 	/**
-	 * Retrieves corrsponding WLCommand.
+	 * Retrieves corresponding WLCommandWrapper.
 	 * @return
 	 */
-	public WLCommand WLCommand(){
-		return this.WLCommand;
+	public WLCommand WLCommandWrapper(WLCommandWrapper curCommandWrapper){		
+		return this.WLCommandWrapperList.get(curCommandWrapper.listIndex()).WLCommand();
+	}
+
+	/**
+	 * Create WLCommandWrapper from WLCommand.
+	 * Add it to list of WLCommandWrappers.
+	 * @return the created Wrapper.
+	 */
+	public WLCommandWrapper add_WLCommandWrapper(WLCommand curCommand){		
+		if(this.WLCommandWrapperList == null){
+			this.WLCommandWrapperList = new ArrayList<WLCommandWrapper>();
+		}
+		int listIndex = this.WLCommandWrapperList.size();
+		WLCommandWrapper curCommandWrapper = new WLCommandWrapper(curCommand, listIndex);
+		this.WLCommandWrapperList.add(curCommandWrapper);
+		return curCommandWrapper;
 	}
 	
 	@Override
 	public String simpleToString(){
 		//if(this.posteriorBuiltStruct != null) return "";
+		
 		//been built into one command already
 		this.WLCommandStrVisitedCount++;
-		if(this.WLCommandStr != null){
-			return this.WLCommandStr;
-		}
+		if(this.WLCommandWrapperList != null){
+			int wrapperListSz = WLCommandWrapperList.size();
+			//wrapperListSz should be > 0, since list is created when first wrapper is added
+			return WLCommandWrapperList.get(wrapperListSz - 1).WLCommandStr();			
+		}		
+		
 		A name = this.prev1;
 		return name instanceof String ? (String)name : this.simpleToString2("");
 	}
 	
 	//auxilliary method for simpleToString and called inside StructH.simpleToString2
 	public String simpleToString2(String str){
-		if(this.WLCommandStr != null) return "";
+		//return "" if commandStr is not null (??)
+		//if(this.WLCommandStr != null) return "";
+		if(this.WLCommandWrapperList != null) return "";
 		
 		str += this.type.matches("conj_.*|disj_.*") ? this.type.split("_")[0] +  " " : "";		
 
 		if(this.prev1 != null && !prev1.equals("")){
-			if(prev1 instanceof Struct && ((Struct) prev1).WLCommandStr() == null){
+			//if(prev1 instanceof Struct && ((Struct) prev1).WLCommandStr() == null){
+			if(prev1 instanceof Struct && ((Struct) prev1).WLCommandWrapperList() == null){
 				str = ((Struct) prev1).simpleToString2(str);
 				
 			}else if(prev1 instanceof String){
@@ -155,7 +175,7 @@ public class StructA<A, B> extends Struct{
 		}
 		
 		if(prev2 != null && !prev2.equals("")){
-			if(prev2 instanceof Struct && ((Struct) prev2).WLCommandStr() == null){
+			if(prev2 instanceof Struct && ((Struct) prev2).WLCommandWrapperList() == null){
 				str = ((Struct) prev2).simpleToString2(str + ", ");
 			}else if(prev2 instanceof String){
 				str += ", " + prev2;
@@ -232,26 +252,6 @@ public class StructA<A, B> extends Struct{
 	
 	public void set_structToAppendCommandStr(Struct structToAppendCommandStr){
 		this.structToAppendCommandStr = structToAppendCommandStr;
-	}
-	
-	@Override
-	public void append_WLCommandStr(String WLCommandStr){
-		this.WLCommandStr = this.WLCommandStr == null ? "" : this.WLCommandStr;
-		this.WLCommandStr += " " + WLCommandStr;
-	}
-	
-	@Override
-	public void clear_WLCommandStr(){
-		this.WLCommandStr = null;
-	}
-	
-	/**
-	 * Retrieves the WLCommandStr
-	 * @return
-	 */
-	@Override
-	public String WLCommandStr(){
-		return this.WLCommandStr;
 	}
 
 	

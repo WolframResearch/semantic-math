@@ -466,13 +466,34 @@ public class ParseToWLTree {
 
 			String curCommandString = WLCommand.build(curCommand, structToAppendCommandStr);
 			
-			structToAppendCommandStr.append_WLCommandStr(curCommandString);
+			//now append Str to wrapper inside build()
+			//structToAppendCommandStr.append_WLCommandStr(curCommandString);
+			
 			//parentStruct.append_WLCommandStr(curCommandString);
 			//System.out.println(curCommandString);
 		}
 		
 	}
-	
+	/**
+	 * iterate through the WrapperList backwards, append the first encounter 
+		whose structsWithOtherHeadCount() lies above the set threshold.
+		don't append if none exists
+	 */
+	private static void appendWLCommandStr(Struct struct, StringBuilder parsedSB){
+		List<WLCommandWrapper> structWrapperList = struct.WLCommandWrapperList();
+		int structWrapperListSz = structWrapperList.size();
+		for(int i = structWrapperListSz - 1; i > -1; i--){
+			WLCommandWrapper curWrapper = structWrapperList.get(i);
+			WLCommand curCommand = curWrapper.WLCommand;
+			if(WLCommand.structsWithOtherHeadCount(curCommand) 
+					> WLCommand.totalComponentCount(curCommand) - 1){
+				//System.out.println(struct.WLCommandStr());
+				//parsedSB.append(struct.WLCommandStr());
+				parsedSB.append(curWrapper.WLCommandStr);
+				break;
+			}
+		}
+	}
 	/**
 	 * DFS for collecting the WLCommandStr's, instead of using the default 
 	 * representations of the Struct's. To achieve a presentation that's closer
@@ -484,17 +505,20 @@ public class ParseToWLTree {
 		//don't append if already incorporated into a higher command
 		//System.out.print(struct.WLCommandStrVisitedCount());
 		//WLComamnd() should not be null if WLCommandStr is not null
-		if(struct.WLCommandStr() != null && struct.WLCommandStrVisitedCount() < 1
-				 ){
-			if(WLCommand.structsWithOtherHeadCount(struct.WLCommand()) 
+		//if(struct.WLCommandStr() != null && struct.WLCommandStrVisitedCount() < 1){		
+		if(struct.WLCommandWrapperList() != null && struct.WLCommandStrVisitedCount() < 1){		
+			/*if(WLCommand.structsWithOtherHeadCount(struct.WLCommand()) 
 				> WLCommand.totalComponentCount(struct.WLCommand()) -2){
 				//if(struct.WLCommandStr() != null ){
 				parsedSB.append(struct.WLCommandStr());
-			}
+			} */
+			appendWLCommandStr(struct, parsedSB);
+			
 			shouldPrint = false;
 			//reset WLCommandStr back to null, so next 
 			//dfs path can create it from scratch
-			struct.clear_WLCommandStr();
+			//no need to do so as wrapper instances are created anew each dfs run
+			//struct.clear_WLCommandStr();
 			//nested commands should have some Struct in its posList 
 			//that already contains sub nested commands' WLCommandStr.
 			//return;
@@ -568,16 +592,20 @@ public class ParseToWLTree {
 		/**
 		 * Wraps around a WLCommand to put in list in each Struct,
 		 * contains a WLCommand instance, and its index in list,
-		 * in order the commands are built: inner -> outer, earlier ->
+		 * in the order the commands are built: inner -> outer, earlier ->
 		 * later.
 		 */
-		private WLCommand curCommand;
+		private WLCommand WLCommand;
 		private int listIndex;
+		//built command String associated with this command.
+		private String WLCommandStr;
 		
-		public WLCommandWrapper(WLCommand curCommand){
-			this.curCommand = curCommand;
+		public WLCommandWrapper(WLCommand curCommand, int listIndex){			
+			this.WLCommand = curCommand;
+			this.listIndex = listIndex;
 		}
 		
+		//shouldn't need this
 		public void set_listIndex(int index){
 			this.listIndex = index;
 		}
@@ -585,5 +613,23 @@ public class ParseToWLTree {
 		public int listIndex(){
 			return this.listIndex;
 		}
+		
+		public WLCommand WLCommand(){
+			return this.WLCommand;
+		}
+		
+		public String WLCommandStr(){
+			return this.WLCommandStr;
+		}
+		
+		public void append_WLCommandStr(String WLCommandStr){
+			this.WLCommandStr = this.WLCommandStr == null ? "" : this.WLCommandStr;
+			this.WLCommandStr += " " + WLCommandStr;
+		}		
+		
+		public void clear_WLCommandStr(){
+			this.WLCommandStr = null;
+		}
+		
 	}
 }

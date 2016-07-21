@@ -220,7 +220,7 @@ public class ThmP1Test {
 			//st = "take the log of derivative of f";
 			st = "$f$ is element of $f$";
 			//st = "there exists a universal property";
-			st = "f is an element of a set";
+			//st = "f is an element of a set";
 			//st = "given an element of a set $S$";
 			//st = "f is a function with radius of convergence r and finitely many roots";
 			//st = "f is a function with radius of convergence r";
