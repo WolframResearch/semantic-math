@@ -1398,8 +1398,9 @@ public class ThmP1 {
 				ParseToWLTree.dfs(uHeadStruct, parseStructSB, headParseStruct, 0);
 				System.out.println("\n DONE ParseStruct DFS \n");
 				StringBuilder wlSB = new StringBuilder();
-				ParseToWLTree.dfs(uHeadStruct, wlSB, true);
+				ParseToWLTree.dfs(uHeadStruct, wlSB, true);				
 				System.out.println(wlSB);
+				ParseToWLTree.dfsCleanUp(uHeadStruct);
 				System.out.println("~~~ DONE WLCommands DFS ~~~");
 				//*******
 				

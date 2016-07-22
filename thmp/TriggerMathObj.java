@@ -214,27 +214,39 @@ public class TriggerMathObj {
 		}
 		
 		getChildrenNames(struct, triggerTermList);
-		
+		System.out.println("TRIGGERTERMLIST " + triggerTermList);
 		String highestMathObj = get_HighestMathObj(triggerTermList);
 		
-		String namePpt = ((StructH<?>)struct).append_name_pptStr();
-		
 		String r = highestMathObj.matches("") ? "MathObj" : highestMathObj;
+		
+		//String namePpt = ((StructH<?>)struct).append_name_pptStr();
+		String namePpt = struct.simpleToString();
 		
 		return r + "[" + namePpt + "]";
 	}
 	
+	/**
+	 * Retrieves the Sting representation of names of the children.
+	 * @param struct
+	 * @param childrenNameList
+	 */
 	private static void getChildrenNames(Struct struct, List<String> childrenNameList){
 		//note for StructA, has_child == false
 		if(struct instanceof StructA || !struct.has_child()) return; 
 		List<Struct> children = struct.children();
 		for(Struct child : children){
-			String namePpt = ((StructH<?>)child).append_name_pptStr();			
-			childrenNameList.add(namePpt);
-			getChildrenNames(child, childrenNameList);
+			//don't cast, make abstract method in Struct
+			if(child instanceof StructH){
+				String namePpt = ((StructH<?>)child).append_name_pptStr();	
+				
+				childrenNameList.add(namePpt);
+				getChildrenNames(child, childrenNameList);
+			}else{
+				System.out.println("\n namePPT " + child.present(""));
+			}
+			
 		}
 		
-	}
-	
+	}	
 	
 }

@@ -207,23 +207,24 @@ public class ThmP1Test {
 			st = "for some submodule $MM$, where $MM$ is a submodule of N";
 			st = "where $m$ is an element of $M$";
 			//st = "if $m$ is an integer where $m$ is an element of $M$";
-			//st = "take the derivative of f";
-			st = "take the log of derivative of f";
-			st = "let f be an element of a field";
-			st = "take the union of subsets of F";
-			st = "$m$ is an element of $M$";
-			st = "where $MM$ is a element of N";
-			st = "let S be the union of elements of a field";
+			st = "take the derivative of f";
+			st = "derivative of f";
+			//st = "let f be an element of a field";
+			//st = "take the union of subsets of F";
+			//st = "$m$ is an element of $M$";
+			//st = "where $MM$ is a element of N";
+			//st = "let S be the union of elements of a field"; //***
 			//st = "let $a$ or $b$ be elements of a field";
 			//st = "let $s \\subset S$ be an element of a set";
 			//st = " B or C is true";
-			//st = "take the log of derivative of f";
-			st = "$f$ is element of $f$";
+			st = "take the log of derivative of f"; //brackets missing!
+			//st = "$f$ is element of $f$";
 			//st = "there exists a universal property";
 			//st = "f is an element of a set";
 			//st = "given an element of a set $S$";
 			//st = "f is a function with radius of convergence r and finitely many roots";
 			//st = "f is a function with radius of convergence r";
+			//st = "f is function with radius";
 			//st = "$f$ is a set";
 			//st = "the derivative is $f=s$";
 			

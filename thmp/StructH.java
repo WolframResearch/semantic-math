@@ -211,6 +211,10 @@ public class StructH<H> extends Struct{
 		return this.WLCommandStrVisitedCount;
 	}
 	
+	public void clear_WLCommandStrVisitedCount(){
+		this.WLCommandStrVisitedCount = 0;
+	}
+	
 	public Struct previousBuiltStruct(){
 		return this.previousBuiltStruct;
 	}
@@ -245,6 +249,10 @@ public class StructH<H> extends Struct{
 	
 	public List<WLCommandWrapper> WLCommandWrapperList(){
 		return this.WLCommandWrapperList;
+	}
+	
+	public void clear_WLCommandWrapperList(){
+		this.WLCommandWrapperList = null;
 	}
 	
 	/**
@@ -293,11 +301,12 @@ public class StructH<H> extends Struct{
 		}		
 		//String name = this.struct.get("name");
 		//return name == null ? this.type : name;
-		return this.simpleToString2("");
+		return this.simpleToString2();
 	}
 	
 	//auxilliary method for simpleToString and StructA.simpleToString
-	public String simpleToString2(String str){
+	public String simpleToString2(){
+		String str = "";
 		str += this.type.equals("ent") ? "MathObj" : this.type;
 		str += "{";
 		
@@ -309,11 +318,14 @@ public class StructH<H> extends Struct{
 			Struct child = children.get(i);
 			if(child.WLCommandWrapperList() != null)
 				continue;
-			str += ", ";
-			//str += childRelation.get(i) + " ";			
-			str = child.simpleToString2(str);	
-		}
-		
+			//str += ", ";
+			//str += childRelation.get(i) + " ";	
+			String childStr = child.simpleToString2();
+			//str += childStr;	
+			if(!childStr.matches("\\s*")){
+				str += ", " + childStr;				
+			}
+		}		
 		str += "}";
 
 		return str;

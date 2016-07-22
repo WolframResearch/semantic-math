@@ -220,20 +220,21 @@ public class WLCommand {
 	 * @return Whether nextStruct already has associated head.
 	 */
 	private static boolean updateWrapper(Struct nextStruct, Struct structToAppendCommandStr){
-		List<WLCommandWrapper> nextStructWrapperList = nextStruct.WLCommandWrapperList();
-		boolean prevStructHeaded = true; 
-		if (nextStructWrapperList != null) {
+		//List<WLCommandWrapper> nextStructWrapperList = nextStruct.WLCommandWrapperList();
+		Struct headStruct = nextStruct.structToAppendCommandStr();
+		boolean prevStructHeaded = false; 
+		if (headStruct != null) {
 			// in this case structToAppendCommandStr should not be
 			// null either
-			Struct headStruct = nextStruct.structToAppendCommandStr();
+			//System.out.println("listSIZE" + nextStructWrapperList.size());
+			//System.out.println("NEXTSTRUCT" + nextStruct);
 			// set the headCount of the last wrapper object
 			List<WLCommandWrapper> headStructWrapperList = headStruct.WLCommandWrapperList();
-			int wrapperListSz = headStructWrapperList.size();
+			int wrapperListSz = headStructWrapperList.size();			
 			WLCommand lastWrapperCommand = headStructWrapperList.get(wrapperListSz-1).WLCommand();						
 			lastWrapperCommand.structsWithOtherHeadCount--;
 			System.out.println("Wraper Counte: " + lastWrapperCommand.structsWithOtherHeadCount);
-		}else{
-			prevStructHeaded = false;
+			prevStructHeaded = true;
 		}
 		nextStruct.set_structToAppendCommandStr(structToAppendCommandStr);
 		return prevStructHeaded;
@@ -255,7 +256,7 @@ public class WLCommand {
 		//use StringBuilder!
 		String commandString = "";
 		//the latest Struct to be touched, for determining if an aux String should be displayed
-		boolean prevStructHeaded = true;
+		boolean prevStructHeaded = false;
 		
 		//make WLCommand refer to list of WLCommands rather than just one.
 		//Wrapper used here during build().
@@ -364,7 +365,7 @@ public class WLCommand {
 				}				
 			}else {
 				//if(prevStruct != null && prevStruct.structToAppendCommandStr() == null )
-				//auxilliary Strings, eg "[", "\[Element]"	
+				//auxilliary Strings inside a WLCommand, eg "[", "\[Element]"	
 				if(!prevStructHeaded){
 					nextWord = term.commandComponent.posTerm;
 				}
@@ -373,6 +374,7 @@ public class WLCommand {
 			
 			commandString += nextWord + " ";
 		}
+		System.out.println("CUR COMMAND: " + curCommand + " ");
 		System.out.print("BUILT COMMAND: " + commandString);
 		
 		curCommandWrapper.append_WLCommandStr(commandString);

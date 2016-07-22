@@ -41,6 +41,8 @@ public abstract class Struct {
 	
 	public abstract int WLCommandStrVisitedCount();
 	
+	public abstract void clear_WLCommandStrVisitedCount();
+	
 	public abstract void set_structList(StructList structList);
 
 	/**
@@ -59,7 +61,7 @@ public abstract class Struct {
 	//To be used in ParseToWLTree.
 	public abstract String simpleToString();
 	
-	public abstract String simpleToString2(String str);
+	public abstract String simpleToString2();
 	
 	//public abstract void append_WLCommandStr(String WLCommandStr);
 
@@ -73,6 +75,8 @@ public abstract class Struct {
 	public abstract WLCommandWrapper add_WLCommandWrapper(WLCommand newCommand);
 	
 	public abstract List<WLCommandWrapper> WLCommandWrapperList();
+	
+	public abstract void clear_WLCommandWrapperList();
 	
 	public abstract int numUnits();
 	

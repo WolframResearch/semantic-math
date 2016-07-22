@@ -93,10 +93,10 @@ public class WLCommandsList {
 		// label a term to use to trigger a mathObj, communicate to posList,
 		// posList dynamically builds command
 		// using TriggerMathObj.
-		WLCommandMapBuilder.put("is", addCommand(new String[] { "symb|ent, , true", "verb|vbs, is|are|be, trigger",
-				"\\[Element]", "symb|ent, , true" }));
+		//WLCommandMapBuilder.put("is", addCommand(new String[] { "symb|ent, , true", "verb|vbs, is|are|be, trigger",
+			//	"\\[Element]", "symb|ent, , true" }));
 		WLCommandMapBuilder.put("subset",
-				addCommand(new String[] { "Subset, WL-subset, true", "[", "pre, of, false", "symb|ent, , true", "]" }));
+				addCommand(new String[] { "Subset, WL, true", "[", "pre, of, false", "symb|ent, , true", "]" }));
 		// $f=\sum i$ with radius of convergence $r$
 		WLCommandMapBuilder.put("convergence", addCommand(new String[] { "symb|ent, , true", "\\subset",
 				", radius, false", ", convergence, trigger", "Function[ 'radius' ", "]" }));

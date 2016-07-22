@@ -110,9 +110,17 @@ public class StructA<A, B> extends Struct{
 	public int WLCommandStrVisitedCount(){
 		return this.WLCommandStrVisitedCount;
 	}
-
+	
+	public void clear_WLCommandStrVisitedCount(){
+		this.WLCommandStrVisitedCount = 0;
+	}
+	
 	public List<WLCommandWrapper> WLCommandWrapperList(){
 		return this.WLCommandWrapperList;
+	}
+	
+	public void clear_WLCommandWrapperList(){
+		this.WLCommandWrapperList = null;
 	}
 	
 	/**
@@ -151,21 +159,22 @@ public class StructA<A, B> extends Struct{
 		}		
 		
 		A name = this.prev1;
-		return name instanceof String ? (String)name : this.simpleToString2("");
+		return name instanceof String ? (String)name : this.simpleToString2();
 	}
 	
 	//auxilliary method for simpleToString and called inside StructH.simpleToString2
-	public String simpleToString2(String str){
+	public String simpleToString2(){
 		//return "" if commandStr is not null (??)
 		//if(this.WLCommandStr != null) return "";
 		if(this.WLCommandWrapperList != null) return "";
 		
+		String str = "";		
 		str += this.type.matches("conj_.*|disj_.*") ? this.type.split("_")[0] +  " " : "";		
 
 		if(this.prev1 != null && !prev1.equals("")){
 			//if(prev1 instanceof Struct && ((Struct) prev1).WLCommandStr() == null){
 			if(prev1 instanceof Struct && ((Struct) prev1).WLCommandWrapperList() == null){
-				str = ((Struct) prev1).simpleToString2(str);
+				str += ((Struct) prev1).simpleToString2();
 				
 			}else if(prev1 instanceof String){
 				if(!type.matches("pre|partiby")){
@@ -176,7 +185,7 @@ public class StructA<A, B> extends Struct{
 		
 		if(prev2 != null && !prev2.equals("")){
 			if(prev2 instanceof Struct && ((Struct) prev2).WLCommandWrapperList() == null){
-				str = ((Struct) prev2).simpleToString2(str + ", ");
+				str += ((Struct) prev2).simpleToString2() + ", ";
 			}else if(prev2 instanceof String){
 				str += ", " + prev2;
 			}

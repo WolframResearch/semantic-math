@@ -449,7 +449,7 @@ public class ParseToWLTree {
 			//Struct posTermStruct = posTermList.get(0).posTermStruct(); 
 			List<Struct> posTermStructList = WLCommand.getStructList(curCommand, firstPosTerm.commandComponent());
 			//System.out.println(firstPosTerm);
-			//currently just get the first Struct in list, not canonical at all
+			//currently just get the first Struct in list, not canonical at all			
 			Struct posTermStruct = posTermStructList.get(0);
 			
 			Struct structToAppendCommandStr = posTermStruct;
@@ -573,6 +573,41 @@ public class ParseToWLTree {
 				dfs(children.get(i), parsedSB, shouldPrint);
 			}
 			if(shouldPrint) parsedSB.append("]");
+		}
+	}
+	
+	/**
+	 * Cleans up after a dfs run, sets relevant properties attached to Struct nodes
+	 * to null.
+	 */
+	public static void dfsCleanUp(Struct struct) {
+		
+		struct.clear_WLCommandWrapperList();
+		struct.clear_WLCommandStrVisitedCount();		
+		struct.set_previousBuiltStruct(null);
+		struct.set_structToAppendCommandStr(null);
+		
+		if (struct instanceof StructA) {
+			
+			if (struct.prev1() instanceof Struct) {
+				dfsCleanUp((Struct) struct.prev1());
+			}
+
+			if (struct.prev2() instanceof Struct) {				
+				dfsCleanUp((Struct) struct.prev2());
+			}
+			
+		} else if (struct instanceof StructH) {
+
+			List<Struct> children = struct.children();
+			
+			if (children == null || children.size() == 0)
+				return;
+			
+			for (int i = 0; i < children.size(); i++) {
+				
+				dfsCleanUp(children.get(i));
+			}
 		}
 	}
 	
