@@ -185,7 +185,7 @@ public class ParseToWLTree {
 					//int curStructDequeIndex = structDequeIndex;
 					//iterate through Deque backwards
 					//Iterator<Struct> dequeReverseIter = structDeque.descendingIterator();
-					int dequeIterCounter = structDeque.size() - 1;
+					//int dequeIterCounter = structDeque.size() - 1;
 					//int dequeIterCounter = structDequeStartIndex;
 					
 					for(int k = structDequeStartIndex; k > -1; k--){
@@ -205,21 +205,32 @@ public class ParseToWLTree {
 						
 						if(curStructInDequeType.matches(curCommandComponent.posTerm())
 								&& nameStr.matches(curCommandComponent.name())
-								&& !usedStructsBool[dequeIterCounter] ){
-							//&& curStructInDeque.name().matches(curCommandComponent.name())
+								&& !usedStructsBool[k] ){
 							//see if name matches, if match, move on, continue outer loop
 							//need a way to mark structs already matched! 
 							
-							//add struct to the matching Component if found a match							
-							//add at beginning since iterating backwards
-							waitingStructList.add(0, curStructInDeque);
-							curPosTerm.set_posTermStruct(curStructInDeque);
+							Struct structToAdd = curStructInDeque;
+							Struct curStructInDequeParent = curStructInDeque.parentStruct();
+							if(curStructInDequeParent != null){
+								String parentType = curStructInDequeParent.type().matches("conj_.*|disj_.*") ?
+										curStructInDequeParent.type().split("_")[1] : curStructInDequeParent.type();
+								if(parentType.matches(curCommandComponent.posTerm())){
+									structToAdd = curStructInDequeParent;
+								}
+							}
 							
-							usedStructsBool[dequeIterCounter] = true;
+							//add struct to the matching Component if found a match							
+							//add at beginning since iterating backwards							
+							waitingStructList.add(0, structToAdd);
+							curPosTerm.set_posTermStruct(structToAdd);
+							
+							//usedStructsBool[dequeIterCounter] = true;
+							usedStructsBool[k] = true;
+							//is earlier than k-1 if parent added instead. Need to know parent's index
 							structDequeStartIndex = k - 1;
 							continue posTermListLoop;
 						}
-						dequeIterCounter--;
+						//dequeIterCounter--;
 					}
 					curCommandSat = false;
 					//done iterating through deque, but no match found; curCommand cannot be satisfied

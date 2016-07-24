@@ -239,6 +239,7 @@ public class WLCommand {
 		nextStruct.set_structToAppendCommandStr(structToAppendCommandStr);
 		return prevStructHeaded;
 	}
+	
 	/**
 	 * Builds the WLCommand from commandsMap & posTermList after it's satisfied.
 	 * Should be called after being satisfied. 
@@ -257,8 +258,6 @@ public class WLCommand {
 		String commandString = "";
 		//the latest Struct to be touched, for determining if an aux String should be displayed
 		boolean prevStructHeaded = false;
-		
-		
 		
 		for(PosTerm term : posTermList){
 			
@@ -364,8 +363,9 @@ public class WLCommand {
 				//if(prevStruct != null && prevStruct.structToAppendCommandStr() == null )
 				//auxilliary Strings inside a WLCommand, eg "[", "\[Element]"	
 				if(!prevStructHeaded){
-					nextWord = term.commandComponent.posTerm;
+					//nextWord = term.commandComponent.posTerm;
 				}
+				nextWord = term.commandComponent.posTerm;
 				//System.out.print("nextWord : " + nextWord + "prevStruct: " + prevStructHeaded);
 			}
 			

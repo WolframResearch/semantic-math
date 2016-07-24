@@ -225,6 +225,7 @@ public class ThmP1Test {
 			st = "Let $R \\to S$ be an epimorphism of rings.";
 			st = "the cardinality of $S$ is at most the cardinality of $R$";
 			st = "the rank of f is at most n";
+			//st = "f is at most g";
 			//st = "let f be g";
 			//st = "there exists a universal property";
 			//st = "f is an element of a set";
