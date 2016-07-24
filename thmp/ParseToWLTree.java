@@ -88,6 +88,93 @@ public class ParseToWLTree {
 	}
 	
 	/**
+	 * Match the slots in posTermList with Structs in structDeque.
+	 * @param posTermList	posTermList for curCommand.
+	 * @param triggerWordIndex	Index of the trigger word.
+	 * @param usedStructsBool (Not really useful.)
+	 * @param waitingStructList	Temporary list to add Struct's to.
+	 * @return Whether the slots before triggerWordIndex have been satisfied.
+	 */
+	private static boolean findStructs(List<PosTerm> posTermList, int triggerWordIndex, boolean[] usedStructsBool,
+			List<Struct> waitingStructList){
+		//start from the word before the trigger word
+		//iterate through posTermList
+		//start index for next iteration of posTermListLoop
+		boolean curCommandSat = true;
+		int structDequeStartIndex = structDeque.size() - 1;
+		posTermListLoop: for(int i = triggerWordIndex - 1; i > -1; i--){
+			PosTerm curPosTerm = posTermList.get(i);
+			//auxilliary term
+			if(curPosTerm.positionInMap() < 0) continue;
+			
+			WLCommandComponent curCommandComponent = curPosTerm.commandComponent();
+			
+			//int curStructDequeIndex = structDequeIndex;
+			//iterate through Deque backwards
+			//Iterator<Struct> dequeReverseIter = structDeque.descendingIterator();
+			//int dequeIterCounter = structDeque.size() - 1;
+			//int dequeIterCounter = structDequeStartIndex;
+			
+			for(int k = structDequeStartIndex; k > -1; k--){
+			//for each struct in deque, go through list to match
+			//Need a way to tell if all filled
+				Struct curStructInDeque = structDeque.get(k);
+				//avoid repeating this: 
+				String nameStr = "";
+				if(curStructInDeque instanceof StructA && curStructInDeque.prev1() instanceof String){
+					nameStr = (String)curStructInDeque.prev1();
+				}else if(curStructInDeque instanceof StructH){
+					nameStr = curStructInDeque.struct().get("name");
+				}
+				
+				String curStructInDequeType = curStructInDeque.type().matches("conj_.*|disj_.*") ?
+						curStructInDeque.type().split("_")[1] : curStructInDeque.type();
+				
+				if(curStructInDequeType.matches(curCommandComponent.posTerm())
+						&& nameStr.matches(curCommandComponent.name())
+						&& !usedStructsBool[k] ){
+					//see if name matches, if match, move on, continue outer loop
+					//need a way to mark structs already matched! 
+					
+					Struct structToAdd = curStructInDeque;
+					Struct curStructInDequeParent = curStructInDeque.parentStruct();
+					if(curStructInDequeParent != null){
+						String parentType = curStructInDequeParent.type().matches("conj_.*|disj_.*") ?
+								curStructInDequeParent.type().split("_")[1] : curStructInDequeParent.type();
+						String componentType = curCommandComponent.posTerm();
+						String parentNameStr = "";
+						if(curStructInDequeParent instanceof StructA && curStructInDequeParent.prev1() instanceof String){
+							parentNameStr = (String)curStructInDequeParent.prev1();
+						}else if(curStructInDequeParent instanceof StructH){
+							parentNameStr = curStructInDequeParent.struct().get("name");
+						}
+						//should match both type and term
+						if(parentNameStr.matches(curCommandComponent.name()) && parentType.matches(componentType)){
+							structToAdd = curStructInDequeParent;
+						}
+					}
+					
+					//add struct to the matching Component if found a match							
+					//add at beginning since iterating backwards							
+					waitingStructList.add(0, structToAdd);
+					curPosTerm.set_posTermStruct(structToAdd);
+					
+					//usedStructsBool[dequeIterCounter] = true;
+					usedStructsBool[k] = true;
+					//is earlier than k-1 if parent added instead. Need to know parent's index
+					structDequeStartIndex = k - 1;
+					continue posTermListLoop;
+				}
+				//dequeIterCounter--;
+			}
+			curCommandSat = false;
+			//done iterating through deque, but no match found; curCommand cannot be satisfied
+			break;
+		}
+		return curCommandSat;
+	}
+	
+	/**
 	 * Searches through parse tree and matches with ParseStruct's.
 	 * Convert to visitor pattern!
 	 * 
@@ -100,7 +187,7 @@ public class ParseToWLTree {
 			List<Struct> structDeque, List<WLCommand> WLCommandList) {
 		//index used to keep track of where in Deque this stuct is
 		//to pop off at correct index later
-		int structDequeIndex = structDeque.size();
+		//int structDequeIndex = structDeque.size();
 		
 		//list of commands satisfied at this level
 		List<WLCommand> satisfiedCommands = new ArrayList<WLCommand>();
@@ -171,71 +258,9 @@ public class ParseToWLTree {
 				//array of booleans to keep track of which deque Struct's have been used
 				boolean[] usedStructsBool = new boolean[structDeque.size()];
 
-				//start from the word before the trigger word
-				//iterate through posTermList
-				//start index for next iteration of posTermListLoop
-				int structDequeStartIndex = structDeque.size() - 1;
-				posTermListLoop: for(int i = triggerWordIndex - 1; i > -1; i--){
-					PosTerm curPosTerm = posTermList.get(i);
-					//auxilliary term
-					if(curPosTerm.positionInMap() < 0) continue;
-					
-					WLCommandComponent curCommandComponent = curPosTerm.commandComponent();
-					
-					//int curStructDequeIndex = structDequeIndex;
-					//iterate through Deque backwards
-					//Iterator<Struct> dequeReverseIter = structDeque.descendingIterator();
-					//int dequeIterCounter = structDeque.size() - 1;
-					//int dequeIterCounter = structDequeStartIndex;
-					
-					for(int k = structDequeStartIndex; k > -1; k--){
-					//for each struct in deque, go through list to match
-					//Need a way to tell if all filled
-						Struct curStructInDeque = structDeque.get(k);
-						//avoid repeating this: 
-						String nameStr = "";
-						if(curStructInDeque instanceof StructA && curStructInDeque.prev1() instanceof String){
-							nameStr = (String)curStructInDeque.prev1();
-						}else if(curStructInDeque instanceof StructH){
-							nameStr = curStructInDeque.struct().get("name");
-						}
-						
-						String curStructInDequeType = curStructInDeque.type().matches("conj_.*|disj_.*") ?
-								curStructInDeque.type().split("_")[1] : curStructInDeque.type();
-						
-						if(curStructInDequeType.matches(curCommandComponent.posTerm())
-								&& nameStr.matches(curCommandComponent.name())
-								&& !usedStructsBool[k] ){
-							//see if name matches, if match, move on, continue outer loop
-							//need a way to mark structs already matched! 
-							
-							Struct structToAdd = curStructInDeque;
-							Struct curStructInDequeParent = curStructInDeque.parentStruct();
-							if(curStructInDequeParent != null){
-								String parentType = curStructInDequeParent.type().matches("conj_.*|disj_.*") ?
-										curStructInDequeParent.type().split("_")[1] : curStructInDequeParent.type();
-								if(parentType.matches(curCommandComponent.posTerm())){
-									structToAdd = curStructInDequeParent;
-								}
-							}
-							
-							//add struct to the matching Component if found a match							
-							//add at beginning since iterating backwards							
-							waitingStructList.add(0, structToAdd);
-							curPosTerm.set_posTermStruct(structToAdd);
-							
-							//usedStructsBool[dequeIterCounter] = true;
-							usedStructsBool[k] = true;
-							//is earlier than k-1 if parent added instead. Need to know parent's index
-							structDequeStartIndex = k - 1;
-							continue posTermListLoop;
-						}
-						//dequeIterCounter--;
-					}
-					curCommandSat = false;
-					//done iterating through deque, but no match found; curCommand cannot be satisfied
-					break;
-				}
+				//match the slots in posTermList with Structs in structDeque
+				curCommandSat = findStructs(posTermList, triggerWordIndex, usedStructsBool, waitingStructList);
+				
 				//curCommand's terms before trigger word are satisfied. 
 				if(curCommandSat){
 					boolean curCommandSatWhole = false;
@@ -488,12 +513,16 @@ public class ParseToWLTree {
 	}
 	/**
 	 * iterate through the WrapperList backwards, append the first encounter 
-		whose structsWithOtherHeadCount() lies above the set threshold.
-		don't append if none exists
+	 *	whose structsWithOtherHeadCount() lies above the set threshold.
+	 *	don't append if none exists.
+	 *	Append all that has structsWithOtherHeadCount equal to the total 
+	 *	component count, since those commands don't interfere with anything else.
 	 */
 	private static void appendWLCommandStr(Struct struct, StringBuilder parsedSB){
+		
 		List<WLCommandWrapper> structWrapperList = struct.WLCommandWrapperList();
 		int structWrapperListSz = structWrapperList.size();
+		System.out.println("HEAD: " + WLCommand.totalComponentCount(structWrapperList.get(0).WLCommand));
 		for(int i = structWrapperListSz - 1; i > -1; i--){
 			WLCommandWrapper curWrapper = structWrapperList.get(i);
 			WLCommand curCommand = curWrapper.WLCommand;
@@ -678,5 +707,9 @@ public class ParseToWLTree {
 			this.WLCommandStr = null;
 		}
 		
+		@Override
+		public String toString(){
+			return this.WLCommandStr;
+		}
 	}
 }

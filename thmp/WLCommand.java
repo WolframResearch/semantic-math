@@ -233,6 +233,7 @@ public class WLCommand {
 			int wrapperListSz = headStructWrapperList.size();			
 			WLCommand lastWrapperCommand = headStructWrapperList.get(wrapperListSz-1).WLCommand();						
 			lastWrapperCommand.structsWithOtherHeadCount--;
+			System.out.println("LASTCOMMAND" + headStruct);
 			//System.out.println("Wraper Count Command: " + lastWrapperCommand);
 			prevStructHeaded = true;
 		}
@@ -294,7 +295,8 @@ public class WLCommand {
 			if(positionInMap != WLCommandsList.AUXINDEX && positionInMap != WLCommandsList.WLCOMMANDINDEX){
 				List<Struct> curCommandComponentList = commandsMap.get(commandComponent);
 				if(positionInMap >= curCommandComponentList.size()){
-					System.out.println("positionInMap >= list size. Should not happen!");
+					System.out.println("positionInMap: " + positionInMap +" list size: "+curCommandComponentList.size() +" Should not happen!");
+					System.out.println("COMPONENT" + commandComponent);
 					continue;
 				}
 				
@@ -317,6 +319,7 @@ public class WLCommand {
 				//check if need to trigger triggerMathObj
 				if(term.triggerMathObj){
 					nextWord = TriggerMathObj.get_mathObjFromStruct(nextStruct);
+					
 					if(nextWord.equals("")){
 						nextWord = nextStruct.simpleToString();
 					}
@@ -347,10 +350,11 @@ public class WLCommand {
 				//should have size > 0 always <--nope! if element is not a true WLCommand, like an auxilliary string
 				if(curCommandComponentList.size() > 0){					
 					Struct nextStruct = curCommandComponentList.get(0);
+					updateWrapper(nextStruct, structToAppendCommandStr);
+					
 					nextStruct.set_previousBuiltStruct(structToAppendCommandStr);
 					structToAppendCommandStr.set_posteriorBuiltStruct(nextStruct);
 					
-					updateWrapper(nextStruct, structToAppendCommandStr);
 					/*if(nextStruct.structToAppendCommandStr() == null){
 						nextStruct.set_structToAppendCommandStr(structToAppendCommandStr);					
 					}else{

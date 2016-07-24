@@ -67,6 +67,9 @@ public class TriggerMathObj {
 		addKeywordToMathObj(new String[]{"ideal", "ring"}, keywordList, keyDictBuilder, mathObjMMap);
 		addKeywordToMathObj(new String[]{"zero", "ring", "function"}, keywordList, keyDictBuilder, mathObjMMap);
 		addKeywordToMathObj(new String[]{"function", "function"}, keywordList, keyDictBuilder, mathObjMMap);
+		addKeywordToMathObj(new String[]{"ring", "ring"}, keywordList, keyDictBuilder, mathObjMMap);
+		addKeywordToMathObj(new String[]{"surjective", "function"}, keywordList, keyDictBuilder, mathObjMMap);
+		//addKeywordToMathObj(new String[]{"finite", "function", "ring", "module"}, keywordList, keyDictBuilder, mathObjMMap);
 		
 		//mathObjMultimap = ImmutableMultimap.copyOf(mathObjMMap);
 		
@@ -205,14 +208,15 @@ public class TriggerMathObj {
 	public static String get_mathObjFromStruct(Struct struct){
 		//recursively find all relevant strings
 		//if structH, use name of element and name of children
-		if(struct instanceof StructA) return "";
+		//if(struct instanceof StructA) return "";
 		
 		List<String> triggerTermList = new ArrayList<String>();
-		String name = struct.struct().get("name");		
-		if(name != null){
-			triggerTermList.add(name);
+		Map<String, String> map = struct.struct();		
+		if(map != null && map.containsKey("name")){
+			triggerTermList.add(map.get("name"));
 		}
 		
+		getSubContent(struct, triggerTermList);
 		getChildrenNames(struct, triggerTermList);
 		System.out.println("TRIGGERTERMLIST " + triggerTermList);
 		String highestMathObj = get_HighestMathObj(triggerTermList);
@@ -225,7 +229,28 @@ public class TriggerMathObj {
 		//return r + "[" + namePpt + "]";
 		return r;
 	}
-	
+	/**
+	 * Analogous method for StructA as getChildrenNames for StructH. 
+	 * @param struct
+	 * @param childrenNameList
+	 */
+	private static void getSubContent(Struct struct, List<String> childrenNameList){
+		if(struct instanceof StructH ) return;
+		
+		if(struct.prev1() instanceof String){
+			childrenNameList.add(struct.prev1().toString());
+		}else if(struct.prev1() instanceof Struct){
+			getSubContent(struct, childrenNameList);
+			getChildrenNames(struct, childrenNameList);
+		}
+		
+		if(struct.prev2() instanceof String){
+			childrenNameList.add(struct.prev2().toString());
+		}else if(struct.prev2() instanceof Struct){
+			getSubContent(struct, childrenNameList);
+			getChildrenNames(struct, childrenNameList);
+		}
+	}
 	/**
 	 * Retrieves the Sting representation of names of the children.
 	 * @param struct
@@ -239,15 +264,14 @@ public class TriggerMathObj {
 			//don't cast, make abstract method in Struct
 			if(child instanceof StructH){
 				String namePpt = ((StructH<?>)child).append_name_pptStr();	
-				
+				//should not add the whole namePpt string to childrenNameList as one string!
+				//should add as separate strings!
 				childrenNameList.add(namePpt);
 				getChildrenNames(child, childrenNameList);
 			}else{
 				System.out.println("\n namePPT " + child.present(""));
-			}
-			
-		}
-		
+			}			
+		}		
 	}	
 	
 }

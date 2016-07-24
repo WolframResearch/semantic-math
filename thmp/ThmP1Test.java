@@ -223,8 +223,14 @@ public class ThmP1Test {
 			st = "let $R$ be a ring";
 			st = "we say that f is a field";
 			st = "Let $R \\to S$ be an epimorphism of rings.";
-			st = "the cardinality of $S$ is at most the cardinality of $R$";
-			st = "the rank of f is at most n";
+			st = "there exists a function f such that f is constant";
+			st = "there exists a function";
+			st = "A ring map is surjective if and only if it is a finite epimorphism";
+			st = "A ring map is surjective if and only if it is finite";
+			st = "a ring is it is finite";
+			//st = "$R \to S$ is surjective ";
+			//st = "the cardinality of $S$ is at most the cardinality of $R$";
+			//st = "the rank of f is at most n";
 			//st = "f is at most g";
 			//st = "let f be g";
 			//st = "there exists a universal property";

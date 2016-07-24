@@ -237,6 +237,7 @@ public class StructH<H> extends Struct{
 	
 	public void set_structToAppendCommandStr(Struct structToAppendCommandStr){
 		this.structToAppendCommandStr = structToAppendCommandStr;
+		System.out.println("CALLED BY: " + this);
 	}
 	
 	/**

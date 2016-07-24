@@ -106,7 +106,7 @@ public class WLCommandsList {
 		
 		// trigger TriggerMathObj
 		WLCommandMapBuilder.put("is", addCommand(new String[] { "symb|ent, , true", "verb|vbs, is|are|be, trigger",
-				"\\[Element]", "symb|ent, , true, TriggerMathObj" }));
+				"\\[Element]", "symb|ent|adj, , true, TriggerMathObj" }));
 		
 		WLCommandMapBuilder.put("at most", addCommand(new String[] { "symb|ent, , true", "verb|vbs, is|are|be, false",
 				"<=", "pre, at most, trigger", "symb|ent, , true, TriggerMathObj" }));
