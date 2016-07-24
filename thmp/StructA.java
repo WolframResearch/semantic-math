@@ -183,10 +183,10 @@ public class StructA<A, B> extends Struct{
 			}			
 		}
 		
-		if(prev2 != null && !prev2.equals("")){
+		if(prev2 != null){
 			if(prev2 instanceof Struct && ((Struct) prev2).WLCommandWrapperList() == null){
-				str += ((Struct) prev2).simpleToString2() + ", ";
-			}else if(prev2 instanceof String){
+				str += ", " + ((Struct) prev2).simpleToString2();
+			}else if(prev2 instanceof String && !prev2.equals("")){
 				str += ", " + prev2;
 			}
 		}

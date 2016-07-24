@@ -38,6 +38,7 @@ public class WLCommandsList {
 	 */
 	public static final int WLCOMMANDINDEX = -1;
 	public static final int AUXINDEX = -2;
+	private static final String TRIGGERMATHOBJSTR = "TriggerMathObj";
 	
 	/**
 	 * 
@@ -81,9 +82,11 @@ public class WLCommandsList {
 		// 5th element used for defining custom order for now, 4th term defines
 		// whether to trigger TriggerMathObj term
 		WLCommandMapBuilder.put("element", addCommand(
-				new String[] { "symb|ent, , true", "\\[Element], WL, true", "pre, of, false", "symb|ent, , true" }));
+				new String[] { "symb|ent, , true", "\\[Element], WL, true", "pre, of, false", "symb|ent, , true" }));		
 		WLCommandMapBuilder.put("element", addCommand(
-				new String[] { "parti, , false", "x", "\\[Element], WL, true", "pre, of, false", "symb|ent, , true" }));
+				new String[] { "parti, , false", ", element, trigger", "x", "\\[Element]", "pre, of, false", "symb|ent, , true" }));
+		WLCommandMapBuilder.put("exist", addCommand(
+				new String[] { ", there, false", "Exists[", ", exists*, trigger",  "ent|symb|phrase|noun, , true", "]"}));
 		WLCommandMapBuilder.put("derivative",
 				addCommand(new String[] { "Derivative, WL, true", "[", "pre, of, false", "symb|ent, , true", "]" }));
 		WLCommandMapBuilder.put("log",
@@ -104,6 +107,9 @@ public class WLCommandsList {
 		// trigger TriggerMathObj
 		WLCommandMapBuilder.put("is", addCommand(new String[] { "symb|ent, , true", "verb|vbs, is|are|be, trigger",
 				"\\[Element]", "symb|ent, , true, TriggerMathObj" }));
+		
+		WLCommandMapBuilder.put("at most", addCommand(new String[] { "symb|ent, , true", "verb|vbs, is|are|be, false",
+				"<=", "pre, at most, trigger", "symb|ent, , true, TriggerMathObj" }));
 		// label string if to be used as trigger ent/symb, then use these words
 		// as trigger system
 		// function with radius of convergence
@@ -177,7 +183,7 @@ public class WLCommandsList {
 				// required
 				if (commandStrParts.length > 3) {
 					//if trigger triggerMathObj
-					triggerMathObj = commandStrParts[3].trim().equals("TriggerMathObj");
+					triggerMathObj = commandStrParts[3].trim().equals(TRIGGERMATHOBJSTR);
 					if (commandStrParts.length > 4) {
 						positionInMap = Integer.valueOf(commandStrParts[4]);
 					}
@@ -197,7 +203,6 @@ public class WLCommandsList {
 				if (commandStrParts[2].trim().matches("trigger")) {
 					triggerWordIndex = i;
 					componentCounter--;
-
 				}
 				
 				// curOcc is the position inside the list in commandsMap.

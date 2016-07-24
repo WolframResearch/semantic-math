@@ -178,7 +178,7 @@ public class ParseToWLTree {
 				posTermListLoop: for(int i = triggerWordIndex - 1; i > -1; i--){
 					PosTerm curPosTerm = posTermList.get(i);
 					//auxilliary term
-					if(curPosTerm.positionInMap() == -1) continue;
+					if(curPosTerm.positionInMap() < 0) continue;
 					
 					WLCommandComponent curCommandComponent = curPosTerm.commandComponent();
 					
@@ -186,6 +186,7 @@ public class ParseToWLTree {
 					//iterate through Deque backwards
 					//Iterator<Struct> dequeReverseIter = structDeque.descendingIterator();
 					int dequeIterCounter = structDeque.size() - 1;
+					//int dequeIterCounter = structDequeStartIndex;
 					
 					for(int k = structDequeStartIndex; k > -1; k--){
 					//for each struct in deque, go through list to match
@@ -203,7 +204,7 @@ public class ParseToWLTree {
 								curStructInDeque.type().split("_")[1] : curStructInDeque.type();
 						
 						if(curStructInDequeType.matches(curCommandComponent.posTerm())
-								&& nameStr.matches(curCommandComponent.name()) 
+								&& nameStr.matches(curCommandComponent.name())
 								&& !usedStructsBool[dequeIterCounter] ){
 							//&& curStructInDeque.name().matches(curCommandComponent.name())
 							//see if name matches, if match, move on, continue outer loop

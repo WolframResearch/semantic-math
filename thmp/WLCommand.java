@@ -233,7 +233,7 @@ public class WLCommand {
 			int wrapperListSz = headStructWrapperList.size();			
 			WLCommand lastWrapperCommand = headStructWrapperList.get(wrapperListSz-1).WLCommand();						
 			lastWrapperCommand.structsWithOtherHeadCount--;
-			System.out.println("Wraper Counte: " + lastWrapperCommand.structsWithOtherHeadCount);
+			//System.out.println("Wraper Count Command: " + lastWrapperCommand);
 			prevStructHeaded = true;
 		}
 		nextStruct.set_structToAppendCommandStr(structToAppendCommandStr);
@@ -258,10 +258,7 @@ public class WLCommand {
 		//the latest Struct to be touched, for determining if an aux String should be displayed
 		boolean prevStructHeaded = false;
 		
-		//make WLCommand refer to list of WLCommands rather than just one.
-		//Wrapper used here during build().
-		WLCommandWrapper curCommandWrapper = structToAppendCommandStr.add_WLCommandWrapper(curCommand);
-		//structToAppendCommandStr.set_WLCommand(curCommand);
+		
 		
 		for(PosTerm term : posTermList){
 			
@@ -377,6 +374,11 @@ public class WLCommand {
 		System.out.println("CUR COMMAND: " + curCommand + " ");
 		System.out.print("BUILT COMMAND: " + commandString);
 		
+		//make WLCommand refer to list of WLCommands rather than just one.
+		//Wrapper used here during build().
+		WLCommandWrapper curCommandWrapper = structToAppendCommandStr.add_WLCommandWrapper(curCommand);
+		//structToAppendCommandStr.set_WLCommand(curCommand);
+				
 		curCommandWrapper.append_WLCommandStr(commandString);
 		return commandString;
 	}

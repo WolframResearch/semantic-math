@@ -276,10 +276,15 @@ public class ThmP1 {
 							joined += str[k] + " ";
 							k++;
 						}
+						
 						Matcher matcher = fixedPhrase.phrasePattern().matcher(joined.trim());
 						if (matcher.matches()) {
-							Pair phrasePair = new Pair(joined.trim(), fixedPhrase.pos());
-							pairs.add(phrasePair);
+							String pos = fixedPhrase.pos();
+							if(!pos.equals("fluff")){
+								Pair phrasePair = new Pair(joined.trim(), pos);
+								pairs.add(phrasePair);
+							}
+							
 							i += numWordsDown - 1;
 
 							continue strloop;
@@ -409,6 +414,11 @@ public class ThmP1 {
 					|| posMap.containsKey(singular2) && posMap.get(singular2).equals("noun")
 					|| posMap.containsKey(singular3) && posMap.get(singular3).equals("noun")) {
 				pairs.add(new Pair(curWord, "noun"));
+			}
+			else if (posMap.containsKey(singular) && posMap.get(singular).matches("verb|vbs")
+					|| posMap.containsKey(singular2) && posMap.get(singular2).matches("verb|vbs")
+					|| posMap.containsKey(singular3) && posMap.get(singular3).matches("verb|vbs")) {
+				pairs.add(new Pair(curWord, "verb"));
 			}
 			// classify words with dashes; eg sesqui-linear
 			else if (curWord.split("-").length > 1) {

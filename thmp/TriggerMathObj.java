@@ -217,12 +217,13 @@ public class TriggerMathObj {
 		System.out.println("TRIGGERTERMLIST " + triggerTermList);
 		String highestMathObj = get_HighestMathObj(triggerTermList);
 		
-		String r = highestMathObj.matches("") ? "MathObj" : highestMathObj;
-		
 		//String namePpt = ((StructH<?>)struct).append_name_pptStr();
 		String namePpt = struct.simpleToString();
 		
-		return r + "[" + namePpt + "]";
+		String r = highestMathObj.matches("") ? namePpt : highestMathObj + "[" + namePpt + "]";
+		
+		//return r + "[" + namePpt + "]";
+		return r;
 	}
 	
 	/**

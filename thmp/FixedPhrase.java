@@ -14,15 +14,18 @@ import java.util.regex.Pattern;
  */
 public class FixedPhrase {
 
-	// number of words down to regex match
+	/** number of words down the sentence to apply the regex match.
+	 * Equal to the length of the pattern.
+	 */
 	private int numWordsDown;
 	//regex to match, potentially different spellings,
 	//like phrases with or without "the".
 	private Pattern phrasePattern;
+	//part of speech
 	private String pos;
 	
 	public FixedPhrase(String regex, String pos){
-		//compile the regex into a Pattern
+		//compile the regex into a Pattern.
 		this.phrasePattern = Pattern.compile(regex);
 		
 		this.pos = pos;

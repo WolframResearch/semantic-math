@@ -618,6 +618,9 @@ public class Maps {
 		structMap.put("auxpass_pobj", new Rule("verbphrase", 1)); // passive
 																	// auxiliary
 
+		//TEMP RULE
+		//structMap.put("assert_csubj", new Rule("", 1));
+		
 		structMap.put("vbs_ent", new Rule("verbphrase", 1));
 		structMap.put("vbs_adj", new Rule("verbphrase", 1));
 		structMap.put("vbs_pro", new Rule("verbphrase", 1));
@@ -666,6 +669,7 @@ public class Maps {
 
 		structMap.put("let_symb", new Rule("let", 1));
 		structMap.put("be_ent", new Rule("be", 1));
+		structMap.put("be_symb", new Rule("be", .7));
 		structMap.put("let_assert", new Rule("letbe", 1));
 		structMap.put("let_be", new Rule("letbe", 1));
 		structMap.put("let_ent", new Rule("let", 1));

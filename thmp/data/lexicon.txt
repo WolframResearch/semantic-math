@@ -17,6 +17,7 @@ great adj
 small adj
 symb symb
 derivative ent
+rank ent
 log ent
 root ent
 radius ent
