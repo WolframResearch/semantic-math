@@ -49,6 +49,8 @@ public class WLCommandsList {
 		triggerWordLookupMapBuilder.put("be", "is");
 		triggerWordLookupMapBuilder.put("are", "is");
 		triggerWordLookupMapBuilder.put("has", "is");
+		triggerWordLookupMapBuilder.put("belong", "is");
+		triggerWordLookupMapBuilder.put("lie", "is");
 		// triggerWordLookupMapBuilder.put("radius", "is");
 
 		triggerWordLookupMap = triggerWordLookupMapBuilder.build();
@@ -82,11 +84,13 @@ public class WLCommandsList {
 		// 5th element used for defining custom order for now, 4th term defines
 		// whether to trigger TriggerMathObj term
 		WLCommandMapBuilder.put("element", addCommand(
-				new String[] { "symb|ent, , true", "\\[Element], WL, true", "pre, of, false", "symb|ent, , true" }));		
+				new String[] { "symb|ent, , true", "\\[Element]", ", element, trigger", "pre, of, false", "symb|ent, , true" }));		
 		WLCommandMapBuilder.put("element", addCommand(
 				new String[] { "parti, , false", ", element, trigger", "x", "\\[Element]", "pre, of, false", "symb|ent, , true" }));
 		WLCommandMapBuilder.put("exist", addCommand(
 				new String[] { ", there, false", "Exists[", ", exists*, trigger",  "ent|symb|phrase|noun, , true", "]"}));
+		//WLCommandMapBuilder.put("derivative",
+			//	addCommand(new String[] { "Derivative[", ", derivative, trigger", "pre, of, false", "symb|ent, , true", "]" }));
 		WLCommandMapBuilder.put("derivative",
 				addCommand(new String[] { "Derivative, WL, true", "[", "pre, of, false", "symb|ent, , true", "]" }));
 		WLCommandMapBuilder.put("log",
@@ -165,15 +169,12 @@ public class WLCommandsList {
 				// String nameStr = commandStrParts.length > 2 ?
 				// commandStrParts[1] : "*";
 				String nameStr = commandStrParts[1].matches("\\s*") ? ".*" : commandStrParts[1].trim();
-
-				// int toUse = commandStrParts.length > 2 ?
-				// Integer.valueOf(commandStrParts[2]) :
-				// Integer.valueOf(commandStrParts[1]);
-				boolean useInPosList = Boolean.valueOf(commandStrParts[2].trim());
+				
+				boolean useInPosList = Boolean.valueOf(commandStrParts[2].trim());				
 				boolean triggerMathObj = false;
 				// process command and create WLCommandComponent and PosList
 				WLCommandComponent commandComponent = new WLCommandComponent(posStr, nameStr);
-
+				
 				// how many have we added so far
 				Integer temp;
 				int curOcc = (temp = commandsCountPreMap.get(commandComponent)) == null ? 0 : temp;

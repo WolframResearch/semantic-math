@@ -396,6 +396,7 @@ public class Maps {
 		// verbs, verbs map does not support -ing form, ie divide->dividing
 		// 3rd person singular form that ends in "es" are checked with
 		// the "es" stripped
+		posMap.put("belong", "verb");
 		posMap.put("divide", "verb");
 		posMap.put("extend", "verb");
 		posMap.put("exist", "verb");
@@ -450,7 +451,7 @@ public class Maps {
 		mathObjMap.put("zero", "mathObj");
 		mathObjMap.put("extension", "COMP"); /////////// ****
 		mathObjMap.put("field extension", "mathObj");
-		mathObjMap.put("element", "mathObj");
+		mathObjMap.put("element", "noun");
 		mathObjMap.put("group", "COMP");
 		mathObjMap.put("symmetric group", "mathObj");
 		mathObjMap.put("p group", "mathObj");

@@ -18,6 +18,7 @@ small adj
 symb symb
 derivative ent
 rank ent
+holomorphic adj
 log ent
 root ent
 radius ent

@@ -69,6 +69,7 @@ public class TriggerMathObj {
 		addKeywordToMathObj(new String[]{"function", "function"}, keywordList, keyDictBuilder, mathObjMMap);
 		addKeywordToMathObj(new String[]{"ring", "ring"}, keywordList, keyDictBuilder, mathObjMMap);
 		addKeywordToMathObj(new String[]{"surjective", "function"}, keywordList, keyDictBuilder, mathObjMMap);
+		addKeywordToMathObj(new String[]{"holomorphic", "function"}, keywordList, keyDictBuilder, mathObjMMap);
 		//addKeywordToMathObj(new String[]{"finite", "function", "ring", "module"}, keywordList, keyDictBuilder, mathObjMMap);
 		
 		//mathObjMultimap = ImmutableMultimap.copyOf(mathObjMMap);
@@ -218,7 +219,7 @@ public class TriggerMathObj {
 		
 		getSubContent(struct, triggerTermList);
 		getChildrenNames(struct, triggerTermList);
-		System.out.println("TRIGGERTERMLIST " + triggerTermList);
+		//System.out.println("TRIGGERTERMLIST " + triggerTermList);
 		String highestMathObj = get_HighestMathObj(triggerTermList);
 		
 		//String namePpt = ((StructH<?>)struct).append_name_pptStr();

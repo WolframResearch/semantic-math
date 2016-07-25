@@ -156,7 +156,8 @@ public class ParseToWLTree {
 					
 					//add struct to the matching Component if found a match							
 					//add at beginning since iterating backwards							
-					waitingStructList.add(0, structToAdd);
+					//waitingStructList.add(0, structToAdd);
+					waitingStructList.add(structToAdd);
 					curPosTerm.set_posTermStruct(structToAdd);
 					
 					//usedStructsBool[dequeIterCounter] = true;
@@ -179,7 +180,7 @@ public class ParseToWLTree {
 	 * Convert to visitor pattern!
 	 * 
 	 * @param struct
-	 * @param parsedSB String
+	 * @param parsedSB StringBuilder. Don't actually need it here for now.
 	 * @param headStruct the nearest ParseStruct that's collecting parses
 	 * @param numSpaces is the number of spaces to print. Increment space if number is 
 	 */
@@ -192,7 +193,7 @@ public class ParseToWLTree {
 		//list of commands satisfied at this level
 		List<WLCommand> satisfiedCommands = new ArrayList<WLCommand>();
 		
-		//add struct to all WLCommands in WLCommandList
+		//add struct to all WLCommands in WLCommandList (triggered commands so far.)
 		//check if satisfied. 
 		//Skip if immediate parents are conj or disj, ie already been added
 		if (struct.parentStruct() == null 
@@ -201,7 +202,7 @@ public class ParseToWLTree {
 			Iterator<WLCommand> WLCommandListIter = WLCommandList.iterator();
 			while (WLCommandListIter.hasNext()) {
 				WLCommand curCommand = WLCommandListIter.next();
-				boolean commandSat = WLCommand.addComponent(curCommand, struct);
+				boolean commandSat = WLCommand.addComponent(curCommand, struct, false);
 
 				// if commandSat, remove all the waiting, triggered commands for
 				// now, except current struct,
@@ -214,8 +215,7 @@ public class ParseToWLTree {
 					WLCommandListIter.remove();
 				}
 			}
-		}
-		
+		}		
 		
 		String triggerKeyWord = "";
 		if (struct instanceof StructA && struct.prev1() instanceof String) {
@@ -232,8 +232,7 @@ public class ParseToWLTree {
 				&& triggerKeyWord.charAt(triggerKeyWord.length() - 1) == 's'){
 				//need to write out all other cases, like ending in "es"
 				String triggerWordSingular = triggerKeyWord.substring(0, triggerKeyWord.length() - 1);
-				triggeredCol = get_triggerCol(triggerWordSingular);
-				
+				triggeredCol = get_triggerCol(triggerWordSingular);				
 		}
 		
 		if(!triggeredCol.isEmpty()){			
@@ -261,13 +260,13 @@ public class ParseToWLTree {
 				//match the slots in posTermList with Structs in structDeque
 				curCommandSat = findStructs(posTermList, triggerWordIndex, usedStructsBool, waitingStructList);
 				
-				//curCommand's terms before trigger word are satisfied. 
+				//curCommand's terms before trigger word are satisfied. Add them to triggered WLCommand.
 				if(curCommandSat){
 					boolean curCommandSatWhole = false;
 					for(Struct curStruct : waitingStructList){
-						//the whole command is satisfied, not the the part before trigger word
+						//see if the whole command is satisfied, not the the part before trigger word
 						//namely the trigger word is last word
-						curCommandSatWhole = WLCommand.addComponent(curCommand, curStruct);						
+						curCommandSatWhole = WLCommand.addComponent(curCommand, curStruct, true);						
 					}
 					if(curCommandSatWhole){
 						satisfiedCommands.add(curCommand);
@@ -453,7 +452,7 @@ public class ParseToWLTree {
 				Iterator<WLCommand> ChildWLCommandListIter = WLCommandList.iterator();
 				while(ChildWLCommandListIter.hasNext()){
 					WLCommand curCommand = ChildWLCommandListIter.next();
-					boolean commandSat = WLCommand.addComponent(curCommand, childRelationStruct);
+					boolean commandSat = WLCommand.addComponent(curCommand, childRelationStruct, false);
 					////add struct to posTerm to posTermList! ////////////
 					
 					if(commandSat){
@@ -522,7 +521,7 @@ public class ParseToWLTree {
 		
 		List<WLCommandWrapper> structWrapperList = struct.WLCommandWrapperList();
 		int structWrapperListSz = structWrapperList.size();
-		System.out.println("HEAD: " + WLCommand.totalComponentCount(structWrapperList.get(0).WLCommand));
+		//System.out.println("HEAD: " + WLCommand.totalComponentCount(structWrapperList.get(0).WLCommand));
 		for(int i = structWrapperListSz - 1; i > -1; i--){
 			WLCommandWrapper curWrapper = structWrapperList.get(i);
 			WLCommand curCommand = curWrapper.WLCommand;
@@ -672,6 +671,7 @@ public class ParseToWLTree {
 		 * later.
 		 */
 		private WLCommand WLCommand;
+		//WLCommand's index in list
 		private int listIndex;
 		//built command String associated with this command.
 		private String WLCommandStr;

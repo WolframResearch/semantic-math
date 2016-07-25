@@ -1408,13 +1408,17 @@ public class ThmP1 {
 				ParseToWLTree.dfs(uHeadStruct, parseStructSB, headParseStruct, 0);
 				System.out.println("\n DONE ParseStruct DFS \n");
 				StringBuilder wlSB = new StringBuilder();
-				ParseToWLTree.dfs(uHeadStruct, wlSB, true);				
+				ParseToWLTree.dfs(uHeadStruct, wlSB, true);	
+				//parsedSB.append("\n");
+				//ParseToWLTree.dfs(uHeadStruct, parsedSB, true);	
 				System.out.println(wlSB);
 				ParseToWLTree.dfsCleanUp(uHeadStruct);
 				System.out.println("~~~ DONE WLCommands DFS ~~~");
 				//*******
 				
 				double maxDownPathScore = uHeadStruct.maxDownPathScore();
+				
+				parsedExpr.add(new ParsedPair(wlSB.toString(), maxDownPathScore, "short"));
 				
 				parsedExpr.add(new ParsedPair(parsedSB.toString(), maxDownPathScore, "long"));
 				

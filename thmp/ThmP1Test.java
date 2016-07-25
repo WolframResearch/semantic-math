@@ -227,15 +227,20 @@ public class ThmP1Test {
 			st = "there exists a function";
 			st = "A ring map is surjective if and only if it is a finite epimorphism";
 			st = "A ring map is surjective if and only if it is finite";
-			st = "a ring is it is finite";
+			st = "a ring is it is finite"; //ensure pronoun doesn't refer to previous ent!
+			st = "f is an element of G";
+			st = "there exists a function f such that f is holomorphic";
+			//st = "f is an element of $R^n$";
 			//st = "$R \to S$ is surjective ";
 			//st = "the cardinality of $S$ is at most the cardinality of $R$";
-			//st = "the rank of f is at most n";
+			st = "the rank of f is at most n";
+			st = "f belongs to a finite set";
 			//st = "f is at most g";
 			//st = "let f be g";
 			//st = "there exists a universal property";
 			//st = "f is an element of a set";
-			//st = "given an element f of a set $S$";			
+			st = "take derivative of log of f";
+			//st = "given an element f of a set $S$";
 			//st = "f is a function with radius of convergence r and finitely many roots";
 			//st = "f is a function with radius of convergence r";
 			//st = "f is a function with radius of convergence r";
@@ -251,7 +256,7 @@ public class ThmP1Test {
 				//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim()) ));
 				ThmP1.parse(ThmP1.tokenize(strAr[i].trim()));				
 			}
-			
+			//System.out.println("****" + ThmP1.getParsedExpr() + "******");
 			Scanner sc = new Scanner(new File("src/thmp/data/noTex4.txt"));
 			
 			while(sc.hasNextLine()){

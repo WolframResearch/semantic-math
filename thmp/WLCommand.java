@@ -83,6 +83,12 @@ public class WLCommand {
 	private int structsWithOtherHeadCount;
 	
 	/**
+	 * Index of last added component inside posList.
+	 * Starts as triggerIndex.
+	 */
+	private int lastAddedCompIndex;
+
+	/**
 	 * Index in list of WLCommand in Struct that 
 	 * *Not* intrinsic to a WLCommand instance, create custom wrapper to put around this?
 	 */
@@ -193,6 +199,7 @@ public class WLCommand {
 		curCommand.totalComponentCount = componentCounter;
 		
 		curCommand.triggerWordIndex = triggerWordIndex;
+		curCommand.lastAddedCompIndex = triggerWordIndex;
 		return curCommand;
 	}
 	
@@ -210,6 +217,7 @@ public class WLCommand {
 		newCommand.triggerWordIndex = curCommand.triggerWordIndex;
 		newCommand.totalComponentCount = curCommand.totalComponentCount;
 		newCommand.structsWithOtherHeadCount = curCommand.totalComponentCount;
+		newCommand.lastAddedCompIndex = curCommand.lastAddedCompIndex;
 		return newCommand;
 	}
 	
@@ -397,7 +405,8 @@ public class WLCommand {
 	 * BUT: what if the Struct just added isn't the one needed? Keep adding.
 	 * If the name could be several optional ones, eg "in" or "of", so use regex .match("in|of")
 	 */
-	public static boolean addComponent(WLCommand curCommand, Struct newStruct){
+	public static boolean addComponent(WLCommand curCommand, Struct newStruct, boolean before){
+		
 		//if key.name .matches()
 		//be careful with type, could be conj_, all sorts of stuff
 		String structPreType = newStruct.type();
@@ -406,18 +415,54 @@ public class WLCommand {
 		
 		String structName = newStruct instanceof StructH ? newStruct.struct().get("name") : 
 			newStruct.prev1() instanceof String ? (String)newStruct.prev1() : "";
-			
-		//need to iterate through the keys of countMap instead of just getting, 
-		//because .hashcode won't find it for us
 		
+		//need to iterate through the keys of countMap instead of just getting, 
+		//because .hashcode won't find it for us, should know precisely which index to add,
+		// should not need to iterate through all componentEntries.
+		// Keep track of index in posList of component added before, and go backwards if before,
+		// forwards if after.
+		//before the trigger word
+		List<PosTerm> posList = curCommand.posTermList;
+		int lastAddedComponentIndex = curCommand.lastAddedCompIndex;
+		//
+		WLCommandComponent commandComponent;
+		String commandComponentPosTerm;
+		String commandComponentName;
+		//
+		int i = lastAddedComponentIndex;
+		if(lastAddedComponentIndex != curCommand.triggerWordIndex){
+		if(before){			
+			i--;
+			//if auxilliary terms, eg "["
+			while(i > -1 && posList.get(i).positionInMap < 0) i--;			
+		}else{
+			i++;
+			while(i < posList.size() && posList.get(i).positionInMap < 0) i++;		
+		}
+		//if no match, return
+		 commandComponent = posList.get(i).commandComponent;
+		 commandComponentPosTerm = commandComponent.posTerm;
+		 commandComponentName = commandComponent.name;
+		
+		if(!(structType.matches(commandComponentPosTerm) 				
+				&& structName.matches(commandComponentName))){
+			System.out.println("curCommand" + curCommand);
+			System.out.println("commandComponentName" + commandComponentName);
+			System.out.println("commandComponentPosTerm" + commandComponentPosTerm);
+			System.out.println("structName" + structName);
+			System.out.println("BEFORE? " + before);
+			return false;
+		}
+		}
+		//System.out.println("~~~commandComponentName" + commandComponentName);
 		for(Entry<WLCommandComponent, Integer> commandComponentEntry : curCommand.commandsCountMap.entrySet()){
-			WLCommandComponent commandComponent = commandComponentEntry.getKey();
+			commandComponent = commandComponentEntry.getKey();
 			int commandComponentCount = commandComponentEntry.getValue();
-			String commandComponentPosTerm = commandComponent.posTerm;
-			String commandComponentName = commandComponent.name;
+			commandComponentPosTerm = commandComponent.posTerm;
+			commandComponentName = commandComponent.name;
 			
-			//if WL expr matches, add Struct to that component, eg \[Element]			
-			if(commandComponentName.matches("WL.*") ){
+			//if WL expr matches, add Struct to that component, eg \[Element]
+			/*if(commandComponentName.matches("WL.*") ){
 				String[] nameAr = commandComponentName.split("-");
 				if(nameAr.length > 1 && commandComponentCount > 0
 						&& structName.matches(nameAr[1])){
@@ -427,7 +472,8 @@ public class WLCommand {
 					break;
 				}
 			}					
-			else if(structType.matches(commandComponentPosTerm) 
+			else */
+			if(structType.matches(commandComponentPosTerm) 
 					&& commandComponentCount > 0 
 					&& structName.matches(commandComponentName)){
 				//put commandComponent into commandsMap
