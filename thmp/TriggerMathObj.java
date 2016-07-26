@@ -47,7 +47,7 @@ public class TriggerMathObj {
 	
 	/**
 	 * Matrix of keywords.
-	 * Dimension is 
+	 * 
 	 */
 	private static final int[][] mathObjMx;
 	
