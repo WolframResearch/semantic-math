@@ -87,16 +87,19 @@ public class WLCommandsList {
 				new String[] { "symb|ent, , true", "\\[Element]", ", element, trigger", "pre, of, false", "symb|ent, , true" }));		
 		WLCommandMapBuilder.put("element", addCommand(
 				new String[] { "parti, , false", ", element, trigger", "x", "\\[Element]", "pre, of, false", "symb|ent, , true" }));
+		WLCommandMapBuilder.put("given", addCommand(
+				new String[] { "parti, given, trigger", "symb|ent, , true" }));
+		
 		WLCommandMapBuilder.put("exist", addCommand(
 				new String[] { ", there, false", "Exists[", ", exists*, trigger",  "ent|symb|phrase|noun, , true", "]"}));
 		//WLCommandMapBuilder.put("derivative",
 			//	addCommand(new String[] { "Derivative[", ", derivative, trigger", "pre, of, false", "symb|ent, , true", "]" }));
 		WLCommandMapBuilder.put("derivative",
-				addCommand(new String[] { "Derivative, WL, true", "[", "pre, of, false", "symb|ent, , true", "]" }));
+				addCommand(new String[] { ", derivative, trigger", "Derivative[", "pre, of, false", "symb|ent, , true", "]" }));
 		WLCommandMapBuilder.put("log",
-				addCommand(new String[] { "Log, WL, true", "[", "pre, of, false", "symb|ent, , true", "]" }));
+				addCommand(new String[] { ", log, trigger", "Log[", "pre, of, false", "symb|ent, , true", "]" }));
 		WLCommandMapBuilder.put("union",
-				addCommand(new String[] { "Union, WL, true", "[", "pre, of, false", "symb|ent, , true", "]" }));
+				addCommand(new String[] { ", union, trigger", "Union[", "pre, of, false", "symb|ent, , true", "]" }));
 		// label a term to use to trigger a mathObj, communicate to posList,
 		// posList dynamically builds command
 		// using TriggerMathObj.
@@ -109,10 +112,10 @@ public class WLCommandsList {
 				", radius, false", ", convergence, trigger", "Function[ 'radius' ", "]" }));
 		
 		// trigger TriggerMathObj
-		WLCommandMapBuilder.put("is", addCommand(new String[] { "symb|ent, , true", "verb|vbs, is|are|be, trigger",
+		WLCommandMapBuilder.put("is", addCommand(new String[] { "symb|ent, , true", "verb|vbs|be, is|are|be, trigger",
 				"\\[Element]", "symb|ent|adj, , true, TriggerMathObj" }));
 		
-		WLCommandMapBuilder.put("at most", addCommand(new String[] { "symb|ent, , true", "verb|vbs, is|are|be, false",
+		WLCommandMapBuilder.put("at most", addCommand(new String[] { "symb|ent, , true", "verb|vbs|be, is|are|be, false",
 				"<=", "pre, at most, trigger", "symb|ent, , true, TriggerMathObj" }));
 		// label string if to be used as trigger ent/symb, then use these words
 		// as trigger system
@@ -203,7 +206,7 @@ public class WLCommandsList {
 
 				if (commandStrParts[2].trim().matches("trigger")) {
 					triggerWordIndex = i;
-					componentCounter--;
+					//componentCounter--;
 				}
 				
 				// curOcc is the position inside the list in commandsMap.

@@ -217,7 +217,7 @@ public class ThmP1Test {
 			//st = "let $a$ or $b$ be elements of a field";
 			//st = "let $s \\subset S$ be an element of a set";
 			//st = " B or C is true";
-			st = "take the log of derivative of f"; //brackets missing!
+			st = "take the log of derivative of f"; 
 			st = "$f$ is element of $f$";
 			st = "$R$ is determined by its ideals";
 			st = "let $R$ be a ring";
@@ -239,9 +239,15 @@ public class ThmP1Test {
 			//st = "let f be g";
 			//st = "there exists a universal property";
 			//st = "f is an element of a set";
-			st = "take derivative of log of f";
-			//st = "given an element f of a set $S$";
+			st = "take derivative of log of f"; //***
+			st = "given a differentiable function f, its derivative is continuous";
+			st = "the map p is said to be a quotient map given  a subset U of Y is open in Y";
+			st = "given a subset U of Y is open in Y";
+			//st = "log of f";
+			//st = "";
+			//st = "given an element f of a set $S$"; 
 			//st = "f is a function with radius of convergence r and finitely many roots";
+			//st = "let S be the union of elements of a field";
 			//st = "f is a function with radius of convergence r";
 			//st = "f is a function with radius of convergence r";
 			//st = "f is function with radius";

@@ -70,6 +70,8 @@ public class TriggerMathObj {
 		addKeywordToMathObj(new String[]{"ring", "ring"}, keywordList, keyDictBuilder, mathObjMMap);
 		addKeywordToMathObj(new String[]{"surjective", "function"}, keywordList, keyDictBuilder, mathObjMMap);
 		addKeywordToMathObj(new String[]{"holomorphic", "function"}, keywordList, keyDictBuilder, mathObjMMap);
+		addKeywordToMathObj(new String[]{"continuous", "function"}, keywordList, keyDictBuilder, mathObjMMap);
+		
 		//addKeywordToMathObj(new String[]{"finite", "function", "ring", "module"}, keywordList, keyDictBuilder, mathObjMMap);
 		
 		//mathObjMultimap = ImmutableMultimap.copyOf(mathObjMMap);

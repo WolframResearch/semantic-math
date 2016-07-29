@@ -95,8 +95,8 @@ public class ParseToWLTree {
 	 * @param waitingStructList	Temporary list to add Struct's to.
 	 * @return Whether the slots before triggerWordIndex have been satisfied.
 	 */
-	private static boolean findStructs(List<PosTerm> posTermList, int triggerWordIndex, boolean[] usedStructsBool,
-			List<Struct> waitingStructList){
+	private static boolean findStructs(List<Struct> structDeque, List<PosTerm> posTermList, int triggerWordIndex, 
+			boolean[] usedStructsBool, List<Struct> waitingStructList){
 		//start from the word before the trigger word
 		//iterate through posTermList
 		//start index for next iteration of posTermListLoop
@@ -230,12 +230,13 @@ public class ParseToWLTree {
 
 		if(triggeredCol.isEmpty() && triggerKeyWord.length() > 1 
 				&& triggerKeyWord.charAt(triggerKeyWord.length() - 1) == 's'){
-				//need to write out all other cases, like ending in "es"
-				String triggerWordSingular = triggerKeyWord.substring(0, triggerKeyWord.length() - 1);
-				triggeredCol = get_triggerCol(triggerWordSingular);				
+			//need to write out all other cases, like ending in "es"
+			String triggerWordSingular = triggerKeyWord.substring(0, triggerKeyWord.length() - 1);
+			triggeredCol = get_triggerCol(triggerWordSingular);				
 		}
 		
-		if(!triggeredCol.isEmpty()){			
+		if(!triggeredCol.isEmpty()){		
+			System.out.print("triggered");
 			//is trigger, add all commands in list 
 			//WLCommand curCommand;
 			for(WLCommand curCommandInCol : triggeredCol){
@@ -258,11 +259,15 @@ public class ParseToWLTree {
 				boolean[] usedStructsBool = new boolean[structDeque.size()];
 
 				//match the slots in posTermList with Structs in structDeque
-				curCommandSat = findStructs(posTermList, triggerWordIndex, usedStructsBool, waitingStructList);
+				curCommandSat = findStructs(structDeque, posTermList, triggerWordIndex, usedStructsBool, 
+						waitingStructList);
 				
 				//curCommand's terms before trigger word are satisfied. Add them to triggered WLCommand.
 				if(curCommandSat){
 					boolean curCommandSatWhole = false;
+					//add Struct corresponding to trigger word
+					WLCommand.addTriggerComponent(curCommand, struct);
+					
 					for(Struct curStruct : waitingStructList){
 						//see if the whole command is satisfied, not the the part before trigger word
 						//namely the trigger word is last word
@@ -278,9 +283,9 @@ public class ParseToWLTree {
 			isTrigger = true;			
 		}
 		
-			//add struct to stack, even if trigger Struct
+		//add struct to stack, even if trigger Struct
 		//if(struct.parentStruct() == null || (struct.parentStruct() != null && !struct.parentStruct().type().matches("conj.*|disj.*"))){
-			structDeque.add(struct);
+			structDeque.add(struct);			
 		//}
 		
 		// use visitor pattern!		
@@ -419,8 +424,7 @@ public class ParseToWLTree {
 				System.out.println(space);
 			}*/
 			//create new parseStruct to put in tree
-			//if Struct (leaf) and not ParseStruct (overall head), done with subtree and return
-			
+			//if Struct (leaf) and not ParseStruct (overall head), done with subtree and return			
 			
 		} else if (struct instanceof StructH) {
 
@@ -480,12 +484,14 @@ public class ParseToWLTree {
 			
 			int i = 0;
 			while(posTermList.get(i).commandComponent().name().matches("WL|AUX")) i++;
-						
+			
 			PosTerm firstPosTerm = posTermList.get(i);
 			//Struct posTermStruct = posTermList.get(0).posTermStruct(); 
 			List<Struct> posTermStructList = WLCommand.getStructList(curCommand, firstPosTerm.commandComponent());
-			//System.out.println(firstPosTerm);
-			//currently just get the first Struct in list, not canonical at all			
+			//System.out.println("Satisfied command: " + curCommand);
+			//System.out.println("First PosTerm" + firstPosTerm);
+			//currently just get the first Struct in list, not canonical at all.			
+			//firstPosTerm should have some Struct, as the command is satisfied.
 			Struct posTermStruct = posTermStructList.get(0);
 			
 			Struct structToAppendCommandStr = posTermStruct;
@@ -496,10 +502,11 @@ public class ParseToWLTree {
 			Struct grandparentStruct = null;
 			if(parentStruct != null) grandparentStruct = parentStruct.parentStruct();
 			
+			//set grandparent to parent if grandparent is a StructH
 			structToAppendCommandStr = (grandparentStruct == null ? 
 					(parentStruct == null ? structToAppendCommandStr : parentStruct) : 
 						(grandparentStruct instanceof StructH ? parentStruct : grandparentStruct));
-
+			
 			String curCommandString = WLCommand.build(curCommand, structToAppendCommandStr);
 			
 			//now append Str to wrapper inside build()

@@ -14,7 +14,10 @@ hold verb
 situation noun
 closed adj
 great adj
+open adj
 small adj
+continuous adj
+differentiable adj
 symb symb
 derivative ent
 rank ent

@@ -239,10 +239,10 @@ public class WLCommand {
 			// set the headCount of the last wrapper object
 			List<WLCommandWrapper> headStructWrapperList = headStruct.WLCommandWrapperList();
 			int wrapperListSz = headStructWrapperList.size();			
-			WLCommand lastWrapperCommand = headStructWrapperList.get(wrapperListSz-1).WLCommand();						
+			WLCommand lastWrapperCommand = headStructWrapperList.get(wrapperListSz-1).WLCommand();			
 			lastWrapperCommand.structsWithOtherHeadCount--;
-			System.out.println("LASTCOMMAND" + headStruct);
-			//System.out.println("Wraper Count Command: " + lastWrapperCommand);
+			System.out.println("Wrapper command struct" + headStruct);
+			//System.out.println("Wrapper Command to update: " + lastWrapperCommand);
 			prevStructHeaded = true;
 		}
 		nextStruct.set_structToAppendCommandStr(structToAppendCommandStr);
@@ -383,8 +383,9 @@ public class WLCommand {
 			
 			commandString += nextWord + " ";
 		}
-		System.out.println("CUR COMMAND: " + curCommand + " ");
+		System.out.println("\n CUR COMMAND: " + curCommand + " ");
 		System.out.print("BUILT COMMAND: " + commandString);
+		System.out.println("HEAD STRUCT: " + structToAppendCommandStr);
 		
 		//make WLCommand refer to list of WLCommands rather than just one.
 		//Wrapper used here during build().
@@ -432,7 +433,7 @@ public class WLCommand {
 		int i = lastAddedComponentIndex;
 		if(lastAddedComponentIndex != curCommand.triggerWordIndex){
 		if(before){			
-			i--;
+			//i--;
 			//if auxilliary terms, eg "["
 			while(i > -1 && posList.get(i).positionInMap < 0) i--;			
 		}else{
@@ -440,9 +441,9 @@ public class WLCommand {
 			while(i < posList.size() && posList.get(i).positionInMap < 0) i++;		
 		}
 		//if no match, return
-		 commandComponent = posList.get(i).commandComponent;
-		 commandComponentPosTerm = commandComponent.posTerm;
-		 commandComponentName = commandComponent.name;
+		commandComponent = posList.get(i).commandComponent;
+		commandComponentPosTerm = commandComponent.posTerm;
+		commandComponentName = commandComponent.name;
 		
 		if(!(structType.matches(commandComponentPosTerm) 				
 				&& structName.matches(commandComponentName))){
@@ -492,6 +493,20 @@ public class WLCommand {
 		return curCommand.componentCounter < 1;
 	}
 
+	/**
+	 * Add Struct corresponding to trigger word to curCommand
+ 	 */
+	public static void addTriggerComponent(WLCommand curCommand, Struct newStruct){
+		WLCommandComponent commandComponent = curCommand.posTermList.get(curCommand.triggerWordIndex).commandComponent;
+		int commandComponentCount = curCommand.commandsCountMap.get(commandComponent);
+		
+		curCommand.commandsMap.put(commandComponent, newStruct);
+		//here newComponent must have been in the original required set
+		curCommand.commandsCountMap.put(commandComponent, commandComponentCount - 1);
+		//use counter to track whether map is satisfied
+		curCommand.componentCounter--;
+	}
+	
 	/**
 	 * Removes the struct from its corresponding Component list in commandsMap.
 	 * Typically used when a command has been satisfied, and its structs should be

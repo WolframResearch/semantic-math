@@ -46,14 +46,14 @@ public class ThmSearch {
 		return s;
 	}
 	
-	public static final String[] argv = new String[]{"-linkmode", "launch", "-linkname", 
+	public static final String[] ARGV = new String[]{"-linkmode", "launch", "-linkname", 
 			"\"/Applications/Mathematica.app/Contents/MacOS/MathKernel\" -mathlink"};
 	
 	public static void main(String[] args) throws ExprFormatException{
 		KernelLink ml = null;
 		
 		try{
-			ml = MathLinkFactory.createKernelLink(argv);
+			ml = MathLinkFactory.createKernelLink(ARGV);
 		}catch(MathLinkException e){
 			System.out.println("error at launch!");
 			return;

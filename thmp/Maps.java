@@ -556,6 +556,7 @@ public class Maps {
 		structMap.put("noun_verbphrase", new Rule("assert", 1));
 		structMap.put("pre_noun", new Rule("prep", 1));
 		structMap.put("gerund_verbphrase", new Rule("assert", 1));
+		structMap.put("parti_assert", new Rule("hypo", .8));
 		// participle: called, need to take care of "said" etc
 		structMap.put("parti_ent", new Rule("partient", 1));
 		structMap.put("ent_partient", new Rule("newchild", 1));
@@ -602,6 +603,7 @@ public class Maps {
 		//////////// combine preposition with whatever comes
 		// verb_ent, not including past tense verbs, only present tense
 		structMap.put("verb_ent", new Rule("verbphrase", 1));
+		structMap.put("verb_csubj", new Rule("verbphrase", 1));
 		structMap.put("be_ent", new Rule("verbphrase", .7));
 		structMap.put("verb_adj", new Rule("verbphrase", 1));
 		structMap.put("verb_pro", new Rule("verbphrase", 1));
