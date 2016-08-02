@@ -305,6 +305,7 @@ public class WLCommand {
 				if(positionInMap >= curCommandComponentList.size()){
 					System.out.println("positionInMap: " + positionInMap +" list size: "+curCommandComponentList.size() +" Should not happen!");
 					System.out.println("COMPONENT" + commandComponent);
+					System.out.println("COMMAND" + curCommand);
 					continue;
 				}
 				

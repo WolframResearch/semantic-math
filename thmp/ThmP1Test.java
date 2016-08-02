@@ -241,8 +241,11 @@ public class ThmP1Test {
 			//st = "f is an element of a set";
 			st = "take derivative of log of f"; //***
 			st = "given a differentiable function f, its derivative is continuous";
-			st = "the map p is said to be a quotient map given  a subset U of Y is open in Y";
-			st = "given a subset U of Y is open in Y";
+			//st = "the map p is said to be a quotient map given  a subset U of Y is open in Y";
+			//st = "given that a subset U of Y is open in Y";
+			//st = "U is an open set in Y";
+			//st = "let U be an open set in Y";
+			//st = "subset U of Y is open in Y";
 			//st = "log of f";
 			//st = "";
 			//st = "given an element f of a set $S$"; 

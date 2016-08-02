@@ -18,6 +18,7 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.regex.Matcher;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
@@ -1408,7 +1409,15 @@ public class ThmP1 {
 				ParseToWLTree.dfs(uHeadStruct, parseStructSB, headParseStruct, 0);
 				System.out.println("\n DONE ParseStruct DFS \n");
 				StringBuilder wlSB = new StringBuilder();
-				ParseToWLTree.dfs(uHeadStruct, wlSB, true);	
+				/**
+				 * Map of parts used to build up a theorem/def etc. 
+				 * Parts can be any ParseStructType. Should make this a local var.
+				 */
+				Multimap<ParseStructType, String> parts = ArrayListMultimap.create();
+				ParseToWLTree.dfs(parts, uHeadStruct, wlSB, true);
+				System.out.println("Parts: " + parts);
+				//ParseToWLTree.dfs(uHeadStruct, wlSB, true);	
+				
 				//parsedSB.append("\n");
 				//ParseToWLTree.dfs(uHeadStruct, parsedSB, true);	
 				System.out.println(wlSB);

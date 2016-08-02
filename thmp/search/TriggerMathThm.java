@@ -56,14 +56,21 @@ public class TriggerMathThm {
 	static {
 		// ImmutableList.Builder<String> keywordList = ImmutableList.builder();
 		List<String> keywordList = new ArrayList<String>();
-		// which keyword corresponds to which index
+		//list of theorems
+		List<String> thmList = new ArrayList<String>();
+		
+		// which keyword corresponds to which index	in the keywords list
 		ImmutableMap.Builder<String, Integer> keyDictBuilder = ImmutableMap.builder();
 		ImmutableList.Builder<String> mathObjListBuilder = ImmutableList.builder();
-
+		
+		//which theorem corresponds to which index in the thmList
+		ImmutableMap.Builder<String, Integer> thmDictBuilder = ImmutableMap.builder();
+		//ImmutableList.Builder<String> mathObjListBuilder = ImmutableList.builder();
+		
 		// math object pre map
 		Multimap<String, String> mathObjMMap = ArrayListMultimap.create();
 
-		// first String is word, the rest are theorems this word
+		// first String should be theorem, the rest are key words of this theorem 
 		// belongs to
 		addKeywordToMathObj(new String[] { "polynomial", "fundamental theorem of algebra" }, keywordList, keyDictBuilder, mathObjMMap);
 		addKeywordToMathObj(new String[] { "root", "fundamental theorem of algebra" }, keywordList, keyDictBuilder, mathObjMMap);
@@ -77,7 +84,7 @@ public class TriggerMathThm {
 		addKeywordToMathObj(new String[] { "incomplete", "Godel's incompleteness theorem" }, keywordList, keyDictBuilder, mathObjMMap);
 		addKeywordToMathObj(new String[] { "arithmetic", "Godel's incompleteness theorem" }, keywordList, keyDictBuilder, mathObjMMap);
 		addKeywordToMathObj(new String[] { "natural", "Godel's incompleteness theorem" }, keywordList, keyDictBuilder, mathObjMMap);
-		//addKeywordToMathObj(new String[] { " ", "Godel's incompleteness theorem" }, keywordList, keyDictBuilder, mathObjMMap);
+		// addKeywordToMathObj(new String[] { " ", "Godel's incompleteness theorem" }, keywordList, keyDictBuilder, mathObjMMap);
 		// addKeywordToMathObj(new String[]{"finite", "function", "ring",
 		// "module"}, keywordList, keyDictBuilder, mathObjMMap);
 
@@ -86,7 +93,7 @@ public class TriggerMathThm {
 		keywordDict = keyDictBuilder.build();
 
 		mathObjMx = new int[keywordList.size()][mathObjMMap.keySet().size()];
-
+		
 		buildMathObjMx(keywordList, mathObjMMap, mathObjListBuilder);
 
 		mathObjList = mathObjListBuilder.build();
@@ -96,16 +103,22 @@ public class TriggerMathThm {
 			ImmutableMap.Builder<String, Integer> keyDictBuilder, Multimap<String, String> mathObjMMap) {
 		if (keywords.length == 0)
 			return;
-
+		
 		String keyword = keywords[0];
-
+		//theorem
+		String thm = keywords[0];
+		
 		keyDictBuilder.put(keyword, keywordList.size());
+		//*keyDictBuilder.put(keyword, keywordList.size());
 		//System.out.println("Building: " + keyword);
 		
 		keywordList.add(keywords[0]);
-
+		
+		
 		for (int i = 1; i < keywords.length; i++) {
 			mathObjMMap.put(keywords[i], keyword);
+			//keys are theorems, values are keywords
+			//mathObjMMap.put(thm, keywords[i]);
 		}
 	}
 
@@ -207,7 +220,7 @@ public class TriggerMathThm {
 	 * @return
 	 */
 	public static String get_HighestMathObj(List<String> triggerTerms) {
-
+		
 		int[] innerProducts = getInnerProducts(triggerTerms);
 		String highestMathObj = "";
 		int max = 0;

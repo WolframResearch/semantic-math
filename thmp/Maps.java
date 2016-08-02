@@ -415,7 +415,7 @@ public class Maps {
 		posMap.put("has", "vbs");
 
 		// special participles
-		posMap.put("given", "parti_COMP");
+		posMap.put("given", "parti_COMP");		
 		posMap.put("been", "parti");
 		posMap.put("written", "parti");
 		posMap.put("given by", "partiby");
@@ -577,6 +577,7 @@ public class Maps {
 		structMap.put("pre_noun", new Rule("ppt", 1)); // nounphrase
 		structMap.put("adj_symb", new Rule("phrase", 1));
 		structMap.put("adj_noun", new Rule("phrase", 1));
+		structMap.put("adj_prep", new Rule("phrase", .85));
 		structMap.put("gerund_noun", new Rule("gerundp", 1)); // gerundphrase
 		structMap.put("ent_gerundp", new Rule("newchild", 1));
 
@@ -625,7 +626,7 @@ public class Maps {
 		//structMap.put("assert_csubj", new Rule("", 1));
 		
 		structMap.put("vbs_ent", new Rule("verbphrase", 1));
-		structMap.put("vbs_adj", new Rule("verbphrase", 1));
+		structMap.put("vbs_adj", new Rule("verbphrase", .9));
 		structMap.put("vbs_pro", new Rule("verbphrase", 1));
 		structMap.put("vbs_symb", new Rule("verbphrase", 1));
 		structMap.put("vbs_np", new Rule("verbphrase", 1));
@@ -691,6 +692,7 @@ public class Maps {
 		structMap.put("ent_rproent", new Rule("newchild", 1));
 		structMap.put("rpro_verbphrase", new Rule("phrase", 1));
 		structMap.put("rpro_assert", new Rule("phrase", 1));
+		structMap.put("parti_phrase", new Rule("hypo", .8));
 		structMap.put("amod_noun", new Rule("csubj", 1));
 		structMap.put("amod_ent", new Rule("csubj", 1)); // structMap.put("gerund_np",
 															// new Rule("csubj",

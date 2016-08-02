@@ -49,6 +49,9 @@ public class ParseToWLTree {
 	 */
 	private static final Multimap<String, WLCommand> WLCommandMap = WLCommandsList.WLCommandMap();
 	
+	
+	
+	
 	/**
 	 * Entry point for depth first search.
 	 * @param struct
@@ -59,6 +62,7 @@ public class ParseToWLTree {
 	public static void dfs(Struct struct, StringBuilder parsedSB, ParseStruct headParseStruct, int numSpaces) {
 		structDeque = new ArrayList<Struct>();
 		WLCommandList = new ArrayList<WLCommand>();
+		
 		dfs(struct, parsedSB, headParseStruct, numSpaces, structDeque, WLCommandList);
 	}
 		
@@ -179,12 +183,14 @@ public class ParseToWLTree {
 	 * Searches through parse tree and matches with ParseStruct's.
 	 * Convert to visitor pattern!
 	 * 
-	 * @param struct
+	 * @param parseMap Map of String maps to which parseStructType.
+	 * @param struct HeadStruct, 
 	 * @param parsedSB StringBuilder. Don't actually need it here for now.
 	 * @param headStruct the nearest ParseStruct that's collecting parses
 	 * @param numSpaces is the number of spaces to print. Increment space if number is 
 	 */
-	public static void dfs(Struct struct, StringBuilder parsedSB, ParseStruct headParseStruct, int numSpaces,
+	public static void dfs(Struct struct, 
+			StringBuilder parsedSB, ParseStruct headParseStruct, int numSpaces,
 			List<Struct> structDeque, List<WLCommand> WLCommandList) {
 		//index used to keep track of where in Deque this stuct is
 		//to pop off at correct index later
@@ -203,7 +209,7 @@ public class ParseToWLTree {
 			while (WLCommandListIter.hasNext()) {
 				WLCommand curCommand = WLCommandListIter.next();
 				boolean commandSat = WLCommand.addComponent(curCommand, struct, false);
-
+				
 				// if commandSat, remove all the waiting, triggered commands for
 				// now, except current struct,
 				// Use the one triggered first, which comes first in
@@ -236,7 +242,7 @@ public class ParseToWLTree {
 		}
 		
 		if(!triggeredCol.isEmpty()){		
-			System.out.print("triggered");
+			
 			//is trigger, add all commands in list 
 			//WLCommand curCommand;
 			for(WLCommand curCommandInCol : triggeredCol){
@@ -524,7 +530,7 @@ public class ParseToWLTree {
 	 *	Append all that has structsWithOtherHeadCount equal to the total 
 	 *	component count, since those commands don't interfere with anything else.
 	 */
-	private static void appendWLCommandStr(Struct struct, StringBuilder parsedSB){
+	private static void appendWLCommandStr(Struct struct, StringBuilder parsedSB, Multimap<ParseStructType, String> partsMap){
 		
 		List<WLCommandWrapper> structWrapperList = struct.WLCommandWrapperList();
 		int structWrapperListSz = structWrapperList.size();
@@ -537,10 +543,24 @@ public class ParseToWLTree {
 				//System.out.println(struct.WLCommandStr());
 				//parsedSB.append(struct.WLCommandStr());
 				parsedSB.append(curWrapper.WLCommandStr);
+				//get the ParseStruct based on type
+				ParseStructType type = ParseStructType.getType(struct.type());
+				partsMap.put(type, curWrapper.WLCommandStr);				
 				break;
 			}
 		}
 	}
+	/*
+	public static void dfs(Struct struct, StringBuilder parsedSB, boolean shouldPrint) {
+		
+		 // Map of parts used to build up a theorem/def etc. 
+		 // Parts can be any ParseStructType. Should make this a local var.
+		 
+		Multimap<ParseStructType, String> parts = ArrayListMultimap.create();
+		dfs(parts, struct, parsedSB, shouldPrint);		
+	}
+	 */
+	
 	/**
 	 * DFS for collecting the WLCommandStr's, instead of using the default 
 	 * representations of the Struct's. To achieve a presentation that's closer
@@ -548,7 +568,7 @@ public class ParseToWLTree {
 	 * @param struct
 	 * @param parsedSB
 	 */
-	public static void dfs(Struct struct, StringBuilder parsedSB, boolean shouldPrint) {
+	public static void dfs(Multimap<ParseStructType, String> partsMap, Struct struct, StringBuilder parsedSB, boolean shouldPrint) {
 		//don't append if already incorporated into a higher command
 		//System.out.print(struct.WLCommandStrVisitedCount());
 		//WLComamnd() should not be null if WLCommandStr is not null
@@ -559,7 +579,7 @@ public class ParseToWLTree {
 				//if(struct.WLCommandStr() != null ){
 				parsedSB.append(struct.WLCommandStr());
 			} */
-			appendWLCommandStr(struct, parsedSB);
+			appendWLCommandStr(struct, parsedSB, partsMap);			
 			
 			shouldPrint = false;
 			//reset WLCommandStr back to null, so next 
@@ -579,7 +599,7 @@ public class ParseToWLTree {
 			
 			// don't know type at compile time
 			if (struct.prev1() instanceof Struct) {
-				dfs((Struct) struct.prev1(), parsedSB, shouldPrint);
+				dfs(partsMap, (Struct) struct.prev1(), parsedSB, shouldPrint);
 			}
 
 			// if(struct.prev2() != null && !struct.prev2().equals(""))
@@ -588,7 +608,7 @@ public class ParseToWLTree {
 				// avoid printing is[is], ie case when parent has same type as
 				// child
 				if(shouldPrint) parsedSB.append(", ");
-				dfs((Struct) struct.prev2(), parsedSB, shouldPrint);
+				dfs(partsMap, (Struct) struct.prev2(), parsedSB, shouldPrint);
 			}
 
 			if (struct.prev1() instanceof String) {
@@ -617,7 +637,7 @@ public class ParseToWLTree {
 			for (int i = 0; i < children.size(); i++) {
 				if(shouldPrint) parsedSB.append(childRelation.get(i) + " ");
 
-				dfs(children.get(i), parsedSB, shouldPrint);
+				dfs(partsMap, children.get(i), parsedSB, shouldPrint);
 			}
 			if(shouldPrint) parsedSB.append("]");
 		}
@@ -665,7 +685,7 @@ public class ParseToWLTree {
 	 */
 	private static boolean checkParseStructType(ParseStructType type){
 		boolean createNew = true;
-		if(type == ParseStructType.NONE)
+		if(type == ParseStructType.NONE || type == ParseStructType.STM)
 			createNew = false;
 		return createNew;
 	}
