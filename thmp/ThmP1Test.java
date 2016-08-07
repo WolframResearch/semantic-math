@@ -241,6 +241,9 @@ public class ThmP1Test {
 			//st = "f is an element of a set";
 			st = "take derivative of log of f"; //***
 			st = "given a differentiable function f, its derivative is continuous";
+			st = "if $f=\\sum_i i$ has radius of convergence $r$, then $f$ is holomorphic on $D(0, r)$";
+			st = "$f$ is holomorphic on $D(0, r)$, the derivative of $f$ is $\\sum_j j $";
+			//st = "$d (r)$";
 			//st = "the map p is said to be a quotient map given  a subset U of Y is open in Y";
 			//st = "given that a subset U of Y is open in Y";
 			//st = "U is an open set in Y";

@@ -59,11 +59,12 @@ public class ParseToWLTree {
 	 * @param headParseStruct
 	 * @param numSpaces
 	 */
-	public static void dfs(Struct struct, StringBuilder parsedSB, ParseStruct headParseStruct, int numSpaces) {
+	public static void dfs(Struct struct, StringBuilder parsedSB, ParseStruct headParseStruct, 
+			int numSpaces, boolean printTiers) {
 		structDeque = new ArrayList<Struct>();
 		WLCommandList = new ArrayList<WLCommand>();
 		
-		dfs(struct, parsedSB, headParseStruct, numSpaces, structDeque, WLCommandList);
+		dfs(struct, parsedSB, headParseStruct, numSpaces, structDeque, WLCommandList, printTiers);
 	}
 		
 	/**
@@ -191,7 +192,7 @@ public class ParseToWLTree {
 	 */
 	public static void dfs(Struct struct, 
 			StringBuilder parsedSB, ParseStruct headParseStruct, int numSpaces,
-			List<Struct> structDeque, List<WLCommand> WLCommandList) {
+			List<Struct> structDeque, List<WLCommand> WLCommandList, boolean printTiers) {
 		//index used to keep track of where in Deque this stuct is
 		//to pop off at correct index later
 		//int structDequeIndex = structDeque.size();
@@ -332,10 +333,10 @@ public class ParseToWLTree {
 				parsedSB.append("\n" + space);				
 			} */
 			
-			System.out.print(struct.type());
+			if(printTiers) System.out.print(struct.type());
 			parsedSB.append(struct.type());
 			
-			System.out.print("[");
+			if(printTiers) System.out.print("[");
 			parsedSB.append("[");
 			
 			// don't know type at compile time
@@ -355,17 +356,17 @@ public class ParseToWLTree {
 					String space = "";
 					for(int i = 0; i < numSpaces; i++) space += " ";
 					//System.out.println(space);
-					System.out.print("\n " + space + prev1Type + ":>");
+					if(printTiers) System.out.print("\n " + space + prev1Type + ":>");
 					parsedSB.append("\n " + space + prev1Type + ":>");	
-				}				
+				}
 				//set parent for this DFS path. The parent can change on each path!
 				((Struct) struct.prev1()).set_parentStruct(struct);				
 				//pass along headStruct, unless created new one here				
-				dfs((Struct) struct.prev1(), parsedSB, curHeadParseStruct, numSpaces, structDeque, WLCommandList);
-				if(checkParseStructType){
+				dfs((Struct) struct.prev1(), parsedSB, curHeadParseStruct, numSpaces, structDeque, WLCommandList, printTiers);
+				if(printTiers && checkParseStructType){
 					String space = "";
 					for(int i = 0; i < numSpaces; i++) space += " ";
-					System.out.println(space);
+						System.out.println(space);
 				}
 			}
 			
@@ -373,7 +374,7 @@ public class ParseToWLTree {
 			// System.out.print(", ");
 			if (struct.prev2() instanceof Struct) {
 				
-				System.out.print(", ");
+				if(printTiers) System.out.print(", ");
 				parsedSB.append(", ");
 				
 				// avoid printing is[is], ie case when parent has same type as
@@ -390,13 +391,14 @@ public class ParseToWLTree {
 					numSpaces++;
 					String space = "";
 					for(int i = 0; i < numSpaces; i++) space += " ";
-					System.out.print("\n " + space + prev2Type + ":>");
+					if(printTiers) System.out.print("\n " + space + prev2Type + ":>");
 					parsedSB.append("\n" + space + prev2Type + ":>");	
 				}
 				
 				((Struct) struct.prev2()).set_parentStruct(struct);				
-				dfs((Struct) struct.prev2(), parsedSB, curHeadParseStruct, numSpaces, structDeque, WLCommandList);
-				if(checkParseStructType){
+				dfs((Struct) struct.prev2(), parsedSB, curHeadParseStruct, numSpaces, structDeque, 
+						WLCommandList, printTiers);
+				if(printTiers && checkParseStructType){
 					//setting to "" is necessary to not append duplicate messages, 
 					//duplicate meaning appears in both a struct and a parsedStruct.
 					//should set a flag on Struct, rather than modifying original basic 
@@ -409,19 +411,19 @@ public class ParseToWLTree {
 			}
 
 			if (struct.prev1() instanceof String) {
-				System.out.print(struct.prev1());
+				if(printTiers) System.out.print(struct.prev1());
 				parsedSB.append(struct.prev1());
 			}
 			if (struct.prev2() instanceof String) {
 				if (!struct.prev2().equals("")){
-					System.out.print(", ");
+					if(printTiers) System.out.print(", ");
 					parsedSB.append(", ");
 				}
-				System.out.print(struct.prev2());
+				if(printTiers) System.out.print(struct.prev2());
 				parsedSB.append(struct.prev2());
 			}
 
-			System.out.print("]");
+			if(printTiers) System.out.print("]");
 			parsedSB.append("]");
 			
 			/*if(checkParseStructType0){
@@ -434,7 +436,7 @@ public class ParseToWLTree {
 			
 		} else if (struct instanceof StructH) {
 
-			System.out.print(struct.toString());
+			if(printTiers) System.out.print(struct.toString());
 			parsedSB.append(struct.toString());
 
 			List<Struct> children = struct.children();
@@ -444,11 +446,11 @@ public class ParseToWLTree {
 				//return;
 			if (children != null && children.size() != 0){
 				
-			System.out.print("[");
-			parsedSB.append("[");
+				if(printTiers) System.out.print("[");
+				parsedSB.append("[");
 
 			for (int i = 0; i < children.size(); i++) {
-				System.out.print(childRelation.get(i) + " ");
+				if(printTiers) System.out.print(childRelation.get(i) + " ");
 				parsedSB.append(childRelation.get(i) + " ");
 				Struct ithChild = children.get(i);
 				
@@ -473,9 +475,9 @@ public class ParseToWLTree {
 				}
 				
 				ithChild.set_parentStruct(struct);
-				dfs(ithChild, parsedSB, headParseStruct, numSpaces, structDeque, WLCommandList);
+				dfs(ithChild, parsedSB, headParseStruct, numSpaces, structDeque, WLCommandList, printTiers);
 			}
-			System.out.print("]");
+			if(printTiers) System.out.print("]");
 			parsedSB.append("]");
 			}
 		}

@@ -69,7 +69,7 @@ public class TriggerMathObj {
 		addKeywordToMathObj(new String[]{"function", "function"}, keywordList, keyDictBuilder, mathObjMMap);
 		addKeywordToMathObj(new String[]{"ring", "ring"}, keywordList, keyDictBuilder, mathObjMMap);
 		addKeywordToMathObj(new String[]{"surjective", "function"}, keywordList, keyDictBuilder, mathObjMMap);
-		addKeywordToMathObj(new String[]{"holomorphic", "function"}, keywordList, keyDictBuilder, mathObjMMap);
+		addKeywordToMathObj(new String[]{"holomorphic", "PowerSeries"}, keywordList, keyDictBuilder, mathObjMMap);
 		addKeywordToMathObj(new String[]{"continuous", "function"}, keywordList, keyDictBuilder, mathObjMMap);
 		
 		//addKeywordToMathObj(new String[]{"finite", "function", "ring", "module"}, keywordList, keyDictBuilder, mathObjMMap);
@@ -221,7 +221,7 @@ public class TriggerMathObj {
 		
 		getSubContent(struct, triggerTermList);
 		getChildrenNames(struct, triggerTermList);
-		//System.out.println("TRIGGERTERMLIST " + triggerTermList);
+		System.out.println("TRIGGERTERMLIST " + triggerTermList);
 		String highestMathObj = get_HighestMathObj(triggerTermList);
 		
 		//String namePpt = ((StructH<?>)struct).append_name_pptStr();
@@ -243,15 +243,17 @@ public class TriggerMathObj {
 		if(struct.prev1() instanceof String){
 			childrenNameList.add(struct.prev1().toString());
 		}else if(struct.prev1() instanceof Struct){
-			getSubContent(struct, childrenNameList);
-			getChildrenNames(struct, childrenNameList);
+			Struct subStruct = (Struct)struct.prev1();
+			getSubContent(subStruct, childrenNameList);
+			getChildrenNames(subStruct, childrenNameList);
 		}
 		
 		if(struct.prev2() instanceof String){
 			childrenNameList.add(struct.prev2().toString());
 		}else if(struct.prev2() instanceof Struct){
-			getSubContent(struct, childrenNameList);
-			getChildrenNames(struct, childrenNameList);
+			Struct subStruct = (Struct)struct.prev2();
+			getSubContent(subStruct, childrenNameList);
+			getChildrenNames(subStruct, childrenNameList);
 		}
 	}
 	/**

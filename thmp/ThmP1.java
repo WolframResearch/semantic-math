@@ -31,7 +31,6 @@ public class ThmP1 {
 
 	// should all be StructH's, since these are ent's
 	private static final Map<String, Struct> namesMap;
-
 	// private static HashMap<String, ArrayList<String>> entityMap =
 	// Maps.entityMap;
 	// map of structures, for all, disj, etc
@@ -63,7 +62,12 @@ public class ThmP1 {
 	private static final List<String> unknownWords = new ArrayList<String>();
 	private static final List<ParsedPair> parsedExpr = new ArrayList<ParsedPair>();
 	private static final ImmutableListMultimap<String, FixedPhrase> fixedPhraseMap;
-
+	/**
+	 * List of Stringified Map of parts used to build up a theorem/def etc.  
+	 * Global variable, so to be able to pass to other functions.
+	 */
+	private static final List<String> parseStructMapList = new ArrayList<String>();	
+	
 	// part of speech, last resort after looking up entity property maps
 	// private static HashMap<String, String> pos;
 
@@ -1406,16 +1410,19 @@ public class ThmP1 {
 				StringBuilder parseStructSB = new StringBuilder();
 				ParseStructType parseStructType = ParseStructType.getType(uHeadStruct.type());
 				ParseStruct headParseStruct = new ParseStruct(parseStructType, "", uHeadStruct);
-				ParseToWLTree.dfs(uHeadStruct, parseStructSB, headParseStruct, 0);
+				//whether to print the commands in tiers with the spaces
+				boolean printTiers = false;
+				ParseToWLTree.dfs(uHeadStruct, parseStructSB, headParseStruct, 0, printTiers);
 				System.out.println("\n DONE ParseStruct DFS \n");
 				StringBuilder wlSB = new StringBuilder();
 				/**
 				 * Map of parts used to build up a theorem/def etc. 
 				 * Parts can be any ParseStructType. Should make this a local var.
 				 */
-				Multimap<ParseStructType, String> parts = ArrayListMultimap.create();
-				ParseToWLTree.dfs(parts, uHeadStruct, wlSB, true);
-				System.out.println("Parts: " + parts);
+				Multimap<ParseStructType, String> parseStructMap = ArrayListMultimap.create();
+				ParseToWLTree.dfs(parseStructMap, uHeadStruct, wlSB, true);
+				System.out.println("Parts: " + parseStructMap);
+				parseStructMapList.add(parseStructMap.toString() + "\n");
 				//ParseToWLTree.dfs(uHeadStruct, wlSB, true);	
 				
 				//parsedSB.append("\n");
@@ -1918,7 +1925,7 @@ public class ThmP1 {
 	}
 
 	/**
-	 * write unknown words to file to classify them
+	 * Write unknown words to file to classify them.
 	 * 
 	 * @throws IOException
 	 */
@@ -1952,6 +1959,15 @@ public class ThmP1 {
 		return parsedExprCopy;
 	}
 
+	/** 
+	 * @return The ParseStruct parts of each parse since last retrieval.
+	 */
+	public static List<String> getParseStructMapList(){		
+		List<String> parseStructMapListCopy = new ArrayList<String>(parseStructMapList);
+		parseStructMapList.clear();
+		return parseStructMapListCopy;
+	}
+	
 	/**
 	 * if not full parse, try to make into full parse by fishing out the
 	 * essential sentence structure, and discarding the phrases still not
