@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -483,7 +484,9 @@ public class Maps {
 		mathObjMap.put("module", "mathObj");
 
 		mathObjMap.put("tex", "mathObj"); // TEMPORARY
-
+		mathObjMap.put("li", "mathObj_COMP");
+		mathObjMap.put("li la", "mathObj");
+		
 		// put in template matching, prepositions, of, by, with
 
 		// conjunctions, and, or, for
@@ -587,11 +590,12 @@ public class Maps {
 		ArrayList<String[]> entList = new ArrayList<String[]>();
 
 		for (int i = 0; i < ents.length; i++) {
-			if (ents[i].split("_").length > 1) {
+			String newEnt = ents[i];
+			if (newEnt.split("_").length > 1) {
 				// composite
-				entList.add(new String[] { ents[i].split("_")[0], "mathObj_COMP" });
+				entList.add(new String[] { newEnt.split("_")[0], "mathObj_COMP" });
 			} else {
-				entList.add(new String[] { ents[i], "mathObj" });
+				entList.add(new String[] { newEnt, "mathObj" });
 			}
 		}
 
@@ -762,10 +766,11 @@ public class Maps {
 	public static void readLexicon() throws FileNotFoundException {
 		File file = new File("src/thmp/data/lexicon.txt");
 		Scanner sc = new Scanner(file);
-		String[] lineAr;
-		String pos = "", word = "", replacement = "";
+		String[] lineAr;		
 
 		while (sc.hasNextLine()) {
+			String pos = "", word = "", replacement = "";
+			
 			String nextLine = sc.nextLine();
 			lineAr = nextLine.split(" ");
 			if (lineAr.length < 2)
@@ -776,15 +781,27 @@ public class Maps {
 			}
 			// compound first word, e.g "comm alg"
 			else {
-				Pattern pattern = Pattern.compile("\"(.*)\" ([^\\s]+) \"(.*)\"");
-				Matcher matcher = pattern.matcher(nextLine);
-				// what about partial finds?
-				if (matcher.find()) {
-					word = matcher.group(1);
-					pos = matcher.group(2);
-					replacement = matcher.group(3);
-				}
-
+				//fluff
+				if(nextLine.charAt(0) == '"'){
+					Pattern pattern = Pattern.compile("\"(.*)\" ([^\\s]+) \"(.*)\"");
+					Matcher matcher = pattern.matcher(nextLine);
+					// what about partial finds?
+					if (matcher.find()) {
+						word = matcher.group(1);
+						pos = matcher.group(2);
+						replacement = matcher.group(3);
+					}
+				}else{
+					//composite words
+					//System.out.println("lineAr "  + Arrays.toString(lineAr));
+					pos = lineAr[lineAr.length-1];
+					
+					for(int i = 0; i < lineAr.length - 1; i++){
+						word += lineAr[i] + " ";
+					}
+					word = word.trim();
+					//System.out.println("WORD" + word);
+				}				
 			}
 
 			// format: "new_word pos"

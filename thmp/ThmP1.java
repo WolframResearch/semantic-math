@@ -202,9 +202,9 @@ public class ThmP1 {
 					if (i < stringLength - 1 && curWord.equals("")) {
 						curWord = str[++i];
 					}
-
 					else if (curWord.matches("[^$]*\\$.*")) {
 						latexExpr += " " + curWord;
+						i++;
 					} else {
 						while (i < stringLength && curWord.length() > 0
 								&& curWord.charAt(curWord.length() - 1) != '$') {
@@ -287,11 +287,13 @@ public class ThmP1 {
 							String pos = fixedPhrase.pos();
 							if(!pos.equals("fluff")){
 								Pair phrasePair = new Pair(joined.trim(), pos);
-								pairs.add(phrasePair);
+								
+								pairs.add(phrasePair);								
+								if(pos.matches("ent")) mathIndexList.add(pairs.size() - 1);
 							}
 							
 							i += numWordsDown - 1;
-
+							
 							continue strloop;
 						}
 
@@ -385,7 +387,7 @@ public class ThmP1 {
 					tempPos = posMap.get(temp);
 					i++;
 				}
-
+				
 				Pair pair;
 				if (posMap.containsKey(temp)) {
 					pos = posMap.get(temp);
@@ -397,20 +399,7 @@ public class ThmP1 {
 					pair = new Pair(curWord, pos);
 				}
 
-				int pairsSize = pairs.size();
-
-				// if adverb-adj pair, eg "clearly good"
-				// And combine adj_adj to adj, eg right exact
-				if (pairs.size() > 0 && posMap.get(curWord).equals("adj")) {
-					if (pairs.get(pairsSize - 1).pos().matches("adverb|adj")) {
-						curWord = pairs.get(pairsSize - 1).word() + " " + curWord;
-						// remove previous Pair
-						pairs.remove(pairsSize - 1);
-						pair = new Pair(curWord, "adj");
-						addIndex = false;
-					}
-
-				}
+				pair = fuseEntAdj(pairs, curWord, pair);
 
 				pairs.add(pair);
 			}
@@ -933,6 +922,32 @@ public class ThmP1 {
 		}
 
 		return structList;
+	}
+
+	/**
+	 * 
+	 * @param pairs
+	 * @param curWord
+	 * @param pair
+	 * @return
+	 */
+	private static Pair fuseEntAdj(ArrayList<Pair> pairs, String curWord, Pair pair) {
+		boolean addIndex;
+		int pairsSize = pairs.size();
+
+		// if adverb-adj pair, eg "clearly good"
+		// And combine adj_adj to adj, eg right exact
+		if (pairs.size() > 0 && posMap.get(curWord).equals("adj")) {
+			if (pairs.get(pairsSize - 1).pos().matches("adverb|adj")) {
+				curWord = pairs.get(pairsSize - 1).word() + " " + curWord;
+				// remove previous Pair
+				pairs.remove(pairsSize - 1);
+				pair = new Pair(curWord, "adj");
+				addIndex = false;
+			}
+
+		}
+		return pair;
 	}
 
 	/*
@@ -2107,11 +2122,14 @@ public class ThmP1 {
 					// keep reading in string characters, until there is no
 					// match
 					tempWord += " " + wordsArray[++j];
-
+					
 					while (posMap.containsKey(tempWord.toLowerCase()) && j < wordsArrayLen - 1) {
 						tempWord += " " + wordsArray[++j];
 					}
-
+					
+					//******************tempWord invokes too many strings!
+					//System.out.println("tempWord: " + tempWord);
+					
 					String replacement = fluffMap.get(tempWord.toLowerCase());
 					if (replacement != null) {
 						sentenceBuilder.append(" " + replacement);

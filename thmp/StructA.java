@@ -147,7 +147,7 @@ public class StructA<A, B> extends Struct{
 	}
 	
 	@Override
-	public String simpleToString(){
+	public String simpleToString(boolean includeType){
 		//if(this.posteriorBuiltStruct != null) return "";
 		
 		//been built into one command already
@@ -159,11 +159,11 @@ public class StructA<A, B> extends Struct{
 		}		
 		
 		A name = this.prev1;
-		return name instanceof String ? (String)name : this.simpleToString2();
+		return name instanceof String ? (String)name : this.simpleToString2(includeType);
 	}
 	
 	//auxilliary method for simpleToString and called inside StructH.simpleToString2
-	public String simpleToString2(){
+	public String simpleToString2(boolean includeType){
 		//return "" if commandStr is not null (??)
 		//if(this.WLCommandStr != null) return "";
 		if(this.WLCommandWrapperList != null) return "";
@@ -171,12 +171,14 @@ public class StructA<A, B> extends Struct{
 		String str = "";		
 		str += this.type.matches("conj_.*|disj_.*") ? this.type.split("_")[0] +  " " : "";		
 
-		if(this.prev1 != null && !prev1.equals("")){
+		if(this.prev1 != null){
 			//if(prev1 instanceof Struct && ((Struct) prev1).WLCommandStr() == null){
 			if(prev1 instanceof Struct && ((Struct) prev1).WLCommandWrapperList() == null){
-				str += ((Struct) prev1).simpleToString2();
-				
-			}else if(prev1 instanceof String){
+				String prev1Str = ((Struct) prev1).simpleToString2(includeType);
+				if(!prev1Str.matches("\\s*")){
+					str += prev1Str;
+				}
+			}else if(prev1 instanceof String && !prev1.equals("")){
 				if(!type.matches("pre|partiby")){
 					str += prev1;
 				}
@@ -185,8 +187,12 @@ public class StructA<A, B> extends Struct{
 		
 		if(prev2 != null){
 			if(prev2 instanceof Struct && ((Struct) prev2).WLCommandWrapperList() == null){
-				str += ", " + ((Struct) prev2).simpleToString2();
-			}else if(prev2 instanceof String && !prev2.equals("")){
+				String prev2Str = ((Struct) prev2).simpleToString2(includeType);
+				if(!prev2Str.matches("\\s*")){
+					if(!str.matches("\\s*")) str += ", ";
+					str += prev2Str;
+				}
+			}else if(prev2 instanceof String && !((String)prev2).matches("\\s*")){
 				str += ", " + prev2;
 			}
 		}
@@ -381,30 +387,32 @@ public class StructA<A, B> extends Struct{
 			showprev1 = false;
 		}
 		
-		str += this.type.matches("conj_.*") ? this.type + "[" : "[";
 		//str += "[";
+		//temporary string used to add to main str later.
+		String tempStr = "";
 		
 		if(prev1 != null && !prev1.equals("")){
 			if(prev1 instanceof Struct){
-				str = ((Struct) prev1).present(str);
+				tempStr = ((Struct) prev1).present(str);
 				
 			}else if(prev1 instanceof String && showprev1){
 				if(!type.matches("pre|partiby")){
-					str += prev1;
+					tempStr += prev1;
 				}
 			}			
 		}
 		
 		if(prev2 != null && !prev2.equals("")){
 			if(prev2 instanceof Struct){
-				str = ((Struct) prev2).present(str + ", ");
+				tempStr = ((Struct) prev2).present(str + ", ");
 			}else if(prev2 instanceof String){
-				str += ", " + prev2;
+				tempStr += ", " + prev2;
 			}
 		}
 		
-		//str += "]";
-		str += "]";
+		if(!tempStr.matches("\\s*")){
+			str += this.type.matches("conj_.*") ? this.type + "[" + tempStr + "]": "[" + tempStr + "]";
+		}
 		return str;
 	}
 	

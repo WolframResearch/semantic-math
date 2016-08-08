@@ -1,3 +1,4 @@
 for all | for all but finitely many | adj
 if and | if and only if | hyp
 we say | we say that | fluff
+radius of | radius of convergence | ent

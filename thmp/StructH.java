@@ -282,10 +282,11 @@ public class StructH<H> extends Struct{
 	/**
 	 * Simple toString to return the bare minimum to present this Struct.
 	 * To be used in ParseToWLTree.
+	 * @param includeType	Whether to include the type, eg "MathObj"
 	 * @return
 	 */
 	@Override
-	public String simpleToString(){
+	public String simpleToString(boolean includeType){
 		//if(this.posteriorBuiltStruct != null) return "";
 		this.WLCommandStrVisitedCount++;
 		// instead of checking WLCommandStr, check if wrapperList is null
@@ -302,15 +303,16 @@ public class StructH<H> extends Struct{
 		}		
 		//String name = this.struct.get("name");
 		//return name == null ? this.type : name;
-		return this.simpleToString2();
+		return this.simpleToString2(includeType);
 	}
 	
 	//auxilliary method for simpleToString and StructA.simpleToString
-	public String simpleToString2(){
+	public String simpleToString2(boolean includeType){
 		String str = "";
-		str += this.type.equals("ent") ? "MathObj" : this.type;
-		str += "{";
-		
+		if(includeType){ 			
+			str += this.type.equals("ent") ? "MathObj" : this.type;
+			str += "{";
+		}
 		str += append_name_pptStr();
 		
 		//iterate through children		
@@ -321,13 +323,13 @@ public class StructH<H> extends Struct{
 				continue;
 			//str += ", ";
 			//str += childRelation.get(i) + " ";	
-			String childStr = child.simpleToString2();
+			String childStr = child.simpleToString2(includeType);
 			//str += childStr;	
 			if(!childStr.matches("\\s*")){
 				str += ", " + childStr;				
 			}
 		}		
-		str += "}";
+		if(includeType) str += "}";
 
 		return str;
 	}

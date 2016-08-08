@@ -1,6 +1,7 @@
 package thmp;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -62,10 +63,12 @@ public class TriggerMathObj {
 		Multimap<String, String> mathObjMMap = ArrayListMultimap.create();
 		
 		//first String is property, the rest are math objects this property belongs to
-		addKeywordToMathObj(new String[]{"radius", "function"}, keywordList, keyDictBuilder, mathObjMMap);
-		addKeywordToMathObj(new String[]{"convergence", "function"}, keywordList, keyDictBuilder, mathObjMMap);
+		addKeywordToMathObj(new String[]{"radius", "function", "PowerSeries"}, keywordList, keyDictBuilder, mathObjMMap);
+		addKeywordToMathObj(new String[]{"convergence", "PowerSeries"}, keywordList, keyDictBuilder, mathObjMMap);
+		addKeywordToMathObj(new String[]{"radius of convergence", "PowerSeries"}, keywordList, keyDictBuilder, mathObjMMap);
 		addKeywordToMathObj(new String[]{"ideal", "ring"}, keywordList, keyDictBuilder, mathObjMMap);
 		addKeywordToMathObj(new String[]{"zero", "ring", "function"}, keywordList, keyDictBuilder, mathObjMMap);
+		addKeywordToMathObj(new String[]{"root", "function"}, keywordList, keyDictBuilder, mathObjMMap);
 		addKeywordToMathObj(new String[]{"function", "function"}, keywordList, keyDictBuilder, mathObjMMap);
 		addKeywordToMathObj(new String[]{"ring", "ring"}, keywordList, keyDictBuilder, mathObjMMap);
 		addKeywordToMathObj(new String[]{"surjective", "function"}, keywordList, keyDictBuilder, mathObjMMap);
@@ -81,6 +84,7 @@ public class TriggerMathObj {
 		mathObjMx = new int[keywordList.size()][mathObjMMap.keySet().size()];
 		
 		buildMathObjMx(keywordList, mathObjMMap, mathObjListBuilder);
+		//System.out.println(Arrays.deepToString(mathObjMx));
 		
 		mathObjList = mathObjListBuilder.build();
 	}
@@ -133,11 +137,14 @@ public class TriggerMathObj {
 		//List<String> triggeredMathObjList = new ArrayList<String>();
 		
 		for(String term : triggerTerms){
+			
 			Integer rowIndex = keywordDict.get(term);
+			
 			if(rowIndex != null){
 				triggerTermsVec[rowIndex] = 1;
 			}
 		}
+		//System.out.println(Arrays.toString(triggerTermsVec));
 		return applyMathObjMx(triggerTermsVec);
 	}
 	
@@ -172,13 +179,15 @@ public class TriggerMathObj {
 		int[] innerProducts = getInnerProducts(triggerTerms);
 		String highestMathObj = "";
 		int max = 0;
-		
+		int maxIndex = 0;
 		for(int i = 0; i < innerProducts.length; i++){
 			if(innerProducts[i] > max){
 				max = innerProducts[i];
-				highestMathObj = mathObjList.get(i);
+				maxIndex = i;				
 			}
 		}
+		highestMathObj = mathObjList.get(maxIndex);
+		System.out.println("inner products: " + Arrays.toString(innerProducts));
 		return highestMathObj;
 	}
 	
@@ -222,10 +231,11 @@ public class TriggerMathObj {
 		getSubContent(struct, triggerTermList);
 		getChildrenNames(struct, triggerTermList);
 		System.out.println("TRIGGERTERMLIST " + triggerTermList);
+		
 		String highestMathObj = get_HighestMathObj(triggerTermList);
 		
 		//String namePpt = ((StructH<?>)struct).append_name_pptStr();
-		String namePpt = struct.simpleToString();
+		String namePpt = struct.simpleToString(false);
 		
 		String r = highestMathObj.matches("") ? namePpt : highestMathObj + "[" + namePpt + "]";
 		
@@ -269,9 +279,10 @@ public class TriggerMathObj {
 			//don't cast, make abstract method in Struct
 			if(child instanceof StructH){
 				String namePpt = ((StructH<?>)child).append_name_pptStr();	
-				//should not add the whole namePpt string to childrenNameList as one string!
-				//should add as separate strings!
-				childrenNameList.add(namePpt);
+				//should not add the whole namePpt string to childrenNameList as one string,
+				//should add as separate strings
+				String[] namePptAr = namePpt.split(",\\s*");
+				childrenNameList.addAll(Arrays.asList(namePptAr));
 				getChildrenNames(child, childrenNameList);
 			}else{
 				System.out.println("\n namePPT " + child.present(""));

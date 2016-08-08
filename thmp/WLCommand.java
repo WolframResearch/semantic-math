@@ -330,10 +330,10 @@ public class WLCommand {
 					nextWord = TriggerMathObj.get_mathObjFromStruct(nextStruct);
 					
 					if(nextWord.equals("")){
-						nextWord = nextStruct.simpleToString();
+						nextWord = nextStruct.simpleToString(true);
 					}
 				}else{
-					nextWord = nextStruct.simpleToString();
+					nextWord = nextStruct.simpleToString(true);
 				}
 				//simple way to present the Struct
 				//set to the head struct the currently built command will be appended to

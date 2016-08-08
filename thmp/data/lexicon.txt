@@ -12,6 +12,14 @@ take verb
 analogue noun
 hold verb
 situation noun
+formal adj
+series ent_comp
+power series ent_comp
+formal power series ent
+la ent_comp
+li la ent
+li adj
+power noun
 closed adj
 great adj
 open adj

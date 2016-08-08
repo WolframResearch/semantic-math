@@ -3,6 +3,7 @@ package thmp;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Scanner;
 
 import com.wolfram.alpha.parser.preparser.TexConverter;
@@ -243,14 +244,21 @@ public class ThmP1Test {
 			st = "given a differentiable function f, its derivative is continuous";
 			st = "if $f=\\sum_i i$ has radius of convergence $r$, then $f$ is holomorphic on $D(0, r)$";
 			st = "$f$ is holomorphic on $D(0, r)$, the derivative of $f$ is $\\sum_j j $";
-			//st = "$d (r)$";
+			st = "f is a function, f has root at 0";
+			st = "if $f(z) = \\sum a_n z^n $ has radius of convergence $r$, then the function $f$ is holomorphic on $D(0, r)$,";
+			st = "f has radius of convergence r";
+			//st = "matrix $M$";
+			//st = "radius of convergence";
+			//st = "formal power series";
+			//st = "the derivative of $f$ is $\\sum na_n z^{n-1}$";
+			//st = "Let $f(T) = a_1T + ...$ be a formal power series with $a_1 \\ne 0$, "
+				//	+ "then there exists a unique power series $g(T)$ such that $f(g(T)) = T$";
 			//st = "the map p is said to be a quotient map given  a subset U of Y is open in Y";
 			//st = "given that a subset U of Y is open in Y";
 			//st = "U is an open set in Y";
 			//st = "let U be an open set in Y";
 			//st = "subset U of Y is open in Y";
 			//st = "log of f";
-			//st = "";
 			//st = "given an element f of a set $S$"; 
 			//st = "f is a function with radius of convergence r and finitely many roots";
 			//st = "let S be the union of elements of a field";
@@ -263,11 +271,14 @@ public class ThmP1Test {
 			//System.out.println("from TexConverter: " + TexConverter.convert("let $m \\subset M$ be an element"));			
 			
 			strAr = ThmP1.preprocess(st);
+			
 			for(int i = 0; i < strAr.length; i++){
 				//alternate commented out line to enable tex converter
 				//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim()) ));
 				ThmP1.parse(ThmP1.tokenize(strAr[i].trim()));				
 			}
+			System.out.println("PARTS: " + Arrays.toString(ThmP1.getParseStructMapList().toArray()));
+			
 			//System.out.println("****" + ThmP1.getParsedExpr() + "******");
 			Scanner sc = new Scanner(new File("src/thmp/data/noTex4.txt"));
 			
