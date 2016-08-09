@@ -51,6 +51,10 @@ public abstract class Struct {
 	public abstract void set_parentStruct(Struct parent);
 	
 	public abstract Struct parentStruct();
+
+	public abstract void set_dfsDepth(int depth);
+	
+	public abstract int dfsDepth();
 	
 	//returns probability of relation in Rule
 	public abstract double score();

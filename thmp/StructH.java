@@ -30,6 +30,9 @@ public class StructH<H> extends Struct{
 	private Struct structToAppendCommandStr;
 	//parentStruct is *not* unique! Depends on which DFS path we take.
 	private Struct parentStruct;
+	//Depth from root of the tree. Root has depth 0. *Not* intrinsic to the Struct, 
+	//depends on the DFS path.
+	private int depth;
 	private boolean hasChild = false;
 	private ArrayList<Struct> children; 
 	//relation to child, eg "of," "enjoyed"
@@ -85,6 +88,17 @@ public class StructH<H> extends Struct{
 	public Struct parentStruct(){
 		return this.parentStruct;
 	}
+	
+	@Override
+	public void set_dfsDepth(int depth){
+		this.depth = depth;
+	}
+	
+	@Override
+	public int dfsDepth(){
+		return this.depth;
+	}
+	
 	/*
 	@Override
 	public void append_WLCommandStr(String WLCommandStr){

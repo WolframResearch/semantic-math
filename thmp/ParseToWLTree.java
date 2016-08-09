@@ -498,10 +498,12 @@ public class ParseToWLTree {
 			List<Struct> posTermStructList = WLCommand.getStructList(curCommand, firstPosTerm.commandComponent());
 			//System.out.println("Satisfied command: " + curCommand);
 			//System.out.println("First PosTerm" + firstPosTerm);
+			
+			
 			//currently just get the first Struct in list, not canonical at all.			
 			//firstPosTerm should have some Struct, as the command is satisfied.
 			Struct posTermStruct = posTermStructList.get(0);
-			
+			///////////
 			Struct structToAppendCommandStr = posTermStruct;
 			
 			Struct parentStruct = posTermStruct.parentStruct();
@@ -514,8 +516,8 @@ public class ParseToWLTree {
 			structToAppendCommandStr = (grandparentStruct == null ? 
 					(parentStruct == null ? structToAppendCommandStr : parentStruct) : 
 						(grandparentStruct instanceof StructH ? parentStruct : grandparentStruct));
-			
-			String curCommandString = WLCommand.build(curCommand, structToAppendCommandStr);
+			////////
+			String curCommandString = WLCommand.build(curCommand, posTermStruct);
 			
 			//now append Str to wrapper inside build()
 			//structToAppendCommandStr.append_WLCommandStr(curCommandString);
@@ -704,10 +706,30 @@ public class ParseToWLTree {
 		private int listIndex;
 		//built command String associated with this command.
 		private String WLCommandStr;
+		//depth of highestStruct
+		private int leastDepth;
+		//highest struct in tree amongst Structs that build this WLCommand, ie closest to root.
+		private Struct highestStruct;
 		
 		public WLCommandWrapper(WLCommand curCommand, int listIndex){			
 			this.WLCommand = curCommand;
 			this.listIndex = listIndex;
+		}
+		
+		public void set_leastDepth(int depth){
+			this.leastDepth = depth;
+		}
+		
+		public int leastDepth(){
+			return this.leastDepth;
+		}
+		
+		public void set_highestStruct(Struct struct){
+			this.highestStruct = struct;
+		}
+		
+		public Struct highestStruct(){
+			return this.highestStruct;
 		}
 		
 		//shouldn't need this

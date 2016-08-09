@@ -1432,14 +1432,14 @@ public class ThmP1 {
 			// ArrayDFS(headStructList));
 			for (int u = 0; u < headStructListSz; u++) {
 				Struct uHeadStruct = headStructList.structList().get(u);
-				
+				uHeadStruct.set_dfsDepth(0);
 				dfs(uHeadStruct, parsedSB);
 				//******
 				System.out.println("\n START ParseStruct DFS");
 				StringBuilder parseStructSB = new StringBuilder();
 				ParseStructType parseStructType = ParseStructType.getType(uHeadStruct.type());
 				ParseStruct headParseStruct = new ParseStruct(parseStructType, "", uHeadStruct);
-				//whether to print the commands in tiers with the spaces
+				//whether to print the commands in tiers with the spaces in subsequent lines.
 				boolean printTiers = false;
 				ParseToWLTree.dfs(uHeadStruct, parseStructSB, headParseStruct, 0, printTiers);
 				System.out.println("\n DONE ParseStruct DFS \n");
@@ -1525,6 +1525,7 @@ public class ThmP1 {
 				int highestScoreIndex = 0; ///**********
 
 				Struct kHeadStruct = parsedStructList.get(k).structList().get(highestScoreIndex);
+				kHeadStruct.set_dfsDepth(0);
 				dfs(kHeadStruct, parsedSB);
 				
 				//only getting first component parse. Should use priority queue instead of list?
@@ -2010,6 +2011,9 @@ public class ThmP1 {
 	}
 
 	public static void dfs(Struct struct, StringBuilder parsedSB) {
+		
+		int structDepth = struct.dfsDepth();
+		
 		// don't like instanceof here
 		if (struct instanceof StructA) {
 
@@ -2019,19 +2023,22 @@ public class ThmP1 {
 			System.out.print("[");
 			parsedSB.append("[");
 			
-			// don't know type at compile time
 			if (struct.prev1() instanceof Struct) {
-				dfs((Struct) struct.prev1(), parsedSB);
+				Struct prev1Struct = (Struct) struct.prev1();
+				prev1Struct.set_dfsDepth(structDepth + 1);
+				dfs(prev1Struct, parsedSB);
 			}
-
+			
 			// if(struct.prev2() != null && !struct.prev2().equals(""))
 			// System.out.print(", ");
-			if (((StructA<?, ?>) struct).prev2() instanceof Struct) {
+			if (struct.prev2() instanceof Struct) {
 				// avoid printing is[is], ie case when parent has same type as
 				// child
 				System.out.print(", ");
 				parsedSB.append(", ");
-				dfs((Struct) struct.prev2(), parsedSB);
+				Struct prev2Struct = (Struct) struct.prev2();
+				prev2Struct.set_dfsDepth(structDepth + 1);
+				dfs(prev2Struct, parsedSB);
 			}
 
 			if (struct.prev1() instanceof String) {
@@ -2050,13 +2057,13 @@ public class ThmP1 {
 			System.out.print("]");
 			parsedSB.append("]");
 		} else if (struct instanceof StructH) {
-
+			
 			System.out.print(struct.toString());
 			parsedSB.append(struct.toString());
-
+			
 			List<Struct> children = struct.children();
 			List<String> childRelation = struct.childRelation();
-
+			
 			if (children == null || children.size() == 0)
 				return;
 
@@ -2066,8 +2073,11 @@ public class ThmP1 {
 			for (int i = 0; i < children.size(); i++) {
 				System.out.print(childRelation.get(i) + " ");
 				parsedSB.append(childRelation.get(i) + " ");
-
-				dfs(children.get(i), parsedSB);
+				
+				Struct child_i = children.get(i);
+				child_i.set_dfsDepth(structDepth + 1);
+				
+				dfs(child_i, parsedSB);
 			}
 			System.out.print("]");
 			parsedSB.append("]");

@@ -95,6 +95,11 @@ public class WLCommand {
 	//private int s;
 	
 	/**
+	 * Max tree depth in DFS.
+	 */
+	private static final int MAXDFSDEPTH = 100;
+
+	/**
 	 * PosTerm stores a part of speech term, and the position in commandsMap
 	 * it occurs, to build a WLCommand, ie turn triggered phrases into WL commands.
 	 * 
@@ -222,12 +227,56 @@ public class WLCommand {
 	}
 	
 	/**
-	 * Update the wrapper list, and current struct passed in.
+	 * Find struct with least depth amongst Structs that build this WLCommand
+	 */
+	private static Struct findCommandHead(List<PosTerm> posTermList, Struct firstPosTermStruct){
+		Struct structToAppendCommandStr;
+		
+		int leastDepth = MAXDFSDEPTH;
+		Struct highestStruct = null;
+		
+		for(PosTerm term : posTermList){
+			//Struct for derivative should not be null!
+			
+			Struct nextStruct = term.posTermStruct;
+			System.out.println("TERMStruct " + nextStruct);
+			if(nextStruct != null){
+			int nextStructDepth = nextStruct.dfsDepth();
+			if(nextStructDepth < leastDepth){
+				highestStruct = nextStruct;
+				leastDepth = nextStructDepth;
+			}
+			}
+		}
+		//if head is ent and 
+		//everything in this command belongs to or is a child of the head ent struct
+		if(firstPosTermStruct.type().equals("ent") && highestStruct == firstPosTermStruct){
+			structToAppendCommandStr = highestStruct;
+		}else{
+			structToAppendCommandStr = firstPosTermStruct;
+		Struct parentStruct = firstPosTermStruct.parentStruct();
+		
+		//go one level higher if parent exists
+		Struct grandparentStruct = null;
+		if(parentStruct != null) grandparentStruct = parentStruct.parentStruct();
+		
+		//set grandparent to parent if grandparent is a StructH
+		structToAppendCommandStr = (grandparentStruct == null ? 
+				(parentStruct == null ? structToAppendCommandStr : parentStruct) : 
+					(grandparentStruct instanceof StructH ? parentStruct : grandparentStruct));
+		}
+		
+		return structToAppendCommandStr;
+	}
+	
+	/**
+	 * Update the wrapper list to incorporate current struct.
 	 * @param nextStruct
 	 * @param structToAppendCommandStr
 	 * @return Whether nextStruct already has associated head.
 	 */
 	private static boolean updateWrapper(Struct nextStruct, Struct structToAppendCommandStr){
+		
 		//List<WLCommandWrapper> nextStructWrapperList = nextStruct.WLCommandWrapperList();
 		Struct headStruct = nextStruct.structToAppendCommandStr();
 		boolean prevStructHeaded = false; 
@@ -257,7 +306,7 @@ public class WLCommand {
 	 * Right now not using this struct value, just to set previousBuiltStruct to not be null.
 	 * @return String form of the resulting WLCommand
 	 */
-	public static String build(WLCommand curCommand, Struct structToAppendCommandStr){
+	public static String build(WLCommand curCommand, Struct firstPosTermStruct){
 		if(curCommand.componentCounter > 0) return "";
 		ListMultimap<WLCommandComponent, Struct> commandsMap = curCommand.commandsMap;
 		//counts should now be all 0
@@ -267,16 +316,20 @@ public class WLCommand {
 		String commandString = "";
 		//the latest Struct to be touched, for determining if an aux String should be displayed
 		boolean prevStructHeaded = false;
+	
+		//determine the which head to attach this command to
+		Struct structToAppendCommandStr = findCommandHead(posTermList, firstPosTermStruct);
 		
 		for(PosTerm term : posTermList){
 			
 			if(!term.includeInBuiltString){ 				
 				//set its head Struct to structToAppendCommandStr,
-				Struct nextStruct = term.posTermStruct;
+				Struct nextStruct = term.posTermStruct;				
+				
 				//get WLCommandWrapperList
 				if(nextStruct != null){
 					updateWrapper(nextStruct, structToAppendCommandStr);
-				
+					
 				//if(nextStruct != null){
 				//if != null, some Wrappers have been added, so already associated to some commands.
 				/*if(nextStructWrapperList != null){						
@@ -342,6 +395,7 @@ public class WLCommand {
 				structToAppendCommandStr.set_posteriorBuiltStruct(nextStruct);				
 				
 				prevStructHeaded = updateWrapper(nextStruct, structToAppendCommandStr);
+				
 				/*if(nextStruct.structToAppendCommandStr() == null){						
 					prevStructHeaded = false;
 				}else{
@@ -393,7 +447,8 @@ public class WLCommand {
 		//Wrapper used here during build().
 		WLCommandWrapper curCommandWrapper = structToAppendCommandStr.add_WLCommandWrapper(curCommand);
 		//structToAppendCommandStr.set_WLCommand(curCommand);
-				
+		
+		curCommandWrapper.set_highestStruct(structToAppendCommandStr);
 		curCommandWrapper.append_WLCommandStr(commandString);
 		return commandString;
 	}
