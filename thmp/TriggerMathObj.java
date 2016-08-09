@@ -179,16 +179,21 @@ public class TriggerMathObj {
 		int[] innerProducts = getInnerProducts(triggerTerms);
 		String highestMathObj = "";
 		int max = 0;
-		int maxIndex = 0;
+		int maxIndex = -1;
 		for(int i = 0; i < innerProducts.length; i++){
 			if(innerProducts[i] > max){
 				max = innerProducts[i];
 				maxIndex = i;				
 			}
 		}
-		highestMathObj = mathObjList.get(maxIndex);
 		System.out.println("inner products: " + Arrays.toString(innerProducts));
-		return highestMathObj;
+
+		if(maxIndex == -1){
+			return "";
+		}else{
+			highestMathObj = mathObjList.get(maxIndex);
+			return highestMathObj;
+		}
 	}
 	
 	/**
