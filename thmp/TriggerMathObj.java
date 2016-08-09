@@ -67,7 +67,7 @@ public class TriggerMathObj {
 		addKeywordToMathObj(new String[]{"convergence", "PowerSeries"}, keywordList, keyDictBuilder, mathObjMMap);
 		addKeywordToMathObj(new String[]{"radius of convergence", "PowerSeries"}, keywordList, keyDictBuilder, mathObjMMap);
 		addKeywordToMathObj(new String[]{"ideal", "ring"}, keywordList, keyDictBuilder, mathObjMMap);
-		addKeywordToMathObj(new String[]{"zero", "ring", "function"}, keywordList, keyDictBuilder, mathObjMMap);
+		addKeywordToMathObj(new String[]{"zero", "function"}, keywordList, keyDictBuilder, mathObjMMap);
 		addKeywordToMathObj(new String[]{"root", "function"}, keywordList, keyDictBuilder, mathObjMMap);
 		addKeywordToMathObj(new String[]{"function", "function"}, keywordList, keyDictBuilder, mathObjMMap);
 		addKeywordToMathObj(new String[]{"ring", "ring"}, keywordList, keyDictBuilder, mathObjMMap);
@@ -144,7 +144,7 @@ public class TriggerMathObj {
 				triggerTermsVec[rowIndex] = 1;
 			}
 		}
-		//System.out.println(Arrays.toString(triggerTermsVec));
+		//System.out.println("triggerTermsVec" + Arrays.toString(triggerTermsVec));
 		return applyMathObjMx(triggerTermsVec);
 	}
 	
@@ -174,7 +174,7 @@ public class TriggerMathObj {
 	 * @param triggerTerms
 	 * @return
 	 */
-	public static String get_HighestMathObj(List<String> triggerTerms){		
+	private static String get_HighestMathObj(List<String> triggerTerms){		
 		
 		int[] innerProducts = getInnerProducts(triggerTerms);
 		String highestMathObj = "";
@@ -273,7 +273,18 @@ public class TriggerMathObj {
 	 */
 	private static void getChildrenNames(Struct struct, List<String> childrenNameList){
 		//note for StructA, has_child == false
-		if(struct instanceof StructA || !struct.has_child()) return; 
+		if(struct instanceof StructA) return; 
+		
+		if(struct.struct().containsKey("name")){
+			String structName = struct.struct().get("name");
+			childrenNameList.add(structName);
+			String[] singularForms = ThmP1.getSingularForms(structName, structName.length());
+			for(String singularForm : singularForms){
+				if(singularForm != null && !singularForm.equals("")){
+					childrenNameList.add(singularForm);
+				}
+			}
+		}
 		List<Struct> children = struct.children();
 		for(Struct child : children){
 			//don't cast, make abstract method in Struct

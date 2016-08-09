@@ -302,22 +302,12 @@ public class ThmP1 {
 				}
 			}
 
-			// primitive way to handle plural forms: if ends in "s"
-			String singular = "";
-			String singular2 = ""; // ending in "ies"
-			String singular3 = ""; // ending in "es"
-			if (wordlen > 0 && curWord.charAt(wordlen - 1) == 's') {
-				singular = curWord.substring(0, wordlen - 1);
-			}
-
-			if (wordlen > 3 && curWord.substring(wordlen - 3, wordlen).equals("ies")) {
-				singular2 = curWord.substring(0, wordlen - 3) + 'y';
-			}
-
-			if (wordlen > 2 && curWord.substring(wordlen - 2, wordlen).equals("es")) {
-				singular3 = curWord.substring(0, wordlen - 2);
-			}
-
+			String[] singularForms = getSingularForms(curWord, wordlen);
+			
+			String singular = singularForms[0];
+			String singular2 = singularForms[1]; // ending in "ies"
+			String singular3 = singularForms[2]; // ending in "es"
+			
 			if (Maps.mathObjMap.containsKey(curWord) || mathObjMap.containsKey(singular)) {
 
 				String tempWord = mathObjMap.containsKey(singular) ? singular : curWord;
@@ -922,6 +912,30 @@ public class ThmP1 {
 		}
 
 		return structList;
+	}
+
+	/**
+	 * Get the singular forms of current word
+	 * @param curWord
+	 * @param wordlen
+	 * @return Array of singular forms
+	 */
+	public static String[] getSingularForms(String curWord, int wordlen) {
+		// primitive way to handle plural forms: if ends in "s"
+		String[] singularForms = new String[3];
+		
+		if (wordlen > 0 && curWord.charAt(wordlen - 1) == 's') {
+			singularForms[0] = curWord.substring(0, wordlen - 1);
+		}
+
+		if (wordlen > 3 && curWord.substring(wordlen - 3, wordlen).equals("ies")) {
+			singularForms[1] = curWord.substring(0, wordlen - 3) + 'y';
+		}
+
+		if (wordlen > 2 && curWord.substring(wordlen - 2, wordlen).equals("es")) {
+			singularForms[2] = curWord.substring(0, wordlen - 2);
+		}
+		return singularForms;
 	}
 
 	/**

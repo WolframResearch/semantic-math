@@ -246,11 +246,12 @@ public class ThmP1Test {
 			st = "$f$ is holomorphic on $D(0, r)$, the derivative of $f$ is $\\sum_j j $";
 			st = "f is a function, f has root at 0";
 			st = "if $f(z) = \\sum a_n z^n $ has radius of convergence $r$, then the function $f$ is holomorphic on $D(0, r)$,";
-			st = "f has radius of convergence r";
+			//st = "f has radius of convergence r and zeros along $z = 1/2 $";
+			//st = "f has radius of convergence r and zeros";
 			//st = "matrix $M$";
 			//st = "radius of convergence";
 			//st = "formal power series";
-			//st = "the derivative of $f$ is $\\sum na_n z^{n-1}$";
+			st = "the derivative of $f$ is $\\sum na_n z^{n-1}$";
 			//st = "Let $f(T) = a_1T + ...$ be a formal power series with $a_1 \\ne 0$, "
 				//	+ "then there exists a unique power series $g(T)$ such that $f(g(T)) = T$";
 			//st = "the map p is said to be a quotient map given  a subset U of Y is open in Y";

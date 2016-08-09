@@ -327,6 +327,7 @@ public class WLCommand {
 				
 				//check if need to trigger triggerMathObj
 				if(term.triggerMathObj){
+					
 					nextWord = TriggerMathObj.get_mathObjFromStruct(nextStruct);
 					
 					if(nextWord.equals("")){

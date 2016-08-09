@@ -168,35 +168,60 @@ public class StructA<A, B> extends Struct{
 		//if(this.WLCommandStr != null) return "";
 		if(this.WLCommandWrapperList != null) return "";
 		
-		String str = "";		
-		str += this.type.matches("conj_.*|disj_.*") ? this.type.split("_")[0] +  " " : "";		
-
+		//whether to wrap braces around the subcontent, to group terms together.
+		//wrap if type is phrase, etc
+		boolean wrapBraces = false;
+		boolean inConj = false;
+		String str = "";
+		//tempStr to add to
+		String tempStr = "";
+		
+		//str += this.type.matches("conj_.*|disj_.*") ? this.type.split("_")[0] +  " " : "";		
+		//also wrap braces around prev1 and prev2 or the conj/disj
+		if(this.type.matches("conj_.*|disj_.*")){
+			str += this.type.split("_")[0] + " ";
+			inConj = true;
+		}
+		
+		if(this.type.matches("phrase")){
+			wrapBraces = true;
+			tempStr += "{";
+		}
+		
 		if(this.prev1 != null){
+			if(inConj) tempStr += "{";
 			//if(prev1 instanceof Struct && ((Struct) prev1).WLCommandStr() == null){
 			if(prev1 instanceof Struct && ((Struct) prev1).WLCommandWrapperList() == null){
 				String prev1Str = ((Struct) prev1).simpleToString2(includeType);
 				if(!prev1Str.matches("\\s*")){
-					str += prev1Str;
+					tempStr += prev1Str;
 				}
 			}else if(prev1 instanceof String && !prev1.equals("")){
 				if(!type.matches("pre|partiby")){
-					str += prev1;
+					tempStr += prev1;
 				}
-			}			
+			}
+			if(inConj) tempStr += "}";
 		}
 		
 		if(prev2 != null){
+			String prev2String = "";
 			if(prev2 instanceof Struct && ((Struct) prev2).WLCommandWrapperList() == null){
 				String prev2Str = ((Struct) prev2).simpleToString2(includeType);
 				if(!prev2Str.matches("\\s*")){
-					if(!str.matches("\\s*")) str += ", ";
-					str += prev2Str;
+					if(!tempStr.matches("\\s*")) tempStr += ", ";
+					
+					prev2String += prev2Str;
+					
 				}
-			}else if(prev2 instanceof String && !((String)prev2).matches("\\s*")){
-				str += ", " + prev2;
+			}else if(prev2 instanceof String && !((String)prev2).matches("\\s*")){			
+				prev2String += ", " + prev2;			
 			}
+			tempStr += inConj ? "{" + prev2String + "}" : prev2String;
 		}
+		if(wrapBraces) tempStr += "}";
 		
+		str += tempStr;
 		return str;
 	}
 	
