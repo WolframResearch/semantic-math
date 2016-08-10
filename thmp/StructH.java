@@ -309,7 +309,7 @@ public class StructH<H> extends Struct{
 		// later.
 		/*if(this.WLCommandStr != null){
 			return this.WLCommandStr;
-		} */
+		} */		
 		if(this.WLCommandWrapperList != null){
 			int wrapperListSz = WLCommandWrapperList.size();
 			//wrapperListSz should be > 0, since list is created when first wrapper is added

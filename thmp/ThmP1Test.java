@@ -252,6 +252,7 @@ public class ThmP1Test {
 			//st = "radius of convergence";
 			//st = "formal power series";
 			st = "the derivative of $f$ is $\\sum na_n z^{n-1}$";
+			st = "derivative of log of f is g";
 			//st = "Let $f(T) = a_1T + ...$ be a formal power series with $a_1 \\ne 0$, "
 				//	+ "then there exists a unique power series $g(T)$ such that $f(g(T)) = T$";
 			//st = "the map p is said to be a quotient map given  a subset U of Y is open in Y";

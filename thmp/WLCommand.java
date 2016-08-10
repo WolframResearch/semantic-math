@@ -229,32 +229,34 @@ public class WLCommand {
 	/**
 	 * Find struct with least depth amongst Structs that build this WLCommand
 	 */
-	private static Struct findCommandHead(List<PosTerm> posTermList, Struct firstPosTermStruct){
+	private static Struct findCommandHead(ListMultimap<WLCommandComponent, Struct> commandsMap, Struct firstPosTermStruct){
 		Struct structToAppendCommandStr;
 		
 		int leastDepth = MAXDFSDEPTH;
 		Struct highestStruct = null;
 		
-		for(PosTerm term : posTermList){
-			//Struct for derivative should not be null!
+		for(Struct nextStruct : commandsMap.values()){
+			System.out.println("~~~nextStruct inside commandsMap " + nextStruct + " " + nextStruct.dfsDepth());
 			
-			Struct nextStruct = term.posTermStruct;
-			System.out.println("TERMStruct " + nextStruct);
+			//should never be null, commandsMap should be all filled
 			if(nextStruct != null){
-			int nextStructDepth = nextStruct.dfsDepth();
-			if(nextStructDepth < leastDepth){
-				highestStruct = nextStruct;
-				leastDepth = nextStructDepth;
-			}
-			}
+				int nextStructDepth = nextStruct.dfsDepth();
+				if(nextStructDepth < leastDepth){
+					highestStruct = nextStruct;
+					leastDepth = nextStructDepth;
+				}			
+			}			
 		}
-		//if head is ent and 
+		
+		//if head is ent (firstPosTermStruct.type().equals("ent") && ) and 
 		//everything in this command belongs to or is a child of the head ent struct
-		if(firstPosTermStruct.type().equals("ent") && highestStruct == firstPosTermStruct){
+		if(highestStruct == firstPosTermStruct){
 			structToAppendCommandStr = highestStruct;
+			//System.out.println("~~~~~~~~~highestStruct"+highestStruct);
 		}else{
+			
 			structToAppendCommandStr = firstPosTermStruct;
-		Struct parentStruct = firstPosTermStruct.parentStruct();
+			Struct parentStruct = firstPosTermStruct.parentStruct();
 		
 		//go one level higher if parent exists
 		Struct grandparentStruct = null;
@@ -265,7 +267,7 @@ public class WLCommand {
 				(parentStruct == null ? structToAppendCommandStr : parentStruct) : 
 					(grandparentStruct instanceof StructH ? parentStruct : grandparentStruct));
 		}
-		
+		//System.out.println("structToAppendCommandStr" + structToAppendCommandStr);
 		return structToAppendCommandStr;
 	}
 	
@@ -317,8 +319,8 @@ public class WLCommand {
 		//the latest Struct to be touched, for determining if an aux String should be displayed
 		boolean prevStructHeaded = false;
 	
-		//determine the which head to attach this command to
-		Struct structToAppendCommandStr = findCommandHead(posTermList, firstPosTermStruct);
+		//determine which head to attach this command to
+		Struct structToAppendCommandStr = findCommandHead(commandsMap, firstPosTermStruct);
 		
 		for(PosTerm term : posTermList){
 			
@@ -380,7 +382,8 @@ public class WLCommand {
 				
 				//check if need to trigger triggerMathObj
 				if(term.triggerMathObj){
-					
+					//should check first if contains WLCommandStr, i.e. has been converted to some 
+					//commands already
 					nextWord = TriggerMathObj.get_mathObjFromStruct(nextStruct);
 					
 					if(nextWord.equals("")){
@@ -405,8 +408,9 @@ public class WLCommand {
 				nextStruct.set_structToAppendCommandStr(structToAppendCommandStr); */
 				
 			}else if(positionInMap == WLCommandsList.WLCOMMANDINDEX){
-				
+				//should change to use simpletoString from Struct
 				nextWord = term.commandComponent.posTerm;
+				
 				//in case of WLCommand eg \\[ELement]
 				//this list should contain Structs that corresponds to a WLCommand
 				List<Struct> curCommandComponentList = commandsMap.get(commandComponent);
@@ -434,6 +438,7 @@ public class WLCommand {
 					//nextWord = term.commandComponent.posTerm;
 				}
 				nextWord = term.commandComponent.posTerm;
+				
 				//System.out.print("nextWord : " + nextWord + "prevStruct: " + prevStructHeaded);
 			}
 			
@@ -446,6 +451,8 @@ public class WLCommand {
 		//make WLCommand refer to list of WLCommands rather than just one.
 		//Wrapper used here during build().
 		WLCommandWrapper curCommandWrapper = structToAppendCommandStr.add_WLCommandWrapper(curCommand);
+		System.out.println("~~~structToAppendCommandStr to append wrapper: " + structToAppendCommandStr);
+		System.out.println("curCommand just appended: " + curCommand);
 		//structToAppendCommandStr.set_WLCommand(curCommand);
 		
 		curCommandWrapper.set_highestStruct(structToAppendCommandStr);

@@ -28,6 +28,7 @@ public enum ParseStructType {
 	private static final ImmutableListMultimap<String, ParseStructType> StringParseStructTypeMap;
 	
 	static{
+		//type should not be determined based just on head type
 		//construct a multimap, and take its inverse
 		ImmutableListMultimap.Builder<ParseStructType, String> builder =
 				new ImmutableListMultimap.Builder<ParseStructType, String>();

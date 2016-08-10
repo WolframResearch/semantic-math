@@ -143,7 +143,7 @@ public class ParseToWLTree {
 					
 					Struct structToAdd = curStructInDeque;
 					Struct curStructInDequeParent = curStructInDeque.parentStruct();
-					if(curStructInDequeParent != null){
+					while(curStructInDequeParent != null){
 						String parentType = curStructInDequeParent.type().matches("conj_.*|disj_.*") ?
 								curStructInDequeParent.type().split("_")[1] : curStructInDequeParent.type();
 						String componentType = curCommandComponent.posTerm();
@@ -153,9 +153,13 @@ public class ParseToWLTree {
 						}else if(curStructInDequeParent instanceof StructH){
 							parentNameStr = curStructInDequeParent.struct().get("name");
 						}
-						//should match both type and term
+						//should match both type and term. Get parent of struct, eg "log of f is g" should get all of
+						//"log of f", instead of just "f"
 						if(parentNameStr.matches(curCommandComponent.name()) && parentType.matches(componentType)){
 							structToAdd = curStructInDequeParent;
+							curStructInDequeParent = curStructInDequeParent.parentStruct();
+						}else{
+							break;
 						}
 					}
 					
@@ -456,6 +460,7 @@ public class ParseToWLTree {
 				
 				Struct childRelationStruct = new StructA<String, String>(childRelation.get(i), "", "pre");
 				childRelationStruct.set_parentStruct(struct);
+				childRelationStruct.set_dfsDepth(struct.dfsDepth() + 1);
 				
 				//add child relation as Struct
 				structDeque.add(childRelationStruct);
@@ -542,14 +547,17 @@ public class ParseToWLTree {
 		for(int i = structWrapperListSz - 1; i > -1; i--){
 			WLCommandWrapper curWrapper = structWrapperList.get(i);
 			WLCommand curCommand = curWrapper.WLCommand;
+			
 			if(WLCommand.structsWithOtherHeadCount(curCommand) 
 					> WLCommand.totalComponentCount(curCommand) - 1){
+				//System.out.println("wrapperList Size" + structWrapperListSz);
 				//System.out.println(struct.WLCommandStr());
 				//parsedSB.append(struct.WLCommandStr());
 				parsedSB.append(curWrapper.WLCommandStr);
 				//get the ParseStruct based on type
 				ParseStructType type = ParseStructType.getType(struct.type());
-				partsMap.put(type, curWrapper.WLCommandStr);				
+				partsMap.put(type, curWrapper.WLCommandStr);	
+				//System.out.println("partsMap being put in: " + curWrapper.WLCommandStr);
 				break;
 			}
 		}
@@ -577,12 +585,14 @@ public class ParseToWLTree {
 		//System.out.print(struct.WLCommandStrVisitedCount());
 		//WLComamnd() should not be null if WLCommandStr is not null
 		//if(struct.WLCommandStr() != null && struct.WLCommandStrVisitedCount() < 1){		
-		if(struct.WLCommandWrapperList() != null && struct.WLCommandStrVisitedCount() < 1){		
+		if(struct.WLCommandWrapperList() != null && struct.WLCommandStrVisitedCount() < 1){	
+		//if(struct.WLCommandWrapperList() != null){	
 			/*if(WLCommand.structsWithOtherHeadCount(struct.WLCommand()) 
 				> WLCommand.totalComponentCount(struct.WLCommand()) -2){
 				//if(struct.WLCommandStr() != null ){
 				parsedSB.append(struct.WLCommandStr());
 			} */
+			System.out.println("~~~Struct inside dfs: " + struct);
 			appendWLCommandStr(struct, parsedSB, partsMap);			
 			
 			shouldPrint = false;
