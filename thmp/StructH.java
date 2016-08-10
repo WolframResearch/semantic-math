@@ -414,13 +414,13 @@ public class StructH<H> extends Struct{
 
 	@Override
 	public Object prev1() {
-		// TODO 
+		
 		return null;
 	}
 
 	@Override
 	public Object prev2() {
-		// TODO 
+		
 		return null;
 	}
 	

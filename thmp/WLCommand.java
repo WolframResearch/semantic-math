@@ -1,5 +1,6 @@
 package thmp;
 
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -98,7 +99,12 @@ public class WLCommand {
 	 * Max tree depth in DFS.
 	 */
 	private static final int MAXDFSDEPTH = 100;
-
+	//to be used in structIntMap to find highest struct
+	private static final int LEFTCHILD = -1;
+	private static final int RIGHTCHILD = 1;
+	private static final int BOTHCHILDREN = 0;
+	private static final int NEITHERCHILD = 0;
+	
 	/**
 	 * PosTerm stores a part of speech term, and the position in commandsMap
 	 * it occurs, to build a WLCommand, ie turn triggered phrases into WL commands.
@@ -231,7 +237,9 @@ public class WLCommand {
 	 */
 	private static Struct findCommandHead(ListMultimap<WLCommandComponent, Struct> commandsMap, Struct firstPosTermStruct){
 		Struct structToAppendCommandStr;
-		
+		//map to store Structs' parents. The integer can be left child (-1)
+		//right child (1), or 0 (both children covered)
+		Map<Struct, Integer> structIntMap = new HashMap<Struct, Integer>();
 		int leastDepth = MAXDFSDEPTH;
 		Struct highestStruct = null;
 		
@@ -240,14 +248,64 @@ public class WLCommand {
 			
 			//should never be null, commandsMap should be all filled
 			if(nextStruct != null){
+				Struct nextStructParent = nextStruct.parentStruct();
+				System.out.println("+++nextStructParent " + nextStructParent);
+				while(nextStructParent != null){
+					
+					System.out.println("***ParentPrev2" + nextStructParent.prev1() + " "  + nextStruct == nextStructParent.prev2());
+					Integer whichChild = nextStruct == nextStructParent.prev1() ? LEFTCHILD : 
+						(nextStruct == nextStructParent.prev2() ? RIGHTCHILD : NEITHERCHILD);
+					
+					if(structIntMap.containsKey(nextStructParent)){
+						if(nextStructParent instanceof StructA && !(whichChild == structIntMap.get(nextStructParent))){
+							//check if has left child, right child, or both.
+							
+								structIntMap.put(nextStructParent, BOTHCHILDREN);
+								//colored twice, need to put its parent in map
+								nextStructParent = nextStructParent.parentStruct();
+							
+						}else{
+							break;
+						}
+					}else if(whichChild != null){						
+						structIntMap.put(nextStructParent, whichChild);
+						break;
+					}					
+				}
+				
+				/*Integer structCount = structIntMap.get(nextStruct);
+				if(structCount != null){					
+					structIntMap.put(nextStruct, structCount + 1);			
+				}else{
+					structIntMap.put(nextStruct, 1);
+				}*/
+			}			
+		}
+
+		for(Entry<Struct, Integer> entry : structIntMap.entrySet()){
+			Integer whichChild = entry.getValue();
+			Struct nextStruct = entry.getKey();
+
+			if(whichChild == BOTHCHILDREN){
 				int nextStructDepth = nextStruct.dfsDepth();
 				if(nextStructDepth < leastDepth){
 					highestStruct = nextStruct;
-					leastDepth = nextStructDepth;
-				}			
-			}			
+					leastDepth = nextStructDepth;				
+				}
+			}
 		}
-		
+		//can happen if in a chain of structH's.
+		if(leastDepth == MAXDFSDEPTH){
+			for(Struct nextStruct : commandsMap.values()){
+				int nextStructDepth = nextStruct.dfsDepth();
+				if(nextStructDepth < leastDepth){
+					highestStruct = nextStruct;
+					leastDepth = nextStructDepth;				
+				}
+			}
+		}
+		System.out.println("````LeastDepth " + leastDepth);
+
 		//if head is ent (firstPosTermStruct.type().equals("ent") && ) and 
 		//everything in this command belongs to or is a child of the head ent struct
 		if(highestStruct == firstPosTermStruct){
