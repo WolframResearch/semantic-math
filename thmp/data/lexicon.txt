@@ -21,6 +21,7 @@ li la ent
 li adj
 power noun
 closed adj
+analytic adj
 along pre
 great adj
 open adj

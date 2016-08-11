@@ -103,7 +103,7 @@ public class WLCommand {
 	private static final int LEFTCHILD = -1;
 	private static final int RIGHTCHILD = 1;
 	private static final int BOTHCHILDREN = 0;
-	private static final int NEITHERCHILD = 0;
+	private static final int NEITHERCHILD = 2;
 	
 	/**
 	 * PosTerm stores a part of speech term, and the position in commandsMap
@@ -257,7 +257,7 @@ public class WLCommand {
 						(nextStruct == nextStructParent.prev2() ? RIGHTCHILD : NEITHERCHILD);
 					
 					if(structIntMap.containsKey(nextStructParent)){
-						if(nextStructParent instanceof StructA && !(whichChild == structIntMap.get(nextStructParent))){
+						if(nextStructParent instanceof StructA && whichChild != structIntMap.get(nextStructParent)){
 							//check if has left child, right child, or both.
 							
 								structIntMap.put(nextStructParent, BOTHCHILDREN);
@@ -285,8 +285,8 @@ public class WLCommand {
 		for(Entry<Struct, Integer> entry : structIntMap.entrySet()){
 			Integer whichChild = entry.getValue();
 			Struct nextStruct = entry.getKey();
-
-			if(whichChild == BOTHCHILDREN){
+			System.out.println("@@@Added Parent: " + nextStruct + " " + whichChild);
+			if(whichChild == BOTHCHILDREN || whichChild == RIGHTCHILD){
 				int nextStructDepth = nextStruct.dfsDepth();
 				if(nextStructDepth < leastDepth){
 					highestStruct = nextStruct;

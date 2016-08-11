@@ -375,7 +375,7 @@ public class Maps {
 		posMap.put("by", "pre");
 		posMap.put("as", "pre");
 		posMap.put("such", "pre_COMP");
-		posMap.put("such that", "hyp");
+		posMap.put("such that", "cond");
 		posMap.put("where", "hyp");
 		posMap.put("which is", "hyp");
 		posMap.put("which are", "hyp");
@@ -689,6 +689,7 @@ public class Maps {
 		structMap.put("hyp_hyp", new Rule("hyp", 1));
 		structMap.put("hyp_assert", new Rule("hypo", 1));
 		structMap.put("hyp_ent", new Rule("hypo", 1));
+		structMap.put("cond_ent", new Rule("Cond", 1));
 		structMap.put("hyp_phrase", new Rule("hypo", 1));
 		structMap.put("hyp_adj", new Rule("hypo", 1));
 		structMap.put("hyp_symb", new Rule("hypo", 1));

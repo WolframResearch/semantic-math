@@ -178,7 +178,7 @@ public class ThmP1Test {
 			st = "if $R$ is a Noetherian ring and $M$ is a Cohen-Macaulay $R$-module with $text{Supp}(M) = Spec(R)$";
 			st = "ring is topological if and only if ring is topological";
 			st = "there exists a field with $F$ maximal and $K$ free"; //<-- revisit!
-			st = "A Noetherian ring $R$ is called  Cohen-Macaulay if all its local rings are Cohen-Macaulay.";
+			
 			//st = "a field with extension $Q_2$ ";
 			//st = "if $R$ is noetherian, $M$ is also noetherian";
 			//st = "this is not coherent"; 
@@ -226,14 +226,14 @@ public class ThmP1Test {
 			st = "Let $R \\to S$ be an epimorphism of rings.";
 			st = "there exists a function f such that f is constant";
 			st = "there exists a function";
-			st = "A ring map is surjective if and only if it is a finite epimorphism";
+			
 			st = "A ring map is surjective if and only if it is finite";
 			st = "a ring is it is finite"; //ensure pronoun doesn't refer to previous ent!
 			st = "f is an element of G";
 			st = "there exists a function f such that f is holomorphic";
 			//st = "f is an element of $R^n$";
 			//st = "$R \to S$ is surjective ";
-			//st = "the cardinality of $S$ is at most the cardinality of $R$";
+			
 			st = "the rank of f is at most n";
 			st = "f belongs to a finite set";
 			//st = "f is at most g";
@@ -241,22 +241,30 @@ public class ThmP1Test {
 			//st = "there exists a universal property";
 			//st = "f is an element of a set";
 			st = "take derivative of log of f"; //***
-			st = "given a differentiable function f, its derivative is continuous";
 			st = "if $f=\\sum_i i$ has radius of convergence $r$, then $f$ is holomorphic on $D(0, r)$";
-			st = "$f$ is holomorphic on $D(0, r)$, the derivative of $f$ is $\\sum_j j $";
+			
 			st = "f is a function, f has root at 0";
 			st = "if $f(z) = \\sum a_n z^n $ has radius of convergence $r$, then the function $f$ is holomorphic on $D(0, r)$,";
-			//st = "f has radius of convergence r and zeros along $z = 1/2 $";
+			//st = "Let $f(T) = a_1T + ...$ be a formal power series with $a_1 \\ne 0$, then there exists a unique power series $g(T)$ where $f(g(T)) = T$;";
+			st = "$f(z)$ has radius of convergence $r$ and zeros along $z = 1/2$";
+			st = "$f$ is holomorphic on $D(0, r)$, the derivative of $f$ is $\\sum_j j $";
 			//st = "f has radius of convergence r and zeros";
 			//st = "matrix $M$";
 			//st = "radius of convergence";
 			//st = "formal power series";
-			//st = "the derivative of $f$ is $\\sum na_n z^{n-1}$";
+			st = "the derivative of $f$ is equal to $\\sum na_n z^{n-1}$";
+			st = "the cardinality of the set $S$ is at most the cardinality of $R$"; //<----
+			st = "A ring map is surjective if and only if it is a finite epimorphism";
+			st = "A Noetherian ring $R$ is called  Cohen-Macaulay if all its local rings are Cohen-Macaulay."; //******<---
+			st = "If $f(z) = a_0 + \\sum_n a_n(z-z_0)^n$ is analytic at $z_0$, then there exists a local analytic isomorphism $\\phi$ at 0, such that $f(z) = a_0 + \\phi(z-z_0)^m$ ";
+			st = "the derivative of the log of $x$ is equal to $1/x$";
 			//st = "derivative of log of f is g";
 			//st = "radius of convergence of f is r";
 			//st = "f has radius of convergence r";
-			//st = "Let $f(T) = a_1T + ...$ be a formal power series with $a_1 \\ne 0$, "
-				//	+ "then there exists a unique power series $g(T)$ such that $f(g(T)) = T$";
+			st = "Let $f(T) = a_1T + ...$ be a formal power series with $a_1 \\ne 0$, "
+					+ "then there exists a unique power series $g(T)$ such that $f(g(T)) = T$";
+			st = "If $f(z) = a_0 + \\sum_n a_n(z-z_0)^n$ is analytic at $z_0$, then there exists a local analytic isomorphism $\\phi$ at 0, such that $f(z) = a_0 + \\phi(z-z_0)^m$";
+			st = "Holomorphic functions are analytic.";
 			//st = "the map p is said to be a quotient map given  a subset U of Y is open in Y";
 			//st = "given that a subset U of Y is open in Y";
 			//st = "U is an open set in Y";
@@ -281,7 +289,11 @@ public class ThmP1Test {
 				//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim()) ));
 				ThmP1.parse(ThmP1.tokenize(strAr[i].trim()));				
 			}
-			System.out.println("PARTS: " + Arrays.toString(ThmP1.getParseStructMapList().toArray()));
+			String parsedOutput = Arrays.toString(ThmP1.getParseStructMapList().toArray());
+			String processedOutput = parsedOutput.replaceAll("MathObj", "MathObject").replaceAll("\\$([^$]+)\\$", "LaTEXMath[\"$1\"]")
+					.replaceAll("MathObject\\{([^}]+)\\}", "MathObject\\[$1\\]");
+			
+			System.out.println("PARTS: " + processedOutput);
 			
 			//System.out.println("****" + ThmP1.getParsedExpr() + "******");
 			Scanner sc = new Scanner(new File("src/thmp/data/noTex4.txt"));

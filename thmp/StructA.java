@@ -192,14 +192,19 @@ public class StructA<A, B> extends Struct{
 		//str += this.type.matches("conj_.*|disj_.*") ? this.type.split("_")[0] +  " " : "";		
 		//also wrap braces around prev1 and prev2 or the conj/disj
 		if(this.type.matches("conj_.*|disj_.*")){
-			str += this.type.split("_")[0] + " ";
+			String toAppend = this.type.matches("conj_.*") ? "Conj" : "Disj";
+			//str += this.type.split("_")[0] + " ";
+			str += toAppend;
 			inConj = true;
+			//wrapBraces = true;
+			tempStr += "[";
 		}
 		
-		if(this.type.matches("phrase")){
-			wrapBraces = true;
+		if(this.type.matches("phrase|prep")){
+			wrapBraces = true;		
 			tempStr += "{";
 		}
+		
 		
 		if(this.prev1 != null){
 			if(inConj) tempStr += "{";
@@ -210,7 +215,8 @@ public class StructA<A, B> extends Struct{
 					tempStr += prev1Str;
 				}
 			}else if(prev1 instanceof String && !prev1.equals("")){
-				if(!type.matches("pre|partiby")){
+				//if(!type.matches("pre|partiby")){
+				if(!type.matches("partiby")){
 					tempStr += prev1;
 				}
 			}
@@ -233,6 +239,7 @@ public class StructA<A, B> extends Struct{
 			tempStr += inConj ? "{" + prev2String + "}" : prev2String;
 		}
 		if(wrapBraces) tempStr += "}";
+		if(inConj) tempStr += "]";
 		
 		str += tempStr;
 		return str;

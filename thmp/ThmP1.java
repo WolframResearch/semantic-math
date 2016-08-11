@@ -1449,7 +1449,7 @@ public class ThmP1 {
 				 * Parts can be any ParseStructType. Should make this a local var.
 				 */
 				Multimap<ParseStructType, String> parseStructMap = ArrayListMultimap.create();
-				ParseToWLTree.dfs(parseStructMap, uHeadStruct, wlSB, true);
+				ParseToWLTree.dfs(parseStructMap, uHeadStruct, wlSB, true);				
 				System.out.println("Parts: " + parseStructMap);
 				parseStructMapList.add(parseStructMap.toString() + "\n");
 				//ParseToWLTree.dfs(uHeadStruct, wlSB, true);	

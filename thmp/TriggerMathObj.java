@@ -64,11 +64,13 @@ public class TriggerMathObj {
 		
 		//first String is property, the rest are math objects this property belongs to
 		addKeywordToMathObj(new String[]{"radius", "function", "PowerSeries"}, keywordList, keyDictBuilder, mathObjMMap);
+		addKeywordToMathObj(new String[]{"analytic", "function"}, keywordList, keyDictBuilder, mathObjMMap);
+		//addKeywordToMathObj(new String[]{"analytic", "function"}, keywordList, keyDictBuilder, mathObjMMap);
 		addKeywordToMathObj(new String[]{"convergence", "PowerSeries"}, keywordList, keyDictBuilder, mathObjMMap);
 		addKeywordToMathObj(new String[]{"radius of convergence", "PowerSeries"}, keywordList, keyDictBuilder, mathObjMMap);
 		addKeywordToMathObj(new String[]{"ideal", "ring"}, keywordList, keyDictBuilder, mathObjMMap);
-		addKeywordToMathObj(new String[]{"zero", "function"}, keywordList, keyDictBuilder, mathObjMMap);
-		addKeywordToMathObj(new String[]{"root", "function"}, keywordList, keyDictBuilder, mathObjMMap);
+		addKeywordToMathObj(new String[]{"zero", "function", "PowerSeries"}, keywordList, keyDictBuilder, mathObjMMap);
+		addKeywordToMathObj(new String[]{"root", "function", "PowerSeries"}, keywordList, keyDictBuilder, mathObjMMap);
 		addKeywordToMathObj(new String[]{"function", "function"}, keywordList, keyDictBuilder, mathObjMMap);
 		addKeywordToMathObj(new String[]{"ring", "ring"}, keywordList, keyDictBuilder, mathObjMMap);
 		addKeywordToMathObj(new String[]{"surjective", "function"}, keywordList, keyDictBuilder, mathObjMMap);
@@ -241,8 +243,10 @@ public class TriggerMathObj {
 		
 		//String namePpt = ((StructH<?>)struct).append_name_pptStr();
 		String namePpt = struct.simpleToString(false);
-		
-		String r = highestMathObj.matches("") ? namePpt : highestMathObj + "[" + namePpt + "]";
+		if(struct.type().equals("ent")){
+			namePpt = "{" + namePpt + "}";
+		}
+		String r = highestMathObj.matches("") ? "MathObj" + namePpt : highestMathObj + "[" + namePpt + "]";
 		
 		//return r + "[" + namePpt + "]";
 		return r;

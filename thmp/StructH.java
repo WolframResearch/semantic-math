@@ -327,7 +327,7 @@ public class StructH<H> extends Struct{
 			str += this.type.equals("ent") ? "MathObj" : this.type;
 			str += "{";
 		}
-		
+		//str += "{";
 		str += append_name_pptStr();
 		
 		//iterate through children		
