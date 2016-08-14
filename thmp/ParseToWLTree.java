@@ -100,13 +100,17 @@ public class ParseToWLTree {
 	 * @param waitingStructList	Temporary list to add Struct's to.
 	 * @return Whether the slots before triggerWordIndex have been satisfied.
 	 */
-	private static boolean findStructs(List<Struct> structDeque, List<PosTerm> posTermList, int triggerWordIndex, 
+	private static boolean findStructs(List<Struct> structDeque, WLCommand curCommand, 
 			boolean[] usedStructsBool, List<Struct> waitingStructList){
+		
+		List<PosTerm> posTermList = WLCommand.posTermList(curCommand);
+		int triggerWordIndex = WLCommand.triggerWordIndex(curCommand);
 		//start from the word before the trigger word
 		//iterate through posTermList
-		//start index for next iteration of posTermListLoop
+		//start index for next iteration of posTermListLoop		
 		boolean curCommandSat = true;
 		int structDequeStartIndex = structDeque.size() - 1;
+		
 		posTermListLoop: for(int i = triggerWordIndex - 1; i > -1; i--){
 			PosTerm curPosTerm = posTermList.get(i);
 			//auxilliary term
@@ -168,6 +172,10 @@ public class ParseToWLTree {
 					//waitingStructList.add(0, structToAdd);
 					waitingStructList.add(structToAdd);
 					curPosTerm.set_posTermStruct(structToAdd);
+					//set headStruct to structToAdd if it is closer to root
+					/*if(WLCommand.headStruct(curCommand).dfsDepth() > structToAdd.dfsDepth()){
+						WLCommand.set_headStruct(curCommand, structToAdd);
+					}*/
 					
 					//usedStructsBool[dequeIterCounter] = true;
 					usedStructsBool[k] = true;
@@ -251,26 +259,27 @@ public class ParseToWLTree {
 			//is trigger, add all commands in list 
 			//WLCommand curCommand;
 			for(WLCommand curCommandInCol : triggeredCol){
-				//Copy the WLCommands! So not to modify the ones in WLCommandMap
+				//Deelp copy the WLCommands! So not to modify the ones in WLCommandMap
 				WLCommand curCommand = WLCommand.copy(curCommandInCol);
 				
 				//backtrack until either stop words (ones that trigger ParseStructs) are reached.
 				//or the beginning of structDeque is reached.
 				//or until commands prior to triggerWordIndex are filled.
-				List<PosTerm> posTermList = WLCommand.posTermList(curCommand);
-				int triggerWordIndex = WLCommand.triggerWordIndex(curCommand);
+				
 				//whether terms prior to trigger word are satisfied
 				boolean curCommandSat = true;
-				//list of structs waiting to be inserted to curCommand via addComponent
-				//temporary list instead of adding directly, since the terms prior need 
+				//list of structs waiting to be inserted to curCommand via addComponent.
+				//Temporary list instead of adding directly, since the terms prior need 
 				//to be added backwards (always add at beginning), and list will not be 
 				//added if !curCommandSat.
 				List<Struct> waitingStructList = new ArrayList<Struct>();
 				//array of booleans to keep track of which deque Struct's have been used
 				boolean[] usedStructsBool = new boolean[structDeque.size()];
 
+				//first set the headStruct to struct
+				//WLCommand.set_headStruct(curCommand, struct);
 				//match the slots in posTermList with Structs in structDeque
-				curCommandSat = findStructs(structDeque, posTermList, triggerWordIndex, usedStructsBool, 
+				curCommandSat = findStructs(structDeque, curCommand, usedStructsBool, 
 						waitingStructList);
 				
 				//curCommand's terms before trigger word are satisfied. Add them to triggered WLCommand.
@@ -296,9 +305,9 @@ public class ParseToWLTree {
 		
 		//add struct to stack, even if trigger Struct
 		//if(struct.parentStruct() == null || (struct.parentStruct() != null && !struct.parentStruct().type().matches("conj.*|disj.*"))){
-			structDeque.add(struct);			
+		structDeque.add(struct);			
 		//}
-		
+						
 		// use visitor pattern!		
 		if (struct instanceof StructA) {
 			//create ParseStruct's
@@ -439,7 +448,14 @@ public class ParseToWLTree {
 			//if Struct (leaf) and not ParseStruct (overall head), done with subtree and return			
 			
 		} else if (struct instanceof StructH) {
-
+			/*
+			//set the head for each possibly-satisfied WLCommand in WLCommandList
+			for(WLCommand command : WLCommandList){
+				if(WLCommand.headStruct(command).dfsDepth() > struct.dfsDepth()){
+					WLCommand.set_headStruct(command, struct);
+				}
+			}*/
+			
 			if(printTiers) System.out.print(struct.toString());
 			parsedSB.append(struct.toString());
 

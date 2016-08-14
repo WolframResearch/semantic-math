@@ -263,8 +263,11 @@ public class ThmP1Test {
 			//st = "f has radius of convergence r";
 			st = "Let $f(T) = a_1T + ...$ be a formal power series with $a_1 \\ne 0$, "
 					+ "then there exists a unique power series $g(T)$ such that $f(g(T)) = T$";
+			st = "there exists a unique power series $g(T)$ such that $f(g(T)) = T$";
+			//st = "the derivative of the log of $x$ is equal to $1/x$";
+			st = "f has radius of convergence r";
 			st = "If $f(z) = a_0 + \\sum_n a_n(z-z_0)^n$ is analytic at $z_0$, then there exists a local analytic isomorphism $\\phi$ at 0, such that $f(z) = a_0 + \\phi(z-z_0)^m$";
-			st = "Holomorphic functions are analytic.";
+			//st = "Holomorphic functions are analytic.";
 			//st = "the map p is said to be a quotient map given  a subset U of Y is open in Y";
 			//st = "given that a subset U of Y is open in Y";
 			//st = "U is an open set in Y";
@@ -289,11 +292,11 @@ public class ThmP1Test {
 				//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim()) ));
 				ThmP1.parse(ThmP1.tokenize(strAr[i].trim()));				
 			}
-			String parsedOutput = Arrays.toString(ThmP1.getParseStructMapList().toArray());
-			String processedOutput = parsedOutput.replaceAll("MathObj", "MathObject").replaceAll("\\$([^$]+)\\$", "LaTEXMath[\"$1\"]")
-					.replaceAll("MathObject\\{([^}]+)\\}", "MathObject\\[$1\\]");
+			String parsedOutput = Arrays.toString(ThmP1.getParseStructMapList().toArray());			
+			//String processedOutput = parsedOutput.replaceAll("MathObj", "MathObject").replaceAll("\\$([^$]+)\\$", "LaTEXMath[\"$1\"]")
+					//.replaceAll("MathObject\\{([^}]+)\\}", "MathObject\\[$1\\]");
 			
-			System.out.println("PARTS: " + processedOutput);
+			System.out.println("PARTS: " + parsedOutput);
 			
 			//System.out.println("****" + ThmP1.getParsedExpr() + "******");
 			Scanner sc = new Scanner(new File("src/thmp/data/noTex4.txt"));

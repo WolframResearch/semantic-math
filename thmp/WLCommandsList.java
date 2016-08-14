@@ -126,10 +126,10 @@ public class WLCommandsList {
 		// label string if to be used as trigger ent/symb, then use these words
 		// as trigger system
 		// function with radius of convergence
-
+		
 		// logical operators
-		WLCommandMapBuilder.put("and",
-				addCommand(new String[] { "Subset, WL, true", "[", "pre, of, false", "symb|ent, , true", "]" }));
+		//WLCommandMapBuilder.put("and",
+				//addCommand(new String[] { "Subset, WL, true", "[", "pre, of, false", "symb|ent, , true", "]" }));
 
 		WLCommandMap = WLCommandMapBuilder.build();
 

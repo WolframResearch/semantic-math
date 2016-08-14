@@ -96,6 +96,12 @@ public class WLCommand {
 	//private int s;
 	
 	/**
+	 * Least common head of Structs used to build this command, will become structToAppendCommandStr.
+	 * It is determined during dfs in ParseToWLTree.
+	 */
+	//private Struct headStruct;
+	
+	/**
 	 * Max tree depth in DFS.
 	 */
 	private static final int MAXDFSDEPTH = 100;
@@ -257,19 +263,22 @@ public class WLCommand {
 						(nextStruct == nextStructParent.prev2() ? RIGHTCHILD : NEITHERCHILD);
 					
 					if(structIntMap.containsKey(nextStructParent)){
-						if(nextStructParent instanceof StructA && whichChild != structIntMap.get(nextStructParent)){
+						int existingChild = structIntMap.get(nextStructParent);
+						if(nextStructParent instanceof StructA && existingChild != NEITHERCHILD
+								&& whichChild != existingChild){
 							//check if has left child, right child, or both.
 							
-								structIntMap.put(nextStructParent, BOTHCHILDREN);
-								//colored twice, need to put its parent in map
-								nextStructParent = nextStructParent.parentStruct();
+							structIntMap.put(nextStructParent, BOTHCHILDREN);
+							//colored twice, need to put its parent in map
+							nextStructParent = nextStructParent.parentStruct();
 							
 						}else{
 							break;
 						}
 					}else if(whichChild != null){						
 						structIntMap.put(nextStructParent, whichChild);
-						break;
+						nextStructParent = nextStructParent.parentStruct();
+						//break;
 					}					
 				}
 				
@@ -286,15 +295,17 @@ public class WLCommand {
 			Integer whichChild = entry.getValue();
 			Struct nextStruct = entry.getKey();
 			System.out.println("@@@Added Parent: " + nextStruct + " " + whichChild);
-			if(whichChild == BOTHCHILDREN || whichChild == RIGHTCHILD){
+			//if(whichChild == BOTHCHILDREN || whichChild == RIGHTCHILD){
+			if(whichChild == BOTHCHILDREN){
 				int nextStructDepth = nextStruct.dfsDepth();
 				if(nextStructDepth < leastDepth){
 					highestStruct = nextStruct;
-					leastDepth = nextStructDepth;				
+					leastDepth = nextStructDepth;			
 				}
 			}
 		}
-		//can happen if in a chain of structH's.
+		
+		//can happen if in a chain of structH's. Not really necessary anymore.
 		if(leastDepth == MAXDFSDEPTH){
 			for(Struct nextStruct : commandsMap.values()){
 				int nextStructDepth = nextStruct.dfsDepth();
@@ -303,7 +314,9 @@ public class WLCommand {
 					leastDepth = nextStructDepth;				
 				}
 			}
-		}
+		}		
+		//highestStruct = headStruct;
+		//leastDepth = headStruct.dfsDepth();
 		System.out.println("````LeastDepth " + leastDepth);
 
 		//if head is ent (firstPosTermStruct.type().equals("ent") && ) and 
@@ -377,6 +390,7 @@ public class WLCommand {
 		//the latest Struct to be touched, for determining if an aux String should be displayed
 		boolean prevStructHeaded = false;
 	
+		//Struct headStruct = curCommand.headStruct;
 		//determine which head to attach this command to
 		Struct structToAppendCommandStr = findCommandHead(commandsMap, firstPosTermStruct);
 		
@@ -704,6 +718,14 @@ public class WLCommand {
 	public static void set_totalComponentCount(WLCommand curCommand, int newCount){
 		 curCommand.totalComponentCount = newCount;
 	}
+	
+	/*public static Struct headStruct(WLCommand curCommand){
+		return curCommand.headStruct;
+	}
+
+	public static void set_headStruct(WLCommand curCommand, Struct headStruct){
+		curCommand.headStruct = headStruct;
+	}*/
 	
 	/**
 	 * @return Is this command (commandsMap) satisfied. 
