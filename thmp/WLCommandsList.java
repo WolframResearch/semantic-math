@@ -112,13 +112,13 @@ public class WLCommandsList {
 				", radius, false", ", convergence, trigger", "Function[ 'radius' ", "]" }));
 		
 		// trigger TriggerMathObj
-		WLCommandMapBuilder.put("is", addCommand(new String[] { "symb|ent, , true", "verb|vbs|be, is|are|be, trigger",
+		WLCommandMapBuilder.put("is", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is|are|be, trigger",
 				"\\[Element]", "symb|ent|adj|phrase, , true, TriggerMathObj" }));
 		
 		WLCommandMapBuilder.put("equal to", addCommand(new String[] { "symb|ent, , true",
 				"==", "equal to, , trigger", "symb|ent|phrase, , true, TriggerMathObj" }));
 		
-		WLCommandMapBuilder.put("at most", addCommand(new String[] { "symb|ent, , true", "verb|vbs|be, is|are|be, false",
+		WLCommandMapBuilder.put("at most", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is|are|be, false",
 				"<=", "pre, at most, trigger", "symb|ent, , true, TriggerMathObj" }));
 		
 		WLCommandMapBuilder.put("such that", addCommand(new String[] { "such that, , trigger", "symb|ent, , true" }));

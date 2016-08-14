@@ -250,17 +250,18 @@ public class WLCommand {
 		Struct highestStruct = null;
 		
 		for(Struct nextStruct : commandsMap.values()){
-			System.out.println("~~~nextStruct inside commandsMap " + nextStruct + " " + nextStruct.dfsDepth());
+			//System.out.println("~~~nextStruct inside commandsMap " + nextStruct + " " + nextStruct.dfsDepth());
 			
 			//should never be null, commandsMap should be all filled
 			if(nextStruct != null){
 				Struct nextStructParent = nextStruct.parentStruct();
-				System.out.println("+++nextStructParent " + nextStructParent);
+				Struct curStruct = nextStruct;
+				//System.out.println("+++nextStructParent " + nextStructParent);
 				while(nextStructParent != null){
 					
-					System.out.println("***ParentPrev2" + nextStructParent.prev1() + " "  + nextStruct == nextStructParent.prev2());
-					Integer whichChild = nextStruct == nextStructParent.prev1() ? LEFTCHILD : 
-						(nextStruct == nextStructParent.prev2() ? RIGHTCHILD : NEITHERCHILD);
+					//System.out.println("***ParentPrev2" + nextStructParent.prev1() + " "  + nextStruct == nextStructParent.prev2());
+					Integer whichChild = curStruct == nextStructParent.prev1() ? LEFTCHILD : 
+						(curStruct == nextStructParent.prev2() ? RIGHTCHILD : NEITHERCHILD);
 					
 					if(structIntMap.containsKey(nextStructParent)){
 						int existingChild = structIntMap.get(nextStructParent);
@@ -269,6 +270,8 @@ public class WLCommand {
 							//check if has left child, right child, or both.
 							
 							structIntMap.put(nextStructParent, BOTHCHILDREN);
+							//update curStruct so to correctly determine which child parent is 
+							curStruct = nextStructParent;
 							//colored twice, need to put its parent in map
 							nextStructParent = nextStructParent.parentStruct();
 							
@@ -277,7 +280,8 @@ public class WLCommand {
 						}
 					}else if(whichChild != null){						
 						structIntMap.put(nextStructParent, whichChild);
-						nextStructParent = nextStructParent.parentStruct();
+						curStruct = nextStructParent;
+						nextStructParent = nextStructParent.parentStruct(); 
 						//break;
 					}					
 				}
@@ -315,16 +319,15 @@ public class WLCommand {
 				}
 			}
 		}		
-		//highestStruct = headStruct;
-		//leastDepth = headStruct.dfsDepth();
-		System.out.println("````LeastDepth " + leastDepth);
+		
+		//System.out.println("````LeastDepth " + leastDepth);
 
 		//if head is ent (firstPosTermStruct.type().equals("ent") && ) and 
 		//everything in this command belongs to or is a child of the head ent struct
-		if(highestStruct == firstPosTermStruct){
+		//if(highestStruct == firstPosTermStruct){
 			structToAppendCommandStr = highestStruct;
 			//System.out.println("~~~~~~~~~highestStruct"+highestStruct);
-		}else{
+		/*}else{
 			
 			structToAppendCommandStr = firstPosTermStruct;
 			Struct parentStruct = firstPosTermStruct.parentStruct();
@@ -337,7 +340,8 @@ public class WLCommand {
 		structToAppendCommandStr = (grandparentStruct == null ? 
 				(parentStruct == null ? structToAppendCommandStr : parentStruct) : 
 					(grandparentStruct instanceof StructH ? parentStruct : grandparentStruct));
-		}
+		}*/
+		
 		//System.out.println("structToAppendCommandStr" + structToAppendCommandStr);
 		return structToAppendCommandStr;
 	}
@@ -561,15 +565,21 @@ public class WLCommand {
 		//before the trigger word
 		List<PosTerm> posList = curCommand.posTermList;
 		int lastAddedComponentIndex = curCommand.lastAddedCompIndex;
-		//
+		int triggerWordIndex = curCommand.triggerWordIndex;
+		
 		WLCommandComponent commandComponent;
 		String commandComponentPosTerm;
 		String commandComponentName;
-		//
-		int i = lastAddedComponentIndex;
-		if(lastAddedComponentIndex != curCommand.triggerWordIndex){
+		
+		int i = lastAddedComponentIndex;		
+		//if the first time we add a component that's after triggerWordIndex
+		if(!before && lastAddedComponentIndex < triggerWordIndex){			
+			i = triggerWordIndex;
+		}
+		//if(lastAddedComponentIndex != curCommand.triggerWordIndex){
+			
 		if(before){			
-			//i--;
+			i--;
 			//if auxilliary terms, eg "["
 			while(i > -1 && posList.get(i).positionInMap < 0) i--;			
 		}else{
@@ -580,36 +590,37 @@ public class WLCommand {
 		commandComponent = posList.get(i).commandComponent;
 		commandComponentPosTerm = commandComponent.posTerm;
 		commandComponentName = commandComponent.name;
+		int commandComponentCount = curCommand.commandsCountMap.get(commandComponent);
 		
-		if(!(structType.matches(commandComponentPosTerm) 				
-				&& structName.matches(commandComponentName))){
+		if(structType.matches(commandComponentPosTerm) 	
+				&& commandComponentCount > 0
+				&& structName.matches(commandComponentName)){
+			curCommand.commandsMap.put(commandComponent, newStruct);
+			//here newComponent must have been in the original required set
+			curCommand.commandsCountMap.put(commandComponent, commandComponentCount - 1);
+			//use counter to track whether map is satisfied
+			curCommand.componentCounter--;
+			curCommand.lastAddedCompIndex = i;
+			return curCommand.componentCounter < 1;
+			
+		}else{
+			/*System.out.println("Component not matching inside addComponent");
 			System.out.println("curCommand" + curCommand);
 			System.out.println("commandComponentName" + commandComponentName);
 			System.out.println("commandComponentPosTerm" + commandComponentPosTerm);
 			System.out.println("structName" + structName);
-			System.out.println("BEFORE? " + before);
+			System.out.println("BEFORE? " + before); */
 			return false;
 		}
-		}
+		//}
 		//System.out.println("~~~commandComponentName" + commandComponentName);
+		/*
 		for(Entry<WLCommandComponent, Integer> commandComponentEntry : curCommand.commandsCountMap.entrySet()){
 			commandComponent = commandComponentEntry.getKey();
 			int commandComponentCount = commandComponentEntry.getValue();
 			commandComponentPosTerm = commandComponent.posTerm;
 			commandComponentName = commandComponent.name;
 			
-			//if WL expr matches, add Struct to that component, eg \[Element]
-			/*if(commandComponentName.matches("WL.*") ){
-				String[] nameAr = commandComponentName.split("-");
-				if(nameAr.length > 1 && commandComponentCount > 0
-						&& structName.matches(nameAr[1])){
-					curCommand.commandsMap.put(commandComponent, newStruct);
-					//here newComponent must have been in the original required set
-					curCommand.commandsCountMap.put(commandComponent, commandComponentCount - 1);					
-					break;
-				}
-			}					
-			else */
 			if(structType.matches(commandComponentPosTerm) 
 					&& commandComponentCount > 0 
 					&& structName.matches(commandComponentName)){
@@ -627,6 +638,7 @@ public class WLCommand {
 		
 		//shouldn't be < 0!
 		return curCommand.componentCounter < 1;
+		*/
 	}
 
 	/**

@@ -14,6 +14,7 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 
+import thmp.ThmP1.ParsedPair;
 import thmp.WLCommand.PosTerm;
 import thmp.WLCommand.WLCommandComponent;
 
@@ -555,7 +556,7 @@ public class ParseToWLTree {
 	 *	Append all that has structsWithOtherHeadCount equal to the total 
 	 *	component count, since those commands don't interfere with anything else.
 	 */
-	private static void appendWLCommandStr(Struct struct, StringBuilder parsedSB, Multimap<ParseStructType, String> partsMap){
+	private static void appendWLCommandStr(Struct struct, StringBuilder parsedSB, Multimap<ParseStructType, ParsedPair> partsMap){
 		
 		List<WLCommandWrapper> structWrapperList = struct.WLCommandWrapperList();
 		int structWrapperListSz = structWrapperList.size();
@@ -571,8 +572,11 @@ public class ParseToWLTree {
 				//parsedSB.append(struct.WLCommandStr());
 				parsedSB.append(curWrapper.WLCommandStr);
 				//get the ParseStruct based on type
-				ParseStructType type = ParseStructType.getType(struct.type());
-				partsMap.put(type, curWrapper.WLCommandStr);	
+				ParseStructType type = ParseStructType.getType(struct.type());				
+				ParsedPair pair = new ParsedPair(curWrapper.WLCommandStr, struct.maxDownPathScore(), 
+						struct.numUnits());
+				//partsMap.put(type, curWrapper.WLCommandStr);	
+				partsMap.put(type, pair);
 				//System.out.println("partsMap being put in: " + curWrapper.WLCommandStr);
 				break;
 			}
@@ -596,7 +600,7 @@ public class ParseToWLTree {
 	 * @param struct
 	 * @param parsedSB
 	 */
-	public static void dfs(Multimap<ParseStructType, String> partsMap, Struct struct, StringBuilder parsedSB, boolean shouldPrint) {
+	public static void dfs(Multimap<ParseStructType, ParsedPair> partsMap, Struct struct, StringBuilder parsedSB, boolean shouldPrint) {
 		//don't append if already incorporated into a higher command
 		//System.out.print(struct.WLCommandStrVisitedCount());
 		//WLComamnd() should not be null if WLCommandStr is not null

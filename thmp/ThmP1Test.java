@@ -252,9 +252,7 @@ public class ThmP1Test {
 			//st = "radius of convergence";
 			//st = "formal power series";
 			st = "the derivative of $f$ is equal to $\\sum na_n z^{n-1}$";
-			st = "the cardinality of the set $S$ is at most the cardinality of $R$"; //<----
 			st = "A ring map is surjective if and only if it is a finite epimorphism";
-			st = "A Noetherian ring $R$ is called  Cohen-Macaulay if all its local rings are Cohen-Macaulay."; //******<---
 			st = "If $f(z) = a_0 + \\sum_n a_n(z-z_0)^n$ is analytic at $z_0$, then there exists a local analytic isomorphism $\\phi$ at 0, such that $f(z) = a_0 + \\phi(z-z_0)^m$ ";
 			st = "the derivative of the log of $x$ is equal to $1/x$";
 			//st = "derivative of log of f is g";
@@ -262,8 +260,13 @@ public class ThmP1Test {
 			//st = "f has radius of convergence r";
 			st = "Let $f(T) = a_1T + ...$ be a formal power series with $a_1 \\ne 0$, "
 					+ "then there exists a unique power series $g(T)$ such that $f(g(T)) = T$";
-			//st = "there exists a unique power series $g(T)$ such that $f(g(T)) = T$";
+			st = "the cardinality of the set $S$ is at most the cardinality of the set $R$"; 
+			st = "A Noetherian ring $R$ is called  Cohen-Macaulay if all its local rings are Cohen-Macaulay."; //******<---
 			
+			st = "this field is perfect, it has order $p$";
+			st = "Cohen-Macaulay";
+			st = "f is a function and f has zeros";
+			//st = "there exists a unique power series $g(T)$ such that $f(g(T)) = T$";			
 			//st = "$f$ is holomorphic on $D(0, r)$, the derivative of $f$ is $\\sum_j j $";
 			//st = "the derivative of the log of $x$ is equal to $1/x$";
 			//st = "f has radius of convergence r";
@@ -289,8 +292,8 @@ public class ThmP1Test {
 			
 			for(int i = 0; i < strAr.length; i++){
 				//alternate commented out line to enable tex converter
-				ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim()) ));
-				//ThmP1.parse(ThmP1.tokenize(strAr[i].trim()));				
+				//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim()) ));
+				ThmP1.parse(ThmP1.tokenize(strAr[i].trim()));				
 			}
 			String parsedOutput = Arrays.toString(ThmP1.getParseStructMapList().toArray());			
 			//String processedOutput = parsedOutput.replaceAll("MathObj", "MathObject").replaceAll("\\$([^$]+)\\$", "LaTEXMath[\"$1\"]")

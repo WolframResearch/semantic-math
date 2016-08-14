@@ -29,7 +29,8 @@ import com.google.common.collect.Multimap;
 
 public class ThmP1 {
 
-	// should all be StructH's, since these are ent's
+	// should all be StructH's, since these are ent's. 
+	//make into multimap, so to get wider scope??
 	private static final Map<String, Struct> namesMap;
 	// private static HashMap<String, ArrayList<String>> entityMap =
 	// Maps.entityMap;
@@ -107,6 +108,8 @@ public class ThmP1 {
 		//parsedExprSz used to group parse components together 
 		//when full parse is unavailable
 		//private int counter;
+		//number of units in this parse, as in numUnits in Struct
+		private int numUnits;
 		
 		public ParsedPair(String parsedStr, double score, String form){
 			this.parsedStr = parsedStr;
@@ -114,8 +117,9 @@ public class ThmP1 {
 			this.form = form;
 		}
 		
-		public ParsedPair(String parsedStr, double score){
+		public ParsedPair(String parsedStr, double score, int numUnits){
 			this(parsedStr, score, "");
+			this.numUnits = numUnits;
 		}
 		
 		public String parsedStr(){
@@ -132,7 +136,8 @@ public class ThmP1 {
 
 		@Override
 		public String toString(){
-			return this.parsedStr + " " + String.valueOf(score);
+			String numUnitsString = numUnits == 0 ? "" : " " + String.valueOf(this.numUnits);
+			return this.parsedStr + " " + String.valueOf(score) + numUnitsString;
 		}
 	}
 	
@@ -311,7 +316,7 @@ public class ThmP1 {
 			String singular = singularForms[0];
 			String singular2 = singularForms[1]; // ending in "ies"
 			String singular3 = singularForms[2]; // ending in "es"
-			
+
 			if (Maps.mathObjMap.containsKey(curWord) || mathObjMap.containsKey(singular)) {
 
 				String tempWord = mathObjMap.containsKey(singular) ? singular : curWord;
@@ -413,9 +418,9 @@ public class ThmP1 {
 				String[] splitWords = curWord.split("-");
 
 				String lastTerm = splitWords[splitWords.length - 1];
-				String lastTermS1 = singular.matches("") ? "" : singular.split("-")[splitWords.length - 1];
-				String lastTermS2 = singular2.matches("") ? "" : singular2.split("-")[splitWords.length - 1];
-				String lastTermS3 = singular3.matches("") ? "" : singular3.split("-")[splitWords.length - 1];
+				String lastTermS1 = singular == null ? "" : singular.split("-")[splitWords.length - 1];
+				String lastTermS2 = singular2 == null ? "" : singular2.split("-")[splitWords.length - 1];
+				String lastTermS3 = singular3 == null ? "" : singular3.split("-")[splitWords.length - 1];
 
 				String searchKey = "";
 				if (posMap.containsKey(lastTerm))
@@ -1567,7 +1572,7 @@ public class ThmP1 {
 		 * Map of parts used to build up a theorem/def etc. 
 		 * Parts can be any ParseStructType. Should make this a local var.
 		 */
-		Multimap<ParseStructType, String> parseStructMap = ArrayListMultimap.create();
+		Multimap<ParseStructType, ParsedPair> parseStructMap = ArrayListMultimap.create();
 		ParseToWLTree.dfs(parseStructMap, uHeadStruct, wlSB, true);				
 		System.out.println("Parts: " + parseStructMap);
 		parseStructMapList.add(parseStructMap.toString() + "\n");

@@ -246,7 +246,7 @@ public class TriggerMathObj {
 		if(struct.type().equals("ent")){
 			namePpt = "{" + namePpt + "}";
 		}
-		String r = highestMathObj.matches("") ? "MathObj" + namePpt : highestMathObj + "[" + namePpt + "]";
+		String r = highestMathObj.matches("") ? "MathObj{" + namePpt + "}": highestMathObj + "[" + namePpt + "]";
 		
 		//return r + "[" + namePpt + "]";
 		return r;
