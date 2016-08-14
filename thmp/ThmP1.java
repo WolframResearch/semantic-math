@@ -114,6 +114,10 @@ public class ThmP1 {
 			this.form = form;
 		}
 		
+		public ParsedPair(String parsedStr, double score){
+			this(parsedStr, score, "");
+		}
+		
 		public String parsedStr(){
 			return this.parsedStr;
 		}
@@ -1435,30 +1439,7 @@ public class ThmP1 {
 				uHeadStruct.set_dfsDepth(0);
 				dfs(uHeadStruct, parsedSB);
 				//******
-				System.out.println("\n START ParseStruct DFS");
-				StringBuilder parseStructSB = new StringBuilder();
-				ParseStructType parseStructType = ParseStructType.getType(uHeadStruct.type());
-				ParseStruct headParseStruct = new ParseStruct(parseStructType, "", uHeadStruct);
-				//whether to print the commands in tiers with the spaces in subsequent lines.
-				boolean printTiers = false;
-				ParseToWLTree.dfs(uHeadStruct, parseStructSB, headParseStruct, 0, printTiers);
-				System.out.println("\n DONE ParseStruct DFS \n");
-				StringBuilder wlSB = new StringBuilder();
-				/**
-				 * Map of parts used to build up a theorem/def etc. 
-				 * Parts can be any ParseStructType. Should make this a local var.
-				 */
-				Multimap<ParseStructType, String> parseStructMap = ArrayListMultimap.create();
-				ParseToWLTree.dfs(parseStructMap, uHeadStruct, wlSB, true);				
-				System.out.println("Parts: " + parseStructMap);
-				parseStructMapList.add(parseStructMap.toString() + "\n");
-				//ParseToWLTree.dfs(uHeadStruct, wlSB, true);	
-				
-				//parsedSB.append("\n");
-				//ParseToWLTree.dfs(uHeadStruct, parsedSB, true);	
-				System.out.println(wlSB);
-				ParseToWLTree.dfsCleanUp(uHeadStruct);
-				System.out.println("~~~ DONE WLCommands DFS ~~~");
+				StringBuilder wlSB = treeTraversal(uHeadStruct);
 				//*******
 				
 				double maxDownPathScore = uHeadStruct.maxDownPathScore();
@@ -1524,7 +1505,9 @@ public class ThmP1 {
 				// int highestScoreIndex = ArrayDFS(parsedStructList.get(k));
 				int highestScoreIndex = 0; ///**********
 
+				
 				Struct kHeadStruct = parsedStructList.get(k).structList().get(highestScoreIndex);
+				
 				kHeadStruct.set_dfsDepth(0);
 				dfs(kHeadStruct, parsedSB);
 				
@@ -1538,6 +1521,8 @@ public class ThmP1 {
 					System.out.print(";  ");
 					parsedSB.append("; ");
 				}
+				
+				StringBuilder wlSB = treeTraversal(kHeadStruct);
 			}
 			parsedExpr.add(new ParsedPair(parsedSB.toString(), totalScore, "long"));
 
@@ -1561,6 +1546,39 @@ public class ThmP1 {
 		 * parse before WL and just parse to WL for that particular parse!
 		 */
 
+	}
+
+	/**
+	 * Traverses parse tree by calling various dfs methods.
+	 * @param uHeadStruct
+	 * @return
+	 */
+	private static StringBuilder treeTraversal(Struct uHeadStruct) {
+		System.out.println("\n START ParseStruct DFS");
+		StringBuilder parseStructSB = new StringBuilder();
+		ParseStructType parseStructType = ParseStructType.getType(uHeadStruct.type());
+		ParseStruct headParseStruct = new ParseStruct(parseStructType, "", uHeadStruct);
+		//whether to print the commands in tiers with the spaces in subsequent lines.
+		boolean printTiers = false;
+		ParseToWLTree.dfs(uHeadStruct, parseStructSB, headParseStruct, 0, printTiers);
+		System.out.println("\n DONE ParseStruct DFS \n");
+		StringBuilder wlSB = new StringBuilder();
+		/**
+		 * Map of parts used to build up a theorem/def etc. 
+		 * Parts can be any ParseStructType. Should make this a local var.
+		 */
+		Multimap<ParseStructType, String> parseStructMap = ArrayListMultimap.create();
+		ParseToWLTree.dfs(parseStructMap, uHeadStruct, wlSB, true);				
+		System.out.println("Parts: " + parseStructMap);
+		parseStructMapList.add(parseStructMap.toString() + "\n");
+		//ParseToWLTree.dfs(uHeadStruct, wlSB, true);	
+		
+		//parsedSB.append("\n");
+		//ParseToWLTree.dfs(uHeadStruct, parsedSB, true);	
+		System.out.println(wlSB);
+		ParseToWLTree.dfsCleanUp(uHeadStruct);
+		System.out.println("~~~ DONE WLCommands DFS ~~~");
+		return wlSB;
 	}
 
 	/**
