@@ -290,7 +290,7 @@ public class ParseToWLTree {
 					WLCommand.addTriggerComponent(curCommand, struct);
 					
 					for(Struct curStruct : waitingStructList){
-						//see if the whole command is satisfied, not the the part before trigger word
+						//see if the whole command is satisfied, not just the part before trigger word
 						//namely the trigger word is last word
 						curCommandSatWhole = WLCommand.addComponent(curCommand, curStruct, true);						
 					}
@@ -574,7 +574,7 @@ public class ParseToWLTree {
 				//get the ParseStruct based on type
 				ParseStructType type = ParseStructType.getType(struct.type());				
 				ParsedPair pair = new ParsedPair(curWrapper.WLCommandStr, struct.maxDownPathScore(), 
-						struct.numUnits());
+						struct.numUnits(), WLCommand.commandNumUnits(curCommand));
 				//partsMap.put(type, curWrapper.WLCommandStr);	
 				partsMap.put(type, pair);
 				//System.out.println("partsMap being put in: " + curWrapper.WLCommandStr);

@@ -159,8 +159,15 @@ public class StructA<A, B> extends Struct{
 		return curCommandWrapper;
 	}
 	
+	/**
+	 * 
+	 * @param includeType
+	 * @param curCommand Command that the returned String is built towards.
+	 * curCommand is null if this struct should not be counted towards commandNumUnits.
+	 * @return
+	 */
 	@Override
-	public String simpleToString(boolean includeType){
+	public String simpleToString(boolean includeType, WLCommand curCommand){
 		//if(this.posteriorBuiltStruct != null) return "";
 		
 		//been built into one command already
@@ -168,18 +175,26 @@ public class StructA<A, B> extends Struct{
 		if(this.WLCommandWrapperList != null){
 			int wrapperListSz = WLCommandWrapperList.size();
 			//wrapperListSz should be > 0, since list is created when first wrapper is added
-			return WLCommandWrapperList.get(wrapperListSz - 1).WLCommandStr();			
+			
+			WLCommandWrapper curWrapper = WLCommandWrapperList.get(wrapperListSz - 1);
+			if(curCommand != null){
+				int commandNumUnits = WLCommand.commandNumUnits(curWrapper.WLCommand());
+			 	WLCommand.increment_commandNumUnits(curCommand, commandNumUnits);
+			}
+			return curWrapper.WLCommandStr();			
 		}		
 		
 		A name = this.prev1;
-		return name instanceof String ? (String)name : this.simpleToString2(includeType);
+		return name instanceof String ? (String)name : this.simpleToString2(includeType, curCommand);
 	}
 	
 	//auxilliary method for simpleToString and called inside StructH.simpleToString2
-	public String simpleToString2(boolean includeType){
+	public String simpleToString2(boolean includeType, WLCommand curCommand){
 		//return "" if commandStr is not null (??)
 		//if(this.WLCommandStr != null) return "";
 		if(this.WLCommandWrapperList != null) return "";
+		
+		if(curCommand != null) WLCommand.increment_commandNumUnits(curCommand, this);
 		
 		//whether to wrap braces around the subcontent, to group terms together.
 		//wrap if type is phrase, etc
@@ -210,7 +225,7 @@ public class StructA<A, B> extends Struct{
 			if(inConj) tempStr += "{";
 			//if(prev1 instanceof Struct && ((Struct) prev1).WLCommandStr() == null){
 			if(prev1 instanceof Struct && ((Struct) prev1).WLCommandWrapperList() == null){
-				String prev1Str = ((Struct) prev1).simpleToString2(includeType);
+				String prev1Str = ((Struct) prev1).simpleToString2(includeType, curCommand);
 				if(!prev1Str.matches("\\s*")){
 					tempStr += prev1Str;
 				}
@@ -226,7 +241,7 @@ public class StructA<A, B> extends Struct{
 		if(prev2 != null){
 			String prev2String = "";
 			if(prev2 instanceof Struct && ((Struct) prev2).WLCommandWrapperList() == null){
-				String prev2Str = ((Struct) prev2).simpleToString2(includeType);
+				String prev2Str = ((Struct) prev2).simpleToString2(includeType, curCommand);
 				if(!prev2Str.matches("\\s*")){
 					if(!tempStr.matches("\\s*")) tempStr += ", ";
 					

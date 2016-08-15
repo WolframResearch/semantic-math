@@ -262,10 +262,11 @@ public class ThmP1Test {
 					+ "then there exists a unique power series $g(T)$ such that $f(g(T)) = T$";
 			st = "the cardinality of the set $S$ is at most the cardinality of the set $R$"; 
 			st = "A Noetherian ring $R$ is called  Cohen-Macaulay if all its local rings are Cohen-Macaulay."; //******<---
-			
-			st = "this field is perfect, it has order $p$";
-			st = "Cohen-Macaulay";
 			st = "f is a function and f has zeros";
+			st = "this field is perfect, it has order $p$";
+			st = "f is holomorphic on D";
+			//st = "Cohen-Macaulay";
+			
 			//st = "there exists a unique power series $g(T)$ such that $f(g(T)) = T$";			
 			//st = "$f$ is holomorphic on $D(0, r)$, the derivative of $f$ is $\\sum_j j $";
 			//st = "the derivative of the log of $x$ is equal to $1/x$";
@@ -293,7 +294,8 @@ public class ThmP1Test {
 			for(int i = 0; i < strAr.length; i++){
 				//alternate commented out line to enable tex converter
 				//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim()) ));
-				ThmP1.parse(ThmP1.tokenize(strAr[i].trim()));				
+				ThmP1.parse(ThmP1.tokenize(strAr[i].trim()));
+				
 			}
 			String parsedOutput = Arrays.toString(ThmP1.getParseStructMapList().toArray());			
 			//String processedOutput = parsedOutput.replaceAll("MathObj", "MathObject").replaceAll("\\$([^$]+)\\$", "LaTEXMath[\"$1\"]")

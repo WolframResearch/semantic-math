@@ -4,7 +4,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
-import static thmp.ParseToWLTree.WLCommandWrapper;
+
+import thmp.ParseToWLTree.WLCommandWrapper;
 
 public class StructH<H> extends Struct{
 
@@ -300,7 +301,7 @@ public class StructH<H> extends Struct{
 	 * @return
 	 */
 	@Override
-	public String simpleToString(boolean includeType){
+	public String simpleToString(boolean includeType, WLCommand curCommand){
 		//if(this.posteriorBuiltStruct != null) return "";
 		this.WLCommandStrVisitedCount++;
 		// instead of checking WLCommandStr, check if wrapperList is null
@@ -313,15 +314,23 @@ public class StructH<H> extends Struct{
 		if(this.WLCommandWrapperList != null){
 			int wrapperListSz = WLCommandWrapperList.size();
 			//wrapperListSz should be > 0, since list is created when first wrapper is added
-			return WLCommandWrapperList.get(wrapperListSz - 1).WLCommandStr();			
+			WLCommandWrapper curWrapper = WLCommandWrapperList.get(wrapperListSz - 1);
+			if(curCommand != null){
+				int commandNumUnits = WLCommand.commandNumUnits(curWrapper.WLCommand());
+			 	WLCommand.increment_commandNumUnits(curCommand, commandNumUnits);
+			}
+			return curWrapper.WLCommandStr();			
 		}		
 		//String name = this.struct.get("name");
 		//return name == null ? this.type : name;
-		return this.simpleToString2(includeType);
+		return this.simpleToString2(includeType, curCommand);
 	}
 	
 	//auxilliary method for simpleToString and StructA.simpleToString
-	public String simpleToString2(boolean includeType){
+	public String simpleToString2(boolean includeType, WLCommand curCommand){
+		
+		if(curCommand != null) WLCommand.increment_commandNumUnits(curCommand, this);
+
 		String str = "";
 		if(includeType){ 			
 			str += this.type.equals("ent") ? "MathObj" : this.type;
@@ -338,7 +347,7 @@ public class StructH<H> extends Struct{
 				continue;
 			//str += ", ";
 			//str += childRelation.get(i) + " ";	
-			String childStr = child.simpleToString2(includeType);
+			String childStr = child.simpleToString2(includeType, curCommand);
 			//str += childStr;	
 			if(!childStr.matches("\\s*")){
 				str += ", " + childStr;				

@@ -63,9 +63,9 @@ public abstract class Struct {
 	
 	//Simple toString to return the bare minimum to identify this Struct.
 	//To be used in ParseToWLTree.
-	public abstract String simpleToString(boolean includeType);
+	public abstract String simpleToString(boolean includeType, WLCommand curCommand);
 	
-	public abstract String simpleToString2(boolean includeType);
+	public abstract String simpleToString2(boolean includeType, WLCommand curCommand);
 	
 	//public abstract void append_WLCommandStr(String WLCommandStr);
 

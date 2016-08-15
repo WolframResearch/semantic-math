@@ -224,7 +224,7 @@ public class TriggerMathObj {
 	 * @param struct
 	 * @return
 	 */
-	public static String get_mathObjFromStruct(Struct struct){
+	public static String get_mathObjFromStruct(Struct struct, WLCommand curCommand){
 		//recursively find all relevant strings
 		//if structH, use name of element and name of children
 		//if(struct instanceof StructA) return "";
@@ -242,7 +242,7 @@ public class TriggerMathObj {
 		String highestMathObj = get_HighestMathObj(triggerTermList);
 		
 		//String namePpt = ((StructH<?>)struct).append_name_pptStr();
-		String namePpt = struct.simpleToString(false);
+		String namePpt = struct.simpleToString(false, curCommand);
 		if(struct.type().equals("ent")){
 			namePpt = "{" + namePpt + "}";
 		}

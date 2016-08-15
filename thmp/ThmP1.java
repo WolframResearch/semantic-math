@@ -108,8 +108,10 @@ public class ThmP1 {
 		//parsedExprSz used to group parse components together 
 		//when full parse is unavailable
 		//private int counter;
-		//number of units in this parse, as in numUnits in Struct
+		//number of units in this parse, as in numUnits (leaf nodes) in Class Struct
 		private int numUnits;
+		//the commandNumUnits associated to a WLCommand that gives this parsedStr.
+		private int commandNumUnits;
 		
 		public ParsedPair(String parsedStr, double score, String form){
 			this.parsedStr = parsedStr;
@@ -117,9 +119,10 @@ public class ThmP1 {
 			this.form = form;
 		}
 		
-		public ParsedPair(String parsedStr, double score, int numUnits){
+		public ParsedPair(String parsedStr, double score, int numUnits, int commandNumUnits){
 			this(parsedStr, score, "");
 			this.numUnits = numUnits;
+			this.commandNumUnits = commandNumUnits;
 		}
 		
 		public String parsedStr(){
@@ -136,7 +139,9 @@ public class ThmP1 {
 
 		@Override
 		public String toString(){
-			String numUnitsString = numUnits == 0 ? "" : " " + String.valueOf(this.numUnits);
+			String numUnitsString = numUnits == 0 ? "" : "  " + String.valueOf(this.numUnits);
+			numUnitsString += commandNumUnits == 0 ? "" : "  " + String.valueOf(this.commandNumUnits);
+			
 			return this.parsedStr + " " + String.valueOf(score) + numUnitsString;
 		}
 	}
@@ -164,7 +169,7 @@ public class ThmP1 {
 	 * @throws IOException
 	 */
 	public static ArrayList<Struct> tokenize(String sentence) throws IOException {
-
+		
 		// .....change to arraylist of Pairs, create Pair class
 		// LinkedHashMap<String, String> linkedMap = new LinkedHashMap<String,
 		// String>();
@@ -185,7 +190,7 @@ public class ThmP1 {
 		strloop: for (int i = 0; i < str.length; i++) {
 
 			String curWord = str[i];
-
+			
 			if (curWord.matches("^\\s*,*$"))
 				continue;
 
@@ -368,8 +373,10 @@ public class ThmP1 {
 				anchorList.add(pairsSize - 1);
 			}
 			// check part of speech
-			else if (posMap.containsKey(curWord)) {
-
+			else if (posMap.containsKey(curWord) || posMap.containsKey(curWord.toLowerCase())) {
+				if(posMap.containsKey(curWord.toLowerCase())){
+					curWord = curWord.toLowerCase();
+				}
 				// composite words, such as "for all",
 				String temp = curWord, pos = curWord;
 				String tempPos = posMap.get(temp);
@@ -415,8 +422,15 @@ public class ThmP1 {
 			}
 			// classify words with dashes; eg sesqui-linear
 			else if (curWord.split("-").length > 1) {
+				
+				//first check if curWord is in dictionary as written
+				if(posMap.containsKey(curWord)){
+					
+				}
+				
 				String[] splitWords = curWord.split("-");
-
+				System.out.println("splitWords: " + Arrays.toString(splitWords));
+				
 				String lastTerm = splitWords[splitWords.length - 1];
 				String lastTermS1 = singular == null ? "" : singular.split("-")[splitWords.length - 1];
 				String lastTermS2 = singular2 == null ? "" : singular2.split("-")[splitWords.length - 1];

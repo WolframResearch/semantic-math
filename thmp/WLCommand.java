@@ -102,6 +102,14 @@ public class WLCommand {
 	//private Struct headStruct;
 	
 	/**
+	 * The number of leaf nodes covered by this command.
+	 * To be compared with numUnits of the structToAppendCommandStr.
+	 * The higher this number, the more spanning this command is.
+	 * Again not intrinsic, depends on DFS path.
+	 */
+	private int commandNumUnits;
+	
+	/**
 	 * Max tree depth in DFS.
 	 */
 	private static final int MAXDFSDEPTH = 100;
@@ -140,6 +148,7 @@ public class WLCommand {
 		 * Whether or not to include in the built String created by build()
 		 */
 		private boolean includeInBuiltString;
+		
 		/**
 		 * Whether this term should be used to trigger TriggerMathObj system
 		 */
@@ -460,13 +469,14 @@ public class WLCommand {
 				if(term.triggerMathObj){
 					//should check first if contains WLCommandStr, i.e. has been converted to some 
 					//commands already
-					nextWord = TriggerMathObj.get_mathObjFromStruct(nextStruct);
+					nextWord = TriggerMathObj.get_mathObjFromStruct(nextStruct, curCommand);
 					
 					if(nextWord.equals("")){
-						nextWord = nextStruct.simpleToString(true);
+						//already added numUnits to Struct above, don't do it again.
+						nextWord = nextStruct.simpleToString(true, null);
 					}
 				}else{
-					nextWord = nextStruct.simpleToString(true);
+					nextWord = nextStruct.simpleToString(true, curCommand);
 				}
 				//simple way to present the Struct
 				//set to the head struct the currently built command will be appended to
@@ -600,6 +610,7 @@ public class WLCommand {
 			curCommand.commandsCountMap.put(commandComponent, commandComponentCount - 1);
 			//use counter to track whether map is satisfied
 			curCommand.componentCounter--;
+			increment_commandNumUnits(curCommand, newStruct);
 			curCommand.lastAddedCompIndex = i;
 			return curCommand.componentCounter < 1;
 			
@@ -653,6 +664,7 @@ public class WLCommand {
 		curCommand.commandsCountMap.put(commandComponent, commandComponentCount - 1);
 		//use counter to track whether map is satisfied
 		curCommand.componentCounter--;
+		increment_commandNumUnits(curCommand, newStruct);
 	}
 	
 	/**
@@ -729,6 +741,36 @@ public class WLCommand {
 	
 	public static void set_totalComponentCount(WLCommand curCommand, int newCount){
 		 curCommand.totalComponentCount = newCount;
+	}
+	
+	public static int commandNumUnits(WLCommand curCommand){
+		return curCommand.commandNumUnits;
+	}
+	
+	public static void set_commandNumUnits(WLCommand curCommand, int commandNumUnits){
+		 curCommand.commandNumUnits = commandNumUnits;
+	}
+	
+	/**
+	 * Increment the commandNumUnits by 1, if newStruct is a leaf node.
+	 * @param curCommand
+	 */
+	public static void increment_commandNumUnits(WLCommand curCommand, Struct newStruct){
+		//instanceof is slow!
+		if(newStruct.prev1() instanceof String && !(newStruct.prev2() instanceof Struct) 
+				|| newStruct instanceof StructH){
+			curCommand.commandNumUnits++;
+			
+		}
+	}
+	
+	/**
+	 * 
+	 * @param curCommand
+	 * @param numUnits	Amount to increment numUnits by.
+	 */
+	public static void increment_commandNumUnits(WLCommand curCommand, int numUnits){
+			curCommand.commandNumUnits += numUnits;
 	}
 	
 	/*public static Struct headStruct(WLCommand curCommand){
