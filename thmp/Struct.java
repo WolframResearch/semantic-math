@@ -52,6 +52,14 @@ public abstract class Struct {
 	
 	public abstract Struct parentStruct();
 
+	/**
+	 * Only meaningful for StructH.
+	 * @param prev
+	 */
+	public abstract void set_possessivePrev(Struct prev);
+	
+	public abstract Struct possessivePrev();
+	
 	public abstract void set_dfsDepth(int depth);
 	
 	public abstract int dfsDepth();

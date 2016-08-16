@@ -110,6 +110,20 @@ public class StructA<A, B> extends Struct{
 		return this.parentStruct;
 	}
 	
+	/**
+	 * Set possessivePrev.
+	 * @param prev	
+	 */
+	@Override
+	public void set_possessivePrev(Struct prev){
+		
+	}
+	
+	@Override
+	public Struct possessivePrev(){
+		return null;
+	}
+	
 	@Override
 	public void set_dfsDepth(int depth){
 		this.depth = depth;

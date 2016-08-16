@@ -43,6 +43,9 @@ public class StructH<H> extends Struct{
 	private double maxDownPathScore = DOWNPATHSCOREDEFAULT;
 	private StructList structList;
 	private int NUMUNITS = 1;
+	//Struct that's the owner of this structH with a possesive term relation
+	//eg related by its/their.
+	private Struct possessivePrev;
 	
 	//parent
 	//private Struct parent;
@@ -90,6 +93,19 @@ public class StructH<H> extends Struct{
 		return this.parentStruct;
 	}
 	
+	/**
+	 * Set possessivePrev.
+	 * @param prev	
+	 */
+	@Override
+	public void set_possessivePrev(Struct prev){
+		this.possessivePrev = prev;
+	}
+	
+	@Override
+	public Struct possessivePrev(){
+		return this.possessivePrev;
+	}
 	@Override
 	public void set_dfsDepth(int depth){
 		this.depth = depth;
@@ -218,7 +234,9 @@ public class StructH<H> extends Struct{
 	public String toString(){
 		String str = this.type;
 		str += this.struct; //struct is hashmap for structH
-		
+		if(this.possessivePrev != null){
+			str += "possessivePrev: " + possessivePrev.type();
+		}
 		return str;
 	}
 	

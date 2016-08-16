@@ -307,7 +307,7 @@ public class WLCommand {
 		for(Entry<Struct, Integer> entry : structIntMap.entrySet()){
 			Integer whichChild = entry.getValue();
 			Struct nextStruct = entry.getKey();
-			System.out.println("@@@Added Parent: " + nextStruct + " " + whichChild);
+			//System.out.println("@@@Added Parent: " + nextStruct + " " + whichChild);
 			//if(whichChild == BOTHCHILDREN || whichChild == RIGHTCHILD){
 			if(whichChild == BOTHCHILDREN){
 				int nextStructDepth = nextStruct.dfsDepth();

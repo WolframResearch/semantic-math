@@ -51,6 +51,7 @@ public class WLCommandsList {
 		triggerWordLookupMapBuilder.put("has", "is");
 		triggerWordLookupMapBuilder.put("belong", "is");
 		triggerWordLookupMapBuilder.put("lie", "is");
+		triggerWordLookupMapBuilder.put("let", "if");
 		// triggerWordLookupMapBuilder.put("radius", "is");
 
 		triggerWordLookupMap = triggerWordLookupMapBuilder.build();
@@ -114,6 +115,12 @@ public class WLCommandsList {
 		// trigger TriggerMathObj
 		WLCommandMapBuilder.put("is", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is|are|be, trigger",
 				"\\[Element]", "symb|ent|adj|phrase, , true, TriggerMathObj" }));
+		//auxpass, eg "is called"
+		WLCommandMapBuilder.put("is called", addCommand(new String[] { "symb|ent|pro, , true", "auxpass, is called, trigger",
+				"\\[Element]", "symb|ent|adj|phrase, , true, TriggerMathObj" }));
+		
+		//if_assert. As well as "let", etc
+		WLCommandMapBuilder.put("if", addCommand(new String[] { "if|If|let, , trigger", "assert, , true" }));
 		
 		WLCommandMapBuilder.put("equal to", addCommand(new String[] { "symb|ent, , true",
 				"==", "equal to, , trigger", "symb|ent|phrase, , true, TriggerMathObj" }));

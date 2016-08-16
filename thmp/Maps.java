@@ -288,7 +288,7 @@ public class Maps {
 		posMap.put("conjugate", "adj");
 		posMap.put("symmetric", "adj");
 		posMap.put("equal", "adj");
-		posMap.put("all", "predet");
+		posMap.put("all", "adj"); //predet
 		posMap.put("isomorphic", "adj");
 		posMap.put("for", "pre_COMP"); // can be composite word, use first pos
 										// if composite not in posmap
@@ -383,11 +383,11 @@ public class Maps {
 		posMap.put("that are", "hyp");
 
 		// pronouns
-		posMap.put("their", "pro");
 		posMap.put("it", "pro");
 		posMap.put("we", "pro");
 		posMap.put("they", "pro");
-		posMap.put("its", "pro");
+		posMap.put("their", "poss");
+		posMap.put("its", "poss");
 		// relative pronouns
 		posMap.put("whose", "rpro");
 		posMap.put("which", "rpro_COMP");
@@ -579,6 +579,7 @@ public class Maps {
 
 		structMap.put("pre_noun", new Rule("ppt", 1)); // nounphrase
 		structMap.put("adj_symb", new Rule("phrase", 1));
+		
 		structMap.put("adj_noun", new Rule("phrase", 1));
 		structMap.put("adj_prep", new Rule("phrase", .85));
 		structMap.put("gerund_noun", new Rule("gerundp", 1)); // gerundphrase
@@ -624,7 +625,7 @@ public class Maps {
 		structMap.put("det_verbphrase", new Rule("assert", 1));
 		structMap.put("verb_parti", new Rule("verbphrase", 1));
 		structMap.put("auxpass_pobj", new Rule("verbphrase", 1)); // passive
-																	// auxiliary
+		structMap.put("auxpass_adj", new Rule("verbphrase", 1));	// auxiliary
 
 		//TEMP RULE
 		//structMap.put("assert_csubj", new Rule("", 1));
@@ -648,6 +649,7 @@ public class Maps {
 		structMap.put("pro_verbphrase", new Rule("assert", 1));
 		structMap.put("pro_csubj", new Rule("pobj", 1)); // could be iobj ->
 															// indirect obj
+		structMap.put("poss_csubj", new Rule("pobj", .95));
 		structMap.put("predet_csubj", new Rule("csubj", 1));
 		structMap.put("np_verbphrase", new Rule("assert", 1));
 		structMap.put("symb_auxpass", new Rule("assert", .8));

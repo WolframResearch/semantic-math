@@ -612,7 +612,7 @@ public class ParseToWLTree {
 				//if(struct.WLCommandStr() != null ){
 				parsedSB.append(struct.WLCommandStr());
 			} */
-			System.out.println("~~~Struct inside dfs: " + struct);
+			
 			appendWLCommandStr(struct, parsedSB, partsMap);			
 			
 			shouldPrint = false;

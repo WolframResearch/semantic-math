@@ -19,7 +19,7 @@ public class ThmSearch {
 	private static int[][] docMx;
 	static{
 		//docMx = new int[][]{{0, 1, 0}, {1, 1, 0}, {0, 0, 1}, {1, 0, 0}};
-		docMx = TriggerMathThm.mathThmMx();
+		docMx = TriggerMathThm2.mathThmMx();
 		System.out.println(Arrays.deepToString(docMx));
 	}
 	
@@ -164,7 +164,7 @@ public class ThmSearch {
 		ml.discardAnswer();	
 		// For now use the number of columns (theorem vectors).
 		// # of words (for now) is a lot larger than the number of theorems.
-		int k = TriggerMathThm.mathThmMx()[0].length;
+		int k = TriggerMathThm2.mathThmMx()[0].length;
 		ml.evaluate("{u, d, v} = SingularValueDecomposition[mx, " + k +"];");
 		ml.discardAnswer();
 		//transform query vector to low dimensional space 
@@ -206,7 +206,7 @@ public class ThmSearch {
 		}
 		System.out.println("max DotProd: " + max);
 		//System.out.println("index: " + index);
-		System.out.println(TriggerMathThm.getThm(index));
+		System.out.println(TriggerMathThm2.getThm(index));
 		return s;
 	}
 	
@@ -215,7 +215,7 @@ public class ThmSearch {
 		Scanner sc = new Scanner(System.in);
 		while(sc.hasNextLine()){
 			String thm = sc.nextLine();
-			query = TriggerMathThm.createQuery(thm);
+			query = TriggerMathThm2.createQuery(thm);
 			constructQuery(ml, query);
 		}		
 		sc.close();

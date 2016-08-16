@@ -261,10 +261,12 @@ public class ThmP1Test {
 			st = "Let $f(T) = a_1T + ...$ be a formal power series with $a_1 \\ne 0$, "
 					+ "then there exists a unique power series $g(T)$ such that $f(g(T)) = T$";
 			st = "the cardinality of the set $S$ is at most the cardinality of the set $R$"; 
-			st = "A Noetherian ring $R$ is called  Cohen-Macaulay if all its local rings are Cohen-Macaulay."; //******<---
 			st = "f is a function and f has zeros";
 			st = "this field is perfect, it has order $p$";
 			st = "f is holomorphic on D";
+			st = "A Noetherian ring $R$ is called Cohen-Macaulay if all local rings are Cohen-Macaulay."; //******<---
+			st = "if all its local rings are cohen-macaulay";
+			//st = "all fields are rings";
 			//st = "Cohen-Macaulay";
 			
 			//st = "there exists a unique power series $g(T)$ such that $f(g(T)) = T$";			
@@ -304,27 +306,35 @@ public class ThmP1Test {
 			System.out.println("PARTS: " + parsedOutput);
 			
 			//System.out.println("****" + ThmP1.getParsedExpr() + "******");
-			Scanner sc = new Scanner(new File("src/thmp/data/noTex4.txt"));
+			boolean processFile = false;
 			
-			while(sc.hasNextLine()){
-				String nextLine = sc.nextLine();
-				st = nextLine;
-				if(st.matches("^\\s*$")) continue;
+			if(processFile){
+				Scanner sc = new Scanner(new File("src/thmp/data/noTex4.txt"));
 				
-				//System.out.println(nextLine + "\n");
-				//array of sentences separated by . or !
-				strAr = ThmP1.preprocess(st);
-				
-				for(int i = 0; i < strAr.length; i++){					
-					//ThmP1.parse(ThmP1.tokenize(strAr[i].trim())); //p1.parse(p1.tokenize(p1.preprocess(strAr2)));					
+				while(sc.hasNextLine()){
+					String nextLine = sc.nextLine();
+					st = nextLine;
+					if(st.matches("^\\s*$")) continue;
+					System.out.println("*~~~*");
+					System.out.println(nextLine + "\n");
+					//array of sentences separated by . or !
+					strAr = ThmP1.preprocess(st);
+					
+					for(int i = 0; i < strAr.length; i++){					
+						ThmP1.parse(ThmP1.tokenize(strAr[i].trim())); //p1.parse(p1.tokenize(p1.preprocess(strAr2)));					
+					}
+					System.out.println();
+					
+					parsedOutput = Arrays.toString(ThmP1.getParseStructMapList().toArray());			
+					
+					System.out.println("PARTS: " + parsedOutput);
+					System.out.println("*~~~*");
 				}
-				//System.out.println();
+				
+				//ThmP1.writeUnknownWordsToFile();
+				//ThmP1.writeParsedExprToFile();
+				sc.close();
 			}
-			
-			//ThmP1.writeUnknownWordsToFile();
-			//ThmP1.writeParsedExprToFile();
-			sc.close();
-			
 			//p1.parse(p1.tokenize(p1.preprocess("characteristic of Fp is p".split(" "))));
 			
 		}

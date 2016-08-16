@@ -1055,8 +1055,7 @@ public class ThmP1 {
 				i = startRow - 1;
 				startRow = -1;
 			}
-			for (; i >= 0; i--) {
-
+			innerloop: for (; i >= 0; i--) {
 				for (int k = j - 1; k >= i; k--) {
 					// pairs are (i,k), and (k+1,j)
 
@@ -1068,6 +1067,7 @@ public class ThmP1 {
 
 					if (structList1 == null || structList2 == null || structList1.size() == 0
 							|| structList2.size() == 0) {
+						
 						continue;
 					}
 
@@ -1079,10 +1079,10 @@ public class ThmP1 {
 					while (structList1Iter.hasNext()) {
 
 						Struct struct1 = structList1Iter.next();
-
+						
 						while (structList2Iter.hasNext()) {
 							Struct struct2 = structList2Iter.next();
-
+							
 							// combine/reduce types, like or_ppt, for_ent,
 							// in_ent
 							String type1 = struct1.type();
@@ -1153,7 +1153,7 @@ public class ThmP1 {
 							// name: or. combined ex: or_adj (returns ent),
 							// or_ent (ent)
 							String combined = type1 + "_" + type2;
-
+							
 							// handle pattern ent_of_symb
 							if (combined.matches("ent_pre") && struct2.prev1() != null
 									&& struct2.prev1().toString().matches("of") && j + 1 < len
@@ -1193,28 +1193,41 @@ public class ThmP1 {
 
 							if (combined.equals("adj_ent")) {
 								// update struct
-								if (struct2 instanceof StructH) {
+								
 									// should be StructH
-									Struct newStruct = struct2.copy();
-									String newPpt = "";
-									if (struct1.type().equals("conj_adj")) {
-										if (struct1.prev1() instanceof Struct) {
-											newPpt += ((Struct) struct1.prev1()).prev1();
-										}
-										if (struct1.prev2() instanceof Struct) {
-											newPpt += ((Struct) struct1.prev2()).prev1();
-										}
-									} else {
-										// check if String and cast instead
-										newPpt += struct1.prev1();
+								Struct newStruct = struct2.copy();
+								String newPpt = "";
+								if (struct1.type().equals("conj_adj")) {
+									if (struct1.prev1() instanceof Struct) {
+										newPpt += ((Struct) struct1.prev1()).prev1();
 									}
-									newStruct.struct().put(newPpt, "ppt");
-									// mx.get(i).set(j, newStruct);
-									mx.get(i).get(j).add(newStruct);
-									continue outerloop;
+									if (struct1.prev2() instanceof Struct) {
+										newPpt += ((Struct) struct1.prev2()).prev1();
+									}
+								} else {
+									// check if String and cast instead
+									newPpt += struct1.prev1();
 								}
+								newStruct.struct().put(newPpt, "ppt");
+								// mx.get(i).set(j, newStruct);
+								mx.get(i).get(j).add(newStruct);
+								continue innerloop;
+								
 							}
-
+							//posessive pronouns with ent
+							else if(combined.equals("poss_ent")){
+								Struct newStruct = struct2.copy();
+								//add reference to previous ent that this poss most likely refers to
+								//to struct2. Put new entry in struct2.struct, with key "poss".
+								//put the new field "possesivePrev" in Struct
+								if(foundFirstEnt && recentEntIndex < j){
+									newStruct.set_possessivePrev(recentEnt);									
+								}
+								
+								mx.get(i).get(j).add(newStruct);
+								continue innerloop;
+							}
+						
 							// handle "is called" -- "verb_parti", also "is
 							// defined"
 							// for definitions
@@ -1457,9 +1470,9 @@ public class ThmP1 {
 				Struct uHeadStruct = headStructList.structList().get(u);
 				uHeadStruct.set_dfsDepth(0);
 				dfs(uHeadStruct, parsedSB);
-				//******
+				//should pass in the wlSB, instead of creating one anew each time.
 				StringBuilder wlSB = treeTraversal(uHeadStruct);
-				//*******
+				System.out.println("+++Previous long parse: " + parsedSB);
 				
 				double maxDownPathScore = uHeadStruct.maxDownPathScore();
 				
@@ -1573,7 +1586,7 @@ public class ThmP1 {
 	 * @return
 	 */
 	private static StringBuilder treeTraversal(Struct uHeadStruct) {
-		System.out.println("\n START ParseStruct DFS");
+		//System.out.println("\n START ParseStruct DFS");
 		StringBuilder parseStructSB = new StringBuilder();
 		ParseStructType parseStructType = ParseStructType.getType(uHeadStruct.type());
 		ParseStruct headParseStruct = new ParseStruct(parseStructType, "", uHeadStruct);
