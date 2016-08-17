@@ -1,11 +1,13 @@
 package thmp;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 /**
@@ -19,9 +21,23 @@ public class ThmInput {
 
 	public static void main(String[] args) throws IOException{
 		File file = new File("src/thmp/data/commAlg4.txt");
-		Scanner sc = new Scanner(file);
 		Path fileTo = Paths.get("src/thmp/data/thmFile4.txt");
-		ArrayList<String> thms = new ArrayList<String>();
+		
+		List<String> thmList = readThm(file);
+		
+		//write list of theorems to file
+		Files.write(fileTo, thmList, Charset.forName("UTF-8"));
+	}
+
+	/**
+	 * @param file
+	 * @return List of theorems read in.
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
+	public static List<String> readThm(File file) throws FileNotFoundException, IOException {
+		Scanner sc = new Scanner(file);
+		List<String> thms = new ArrayList<String>();
 		
 		String newThm = "";
 		boolean inThm = false;
@@ -32,9 +48,8 @@ public class ThmInput {
 				newThm = line;				
 				line = sc.nextLine();
 				inThm = true;
-			}
-			
-			if(line.matches("(\\\\end\\{definition\\})|(\\\\end\\{lemma\\})")){
+			}			
+			else if(line.matches("(\\\\end\\{definition\\})|(\\\\end\\{lemma\\})")){
 				inThm = false;
 				newThm += "\n";
 				thms.add(newThm);
@@ -44,9 +59,8 @@ public class ThmInput {
 				newThm = newThm + " " + line;
 		}
 		
-		//write list of theorems to file
-		Files.write(fileTo, thms, Charset.forName("UTF-8"));
-
 		sc.close();
+		
+		return thms;
 	}
 }

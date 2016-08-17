@@ -12,7 +12,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Processes theorems/lemmas/defs read in from file
+ * Processes theorems/lemmas/defs read in from file.
+ * To be done after ThmInput.java.
  * 
  * @author yihed
  *
@@ -24,23 +25,22 @@ public class ProcessInput {
 	public static void main(String[] args) throws IOException{
 		
 		File inputFile = new File("src/thmp/data/thmFile4.txt");
-		Scanner sc = new Scanner(inputFile);		
 		Path noTex = Paths.get("src/thmp/data/noTex4.txt");
-		String noTexString = null;
+
+		Scanner sc = new Scanner(inputFile);		
+		String noTexString = "";
+		ArrayList<String> noTexStringList = new ArrayList<String>();
 		
 		while(sc.hasNextLine()){
 			String thm = sc.nextLine();
 			if(thm.matches("")) continue;			
-			
-			String start = thm.substring(0, 11);
-			
-			if(start.matches("\\\\begin\\{def[a-z]*")){
-			
-			}else if(start.matches("\\\\begin\\{lem[a-z]*")){
-				
-			}else if(start.matches("\\\\begin\\{the[a-z]*")){
-				
-			}
+			/*
+			//get first 11 chars
+			String start = thm.substring(0, 11);			
+			if(start.matches("\\\\begin\\{def[a-z]*")){			
+			}else if(start.matches("\\\\begin\\{lem[a-z]*")){				
+			}else if(start.matches("\\\\begin\\{the[a-z]*")){				
+			} */
 			
 			//skips the "\label"
 			String[] meat = thm.split("\\\\label\\{([a-zA-Z]|-)*\\} ");
@@ -63,14 +63,14 @@ public class ProcessInput {
 				//System.out.println(thm.replaceAll("(\\$[^$]+\\$)|(\\$\\$[^$]+\\$\\$)", "tex"));
 				
 			}
-			
-			ArrayList<String> noTexStringList = new ArrayList<String>();
+						
 			noTexStringList.add(noTexString);
 			
-			Files.write(noTex, noTexStringList, Charset.forName("UTF-8"));
 		}
 		
 		sc.close();
+		
+		Files.write(noTex, noTexStringList, Charset.forName("UTF-8"));
 	}
 		
 }
