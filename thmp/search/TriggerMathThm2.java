@@ -92,9 +92,10 @@ public class TriggerMathThm2 {
 		*/
 		// should be "thm", "term1", "term2", etc
 		addKeywordToMathObj(new String[] { "Godel's incompleteness theorem", "arithmetic", "incomplete" }, keywordList, keywordMap, mathObjMMap);
-		// addKeywordToMathObj(new String[]{"finite", "function", "ring",
-		// "module"}, keywordList, keyDictBuilder, mathObjMMap);
-
+		
+		//adds thms from CollectThm.thmWordsList. The thm name is its index in thmWordsList.
+		addThmsFromList(keywordList, keywordMap, mathObjMMap);
+		
 		// mathObjMultimap = ImmutableMultimap.copyOf(mathObjMMap);
 
 		keywordDict = ImmutableMap.copyOf(keywordMap);
@@ -110,7 +111,7 @@ public class TriggerMathThm2 {
 			Map<String, Integer> keywordMap, Multimap<String, String> mathObjMMap) {
 		if (keywords.length == 0)
 			return;
-				
+		
 		//String keyword = keywords[0];
 		//theorem
 		String thm = keywords[0];
@@ -139,6 +140,26 @@ public class TriggerMathThm2 {
 	}
 
 	/**
+	 * Adds thms by calling addKeywordToMathObj on CollectThm.thmWordsList.
+	 * @param keywords
+	 * @param keywordList
+	 * @param keywordMap
+	 * @param mathObjMMap
+	 */
+	private static void addThmsFromList(List<String> keywordList,
+			Map<String, Integer> keywordMap, Multimap<String, String> mathObjMMap){
+		ImmutableList<ImmutableMap<String, Integer>> thmWordsList = CollectThm.get_thmWordsList();
+		//index of thm in thmWordsList, to be used as part of name
+		int thmIndex = 0;
+		for(ImmutableMap<String, Integer> wordsMap : thmWordsList){
+			String thmName = Integer.toString(thmIndex++);
+			List<String> keyWordsList = wordsMap.keySet().asList();
+			keyWordsList.add(0, thmName);
+			addKeywordToMathObj(keyWordsList.toArray(new String[keyWordsList.size()]), keywordList, keywordMap, mathObjMMap);
+		}
+	}
+	
+	/**
 	 * Builds the MathObjMx
 	 */
 	private static void buildMathObjMx(List<String> keywordList, Multimap<String, String> mathObjMMap,
@@ -158,6 +179,7 @@ public class TriggerMathThm2 {
 			while (curMathObjColIter.hasNext()) {
 				String keyword = curMathObjColIter.next();
 				Integer keyWordIndex = keywordDict.get(keyword);
+				//should incorporate weights of each word!
 				mathObjMx[keyWordIndex][mathObjCounter] = 1;
 			}
 			mathObjCounter++;

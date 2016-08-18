@@ -53,6 +53,7 @@ public class ThmInput {
 				inThm = false;
 				newThm += "\n";
 				thms.add(newThm);
+				newThm = "";
 			}
 			
 			if(inThm)

@@ -1,12 +1,14 @@
 package thmp;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,6 +29,18 @@ public class ProcessInput {
 		File inputFile = new File("src/thmp/data/thmFile4.txt");
 		Path noTex = Paths.get("src/thmp/data/noTex4.txt");
 
+		List<String> noTexStringList = processInput(inputFile, false);
+		
+		Files.write(noTex, noTexStringList, Charset.forName("UTF-8"));
+	}
+
+	/**
+	 * @param inputFile
+	 * @param replaceTex replaces the tex inside $ $ with "tex"
+	 * @return List of Strings with latex such as \\cite removed.
+	 * @throws FileNotFoundException
+	 */
+	public static List<String> processInput(File inputFile, boolean replaceTex) throws FileNotFoundException {
 		Scanner sc = new Scanner(inputFile);		
 		String noTexString = "";
 		ArrayList<String> noTexStringList = new ArrayList<String>();
@@ -47,8 +61,11 @@ public class ProcessInput {
 			if(meat.length > 1){
 				thm = meat[1];
 				//System.out.println(thm);
+				if(replaceTex){
+					thm = thm.replaceAll("\\$[^$]+\\$|\\$\\$[^$]+\\$\\$", "tex");
+				}
 				//thm.replaceAll("$[^$]\\$", "tex");
-				//replaceAll("(\\$[^$]+\\$)|(\\$\\$[^$]+\\$\\$)", "tex").
+				//replaceAll("(?:\\$[^$]+\\$)|(?:\\$\\$[^$]+\\$\\$)", "tex").
 				//use capturing groups to capture text inside {\it ... }
 				//replace the others with non-captureing groups to speed up
 				String tempThm = thm.replaceAll("\\\\begin\\{ali[^}]*\\}|\\\\end\\{ali[^}]*\\}|\\\\begin\\{equ[^}]*\\}|\\\\end\\{equ[^}]*\\}", "\\$\\$")
@@ -58,8 +75,10 @@ public class ProcessInput {
 				/*Pattern regex = Pattern.compile("\\{\\\\it([^}]*)\\}");
 				Matcher matcher = regex.matcher(tempThm);
 				tempThm = matcher.replaceAll("$1"); */
+
+				//noTexString += tempThm;
+				noTexString = tempThm;
 				
-				noTexString += tempThm;
 				//System.out.println(thm.replaceAll("(\\$[^$]+\\$)|(\\$\\$[^$]+\\$\\$)", "tex"));
 				
 			}
@@ -69,8 +88,7 @@ public class ProcessInput {
 		}
 		
 		sc.close();
-		
-		Files.write(noTex, noTexStringList, Charset.forName("UTF-8"));
+		return noTexStringList;
 	}
 		
 }
