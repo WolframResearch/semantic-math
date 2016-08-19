@@ -625,6 +625,7 @@ public class Maps {
 		structMap.put("det_verbphrase", new Rule("assert", 1));
 		structMap.put("verb_parti", new Rule("verbphrase", 1));
 		structMap.put("auxpass_pobj", new Rule("verbphrase", 1)); // passive
+		structMap.put("auxpass_ent", new Rule("verbphrase", 1)); 
 		structMap.put("auxpass_adj", new Rule("verbphrase", 1));	// auxiliary
 
 		//TEMP RULE

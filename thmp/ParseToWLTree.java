@@ -72,22 +72,26 @@ public class ParseToWLTree {
 	 * Get the triggered collection 
 	 * @param struct
 	 */
-	private static Collection<WLCommand> get_triggerCol(String triggerKeyWord){
+	private static Collection<WLCommand> get_triggerCol(String triggerKeyWord, String triggerType){
 		
 		Collection<WLCommand> triggeredCol;
 
 		triggeredCol = WLCommandMap.get(triggerKeyWord);
 		
 		if(triggeredCol.isEmpty()){
+			//trigger word redirects: eg are -> is, since they are functionally equivalent
 			if(triggerWordLookupMap.containsKey(triggerKeyWord)){
 				
 				triggeredCol = new ArrayList<WLCommand>();
 			//look up again with fetched list of keywords
 			
-			Collection<String> col= triggerWordLookupMap.get(triggerKeyWord);
-			for(String s : col){
-				triggeredCol.addAll(WLCommandMap.get(s));
-			}
+				Collection<String> col= triggerWordLookupMap.get(triggerKeyWord);
+				for(String s : col){
+					triggeredCol.addAll(WLCommandMap.get(s));
+				}
+			}else if(WLCommandMap.containsKey(triggerType)){
+				triggeredCol = WLCommandMap.get(triggerType);
+				
 			}
 		}
 		return triggeredCol;
@@ -113,7 +117,7 @@ public class ParseToWLTree {
 		int structDequeStartIndex = structDeque.size() - 1;
 		
 		posTermListLoop: for(int i = triggerWordIndex - 1; i > -1; i--){
-			PosTerm curPosTerm = posTermList.get(i);
+			PosTerm curPosTerm = posTermList.get(i);			
 			//auxilliary term
 			if(curPosTerm.positionInMap() < 0) continue;
 			
@@ -129,6 +133,7 @@ public class ParseToWLTree {
 			//for each struct in deque, go through list to match
 			//Need a way to tell if all filled
 				Struct curStructInDeque = structDeque.get(k);
+				
 				//avoid repeating this: 
 				String nameStr = "";
 				if(curStructInDeque instanceof StructA && curStructInDeque.prev1() instanceof String){
@@ -139,7 +144,7 @@ public class ParseToWLTree {
 				
 				String curStructInDequeType = curStructInDeque.type().matches("conj_.*|disj_.*") ?
 						curStructInDeque.type().split("_")[1] : curStructInDeque.type();
-				
+						
 				if(curStructInDequeType.matches(curCommandComponent.posTerm())
 						&& nameStr.matches(curCommandComponent.name())
 						&& !usedStructsBool[k] ){
@@ -172,7 +177,7 @@ public class ParseToWLTree {
 					//add at beginning since iterating backwards							
 					//waitingStructList.add(0, structToAdd);
 					waitingStructList.add(structToAdd);
-					curPosTerm.set_posTermStruct(structToAdd);
+					
 					//set headStruct to structToAdd if it is closer to root
 					/*if(WLCommand.headStruct(curCommand).dfsDepth() > structToAdd.dfsDepth()){
 						WLCommand.set_headStruct(curCommand, structToAdd);
@@ -244,15 +249,17 @@ public class ParseToWLTree {
 			triggerKeyWord = struct.struct().get("name");
 		}
 		
+		String triggerType = struct.type();
+		
 		//if trigger a WLCommand, 
 		boolean isTrigger = false;
-		Collection<WLCommand> triggeredCol = get_triggerCol(triggerKeyWord);
+		Collection<WLCommand> triggeredCol = get_triggerCol(triggerKeyWord, triggerType);
 
 		if(triggeredCol.isEmpty() && triggerKeyWord.length() > 1 
 				&& triggerKeyWord.charAt(triggerKeyWord.length() - 1) == 's'){
 			//need to write out all other cases, like ending in "es"
 			String triggerWordSingular = triggerKeyWord.substring(0, triggerKeyWord.length() - 1);
-			triggeredCol = get_triggerCol(triggerWordSingular);				
+			triggeredCol = get_triggerCol(triggerWordSingular, triggerType);				
 		}
 		
 		if(!triggeredCol.isEmpty()){		
@@ -306,7 +313,7 @@ public class ParseToWLTree {
 		
 		//add struct to stack, even if trigger Struct
 		//if(struct.parentStruct() == null || (struct.parentStruct() != null && !struct.parentStruct().type().matches("conj.*|disj.*"))){
-		structDeque.add(struct);			
+		structDeque.add(struct);
 		//}
 						
 		// use visitor pattern!		
@@ -363,8 +370,6 @@ public class ParseToWLTree {
 				if(checkParseStructType){
 					curHeadParseStruct = new ParseStruct(parseStructType, "", (Struct)struct.prev1());
 					headParseStruct.addToSubtree(parseStructType, curHeadParseStruct);
-					//set to "" so to not print duplicates
-					//struct.set_prev1("");
 					
 					numSpaces++;
 					String space = "";
@@ -572,7 +577,7 @@ public class ParseToWLTree {
 				//parsedSB.append(struct.WLCommandStr());
 				parsedSB.append(curWrapper.WLCommandStr);
 				//get the ParseStruct based on type
-				ParseStructType type = ParseStructType.getType(struct.type());				
+				ParseStructType type = ParseStructType.getType(struct.type());
 				ParsedPair pair = new ParsedPair(curWrapper.WLCommandStr, struct.maxDownPathScore(), 
 						struct.numUnits(), WLCommand.commandNumUnits(curCommand));
 				//partsMap.put(type, curWrapper.WLCommandStr);	

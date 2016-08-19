@@ -225,7 +225,6 @@ public class ThmP1Test {
 			st = "we say that f is a field";
 			st = "Let $R \\to S$ be an epimorphism of rings.";
 			st = "there exists a function f such that f is constant";
-			st = "there exists a function";
 			
 			st = "A ring map is surjective if and only if it is finite";
 			st = "a ring is it is finite"; //ensure pronoun doesn't refer to previous ent!
@@ -266,9 +265,8 @@ public class ThmP1Test {
 			st = "f is holomorphic on D";
 			st = "A Noetherian ring $R$ is called Cohen-Macaulay if all local rings are Cohen-Macaulay."; //******<---
 			st = "if all its local rings are cohen-macaulay";
-			//st = "all fields are rings";
-			//st = "Cohen-Macaulay";
-			
+			st = "we have f as a function of x";
+			st = "$I$ is pure";
 			//st = "there exists a unique power series $g(T)$ such that $f(g(T)) = T$";			
 			//st = "$f$ is holomorphic on $D(0, r)$, the derivative of $f$ is $\\sum_j j $";
 			//st = "the derivative of the log of $x$ is equal to $1/x$";
@@ -283,12 +281,11 @@ public class ThmP1Test {
 			//st = "given an element f of a set $S$"; 
 			//st = "f is a function with radius of convergence r and finitely many roots";
 			//st = "let S be the union of elements of a field";
-			//st = "f is a function with radius of convergence r";
-			//st = "f is a function with radius of convergence r";
+			//st = "f is a function with radius of convergence r";			
 			//st = "f is function with radius";
 			//st = "$f$ is a set";
 			//st = "the derivative is $f=s$";
-			
+
 			//System.out.println("from TexConverter: " + TexConverter.convert("let $m \\subset M$ be an element"));			
 			
 			strAr = ThmP1.preprocess(st);

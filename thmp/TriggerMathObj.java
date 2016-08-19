@@ -77,6 +77,7 @@ public class TriggerMathObj {
 		addKeywordToMathObj(new String[]{"holomorphic", "PowerSeries"}, keywordList, keyDictBuilder, mathObjMMap);
 		addKeywordToMathObj(new String[]{"continuous", "function"}, keywordList, keyDictBuilder, mathObjMMap);
 		addKeywordToMathObj(new String[]{"cohen-macaulay", "ring"}, keywordList, keyDictBuilder, mathObjMMap);
+		addKeywordToMathObj(new String[]{"pure", "ring"}, keywordList, keyDictBuilder, mathObjMMap);
 		
 		//addKeywordToMathObj(new String[]{"finite", "function", "ring", "module"}, keywordList, keyDictBuilder, mathObjMMap);
 		

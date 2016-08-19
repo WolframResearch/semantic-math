@@ -78,18 +78,6 @@ public class TriggerMathThm2 {
 		addKeywordToMathObj(new String[] { "Pythagorean theorem", "triangle", "right", "length", "square"}, keywordList, keywordMap, mathObjMMap);
 		addKeywordToMathObj(new String[] { "quadratic extension", "degree", "field", "square", "root"}, keywordList, keywordMap, mathObjMMap);
 		
-		/*addKeywordToMathObj(new String[] { "root", "fundamental theorem of algebra" }, keywordList, keyDictBuilder, mathObjMMap);
-		addKeywordToMathObj(new String[] { "degree", "fundamental theorem of algebra" }, keywordList, keyDictBuilder, mathObjMMap);
-		addKeywordToMathObj(new String[] { "complex", "fundamental theorem of algebra" }, keywordList, keyDictBuilder, mathObjMMap);
-		addKeywordToMathObj(new String[] { "triangle", "Pythagorean theorem" }, keywordList, keyDictBuilder, mathObjMMap);
-		addKeywordToMathObj(new String[] { "length", "Pythagorean theorem" }, keywordList, keyDictBuilder, mathObjMMap);
-		addKeywordToMathObj(new String[] { "right", "Pythagorean theorem" }, keywordList, keyDictBuilder, mathObjMMap);
-		addKeywordToMathObj(new String[] { "hypotenuse", "Pythagorean theorem" }, keywordList, keyDictBuilder, mathObjMMap);
-		addKeywordToMathObj(new String[] { "square", "Pythagorean theorem" }, keywordList, keyDictBuilder, mathObjMMap);
-		addKeywordToMathObj(new String[] { "incomplete", "Godel's incompleteness theorem" }, keywordList, keyDictBuilder, mathObjMMap);
-		addKeywordToMathObj(new String[] { "arithmetic", "Godel's incompleteness theorem" }, keywordList, keyDictBuilder, mathObjMMap);
-		addKeywordToMathObj(new String[] { "natural", "Godel's incompleteness theorem" }, keywordList, keyDictBuilder, mathObjMMap);
-		*/
 		// should be "thm", "term1", "term2", etc
 		addKeywordToMathObj(new String[] { "Godel's incompleteness theorem", "arithmetic", "incomplete" }, keywordList, keywordMap, mathObjMMap);
 		
@@ -153,7 +141,7 @@ public class TriggerMathThm2 {
 		int thmIndex = 0;
 		for(ImmutableMap<String, Integer> wordsMap : thmWordsList){
 			String thmName = Integer.toString(thmIndex++);
-			List<String> keyWordsList = wordsMap.keySet().asList();
+			List<String> keyWordsList = new ArrayList<String>(wordsMap.keySet()); 
 			keyWordsList.add(0, thmName);
 			addKeywordToMathObj(keyWordsList.toArray(new String[keyWordsList.size()]), keywordList, keywordMap, mathObjMMap);
 		}

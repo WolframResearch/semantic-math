@@ -130,6 +130,13 @@ public class WLCommandsList {
 		
 		WLCommandMapBuilder.put("such that", addCommand(new String[] { "such that, , trigger", "symb|ent, , true" }));
 		
+		WLCommandMapBuilder.put("auxpass", addCommand(new String[] { "ent, , true",
+				"auxpass, , trigger_true", "ent|csubj, , true" }));
+		//for every $x$
+		WLCommandMapBuilder.put("for every", addCommand(new String[] { ", for every, trigger", "\\[ForAll][",
+				 "ent|symb, , true", "]" }));
+		//we have ...
+		WLCommandMapBuilder.put("have", addCommand(new String[] { "pro, we, false", "verb, have, trigger", ", , true",}));
 		// label string if to be used as trigger ent/symb, then use these words
 		// as trigger system
 		// function with radius of convergence
@@ -186,7 +193,11 @@ public class WLCommandsList {
 				// commandStrParts[1] : "*";
 				String nameStr = commandStrParts[1].matches("\\s*") ? ".*" : commandStrParts[1].trim();
 				
-				boolean useInPosList = Boolean.valueOf(commandStrParts[2].trim());				
+				String[] cmdPart2Ar = commandStrParts[2].trim().split("_");
+				//could be trigger_true, to indicate inclusion in posString
+				boolean useInPosList = cmdPart2Ar.length > 1 ? Boolean.valueOf(cmdPart2Ar[1])
+						: Boolean.valueOf(cmdPart2Ar[0]);	
+				
 				boolean triggerMathObj = false;
 				// process command and create WLCommandComponent and PosList
 				WLCommandComponent commandComponent = new WLCommandComponent(posStr, nameStr);
@@ -217,7 +228,7 @@ public class WLCommandsList {
 					
 				}
 
-				if (commandStrParts[2].trim().matches("trigger")) {
+				if (commandStrParts[2].trim().matches("trigger.*")) {
 					triggerWordIndex = i;
 					//componentCounter--;
 				}

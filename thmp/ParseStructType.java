@@ -34,7 +34,7 @@ public enum ParseStructType {
 				new ImmutableListMultimap.Builder<ParseStructType, String>();
 		builder.putAll(HYP, Arrays.asList("letbe", "hypo", "partient", "if", "If"));
 		builder.putAll(RES, Arrays.asList("where", "assuming"));
-		//builder.putAll(OBJ, Arrays.asList("ent", "MathObj"));
+		builder.putAll(OBJ, Arrays.asList("ent", "MathObj"));
 		builder.putAll(RES, Arrays.asList("Cond"));
 		
 		StringParseStructTypeMap = builder.build().inverse();		

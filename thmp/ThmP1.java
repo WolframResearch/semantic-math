@@ -496,7 +496,7 @@ public class ThmP1 {
 					// if previous word is a verb, combine to form verb
 					if (pairsSize > 0 && pairs.get(pairsSize - 1).pos().matches("verb|vbs")) {
 						curWord = pairs.get(pairsSize - 1).word() + " " + curWord;
-						curPos = "auxpass"; // passive auxiliary
+						curPos = "auxpass"; // passive auxiliary, eg "is determined by"
 						pairs.remove(pairsSize - 1);
 					}
 					i++;
@@ -550,6 +550,7 @@ public class ThmP1 {
 					// modifier
 					//curWord = curWord + " " + str[++i];
 					curType = "amod";
+					curType = "adj"; //adj, so can be grouped together with ent's later
 				}
 				Pair pair = new Pair(curWord, curType);
 				pairs.add(pair);
