@@ -17,10 +17,58 @@ public class ThmSearch {
 	 * Rows are terms.
 	 */
 	private static int[][] docMx;
+	public static final String[] ARGV = new String[]{"-linkmode", "launch", "-linkname", 
+	"\"/Applications/Mathematica.app/Contents/MacOS/MathKernel\" -mathlink"};
+
+	private static KernelLink ml;
+	
 	static{
 		//docMx = new int[][]{{0, 1, 0}, {1, 1, 0}, {0, 0, 1}, {1, 0, 0}};
 		docMx = TriggerMathThm2.mathThmMx();
 		System.out.println(Arrays.deepToString(docMx));
+		
+		try{			
+			ml = MathLinkFactory.createKernelLink(ARGV);
+			ml.discardAnswer();
+			//set up the matrix corresponding to docMx, to be SVD'd. 
+			String mx = toNestedList(docMx);
+			ml.evaluate("mx=" + mx +";");			
+			ml.discardAnswer();	
+			System.out.println(mx);
+			//ml.discardAnswer();
+			// For now use the number of columns (theorem vectors).
+			// # of words (for now) is a lot larger than the number of theorems.
+			//int k = TriggerMathThm2.mathThmMx()[0].length;
+			int k = 3;
+			ml.evaluate("{u, d, v} = SingularValueDecomposition[mx, " + k +"];");
+			//ml.waitForAnswer();
+			ml.discardAnswer();
+			System.out.println("Finished SVD");
+			//Expr t = ml.getExpr();
+			for(int i = 1; i <= docMx[0].length; i++){
+			//should just be columns of V*, so rows of V
+				ml.evaluate("p" + i + "= v[["+i+"]];");
+				ml.discardAnswer();
+			}
+			
+			String queryStr = TriggerMathThm2.createQuery("root");
+			System.out.println(queryStr);
+			ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"];");
+			ml.discardAnswer();
+			ml.evaluate("q//N");
+			ml.waitForAnswer();
+			Expr v = ml.getExpr();
+			System.out.println("exprs realQ? " + v);
+			
+			ml.evaluate("(p1.First@Transpose[q])//N");
+			ml.waitForAnswer();
+			Expr w = ml.getExpr();
+			System.out.println("~W " + w);
+			
+		}catch(MathLinkException e){
+			System.out.println("error at launch!");
+			e.printStackTrace();
+		}
 	}
 	
 	/*
@@ -46,21 +94,11 @@ public class ThmSearch {
 		return s;
 	}
 	
-	public static final String[] ARGV = new String[]{"-linkmode", "launch", "-linkname", 
-			"\"/Applications/Mathematica.app/Contents/MacOS/MathKernel\" -mathlink"};
 	
-	public static void main(String[] args) throws ExprFormatException{
-		KernelLink ml = null;
+	public static void main(String[] args) throws ExprFormatException{		
 		
 		try{
-			ml = MathLinkFactory.createKernelLink(ARGV);
-		}catch(MathLinkException e){
-			System.out.println("error at launch!");
-			return;
-		}
-		
-		try{
-			ml.discardAnswer();
+			//ml.discardAnswer();
 			
 			//String result = ml.evaluateToOutputForm("Transpose@" + toNestedList(docMx), 0);
 			String result = ml.evaluateToOutputForm("4+4", 0);
@@ -139,7 +177,7 @@ public class ThmSearch {
 			//System.out.println(ml.getData(10));
 			//System.out.println(ml.getDoubleArray2());
 			//System.out.println(ml.getByteString(0));
-		}catch(MathLinkException e){
+		}catch(MathLinkException|IndexOutOfBoundsException e){
 			System.out.println("error during eval!" + e.getMessage());
 			e.printStackTrace();
 			return;
@@ -150,6 +188,7 @@ public class ThmSearch {
 	
 	/**
 	 * Constructs the String query to be evaluated.
+	 * Submits it to kernel for evaluation.
 	 * @return
 	 * @throws MathLinkException 
 	 * @throws ExprFormatException 
@@ -157,20 +196,10 @@ public class ThmSearch {
 	private static String constructQuery(KernelLink ml, String queryStr) 
 			throws MathLinkException, ExprFormatException{
 		System.out.println("queryStr: " + queryStr);
-		String s = "";
-		//query matrix
-		String mx = toNestedList(docMx);
-		ml.evaluate("mx=" + mx +";");
-		ml.discardAnswer();	
-		// For now use the number of columns (theorem vectors).
-		// # of words (for now) is a lot larger than the number of theorems.
-		int k = TriggerMathThm2.mathThmMx()[0].length;
-		ml.evaluate("{u, d, v} = SingularValueDecomposition[mx, " + k +"];");
-		ml.discardAnswer();
+		String s = "";		
 		//transform query vector to low dimensional space 
 		//String query = "{{1,1,0,0}}";
-		String query = queryStr;
-		ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+query+"]");
+		ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"];");
 		ml.discardAnswer();
 		double max = 0;
 		//index i of pi that yields maximal inner product
@@ -179,26 +208,30 @@ public class ThmSearch {
 		for(int i = 1; i <= docMx[0].length; i++){
 			//System.out.println("Got here");
 			//document vectors as row vectors
-			ml.evaluate("d" + i + "= Transpose[mx][["+ i + "]]");
-			
+			//ml.evaluate("d" + i + "= Transpose[mx][["+ i + "]]");			
 			//System.out.println("d_i: " +ml.getExpr());
-			ml.discardAnswer();
+			//ml.discardAnswer();
 			//transformed document vectors to column vectors in space spanned by
 			//columns of V*.
+			//ml.evaluate("p" + i + "= Inverse[d].Transpose[u].Transpose[{d"+i+"}];");
 			
-			ml.evaluate("p" + i + "= Inverse[d].Transpose[u].Transpose[{d"+i+"}];");
-			ml.discardAnswer();
 			//take inner product of q in low dimenensional space with pi
-			ml.evaluate("First@Transpose[p" + i +"].First@Transpose[q]//N");
+			ml.evaluate("(p" + i +".First@Transpose[q])//N");
+			ml.waitForAnswer();
 			Expr expr = ml.getExpr();
 			//ml.waitForAnswer();
+			//Expr[] exprs = expr.args();
+			ml.evaluate("p1//N");
+			ml.waitForAnswer();
+			Expr v = ml.getExpr();
 			//check to ensure that the returned value is a real number
-			Expr[] exprs = expr.args();
-			if(exprs.length == 0 || !exprs[0].realQ()){
-				System.out.println("Returned dot product has wrong type!");
+			System.out.println("exprs realQ? " + expr.realQ());
+			//if(exprs.length == 0 || !exprs[0].realQ()){
+			if( !expr.realQ()){
+				System.out.println("Returned dot product should be real!");
 				break;
 			}
-			double dotProd = expr.args()[0].asDouble();
+			double dotProd = expr.asDouble();
 			if(dotProd > max){
 				max = dotProd;
 				index = i;
@@ -216,6 +249,7 @@ public class ThmSearch {
 		while(sc.hasNextLine()){
 			String thm = sc.nextLine();
 			query = TriggerMathThm2.createQuery(thm);
+			//processes query
 			constructQuery(ml, query);
 		}		
 		sc.close();
