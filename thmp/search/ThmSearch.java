@@ -32,7 +32,7 @@ public class ThmSearch {
 			ml.discardAnswer();
 			//set up the matrix corresponding to docMx, to be SVD'd. 
 			String mx = toNestedList(docMx);
-			ml.evaluate("mx=" + mx +";");			
+			ml.evaluate("mx=" + mx +"//N;");			
 			ml.discardAnswer();	
 			System.out.println(mx);
 			//ml.discardAnswer();
@@ -225,7 +225,7 @@ public class ThmSearch {
 			ml.waitForAnswer();
 			Expr v = ml.getExpr();
 			//check to ensure that the returned value is a real number
-			System.out.println("exprs realQ? " + expr.realQ());
+			//System.out.println("exprs realQ? " + expr.realQ());
 			//if(exprs.length == 0 || !exprs[0].realQ()){
 			if( !expr.realQ()){
 				System.out.println("Returned dot product should be real!");

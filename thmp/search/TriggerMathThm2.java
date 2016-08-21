@@ -84,8 +84,6 @@ public class TriggerMathThm2 {
 		//adds thms from CollectThm.thmWordsList. The thm name is its index in thmWordsList.
 		addThmsFromList(keywordList, keywordMap, mathObjMMap);
 		
-		// mathObjMultimap = ImmutableMultimap.copyOf(mathObjMMap);
-
 		keywordDict = ImmutableMap.copyOf(keywordMap);
 
 		mathObjMx = new int[keywordList.size()][mathObjMMap.keySet().size()];		
