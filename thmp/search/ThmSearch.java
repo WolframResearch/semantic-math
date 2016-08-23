@@ -39,17 +39,18 @@ public class ThmSearch {
 			// For now use the number of columns (theorem vectors).
 			// # of words (for now) is a lot larger than the number of theorems.
 			//int k = TriggerMathThm2.mathThmMx()[0].length;
-			int k = 3;
+			int k = 20;
 			ml.evaluate("{u, d, v} = SingularValueDecomposition[mx, " + k +"];");
 			//ml.waitForAnswer();
 			ml.discardAnswer();
 			System.out.println("Finished SVD");
 			//Expr t = ml.getExpr();
-			for(int i = 1; i <= docMx[0].length; i++){
+			
+			/*for(int i = 1; i <= docMx[0].length; i++){
 			//should just be columns of V*, so rows of V
 				ml.evaluate("p" + i + "= v[["+i+"]];");
 				ml.discardAnswer();
-			}
+			}*/
 			
 			String queryStr = TriggerMathThm2.createQuery("root");
 			System.out.println(queryStr);
@@ -195,18 +196,36 @@ public class ThmSearch {
 	 */
 	private static String constructQuery(KernelLink ml, String queryStr) 
 			throws MathLinkException, ExprFormatException{
-		System.out.println("queryStr: " + queryStr);
+		//System.out.println("queryStr: " + queryStr);
 		String s = "";		
 		//transform query vector to low dimensional space 
 		//String query = "{{1,1,0,0}}";
 		ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"];");
 		ml.discardAnswer();
+		
+		//use Nearest to get numNearest number of nearest vectors, 
+		int numNearest = 3;
+		//ml.evaluate("v[[1]]");
+		//ml.getExpr();
+		//System.out.println("DIMENSIONS " +ml.getExpr());
+		
+		//ml.evaluate("q");
+		//ml.getExpr();
+		//System.out.println("q " +ml.getExpr());
+		
+		ml.evaluate("Nearest[v->Range[Dimensions[v][[1]]], First[Transpose[q]],"+numNearest+"]");
+		Expr nearestVec = ml.getExpr();
+		//System.out.println(nearestVec.length() + "  " + Arrays.toString((int[])nearestVec.part(1).asArray(Expr.INTEGER, 1)));
+		for(int d : (int[])nearestVec.part(1).asArray(Expr.INTEGER, 1)){
+			System.out.println(TriggerMathThm2.getThm(d));			
+		}
+		
+		/*
 		double max = 0;
 		//index i of pi that yields maximal inner product
 		int index = -1;
 		//assign the document (column) vectors
 		for(int i = 1; i <= docMx[0].length; i++){
-			//System.out.println("Got here");
 			//document vectors as row vectors
 			//ml.evaluate("d" + i + "= Transpose[mx][["+ i + "]]");			
 			//System.out.println("d_i: " +ml.getExpr());
@@ -240,6 +259,8 @@ public class ThmSearch {
 		System.out.println("max DotProd: " + max);
 		//System.out.println("index: " + index);
 		System.out.println(TriggerMathThm2.getThm(index));
+		*/
+		
 		return s;
 	}
 	

@@ -39,6 +39,9 @@ public class TermDocMatrix {
 	 */
 	private int[][] termDocMx;
 
+	//map of mathObj and its index in docList
+	private Map<String, Integer> docIndexMap;
+	
 	//private constructor. Using builder pattern.
 	private TermDocMatrix(){		
 	}
@@ -53,15 +56,27 @@ public class TermDocMatrix {
 	}
 	
 	/**
-	 * Obtains mathThmMx
+	 * Obtains termDocMx, rows are terms, columns documents
 	 * @return
 	 */
 	public int[][] termDocMx(){
 		return termDocMx;
 	}
 	
+	/**
+	 * List of documents (columns in termDocMx)
+	 * @return
+	 */
 	public List<String> docList(){
 		return docList;
+	}
+	
+	/**
+	 * map of mathObj and its index in docList
+	 * @return
+	 */
+	public Map<String, Integer> docIndexMap(){
+		return docIndexMap;
 	}
 	
 	public static class TermDocMatrixBuilder{
@@ -72,7 +87,11 @@ public class TermDocMatrix {
 		//map of String (keyword), and integer (index in keywordList) of keyword.
 		private Map<String, Integer> keywordMap;
 		//to be list that contains the theorems, in the order they are inserted
+		//should make this inside the static initializer
 		private ImmutableList.Builder<String> mathObjListBuilder;
+		//map of mathObj and its index in mathObjList
+		private Map<String, Integer> mathObjIndexMap;
+		
 		// math object pre map. keys are theorems, values are keywords.
 		private Multimap<String, String> mathObjMMap;
 		
@@ -82,6 +101,7 @@ public class TermDocMatrix {
 			keyDictBuilder = ImmutableMap.builder();
 			keywordMap = new HashMap<String, Integer>();
 			mathObjListBuilder = ImmutableList.builder();
+			mathObjIndexMap = new HashMap<String, Integer>();
 			mathObjMMap = ArrayListMultimap.create();
 		}
 
@@ -97,6 +117,8 @@ public class TermDocMatrix {
 			buildMathObjMx(keywordList, mathObjMMap, mathObjListBuilder, s);
 
 			s.docList = mathObjListBuilder.build();
+			
+			s.docIndexMap = mathObjIndexMap;
 			
 			return s;
 		}
@@ -126,12 +148,16 @@ public class TermDocMatrix {
 	 */
 	public void addQAKeywordToMathObj(String[] keywords, Map<String, Formula> formulaDict,
 			Multimap<String, Formula> varFormulaMMap) {
-		if (keywords.length < 4)
+		if (keywords.length < 5)
 			return;	
 		//theorem
 		String varName = keywords[1];
 		String formulaName = keywords[0];
 		String varQuestion = keywords[2];
+		//format of expected answer, Double, Integer, etc
+		//wouldn't work yet if it's a string!
+		String answerFormat = keywords[3];
+		
 		//need formula entry, to put in map.
 		
 		Formula formula = formulaDict.get(formulaName);
@@ -139,13 +165,14 @@ public class TermDocMatrix {
 			formula = new Formula(formulaName);
 			formulaDict.put(formulaName, formula);
 		}
-		formula.addVariable(varName, varQuestion);
+		formula.addVariable(varName, varQuestion, answerFormat);
 		//multimap re-add exact same val? --yes
 		//but one formula should not have two var's of same name.
 		varFormulaMMap.put(varName, formula);
 		
+		
 		//should take weights into account!
-		for(int i = 3; i < keywords.length; i += 2){
+		for(int i = 4; i < keywords.length; i += 2){
 			String keyword = keywords[i];
 			mathObjMMap.put(varName, keyword);
 			//add each keyword in
@@ -169,7 +196,11 @@ public class TermDocMatrix {
 		while (mathObjMMapkeysIter.hasNext()) {
 			
 			String curMathObj = mathObjMMapkeysIter.next();
+			
+			//add to map of mathObj to index in list
+			mathObjIndexMap.put(curMathObj, mathObjCounter);			
 			mathObjListBuilder.add(curMathObj);
+			
 			Collection<String> curMathObjCol = mathObjMMap.get(curMathObj);
 			Iterator<String> curMathObjColIter = curMathObjCol.iterator();
 
@@ -181,6 +212,31 @@ public class TermDocMatrix {
 			}
 			mathObjCounter++;
 		}
+	}	
 	}
+	/**
+	 * Create query row vector, 1's and 0's.
+	 * @param triggerTerms
+	 * @return String representation of query vector, eg {{1,0,1,0}}
+	 */
+	public static String createQuery(String thm, TermDocMatrix termDocMx){
+		Map<String, Integer> keywordDict = termDocMx.keywordDict;
+		String[] thmAr = thm.split(" |,|;|\\.");
+		int dictSz = keywordDict.keySet().size();
+		int[] triggerTermsVec = new int[dictSz];
+		for (String term : thmAr) {
+			Integer rowIndex = keywordDict.get(term);
+			if (rowIndex != null) {
+				triggerTermsVec[rowIndex] = 1;
+			}
+		}
+		//transform into query list String 
+		String s = "{{";
+		for(int j = 0; j < dictSz; j++){
+			String t = j == dictSz-1 ? triggerTermsVec[j] + "" : triggerTermsVec[j] + ", ";
+			s += t;
+		}
+		s += "}}";
+		return s;
 	}
 }

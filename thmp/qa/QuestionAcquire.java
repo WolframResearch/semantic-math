@@ -1,6 +1,7 @@
 package thmp.qa;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -10,8 +11,9 @@ import thmp.search.TermDocMatrix;
 import thmp.search.TermDocMatrix.TermDocMatrixBuilder;
 
 /**
- * Uses TriggerMathThm2.java to build mx, 
- * Takes mx, 
+ * Uses TermDocMatrix.java to build mx of documents-terms, 
+ * 
+ * Contains structure for Formulas.
  * @author yihed
  *
  */
@@ -25,6 +27,13 @@ public class QuestionAcquire {
 	private static Map<String, Formula> formulaDict = new HashMap<String, Formula>();
 	//map of variable names, and the formulas they belong to. Could be multiple Formulas.
 	private static Multimap<String, Formula> varFormulaMMap = ArrayListMultimap.create();
+	//termDocMatrix instance used to produce the above maps and lists.
+	private static TermDocMatrix termDocMx;
+	
+	/**
+	 * List of variables, in order they are inserted into mathObjMx (as columns)
+	 */
+	private static final List<String> variableList;
 	
 	static{
 		TermDocMatrixBuilder mxBuilder = new TermDocMatrix.TermDocMatrixBuilder();
@@ -35,25 +44,64 @@ public class QuestionAcquire {
 		//or keywords that should trigger the head keyword, eg "annual percentage rate". 
 		//should weigh the keywords!
 		//make enum of the format of answers needed fill in the var, eg String, int, etc
-		addFormulaVar(new String[] { "FixedRateMortgage", "APR", "What's the APR?", "annual", "1", "percentage", "1", "rate", "1"}, mxBuilder); 
-		addFormulaVar(new String[] { "FixedRateMortgage", "MA", "What's the principle?", "mortgage", "1", "amount", "1", "principle", ".5"}, mxBuilder); 
-		addFormulaVar(new String[] { "FixedRateMortgage", "MP", "How long is the loan period?", "mortgage", "1", "period", "1", "months", ".4" }, mxBuilder); 
+		addFormulaVar(new String[] { "FixedRateMortgage", "APR", "What's the APR?", "Double", "annual", "1", "percentage", "1", "rate", "1"}, mxBuilder); 
+		addFormulaVar(new String[] { "FixedRateMortgage", "MA", "What's the principle?", "Double", "mortgage", "1", "amount", "1", "principle", ".5"}, mxBuilder); 
+		addFormulaVar(new String[] { "FixedRateMortgage", "MP", "How long is the loan period?", "Integer", "mortgage", "1", "period", "1", "months", ".4" }, mxBuilder); 
 		
-		TermDocMatrix termDocMx = mxBuilder.build();		
+		termDocMx = mxBuilder.build();		
 		
 		AnswerMx = termDocMx.termDocMx();
+		variableList = termDocMx.docList();
 	}
 	
 	private static void addFormulaVar(String[] keywords, TermDocMatrixBuilder mxBuilder){
 		mxBuilder.addQAKeywordToMathObj(keywords, formulaDict, varFormulaMMap);
 	}
 	
+	/**
+	 * Map of variables and their corresponding formulas.
+	 * @return
+	 */
 	public static Multimap<String, Formula> varFormulaMMap(){
 		return varFormulaMMap;
 	}
 	
 	public static int[][] AnswerMx(){
 		return AnswerMx;
+	}
+	
+	public static List<String> variableList(){
+		return variableList;
+	}
+	
+	/**
+	 * Get variable given its index (column number) in AnswerMx.
+	 * (which is index+1 in docList)
+	 * @param index
+	 * @return
+	 */
+	public static String getVar(int index){
+		return variableList.get(index-1);
+	}
+	
+	/**
+	 * Create query row vector, 1's and 0's.
+	 * @param input
+	 * @return String representation of query vector, eg {{1,0,1,0}}
+	 */
+	public static String createQuery(String input){
+		return TermDocMatrix.createQuery(input, termDocMx);
+	}
+	
+	/**
+	 * Map of variables and its index in variableList.
+	 * Also column number in AnswerMx.
+	 * Variable names may not be unique!! Probably need to make
+	 * key Variable, with custom .equals.
+	 * @return
+	 */
+	public static Map<String, Integer> variableIndexMap(){
+		return termDocMx.docIndexMap();
 	}
 	
 	public static void main(String[] args){
@@ -77,9 +125,16 @@ public class QuestionAcquire {
 			
 		}
 		
-		public void addVariable(String variableName, String varQuestion){
-			variableMap.put(variableName, new Variable(variableName, varQuestion));
-			
+		public void addVariable(String variableName, String varQuestion, String answerType){
+			variableMap.put(variableName, new Variable(variableName, varQuestion, answerType));
+		}
+		
+		public Map<String, Variable> variableMap(){
+			return variableMap;
+		}
+		
+		public String formulaName(){
+			return formulaName;
 		}
 		
 		/**
@@ -89,26 +144,48 @@ public class QuestionAcquire {
 		public static class Variable{
 			
 			//name of variable, 2nd String in String[] added to termDocMx.
+			//eg "MA", "APR"
 			private String varName;
-			private boolean optional;
+			//should set to false!***
+			private boolean optional = true;
 			//default value as a String
 			private String defaultVal;
 			//question for this variable
 			private String varQuestion;
+			//type of expected answer, eg Integer, Double
+			private String answerType;
 			
-			public Variable(String varName, String varQuestion){
+			public Variable(String varName, String varQuestion, String answerType){
 				this.varName = varName;
 				this.varQuestion = varQuestion;
+				this.answerType = answerType;
 			}
 			
 			public String varQuestion(){
 				return varQuestion;
 			}
 			
+			public String answerType(){
+				return answerType;
+			}
+			
 			public boolean optional(){
 				return optional;
 			}
+			
+			public String name(){
+				return varName;
+			}
+			
+			@Override
+			public String toString(){
+				return varName;
+			}
 		}
 		
+		@Override
+		public String toString(){
+			return formulaName + " {" + variableMap.keySet() + "}";
+		}
 	}
 }

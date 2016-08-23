@@ -37,7 +37,7 @@ public class TriggerMathThm2 {
 	 * List of mathObj's, in order they are inserted into mathObjMx
 	 */
 	private static final List<String> mathObjList;
-
+	
 	/**
 	 * Dictionary of keywords -> their index/row number in mathObjMx.
 	 * ImmutableMap.
@@ -57,6 +57,7 @@ public class TriggerMathThm2 {
 	private static final int[][] mathObjMx;
 
 	static {
+		
 		// ImmutableList.Builder<String> keywordList = ImmutableList.builder();
 		List<String> keywordList = new ArrayList<String>();
 		//list of theorems
@@ -68,7 +69,7 @@ public class TriggerMathThm2 {
 		Map<String, Integer> keywordMap = new HashMap<String, Integer>();
 		//ImmutableList.Builder<String> mathObjListBuilder = ImmutableList.builder();
 		//to be list that contains the theorems, in the order they are inserted
-				ImmutableList.Builder<String> mathObjListBuilder = ImmutableList.builder();
+		ImmutableList.Builder<String> mathObjListBuilder = ImmutableList.builder();
 		// math object pre map. keys are theorems, values are keywords.
 		Multimap<String, String> mathObjMMap = ArrayListMultimap.create();
 
@@ -79,7 +80,7 @@ public class TriggerMathThm2 {
 		addKeywordToMathObj(new String[] { "quadratic extension", "degree", "field", "square", "root"}, keywordList, keywordMap, mathObjMMap);
 		
 		// should be "thm", "term1", "term2", etc
-		addKeywordToMathObj(new String[] { "Godel's incompleteness theorem", "arithmetic", "incomplete" }, keywordList, keywordMap, mathObjMMap);
+		addKeywordToMathObj(new String[] { "Godel's incompleteness theorem", "arithmetic", "incomplete"}, keywordList, keywordMap, mathObjMMap);
 		
 		//adds thms from CollectThm.thmWordsList. The thm name is its index in thmWordsList.
 		addThmsFromList(keywordList, keywordMap, mathObjMMap);
@@ -134,11 +135,17 @@ public class TriggerMathThm2 {
 	 */
 	private static void addThmsFromList(List<String> keywordList,
 			Map<String, Integer> keywordMap, Multimap<String, String> mathObjMMap){
+		
 		ImmutableList<ImmutableMap<String, Integer>> thmWordsList = CollectThm.get_thmWordsList();
+		ImmutableList<String> thmList = CollectThm.get_thmList();
+		
 		//index of thm in thmWordsList, to be used as part of name
 		int thmIndex = 0;
 		for(ImmutableMap<String, Integer> wordsMap : thmWordsList){
-			String thmName = Integer.toString(thmIndex++);
+			//String thmName = Integer.toString(thmIndex++);
+			//make whole thm text as name
+			String thmName = thmList.get(thmIndex++);
+			
 			List<String> keyWordsList = new ArrayList<String>(wordsMap.keySet()); 
 			keyWordsList.add(0, thmName);
 			addKeywordToMathObj(keyWordsList.toArray(new String[keyWordsList.size()]), keywordList, keywordMap, mathObjMMap);
@@ -182,11 +189,9 @@ public class TriggerMathThm2 {
 		int dictSz = keywordDict.keySet().size();
 		int[] triggerTermsVec = new int[dictSz];
 		for (String term : thmAr) {
-			//System.out.println("TERM: " + term);
 			Integer rowIndex = keywordDict.get(term);
 			if (rowIndex != null) {
 				triggerTermsVec[rowIndex] = 1;
-				//System.out.println("not null!");
 			}
 		}
 		//transform into query list String 

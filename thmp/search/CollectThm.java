@@ -97,6 +97,10 @@ public class CollectThm {
 		return thmWordsList;
 	}
 	
+	public static ImmutableList<String> get_thmList(){
+		return thmList;
+	}
+	
 	/**
 	 * Tests the methods here.
 	 * 
