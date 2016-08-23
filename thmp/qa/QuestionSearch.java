@@ -38,12 +38,15 @@ public class QuestionSearch {
 		
 		String initialReply = sc.nextLine();
 		
-		//process initial reply, prod more until arrive at some context.
-		AnswerState answerState = AnswerParse.processInitial(initialReply);
+		AnswerState answerState = processNewInput(initialReply);
 		
 		//try to fill in variables in the formula
 		while(sc.hasNextLine()){
 			String nextLine = sc.nextLine();
+
+			if(answerState.startOver()){
+				answerState = processNewInput(nextLine);
+			}else{
 			
 			//parseInput processes the input, 
 			//updates the current AnswerState with information such 
@@ -53,9 +56,22 @@ public class QuestionSearch {
 			String response = answerState.nextQuestion();
 			
 			System.out.println(response);
-			
+			}
 		}
 		
 		sc.close();
+	}
+
+	/**
+	 * @param initialReply
+	 * @return
+	 * @throws MathLinkException
+	 * @throws ExprFormatException
+	 */
+	private static AnswerState processNewInput(String initialReply) throws MathLinkException, ExprFormatException {
+		//process initial reply, prod more until arrive at some context.
+		AnswerState answerState = AnswerParse.processInitial(initialReply);
+		System.out.println(answerState.nextQuestion());
+		return answerState;
 	}
 }

@@ -239,4 +239,27 @@ public class TermDocMatrix {
 		s += "}}";
 		return s;
 	}
+	
+	/*
+	 * Convert docMx from array form to a String
+	 * that's a nested List for WL.
+	 * 
+	 */
+	public static String toNestedList(int[][] docMx){
+		String s = "";
+		s += "{";
+		int docSz = docMx.length;
+		for(int i = 0; i < docSz; i++){
+			s += "{";
+			int iSz = docMx[i].length;
+			for(int j = 0; j < iSz; j++){
+				String t = j == iSz-1 ? docMx[i][j] + "" : docMx[i][j] + ", ";
+				s += t;
+			}
+			String t = i == docSz-1 ? "}" : "}, ";
+			s += t;
+		}
+		s += "}";
+		return s;
+	}
 }

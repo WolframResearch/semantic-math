@@ -1,6 +1,7 @@
 package thmp.qa;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -15,7 +16,7 @@ import com.wolfram.jlink.KernelLink;
 import com.wolfram.jlink.MathLinkException;
 import com.wolfram.jlink.MathLinkFactory;
 
-import thmp.search.ThmSearch;
+import thmp.search.TermDocMatrix;
 import thmp.search.TriggerMathThm2;
 import thmp.qa.AnswerParse.AnswerState;
 import thmp.qa.QuestionAcquire.Formula;
@@ -42,7 +43,7 @@ public class AnswerParse {
 	static{
 		//initializes in matrix for termDocMx.
 		AnswerMx = QuestionAcquire.AnswerMx();
-		String mx = ThmSearch.toNestedList(AnswerMx);
+		String mx = TermDocMatrix.toNestedList(AnswerMx);
 		
 		try{			
 			ml = MathLinkFactory.createKernelLink(ARGV);
@@ -50,7 +51,7 @@ public class AnswerParse {
 			//set up the matrix corresponding to docMx, to be SVD'd. 
 			ml.evaluate("mx=" + mx +"//N;");			
 			ml.discardAnswer();	
-			System.out.println(mx);
+			//System.out.println(mx);
 			
 			//ml.evaluate("");
 			
@@ -114,10 +115,11 @@ public class AnswerParse {
 			String curVar = QuestionAcquire.getVar(d);
 			formulaList.addAll(varFormulaMap.get(curVar));
 			//get variable giving the index in mx
-			System.out.println("variable " + curVar + "triggered formula " + varFormulaMap.get(curVar));			
+			//System.out.println("variable " + curVar + "triggered formula " + varFormulaMap.get(curVar));			
 		}
 		
 		Formula firstFormula = formulaList.get(0);
+		//System.out.println("+++" + firstFormula + firstFormula.variableMap());
 		AnswerState answerState = new AnswerState(formulaList);
 
 		Variable var = answerState.getNextVar();
@@ -141,11 +143,12 @@ public class AnswerParse {
 	private static int[] get_nearestVecAr(String initialReply) throws MathLinkException, ExprFormatException {
 		//String representation of query vector, eg {{1,0,1,0}}
 		String queryStr = QuestionAcquire.createQuery(initialReply);
+		//System.out.println("queryStr " + queryStr);
 		//find the 3 nearest vectors, by finding the Nearest 3 to the input vector		
 		int numNearest = 3;
 		ml.evaluate("Nearest[Transpose[mx]->Range[Dimensions[mx][[2]]], First@" + queryStr + "," + numNearest +"]");
 		Expr nearestVec = ml.getExpr();
-		System.out.println("nearestVec " + nearestVec);
+		//sSystem.out.println("nearestVec " + nearestVec);
 		int[] nearestVecAr = (int[])nearestVec.part(1).asArray(Expr.INTEGER, 1);
 		return nearestVecAr;
 	}
@@ -182,9 +185,10 @@ public class AnswerParse {
 		Set<Integer> nearestVarIndexSet = new HashSet<Integer>();
 		Formula curFormula = curState.curFormula;
 		String curVarName = curState.curVarName;
-		String[] inputAr = input.split("\\s+|,|.");
+		String[] inputAr = input.split("\\s+");
 		
 		for(int d : nearestVecAr){
+			//??
 			String curVar = QuestionAcquire.getVar(d);
 			nearestVarIndexSet.add(d);			
 			//get variable giving the index in mx
@@ -197,14 +201,16 @@ public class AnswerParse {
 		if(inputAr.length > 2){
 			//check to see if fit in right
 			Integer curVarIndex = QuestionAcquire.variableIndexMap().get(curVarName);
-			if(!nearestVarIndexSet.contains(curVarIndex)){
-			if(!prevQuestion.substring(0, 6).equals("Your re")){
-				curState.set_nextQuestion("Your response makes no sense, " + curState.nextQuestion);
-			}else{
-				curState.set_nextQuestion("Your response makes no sense, try harder");
+			//index in variableMap starts from 0
+			if(!nearestVarIndexSet.contains(curVarIndex+1)){
+				if(!prevQuestion.substring(0, 6).equals("Your re")){
+					curState.set_nextQuestion("I don't quite understand, " + curState.nextQuestion);
+				}else{
+					curState.set_nextQuestion("I don't quite understand, try again.");
+				}
+				return curState;
 			}
-			}
-			return curState;
+			
 		}
 		
 		//parse the input here?? --to be incorporated!
@@ -218,11 +224,15 @@ public class AnswerParse {
 			//use better way to determine type!
 			//if( instanceof Class.forName(curVarAnswerType)){
 			//just check integer or float for now
-			if(word.matches("\\d+.*\\d*")){
+			
+			if(word.trim().matches("\\d+\\.*\\d*")){
+				//if(word.matches("\\d+\\.*\\d*")){
 				boolean formulaSat = curState.addVariable(curVar, word);
 				if(formulaSat){
-					curState.set_nextQuestion("Thanks! Calculating ... ");
-					curState.presentSat();
+					System.out.println("Thanks! Calculating ... ");
+					System.out.println(curState.presentSat());
+					curState.set_startOver(true);
+					curState.set_nextQuestion("What do you want to find out next?");
 				}else{
 					//set next question
 					Variable nextVar = curState.getNextVar();
@@ -238,9 +248,9 @@ public class AnswerParse {
 		}
 		if(!s){
 			if(!prevQuestion.substring(0, 6).equals("Your re")){
-				curState.set_nextQuestion("Your response makes no sense, " + curState.nextQuestion);
+				curState.set_nextQuestion("I don't quite understand, " + curState.nextQuestion);
 			}else{
-				curState.set_nextQuestion("Your response makes no sense, try harder");
+				curState.set_nextQuestion("I don't quite understand, try again");
 			}
 		}
 		
@@ -265,6 +275,8 @@ public class AnswerParse {
 		//variable currently under consideration, corresponds to answer
 		//to previous nextQuestion
 		private String curVarName;
+		//whether previous command was satisfied, i.e. whether to move to a new one.
+		private boolean startOver;
 		
 		//keep track of the values for each var, verified to have the right type, presented as a string
 		Map<Variable, String> varValueMap = new HashMap<Variable, String>();
@@ -279,6 +291,7 @@ public class AnswerParse {
 			
 			//create and add all vars into requiredVarSet and optionalVarSet, default to false
 			variableMap = curFormula.variableMap();
+			//System.out.println("variableMap " + variableMap);
 			for(Variable var: variableMap.values()){
 				if(!var.optional()){
 					requiredVarSet.add(var.name());
@@ -335,11 +348,20 @@ public class AnswerParse {
 		 */
 		public Variable getNextVar(){
 			String nextVar = "";
+			//System.out.println("__requiredVarSet" + requiredVarSet);
 			for(String varName : requiredVarSet){
 				nextVar = varName;
 				break;
 			}			
 			return curFormula.variableMap().get(nextVar);
+		}
+		
+		public void set_startOver(boolean startOver){
+			this.startOver = startOver;
+		}
+		
+		public boolean startOver(){
+			return startOver;
 		}
 		
 		/**

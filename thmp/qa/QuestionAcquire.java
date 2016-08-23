@@ -47,6 +47,9 @@ public class QuestionAcquire {
 		addFormulaVar(new String[] { "FixedRateMortgage", "APR", "What's the APR?", "Double", "annual", "1", "percentage", "1", "rate", "1"}, mxBuilder); 
 		addFormulaVar(new String[] { "FixedRateMortgage", "MA", "What's the principle?", "Double", "mortgage", "1", "amount", "1", "principle", ".5"}, mxBuilder); 
 		addFormulaVar(new String[] { "FixedRateMortgage", "MP", "How long is the loan period?", "Integer", "mortgage", "1", "period", "1", "months", ".4" }, mxBuilder); 
+		addFormulaVar(new String[] { "GrossDomesticProductExpenditures", "GDP", "What's the gross domestic product?", "Integer", "gross", "1", "domestic", "1", "product", ".4" }, mxBuilder); 
+		addFormulaVar(new String[] { "GrossDomesticProductExpenditures", "GDP", "What's the gross domestic product?", "Integer", "gross", "1", "domestic", "1", "product", ".4" }, mxBuilder); 
+		
 		
 		termDocMx = mxBuilder.build();		
 		
@@ -147,7 +150,7 @@ public class QuestionAcquire {
 			//eg "MA", "APR"
 			private String varName;
 			//should set to false!***
-			private boolean optional = true;
+			private boolean optional;
 			//default value as a String
 			private String defaultVal;
 			//question for this variable
