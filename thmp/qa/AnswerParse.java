@@ -108,8 +108,15 @@ public class AnswerParse {
 	 * @throws ExprFormatException 
 	 */
 	public static AnswerState processInitial(String initialReply) throws MathLinkException, ExprFormatException{
-		int[] nearestVecAr = get_nearestVecAr(initialReply);
+		int[] nearestVecAr = get_nearestVecAr(initialReply, 1, 2);
 		List<Formula> formulaList = new ArrayList<Formula>();
+		//System.out.println("nearestVecAr"+Arrays.toString(nearestVecAr) + " " + QuestionAcquire.getVar(nearestVecAr[0]));
+		
+		if(nearestVecAr.length == 0){
+			AnswerState answerState = new AnswerState();
+			System.out.print("I don't have anything for that yet. ");
+			return resetState(answerState);
+		}
 		
 		for(int d : nearestVecAr){
 			String curVar = QuestionAcquire.getVar(d);
@@ -136,17 +143,18 @@ public class AnswerParse {
 	 * Retrieves array of nearest vectors, representing the column indices
 	 * of the variables. 
 	 * @param initialReply
+	 * @param numNearest number of nearest vectors to go into Nearest[]
+	 * @param radius radius within which to seek nearest vec
 	 * @return
 	 * @throws MathLinkException
 	 * @throws ExprFormatException
 	 */
-	private static int[] get_nearestVecAr(String initialReply) throws MathLinkException, ExprFormatException {
+	private static int[] get_nearestVecAr(String initialReply, int numNearest, int radius) throws MathLinkException, ExprFormatException {
 		//String representation of query vector, eg {{1,0,1,0}}
 		String queryStr = QuestionAcquire.createQuery(initialReply);
 		//System.out.println("queryStr " + queryStr);
-		//find the 3 nearest vectors, by finding the Nearest 3 to the input vector		
-		int numNearest = 3;
-		ml.evaluate("Nearest[Transpose[mx]->Range[Dimensions[mx][[2]]], First@" + queryStr + "," + numNearest +"]");
+		//find the 3 nearest vectors, by finding the Nearest 3 to the input vector	
+		ml.evaluate("Nearest[Transpose[mx]->Range[Dimensions[mx][[2]]], First@" + queryStr + ", {" + numNearest +"," +radius+"}]");
 		Expr nearestVec = ml.getExpr();
 		//sSystem.out.println("nearestVec " + nearestVec);
 		int[] nearestVecAr = (int[])nearestVec.part(1).asArray(Expr.INTEGER, 1);
@@ -171,16 +179,20 @@ public class AnswerParse {
 			throw new IllegalArgumentException("curState cannot be null");
 		}
 		
-		if(input.toLowerCase().matches("no|stop")){
-			System.out.println("Let's try again. What would you like to know?");
-			return processInitial(input);
+		if(input.toLowerCase().matches("stop")){	
+			return resetState(curState);
 		}
 		//this method should add variable (based on input) to the current formula in curState, 
 		//and update the question in curState to prod the user more, or ask user for clarification
 		//if the input does not fit as an answer.
 		
 		//update curState according to input. Adds input 
-		int[] nearestVecAr = get_nearestVecAr(input);
+		int[] nearestVecAr = get_nearestVecAr(input,2,2);
+		//System.out.println("nearestVecAr"+Arrays.toString(nearestVecAr));
+		if(nearestVecAr.length == 0){
+			System.out.print("I don't have anything for that yet. ");
+			return resetState(curState);
+		}
 		//need set of integers, containing indices of nearby variables.
 		Set<Integer> nearestVarIndexSet = new HashSet<Integer>();
 		Formula curFormula = curState.curFormula;
@@ -203,7 +215,7 @@ public class AnswerParse {
 			Integer curVarIndex = QuestionAcquire.variableIndexMap().get(curVarName);
 			//index in variableMap starts from 0
 			if(!nearestVarIndexSet.contains(curVarIndex+1)){
-				if(!prevQuestion.substring(0, 6).equals("Your re")){
+				if(!prevQuestion.matches("I don't.*")){
 					curState.set_nextQuestion("I don't quite understand, " + curState.nextQuestion);
 				}else{
 					curState.set_nextQuestion("I don't quite understand, try again.");
@@ -247,15 +259,25 @@ public class AnswerParse {
 			
 		}
 		if(!s){
-			if(!prevQuestion.substring(0, 6).equals("Your re")){
+			if(!prevQuestion.matches("I don't.*")){
 				curState.set_nextQuestion("I don't quite understand, " + curState.nextQuestion);
 			}else{
-				curState.set_nextQuestion("I don't quite understand, try again");
+				curState.set_nextQuestion("I don't quite understand, try again.");
 			}
 		}
 		
 		return curState;
 		
+	}
+
+	/**
+	 * @param curState
+	 * @return
+	 */
+	private static AnswerState resetState(AnswerState curState) {
+		curState.set_startOver(true);
+		curState.set_nextQuestion("Let's try again. What would you like to know?");
+		return curState;
 	}
 	
 	/**
@@ -283,6 +305,9 @@ public class AnswerParse {
 		//sets of required and optional variables. Formula satisfied when requiredVarSet is empty.
 		Set<String> requiredVarSet = new HashSet<String>();		
 		Set<String> optionalVarSet = new HashSet<String>();
+	
+		public AnswerState(){
+		}
 		
 		public AnswerState(List<Formula> formulaList){
 		

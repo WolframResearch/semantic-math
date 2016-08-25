@@ -173,7 +173,7 @@ public class TermDocMatrix {
 		
 		//should take weights into account!
 		for(int i = 4; i < keywords.length; i += 2){
-			String keyword = keywords[i];
+			String keyword = keywords[i].toLowerCase();
 			mathObjMMap.put(varName, keyword);
 			//add each keyword in
 			if(!keywordMap.containsKey(keyword)){
@@ -221,7 +221,7 @@ public class TermDocMatrix {
 	 */
 	public static String createQuery(String thm, TermDocMatrix termDocMx){
 		Map<String, Integer> keywordDict = termDocMx.keywordDict;
-		String[] thmAr = thm.split(" |,|;|\\.");
+		String[] thmAr = thm.toLowerCase().split(" |,|;|\\.");
 		int dictSz = keywordDict.keySet().size();
 		int[] triggerTermsVec = new int[dictSz];
 		for (String term : thmAr) {
