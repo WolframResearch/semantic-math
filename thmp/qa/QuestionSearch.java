@@ -20,7 +20,6 @@ import thmp.qa.QuestionAcquire.Formula;
 public class QuestionSearch {
 
 	//private static KernelLink ml;	
-
 	
 	/**
 	 * Takes user's initial input, gets to the right context.
