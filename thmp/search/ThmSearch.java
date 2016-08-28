@@ -19,13 +19,15 @@ public class ThmSearch {
 	private static int[][] docMx;
 	public static final String[] ARGV = new String[]{"-linkmode", "launch", "-linkname", 
 	"\"/Applications/Mathematica.app/Contents/MacOS/MathKernel\" -mathlink"};
-
+	//number of nearest vectors to get for Nearest[]
+	private static final int NUM_NEAREST = 3;
+	
 	private static KernelLink ml;
 	
 	static{
 		//docMx = new int[][]{{0, 1, 0}, {1, 1, 0}, {0, 0, 1}, {1, 0, 0}};
 		docMx = TriggerMathThm2.mathThmMx();
-		System.out.println(Arrays.deepToString(docMx));
+		//System.out.println(Arrays.deepToString(docMx));
 		
 		try{			
 			ml = MathLinkFactory.createKernelLink(ARGV);
@@ -204,7 +206,7 @@ public class ThmSearch {
 		ml.discardAnswer();
 		
 		//use Nearest to get numNearest number of nearest vectors, 
-		int numNearest = 3;
+		int numNearest = NUM_NEAREST;
 		//ml.evaluate("v[[1]]");
 		//ml.getExpr();
 		//System.out.println("DIMENSIONS " +ml.getExpr());
@@ -217,7 +219,8 @@ public class ThmSearch {
 		Expr nearestVec = ml.getExpr();
 		//System.out.println(nearestVec.length() + "  " + Arrays.toString((int[])nearestVec.part(1).asArray(Expr.INTEGER, 1)));
 		for(int d : (int[])nearestVec.part(1).asArray(Expr.INTEGER, 1)){
-			System.out.println(TriggerMathThm2.getThm(d));			
+			System.out.println(TriggerMathThm2.getThm(d));	
+			//System.out.println("thm vec: " + TriggerMathThm2.createQuery(TriggerMathThm2.getThm(d)));
 		}
 		
 		/*

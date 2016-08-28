@@ -42,7 +42,7 @@ public class TriggerMathThm2 {
 	
 	/**
 	 * Dictionary of keywords -> their index/row number in mathObjMx.
-	 * ImmutableMap.
+	 * ImmutableMap. Java indexing, starts at 0.
 	 */
 	private static final Map<String, Integer> keywordDict;
 
@@ -51,7 +51,7 @@ public class TriggerMathThm2 {
 	 * need this either
 	 */
 	// private static final Multimap<String, String> mathObjMultimap;
-
+	
 	/**
 	 * Matrix of keywords.
 	 * 
@@ -62,8 +62,6 @@ public class TriggerMathThm2 {
 		
 		// ImmutableList.Builder<String> keywordList = ImmutableList.builder();
 		List<String> keywordList = new ArrayList<String>();
-		//list of theorems
-		//List<String> thmList = new ArrayList<String>();
 		
 		// which keyword corresponds to which index	in the keywords list
 		ImmutableMap.Builder<String, Integer> keyDictBuilder = ImmutableMap.builder();
@@ -77,12 +75,12 @@ public class TriggerMathThm2 {
 
 		// first String should be theorem, the rest are key words of this theorem 
 		// belongs to
-		addKeywordToMathObj(new String[] { "fundamental theorem of algebra", "polynomial", "degree", "root", "complex"}, keywordList, keywordMap, mathObjMMap);
-		addKeywordToMathObj(new String[] { "Pythagorean theorem", "triangle", "right", "length", "square"}, keywordList, keywordMap, mathObjMMap);
-		addKeywordToMathObj(new String[] { "quadratic extension", "degree", "field", "square", "root"}, keywordList, keywordMap, mathObjMMap);
+		//addKeywordToMathObj(new String[] { "fundamental theorem of algebra", "polynomial", "degree", "root", "complex"}, keywordList, keywordMap, mathObjMMap);
+		//addKeywordToMathObj(new String[] { "Pythagorean theorem", "triangle", "right", "length", "square"}, keywordList, keywordMap, mathObjMMap);
+		//addKeywordToMathObj(new String[] { "quadratic extension", "degree", "field", "square", "root"}, keywordList, keywordMap, mathObjMMap);
 		
 		// should be "thm", "term1", "term2", etc
-		addKeywordToMathObj(new String[] { "Godel's incompleteness theorem", "arithmetic", "incomplete"}, keywordList, keywordMap, mathObjMMap);
+		//addKeywordToMathObj(new String[] { "Godel's incompleteness theorem", "arithmetic", "incomplete"}, keywordList, keywordMap, mathObjMMap);
 		
 		//adds thms from CollectThm.thmWordsList. The thm name is its index in thmWordsList.
 		addThmsFromList(keywordList, keywordMap, mathObjMMap);
@@ -180,12 +178,14 @@ public class TriggerMathThm2 {
 				Integer keyWordIndex = keywordDict.get(keyword);
 				Integer wordScore = wordsScoreMap.get(keyword);
 				//should not be null, as wordsScoreMap was created using same list of thms.
-				if(wordScore == null) continue;
-				//weigh each word based on frequency
-				mathObjMx[keyWordIndex][mathObjCounter] = wordScore;
+				//if(wordScore == null) continue;
+				//weigh each word based on *local* frequency, ie word freq in sentence, not whole doc.
+				//mathObjMx[keyWordIndex][mathObjCounter] = wordScore;
+				mathObjMx[keyWordIndex][mathObjCounter] = 1;
 			}
 			mathObjCounter++;
 		}
+		System.out.println("~~keywordDict "+keywordDict);
 	}
 
 	/**
@@ -200,24 +200,28 @@ public class TriggerMathThm2 {
 		Map<String, Integer> wordsScoreMap = CollectThm.get_wordsScoreMap();				
 		List<WordWrapper> wordWrapperList = SearchWordPreprocess.sortWordsType(thm);
 		System.out.println(wordWrapperList);
+		//keywordDict is annotated with "hyp"/"stm"
 		int dictSz = keywordDict.keySet().size();
 		int[] triggerTermsVec = new int[dictSz];
-		System.out.println(keywordDict);
+		
 		for (WordWrapper wordWrapper : wordWrapperList) {
 			//annotated form
 			String termAnno = wordWrapper.hashToString();
 			
 			Integer rowIndex = keywordDict.get(termAnno);
-
+			//System.out.println("first rowIndex " + rowIndex);
 			if(rowIndex == null){
 				termAnno = wordWrapper.otherHashForm();
 				rowIndex = keywordDict.get(termAnno);				
 			}
-
+			//System.out.println("second rowIndex " + rowIndex);
 			if (rowIndex != null) {
 				int termScore = wordsScoreMap.get(termAnno);
-				System.out.print("termScore " + termScore + "\t");
-				triggerTermsVec[rowIndex] = termScore;
+				//System.out.println("termAnno " + termAnno);
+				//System.out.print("termScore " + termScore + "\t");
+				//triggerTermsVec[rowIndex] = termScore;
+				//keywordDict starts indexing from 0!
+				triggerTermsVec[rowIndex] = 1;
 			}
 		}
 		//transform into query list String 
@@ -246,6 +250,7 @@ public class TriggerMathThm2 {
 	 * @return
 	 */
 	public static String getThm(int index){
+		//index is 1-based indexing, not 0-based.
 		return mathObjList.get(index-1);
 	}
 }

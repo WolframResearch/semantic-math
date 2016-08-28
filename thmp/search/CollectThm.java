@@ -54,11 +54,13 @@ public class CollectThm {
 	 * score, say 1/(log freq + 1) since log 1 = 0. 
 	 */
 	private static final ImmutableMap<String, Integer> wordsScoreMap;	
+	//The number of frequent words to take
+	private static final int NUM_FREQ_WORDS = 500;
 	
 	static{
-		//should only get the top N words! *******
-		//freqWordsMap = CollectFreqWords.get_wordPosMap();
-		freqWordsMap = CollectFreqWords.getTopFreqWords(500);
+		//only get the top N words
+		freqWordsMap = CollectFreqWords.get_wordPosMap();
+		//freqWordsMap = CollectFreqWords.getTopFreqWords(NUM_FREQ_WORDS);
 		//pass builder into a reader function. For each thm, builds immutable list of keywords, 
 		//put that list into the thm list.
 		ImmutableList.Builder<ImmutableMap<String, Integer>> thmWordsListBuilder = ImmutableList.builder();
