@@ -13,6 +13,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
 
+import thmp.search.SearchWordPreprocess.WordWrapper;
+
 public class TriggerMathThm2 {
 
 	/**
@@ -93,7 +95,7 @@ public class TriggerMathThm2 {
 
 		mathObjList = mathObjListBuilder.build();
 	}
-
+	
 	public static void addKeywordToMathObj(String[] keywords, List<String> keywordList,
 			Map<String, Integer> keywordMap, Multimap<String, String> mathObjMMap) {
 		if (keywords.length == 0)
@@ -106,7 +108,7 @@ public class TriggerMathThm2 {
 		for(int i = 1; i < keywords.length; i++){
 			String keyword = keywords[i];
 			mathObjMMap.put(thm, keyword);
-			//add each keyword in
+			//add each keyword in. words should already have annotation.
 			if(!keywordMap.containsKey(keyword)){
 				keywordMap.put(keyword, keywordList.size());
 				keywordList.add(keyword);
@@ -128,6 +130,7 @@ public class TriggerMathThm2 {
 
 	/**
 	 * Adds thms by calling addKeywordToMathObj on CollectThm.thmWordsList.
+	 * Weighed by frequencies.
 	 * @param keywords
 	 * @param keywordList
 	 * @param keywordMap
@@ -135,31 +138,34 @@ public class TriggerMathThm2 {
 	 */
 	private static void addThmsFromList(List<String> keywordList,
 			Map<String, Integer> keywordMap, Multimap<String, String> mathObjMMap){
-		
+		//thmWordsList has annotations, such as hyp or stm
 		ImmutableList<ImmutableMap<String, Integer>> thmWordsList = CollectThm.get_thmWordsList();
 		ImmutableList<String> thmList = CollectThm.get_thmList();
 		
 		//index of thm in thmWordsList, to be used as part of name
 		int thmIndex = 0;
 		for(ImmutableMap<String, Integer> wordsMap : thmWordsList){
-			//String thmName = Integer.toString(thmIndex++);
 			//make whole thm text as name
 			String thmName = thmList.get(thmIndex++);
 			
 			List<String> keyWordsList = new ArrayList<String>(wordsMap.keySet()); 
 			keyWordsList.add(0, thmName);
+			//System.out.print(keyWordsList + "\t");
 			addKeywordToMathObj(keyWordsList.toArray(new String[keyWordsList.size()]), keywordList, keywordMap, mathObjMMap);
 		}
 	}
 	
 	/**
-	 * Builds the MathObjMx
+	 * Builds the MathObjMx. Weigh inversely based on frequencies extracted from 
+	 * CollectThm.java.
 	 */
 	private static void buildMathObjMx(List<String> keywordList, Multimap<String, String> mathObjMMap,
 			ImmutableList.Builder<String> mathObjListBuilder) {
-
+		
 		Set<String> mathObjMMapkeys = mathObjMMap.keySet();
-
+		//map of annotated words and their scores
+		Map<String, Integer> wordsScoreMap = CollectThm.get_wordsScoreMap();
+		
 		Iterator<String> mathObjMMapkeysIter = mathObjMMapkeys.iterator();
 		int mathObjCounter = 0;
 		while (mathObjMMapkeysIter.hasNext()) {
@@ -172,8 +178,11 @@ public class TriggerMathThm2 {
 			while (curMathObjColIter.hasNext()) {
 				String keyword = curMathObjColIter.next();
 				Integer keyWordIndex = keywordDict.get(keyword);
-				//should incorporate weights of each word!
-				mathObjMx[keyWordIndex][mathObjCounter] = 1;
+				Integer wordScore = wordsScoreMap.get(keyword);
+				//should not be null, as wordsScoreMap was created using same list of thms.
+				if(wordScore == null) continue;
+				//weigh each word based on frequency
+				mathObjMx[keyWordIndex][mathObjCounter] = wordScore;
 			}
 			mathObjCounter++;
 		}
@@ -185,13 +194,30 @@ public class TriggerMathThm2 {
 	 * @return String representation of query vector, eg {{1,0,1,0}}
 	 */
 	public static String createQuery(String thm){
-		String[] thmAr = thm.split(" |,|;|\\.");
+		
+		//String[] thmAr = thm.split("\\s+|,|;|\\.");
+		//map of annotated words and their scores
+		Map<String, Integer> wordsScoreMap = CollectThm.get_wordsScoreMap();				
+		List<WordWrapper> wordWrapperList = SearchWordPreprocess.sortWordsType(thm);
+		System.out.println(wordWrapperList);
 		int dictSz = keywordDict.keySet().size();
 		int[] triggerTermsVec = new int[dictSz];
-		for (String term : thmAr) {
-			Integer rowIndex = keywordDict.get(term);
+		System.out.println(keywordDict);
+		for (WordWrapper wordWrapper : wordWrapperList) {
+			//annotated form
+			String termAnno = wordWrapper.hashToString();
+			
+			Integer rowIndex = keywordDict.get(termAnno);
+
+			if(rowIndex == null){
+				termAnno = wordWrapper.otherHashForm();
+				rowIndex = keywordDict.get(termAnno);				
+			}
+
 			if (rowIndex != null) {
-				triggerTermsVec[rowIndex] = 1;
+				int termScore = wordsScoreMap.get(termAnno);
+				System.out.print("termScore " + termScore + "\t");
+				triggerTermsVec[rowIndex] = termScore;
 			}
 		}
 		//transform into query list String 
@@ -201,6 +227,7 @@ public class TriggerMathThm2 {
 			s += t;
 		}
 		s += "}}";
+		System.out.println("query vector " + s);
 		return s;
 	}
 

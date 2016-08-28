@@ -14,6 +14,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.TreeMultimap;
 
+import thmp.search.SearchWordPreprocess.WordWrapper;
+
 /**
  * Searches by finding intersections in theorems that contain given keywords.
  * 
@@ -23,11 +25,13 @@ public class SearchIntersection {
 
 	//delimiters to split on when making words out of input
 	private static final String SPLIT_DELIM = "\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:";
+	//bonus points for matching context better, eg hyp or stm
+	private static final int CONTEXT_WORD_BONUS = 2;
 	/**
 	 * Map of keywords and their scores in document, the higher freq in doc, the lower 
 	 * score, say 1/(log freq + 1) since log 1 = 0. 
 	 */
-	private static final ImmutableMap<String, Double> wordsScoreMap;	
+	private static final ImmutableMap<String, Integer> wordsScoreMap;	
 	
 	/**
 	 * List of theorems.
@@ -44,24 +48,9 @@ public class SearchIntersection {
 	 */
 	static{
 		thmList = CollectThm.get_thmList();
-		//builds scoresMap based on frequency map obtained from CollectThm.
-		ImmutableMap.Builder<String, Double> wordsScoreMapBuilder = ImmutableMap.builder();		
-		buildScoreMap(wordsScoreMapBuilder);
-		wordsScoreMap = wordsScoreMapBuilder.build();
+		
+		wordsScoreMap = CollectThm.get_wordsScoreMap();
 		wordThmMMap = CollectThm.get_wordThmsMMap();
-	}	
-	/**
-	 * Fills up wordsScoreMapBuilder
-	 * @param wordsScoreMapBuilder
-	 */
-	private static void buildScoreMap(ImmutableMap.Builder<String, Double> wordsScoreMapBuilder){
-		Map<String, Integer> wordFreqMap = CollectThm.get_docWordsFreqMap();
-		for(Entry<String, Integer> entry : wordFreqMap.entrySet()){
-			//truncate 1/... !
-			
-			//wordsScoreMapBuilder.put(entry.getKey(), 1/(Math.log(entry.getValue() + 1)));
-			wordsScoreMapBuilder.put(entry.getKey(), 1/Math.log(entry.getValue()+1)*10 );
-		}
 	}
 		
 	/**
@@ -69,60 +58,96 @@ public class SearchIntersection {
 	 * @param input input String
 	 * @param numHighest number of highest-scored thms to retrieve
 	 */
-	public static List<Integer> getHighestThm(String input, int numHighest){
-		//make input list of words
-		String[] inputAr = input.toLowerCase().split(SPLIT_DELIM);
+	public static List<Integer> getHighestThm(String input){
+		if(input.matches("\\s*")) return null;
 		
+		//make input list of words
+		//String[] inputAr = input.toLowerCase().split(SPLIT_DELIM);
+		List<WordWrapper> wordWrapperList = SearchWordPreprocess.sortWordsType(input);
+		
+		//determine if first token is integer, if yes, use it as the number of 
+		//closest thms. Else use 3 as default value.
+		int numHighest = 3;
+		//whether to skip first token
+		int firstIndex = 0;
+		String firstWord = wordWrapperList.get(0).word();
+		if(firstWord.matches("\\d+")){
+			numHighest = Integer.parseInt(firstWord);
+			firstIndex = 1;
+		}
 		/*
 		 * Map of theorems, in particular their indices in thmList, and the scores corresponding to the keywords they contain.
 		 * The rarer a keyword is in the doc, the higher its score is.
 		 */
-		Map<Integer, Double> thmScoreMap = new HashMap<Integer, Double>(); 
+		Map<Integer, Integer> thmScoreMap = new HashMap<Integer, Integer>(); 
 		
 		/*
 		 * Multimap of double and ints, where double is score, and the Integers
 		 * are the indices of the thms having this score.
 		 */
-		TreeMultimap<Double, Integer> scoreThmMMap = TreeMultimap.create();
+		TreeMultimap<Integer, Integer> scoreThmMMap = TreeMultimap.create();
 		
-		for(String word : inputAr){
-			
+		for(int i = firstIndex; i < wordWrapperList.size(); i++){
+			WordWrapper curWrapper = wordWrapperList.get(i);
+			//String word = curWrapper.word();
+			//other annotation form of word. 
+			String wordOtherForm = curWrapper.otherHashForm();
+			//elicit higher score if wordLong fits
+			String wordLong = curWrapper.hashToString();
 			//update scores map
-			if(wordsScoreMap.containsKey(word)){
+			int curScoreToAdd = 0;
+			Integer wordOtherFormScore = wordsScoreMap.get(wordOtherForm);
+			Integer wordLongScore = wordsScoreMap.get(wordLong);
+			Collection<Integer> wordThms = null;
+			if(wordLongScore != null){
 				//for every word, get list of thms containing this word
-				Collection<Integer> wordThms = wordThmMMap.get(word);
-				Double wordScore = wordsScoreMap.get(word);
-				for(Integer thmIndex : wordThms){
-					Double newScore = wordsScoreMap.get(word) + wordScore;
-					//this mapping is not used right now
+				wordThms = wordThmMMap.get(wordLong);
+				curScoreToAdd = wordLongScore + CONTEXT_WORD_BONUS;
+			}else if(wordOtherFormScore != null){
+				wordThms = wordThmMMap.get(wordOtherForm);
+				curScoreToAdd = wordOtherFormScore;
+			}
+			if(wordThms != null){
+				for(Integer thmIndex : wordThms){	
+					Integer prevScore = thmScoreMap.get(thmIndex);
+					prevScore = prevScore == null ? 0 : prevScore;
+					Integer newScore = prevScore + curScoreToAdd;
+					//this mapping is not being used right now
 					thmScoreMap.put(thmIndex, newScore);
 					scoreThmMMap.put(newScore, thmIndex);
 				}				
-			}
+			}			
 		}
 		List<Integer> highestThmList = new ArrayList<Integer>();
 		//get the thms having the highest k scores
-		NavigableMap<Double, Collection<Integer>> thmMap = scoreThmMMap.asMap().descendingMap();
+		NavigableMap<Integer, Collection<Integer>> thmMap = scoreThmMMap.asMap().descendingMap();
 		int counter = numHighest;
 		
-		for(Entry<Double, Collection<Integer>> entry : thmMap.entrySet()){			
+		for(Entry<Integer, Collection<Integer>> entry : thmMap.entrySet()){			
 			for(Integer thmIndex : entry.getValue()){
 				if(counter == 0) break;				
 				highestThmList.add(thmIndex);				
 				counter--;			
 			}
-				
+			
 		}
 		return highestThmList ;
 	}	
 	
-	//test function
+	/**
+	 * Reads in keywords. Gets theorems with highest scores for this.
+	 * @param args
+	 */
 	public static void main(String[] args){
 		Scanner sc = new Scanner(System.in);
 		
 		while(sc.hasNextLine()){
 			String thm = sc.nextLine();			
-			List<Integer> highestThms = getHighestThm(thm, 3);
+			
+			List<Integer> highestThms = getHighestThm(thm);
+			
+			if(highestThms == null) continue;
+			
 			for(Integer thmIndex : highestThms){
 				System.out.println(thmList.get(thmIndex));
 			}

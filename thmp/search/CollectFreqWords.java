@@ -6,8 +6,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Scanner;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -18,8 +20,11 @@ import com.google.common.collect.ImmutableMap;
 public class CollectFreqWords {
 
 	//Map of words and their pos.
+	//entrySet of immutable maps preserve the order the entries are inserted,
+	//so to get the top N words, just iterate the top N entries.
 	private static final ImmutableMap<String, String> wordPosMap;
-	
+	//this list contains 5000 most frequent words, ordered by freq. Oftentimes we need fewer than those,
+	//maybe only top 500, so words such as "ring" don't get screened out.
 	private static File wordsFile = new File("src/thmp/data/wordFrequency.txt");
 	
 	static{
@@ -114,6 +119,22 @@ public class CollectFreqWords {
 	
 	public static ImmutableMap<String, String> get_wordPosMap(){
 		return wordPosMap;
+	}
+	
+	/**
+	 * Returns the top most frequent words.
+	 * @param K is number of most frequent words to use.
+	 * @return 
+	 */
+	public static ImmutableMap<String, String> getTopFreqWords(int K){
+		Map<String, String> freqWordsMap = new HashMap<String, String>();
+		int counter = K;
+		for(Entry<String, String> wordEntry : wordPosMap.entrySet()){
+			if(counter == 0) break;
+			freqWordsMap.put(wordEntry.getKey(), wordEntry.getValue());
+			counter--;
+		}
+		return ImmutableMap.copyOf(freqWordsMap);
 	}
 	
 	/**

@@ -263,10 +263,11 @@ public class ThmP1Test {
 			st = "f is a function and f has zeros";
 			st = "this field is perfect, it has order $p$";
 			st = "f is holomorphic on D";
-			st = "A Noetherian ring $R$ is called Cohen-Macaulay if all local rings are Cohen-Macaulay."; //******<---
 			st = "if all its local rings are cohen-macaulay";
 			st = "we have f as a function of x";
 			st = "$I$ is pure";
+			st = "A Noetherian ring $R$ is called Cohen-Macaulay if all local rings are Cohen-Macaulay."; //******<---
+
 			//st = "there exists a unique power series $g(T)$ such that $f(g(T)) = T$";			
 			//st = "$f$ is holomorphic on $D(0, r)$, the derivative of $f$ is $\\sum_j j $";
 			//st = "the derivative of the log of $x$ is equal to $1/x$";

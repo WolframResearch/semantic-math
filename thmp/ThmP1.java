@@ -2145,8 +2145,8 @@ public class ThmP1 {
 	public static String[] preprocess(String inputStr) {
 
 		ArrayList<String> sentenceList = new ArrayList<String>();
-
-		String[] wordsArray = inputStr.replaceAll("([^.,!:]*)([.|,|:|!]{1})", "$1 $2").split("\\s+");
+		//separate out words away from punctuations.
+		String[] wordsArray = inputStr.replaceAll("([^.,!:;]*)([.,:!;]{1})", "$1 $2").split("\\s+");
 		int wordsArrayLen = wordsArray.length;
 
 		StringBuilder sentenceBuilder = new StringBuilder();
@@ -2202,7 +2202,7 @@ public class ThmP1 {
 						tempWord += " " + wordsArray[++j];
 					}
 					
-					//******************tempWord invokes too many strings!
+					//******************tempWord invokes too many strings!**********
 					//System.out.println("tempWord: " + tempWord);
 					
 					String replacement = fluffMap.get(tempWord.toLowerCase());

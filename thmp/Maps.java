@@ -38,21 +38,21 @@ public class Maps {
 	// structMap for the second run, grammars that shouldn't be
 	// used in first run, like ent_verb: there exists
 	protected static HashMap<String, String> structMap2;
-
+	//make these private!
 	// probability hashmap for pairs of phrase constructs
 	// vs noun_verb high prob, verb_verb low prob
-	protected static HashMap<String, Double> probMap;
+	protected static Map<String, Double> probMap;
 
-	protected static HashMap<String, String> anchorMap;
+	protected static Map<String, String> anchorMap;
 	// parts of speech map, e.g. "open", "adj"
-	protected static HashMap<String, String> posMap;
+	protected static Map<String, String> posMap;
 	// fluff words, e.g. "the", "a"
-	protected static HashMap<String, String> fluffMap;
+	protected static Map<String, String> fluffMap;
 
-	protected static HashMap<String, String> mathObjMap;
+	protected static Map<String, String> mathObjMap;
 	// map for composite adjectives, eg positive semidefinite
 	// value is regex string to be matched
-	protected static HashMap<String, String> adjMap;
+	protected static Map<String, String> adjMap;
 
 	// implmented via ImmutableMultimap. String is trigger word.
 	//private static final ImmutableListMultimap<String, FixedPhrase> fixedPhraseMMap;
@@ -140,6 +140,14 @@ public class Maps {
 		return fixedPhraseMMap;
 	}
 
+	/**
+	 * Return part of speech (pos) of word
+	 * @param word word
+	 * @return pos
+	 */
+	public static String getPos(String word){
+		return posMap.get(word);
+	}
 	/**
 	 * Read in files using stream
 	 * @throws IOException

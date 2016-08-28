@@ -52,10 +52,10 @@ public class ThmSearch {
 				ml.discardAnswer();
 			}*/
 			
-			String queryStr = TriggerMathThm2.createQuery("root");
-			System.out.println(queryStr);
-			ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"];");
-			ml.discardAnswer();
+			//String queryStr = TriggerMathThm2.createQuery("root");
+			//System.out.println(queryStr);
+			//ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"];");
+			//ml.discardAnswer();
 			ml.evaluate("q//N");
 			ml.waitForAnswer();
 			Expr v = ml.getExpr();
