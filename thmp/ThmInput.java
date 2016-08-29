@@ -44,11 +44,13 @@ public class ThmInput {
 		while(sc.hasNextLine()){
 			String line = sc.nextLine();
 			
-			if(line.matches("(\\\\begin\\{definition\\})|(\\\\begin\\{lemma\\})")){				
+			//if(line.matches("\\\\begin\\{def[^}]*\\}|\\\\begin\\{lem[^}]*\\}|\\\\begin\\{th[^}]*\\}")){	
+			if(line.matches("(\\\\begin\\{definition\\})|(\\\\begin\\{lemma\\})")){	
 				newThm = line;				
 				line = sc.nextLine();
 				inThm = true;
 			}			
+			//else if(line.matches("\\\\end\\{def[^}]*\\}|\\\\end\\{lem[^}]*\\}||\\\\begin\\{lem[^}]*\\}")){
 			else if(line.matches("(\\\\end\\{definition\\})|(\\\\end\\{lemma\\})")){
 				inThm = false;
 				newThm += "\n";

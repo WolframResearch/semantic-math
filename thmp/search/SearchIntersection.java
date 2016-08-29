@@ -48,7 +48,7 @@ public class SearchIntersection {
 	 */
 	static{
 		thmList = CollectThm.get_thmList();
-		
+		System.out.println(thmList);
 		wordsScoreMap = CollectThm.get_wordsScoreMap();
 		wordThmMMap = CollectThm.get_wordThmsMMap();
 	}

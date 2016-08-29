@@ -235,7 +235,6 @@ public class TriggerMathThm2 {
 		return s;
 	}
 
-
 	/**
 	 * Obtains mathThmMx
 	 * @return
@@ -250,6 +249,7 @@ public class TriggerMathThm2 {
 	 * @return
 	 */
 	public static String getThm(int index){
+		System.out.println("index of thm: " + index);
 		//index is 1-based indexing, not 0-based.
 		return mathObjList.get(index-1);
 	}
