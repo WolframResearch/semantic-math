@@ -199,7 +199,7 @@ public class ThmSearch {
 	private static String constructQuery(KernelLink ml, String queryStr) 
 			throws MathLinkException, ExprFormatException{
 		//System.out.println("queryStr: " + queryStr);
-		String s = "";		
+		String s = "";
 		//transform query vector to low dimensional space 
 		//String query = "{{1,1,0,0}}";
 		ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"];");

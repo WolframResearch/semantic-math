@@ -127,13 +127,13 @@ public class UnzipFile {
 		List<String> extractedFiles = unzipGz(srcBasePath, destBasePath, fileNames);
 		//reads in those files from 
 		for(String file : extractedFiles){
-		File fileFrom = new File(file);
-		Path fileTo = Paths.get(file.replaceAll("", ""));
-		
-		List<String> thmList = ThmInput.readThm(fileFrom);
-		
-		//write list of theorems to file
-		Files.write(fileTo, thmList, Charset.forName("UTF-8"));
+			File fileFrom = new File(file);
+			Path fileTo = Paths.get(file.replaceAll("([^.]*)(\\.txt)", "$1_thms$2"));
+			
+			List<String> thmList = ThmInput.readThm(fileFrom);
+			
+			//write list of theorems to file
+			Files.write(fileTo, thmList, Charset.forName("UTF-8"));
 		}
 	}
 }

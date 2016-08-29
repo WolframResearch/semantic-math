@@ -20,8 +20,8 @@ import java.util.Scanner;
 public class ThmInput {
 
 	public static void main(String[] args) throws IOException{
-		File file = new File("src/thmp/data/commAlg4.txt");
-		Path fileTo = Paths.get("src/thmp/data/thmFile4.txt");
+		File file = new File("src/thmp/data/commAlg5.txt");
+		Path fileTo = Paths.get("src/thmp/data/thmFile5.txt");
 		
 		List<String> thmList = readThm(file);
 		
@@ -45,13 +45,13 @@ public class ThmInput {
 			String line = sc.nextLine();
 			
 			//if(line.matches("\\\\begin\\{def[^}]*\\}|\\\\begin\\{lem[^}]*\\}|\\\\begin\\{th[^}]*\\}")){	
-			if(line.matches("(\\\\begin\\{definition\\})|(\\\\begin\\{lemma\\})")){	
+			if(line.matches("\\\\begin\\{definition\\}|\\\\begin\\{lemma\\}|\\\\begin\\{thm\\}|\\\\begin\\{theorem\\}")){	
 				newThm = line;				
 				line = sc.nextLine();
 				inThm = true;
 			}			
 			//else if(line.matches("\\\\end\\{def[^}]*\\}|\\\\end\\{lem[^}]*\\}||\\\\begin\\{lem[^}]*\\}")){
-			else if(line.matches("(\\\\end\\{definition\\})|(\\\\end\\{lemma\\})")){
+			else if(line.matches("\\\\end\\{definition\\}|\\\\end\\{lemma\\}|\\\\end\\{thm\\}|\\\\end\\{theorem\\}")){
 				inThm = false;
 				newThm += "\n";
 				thms.add(newThm);

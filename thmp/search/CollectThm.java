@@ -42,9 +42,9 @@ public class CollectThm {
 	//document-wide word frequency. Keys are words, values are counts in whole doc.
 	private static final ImmutableMap<String, Integer> docWordsFreqMap;
 	//raw original file
-	private static final File rawFile = new File("src/thmp/data/commAlg4.txt");
+	private static final File rawFile = new File("src/thmp/data/commAlg5.txt");
 	//file to read from. Thms already extracted, ready to be processed.
-	private static final File thmFile = new File("src/thmp/data/thmFile4.txt");
+	private static final File thmFile = new File("src/thmp/data/thmFile5.txt");
 	//list of theorems, in order their keywords are added to thmWordsList
 	private static final ImmutableList<String> thmList;
 	//Multimap of keywords and the theorems they are in, in particular their indices in thmList
@@ -59,8 +59,8 @@ public class CollectThm {
 	
 	static{
 		//only get the top N words
-		freqWordsMap = CollectFreqWords.get_wordPosMap();
-		//freqWordsMap = CollectFreqWords.getTopFreqWords(NUM_FREQ_WORDS);
+		//freqWordsMap = CollectFreqWords.get_wordPosMap();
+		freqWordsMap = CollectFreqWords.getTopFreqWords(NUM_FREQ_WORDS);
 		//pass builder into a reader function. For each thm, builds immutable list of keywords, 
 		//put that list into the thm list.
 		ImmutableList.Builder<ImmutableMap<String, Integer>> thmWordsListBuilder = ImmutableList.builder();
@@ -103,7 +103,7 @@ public class CollectThm {
 			ImmutableListMultimap.Builder<String, Integer> wordThmsMMapBuilder)
 			throws IOException, FileNotFoundException{
 		
-		//use method in ProcessInput to process in thms. 
+		//use method in ProcessInput to process in thms. Like turn $blah$ -> $tex$
 		List<String> thmList = ProcessInput.processInput(thmFile, true);
 		//adds original thms without latex replaced, should be in same order as above
 		thmListBuilder.addAll(ThmInput.readThm(rawFile));

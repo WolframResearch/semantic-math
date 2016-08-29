@@ -93,7 +93,13 @@ public class TriggerMathThm2 {
 
 		mathObjList = mathObjListBuilder.build();
 	}
-	
+	/**
+	 * Add keyword/term to mathObjList, in the process of building keywordList, mathObjMMap, etc.
+	 * @param keywords
+	 * @param keywordList
+	 * @param keywordMap
+	 * @param mathObjMMap
+	 */
 	public static void addKeywordToMathObj(String[] keywords, List<String> keywordList,
 			Map<String, Integer> keywordMap, Multimap<String, String> mathObjMMap) {
 		if (keywords.length == 0)

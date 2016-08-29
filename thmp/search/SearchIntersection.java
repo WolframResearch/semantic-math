@@ -3,11 +3,13 @@ package thmp.search;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.Scanner;
+import java.util.Set;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -48,7 +50,7 @@ public class SearchIntersection {
 	 */
 	static{
 		thmList = CollectThm.get_thmList();
-		System.out.println(thmList);
+		//System.out.println(thmList);
 		wordsScoreMap = CollectThm.get_wordsScoreMap();
 		wordThmMMap = CollectThm.get_wordThmsMMap();
 	}
@@ -121,11 +123,16 @@ public class SearchIntersection {
 		List<Integer> highestThmList = new ArrayList<Integer>();
 		//get the thms having the highest k scores
 		NavigableMap<Integer, Collection<Integer>> thmMap = scoreThmMMap.asMap().descendingMap();
-		int counter = numHighest;
 		
+		//pick up numHighest number of unique thms
+		Set<Integer> pickedThmSet = new HashSet<Integer>();
+		
+		int counter = numHighest;
 		for(Entry<Integer, Collection<Integer>> entry : thmMap.entrySet()){			
 			for(Integer thmIndex : entry.getValue()){
 				if(counter == 0) break;				
+				if(pickedThmSet.contains(thmIndex)) continue;
+				pickedThmSet.add(thmIndex);
 				highestThmList.add(thmIndex);				
 				counter--;			
 			}
