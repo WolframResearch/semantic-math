@@ -25,8 +25,7 @@ import thmp.search.SearchWordPreprocess.WordWrapper;
  */
 public class SearchIntersection {
 
-	//delimiters to split on when making words out of input
-	private static final String SPLIT_DELIM = "\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:";
+	
 	//bonus points for matching context better, eg hyp or stm
 	private static final int CONTEXT_WORD_BONUS = 2;
 	/**
@@ -162,4 +161,5 @@ public class SearchIntersection {
 		sc.close();
 	}
 	
+
 }

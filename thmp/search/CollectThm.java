@@ -46,7 +46,7 @@ public class CollectThm {
 	//document-wide word frequency. Keys are words, values are counts in whole doc.
 	private static final ImmutableMap<String, Integer> docWordsFreqMap;
 	//raw original file
-	private static final File rawFile = new File("src/thmp/data/commAlg4.txt");
+	private static final File rawFile = new File("src/thmp/data/commAlg5.txt");
 	//file to read from. Thms already extracted, ready to be processed.
 	//private static final File thmFile = new File("src/thmp/data/thmFile5.txt");
 	//list of theorems, in order their keywords are added to thmWordsList
@@ -58,6 +58,9 @@ public class CollectThm {
 	private static final ImmutableMap<String, Integer> docWordsFreqMapNoAnno;
 	private static final ImmutableMultimap<String, Integer> wordThmsMMapNoAnno;
 
+	//delimiters to split on when making words out of input
+	private static final String SPLIT_DELIM = "\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:";
+		
 	/**
 	 * Map of (annotated with "hyp" etc) keywords and their scores in document, the higher freq in doc, the lower 
 	 * score, say 1/(log freq + 1) since log 1 = 0. 
@@ -65,12 +68,12 @@ public class CollectThm {
 	private static final ImmutableMap<String, Integer> wordsScoreMap;	
 	private static final ImmutableMap<String, Integer> wordsScoreMapNoAnno;	
 	//The number of frequent words to take
-	private static final int NUM_FREQ_WORDS = 300;
+	private static final int NUM_FREQ_WORDS = 500;
 	
 	static{
 		//only get the top N words
-		//freqWordsMap = CollectFreqWords.get_wordPosMap();
-		freqWordsMap = CollectFreqWords.getTopFreqWords(NUM_FREQ_WORDS);
+		freqWordsMap = CollectFreqWords.get_wordPosMap();
+		//freqWordsMap = CollectFreqWords.getTopFreqWords(NUM_FREQ_WORDS);
 		//pass builder into a reader function. For each thm, builds immutable list of keywords, 
 		//put that list into the thm list.
 		ImmutableList.Builder<ImmutableMap<String, Integer>> thmWordsListBuilder = ImmutableList.builder();
@@ -101,10 +104,10 @@ public class CollectThm {
 		thmList = thmListBuilder.build();
 		docWordsFreqMap = ImmutableMap.copyOf(docWordsFreqPreMap); 
 		wordThmsMMap = wordThmsMMapBuilder.build();
-		
-		thmWordsListNoAnno = thmWordsListBuilder.build();	
-		docWordsFreqMapNoAnno = ImmutableMap.copyOf(docWordsFreqPreMap); 
-		wordThmsMMapNoAnno = wordThmsMMapBuilder.build();
+		//non-annotated version
+		thmWordsListNoAnno = thmWordsListBuilderNoAnno.build();	
+		docWordsFreqMapNoAnno = ImmutableMap.copyOf(docWordsFreqPreMapNoAnno); 
+		wordThmsMMapNoAnno = wordThmsMMapBuilderNoAnno.build();
 		
 		System.out.println(thmList.size());
 		
@@ -315,6 +318,13 @@ public class CollectThm {
 	
 	public static ImmutableMap<String, Integer> get_docWordsFreqMapNoAnno(){
 		return docWordsFreqMapNoAnno;
+	}
+	/**
+	 * Returns split delimiters.
+	 * @return
+	 */
+	public static String splitDelim(){
+		return SPLIT_DELIM;
 	}
 	
 }

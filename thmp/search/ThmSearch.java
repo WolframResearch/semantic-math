@@ -21,6 +21,7 @@ public class ThmSearch {
 	"\"/Applications/Mathematica.app/Contents/MacOS/MathKernel\" -mathlink"};
 	//number of nearest vectors to get for Nearest[]
 	private static final int NUM_NEAREST = 3;
+	private static final int NUM_SINGULAR_VAL_TO_KEEP = 30;
 	
 	private static KernelLink ml;
 	
@@ -28,7 +29,7 @@ public class ThmSearch {
 		//docMx = new int[][]{{0, 1, 0}, {1, 1, 0}, {0, 0, 1}, {1, 0, 0}};
 		docMx = TriggerMathThm2.mathThmMx();
 
-		//System.out.println(Arrays.deepToString(docMx));
+		
 		
 		try{			
 			ml = MathLinkFactory.createKernelLink(ARGV);
@@ -36,16 +37,15 @@ public class ThmSearch {
 			//set up the matrix corresponding to docMx, to be SVD'd. 
 			System.out.print(docMx.length + " " +docMx[0].length);
 			String mx = toNestedList(docMx);
-			System.out.println("Got to static initializer inside thmSearch");
+			System.out.println(mx);
+			
 			ml.evaluate("mx=" + mx +"//N;");				
 			ml.discardAnswer();	
-			
-			System.out.println("Got the matrix");
 			//ml.discardAnswer();
 			// For now use the number of columns (theorem vectors).
 			// # of words (for now) is a lot larger than the number of theorems.
 			//int k = TriggerMathThm2.mathThmMx()[0].length;
-			int k = 20;
+			int k = NUM_SINGULAR_VAL_TO_KEEP;
 			ml.evaluate("{u, d, v} = SingularValueDecomposition[mx, " + k +"];");
 			//ml.waitForAnswer();
 			ml.discardAnswer();
@@ -62,15 +62,15 @@ public class ThmSearch {
 			//System.out.println(queryStr);
 			//ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"];");
 			//ml.discardAnswer();
-			ml.evaluate("q//N");
+			/*ml.evaluate("q//N");
 			ml.waitForAnswer();
 			Expr v = ml.getExpr();
-			System.out.println("exprs realQ? " + v);
+			System.out.println("exprs realQ? " + v); 
 			
 			ml.evaluate("(p1.First@Transpose[q])//N");
 			ml.waitForAnswer();
 			Expr w = ml.getExpr();
-			System.out.println("~W " + w);
+			System.out.println("~W " + w);*/
 			
 		}catch(MathLinkException e){
 			System.out.println("error at launch!");
@@ -186,7 +186,6 @@ public class ThmSearch {
 			//System.out.println("thm vec: " + TriggerMathThm2.createQuery(TriggerMathThm2.getThm(d)));
 		}
 		
-		
 	}
 	
 	private static String readThmInput(KernelLink ml) throws MathLinkException, ExprFormatException{
@@ -194,7 +193,7 @@ public class ThmSearch {
 		Scanner sc = new Scanner(System.in);
 		while(sc.hasNextLine()){
 			String thm = sc.nextLine();
-			query = TriggerMathThm2.createQuery(thm);
+			query = TriggerMathThm2.createQueryNoAnno(thm);
 			//processes query
 			findNearestVecs(ml, query);
 		}		

@@ -160,7 +160,7 @@ public class TriggerMathThm2 {
 	}
 	
 	/**
-	 * Builds the MathObjMx. Weigh inversely based on frequencies extracted from 
+	 * Builds the MathObjMx. Weigh inversely based on word frequencies extracted from 
 	 * CollectThm.java.
 	 */
 	private static void buildMathObjMx(List<String> keywordList, Multimap<String, String> mathObjMMap,
@@ -177,21 +177,29 @@ public class TriggerMathThm2 {
 			String curMathObj = mathObjMMapkeysIter.next();
 			mathObjListBuilder.add(curMathObj);
 			Collection<String> curMathObjCol = mathObjMMap.get(curMathObj);
-			Iterator<String> curMathObjColIter = curMathObjCol.iterator();
-
-			while (curMathObjColIter.hasNext()) {
-				String keyword = curMathObjColIter.next();
-				Integer keyWordIndex = keywordDict.get(keyword);
+			//Iterator<String> curMathObjColIter = curMathObjCol.iterator();
+			int norm = 0;
+			for (String keyword : curMathObjCol) {
+				//Integer keyWordIndex = keywordDict.get(keyword);
 				Integer wordScore = wordsScoreMap.get(keyword);
+				norm += Math.pow(wordScore, 2);
 				//should not be null, as wordsScoreMap was created using same list of thms.
 				//if(wordScore == null) continue;
 				//weigh each word based on *local* frequency, ie word freq in sentence, not whole doc.
 				//mathObjMx[keyWordIndex][mathObjCounter] = wordScore;
-				mathObjMx[keyWordIndex][mathObjCounter] = wordScore;
+			}
+			norm = norm == 0 ? 1 : (int)Math.log(norm);
+			//divide by log of norm
+			for (String keyword : curMathObjCol) {
+				Integer keyWordIndex = keywordDict.get(keyword);
+				Integer wordScore = wordsScoreMap.get(keyword);
+				//divide by log of norm
+				//could be very small! ie 0 after rounding.
+				mathObjMx[keyWordIndex][mathObjCounter] = wordScore/norm;
 			}
 			mathObjCounter++;
 		}
-		//System.out.println("~~keywordDict "+keywordDict);
+		System.out.println("~~keywordDict "+keywordDict);
 	}
 
 	/**
@@ -241,7 +249,54 @@ public class TriggerMathThm2 {
 			sb.append(t);
 		}
 		sb.append("}}");
-		//System.out.println("query vector " + sb);
+		System.out.println("query vector " + sb);
+		return sb.toString();
+	}
+
+	//Same as creareQuery, no annotation.
+	public static String createQueryNoAnno(String thm){
+		
+		//String[] thmAr = thm.split("\\s+|,|;|\\.");
+		String[] thmAr = thm.split(CollectThm.splitDelim());
+		//map of annotated words and their scores
+		Map<String, Integer> wordsScoreMap = CollectThm.get_wordsScoreMapNoAnno();		
+		//should eliminate unnecessary words first, then send to get wrapped.
+		//<--can only do that if leave the hyp words in, eg if.
+		
+		//keywordDict is annotated with "hyp"/"stm"
+		int dictSz = keywordDict.keySet().size();
+		int[] triggerTermsVec = new int[dictSz];
+		int norm = 0;
+		
+		//get norm first, then divide by log of norm
+		for (String term : thmAr) {
+				Integer termScore = wordsScoreMap.get(term);
+				//triggerTermsVec[rowIndex] = termScore;
+				//keywordDict starts indexing from 0!
+				if(termScore != null){
+					norm += termScore;
+				}
+		}
+		norm = norm == 0 ? 1 : (int)Math.log(norm);
+		for (String term : thmAr) {			
+			Integer rowIndex = keywordDict.get(term);
+			if (rowIndex != null) {
+				int termScore = wordsScoreMap.get(term);
+				//triggerTermsVec[rowIndex] = termScore;
+				//keywordDict starts indexing from 0!
+				triggerTermsVec[rowIndex] = termScore/norm;
+			}
+		}
+		//transform into query list String 
+		StringBuilder sb = new StringBuilder();
+		sb.append("{{");
+		//String s = "{{";
+		for(int j = 0; j < dictSz; j++){
+			String t = j == dictSz-1 ? triggerTermsVec[j] + "" : triggerTermsVec[j] + ", ";
+			sb.append(t);
+		}
+		sb.append("}}");
+		System.out.println("query vector " + sb);
 		return sb.toString();
 	}
 
@@ -261,6 +316,7 @@ public class TriggerMathThm2 {
 	public static String getThm(int index){
 		System.out.println("index of thm: " + index);
 		//index is 1-based indexing, not 0-based.
+		System.out.println(CollectThm.get_thmWordsListNoAnno().get(index-1));
 		return mathObjList.get(index-1);
 	}
 }
