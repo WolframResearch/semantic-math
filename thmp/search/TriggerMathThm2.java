@@ -143,7 +143,7 @@ public class TriggerMathThm2 {
 	private static void addThmsFromList(List<String> keywordList,
 			Map<String, Integer> keywordMap, Multimap<String, String> mathObjMMap){
 		//thmWordsList has annotations, such as hyp or stm
-		ImmutableList<ImmutableMap<String, Integer>> thmWordsList = CollectThm.get_thmWordsList();
+		ImmutableList<ImmutableMap<String, Integer>> thmWordsList = CollectThm.get_thmWordsListNoAnno();
 		ImmutableList<String> thmList = CollectThm.get_thmList();
 		
 		//index of thm in thmWordsList, to be used as part of name
@@ -168,7 +168,7 @@ public class TriggerMathThm2 {
 		
 		Set<String> mathObjMMapkeys = mathObjMMap.keySet();
 		//map of annotated words and their scores
-		Map<String, Integer> wordsScoreMap = CollectThm.get_wordsScoreMap();
+		Map<String, Integer> wordsScoreMap = CollectThm.get_wordsScoreMapNoAnno();
 		
 		Iterator<String> mathObjMMapkeysIter = mathObjMMapkeys.iterator();
 		int mathObjCounter = 0;
@@ -187,11 +187,11 @@ public class TriggerMathThm2 {
 				//if(wordScore == null) continue;
 				//weigh each word based on *local* frequency, ie word freq in sentence, not whole doc.
 				//mathObjMx[keyWordIndex][mathObjCounter] = wordScore;
-				mathObjMx[keyWordIndex][mathObjCounter] = 1;
+				mathObjMx[keyWordIndex][mathObjCounter] = wordScore;
 			}
 			mathObjCounter++;
 		}
-		System.out.println("~~keywordDict "+keywordDict);
+		//System.out.println("~~keywordDict "+keywordDict);
 	}
 
 	/**
@@ -203,7 +203,9 @@ public class TriggerMathThm2 {
 		
 		//String[] thmAr = thm.split("\\s+|,|;|\\.");
 		//map of annotated words and their scores
-		Map<String, Integer> wordsScoreMap = CollectThm.get_wordsScoreMap();				
+		Map<String, Integer> wordsScoreMap = CollectThm.get_wordsScoreMapNoAnno();		
+		//should eliminate unnecessary words first, then send to get wrapped.
+		//<--can only do that if leave the hyp words in, eg if.
 		List<WordWrapper> wordWrapperList = SearchWordPreprocess.sortWordsType(thm);
 		System.out.println(wordWrapperList);
 		//keywordDict is annotated with "hyp"/"stm"
@@ -227,18 +229,20 @@ public class TriggerMathThm2 {
 				//System.out.print("termScore " + termScore + "\t");
 				//triggerTermsVec[rowIndex] = termScore;
 				//keywordDict starts indexing from 0!
-				triggerTermsVec[rowIndex] = 1;
+				triggerTermsVec[rowIndex] = termScore;
 			}
 		}
 		//transform into query list String 
-		String s = "{{";
+		StringBuilder sb = new StringBuilder();
+		sb.append("{{");
+		//String s = "{{";
 		for(int j = 0; j < dictSz; j++){
 			String t = j == dictSz-1 ? triggerTermsVec[j] + "" : triggerTermsVec[j] + ", ";
-			s += t;
+			sb.append(t);
 		}
-		s += "}}";
-		System.out.println("query vector " + s);
-		return s;
+		sb.append("}}");
+		//System.out.println("query vector " + sb);
+		return sb.toString();
 	}
 
 	/**

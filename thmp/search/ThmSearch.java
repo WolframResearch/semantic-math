@@ -27,16 +27,20 @@ public class ThmSearch {
 	static{
 		//docMx = new int[][]{{0, 1, 0}, {1, 1, 0}, {0, 0, 1}, {1, 0, 0}};
 		docMx = TriggerMathThm2.mathThmMx();
+
 		//System.out.println(Arrays.deepToString(docMx));
 		
 		try{			
 			ml = MathLinkFactory.createKernelLink(ARGV);
 			ml.discardAnswer();
 			//set up the matrix corresponding to docMx, to be SVD'd. 
+			System.out.print(docMx.length + " " +docMx[0].length);
 			String mx = toNestedList(docMx);
-			ml.evaluate("mx=" + mx +"//N;");			
+			System.out.println("Got to static initializer inside thmSearch");
+			ml.evaluate("mx=" + mx +"//N;");				
 			ml.discardAnswer();	
-			System.out.println(mx);
+			
+			System.out.println("Got the matrix");
 			//ml.discardAnswer();
 			// For now use the number of columns (theorem vectors).
 			// # of words (for now) is a lot larger than the number of theorems.
@@ -80,21 +84,29 @@ public class ThmSearch {
 	 * 
 	 */
 	public static String toNestedList(int[][] docMx){
-		String s = "";
-		s += "{";
+		StringBuilder sb = new StringBuilder();
+		
+		//hString s = "";
+		//s += "{";
+		sb.append("{");
+		
 		int docSz = docMx.length;
 		for(int i = 0; i < docSz; i++){
-			s += "{";
+			//s += "{";
+			sb.append("{");
 			int iSz = docMx[i].length;
 			for(int j = 0; j < iSz; j++){
 				String t = j == iSz-1 ? docMx[i][j] + "" : docMx[i][j] + ", ";
-				s += t;
+				//s += t;
+				sb.append(t);
 			}
 			String t = i == docSz-1 ? "}" : "}, ";
-			s += t;
+			//s += t;
+			sb.append(t);
 		}
-		s += "}";
-		return s;
+		//s += "}";
+		sb.append("}");
+		return sb.toString();
 	}
 	
 	
@@ -131,55 +143,6 @@ public class ThmSearch {
 			//reads input theorem, generates query string, process query
 			readThmInput(ml);
 			
-			//System.out.println(Arrays.toString(expr.args()[0].dimensions()));
-			//System.out.println(expr.args()[0].matrixQ());
-			//System.out.println(expr.args()[0]);
-			//double[][] matrix = (double[][])((expr.args()[0]).asArray(Expr.REAL, 2));
-			
-			//System.out.println(Arrays.deepToString(matrix));
-			//int[][] d = (int[][])((expr.args()[0]).asArray(Expr.INTEGER, 2));
-			//double[][] d = (double[][])((expr.args()[0]).asArray(Expr.REAL, 2));
-			//System.out.println(d[0][0]);
-			
-			//present(expr);
-			
-			//ml.putFunction("SingularValueDecomposition", 1);
-			//ml.putFunction("IdentityMatrix", 1);
-			//ml.put("{{1,2},{3,4}}");
-			//ml.put("{{1,2},{3,4}}");
-			//ml.put("2");
-			//ml.putFunction("IdentityMatrix", 1);
-			//ml.put(2);
-			//ml.waitForAnswer();
-			//ml.endPacket();
-			//byte[] r = ml.getData(10);
-			//double[][] r = ml.getDoubleArray2();
-			//byte[] r = ml.getData(4);
-
-			//System.out.print(r.length);
-			//System.out.print(r);
-
-			//System.out.println(ml.getData(4));
-			//double[][] result1 = ml.getDoubleArray2();
-			//byte[][] result1 = ml.getByteArray2();
-			//ml.getByteString(0);
-			//System.out.println(result1.length);
-			/*for(double[] d : result1){
-				for(double i : d){
-					System.out.print(i + ", ");
-				}
-				System.out.println();
-			} */
-			/*for(byte[] d : result1){
-				for(byte i : d){
-					System.out.print(i + ", ");
-				}
-				System.out.println();
-			}*/
-			//System.out.println(result1);
-			//System.out.println(ml.getData(10));
-			//System.out.println(ml.getDoubleArray2());
-			//System.out.println(ml.getByteString(0));
 		}catch(MathLinkException|IndexOutOfBoundsException e){
 			System.out.println("error during eval!" + e.getMessage());
 			e.printStackTrace();
@@ -196,10 +159,10 @@ public class ThmSearch {
 	 * @throws MathLinkException 
 	 * @throws ExprFormatException 
 	 */
-	private static String constructQuery(KernelLink ml, String queryStr) 
+	private static void findNearestVecs(KernelLink ml, String queryStr) 
 			throws MathLinkException, ExprFormatException{
 		//System.out.println("queryStr: " + queryStr);
-		String s = "";
+		//String s = "";
 		//transform query vector to low dimensional space 
 		//String query = "{{1,1,0,0}}";
 		ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"];");
@@ -223,48 +186,7 @@ public class ThmSearch {
 			//System.out.println("thm vec: " + TriggerMathThm2.createQuery(TriggerMathThm2.getThm(d)));
 		}
 		
-		/*
-		double max = 0;
-		//index i of pi that yields maximal inner product
-		int index = -1;
-		//assign the document (column) vectors
-		for(int i = 1; i <= docMx[0].length; i++){
-			//document vectors as row vectors
-			//ml.evaluate("d" + i + "= Transpose[mx][["+ i + "]]");			
-			//System.out.println("d_i: " +ml.getExpr());
-			//ml.discardAnswer();
-			//transformed document vectors to column vectors in space spanned by
-			//columns of V*.
-			//ml.evaluate("p" + i + "= Inverse[d].Transpose[u].Transpose[{d"+i+"}];");
-			
-			//take inner product of q in low dimenensional space with pi
-			ml.evaluate("(p" + i +".First@Transpose[q])//N");
-			ml.waitForAnswer();
-			Expr expr = ml.getExpr();
-			//ml.waitForAnswer();
-			//Expr[] exprs = expr.args();
-			ml.evaluate("p1//N");
-			ml.waitForAnswer();
-			Expr v = ml.getExpr();
-			//check to ensure that the returned value is a real number
-			//System.out.println("exprs realQ? " + expr.realQ());
-			//if(exprs.length == 0 || !exprs[0].realQ()){
-			if( !expr.realQ()){
-				System.out.println("Returned dot product should be real!");
-				break;
-			}
-			double dotProd = expr.asDouble();
-			if(dotProd > max){
-				max = dotProd;
-				index = i;
-			}
-		}
-		System.out.println("max DotProd: " + max);
-		//System.out.println("index: " + index);
-		System.out.println(TriggerMathThm2.getThm(index));
-		*/
 		
-		return s;
 	}
 	
 	private static String readThmInput(KernelLink ml) throws MathLinkException, ExprFormatException{
@@ -274,12 +196,13 @@ public class ThmSearch {
 			String thm = sc.nextLine();
 			query = TriggerMathThm2.createQuery(thm);
 			//processes query
-			constructQuery(ml, query);
+			findNearestVecs(ml, query);
 		}		
 		sc.close();
 		return query;
 	}
 	
+	//little function that tests various inputs
 	private static void present(Expr expr) throws ExprFormatException{
 		System.out.print(expr.length());
 		System.out.println("matrixQ" + expr.matrixQ());

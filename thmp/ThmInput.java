@@ -44,14 +44,16 @@ public class ThmInput {
 		while(sc.hasNextLine()){
 			String line = sc.nextLine();
 			
-			//if(line.matches("\\\\begin\\{def[^}]*\\}|\\\\begin\\{lem[^}]*\\}|\\\\begin\\{th[^}]*\\}")){	
-			if(line.matches("\\\\begin\\{definition\\}|\\\\begin\\{lemma\\}|\\\\begin\\{thm\\}|\\\\begin\\{theorem\\}")){	
+			if(line.matches("\\\\begin\\{def[^}]*\\}|\\\\begin\\{lem[^}]*\\}|\\\\begin\\{th[^}]*\\}")){	
+			//if(line.matches("\\\\begin\\{definition\\}|\\\\begin\\{lemma\\}")){
+				//if(line.matches("\\\\begin\\{definition\\}|\\\\begin\\{lemma\\}|\\\\begin\\{thm\\}|\\\\begin\\{theorem\\}")){	
 				newThm = line;				
 				line = sc.nextLine();
 				inThm = true;
 			}			
-			//else if(line.matches("\\\\end\\{def[^}]*\\}|\\\\end\\{lem[^}]*\\}||\\\\begin\\{lem[^}]*\\}")){
-			else if(line.matches("\\\\end\\{definition\\}|\\\\end\\{lemma\\}|\\\\end\\{thm\\}|\\\\end\\{theorem\\}")){
+			//else if(line.matches("\\\\end\\{definition\\}|\\\\end\\{lemma\\}")){
+			else if(line.matches("\\\\end\\{def[^}]*\\}|\\\\end\\{lem[^}]*\\}|\\\\begin\\{lem[^}]*\\}")){
+			//else if(line.matches("\\\\end\\{definition\\}|\\\\end\\{lemma\\}|\\\\end\\{thm\\}|\\\\end\\{theorem\\}")){
 				inThm = false;
 				newThm += "\n";
 				thms.add(newThm);
