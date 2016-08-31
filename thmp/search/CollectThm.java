@@ -46,7 +46,7 @@ public class CollectThm {
 	//document-wide word frequency. Keys are words, values are counts in whole doc.
 	private static final ImmutableMap<String, Integer> docWordsFreqMap;
 	//raw original file
-	private static final File rawFile = new File("src/thmp/data/commAlg5.txt");
+	private static final File rawFile = new File("src/thmp/data/commAlg4.txt");
 	//file to read from. Thms already extracted, ready to be processed.
 	//private static final File thmFile = new File("src/thmp/data/thmFile5.txt");
 	//list of theorems, in order their keywords are added to thmWordsList
@@ -72,8 +72,8 @@ public class CollectThm {
 	
 	static{
 		//only get the top N words
-		freqWordsMap = CollectFreqWords.get_wordPosMap();
-		//freqWordsMap = CollectFreqWords.getTopFreqWords(NUM_FREQ_WORDS);
+		//freqWordsMap = CollectFreqWords.get_wordPosMap();
+		freqWordsMap = CollectFreqWords.getTopFreqWords(NUM_FREQ_WORDS);
 		//pass builder into a reader function. For each thm, builds immutable list of keywords, 
 		//put that list into the thm list.
 		ImmutableList.Builder<ImmutableMap<String, Integer>> thmWordsListBuilder = ImmutableList.builder();
@@ -94,7 +94,7 @@ public class CollectThm {
 			List<String> thmList = ProcessInput.processInput(extractedThms, true);
 			
 			readThm(thmWordsListBuilder, docWordsFreqPreMap, wordThmsMMapBuilder, thmList);
-			//buid maps without annocation
+			//same as readThm, just buid maps without annocation
 			buildMapsNoAnno(thmWordsListBuilderNoAnno, docWordsFreqPreMapNoAnno, wordThmsMMapBuilderNoAnno, thmList);
 		}catch(IOException e){
 			e.printStackTrace();
@@ -219,9 +219,7 @@ public class CollectThm {
 			//List<WordWrapper> wordWrapperList = SearchWordPreprocess.sortWordsType(thm);			
 			
 			for(String word : thmAr){
-				
-				//the two frequencies are now kept separate!
-				
+								
 				//only keep words with lengths > 2
 				//System.out.println(word);
 				if(word.length() < 3 || freqWordsMap.containsKey(word)) continue;

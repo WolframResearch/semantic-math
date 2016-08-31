@@ -57,7 +57,8 @@ public class TriggerMathThm2 {
 	 * 
 	 */
 	private static final int[][] mathObjMx;
-
+	private static final List<ImmutableMap<String,Integer>> thmWordsList;
+	
 	static {
 		
 		// ImmutableList.Builder<String> keywordList = ImmutableList.builder();
@@ -88,11 +89,24 @@ public class TriggerMathThm2 {
 		keywordDict = ImmutableMap.copyOf(keywordMap);
 
 		mathObjMx = new int[keywordList.size()][mathObjMMap.keySet().size()];		
+		ImmutableList<String> thmList = CollectThm.get_thmList();
 		
-		buildMathObjMx(keywordList, mathObjMMap, mathObjListBuilder);
+		thmWordsList = CollectThm.get_thmWordsListNoAnno();
+		
+		//System.out.println("BEFORE mathObjMMap" +mathObjMMap);
+		//pass in thmList to ensure the right order (insertion order) of thms 
+		//is preserved or MathObjList and mathObjMMap. Multimaps don't preserve insertion order
+		buildMathObjMx(keywordList, mathObjMMap, mathObjListBuilder, thmList);
 
 		mathObjList = mathObjListBuilder.build();
+		//System.out.println("===");
+		
+		/*for(int i = 0; i < thmWordsList.size(); i++){
+			System.out.println(mathObjList.get(i));
+			System.out.println(thmWordsList.get(i));
+		}*/
 	}
+	
 	/**
 	 * Add keyword/term to mathObjList, in the process of building keywordList, mathObjMMap, etc.
 	 * @param keywords
@@ -108,17 +122,17 @@ public class TriggerMathThm2 {
 		//String keyword = keywords[0];
 		//theorem
 		String thm = keywords[0];
-		
+		//System.out.println("THM " + thm);
 		for(int i = 1; i < keywords.length; i++){
 			String keyword = keywords[i];
-			mathObjMMap.put(thm, keyword);
+			mathObjMMap.put(thm, keyword); //version with tex, unprocessed
 			//add each keyword in. words should already have annotation.
 			if(!keywordMap.containsKey(keyword)){
 				keywordMap.put(keyword, keywordList.size());
 				keywordList.add(keyword);
 			}			
 		}		
-		
+		//System.out.println("AFTER mathObjMMap" + mathObjMMap);
 		/*keyDictBuilder.put(keyword, keywordList.size());
 		//*keyDictBuilder.put(keyword, keywordList.size());
 		//System.out.println("Building: " + keyword);
@@ -144,19 +158,25 @@ public class TriggerMathThm2 {
 			Map<String, Integer> keywordMap, Multimap<String, String> mathObjMMap){
 		//thmWordsList has annotations, such as hyp or stm
 		ImmutableList<ImmutableMap<String, Integer>> thmWordsList = CollectThm.get_thmWordsListNoAnno();
+		System.out.println("---thmWordsList " + thmWordsList);
 		ImmutableList<String> thmList = CollectThm.get_thmList();
+		System.out.println("---thmList " + thmList);
 		
 		//index of thm in thmWordsList, to be used as part of name
 		int thmIndex = 0;
 		for(ImmutableMap<String, Integer> wordsMap : thmWordsList){
 			//make whole thm text as name
 			String thmName = thmList.get(thmIndex++);
-			
-			List<String> keyWordsList = new ArrayList<String>(wordsMap.keySet()); 
-			keyWordsList.add(0, thmName);
-			//System.out.print(keyWordsList + "\t");
+			System.out.println("!thmName " +thmName);
+			List<String> keyWordsList = new ArrayList<String>();
+			keyWordsList.add(thmName);
+			keyWordsList.addAll(wordsMap.keySet());
+			//System.out.println("wordsMap " +wordsMap);
+			//thms added to mathObjMMap are *not* in the same order as thms are iterated here!! Cause Multimaps don't 
+			//need to preserve insertion order!
 			addKeywordToMathObj(keyWordsList.toArray(new String[keyWordsList.size()]), keywordList, keywordMap, mathObjMMap);
 		}
+		//System.out.println("!!mathObjMMap " + mathObjMMap);
 	}
 	
 	/**
@@ -164,19 +184,23 @@ public class TriggerMathThm2 {
 	 * CollectThm.java.
 	 */
 	private static void buildMathObjMx(List<String> keywordList, Multimap<String, String> mathObjMMap,
-			ImmutableList.Builder<String> mathObjListBuilder) {
+			ImmutableList.Builder<String> mathObjListBuilder, ImmutableList<String> thmList) {
 		
 		Set<String> mathObjMMapkeys = mathObjMMap.keySet();
 		//map of annotated words and their scores
 		Map<String, Integer> wordsScoreMap = CollectThm.get_wordsScoreMapNoAnno();
 		
-		Iterator<String> mathObjMMapkeysIter = mathObjMMapkeys.iterator();
+		//Iterator<String> mathObjMMapkeysIter = mathObjMMapkeys.iterator();
+		Iterator<String> thmListIter = thmList.iterator();
+		
 		int mathObjCounter = 0;
-		while (mathObjMMapkeysIter.hasNext()) {
-
-			String curMathObj = mathObjMMapkeysIter.next();
-			mathObjListBuilder.add(curMathObj);
-			Collection<String> curMathObjCol = mathObjMMap.get(curMathObj);
+		
+		while (thmListIter.hasNext()) {
+			String thm = thmListIter.next();
+			//String curMathObj = mathObjMMapkeysIter.next();
+			//System.out.println("BUILDING mathObjList " +curMathObj);
+			mathObjListBuilder.add(thm);
+			Collection<String> curMathObjCol = mathObjMMap.get(thm);
 			//Iterator<String> curMathObjColIter = curMathObjCol.iterator();
 			int norm = 0;
 			for (String keyword : curMathObjCol) {
@@ -188,7 +212,9 @@ public class TriggerMathThm2 {
 				//weigh each word based on *local* frequency, ie word freq in sentence, not whole doc.
 				//mathObjMx[keyWordIndex][mathObjCounter] = wordScore;
 			}
-			norm = norm == 0 ? 1 : (int)Math.log(norm);
+			//casting to int rounds?
+			norm = norm < 3 ? 1 : (int)Math.log(norm);
+			
 			//divide by log of norm
 			for (String keyword : curMathObjCol) {
 				Integer keyWordIndex = keywordDict.get(keyword);
@@ -277,7 +303,7 @@ public class TriggerMathThm2 {
 					norm += termScore;
 				}
 		}
-		norm = norm == 0 ? 1 : (int)Math.log(norm);
+		norm = norm < 3 ? 1 : (int)Math.log(norm);
 		for (String term : thmAr) {			
 			Integer rowIndex = keywordDict.get(term);
 			if (rowIndex != null) {
@@ -314,7 +340,7 @@ public class TriggerMathThm2 {
 	 * @return
 	 */
 	public static String getThm(int index){
-		System.out.println("index of thm: " + index);
+		System.out.print("index of thm: " + index + "\t");
 		//index is 1-based indexing, not 0-based.
 		System.out.println(CollectThm.get_thmWordsListNoAnno().get(index-1));
 		return mathObjList.get(index-1);

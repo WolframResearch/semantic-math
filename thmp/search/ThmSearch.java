@@ -21,23 +21,20 @@ public class ThmSearch {
 	"\"/Applications/Mathematica.app/Contents/MacOS/MathKernel\" -mathlink"};
 	//number of nearest vectors to get for Nearest[]
 	private static final int NUM_NEAREST = 3;
-	private static final int NUM_SINGULAR_VAL_TO_KEEP = 30;
+	private static final int NUM_SINGULAR_VAL_TO_KEEP = 20;
 	
 	private static KernelLink ml;
 	
 	static{
 		//docMx = new int[][]{{0, 1, 0}, {1, 1, 0}, {0, 0, 1}, {1, 0, 0}};
 		docMx = TriggerMathThm2.mathThmMx();
-
-		
-		
 		try{			
 			ml = MathLinkFactory.createKernelLink(ARGV);
 			ml.discardAnswer();
 			//set up the matrix corresponding to docMx, to be SVD'd. 
 			System.out.print(docMx.length + " " +docMx[0].length);
 			String mx = toNestedList(docMx);
-			System.out.println(mx);
+			//System.out.println(mx);
 			
 			ml.evaluate("mx=" + mx +"//N;");				
 			ml.discardAnswer();	
@@ -184,8 +181,7 @@ public class ThmSearch {
 		for(int d : (int[])nearestVec.part(1).asArray(Expr.INTEGER, 1)){
 			System.out.println(TriggerMathThm2.getThm(d));	
 			//System.out.println("thm vec: " + TriggerMathThm2.createQuery(TriggerMathThm2.getThm(d)));
-		}
-		
+		}		
 	}
 	
 	private static String readThmInput(KernelLink ml) throws MathLinkException, ExprFormatException{
