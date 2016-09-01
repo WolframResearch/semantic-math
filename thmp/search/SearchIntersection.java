@@ -57,9 +57,11 @@ public class SearchIntersection {
 	/**
 	 * Builds scoreThmMMap 
 	 * @param input input String
-	 * @param numHighest number of highest-scored thms to retrieve
+	 * @param numHighest number of highest-scored thms to retrieve.
+	 * @return List of indices of highest-scored thms. Sorted in ascending
+	 * order, best first.
 	 */
-	public static List<Integer> getHighestThm(String input){
+	public static List<Integer> getHighestThm(String input, int ... num){
 		if(input.matches("\\s*")) return null;
 		
 		//make input list of words
@@ -71,10 +73,14 @@ public class SearchIntersection {
 		int numHighest = 3;
 		//whether to skip first token
 		int firstIndex = 0;
+		if(num.length == 0){
 		String firstWord = wordWrapperList.get(0).word();
 		if(firstWord.matches("\\d+")){
 			numHighest = Integer.parseInt(firstWord);
 			firstIndex = 1;
+		}
+		}else{
+			numHighest = num[0];
 		}
 		/*
 		 * Map of theorems, in particular their indices in thmList, and the scores corresponding to the keywords they contain.

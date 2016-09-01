@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
@@ -60,12 +59,12 @@ public class TriggerMathThm2 {
 	private static final List<ImmutableMap<String,Integer>> thmWordsList;
 	
 	static {
-		
+		thmWordsList = CollectThm.get_thmWordsListNoAnno();
 		// ImmutableList.Builder<String> keywordList = ImmutableList.builder();
 		List<String> keywordList = new ArrayList<String>();
 		
 		// which keyword corresponds to which index	in the keywords list
-		ImmutableMap.Builder<String, Integer> keyDictBuilder = ImmutableMap.builder();
+		//ImmutableMap.Builder<String, Integer> keyDictBuilder = ImmutableMap.builder();
 		//map of String (keyword), and integer (index in keywordList) of keyword.
 		Map<String, Integer> keywordMap = new HashMap<String, Integer>();
 		//ImmutableList.Builder<String> mathObjListBuilder = ImmutableList.builder();
@@ -87,11 +86,14 @@ public class TriggerMathThm2 {
 		addThmsFromList(keywordList, keywordMap, mathObjMMap);
 		
 		keywordDict = ImmutableMap.copyOf(keywordMap);
-
-		mathObjMx = new int[keywordList.size()][mathObjMMap.keySet().size()];		
+		
+		
+		
+		//mathObjMx = new int[keywordList.size()][mathObjMMap.keySet().size()];	
+		mathObjMx = new int[keywordList.size()][thmWordsList.size()];	
 		ImmutableList<String> thmList = CollectThm.get_thmList();
 		
-		thmWordsList = CollectThm.get_thmWordsListNoAnno();
+		
 		
 		//System.out.println("BEFORE mathObjMMap" +mathObjMMap);
 		//pass in thmList to ensure the right order (insertion order) of thms 
@@ -157,17 +159,17 @@ public class TriggerMathThm2 {
 	private static void addThmsFromList(List<String> keywordList,
 			Map<String, Integer> keywordMap, Multimap<String, String> mathObjMMap){
 		//thmWordsList has annotations, such as hyp or stm
-		ImmutableList<ImmutableMap<String, Integer>> thmWordsList = CollectThm.get_thmWordsListNoAnno();
-		System.out.println("---thmWordsList " + thmWordsList);
+		//ImmutableList<ImmutableMap<String, Integer>> thmWordsList = CollectThm.get_thmWordsListNoAnno();
+		//System.out.println("---thmWordsList " + thmWordsList);
 		ImmutableList<String> thmList = CollectThm.get_thmList();
-		System.out.println("---thmList " + thmList);
+		//System.out.println("---thmList " + thmList);
 		
 		//index of thm in thmWordsList, to be used as part of name
 		int thmIndex = 0;
 		for(ImmutableMap<String, Integer> wordsMap : thmWordsList){
 			//make whole thm text as name
 			String thmName = thmList.get(thmIndex++);
-			System.out.println("!thmName " +thmName);
+			//System.out.println("!thmName " +thmName);
 			List<String> keyWordsList = new ArrayList<String>();
 			keyWordsList.add(thmName);
 			keyWordsList.addAll(wordsMap.keySet());
@@ -186,7 +188,6 @@ public class TriggerMathThm2 {
 	private static void buildMathObjMx(List<String> keywordList, Multimap<String, String> mathObjMMap,
 			ImmutableList.Builder<String> mathObjListBuilder, ImmutableList<String> thmList) {
 		
-		Set<String> mathObjMMapkeys = mathObjMMap.keySet();
 		//map of annotated words and their scores
 		Map<String, Integer> wordsScoreMap = CollectThm.get_wordsScoreMapNoAnno();
 		
@@ -225,7 +226,7 @@ public class TriggerMathThm2 {
 			}
 			mathObjCounter++;
 		}
-		System.out.println("~~keywordDict "+keywordDict);
+		//System.out.println("~~keywordDict "+keywordDict);
 	}
 
 	/**
@@ -241,7 +242,7 @@ public class TriggerMathThm2 {
 		//should eliminate unnecessary words first, then send to get wrapped.
 		//<--can only do that if leave the hyp words in, eg if.
 		List<WordWrapper> wordWrapperList = SearchWordPreprocess.sortWordsType(thm);
-		System.out.println(wordWrapperList);
+		//System.out.println(wordWrapperList);
 		//keywordDict is annotated with "hyp"/"stm"
 		int dictSz = keywordDict.keySet().size();
 		int[] triggerTermsVec = new int[dictSz];
@@ -340,9 +341,10 @@ public class TriggerMathThm2 {
 	 * @return
 	 */
 	public static String getThm(int index){
-		System.out.print("index of thm: " + index + "\t");
+		//System.out.print("index of thm: " + index + "\t");
 		//index is 1-based indexing, not 0-based.
-		System.out.println(CollectThm.get_thmWordsListNoAnno().get(index-1));
+		//System.out.println(CollectThm.get_thmWordsListNoAnno().get(index-1));
+		System.out.println(thmWordsList.get(index-1));
 		return mathObjList.get(index-1);
 	}
 }

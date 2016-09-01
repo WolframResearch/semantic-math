@@ -1,7 +1,10 @@
 package thmp.search;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Scanner;
+
+import org.apache.commons.lang3.ArrayUtils;
 
 import com.wolfram.jlink.*;
 
@@ -38,10 +41,7 @@ public class ThmSearch {
 			
 			ml.evaluate("mx=" + mx +"//N;");				
 			ml.discardAnswer();	
-			//ml.discardAnswer();
-			// For now use the number of columns (theorem vectors).
-			// # of words (for now) is a lot larger than the number of theorems.
-			//int k = TriggerMathThm2.mathThmMx()[0].length;
+			
 			int k = NUM_SINGULAR_VAL_TO_KEEP;
 			ml.evaluate("{u, d, v} = SingularValueDecomposition[mx, " + k +"];");
 			//ml.waitForAnswer();
@@ -107,7 +107,7 @@ public class ThmSearch {
 	}
 	
 	
-	public static void main(String[] args) throws ExprFormatException{		
+	public static void main(String[] args) {		
 		
 		try{
 			//ml.discardAnswer();
@@ -138,7 +138,7 @@ public class ThmSearch {
 
 			System.out.println("~~~");
 			//reads input theorem, generates query string, process query
-			readThmInput(ml);
+			readThmInput();
 			
 		}catch(MathLinkException|IndexOutOfBoundsException e){
 			System.out.println("error during eval!" + e.getMessage());
@@ -152,11 +152,13 @@ public class ThmSearch {
 	/**
 	 * Constructs the String query to be evaluated.
 	 * Submits it to kernel for evaluation.
-	 * @return
+	 * @return List of indices of nearest thms. Indices in, eg MathObjList 
+	 * (Indices in all such lists should coincide).
 	 * @throws MathLinkException 
 	 * @throws ExprFormatException 
+	 * 
 	 */
-	private static void findNearestVecs(KernelLink ml, String queryStr) 
+	private static List<Integer> findNearestVecs(KernelLink ml, String queryStr, int ... num) 
 			throws MathLinkException, ExprFormatException{
 		//System.out.println("queryStr: " + queryStr);
 		//String s = "";
@@ -166,7 +168,12 @@ public class ThmSearch {
 		ml.discardAnswer();
 		
 		//use Nearest to get numNearest number of nearest vectors, 
-		int numNearest = NUM_NEAREST;
+		int numNearest;
+		if(num.length == 0){
+			numNearest = NUM_NEAREST;
+		}else{
+			numNearest = num[0];
+		}
 		//ml.evaluate("v[[1]]");
 		//ml.getExpr();
 		//System.out.println("DIMENSIONS " +ml.getExpr());
@@ -178,23 +185,56 @@ public class ThmSearch {
 		ml.evaluate("Nearest[v->Range[Dimensions[v][[1]]], First[Transpose[q]],"+numNearest+"]");
 		Expr nearestVec = ml.getExpr();
 		//System.out.println(nearestVec.length() + "  " + Arrays.toString((int[])nearestVec.part(1).asArray(Expr.INTEGER, 1)));
-		for(int d : (int[])nearestVec.part(1).asArray(Expr.INTEGER, 1)){
-			System.out.println(TriggerMathThm2.getThm(d));	
+		//turn into list.
+		
+		int[] nearestVecArray = (int[])nearestVec.part(1).asArray(Expr.INTEGER, 1);
+		Integer[] nearestVecArrayBoxed = ArrayUtils.toObject(nearestVecArray);
+		List<Integer> nearestVecList = Arrays.asList(nearestVecArrayBoxed);
+		
+		for(int d : nearestVecList){
+			System.out.println(TriggerMathThm2.getThm(d));
 			//System.out.println("thm vec: " + TriggerMathThm2.createQuery(TriggerMathThm2.getThm(d)));
-		}		
+		}
+		System.out.println("~~~~~");
+		return nearestVecList;
 	}
 	
-	private static String readThmInput(KernelLink ml) throws MathLinkException, ExprFormatException{
+	public static String readThmInput(){
+		
 		String query = "";
 		Scanner sc = new Scanner(System.in);
-		while(sc.hasNextLine()){
-			String thm = sc.nextLine();
-			query = TriggerMathThm2.createQueryNoAnno(thm);
-			//processes query
-			findNearestVecs(ml, query);
-		}		
-		sc.close();
+		try{
+			while(sc.hasNextLine()){
+				String thm = sc.nextLine();
+				query = TriggerMathThm2.createQueryNoAnno(thm);
+				//processes query
+				findNearestVecs(ml, query);
+			}	
+		}catch(MathLinkException|ExprFormatException e){
+			e.printStackTrace();
+		}finally{
+			sc.close();
+		}
 		return query;
+	}
+	/**
+	 * Reads thm one at a time.
+	 * @param thm is a thm input String
+	 * @param numVecs number of cloests vecs to take
+	 * @return list of indices of nearest thms. 
+	 */
+	public static List<Integer> readThmInput(String thm, int numVec){
+		
+		List<Integer> nearestVecList = null;
+		try{			
+			String query = TriggerMathThm2.createQueryNoAnno(thm);
+			//processes query
+			nearestVecList = findNearestVecs(ml, query, numVec);
+				
+		}catch(MathLinkException|ExprFormatException e){
+			e.printStackTrace();
+		}
+		return nearestVecList;
 	}
 	
 	//little function that tests various inputs

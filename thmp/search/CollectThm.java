@@ -46,7 +46,7 @@ public class CollectThm {
 	//document-wide word frequency. Keys are words, values are counts in whole doc.
 	private static final ImmutableMap<String, Integer> docWordsFreqMap;
 	//raw original file
-	private static final File rawFile = new File("src/thmp/data/commAlg4.txt");
+	private static final File rawFile = new File("src/thmp/data/commAlg5.txt");
 	//file to read from. Thms already extracted, ready to be processed.
 	//private static final File thmFile = new File("src/thmp/data/thmFile5.txt");
 	//list of theorems, in order their keywords are added to thmWordsList
@@ -210,14 +210,12 @@ public class CollectThm {
 		for(int i = 0; i < thmList.size(); i++){
 			String thm = thmList.get(i);
 			
-			if(thm.matches("\\s*")) continue;
+			//if(thm.matches("\\s*")) continue;
 			
 			String[] thmAr = thm.toLowerCase().split("\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:");
 			
 			Map<String, Integer> thmWordsMap = new HashMap<String, Integer>();
-			
-			//List<WordWrapper> wordWrapperList = SearchWordPreprocess.sortWordsType(thm);			
-			
+						
 			for(String word : thmAr){
 								
 				//only keep words with lengths > 2
