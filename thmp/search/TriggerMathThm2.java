@@ -57,6 +57,12 @@ public class TriggerMathThm2 {
 	 */
 	private static final int[][] mathObjMx;
 	private static final List<ImmutableMap<String,Integer>> thmWordsList;
+	private static final ImmutableMap<String, Integer> docWordsFreqMapNoAnno = CollectThm.get_docWordsFreqMapNoAnno();
+	
+	/**
+	 * Debug variables
+	 */
+	private static final boolean showWordScore = false;
 	
 	static {
 		thmWordsList = CollectThm.get_thmWordsListNoAnno();
@@ -341,10 +347,18 @@ public class TriggerMathThm2 {
 	 * @return
 	 */
 	public static String getThm(int index){
+		//System.out.println("docWrodsFreqMap " + docWordsFreqMap);
 		//System.out.print("index of thm: " + index + "\t");
 		//index is 1-based indexing, not 0-based.
 		//System.out.println(CollectThm.get_thmWordsListNoAnno().get(index-1));
-		System.out.println(thmWordsList.get(index-1));
+		
+		if(showWordScore){
+			Map<String, Integer> wordsScoreMap = CollectThm.get_wordsScoreMapNoAnno();		
+			for(String word : thmWordsList.get(index-1).keySet()){
+				System.out.print(word + " " + wordsScoreMap.get(word) + " " + docWordsFreqMapNoAnno.get(word));
+			}
+		}
+		//System.out.println(thmWordsList.get(index-1));
 		return mathObjList.get(index-1);
 	}
 }

@@ -18,7 +18,7 @@ import com.wolfram.jlink.MathLinkException;
  */
 public class SearchCombined {
 
-	private static final int NUM_NEAREST = 3;
+	private static final int NUM_NEAREST = 10;
 	//combined number of vectors to take from search results of
 	//svd/nearest and intersection
 	private static final int NUM_COMMON_VECS = 4;
@@ -89,8 +89,8 @@ public class SearchCombined {
 			int nearestListThmIndex = entry.getValue();
 			//prioritize intersectionList because the results there are more precise. So
 			//all added lists there have guaranteed spot
-			int score = Math.max(maxScore, nearestListThmIndex + intersectionVecListSz);
-			scoreThmTreeMMap.put(score, thm);
+			//int score = Math.max(maxScore, nearestListThmIndex + intersectionVecListSz);
+			scoreThmTreeMMap.put(nearestListThmIndex + intersectionVecListSz, thm);
 		}
 		
 		//System.out.println("values size " + scoreThmTreeMMap.values().size());
@@ -101,7 +101,6 @@ public class SearchCombined {
 			bestCommonVecList.add(thmIndex);	
 			counter--;
 		}
-		
 		
 		return bestCommonVecList;
 	}

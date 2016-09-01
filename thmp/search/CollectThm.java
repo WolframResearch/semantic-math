@@ -16,6 +16,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSetMultimap;
 
 import thmp.ProcessInput;
 import thmp.ThmInput;
@@ -72,20 +73,20 @@ public class CollectThm {
 	
 	static{
 		//only get the top N words
-		//freqWordsMap = CollectFreqWords.get_wordPosMap();
-		freqWordsMap = CollectFreqWords.getTopFreqWords(NUM_FREQ_WORDS);
+		freqWordsMap = CollectFreqWords.get_wordPosMap();
+		//freqWordsMap = CollectFreqWords.getTopFreqWords(NUM_FREQ_WORDS);
 		//pass builder into a reader function. For each thm, builds immutable list of keywords, 
 		//put that list into the thm list.
 		ImmutableList.Builder<ImmutableMap<String, Integer>> thmWordsListBuilder = ImmutableList.builder();
 		ImmutableList.Builder<String> thmListBuilder = ImmutableList.builder();
 		Map<String, Integer> docWordsFreqPreMap = new HashMap<String, Integer>();
-		ImmutableListMultimap.Builder<String, Integer> wordThmsMMapBuilder = ImmutableListMultimap.builder();
+		ImmutableSetMultimap.Builder<String, Integer> wordThmsMMapBuilder = ImmutableSetMultimap.builder();
 		
 		/**Versions with no annotation, eg "hyp"/"stm" **/
 		ImmutableList.Builder<ImmutableMap<String, Integer>> thmWordsListBuilderNoAnno = ImmutableList.builder();
 		//ImmutableList.Builder<String> thmListBuilderNoAnno = ImmutableList.builder();
 		Map<String, Integer> docWordsFreqPreMapNoAnno = new HashMap<String, Integer>();
-		ImmutableListMultimap.Builder<String, Integer> wordThmsMMapBuilderNoAnno = ImmutableListMultimap.builder();
+		ImmutableSetMultimap.Builder<String, Integer> wordThmsMMapBuilderNoAnno = ImmutableSetMultimap.builder();
 		
 		try{
 			List<String> extractedThms = ThmInput.readThm(rawFile);
@@ -137,7 +138,7 @@ public class CollectThm {
 	 */
 	private static void readThm(ImmutableList.Builder<ImmutableMap<String, Integer>> thmWordsListBuilder,
 			Map<String, Integer> docWordsFreqPreMap,
-			ImmutableListMultimap.Builder<String, Integer> wordThmsMMapBuilder, List<String> thmList)
+			ImmutableSetMultimap.Builder<String, Integer> wordThmsMMapBuilder, List<String> thmList)
 			throws IOException, FileNotFoundException{
 		
 		//processes the theorems, select the words
@@ -196,7 +197,7 @@ public class CollectThm {
 	 */
 	private static void buildMapsNoAnno(ImmutableList.Builder<ImmutableMap<String, Integer>> thmWordsListBuilder,
 			Map<String, Integer> docWordsFreqPreMap,
-			ImmutableListMultimap.Builder<String, Integer> wordThmsMMapBuilder, List<String> thmList)
+			ImmutableSetMultimap.Builder<String, Integer> wordThmsMMapBuilder, List<String> thmList)
 			throws IOException, FileNotFoundException{
 		
 		//use method in ProcessInput to process in thms. Like turn $blah$ -> $tex$
@@ -258,7 +259,12 @@ public class CollectThm {
 			//wordsScoreMapBuilder.put(entry.getKey(), 1/(Math.log(entry.getValue() + 1)));
 			//integer works better as keys to maps than doubles, so round/cast 2nd arg to int
 			//+1 to avoid log(0)
-			wordsScoreMapBuilder.put(entry.getKey(), (int)Math.round(1/Math.log(entry.getValue()+1)*10) );
+			//wordsScoreMapBuilder.put(entry.getKey(), (int)Math.round(1/Math.log(entry.getValue()+1)*5) );
+			//wordsScoreMapBuilder.put(entry.getKey(), (int)Math.round(1/Math.pow(entry.getValue(), 1.25)*200) );
+			int wordFreq = entry.getValue();
+			int score = wordFreq < 100 ? (int)Math.round(10 - wordFreq/12) : wordFreq < 300 ? 1 : 0;			
+			wordsScoreMapBuilder.put(entry.getKey(), score);
+			//System.out.print(entry.getValue() + " ");
 		}
 	}
 
@@ -269,7 +275,11 @@ public class CollectThm {
 	private static void buildScoreMapNoAnno(ImmutableMap.Builder<String, Integer> wordsScoreMapBuilderNoAnno){		
 		for(Entry<String, Integer> entry : docWordsFreqMapNoAnno.entrySet()){
 			//+1 so not to divide by 0.
-			wordsScoreMapBuilderNoAnno.put(entry.getKey(), (int)Math.round(1/Math.log(entry.getValue()+1)*10) );
+			//wordsScoreMapBuilderNoAnno.put(entry.getKey(), (int)Math.round(1/Math.log(entry.getValue()+1)*10) );
+			//wordsScoreMapBuilderNoAnno.put(entry.getKey(), (int)Math.round(1/Math.pow(entry.getValue(), 1.25)*200) );
+			int wordFreq = entry.getValue();
+			int score = wordFreq < 100 ? (int)Math.round(10 - wordFreq/12) : wordFreq < 300 ? 1 : 0;			
+			wordsScoreMapBuilderNoAnno.put(entry.getKey(), score);
 		}
 	}
 	

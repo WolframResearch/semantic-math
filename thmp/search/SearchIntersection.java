@@ -27,7 +27,7 @@ public class SearchIntersection {
 
 	
 	//bonus points for matching context better, eg hyp or stm
-	private static final int CONTEXT_WORD_BONUS = 2;
+	private static final int CONTEXT_WORD_BONUS = 1;
 	/**
 	 * Map of keywords and their scores in document, the higher freq in doc, the lower 
 	 * score, say 1/(log freq + 1) since log 1 = 0. 
@@ -112,7 +112,7 @@ public class SearchIntersection {
 				curScoreToAdd = wordLongScore + CONTEXT_WORD_BONUS;
 			}else if(wordOtherFormScore != null){
 				wordThms = wordThmMMap.get(wordOtherForm);
-				curScoreToAdd = wordOtherFormScore;
+				curScoreToAdd = wordOtherFormScore;				
 			}
 			if(wordThms != null){
 				for(Integer thmIndex : wordThms){	
@@ -140,6 +140,7 @@ public class SearchIntersection {
 				pickedThmSet.add(thmIndex);
 				highestThmList.add(thmIndex);				
 				counter--;			
+				//System.out.println("thm Score " + entry.getKey() + " thmIndex "+ thmIndex + " thm " + thmList.get(thmIndex));
 			}
 			
 		}
