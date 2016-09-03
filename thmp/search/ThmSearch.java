@@ -1,6 +1,8 @@
 package thmp.search;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 
@@ -25,22 +27,54 @@ public class ThmSearch {
 	//number of nearest vectors to get for Nearest[]
 	private static final int NUM_NEAREST = 3;
 	private static final int NUM_SINGULAR_VAL_TO_KEEP = 20;
-	
+	//cutoff for a correlated term to be considered
+	private static final int COR_THRESHOLD = 3;
+	//mx to keep track of correlations between terms, mx.mx^T
+	private static final List<List<Integer>> corMxList;
 	private static KernelLink ml;
 	
 	static{
 		//docMx = new int[][]{{0, 1, 0}, {1, 1, 0}, {0, 0, 1}, {1, 0, 0}};
 		docMx = TriggerMathThm2.mathThmMx();
+		corMxList = new ArrayList<List<Integer>>();
 		try{			
 			ml = MathLinkFactory.createKernelLink(ARGV);
+			//discard initial pakets the kernel sends over.
 			ml.discardAnswer();
 			//set up the matrix corresponding to docMx, to be SVD'd. 
-			System.out.print(docMx.length + " " +docMx[0].length);
+			//adjust mx entries based on correlation first			
 			String mx = toNestedList(docMx);
+			ml.evaluate("m=IntegerPart[" + mx +"//N];");				
+			ml.discardAnswer();	
+			ml.evaluate("corMx = m.Transpose[m]");
+			//symmetric matrix containing correlations
+			
+			Expr r = ml.getExpr();
+			//System.out.println("is matrix? " + r.part(1).matrixQ() + r.part(1));
+			//System.out.println(Arrays.toString((int[])r.part(1).part(1).asArray(Expr.INTEGER, 1)));
+			
+			int corMxLen1 = r.part(1).length();
+			for(int i = 0; i < corMxLen1; i++){
+				Integer[] thm_iListBoxed = ArrayUtils.toObject((int[])r.part(1).part(i+1).asArray(Expr.INTEGER, 1));
+				List<Integer> thm_iList = Arrays.asList(thm_iListBoxed);
+				corMxList.add(thm_iList);
+			}
+			//adjust entries of docMx based on corMxList
+			int[][] corrAdjustedDocMx = corrAdjustDocMx(docMx, corMxList);
+			mx = toNestedList(corrAdjustedDocMx);
+			//System.out.println(nearestVec.length() + "  " + Arrays.toString((int[])nearestVec.part(1).asArray(Expr.INTEGER, 1)));
+			//
+			System.out.print("Dimensions of docMx: " + docMx.length + " " +docMx[0].length);
 			//System.out.println(mx);
 			
-			ml.evaluate("mx=" + mx +"//N;");				
+			ml.evaluate("mx=" + mx +"//N;");
 			ml.discardAnswer();	
+			//add a small multiple of mx.mx^T.mx, so to make term i more 
+			//prominent when a correlated term is present.
+			//ml.evaluate("mx=mx+0.2*mx.Transpose[mx].mx;");
+			//this was to take correlations into account
+			//ml.evaluate("mx=mx.Transpose[mx].mx;");
+			//ml.discardAnswer();
 			
 			int k = NUM_SINGULAR_VAL_TO_KEEP;
 			ml.evaluate("{u, d, v} = SingularValueDecomposition[mx, " + k +"];");
@@ -69,12 +103,46 @@ public class ThmSearch {
 			Expr w = ml.getExpr();
 			System.out.println("~W " + w);*/
 			
-		}catch(MathLinkException e){
+		}catch(MathLinkException | ExprFormatException e){
 			System.out.println("error at launch!");
 			e.printStackTrace();
 		}
+		
 	}
 	
+	/**
+	 * Adjusts docMx based on corMxList: increase docMx[j][k] if corMxList.get(i).get(j)
+	 * is high.
+	 * @param docMx
+	 * @param corMxList
+	 * @return
+	 */
+	private static int[][] corrAdjustDocMx(int[][] docMx, List<List<Integer>> corMxList){
+		int docMxDim1 = docMx.length;
+		int docMxDim2 = docMx[0].length;
+		//must create new mx, since we modifying docMx in place will mess up la updates 
+		int[][] corrDocMx = new int[docMxDim1][docMxDim2];
+		
+		//System.out.println("b=" +toNestedList(docMx));
+
+		for(int i = 0; i < docMxDim1; i++){
+			for(int k = 0; k < docMxDim2; k++){
+				if(docMx[i][k] != 0){
+					corrDocMx[i][k] = docMx[i][k];
+					for(int j = 0; j < docMxDim1; j++){
+						if(corMxList.get(i).get(j) > COR_THRESHOLD){
+						//if(corMxList.get(i).get(j) > 1){
+							//for ~1100 thms, /2 is too much addition, can skew results, /3 seems ok.
+							corrDocMx[j][k] += Math.max(Math.round(docMx[i][k]/3), .5); 
+						}
+					}
+				}
+			}
+		}
+		//System.out.println("a=" +toNestedList(corrDocMx));
+
+		return corrDocMx;
+	}
 	/*
 	 * Convert docMx from array form to a String
 	 * that's a nested List for WL.
@@ -82,7 +150,6 @@ public class ThmSearch {
 	 */
 	public static String toNestedList(int[][] docMx){
 		StringBuilder sb = new StringBuilder();
-		
 		//hString s = "";
 		//s += "{";
 		sb.append("{");
@@ -164,7 +231,10 @@ public class ThmSearch {
 		//String s = "";
 		//transform query vector to low dimensional space 
 		//String query = "{{1,1,0,0}}";
+		//ml.evaluate("q = " + queryStr + ".mx.Transpose[mx];");
+		//ml.discardAnswer();
 		ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"];");
+		//ml.evaluate("q = Inverse[d].Transpose[u].Transpose[q];");
 		ml.discardAnswer();
 		
 		//use Nearest to get numNearest number of nearest vectors, 
@@ -186,7 +256,7 @@ public class ThmSearch {
 		Expr nearestVec = ml.getExpr();
 		//System.out.println(nearestVec.length() + "  " + Arrays.toString((int[])nearestVec.part(1).asArray(Expr.INTEGER, 1)));
 		//turn into list.
-		
+		System.out.println(nearestVec);
 		int[] nearestVecArray = (int[])nearestVec.part(1).asArray(Expr.INTEGER, 1);
 		Integer[] nearestVecArrayBoxed = ArrayUtils.toObject(nearestVecArray);
 		List<Integer> nearestVecList = Arrays.asList(nearestVecArrayBoxed);
@@ -207,7 +277,11 @@ public class ThmSearch {
 			while(sc.hasNextLine()){
 				String thm = sc.nextLine();
 				query = TriggerMathThm2.createQueryNoAnno(thm);
-				//processes query
+				if(query.equals("")){
+					System.out.println("I've got nothing for you yet. Try again.");
+					continue;
+				}
+				//processes query				
 				findNearestVecs(ml, query);
 			}	
 		}catch(MathLinkException|ExprFormatException e){
@@ -228,6 +302,9 @@ public class ThmSearch {
 		List<Integer> nearestVecList = null;
 		try{			
 			String query = TriggerMathThm2.createQueryNoAnno(thm);
+			if(query.equals("")){
+				return Collections.emptyList();
+			}
 			//processes query
 			nearestVecList = findNearestVecs(ml, query, numVec);
 				

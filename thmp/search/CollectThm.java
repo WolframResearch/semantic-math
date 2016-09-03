@@ -16,6 +16,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 
 import thmp.ProcessInput;
@@ -261,9 +262,11 @@ public class CollectThm {
 			//+1 to avoid log(0)
 			//wordsScoreMapBuilder.put(entry.getKey(), (int)Math.round(1/Math.log(entry.getValue()+1)*5) );
 			//wordsScoreMapBuilder.put(entry.getKey(), (int)Math.round(1/Math.pow(entry.getValue(), 1.25)*200) );
+			String word = entry.getKey();
+			//if(word.equals("tex")) continue;
 			int wordFreq = entry.getValue();
 			int score = wordFreq < 100 ? (int)Math.round(10 - wordFreq/12) : wordFreq < 300 ? 1 : 0;			
-			wordsScoreMapBuilder.put(entry.getKey(), score);
+			wordsScoreMapBuilder.put(word, score);
 			//System.out.print(entry.getValue() + " ");
 		}
 	}
@@ -277,12 +280,14 @@ public class CollectThm {
 			//+1 so not to divide by 0.
 			//wordsScoreMapBuilderNoAnno.put(entry.getKey(), (int)Math.round(1/Math.log(entry.getValue()+1)*10) );
 			//wordsScoreMapBuilderNoAnno.put(entry.getKey(), (int)Math.round(1/Math.pow(entry.getValue(), 1.25)*200) );
+			String word = entry.getKey();
+			//if(word.equals("tex")) continue;
 			int wordFreq = entry.getValue();
 			int score = wordFreq < 100 ? (int)Math.round(10 - wordFreq/12) : wordFreq < 300 ? 1 : 0;			
-			wordsScoreMapBuilderNoAnno.put(entry.getKey(), score);
+			wordsScoreMapBuilderNoAnno.put(word, score);
 		}
 	}
-	
+
 	/**
 	 * Retrieves scores corresponding to words
 	 * @return
@@ -303,7 +308,7 @@ public class CollectThm {
 	
 	/**
 	 * Retrieves ImmutableListMultimap of words and the theorems's indices in thmList
-	 *  they appear in.
+	 *  they appear in. Indices of thms are 0-based.
 	 * @return
 	 */
 	public static ImmutableMultimap<String, Integer> get_wordThmsMMap(){

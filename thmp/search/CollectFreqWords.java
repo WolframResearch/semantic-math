@@ -11,6 +11,7 @@ import java.util.Scanner;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Read in the most frequently-used words from file, 
@@ -26,6 +27,7 @@ public class CollectFreqWords {
 	//this list contains 5000 most frequent words, ordered by freq. Oftentimes we need fewer than those,
 	//maybe only top 500, so words such as "ring" don't get screened out.
 	private static File wordsFile = new File("src/thmp/data/wordFrequency.txt");
+	private static final Path nonMathWordsFilePath = new File("src/thmp/data/wordFrequency.txt");
 	
 	static{
 		Map<String, String> wordPosPreMap = new HashMap<String, String>();
@@ -119,6 +121,21 @@ public class CollectFreqWords {
 	
 	public static ImmutableMap<String, String> get_wordPosMap(){
 		return wordPosMap;
+	}
+	
+	
+	/**
+	 * Gets only the non math words.
+	 * @return
+	 */
+	private static ImmutableSet<String> write_nonMathWords(){
+		
+		ImmutableMap<String, Integer> docWordsFreqMap = CollectThm.get_docWordsFreqMapNoAnno();
+		
+		for(){
+			
+		}
+		
 	}
 	
 	/**

@@ -42,7 +42,8 @@ public class SearchCombined {
 	
 	/**
 	 * Gets highest scored vectors that are the common to both lists.
-	 * Can weigh the two lists differently
+	 * Can weigh the two lists differently.
+	 * nearestVecList is 1-based, but intersectionVecList is 0-based!
 	 * @param nearestVecList
 	 * @param intersectionVecList
 	 * @param numVectors is the total number of vectors to get 
@@ -69,16 +70,17 @@ public class SearchCombined {
 		for(int i = 0; i < intersectionVecList.size(); i++){
 			//index of thm
 			int intersectionThm = intersectionVecList.get(i);
-			Integer nearestListThmIndex = nearestVecListPositionsMap.remove(intersectionThm);
+			//intersection list is 0-based!
+			Integer nearestListThmIndex = nearestVecListPositionsMap.remove(intersectionThm+1);
 			if(nearestListThmIndex != null){
 				int score = i+nearestListThmIndex;
 				if(score > maxScore) maxScore = score;
-				scoreThmTreeMMap.put(score, intersectionThm);
+				scoreThmTreeMMap.put(score, intersectionThm+1);
 			}//else add the length of nearestVecList to the score
 			else{
 				int score = i+nearestVecListSz;
 				if(score > maxScore) maxScore = score;
-				scoreThmTreeMMap.put(score, intersectionThm);
+				scoreThmTreeMMap.put(score, intersectionThm+1);
 			}			
 		}
 		
@@ -115,10 +117,15 @@ public class SearchCombined {
 		
 		while(sc.hasNextLine()){
 			String thm = sc.nextLine();
+			if(thm.matches("\\s*")) continue;
 			
 			List<Integer> nearestVecList = ThmSearch.readThmInput(thm, NUM_NEAREST);
+			if(nearestVecList.isEmpty()){
+				System.out.println("I've got nothing for you yet. Try again.");
+				continue;
+			}
 			List<Integer> intersectionVecList = SearchIntersection.getHighestThm(thm, NUM_NEAREST);
-			//find best intersection of these two lists.
+			//find best intersection of these two lists. nearestVecList is 1-based, but intersectionVecList is 0-based! 
 			List<Integer> bestCommonVecs = findListsIntersection(nearestVecList, intersectionVecList, NUM_COMMON_VECS);
 			for(int d : bestCommonVecs){
 				System.out.println(TriggerMathThm2.getThm(d));

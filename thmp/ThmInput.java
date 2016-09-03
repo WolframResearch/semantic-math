@@ -44,6 +44,8 @@ public class ThmInput {
 		while(sc.hasNextLine()){
 			String line = sc.nextLine();
 			
+			if(line.matches("\\s*")) continue;
+			
 			if(line.matches("\\\\begin\\{def[^}]*\\}|\\\\begin\\{lem[^}]*\\}|\\\\begin\\{th[^}]*\\}")){	
 			//if(line.matches("\\\\begin\\{definition\\}|\\\\begin\\{lemma\\}")){
 				//if(line.matches("\\\\begin\\{definition\\}|\\\\begin\\{lemma\\}|\\\\begin\\{thm\\}|\\\\begin\\{theorem\\}")){	
@@ -56,8 +58,9 @@ public class ThmInput {
 			//else if(line.matches("\\\\end\\{definition\\}|\\\\end\\{lemma\\}|\\\\end\\{thm\\}|\\\\end\\{theorem\\}")){
 				inThm = false;
 				newThm += "\n";
-				thms.add(newThm);
+				if(!newThm.matches("\\s*")) thms.add(newThm);
 				newThm = "";
+				continue;
 			}
 			
 			if(inThm)

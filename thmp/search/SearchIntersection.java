@@ -59,7 +59,7 @@ public class SearchIntersection {
 	 * @param input input String
 	 * @param numHighest number of highest-scored thms to retrieve.
 	 * @return List of indices of highest-scored thms. Sorted in ascending
-	 * order, best first.
+	 * order, best first. List is 0-based.
 	 */
 	public static List<Integer> getHighestThm(String input, int ... num){
 		if(input.matches("\\s*")) return null;

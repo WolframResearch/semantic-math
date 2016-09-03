@@ -263,6 +263,8 @@ public class TriggerMathThm2 {
 				termAnno = wordWrapper.otherHashForm();
 				rowIndex = keywordDict.get(termAnno);				
 			}
+			//should normalize!
+			
 			//System.out.println("second rowIndex " + rowIndex);
 			if (rowIndex != null) {
 				int termScore = wordsScoreMap.get(termAnno);
@@ -310,6 +312,11 @@ public class TriggerMathThm2 {
 					norm += termScore;
 				}
 		}
+		//short-circuit if no relevant term was detected in input thm
+		//rather than return a list of results that are close to the 0-vector
+		//but doesn't make sense.
+		if(norm == 0) return "";
+		
 		norm = norm < 3 ? 1 : (int)Math.log(norm);
 		for (String term : thmAr) {			
 			Integer rowIndex = keywordDict.get(term);
@@ -348,7 +355,7 @@ public class TriggerMathThm2 {
 	 */
 	public static String getThm(int index){
 		//System.out.println("docWrodsFreqMap " + docWordsFreqMap);
-		//System.out.print("index of thm: " + index + "\t");
+		System.out.print("index of thm: " + index + "\t");
 		//index is 1-based indexing, not 0-based.
 		//System.out.println(CollectThm.get_thmWordsListNoAnno().get(index-1));
 		
