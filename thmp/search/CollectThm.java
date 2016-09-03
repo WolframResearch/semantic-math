@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableSetMultimap;
 
 import thmp.ProcessInput;
 import thmp.ThmInput;
+import thmp.ThmP1;
 import thmp.search.SearchWordPreprocess.WordWrapper;
 
 /**
@@ -44,7 +45,7 @@ public class CollectThm {
 	//ones that are frequent in the whole doc weighed down.
 	private static final ImmutableList<ImmutableMap<String, Integer>> thmWordsList;
 	//Map of frequent words and their parts of speech (from words file data). Don't need the pos for now.
-	private static final ImmutableMap<String, String> freqWordsMap; 
+	private static final ImmutableSet<String> freqWordsSet; 
 	//document-wide word frequency. Keys are words, values are counts in whole doc.
 	private static final ImmutableMap<String, Integer> docWordsFreqMap;
 	//raw original file
@@ -74,7 +75,7 @@ public class CollectThm {
 	
 	static{
 		//only get the top N words
-		freqWordsMap = CollectFreqWords.get_wordPosMap();
+		freqWordsSet = CollectFreqWords.get_nonMathFluffWordsSet();
 		//freqWordsMap = CollectFreqWords.getTopFreqWords(NUM_FREQ_WORDS);
 		//pass builder into a reader function. For each thm, builds immutable list of keywords, 
 		//put that list into the thm list.
@@ -130,6 +131,7 @@ public class CollectThm {
 	 * annotated versions (with H/C) will get score bonus.
 	 * Actually, should not put duplicates, all occurring words should have annotation, if one
 	 * does not fit, try other annotations, just without the bonus points.
+	 * ThmList should already have the singular forms of words.
 	 * @param thmWordsListBuilder
 	 * @param thmListBuilder
 	 * @param docWordsFreqPreMap
@@ -163,9 +165,13 @@ public class CollectThm {
 				String wordLong = curWrapper.hashToString();
 				//the two frequencies are now kept separate!
 				
+				//get singular forms if plural, put singular form in map
+				//Note, some words shouldn't need to be converted to singular form!
+				word = getSingularForm(word);
+				
 				//only keep words with lengths > 2
 				//System.out.println(word);
-				if(word.length() < 3 || freqWordsMap.containsKey(word)) continue;
+				if(word.length() < 3 || freqWordsSet.contains(word)) continue;
 				
 				//int wordFreq = thmWordsMap.containsKey(word) ? thmWordsMap.get(word) : 0;
 				int wordLongFreq = thmWordsMap.containsKey(wordLong) ? thmWordsMap.get(wordLong) : 0;
@@ -186,7 +192,25 @@ public class CollectThm {
 			//System.out.println("++THM: " + thmWordsMap);
 		}
 	}
-	
+	/**
+	 * Returns the most likely singular form of the word, or
+	 * original word if it doesn't end in s, es, or ies
+	 * @param word
+	 * @return
+	 */
+	public static String getSingularForm(String word){
+		String[] singFormsAr = ThmP1.getSingularForms(word);
+		//singFormsAr successively replaces words ending in "s", "es", "ies"
+		int k = 2;
+		while(k > -1 && singFormsAr[k] == null){
+			k--;
+		}
+		if(k != -1){
+			word = singFormsAr[k];
+			//System.out.println("singular form: "+ word);
+		}
+		return word;
+	}
 	/**
 	 * Same as readThm, except without hyp/concl wrappers.
 	 * @param thmWordsListBuilder
@@ -212,8 +236,6 @@ public class CollectThm {
 		for(int i = 0; i < thmList.size(); i++){
 			String thm = thmList.get(i);
 			
-			//if(thm.matches("\\s*")) continue;
-			
 			String[] thmAr = thm.toLowerCase().split("\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:");
 			
 			Map<String, Integer> thmWordsMap = new HashMap<String, Integer>();
@@ -222,7 +244,13 @@ public class CollectThm {
 								
 				//only keep words with lengths > 2
 				//System.out.println(word);
-				if(word.length() < 3 || freqWordsMap.containsKey(word)) continue;
+				if(word.length() < 3) continue;
+				
+				//get singular forms if plural, put singular form in map
+				//Note, some words shouldn't need to be converted to singular form!
+				word = getSingularForm(word);
+				
+				if(freqWordsSet.contains(word)) continue;
 				
 				int wordFreq = thmWordsMap.containsKey(word) ? thmWordsMap.get(word) : 0;
 				//int wordLongFreq = thmWordsMap.containsKey(wordLong) ? thmWordsMap.get(wordLong) : 0;

@@ -316,11 +316,11 @@ public class ThmP1 {
 				}
 			}
 
-			String[] singularForms = getSingularForms(curWord, wordlen);
+			String[] singularForms = getSingularForms(curWord);
 			
 			String singular = singularForms[0];
-			String singular2 = singularForms[1]; // ending in "ies"
-			String singular3 = singularForms[2]; // ending in "es"
+			String singular2 = singularForms[1]; // ending in "es"
+			String singular3 = singularForms[2]; // ending in "ies"
 
 			if (Maps.mathObjMap.containsKey(curWord) || mathObjMap.containsKey(singular)) {
 
@@ -944,20 +944,21 @@ public class ThmP1 {
 	 * @param wordlen
 	 * @return Array of singular forms
 	 */
-	public static String[] getSingularForms(String curWord, int wordlen) {
+	public static String[] getSingularForms(String curWord) {
 		// primitive way to handle plural forms: if ends in "s"
 		String[] singularForms = new String[3];
+		int wordlen = curWord.length();
 		
 		if (wordlen > 0 && curWord.charAt(wordlen - 1) == 's') {
 			singularForms[0] = curWord.substring(0, wordlen - 1);
 		}
 
-		if (wordlen > 3 && curWord.substring(wordlen - 3, wordlen).equals("ies")) {
-			singularForms[1] = curWord.substring(0, wordlen - 3) + 'y';
+		if (wordlen > 2 && curWord.substring(wordlen - 2, wordlen).equals("es")) {
+			singularForms[1] = curWord.substring(0, wordlen - 2);
 		}
 
-		if (wordlen > 2 && curWord.substring(wordlen - 2, wordlen).equals("es")) {
-			singularForms[2] = curWord.substring(0, wordlen - 2);
+		if (wordlen > 3 && curWord.substring(wordlen - 3, wordlen).equals("ies")) {
+			singularForms[2] = curWord.substring(0, wordlen - 3) + 'y';
 		}
 		return singularForms;
 	}

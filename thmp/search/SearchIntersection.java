@@ -96,24 +96,46 @@ public class SearchIntersection {
 		
 		for(int i = firstIndex; i < wordWrapperList.size(); i++){
 			WordWrapper curWrapper = wordWrapperList.get(i);
-			//String word = curWrapper.word();
+			String word = curWrapper.word();			
+			
 			//other annotation form of word. 
-			String wordOtherForm = curWrapper.otherHashForm();
+			//String wordOtherForm;
 			//elicit higher score if wordLong fits
+			//also turn into singular form if applicable
 			String wordLong = curWrapper.hashToString();
+			
 			//update scores map
 			int curScoreToAdd = 0;
-			Integer wordOtherFormScore = wordsScoreMap.get(wordOtherForm);
-			Integer wordLongScore = wordsScoreMap.get(wordLong);
-			Collection<Integer> wordThms = null;
-			if(wordLongScore != null){
-				//for every word, get list of thms containing this word
-				wordThms = wordThmMMap.get(wordLong);
-				curScoreToAdd = wordLongScore + CONTEXT_WORD_BONUS;
-			}else if(wordOtherFormScore != null){
-				wordThms = wordThmMMap.get(wordOtherForm);
-				curScoreToAdd = wordOtherFormScore;				
-			}
+			
+			//for every word, get list of thms containing this word			
+			Collection<Integer> wordThms = wordThmMMap.get(wordLong);
+			Integer wordScore;
+			if(wordThms != null){	
+				wordScore = wordsScoreMap.get(wordLong);
+				curScoreToAdd = wordScore + CONTEXT_WORD_BONUS;
+				
+			}else{
+				String wordOtherForm = curWrapper.otherHashForm();
+				String singWordOtherForm = curWrapper.otherHashForm();
+				
+				String singForm = CollectThm.getSingularForm(word);	
+				String singFormLong = curWrapper.hashToString(singForm);
+				if(wordsScoreMap.get(singFormLong) != null){
+					wordThms = wordThmMMap.get(singFormLong);
+					wordScore = wordsScoreMap.get(singFormLong);
+					curScoreToAdd = wordScore + CONTEXT_WORD_BONUS;	
+				}//other form of word
+				else if(wordThmMMap.containsKey(wordOtherForm)){
+					wordThms = wordThmMMap.get(wordOtherForm);
+					wordScore = wordsScoreMap.get(wordOtherForm);
+					curScoreToAdd = wordScore;				
+				}else if(wordThmMMap.containsKey(singWordOtherForm)){
+					wordThms = wordThmMMap.get(singWordOtherForm);
+					wordScore = wordsScoreMap.get(singWordOtherForm);
+					curScoreToAdd = wordScore;		
+				}				
+			}			
+			
 			if(wordThms != null){
 				for(Integer thmIndex : wordThms){	
 					Integer prevScore = thmScoreMap.get(thmIndex);

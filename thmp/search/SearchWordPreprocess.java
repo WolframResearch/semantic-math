@@ -18,6 +18,7 @@ import thmp.ThmP1;
  */
 public class SearchWordPreprocess {
 
+	//private static final ImmutableMap<String, Integer> wordsScoreMap = CollectThm.get_wordsScoreMapNoAnno();
 	//make "hyp" and "stm" into constants!
 	private static final String HYP = "hyp";
 	private static final String STM = "stm";
@@ -110,6 +111,7 @@ public class SearchWordPreprocess {
 		//word being wrapped
 		private String word;
 		
+		
 		public WordWrapper(String pos, String word){
 			this.pos = pos;
 			this.word = word;
@@ -121,18 +123,28 @@ public class SearchWordPreprocess {
 		 * @return
 		 */
 		public String otherHashForm(){
-			String prefix = pos.equals(HYP) ? "C" : "H";
-			return prefix + word;
+			return otherHashForm(word);
 		}
 
+		public String otherHashForm(String curWord){
+			String prefix = pos.equals(HYP) ? "C" : "H";
+			return prefix + curWord;
+		}
+		
 		/**
 		 * Wrap around words based on context. 
 		 * could also pass in long form.
 		 */
-		public String hashToString(){
+		public String hashToString(){			
+			return hashToString(word);
+		}
+		/**
+		 * Hash this wrapper's context in the input word
+		 */
+		public String hashToString(String curWord){		
 			//for now just do hyp or conclusion
 			String prefix = pos.equals(HYP) ? "H" : "C";
-			return prefix + word;
+			return prefix + curWord;
 		}
 		
 		public String pos(){

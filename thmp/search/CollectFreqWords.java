@@ -2,12 +2,19 @@ package thmp.search;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Scanner;
+import java.util.Set;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -27,7 +34,8 @@ public class CollectFreqWords {
 	//this list contains 5000 most frequent words, ordered by freq. Oftentimes we need fewer than those,
 	//maybe only top 500, so words such as "ring" don't get screened out.
 	private static File wordsFile = new File("src/thmp/data/wordFrequency.txt");
-	private static final Path nonMathWordsFilePath = new File("src/thmp/data/wordFrequency.txt");
+	private static final Path nonMathFluffWordsFilePath = Paths.get("src/thmp/data/nonMathFluffWords.txt");
+	private static final File nonMathFluffWordsFile = new File("src/thmp/data/nonMathFluffWords.txt");
 	
 	static{
 		Map<String, String> wordPosPreMap = new HashMap<String, String>();
@@ -123,19 +131,58 @@ public class CollectFreqWords {
 		return wordPosMap;
 	}
 	
-	
 	/**
-	 * Gets only the non math words.
-	 * @return
+	 * Gets only the non math common words. Filters out the math words by 
+	 * collecting words of certain frequencies in math texts, e.g. 
+	 * CollectThm.docWordsFreqMapNoAnno.
+	 * 
+	 * @return set of non math fluff words.
+	 * @throws FileNotFoundException 
 	 */
-	private static ImmutableSet<String> write_nonMathWords(){
+	public static ImmutableSet<String> get_nonMathFluffWordsSet(){
+		Set<String> nonMathFluffWordsSet = new HashSet<String>();
+		Scanner sc = null;
+		try{
+			sc = new Scanner(nonMathFluffWordsFile);
 		
-		ImmutableMap<String, Integer> docWordsFreqMap = CollectThm.get_docWordsFreqMapNoAnno();
-		
-		for(){
-			
+			while(sc.hasNextLine()){
+				String line = sc.nextLine();
+				nonMathFluffWordsSet.add(line);
+			}
+			//close here instead of in finally, since sc wouldn't
+			//have been opened if an Exception was thrown, and 
+			//we might have NPE in finally if FileNotFoundException is thrown. 
+			sc.close();
+		}catch(FileNotFoundException e){
+			e.printStackTrace();
 		}
 		
+		return ImmutableSet.copyOf(nonMathFluffWordsSet);
+	}
+	
+	/**
+	 * Gets only the non math common words. Filters out the math words by 
+	 * collecting words of certain frequencies in math texts, e.g. 
+	 * CollectThm.docWordsFreqMapNoAnno.
+	 * Intentionally private, so not to create cyclic reliance with CollectThm.
+	 * Utility function to write set to file. 
+	 * @return
+	 */
+	private static ImmutableSet<String> get_nonMathFluffWords(){
+		Set<String> nonMathFluffWordsSet = new HashSet<String>();
+		ImmutableMap<String, Integer> docWordsFreqMap = CollectThm.get_docWordsFreqMapNoAnno();
+		//iterate over the math words, remove from wordPosMap words that have freq lower than 150
+		//(in docWordsFreqMap)
+		
+		for(String word : wordPosMap.keySet()){
+			Integer wordFreq = docWordsFreqMap.get(word);
+			if(wordFreq == null ){//|| wordFreq > 1500 for ~1100 thms
+				nonMathFluffWordsSet.add(word);
+				//System.out.println("word just added " + word + " " + wordFreq);
+			}
+		}
+		
+		return ImmutableSet.copyOf(nonMathFluffWordsSet);
 	}
 	
 	/**
@@ -158,8 +205,15 @@ public class CollectFreqWords {
 	 * Tests the methods here.
 	 * 
 	 * @param args
+	 * @throws IOException 
 	 */
-	public static void main(String[] args){
+	public static void main(String[] args) throws IOException{
+		//System.out.print(CollectThm.get_docWordsFreqMapNoAnno());
+		boolean writeNonMathFluffWordsToFile = false;
+		if(writeNonMathFluffWordsToFile){
+			List<String> nonMathFluffWordsSet = new ArrayList<String>(get_nonMathFluffWords());
+			Files.write(nonMathFluffWordsFilePath, nonMathFluffWordsSet, Charset.forName("UTF-8"));
+		}
 		
 	}
 }

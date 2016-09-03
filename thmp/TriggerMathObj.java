@@ -289,7 +289,7 @@ public class TriggerMathObj {
 		if(struct.struct().containsKey("name")){
 			String structName = struct.struct().get("name");
 			childrenNameList.add(structName);
-			String[] singularForms = ThmP1.getSingularForms(structName, structName.length());
+			String[] singularForms = ThmP1.getSingularForms(structName);
 			for(String singularForm : singularForms){
 				if(singularForm != null && !singularForm.equals("")){
 					childrenNameList.add(singularForm);

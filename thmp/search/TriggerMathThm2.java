@@ -12,6 +12,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
 
+import thmp.ThmP1;
 import thmp.search.SearchWordPreprocess.WordWrapper;
 
 public class TriggerMathThm2 {
@@ -293,7 +294,7 @@ public class TriggerMathThm2 {
 		
 		//String[] thmAr = thm.split("\\s+|,|;|\\.");
 		String[] thmAr = thm.split(CollectThm.splitDelim());
-		//map of annotated words and their scores
+		//map of non-annotated words and their scores
 		Map<String, Integer> wordsScoreMap = CollectThm.get_wordsScoreMapNoAnno();		
 		//should eliminate unnecessary words first, then send to get wrapped.
 		//<--can only do that if leave the hyp words in, eg if.
@@ -304,12 +305,20 @@ public class TriggerMathThm2 {
 		int norm = 0;
 		
 		//get norm first, then divide by log of norm
-		for (String term : thmAr) {
+		for (int i = 0; i < thmAr.length; i++) {
+			String term = thmAr[i];
 				Integer termScore = wordsScoreMap.get(term);
+				//get singular forms
+				
+				if(termScore == null){
+					term = CollectThm.getSingularForm(term);
+					termScore = wordsScoreMap.get(term);
+				}
 				//triggerTermsVec[rowIndex] = termScore;
 				//keywordDict starts indexing from 0!
 				if(termScore != null){
 					norm += termScore;
+					thmAr[i] = term;
 				}
 		}
 		//short-circuit if no relevant term was detected in input thm
