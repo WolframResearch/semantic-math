@@ -50,7 +50,8 @@ public class SearchIntersection {
 	static{
 		thmList = CollectThm.get_thmList();
 		//System.out.println(thmList);
-		wordsScoreMap = CollectThm.get_wordsScoreMap();
+		wordsScoreMap = CollectThm.get_wordsScoreMapNoAnno();
+		//System.out.println(CollectThm.get_wordsScoreMap());
 		wordThmMMap = CollectThm.get_wordThmsMMap();
 	}
 		
@@ -110,8 +111,9 @@ public class SearchIntersection {
 			//for every word, get list of thms containing this word			
 			Collection<Integer> wordThms = wordThmMMap.get(wordLong);
 			Integer wordScore;
-			if(wordThms != null){	
-				wordScore = wordsScoreMap.get(wordLong);
+			if(!wordThms.isEmpty()){	
+				//wordScore = wordsScoreMap.get(wordLong);
+				wordScore = wordsScoreMap.get(word);
 				curScoreToAdd = wordScore + CONTEXT_WORD_BONUS;
 				
 			}else{
@@ -120,12 +122,14 @@ public class SearchIntersection {
 				
 				String singForm = CollectThm.getSingularForm(word);	
 				String singFormLong = curWrapper.hashToString(singForm);
-				if(wordsScoreMap.get(singFormLong) != null){
+				//if(wordsScoreMap.get(singFormLong) != null){
+				if(wordsScoreMap.get(singForm) != null){	
 					wordThms = wordThmMMap.get(singFormLong);
-					wordScore = wordsScoreMap.get(singFormLong);
+					//wordScore = wordsScoreMap.get(singFormLong);
+					wordScore = wordsScoreMap.get(singForm);
 					curScoreToAdd = wordScore + CONTEXT_WORD_BONUS;	
 				}//other form of word
-				else if(wordThmMMap.containsKey(wordOtherForm)){
+				/*else if(wordThmMMap.containsKey(wordOtherForm)){
 					wordThms = wordThmMMap.get(wordOtherForm);
 					wordScore = wordsScoreMap.get(wordOtherForm);
 					curScoreToAdd = wordScore;				
@@ -133,7 +137,7 @@ public class SearchIntersection {
 					wordThms = wordThmMMap.get(singWordOtherForm);
 					wordScore = wordsScoreMap.get(singWordOtherForm);
 					curScoreToAdd = wordScore;		
-				}				
+				}			*/	
 			}			
 			
 			if(wordThms != null){

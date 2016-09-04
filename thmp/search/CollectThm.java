@@ -63,7 +63,9 @@ public class CollectThm {
 
 	//delimiters to split on when making words out of input
 	private static final String SPLIT_DELIM = "\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:";
-		
+
+	private static final String[] SCORE1MATH_WORDS = new String[]{"ring"};
+	
 	/**
 	 * Map of (annotated with "hyp" etc) keywords and their scores in document, the higher freq in doc, the lower 
 	 * score, say 1/(log freq + 1) since log 1 = 0. 
@@ -105,7 +107,7 @@ public class CollectThm {
 		
 		thmWordsList = thmWordsListBuilder.build();	
 		thmList = thmListBuilder.build();
-		docWordsFreqMap = ImmutableMap.copyOf(docWordsFreqPreMap); 
+		docWordsFreqMap = ImmutableMap.copyOf(docWordsFreqPreMap); 		
 		wordThmsMMap = wordThmsMMapBuilder.build();
 		//non-annotated version
 		thmWordsListNoAnno = thmWordsListBuilderNoAnno.build();	
@@ -117,11 +119,12 @@ public class CollectThm {
 		//builds scoresMap based on frequency map obtained from CollectThm.
 		ImmutableMap.Builder<String, Integer> wordsScoreMapBuilder = ImmutableMap.builder();		
 		buildScoreMap(wordsScoreMapBuilder);
-		wordsScoreMap = wordsScoreMapBuilder.build();
+		wordsScoreMap = wordsScoreMapBuilder.build();		
 		
-		ImmutableMap.Builder<String, Integer> wordsScoreMapBuilderNoAnno = ImmutableMap.builder();
-		buildScoreMapNoAnno(wordsScoreMapBuilderNoAnno);
-		wordsScoreMapNoAnno = wordsScoreMapBuilderNoAnno.build();
+		//ImmutableMap.Builder<String, Integer> wordsScoreMapBuilderNoAnno = ImmutableMap.builder();
+		Map<String, Integer> wordsScorePreMap = new HashMap<String, Integer>();
+		buildScoreMapNoAnno(wordsScorePreMap);
+		wordsScoreMapNoAnno = ImmutableMap.copyOf(wordsScorePreMap);
 	}
 	
 	/**
@@ -161,13 +164,14 @@ public class CollectThm {
 			
 			for(int j = 0; j < wordWrapperList.size(); j++){
 				WordWrapper curWrapper = wordWrapperList.get(j);
-				String word = curWrapper.word();
-				String wordLong = curWrapper.hashToString();
+				String word = curWrapper.word();				
 				//the two frequencies are now kept separate!
 				
 				//get singular forms if plural, put singular form in map
 				//Note, some words shouldn't need to be converted to singular form!
+				//like "has", should use pos data to determine
 				word = getSingularForm(word);
+				String wordLong = curWrapper.hashToString(word);
 				
 				//only keep words with lengths > 2
 				//System.out.println(word);
@@ -303,7 +307,7 @@ public class CollectThm {
 	 * Fills up wordsScoreMapBuilder
 	 * @param wordsScoreMapBuilder
 	 */
-	private static void buildScoreMapNoAnno(ImmutableMap.Builder<String, Integer> wordsScoreMapBuilderNoAnno){		
+	private static void buildScoreMapNoAnno(Map<String, Integer> wordsScorePreMap){		
 		for(Entry<String, Integer> entry : docWordsFreqMapNoAnno.entrySet()){
 			//+1 so not to divide by 0.
 			//wordsScoreMapBuilderNoAnno.put(entry.getKey(), (int)Math.round(1/Math.log(entry.getValue()+1)*10) );
@@ -312,7 +316,11 @@ public class CollectThm {
 			//if(word.equals("tex")) continue;
 			int wordFreq = entry.getValue();
 			int score = wordFreq < 100 ? (int)Math.round(10 - wordFreq/12) : wordFreq < 300 ? 1 : 0;			
-			wordsScoreMapBuilderNoAnno.put(word, score);
+			wordsScorePreMap.put(word, score);
+		}
+		//put 1 for math words that occur more frequently than the cutoff, but should still be counted, like "ring"	
+		for(String word : SCORE1MATH_WORDS){
+			wordsScorePreMap.put(word, 1);
 		}
 	}
 

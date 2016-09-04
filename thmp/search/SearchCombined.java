@@ -36,9 +36,9 @@ public class SearchCombined {
 	 * Takes the result nearest vectors from SVD and combines
 	 * picks out the highest-scoring ones based on intersection.
 	 */
-	private static void searchIntersection(){
+	/*private static void searchIntersection(){
 		
-	}
+	} */
 	
 	/**
 	 * Gets highest scored vectors that are the common to both lists.
@@ -112,6 +112,10 @@ public class SearchCombined {
 	 * @param args
 	 */
 	public static void main(String[] args){
+		
+		//load the necessary classes so the first call doesn't take 
+		//disproportionately more time
+		
 		
 		Scanner sc = new Scanner(System.in);
 		
