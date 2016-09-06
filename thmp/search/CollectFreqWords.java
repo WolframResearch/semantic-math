@@ -27,7 +27,7 @@ import com.google.common.collect.ImmutableSet;
  */
 public class CollectFreqWords {
 
-	//Map of words and their pos.
+	//Map of most frequent words and their pos.
 	//entrySet of immutable maps preserve the order the entries are inserted,
 	//so to get the top N words, just iterate the top N entries.
 	private static final ImmutableMap<String, String> wordPosMap;
@@ -131,6 +131,7 @@ public class CollectFreqWords {
 		return wordPosMap;
 	}
 	
+
 	/**
 	 * Gets only the non math common words. Filters out the math words by 
 	 * collecting words of certain frequencies in math texts, e.g. 
@@ -161,6 +162,26 @@ public class CollectFreqWords {
 	}
 	
 	/**
+	 * Gets non math fluff words differently, by taking the math words
+	 * that are marked as fluff out of the wordPosMap. 
+	 * @return
+	 */
+	public static ImmutableSet<String> get_nonMathFluffWordsSet2(){
+		Set<String> nonMathFluffWordsSet = new HashSet<String>(wordPosMap.keySet());
+		String[] score1mathWords = CollectThm.score1MathWords();
+		String[] additionalFluffWords = CollectThm.additionalFluffWords();
+		
+		for(String word : score1mathWords){
+			nonMathFluffWordsSet.remove(word);
+		}
+		
+		for(String word : additionalFluffWords){
+			nonMathFluffWordsSet.add(word);
+		}
+		return ImmutableSet.copyOf(nonMathFluffWordsSet);
+	}
+	
+	/**
 	 * Gets only the non math common words. Filters out the math words by 
 	 * collecting words of certain frequencies in math texts, e.g. 
 	 * CollectThm.docWordsFreqMapNoAnno.
@@ -176,7 +197,7 @@ public class CollectFreqWords {
 		
 		for(String word : wordPosMap.keySet()){
 			Integer wordFreq = docWordsFreqMap.get(word);
-			if(wordFreq == null ){//|| wordFreq > 1500 for ~1100 thms
+			if(wordFreq == null || wordFreq > 100){//|| wordFreq > 1500 for ~1100 thms
 				nonMathFluffWordsSet.add(word);
 				//System.out.println("word just added " + word + " " + wordFreq);
 			}

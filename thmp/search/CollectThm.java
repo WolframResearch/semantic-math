@@ -60,16 +60,22 @@ public class CollectThm {
 	private static final ImmutableList<ImmutableMap<String, Integer>> thmWordsListNoAnno;
 	private static final ImmutableMap<String, Integer> docWordsFreqMapNoAnno;
 	private static final ImmutableMultimap<String, Integer> wordThmsMMapNoAnno;
-
+	private static final ImmutableMap<String, Integer> twoGramsMap = ImmutableMap.copyOf(NGramSearch.get2GramsMap());
+	
 	//delimiters to split on when making words out of input
-	private static final String SPLIT_DELIM = "\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:";
-
-	private static final String[] SCORE1MATH_WORDS = new String[]{"ring"};
+	private static final String SPLIT_DELIM = "\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:|-";
+	//words that should be included as math words, but occur too frequently in math texts
+	//to be detected as non-fluff words.
+	private static final String[] SCORE1MATH_WORDS = new String[]{"ring", "field", "ideal", "finite", "series",
+			"complex", "combination", "regular", "domain"};
+	//additional fluff words to add, that weren't listed in 
+	private static final String[] ADDITIONAL_FLUFF_WORDS = new String[]{"tex", "is", "are", "an"};
 	
 	/**
 	 * Map of (annotated with "hyp" etc) keywords and their scores in document, the higher freq in doc, the lower 
 	 * score, say 1/(log freq + 1) since log 1 = 0. 
 	 */
+	//wordsScoreMap should get deprecated! Should use scores of words without annotations.
 	private static final ImmutableMap<String, Integer> wordsScoreMap;	
 	private static final ImmutableMap<String, Integer> wordsScoreMapNoAnno;	
 	//The number of frequent words to take
@@ -203,6 +209,9 @@ public class CollectThm {
 	 * @return
 	 */
 	public static String getSingularForm(String word){
+		//if word in dictionary, should not be processed. Eg "continuous"
+		if(freqWordsSet.contains(word)) return word;
+		
 		String[] singFormsAr = ThmP1.getSingularForms(word);
 		//singFormsAr successively replaces words ending in "s", "es", "ies"
 		int k = 2;
@@ -212,6 +221,14 @@ public class CollectThm {
 		if(k != -1){
 			word = singFormsAr[k];
 			//System.out.println("singular form: "+ word);
+		}
+		//if letter before "es" is not "s", eg "kisses", or "ch", eg "catches",
+		//add e back, to preserve terms that end in "e", eg "agrees"
+
+		String irregPluralEndings = "s|h|x";
+		int wordLen = word.length();
+		if(k==1 && wordLen > 1 && !String.valueOf(word.charAt(wordLen-1)).matches(irregPluralEndings)){
+			word = word+"e";
 		}
 		return word;
 	}
@@ -243,37 +260,67 @@ public class CollectThm {
 			String[] thmAr = thm.toLowerCase().split("\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:");
 			
 			Map<String, Integer> thmWordsMap = new HashMap<String, Integer>();
-						
-			for(String word : thmAr){
-								
-				//only keep words with lengths > 2
-				//System.out.println(word);
-				if(word.length() < 3) continue;
+			
+			for(int j = 0; j < thmAr.length; j++){
 				
-				//get singular forms if plural, put singular form in map
-				//Note, some words shouldn't need to be converted to singular form!
-				word = getSingularForm(word);
-				
-				if(freqWordsSet.contains(word)) continue;
-				
-				int wordFreq = thmWordsMap.containsKey(word) ? thmWordsMap.get(word) : 0;
-				//int wordLongFreq = thmWordsMap.containsKey(wordLong) ? thmWordsMap.get(wordLong) : 0;
-				thmWordsMap.put(word, wordFreq + 1);
-				//thmWordsMap.put(wordLong, wordLongFreq + 1);
-				
-				int docWordFreq = docWordsFreqPreMap.containsKey(word) ? docWordsFreqPreMap.get(word) : 0;
-				//int docWordLongFreq = docWordsFreqPreMap.containsKey(wordLong) ? docWordsFreqPreMap.get(wordLong) : 0;				
-				//increase freq of word by 1
-				docWordsFreqPreMap.put(word, docWordFreq + 1);
-				//docWordsFreqPreMap.put(wordLong, docWordLongFreq + 1);
-				
-				//put both original and long form.
-				wordThmsMMapBuilder.put(word, i);
-				//wordThmsMMapBuilder.put(wordLong, i);
+				String word = thmAr[j];	
+				addWordToMaps(word, i, thmWordsMap,
+						thmWordsListBuilder,
+						docWordsFreqPreMap,
+						wordThmsMMapBuilder);
+				//check the following word
+				if(j < thmAr.length-1){
+					String nextWordCombined = word + " " + thmAr[j+1];
+					if(twoGramsMap.containsKey(nextWordCombined)){
+						addWordToMaps(nextWordCombined, i, thmWordsMap,
+								thmWordsListBuilder,
+								docWordsFreqPreMap,
+								wordThmsMMapBuilder);
+					}
+				}
 			}
 			thmWordsListBuilder.add(ImmutableMap.copyOf(thmWordsMap));
 			//System.out.println("++THM: " + thmWordsMap);
 		}
+	}
+	
+	/**
+	 * Auxiliary method for building word frequency maps.
+	 * @param word
+	 * @param curThmIndex
+	 * @param thmWordsMap
+	 * @param thmWordsListBuilder
+	 * @param docWordsFreqPreMap
+	 * @param wordThmsMMapBuilder
+	 */
+	private static void addWordToMaps(String word, int curThmIndex, Map<String, Integer> thmWordsMap,
+			ImmutableList.Builder<ImmutableMap<String, Integer>> thmWordsListBuilder,
+			Map<String, Integer> docWordsFreqPreMap,
+			ImmutableSetMultimap.Builder<String, Integer> wordThmsMMapBuilder){
+		//only keep words with lengths > 2
+		//System.out.println(word);
+		if(word.length() < 3) return;
+		
+		//get singular forms if plural, put singular form in map
+		//Note, some words shouldn't need to be converted to singular form!
+		word = getSingularForm(word);
+		
+		if(freqWordsSet.contains(word)) return;
+		
+		int wordFreq = thmWordsMap.containsKey(word) ? thmWordsMap.get(word) : 0;
+		//int wordLongFreq = thmWordsMap.containsKey(wordLong) ? thmWordsMap.get(wordLong) : 0;
+		thmWordsMap.put(word, wordFreq + 1);
+		//thmWordsMap.put(wordLong, wordLongFreq + 1);
+		
+		int docWordFreq = docWordsFreqPreMap.containsKey(word) ? docWordsFreqPreMap.get(word) : 0;
+		//int docWordLongFreq = docWordsFreqPreMap.containsKey(wordLong) ? docWordsFreqPreMap.get(wordLong) : 0;				
+		//increase freq of word by 1
+		docWordsFreqPreMap.put(word, docWordFreq + 1);
+		//docWordsFreqPreMap.put(wordLong, docWordLongFreq + 1);
+		
+		//put both original and long form.
+		wordThmsMMapBuilder.put(word, curThmIndex);
+		//wordThmsMMapBuilder.put(wordLong, i);
 	}
 	
 	public static ImmutableList<ImmutableMap<String, Integer>> get_thmWordsList(){
@@ -297,7 +344,7 @@ public class CollectThm {
 			String word = entry.getKey();
 			//if(word.equals("tex")) continue;
 			int wordFreq = entry.getValue();
-			int score = wordFreq < 100 ? (int)Math.round(10 - wordFreq/12) : wordFreq < 300 ? 1 : 0;			
+			int score = wordFreq < 100 ? (int)Math.round(10 - wordFreq/5) : wordFreq < 100 ? 1 : 0;			
 			wordsScoreMapBuilder.put(word, score);
 			//System.out.print(entry.getValue() + " ");
 		}
@@ -308,19 +355,29 @@ public class CollectThm {
 	 * @param wordsScoreMapBuilder
 	 */
 	private static void buildScoreMapNoAnno(Map<String, Integer> wordsScorePreMap){		
-		for(Entry<String, Integer> entry : docWordsFreqMapNoAnno.entrySet()){
+		
+		addWordScoresFromMap(wordsScorePreMap, docWordsFreqMapNoAnno);
+		//put 2 grams in
+		addWordScoresFromMap(wordsScorePreMap, twoGramsMap);
+		
+		//put 1 for math words that occur more frequently than the cutoff, but should still be counted, like "ring"	
+		for(String word : SCORE1MATH_WORDS){
+			wordsScorePreMap.put(word, 1);
+		}
+	}
+	/**
+	 * @param wordsScorePreMap
+	 */
+	private static void addWordScoresFromMap(Map<String, Integer> wordsScorePreMap, Map<String, Integer> mapFrom) {
+		for(Entry<String, Integer> entry : mapFrom.entrySet()){
 			//+1 so not to divide by 0.
 			//wordsScoreMapBuilderNoAnno.put(entry.getKey(), (int)Math.round(1/Math.log(entry.getValue()+1)*10) );
 			//wordsScoreMapBuilderNoAnno.put(entry.getKey(), (int)Math.round(1/Math.pow(entry.getValue(), 1.25)*200) );
 			String word = entry.getKey();
 			//if(word.equals("tex")) continue;
 			int wordFreq = entry.getValue();
-			int score = wordFreq < 100 ? (int)Math.round(10 - wordFreq/12) : wordFreq < 300 ? 1 : 0;			
+			int score = wordFreq < 100 ? (int)Math.round(10 - wordFreq/8) : wordFreq < 300 ? 1 : 0;			
 			wordsScorePreMap.put(word, score);
-		}
-		//put 1 for math words that occur more frequently than the cutoff, but should still be counted, like "ring"	
-		for(String word : SCORE1MATH_WORDS){
-			wordsScorePreMap.put(word, 1);
 		}
 	}
 
@@ -372,6 +429,25 @@ public class CollectThm {
 	 */
 	public static String splitDelim(){
 		return SPLIT_DELIM;
+	}
+	
+	/**
+	 * Math words that should be included, but have been 
+	 * marked as fluff due to their common occurance in English.
+	 * Eg "ring".
+	 * @return
+	 */
+	public static String[] score1MathWords(){
+		return SCORE1MATH_WORDS;
+	}
+	
+	/**
+	 * Fluff words that are not included in the downloaded usual
+	 * English fluff words list. Eg "tex"
+	 * @return
+	 */
+	public static String[] additionalFluffWords(){
+		return ADDITIONAL_FLUFF_WORDS;
 	}
 	
 }

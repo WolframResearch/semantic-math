@@ -75,11 +75,11 @@ public class SearchIntersection {
 		//whether to skip first token
 		int firstIndex = 0;
 		if(num.length == 0){
-		String firstWord = wordWrapperList.get(0).word();
-		if(firstWord.matches("\\d+")){
-			numHighest = Integer.parseInt(firstWord);
-			firstIndex = 1;
-		}
+			String firstWord = wordWrapperList.get(0).word();
+			if(firstWord.matches("\\d+")){
+				numHighest = Integer.parseInt(firstWord);
+				firstIndex = 1;
+			}
 		}else{
 			numHighest = num[0];
 		}
