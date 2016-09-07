@@ -20,6 +20,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+import thmp.search.CollectThm.ThmWordsMaps;
+
 /**
  * Read in the most frequently-used words from file, 
  * along with their POS
@@ -187,17 +189,19 @@ public class CollectFreqWords {
 	 * CollectThm.docWordsFreqMapNoAnno.
 	 * Intentionally private, so not to create cyclic reliance with CollectThm.
 	 * Utility function to write set to file. 
+	 * *NOTE* Too many false negatives! Fluff words counted as non fluff.
 	 * @return
 	 */
 	private static ImmutableSet<String> get_nonMathFluffWords(){
 		Set<String> nonMathFluffWordsSet = new HashSet<String>();
-		ImmutableMap<String, Integer> docWordsFreqMap = CollectThm.get_docWordsFreqMapNoAnno();
+		ImmutableMap<String, Integer> docWordsFreqMap = CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno();
+		//System.out.println(docWordsFreqMap);
 		//iterate over the math words, remove from wordPosMap words that have freq lower than 150
 		//(in docWordsFreqMap)
 		
 		for(String word : wordPosMap.keySet()){
 			Integer wordFreq = docWordsFreqMap.get(word);
-			if(wordFreq == null || wordFreq > 100){//|| wordFreq > 1500 for ~1100 thms
+			if(wordFreq == null || wordFreq > 200){//|| wordFreq > 1500 for ~1100 thms
 				nonMathFluffWordsSet.add(word);
 				//System.out.println("word just added " + word + " " + wordFreq);
 			}
@@ -235,6 +239,6 @@ public class CollectFreqWords {
 			List<String> nonMathFluffWordsSet = new ArrayList<String>(get_nonMathFluffWords());
 			Files.write(nonMathFluffWordsFilePath, nonMathFluffWordsSet, Charset.forName("UTF-8"));
 		}
-		
+		get_nonMathFluffWords();
 	}
 }

@@ -17,6 +17,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.TreeMultimap;
 
 import thmp.search.SearchWordPreprocess.WordWrapper;
+import thmp.utils.WordForms;
 
 /**
  * Searches by finding intersections in theorems that contain given keywords.
@@ -44,17 +45,21 @@ public class SearchIntersection {
 	 */
 	private static final ImmutableMultimap<String, Integer> wordThmMMap;
 	
+	private static final ImmutableMap<String, Integer> twoGramsMap = ImmutableMap.copyOf(NGramSearch.get2GramsMap());
+	
 	/**
 	 * Static initializer, builds the maps using CollectThm.java. 
 	 */
 	static{
 		thmList = CollectThm.get_thmList();
 		//System.out.println(thmList);
-		wordsScoreMap = CollectThm.get_wordsScoreMapNoAnno();
+		wordsScoreMap = CollectThm.ThmWordsMaps.get_wordsScoreMapNoAnno();
 		//System.out.println(CollectThm.get_wordsScoreMap());
-		wordThmMMap = CollectThm.get_wordThmsMMap();
-	}
+		wordThmMMap = CollectThm.ThmWordsMaps.get_wordThmsMMap();
 		
+		//System.out.println(wordsScoreMap);
+	}
+	
 	/**
 	 * Builds scoreThmMMap 
 	 * @param input input String
@@ -105,51 +110,16 @@ public class SearchIntersection {
 			//also turn into singular form if applicable
 			String wordLong = curWrapper.hashToString();
 			
-			//update scores map
-			int curScoreToAdd = 0;
-			
-			//for every word, get list of thms containing this word			
-			Collection<Integer> wordThms = wordThmMMap.get(wordLong);
-			Integer wordScore;
-			if(!wordThms.isEmpty()){	
-				//wordScore = wordsScoreMap.get(wordLong);
-				wordScore = wordsScoreMap.get(word);
-				curScoreToAdd = wordScore + CONTEXT_WORD_BONUS;
-				
-			}else{
-				String wordOtherForm = curWrapper.otherHashForm();
-				String singWordOtherForm = curWrapper.otherHashForm();
-				
-				String singForm = CollectThm.getSingularForm(word);	
-				String singFormLong = curWrapper.hashToString(singForm);
-				//if(wordsScoreMap.get(singFormLong) != null){
-				if(wordsScoreMap.get(singForm) != null){	
-					wordThms = wordThmMMap.get(singFormLong);
-					//wordScore = wordsScoreMap.get(singFormLong);
-					wordScore = wordsScoreMap.get(singForm);
-					curScoreToAdd = wordScore + CONTEXT_WORD_BONUS;	
-				}//other form of word
-				/*else if(wordThmMMap.containsKey(wordOtherForm)){
-					wordThms = wordThmMMap.get(wordOtherForm);
-					wordScore = wordsScoreMap.get(wordOtherForm);
-					curScoreToAdd = wordScore;				
-				}else if(wordThmMMap.containsKey(singWordOtherForm)){
-					wordThms = wordThmMMap.get(singWordOtherForm);
-					wordScore = wordsScoreMap.get(singWordOtherForm);
-					curScoreToAdd = wordScore;		
-				}			*/	
-			}			
-			
-			if(wordThms != null){
-				for(Integer thmIndex : wordThms){	
-					Integer prevScore = thmScoreMap.get(thmIndex);
-					prevScore = prevScore == null ? 0 : prevScore;
-					Integer newScore = prevScore + curScoreToAdd;
-					//this mapping is not being used right now
-					thmScoreMap.put(thmIndex, newScore);
-					scoreThmMMap.put(newScore, thmIndex);
-				}				
-			}			
+			addWordThms(thmScoreMap, scoreThmMMap, curWrapper, word, wordLong);	
+			//check for 2 grams
+			if(i < wordWrapperList.size()-1){				
+				String nextWord = wordWrapperList.get(i+1).word();
+				String nextWordCombined = wordLong + " " + nextWord;
+				word = word + " " + nextWord;
+				if(twoGramsMap.containsKey(word)){
+					addWordThms(thmScoreMap, scoreThmMMap, curWrapper, word, nextWordCombined);	
+				}
+			}
 		}
 		List<Integer> highestThmList = new ArrayList<Integer>();
 		//get the thms having the highest k scores
@@ -171,6 +141,65 @@ public class SearchIntersection {
 			
 		}
 		return highestThmList ;
+	}
+
+	/**
+	 * Auxiliary method for getHighestVecs. Retrieves thms that contain wordLong,
+	 * add these thms to map. Annotated 2 grams only have annotation at start of
+	 * first word.
+	 * @param thmScoreMap
+	 * @param scoreThmMMap
+	 * @param curWrapper
+	 * @param word
+	 * @param wordLong
+	 */
+	private static void addWordThms(Map<Integer, Integer> thmScoreMap, TreeMultimap<Integer, Integer> scoreThmMMap,
+			WordWrapper curWrapper, String word, String wordLong) {
+		//update scores map
+		int curScoreToAdd = 0;
+		
+		//for every word, get list of thms containing this word			
+		Collection<Integer> wordThms = wordThmMMap.get(wordLong);
+		Integer wordScore;
+		if(!wordThms.isEmpty()){	
+			//wordScore = wordsScoreMap.get(wordLong);
+			wordScore = wordsScoreMap.get(word);
+			curScoreToAdd = wordScore + CONTEXT_WORD_BONUS;
+			
+		}else{
+			//String wordOtherForm = curWrapper.otherHashForm();
+			//String singWordOtherForm = curWrapper.otherHashForm();
+			
+			String singForm = WordForms.getSingularForm(word);	
+			String singFormLong = curWrapper.hashToString(singForm);
+			//if(wordsScoreMap.get(singFormLong) != null){
+			if(wordsScoreMap.get(singForm) != null){	
+				wordThms = wordThmMMap.get(singFormLong);
+				//wordScore = wordsScoreMap.get(singFormLong);
+				wordScore = wordsScoreMap.get(singForm);
+				curScoreToAdd = wordScore + CONTEXT_WORD_BONUS;	
+			}//other form of word
+			/*else if(wordThmMMap.containsKey(wordOtherForm)){
+				wordThms = wordThmMMap.get(wordOtherForm);
+				wordScore = wordsScoreMap.get(wordOtherForm);
+				curScoreToAdd = wordScore;				
+			}else if(wordThmMMap.containsKey(singWordOtherForm)){
+				wordThms = wordThmMMap.get(singWordOtherForm);
+				wordScore = wordsScoreMap.get(singWordOtherForm);
+				curScoreToAdd = wordScore;		
+			}			*/	
+		}			
+		
+		if(wordThms != null){
+			for(Integer thmIndex : wordThms){	
+				Integer prevScore = thmScoreMap.get(thmIndex);
+				prevScore = prevScore == null ? 0 : prevScore;
+				Integer newScore = prevScore + curScoreToAdd;
+				//this mapping is not being used right now
+				thmScoreMap.put(thmIndex, newScore);
+				scoreThmMMap.put(newScore, thmIndex);
+			}				
+		}
 	}	
 	
 	/**

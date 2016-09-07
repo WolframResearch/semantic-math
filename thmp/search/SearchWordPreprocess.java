@@ -9,6 +9,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 import thmp.ThmP1;
+import thmp.utils.WordForms;
 
 /**
  * Preprocesses keywords before incorportating them into the termDocMx.
@@ -54,7 +55,8 @@ public class SearchWordPreprocess {
 		//ie processed. 
 		//reset type when a punctuation mark such as , or . is encountered,
 		String[] inputAr = inputStr.toLowerCase().replaceAll("([^"+PUNCTUATION+"]*)(["+PUNCTUATION+"]{1})", "$1 $2")
-				.split("\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]");
+				//.split("\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]");
+				.split(WordForms.splitDelim());
 		List<WordWrapper> wrapperList = new ArrayList<WordWrapper>();
 		//use posMap to tell if hyp, etc
 		//create wrapper object for each word

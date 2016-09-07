@@ -10,6 +10,7 @@ import java.util.Set;
 
 import thmp.ProcessInput;
 import thmp.utils.FileUtils;
+import thmp.utils.WordForms;
 
 /**
  * Fish out 2-grams, compute probabilities of one word following another.
@@ -29,6 +30,7 @@ public class NGramSearch {
 	//private static final File twoGramsFile = new File("src/thmp/data/twoGrams.txt");
 	//list of 2 grams that show up with above-average frequency, with their frequencies
 	private static final Map<String, Integer> twoGramsMap;
+	private static final String[] ADDITIONAL_TWO_GRAMS = new String[]{"local ring", "local field"};
 	
 	static{
 		Map<String, Map<String, Integer>> nGramMap = new HashMap<String, Map<String, Integer>>();
@@ -57,12 +59,12 @@ public class NGramSearch {
 		//map of words that show up, and the words that immediately follow and their counts.
 		//nGramMap = new HashMap<String, Map<String, Integer>>();
 		//get thmList from CollectThm
-		List<String> thmList = ProcessInput.processInput(CollectThm.get_thmList(), true);
+		List<String> thmList = ProcessInput.processInput(CollectThm.ThmList.get_thmList(), true);
 		
 		//skip nonMathFluffWords, collapse list
 		for(String thm : thmList){
 			//split into words
-			String[] thmAr = thm.toLowerCase().split(CollectThm.splitDelim());
+			String[] thmAr = thm.toLowerCase().split(WordForms.splitDelim());
 			String curWord;
 			String nextWord;
 			
@@ -71,8 +73,8 @@ public class NGramSearch {
 				nextWord = thmAr[i+1];
 				
 				//take singular forms
-				curWord = CollectThm.getSingularForm(curWord);
-				nextWord = CollectThm.getSingularForm(nextWord);				
+				curWord = WordForms.getSingularForm(curWord);
+				nextWord = WordForms.getSingularForm(nextWord);				
 				
 				if(nonMathFluffWordsSet.contains(curWord) || curWord.matches("\\s*") || curWord.length() < 2){					
 					continue;
@@ -135,6 +137,8 @@ public class NGramSearch {
 	private static Map<String, Integer> compile2grams(Map<String, Map<String, Integer>> nGramMap, Map<String, Integer> averageWordCounts){
 		Map<String, Integer> twoGramMap = new HashMap<String, Integer>();
 		
+		int totalFreqCount = 0;	
+		int totalTwoGrams = 0;
 		for(Map.Entry<String, Map<String, Integer>> wordMapEntry : nGramMap.entrySet()){
 			String word = wordMapEntry.getKey();
 			int averageWordCount = averageWordCounts.get(word);
@@ -146,10 +150,18 @@ public class NGramSearch {
 					String nextWord = nextWordsMapEntry.getKey();
 					String twoGram = word + " " + nextWord;					
 					twoGramMap.put(twoGram, nextWordCount);
+					totalFreqCount += nextWordCount;
+					totalTwoGrams++;
+					//System.out.println(twoGram + " " + nextWordCount);
 				}
 			}
 		}
-		
+		//add additional two grams that were not programmatically selected
+		int averageFreqCount = totalFreqCount/totalTwoGrams;
+		System.out.print("averageFreqCount " + averageFreqCount);
+		for(String twoGram : ADDITIONAL_TWO_GRAMS){
+			twoGramMap.put(twoGram, averageFreqCount);
+		}
 		return twoGramMap;
 	}
 
