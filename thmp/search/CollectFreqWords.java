@@ -33,31 +33,38 @@ public class CollectFreqWords {
 	//entrySet of immutable maps preserve the order the entries are inserted,
 	//so to get the top N words, just iterate the top N entries.
 	private static final ImmutableMap<String, String> wordPosMap;
+	private static final ImmutableMap<String, Integer> wordRankMap;
 	//this list contains 5000 most frequent words, ordered by freq. Oftentimes we need fewer than those,
 	//maybe only top 500, so words such as "ring" don't get screened out.
-	private static File wordsFile = new File("src/thmp/data/wordFrequency.txt");
+	private static final File wordsFile = new File("src/thmp/data/wordFrequency.txt");
 	private static final Path nonMathFluffWordsFilePath = Paths.get("src/thmp/data/nonMathFluffWords.txt");
 	private static final File nonMathFluffWordsFile = new File("src/thmp/data/nonMathFluffWords.txt");
 	
 	static{
 		Map<String, String> wordPosPreMap = new HashMap<String, String>();
+		Map<String, Integer>  wordRankPreMap = new HashMap<String, Integer>();
 		
 		//pass premap into file
 		try{
-			readWords(wordPosPreMap);
+			readWords(wordPosPreMap, wordRankPreMap);
 		}catch(FileNotFoundException e){
 			e.printStackTrace();
 		}
 		
 		wordPosMap = ImmutableMap.copyOf(wordPosPreMap);
+		wordRankMap = ImmutableMap.copyOf(wordRankPreMap);
 	}
 	
-	private static void readWords(Map<String, String> wordPosPreMap) throws FileNotFoundException{
+	private static void readWords(Map<String, String> wordPosPreMap, Map<String, Integer> wordRankPreMap) throws FileNotFoundException{
 		Scanner sc = new Scanner(wordsFile);
 		//skip first line with header info
 		sc.nextLine();
-		List<String> defaultList = new ArrayList<String>();
-		
+		//List<String> defaultList = new ArrayList<String>();
+		/**
+		 * Also Read in the frequent words from frequent words file (wordsFile), add to list, 
+		 * recording their rank. Put rank as values to words in Hashmap.
+		 */
+		int curRank = 0;
 		while(sc.hasNextLine()){
 			String line = sc.nextLine();
 			String[] lineAr = line.split("\\s+");
@@ -118,10 +125,12 @@ public class CollectFreqWords {
 			default:
 				pos = word;
 				System.out.println("default pos: " + lineAr[2]);
-				defaultList.add(lineAr[2]);
+				//defaultList.add(lineAr[2]);
 			}
 			
 			wordPosPreMap.put(word, pos);
+			//record the word's rank
+			wordRankPreMap.put(word, curRank++);			
 			//System.out.println(word + " " + pos);			
 		}
 		
@@ -133,6 +142,9 @@ public class CollectFreqWords {
 		return wordPosMap;
 	}
 	
+	public static ImmutableMap<String, Integer> get_wordRankMap(){
+		return wordRankMap;
+	}	
 
 	/**
 	 * Gets only the non math common words. Filters out the math words by 
@@ -226,6 +238,11 @@ public class CollectFreqWords {
 		return ImmutableMap.copyOf(freqWordsMap);
 	}
 	
+	
+	private static void wordsRank(){
+		
+	}
+	
 	/**
 	 * Tests the methods here.
 	 * 
@@ -239,6 +256,6 @@ public class CollectFreqWords {
 			List<String> nonMathFluffWordsSet = new ArrayList<String>(get_nonMathFluffWords());
 			Files.write(nonMathFluffWordsFilePath, nonMathFluffWordsSet, Charset.forName("UTF-8"));
 		}
-		get_nonMathFluffWords();
+		//get_nonMathFluffWords();
 	}
 }

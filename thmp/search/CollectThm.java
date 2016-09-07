@@ -48,10 +48,9 @@ public class CollectThm {
 	//words that should be included as math words, but occur too frequently in math texts
 	//to be detected as non-fluff words.
 	private static final String[] SCORE1MATH_WORDS = new String[]{"ring", "field", "ideal", "finite", "series",
-			"complex", "combination", "regular", "domain", "local", "smooth", "map"};
+			"complex", "combination", "regular", "domain", "local", "smooth", "map", "definition", "standard", "prime"};
 	//additional fluff words to add, that weren't listed in 
 	private static final String[] ADDITIONAL_FLUFF_WORDS = new String[]{"tex", "is", "are", "an"};
-	
 	
 	//private static final ImmutableMap<String, Integer> twoGramsMap;
 	
