@@ -12,7 +12,7 @@ public class WordForms {
 	private static final ImmutableSet<String> freqWordsSet; 
 	
 	static{
-		freqWordsSet = CollectFreqWords.get_nonMathFluffWordsSet2();
+		freqWordsSet = CollectFreqWords.GetFreqWords.get_nonMathFluffWordsSet2();
 	}
 	
 	/**

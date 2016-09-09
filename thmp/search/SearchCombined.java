@@ -1,5 +1,6 @@
 package thmp.search;
 
+import java.io.BufferedReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,12 +23,11 @@ public class SearchCombined {
 	//combined number of vectors to take from search results of
 	//svd/nearest and intersection
 	private static final int NUM_COMMON_VECS = 4;
+
 	
-	/**
-	 * SVD/Nearest interface.
-	 */
-	private static void searchSVD(){
-		
+	public static void initializeSearchWithResource(BufferedReader freqWordsFileBuffer, BufferedReader texSourceFileBuffer){
+		CollectFreqWords.setResources(freqWordsFileBuffer);
+		CollectThm.setResources(texSourceFileBuffer);		
 	}
 	
 	/**
@@ -108,6 +108,31 @@ public class SearchCombined {
 	}
 	
 	/**
+	 * Search interface to be called externally, eg from servlet.
+	 * Resources should have been set prior to this if called externally.
+	 * @param inputStr search input
+	 */
+	public static List<String> searchCombined(String input){
+		if(input.matches("\\s*")) return null;
+		
+		List<Integer> nearestVecList = ThmSearch.readThmInput(input, NUM_NEAREST);
+		if(nearestVecList.isEmpty()){
+			System.out.println("I've got nothing for you yet. Try again.");
+			return null;
+		}
+		List<Integer> intersectionVecList = SearchIntersection.getHighestThm(input, NUM_NEAREST);
+		//find best intersection of these two lists. nearestVecList is 1-based, but intersectionVecList is 0-based! 
+		List<Integer> bestCommonVecs = findListsIntersection(nearestVecList, intersectionVecList, NUM_COMMON_VECS);
+		List<String> bestCommonThms = new ArrayList<String>();
+		for(int d : bestCommonVecs){
+			String thm = TriggerMathThm2.getThm(d);
+			System.out.println(thm);
+			bestCommonThms.add(thm);
+		}
+		return bestCommonThms;
+	}
+	
+	/**
 	 * Search that invokes different layers
 	 * @param args
 	 */
@@ -115,8 +140,6 @@ public class SearchCombined {
 		
 		//load the necessary classes so the first call doesn't take 
 		//disproportionately more time
-		
-		
 		Scanner sc = new Scanner(System.in);
 		
 		while(sc.hasNextLine()){

@@ -4,8 +4,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -44,20 +46,46 @@ public class CollectThm {
 	private static final ImmutableSet<String> freqWordsSet; 
 	
 	//raw original file
-	private static final File rawFile = new File("src/thmp/data/commAlg5.txt");
+	//private static final File rawFile = new File("src/thmp/data/commAlg5.txt");
+	private static final String rawFileStr = "src/thmp/data/commAlg5.txt";
+	//intentionally not final.
+	private static volatile BufferedReader rawFileReader = null;
+	
 	//words that should be included as math words, but occur too frequently in math texts
 	//to be detected as non-fluff words.
 	private static final String[] SCORE1MATH_WORDS = new String[]{"ring", "field", "ideal", "finite", "series",
 			"complex", "combination", "regular", "domain", "local", "smooth", "map", "definition", "standard", "prime"};
 	//additional fluff words to add, that weren't listed in 
 	private static final String[] ADDITIONAL_FLUFF_WORDS = new String[]{"tex", "is", "are", "an"};
+	//file to be changed
+	private static File e = null;
 	
 	//private static final ImmutableMap<String, Integer> twoGramsMap;
 	
 	static{
 		//only get the top N words
-		freqWordsSet = CollectFreqWords.get_nonMathFluffWordsSet2();
+		freqWordsSet = CollectFreqWords.GetFreqWords.get_nonMathFluffWordsSet2();
 		
+	}
+	
+	/**
+	 * Initialize class with reader, same as in static initializer. This needs
+	 * to be called before initializing GetFreqWords subclass, if the maps are
+	 * to be built from a particular bufferedReader.
+	 * 
+	 * @param wordsFileReader
+	 */
+	public static void setResources(BufferedReader srcFileReader) {
+		rawFileReader = srcFileReader;
+		System.out.print("first passed in: " +srcFileReader);
+		/*String line;
+		try {
+			while((line=rawFileReader.readLine()) != null){
+				System.out.println(line);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}*/
 	}
 	
 	public static class ThmWordsMaps{
@@ -104,16 +132,45 @@ public class CollectThm {
 			Map<String, Integer> docWordsFreqPreMapNoAnno = new HashMap<String, Integer>();
 			ImmutableSetMultimap.Builder<String, Integer> wordThmsMMapBuilderNoAnno = ImmutableSetMultimap.builder();
 			
-			try{
-				List<String> extractedThms = ThmInput.readThm(rawFile);
-				//thmListBuilder.addAll(extractedThms);
+			/*try{
+				//if run locally
+				if(rawFileReader == null){
+					FileReader rawFileReader = new FileReader(rawFileStr);
+					BufferedReader rawFileBReader = new BufferedReader(rawFileReader);
+					List<String> extractedThms = ThmInput.readThm(rawFileBReader);
+					//thmListBuilder.addAll(extractedThms);
+					
+					List<String> thmList = ProcessInput.processInput(extractedThms, true);
+					
+					readThm(thmWordsListBuilder, docWordsFreqPreMap, wordThmsMMapBuilder, thmList);
+					//same as readThm, just buid maps without annocation
+					buildMapsNoAnno(thmWordsListBuilderNoAnno, docWordsFreqPreMapNoAnno, wordThmsMMapBuilderNoAnno, thmList);				
+				}//if run from servlet
+				else{
+					System.out.println("This should never get invoked. Here are the contents. ");
+					
+					List<String> extractedThms = ThmInput.readThm(rawFileReader);
+					//thmListBuilder.addAll(extractedThms);
+					
+					List<String> thmList = ProcessInput.processInput(extractedThms, true);
+					
+					readThm(thmWordsListBuilder, docWordsFreqPreMap, wordThmsMMapBuilder, thmList);
+					//same as readThm, just buid maps without annocation
+					buildMapsNoAnno(thmWordsListBuilderNoAnno, docWordsFreqPreMapNoAnno, wordThmsMMapBuilderNoAnno, thmList);	
+				}
 				
-				List<String> thmList = ProcessInput.processInput(extractedThms, true);
-				
+			}catch(IOException e){
+				e.printStackTrace();
+			}*/
+			List<String> extractedThms = ThmList.get_thmList();
+			//thmListBuilder.addAll(extractedThms);			
+			List<String> thmList = ProcessInput.processInput(extractedThms, true);
+			
+			try {
 				readThm(thmWordsListBuilder, docWordsFreqPreMap, wordThmsMMapBuilder, thmList);
 				//same as readThm, just buid maps without annocation
-				buildMapsNoAnno(thmWordsListBuilderNoAnno, docWordsFreqPreMapNoAnno, wordThmsMMapBuilderNoAnno, thmList);
-			}catch(IOException e){
+				buildMapsNoAnno(thmWordsListBuilderNoAnno, docWordsFreqPreMapNoAnno, wordThmsMMapBuilderNoAnno, thmList);				
+			} catch (IOException e) {
 				e.printStackTrace();
 			}
 			
@@ -443,13 +500,30 @@ public class CollectThm {
 
 		static{
 			ImmutableList.Builder<String> thmListBuilder = ImmutableList.builder();
-			List<String> extractedThms;
+			List<String> extractedThms = null;
+			//System.out.print("rawFileReader: " + rawFileReader);
+			//extractedThms = ThmList.get_thmList();
 			try {
-				extractedThms = ThmInput.readThm(rawFile);
-				thmListBuilder.addAll(extractedThms);
+				if(rawFileReader == null){
+					FileReader rawFileReader = new FileReader(rawFileStr);
+					BufferedReader rawFileBReader = new BufferedReader(rawFileReader);
+					//System.out.println("rawFileReader is null ");
+					extractedThms = ThmInput.readThm(rawFileBReader);		
+				}else{
+					//System.out.println("read from rawFileReader");
+					//System.out.print("ready for processing: " +rawFileReader);
+					
+					/*System.out.println(rawFileReader);
+					String line;
+					while((line=rawFileReader.readLine()) != null){
+						System.out.println(line);
+					}*/ 
+					extractedThms = ThmInput.readThm(rawFileReader);
+				}
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+			thmListBuilder.addAll(extractedThms);
 			thmList = thmListBuilder.build();
 		}
 		

@@ -25,7 +25,7 @@ import thmp.utils.WordForms;
 public class NGramSearch {
 
 	//get the non math fluff words
-	private static final Set<String> nonMathFluffWordsSet = CollectFreqWords.get_nonMathFluffWordsSet2();	
+	private static final Set<String> nonMathFluffWordsSet = CollectFreqWords.GetFreqWords.get_nonMathFluffWordsSet2();	
 	private static final Path twoGramsFilePath = Paths.get("src/thmp/data/twoGrams.txt");
 	//private static final File twoGramsFile = new File("src/thmp/data/twoGrams.txt");
 	//list of 2 grams that show up with above-average frequency, with their frequencies
@@ -60,7 +60,7 @@ public class NGramSearch {
 		//nGramMap = new HashMap<String, Map<String, Integer>>();
 		//get thmList from CollectThm
 		List<String> thmList = ProcessInput.processInput(CollectThm.ThmList.get_thmList(), true);
-		
+		//System.out.println(thmList);
 		//skip nonMathFluffWords, collapse list
 		for(String thm : thmList){
 			//split into words
@@ -136,6 +136,7 @@ public class NGramSearch {
 	 */
 	private static Map<String, Integer> compile2grams(Map<String, Map<String, Integer>> nGramMap, Map<String, Integer> averageWordCounts){
 		Map<String, Integer> twoGramMap = new HashMap<String, Integer>();
+		//System.out.print(nGramMap);
 		
 		int totalFreqCount = 0;	
 		int totalTwoGrams = 0;
