@@ -177,7 +177,6 @@ public class ThmP1Test {
 			st = "for all but finitely many I";
 			st = "if $R$ is a Noetherian ring and $M$ is a Cohen-Macaulay $R$-module with $text{Supp}(M) = Spec(R)$";
 			st = "ring is topological if and only if ring is topological";
-			st = "there exists a field with $F$ maximal and $K$ free"; //<-- revisit!
 			
 			//st = "a field with extension $Q_2$ ";
 			//st = "if $R$ is noetherian, $M$ is also noetherian";
@@ -267,6 +266,7 @@ public class ThmP1Test {
 			st = "we have f as a function of x";
 			st = "$I$ is pure";
 			st = "A Noetherian ring $R$ is called Cohen-Macaulay if all local rings are Cohen-Macaulay."; //******<---
+			st = "there exists a field with $F$ maximal and $K$ free"; //<-- revisit!
 
 			//st = "there exists a unique power series $g(T)$ such that $f(g(T)) = T$";			
 			//st = "$f$ is holomorphic on $D(0, r)$, the derivative of $f$ is $\\sum_j j $";
@@ -304,7 +304,7 @@ public class ThmP1Test {
 			System.out.println("PARTS: " + parsedOutput);
 			
 			//System.out.println("****" + ThmP1.getParsedExpr() + "******");
-			boolean processFile = false;
+			boolean processFile = true;
 			
 			if(processFile){
 				Scanner sc = new Scanner(new File("src/thmp/data/noTex4.txt"));

@@ -164,7 +164,8 @@ public class SearchIntersection {
 		if(!wordThms.isEmpty()){	
 			//wordScore = wordsScoreMap.get(wordLong);
 			wordScore = wordsScoreMap.get(word);
-			curScoreToAdd = wordScore + CONTEXT_WORD_BONUS;
+			curScoreToAdd = wordScore + CONTEXT_WORD_BONUS 
+					+ curWrapper.matchExtraPoints();
 			
 		}else{
 			//String wordOtherForm = curWrapper.otherHashForm();
@@ -177,7 +178,8 @@ public class SearchIntersection {
 				wordThms = wordThmMMap.get(singFormLong);
 				//wordScore = wordsScoreMap.get(singFormLong);
 				wordScore = wordsScoreMap.get(singForm);
-				curScoreToAdd = wordScore + CONTEXT_WORD_BONUS;	
+				curScoreToAdd = wordScore + CONTEXT_WORD_BONUS 
+						+ curWrapper.matchExtraPoints();	
 			}//other form of word
 			/*else if(wordThmMMap.containsKey(wordOtherForm)){
 				wordThms = wordThmMMap.get(wordOtherForm);

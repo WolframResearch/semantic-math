@@ -121,8 +121,14 @@ public class SearchCombined {
 			return null;
 		}
 		List<Integer> intersectionVecList = SearchIntersection.getHighestThm(input, NUM_NEAREST);
+		int numCommonVecs = NUM_COMMON_VECS;
+		
+		String firstWord = input.split("\\s+")[0];
+		if(firstWord.matches("\\d+")){
+			numCommonVecs = Integer.parseInt(firstWord);			
+		}		
 		//find best intersection of these two lists. nearestVecList is 1-based, but intersectionVecList is 0-based! 
-		List<Integer> bestCommonVecs = findListsIntersection(nearestVecList, intersectionVecList, NUM_COMMON_VECS);
+		List<Integer> bestCommonVecs = findListsIntersection(nearestVecList, intersectionVecList, numCommonVecs);
 		List<String> bestCommonThms = new ArrayList<String>();
 		for(int d : bestCommonVecs){
 			String thm = TriggerMathThm2.getThm(d);
@@ -131,6 +137,19 @@ public class SearchCombined {
 		}
 		return bestCommonThms;
 	}
+	
+	/**
+	 * Nested class for Gson processing.
+	 * Contains thm, and keywords for highlighting.
+	 */
+	/*public static class SoughtPair{
+		private String thm;
+		private List<String> keywords;
+		
+		public SoughtPair(){
+			
+		}
+	}*/
 	
 	/**
 	 * Search that invokes different layers
@@ -152,8 +171,14 @@ public class SearchCombined {
 				continue;
 			}
 			List<Integer> intersectionVecList = SearchIntersection.getHighestThm(thm, NUM_NEAREST);
+			int numCommonVecs = NUM_COMMON_VECS;
+			
+			String firstWord = thm.split("\\s+")[0];
+			if(firstWord.matches("\\d+")){
+				numCommonVecs = Integer.parseInt(firstWord);			
+			}
 			//find best intersection of these two lists. nearestVecList is 1-based, but intersectionVecList is 0-based! 
-			List<Integer> bestCommonVecs = findListsIntersection(nearestVecList, intersectionVecList, NUM_COMMON_VECS);
+			List<Integer> bestCommonVecs = findListsIntersection(nearestVecList, intersectionVecList, numCommonVecs);
 			for(int d : bestCommonVecs){
 				System.out.println(TriggerMathThm2.getThm(d));
 			}

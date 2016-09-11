@@ -23,14 +23,20 @@ public class SearchWordPreprocess {
 	//make "hyp" and "stm" into constants!
 	private static final String HYP = "hyp";
 	private static final String STM = "stm";
-	//set of trigger words indicating need to go further, and how many steps further
+	//used in auxiliary list when labeling trigger words
+	private static final int WHERE = 1;
+	private static final int EXTRA_POINTS = 1;
+	//set of trigger words indicating need to go further, and how many steps further. Eg "for every"
 	private static final ImmutableMap<String, Integer> multipleWordTriggersMap;
 	private static final String[] multipleWordTriggers = new String[]{"for", "1"};
 	private static final String PUNCTUATION = ".,!:;";
 	//regex for matching hypothesis words, such as let, suppose etc.
 	//this is because Maps.posMap does not always label these words as "hyp" for 
 	//parsing purposes.
-	private static final String HYP_WORDS = "let|if";
+	private static final String HYP_WORDS = "let|if|where|when";
+	//trigger words indicating that the prior words are stm keywords
+	//eg "where primality is in conclusion"
+	private static final String STM_WORDS = "conclusion|result";
 	
 	static{
 		Map<String, Integer> multipleWordTriggersPreMap = new HashMap<String, Integer>();
@@ -58,10 +64,14 @@ public class SearchWordPreprocess {
 				//.split("\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]");
 				.split(WordForms.splitDelim());
 		List<WordWrapper> wrapperList = new ArrayList<WordWrapper>();
+		//auxiliary list of integers indicating the trigger words for 
+		//labeling something as hyp word. Correspond to elements in wrapperList.
+		List<Integer> hypTriggerWords = new ArrayList<Integer>();
 		//use posMap to tell if hyp, etc
 		//create wrapper object for each word
 		//in hypothesis or not
 		boolean inHyp = false;
+		String hypTriggerWord = "";
 		for(int i = 0; i < inputAr.length; i++){
 			String word = inputAr[i];
 			if(PUNCTUATION.contains(word)){
@@ -78,16 +88,19 @@ public class SearchWordPreprocess {
 					word = tempWord;
 					i++;
 				}
-			}
+			}			
+			
 			if(!word.matches(HYP_WORDS)){
 				wordPos = thmp.Maps.getPos(word);
 				if(wordPos != null && wordPos.equals(HYP)){
 					inHyp = true;
+					hypTriggerWord = word;
 					//these words should not count as keywords in thms.
 					continue;
 				}
 			}else{
 				inHyp = true;
+				hypTriggerWord = word;
 				continue;
 			}
 			
@@ -96,10 +109,30 @@ public class SearchWordPreprocess {
 				//pos for wordWrapper could be stm or hyp.
 				wordWrapper = new WordWrapper(HYP, word);
 			}else{
-				wordWrapper = new WordWrapper(STM, word);				
+				wordWrapper = new WordWrapper(STM, word);	
+				hypTriggerWord = "";
 			}
 			wrapperList.add(wordWrapper);
+			if(hypTriggerWord.matches("where|if|when")){
+				hypTriggerWords.add(WHERE);
+			}else{
+				hypTriggerWords.add(0);			
+			}
 		}
+		//go through wrapperList backwards, update conclusion words
+		for(int i = wrapperList.size()-1; i > -1; i--){
+			WordWrapper curWrapper = wrapperList.get(i);
+			if(curWrapper.word().matches(STM_WORDS) && hypTriggerWords.get(i) == WHERE){
+				while(i > -1 && hypTriggerWords.get(i) == WHERE){	
+					curWrapper = wrapperList.get(i);
+					curWrapper.set_pos(STM);
+					//set extra points if pos matches in sentence.
+					curWrapper.set_extraPoints(EXTRA_POINTS);
+					i--;					
+				}
+			}
+		}
+		System.out.print("wrapperList: "+wrapperList);
 		return wrapperList;
 	}
 	
@@ -112,7 +145,9 @@ public class SearchWordPreprocess {
 		private String pos;
 		//word being wrapped
 		private String word;
-		
+		//extra points for matching the pos in sentence.
+		//default is 0
+		private int matchExtraPoints;
 		
 		public WordWrapper(String pos, String word){
 			this.pos = pos;
@@ -147,6 +182,20 @@ public class SearchWordPreprocess {
 			//for now just do hyp or conclusion
 			String prefix = pos.equals(HYP) ? "H" : "C";
 			return prefix + curWord;
+		}		
+		
+		public void set_extraPoints(int points){
+			matchExtraPoints = points;
+		}
+		/**
+		 * Extra points awarded if pos matches.
+		 * @return
+		 */
+		public int matchExtraPoints(){
+			return matchExtraPoints;
+		}
+		public void set_pos(String pos){
+			this.pos = pos;
 		}
 		
 		public String pos(){
