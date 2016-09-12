@@ -132,7 +132,7 @@ public class SearchWordPreprocess {
 				}
 			}
 		}
-		System.out.print("wrapperList: "+wrapperList);
+		//System.out.print("wrapperList: "+wrapperList);
 		return wrapperList;
 	}
 	

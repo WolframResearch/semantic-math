@@ -33,6 +33,7 @@ public class NGramSearch {
 	private static final String[] ADDITIONAL_TWO_GRAMS = new String[]{"local ring", "local field"};
 	
 	static{
+		//System.out.println("Gathering 2-grams...");
 		Map<String, Map<String, Integer>> nGramMap = new HashMap<String, Map<String, Integer>>();
 		Map<String, Integer> totalWordCounts = new HashMap<String, Integer>();
 		recordCounts(nGramMap, totalWordCounts);
@@ -43,6 +44,7 @@ public class NGramSearch {
 		twoGramsMap = compile2grams(nGramMap, averageWordCounts);
 		//System.out.println("twoGramsMapSz" + twoGramsMap.size());
 		//System.out.println(twoGramsMap);
+		System.out.println("Done with 2-grams.");
 	}
 	
 	//private static Map<String, HashMap<String, Integer>> nGramMap;
@@ -158,8 +160,8 @@ public class NGramSearch {
 			}
 		}
 		//add additional two grams that were not programmatically selected
-		int averageFreqCount = totalFreqCount/totalTwoGrams;
-		System.out.print("averageFreqCount " + averageFreqCount);
+		//
+ 		int averageFreqCount = totalFreqCount/totalTwoGrams;
 		for(String twoGram : ADDITIONAL_TWO_GRAMS){
 			twoGramMap.put(twoGram, averageFreqCount);
 		}

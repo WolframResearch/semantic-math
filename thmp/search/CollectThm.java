@@ -1,5 +1,7 @@
 package thmp.search;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,8 +50,15 @@ public class CollectThm {
 	//raw original file
 	//private static final File rawFile = new File("src/thmp/data/commAlg5.txt");
 	private static final String rawFileStr = "src/thmp/data/commAlg5.txt";
+	//read in from list of files streams instead of just one
+	private static final List<String> rawFileStrList = Arrays.asList(new String[]{"src/thmp/data/commAlg5.txt", 
+			"src/thmp/data/fieldsRawTex.txt", "src/thmp/data/functional_analysis_operator_algebras/distributions.txt"});
+	//private static final List<String> rawFileStrList = Arrays.asList(new String[]{"src/thmp/data/functional_analysis_operator_algebras/distributions.txt"});
+
 	//intentionally not final.
 	private static volatile BufferedReader rawFileReader = null;
+	//corresponding list of file readers
+	private static volatile List<BufferedReader> rawFileReaderList = null;
 	
 	//words that should be included as math words, but occur too frequently in math texts
 	//to be detected as non-fluff words.
@@ -78,6 +87,22 @@ public class CollectThm {
 	public static void setResources(BufferedReader srcFileReader) {
 		rawFileReader = srcFileReader;
 		System.out.print("first passed in: " +srcFileReader);
+		/*String line;
+		try {
+			while((line=rawFileReader.readLine()) != null){
+				System.out.println(line);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}*/
+	}
+	/**
+	 * Set list of bufferedReaders, rawFileReaderList
+	 * @param srcFileReader
+	 */
+	public static void setResources(List<BufferedReader> srcFileReaderList) {
+		rawFileReaderList = srcFileReaderList;
+		System.out.print("buffered readers first passed in: " +srcFileReaderList);
 		/*String line;
 		try {
 			while((line=rawFileReader.readLine()) != null){
@@ -165,7 +190,7 @@ public class CollectThm {
 			List<String> extractedThms = ThmList.get_thmList();
 			//thmListBuilder.addAll(extractedThms);			
 			List<String> thmList = ProcessInput.processInput(extractedThms, true);
-			
+			//System.out.println("After processing: "+thmList);
 			try {
 				readThm(thmWordsListBuilder, docWordsFreqPreMap, wordThmsMMapBuilder, thmList);
 				//same as readThm, just buid maps without annocation
@@ -402,9 +427,10 @@ public class CollectThm {
 				String word = entry.getKey();
 				//if(word.equals("tex")) continue;
 				int wordFreq = entry.getValue();
-				int score = wordFreq < 100 ? (int)Math.round(10 - wordFreq/5) : wordFreq < 100 ? 1 : 0;			
+				int score = wordFreq < 100 ? (int)Math.round(15 - wordFreq/5) : wordFreq < 100 ? 1 : 0;			
 				wordsScoreMapBuilder.put(word, score);
 				//System.out.print(entry.getValue() + " ");
+				//System.out.print("word: "+word +" score: "+score + "  ");
 			}
 		}
 
@@ -436,8 +462,10 @@ public class CollectThm {
 				String word = entry.getKey();
 				//if(word.equals("tex")) continue;
 				int wordFreq = entry.getValue();
-				int score = wordFreq < 100 ? (int)Math.round(10 - wordFreq/8) : wordFreq < 300 ? 1 : 0;			
+				//int score = wordFreq < 100 ? (int)Math.round(10 - wordFreq/8) : wordFreq < 300 ? 1 : 0;			
+				int score = wordFreq < 110 ? (int)Math.round(10 - wordFreq/4) : wordFreq < 300 ? 1 : 0;			
 				wordsScorePreMap.put(word, score);
+				System.out.print("word: "+word +" score: "+score + "  ");
 			}
 		}
 		
@@ -500,15 +528,18 @@ public class CollectThm {
 
 		static{
 			ImmutableList.Builder<String> thmListBuilder = ImmutableList.builder();
-			List<String> extractedThms = null;
+			List<String> extractedThms = new ArrayList<String>();
 			//System.out.print("rawFileReader: " + rawFileReader);
 			//extractedThms = ThmList.get_thmList();
 			try {
-				if(rawFileReader == null){
-					FileReader rawFileReader = new FileReader(rawFileStr);
-					BufferedReader rawFileBReader = new BufferedReader(rawFileReader);
-					//System.out.println("rawFileReader is null ");
-					extractedThms = ThmInput.readThm(rawFileBReader);		
+				if(rawFileReaderList == null){
+					for(String fileStr : rawFileStrList){
+						//FileReader rawFileReader = new FileReader(rawFileStr);
+						FileReader rawFileReader = new FileReader(fileStr);
+						BufferedReader rawFileBReader = new BufferedReader(rawFileReader);
+						//System.out.println("rawFileReader is null ");
+						extractedThms.addAll(ThmInput.readThm(rawFileBReader));								
+					}
 				}else{
 					//System.out.println("read from rawFileReader");
 					//System.out.print("ready for processing: " +rawFileReader);
@@ -518,7 +549,9 @@ public class CollectThm {
 					while((line=rawFileReader.readLine()) != null){
 						System.out.println(line);
 					}*/ 
-					extractedThms = ThmInput.readThm(rawFileReader);
+					for(BufferedReader fileReader : rawFileReaderList){
+						extractedThms.addAll(ThmInput.readThm(fileReader));
+					}
 				}
 			} catch (IOException e) {
 				e.printStackTrace();

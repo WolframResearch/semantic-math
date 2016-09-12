@@ -83,29 +83,40 @@ public class ProcessInput {
 	private static String inputReplace(String thm, boolean replaceTex){
 		String[] meat = thm.split("\\\\label\\{([a-zA-Z]|-)*\\} ");
 		String noTexString = "";
-		
+		//get the second part if separated by "\label{...}"
 		if(meat.length > 1){
 			thm = meat[1];
 			//System.out.println(thm);
-			if(replaceTex){
-				thm = thm.replaceAll("\\$[^$]+\\$|\\$\\$[^$]+\\$\\$", "tex");
-			}
-			//thm.replaceAll("$[^$]\\$", "tex");
-			//replaceAll("(?:\\$[^$]+\\$)|(?:\\$\\$[^$]+\\$\\$)", "tex").
-			//use capturing groups to capture text inside {\it ... }
-			//replace the others with non-captureing groups to speed up
-			String tempThm = thm.replaceAll("\\\\begin\\{ali[^}]*\\}|\\\\end\\{ali[^}]*\\}|\\\\begin\\{equ[^}]*\\}|\\\\end\\{equ[^}]*\\}", "\\$\\$")
-					.replaceAll("\\\\begin\\{[^}]*\\}|\\\\end\\{[^}]*\\}|\\\\cite\\{[^}]*\\}|\\\\item"
-							+ "|\\\\ref\\{[^}]*\\}", "").replaceAll("\\{\\\\it([^}]*)\\}", "$1")
-					 + "\n";
-			/*Pattern regex = Pattern.compile("\\{\\\\it([^}]*)\\}");
-			Matcher matcher = regex.matcher(tempThm);
-			tempThm = matcher.replaceAll("$1"); */
-			//noTexString += tempThm;
-			noTexString = tempThm;				
-			//System.out.println(thm.replaceAll("(\\$[^$]+\\$)|(\\$\\$[^$]+\\$\\$)", "tex"));
-			
-		}		
+		}
+		noTexString = replaceThm(thm, replaceTex);			
+
+		return noTexString;
+	}
+
+	/**
+	 * @param thm
+	 * @param replaceTex
+	 * @return
+	 */
+	private static String replaceThm(String thm, boolean replaceTex) {
+		String noTexString;
+		if(replaceTex){
+			thm = thm.replaceAll("\\$[^$]+\\$|\\$\\$[^$]+\\$\\$", "tex");
+		}
+		//thm.replaceAll("$[^$]\\$", "tex");
+		//replaceAll("(?:\\$[^$]+\\$)|(?:\\$\\$[^$]+\\$\\$)", "tex").
+		//use capturing groups to capture text inside {\it ... }
+		//replace the others with non-captureing groups to speed up
+		String tempThm = thm.replaceAll("\\\\begin\\{ali[^}]*\\}|\\\\end\\{ali[^}]*\\}|\\\\begin\\{equ[^}]*\\}|\\\\end\\{equ[^}]*\\}", "\\$\\$")
+				.replaceAll("\\\\begin\\{[^}]*\\}|\\\\end\\{[^}]*\\}|\\\\cite\\{[^}]*\\}|\\\\item"
+						+ "|\\\\ref\\{[^}]*\\}", "").replaceAll("\\{\\\\it([^}]*)\\}", "$1")
+				 + "\n";
+		/*Pattern regex = Pattern.compile("\\{\\\\it([^}]*)\\}");
+		Matcher matcher = regex.matcher(tempThm);
+		tempThm = matcher.replaceAll("$1"); */
+		//noTexString += tempThm;
+		noTexString = tempThm;				
+		//System.out.println(thm.replaceAll("(\\$[^$]+\\$)|(\\$\\$[^$]+\\$\\$)", "tex"));
 		return noTexString;
 	}
 }

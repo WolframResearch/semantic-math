@@ -8,7 +8,7 @@ import thmp.search.CollectFreqWords;
 public class WordForms {
 
 	//delimiters to split on when making words out of input
-	private static final String SPLIT_DELIM = "\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:|-";
+	private static final String SPLIT_DELIM = "\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:|-|_|~";
 	private static final ImmutableSet<String> freqWordsSet; 
 	
 	static{

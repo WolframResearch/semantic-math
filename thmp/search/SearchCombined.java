@@ -30,6 +30,10 @@ public class SearchCombined {
 		CollectThm.setResources(texSourceFileBuffer);		
 	}
 	
+	public static void initializeSearchWithResource(BufferedReader freqWordsFileBuffer, List<BufferedReader> texSourceFileBuffer){
+		CollectFreqWords.setResources(freqWordsFileBuffer);
+		CollectThm.setResources(texSourceFileBuffer);		
+	}
 	/**
 	 * SearchIntersection interface.
 	 * Searches intersection. Should run after SVD. 
