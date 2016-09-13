@@ -290,7 +290,7 @@ public class CollectThm {
 					if(j < wordWrapperList.size()-1){
 						String nextWord = wordWrapperList.get(j+1).word();
 						String nextWordCombined = word + " " + nextWord;
-						if(TwoGramsMap.get_twoGramsMap().containsKey(nextWordCombined)){
+						if(NGramsMap.get_twoGramsMap().containsKey(nextWordCombined)){
 							String nextWordCombinedLong = wordLong + " " + nextWord;
 							addWordToMaps(nextWordCombinedLong, i, thmWordsMap, thmWordsListBuilder, docWordsFreqPreMap,
 									wordThmsMMapBuilder);
@@ -363,7 +363,7 @@ public class CollectThm {
 					//check the following word
 					if(j < thmAr.length-1){
 						String nextWordCombined = word + " " + thmAr[j+1];
-						if(TwoGramsMap.get_twoGramsMap().containsKey(nextWordCombined)){
+						if(NGramsMap.get_twoGramsMap().containsKey(nextWordCombined)){
 							addWordToMaps(nextWordCombined, i, thmWordsMap, thmWordsListBuilder, docWordsFreqPreMap,
 									wordThmsMMapBuilder);
 						}
@@ -512,10 +512,17 @@ public class CollectThm {
 	 * Static nested classes that accomodates lazy initialization (so to avoid circular 
 	 * dependency), but also gives benefit of final (cause singleton), immutable (make it so).
 	 */
-	public static class TwoGramsMap{
+	public static class NGramsMap{
 		private static final ImmutableMap<String, Integer> twoGramsMap = ImmutableMap.copyOf(NGramSearch.get2GramsMap());
+		//don't need to make immutable, since not modifying during runtime
+		private static final Map<String, Integer> threeGramsMap = ThreeGramSearch.get3GramsMap();
+		
 		public static ImmutableMap<String, Integer> get_twoGramsMap(){
 			return twoGramsMap;
+		}
+		
+		public static Map<String, Integer> get_threeGramsMap(){
+			return threeGramsMap;
 		}
 	}
 	
