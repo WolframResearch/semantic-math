@@ -308,6 +308,7 @@ public class TriggerMathThm2 {
 		//should eliminate unnecessary words first, then send to get wrapped.
 		//<--can only do that if leave the hyp words in, eg if.
 		
+		String priorityWords = ConstantsInSearch.get_priorityWords();
 		//keywordDict is annotated with "hyp"/"stm"
 		int dictSz = keywordDict.keySet().size();
 		int[] triggerTermsVec = new int[dictSz];
@@ -327,9 +328,14 @@ public class TriggerMathThm2 {
 			}
 			if(i < thmAr.length-1){
 				String nextTermCombined = term + " " + thmAr[i+1];
-				newNorm = addToNorm(thmAr, wordsScoreMap, triggerTermsVec, newNorm, i, nextTermCombined);				
+				newNorm = addToNorm(thmAr, wordsScoreMap, triggerTermsVec, newNorm, i, nextTermCombined);	
+				
+				if(i < thmAr.length-2){
+					String threeTermsCombined = nextTermCombined + " " + thmAr[i+2];
+					newNorm = addToNorm(thmAr, wordsScoreMap, triggerTermsVec, newNorm, i, threeTermsCombined);
+				}
 			}
-			if(term.matches(ConstantsInSearch.get_priorityWords())){
+			if(term.matches(priorityWords)){
 				priorityWordsIndexList.add(i);
 			}						
 			norm = newNorm;

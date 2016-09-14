@@ -241,6 +241,9 @@ public class CollectThm {
 				ImmutableSetMultimap.Builder<String, Integer> wordThmsMMapBuilder, List<String> thmList)
 				throws IOException, FileNotFoundException{
 			
+			Map<String, Integer> twoGramsMap = NGramsMap.get_twoGramsMap();
+			Map<String, Integer> threeGramsMap = NGramsMap.get_threeGramsMap();
+			
 			//processes the theorems, select the words
 			for(int i = 0; i < thmList.size(); i++){
 				String thm = thmList.get(i);
@@ -286,14 +289,24 @@ public class CollectThm {
 					
 					addWordToMaps(wordLong, i, thmWordsMap, thmWordsListBuilder, docWordsFreqPreMap, wordThmsMMapBuilder);
 					
-					//check the following word for potential 2 grams.
+					//check the following word for potential 2 grams. Only first word has hyp/stm annotation.
 					if(j < wordWrapperList.size()-1){
 						String nextWord = wordWrapperList.get(j+1).word();
 						String nextWordCombined = word + " " + nextWord;
-						if(NGramsMap.get_twoGramsMap().containsKey(nextWordCombined)){
-							String nextWordCombinedLong = wordLong + " " + nextWord;
+						String nextWordCombinedLong = wordLong + " " + nextWord;
+						if(twoGramsMap.containsKey(nextWordCombined)){							
 							addWordToMaps(nextWordCombinedLong, i, thmWordsMap, thmWordsListBuilder, docWordsFreqPreMap,
 									wordThmsMMapBuilder);
+						}
+						
+						if(j < wordWrapperList.size()-2){
+							String thirdWord = wordWrapperList.get(j+2).word();
+							String threeWordsCombined = nextWordCombined + " " + thirdWord;
+							if(threeGramsMap.containsKey(threeWordsCombined)){
+								String threeWordsCombinedLong = nextWordCombinedLong + " " + nextWord;
+								addWordToMaps(threeWordsCombinedLong, i, thmWordsMap, thmWordsListBuilder, docWordsFreqPreMap,
+										wordThmsMMapBuilder);
+							}
 						}
 					}
 					
@@ -330,6 +343,8 @@ public class CollectThm {
 				Map<String, Integer> docWordsFreqPreMap,
 				ImmutableSetMultimap.Builder<String, Integer> wordThmsMMapBuilder, List<String> thmList)
 				throws IOException, FileNotFoundException{
+			Map<String, Integer> twoGramsMap = NGramsMap.get_twoGramsMap();
+			Map<String, Integer> threeGramsMap = NGramsMap.get_threeGramsMap();
 			
 			//use method in ProcessInput to process in thms. Like turn $blah$ -> $tex$
 			//adds original thms without latex replaced, should be in same order as above
@@ -363,9 +378,17 @@ public class CollectThm {
 					//check the following word
 					if(j < thmAr.length-1){
 						String nextWordCombined = word + " " + thmAr[j+1];
-						if(NGramsMap.get_twoGramsMap().containsKey(nextWordCombined)){
+						if(twoGramsMap.containsKey(nextWordCombined)){
 							addWordToMaps(nextWordCombined, i, thmWordsMap, thmWordsListBuilder, docWordsFreqPreMap,
 									wordThmsMMapBuilder);
+						}
+						//try to see if these three words form a valid 3-gram
+						if(j < thmAr.length-2){
+							String threeWordsCombined = nextWordCombined + " " + thmAr[j+2];
+							if(threeGramsMap.containsKey(threeWordsCombined)){
+								addWordToMaps(threeWordsCombined, i, thmWordsMap, thmWordsListBuilder, docWordsFreqPreMap,
+										wordThmsMMapBuilder);
+							}
 						}
 					}
 				}
@@ -375,8 +398,8 @@ public class CollectThm {
 		}
 		
 		/**
-		 * Auxiliary method for building word frequency maps.
-		 * @param word
+		 * Auxiliary method for building word frequency maps. 
+		 * @param word Can be singleton or n-gram.
 		 * @param curThmIndex
 		 * @param thmWordsMap
 		 * @param thmWordsListBuilder
@@ -463,9 +486,10 @@ public class CollectThm {
 				//if(word.equals("tex")) continue;
 				int wordFreq = entry.getValue();
 				//int score = wordFreq < 100 ? (int)Math.round(10 - wordFreq/8) : wordFreq < 300 ? 1 : 0;			
-				int score = wordFreq < 110 ? (int)Math.round(10 - wordFreq/4) : wordFreq < 300 ? 1 : 0;			
+				int score = wordFreq < 110 ? (int)Math.round(10 - wordFreq/4) : wordFreq < 300 ? 1 : 0;		
+				score = score < 0 ? 0 : score;
 				wordsScorePreMap.put(word, score);
-				System.out.print("word: "+word +" score: "+score + "  ");
+				System.out.println("word: "+word +" score: "+score + "  ");
 			}
 		}
 		

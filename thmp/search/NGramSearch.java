@@ -30,14 +30,23 @@ public class NGramSearch {
 	//private static final File twoGramsFile = new File("src/thmp/data/twoGrams.txt");
 	//list of 2 grams that show up with above-average frequency, with their frequencies
 	private static final Map<String, Integer> twoGramsMap;
+	//this field will be exposed to build 3-grams
+	private static final Map<String, Map<String, Integer>> nGramMap;
 	private static final String[] ADDITIONAL_TWO_GRAMS = new String[]{"local ring", "local field"};
+	//should use this to detect fluff in first word.
+	private static final Set<String> fluffWordsSet = WordForms.makeFluffSet();
 	
 	static{
 		//System.out.println("Gathering 2-grams...");
-		Map<String, Map<String, Integer>> nGramMap = new HashMap<String, Map<String, Integer>>();
+		nGramMap = new HashMap<String, Map<String, Integer>>();
+		//total word counts of all 2 grams
 		Map<String, Integer> totalWordCounts = new HashMap<String, Integer>();
+		//nGram map, 
 		recordCounts(nGramMap, totalWordCounts);
+		//nGramMap has been built, use it to filter out the right 3-gram words.
 		
+		
+		//computes the average frequencies of words that follow the first word in all 2-grams
 		Map<String, Integer> averageWordCounts = computeAverageFreq(nGramMap, totalWordCounts);
 		
 		//get list of 2 grams that show up frequently
@@ -56,6 +65,10 @@ public class NGramSearch {
 	 * each word that's its key in this map. This is used to compute the average freq of words
 	 * that follow a given word. This is less than the total count of that key word in the document, 
 	 * as fluff words are skipped.
+	 * @param totalWordCounts Total counts of words that follow this word, equivalent to size of map in
+	 * nGramMap corresponding to this key word.
+	 * @param nGramMap Map of maps. Keys are words in text, and entries are maps whose keys are 2nd terms
+	 * in 2 grams, and entries are frequency counts.
 	 */
 	private static void recordCounts(Map<String, Map<String, Integer>> nGramMap, Map<String, Integer> totalWordCounts){
 		//map of words that show up, and the words that immediately follow and their counts.
@@ -76,14 +89,20 @@ public class NGramSearch {
 				
 				//take singular forms
 				curWord = WordForms.getSingularForm(curWord);
-				nextWord = WordForms.getSingularForm(nextWord);				
+				nextWord = WordForms.getSingularForm(nextWord);					
 				
-				if(nonMathFluffWordsSet.contains(curWord) || curWord.matches("\\s*") || curWord.length() < 2){					
+				//this is a rather large set, should not include so many words.
+				//words such as "purely inseparable" might be filtered out.
+				//maybe first word could be the small fluff words list from ThreeGramSearch?
+				if(fluffWordsSet.contains(curWord) || curWord.length() < 2 
+						|| curWord.matches("\\s*") || curWord.contains("\\")){	
+					//if(nonMathFluffWordsSet.contains(curWord) || curWord.length() < 2 
+						//	|| curWord.matches("\\s*") || curWord.contains("\\")){	
 					continue;
 				}
 				
-				if(nonMathFluffWordsSet.contains(nextWord)
-					|| nextWord.matches("\\s*") || nextWord.length() < 2){					
+				if(nonMathFluffWordsSet.contains(nextWord) || nextWord.length() < 2
+					|| nextWord.matches("\\s*") || curWord.contains("\\")){					
 					i++;
 					continue;
 				}
@@ -177,6 +196,14 @@ public class NGramSearch {
 	}
 
 	/**
+	 * Get 2-grams and their frequencies.
+	 * @return
+	 */
+	public static Map<String, Map<String, Integer>> get_nGramMap(){
+		return nGramMap;
+	}	
+
+	/**
 	 * Write 2-grams to file.
 	 * Should also write freqencies to file.
 	 */
@@ -186,7 +213,7 @@ public class NGramSearch {
 	
 	public static void main(String[] args){
 		//System.out.println(CollectThm.get_wordsScoreMapNoAnno());
-		boolean write2gramsToFile = false;
+		boolean write2gramsToFile = true;
 		if(write2gramsToFile) write2gramsToFile(twoGramsMap);
 	}
 	

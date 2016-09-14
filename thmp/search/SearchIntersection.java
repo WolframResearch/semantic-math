@@ -44,8 +44,9 @@ public class SearchIntersection {
 	 * Multimap of words, and the theorems (their indices) in thmList, the word shows up in.
 	 */
 	private static final ImmutableMultimap<String, Integer> wordThmMMap;
-	
-	private static final ImmutableMap<String, Integer> twoGramsMap = ImmutableMap.copyOf(NGramSearch.get2GramsMap());
+	//these maps are not immutable, they are not modified during runtime.
+	private static final Map<String, Integer> twoGramsMap = NGramSearch.get2GramsMap();
+	private static final Map<String, Integer> threeGramsMap = ThreeGramSearch.get3GramsMap();
 	
 	/**
 	 * Static initializer, builds the maps using CollectThm.java. 
@@ -118,6 +119,15 @@ public class SearchIntersection {
 				word = word + " " + nextWord;
 				if(twoGramsMap.containsKey(word)){
 					addWordThms(thmScoreMap, scoreThmMMap, curWrapper, word, nextWordCombined);	
+				}
+				//check for 3 grams. Again only first word is annotated.
+				if(i < wordWrapperList.size()-2){
+					String thirdWord = wordWrapperList.get(i+2).word();
+					String threeWordsCombined = wordLong + " " + thirdWord;
+					word = word + " " + thirdWord;
+					if(threeGramsMap.containsKey(word)){
+						addWordThms(thmScoreMap, scoreThmMMap, curWrapper, word, threeWordsCombined);	
+					}
 				}
 			}
 		}

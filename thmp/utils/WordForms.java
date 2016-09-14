@@ -1,5 +1,8 @@
 package thmp.utils;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import com.google.common.collect.ImmutableSet;
 
 import thmp.ThmP1;
@@ -9,6 +12,9 @@ public class WordForms {
 
 	//delimiters to split on when making words out of input
 	private static final String SPLIT_DELIM = "\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:|-|_|~";
+	//small lists of fluff words, used in, e.g., n gram extraction.
+	private static final String FLUFF_WORDS_SMALL = "a|the|tex|of|and|on|let|lemma|for|to|that|with|is|be|are|there|by"
+			+ "|any|as|if|we|suppose|then|which|in|from|this|assume|this|have|just|may|an|every|it";
 	private static final ImmutableSet<String> freqWordsSet; 
 	
 	static{
@@ -44,6 +50,18 @@ public class WordForms {
 			word = word+"e";
 		}
 		return word;
+	}
+	
+	/**
+	 * Make the fluff map from the fluff String.
+	 */
+	public static Set<String> makeFluffSet(){
+		Set<String> fluffSet = new HashSet<String>();
+		String[] fluffAr = FLUFF_WORDS_SMALL.split("\\|");
+		for(String word : fluffAr){
+			fluffSet.add(word);
+		}
+		return fluffSet;
 	}
 	
 	/**
