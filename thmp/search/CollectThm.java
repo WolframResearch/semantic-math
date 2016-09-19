@@ -63,7 +63,7 @@ public class CollectThm {
 	//additional fluff words to add, that weren't listed in 
 	private static final String[] ADDITIONAL_FLUFF_WORDS = new String[]{"tex", "is", "are", "an"};
 	//file to be changed
-	private static File e = null;
+	//private static File e = null;
 	
 	//private static final ImmutableMap<String, Integer> twoGramsMap;
 	
@@ -162,7 +162,7 @@ public class CollectThm {
 			
 			nGramFirstWordsSet.addAll(NGramSearch.get_2GramFirstWordsSet());
 			nGramFirstWordsSet.addAll(ThreeGramSearch.get_3GramFirstWordsSet());
-			
+			//System.out.print("nGramFirstWordsSet: " + nGramFirstWordsSet);
 			/*try{
 				//if run locally
 				if(rawFileReader == null){
@@ -247,8 +247,8 @@ public class CollectThm {
 				ImmutableSetMultimap.Builder<String, Integer> wordThmsMMapBuilder, List<String> thmList)
 				throws IOException, FileNotFoundException{
 			
-			Map<String, Integer> twoGramsMap = NGramsMap.get_twoGramsMap();
-			Map<String, Integer> threeGramsMap = NGramsMap.get_threeGramsMap();
+			//Map<String, Integer> twoGramsMap = NGramsMap.get_twoGramsMap();
+			//Map<String, Integer> threeGramsMap = NGramsMap.get_threeGramsMap();
 			
 			//processes the theorems, select the words
 			for(int i = 0; i < thmList.size(); i++){
@@ -405,6 +405,41 @@ public class CollectThm {
 		}
 		
 		/**
+		 * Auxiliary method for building word frequency maps. Just like addWordToMaps, 
+		 * but add 2 and 3 Grams. 
+		 * @param word Can be singleton or n-gram.
+		 * @param curThmIndex
+		 * @param thmWordsMap ThmWordsMap for current thm
+		 * @param thmWordsListBuilder
+		 * @param docWordsFreqPreMap
+		 * @param wordThmsMMapBuilder
+		 */
+		private static void addNGramToMaps(String word, int curThmIndex, Map<String, Integer> thmWordsMap,
+				ImmutableList.Builder<ImmutableMap<String, Integer>> thmWordsListBuilder,
+				Map<String, Integer> docWordsFreqPreMap,
+				ImmutableSetMultimap.Builder<String, Integer> wordThmsMMapBuilder){			
+			
+			int wordFreq = thmWordsMap.containsKey(word) ? thmWordsMap.get(word) : 0;
+			//int wordLongFreq = thmWordsMap.containsKey(wordLong) ? thmWordsMap.get(wordLong) : 0;
+			thmWordsMap.put(word, wordFreq + 1);
+			//thmWordsMap.put(wordLong, wordLongFreq + 1);
+			
+			if(docWordsFreqPreMap){
+				
+			}
+			int docWordFreq = docWordsFreqPreMap.containsKey(word) ? docWordsFreqPreMap.get(word) : 0;
+			//int docWordLongFreq = docWordsFreqPreMap.containsKey(wordLong) ? docWordsFreqPreMap.get(wordLong) : 0;				
+			//increase freq of word by 1
+			docWordsFreqPreMap.put(word, docWordFreq + 1);
+			//System.out.print(word + " " + docWordFreq+ " ");
+			//docWordsFreqPreMap.put(wordLong, docWordLongFreq + 1);
+			
+			//put both original and long form.
+			wordThmsMMapBuilder.put(word, curThmIndex);
+			//wordThmsMMapBuilder.put(wordLong, i);
+		}
+		
+		/**
 		 * Auxiliary method for building word frequency maps. 
 		 * @param word Can be singleton or n-gram.
 		 * @param curThmIndex
@@ -416,8 +451,7 @@ public class CollectThm {
 		private static void addWordToMaps(String word, int curThmIndex, Map<String, Integer> thmWordsMap,
 				ImmutableList.Builder<ImmutableMap<String, Integer>> thmWordsListBuilder,
 				Map<String, Integer> docWordsFreqPreMap,
-				ImmutableSetMultimap.Builder<String, Integer> wordThmsMMapBuilder){
-			
+				ImmutableSetMultimap.Builder<String, Integer> wordThmsMMapBuilder){			
 			
 			int wordFreq = thmWordsMap.containsKey(word) ? thmWordsMap.get(word) : 0;
 			//int wordLongFreq = thmWordsMap.containsKey(wordLong) ? thmWordsMap.get(wordLong) : 0;
@@ -457,7 +491,9 @@ public class CollectThm {
 				String word = entry.getKey();
 				//if(word.equals("tex")) continue;
 				int wordFreq = entry.getValue();
-				int score = wordFreq < 100 ? (int)Math.round(15 - wordFreq/5) : wordFreq < 100 ? 1 : 0;			
+				int score = wordFreq < 110 ? (int)Math.round(10 - wordFreq/4) : wordFreq < 300 ? 1 : 0;		
+				//frequently occurring words, should not score too low since they are mostly math words.
+				score = score < 0 ? 5 : score;
 				wordsScoreMapBuilder.put(word, score);
 				//System.out.print(entry.getValue() + " ");
 				//System.out.print("word: "+word +" score: "+score + "  ");
@@ -495,7 +531,8 @@ public class CollectThm {
 				int wordFreq = entry.getValue();
 				//int score = wordFreq < 100 ? (int)Math.round(10 - wordFreq/8) : wordFreq < 300 ? 1 : 0;			
 				int score = wordFreq < 110 ? (int)Math.round(10 - wordFreq/4) : wordFreq < 300 ? 1 : 0;		
-				score = score < 0 ? 0 : score;
+				//frequently occurring words, should not score too low since they are mostly math words.
+				score = score < 0 ? 5 : score;
 				wordsScorePreMap.put(word, score);
 				//System.out.println("word: "+word +" score: "+score + "  ");
 			}

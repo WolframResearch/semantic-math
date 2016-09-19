@@ -71,6 +71,11 @@ public class ThmSearch {
 			
 			ml.evaluate("mx=" + mx +"//N;");
 			ml.discardAnswer();	
+			
+			//ml.evaluate("mx= mx+0.2.Transpose[mx.Correlation[Transpose[mx]]];");
+			//ml.discardAnswer();
+			//need to trim down 
+			
 			//add a small multiple of mx.mx^T.mx, so to make term i more 
 			//prominent when a correlated term is present.
 			//ml.evaluate("mx=mx+0.2*mx.Transpose[mx].mx;");
