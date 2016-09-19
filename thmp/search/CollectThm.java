@@ -3,21 +3,18 @@ package thmp.search;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -25,7 +22,6 @@ import com.google.common.collect.ImmutableSetMultimap;
 
 import thmp.ProcessInput;
 import thmp.ThmInput;
-import thmp.ThmP1;
 import thmp.search.SearchWordPreprocess.WordWrapper;
 import thmp.utils.WordForms;
 
@@ -133,6 +129,12 @@ public class CollectThm {
 		private static final ImmutableList<ImmutableMap<String, Integer>> thmWordsListNoAnno;
 		private static final ImmutableMap<String, Integer> docWordsFreqMapNoAnno;
 		private static final ImmutableMultimap<String, Integer> wordThmsMMapNoAnno;
+		
+		private static final Map<String, Integer> twoGramsMap = NGramsMap.get_twoGramsMap();
+		private static final Map<String, Integer> threeGramsMap = NGramsMap.get_threeGramsMap();	
+		//set that contains the first word of the two and three grams of twoGramsMap and threeGramsMap		
+		private static final Set<String> nGramFirstWordsSet = new HashSet<String>();
+		
 		/**
 		 * Map of (annotated with "hyp" etc) keywords and their scores in document, the higher freq in doc, the lower 
 		 * score, say 1/(log freq + 1) since log 1 = 0. 
@@ -144,6 +146,7 @@ public class CollectThm {
 		private static final int NUM_FREQ_WORDS = 500;
 		
 		static{
+			
 			//freqWordsMap = CollectFreqWords.getTopFreqWords(NUM_FREQ_WORDS);
 			//pass builder into a reader function. For each thm, builds immutable list of keywords, 
 			//put that list into the thm list.
@@ -156,6 +159,9 @@ public class CollectThm {
 			//ImmutableList.Builder<String> thmListBuilderNoAnno = ImmutableList.builder();
 			Map<String, Integer> docWordsFreqPreMapNoAnno = new HashMap<String, Integer>();
 			ImmutableSetMultimap.Builder<String, Integer> wordThmsMMapBuilderNoAnno = ImmutableSetMultimap.builder();
+			
+			nGramFirstWordsSet.addAll(NGramSearch.get_2GramFirstWordsSet());
+			nGramFirstWordsSet.addAll(ThreeGramSearch.get_3GramFirstWordsSet());
 			
 			/*try{
 				//if run locally
@@ -189,7 +195,7 @@ public class CollectThm {
 			}*/
 			List<String> extractedThms = ThmList.get_thmList();
 			//thmListBuilder.addAll(extractedThms);			
-			List<String> thmList = ProcessInput.processInput(extractedThms, true);
+			List<String> thmList = ProcessInput.processInput(extractedThms, true, true);
 			//System.out.println("After processing: "+thmList);
 			try {
 				readThm(thmWordsListBuilder, docWordsFreqPreMap, wordThmsMMapBuilder, thmList);
@@ -285,8 +291,9 @@ public class CollectThm {
 					
 					//only keep words with lengths > 2
 					//System.out.println(word);
-					if(word.length() < 3 || freqWordsSet.contains(word)) continue;
-					
+					if(word.length() < 3 || (freqWordsSet.contains(word) && !nGramFirstWordsSet.contains(word))){ 
+						continue;
+					}
 					addWordToMaps(wordLong, i, thmWordsMap, thmWordsListBuilder, docWordsFreqPreMap, wordThmsMMapBuilder);
 					
 					//check the following word for potential 2 grams. Only first word has hyp/stm annotation.
@@ -344,7 +351,7 @@ public class CollectThm {
 				ImmutableSetMultimap.Builder<String, Integer> wordThmsMMapBuilder, List<String> thmList)
 				throws IOException, FileNotFoundException{
 			Map<String, Integer> twoGramsMap = NGramsMap.get_twoGramsMap();
-			Map<String, Integer> threeGramsMap = NGramsMap.get_threeGramsMap();
+			Map<String, Integer> threeGramsMap = NGramsMap.get_threeGramsMap();			
 			
 			//use method in ProcessInput to process in thms. Like turn $blah$ -> $tex$
 			//adds original thms without latex replaced, should be in same order as above
@@ -371,8 +378,8 @@ public class CollectThm {
 					
 					//get singular forms if plural, put singular form in map
 					//Note, some words shouldn't need to be converted to singular form!
-					word = WordForms.getSingularForm(word);				
-					if(freqWordsSet.contains(word)) continue;
+					word = WordForms.getSingularForm(word);			
+					if(freqWordsSet.contains(word) && !nGramFirstWordsSet.contains(word)) continue;
 					
 					addWordToMaps(word, i, thmWordsMap, thmWordsListBuilder, docWordsFreqPreMap, wordThmsMMapBuilder);
 					//check the following word
@@ -464,6 +471,7 @@ public class CollectThm {
 		private static void buildScoreMapNoAnno(Map<String, Integer> wordsScorePreMap){		
 			
 			addWordScoresFromMap(wordsScorePreMap, docWordsFreqMapNoAnno);
+			//System.out.println("docWordsFreqMapNoAnno "+docWordsFreqMapNoAnno);
 			//put 2 grams in, freq map should already contain 2 grams
 			//addWordScoresFromMap(wordsScorePreMap, twoGramsMap);
 			
@@ -489,7 +497,7 @@ public class CollectThm {
 				int score = wordFreq < 110 ? (int)Math.round(10 - wordFreq/4) : wordFreq < 300 ? 1 : 0;		
 				score = score < 0 ? 0 : score;
 				wordsScorePreMap.put(word, score);
-				System.out.println("word: "+word +" score: "+score + "  ");
+				//System.out.println("word: "+word +" score: "+score + "  ");
 			}
 		}
 		

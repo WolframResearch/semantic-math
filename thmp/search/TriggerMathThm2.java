@@ -305,6 +305,7 @@ public class TriggerMathThm2 {
 		String[] thmAr = thm.split(WordForms.splitDelim());
 		//map of non-annotated words and their scores
 		Map<String, Integer> wordsScoreMap = CollectThm.ThmWordsMaps.get_wordsScoreMapNoAnno();		
+		//System.out.print("wordsScoreMap inside TriggerMathThm: " + wordsScoreMap);
 		//should eliminate unnecessary words first, then send to get wrapped.
 		//<--can only do that if leave the hyp words in, eg if.
 		
@@ -329,6 +330,7 @@ public class TriggerMathThm2 {
 			if(i < thmAr.length-1){
 				String nextTermCombined = term + " " + thmAr[i+1];
 				newNorm = addToNorm(thmAr, wordsScoreMap, triggerTermsVec, newNorm, i, nextTermCombined);	
+				System.out.println("combined word: " + nextTermCombined + " norm: " + newNorm);
 				
 				if(i < thmAr.length-2){
 					String threeTermsCombined = nextTermCombined + " " + thmAr[i+2];
@@ -403,7 +405,7 @@ public class TriggerMathThm2 {
 			int norm, int i, String term) {
 		Integer termScore = wordsScoreMap.get(term);
 		//get singular forms
-		
+		System.out.println("term: " + term + " termScore: " + termScore );
 		if(termScore == null){
 			term = WordForms.getSingularForm(term);
 			termScore = wordsScoreMap.get(term);

@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,11 +31,15 @@ public class NGramSearch {
 	//private static final File twoGramsFile = new File("src/thmp/data/twoGrams.txt");
 	//list of 2 grams that show up with above-average frequency, with their frequencies
 	private static final Map<String, Integer> twoGramsMap;
+	//nGramMap Map of maps. Keys are words in text, and entries are maps whose keys are 2nd terms
+	// in 2 grams, and entries are frequency counts.
 	//this field will be exposed to build 3-grams
 	private static final Map<String, Map<String, Integer>> nGramMap;
-	private static final String[] ADDITIONAL_TWO_GRAMS = new String[]{"local ring", "local field"};
+	private static final String[] ADDITIONAL_TWO_GRAMS = new String[]{"local ring", "local field", "direct sum"};
 	//should use this to detect fluff in first word.
 	private static final Set<String> fluffWordsSet = WordForms.makeFluffSet();
+	//set that contains the first word of each n-grams.
+	private static final Set<String> nGramFirstWordsSet;
 	
 	static{
 		//System.out.println("Gathering 2-grams...");
@@ -43,14 +48,13 @@ public class NGramSearch {
 		Map<String, Integer> totalWordCounts = new HashMap<String, Integer>();
 		//nGram map, 
 		recordCounts(nGramMap, totalWordCounts);
-		//nGramMap has been built, use it to filter out the right 3-gram words.
-		
-		
+
 		//computes the average frequencies of words that follow the first word in all 2-grams
 		Map<String, Integer> averageWordCounts = computeAverageFreq(nGramMap, totalWordCounts);
 		
+		nGramFirstWordsSet = new HashSet<String>();
 		//get list of 2 grams that show up frequently
-		twoGramsMap = compile2grams(nGramMap, averageWordCounts);
+		twoGramsMap = compile2grams(nGramMap, averageWordCounts, nGramFirstWordsSet);
 		//System.out.println("twoGramsMapSz" + twoGramsMap.size());
 		//System.out.println(twoGramsMap);
 		System.out.println("Done with 2-grams.");
@@ -155,7 +159,8 @@ public class NGramSearch {
 	 * compile list of 2 grams. Retain ones that show up higher than 3/2 of avg frequency.
 	 * @return 2 grams, and their raw frequencies in doc.
 	 */
-	private static Map<String, Integer> compile2grams(Map<String, Map<String, Integer>> nGramMap, Map<String, Integer> averageWordCounts){
+	private static Map<String, Integer> compile2grams(Map<String, Map<String, Integer>> nGramMap, Map<String, Integer> averageWordCounts,
+			Set<String> nGramFirstWordsSet){
 		Map<String, Integer> twoGramMap = new HashMap<String, Integer>();
 		//System.out.print(nGramMap);
 		
@@ -172,6 +177,7 @@ public class NGramSearch {
 					String nextWord = nextWordsMapEntry.getKey();
 					String twoGram = word + " " + nextWord;					
 					twoGramMap.put(twoGram, nextWordCount);
+					nGramFirstWordsSet.add(word);
 					totalFreqCount += nextWordCount;
 					totalTwoGrams++;
 					//System.out.println(twoGram + " " + nextWordCount);
@@ -184,6 +190,7 @@ public class NGramSearch {
 		for(String twoGram : ADDITIONAL_TWO_GRAMS){
 			twoGramMap.put(twoGram, averageFreqCount);
 		}
+		//System.out.println("averageFreqCount " + averageFreqCount);
 		return twoGramMap;
 	}
 
@@ -202,6 +209,14 @@ public class NGramSearch {
 	public static Map<String, Map<String, Integer>> get_nGramMap(){
 		return nGramMap;
 	}	
+	
+	/**
+	 * 
+	 * @return Set of first words in the collected 2-grams.
+	 */
+	public static Set<String> get_2GramFirstWordsSet(){
+		return nGramFirstWordsSet;
+	}
 
 	/**
 	 * Write 2-grams to file.
@@ -213,7 +228,7 @@ public class NGramSearch {
 	
 	public static void main(String[] args){
 		//System.out.println(CollectThm.get_wordsScoreMapNoAnno());
-		boolean write2gramsToFile = true;
+		boolean write2gramsToFile = false;
 		if(write2gramsToFile) write2gramsToFile(twoGramsMap);
 	}
 	

@@ -1,10 +1,13 @@
 package thmp.crawl;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -128,9 +131,13 @@ public class UnzipFile {
 		//reads in those files from 
 		for(String file : extractedFiles){
 			File fileFrom = new File(file);
+			//InputStream fileStream = new FileInputStream(file);
+			FileReader fileReader = new FileReader(file);
+			BufferedReader fileBufferedReader = new BufferedReader(fileReader);
+			
 			Path fileTo = Paths.get(file.replaceAll("([^.]*)(\\.txt)", "$1_thms$2"));
 			
-			List<String> thmList = ThmInput.readThm(fileFrom);
+			List<String> thmList = ThmInput.readThm(fileBufferedReader);
 			
 			//write list of theorems to file
 			Files.write(fileTo, thmList, Charset.forName("UTF-8"));

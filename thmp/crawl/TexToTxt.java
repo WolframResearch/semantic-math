@@ -20,13 +20,15 @@ public class TexToTxt {
 
 	private static final String SRC_DIR = "src/thmp/data/functional_analysis_operator_algebras";
 	private static final String TXT_File = "src/thmp/data/functional_analysis_operator_algebras/functionalAnalysis.txt";
+	private static final String ML_ALG_SRC_DIR = "src/thmp/data/multilinear_algebra";
+	private static final String ML_ALG_TXT_File = "src/thmp/data/multilinearAlgebra.txt";
 	
 	public static void main(String[] args){	
 		
 		//list to be written to txt file
 		List<String> texContentList = new ArrayList<String>();
 		
-		File dir = new File(SRC_DIR);
+		File dir = new File(ML_ALG_SRC_DIR);
 		File[] fileList = dir.listFiles();
 		if(fileList == null){
 			System.out.println("Not a directory!");
@@ -49,7 +51,7 @@ public class TexToTxt {
 			}
 			
 		}
-		Path txtFilePath = Paths.get(TXT_File);
+		Path txtFilePath = Paths.get(ML_ALG_TXT_File);
 		FileUtils.writeToFile(texContentList, txtFilePath);
 	}
 	

@@ -5,6 +5,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +37,8 @@ public class ThreeGramSearch {
 	private static final List<String> threeGramList;
 	//map of three grams and their frequencies
 	private static final Map<String, Integer> threeGramFreqMap;
+	//
+	private static final Set<String> threeGramFirstWordsSet = new HashSet<String>();
 	
 	//private static final Set<String> nonMathFluffWordsSet = CollectFreqWords.GetFreqWords.get_nonMathFluffWordsSet2();	
 	private static final Path threeGramsFilePath = Paths.get("src/thmp/data/threeGrams.txt");
@@ -182,6 +185,7 @@ public class ThreeGramSearch {
 				String threeGram = threeGramSetIter.next();
 				threeGramList.add(threeGram);
 				threeGramFreqMap.put(threeGram, threeGramCountsMap.get(threeGram));
+				threeGramFirstWordsSet.add(firstWord);
 				upTo--;
 			}
 			//pick the rest according to pairs frequencies gathered in twoGramFreqMap
@@ -200,12 +204,12 @@ public class ThreeGramSearch {
 				int threeGramFreq = threeGramCountsMap.get(threeGram);
 				
 				if(firstWordMap != null ){
-					boolean added = addTo3GramList(threeGramList, firstWordMap, threeGram, word1, threeGramFreq);
+					boolean added = addTo3GramList(threeGramList, firstWordMap, threeGram, word1, threeGramFreq, firstWord);
 					if(!added){
 						String word2 = threeGramAr[2];
 						Map<String, Integer> word1Map = twoGramFreqMap.get(word1);
 						if(word1Map != null){
-							addTo3GramList(threeGramList, word1Map, threeGram, word2, threeGramFreq);
+							addTo3GramList(threeGramList, word1Map, threeGram, word2, threeGramFreq, firstWord);
 						}
 					}
 				}
@@ -219,19 +223,22 @@ public class ThreeGramSearch {
 	 * @param wordMap map to get word freq out of.
 	 * @param threeGram the 3-gram
 	 * @param word Either second or third word in the 3-gram
+	 * @param firstWord The first word in the 3-gram
 	 */
 	private static boolean addTo3GramList(List<String> threeGramList, Map<String, Integer> wordMap, String threeGram, String word,
-			int threeGramFreq){
+			int threeGramFreq, String firstWord){
 		Integer totalPairFreq = wordMap.get(word);
 		boolean added = false;
 		//
 		if((totalPairFreq != null && threeGramFreq > totalPairFreq/2)){
 			threeGramList.add(threeGram);
 			threeGramFreqMap.put(threeGram, threeGramFreq);
+			threeGramFirstWordsSet.add(firstWord);
 			added = true;
 		}
 		return added;
 	}
+	
 	/**
 	 * String comparator that uses String's natural lexicographical ordering.
 	 */
@@ -266,6 +273,13 @@ public class ThreeGramSearch {
 	 */
 	public static Map<String, Integer> get3GramsMap(){
 		return threeGramFreqMap;
+	}
+	
+	/** 
+	 * @return Set of first words in the collected 2-grams.
+	 */
+	public static Set<String> get_3GramFirstWordsSet(){
+		return threeGramFirstWordsSet;
 	}
 	
 	public static void main(String[] args){

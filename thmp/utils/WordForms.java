@@ -13,6 +13,7 @@ public class WordForms {
 	//delimiters to split on when making words out of input
 	private static final String SPLIT_DELIM = "\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:|-|_|~";
 	//small lists of fluff words, used in, e.g., n gram extraction.
+	//*don't* put off here, will interfere with 3 gram collection
 	private static final String FLUFF_WORDS_SMALL = "a|the|tex|of|and|on|let|lemma|for|to|that|with|is|be|are|there|by"
 			+ "|any|as|if|we|suppose|then|which|in|from|this|assume|this|have|just|may|an|every|it";
 	private static final ImmutableSet<String> freqWordsSet; 

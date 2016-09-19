@@ -304,7 +304,7 @@ public class ThmP1Test {
 			System.out.println("PARTS: " + parsedOutput);
 			
 			//System.out.println("****" + ThmP1.getParsedExpr() + "******");
-			boolean processFile = true;
+			boolean processFile = false;
 			
 			if(processFile){
 				Scanner sc = new Scanner(new File("src/thmp/data/noTex4.txt"));

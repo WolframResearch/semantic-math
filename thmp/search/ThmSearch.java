@@ -23,7 +23,8 @@ public class ThmSearch {
 	 */
 	private static int[][] docMx;
 	public static final String[] ARGV = new String[]{"-linkmode", "launch", "-linkname", 
-	"\"/Applications/Mathematica.app/Contents/MacOS/MathKernel\" -mathlink"};
+	"\"/Applications/Mathematica2.app/Contents/MacOS/MathKernel\" -mathlink"};
+	
 	//number of nearest vectors to get for Nearest[]
 	private static final int NUM_NEAREST = 3;
 	private static final int NUM_SINGULAR_VAL_TO_KEEP = 20;
@@ -39,6 +40,7 @@ public class ThmSearch {
 		corMxList = new ArrayList<List<Integer>>();
 		try{			
 			ml = MathLinkFactory.createKernelLink(ARGV);
+			System.out.println("MathLink created! "+ ml);
 			//discard initial pakets the kernel sends over.
 			ml.discardAnswer();
 			//set up the matrix corresponding to docMx, to be SVD'd. 
@@ -266,6 +268,7 @@ public class ThmSearch {
 			//System.out.println("thm vec: " + TriggerMathThm2.createQuery(TriggerMathThm2.getThm(d)));
 		}
 		System.out.println("~~~~~");
+		//System.out.println("nearestVecList from within ThmSearch.java: " + nearestVecList);
 		return nearestVecList;
 	}
 	
@@ -291,6 +294,7 @@ public class ThmSearch {
 		}
 		return query;
 	}
+	
 	/**
 	 * Reads thm one at a time.
 	 * @param thm is a thm input String
@@ -311,6 +315,7 @@ public class ThmSearch {
 		}catch(MathLinkException|ExprFormatException e){
 			e.printStackTrace();
 		}
+		//System.out.print("Within ThmSearch, nearestVecList: " + nearestVecList);
 		return nearestVecList;
 	}
 	

@@ -8,10 +8,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ListMultimap;
 
 /**
  * Processes theorems/lemmas/defs read in from file.
@@ -23,17 +29,29 @@ import java.util.regex.Pattern;
 
 public class ProcessInput {
 	
+	//regex to mark start of tex, such as $, \[, \begin{align}
+	private static final String TEX_START = "\\$.*|\\\\\\[.*|\\\\begin\\{ali[^}]*\\}";
+	private static final String TEX_END = "[^$]*\\$|[^]]*\\\\\\]|\\\\end\\{ali[^}]*\\}";
+	//character that would mark the end of a latex command
+	private static final String COMMAND_STOP_CHAR = "\\\\|\\s+|\\$|\\^|_|-|:|\\.|;";
+	private static final ImmutableMultimap<String, String> texCommandWordsMMap;
 	
-	public static void main(String[] args) throws IOException{
+	static{
 		
-		File inputFile = new File("src/thmp/data/thmFile5.txt");
-		Path noTex = Paths.get("src/thmp/data/noTex5.txt");
-
-		List<String> noTexStringList = processInput(inputFile, false);
-		
-		Files.write(noTex, noTexStringList, Charset.forName("UTF-8"));
+		ListMultimap<String, String> texCommandWordsPreMMap = ArrayListMultimap.create();
+		//put tex-words pairs into the premap
+		addCommandWords(texCommandWordsPreMMap, "oplus", new String[]{"direct sum"});
+		texCommandWordsMMap = ImmutableMultimap.copyOf(texCommandWordsPreMMap);
+	}	
+	
+	private static void addCommandWords(ListMultimap<String, String> texCommandWordsPreMMap, String texCommand, String[] words){
+		texCommandWordsPreMMap.putAll(texCommand, Arrays.asList(words));
 	}
-
+	
+	public static List<String> processInput(File inputFile, boolean replaceTex) throws FileNotFoundException{
+		return processInput(inputFile, replaceTex, false);
+	}
+	
 	/**
 	 * Reads in from file, potentially replaces latex, puts thms into a list, 
 	 * @param inputFile
@@ -41,7 +59,7 @@ public class ProcessInput {
 	 * @return List of Strings with latex such as \\cite removed.
 	 * @throws FileNotFoundException
 	 */
-	public static List<String> processInput(File inputFile, boolean replaceTex) throws FileNotFoundException {
+	public static List<String> processInput(File inputFile, boolean replaceTex, boolean texToWords) throws FileNotFoundException {
 		Scanner sc = new Scanner(inputFile);		
 		
 		ArrayList<String> noTexStringList = new ArrayList<String>();
@@ -49,7 +67,7 @@ public class ProcessInput {
 		while(sc.hasNextLine()){
 			String thm = sc.nextLine();
 			if(thm.matches("")) continue;			
-			String noTexString = inputReplace(thm, replaceTex);
+			String noTexString = inputReplace(thm, replaceTex, texToWords);
 			noTexStringList.add(noTexString);
 		}
 		
@@ -58,17 +76,30 @@ public class ProcessInput {
 	}
 	
 	/**
-	 * Processes list of inputs.
+	 * Redirect method for processInput.
 	 * @param thmInputList
 	 * @param replaceTex
 	 * @return
 	 */
 	public static List<String> processInput(List<String> thmInputList, boolean replaceTex){
+		return processInput(thmInputList, replaceTex, false);
+	}
+	
+	/**
+	 * Processes list of inputs.
+	 * @param thmInputList
+	 * @param replaceTex Whether to replace latex between $ $ as simply tex
+	 * @param texToWords Whether to convert tex symbols to words, eg \oplus->direct sum.
+	 * Places these words at beginning of the tex command, so to stay at same part with regard
+	 * to "hyp/stm"
+	 * @return
+	 */
+	public static List<String> processInput(List<String> thmInputList, boolean replaceTex, boolean texToWords){
 		List<String> inputProcessedList = new ArrayList<String>();
 		
 		for(int i = 0; i < thmInputList.size(); i++){
 			String thm = thmInputList.get(i);
-			String thmProcessed = inputReplace(thm, replaceTex);
+			String thmProcessed = inputReplace(thm, replaceTex, texToWords);
 			inputProcessedList.add(thmProcessed);
 		}
 		return inputProcessedList;
@@ -80,33 +111,41 @@ public class ProcessInput {
 	 * @param replaceTex
 	 * @return
 	 */
-	private static String inputReplace(String thm, boolean replaceTex){
+	private static String inputReplace(String thm, boolean replaceTex, boolean texToWords){
+		//sorry vegetarians.
 		String[] meat = thm.split("\\\\label\\{([a-zA-Z]|-)*\\} ");
 		String noTexString = "";
-		//get the second part if separated by "\label{...}"
+		//get the second part, meat[1], if separated by "\label{...}"
 		if(meat.length > 1){
 			thm = meat[1];
 			//System.out.println(thm);
 		}
-		noTexString = replaceThm(thm, replaceTex);			
-
+		noTexString = replaceThm(thm, replaceTex, texToWords);			
+		
 		return noTexString;
 	}
 
 	/**
 	 * @param thm
 	 * @param replaceTex
+	 * @param texToWords whether to replace tex symbols, eg "\oplus", with words, eg "direct sum"
 	 * @return
 	 */
-	private static String replaceThm(String thm, boolean replaceTex) {
+	private static String replaceThm(String thm, boolean replaceTex, boolean texToWords) {
 		String noTexString;
+		
+		//replace the latex symbols e.g. \oplus into words, e.g. direct sum, 
+		if(texToWords){
+			thm = turnTexToWords(thm);
+		}
 		if(replaceTex){
 			thm = thm.replaceAll("\\$[^$]+\\$|\\$\\$[^$]+\\$\\$", "tex");
-		}
+		}		
+		
 		//thm.replaceAll("$[^$]\\$", "tex");
 		//replaceAll("(?:\\$[^$]+\\$)|(?:\\$\\$[^$]+\\$\\$)", "tex").
-		//use capturing groups to capture text inside {\it ... }
-		//replace the others with non-captureing groups to speed up
+		//use capturing groups to capture text inside {\it ... } etc.
+		//replace the others with non-captureing groups to speed up.
 		String tempThm = thm.replaceAll("\\\\begin\\{ali[^}]*\\}|\\\\end\\{ali[^}]*\\}|\\\\begin\\{equ[^}]*\\}|\\\\end\\{equ[^}]*\\}", "\\$\\$")
 				.replaceAll("\\\\begin\\{[^}]*\\}|\\\\end\\{[^}]*\\}|\\\\cite\\{[^}]*\\}|\\\\item"
 						+ "|\\\\ref\\{[^}]*\\}", "").replaceAll("\\{\\\\it([^}]*)\\}", "$1")
@@ -119,4 +158,128 @@ public class ProcessInput {
 		//System.out.println(thm.replaceAll("(\\$[^$]+\\$)|(\\$\\$[^$]+\\$\\$)", "tex"));
 		return noTexString;
 	}
+	
+	/**
+	 * Turn tex symbols to words. Walk through the input,
+	 * when trigger words encountered, check for stop symbols such as space,
+	 * extract command, replace with words in multimap if command contained in map.
+	 * @param thm
+	 * @return
+	 */
+	private static String turnTexToWords(String thm){
+		//if word contains the startWords		
+		//StringBuilder thmBuilder = new StringBuilder(thm);
+		 List<String> thmWordsList = new ArrayList<String>(Arrays.asList(thm.split("\\s+")));
+		//remember index in the stringbuilder for startWord
+		//insert extract tex word at index of the startword,
+		//eg "There exists $\oplus ..." => "There exists direct sum $\oplus ..."
+		//the start index of the current tex block, block starting with $ or \[
+		int curTexStartIndex = 0;
+		for(int i = 0; i < thmWordsList.size(); i++){
+			//thmWordsList.add(" ");
+			String curWord = thmWordsList.get(i);
+			//avoid cases such as $R$-module
+			if(curWord.matches("\\$[^$]+\\$[^\\s]*|\\s*")){
+				continue;
+			}
+			if(curWord.matches(TEX_START)){
+				curTexStartIndex = i;
+				//insert extracted words at curTexStartIndex
+				//returns index of end block
+				int texEndIndex = addToIndex(thmWordsList, curTexStartIndex);	
+				i = texEndIndex == i ? i+1 : texEndIndex;
+			}
+		}
+		StringBuilder thmBuilder = new StringBuilder();
+		for(String word : thmWordsList){
+			thmBuilder.append(word + " ");
+		}
+		
+		return thmBuilder.toString();
+	}
+	
+	/**
+	 * Auxiliary method for turnTexToWords.
+	 * @param thmWordsList List of space-separated words of thm.
+	 * @param curTexStartIndex Starting index of current tex block.
+	 * @return index of end of block.
+	 */
+	private static int addToIndex(List<String> thmWordsList, int curTexStartIndex){
+		//int texBlockEndIndex = curTexStartIndex;
+		int i;
+		for(i = curTexStartIndex; i < thmWordsList.size(); i++){
+			String word = thmWordsList.get(i);
+			boolean texEnded = word.matches(TEX_END);
+			//check for latex commands after "\"
+			int slashIndex = word.indexOf("\\");
+			int wordLen = word.length();			
+			//if does not contain slash
+			if(slashIndex == -1){
+				//if end of tex block
+				if(texEnded){
+					break;
+				}
+				continue;
+			}
+			//short-circuit if no more \ other than the \ in \]
+			if(texEnded && slashIndex == wordLen-2){
+				break;
+			}
+			//get word succeeding \
+			//iterate through word,
+			StringBuilder commandBuilder = new StringBuilder();
+			//index for storing slashes
+			List<StringBuilder> sbList = new ArrayList<StringBuilder>();
+			
+			for(int j = slashIndex+1; j < word.length(); j++){
+				String curChar = String.valueOf(word.charAt(j));
+				//if stop char reached
+				//Would using .indexOf be faster than regex matching?
+				if(curChar.matches(COMMAND_STOP_CHAR)){
+					sbList.add(commandBuilder);
+					commandBuilder = new StringBuilder();
+					continue;
+				}
+				commandBuilder.append(curChar);				
+			}
+			sbList.add(commandBuilder);
+			
+			for(StringBuilder sb : sbList){
+				StringBuilder texWordsBuilder = new StringBuilder();
+				//check to see if a command keyword, eg oplus
+				Collection<String> texWordsCol = texCommandWordsMMap.get(sb.toString());
+				if(!texWordsCol.isEmpty()){
+					for(String texWord : texWordsCol){
+						texWordsBuilder.append(texWord);
+					}
+					//add the tex words at the start index
+					thmWordsList.add(curTexStartIndex, texWordsBuilder.toString());				
+				}
+			}
+			
+			//skip to the next word to avoid infinite loop, as just added one word
+			i++;
+			if(texEnded){
+				break;
+			}
+		}
+		return i;
+	}
+	
+	public static void main(String[] args) throws IOException{
+		
+		boolean writeToFile = false;
+		
+		if(writeToFile){
+			File inputFile = new File("src/thmp/data/thmFile5.txt");
+			Path noTex = Paths.get("src/thmp/data/noTex5.txt");
+	
+			List<String> noTexStringList = processInput(inputFile, false);
+			
+			Files.write(noTex, noTexStringList, Charset.forName("UTF-8"));
+		}
+		System.out.println(turnTexToWords("this is $\\oplus r$ "));
+		System.out.println(turnTexToWords(" \\[\\oplus r\\] "));
+	}
+
 }
