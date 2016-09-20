@@ -40,8 +40,6 @@ import thmp.utils.WordForms;
  */
 public class CollectThm {
 
-	//Map of frequent words and their parts of speech (from words file data). Don't need the pos for now.
-	private static final ImmutableSet<String> freqWordsSet; 
 	
 	//raw original file
 	//private static final File rawFile = new File("src/thmp/data/commAlg5.txt");
@@ -67,10 +65,20 @@ public class CollectThm {
 	
 	//private static final ImmutableMap<String, Integer> twoGramsMap;
 	
-	static{
-		//only get the top N words
-		freqWordsSet = CollectFreqWords.GetFreqWords.get_nonMathFluffWordsSet2();
+	public static class FreqWordsSet{
+
+		//Map of frequent words and their parts of speech (from words file data). Don't need the pos for now.
+		private static final Set<String> freqWordsSet; 
 		
+		static{
+			//only get the top N words
+			//freqWordsSet = CollectFreqWords.GetFreqWords.get_nonMathFluffWordsSet2();
+			freqWordsSet = WordFrequency.trueFluffWordsSet();
+		}
+		
+		public static Set<String> freqWordsSet(){
+			return freqWordsSet;
+		}
 	}
 	
 	/**
@@ -83,14 +91,7 @@ public class CollectThm {
 	public static void setResources(BufferedReader srcFileReader) {
 		rawFileReader = srcFileReader;
 		System.out.print("first passed in: " +srcFileReader);
-		/*String line;
-		try {
-			while((line=rawFileReader.readLine()) != null){
-				System.out.println(line);
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}*/
+		
 	}
 	/**
 	 * Set list of bufferedReaders, rawFileReaderList
@@ -99,14 +100,7 @@ public class CollectThm {
 	public static void setResources(List<BufferedReader> srcFileReaderList) {
 		rawFileReaderList = srcFileReaderList;
 		System.out.print("buffered readers first passed in: " +srcFileReaderList);
-		/*String line;
-		try {
-			while((line=rawFileReader.readLine()) != null){
-				System.out.println(line);
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}*/
+		
 	}
 	
 	public static class ThmWordsMaps{
@@ -195,6 +189,7 @@ public class CollectThm {
 			}*/
 			List<String> extractedThms = ThmList.get_thmList();
 			//thmListBuilder.addAll(extractedThms);			
+			//the third true means to extract words from latex symbols, eg oplus->direct sum.
 			List<String> thmList = ProcessInput.processInput(extractedThms, true, true);
 			//System.out.println("After processing: "+thmList);
 			try {
@@ -291,7 +286,7 @@ public class CollectThm {
 					
 					//only keep words with lengths > 2
 					//System.out.println(word);
-					if(word.length() < 3 || (freqWordsSet.contains(word) && !nGramFirstWordsSet.contains(word))){ 
+					if(word.length() < 3 || (FreqWordsSet.freqWordsSet.contains(word) && !nGramFirstWordsSet.contains(word))){ 
 						continue;
 					}
 					addWordToMaps(wordLong, i, thmWordsMap, thmWordsListBuilder, docWordsFreqPreMap, wordThmsMMapBuilder);
@@ -379,22 +374,24 @@ public class CollectThm {
 					//get singular forms if plural, put singular form in map
 					//Note, some words shouldn't need to be converted to singular form!
 					word = WordForms.getSingularForm(word);			
-					if(freqWordsSet.contains(word) && !nGramFirstWordsSet.contains(word)) continue;
+					if(FreqWordsSet.freqWordsSet.contains(word) && !nGramFirstWordsSet.contains(word)) continue;
 					
 					addWordToMaps(word, i, thmWordsMap, thmWordsListBuilder, docWordsFreqPreMap, wordThmsMMapBuilder);
 					//check the following word
 					if(j < thmAr.length-1){
 						String nextWordCombined = word + " " + thmAr[j+1];
-						if(twoGramsMap.containsKey(nextWordCombined)){
-							addWordToMaps(nextWordCombined, i, thmWordsMap, thmWordsListBuilder, docWordsFreqPreMap,
-									wordThmsMMapBuilder);
+						Integer twoGramFreq = twoGramsMap.get(nextWordCombined);
+						if(twoGramFreq != null){
+							addNGramToMaps(nextWordCombined, i, thmWordsMap, thmWordsListBuilder, docWordsFreqPreMap,
+									wordThmsMMapBuilder, twoGramFreq);
 						}
 						//try to see if these three words form a valid 3-gram
 						if(j < thmAr.length-2){
 							String threeWordsCombined = nextWordCombined + " " + thmAr[j+2];
-							if(threeGramsMap.containsKey(threeWordsCombined)){
-								addWordToMaps(threeWordsCombined, i, thmWordsMap, thmWordsListBuilder, docWordsFreqPreMap,
-										wordThmsMMapBuilder);
+							Integer threeGramFreq = threeGramsMap.get(threeWordsCombined);
+							if(threeGramFreq != null){
+								addNGramToMaps(threeWordsCombined, i, thmWordsMap, thmWordsListBuilder, docWordsFreqPreMap,
+										wordThmsMMapBuilder, threeGramFreq);
 							}
 						}
 					}
@@ -413,28 +410,25 @@ public class CollectThm {
 		 * @param thmWordsListBuilder
 		 * @param docWordsFreqPreMap
 		 * @param wordThmsMMapBuilder
+		 * @param wordTotalFreq is total frequency of word in corpus. This 
+		 * was found when collecting 2 and 3 grams
 		 */
 		private static void addNGramToMaps(String word, int curThmIndex, Map<String, Integer> thmWordsMap,
 				ImmutableList.Builder<ImmutableMap<String, Integer>> thmWordsListBuilder,
 				Map<String, Integer> docWordsFreqPreMap,
-				ImmutableSetMultimap.Builder<String, Integer> wordThmsMMapBuilder){			
+				ImmutableSetMultimap.Builder<String, Integer> wordThmsMMapBuilder,
+				int wordTotalFreq){			
 			
 			int wordFreq = thmWordsMap.containsKey(word) ? thmWordsMap.get(word) : 0;
 			//int wordLongFreq = thmWordsMap.containsKey(wordLong) ? thmWordsMap.get(wordLong) : 0;
 			thmWordsMap.put(word, wordFreq + 1);
 			//thmWordsMap.put(wordLong, wordLongFreq + 1);
 			
-			if(docWordsFreqPreMap){
-				
+			//only add word freq to global doc word frequency if not already done so.
+			if(!docWordsFreqPreMap.containsKey(word)){
+				docWordsFreqPreMap.put(word, wordTotalFreq);
 			}
-			int docWordFreq = docWordsFreqPreMap.containsKey(word) ? docWordsFreqPreMap.get(word) : 0;
-			//int docWordLongFreq = docWordsFreqPreMap.containsKey(wordLong) ? docWordsFreqPreMap.get(wordLong) : 0;				
-			//increase freq of word by 1
-			docWordsFreqPreMap.put(word, docWordFreq + 1);
-			//System.out.print(word + " " + docWordFreq+ " ");
-			//docWordsFreqPreMap.put(wordLong, docWordLongFreq + 1);
 			
-			//put both original and long form.
 			wordThmsMMapBuilder.put(word, curThmIndex);
 			//wordThmsMMapBuilder.put(wordLong, i);
 		}
