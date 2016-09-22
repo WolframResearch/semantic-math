@@ -52,6 +52,9 @@ public class WLCommandsList {
 		triggerWordLookupMapBuilder.put("belong", "is");
 		triggerWordLookupMapBuilder.put("lie", "is");
 		triggerWordLookupMapBuilder.put("let", "if");
+		triggerWordLookupMapBuilder.put("for any", "for every");
+		triggerWordLookupMapBuilder.put("if", "suppose");
+		triggerWordLookupMapBuilder.put("if and only if", "suppose");
 		// triggerWordLookupMapBuilder.put("radius", "is");
 
 		triggerWordLookupMap = triggerWordLookupMapBuilder.build();
@@ -132,9 +135,14 @@ public class WLCommandsList {
 		
 		WLCommandMapBuilder.put("auxpass", addCommand(new String[] { "ent, , true",
 				"auxpass, , trigger_true", "ent|csubj, , true" }));
+		
+		// ***Hypothesis commands***
 		//for every $x$
-		WLCommandMapBuilder.put("for every", addCommand(new String[] { ", for every, trigger", "\\[ForAll][",
+		WLCommandMapBuilder.put("for every", addCommand(new String[] { ", for every|for any, trigger", "\\[ForAll][",
 				 "ent|symb, , true", "]" }));
+		WLCommandMapBuilder.put("suppose", addCommand(new String[] { "hyp, , trigger",
+				 "assert, , true" }));
+		
 		//we have ...
 		WLCommandMapBuilder.put("have", addCommand(new String[] { "pro, we, false", "verb, have, trigger", ", , true",}));
 		// label string if to be used as trigger ent/symb, then use these words

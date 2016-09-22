@@ -54,15 +54,16 @@ public class ThmInput {
 			//while(sc.hasNextLine()){
 			if(line.matches("\\s*")) continue;
 			
-			if(line.matches("(?:\\\\begin\\{def[^}]*\\}|\\\\begin\\{lem[^}]*\\}|\\\\begin\\{th[^}]*\\}|\\\\begin\\{prop[^}]*\\})(?:.)*")){	
-			//if(line.matches("\\\\begin\\{definition\\}|\\\\begin\\{lemma\\}")){
+			//if(line.matches("(?:\\\\begin\\{def[^}]*\\}|\\\\begin\\{lem[^}]*\\}|\\\\begin\\{th[^}]*\\}|\\\\begin\\{prop[^}]*\\})(?:.)*")){	
+			if(line.matches("(?:\\\\begin\\{def[.]*|\\\\begin\\{lem[.]*|\\\\begin\\{th[.]*|\\\\begin\\{prop[.]*|\\\\begin\\{proclaim[.]*)")){	
+				//if(line.matches("\\\\begin\\{definition\\}|\\\\begin\\{lemma\\}")){
 				//if(line.matches("\\\\begin\\{definition\\}|\\\\begin\\{lemma\\}|\\\\begin\\{thm\\}|\\\\begin\\{theorem\\}")){	
 				newThm = line;				
 				line = srcFileReader.readLine();
 				inThm = true;
 			}			
 			//else if(line.matches("\\\\end\\{definition\\}|\\\\end\\{lemma\\}")){
-			else if(line.matches("(?:\\\\end\\{def[^}]*\\}|\\\\end\\{lem[^}]*\\}|\\\\end\\{th[^}]*\\}|\\\\end\\{prop[^}]*\\})(?:.)*")){
+			else if(line.matches("(?:\\\\end\\{def[.]*|\\\\end\\{lem[.]*|\\\\end\\{th[.]*|\\\\end\\{prop[.]*|\\\\endproclaim[.]*)")){
 			//else if(line.matches("\\\\end\\{definition\\}|\\\\end\\{lemma\\}|\\\\end\\{thm\\}|\\\\end\\{theorem\\}")){
 				inThm = false;
 				newThm += "\n";

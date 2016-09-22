@@ -267,7 +267,16 @@ public class ThmP1Test {
 			st = "$I$ is pure";
 			st = "A Noetherian ring $R$ is called Cohen-Macaulay if all local rings are Cohen-Macaulay."; //******<---
 			st = "there exists a field with $F$ maximal and $K$ free"; //<-- revisit!
-
+			st = "Suppose $R$ is a Cohen-Macaulay local ring. For any prime $p$ the ring $R$ is Cohen-Macaulay as well.";
+			st = "for any prime p $R$ is a ring";
+			st = "suppose $R$ is a ring";
+			st = "$R$ is catenary if and only if $R/\\mathfrak p$ is catenary for every minimal prime $\\mathfrak p$.";
+			st = "$R$ is universally catenary if and only if $R/\\mathfrak p$ is universally catenary for every minimal prime $\\mathfrak p$.";
+			st = "$R $";
+			st = "$R/\\mathfrak p$ is catenary for every minimal prime $\\mathfrak p$";
+			st = "$f$ is holomorphic on $D(0, r)$, the derivative of $f$ is $\\sum_j j $";
+			//st = "$r $ is catenary "; 
+			//st = "$R$ is field if and only if it is a field";
 			//st = "there exists a unique power series $g(T)$ such that $f(g(T)) = T$";			
 			//st = "$f$ is holomorphic on $D(0, r)$, the derivative of $f$ is $\\sum_j j $";
 			//st = "the derivative of the log of $x$ is equal to $1/x$";
@@ -294,10 +303,10 @@ public class ThmP1Test {
 			for(int i = 0; i < strAr.length; i++){
 				//alternate commented out line to enable tex converter
 				//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim()) ));
-				ThmP1.parse(ThmP1.tokenize(strAr[i].trim()));
-				
+				ThmP1.parse(ThmP1.tokenize(strAr[i].trim()));				
 			}
-			String parsedOutput = Arrays.toString(ThmP1.getParseStructMapList().toArray());			
+			String parsedOutput = ThmP1.getParseStructMapList().toString();
+			//String parsedOutput = Arrays.toString(ThmP1.getParseStructMapList().toArray());			
 			//String processedOutput = parsedOutput.replaceAll("MathObj", "MathObject").replaceAll("\\$([^$]+)\\$", "LaTEXMath[\"$1\"]")
 					//.replaceAll("MathObject\\{([^}]+)\\}", "MathObject\\[$1\\]");
 			
@@ -323,7 +332,8 @@ public class ThmP1Test {
 					}
 					System.out.println();
 					
-					parsedOutput = Arrays.toString(ThmP1.getParseStructMapList().toArray());			
+					//parsedOutput = Arrays.toString(ThmP1.getParseStructMapList().toArray());			
+					parsedOutput = ThmP1.getParseStructMapList().toString();
 					
 					System.out.println("PARTS: " + parsedOutput);
 					System.out.println("*~~~*");

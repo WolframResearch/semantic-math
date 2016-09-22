@@ -218,7 +218,7 @@ public class ThmP1 {
 					}
 					else if (curWord.matches("[^$]*\\$.*")) {
 						latexExpr += " " + curWord;
-						i++;
+						//i++;
 					} else {
 						while (i < stringLength && curWord.length() > 0
 								&& curWord.charAt(curWord.length() - 1) != '$') {
@@ -232,8 +232,8 @@ public class ThmP1 {
 
 						}
 					}
-
-					if (i < stringLength) {
+					//add the end of the latex expression, only if it's the end bit
+					if (i < stringLength && !curWord.matches("[^$]*\\$.*")) {
 						int tempWordlen = str[i].length();
 
 						if (tempWordlen > 0 && str[i].charAt(tempWordlen - 1) == '$')
@@ -971,7 +971,7 @@ public class ThmP1 {
 	 * @return
 	 */
 	private static Pair fuseEntAdj(ArrayList<Pair> pairs, String curWord, Pair pair) {
-		boolean addIndex;
+		//boolean addIndex;
 		int pairsSize = pairs.size();
 
 		// if adverb-adj pair, eg "clearly good"
@@ -982,7 +982,7 @@ public class ThmP1 {
 				// remove previous Pair
 				pairs.remove(pairsSize - 1);
 				pair = new Pair(curWord, "adj");
-				addIndex = false;
+				//addIndex = false;
 			}
 
 		}
@@ -1314,8 +1314,7 @@ public class ThmP1 {
 							//////// subset G of H"
 							// because G gets null'ed out after "of". Need
 							//////// better strategy!
-							// should probably be j? j is column #.
-
+							
 							// iterate through the List at position (i-1, i-1)
 							if (i > 0 && i + 1 < len) {
 
@@ -1538,8 +1537,6 @@ public class ThmP1 {
 			for (int k = 0; k < parsedStructListSize; k++) {
 				// int highestScoreIndex = ArrayDFS(parsedStructList.get(k));
 				int highestScoreIndex = 0; ///**********
-
-				
 				Struct kHeadStruct = parsedStructList.get(k).structList().get(highestScoreIndex);
 				
 				kHeadStruct.set_dfsDepth(0);

@@ -36,7 +36,10 @@ public class SearchWordPreprocess {
 	private static final String HYP_WORDS = "let|if|where|when";
 	//trigger words indicating that the prior words are stm keywords
 	//eg "where primality is in conclusion"
-	private static final String STM_WORDS = "conclusion|result";
+	private static final String STM_WORDS = "conclusion|result|then|therefore";
+	//trigger words that indicate conclusion, the analogue of HYP_WORDS for conclusions
+	//e.g. "therefore V is smooth"
+	private static final String CONCLUSION_WORDS = "then|therefore|hence";
 	
 	static{
 		Map<String, Integer> multipleWordTriggersPreMap = new HashMap<String, Integer>();
