@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import thmp.ParseToWLTree.WLCommandWrapper;
+import thmp.Struct.NodeType;
 
 public class StructA<A, B> extends Struct{
 
@@ -22,8 +23,11 @@ public class StructA<A, B> extends Struct{
 	//Ranges over (0, 1]. 1 by default
 	private double score;
 	private String type; //or, and, adj, pro etc, cannot ent
-	private String type1; //type of prev1, , al, string etc. Is this used??
+	//private String type1; //type of prev1, , al, string etc. Is this used??
 	private String type2; //type of prev2. Also not used!
+	private NodeType PREV1_TYPE;
+	private NodeType PREV2_TYPE;
+	
 	//list of Struct at mx element, to which this Struct belongs
 	//pointer to mx.get(i).get(j)
 	//if not null, means this is head of some parsed WLCommand. 
@@ -53,10 +57,9 @@ public class StructA<A, B> extends Struct{
 	//be unique. It's the parents' paths to here that can differ
 	//private List<MatrixPathNode> mxPathNodeList;
 	
-	
 	//is this ever needed?
 	public StructA(A prev1, B prev2, String type, StructList structList){		
-		this.prev1 = prev1;		
+		this.prev1 = prev1;	
 		this.prev2 = prev2;
 		this.type = type; 
 		this.score = 1;
@@ -70,6 +73,14 @@ public class StructA<A, B> extends Struct{
 		this.type = type; 
 		this.numUnits = 1;
 		this.score = 1;
+	}
+	
+	public NodeType prev1NodeType(){
+		return PREV1_TYPE;
+	}
+	
+	public NodeType prev2NodeType(){
+		return PREV2_TYPE;
 	}
 	
 	//this method should never be called on StructA
@@ -94,6 +105,19 @@ public class StructA<A, B> extends Struct{
 		newStruct.score = this.score;
 		//newStruct.WLCommandStr = this.WLCommandStr;
 		return newStruct;
+	}
+	
+	/**
+	 * Retrieves the left-most child of this struct, which should
+	 * be a String based on the structure of Struct.
+	 * @return
+	 */
+	public String getLeftMostChild(){
+		StructA<?,?> curStructA = this;
+		while(curStructA.prev1 instanceof StructA){
+			curStructA = (StructA<?,?>)curStructA.prev1;
+		}
+		return curStructA.prev1.toString();
 	}
 	
 	/**
@@ -426,16 +450,13 @@ public class StructA<A, B> extends Struct{
 		this.type = type;		
 	}
 	
-	//public void set_prev1(A str){
-	//}
-	
-	public String type1(){
+	/*public String type1(){
 		return this.type1;		
 	}
 
 	public String type2(){
 		return this.type2;		
-	}
+	}*/
 
 	@Override
 	public void set_score(double score){
@@ -492,19 +513,16 @@ public class StructA<A, B> extends Struct{
 	
 	@Override
 	public ArrayList<Struct> children() {
-		// TODO 
 		return null;
 	}
 
 	@Override
 	public List<String> childRelation() {
-		// TODO 
 		return null;
 	}
 
 	@Override
-	public void add_child(Struct child, String relation) {
-		// TODO 
-		
+	public void add_child(Struct child, String relation) {		
 	}
+	
 }

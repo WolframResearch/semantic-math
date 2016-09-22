@@ -271,10 +271,16 @@ public class ThmP1Test {
 			st = "for any prime p $R$ is a ring";
 			st = "suppose $R$ is a ring";
 			st = "$R$ is catenary if and only if $R/\\mathfrak p$ is catenary for every minimal prime $\\mathfrak p$.";
-			st = "$R$ is universally catenary if and only if $R/\\mathfrak p$ is universally catenary for every minimal prime $\\mathfrak p$.";
-			st = "$R $";
+			st = "$R$ is universally catenary if and only if $R/\\mathfrak p$ is universally catenary for every minimal prime $\\mathfrak p$.";			
 			st = "$R/\\mathfrak p$ is catenary for every minimal prime $\\mathfrak p$";
-			st = "$f$ is holomorphic on $D(0, r)$, the derivative of $f$ is $\\sum_j j $";
+			st = "Any quotient over a (universally) catenary ring is (universally) catenary.";
+			st = "$R_\\mathfrak m$ is universally catenary for all maximal ideals $\\mathfrak m$";
+			st = "A ring $R$ is said to be  universally catenary if $R$ is Noetherian and every $R$ algebra of finite type is catenary."; //****Need revisit
+			st = "A ring $R$ is catenary if and only if the topological space $\\Spec(R)$ is catenary";
+			st = "if and only if $P$ is prime";
+			st = "a regular ring is regular";
+			//st = "quotient over ring is quotient";
+			//st = "$f$ is holomorphic on $D(0, r)$, the derivative of $f$ is $\\sum_j j $";
 			//st = "$r $ is catenary "; 
 			//st = "$R$ is field if and only if it is a field";
 			//st = "there exists a unique power series $g(T)$ such that $f(g(T)) = T$";			

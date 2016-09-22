@@ -18,9 +18,10 @@ import com.google.common.collect.Multimap;
  * A column contains a set of words that trigger a particular MathObj,
  * such as radius of convergence and root likely in column for function.
  * And ideals for column for ring.  
+ * @deprecated Superceded by TriggerMathObj2
  * @author yihed
- *
  */
+@Deprecated
 public class TriggerMathObj {
 	
 	/**

@@ -334,7 +334,7 @@ public class WLCommand {
 		//if head is ent (firstPosTermStruct.type().equals("ent") && ) and 
 		//everything in this command belongs to or is a child of the head ent struct
 		//if(highestStruct == firstPosTermStruct){
-			structToAppendCommandStr = highestStruct;
+		structToAppendCommandStr = highestStruct;
 			//System.out.println("~~~~~~~~~highestStruct"+highestStruct);
 		/*}else{
 			
@@ -469,6 +469,7 @@ public class WLCommand {
 				if(term.triggerMathObj){
 					//should check first if contains WLCommandStr, i.e. has been converted to some 
 					//commands already
+					/////******Changing this to TriggerMathObj2 generate Exception?!
 					nextWord = TriggerMathObj.get_mathObjFromStruct(nextStruct, curCommand);
 					
 					if(nextWord.equals("")){
@@ -654,6 +655,8 @@ public class WLCommand {
 
 	/**
 	 * Add Struct corresponding to trigger word to curCommand
+	 * @param curCommand current command under consideration
+	 * @param newStruct new Struct to be added
  	 */
 	public static void addTriggerComponent(WLCommand curCommand, Struct newStruct){
 		WLCommandComponent commandComponent = curCommand.posTermList.get(curCommand.triggerWordIndex).commandComponent;
@@ -674,6 +677,7 @@ public class WLCommand {
 	 * @param curCommand	WLCommand to be removed from.
 	 * @param curStruct		Struct to be removed.
 	 * @return		Whether newStruct is found and removed.
+	 * This is *not* used right now
 	 */
 	public static boolean removeComponent(WLCommand curCommand, 
 			Struct curStruct){

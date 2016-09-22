@@ -350,6 +350,7 @@ public class Maps {
 		posMap.put("for every", "hyp");
 		posMap.put("suppose", "hyp");
 		posMap.put("assume", "hyp");
+		posMap.put("assuming", "hyp");
 		posMap.put("for all", "hyp");
 		posMap.put("for each", "hyp");
 		posMap.put("for any", "hyp");

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import thmp.ParseToWLTree.WLCommandWrapper;
+import thmp.Struct.NodeType;
 
 public class StructH<H> extends Struct{
 
@@ -114,6 +115,14 @@ public class StructH<H> extends Struct{
 	@Override
 	public int dfsDepth(){
 		return this.depth;
+	}
+	
+	public NodeType prev1NodeType(){
+		return NodeType.NONE;
+	}
+	
+	public NodeType prev2NodeType(){
+		return NodeType.NONE;
 	}
 	
 	/*
@@ -316,6 +325,7 @@ public class StructH<H> extends Struct{
 	 * Simple toString to return the bare minimum to present this Struct.
 	 * To be used in ParseToWLTree.
 	 * @param includeType	Whether to include the type, eg "MathObj"
+	 * @param curCommand current WLCommand this Struct is showing up in
 	 * @return
 	 */
 	@Override
@@ -325,7 +335,7 @@ public class StructH<H> extends Struct{
 		// instead of checking WLCommandStr, check if wrapperList is null
 		// ie if any command has been assigned to this Struct yet. If yes,
 		// get the last one (might want the one with highest commandsWithOtherHead
-		// later.
+		// later).
 		/*if(this.WLCommandStr != null){
 			return this.WLCommandStr;
 		} */		
@@ -361,6 +371,7 @@ public class StructH<H> extends Struct{
 		int childrenSize = children.size();
 		for(int i = 0; i < childrenSize; i++){			
 			Struct child = children.get(i);
+			String curChildRelation = childRelation.get(i);
 			if(child.WLCommandWrapperList() != null)
 				continue;
 			//str += ", ";
@@ -368,7 +379,7 @@ public class StructH<H> extends Struct{
 			String childStr = child.simpleToString2(includeType, curCommand);
 			//str += childStr;	
 			if(!childStr.matches("\\s*")){
-				str += ", " + childStr;				
+				str += ", " + curChildRelation + " " + childStr;				
 			}
 		}		
 		if(includeType) str += "}";
@@ -436,7 +447,7 @@ public class StructH<H> extends Struct{
 
 	@Override
 	public void set_prev1(String str) {
-		// TODO 		
+			
 	}
 
 	@Override

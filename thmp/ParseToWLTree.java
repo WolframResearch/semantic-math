@@ -163,8 +163,11 @@ public class ParseToWLTree {
 						}else if(curStructInDequeParent instanceof StructH){
 							parentNameStr = curStructInDequeParent.struct().get("name");
 						}
-						//should match both type and term. Get parent of struct, eg "log of f is g" should get all of
-						//"log of f", instead of just "f"
+						//should match both type and term. Get parent of struct, e.g. "log of f is g" should get all of
+						//"log of f", instead of just "f". I.e. get all of StructH.
+						
+						//System.out.println("\n^^^^^^^^" + ".name(): " + curCommandComponent.name() + " parentStr: " + parentNameStr+" type " +
+						//componentType + " parentType " + parentType);						
 						if(parentNameStr.matches(curCommandComponent.name()) && parentType.matches(componentType)){
 							structToAdd = curStructInDequeParent;
 							curStructInDequeParent = curStructInDequeParent.parentStruct();
@@ -364,8 +367,9 @@ public class ParseToWLTree {
 			if (struct.prev1() instanceof Struct) {
 				//ParseStruct curHeadParseStruct = headParseStruct;
 				//check if need to create new ParseStruct
-				String prev1Type = ((Struct)struct.prev1()).type();
-				ParseStructType parseStructType = ParseStructType.getType(prev1Type);
+				Struct prev1 = (Struct)struct.prev1();
+				String prev1Type = prev1.type();
+				ParseStructType parseStructType = ParseStructType.getType(prev1);
 				boolean checkParseStructType = checkParseStructType(parseStructType);
 				if(checkParseStructType){
 					curHeadParseStruct = new ParseStruct(parseStructType, "", (Struct)struct.prev1());
@@ -398,13 +402,15 @@ public class ParseToWLTree {
 				
 				// avoid printing is[is], ie case when parent has same type as
 				// child
-				String prev2Type = ((Struct)struct.prev2()).type();
-				ParseStructType parseStructType = ParseStructType.getType(prev2Type);
+				//String prev2Type = ((Struct)struct.prev2()).type();
+				Struct prev2 = (Struct)struct.prev2();
+				String prev2Type = prev2.type();
+				ParseStructType parseStructType = ParseStructType.getType(prev2);
 				curHeadParseStruct = headParseStruct;
 				//check if need to create new ParseStruct
 				boolean checkParseStructType = checkParseStructType(parseStructType);
 				if(checkParseStructType){
-					curHeadParseStruct = new ParseStruct(parseStructType, "", (Struct)struct.prev2());
+					curHeadParseStruct = new ParseStruct(parseStructType, "", prev2);
 					headParseStruct.addToSubtree(parseStructType, curHeadParseStruct);
 					
 					numSpaces++;
@@ -577,7 +583,7 @@ public class ParseToWLTree {
 				//parsedSB.append(struct.WLCommandStr());
 				parsedSB.append(curWrapper.WLCommandStr);
 				//get the ParseStruct based on type
-				ParseStructType type = ParseStructType.getType(struct.type());
+				ParseStructType type = ParseStructType.getType(struct);
 				ParsedPair pair = new ParsedPair(curWrapper.WLCommandStr, struct.maxDownPathScore(), 
 						struct.numUnits(), WLCommand.commandNumUnits(curCommand));
 				//partsMap.put(type, curWrapper.WLCommandStr);	

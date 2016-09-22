@@ -23,6 +23,9 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 
+import thmp.search.NGramSearch;
+import thmp.search.ThreeGramSearch;
+
 /* 
  * contains hashtable of entities (keys) and properties (values)
  */
@@ -30,7 +33,7 @@ import com.google.common.collect.Multimap;
 public class ThmP1 {
 
 	// should all be StructH's, since these are ent's. 
-	//make into multimap, so to get wider scope??
+	// make into multimap, so to get wider scope??
 	private static final Map<String, Struct> namesMap;
 	// private static HashMap<String, ArrayList<String>> entityMap =
 	// Maps.entityMap;
@@ -49,13 +52,13 @@ public class ThmP1 {
 	private static final Map<String, Double> probMap;
 	// split a sentence into parts, separated by commas, semicolons etc
 	// private String[] subSentences;
-
+	
 	// list of parts of speech, ent, verb etc
 	private static List<String> posList;
-
+	
 	// fluff type, skip when adding to parsed ArrayList
 	private static String FLUFF = "Fluff";
-
+	
 	// private static final File unknownWordsFile;
 	private static final Path unknownWordsFile = Paths.get("src/thmp/data/unknownWords.txt");
 	private static final Path parsedExprFile = Paths.get("src/thmp/data/parsedExpr.txt");
@@ -145,12 +148,46 @@ public class ThmP1 {
 			return this.parsedStr + " " + String.valueOf(score) + numUnitsString;
 		}
 	}
+
+
+	//check in 2- and 3-gram maps. Then determine the type based on 
+	//last word, e.g. "regular local ring"
+	//check 3-gram first. 
+	private static int gatherTwoThreeGram(int i, String[] str, List<Pair> pairs, List<Integer> mathIndexList){
+		
+		String twoGram = str[i] + " " + str[i+1];
+		Map<String, Integer> twoGramMap = NGramSearch.get2GramsMap();
+		Map<String, Integer> threeGramMap = ThreeGramSearch.get3GramsMap();
+		
+		if(i < str.length - 2){
+			String thirdWord = str[i + 2];
+			String threeGram = twoGram + " " + thirdWord;
+			if(threeGramMap.containsKey(threeGram)){
+				String pos = posMap.get(thirdWord);
+				Pair phrasePair = new Pair(threeGram, pos);								
+				pairs.add(phrasePair);
+				if(pos.matches("ent")) mathIndexList.add(pairs.size() - 1);
+				i += 2;
+				return i;
+			}
+		}
+		//String twoGram = potentialTrigger;
+		//Integer twoGram = twoGramMap.get(potentialTrigger);
+		if(twoGramMap.containsKey(twoGram)){
+			String pos = posMap.get(str[i+1]);
+			Pair phrasePair = new Pair(twoGram, pos);								
+			pairs.add(phrasePair);								
+			if(pos.matches("ent")) mathIndexList.add(pairs.size() - 1);
+			i++;
+			//return i;					
+		}
+		return i;
+	}
 	
 	/**
 	 * Tokenizes by splitting into comma-separated strings
 	 * 
-	 * @param str
-	 *            A full sentence.
+	 * @param str A full sentence.
 	 * @return
 	 */
 	/*
@@ -160,12 +197,10 @@ public class ThmP1 {
 	 * = 0; i < subSentLen; i++){ parse(tokenize(subSentences[i])); }
 	 * System.out.println(); }
 	 */
-
 	/**
 	 * 
-	 * @param str
-	 *            string to be tokenized
-	 * @return
+	 * @param sentence string to be tokenized
+	 * @return List of Struct's
 	 * @throws IOException
 	 */
 	public static ArrayList<Struct> tokenize(String sentence) throws IOException {
@@ -176,16 +211,16 @@ public class ThmP1 {
 
 		// list of indices of "proper" math objects, e.g. "field", but not e.g.
 		// "pair"
-		ArrayList<Integer> mathIndexList = new ArrayList<Integer>();
+		List<Integer> mathIndexList = new ArrayList<Integer>();
 		// list of indices of anchor words, e.g. "of"
-		ArrayList<Integer> anchorList = new ArrayList<Integer>();
+		List<Integer> anchorList = new ArrayList<Integer>();
 
 		// list of each word with their initial type, adj, noun,
-		ArrayList<Pair> pairs = new ArrayList<Pair>();
-		boolean addIndex = true; // whether to add to pairIndex
-		// unfortunate naming
+		List<Pair> pairs = new ArrayList<Pair>();
+		//boolean addIndex = true; // whether to add to pairIndex
+		// str: unfortunate naming
 		String[] str = sentence.split(" ");
-
+		
 		// int pairIndex = 0;
 		strloop: for (int i = 0; i < str.length; i++) {
 
@@ -208,20 +243,20 @@ public class ThmP1 {
 			if (curWord.charAt(0) == '$') {
 				String latexExpr = curWord;
 				int stringLength = str.length;
-
+				//not a single-word latex expression, i.e. $R$-module
 				if (i < stringLength - 1 && !curWord.matches("\\$[^$]+\\$[^\\s]*")
 						&& (curWord.charAt(wordlen - 1) != '$' || wordlen == 2 || wordlen == 1)) {
 					i++;
 					curWord = str[i];
 					if (i < stringLength - 1 && curWord.equals("")) {
 						curWord = str[++i];
-					}
-					else if (curWord.matches("[^$]*\\$.*")) {
-						latexExpr += " " + curWord;
+					//}
+					//else if (curWord.matches("[^$]*\\$.*")) {
+						//latexExpr += " " + curWord;
 						//i++;
 					} else {
 						while (i < stringLength && curWord.length() > 0
-								&& curWord.charAt(curWord.length() - 1) != '$') {
+								&& !curWord.matches("[^$]*\\$.*") ){//curWord.charAt(curWord.length() - 1) != '$') {
 							latexExpr += " " + curWord;
 							i++;
 
@@ -233,7 +268,7 @@ public class ThmP1 {
 						}
 					}
 					//add the end of the latex expression, only if it's the end bit
-					if (i < stringLength && !curWord.matches("[^$]*\\$.*")) {
+					if (i < stringLength ) {
 						int tempWordlen = str[i].length();
 
 						if (tempWordlen > 0 && str[i].charAt(tempWordlen - 1) == '$')
@@ -259,9 +294,9 @@ public class ThmP1 {
 
 				Pair pair = new Pair(latexExpr, type);
 				pairs.add(pair);
-				if (type.equals("mathObj"))
+				if (type.equals("mathObj")){
 					mathIndexList.add(pairs.size() - 1);
-
+				}				
 				continue;
 			}
 			// check for trigger words
@@ -275,7 +310,7 @@ public class ThmP1 {
 					// of just "for"
 					// since compound words contain at least 2 words
 					List<FixedPhrase> fixedPhraseList = fixedPhraseMap.get(potentialTrigger);
-
+					
 					Iterator<FixedPhrase> fixedPhraseListIter = fixedPhraseList.iterator();
 					while (fixedPhraseListIter.hasNext()) {
 						FixedPhrase fixedPhrase = fixedPhraseListIter.next();
@@ -300,8 +335,7 @@ public class ThmP1 {
 						if (matcher.matches()) {
 							String pos = fixedPhrase.pos();
 							if(!pos.equals("fluff")){
-								Pair phrasePair = new Pair(joined.trim(), pos);
-								
+								Pair phrasePair = new Pair(joined.trim(), pos);								
 								pairs.add(phrasePair);								
 								if(pos.matches("ent")) mathIndexList.add(pairs.size() - 1);
 							}
@@ -313,9 +347,13 @@ public class ThmP1 {
 
 					}
 
-				}
+				}				
+				
+				int newIndex = gatherTwoThreeGram(i, str, pairs, mathIndexList);
+				//a two or three gram was picked up
+				if(newIndex > i) continue;
 			}
-
+			
 			String[] singularForms = getSingularForms(curWord);
 			
 			String singular = singularForms[0];
@@ -343,7 +381,7 @@ public class ThmP1 {
 						}
 						pairs.remove(pairsSize - 1);
 
-						addIndex = false;
+						//addIndex = false;
 					}
 
 					tempWord = str[i - k] + " " + tempWord;
@@ -404,9 +442,9 @@ public class ThmP1 {
 					pos = pos.split("_")[0];
 					pair = new Pair(curWord, pos);
 				}
-
+				
 				pair = fuseEntAdj(pairs, curWord, pair);
-
+				
 				pairs.add(pair);
 			}
 			// if plural form of noun
@@ -580,7 +618,7 @@ public class ThmP1 {
 			// if (addIndex) {
 			// pairIndex++;
 			// }
-			addIndex = true;
+			//addIndex = true;
 
 			int pairsSize = pairs.size();
 
@@ -970,10 +1008,10 @@ public class ThmP1 {
 	 * @param pair
 	 * @return
 	 */
-	private static Pair fuseEntAdj(ArrayList<Pair> pairs, String curWord, Pair pair) {
+	private static Pair fuseEntAdj(List<Pair> pairs, String curWord, Pair pair) {
 		//boolean addIndex;
 		int pairsSize = pairs.size();
-
+		
 		// if adverb-adj pair, eg "clearly good"
 		// And combine adj_adj to adj, eg right exact
 		if (pairs.size() > 0 && posMap.get(curWord).equals("adj")) {
@@ -984,7 +1022,7 @@ public class ThmP1 {
 				pair = new Pair(curWord, "adj");
 				//addIndex = false;
 			}
-
+			
 		}
 		return pair;
 	}
@@ -1587,7 +1625,7 @@ public class ThmP1 {
 	private static StringBuilder treeTraversal(Struct uHeadStruct) {
 		//System.out.println("\n START ParseStruct DFS");
 		StringBuilder parseStructSB = new StringBuilder();
-		ParseStructType parseStructType = ParseStructType.getType(uHeadStruct.type());
+		ParseStructType parseStructType = ParseStructType.getType(uHeadStruct);
 		ParseStruct headParseStruct = new ParseStruct(parseStructType, "", uHeadStruct);
 		//whether to print the commands in tiers with the spaces in subsequent lines.
 		boolean printTiers = false;
@@ -1686,7 +1724,7 @@ public class ThmP1 {
 			
 			// String childRelation = mx.get(k + 1).get(k +
 			// 1).prev1().toString();
-
+			//should not even call add child if struct1 is a StructA
 			if (struct1 instanceof StructH) {
 				// why does this cast not trigger unchecked warning
 				// Because wildcard.
@@ -1705,7 +1743,13 @@ public class ThmP1 {
 					}
 				}
 				if(!childAdded){ 
-					((StructH<?>) newStruct).add_child(struct2, childRelation); 
+					//if struct2 is eg a prep, only want the ent in the prep
+					//to be added. Try to avoid the "instanceof" and cast.
+					Struct childToAdd = struct2;
+					if(struct2.type().equals("prep") && struct2.prev2() instanceof StructH){
+						childToAdd = (StructH<?>)struct2.prev2();
+					}
+					((StructH<?>) newStruct).add_child(childToAdd, childRelation); 
 					struct2.set_parentStruct(newStruct);
 				}
 			}

@@ -27,6 +27,14 @@ public abstract class Struct {
 	}
 	*/
 
+	/**
+	 * 
+	 * @return whether this struct is StructA or not
+	 */
+	public boolean isStructA(){
+		return this.struct() == null;
+	}
+	
 	public abstract Struct previousBuiltStruct();
 
 	public abstract Struct posteriorBuiltStruct();
@@ -133,4 +141,15 @@ public abstract class Struct {
 		
 	public abstract String present(String str);
 	
+	public abstract NodeType prev1NodeType();
+	public abstract NodeType prev2NodeType();
+	
+	/**
+	 * Possible types of prev1 and prev2
+	 */
+	enum NodeType{
+		//NONE type indicates that this is none of the previous ones
+		//used for instance for StructH.
+		STR, STRUCTA, STRUCTH, NONE;
+	}
 }

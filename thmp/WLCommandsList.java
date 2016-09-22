@@ -53,6 +53,7 @@ public class WLCommandsList {
 		triggerWordLookupMapBuilder.put("lie", "is");
 		triggerWordLookupMapBuilder.put("let", "if");
 		triggerWordLookupMapBuilder.put("for any", "for every");
+		triggerWordLookupMapBuilder.put("for all", "for every");
 		triggerWordLookupMapBuilder.put("if", "suppose");
 		triggerWordLookupMapBuilder.put("if and only if", "suppose");
 		// triggerWordLookupMapBuilder.put("radius", "is");
@@ -142,6 +143,9 @@ public class WLCommandsList {
 				 "ent|symb, , true", "]" }));
 		WLCommandMapBuilder.put("suppose", addCommand(new String[] { "hyp, , trigger",
 				 "assert, , true" }));
+		//assert_hypo: 
+		//WLCommandMapBuilder.put("hyp", addCommand(new String[] { "assert, , true", "hyp, , trigger", "ent|symb, , true"
+		  //}));
 		
 		//we have ...
 		WLCommandMapBuilder.put("have", addCommand(new String[] { "pro, we, false", "verb, have, trigger", ", , true",}));

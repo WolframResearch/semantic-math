@@ -105,7 +105,7 @@ public class CollectFreqWords {
 				Map<String, Integer> wordRankPreMap) throws IOException {
 
 			//Scanner sc = new Scanner(wordsFile);
-
+			
 			// skip first line with header info
 			//sc.nextLine();
 			wordsFileBufferedReader.readLine();
