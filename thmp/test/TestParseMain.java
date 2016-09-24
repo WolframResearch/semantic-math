@@ -49,7 +49,7 @@ public class TestParseMain {
 		stList.add("f is a function with radius of convergence r");
 		parsedList.add("{STM=[ f \\[Element] function[{function, with radius of convergence, r}]  1.0  3  5]}\n");
 		stList.add("f is a function with radius of convergence r and finitely many roots");
-		parsedList.add("{STM=[ f \\[Element] function[{function, {with, Conj[{radius of convergence, r}, {roots, finitely many}]}}]  1.0  3  7]}\n");
+		parsedList.add("{STM=[ f \\[Element] function[{function, with {with, Conj[{radius of convergence, r}, {roots, finitely many}]}}]  1.0  3  7]}\n");
 		stList.add("$f$ is holomorphic on $D(0, r)$, the derivative of $f$ is $\\sum_j j $");
 		parsedList.add("{STM=[  Derivative[ $f$ ]  \\[Element] MathObj{{$\\sum_j j $}}  1.0  3  7]}\n");
 		stList.add("$R/\\mathfrak p$ is catenary for every minimal prime $\\mathfrak p$");

@@ -19,6 +19,8 @@ import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 
 /**
+ * Produces set of words that are English fluff words, and less likely to be
+ * useful math words, e.g. excludes words such as "prime", "regular", "ring"
  * Computes word frequency in input. Computes the
  * frequency of words in math text, if drastically higher than common English
  * words frequency, then don't count as fluff word, e.g. regular, prime. Words
@@ -30,22 +32,26 @@ public class WordFrequency {
 	private static final Map<String, Integer> corpusWordFreqMap = new HashMap<String, Integer>();
 	// map of common words and freq as read in from wordFrequency.txt
 	private static final Map<String, Integer> stockFreqMap = new HashMap<String, Integer>();
+	
+	//subset of words and their pos from the stock file that only stores word and its pos of true fluff words
+	private static final Map<String, String> trueFluffWordsPosMap = new HashMap<String, String>();
+	
 	private static final Set<String> trueFluffWordsSet = new HashSet<String>();
 	private static final String WORDS_FILE_STR = "src/thmp/data/wordFrequency.txt";
 	//450 million total words in stock word frequency list
 	private static final int TOTAL_STOCK_WORD_COUNT = (int)Math.pow(10, 7)*45;
-	private static final Path trueFluffWordsPath = Paths.get("src/thmp/data/wordFrequency.txt");
+	private static final Path trueFluffWordsPath = Paths.get("src/thmp/data/trueFluffWords.txt");
 	
 	static {
 		
 		// build wordFreqMap
-				List<String> extractedThms = ThmList.get_thmList();
-				// the third boolean argument means to extract words from latex symbols,
-				// eg oplus->direct sum.
-				List<String> thmList = ProcessInput.processInput(extractedThms, true, false);
-				
-				int totalCorpusWordCount = extractFreq(thmList);
-				
+		List<String> extractedThms = ThmList.get_thmList();
+		// the third boolean argument means to extract words from latex symbols,
+		// eg oplus->direct sum.
+		List<String> thmList = ProcessInput.processInput(extractedThms, true, false);
+		
+		int totalCorpusWordCount = extractFreq(thmList);
+		
 		FileReader wordsFileReader;
 		try {
 			wordsFileReader = new FileReader(WORDS_FILE_STR);
@@ -114,6 +120,8 @@ public class WordFrequency {
 				// 2nd is word, 4rd is freq
 				String word = lineAr[1].trim();
 				
+				String wordPos = CollectFreqWords.getPos(word, lineAr[2].trim());
+				
 				int wordFreq = Integer.valueOf(lineAr[3].trim());
 				
 				stockFreqMap.put(word, wordFreq);
@@ -123,9 +131,11 @@ public class WordFrequency {
 					//put in trueFluffWordsSet if below twice the stock freq
 					if((double)wordCorpusFreq / totalCorpusWordCount < 2*(double)wordFreq / TOTAL_STOCK_WORD_COUNT){
 						trueFluffWordsSet.add(word);
+						trueFluffWordsPosMap.put(word, wordPos);
 					}
 				}else{
 					trueFluffWordsSet.add(word);
+					trueFluffWordsPosMap.put(word, wordPos);
 				}
 			}
 
@@ -144,13 +154,21 @@ public class WordFrequency {
 	}
 
 	/**
-	 * Retrieves set of true fluff words, 
+	 * Retrieves set of true fluff words.
 	 * @return
 	 */
 	public static Set<String> trueFluffWordsSet() {
 		return trueFluffWordsSet;
 	}	
-	
+
+	/**
+	 * Retrieves map of true fluff words and their pos. 
+	 * @return
+	 */
+	public static Map<String, String> trueFluffWordsPosMap() {
+		return trueFluffWordsPosMap;
+	}	
+
 	/**
 	 * Computes frequency of words in a sentence, store in map.
 	 * *Not* used right now.

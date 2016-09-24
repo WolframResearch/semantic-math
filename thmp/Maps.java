@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.regex.Matcher;
@@ -18,6 +19,9 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
+
+import thmp.search.CollectFreqWords;
+import thmp.search.WordFrequency;
 
 import java.util.Map.Entry;
 
@@ -133,9 +137,10 @@ public class Maps {
 		}
 
 		fixedPhraseMMap = fixedPhraseMMapBuilder.build();
+		//System.out.print("^^^^fixedPhraseMMap "+fixedPhraseMMap);
 	} 
 
-	// Getter methods
+	// get fixed phrase map containing phrases such as "if and only if"
 	public static ImmutableListMultimap<String, FixedPhrase> fixedPhraseMap() {
 		return fixedPhraseMMap;
 	}
@@ -176,6 +181,7 @@ public class Maps {
 		}
 
 		fixedPhraseMMap = fixedPhraseMMapBuilder.build();
+		
 	}
 
 	/*
@@ -231,7 +237,7 @@ public class Maps {
 		// ArrayList<String[]> posArraysList = new ArrayList<String[]>();
 		// partsOfSpeech must be ordered the same way as posArraysList
 
-		HashMap<String, String[]> posArraysMap = new HashMap<String, String[]>();
+		Map<String, String[]> posArraysMap = new HashMap<String, String[]>();
 		posArraysMap.put("mathObj", ents);
 		posArraysMap.put("adverb", adverbs);
 		posArraysMap.put("verb", verbs);
@@ -239,7 +245,7 @@ public class Maps {
 		posArraysMap.put("adj", adjs);
 		posArraysMap.put("pre", pres);
 
-		ArrayList<String[]> pList = new ArrayList<String[]>(); // pos List
+		List<String[]> pList = new ArrayList<String[]>(); // pos List
 
 		Iterator<Entry<String, String[]>> posArraysMapIter = posArraysMap.entrySet().iterator();
 
@@ -283,6 +289,8 @@ public class Maps {
 			posMap.put(pList.get(i)[0], pList.get(i)[1]);
 		}
 
+		//adds all words from the stock frequent words
+		posMap.putAll(WordFrequency.trueFluffWordsPosMap());
 		posMap.put("disjoint", "adj");
 		posMap.put("perfect", "adj");
 		posMap.put("equivalent", "adj");

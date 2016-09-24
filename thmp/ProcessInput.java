@@ -62,7 +62,7 @@ public class ProcessInput {
 	public static List<String> processInput(File inputFile, boolean replaceTex, boolean texToWords) throws FileNotFoundException {
 		Scanner sc = new Scanner(inputFile);		
 		
-		ArrayList<String> noTexStringList = new ArrayList<String>();
+		List<String> noTexStringList = new ArrayList<String>();
 		
 		while(sc.hasNextLine()){
 			String thm = sc.nextLine();

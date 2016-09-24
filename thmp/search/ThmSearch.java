@@ -22,8 +22,12 @@ public class ThmSearch {
 	 * Rows are terms.
 	 */
 	private static int[][] docMx;
-	public static final String[] ARGV = new String[]{"-linkmode", "launch", "-linkname", 
-	"\"/Applications/Mathematica2.app/Contents/MacOS/MathKernel\" -mathlink"};
+	
+	//public static final String[] ARGV = new String[]{"-linkmode", "launch", "-linkname", 
+	//"\"/Applications/Mathematica2.app/Contents/MacOS/MathKernel\" -mathlink"};
+	
+	//path for on Linux VM 
+	public static final String[] ARGV;
 	
 	//number of nearest vectors to get for Nearest[]
 	private static final int NUM_NEAREST = 3;
@@ -35,6 +39,20 @@ public class ThmSearch {
 	private static KernelLink ml;
 	
 	static{
+		
+		//use OS system variable to tell whether on VM or local machine, and set InstallDirectory 
+		//path accordingly.
+		String OS_name = System.getProperty("os.name");
+		if(OS_name.equals("Mac OS X")){
+			ARGV = new String[]{"-linkmode", "launch", "-linkname", 
+					"\"/Applications/Mathematica2.app/Contents/MacOS/MathKernel\" -mathlink"};
+		}else{
+			//path on Linux VM
+			//ARGV = new String[]{"-linkmode", "launch", "-linkname", 
+					//"\"/usr/local/Wolfram/Mathematica/11.0/Executables/MathKernel\" -mathlink"};
+			ARGV = new String[]{"-linkmode", "launch", "-linkname", "math -mathlink"};
+		}
+		
 		//docMx = new int[][]{{0, 1, 0}, {1, 1, 0}, {0, 0, 1}, {1, 0, 0}};
 		docMx = TriggerMathThm2.mathThmMx();
 		corMxList = new ArrayList<List<Integer>>();

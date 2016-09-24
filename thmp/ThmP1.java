@@ -23,8 +23,10 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 
+import thmp.Struct.NodeType;
 import thmp.search.NGramSearch;
 import thmp.search.ThreeGramSearch;
+import thmp.utils.WordForms;
 
 /* 
  * contains hashtable of entities (keys) and properties (values)
@@ -149,24 +151,31 @@ public class ThmP1 {
 		}
 	}
 
-
 	//check in 2- and 3-gram maps. Then determine the type based on 
 	//last word, e.g. "regular local ring"
 	//check 3-gram first. 
 	private static int gatherTwoThreeGram(int i, String[] str, List<Pair> pairs, List<Integer> mathIndexList){
+		String curWord = str[i];
+		String nextWord = str[i+1];
+		String nextWordSingular = WordForms.getSingularForm(nextWord);
+		String twoGram = curWord + " " + nextWord;
+		String twoGramSingular = curWord + " " + nextWordSingular;
 		
-		String twoGram = str[i] + " " + str[i+1];
 		Map<String, Integer> twoGramMap = NGramSearch.get2GramsMap();
 		Map<String, Integer> threeGramMap = ThreeGramSearch.get3GramsMap();
 		
 		if(i < str.length - 2){
-			String thirdWord = str[i + 2];
+			String thirdWord = str[i + 2];	
+			String thirdWordSingular = WordForms.getSingularForm(thirdWord);
 			String threeGram = twoGram + " " + thirdWord;
+			String threeGramSingular = twoGram + " " + thirdWordSingular;
+			
 			if(threeGramMap.containsKey(threeGram)){
-				String pos = posMap.get(thirdWord);
-				Pair phrasePair = new Pair(threeGram, pos);								
-				pairs.add(phrasePair);
-				if(pos.matches("ent")) mathIndexList.add(pairs.size() - 1);
+				addNGramToPairs(pairs, mathIndexList, thirdWord, threeGram);
+				i += 2;
+				return i;
+			}else if(threeGramMap.containsKey(threeGramSingular)){
+				addNGramToPairs(pairs, mathIndexList, thirdWordSingular, threeGramSingular);
 				i += 2;
 				return i;
 			}
@@ -174,14 +183,34 @@ public class ThmP1 {
 		//String twoGram = potentialTrigger;
 		//Integer twoGram = twoGramMap.get(potentialTrigger);
 		if(twoGramMap.containsKey(twoGram)){
-			String pos = posMap.get(str[i+1]);
-			Pair phrasePair = new Pair(twoGram, pos);								
-			pairs.add(phrasePair);								
-			if(pos.matches("ent")) mathIndexList.add(pairs.size() - 1);
+			addNGramToPairs(pairs, mathIndexList, nextWord, twoGram);			
 			i++;
 			//return i;					
+		}else if(twoGramMap.containsKey(twoGramSingular)){
+			addNGramToPairs(pairs, mathIndexList, nextWordSingular, twoGramSingular);
+			i++;
 		}
 		return i;
+	}
+
+	/**
+	 * @param pairs
+	 * @param mathIndexList
+	 * @param thirdWord
+	 * @param threeGram
+	 */
+	private static void addNGramToPairs(List<Pair> pairs, List<Integer> mathIndexList, String thirdWord,
+			String threeGram) {
+		String pos = posMap.get(thirdWord);
+		if(pos == null){
+			///************need better solution!
+			pos = "ent";
+			//better no parse and know, rather than wrong parse
+			pos = "";
+		}
+		Pair phrasePair = new Pair(threeGram, pos);								
+		pairs.add(phrasePair);
+		if(pos.matches("ent")) mathIndexList.add(pairs.size() - 1);
 	}
 	
 	/**
@@ -302,9 +331,8 @@ public class ThmP1 {
 			// check for trigger words
 			else if (i < str.length - 1) {
 				String potentialTrigger = curWord + " " + str[i + 1];
-
 				if (fixedPhraseMap.containsKey(potentialTrigger)) {
-
+					
 					// need multimap!! same trigger could apply to many phrases
 					// do first two words instead of 1, e.g. "for all" instead
 					// of just "for"
@@ -351,10 +379,13 @@ public class ThmP1 {
 				
 				int newIndex = gatherTwoThreeGram(i, str, pairs, mathIndexList);
 				//a two or three gram was picked up
-				if(newIndex > i) continue;
+				if(newIndex > i){ 
+					i = newIndex;
+					continue;				
+				}
 			}
 			
-			String[] singularForms = getSingularForms(curWord);
+			String[] singularForms = WordForms.getSingularForms(curWord);
 			
 			String singular = singularForms[0];
 			String singular2 = singularForms[1]; // ending in "es"
@@ -365,7 +396,8 @@ public class ThmP1 {
 				String tempWord = mathObjMap.containsKey(singular) ? singular : curWord;
 				int pairsSize = pairs.size();
 				int k = 1;
-
+				
+				//should be superceded by using the two-gram map above!
 				// if composite math noun, eg "finite field"
 				while (i - k > -1 && mathObjMap.containsKey(str[i - k] + " " + tempWord)
 						&& mathObjMap.get(str[i - k] + " " + tempWord).equals("mathObj")) {
@@ -931,7 +963,8 @@ public class ThmP1 {
 				String curWord = curPair.word();
 
 				// is leaf of prev2 is empty string ""
-				StructA<String, String> newStruct = new StructA<String, String>(curWord, "", curPair.pos());
+				StructA<String, String> newStruct = 
+						new StructA<String, String>(curWord, NodeType.STR, "", NodeType.STR, curPair.pos());
 
 				if (curPair.pos().equals("adj")) {
 					if (structListSize > 0 && structList.get(structListSize - 1).type().equals("adverb")) {
@@ -972,35 +1005,10 @@ public class ThmP1 {
 			// add as property
 
 		}
-
+		//System.out.println("^^^^structList: " + structList);
 		return structList;
 	}
-
-	/**
-	 * Get the singular forms of current word
-	 * @param curWord
-	 * @param wordlen
-	 * @return Array of singular forms
-	 */
-	public static String[] getSingularForms(String curWord) {
-		// primitive way to handle plural forms: if ends in "s"
-		String[] singularForms = new String[3];
-		int wordlen = curWord.length();
-		
-		if (wordlen > 0 && curWord.charAt(wordlen - 1) == 's') {
-			singularForms[0] = curWord.substring(0, wordlen - 1);
-		}
-
-		if (wordlen > 2 && curWord.substring(wordlen - 2, wordlen).equals("es")) {
-			singularForms[1] = curWord.substring(0, wordlen - 2);
-		}
-
-		if (wordlen > 3 && curWord.substring(wordlen - 3, wordlen).equals("ies")) {
-			singularForms[2] = curWord.substring(0, wordlen - 3) + 'y';
-		}
-		return singularForms;
-	}
-
+	
 	/**
 	 * 
 	 * @param pairs
@@ -1309,8 +1317,9 @@ public class ThmP1 {
 								// record the symbol/given name associated to an
 								// ent
 								if (firstEnt != null) {
-									StructA<Struct, String> parentStruct = new StructA<Struct, String>(firstEnt, called,
-											"def", mx.get(0).get(len - 1));
+									StructA<Struct, String> parentStruct = 
+											new StructA<Struct, String>(firstEnt, NodeType.STRUCTH, 
+													called, NodeType.STR, "def", mx.get(0).get(len - 1));
 									firstEnt.set_parentStruct(parentStruct);
 									
 									// mx.get(0).set(len - 1, parentStruct);
@@ -1431,8 +1440,11 @@ public class ThmP1 {
 													// should work a score in to
 													// conj/disj! The longer the
 													// conj/disj the higher
+													NodeType struct1Type = struct1.isStructA() ? NodeType.STRUCTA : NodeType.STRUCTH;
+													NodeType struct2Type = struct2.isStructA() ? NodeType.STRUCTA : NodeType.STRUCTH;
+													
 													StructA<Struct, Struct> parentStruct = new StructA<Struct, Struct>(
-															p_struct, struct2, newType + "_" + type2,
+															p_struct, struct1Type, struct2, struct2Type, newType + "_" + type2,
 															mx.get(i - l).get(j));
 													p_struct.set_parentStruct(parentStruct);
 													struct2.set_parentStruct(parentStruct);

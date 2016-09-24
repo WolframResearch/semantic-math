@@ -608,7 +608,8 @@ public class CollectThm {
 						FileReader rawFileReader = new FileReader(fileStr);
 						BufferedReader rawFileBReader = new BufferedReader(rawFileReader);
 						//System.out.println("rawFileReader is null ");
-						extractedThms.addAll(ThmInput.readThm(rawFileBReader));								
+						extractedThms.addAll(ThmInput.readThm(rawFileBReader));	
+						//System.out.print("Should be extracting theorems here: " + extractedThms);
 					}
 				}else{
 					//System.out.println("read from rawFileReader");

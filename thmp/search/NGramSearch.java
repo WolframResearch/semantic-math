@@ -36,6 +36,8 @@ public class NGramSearch {
 	//this field will be exposed to build 3-grams
 	private static final Map<String, Map<String, Integer>> nGramMap;
 	private static final String[] ADDITIONAL_TWO_GRAMS = new String[]{"local ring", "local field", "direct sum"};
+	//default two-gram count when total number of two grams is 0
+	private static final int ADDITIONAL_TWO_GRAM_DEFAULT_COUNT = 5;
 	//should use this to detect fluff in first word.
 	private static final Set<String> fluffWordsSet = WordForms.makeFluffSet();
 	//set that contains the first word of each n-grams.
@@ -46,7 +48,7 @@ public class NGramSearch {
 		nGramMap = new HashMap<String, Map<String, Integer>>();
 		//total word counts of all 2 grams
 		Map<String, Integer> totalWordCounts = new HashMap<String, Integer>();
-		//nGram map, 
+		//build nGram map, 
 		recordCounts(nGramMap, totalWordCounts);
 
 		//computes the average frequencies of words that follow the first word in all 2-grams
@@ -180,13 +182,17 @@ public class NGramSearch {
 					nGramFirstWordsSet.add(word);
 					totalFreqCount += nextWordCount;
 					totalTwoGrams++;
-					//System.out.println(twoGram + " " + nextWordCount);
+					//System.out.println("new twoGram "+twoGram + " " + nextWordCount);
 				}
 			}
 		}
 		//add additional two grams that were not programmatically selected
-		//
- 		int averageFreqCount = totalFreqCount/totalTwoGrams;
+		int averageFreqCount;
+		if(totalTwoGrams != 0){ 
+			averageFreqCount = totalFreqCount/totalTwoGrams;
+		}else{
+			averageFreqCount = ADDITIONAL_TWO_GRAM_DEFAULT_COUNT;
+		}		
 		for(String twoGram : ADDITIONAL_TWO_GRAMS){
 			twoGramMap.put(twoGram, averageFreqCount);
 		}

@@ -13,6 +13,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
 
+import thmp.utils.WordForms;
+
 /**
  * Take inner product of trigger words and matrix of keywords.
  * A column contains a set of words that trigger a particular MathObj,
@@ -290,7 +292,7 @@ public class TriggerMathObj {
 		if(struct.struct().containsKey("name")){
 			String structName = struct.struct().get("name");
 			childrenNameList.add(structName);
-			String[] singularForms = ThmP1.getSingularForms(structName);
+			String[] singularForms = WordForms.getSingularForms(structName);
 			for(String singularForm : singularForms){
 				if(singularForm != null && !singularForm.equals("")){
 					childrenNameList.add(singularForm);

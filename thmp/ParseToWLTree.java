@@ -14,6 +14,7 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 
+import thmp.Struct.NodeType;
 import thmp.ThmP1.ParsedPair;
 import thmp.WLCommand.PosTerm;
 import thmp.WLCommand.WLCommandComponent;
@@ -486,7 +487,8 @@ public class ParseToWLTree {
 				parsedSB.append(childRelation.get(i) + " ");
 				Struct ithChild = children.get(i);
 				
-				Struct childRelationStruct = new StructA<String, String>(childRelation.get(i), "", "pre");
+				Struct childRelationStruct = new StructA<String, String>(childRelation.get(i), 
+						NodeType.STR, "", NodeType.STR, "pre");
 				childRelationStruct.set_parentStruct(struct);
 				childRelationStruct.set_dfsDepth(struct.dfsDepth() + 1);
 				

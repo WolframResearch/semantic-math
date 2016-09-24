@@ -58,7 +58,9 @@ public class StructA<A, B> extends Struct{
 	//private List<MatrixPathNode> mxPathNodeList;
 	
 	//is this ever needed?
-	public StructA(A prev1, B prev2, String type, StructList structList){		
+	public StructA(A prev1, NodeType prev1Type, B prev2, NodeType prev2Type, String type, StructList structList){
+		this.PREV1_TYPE = prev1Type;
+		this.PREV2_TYPE = prev2Type;
 		this.prev1 = prev1;	
 		this.prev2 = prev2;
 		this.type = type; 
@@ -67,7 +69,9 @@ public class StructA<A, B> extends Struct{
 		this.structList = structList;
 	}
 	
-	public StructA(A prev1, B prev2, String type){		
+	public StructA(A prev1, NodeType prev1Type, B prev2, NodeType prev2Type, String type){	
+		this.PREV1_TYPE = prev1Type;
+		this.PREV2_TYPE = prev2Type;
 		this.prev1 = prev1;		
 		this.prev2 = prev2;
 		this.type = type; 
@@ -98,8 +102,8 @@ public class StructA<A, B> extends Struct{
 	public StructA<A, B> copy(){
 		//shallow copy of structlist
 		StructList copiedStructlist = this.structList.copy();
-		StructA<A, B> newStruct = new StructA<A, B>(this.prev1, this.prev2, 
-				this.type, copiedStructlist);
+		StructA<A, B> newStruct = new StructA<A, B>(this.prev1, this.PREV1_TYPE, 
+				this.prev2, this.PREV2_TYPE, this.type, copiedStructlist);
 		newStruct.maxDownPathScore = this.maxDownPathScore;
 		newStruct.numUnits = this.numUnits;
 		newStruct.score = this.score;

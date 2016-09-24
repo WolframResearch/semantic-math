@@ -132,6 +132,7 @@ public abstract class Struct {
 
 	public abstract void set_prev1(String str);
 	
+	//not abstract, because not applicable to StructH
 	public void set_prev2(String str){		
 	}
 	

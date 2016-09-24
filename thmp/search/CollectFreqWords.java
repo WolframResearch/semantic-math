@@ -59,6 +59,78 @@ public class CollectFreqWords {
 	}
 
 	/**
+	 * Get the part of speech corresponding to the pos tag/symbol.
+	 * E.g. i -> "pre". Placed here instead of in subclass, so it can
+	 * be used by WordFrequency.java as well.
+	 * @param word
+	 * @param wordPos
+	 * @return
+	 */
+	public static String getPos(String word, String wordPos){
+		String pos;
+		switch (wordPos) {
+		case "i":
+			pos = "pre";
+			break;
+		case "p":
+			pos = "pro";
+			break;
+		case "v":
+			pos = "verb";
+			break;
+		case "n":
+			pos = "noun";
+			break;
+		case "x":
+			// not, no etc
+			pos = "not";
+			break;
+		case "d":
+			// determiner
+			pos = "det";
+			break;
+		case "j":
+			pos = "adj";
+			break;
+		case "r":
+			pos = "adverb";
+			break;
+		case "e":
+			// "existential there"
+			pos = "det";
+			break;
+		case "a":
+			// article, eg the, every, a.
+			// classify as adj because of the rules for
+			// fusing adj and ent's
+			pos = "adj";
+			break;
+		case "m":
+			pos = "num";
+			break;
+		case "u":
+			// interjection, eg oh, yes, um.
+			pos = "intj";
+			break;
+		case "c":
+			// conjunctions, eg before, until, although
+			// and/or should be parsed as conj/disj, will
+			// be overwritten in Maps.java
+			pos = "con";
+			break;
+		case "t":
+			//only word with this type is "to"
+			pos = "pre";
+			break;
+		default:
+			pos = word;
+			//System.out.println("default pos: "+ word + " "+ lineAr[2]);
+			// defaultList.add(lineAr[2]);
+		}
+		return pos;
+	}
+	
+	/**
 	 * Static nested class, created so that the objects do *not* does not
 	 * automatically get initialized in the enclosing class's initialier the
 	 * moment the outer class is invoked. Need to initialize this subclass to
@@ -123,63 +195,9 @@ public class CollectFreqWords {
 				String[] lineAr = line.split("\\s+");
 				// 2nd is word, 3rd is pos
 				String word = lineAr[1].trim();
-
-				String pos;
-				switch (lineAr[2].trim()) {
-				case "i":
-					pos = "pre";
-					break;
-				case "p":
-					pos = "pro";
-					break;
-				case "v":
-					pos = "verb";
-					break;
-				case "n":
-					pos = "noun";
-					break;
-				case "x":
-					// not, no etc
-					pos = "not";
-					break;
-				case "d":
-					// determiner
-					pos = "det";
-					break;
-				case "j":
-					pos = "adj";
-					break;
-				case "r":
-					pos = "adverb";
-					break;
-				case "e":
-					// "existential there"
-					pos = "det";
-					break;
-				case "a":
-					// article, eg the, every, a.
-					// classify as adj because of the rules for
-					// fusing adj and ent's
-					pos = "adj";
-					break;
-				case "m":
-					pos = "num";
-					break;
-				case "u":
-					// interjection, eg oh, yes, um.
-					pos = "intj";
-					break;
-				case "c":
-					// conjunctions, eg before, until, although
-					// and/or should be parsed as conj/disj, will
-					// be overwritten in Maps.java
-					pos = "con";
-					break;
-				default:
-					pos = word;
-					System.out.println("default pos: " + lineAr[2]);
-					// defaultList.add(lineAr[2]);
-				}
+				String wordPos = lineAr[2].trim();
+				
+				String pos = getPos(word, wordPos);
 
 				wordPosPreMap.put(word, pos);
 				// record the word's rank

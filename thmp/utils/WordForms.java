@@ -32,7 +32,7 @@ public class WordForms {
 		//if word in dictionary, should not be processed. Eg "continuous"
 		if(freqWordsSet.contains(word)) return word;
 		
-		String[] singFormsAr = ThmP1.getSingularForms(word);
+		String[] singFormsAr = getSingularForms(word);
 		//singFormsAr successively replaces words ending in "s", "es", "ies"
 		int k = 2;
 		while(k > -1 && singFormsAr[k] == null){
@@ -51,6 +51,31 @@ public class WordForms {
 			word = word+"e";
 		}
 		return word;
+	}
+	
+	/**
+	 * Get the singular forms of current word
+	 * @param curWord
+	 * @param wordlen
+	 * @return Array of singular forms
+	 */
+	public static String[] getSingularForms(String curWord) {
+		// primitive way to handle plural forms: if ends in "s"
+		String[] singularForms = new String[3];
+		int wordlen = curWord.length();
+		
+		if (wordlen > 0 && curWord.charAt(wordlen - 1) == 's') {
+			singularForms[0] = curWord.substring(0, wordlen - 1);
+		}
+
+		if (wordlen > 2 && curWord.substring(wordlen - 2, wordlen).equals("es")) {
+			singularForms[1] = curWord.substring(0, wordlen - 2);
+		}
+
+		if (wordlen > 3 && curWord.substring(wordlen - 3, wordlen).equals("ies")) {
+			singularForms[2] = curWord.substring(0, wordlen - 3) + 'y';
+		}
+		return singularForms;
 	}
 	
 	/**

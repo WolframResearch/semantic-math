@@ -25,7 +25,7 @@ public class ThmP1Test {
 
 	//the char of F_p is p
 		public static void main(String[] args) throws IOException{
-			
+			//System.out.print("Got to main!");
 			//ThmP1.buildMap();
 			
 			//ThmP1 p1 = new ThmP1();
@@ -278,7 +278,11 @@ public class ThmP1Test {
 			st = "A ring $R$ is said to be  universally catenary if $R$ is Noetherian and every $R$ algebra of finite type is catenary."; //****Need revisit
 			st = "A ring $R$ is catenary if and only if the topological space $\\Spec(R)$ is catenary";
 			st = "if and only if $P$ is prime";
-			st = "a regular ring is regular";
+			st = "regular rings are regular";
+			st = "f is a function with radius of convergence r and finitely many roots";
+			st = "$R/\\mathfrak p$ is catenary for every minimal prime $\\mathfrak p$";
+			st = "for every minimal prime $\\p$";
+			
 			//st = "quotient over ring is quotient";
 			//st = "$f$ is holomorphic on $D(0, r)$, the derivative of $f$ is $\\sum_j j $";
 			//st = "$r $ is catenary "; 
