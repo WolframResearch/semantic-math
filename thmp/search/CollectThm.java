@@ -39,13 +39,12 @@ import thmp.utils.WordForms;
  *
  */
 public class CollectThm {
-
 	
 	//raw original file
 	//private static final File rawFile = new File("src/thmp/data/commAlg5.txt");
-	private static final String rawFileStr = "src/thmp/data/commAlg5.txt";
+	private static final String rawFileStr = "src/thmp/data/CommAlg5.txt";
 	//read in from list of files streams instead of just one
-	private static final List<String> rawFileStrList = Arrays.asList(new String[]{"src/thmp/data/commAlg5.txt", 
+	private static final List<String> rawFileStrList = Arrays.asList(new String[]{"src/thmp/data/CommAlg5.txt", 
 			"src/thmp/data/fieldsRawTex.txt", "src/thmp/data/functional_analysis_operator_algebras/distributions.txt"});
 	//private static final List<String> rawFileStrList = Arrays.asList(new String[]{"src/thmp/data/functional_analysis_operator_algebras/distributions.txt"});
 

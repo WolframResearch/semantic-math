@@ -8,6 +8,8 @@ import java.util.Scanner;
 
 import com.wolfram.alpha.parser.preparser.TexConverter;
 
+import thmp.ThmP1.ParsedPair;
+
 /*
  * Test class for ThmP1
  */
@@ -279,9 +281,10 @@ public class ThmP1Test {
 			st = "A ring $R$ is catenary if and only if the topological space $\\Spec(R)$ is catenary";
 			st = "if and only if $P$ is prime";
 			st = "regular rings are regular";
-			st = "f is a function with radius of convergence r and finitely many roots";
 			st = "$R/\\mathfrak p$ is catenary for every minimal prime $\\mathfrak p$";
+			st = "f is a function with radius of convergence r and finitely many roots";			
 			st = "all maximal chains of primes $\\mathfrak p = \\mathfrak q$ have the same (finite) length";
+			st = "$M/gM$ is Cohen-Macaulay with maximal regular sequence $f_1, \\ldots, f_{d-1}$.";
 			st = "$M/gM$ is Cohen-Macaulay with maximal regular sequence $f_1, \\ldots, f_{d-1}$.";
 			//st = "Assume that $B$ is Noetherian and Cohen-Macaulay and that $\\mathfrak m_B = (\\mathfrak m_A) B}$"; //**<--revisit!
 			//st = "ring $R_p$ is regular, for every $p$";
@@ -326,7 +329,10 @@ public class ThmP1Test {
 					//.replaceAll("MathObject\\{([^}]+)\\}", "MathObject\\[$1\\]");
 			
 			System.out.println("PARTS: " + parsedOutput);
-			
+			System.out.println("****ParsedExpr ");
+			for(ParsedPair pair : ThmP1.getParsedExpr()){
+				System.out.println(pair);
+			}
 			//System.out.println("****" + ThmP1.getParsedExpr() + "******");
 			boolean processFile = false;
 			
@@ -351,6 +357,7 @@ public class ThmP1Test {
 					parsedOutput = ThmP1.getParseStructMapList().toString();
 					
 					System.out.println("PARTS: " + parsedOutput);
+					System.out.println("****ParsedExpr " + ThmP1.getParsedExpr());
 					System.out.println("*~~~*");
 				}
 				
