@@ -281,7 +281,12 @@ public class ThmP1Test {
 			st = "regular rings are regular";
 			st = "f is a function with radius of convergence r and finitely many roots";
 			st = "$R/\\mathfrak p$ is catenary for every minimal prime $\\mathfrak p$";
-			st = "for every minimal prime $\\p$";
+			st = "all maximal chains of primes $\\mathfrak p = \\mathfrak q$ have the same (finite) length";
+			st = "$M/gM$ is Cohen-Macaulay with maximal regular sequence $f_1, \\ldots, f_{d-1}$.";
+			//st = "Assume that $B$ is Noetherian and Cohen-Macaulay and that $\\mathfrak m_B = (\\mathfrak m_A) B}$"; //**<--revisit!
+			//st = "ring $R_p$ is regular, for every $p$";
+			//st = "$R/\\mathfrak p$ is catenary for every minimal prime $\\mathfrak p$";
+			//st = "for every minimal prime $\\p$";
 			
 			//st = "quotient over ring is quotient";
 			//st = "$f$ is holomorphic on $D(0, r)$, the derivative of $f$ is $\\sum_j j $";

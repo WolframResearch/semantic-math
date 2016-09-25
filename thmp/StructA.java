@@ -50,8 +50,9 @@ public class StructA<A, B> extends Struct{
 	private double DOWNPATHSCOREDEFAULT = 1;
 	private double maxDownPathScore = DOWNPATHSCOREDEFAULT;
 	
-	//number of units down from this Struct , used for tie-breaking.
-	//StructH counts as one unit. Lower numUnits wins.
+	//number of units down from this Struct (descendents), used for tie-breaking.
+	//StructH counts as one unit. Lower numUnits wins, since it means more consolidation.
+	//e.g. children of MathObj's grouped together with the MathObj.
 	private int numUnits;
 	//don't need mxPathNodeList. The path down from this Struct should 
 	//be unique. It's the parents' paths to here that can differ
@@ -245,6 +246,7 @@ public class StructA<A, B> extends Struct{
 		String str = "";
 		//tempStr to add to
 		String tempStr = "";
+		StringBuilder tempSB = new StringBuilder();
 		
 		//str += this.type.matches("conj_.*|disj_.*") ? this.type.split("_")[0] +  " " : "";		
 		//also wrap braces around prev1 and prev2 or the conj/disj
@@ -255,29 +257,36 @@ public class StructA<A, B> extends Struct{
 			inConj = true;
 			//wrapBraces = true;
 			tempStr += "[";
+			tempSB.append("[");
 		}
 		
 		if(this.type.matches("phrase|prep")){
 			wrapBraces = true;		
 			tempStr += "{";
-		}
-		
+			tempSB.append("{");
+		}		
 		
 		if(this.prev1 != null){
-			if(inConj) tempStr += "{";
+			if(inConj){ tempStr += "{";
+				tempSB.append("{");
+			}
 			//if(prev1 instanceof Struct && ((Struct) prev1).WLCommandStr() == null){
 			if(prev1 instanceof Struct && ((Struct) prev1).WLCommandWrapperList() == null){
 				String prev1Str = ((Struct) prev1).simpleToString2(includeType, curCommand);
 				if(!prev1Str.matches("\\s*")){
 					tempStr += prev1Str;
+					tempSB.append(prev1Str);
 				}
 			}else if(prev1 instanceof String && !prev1.equals("")){
 				//if(!type.matches("pre|partiby")){
 				if(!type.matches("partiby")){
 					tempStr += prev1;
+					tempSB.append(prev1);
 				}
 			}
-			if(inConj) tempStr += "}";
+			if(inConj){ tempStr += "}";
+				tempSB.append("}");
+			}
 		}
 		
 		if(prev2 != null){
@@ -285,8 +294,9 @@ public class StructA<A, B> extends Struct{
 			if(prev2 instanceof Struct && ((Struct) prev2).WLCommandWrapperList() == null){
 				String prev2Str = ((Struct) prev2).simpleToString2(includeType, curCommand);
 				if(!prev2Str.matches("\\s*")){
-					if(!tempStr.matches("\\s*")) tempStr += ", ";
-					
+					if(!tempSB.toString().matches("\\s*")){ tempStr += ", ";
+						tempSB.append(", ");
+					}
 					prev2String += prev2Str;
 					
 				}
@@ -294,11 +304,16 @@ public class StructA<A, B> extends Struct{
 				prev2String += ", " + prev2;			
 			}
 			tempStr += inConj ? "{" + prev2String + "}" : prev2String;
+			tempSB.append(inConj ? "{" + prev2String + "}" : prev2String);
 		}
-		if(wrapBraces) tempStr += "}";
-		if(inConj) tempStr += "]";
-		
-		str += tempStr;
+		if(wrapBraces){ tempStr += "}";
+			tempSB.append("}");
+		}
+		if(inConj){ tempStr += "]";
+			tempSB.append("]");
+		}
+		//str += tempStr;
+		str += tempSB;
 		return str;
 	}
 	

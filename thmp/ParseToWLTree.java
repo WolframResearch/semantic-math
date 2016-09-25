@@ -76,25 +76,30 @@ public class ParseToWLTree {
 	private static Collection<WLCommand> get_triggerCol(String triggerKeyWord, String triggerType){
 		
 		Collection<WLCommand> triggeredCol;
-
-		triggeredCol = WLCommandMap.get(triggerKeyWord);
+		//copy into mutable collection
+		triggeredCol = new ArrayList<WLCommand>(WLCommandMap.get(triggerKeyWord));
 		
-		if(triggeredCol.isEmpty()){
+		//if(triggeredCol.isEmpty()){
+		//add words from triggerWords redirects in case there's an entry there.
 			//trigger word redirects: eg are -> is, since they are functionally equivalent
 			if(triggerWordLookupMap.containsKey(triggerKeyWord)){
 				
-				triggeredCol = new ArrayList<WLCommand>();
-			//look up again with fetched list of keywords
-			
+				//if(triggeredCol.isEmpty()){
+					//triggeredCol = new ArrayList<WLCommand>();
+				//}
+				//look up again with fetched list of keywords
+				
 				Collection<String> col= triggerWordLookupMap.get(triggerKeyWord);
 				for(String s : col){
 					triggeredCol.addAll(WLCommandMap.get(s));
 				}
-			}else if(WLCommandMap.containsKey(triggerType)){
+			}
+			//look up using type
+			if(triggeredCol.isEmpty() && WLCommandMap.containsKey(triggerType)){
 				triggeredCol = WLCommandMap.get(triggerType);
 				
 			}
-		}
+		//}
 		return triggeredCol;
 	}
 	
@@ -565,7 +570,7 @@ public class ParseToWLTree {
 	/**
 	 * iterate through the WrapperList backwards, append the first encounter 
 	 *	whose structsWithOtherHeadCount() lies above the set threshold.
-	 *	don't append if none exists.
+	 *	Don't append if none exists.
 	 *	Append all that has structsWithOtherHeadCount equal to the total 
 	 *	component count, since those commands don't interfere with anything else.
 	 */
@@ -577,7 +582,7 @@ public class ParseToWLTree {
 		for(int i = structWrapperListSz - 1; i > -1; i--){
 			WLCommandWrapper curWrapper = structWrapperList.get(i);
 			WLCommand curCommand = curWrapper.WLCommand;
-			
+			//right now that threshold is: all components must be included.
 			if(WLCommand.structsWithOtherHeadCount(curCommand) 
 					> WLCommand.totalComponentCount(curCommand) - 1){
 				//System.out.println("wrapperList Size" + structWrapperListSz);
@@ -595,6 +600,7 @@ public class ParseToWLTree {
 			}
 		}
 	}
+	
 	/*
 	public static void dfs(Struct struct, StringBuilder parsedSB, boolean shouldPrint) {
 		
@@ -617,7 +623,7 @@ public class ParseToWLTree {
 		//don't append if already incorporated into a higher command
 		//System.out.print(struct.WLCommandStrVisitedCount());
 		//WLComamnd() should not be null if WLCommandStr is not null
-		//if(struct.WLCommandStr() != null && struct.WLCommandStrVisitedCount() < 1){		
+		//if(struct.WLCommandStr() != null && struct.WLCommandStrVisitedCount(k) < 1){		
 		if(struct.WLCommandWrapperList() != null && struct.WLCommandStrVisitedCount() < 1){	
 		//if(struct.WLCommandWrapperList() != null){	
 			/*if(WLCommand.structsWithOtherHeadCount(struct.WLCommand()) 

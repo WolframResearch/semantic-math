@@ -379,7 +379,11 @@ public class StructH<H> extends Struct{
 			String childStr = child.simpleToString2(includeType, curCommand);
 			//str += childStr;	
 			if(!childStr.matches("\\s*")){
-				str += ", " + curChildRelation + " " + childStr;				
+				//only append curChidRelation if child is a StructH, to avoid
+				//including the relation twice, eg in case child is of type "prep"
+				curChildRelation = child.isStructA() ? "" : curChildRelation + " ";
+				str += ", " + curChildRelation + childStr;
+				
 			}
 		}		
 		if(includeType) str += "}";

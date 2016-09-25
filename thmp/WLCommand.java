@@ -104,6 +104,8 @@ public class WLCommand {
 	/**
 	 * The number of leaf nodes covered by this command.
 	 * To be compared with numUnits of the structToAppendCommandStr.
+	 * (Usually higher than that numUnits, since numUnits does not include
+	 * # of children nodes of StructH's).
 	 * The higher this number, the more spanning this command is.
 	 * Again not intrinsic, depends on DFS path.
 	 */

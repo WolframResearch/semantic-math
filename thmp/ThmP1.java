@@ -66,13 +66,14 @@ public class ThmP1 {
 	private static final Path parsedExprFile = Paths.get("src/thmp/data/parsedExpr.txt");
 
 	private static final List<String> unknownWords = new ArrayList<String>();
-	private static final List<ParsedPair> parsedExpr = new ArrayList<ParsedPair>();
+	private static List<ParsedPair> parsedExpr = new ArrayList<ParsedPair>();
 	private static final ImmutableListMultimap<String, FixedPhrase> fixedPhraseMap;
 	/**
 	 * List of Stringified Map of parts used to build up a theorem/def etc.  
 	 * Global variable, so to be able to pass to other functions.
+	 * Not final, since it needs to be cleared and reassigned. 
 	 */
-	private static final List<String> parseStructMapList = new ArrayList<String>();	
+	private static List<String> parseStructMapList = new ArrayList<String>();	
 	
 	// part of speech, last resort after looking up entity property maps
 	// private static HashMap<String, String> pos;
@@ -138,6 +139,26 @@ public class ThmP1 {
 			return this.score;
 		}
 
+		/**
+		 * Number of units covered in this parse.
+		 * i.e. measures how consolidated the parse is.
+		 * Different from commandNumUnits in that it doesn't count
+		 * children of StructH, among other things.
+		 * Lower numUnits is better.
+		 */
+		public int numUnits(){
+			return numUnits;
+		}
+
+		/**
+		 * commandNumUnits of the WLCommands involved in this parse.
+		 * I.e. number of leaf nodes covered. Higher is better.
+		 * @return
+		 */
+		public int commandNumUnits(){
+			return commandNumUnits;
+		}
+
 		public String form(){
 			return this.form;
 		}
@@ -194,6 +215,7 @@ public class ThmP1 {
 	}
 
 	/**
+	 * Add n gram to pairs list
 	 * @param pairs
 	 * @param mathIndexList
 	 * @param thirdWord
@@ -202,9 +224,12 @@ public class ThmP1 {
 	private static void addNGramToPairs(List<Pair> pairs, List<Integer> mathIndexList, String thirdWord,
 			String threeGram) {
 		String pos = posMap.get(thirdWord);
-		if(pos == null){
-			///************need better solution!
+		
+		if(mathObjMap.containsKey(thirdWord)){
 			pos = "ent";
+		}else if(pos == null){
+			///************need better solution!
+			//pos = "ent";
 			//better no parse and know, rather than wrong parse
 			pos = "";
 		}
@@ -1005,7 +1030,7 @@ public class ThmP1 {
 			// add as property
 
 		}
-		//System.out.println("^^^^structList: " + structList);
+		System.out.println("^^^^structList: " + structList);
 		return structList;
 	}
 	
@@ -1517,18 +1542,20 @@ public class ThmP1 {
 		if (headStructListSz > 0) {			
 			// System.out.println("index of highest score: " +
 			// ArrayDFS(headStructList));
+			//temporary list to store the ParsedPairs to be sorted
+			List<Multimap<ParseStructType, ParsedPair>> parsedPairMMapList = new ArrayList<Multimap<ParseStructType, ParsedPair>>();
+			
 			for (int u = 0; u < headStructListSz; u++) {
 				Struct uHeadStruct = headStructList.structList().get(u);
 				uHeadStruct.set_dfsDepth(0);
 				dfs(uHeadStruct, parsedSB);
-				//should pass in the wlSB, instead of creating one anew each time.
-				StringBuilder wlSB = treeTraversal(uHeadStruct);
+				//should pass in the wlSB, instead of creating one anew each time. <--It's ok.
+				StringBuilder wlSB = treeTraversal(uHeadStruct, parsedPairMMapList);
 				System.out.println("+++Previous long parse: " + parsedSB);
 				
 				double maxDownPathScore = uHeadStruct.maxDownPathScore();
-				
-				parsedExpr.add(new ParsedPair(wlSB.toString(), maxDownPathScore, "short"));
-				
+				//defer these additions to orderPairsAndPutToLists()
+				parsedExpr.add(new ParsedPair(wlSB.toString(), maxDownPathScore, "short"));				
 				parsedExpr.add(new ParsedPair(parsedSB.toString(), maxDownPathScore, "long"));
 				
 				System.out.println(maxDownPathScore);
@@ -1539,8 +1566,10 @@ public class ThmP1 {
 				System.out.print(parsedString + " \n ** ");
 				
 				parsedSB.setLength(0);
-				// System.out.println("%%%%%\n");
 			}
+			//order maps from parsedPairMMapList and put into parseStructMapList and parsedExpr
+			orderPairsAndPutToLists(parsedPairMMapList);
+			//parseStructMapList.add(parseStructMap.toString() + "\n");
 		}
 		// if no full parse. Also add to parsedExpr List.
 		else {
@@ -1583,10 +1612,11 @@ public class ThmP1 {
 			int parsedStructListSize = parsedStructList.size();
 			String totalParsedString = "";
 			double totalScore = 1; //product of component scores
+			List<Multimap<ParseStructType, ParsedPair>> parsedPairMMapList = new ArrayList<Multimap<ParseStructType, ParsedPair>>();
 			
 			for (int k = 0; k < parsedStructListSize; k++) {
 				// int highestScoreIndex = ArrayDFS(parsedStructList.get(k));
-				int highestScoreIndex = 0; ///**********
+				int highestScoreIndex = 0; //**********
 				Struct kHeadStruct = parsedStructList.get(k).structList().get(highestScoreIndex);
 				
 				kHeadStruct.set_dfsDepth(0);
@@ -1596,19 +1626,22 @@ public class ThmP1 {
 				//or at least get highest score
 				totalScore *= kHeadStruct.maxDownPathScore();
 				String parsedString = ParseToWL.parseToWL(kHeadStruct);
-								
+				
 				if (k < parsedStructListSize - 1){
 					totalParsedString += parsedString + "; ";
 					System.out.print(";  ");
 					parsedSB.append("; ");
 				}
 				
-				StringBuilder wlSB = treeTraversal(kHeadStruct);
+				StringBuilder wlSB = treeTraversal(kHeadStruct, parsedPairMMapList);
 			}
+			//defer these to ordered addition in orderPairsAndPutToLists!
 			parsedExpr.add(new ParsedPair(parsedSB.toString(), totalScore, "long"));
 
 			//System.out.println(totalParsedString + "; ");
 			parsedExpr.add(new ParsedPair(totalParsedString, totalScore, "wl"));
+			
+			orderPairsAndPutToLists(parsedPairMMapList);
 			
 			System.out.println("%%%%%\n");
 		}
@@ -1630,11 +1663,83 @@ public class ThmP1 {
 	}
 
 	/**
+	 * Order parsedPairMMapList and add to parseStructMapList and parsedExpr (both static members).
+	 * @param parsedPairMMapList
+	 */
+	private static void orderPairsAndPutToLists(List<Multimap<ParseStructType, ParsedPair>> parsedPairMMapList){
+		//use insertion sort, since list of maps is usually very small, ~1-3
+		//for maps with multiple entries (e.g. one sentence with both a HYP and a STM), add the numUnits and 
+		//commandNumUnits across entries.
+		List<Multimap<ParseStructType, ParsedPair>> sortedParsedPairMMapList = new ArrayList<Multimap<ParseStructType, ParsedPair>>();
+		//evolving list of numUnits scores for elements in sortedParsedPairMMapList
+		List<Integer> numUnitsList = new ArrayList<Integer>();
+		List<Integer> commandNumUnitsList = new ArrayList<Integer>();
+		List<Double> scoresList = new ArrayList<Double>();
+		
+		Multimap<ParseStructType, ParsedPair> firstMMap = parsedPairMMapList.get(0);
+		sortedParsedPairMMapList.add(firstMMap);
+		
+		int firstNumUnits = 0;
+		int firstCommandNumUnits = 0;
+		for(ParsedPair parsedPair : firstMMap.values()){
+			firstNumUnits += parsedPair.numUnits;
+			firstCommandNumUnits += parsedPair.commandNumUnits;
+		}
+		numUnitsList.add(firstNumUnits);
+		commandNumUnitsList.add(firstCommandNumUnits);
+		
+		for(int i = 1; i < parsedPairMMapList.size(); i++){
+			int numUnits = 0;
+			int commandNumUnits = 0;
+			Multimap<ParseStructType, ParsedPair> mmap = parsedPairMMapList.get(i);
+			for(ParsedPair parsedPair : mmap.values()){
+				numUnits += parsedPair.numUnits;
+				commandNumUnits += parsedPair.commandNumUnits;
+			}
+			
+			//put into sortedParsedPairMMapList in sorted order, best parse first
+			for(int j = 0; j < sortedParsedPairMMapList.size(); j++){
+				//Multimap<ParseStructType, ParsedPair> sortedMap = sortedParsedPairMMapList.get(j);
+				//commandNumUnits weigh the most, use numUnits as tie-breakers, use numUnits if
+				//commandNumUnits differ by more than 1. Count commandNumUnits diff 3/2 as much weight
+				//as numUnits diff
+				//simplify this to use only one if!
+				int sortedNumUnits = numUnitsList.get(j);
+				int sortedCommandNumUnits = commandNumUnitsList.get(j);
+				if(sortedCommandNumUnits > commandNumUnits && sortedNumUnits < numUnits ){
+					continue;
+				}else if(sortedCommandNumUnits > commandNumUnits + 1){
+					continue;
+				}else if((sortedNumUnits - numUnits) > ((double)commandNumUnits - sortedCommandNumUnits)*3/2){
+					//insert
+					sortedParsedPairMMapList.add(j, mmap);
+					numUnitsList.add(j, numUnits);
+					commandNumUnitsList.add(j, commandNumUnits);
+					break;
+				}				
+			}			
+			
+		}
+		for(Multimap<ParseStructType, ParsedPair> map : sortedParsedPairMMapList){
+			//parseStructMapList.add(parseStructMap.toString() + "\n");
+			parseStructMapList.add(map.toString() + "\n");
+			//add to parsedExpr  parsedExpr.add(new ParsedPair(totalParsedString, totalScore, "wl"));
+			// ********need to put the "long" form into parsedExpr as well!
+			//note that Multimap does not necessarily preserve insertion order!
+			for(ParsedPair pair : map.values()){
+				parsedExpr.add(new ParsedPair(pair.parsedStr, pair.score, pair.numUnits, pair.commandNumUnits));
+			}
+		}
+		
+		//parseStructMap ;
+		
+	}
+	/**
 	 * Traverses parse tree by calling various dfs methods.
 	 * @param uHeadStruct
 	 * @return
 	 */
-	private static StringBuilder treeTraversal(Struct uHeadStruct) {
+	private static StringBuilder treeTraversal(Struct uHeadStruct, List<Multimap<ParseStructType, ParsedPair>> parsedPairMMapList) {
 		//System.out.println("\n START ParseStruct DFS");
 		StringBuilder parseStructSB = new StringBuilder();
 		ParseStructType parseStructType = ParseStructType.getType(uHeadStruct);
@@ -1651,9 +1756,10 @@ public class ThmP1 {
 		Multimap<ParseStructType, ParsedPair> parseStructMap = ArrayListMultimap.create();
 		ParseToWLTree.dfs(parseStructMap, uHeadStruct, wlSB, true);				
 		System.out.println("Parts: " + parseStructMap);
-		parseStructMapList.add(parseStructMap.toString() + "\n");
-		//ParseToWLTree.dfs(uHeadStruct, wlSB, true);	
+		//**parseStructMapList.add(parseStructMap.toString() + "\n");
+		parsedPairMMapList.add(parseStructMap);
 		
+		//ParseToWLTree.dfs(uHeadStruct, wlSB, true);		
 		//parsedSB.append("\n");
 		//ParseToWLTree.dfs(uHeadStruct, parsedSB, true);	
 		System.out.println(wlSB);
@@ -2090,7 +2196,7 @@ public class ThmP1 {
 	public static List<ParsedPair> getParsedExpr(){
 		List<ParsedPair> parsedExprCopy = new ArrayList<ParsedPair>(parsedExpr);
 		
-		parsedExpr.clear();
+		parsedExpr = new ArrayList<ParsedPair>();
 		return parsedExprCopy;
 	}
 
@@ -2099,7 +2205,7 @@ public class ThmP1 {
 	 */
 	public static List<String> getParseStructMapList(){		
 		List<String> parseStructMapListCopy = new ArrayList<String>(parseStructMapList);
-		parseStructMapList.clear();
+		parseStructMapList = new ArrayList<String>();;
 		return parseStructMapListCopy;
 	}
 	

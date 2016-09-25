@@ -64,13 +64,16 @@ public enum ParseStructType {
 				
 			}else{		
 				if(struct.prev1() instanceof StructA){
+					//in case typeStr == "hypo", need to differentiate between "if" and "iff"
 					//the prev1 should be a StructA of type hyp.
 					//typeStr = ((StructA<?,?>)struct.prev1()).prev1().toString() ;
-					typeStr = ((StructA<?,?>)struct.prev1()).getLeftMostChild();
+					String hypoStr = ((StructA<?,?>)struct.prev1()).getLeftMostChild();
+					typeStr = hypoStr.equals("if and only if") ? hypoStr : typeStr;
 					matchedTypeCol = StringParseStructTypeMap.get(typeStr);
 				}
 			}
-			if(matchedTypeCol != null){
+			//StringParseStructTypeMap is a Multimap
+			if(!matchedTypeCol.isEmpty()){
 				type = matchedTypeCol.get(0);
 			}else{
 				type = STM;

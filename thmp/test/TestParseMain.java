@@ -42,20 +42,27 @@ public class TestParseMain {
 		//the parsed results must be added in the same order as their inputs
 		stList.add("let f be g");
 		parsedList.add("{HYP=[ f \\[Element] MathObj{g}  0.7  4  3]}\n");
+		
 		stList.add("given an element f of a set $S$");
 		parsedList.add("{HYP=[ MathObj{element, f, of MathObj{set, $S$}}  1.0  2  4]}\n");
+		
 		stList.add("take derivative of log of f");
 		parsedList.add("{OBJ=[ Derivative[  Log[ f ]  ]  1.0  1  6]}\n");
+		
 		stList.add("f is a function with radius of convergence r");
 		parsedList.add("{STM=[ f \\[Element] function[{function, with radius of convergence, r}]  1.0  3  5]}\n");
+		
 		stList.add("f is a function with radius of convergence r and finitely many roots");
-		parsedList.add("{STM=[ f \\[Element] function[{function, with {with, Conj[{radius of convergence, r}, {roots, finitely many}]}}]  1.0  3  7]}\n");
+		parsedList.add("{STM=[ f \\[Element] function[{function, {with, Conj[{radius of convergence, r}, {roots, finitely many}]}}]  1.0  3  7]}\n");
+		
 		stList.add("$f$ is holomorphic on $D(0, r)$, the derivative of $f$ is $\\sum_j j $");
 		parsedList.add("{STM=[  Derivative[ $f$ ]  \\[Element] MathObj{{$\\sum_j j $}}  1.0  3  7]}\n");
+		
 		stList.add("$R/\\mathfrak p$ is catenary for every minimal prime $\\mathfrak p$");
-		parsedList.add("{STM=[ MathObj{$R/\\mathfrak p$} \\[Element] MathObj{catenary}  0.9  3  4], HYP=[ \\[ForAll][ MathObj{prime, $\\mathfrak p$, minimal} ]  1.0  2  3]}\n");
+		parsedList.add("{HYP=[ \\[ForAll][ MathObj{minimal prime, $\\mathfrak p$} ]  1.0  2  3], STM=[ MathObj{$R/\\mathfrak p$} \\[Element] MathObj{catenary}  0.9  3  4]}\n");
+		              //{HYP=[ \\[ForAll][ MathObj{minimal prime, $\\mathfrak p$} ]  1.0  2  3], STM=[ MathObj{$R/\mathfrak p$} \[Element] MathObj{catenary}  0.9  3  4]}
 		stList.add("quotient over ring is quotient");
-		parsedList.add("{STM=[ MathObj{quotient, over MathObj{ring}} \\[Element] MathObj{{quotient}}  1.0  3  6]}");
+		parsedList.add("{STM=[ MathObj{quotient, over MathObj{ring}} \\[Element] MathObj{{quotient}}  1.0  3  6]}\n");
 		
 		for(int j = 0; j < stList.size(); j++){
 			String st = stList.get(j);
@@ -101,8 +108,10 @@ public class TestParseMain {
 	 */
 	@Test
 	public void test2(){
+		//           "$R/\\mathfrak p$ is catenary for every minimal prime $\\mathfrak p$"
 		String thm = "$R_\\mathfrak m$ is universally catenary for all maximal ideals $\\mathfrak m$";
-		String parsed = "{STM=[ MathObj{$R_\\mathfrak m$} \\[Element] MathObj{universally catenary}  0.9  3  4], HYP=[ \\[ForAll][ MathObj{ideals, $\\mathfrak m$, maximal} ]  1.0  2  3]}\n";
+		String parsed = "{HYP=[ \\[ForAll][ MathObj{maximal ideal, $\\mathfrak m$} ]  1.0  2  3], STM=[ MathObj{$R_\\mathfrak m$} \\[Element] MathObj{universally catenary}  0.9  3  4]}\n";
+		
 		parseThm(thm, parsed);
 	}
 

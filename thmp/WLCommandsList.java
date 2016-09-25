@@ -26,7 +26,7 @@ public class WLCommandsList {
 	private static final ImmutableMultimap<String, WLCommand> WLCommandMap; 
 	
 	/**
-	 * ImmutableMultimap of which strings lead to which trigger words. It's a
+	 * ImmutableMultimap of which strings lead/direct to which trigger words. It's a
 	 * many-to-many mapping: one string can lead to many, and many can lead to
 	 * one, trigger word. Strings that don't have entries should subsequently
 	 * look up in WLCommandMap directly.
@@ -49,6 +49,7 @@ public class WLCommandsList {
 		triggerWordLookupMapBuilder.put("be", "is");
 		triggerWordLookupMapBuilder.put("are", "is");
 		triggerWordLookupMapBuilder.put("has", "is");
+		triggerWordLookupMapBuilder.put("have", "is");
 		triggerWordLookupMapBuilder.put("belong", "is");
 		triggerWordLookupMapBuilder.put("lie", "is");
 		triggerWordLookupMapBuilder.put("let", "if");
@@ -117,7 +118,8 @@ public class WLCommandsList {
 				", radius, false", ", convergence, trigger", "Function[ 'radius' ", "]" }));
 		
 		// trigger TriggerMathObj
-		WLCommandMapBuilder.put("is", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is|are|be, trigger",
+		// should handle "have" differently ////******
+		WLCommandMapBuilder.put("is", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is|are|be|have, trigger",
 				"\\[Element]", "symb|ent|adj|phrase, , true, TriggerMathObj" }));
 		//auxpass, eg "is called"
 		WLCommandMapBuilder.put("is called", addCommand(new String[] { "symb|ent|pro, , true", "auxpass, is called, trigger",
