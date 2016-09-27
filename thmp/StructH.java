@@ -466,4 +466,21 @@ public class StructH<H> extends Struct{
 		return null;
 	}
 	
+	@Override
+	public String contentStr(){
+		String str = struct.get("name");
+		String contentStr = str == null ? "" : str; 
+		return contentStr;
+		
+	}
+	
+	/**
+	 * Calling the applicable ParseTreeToVec with dynamic dispatch.
+	 * To avoid casting, and to distribute the logic.
+	 */
+	@Override
+	public void setContextVecEntry(int structParentIndex, int[] contextVec){
+		ParseTreeToVec.setStructHContextVecEntry(this, structParentIndex, contextVec);
+	}
+	
 }

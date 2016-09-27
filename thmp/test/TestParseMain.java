@@ -1,12 +1,10 @@
 package thmp.test;
 
-
 import static org.junit.Assert.*;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Before;
@@ -14,7 +12,7 @@ import org.junit.Test;
 
 import thmp.Maps;
 import thmp.ThmP1;
-import thmp.ThmP1.ParsedPair;
+
 /**
  * Parses preliminary set of Strings.
  * @author yihed
@@ -114,5 +112,16 @@ public class TestParseMain {
 		
 		parseThm(thm, parsed);
 	}
-
+	/**
+	 * Test $M/gM$ is Cohen-Macaulay with maximal regular sequence $f_1, \\ldots, f_{d-1}$.
+	 */
+	@Test
+	public void test3(){
+		//           "$R/\\mathfrak p$ is catenary for every minimal prime $\\mathfrak p$"
+		String thm = "$M/gM$ is Cohen-Macaulay with maximal regular sequence $f_1, \\ldots, f_{d-1}$.";
+		String parsed = "{STM=[ MathObj{$M/gM$} \\[Element] ring[{cohen-macaulay, {with, sequence, $f_1, \\ldots, f_{d-1}$, maximal regular}}]  0.85  5  6]}\n";
+		
+		parseThm(thm, parsed);
+	}
+	
 }

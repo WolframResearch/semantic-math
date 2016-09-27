@@ -42,6 +42,9 @@ public class WordFrequency {
 	private static final int TOTAL_STOCK_WORD_COUNT = (int)Math.pow(10, 7)*45;
 	private static final Path trueFluffWordsPath = Paths.get("src/thmp/data/trueFluffWords.txt");
 	
+	//words that should be included in trueFluffWordsSet, but were left out by algorithm.
+	private static final String[] ADDITIONAL_FLUFF_WORDS = new String[]{"an", "are", "has", "tex"};
+	
 	static {
 		
 		// build wordFreqMap
@@ -104,11 +107,12 @@ public class WordFrequency {
 	private static void getStockFreq(BufferedReader wordsFileBufferedReader, int totalCorpusWordCount) {
 		
 		try {
-			int N = 80;
+			wordsFileBufferedReader.readLine();
+			/*int N = 80;
 			//the first N lines are both math and English fluff words, eg "the"
 			for(int i = 0; i < N; i++){
-				wordsFileBufferedReader.readLine();
-			}
+				wordsFileBufferedReader.readLine();				
+			}*/
 			
 			String line;
 			//read in words and 
@@ -137,6 +141,9 @@ public class WordFrequency {
 					trueFluffWordsSet.add(word);
 					trueFluffWordsPosMap.put(word, wordPos);
 				}
+			}
+			for(String fluffWord : ADDITIONAL_FLUFF_WORDS){
+				trueFluffWordsSet.add(fluffWord);
 			}
 
 		} catch (IOException e) {

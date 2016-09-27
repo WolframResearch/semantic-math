@@ -53,7 +53,7 @@ public class WLCommand {
 	//which WL expression to turn into using map components and how.
 	//need to keep references to Structs in commandsMap
 	// List of PosTerm with its position, {entsymb, 0}, {\[Element], -1}, {entsymb,2}
-	//entsymb, 0, entsymb 1, use these to build grammar
+	//entsymb, 0, entsymb 1, use these to fulfill grammar rule
 	private List<PosTerm> posTermList;
 
 	/**
@@ -109,7 +109,7 @@ public class WLCommand {
 	 * The higher this number, the more spanning this command is.
 	 * Again not intrinsic, depends on DFS path.
 	 */
-	private int commandNumUnits;
+	private int commandNumUnits;	
 	
 	/**
 	 * Max tree depth in DFS.

@@ -27,6 +27,7 @@ import com.google.common.collect.Multimap;
 import thmp.Struct.NodeType;
 import thmp.search.NGramSearch;
 import thmp.search.ThreeGramSearch;
+import thmp.search.TriggerMathThm2;
 import thmp.utils.WordForms;
 
 /* 
@@ -1581,7 +1582,9 @@ public class ThmP1 {
 			for (int u = 0; u < headStructListSz; u++) {
 				Struct uHeadStruct = headStructList.structList().get(u);
 				uHeadStruct.set_dfsDepth(0);
+				//get the "long" form, not WL form, with this dfs
 				dfs(uHeadStruct, parsedSB);
+				//now get the WL form build from WLCommand's
 				//should pass in the wlSB, instead of creating one anew each time. <--It's ok.
 				StringBuilder wlSB = treeTraversal(uHeadStruct, parsedPairMMapList);
 				System.out.println("+++Previous long parse: " + parsedSB);
@@ -1716,7 +1719,9 @@ public class ThmP1 {
 		//evolving list of numUnits scores for elements in sortedParsedPairMMapList
 		List<Integer> numUnitsList = new ArrayList<Integer>();
 		List<Integer> commandNumUnitsList = new ArrayList<Integer>();
-		List<Double> scoresList = new ArrayList<Double>();
+		//use scores to tie-break once scores become more comprehensive
+		//List<Double> scoresList = new ArrayList<Double>();
+		
 		//ordering in the sorted list, the value list.get(i) is the index of the pair in the original parsedPairMMapList
 		List<Integer> finalOrderingList = new ArrayList<Integer>();
 		for(int i = 0; i < parsedPairMMapList.size(); i++){
@@ -1755,8 +1760,8 @@ public class ThmP1 {
 				//simplify this to use only one if!
 				int sortedNumUnits = numUnitsList.get(j);
 				int sortedCommandNumUnits = commandNumUnitsList.get(j);
-				//if(sortedCommandNumUnits > commandNumUnits && sortedNumUnits < numUnits ){
-				if(sortedCommandNumUnits + 1 < commandNumUnits || (sortedNumUnits - numUnits) > ((double)commandNumUnits - sortedCommandNumUnits)*3/2){
+				if(sortedCommandNumUnits < commandNumUnits 
+						|| (sortedNumUnits - numUnits) > ((double)commandNumUnits - sortedCommandNumUnits)*3/2){
 					//insert
 					sortedParsedPairMMapList.add(j, mmap);
 					numUnitsList.add(j, numUnits);
@@ -1799,8 +1804,11 @@ public class ThmP1 {
 		}	
 		//parseStructMap ;		
 	}
+	
 	/**
-	 * Traverses parse tree by calling various dfs methods.
+	 * Traverses and produces parse tree by calling various dfs methods,
+	 * by matching commands. Returns
+	 * string representation of the parse tree. Tree uses WLCommands.
 	 * @param uHeadStruct
 	 * @return
 	 */
@@ -1811,6 +1819,7 @@ public class ThmP1 {
 		ParseStruct headParseStruct = new ParseStruct(parseStructType, "", uHeadStruct);
 		//whether to print the commands in tiers with the spaces in subsequent lines.
 		boolean printTiers = false;
+		//builds the parse tree by matching triggered commands. 
 		ParseToWLTree.dfs(uHeadStruct, parseStructSB, headParseStruct, 0, printTiers);
 		System.out.println("\n DONE ParseStruct DFS \n");
 		StringBuilder wlSB = new StringBuilder();
@@ -1819,7 +1828,12 @@ public class ThmP1 {
 		 * Parts can be any ParseStructType. Should make this a local var.
 		 */
 		Multimap<ParseStructType, ParsedPair> parseStructMap = ArrayListMultimap.create();
-		ParseToWLTree.dfs(parseStructMap, uHeadStruct, wlSB, true);				
+		//initialize context vector for this command <--need to expose by adding to list
+		//length is total number of terms in corpus, i.e. row dimension in term-document matrix in search
+		int[] curStructContextVec = new int[TriggerMathThm2.keywordDictSize()];
+		
+		//fills the parseStructMap and produces String representation		
+		ParseToWLTree.dfs(parseStructMap, uHeadStruct, wlSB, curStructContextVec, true);				
 		System.out.println("Parts: " + parseStructMap);
 		//**parseStructMapList.add(parseStructMap.toString() + "\n");
 		parsedPairMMapList.add(parseStructMap);
@@ -2246,16 +2260,17 @@ public class ThmP1 {
 	 */
 	public static void writeParsedExprToFile() throws IOException {		
 		List<String> parsedExprStringList = new ArrayList<String>();
+		//just call .toString() directly on parsedExpr!
 		for(ParsedPair parsedPair : parsedExpr){
 			parsedExprStringList.add(parsedPair.toString());
 		}
 		Files.write(parsedExprFile, parsedExprStringList, Charset.forName("UTF-8"));
-		parsedExpr.clear();
+		parsedExpr = new ArrayList<ParsedPair>();
 	}
 	
 	/**
 	 * @return the List of parsed expressions, with different scores.
-	 * Resets parsedExpr by clearing.
+	 * Resets parsedExpr by re-initializing.
 	 * Defensively copies List and returns copy.
 	 */
 	public static List<ParsedPair> getParsedExpr(){
@@ -2264,7 +2279,7 @@ public class ThmP1 {
 		parsedExpr = new ArrayList<ParsedPair>();
 		return parsedExprCopy;
 	}
-
+	
 	/** 
 	 * @return The ParseStruct parts of each parse since last retrieval.
 	 */

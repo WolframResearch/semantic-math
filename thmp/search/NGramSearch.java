@@ -18,7 +18,7 @@ import thmp.utils.WordForms;
  * O(N^2) time performance, where N is number of words.
  * Put words in HashMaps, where each entry is another map, with frequencies of words
  * that follow. N^2 space. Skip if common word.
- * F
+ * 
  * @author yihed
  *
  */
@@ -26,7 +26,7 @@ import thmp.utils.WordForms;
 public class NGramSearch {
 
 	//get the non math fluff words
-	private static final Set<String> nonMathFluffWordsSet = CollectFreqWords.GetFreqWords.get_nonMathFluffWordsSet2();	
+	private static final Set<String> nonMathFluffWordsSet = WordFrequency.trueFluffWordsSet();	
 	private static final Path twoGramsFilePath = Paths.get("src/thmp/data/twoGrams.txt");
 	//private static final File twoGramsFile = new File("src/thmp/data/twoGrams.txt");
 	//list of 2 grams that show up with above-average frequency, with their frequencies
@@ -35,7 +35,8 @@ public class NGramSearch {
 	// in 2 grams, and entries are frequency counts.
 	//this field will be exposed to build 3-grams
 	private static final Map<String, Map<String, Integer>> nGramMap;
-	private static final String[] ADDITIONAL_TWO_GRAMS = new String[]{"local ring", "local field", "direct sum"};
+	private static final String[] ADDITIONAL_TWO_GRAMS = new String[]{"local ring", "local field", "direct sum",
+			"finitely many"};
 	//default two-gram count when total number of two grams is 0
 	private static final int ADDITIONAL_TWO_GRAM_DEFAULT_COUNT = 5;
 	//should use this to detect fluff in first word.
@@ -58,7 +59,7 @@ public class NGramSearch {
 		//get list of 2 grams that show up frequently
 		twoGramsMap = compile2grams(nGramMap, averageWordCounts, nGramFirstWordsSet);
 		//System.out.println("twoGramsMapSz" + twoGramsMap.size());
-		//System.out.println(twoGramsMap);
+		System.out.println(twoGramsMap);
 		System.out.println("Done with 2-grams.");
 	}
 	

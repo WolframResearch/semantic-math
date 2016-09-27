@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Build the thm search project -->
+
+<project name="thmSearch" default="dist" basedir=".">
+	
+	<property name="builddir" value="${basedir}/build/"/>
+	<property name="srcdir" value="${basedir}/src/thmp/search/"/>
+	<property name="libdir" value="${basedir}/lib/"/>
+	<property name="thmplibdir" value="${basedir}/bin/"/>
+	<property name="utilslibdir" value="${basedir}/bin/thmp/utils/"/>
+	<property name="jarname" value="thmSearch.jar"/>
+	
+	<target name="clean" description="clean">
+		<delete failonerror="false" file="${basedir}/${jarname}"/>
+	</target>
+	
+	<target name="compileThmp" description="compile main thmp package">
+		<mkdir dir="${builddir}"/>
+		<javac		
+			srcdir="${srcdir}"
+			destdir="${builddir}"
+			debug="true"
+		>
+		<classpath>			
+			<fileset dir="${thmplibdir}">
+				<include name="**/*.class"/>
+			</fileset>
+			<fileset dir="${libdir}">
+				<include name="**/*.jar"/>
+				<!-- <include name="**/SystemFiles/*"/>-->
+			</fileset>
+		</classpath>
+		</javac>
+	</target>
+	
+	<target name="compile" description="compile">
+		<mkdir dir="${builddir}"/>
+		<javac		
+			srcdir="${srcdir}"
+			destdir="${builddir}"
+			debug="true"
+		>
+		<classpath>			
+			<fileset dir="${thmplibdir}">
+				<include name="**/*.class"/>
+			</fileset>
+			<fileset dir="${libdir}">
+				<include name="**/*.jar"/>
+				<!-- <include name="**/SystemFiles/*"/>-->
+			</fileset>
+		</classpath>
+		</javac>
+	</target>
+	
+	<target name="buildjar" description="build jar file">
+		<jar
+			destfile="${basedir}/${jarname}"
+			basedir="${basedir}/build/"
+		>
+		<exclude name="../src/"/>
+		<exclude name="~/"/>
+		<exclude name="bin/"/>
+		<exclude name="lib/"/>
+		<exclude name="${basedir}/*.txt"/>
+		<exclude name="${basedir}/*.xml"/>
+		<exclude name="**/*.jar"/>		
+		</jar>
+	</target>
+	
+	<target name="run" description="run the build process">
+		<antcall target="clean"/>
+		<antcall target="compile"/>
+		<antcall target="buildjar"/>
+	</target>
+
+</project>

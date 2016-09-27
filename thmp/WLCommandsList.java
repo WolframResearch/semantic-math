@@ -48,8 +48,8 @@ public class WLCommandsList {
 		//need to put all vbs in here programmatically
 		triggerWordLookupMapBuilder.put("be", "is");
 		triggerWordLookupMapBuilder.put("are", "is");
-		triggerWordLookupMapBuilder.put("has", "is");
-		triggerWordLookupMapBuilder.put("have", "is");
+		triggerWordLookupMapBuilder.put("has", "have");
+		//triggerWordLookupMapBuilder.put("have", "is");
 		triggerWordLookupMapBuilder.put("belong", "is");
 		triggerWordLookupMapBuilder.put("lie", "is");
 		triggerWordLookupMapBuilder.put("let", "if");
@@ -150,7 +150,9 @@ public class WLCommandsList {
 		  //}));
 		
 		//we have ...
-		WLCommandMapBuilder.put("have", addCommand(new String[] { "pro, we, false", "verb, have, trigger", ", , true",}));
+		WLCommandMapBuilder.put("have", addCommand(new String[] { "pro, we, false", "verb, have, trigger", ", , true"}));
+		// "A has property B", eg "chains of ideals have same length"
+		WLCommandMapBuilder.put("have", addCommand(new String[] { "ent, , true", "verb, have|has, trigger", "\\HasProperty[", ", , true", "]"}));
 		// label string if to be used as trigger ent/symb, then use these words
 		// as trigger system
 		// function with radius of convergence

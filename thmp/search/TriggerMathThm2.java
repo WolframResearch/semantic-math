@@ -330,7 +330,7 @@ public class TriggerMathThm2 {
 			if(i < thmAr.length-1){
 				String nextTermCombined = term + " " + thmAr[i+1];
 				newNorm = addToNorm(thmAr, wordsScoreMap, triggerTermsVec, newNorm, i, nextTermCombined);	
-				System.out.println("combined word: " + nextTermCombined + " norm: " + newNorm);
+				//System.out.println("combined word: " + nextTermCombined + ". norm: " + newNorm);
 				
 				if(i < thmAr.length-2){
 					String threeTermsCombined = nextTermCombined + " " + thmAr[i+2];
@@ -404,12 +404,13 @@ public class TriggerMathThm2 {
 	private static int addToNorm(String[] thmAr, Map<String, Integer> wordsScoreMap, int[] triggerTermsVec,
 			int norm, int i, String term) {
 		Integer termScore = wordsScoreMap.get(term);
-		//get singular forms
-		System.out.println("term: " + term + " termScore: " + termScore );
+		//get singular forms		
 		if(termScore == null){
 			term = WordForms.getSingularForm(term);
 			termScore = wordsScoreMap.get(term);
 		}
+		System.out.println("term: " + term + ". termScore: " + termScore );
+		
 		//triggerTermsVec[rowIndex] = termScore;
 		//keywordDict starts indexing from 0!
 		if(termScore != null){
@@ -422,7 +423,7 @@ public class TriggerMathThm2 {
 			//triggerTermsVec[rowIndex] = termScore;
 			//keywordDict starts indexing from 0!
 			triggerTermsVec[rowIndex] = termScore;
-			System.out.println("term just added: " + term + " " + rowIndex + " " + termScore);
+			System.out.println("term just added: " + term + ". " + rowIndex + " " + termScore);
 			System.out.println(Arrays.toString(triggerTermsVec));
 		}
 		return norm;
@@ -435,7 +436,19 @@ public class TriggerMathThm2 {
 	public static int[][] mathThmMx(){
 		return mathObjMx;
 	}
+	
+	/**
+	 * Map of words to their corresponding row index in term-document matrix.
+	 * @return
+	 */
+	public static Map<String, Integer> keywordDict(){
+		return keywordDict;
+	}
 
+	public static int keywordDictSize(){
+		return keywordDict.size();
+	}
+	
 	/**
 	 * Get theorem given its index (column number) in mathThmMx.
 	 * @param index

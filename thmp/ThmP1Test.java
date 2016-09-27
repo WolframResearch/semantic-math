@@ -286,6 +286,8 @@ public class ThmP1Test {
 			st = "all maximal chains of primes $\\mathfrak p = \\mathfrak q$ have the same (finite) length";
 			st = "$M/gM$ is Cohen-Macaulay with maximal regular sequence $f_1, \\ldots, f_{d-1}$.";
 			st = "$M/gM$ is Cohen-Macaulay with maximal regular sequence $f_1, \\ldots, f_{d-1}$.";
+			st = "f is a function with radius of convergence r and finitely many roots";
+			st = "all maximal chains of primes $\\mathfrak p = \\mathfrak q$ have the same length";
 			//st = "Assume that $B$ is Noetherian and Cohen-Macaulay and that $\\mathfrak m_B = (\\mathfrak m_A) B}$"; //**<--revisit!
 			//st = "ring $R_p$ is regular, for every $p$";
 			//st = "$R/\\mathfrak p$ is catenary for every minimal prime $\\mathfrak p$";

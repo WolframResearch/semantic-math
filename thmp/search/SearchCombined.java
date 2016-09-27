@@ -119,6 +119,8 @@ public class SearchCombined {
 	public static List<String> searchCombined(String input){
 		if(input.matches("\\s*")) return null;
 		
+		input = input.toLowerCase();
+		
 		List<Integer> nearestVecList = ThmSearch.readThmInput(input, NUM_NEAREST);
 		if(nearestVecList.isEmpty()){
 			System.out.println("I've got nothing for you yet. Try again.");
@@ -168,6 +170,8 @@ public class SearchCombined {
 		while(sc.hasNextLine()){
 			String thm = sc.nextLine();
 			if(thm.matches("\\s*")) continue;
+			
+			thm = thm.toLowerCase();
 			
 			List<Integer> nearestVecList = ThmSearch.readThmInput(thm, NUM_NEAREST);
 			if(nearestVecList.isEmpty()){

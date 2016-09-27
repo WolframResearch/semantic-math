@@ -85,6 +85,8 @@ public abstract class Struct {
 	
 	//public abstract void append_WLCommandStr(String WLCommandStr);
 
+	public abstract void setContextVecEntry(int structParentIndex, int[] contextVec);
+	
 	/**
 	 * Sets WLCommandStr to null.
 	 */
@@ -103,6 +105,8 @@ public abstract class Struct {
 	public abstract double maxDownPathScore();
 	
 	public abstract void set_maxDownPathScore(double pathScore);
+	
+	public abstract String contentStr();
 	
 	public abstract StructList StructList();
 	

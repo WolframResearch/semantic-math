@@ -25,7 +25,6 @@ import thmp.utils.WordForms;
  * @author yihed
  */
 public class SearchIntersection {
-
 	
 	//bonus points for matching context better, eg hyp or stm
 	private static final int CONTEXT_WORD_BONUS = 1;
@@ -47,6 +46,9 @@ public class SearchIntersection {
 	//these maps are not immutable, they are not modified during runtime.
 	private static final Map<String, Integer> twoGramsMap = NGramSearch.get2GramsMap();
 	private static final Map<String, Integer> threeGramsMap = ThreeGramSearch.get3GramsMap();
+	
+	//debug flag for development. Prints out the words used and their scores.
+	private static final boolean debug = true;
 	
 	/**
 	 * Static initializer, builds the maps using CollectThm.java. 
@@ -173,10 +175,13 @@ public class SearchIntersection {
 		Integer wordScore;
 		if(!wordThms.isEmpty()){	
 			//wordScore = wordsScoreMap.get(wordLong);
-			wordScore = wordsScoreMap.get(word);
+			wordScore = wordsScoreMap.get(word);			
 			curScoreToAdd = wordScore + CONTEXT_WORD_BONUS 
 					+ curWrapper.matchExtraPoints();
 			
+			if(debug){
+				System.out.println("Word added: " + word + ". Score: " + curScoreToAdd);
+			}
 		}else{
 			//String wordOtherForm = curWrapper.otherHashForm();
 			//String singWordOtherForm = curWrapper.otherHashForm();
@@ -189,7 +194,10 @@ public class SearchIntersection {
 				//wordScore = wordsScoreMap.get(singFormLong);
 				wordScore = wordsScoreMap.get(singForm);
 				curScoreToAdd = wordScore + CONTEXT_WORD_BONUS 
-						+ curWrapper.matchExtraPoints();	
+						+ curWrapper.matchExtraPoints();
+				if(debug){
+					System.out.println("Word added: " + word + ". Score: " + curScoreToAdd);
+				}
 			}//other form of word
 			/*else if(wordThmMMap.containsKey(wordOtherForm)){
 				wordThms = wordThmMMap.get(wordOtherForm);

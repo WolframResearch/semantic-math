@@ -27,11 +27,11 @@ public class ThmSearch {
 	//"\"/Applications/Mathematica2.app/Contents/MacOS/MathKernel\" -mathlink"};
 	
 	//path for on Linux VM 
-	public static final String[] ARGV;
+	private static final String[] ARGV;
 	
 	//number of nearest vectors to get for Nearest[]
 	private static final int NUM_NEAREST = 3;
-	private static final int NUM_SINGULAR_VAL_TO_KEEP = 20;
+	private static final int NUM_SINGULAR_VAL_TO_KEEP = 40;
 	//cutoff for a correlated term to be considered
 	private static final int COR_THRESHOLD = 3;
 	//mx to keep track of correlations between terms, mx.mx^T
@@ -67,8 +67,11 @@ public class ThmSearch {
 			ml.evaluate("m=IntegerPart[" + mx +"//N];");				
 			ml.discardAnswer();	
 			ml.evaluate("corMx = m.Transpose[m]");
-			//symmetric matrix containing correlations
 			
+			//substitute correlation matrix here! *******!
+			
+			//symmetric matrix containing correlations
+			ml.waitForAnswer();
 			Expr r = ml.getExpr();
 			//System.out.println("is matrix? " + r.part(1).matrixQ() + r.part(1));
 			//System.out.println(Arrays.toString((int[])r.part(1).part(1).asArray(Expr.INTEGER, 1)));
@@ -82,17 +85,31 @@ public class ThmSearch {
 			//adjust entries of docMx based on corMxList
 			int[][] corrAdjustedDocMx = corrAdjustDocMx(docMx, corMxList);
 			mx = toNestedList(corrAdjustedDocMx);
+			//write matrix to file, so no need to form it each time
+			
 			//System.out.println(nearestVec.length() + "  " + Arrays.toString((int[])nearestVec.part(1).asArray(Expr.INTEGER, 1)));
-			//
+			
 			System.out.print("Dimensions of docMx: " + docMx.length + " " +docMx[0].length);
 			//System.out.println(mx);
 			
 			ml.evaluate("mx=" + mx +"//N;");
 			ml.discardAnswer();	
 			
-			//ml.evaluate("mx= mx+0.2.Transpose[mx.Correlation[Transpose[mx]]];");
-			//ml.discardAnswer();
-			//need to trim down 
+			/*ml.evaluate("Mean[Mean[0.2*Transpose[ Covariance[Transpose[mx]].mx ]]]");
+			//ml.evaluate("mx");
+			ml.waitForAnswer();
+			Expr mean = ml.getExpr();
+			System.out.print("Mean of Mean " + mean);
+			
+			//ml.evaluate("mx = mx + Clip[0.2*Transpose[mx.Correlation[Transpose[mx]]], {2, Infinity}, {0, 0}];");
+			ml.evaluate("mx = mx + Clip[0.2*Transpose[Covariance[Transpose[mx]].mx], {.1, Infinity}, {0, 0}];");
+			ml.discardAnswer(); */
+			
+			//trim down to make mx sparse again, and also don't want small correlations
+			//ml.evaluate("mx = Clip[mx, {.2, Infinity}, {0, 0}];");
+			//ml.discardAnswer();		
+			
+			System.out.println("Done clipping");
 			
 			//add a small multiple of mx.mx^T.mx, so to make term i more 
 			//prominent when a correlated term is present.
@@ -359,4 +376,7 @@ public class ThmSearch {
 		System.out.println(expr.dimensions().length);
 	}	
 	
+	//used for initializing this class
+	public static void initialize(){		
+	}
 }

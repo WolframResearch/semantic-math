@@ -11,7 +11,7 @@ import thmp.search.CollectFreqWords;
 public class WordForms {
 
 	//delimiters to split on when making words out of input
-	private static final String SPLIT_DELIM = "\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:|-|_|~";
+	private static final String SPLIT_DELIM = "\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:|-|_|~|!";
 	//small lists of fluff words, used in, e.g., n gram extraction.
 	//*don't* put off here, will interfere with 3 gram collection
 	private static final String FLUFF_WORDS_SMALL = "a|the|tex|of|and|on|let|lemma|for|to|that|with|is|be|are|there|by"
@@ -44,7 +44,6 @@ public class WordForms {
 		}
 		//if letter before "es" is not "s", eg "kisses", or "ch", eg "catches",
 		//add e back, to preserve terms that end in "e", eg "agrees"
-
 		String irregPluralEndings = "s|h|x";
 		int wordLen = word.length();
 		if(k==1 && wordLen > 1 && !String.valueOf(word.charAt(wordLen-1)).matches(irregPluralEndings)){
@@ -65,7 +64,10 @@ public class WordForms {
 		int wordlen = curWord.length();
 		
 		if (wordlen > 0 && curWord.charAt(wordlen - 1) == 's') {
-			singularForms[0] = curWord.substring(0, wordlen - 1);
+			//don't strip 's' if belongs to common endings with 's', e.g. "homogeneous"
+			if(!curWord.matches(".*ous$?|.*ois$?")){ 
+				singularForms[0] = curWord.substring(0, wordlen - 1);								
+			}
 		}
 
 		if (wordlen > 2 && curWord.substring(wordlen - 2, wordlen).equals("es")) {

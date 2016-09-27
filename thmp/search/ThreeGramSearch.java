@@ -73,7 +73,7 @@ public class ThreeGramSearch {
 		threeGramMap = TreeMultimap.create(stringComparator, threeGramComparator);
 		buildThreeGramMap(threeGramMap);
 		
-		//System.out.println(threeGramMap);
+		System.out.println(threeGramMap);
 		
 		threeGramFreqMap = new HashMap<String, Integer>();
 		threeGramList = filterThreeGrams(threeGramMap, threeGramFreqMap);

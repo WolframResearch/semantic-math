@@ -209,6 +209,7 @@ public class ParseToWLTree {
 	
 	/**
 	 * Searches through parse tree and matches with ParseStruct's.
+	 * Builds search tree.
 	 * Convert to visitor pattern!
 	 * 
 	 * @param parseMap Map of String maps to which parseStructType.
@@ -216,6 +217,7 @@ public class ParseToWLTree {
 	 * @param parsedSB StringBuilder. Don't actually need it here for now.
 	 * @param headStruct the nearest ParseStruct that's collecting parses
 	 * @param numSpaces is the number of spaces to print. Increment space if number is 
+	 * @param structDeque List of Struct's collected so far
 	 */
 	public static void dfs(Struct struct, 
 			StringBuilder parsedSB, ParseStruct headParseStruct, int numSpaces,
@@ -369,7 +371,6 @@ public class ParseToWLTree {
 			if(printTiers) System.out.print("[");
 			parsedSB.append("[");
 			
-			// don't know type at compile time
 			if (struct.prev1() instanceof Struct) {
 				//ParseStruct curHeadParseStruct = headParseStruct;
 				//check if need to create new ParseStruct
@@ -395,7 +396,7 @@ public class ParseToWLTree {
 				if(printTiers && checkParseStructType){
 					String space = "";
 					for(int i = 0; i < numSpaces; i++) space += " ";
-						System.out.println(space);
+					System.out.println(space);
 				}
 			}
 			
@@ -568,13 +569,16 @@ public class ParseToWLTree {
 		
 	}
 	/**
-	 * iterate through the WrapperList backwards, append the first encounter 
+	 * Iterate through the WrapperList (list of potential commands) backwards, append the first encounter 
 	 *	whose structsWithOtherHeadCount() lies above the set threshold.
 	 *	Don't append if none exists.
 	 *	Append all that has structsWithOtherHeadCount equal to the total 
 	 *	component count, since those commands don't interfere with anything else.
+	 * @param struct is Struct that the commandStr has been appended to, i.e. head struct.
+	 * @param contextVec is context vector for this WLCommand. 
 	 */
-	private static void appendWLCommandStr(Struct struct, StringBuilder parsedSB, Multimap<ParseStructType, ParsedPair> partsMap){
+	private static void appendWLCommandStr(Struct struct, StringBuilder parsedSB, Multimap<ParseStructType, ParsedPair> partsMap, 
+			int[] contextVec){
 		
 		List<WLCommandWrapper> structWrapperList = struct.WLCommandWrapperList();
 		int structWrapperListSz = structWrapperList.size();
@@ -589,6 +593,15 @@ public class ParseToWLTree {
 				//System.out.println(struct.WLCommandStr());
 				//parsedSB.append(struct.WLCommandStr());
 				parsedSB.append(curWrapper.WLCommandStr);
+				//form the contex vector by going down struct*****
+				// fill in an int[] with the terms in the right indices, done
+				// in methods in StructH and StructA.
+				
+				// curCommand's type determines the num attached to head of structH,
+				// e.g. "Exists[structH]" writes enum ParseRelation -2 at the index of structH 
+				
+				ParseTreeToVec.tree2vec(struct, contextVec, curWrapper.WLCommandStr);
+				
 				//get the ParseStruct based on type
 				ParseStructType type = ParseStructType.getType(struct);
 				ParsedPair pair = new ParsedPair(curWrapper.WLCommandStr, struct.maxDownPathScore(), 
@@ -615,11 +628,12 @@ public class ParseToWLTree {
 	/**
 	 * DFS for collecting the WLCommandStr's, instead of using the default 
 	 * representations of the Struct's. To achieve a presentation that's closer
-	 * to WL commands.
+	 * to WL commands. Parse tree should have already finished building.
 	 * @param struct
 	 * @param parsedSB
 	 */
-	public static void dfs(Multimap<ParseStructType, ParsedPair> partsMap, Struct struct, StringBuilder parsedSB, boolean shouldPrint) {
+	public static void dfs(Multimap<ParseStructType, ParsedPair> partsMap, Struct struct, StringBuilder parsedSB, 
+			int[] curStructContextVec, boolean shouldPrint) {
 		//don't append if already incorporated into a higher command
 		//System.out.print(struct.WLCommandStrVisitedCount());
 		//WLComamnd() should not be null if WLCommandStr is not null
@@ -632,7 +646,7 @@ public class ParseToWLTree {
 				parsedSB.append(struct.WLCommandStr());
 			} */
 			
-			appendWLCommandStr(struct, parsedSB, partsMap);			
+			appendWLCommandStr(struct, parsedSB, partsMap, curStructContextVec);			
 			
 			shouldPrint = false;
 			//reset WLCommandStr back to null, so next 
@@ -652,7 +666,7 @@ public class ParseToWLTree {
 			
 			// don't know type at compile time
 			if (struct.prev1() instanceof Struct) {
-				dfs(partsMap, (Struct) struct.prev1(), parsedSB, shouldPrint);
+				dfs(partsMap, (Struct) struct.prev1(), parsedSB, curStructContextVec, shouldPrint);
 			}
 
 			// if(struct.prev2() != null && !struct.prev2().equals(""))
@@ -661,7 +675,7 @@ public class ParseToWLTree {
 				// avoid printing is[is], ie case when parent has same type as
 				// child
 				if(shouldPrint) parsedSB.append(", ");
-				dfs(partsMap, (Struct) struct.prev2(), parsedSB, shouldPrint);
+				dfs(partsMap, (Struct) struct.prev2(), parsedSB, curStructContextVec, shouldPrint);
 			}
 
 			if (struct.prev1() instanceof String) {
@@ -690,7 +704,7 @@ public class ParseToWLTree {
 			for (int i = 0; i < children.size(); i++) {
 				if(shouldPrint) parsedSB.append(childRelation.get(i) + " ");
 
-				dfs(partsMap, children.get(i), parsedSB, shouldPrint);
+				dfs(partsMap, children.get(i), parsedSB, curStructContextVec, shouldPrint);
 			}
 			if(shouldPrint) parsedSB.append("]");
 		}
