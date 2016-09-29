@@ -43,7 +43,7 @@ public class WordFrequency {
 	private static final Path trueFluffWordsPath = Paths.get("src/thmp/data/trueFluffWords.txt");
 	
 	//words that should be included in trueFluffWordsSet, but were left out by algorithm.
-	private static final String[] ADDITIONAL_FLUFF_WORDS = new String[]{"an", "are", "has", "tex"};
+	private static final String[] ADDITIONAL_FLUFF_WORDS = new String[]{"an", "are", "has", "tex", "between"};
 	
 	static {
 		

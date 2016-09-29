@@ -130,6 +130,7 @@ public class CollectThm {
 		private static final Map<String, Integer> twoGramsMap = NGramsMap.get_twoGramsMap();
 		private static final Map<String, Integer> threeGramsMap = NGramsMap.get_threeGramsMap();	
 		//set that contains the first word of the two and three grams of twoGramsMap and threeGramsMap		
+		//so the n-grams have a chance of being called.
 		private static final Set<String> nGramFirstWordsSet = new HashSet<String>();
 		
 		/**
@@ -141,6 +142,10 @@ public class CollectThm {
 		private static final ImmutableMap<String, Integer> wordsScoreMapNoAnno;	
 		//The number of frequent words to take
 		private static final int NUM_FREQ_WORDS = 500;
+		//multiplication factors to deflate the frequencies of 2-grams and 3-grams to weigh
+		//them more
+		private static final double THREE_GRAM_FREQ_REDUCTION_FACTOR = 4.0/5;
+		private static final double TWO_GRAM_FREQ_REDUCTION_FACTOR = 5.0/6;
 		
 		static{
 			
@@ -290,9 +295,11 @@ public class CollectThm {
 					
 					//only keep words with lengths > 2
 					//System.out.println(word);
-					if(word.length() < 3 || (FreqWordsSet.freqWordsSet.contains(word) && !nGramFirstWordsSet.contains(word))){ 
+					//words that should be de-fluffed as first word of n-grams need to be added to WordForms.FLUFF_WORDS_SMALL.
+					if(word.length() < 3 || (FreqWordsSet.freqWordsSet.contains(word) && !nGramFirstWordsSet.contains(word))){ 						
 						continue;
 					}
+					//if(word.matches("between")) System.out.println("********let Between go through!");
 					addWordToMaps(wordLong, i, thmWordsMap, thmWordsListBuilder, docWordsFreqPreMap, wordThmsMMapBuilder);
 					
 					//check the following word for potential 2 grams. Only first word has hyp/stm annotation.
@@ -359,6 +366,9 @@ public class CollectThm {
 			List<String> thmList = ProcessInput.processInput(extractedThms, true);
 			System.out.println(thmList.size()); */
 			
+			//System.out.println("nGramFirstWordsSet contains between? " + nGramFirstWordsSet.contains("between"));
+			//System.out.println("FreqWordsSet contains between? " + FreqWordsSet.freqWordsSet.contains("between"));
+			
 			//processes the theorems, select the words
 			for(int i = 0; i < thmList.size(); i++){
 				String thm = thmList.get(i);
@@ -366,7 +376,7 @@ public class CollectThm {
 				//String[] thmAr = thm.toLowerCase().split("\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:");
 				String[] thmAr = thm.toLowerCase().split(WordForms.splitDelim());
 				
-				Map<String, Integer> thmWordsMap = new HashMap<String, Integer>();
+				Map<String, Integer> thmWordsMap = new HashMap<String, Integer>();				
 				
 				for(int j = 0; j < thmAr.length; j++){
 					
@@ -377,8 +387,11 @@ public class CollectThm {
 					
 					//get singular forms if plural, put singular form in map
 					//Note, some words shouldn't need to be converted to singular form!
-					word = WordForms.getSingularForm(word);			
+					word = WordForms.getSingularForm(word);	
+				
 					if(FreqWordsSet.freqWordsSet.contains(word) && !nGramFirstWordsSet.contains(word)) continue;
+					
+					//if(word.equals("between")) System.out.println("********let Between go through!");
 					
 					addWordToMaps(word, i, thmWordsMap, thmWordsListBuilder, docWordsFreqPreMap, wordThmsMMapBuilder);
 					//check the following word
@@ -386,6 +399,8 @@ public class CollectThm {
 						String nextWordCombined = word + " " + thmAr[j+1];
 						Integer twoGramFreq = twoGramsMap.get(nextWordCombined);
 						if(twoGramFreq != null){
+							int freq = (int)(twoGramFreq*TWO_GRAM_FREQ_REDUCTION_FACTOR);
+							twoGramFreq = freq == 0 ? 1 : freq;
 							addNGramToMaps(nextWordCombined, i, thmWordsMap, thmWordsListBuilder, docWordsFreqPreMap,
 									wordThmsMMapBuilder, twoGramFreq);
 						}
@@ -394,6 +409,9 @@ public class CollectThm {
 							String threeWordsCombined = nextWordCombined + " " + thmAr[j+2];
 							Integer threeGramFreq = threeGramsMap.get(threeWordsCombined);
 							if(threeGramFreq != null){
+								//reduce frequency so 3-grams weigh more 
+								int freq = (int)(threeGramFreq*THREE_GRAM_FREQ_REDUCTION_FACTOR);
+								threeGramFreq = freq == 0 ? 1 : freq;
 								addNGramToMaps(threeWordsCombined, i, thmWordsMap, thmWordsListBuilder, docWordsFreqPreMap,
 										wordThmsMMapBuilder, threeGramFreq);
 							}
@@ -490,7 +508,7 @@ public class CollectThm {
 				//if(word.equals("tex")) continue;
 				int wordFreq = entry.getValue();
 				//300 (for search in this file)
-				//int score = wordFreq < 110 ? (int)Math.round(10 - wordFreq/4) : wordFreq < 300 ? 1 : 0;		
+				//int score = wordFreq < 110 ? (int)Math.round(10 - wordFreq/4) : wordFreq < 300 ? 1 : 0;
 				int score = wordFreq < 40 ? (int)Math.round(10 - wordFreq/3) : (wordFreq < 180 ? (int)Math.round(15 - wordFreq/3) : (wordFreq < 450 ? 1 : 0));	
 				//frequently occurring words, should not score too low since they are mostly math words.
 				score = score < 0 ? 5 : score;

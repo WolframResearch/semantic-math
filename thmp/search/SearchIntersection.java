@@ -11,9 +11,14 @@ import java.util.NavigableMap;
 import java.util.Scanner;
 import java.util.Set;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.SetMultimap;
 import com.google.common.collect.TreeMultimap;
 
 import thmp.search.SearchWordPreprocess.WordWrapper;
@@ -72,6 +77,10 @@ public class SearchIntersection {
 	 */
 	public static List<Integer> getHighestThm(String input, int ... num){
 		if(input.matches("\\s*")) return null;
+		//map containing the indices of theorems added so far, where values are sets (hashset)
+		//of indices of words that have been added. This is to reward theorems that cover
+		//the more number of words. Actually just use SetMultimap.
+		TreeMultimap<Integer, Integer> thmWordSpanMMap = TreeMultimap.create();
 		
 		//make input list of words
 		//String[] inputAr = input.toLowerCase().split(SPLIT_DELIM);
@@ -82,15 +91,16 @@ public class SearchIntersection {
 		int numHighest = 3;
 		//whether to skip first token
 		int firstIndex = 0;
-		if(num.length == 0){
-			String firstWord = wordWrapperList.get(0).word();
-			if(firstWord.matches("\\d+")){
-				numHighest = Integer.parseInt(firstWord);
-				firstIndex = 1;
-			}
-		}else{
+		if(num.length != 0){
 			numHighest = num[0];
 		}
+		//user's input overrides default num
+		String firstWord = wordWrapperList.get(0).word();
+		if(firstWord.matches("\\d+")){
+			numHighest = Integer.parseInt(firstWord);
+			firstIndex = 1;
+		}
+		
 		/*
 		 * Map of theorems, in particular their indices in thmList, and the scores corresponding to the keywords they contain.
 		 * The rarer a keyword is in the doc, the higher its score is.
@@ -98,10 +108,54 @@ public class SearchIntersection {
 		Map<Integer, Integer> thmScoreMap = new HashMap<Integer, Integer>(); 
 		
 		/*
-		 * Multimap of double and ints, where double is score, and the Integers
+		 * Multimap of ints and ints, where key is score, and the value Integers
 		 * are the indices of the thms having this score.
 		 */
 		TreeMultimap<Integer, Integer> scoreThmMMap = TreeMultimap.create();
+		
+		//total score of all words, used for computing bonus spanning scores, and lowering
+		//scores of n-grams if to dominant. Approximate, for instance does not de-singularize.
+		int approxTotalWordsScore = 0;
+		int totalWordsScore = 0;
+		int numWordsAdded = 0;
+		
+		//pre-compute approximate total score
+		for(int i = firstIndex; i < wordWrapperList.size(); i++){
+			WordWrapper curWrapper = wordWrapperList.get(i);
+			String word = curWrapper.word();
+			approxTotalWordsScore += wordsScoreMap.get(word);
+			
+			if(i < wordWrapperList.size()-1){				
+				String nextWord = wordWrapperList.get(i+1).word();
+				word = word + " " + nextWord;
+				if(twoGramsMap.containsKey(word)){
+					approxTotalWordsScore += wordsScoreMap.get(word);					
+				}
+				//check for 3 grams. Again only first word is annotated.
+				if(i < wordWrapperList.size()-2){
+					String thirdWord = wordWrapperList.get(i+2).word();
+					word = word + " " + thirdWord;
+					if(threeGramsMap.containsKey(word)){
+						approxTotalWordsScore += wordsScoreMap.get(word);
+					}
+				}
+			}
+		}
+		//multimap of words, and the list of thm indices that have been added
+		ListMultimap<String, Integer> wordThmMMap = ArrayListMultimap.create();
+		
+		//map of dominant words and the number of times they've been added, 
+		//whose theorem scores might need to be lowered later
+		//the words that have been added multiple times in 1, 2-grams and 3-grams
+		//values are the number of times they've been added
+		Map<String, Integer> dominantWordsMap = new HashMap<String, Integer>();
+		//multimap of indices in wrapper list and the words that start at that index
+		Multimap<Integer, String> indexStartingWordsMMap = ArrayListMultimap.create();
+		
+		//array of words to indicate frequencies that this word was included in either 
+		//a singleton or n-gram
+		int[] wordCountArray = new int[wordWrapperList.size()];
+		//whether current word has been included in a singleton or n-gram
 		
 		for(int i = firstIndex; i < wordWrapperList.size(); i++){
 			WordWrapper curWrapper = wordWrapperList.get(i);
@@ -112,15 +166,39 @@ public class SearchIntersection {
 			//elicit higher score if wordLong fits
 			//also turn into singular form if applicable
 			String wordLong = curWrapper.hashToString();
+			int scoreAdded = 0;
 			
-			addWordThms(thmScoreMap, scoreThmMMap, curWrapper, word, wordLong);	
+			//if the words in a three gram collectively (3 gram + 2 gram + individual words) weigh a lot, 
+			//then scale down the overall words? e.g. "linear map with closed range", "closed", "range", 
+			//"closed range" all weigh a lot. Scale proportionally down with respect to the average 
+			//score of all words added.
+			scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, wordThmMMap, dominantWordsMap, curWrapper, 
+					word, wordLong, i);
+			if(scoreAdded > 0){
+				wordCountArray[i] = wordCountArray[i] + 1;
+				totalWordsScore += scoreAdded;
+				numWordsAdded++;
+				indexStartingWordsMMap.put(i, word);
+			}
 			//check for 2 grams
 			if(i < wordWrapperList.size()-1){				
 				String nextWord = wordWrapperList.get(i+1).word();
 				String nextWordCombined = wordLong + " " + nextWord;
 				word = word + " " + nextWord;
+				
 				if(twoGramsMap.containsKey(word)){
-					addWordThms(thmScoreMap, scoreThmMMap, curWrapper, word, nextWordCombined);	
+					
+					scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, wordThmMMap, dominantWordsMap, curWrapper, word, 
+							nextWordCombined, i, i+1);	
+					
+					if(scoreAdded > 0){
+						wordCountArray[i] = wordCountArray[i] + 1;
+						wordCountArray[i+1] = wordCountArray[i+1] + 1;
+						totalWordsScore += scoreAdded;
+						numWordsAdded++;
+						indexStartingWordsMMap.put(i, word);
+					}
+					
 				}
 				//check for 3 grams. Again only first word is annotated.
 				if(i < wordWrapperList.size()-2){
@@ -128,13 +206,35 @@ public class SearchIntersection {
 					String threeWordsCombined = wordLong + " " + thirdWord;
 					word = word + " " + thirdWord;
 					if(threeGramsMap.containsKey(word)){
-						addWordThms(thmScoreMap, scoreThmMMap, curWrapper, word, threeWordsCombined);	
+						scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, wordThmMMap, dominantWordsMap, curWrapper, word, 
+								threeWordsCombined, i, i+1, i+2);	
+						if(scoreAdded > 0){
+							wordCountArray[i] = wordCountArray[i] + 1;
+							wordCountArray[i+1] = wordCountArray[i+1] + 1;
+							wordCountArray[i+2] = wordCountArray[i+2] + 1;
+							totalWordsScore += scoreAdded;
+							numWordsAdded++;
+							indexStartingWordsMMap.put(i, word);
+						}
 					}
 				}
 			}
 		}
+		//System.out.println("BEFORE "+scoreThmMMap);
+		//Map<Integer, Integer> g = new HashMap<Integer, Integer>(thmScoreMap);
+		//add bonus points to thms with most number of query words, judging from size of value set
+		//in thmWordSpanMMap
+		addWordSpanBonus(thmScoreMap, scoreThmMMap, thmWordSpanMMap, numHighest);
+		//System.out.println("AFTER " + g.equals(scoreThmMMap));
+		
+		//lower the thm scores for ones that match words with high wordCountArray counts
+		lowerThmScores(thmScoreMap, scoreThmMMap, thmWordSpanMMap, wordThmMMap, dominantWordsMap, 
+				indexStartingWordsMMap, wordCountArray, 
+				wordWrapperList, ((double)totalWordsScore)/numWordsAdded);
+		
 		List<Integer> highestThmList = new ArrayList<Integer>();
-		//get the thms having the highest k scores
+		
+		//get the thms having the highest k scores. Keys are scores.
 		NavigableMap<Integer, Collection<Integer>> thmMap = scoreThmMMap.asMap().descendingMap();
 		
 		//pick up numHighest number of unique thms
@@ -156,6 +256,122 @@ public class SearchIntersection {
 	}
 
 	/**
+	 * Auxiliary method to lower the scores.
+	 * if the words in a three gram collectively (3 gram + 2 gram + individual words) weigh a lot,
+	 * then scale down the overall words proportionally.
+	 * e.g. "linear map with closed range", "closed", "range",
+	 * "closed range" all weigh a lot. Scale proportionally down with respect to the average score.
+	 * @param thmScoreMap
+	 * @param scoreThmMMap
+	 * @param thmWordSpanMMap
+	 * @param wordThmMMap
+	 * @param dominantWordsMap
+	 * @param indexStartingWordsMMap
+	 * @param wordCountArray
+	 * @param wordWrapperList
+	 * @param avgWordScore
+	 */
+	private static void lowerThmScores(Map<Integer, Integer> thmScoreMap, TreeMultimap<Integer, Integer> scoreThmMMap,
+			Multimap<Integer, Integer> thmWordSpanMMap, ListMultimap<String, Integer> wordThmMMap, 
+			Map<String, Integer> dominantWordsMap, Multimap<Integer, String> indexStartingWordsMMap,
+			int[] wordCountArray, List<WordWrapper> wordWrapperList, 			
+			double avgWordScore){
+		
+		//if freq above certain level
+		for(int i = 0; i < wordCountArray.length; i++){
+			
+			//String word = wordWrapperList.get(i).word();
+			//dominant map??
+			if(wordCountArray[i] > 1){
+				//set of words that start at this index
+				Collection<String> indexWordsCol = indexStartingWordsMMap.get(i);
+				
+				for(String indexWord : indexWordsCol){
+					String[] wordAr = indexWord.split(" ");
+					int len = indexWord.split(" ").length;
+					//and score above averg
+					if(len == 1 && wordsScoreMap.get(indexWord) > avgWordScore*3.0/2){
+						//get list of theorems
+						List<Integer> thmList = wordThmMMap.get(indexWord);
+						//lower their scores
+						for(int thmIndex : thmList){
+							int prevScore = thmScoreMap.get(thmIndex);
+							scoreThmMMap.remove(prevScore, thmIndex);
+							////////////*************need customize this score based on avg score
+							scoreThmMMap.put(prevScore - 2, thmIndex);
+						}
+					}else if(len == 2){
+						//2 tuple, only lower if second word also included often with high score
+						if(wordsScoreMap.get(wordAr[1]) > avgWordScore*3.0/2){
+							//get list of theorems
+							List<Integer> thmList = wordThmMMap.get(indexWord);
+							//lower their scores
+							for(int thmIndex : thmList){
+								int prevScore = thmScoreMap.get(thmIndex);
+								scoreThmMMap.remove(prevScore, thmIndex);
+								////////////*************need customize this score based on avg score
+								scoreThmMMap.put(prevScore - 2, thmIndex);
+							}
+						}						
+					}else if(len == 3){
+						if(wordsScoreMap.get(wordAr[1]) > avgWordScore*3.0/2 || wordsScoreMap.get(wordAr[2]) > avgWordScore*3.0/2){
+							//get list of theorems
+							List<Integer> thmList = wordThmMMap.get(indexWord);
+							//lower their scores
+							for(int thmIndex : thmList){
+								int prevScore = thmScoreMap.get(thmIndex);
+								scoreThmMMap.remove(prevScore, thmIndex);
+								////////////*************need customize this score based on avg score
+								scoreThmMMap.put(prevScore - 2, thmIndex);
+							}
+						}
+					}
+					
+				}
+				
+			}
+			
+		}
+		
+	}
+	
+	/**
+	 * Auxiliary method to add bonus points to theorems containing more words.
+	 * Bonus is proportional to the highest thm score,
+	 * @param thmScoreMap
+	 * @param scoreThmMMap
+	 * @param thmWordSpanMMap
+	 */
+	private static void addWordSpanBonus(Map<Integer, Integer> thmScoreMap, TreeMultimap<Integer, Integer> scoreThmMMap,
+			TreeMultimap<Integer, Integer> thmWordSpanMMap, int N){
+		//add  according to score
+		//gather the sizes of the value maps for thmWordSpanMMap, and keep track of order based on scores using a TreeMultimap
+		
+		TreeMultimap<Integer, Integer> spanScoreThmMMap = TreeMultimap.create();
+		
+		for(int thmIndex : thmWordSpanMMap.keySet()){
+			int thmWordsSetSize = thmWordSpanMMap.get(thmIndex).size();
+			spanScoreThmMMap.put(thmWordsSetSize, thmIndex);
+		}
+		//add   proportional to the highest thm score (not span score)
+		NavigableMap<Integer, Collection<Integer>> r = spanScoreThmMMap.asMap().descendingMap();
+		
+		int counter = N;
+		for(Entry<Integer, Collection<Integer>> entry : r.entrySet()){	
+			
+			for(int thmIndex : entry.getValue()){
+				if(counter == 0) break;
+				int prevScore = thmScoreMap.get(thmIndex);
+				//refine this! using the highest or average score (not span score) ************
+				scoreThmMMap.put(prevScore + 20+2*counter, thmIndex);
+				//System.out.println("PREV SCORE " + prevScore + " NEW SCORE " + prevScore + 20+2*counter + thmList.get(thmIndex));
+				counter--;
+			}						
+		}
+		
+	}
+	
+	/**
 	 * Auxiliary method for getHighestVecs. Retrieves thms that contain wordLong,
 	 * add these thms to map. Annotated 2 grams only have annotation at start of
 	 * first word.
@@ -164,12 +380,15 @@ public class SearchIntersection {
 	 * @param curWrapper
 	 * @param word
 	 * @param wordLong
+	 * @param wordIndices array of indices of words in query
+	 * @return List of theorem indices that have been added, 
 	 */
-	private static void addWordThms(Map<Integer, Integer> thmScoreMap, TreeMultimap<Integer, Integer> scoreThmMMap,
-			WordWrapper curWrapper, String word, String wordLong) {
+	private static int addWordThms(Map<Integer, Integer> thmScoreMap, TreeMultimap<Integer, Integer> scoreThmMMap,
+			Multimap<Integer, Integer> thmWordSpanMMap, ListMultimap<String, Integer> wordThmMMap, Map<String, Integer> dominantWordsMap,
+			WordWrapper curWrapper, String word, String wordLong, int ... wordIndices) {
 		//update scores map
 		int curScoreToAdd = 0;
-		
+		int scoreAdded = 0;
 		//for every word, get list of thms containing this word			
 		Collection<Integer> wordThms = wordThmMMap.get(wordLong);
 		Integer wordScore;
@@ -195,6 +414,7 @@ public class SearchIntersection {
 				wordScore = wordsScoreMap.get(singForm);
 				curScoreToAdd = wordScore + CONTEXT_WORD_BONUS 
 						+ curWrapper.matchExtraPoints();
+				word = singForm;
 				if(debug){
 					System.out.println("Word added: " + word + ". Score: " + curScoreToAdd);
 				}
@@ -211,15 +431,28 @@ public class SearchIntersection {
 		}			
 		
 		if(wordThms != null){
+			
+			wordThmMMap.putAll(word, wordThms);
+			
 			for(Integer thmIndex : wordThms){	
 				Integer prevScore = thmScoreMap.get(thmIndex);
 				prevScore = prevScore == null ? 0 : prevScore;
 				Integer newScore = prevScore + curScoreToAdd;
-				//this mapping is not being used right now
+				//this mapping is not being used in the end right now,
+				//since the top N are picked, regardless of their scores.
 				thmScoreMap.put(thmIndex, newScore);
 				scoreThmMMap.put(newScore, thmIndex);
+				//put in thmIndex, and the index of word in the query.
+				for(int index : wordIndices){
+					thmWordSpanMMap.put(thmIndex, index);
+				}
+				scoreAdded = curScoreToAdd;
+				//but this will always be 1***************
+				int numTimesAdded = dominantWordsMap.get(word);
+				dominantWordsMap.put(word, numTimesAdded+1);
 			}				
 		}
+		return scoreAdded;
 	}	
 	
 	/**
