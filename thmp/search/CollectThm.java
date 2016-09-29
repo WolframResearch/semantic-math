@@ -469,6 +469,7 @@ public class CollectThm {
 				Map<String, Integer> docWordsFreqPreMap,
 				ImmutableSetMultimap.Builder<String, Integer> wordThmsMMapBuilder){			
 			
+			//if(word.matches("(^.)linear")) System.out.println("************"  + "Got linear " + word );
 			int wordFreq = thmWordsMap.containsKey(word) ? thmWordsMap.get(word) : 0;
 			//int wordLongFreq = thmWordsMap.containsKey(wordLong) ? thmWordsMap.get(wordLong) : 0;
 			thmWordsMap.put(word, wordFreq + 1);

@@ -16,6 +16,7 @@ import thmp.Maps;
 import thmp.ThmP1;
 import thmp.ThmP1.ParsedPair;
 import thmp.search.SearchCombined;
+import thmp.search.SearchIntersection;
 import thmp.search.ThmSearch;
 
 /**
@@ -39,6 +40,7 @@ public class TestSearch {
 	
 	public void testSearch(String inputStr, String desiredOutput){
 		List<String> nearestThmsList = SearchCombined.searchCombined(inputStr);
+		//List<Integer> nearestThmsList = SearchIntersection.getHighestThm(inputStr);
 		assertTrue(nearestThmsList.size() > 1);
 		String desiredOutputLower = desiredOutput.toLowerCase();
 		assertTrue(nearestThmsList.get(0).toLowerCase().contains(desiredOutputLower) 
@@ -48,9 +50,7 @@ public class TestSearch {
 	@Test
 	public void test1(){
 		String inputStr = "locally convex space";
-		List<String> nearestThmsList = SearchCombined.searchCombined(inputStr);
-		assertTrue(nearestThmsList.size() > 1);
-		assertTrue(nearestThmsList.get(0).contains("locally convex space") || nearestThmsList.get(1).contains("locally convex space"));
+		testSearch(inputStr);
 	}
 	
 	@Test
