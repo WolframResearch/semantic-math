@@ -64,27 +64,63 @@ public class ThmSearch {
 			//set up the matrix corresponding to docMx, to be SVD'd. 
 			//adjust mx entries based on correlation first			
 			String mx = toNestedList(docMx);
-			ml.evaluate("m=IntegerPart[" + mx +"//N];");				
+			ml.evaluate("m=IntegerPart[" + mx +"]//N;");				
 			ml.discardAnswer();	
-			ml.evaluate("corMx = m.Transpose[m]");
 			
-			//substitute correlation matrix here! *******!
+			//corMx should be computed using correlation mx
+			//or add a fraction of M.M^T.M
+			//this has the effect that if ith term and jth terms
+			//are correlated, and (i,k) is non zero in M, then make (j,k)
+			//nonzero (of smaller magnitude than (i,K) in M.
+			//clip the matrix 			
+			boolean getMean = false;			
+			if(getMean){
+				ml.evaluate("matrix = m.Transpose[m].m;");
+				ml.discardAnswer();
+				ml.evaluate("Mean[matrix//N]");
+				ml.waitForAnswer();			
+				Expr expr = ml.getExpr();
+				System.out.println("Mean " + expr);
+			}
 			
-			//symmetric matrix containing correlations
-			ml.waitForAnswer();
-			Expr r = ml.getExpr();
+			//ml.evaluate("corMx = Clip[ m.Transpose[m], {4, Infinity}, {0, 0} ].m;");
+			//ml.evaluate("correlatedMx = IntegerPart[m.Transpose[m].m];");
+			//ml.discardAnswer();			
+			
+			//System.out.println("Done clipping!");	
+			
+			ml.evaluate("corMx = Clip[SetPrecision[Correlation[Transpose[m]],3], {.3, Infinity}, {0, 0}]/.Indeterminate->0");
+			//Expr expr = ml.getExpr();
+			//System.out.println("corMx " + expr);
+			ml.discardAnswer();
+			
+			ml.evaluate("mx = Round[m + .2*corMx.m]//N");
+			ml.discardAnswer();
+			//ml.waitForAnswer();
+			//Expr expr = ml.getExpr();
+			//System.out.println("corMx " + expr);
+			
+			//take IntegerPart, faster processing later on
+			//ml.evaluate("mx = m + IntegerPart[0.2*corMx];");
+			//ml.discardAnswer();
+			
+			//Expr r = ml.getExpr();
+			//add to m
+			
 			//System.out.println("is matrix? " + r.part(1).matrixQ() + r.part(1));
 			//System.out.println(Arrays.toString((int[])r.part(1).part(1).asArray(Expr.INTEGER, 1)));
 			
-			int corMxLen1 = r.part(1).length();
+			/*int corMxLen1 = r.part(1).length();
 			for(int i = 0; i < corMxLen1; i++){
 				Integer[] thm_iListBoxed = ArrayUtils.toObject((int[])r.part(1).part(i+1).asArray(Expr.INTEGER, 1));
 				List<Integer> thm_iList = Arrays.asList(thm_iListBoxed);
 				corMxList.add(thm_iList);
-			}
+			}*/
 			//adjust entries of docMx based on corMxList
-			int[][] corrAdjustedDocMx = corrAdjustDocMx(docMx, corMxList);
-			mx = toNestedList(corrAdjustedDocMx);
+			//do this in WL, not loops here!
+			//int[][] corrAdjustedDocMx = corrAdjustDocMx(docMx, corMxList);
+			//mx = toNestedList(corrAdjustedDocMx);
+			
 			//write matrix to file, so no need to form it each time
 			
 			//System.out.println(nearestVec.length() + "  " + Arrays.toString((int[])nearestVec.part(1).asArray(Expr.INTEGER, 1)));
@@ -92,8 +128,8 @@ public class ThmSearch {
 			System.out.print("Dimensions of docMx: " + docMx.length + " " +docMx[0].length);
 			//System.out.println(mx);
 			
-			ml.evaluate("mx=" + mx +"//N;");
-			ml.discardAnswer();	
+			//ml.evaluate("mx=" + mx +"//N;");
+			//ml.discardAnswer();	
 			
 			/*ml.evaluate("Mean[Mean[0.2*Transpose[ Covariance[Transpose[mx]].mx ]]]");
 			//ml.evaluate("mx");
@@ -109,7 +145,7 @@ public class ThmSearch {
 			//ml.evaluate("mx = Clip[mx, {.2, Infinity}, {0, 0}];");
 			//ml.discardAnswer();		
 			
-			System.out.println("Done clipping");
+			//System.out.println("Done clipping");
 			
 			//add a small multiple of mx.mx^T.mx, so to make term i more 
 			//prominent when a correlated term is present.
@@ -119,7 +155,7 @@ public class ThmSearch {
 			//ml.discardAnswer();
 			
 			int k = NUM_SINGULAR_VAL_TO_KEEP;
-			ml.evaluate("{u, d, v} = SingularValueDecomposition[mx, " + k +"];");
+			ml.evaluate("{u, d, v} = SingularValueDecomposition[mx//N, " + k +"];");
 			//ml.waitForAnswer();
 			ml.discardAnswer();
 			System.out.println("Finished SVD");
@@ -145,7 +181,7 @@ public class ThmSearch {
 			Expr w = ml.getExpr();
 			System.out.println("~W " + w);*/
 			
-		}catch(MathLinkException | ExprFormatException e){
+		}catch(MathLinkException e){
 			System.out.println("error at launch!");
 			e.printStackTrace();
 		}
@@ -166,7 +202,7 @@ public class ThmSearch {
 		int[][] corrDocMx = new int[docMxDim1][docMxDim2];
 		
 		//System.out.println("b=" +toNestedList(docMx));
-
+		
 		for(int i = 0; i < docMxDim1; i++){
 			for(int k = 0; k < docMxDim2; k++){
 				if(docMx[i][k] != 0){
@@ -175,7 +211,7 @@ public class ThmSearch {
 						if(corMxList.get(i).get(j) > COR_THRESHOLD){
 						//if(corMxList.get(i).get(j) > 1){
 							//for ~1100 thms, /2 is too much addition, can skew results, /3 seems ok.
-							corrDocMx[j][k] += Math.max(Math.round(docMx[i][k]/3), .5); 
+							corrDocMx[j][k] += Math.max(docMx[i][k]/3.0, .5); 
 						}
 					}
 				}
@@ -265,7 +301,6 @@ public class ThmSearch {
 	 * (Indices in all such lists should coincide).
 	 * @throws MathLinkException 
 	 * @throws ExprFormatException 
-	 * 
 	 */
 	private static List<Integer> findNearestVecs(KernelLink ml, String queryStr, int ... num) 
 			throws MathLinkException, ExprFormatException{
