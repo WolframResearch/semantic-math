@@ -65,7 +65,7 @@ public class WordForms {
 		
 		if (wordlen > 0 && curWord.charAt(wordlen - 1) == 's') {
 			//don't strip 's' if belongs to common endings with 's', e.g. "homogeneous"
-			if(!curWord.matches(".*ous$?|.*ois$?")){ 
+			if(!curWord.matches(".*ous$?|.*ois$?|has")){ 
 				singularForms[0] = curWord.substring(0, wordlen - 1);								
 			}
 		}

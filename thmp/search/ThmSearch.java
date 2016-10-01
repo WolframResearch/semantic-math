@@ -89,11 +89,13 @@ public class ThmSearch {
 			
 			//System.out.println("Done clipping!");	
 			
+			//the entries in clipped correlation are between 0.3 and 1.
 			ml.evaluate("corMx = Clip[SetPrecision[Correlation[Transpose[m]],3], {.3, Infinity}, {0, 0}]/.Indeterminate->0");
 			//Expr expr = ml.getExpr();
 			//System.out.println("corMx " + expr);
 			ml.discardAnswer();
 			
+			//the entries in corMx.m can range from 0 to ~6
 			ml.evaluate("mx = Round[m + .2*corMx.m]//N");
 			ml.discardAnswer();
 			//ml.waitForAnswer();

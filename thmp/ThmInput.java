@@ -22,17 +22,27 @@ import java.util.Scanner;
 public class ThmInput {
 
 	public static void main(String[] args) throws IOException{
-		//File file = new File("src/thmp/data/commAlg5.txt");
-		String srcFileStr = "src/thmp/data/commAlg5.txt";
-		FileReader srcFileReader = new FileReader(srcFileStr);
-		BufferedReader srcFileBReader = new BufferedReader(srcFileReader);
-		
-		Path fileTo = Paths.get("src/thmp/data/thmFile5.txt");
-		
-		List<String> thmList = readThm(srcFileBReader);
-		
-		//write list of theorems to file
-		Files.write(fileTo, thmList, Charset.forName("UTF-8"));
+		boolean writeToFile = false;
+		if(writeToFile){
+			//File file = new File("src/thmp/data/commAlg5.txt");
+			//String srcFileStr = "src/thmp/data/commAlg5.txt";
+			//String srcFileStr = "src/thmp/data/multilinearAlgebra.txt";
+			//String srcFileStr = "src/thmp/data/functionalAnalysis.txt";
+			String srcFileStr = "src/thmp/data/fieldsRawTex.txt";
+			
+			
+			//Path fileTo = Paths.get("src/thmp/data/thmFile5.txt");
+			//Path fileTo = Paths.get("src/thmp/data/multilinearAlgebraThms.txt");
+			Path fileTo = Paths.get("src/thmp/data/fieldsThms.txt");
+			
+			FileReader srcFileReader = new FileReader(srcFileStr);
+			BufferedReader srcFileBReader = new BufferedReader(srcFileReader);
+			
+			List<String> thmList = readThm(srcFileBReader);
+			
+			//write list of theorems to file
+			Files.write(fileTo, thmList, Charset.forName("UTF-8"));
+		}
 	}
 
 	/**

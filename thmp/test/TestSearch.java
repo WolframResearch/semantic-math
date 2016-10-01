@@ -57,8 +57,7 @@ public class TestSearch {
 	public void test2(){
 		String inputStr = "locally compact hausdorff space";
 		testSearch(inputStr);
-	}
-	
+	}	
 	
 	@Test
 	public void test3(){

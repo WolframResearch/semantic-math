@@ -187,6 +187,7 @@ public class SearchCombined {
 			}
 			//find best intersection of these two lists. nearestVecList is 1-based, but intersectionVecList is 0-based! 
 			List<Integer> bestCommonVecs = findListsIntersection(nearestVecList, intersectionVecList, numCommonVecs);
+			
 			for(int d : bestCommonVecs){
 				System.out.println(TriggerMathThm2.getThm(d));
 			}

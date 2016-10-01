@@ -33,6 +33,8 @@ public class SearchIntersection {
 	
 	//bonus points for matching context better, eg hyp or stm
 	private static final int CONTEXT_WORD_BONUS = 1;
+	
+	private static final int NUM_NEAREST_VECS = 4;
 	/**
 	 * Map of keywords and their scores in document, the higher freq in doc, the lower 
 	 * score, say 1/(log freq + 1) since log 1 = 0. 
@@ -54,7 +56,7 @@ public class SearchIntersection {
 	private static final Map<String, Integer> threeGramsMap = ThreeGramSearch.get3GramsMap();
 	
 	//debug flag for development. Prints out the words used and their scores.
-	private static final boolean debug = true;
+	private static final boolean debug = false;
 	private static final boolean anno = false;
 	
 	/**
@@ -89,8 +91,8 @@ public class SearchIntersection {
 		List<WordWrapper> wordWrapperList = SearchWordPreprocess.sortWordsType(input);
 		
 		//determine if first token is integer, if yes, use it as the number of 
-		//closest thms. Else use 3 as default value.
-		int numHighest = 3;
+		//closest thms. Else use NUM_NEAREST_VECS as default value.
+		int numHighest = NUM_NEAREST_VECS;
 		//whether to skip first token
 		int firstIndex = 0;
 		if(num.length != 0){
@@ -244,8 +246,9 @@ public class SearchIntersection {
 			scoreThmMMap2.put(thmScore, thmIndex);
 		}
 		
-		System.out.println("scoreThmMMap2 "+ scoreThmMMap2);
-		
+		if(debug) {
+			System.out.println("scoreThmMMap2 "+ scoreThmMMap2);
+		}
 		List<Integer> highestThmList = new ArrayList<Integer>();
 		
 		//get the thms having the highest k scores. Keys are scores.
@@ -260,9 +263,11 @@ public class SearchIntersection {
 				if(counter == 0) break;				
 				if(pickedThmSet.contains(thmIndex)) continue;
 				pickedThmSet.add(thmIndex);
-				highestThmList.add(thmIndex);				
+				highestThmList.add(thmIndex);		
 				counter--;			
-				System.out.println("thm Score " + entry.getKey() + " thmIndex "+ thmIndex + " thm " + thmList.get(thmIndex));
+				if(debug) {
+					System.out.println("thm Score " + entry.getKey() + " thmIndex "+ thmIndex + " thm " + thmList.get(thmIndex));					
+				}
 			}
 			
 		}
@@ -391,7 +396,7 @@ public class SearchIntersection {
 				if(debug){ 
 					String thm = thmList.get(thmIndex);
 					System.out.println("theorem whose score is upped. size "+ entry.getKey() + " value " + thm);
-					System.out.println("PREV SCORE " + prevScore + " NEW SCORE " + newThmScore + thm);
+					//System.out.println("PREV SCORE " + prevScore + " NEW SCORE " + newThmScore + thm);
 				}
 				counter--;
 			}
@@ -492,7 +497,7 @@ public class SearchIntersection {
 					//System.out.println("thmIndex " + thmIndex +  " index of word " + index);					
 				}
 				scoreAdded = curScoreToAdd;
-				//but this will always be 1***************
+				//but this will always be 1*****
 				//int numTimesAdded = dominantWordsMap.get(word);
 				//dominantWordsMap.put(word, numTimesAdded+1);
 			}				
@@ -500,6 +505,28 @@ public class SearchIntersection {
 		return scoreAdded;
 	}	
 	
+	/**
+	 * Searches the theorem base using just the intersection algorithm.
+	 * @param inputStr Query string.
+	 * @return
+	 */
+	public static List<String> search(String inputStr){
+		
+		List<String> foundThmList = new ArrayList<String>();
+
+		List<Integer> highestThms = getHighestThm(inputStr);
+		
+		if(highestThms == null){
+			foundThmList.add("Close, but no cigar. I don't have a theorem on that yet.");
+			return thmList;
+		}
+		
+		for(Integer thmIndex : highestThms){
+			foundThmList.add(thmList.get(thmIndex));
+		}
+		
+		return foundThmList;
+	}
 	/**
 	 * Reads in keywords. Gets theorems with highest scores for this.
 	 * @param args
