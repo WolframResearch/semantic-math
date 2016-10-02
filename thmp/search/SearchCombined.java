@@ -23,7 +23,6 @@ public class SearchCombined {
 	//combined number of vectors to take from search results of
 	//svd/nearest and intersection
 	private static final int NUM_COMMON_VECS = 4;
-
 	
 	public static void initializeSearchWithResource(BufferedReader freqWordsFileBuffer, BufferedReader texSourceFileBuffer){
 		CollectFreqWords.setResources(freqWordsFileBuffer);
@@ -34,6 +33,7 @@ public class SearchCombined {
 		CollectFreqWords.setResources(freqWordsFileBuffer);
 		CollectThm.setResources(texSourceFileBuffer);		
 	}
+	
 	/**
 	 * SearchIntersection interface.
 	 * Searches intersection. Should run after SVD. 

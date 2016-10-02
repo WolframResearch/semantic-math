@@ -28,8 +28,7 @@ public class ThmInput {
 			//String srcFileStr = "src/thmp/data/commAlg5.txt";
 			//String srcFileStr = "src/thmp/data/multilinearAlgebra.txt";
 			//String srcFileStr = "src/thmp/data/functionalAnalysis.txt";
-			String srcFileStr = "src/thmp/data/fieldsRawTex.txt";
-			
+			String srcFileStr = "src/thmp/data/fieldsRawTex.txt";			
 			
 			//Path fileTo = Paths.get("src/thmp/data/thmFile5.txt");
 			//Path fileTo = Paths.get("src/thmp/data/multilinearAlgebraThms.txt");

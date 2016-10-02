@@ -31,7 +31,7 @@ public class ThmSearch {
 	
 	//number of nearest vectors to get for Nearest[]
 	private static final int NUM_NEAREST = 3;
-	private static final int NUM_SINGULAR_VAL_TO_KEEP = 40;
+	private static final int NUM_SINGULAR_VAL_TO_KEEP = 25;
 	//cutoff for a correlated term to be considered
 	private static final int COR_THRESHOLD = 3;
 	//mx to keep track of correlations between terms, mx.mx^T
@@ -64,9 +64,19 @@ public class ThmSearch {
 			//set up the matrix corresponding to docMx, to be SVD'd. 
 			//adjust mx entries based on correlation first			
 			String mx = toNestedList(docMx);
-			ml.evaluate("m=IntegerPart[" + mx +"]//N;");				
-			ml.discardAnswer();	
+			int rowDimension = docMx.length;
 			
+			System.out.println("nested mx " + Arrays.deepToString(docMx));
+			boolean getMx = true;
+			
+			ml.evaluate("m=IntegerPart[" + mx +"]//N");
+			if(getMx){
+				ml.waitForAnswer();			
+				Expr expr = ml.getExpr();
+				System.out.println("m " + expr);
+			}else{
+				ml.discardAnswer();	
+			}
 			//corMx should be computed using correlation mx
 			//or add a fraction of M.M^T.M
 			//this has the effect that if ith term and jth terms
@@ -88,19 +98,29 @@ public class ThmSearch {
 			//ml.discardAnswer();			
 			
 			//System.out.println("Done clipping!");	
-			
+			boolean getCorMx = true;
+						
 			//the entries in clipped correlation are between 0.3 and 1.
-			ml.evaluate("corMx = Clip[SetPrecision[Correlation[Transpose[m]],3], {.3, Infinity}, {0, 0}]/.Indeterminate->0");
-			//Expr expr = ml.getExpr();
-			//System.out.println("corMx " + expr);
-			ml.discardAnswer();
-			
+			//subtract IdentityMatrix to avoid self-compounding
+			ml.evaluate("corMx = Clip[SetPrecision[Correlation[Transpose[m]],3]-IdentityMatrix[" + rowDimension 
+					+ "], {.3, Infinity}, {0, 0}]/.Indeterminate->0");
+		
+			if(getCorMx){
+				ml.waitForAnswer();
+				Expr expr = ml.getExpr();
+				System.out.println("corMx " + expr);
+			}else{
+				ml.discardAnswer();
+			}
 			//the entries in corMx.m can range from 0 to ~6
-			ml.evaluate("mx = Round[m + .2*corMx.m]//N");
-			ml.discardAnswer();
-			//ml.waitForAnswer();
-			//Expr expr = ml.getExpr();
-			//System.out.println("corMx " + expr);
+			ml.evaluate("mx = Round[m + .1*corMx.m]//N");
+			if(getCorMx){
+				ml.waitForAnswer();
+				Expr expr = ml.getExpr();
+				System.out.println("Round[m + .1*corMx.m] " + expr);
+			}else{
+				ml.discardAnswer();
+			}			
 			
 			//take IntegerPart, faster processing later on
 			//ml.evaluate("mx = m + IntegerPart[0.2*corMx];");
@@ -190,6 +210,8 @@ public class ThmSearch {
 		
 	}
 	
+	//add terms to mx based on correlation matrix using sow and reap.	
+	
 	/**
 	 * Adjusts docMx based on corMxList: increase docMx[j][k] if corMxList.get(i).get(j)
 	 * is high.
@@ -200,7 +222,7 @@ public class ThmSearch {
 	private static int[][] corrAdjustDocMx(int[][] docMx, List<List<Integer>> corMxList){
 		int docMxDim1 = docMx.length;
 		int docMxDim2 = docMx[0].length;
-		//must create new mx, since we modifying docMx in place will mess up la updates 
+		//must create new mx, since modifying docMx in place will mess up updates 
 		int[][] corrDocMx = new int[docMxDim1][docMxDim2];
 		
 		//System.out.println("b=" +toNestedList(docMx));
@@ -211,7 +233,6 @@ public class ThmSearch {
 					corrDocMx[i][k] = docMx[i][k];
 					for(int j = 0; j < docMxDim1; j++){
 						if(corMxList.get(i).get(j) > COR_THRESHOLD){
-						//if(corMxList.get(i).get(j) > 1){
 							//for ~1100 thms, /2 is too much addition, can skew results, /3 seems ok.
 							corrDocMx[j][k] += Math.max(docMx[i][k]/3.0, .5); 
 						}
@@ -257,7 +278,6 @@ public class ThmSearch {
 	public static void main(String[] args) {		
 		
 		try{
-			//ml.discardAnswer();
 			
 			//String result = ml.evaluateToOutputForm("Transpose@" + toNestedList(docMx), 0);
 			String result = ml.evaluateToOutputForm("4+4", 0);
@@ -312,7 +332,13 @@ public class ThmSearch {
 		//String query = "{{1,1,0,0}}";
 		//ml.evaluate("q = " + queryStr + ".mx.Transpose[mx];");
 		//ml.discardAnswer();
-		ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"];");
+		
+		//process query first with corMx		
+		ml.evaluate("q = Transpose[" + queryStr + "] + 0.1*corMx.Transpose["+ queryStr +"];");
+		ml.discardAnswer();
+		
+		//ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"];");
+		ml.evaluate("q = Inverse[d].Transpose[u].q;");
 		//ml.evaluate("q = Inverse[d].Transpose[u].Transpose[q];");
 		ml.discardAnswer();
 		
@@ -327,16 +353,20 @@ public class ThmSearch {
 		//ml.getExpr();
 		//System.out.println("DIMENSIONS " +ml.getExpr());
 		
-		//ml.evaluate("q");
-		//ml.getExpr();
-		//System.out.println("q " +ml.getExpr());
+		ml.evaluate("q");
+		ml.waitForAnswer();
+		System.out.println("q " +ml.getExpr()); 
 		
-		ml.evaluate("Nearest[v->Range[Dimensions[v][[1]]], First[Transpose[q]],"+numNearest+"]");
+		//ml.evaluate("Nearest[v->Range[Dimensions[v][[1]]], First[Transpose[q]],"+numNearest+"]");
+		//take largest inner product
+		ml.evaluate("Keys[TakeLargest[AssociationThread[Range[Dimensions[v][[1]]] -> v.First[Transpose[q]]], "+numNearest+"]]");
+		ml.waitForAnswer();
 		Expr nearestVec = ml.getExpr();
 		//System.out.println(nearestVec.length() + "  " + Arrays.toString((int[])nearestVec.part(1).asArray(Expr.INTEGER, 1)));
 		//turn into list.
 		System.out.println(nearestVec);
-		int[] nearestVecArray = (int[])nearestVec.part(1).asArray(Expr.INTEGER, 1);
+		//int[] nearestVecArray = (int[])nearestVec.part(1).asArray(Expr.INTEGER, 1);
+		int[] nearestVecArray = (int[])nearestVec.asArray(Expr.INTEGER, 1);
 		Integer[] nearestVecArrayBoxed = ArrayUtils.toObject(nearestVecArray);
 		List<Integer> nearestVecList = Arrays.asList(nearestVecArrayBoxed);
 		

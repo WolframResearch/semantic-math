@@ -58,7 +58,7 @@ public class ThmP1 {
 	// private String[] subSentences;
 	
 	// list of parts of speech, ent, verb etc
-	private static List<String> posList;
+	private static final List<String> posList;
 	
 	// fluff type, skip when adding to parsed ArrayList
 	private static String FLUFF = "Fluff";
@@ -69,7 +69,9 @@ public class ThmP1 {
 
 	private static final List<String> unknownWords = new ArrayList<String>();
 	private static List<ParsedPair> parsedExpr = new ArrayList<ParsedPair>();
+	
 	private static final ImmutableListMultimap<String, FixedPhrase> fixedPhraseMap;
+	
 	/**
 	 * List of Stringified Map of parts used to build up a theorem/def etc.  
 	 * Global variable, so to be able to pass to other functions.
@@ -77,9 +79,16 @@ public class ThmP1 {
 	 */
 	private static List<String> parseStructMapList = new ArrayList<String>();	
 	
+	//list of context vectors of the highest-scoring parse tree for each input.
+	//will be cleared every time this list is retrieved, which should be once per 
+	//parse. Default values of context vec entry is the average val over all context vecs.
+	//For Nearest[] to work.
+	private static int[] parseContextVector = new int[TriggerMathThm2.keywordDictSize()];
+	//private static List<String> contextVectorList = new ArrayList<String>();	
+	
 	// part of speech, last resort after looking up entity property maps
 	// private static HashMap<String, String> pos;
-
+	
 	static{
 		/*Maps.buildMap();
 		try {
@@ -1569,10 +1578,13 @@ public class ThmP1 {
 		StructList headStructList = mx.get(0).get(len - 1);
 		int headStructListSz = headStructList.size();
 		System.out.println("headStructListSz " + headStructListSz);
-		
+		//the default entry value in context vec should be the average of all entries in matrix.
+		//list of context vectors.
+		List<int[]> contextVecList = new ArrayList<int[]>();		
 		
 		if (headStructListSz > 0) {		
 			StringBuilder parsedSB = new StringBuilder();
+			
 			// System.out.println("index of highest score: " +
 			// ArrayDFS(headStructList));
 			//temporary list to store the ParsedPairs to be sorted
@@ -1582,18 +1594,22 @@ public class ThmP1 {
 			for (int u = 0; u < headStructListSz; u++) {
 				Struct uHeadStruct = headStructList.structList().get(u);
 				uHeadStruct.set_dfsDepth(0);
+				
+				int[] curStructContextvec = new int[TriggerMathThm2.keywordDictSize()];				
 				//get the "long" form, not WL form, with this dfs
 				dfs(uHeadStruct, parsedSB);
 				//now get the WL form build from WLCommand's
 				//should pass in the wlSB, instead of creating one anew each time. <--It's ok.
-				StringBuilder wlSB = treeTraversal(uHeadStruct, parsedPairMMapList);
+				StringBuilder wlSB = treeTraversal(uHeadStruct, parsedPairMMapList, curStructContextvec);
+				contextVecList.add(curStructContextvec);
+				
 				System.out.println("+++Previous long parse: " + parsedSB);
 				
 				double maxDownPathScore = uHeadStruct.maxDownPathScore();
 				//defer these additions to orderPairsAndPutToLists()
 				//parsedExpr.add(new ParsedPair(wlSB.toString(), maxDownPathScore, "short"));		
 				//System.out.println("*******SHORT FORM: " + wlSB);
-				//parsedExpr.add(new ParsedPair(parsedSB.toString(), maxDownPathScore, "long"));
+				//parsedExpr.add(new ParsedPair(parsedSB.toString(), maxDownPathScore, "long"));				
 				
 				longFormParsedPairList.add(new ParsedPair(parsedSB.toString(), maxDownPathScore, "long"));
 				
@@ -1606,8 +1622,10 @@ public class ThmP1 {
 				
 				parsedSB.setLength(0); //should just declare new StringBuilder instead!
 			}
-			//order maps from parsedPairMMapList and put into parseStructMapList and parsedExpr
-			orderPairsAndPutToLists(parsedPairMMapList, longFormParsedPairList);
+			//order maps from parsedPairMMapList and put into parseStructMapList and parsedExpr.
+			//Also add context vector of highest scores
+			
+			orderPairsAndPutToLists(parsedPairMMapList, longFormParsedPairList, contextVecList);
 			//parseStructMapList.add(parseStructMap.toString() + "\n");
 		}
 		// if no full parse. Also add to parsedExpr List.
@@ -1652,12 +1670,15 @@ public class ThmP1 {
 			String totalParsedString = "";
 			double totalScore = 1; //product of component scores
 			List<Multimap<ParseStructType, ParsedPair>> parsedPairMMapList = new ArrayList<Multimap<ParseStructType, ParsedPair>>();
+			//list of long forms, with flattened tree structure.
 			List<ParsedPair> longFormParsedPairList = new ArrayList<ParsedPair>();
-
+			
+			int[] curStructContextvec = new int[TriggerMathThm2.keywordDictSize()];	
+			
 			for (int k = 0; k < parsedStructListSize; k++) {
 				StringBuilder parsedSB = new StringBuilder();
 				// int highestScoreIndex = ArrayDFS(parsedStructList.get(k));
-				int highestScoreIndex = 0; //**********
+				int highestScoreIndex = 0; //*******
 				Struct kHeadStruct = parsedStructList.get(k).structList().get(highestScoreIndex);
 				
 				kHeadStruct.set_dfsDepth(0);
@@ -1674,9 +1695,12 @@ public class ThmP1 {
 					parsedSB.append("; ");
 				}
 				
-				StringBuilder wlSB = treeTraversal(kHeadStruct, parsedPairMMapList);
+				StringBuilder wlSB = treeTraversal(kHeadStruct, parsedPairMMapList, curStructContextvec);
 				longFormParsedPairList.add(new ParsedPair(parsedSB.toString(), totalScore, "long"));
 			}
+			
+			//add only one vector to list since the pieces are part of one single parse, if no full parse
+			contextVecList.add(curStructContextvec);
 			
 			//defer these to ordered addition in orderPairsAndPutToLists!
 			//parsedExpr.add(new ParsedPair(parsedSB.toString(), totalScore, "long"));
@@ -1684,7 +1708,7 @@ public class ThmP1 {
 			//System.out.println(totalParsedString + "; ");
 			//parsedExpr.add(new ParsedPair(totalParsedString, totalScore, "wl"));
 			
-			orderPairsAndPutToLists(parsedPairMMapList, longFormParsedPairList);
+			orderPairsAndPutToLists(parsedPairMMapList, longFormParsedPairList, contextVecList);
 			
 			System.out.println("%%%%%\n");
 		}
@@ -1708,9 +1732,13 @@ public class ThmP1 {
 	/**
 	 * Order parsedPairMMapList and add to parseStructMapList and parsedExpr (both static members).
 	 * @param parsedPairMMapList
+	 * @param longFormParsedPairList List of long forms.
+	 * @param contextVecList is list of context vectors, pick out the highest one and use as global context vec.
+	 * contextVecList does not need to have same size as parsedPairMMapList or longFormParsedPairList, which have
+	 * the same length. Length 1 if no spanning parse.
 	 */
 	private static void orderPairsAndPutToLists(List<Multimap<ParseStructType, ParsedPair>> parsedPairMMapList,
-			List<ParsedPair> longFormParsedPairList){
+			List<ParsedPair> longFormParsedPairList, List<int[]> contextVecList){
 		
 		//use insertion sort, since list of maps is usually very small, ~1-3
 		//for maps with multiple entries (e.g. one sentence with both a HYP and a STM), add the numUnits and 
@@ -1792,7 +1820,6 @@ public class ThmP1 {
 			parseStructMapList.add(map.toString() + "\n");
 			
 			//add to parsedExpr  parsedExpr.add(new ParsedPair(totalParsedString, totalScore, "wl"));
-			// ********need to put the "long" form into parsedExpr as well!
 			//note that Multimap does not necessarily preserve insertion order!
 			for(Map.Entry<ParseStructType, ParsedPair> structTypePair : map.entries()){
 				ParsedPair pair = structTypePair.getValue();
@@ -1801,8 +1828,16 @@ public class ThmP1 {
 			}
 			//add the long form to parsedExpr
 			parsedExpr.add(longFormParsedPairList.get(finalOrderingList.get(i)));
+			
 		}	
-		//parseStructMap ;		
+		//assign the global context vec as the vec of the highest-ranked parse
+		if(contextVecList.size() == 1){
+			//in case there was no full parse
+			parseContextVector = contextVecList.get(0);
+		}else{
+			parseContextVector = contextVecList.get(finalOrderingList.get(0));
+		}
+		
 	}
 	
 	/**
@@ -1812,7 +1847,8 @@ public class ThmP1 {
 	 * @param uHeadStruct
 	 * @return
 	 */
-	private static StringBuilder treeTraversal(Struct uHeadStruct, List<Multimap<ParseStructType, ParsedPair>> parsedPairMMapList) {
+	private static StringBuilder treeTraversal(Struct uHeadStruct, List<Multimap<ParseStructType, ParsedPair>> parsedPairMMapList,
+			int[] curStructContextVec) {
 		//System.out.println("\n START ParseStruct DFS");
 		StringBuilder parseStructSB = new StringBuilder();
 		ParseStructType parseStructType = ParseStructType.getType(uHeadStruct);
@@ -1830,10 +1866,13 @@ public class ThmP1 {
 		Multimap<ParseStructType, ParsedPair> parseStructMap = ArrayListMultimap.create();
 		//initialize context vector for this command <--need to expose by adding to list
 		//length is total number of terms in corpus, i.e. row dimension in term-document matrix in search
-		int[] curStructContextVec = new int[TriggerMathThm2.keywordDictSize()];
+		//int[] curStructContextVec = new int[TriggerMathThm2.keywordDictSize()];
 		
 		//fills the parseStructMap and produces String representation		
 		ParseToWLTree.dfs(parseStructMap, uHeadStruct, wlSB, curStructContextVec, true);				
+		System.out.println("curStructContextVec " + curStructContextVec);
+		//add context vec to list
+		
 		System.out.println("Parts: " + parseStructMap);
 		//**parseStructMapList.add(parseStructMap.toString() + "\n");
 		parsedPairMMapList.add(parseStructMap);
@@ -2278,6 +2317,13 @@ public class ThmP1 {
 		
 		parsedExpr = new ArrayList<ParsedPair>();
 		return parsedExprCopy;
+	}
+	
+	/**
+	 * @return the context vector of highest-ranking parse.
+	 */
+	public static int[] getParseContextVector(){
+		return parseContextVector;
 	}
 	
 	/** 

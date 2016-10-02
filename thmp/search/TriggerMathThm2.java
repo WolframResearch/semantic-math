@@ -227,7 +227,8 @@ public class TriggerMathThm2 {
 				Integer wordScore = wordsScoreMap.get(keyword);
 				//divide by log of norm
 				//could be very small! ie 0 after rounding.
-				int newScore = wordScore/norm;
+				//***int newScore = wordScore/norm;
+				int newScore = wordScore;
 				if(newScore == 0 && wordScore != 0){
 					mathObjMx[keyWordIndex][mathObjCounter] = 1;
 				}else{
@@ -361,7 +362,8 @@ public class TriggerMathThm2 {
 		//divide entries of triggerTermsVec by norm
 		for(int i = 0; i < triggerTermsVec.length; i++){
 			int prevScore = triggerTermsVec[i]; 
-			triggerTermsVec[i] = triggerTermsVec[i]/norm;
+			//triggerTermsVec[i] = triggerTermsVec[i]/norm;
+			
 			//avoid completely obliterating a word 
 			if(prevScore != 0 && triggerTermsVec[i] == 0){
 				triggerTermsVec[i] = 1;

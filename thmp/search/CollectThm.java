@@ -44,10 +44,10 @@ public class CollectThm {
 	//private static final File rawFile = new File("src/thmp/data/commAlg5.txt");
 	private static final String rawFileStr = "src/thmp/data/CommAlg5.txt";
 	//read in from list of files streams instead of just one
-	private static final List<String> rawFileStrList = Arrays.asList(new String[]{"src/thmp/data/CommAlg5.txt", 
-			//"src/thmp/data/fieldsRawTex.txt", //"src/thmp/data/functional_analysis_operator_algebras/distributions.txt",
-			//"src/thmp/data/multilinearAlgebra.txt",
-			//"src/thmp/data/functionalAnalysis.txt"
+	private static final List<String> rawFileStrList = Arrays.asList(new String[]{//"src/thmp/data/CommAlg5.txt", 
+			"src/thmp/data/fieldsRawTex.txt", 
+			"src/thmp/data/multilinearAlgebra.txt",
+			"src/thmp/data/functionalAnalysis.txt"
 			});
 	//private static final List<String> rawFileStrList = Arrays.asList(new String[]{"src/thmp/data/functional_analysis_operator_algebras/distributions.txt"});
 
@@ -511,11 +511,12 @@ public class CollectThm {
 				//300 (for search in this file)
 				//int score = wordFreq < 110 ? (int)Math.round(10 - wordFreq/4) : wordFreq < 300 ? 1 : 0;
 				int score = wordFreq < 40 ? (int)Math.round(10 - wordFreq/3) : (wordFreq < 180 ? (int)Math.round(15 - wordFreq/3) : (wordFreq < 450 ? 1 : 0));	
+				
 				//frequently occurring words, should not score too low since they are mostly math words.
-				score = score < 0 ? 5 : score;
+				score = score < 0 ? 3 : score;
 				wordsScoreMapBuilder.put(word, score);
 				//System.out.print(entry.getValue() + " ");
-				//System.out.print("word: "+word +" score: "+score + "  ");
+				//System.out.print("word: "+word +" score: "+score + " freq "+ wordFreq + "$   ");
 			}
 		}
 
@@ -554,9 +555,9 @@ public class CollectThm {
 				//int score = wordFreq < 180 ? (int)Math.round(15 - wordFreq/4) : wordFreq < 450 ? 1 : 0;
 				int score = wordFreq < 40 ? (int)Math.round(10 - wordFreq/3) : (wordFreq < 180 ? (int)Math.round(15 - wordFreq/3) : (wordFreq < 450 ? 2 : 0));	
 				//frequently occurring words, should not score too low since they are mostly math words.
-				score = score < 0 ? 5 : score;
+				score = score < 0 ? 3 : score;
 				wordsScorePreMap.put(word, score);
-				//System.out.println("word: "+word +" score: "+score + "  ");
+				//System.out.print("word: "+word +" score: "+score + " freq "+ wordFreq + "$   ");
 			}
 		}
 		
