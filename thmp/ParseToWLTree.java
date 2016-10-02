@@ -577,11 +577,13 @@ public class ParseToWLTree {
 	 * @param struct is Struct that the commandStr has been appended to, i.e. head struct.
 	 * @param contextVec is context vector for this WLCommand. 
 	 */
-	private static void appendWLCommandStr(Struct struct, StringBuilder parsedSB, Multimap<ParseStructType, ParsedPair> partsMap, 
+	private static boolean appendWLCommandStr(Struct struct, StringBuilder parsedSB, Multimap<ParseStructType, ParsedPair> partsMap, 
 			int[] contextVec){
 		
 		List<WLCommandWrapper> structWrapperList = struct.WLCommandWrapperList();
 		int structWrapperListSz = structWrapperList.size();
+		boolean contextVecConstructed = false;		
+		
 		//System.out.println("HEAD: " + WLCommand.totalComponentCount(structWrapperList.get(0).WLCommand));
 		for(int i = structWrapperListSz - 1; i > -1; i--){
 			WLCommandWrapper curWrapper = structWrapperList.get(i);
@@ -593,14 +595,12 @@ public class ParseToWLTree {
 				//System.out.println(struct.WLCommandStr());
 				//parsedSB.append(struct.WLCommandStr());
 				parsedSB.append(curWrapper.WLCommandStr);
-				//form the contex vector by going down struct*****
-				// fill in an int[] with the terms in the right indices, done
-				// in methods in StructH and StructA.
 				
+				//form the int[] contex vector by going down struct				
 				// curCommand's type determines the num attached to head of structH,
-				// e.g. "Exists[structH]" writes enum ParseRelation -2 at the index of structH 
-				
+				// e.g. "Exists[structH]" writes enum ParseRelation -2 at the index of structH 				
 				ParseTreeToVec.tree2vec(struct, contextVec, curWrapper.WLCommandStr);
+				contextVecConstructed = true;
 				
 				//get the ParseStruct based on type
 				ParseStructType type = ParseStructType.getType(struct);
@@ -612,6 +612,7 @@ public class ParseToWLTree {
 				break;
 			}
 		}
+		return contextVecConstructed;
 	}
 	
 	/*
@@ -638,6 +639,9 @@ public class ParseToWLTree {
 		//System.out.print(struct.WLCommandStrVisitedCount());
 		//WLComamnd() should not be null if WLCommandStr is not null
 		//if(struct.WLCommandStr() != null && struct.WLCommandStrVisitedCount(k) < 1){		
+		//whether context vec has been constructed
+		boolean contextVecConstructed = false;
+		
 		if(struct.WLCommandWrapperList() != null && struct.WLCommandStrVisitedCount() < 1){	
 		//if(struct.WLCommandWrapperList() != null){	
 			/*if(WLCommand.structsWithOtherHeadCount(struct.WLCommand()) 
@@ -646,7 +650,7 @@ public class ParseToWLTree {
 				parsedSB.append(struct.WLCommandStr());
 			} */
 			
-			appendWLCommandStr(struct, parsedSB, partsMap, curStructContextVec);			
+			contextVecConstructed = appendWLCommandStr(struct, parsedSB, partsMap, curStructContextVec);			
 			
 			shouldPrint = false;
 			//reset WLCommandStr back to null, so next 
@@ -658,7 +662,11 @@ public class ParseToWLTree {
 			//return;
 		} 
 		
-		if (struct instanceof StructA) {
+		if(!contextVecConstructed){
+			ParseTreeToVec.tree2vec(struct, curStructContextVec, "");
+		}
+		
+		if (struct.isStructA()) {
 			
 			if(shouldPrint) parsedSB.append(struct.type());			
 			

@@ -70,14 +70,19 @@ public class ThmP1 {
 	private static final List<String> unknownWords = new ArrayList<String>();
 	private static List<ParsedPair> parsedExpr = new ArrayList<ParsedPair>();
 	
-	private static final ImmutableListMultimap<String, FixedPhrase> fixedPhraseMap;
+	private static final ImmutableListMultimap<String, FixedPhrase> fixedPhraseMap;	
+	
+	//private static final Map<String, Integer> twoGramMap = NGramSearch.get2GramsMap();
+	private static final Map<String, Integer> threeGramMap = ThreeGramSearch.get3GramsMap();
 	
 	/**
 	 * List of Stringified Map of parts used to build up a theorem/def etc.  
 	 * Global variable, so to be able to pass to other functions.
 	 * Not final, since it needs to be cleared and reassigned. 
 	 */
-	private static List<String> parseStructMapList = new ArrayList<String>();	
+	private static List<String> parseStructMapList = new ArrayList<String>();
+	//the non-stringified version of parseStructMapList
+	private static List<Multimap<ParseStructType, ParsedPair>> parseStructMaps = new ArrayList<Multimap<ParseStructType, ParsedPair>>();
 	
 	//list of context vectors of the highest-scoring parse tree for each input.
 	//will be cleared every time this list is retrieved, which should be once per 
@@ -231,23 +236,26 @@ public class ThmP1 {
 			String thirdWordSingular = WordForms.getSingularForm(thirdWord);
 			String threeGram = twoGram + " " + thirdWord;
 			String threeGramSingular = twoGram + " " + thirdWordSingular;
+			String threeGramSingularSingular = twoGramSingular + " " + thirdWordSingular;
+			
+			//System.out.println("^^^Adding three gram " + threeGram);
 			
 			if(threeGramMap.containsKey(threeGram)){
 				addNGramToPairs(pairs, mathIndexList, thirdWord, threeGram);
-				i += 2;
-				return i;
+				return i+2;
 			}else if(threeGramMap.containsKey(threeGramSingular)){
 				addNGramToPairs(pairs, mathIndexList, thirdWordSingular, threeGramSingular);
-				i += 2;
-				return i;
-			}
+				return i+2;
+			}else if(threeGramMap.containsKey(threeGramSingularSingular)){
+				addNGramToPairs(pairs, mathIndexList, thirdWordSingular, threeGramSingularSingular);
+				return i+2;
+			}			
 		}
 		//String twoGram = potentialTrigger;
 		//Integer twoGram = twoGramMap.get(potentialTrigger);
 		if(twoGramMap.containsKey(twoGram)){
 			addNGramToPairs(pairs, mathIndexList, nextWord, twoGram);			
 			i++;
-			//return i;					
 		}else if(twoGramMap.containsKey(twoGramSingular)){
 			addNGramToPairs(pairs, mathIndexList, nextWordSingular, twoGramSingular);
 			i++;
@@ -1816,8 +1824,9 @@ public class ThmP1 {
 		
 		for(int i = 0; i < sortedParsedPairMMapList.size(); i++){
 			Multimap<ParseStructType, ParsedPair> map = sortedParsedPairMMapList.get(i);
-			//parseStructMapList.add(parseStructMap.toString() + "\n");
+			
 			parseStructMapList.add(map.toString() + "\n");
+			parseStructMaps.add(map);
 			
 			//add to parsedExpr  parsedExpr.add(new ParsedPair(totalParsedString, totalScore, "wl"));
 			//note that Multimap does not necessarily preserve insertion order!
@@ -1870,8 +1879,7 @@ public class ThmP1 {
 		
 		//fills the parseStructMap and produces String representation		
 		ParseToWLTree.dfs(parseStructMap, uHeadStruct, wlSB, curStructContextVec, true);				
-		System.out.println("curStructContextVec " + curStructContextVec);
-		//add context vec to list
+		//System.out.println("curStructContextVec " + curStructContextVec);		
 		
 		System.out.println("Parts: " + parseStructMap);
 		//**parseStructMapList.add(parseStructMap.toString() + "\n");
@@ -2097,8 +2105,12 @@ public class ThmP1 {
 			// struct1_struct2 combo
 			double parentDownPathScore = struct1.maxDownPathScore() * struct2.maxDownPathScore() * newScore;
 			int parentNumUnits = struct1.numUnits() + struct2.numUnits();
-			StructA<Struct, Struct> parentStruct = new StructA<Struct, Struct>(struct1, struct2, newType, newScore,
-					mx.get(i).get(j), parentDownPathScore, parentNumUnits);
+			
+			NodeType struct1Type = struct1.isStructA() ? NodeType.STRUCTA : NodeType.STRUCTH;
+			NodeType struct2Type = struct2.isStructA() ? NodeType.STRUCTA : NodeType.STRUCTH;
+			
+			StructA<Struct, Struct> parentStruct = new StructA<Struct, Struct>(struct1, struct1Type, 
+					struct2, struct2Type, newType, newScore, mx.get(i).get(j), parentDownPathScore, parentNumUnits);
 			struct1.set_parentStruct(parentStruct);
 			struct2.set_parentStruct(parentStruct);
 			
@@ -2334,6 +2346,26 @@ public class ThmP1 {
 		ImmutableList<String> parseStructMapListCopy = ImmutableList.copyOf(parseStructMapList);
 		parseStructMapList = new ArrayList<String>();;
 		return parseStructMapListCopy;
+	}
+	
+	/** 
+	 * This method iterates through the lists of parseStructMaps.
+	 * Should *only* be used for unit testing. Otherwise, should build separate field
+	 * to avoid iterating here.
+	 * @return The ParseStruct ParsedPairs of each parse since last retrieval.
+	 */
+	public static List<Multimap<ParseStructType, String>> getParseStructMaps(){		
+		
+		List<Multimap<ParseStructType, String>> parseStructStringList = new ArrayList<Multimap<ParseStructType, String>>();
+		//get parsedStr in each parsedPair
+		for(Multimap<ParseStructType, ParsedPair> map : parseStructMaps){
+			Multimap<ParseStructType, String> newMap = ArrayListMultimap.create();
+			for(Map.Entry<ParseStructType, ParsedPair> entry : map.entries()){
+				newMap.put(entry.getKey(), entry.getValue().parsedStr);
+			}
+			parseStructStringList.add(newMap);
+		}		
+		return parseStructStringList;
 	}
 	
 	/**

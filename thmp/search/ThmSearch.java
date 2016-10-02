@@ -31,7 +31,7 @@ public class ThmSearch {
 	
 	//number of nearest vectors to get for Nearest[]
 	private static final int NUM_NEAREST = 3;
-	private static final int NUM_SINGULAR_VAL_TO_KEEP = 25;
+	private static final int NUM_SINGULAR_VAL_TO_KEEP = 55;
 	//cutoff for a correlated term to be considered
 	private static final int COR_THRESHOLD = 3;
 	//mx to keep track of correlations between terms, mx.mx^T

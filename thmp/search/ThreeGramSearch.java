@@ -35,7 +35,7 @@ public class ThreeGramSearch {
 	private static final Map<String, Integer> threeGramCountsMap;
 	
 	private static final List<String> threeGramList;
-	//map of three grams and their frequencies
+	//map of three grams and their frequencies, filtered from threeGramCountsMap.
 	private static final Map<String, Integer> threeGramFreqMap;
 	//
 	private static final Set<String> threeGramFirstWordsSet = new HashSet<String>();
@@ -73,11 +73,10 @@ public class ThreeGramSearch {
 		threeGramMap = TreeMultimap.create(stringComparator, threeGramComparator);
 		buildThreeGramMap(threeGramMap);
 		
-		System.out.println(threeGramMap);
-		
 		threeGramFreqMap = new HashMap<String, Integer>();
 		threeGramList = filterThreeGrams(threeGramMap, threeGramFreqMap);
-		System.out.println("Done with 3 grams.");
+		System.out.println(threeGramFreqMap);
+		System.out.println("Done with 3-grams.");
 	}		
 	
 	/**

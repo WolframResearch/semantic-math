@@ -44,10 +44,11 @@ public class CollectThm {
 	//private static final File rawFile = new File("src/thmp/data/commAlg5.txt");
 	private static final String rawFileStr = "src/thmp/data/CommAlg5.txt";
 	//read in from list of files streams instead of just one
-	private static final List<String> rawFileStrList = Arrays.asList(new String[]{//"src/thmp/data/CommAlg5.txt", 
-			"src/thmp/data/fieldsRawTex.txt", 
-			"src/thmp/data/multilinearAlgebra.txt",
-			"src/thmp/data/functionalAnalysis.txt"
+	private static final List<String> rawFileStrList = Arrays.asList(new String[]{
+			"src/thmp/data/CommAlg5.txt", 
+			//"src/thmp/data/fieldsRawTex.txt", 
+			//"src/thmp/data/multilinearAlgebra.txt",
+			//"src/thmp/data/functionalAnalysis.txt"
 			});
 	//private static final List<String> rawFileStrList = Arrays.asList(new String[]{"src/thmp/data/functional_analysis_operator_algebras/distributions.txt"});
 
@@ -164,37 +165,7 @@ public class CollectThm {
 			
 			nGramFirstWordsSet.addAll(NGramSearch.get_2GramFirstWordsSet());
 			nGramFirstWordsSet.addAll(ThreeGramSearch.get_3GramFirstWordsSet());
-			//System.out.print("nGramFirstWordsSet: " + nGramFirstWordsSet);
-			/*try{
-				//if run locally
-				if(rawFileReader == null){
-					FileReader rawFileReader = new FileReader(rawFileStr);
-					BufferedReader rawFileBReader = new BufferedReader(rawFileReader);
-					List<String> extractedThms = ThmInput.readThm(rawFileBReader);
-					//thmListBuilder.addAll(extractedThms);
-					
-					List<String> thmList = ProcessInput.processInput(extractedThms, true);
-					
-					readThm(thmWordsListBuilder, docWordsFreqPreMap, wordThmsMMapBuilder, thmList);
-					//same as readThm, just buid maps without annocation
-					buildMapsNoAnno(thmWordsListBuilderNoAnno, docWordsFreqPreMapNoAnno, wordThmsMMapBuilderNoAnno, thmList);				
-				}//if run from servlet
-				else{
-					System.out.println("This should never get invoked. Here are the contents. ");
-					
-					List<String> extractedThms = ThmInput.readThm(rawFileReader);
-					//thmListBuilder.addAll(extractedThms);
-					
-					List<String> thmList = ProcessInput.processInput(extractedThms, true);
-					
-					readThm(thmWordsListBuilder, docWordsFreqPreMap, wordThmsMMapBuilder, thmList);
-					//same as readThm, just buid maps without annocation
-					buildMapsNoAnno(thmWordsListBuilderNoAnno, docWordsFreqPreMapNoAnno, wordThmsMMapBuilderNoAnno, thmList);	
-				}
-				
-			}catch(IOException e){
-				e.printStackTrace();
-			}*/
+			
 			List<String> extractedThms = ThmList.get_thmList();
 			//thmListBuilder.addAll(extractedThms);			
 			//the third true means to extract words from latex symbols, eg oplus->direct sum.
@@ -389,9 +360,7 @@ public class CollectThm {
 					//Note, some words shouldn't need to be converted to singular form!
 					word = WordForms.getSingularForm(word);	
 				
-					if(FreqWordsSet.freqWordsSet.contains(word) && !nGramFirstWordsSet.contains(word)) continue;
-					
-					//if(word.equals("between")) System.out.println("********let Between go through!");
+					if(FreqWordsSet.freqWordsSet.contains(word) && !nGramFirstWordsSet.contains(word)) continue;					
 					
 					addWordToMaps(word, i, thmWordsMap, thmWordsListBuilder, docWordsFreqPreMap, wordThmsMMapBuilder);
 					//check the following word
@@ -549,6 +518,7 @@ public class CollectThm {
 				String word = entry.getKey();
 				//if(word.equals("tex")) continue;
 				int wordFreq = entry.getValue();
+				//*Keep* these comments. Experimenting with scoring parameters.
 				//int score = wordFreq < 100 ? (int)Math.round(10 - wordFreq/8) : wordFreq < 300 ? 1 : 0;	
 				//for 1200 thms, CommAlg5 + distributions:
 				//int score = wordFreq < 110 ? (int)Math.round(10 - wordFreq/4) : wordFreq < 300 ? 1 : 0;	

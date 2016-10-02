@@ -1,9 +1,12 @@
 package thmp;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import thmp.ParseToWLTree.WLCommandWrapper;
 import thmp.Struct.NodeType;
@@ -47,6 +50,12 @@ public class StructH<H> extends Struct{
 	//Struct that's the owner of this structH with a possesive term relation
 	//eg related by its/their.
 	private Struct possessivePrev;
+	//set of properties, to avoid iterating through the HashMap struct each time 
+	//properties are needed (since "ppt" are values, not keys, in struct). This set caches the properties.
+	//Should not have used String "ppt" to record properties in struct!
+	private final Set<String> propertySet = new HashSet<String>();
+	//use this variable to avoid race conditions, since propertySet can be added to by multiple methods.
+	private volatile boolean isPropertySetEmpty = true;
 	
 	//parent
 	//private Struct parent;
@@ -393,17 +402,42 @@ public class StructH<H> extends Struct{
 	}
 	
 	/**
-	 * Append name, ppt, called, tex info to the String passed in.
-	 * @param str String to be appended to
+	 * 
+	 * @return set of properties of this StructH.
+	 */
+	public Set<String> getPropertySet(){
+		//seek out the properties in struct
+		//Not thread-safe: can give rise to race conditions if append_name_pptStr()
+		//is called by another thread and propertySet is being modified. <--now safe
+		//with volatile boolean isPropertySetEmpty. But could add to map multiple times
+		//if called by multiple threads, could be wasteful but no race condition.
+		if(isPropertySetEmpty){
+			for(Map.Entry<String, String> entry : struct.entrySet()){
+				if(entry.getValue().equals("ppt")){
+					propertySet.add(entry.getKey());
+				}
+			}
+		}		
+		isPropertySetEmpty = false;
+		return propertySet;		
+	}
+	
+	/**
+	 * Retrieve name, ppt, called, tex info.
 	 */
 	public String append_name_pptStr(){
 		Iterator<Entry<String, String>> structIter = struct.entrySet().iterator();
 		String name = "", called = "", ppt = "", tex = "";
+		//boolean addToPropertySet = propertySet.isEmpty();
 		
 		while(structIter.hasNext()){
 			Entry<String, String> entry = structIter.next();
 			if(entry.getValue().matches("ppt") ){
-				ppt += entry.getKey() + ", ";
+				String newPpt = entry.getKey();
+				ppt += newPpt + ", ";
+				if(isPropertySetEmpty){
+					propertySet.add(newPpt);
+				}
 			}
 			else if(entry.getKey().matches("name") ){
 				name = entry.getValue();
@@ -415,6 +449,8 @@ public class StructH<H> extends Struct{
 				tex = entry.getValue();
 			}
 		}		
+		
+		isPropertySetEmpty = false;
 		
 		name = tex.length() > 0 ? name + ", ": name;
 		tex = called.length() > 0 ? tex + ", ": tex;

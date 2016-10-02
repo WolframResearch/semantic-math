@@ -2,9 +2,11 @@ package thmp;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import thmp.Struct.NodeType;
 import thmp.search.TriggerMathThm2;
+import thmp.utils.WordForms;
 
 /**
  * Converts a parse tree produced by ThmP1 
@@ -16,6 +18,7 @@ import thmp.search.TriggerMathThm2;
 public class ParseTreeToVec {
 
 	private static final Map<String, Integer> keywordDict = TriggerMathThm2.keywordDict();
+	
 	/**
 	 * Entry method from ParseToWLTree, sets the term corresponding to head using WLCommandStr. 
 	 * calls tree2vec.
@@ -29,9 +32,14 @@ public class ParseTreeToVec {
 		// e.g. "Exists[structH]" writes enum ParseRelation -2 at the index of structH 
 		//get the entry for head and sets it corresponding to the term for headStruct
 		int headVecEntry = ParseRelation.getParseRelation(WLCommandStr);
+		//System.out.println("parseRelation headVecEntry " + headVecEntry);
+		//System.out.println("headStruct " + headStruct);
 		
-		//set the contextVec entry of the headStruct
-		int termRowIndex = setContextVecEntry(headStruct, headVecEntry, contextVec);
+		//set the contextVec entry of the headStruct, returns the index of the entry being set
+		//should set it for both children!
+		String termStr = headStruct.contentStr();
+		int termRowIndex = setContextVecEntry(headStruct, termStr, headVecEntry, contextVec);
+		//System.out.println("termRowIndex " + termRowIndex);
 		
 		return tree2vec(headStruct, termRowIndex, contextVec);
 	}
@@ -61,19 +69,23 @@ public class ParseTreeToVec {
 	 */
 	public static void setStructHContextVecEntry(StructH<?> struct, int structParentIndex, int[] contextVec){
 		
+		String termStr = struct.contentStr();
 		//add struct itself, then its children
-		int structIndex = setContextVecEntry(struct, structParentIndex, contextVec);
-		
+		int structIndex = setContextVecEntry(struct, termStr, structParentIndex, contextVec);
+		//System.out.println("***inside StructH context vec setting, struct " + struct + " parentIndex " + structParentIndex);
 		List<Struct> children = struct.children();
 		
 		for(Struct child : children){
-			//recurse if StructH, else call setContextVecEntry
-			if(!child.isStructA()){
-				tree2vec(child, structIndex, contextVec);
-			}else{
-				setContextVecEntry(child, structIndex, contextVec);
-			}
-		}			
+			tree2vec(child, structIndex, contextVec);			
+		}
+		
+		//should also set indices of ppt's of StructH, e.g. "maximal ideal", maximal is ppt of ideal 
+		Set<String> propertySet = struct.getPropertySet();
+		//mark indices for words that are properties
+		for(String propertyStr : propertySet){
+			//split properties by whitespace? E.g. "all maximal" -> "all", "maximal"
+			setContextVecEntry(struct, propertyStr, structIndex, contextVec);
+		}
 	}
 	
 	/**
@@ -85,8 +97,9 @@ public class ParseTreeToVec {
 	 */
 	public static void setStructAContextVecEntry(StructA<?, ?> struct, int structParentIndex, int[] contextVec){
 		
+		String termStr = struct.contentStr();
 		//add struct itself, then its prev1 and prev2
-		int structIndex = setContextVecEntry(struct, structParentIndex, contextVec);
+		int structIndex = setContextVecEntry(struct, termStr, structParentIndex, contextVec);
 		
 		//do prev1 and prev2
 		if(struct.prev1NodeType().equals(NodeType.STRUCTA) || struct.prev1NodeType().equals(NodeType.STRUCTH)){
@@ -110,21 +123,27 @@ public class ParseTreeToVec {
 	 * if headStruct, e.g. ParseRelation.EXISTS for Exists[structH]
 	 * @return row index corresponding to Struct that was just inserted into.
 	 */
-	private static int setContextVecEntry(Struct struct, int structParentIndex, int[] contextVec){
-		//sets the parent of the 
+	private static int setContextVecEntry(Struct struct, String termStr, int structParentIndex, int[] contextVec){
+		//sets the entry to the index of the parent	
 		
-		String termStr = struct.contentStr();
+		//String termStr = struct.contentStr();
+		
 		Integer termRowIndex = keywordDict.get(termStr);
-		if(termRowIndex != null){
-			//
-			contextVec[termRowIndex] = structParentIndex;
+		if(termRowIndex == null){
+			//de-singularize, and remove "-ed" and "ing"!
+			termRowIndex = keywordDict.get(WordForms.getSingularForm(termStr));
 		}
+		//System.out.println("##### Setting context vec, termStr " + termStr + " termRowIndex " + termRowIndex);
+		if(termRowIndex != null){			
+			contextVec[termRowIndex] = structParentIndex;
+			System.out.println("termStr " + termStr + " ### rowIndex " + termRowIndex + " parent index " + structParentIndex);
+		}else{
+			//pass parentIndex down to children, in case of intermediate StructA that doesn't have a content string.
+			//eg assert[A, B], the assert does not have content string.
+			termRowIndex = structParentIndex;
+		}		
 		return termRowIndex;
-	}
-	
-	public static void main(String[] args){
-		
-	}
+	}		
 	
 	/**
 	 * Number indicating a parse relation, used to build context vector.
@@ -133,7 +152,8 @@ public class ParseTreeToVec {
 	 */
 	public enum ParseRelation{
 		ELEMENT(-1),
-		EXISTS(-2);
+		EXISTS(-2),
+		HASPPT(-3);
 		
 		private final int relationNum;
 		
@@ -157,6 +177,8 @@ public class ParseTreeToVec {
 				return ELEMENT.relationNum;
 			}else if(WLCommandStr.contains("Exists")){
 				return EXISTS.relationNum;
+			}else if(WLCommandStr.contains("HasProperty")){
+				return HASPPT.relationNum;
 			}else{
 				return 0;
 			}

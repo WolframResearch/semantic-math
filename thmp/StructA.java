@@ -59,14 +59,8 @@ public class StructA<A, B> extends Struct{
 	//private List<MatrixPathNode> mxPathNodeList;
 	
 	//is this ever needed?
-	public StructA(A prev1, NodeType prev1Type, B prev2, NodeType prev2Type, String type, StructList structList){
-		this.PREV1_TYPE = prev1Type;
-		this.PREV2_TYPE = prev2Type;
-		this.prev1 = prev1;	
-		this.prev2 = prev2;
-		this.type = type; 
-		this.score = 1;
-		this.numUnits = 1;
+	public StructA(A prev1, NodeType prev1Type, B prev2, NodeType prev2Type, String type, StructList structList){		
+		this(prev1, prev1Type, prev2, prev2Type, type);
 		this.structList = structList;
 	}
 	
@@ -78,6 +72,29 @@ public class StructA<A, B> extends Struct{
 		this.type = type; 
 		this.numUnits = 1;
 		this.score = 1;
+	}
+	
+	/**
+	 * @param prev1
+	 * @param prev2
+	 * @param type
+	 * @param score
+	 * @param structList  pointer to list of Struct's containing this.
+	 * @param downPathScore 
+	 * @param numUnits
+	 */
+	public StructA(A prev1, NodeType prev1Type, B prev2, NodeType prev2Type, String type, double score, StructList structList, 
+			double downPathScore, int numUnits){
+		this.PREV1_TYPE = prev1Type;
+		this.PREV2_TYPE = prev2Type;
+		this.prev1 = prev1;		
+		this.prev2 = prev2;
+		this.type = type; 
+		this.structList = structList;
+		this.score = score;
+		this.maxDownPathScore = downPathScore;
+		this.numUnits = numUnits;
+		//this.mxPathNodeList = new ArrayList<MatrixPathNode>();
 	}
 	
 	public NodeType prev1NodeType(){
@@ -318,8 +335,8 @@ public class StructA<A, B> extends Struct{
 	}
 	
 	@Override
-	public String contentStr(){
-		if(PREV1_TYPE.equals(NodeType.STR)){
+	public String contentStr(){		
+		if(PREV1_TYPE != null && PREV1_TYPE.equals(NodeType.STR)){
 			return (String) prev1;
 		}else{
 			return "";
@@ -353,27 +370,7 @@ public class StructA<A, B> extends Struct{
 		//this.mxPathNodeList = new ArrayList<MatrixPathNode>();
 	} */
 
-	/**
-	 * 
-	 * @param prev1
-	 * @param prev2
-	 * @param type
-	 * @param score
-	 * @param structList  pointer to list of Struct's containing this.
-	 * @param downPathScore 
-	 * @param numUnits
-	 */
-	public StructA(A prev1, B prev2, String type, double score, StructList structList, 
-			double downPathScore, int numUnits){		
-		this.prev1 = prev1;		
-		this.prev2 = prev2;
-		this.type = type; 
-		this.structList = structList;
-		this.score = score;
-		this.maxDownPathScore = downPathScore;
-		this.numUnits = numUnits;
-		//this.mxPathNodeList = new ArrayList<MatrixPathNode>();
-	}
+
 	
 	@Override
 	public int numUnits(){
