@@ -61,7 +61,7 @@ public class ThmP1 {
 	private static final List<String> posList;
 	
 	// fluff type, skip when adding to parsed ArrayList
-	private static String FLUFF = "Fluff";
+	private static final String FLUFF = "Fluff";
 	
 	// private static final File unknownWordsFile;
 	private static final Path unknownWordsFile = Paths.get("src/thmp/data/unknownWords.txt");
@@ -87,7 +87,7 @@ public class ThmP1 {
 	//list of context vectors of the highest-scoring parse tree for each input.
 	//will be cleared every time this list is retrieved, which should be once per 
 	//parse. Default values of context vec entry is the average val over all context vecs.
-	//For Nearest[] to work.
+	//For Nearest[] to work. *Not* final because need reassignment.
 	private static int[] parseContextVector = new int[TriggerMathThm2.keywordDictSize()];
 	//private static List<String> contextVectorList = new ArrayList<String>();	
 	
@@ -333,7 +333,7 @@ public class ThmP1 {
 				continue;
 
 			// strip away special chars '(', ')', etc ///should not
-			// remove........
+			// remove......
 			// curWord = curWord.replaceAll("\\(|\\)", "");
 			// remove this and ensure curWord is used subsequently
 			// instead of str[i]
@@ -342,7 +342,7 @@ public class ThmP1 {
 			String type = "mathObj";
 			int wordlen = str[i].length();
 
-			// detect latex expressions, mark them as "mathObj" for now
+			// detect latex expressions, set their pos as "mathObj" for now
 			if (curWord.charAt(0) == '$') {
 				String latexExpr = curWord;
 				int stringLength = str.length;

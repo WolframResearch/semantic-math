@@ -256,6 +256,7 @@ public class TriggerMathObj {
 		//return r + "[" + namePpt + "]";
 		return r;
 	}
+	
 	/**
 	 * Analogous method for StructA as getChildrenNames for StructH. 
 	 * @param struct

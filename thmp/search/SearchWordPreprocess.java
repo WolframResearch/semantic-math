@@ -136,6 +136,11 @@ public class SearchWordPreprocess {
 			}
 		}
 		//System.out.print("wrapperList: "+wrapperList);
+		//add word "definition" if wrapperList length <3, as those query probably want definition
+		if(wrapperList.size() < 3){
+			WordWrapper wordWrapper = new WordWrapper(STM, "definition");
+			wrapperList.add(wordWrapper);
+		}
 		return wrapperList;
 	}
 	

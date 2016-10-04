@@ -56,8 +56,10 @@ public class SearchIntersection {
 	private static final Map<String, Integer> threeGramsMap = ThreeGramSearch.get3GramsMap();
 	
 	//debug flag for development. Prints out the words used and their scores.
-	private static final boolean debug = false;
+	private static final boolean DEBUG = false;
 	private static final boolean anno = false;
+	//priority words that should be weighed higher, eg "define"
+	//private static final String PRIORITY_WORDS = ConstantsInSearch.get_priorityWords();
 	
 	/**
 	 * Static initializer, builds the maps using CollectThm.java. 
@@ -246,7 +248,7 @@ public class SearchIntersection {
 			scoreThmMMap2.put(thmScore, thmIndex);
 		}
 		
-		if(debug) {
+		if(DEBUG) {
 			System.out.println("scoreThmMMap2 "+ scoreThmMMap2);
 		}
 		List<Integer> highestThmList = new ArrayList<Integer>();
@@ -265,7 +267,7 @@ public class SearchIntersection {
 				pickedThmSet.add(thmIndex);
 				highestThmList.add(thmIndex);		
 				counter--;			
-				if(debug) {
+				if(DEBUG) {
 					System.out.println("thm Score " + entry.getKey() + " thmIndex "+ thmIndex + " thm " + thmList.get(thmIndex));					
 				}
 			}
@@ -334,6 +336,7 @@ public class SearchIntersection {
 	}
 
 	/**
+	 * Auxiliary method to adjust scores of word clusters. 
 	 * @param thmScoreMap
 	 * @param scoreThmMMap
 	 * @param wordThmMMap
@@ -393,7 +396,7 @@ public class SearchIntersection {
 				int newThmScore = (int)(prevScore + avgWordScore*3.0/2 + counter);
 				scoreThmMMap.put(newThmScore, thmIndex);
 				thmScoreMap.put(thmIndex, newThmScore);
-				if(debug){ 
+				if(DEBUG){ 
 					String thm = thmList.get(thmIndex);
 					System.out.println("theorem whose score is upped. size "+ entry.getKey() + " value " + thm);
 					//System.out.println("PREV SCORE " + prevScore + " NEW SCORE " + newThmScore + thm);
@@ -479,7 +482,7 @@ public class SearchIntersection {
 		if(wordThms != null && curScoreToAdd != 0){
 			//System.out.println("wordThms " + wordThms);
 			wordThmIndexMMap.putAll(word, wordThms);
-			if(debug){
+			if(DEBUG){
 				System.out.println("Word added: " + word + ". Score: " + curScoreToAdd);
 			}
 			for(Integer thmIndex : wordThms){					

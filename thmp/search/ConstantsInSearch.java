@@ -9,7 +9,6 @@ package thmp.search;
  */
 public class ConstantsInSearch {
 
-
 	//regex of key words that should be intentioanlly weighed more, eg "definition"
 	//should be weighed as high as the highest word in vector
 	private static final String PRIORITY_WORDS = "definition|define";

@@ -46,42 +46,41 @@ public class TestParseMain {
 		Multimap<ParseStructType, String> desiredMap1 = ArrayListMultimap.create();
 		desiredMap1.put(ParseStructType.HYP, "f \\[Element] MathObj{g}");
 		parsedList.add(desiredMap1);
+		//keeping these comments for comparing scores
 		//parsedList.add("{HYP=[ f \\[Element] MathObj{g}  0.7  4  3]}\n");
 		
 		stList.add("given an element f of a set $S$");
 		Multimap<ParseStructType, String> desiredMap2 = ArrayListMultimap.create();
 		desiredMap1.put(ParseStructType.HYP, "MathObj{element, f, of MathObj{set, $S$}}");
-		parsedList.add(desiredMap2);
-		
+		parsedList.add(desiredMap2);		
 		//parsedList.add("{HYP=[ MathObj{element, f, of MathObj{set, $S$}}  1.0  2  4]}\n");
 		
 		stList.add("take derivative of log of f");
-		Multimap<ParseStructType, String> desiredMap2 = ArrayListMultimap.create();
-		desiredMap1.put(ParseStructType.HYP, "MathObj{element, f, of MathObj{set, $S$}}");
-		parsedList.add(desiredMap2);
-		
-		parsedList.add("{OBJ=[ Derivative[  Log[ f ]  ]  1.0  1  6]}\n");
+		Multimap<ParseStructType, String> desiredMap3 = ArrayListMultimap.create();
+		desiredMap3.put(ParseStructType.OBJ, "Derivative[  Log[ f ]  ]");
+		parsedList.add(desiredMap3);		
+		//parsedList.add("{OBJ=[ Derivative[  Log[ f ]  ]  1.0  1  6]}\n");
 		
 		stList.add("f is a function with radius of convergence r");
-		Multimap<ParseStructType, String> desiredMap2 = ArrayListMultimap.create();
-		desiredMap1.put(ParseStructType.HYP, "MathObj{element, f, of MathObj{set, $S$}}");
-		parsedList.add(desiredMap2);
-		parsedList.add("{STM=[ f \\[Element] function[{function, with radius of convergence, r}]  1.0  3  5]}\n");
+		Multimap<ParseStructType, String> desiredMap4 = ArrayListMultimap.create();
+		desiredMap1.put(ParseStructType.STM, "f \\[Element] function[{function, with radius of convergence, r}]");
+		parsedList.add(desiredMap4);
+		//parsedList.add("{STM=[ f \\[Element] function[{function, with radius of convergence, r}]  1.0  3  5]}\n");
 		
 		stList.add("f is a function with radius of convergence r and finitely many roots");
-		Multimap<ParseStructType, String> desiredMap2 = ArrayListMultimap.create();
-		desiredMap1.put(ParseStructType.HYP, "MathObj{element, f, of MathObj{set, $S$}}");
-		parsedList.add(desiredMap2);
-		parsedList.add("{STM=[ f \\[Element] function[{function, {with, Conj[{radius of convergence, r}, {roots, finitely many}]}}]  1.0  3  7]}\n");
+		Multimap<ParseStructType, String> desiredMap5 = ArrayListMultimap.create();
+		desiredMap1.put(ParseStructType.STM, "f \\[Element] function[{function, {with, Conj[{radius of convergence, r}, {roots, finitely many}]}}]");
+		parsedList.add(desiredMap5);
+		//parsedList.add("{STM=[ f \\[Element] function[{function, {with, Conj[{radius of convergence, r}, {roots, finitely many}]}}]  1.0  3  7]}\n");
 		
 		stList.add("$f$ is holomorphic on $D(0, r)$, the derivative of $f$ is $\\sum_j j $");
-		Multimap<ParseStructType, String> desiredMap2 = ArrayListMultimap.create();
-		desiredMap1.put(ParseStructType.HYP, "MathObj{element, f, of MathObj{set, $S$}}");
-		parsedList.add(desiredMap2);
-		parsedList.add("{STM=[  Derivative[ $f$ ]  \\[Element] MathObj{{$\\sum_j j $}}  1.0  3  7]}\n");
+		Multimap<ParseStructType, String> desiredMap6 = ArrayListMultimap.create();
+		desiredMap1.put(ParseStructType.STM, "Derivative[ $f$ ]  \\[Element] MathObj{{$\\sum_j j $}}");
+		parsedList.add(desiredMap6);
+		//parsedList.add("{STM=[  Derivative[ $f$ ]  \\[Element] MathObj{{$\\sum_j j $}}  1.0  3  7]}\n");
 		
 		stList.add("$R/\\mathfrak p$ is catenary for every minimal prime $\\mathfrak p$");
-		Multimap<ParseStructType, String> desiredMap2 = ArrayListMultimap.create();
+		Multimap<ParseStructType, String> desiredMap7 = ArrayListMultimap.create();
 		desiredMap1.put(ParseStructType.HYP, "MathObj{element, f, of MathObj{set, $S$}}");
 		parsedList.add(desiredMap2);
 		parsedList.add("{HYP=[ \\[ForAll][ MathObj{minimal prime, $\\mathfrak p$} ]  1.0  2  3], STM=[ MathObj{$R/\\mathfrak p$} \\[Element] MathObj{catenary}  0.9  3  4]}\n");

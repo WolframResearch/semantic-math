@@ -169,7 +169,8 @@ public class CollectThm {
 			List<String> extractedThms = ThmList.get_thmList();
 			//thmListBuilder.addAll(extractedThms);			
 			//the third true means to extract words from latex symbols, eg oplus->direct sum.
-			List<String> thmList = ProcessInput.processInput(extractedThms, true, true);
+			//last boolean is whether to replace macros, 
+			List<String> thmList = ProcessInput.processInput(extractedThms, true, true, true);
 			//System.out.println("After processing: "+thmList);
 			try {
 				readThm(thmWordsListBuilder, docWordsFreqPreMap, wordThmsMMapBuilder, thmList);
