@@ -21,7 +21,7 @@ public class ThmSearch {
 	 * Matrix of documents. Columns are documents.
 	 * Rows are terms.
 	 */
-	private static int[][] docMx;
+	private static double[][] docMx;
 	
 	//public static final String[] ARGV = new String[]{"-linkmode", "launch", "-linkname", 
 	//"\"/Applications/Mathematica2.app/Contents/MacOS/MathKernel\" -mathlink"};
@@ -31,7 +31,7 @@ public class ThmSearch {
 	
 	//number of nearest vectors to get for Nearest[]
 	private static final int NUM_NEAREST = 3;
-	private static final int NUM_SINGULAR_VAL_TO_KEEP = 55;
+	private static final int NUM_SINGULAR_VAL_TO_KEEP = 20;
 	//cutoff for a correlated term to be considered
 	private static final int COR_THRESHOLD = 3;
 	//mx to keep track of correlations between terms, mx.mx^T
@@ -69,7 +69,8 @@ public class ThmSearch {
 			System.out.println("nested mx " + Arrays.deepToString(docMx));
 			boolean getMx = true;
 			
-			ml.evaluate("m=IntegerPart[" + mx +"]//N");
+			//ml.evaluate("m=IntegerPart[" + mx +"]//N");
+			ml.evaluate("m =" + mx+ "//N");
 			if(getMx){
 				ml.waitForAnswer();			
 				Expr expr = ml.getExpr();
@@ -77,6 +78,7 @@ public class ThmSearch {
 			}else{
 				ml.discardAnswer();	
 			}
+			
 			//corMx should be computed using correlation mx
 			//or add a fraction of M.M^T.M
 			//this has the effect that if ith term and jth terms
@@ -102,8 +104,8 @@ public class ThmSearch {
 						
 			//the entries in clipped correlation are between 0.3 and 1.
 			//subtract IdentityMatrix to avoid self-compounding
-			ml.evaluate("corMx = Clip[SetPrecision[Correlation[Transpose[m]],3]-IdentityMatrix[" + rowDimension 
-					+ "], {.3, Infinity}, {0, 0}]/.Indeterminate->0");
+			ml.evaluate("corMx = Clip[Correlation[Transpose[m]]-IdentityMatrix[" + rowDimension 
+					+ "], {.6, Infinity}, {0, 0}]/.Indeterminate->0");
 		
 			if(getCorMx){
 				ml.waitForAnswer();
@@ -113,14 +115,14 @@ public class ThmSearch {
 				ml.discardAnswer();
 			}
 			//the entries in corMx.m can range from 0 to ~6
-			ml.evaluate("mx = Round[m + .1*corMx.m]//N");
+			ml.evaluate("mx = m + .15*corMx.m");
 			if(getCorMx){
 				ml.waitForAnswer();
 				Expr expr = ml.getExpr();
-				System.out.println("Round[m + .1*corMx.m] " + expr);
+				System.out.println("m + .1*corMx.m " + expr);
 			}else{
 				ml.discardAnswer();
-			}			
+			}
 			
 			//take IntegerPart, faster processing later on
 			//ml.evaluate("mx = m + IntegerPart[0.2*corMx];");
@@ -181,7 +183,10 @@ public class ThmSearch {
 			//ml.waitForAnswer();
 			ml.discardAnswer();
 			System.out.println("Finished SVD");
-			//Expr t = ml.getExpr();
+			
+			ml.evaluate("mxMeanValue = Mean[Flatten[mx]];");
+			ml.discardAnswer();			
+			//System.out.println(" mean of flattened mx " + ml.getExpr().part(1));
 			
 			/*for(int i = 1; i <= docMx[0].length; i++){
 			//should just be columns of V*, so rows of V
@@ -244,12 +249,11 @@ public class ThmSearch {
 
 		return corrDocMx;
 	}
-	/*
+	/**
 	 * Convert docMx from array form to a String
 	 * that's a nested List for WL.
-	 * 
 	 */
-	public static String toNestedList(int[][] docMx){
+	public static String toNestedList(double[][] docMx){
 		StringBuilder sb = new StringBuilder();
 		//hString s = "";
 		//s += "{";
@@ -280,8 +284,8 @@ public class ThmSearch {
 		try{
 			
 			//String result = ml.evaluateToOutputForm("Transpose@" + toNestedList(docMx), 0);
-			String result = ml.evaluateToOutputForm("4+4", 0);
-			System.out.println(result);
+			//String result = ml.evaluateToOutputForm("4+4", 0);
+			//System.out.println(result);
 			//result = ml.evaluateToOutputForm("IdentityMatrix[2]", 0);
 			//result = ml.evaluateToOutputForm("Plus@@{4,2}", 0);
 			//ml.evaluate("Transpose[{{1, 2},{3,4}}]");
@@ -334,14 +338,19 @@ public class ThmSearch {
 		//ml.discardAnswer();
 		
 		//process query first with corMx		
-		ml.evaluate("q = Transpose[" + queryStr + "] + 0.1*corMx.Transpose["+ queryStr +"];");
-		ml.discardAnswer();
+		//ml.evaluate("q = Round[Transpose[" + queryStr + "] + 0.1*corMx.Transpose["+ queryStr +"]]//N;");
+		//ml.discardAnswer();
+		//ml.evaluate(queryStr+"/.{0.0->30}");
+		//System.out.println("QUERY " + ml.getExpr().part(1));
 		
 		//ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"];");
-		ml.evaluate("q = Inverse[d].Transpose[u].q;");
+		ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"/.{0.0->mxMeanValue}];");
+		//ml.evaluate("q = Inverse[d].Transpose[u].q;");
 		//ml.evaluate("q = Inverse[d].Transpose[u].Transpose[q];");
 		ml.discardAnswer();
+		//System.out.println("@@q " + ml.getExpr());
 		
+		//vMeanValue
 		//use Nearest to get numNearest number of nearest vectors, 
 		int numNearest;
 		if(num.length == 0){
@@ -353,25 +362,29 @@ public class ThmSearch {
 		//ml.getExpr();
 		//System.out.println("DIMENSIONS " +ml.getExpr());
 		
-		ml.evaluate("q");
+		/*ml.evaluate("q");
 		ml.waitForAnswer();
-		System.out.println("q " +ml.getExpr()); 
+		System.out.println("q " +ml.getExpr()); */
 		
-		//ml.evaluate("Nearest[v->Range[Dimensions[v][[1]]], First[Transpose[q]],"+numNearest+"]");
+		ml.evaluate("Nearest[v->Range[Dimensions[v][[1]]], First@Transpose[q],"+numNearest+"]");
 		//take largest inner product
-		ml.evaluate("Keys[TakeLargest[AssociationThread[Range[Dimensions[v][[1]]] -> v.First[Transpose[q]]], "+numNearest+"]]");
+		//ml.evaluate("Keys[TakeLargest[AssociationThread[Range[Dimensions[v][[1]]] -> v.First[Transpose[q]]], "+numNearest+"]]");
+		//ml.evaluate("Ordering[v.First[Transpose[q]], -"+numNearest+"]");
 		ml.waitForAnswer();
 		Expr nearestVec = ml.getExpr();
 		//System.out.println(nearestVec.length() + "  " + Arrays.toString((int[])nearestVec.part(1).asArray(Expr.INTEGER, 1)));
 		//turn into list.
 		System.out.println(nearestVec);
+		//use this when using Nearest
 		//int[] nearestVecArray = (int[])nearestVec.part(1).asArray(Expr.INTEGER, 1);
 		int[] nearestVecArray = (int[])nearestVec.asArray(Expr.INTEGER, 1);
 		Integer[] nearestVecArrayBoxed = ArrayUtils.toObject(nearestVecArray);
 		List<Integer> nearestVecList = Arrays.asList(nearestVecArrayBoxed);
 		
-		for(int d : nearestVecList){
-			System.out.println(TriggerMathThm2.getThm(d));
+		//for(int i = nearestVecList.size()-1; i > -1; i--){
+		for(int i = 0; i < nearestVecList.size(); i++){
+			int thmIndex = nearestVecList.get(i);
+			System.out.println(TriggerMathThm2.getThm(thmIndex));
 			//System.out.println("thm vec: " + TriggerMathThm2.createQuery(TriggerMathThm2.getThm(d)));
 		}
 		System.out.println("~~~~~");

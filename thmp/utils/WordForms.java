@@ -15,7 +15,7 @@ public class WordForms {
 	//small lists of fluff words, used in, e.g., n gram extraction.
 	//*don't* put "of" here, will interfere with 3 gram collection
 	private static final String FLUFF_WORDS_SMALL = "a|the|tex|of|and|on|let|lemma|for|to|that|with|is|be|are|there|by"
-			+ "|any|as|if|we|suppose|then|which|in|from|this|assume|this|have|just|may|an|every|it|between|given";
+			+ "|any|as|if|we|suppose|then|which|in|from|this|assume|this|have|just|may|an|every|it|between|given|itself";
 	private static final ImmutableSet<String> freqWordsSet; 
 	
 	static{
@@ -64,8 +64,8 @@ public class WordForms {
 		int wordlen = curWord.length();
 		
 		if (wordlen > 0 && curWord.charAt(wordlen - 1) == 's') {
-			//don't strip 's' if belongs to common endings with 's', e.g. "homogeneous"
-			if(!curWord.matches(".*ous$?|.*ois$?|has")){ 
+			//don't strip 's' if belongs to common endings with 's', e.g. "homogeneous", "basis"
+			if(!curWord.matches(".*ous$?|.*is$?|has")){ 
 				singularForms[0] = curWord.substring(0, wordlen - 1);								
 			}
 		}

@@ -58,7 +58,8 @@ public class TriggerMathThm2 {
 	 * Matrix of keywords.
 	 * 
 	 */
-	private static final int[][] mathObjMx;
+	//private static final int[][] mathObjMx;
+	private static final double[][] mathObjMx;
 	private static final List<ImmutableMap<String,Integer>> thmWordsList;
 	private static final ImmutableMap<String, Integer> docWordsFreqMapNoAnno = CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno();
 	
@@ -97,7 +98,8 @@ public class TriggerMathThm2 {
 		keywordDict = ImmutableMap.copyOf(keywordMap);
 		
 		//mathObjMx = new int[keywordList.size()][mathObjMMap.keySet().size()];	
-		mathObjMx = new int[keywordList.size()][thmWordsList.size()];	
+		//mathObjMx = new int[keywordList.size()][thmWordsList.size()];
+		mathObjMx = new double[keywordList.size()][thmWordsList.size()];
 		ImmutableList<String> thmList = CollectThm.get_thmList();
 		
 		//System.out.println("BEFORE mathObjMMap" +mathObjMMap);
@@ -208,7 +210,7 @@ public class TriggerMathThm2 {
 			mathObjListBuilder.add(thm);
 			Collection<String> curMathObjCol = mathObjMMap.get(thm);
 			//Iterator<String> curMathObjColIter = curMathObjCol.iterator();
-			int norm = 0;
+			double norm = 0;
 			for (String keyword : curMathObjCol) {
 				//Integer keyWordIndex = keywordDict.get(keyword);
 				Integer wordScore = wordsScoreMap.get(keyword);
@@ -219,18 +221,18 @@ public class TriggerMathThm2 {
 				//mathObjMx[keyWordIndex][mathObjCounter] = wordScore;
 			}
 			//Sqrt is usually too large, so take log instead of sqrt.
-			norm = norm < 3 ? 1 : (int)Math.log(norm);
-			
+			//norm = norm < 3 ? 1 : (int)Math.sqrt(norm);
+			norm = Math.sqrt(norm);
 			//divide by log of norm
 			for (String keyword : curMathObjCol) {
 				Integer keyWordIndex = keywordDict.get(keyword);
 				Integer wordScore = wordsScoreMap.get(keyword);
 				//divide by log of norm
 				//could be very small! ie 0 after rounding.
-				//***int newScore = wordScore/norm;
-				int newScore = wordScore;
+				double newScore = (double)wordScore/norm;
+				//int newScore = wordScore;
 				if(newScore == 0 && wordScore != 0){
-					mathObjMx[keyWordIndex][mathObjCounter] = 1;
+					mathObjMx[keyWordIndex][mathObjCounter] = .1;
 				}else{
 					mathObjMx[keyWordIndex][mathObjCounter] = newScore;
 				}
@@ -306,24 +308,25 @@ public class TriggerMathThm2 {
 		String[] thmAr = thm.split(WordForms.splitDelim());
 		//map of non-annotated words and their scores
 		Map<String, Integer> wordsScoreMap = CollectThm.ThmWordsMaps.get_wordsScoreMapNoAnno();		
-		System.out.print("wordsScoreMap inside TriggerMathThm: " + wordsScoreMap);
+		System.out.println("wordsScoreMap inside TriggerMathThm: " + wordsScoreMap);
 		//should eliminate unnecessary words first, then send to get wrapped.
 		//<--can only do that if leave the hyp words in, eg if.
 		
 		String priorityWords = ConstantsInSearch.get_priorityWords();
 		//keywordDict is annotated with "hyp"/"stm"
 		int dictSz = keywordDict.keySet().size();
-		int[] triggerTermsVec = new int[dictSz];
-		int norm = 0;
+		//int[] triggerTermsVec = new int[dictSz];
+		double[] triggerTermsVec = new double[dictSz];
+		double norm = 0;
 		//highest weight amongst the single words
-		int highestWeight = 0;
+		double highestWeight = 0;
 		//int numWords = 0;
 		List<Integer> priorityWordsIndexList = new ArrayList<Integer>();
 		
 		//get norm first, form unnormalized vector, then divide terms by log of norm
 		for (int i = 0; i < thmAr.length; i++) {
 			String term = thmAr[i];
-			int newNorm = norm;
+			double newNorm;
 			newNorm = addToNorm(thmAr, wordsScoreMap, triggerTermsVec, norm, i, term);
 			if(newNorm - norm > highestWeight){
 				highestWeight = newNorm - norm;
@@ -351,22 +354,26 @@ public class TriggerMathThm2 {
 		for(int index : priorityWordsIndexList){
 			Integer rowIndex = keywordDict.get(thmAr[index]);
 			if(rowIndex != null){
-				int prevWeight = triggerTermsVec[rowIndex];
-				int weightDiff = highestWeight - prevWeight;
+				double prevWeight = triggerTermsVec[rowIndex];
+				double weightDiff = highestWeight - prevWeight;
 				triggerTermsVec[rowIndex] = highestWeight;
 				norm += weightDiff;
 			}
 		}		
-		//avoid division by 0 apocalypse.
-		norm = norm < 3 ? 1 : (int)Math.log(norm);
+		//avoid division by 0 apocalypse, when it was log
+		
+		//norm = norm < 3 ? 1 : (int)Math.log(norm);
+		norm = Math.sqrt(norm);
+		norm = norm == 0 ? 1 : norm;
 		//divide entries of triggerTermsVec by norm
 		for(int i = 0; i < triggerTermsVec.length; i++){
-			int prevScore = triggerTermsVec[i]; 
-			//triggerTermsVec[i] = triggerTermsVec[i]/norm;
+			double prevScore = triggerTermsVec[i]; 
+			triggerTermsVec[i] = triggerTermsVec[i]/norm;
 			
 			//avoid completely obliterating a word 
 			if(prevScore != 0 && triggerTermsVec[i] == 0){
-				triggerTermsVec[i] = 1;
+				//triggerTermsVec[i] = 1;
+				triggerTermsVec[i] = .1;
 			}
 		}
 		/*for (String term : thmAr) {			
@@ -403,8 +410,8 @@ public class TriggerMathThm2 {
 	 * @param term
 	 * @return
 	 */
-	private static int addToNorm(String[] thmAr, Map<String, Integer> wordsScoreMap, int[] triggerTermsVec,
-			int norm, int i, String term) {
+	private static double addToNorm(String[] thmAr, Map<String, Integer> wordsScoreMap, double[] triggerTermsVec,
+			double norm, int i, String term) {
 		Integer termScore = wordsScoreMap.get(term);
 		//get singular forms		
 		if(termScore == null){
@@ -415,18 +422,21 @@ public class TriggerMathThm2 {
 		
 		//triggerTermsVec[rowIndex] = termScore;
 		//keywordDict starts indexing from 0!
-		if(termScore != null){
+		//should not be necessary!
+		Integer rowIndex = keywordDict.get(term);
+		
+		if(termScore != null && rowIndex != null){
 			//just adding the termscore, without squaring, works better
 			//norm += Math.pow(termScore, 2);
-			norm += termScore;
+			norm += Math.pow(termScore, 2);
 			thmAr[i] = term;
 			//shouldn't be null, since termScore!=null
-			int rowIndex = keywordDict.get(term);
+			//int rowIndex = keywordDict.get(term);
 			//triggerTermsVec[rowIndex] = termScore;
 			//keywordDict starts indexing from 0!
 			triggerTermsVec[rowIndex] = termScore;
 			System.out.println("term just added: " + term + ". " + rowIndex + " " + termScore);
-			System.out.println(Arrays.toString(triggerTermsVec));
+			//System.out.println(Arrays.toString(triggerTermsVec));
 		}
 		return norm;
 	}
@@ -435,7 +445,7 @@ public class TriggerMathThm2 {
 	 * Obtains mathThmMx
 	 * @return
 	 */
-	public static int[][] mathThmMx(){
+	public static double[][] mathThmMx(){
 		return mathObjMx;
 	}
 	
