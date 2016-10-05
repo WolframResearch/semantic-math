@@ -1,7 +1,6 @@
 package thmp.utils;
 
 import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -17,17 +16,11 @@ import java.util.regex.Pattern;
  */
 public class ExtractMacros {
 
-	//latex macros source file name src/thmp/data/CommAlg5.txt
-	private static final String TEX_SRC = "src/thmp/data/texMacros.txt";
 	
-	/**use regex to get the customized commands and their definitions
-	 * e.g. \def\Spec{\mathop{\rm Spec}}.
-	 * Careful about duplicate commands, need to apply commands in the 
-	 * right files where it's intended.
-	 */
+	
 	public static Map<String, String> extractDefs(){
 		//read in from file
-		//FileInputStream texSrcStream = new FileInputStream(TEX_SRC);
+				//FileInputStream texSrcStream = new FileInputStream(TEX_SRC);
 		FileReader texSrcFileReader = null;
 		try{
 			texSrcFileReader = new FileReader(TEX_SRC);
@@ -35,6 +28,15 @@ public class ExtractMacros {
 			e.printStackTrace();
 		}
 		BufferedReader texSrcFileBReader = new BufferedReader(texSrcFileReader);
+		return extractDefs(texSrcFileBReader);
+	}
+	
+	/**use regex to get the customized commands and their definitions
+	 * e.g. \def\Spec{\mathop{\rm Spec}}.
+	 * Careful about duplicate commands, need to apply commands in the 
+	 * right files where it's intended.
+	 */
+	public static Map<String, String> extractDefs(BufferedReader texSrcFileBReader){
 		
 		//map to store defs, keys are commands after the "\", values
 		//are the parts to substitute, including starting "\", if any.

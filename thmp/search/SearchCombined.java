@@ -29,9 +29,10 @@ public class SearchCombined {
 		CollectThm.setResources(texSourceFileBuffer);		
 	}
 	
-	public static void initializeSearchWithResource(BufferedReader freqWordsFileBuffer, List<BufferedReader> texSourceFileBuffer){
+	public static void initializeSearchWithResource(BufferedReader freqWordsFileBuffer, List<BufferedReader> texSourceFileBuffer,
+			BufferedReader macrosReader){
 		CollectFreqWords.setResources(freqWordsFileBuffer);
-		CollectThm.setResources(texSourceFileBuffer);		
+		CollectThm.setResources(texSourceFileBuffer, macrosReader);		
 	}
 	
 	/**

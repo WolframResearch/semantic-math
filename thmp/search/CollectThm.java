@@ -46,16 +46,21 @@ public class CollectThm {
 	//read in from list of files streams instead of just one
 	private static final List<String> rawFileStrList = Arrays.asList(new String[]{
 			"src/thmp/data/fieldsRawTex.txt",
-			/*"src/thmp/data/CommAlg5.txt", 
-			"src/thmp/data/multilinearAlgebra.txt",
-			"src/thmp/data/functionalAnalysis.txt"*/
+			//"src/thmp/data/CommAlg5.txt", 
+			//"src/thmp/data/multilinearAlgebra.txt",
+			//"src/thmp/data/functionalAnalysis.txt"
 			});
+	
+	//latex macros source file name src/thmp/data/CommAlg5.txt
+	private static final String MACROS_SRC = "src/thmp/data/texMacros.txt";
 	//private static final List<String> rawFileStrList = Arrays.asList(new String[]{"src/thmp/data/functional_analysis_operator_algebras/distributions.txt"});
 
 	//intentionally not final.
-	private static volatile BufferedReader rawFileReader = null;
+	private static volatile BufferedReader rawFileReader;
 	//corresponding list of file readers
-	private static volatile List<BufferedReader> rawFileReaderList = null;
+	private static volatile List<BufferedReader> rawFileReaderList;
+	//macros file
+	private static volatile BufferedReader macrosDefReader;
 	
 	//words that should be included as math words, but occur too frequently in math texts
 	//to be detected as non-fluff words.
@@ -101,8 +106,9 @@ public class CollectThm {
 	 * Set list of bufferedReaders, rawFileReaderList
 	 * @param srcFileReader
 	 */
-	public static void setResources(List<BufferedReader> srcFileReaderList) {
+	public static void setResources(List<BufferedReader> srcFileReaderList, BufferedReader macrosReader) {
 		rawFileReaderList = srcFileReaderList;
+		macrosDefReader = macrosReader;
 		System.out.print("buffered readers first passed in: " +srcFileReaderList);
 		
 	}
@@ -166,16 +172,16 @@ public class CollectThm {
 			nGramFirstWordsSet.addAll(NGramSearch.get_2GramFirstWordsSet());
 			nGramFirstWordsSet.addAll(ThreeGramSearch.get_3GramFirstWordsSet());
 			
-			List<String> extractedThms = ThmList.get_thmList();
-			//thmListBuilder.addAll(extractedThms);			
+			//List<String> extractedThms = ThmList.get_thmList();
 			//the third true means to extract words from latex symbols, eg oplus->direct sum.
 			//last boolean is whether to replace macros, 
-			List<String> thmList = ProcessInput.processInput(extractedThms, true, true, true);
+			//List<String> processedThmList = ProcessInput.processInput(extractedThms, true, true, true);
+			List<String> processedThmList = ThmList.get_processedThmList();
 			//System.out.println("After processing: "+thmList);
 			try {
-				readThm(thmWordsListBuilder, docWordsFreqPreMap, wordThmsMMapBuilder, thmList);
+				readThm(thmWordsListBuilder, docWordsFreqPreMap, wordThmsMMapBuilder, processedThmList);
 				//same as readThm, just buid maps without annocation
-				buildMapsNoAnno(thmWordsListBuilderNoAnno, docWordsFreqPreMapNoAnno, wordThmsMMapBuilderNoAnno, thmList);				
+				buildMapsNoAnno(thmWordsListBuilderNoAnno, docWordsFreqPreMapNoAnno, wordThmsMMapBuilderNoAnno, processedThmList);				
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -596,10 +602,22 @@ public class CollectThm {
 	 */
 	public static class ThmList{
 		private static final ImmutableList<String> thmList;
-
+		//processed with options to replace tex with latex, and expand macros with their definitions
+		private static final ImmutableList<String> processedThmList;
+		//thm list with just macros replaced
+		private static final ImmutableList<String> macroReplacedThmList;
+		//whether to replace latex symbols with the word "tex"
+		private static final boolean REPLACE_TEX = true;
+		//whether to extract words from latex symbols, eg oplus->direct sum.
+		private static final boolean TEX_TO_WORDS = true;
+		//whether to expand macros to their definitions
+		private static final boolean REPLACE_MACROS = true;
+		
 		static{
 			ImmutableList.Builder<String> thmListBuilder = ImmutableList.builder();
 			List<String> extractedThms = new ArrayList<String>();
+			List<String> processedThms = new ArrayList<String>();
+			List<String> macroReplacedThms = new ArrayList<String>();
 			//System.out.print("rawFileReader: " + rawFileReader);
 			//extractedThms = ThmList.get_thmList();
 			try {
@@ -609,9 +627,13 @@ public class CollectThm {
 						FileReader rawFileReader = new FileReader(fileStr);
 						BufferedReader rawFileBReader = new BufferedReader(rawFileReader);
 						//System.out.println("rawFileReader is null ");
-						extractedThms.addAll(ThmInput.readThm(rawFileBReader));	
+						extractedThms.addAll(ThmInput.readThm(rawFileBReader));							
 						//System.out.print("Should be extracting theorems here: " + extractedThms);
 					}
+					//the third true means to extract words from latex symbols, eg oplus->direct sum.
+					//last boolean is whether to replace macros, 
+					processedThms = ProcessInput.processInput(extractedThms, REPLACE_TEX, TEX_TO_WORDS, REPLACE_MACROS);
+					macroReplacedThms = ProcessInput.get_macroReplacedThmList();
 				}else{
 					//System.out.println("read from rawFileReader");
 					//System.out.print("ready for processing: " +rawFileReader);
@@ -624,17 +646,37 @@ public class CollectThm {
 					for(BufferedReader fileReader : rawFileReaderList){
 						extractedThms.addAll(ThmInput.readThm(fileReader));
 					}
+					processedThms = ProcessInput.processInput(extractedThms, macrosDefReader, REPLACE_TEX, TEX_TO_WORDS, REPLACE_MACROS);
+					macroReplacedThms = ProcessInput.get_macroReplacedThmList();
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 			thmListBuilder.addAll(extractedThms);
 			thmList = thmListBuilder.build();
+			processedThmList = ImmutableList.copyOf(processedThms);
+			macroReplacedThmList = ImmutableList.copyOf(macroReplacedThms);
 		}
 		
+		/**
+		 * Get thmList. Macros are expanded to their full forms by default.
+		 * @return
+		 */
 		public static ImmutableList<String> get_thmList(){
 			return thmList;
 		}
+		
+		public static ImmutableList<String> get_processedThmList(){
+			return processedThmList;
+		}
+		
+		/**
+		 * Get original list expanding macros to their full forms.
+		 * @return
+		 */
+		public static ImmutableList<String> get_macroReplacedThmList(){
+			return macroReplacedThmList;
+		}		
 	}
 	
 	/**
@@ -644,7 +686,6 @@ public class CollectThm {
 	public static ImmutableList<String> get_thmList(){
 		return ThmList.get_thmList();
 	}
-	
 	
 	/**
 	 * Math words that should be included, but have been 

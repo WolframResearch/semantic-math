@@ -81,27 +81,27 @@ public class TestParseMain {
 		
 		stList.add("$R/\\mathfrak p$ is catenary for every minimal prime $\\mathfrak p$");
 		Multimap<ParseStructType, String> desiredMap7 = ArrayListMultimap.create();
-		desiredMap1.put(ParseStructType.HYP, "MathObj{element, f, of MathObj{set, $S$}}");
-		parsedList.add(desiredMap2);
-		parsedList.add("{HYP=[ \\[ForAll][ MathObj{minimal prime, $\\mathfrak p$} ]  1.0  2  3], STM=[ MathObj{$R/\\mathfrak p$} \\[Element] MathObj{catenary}  0.9  3  4]}\n");
+		desiredMap1.put(ParseStructType.HYP, "\\[ForAll][ MathObj{minimal prime, $\\mathfrak p$} ]");
+		desiredMap1.put(ParseStructType.STM, "MathObj{$R/\\mathfrak p$} \\[Element] MathObj{catenary}");
+		parsedList.add(desiredMap7);
+		//parsedList.add("{HYP=[ \\[ForAll][ MathObj{minimal prime, $\\mathfrak p$} ]  1.0  2  3], STM=[ MathObj{$R/\\mathfrak p$} \\[Element] MathObj{catenary}  0.9  3  4]}\n");
 		              //{HYP=[ \\[ForAll][ MathObj{minimal prime, $\\mathfrak p$} ]  1.0  2  3], STM=[ MathObj{$R/\mathfrak p$} \[Element] MathObj{catenary}  0.9  3  4]}
 		
 		stList.add("quotient over ring is quotient");
-		Multimap<ParseStructType, String> desiredMap2 = ArrayListMultimap.create();
-		desiredMap1.put(ParseStructType.HYP, "MathObj{element, f, of MathObj{set, $S$}}");
-		parsedList.add(desiredMap2);
-		parsedList.add("{STM=[ MathObj{quotient, over MathObj{ring}} \\[Element] MathObj{{quotient}}  1.0  3  6]}\n");
+		Multimap<ParseStructType, String> desiredMap8 = ArrayListMultimap.create();
+		desiredMap1.put(ParseStructType.STM, "MathObj{quotient, over MathObj{ring}} \\[Element] MathObj{{quotient}}");
+		parsedList.add(desiredMap8);
+		//parsedList.add("{STM=[ MathObj{quotient, over MathObj{ring}} \\[Element] MathObj{{quotient}}  1.0  3  6]}\n");
 		
 		for(int j = 0; j < stList.size(); j++){
-			String st = stList.get(j);
-			String parsedSt = parsedList.get(j);
-			parseThm(st, parsedSt);
+			 String str = stList.get(j);
+			 Multimap<ParseStructType, String> map = parsedList.get(j);
+			parseThm(str, map);
 			
 			//System.out.println("*******"+parseStructMapList);
 			//System.out.println("*******"+parsedList.get(j));
 			
-			//System.out.println("RESULT: "+Arrays.toString(parseStructMapList.toArray()) + "/RESULT");
-			
+			//System.out.println("RESULT: "+Arrays.toString(parseStructMapList.toArray()) + "/RESULT");			
 		}	
 	}
 

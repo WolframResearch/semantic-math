@@ -67,10 +67,10 @@ public class ThmSearch {
 			int rowDimension = docMx.length;
 			
 			System.out.println("nested mx " + Arrays.deepToString(docMx));
-			boolean getMx = true;
+			boolean getMx = false;
 			
 			//ml.evaluate("m=IntegerPart[" + mx +"]//N");
-			ml.evaluate("m =" + mx+ "//N");
+			ml.evaluate("m =" + mx+ "//N;");
 			if(getMx){
 				ml.waitForAnswer();			
 				Expr expr = ml.getExpr();
@@ -100,12 +100,12 @@ public class ThmSearch {
 			//ml.discardAnswer();			
 			
 			//System.out.println("Done clipping!");	
-			boolean getCorMx = true;
-						
+			boolean getCorMx = false;
+			
 			//the entries in clipped correlation are between 0.3 and 1.
 			//subtract IdentityMatrix to avoid self-compounding
 			ml.evaluate("corMx = Clip[Correlation[Transpose[m]]-IdentityMatrix[" + rowDimension 
-					+ "], {.6, Infinity}, {0, 0}]/.Indeterminate->0");
+					+ "], {.6, Infinity}, {0, 0}]/.Indeterminate->0;");
 		
 			if(getCorMx){
 				ml.waitForAnswer();
@@ -119,7 +119,7 @@ public class ThmSearch {
 			if(getCorMx){
 				ml.waitForAnswer();
 				Expr expr = ml.getExpr();
-				System.out.println("m + .1*corMx.m " + expr);
+				System.out.println("m + .15*corMx.m " + expr);
 			}else{
 				ml.discardAnswer();
 			}
@@ -184,8 +184,11 @@ public class ThmSearch {
 			ml.discardAnswer();
 			System.out.println("Finished SVD");
 			
-			ml.evaluate("mxMeanValue = Mean[Flatten[mx]];");
-			ml.discardAnswer();			
+			ml.evaluate("vMeanValue = Mean[Flatten[v]];");
+			ml.discardAnswer();
+			//System.out.println("vMeanValue " + ml.getExpr());
+			/*ml.evaluate("mxMeanValue = Mean[Flatten[mx]];");
+			ml.discardAnswer();	*/
 			//System.out.println(" mean of flattened mx " + ml.getExpr().part(1));
 			
 			/*for(int i = 1; i <= docMx[0].length; i++){
@@ -281,17 +284,13 @@ public class ThmSearch {
 	
 	public static void main(String[] args) {		
 		
-		try{
-			
+		try{			
 			//String result = ml.evaluateToOutputForm("Transpose@" + toNestedList(docMx), 0);
 			//String result = ml.evaluateToOutputForm("4+4", 0);
-			//System.out.println(result);
 			//result = ml.evaluateToOutputForm("IdentityMatrix[2]", 0);
 			//result = ml.evaluateToOutputForm("Plus@@{4,2}", 0);
 			//ml.evaluate("Transpose[{{1, 2},{3,4}}]");
 			//ml.evaluate("SingularValueDecomposition@" + toNestedList(docMx) +"//N");
-			//ml.putFunction("Transpose", 1);
-			//ml.put("{{1,2},{3,4}}");
 			
 			//ml.evaluate("Transpose@{{1,2},{3,4}}");
 			ml.evaluate("d1 = 3; ");
@@ -343,12 +342,15 @@ public class ThmSearch {
 		//ml.evaluate(queryStr+"/.{0.0->30}");
 		//System.out.println("QUERY " + ml.getExpr().part(1));
 		
-		//ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"];");
-		ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"/.{0.0->mxMeanValue}];");
+		ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"];");
+		//ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"/.{0.0->mxMeanValue}];");
 		//ml.evaluate("q = Inverse[d].Transpose[u].q;");
 		//ml.evaluate("q = Inverse[d].Transpose[u].Transpose[q];");
 		ml.discardAnswer();
 		//System.out.println("@@q " + ml.getExpr());
+		ml.evaluate("q = q + vMeanValue;");
+		ml.discardAnswer();
+		//System.out.println("q + vMeanValue: " + ml.getExpr());
 		
 		//vMeanValue
 		//use Nearest to get numNearest number of nearest vectors, 
