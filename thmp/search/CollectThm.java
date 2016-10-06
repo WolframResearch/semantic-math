@@ -46,9 +46,9 @@ public class CollectThm {
 	//read in from list of files streams instead of just one
 	private static final List<String> rawFileStrList = Arrays.asList(new String[]{
 			"src/thmp/data/fieldsRawTex.txt",
-			//"src/thmp/data/CommAlg5.txt", 
-			//"src/thmp/data/multilinearAlgebra.txt",
-			//"src/thmp/data/functionalAnalysis.txt"
+			"src/thmp/data/CommAlg5.txt", 
+			"src/thmp/data/multilinearAlgebra.txt",
+			"src/thmp/data/functionalAnalysis.txt"
 			});
 	
 	//latex macros source file name src/thmp/data/CommAlg5.txt
@@ -632,7 +632,9 @@ public class CollectThm {
 					}
 					//the third true means to extract words from latex symbols, eg oplus->direct sum.
 					//last boolean is whether to replace macros, 
-					processedThms = ProcessInput.processInput(extractedThms, REPLACE_TEX, TEX_TO_WORDS, REPLACE_MACROS);
+					FileReader macrosReader = new FileReader(MACROS_SRC);
+					BufferedReader macrosBReader = new BufferedReader(macrosReader);
+					processedThms = ProcessInput.processInput(extractedThms, macrosBReader, REPLACE_TEX, TEX_TO_WORDS, REPLACE_MACROS);					
 					macroReplacedThms = ProcessInput.get_macroReplacedThmList();
 				}else{
 					//System.out.println("read from rawFileReader");
@@ -647,6 +649,7 @@ public class CollectThm {
 						extractedThms.addAll(ThmInput.readThm(fileReader));
 					}
 					processedThms = ProcessInput.processInput(extractedThms, macrosDefReader, REPLACE_TEX, TEX_TO_WORDS, REPLACE_MACROS);
+					//the BufferedStream containing macros is set when rawFileReaderList is set.
 					macroReplacedThms = ProcessInput.get_macroReplacedThmList();
 				}
 			} catch (IOException e) {

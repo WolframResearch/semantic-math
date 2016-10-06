@@ -32,7 +32,8 @@ import thmp.utils.WordForms;
 public class SearchIntersection {
 	
 	//bonus points for matching context better, eg hyp or stm
-	private static final int CONTEXT_WORD_BONUS = 1;
+	//disable bonus now, since not using annotated words
+	private static final int CONTEXT_WORD_BONUS = 0;
 	
 	private static final int NUM_NEAREST_VECS = 4;
 	/**
@@ -56,7 +57,7 @@ public class SearchIntersection {
 	private static final Map<String, Integer> threeGramsMap = ThreeGramSearch.get3GramsMap();
 	
 	//debug flag for development. Prints out the words used and their scores.
-	private static final boolean DEBUG = false;
+	private static final boolean DEBUG = true;
 	private static final boolean anno = false;
 	//priority words that should be weighed higher, eg "define"
 	//private static final String PRIORITY_WORDS = ConstantsInSearch.get_priorityWords();
@@ -72,6 +73,51 @@ public class SearchIntersection {
 		wordThmMMapNoAnno = CollectThm.ThmWordsMaps.get_wordThmsMMapNoAnno();
 		//System.out.println(wordsScoreMap);
 		thmList = CollectThm.ThmList.get_macroReplacedThmList();
+	}
+	
+	/**
+	 * Pair of theorem index and its span score.
+	 *
+	 */
+	private static class ThmSpanPair implements Comparable<ThmSpanPair>{
+		private int thmIndex;
+		private int spanScore;
+		
+		public ThmSpanPair(int index, int spanScore){
+			this.thmIndex = index;
+			this.spanScore = spanScore;					
+		}
+		
+		public int thmIndex(){
+			return thmIndex;
+		}
+		
+		public int spanScore(){
+			return spanScore;
+		}
+		
+		public int compareTo(ThmSpanPair other){
+			//return this.spanScore > other.spanScore ? 1 : (this.spanScore < other.spanScore ? -1 : 0);
+			//reverse because treemap naturally has ascending order
+			return this.spanScore > other.spanScore ? -1 : (this.spanScore < other.spanScore ? 1 : 0);
+		}
+	}
+	
+	
+	private static class ThmScorePair implements Comparable<ThmScorePair>{
+		private int thmIndex;
+		private int score;
+		
+		public ThmScorePair(int index, int score){
+			this.thmIndex = index;
+			this.score = score;					
+		}
+		
+		public int compareTo(ThmScorePair other){
+			//return this.spanScore > other.spanScore ? 1 : (this.spanScore < other.spanScore ? -1 : 0);
+			//reverse because treemap naturally has ascending order
+			return this.score > other.score ? -1 : (this.score < other.score ? 1 : 0);
+		}
 	}
 	
 	/**
@@ -92,6 +138,9 @@ public class SearchIntersection {
 		//String[] inputAr = input.toLowerCase().split(SPLIT_DELIM);
 		List<WordWrapper> wordWrapperList = SearchWordPreprocess.sortWordsType(input);
 		
+		//create searchState to record the intersectionVecList, and map of tokens and their scores.
+		SearchState searchState = new SearchState();
+		
 		//determine if first token is integer, if yes, use it as the number of 
 		//closest thms. Else use NUM_NEAREST_VECS as default value.
 		int numHighest = NUM_NEAREST_VECS;
@@ -111,7 +160,9 @@ public class SearchIntersection {
 		 * Map of theorems, in particular their indices in thmList, and the scores corresponding to the keywords they contain.
 		 * The rarer a keyword is in the doc, the higher its score is.
 		 */
-		Map<Integer, Integer> thmScoreMap = new HashMap<Integer, Integer>(); 
+		Map<Integer, Integer> thmScoreMap = new HashMap<Integer, Integer>();
+		//theorem span map, theorem index and their span scores.
+		Map<Integer, Integer> thmSpanMap = new HashMap<Integer, Integer>();
 		
 		/*
 		 * Multimap of ints and ints, where key is score, and the value Integers
@@ -232,7 +283,7 @@ public class SearchIntersection {
 		//Map<Integer, Integer> g = new HashMap<Integer, Integer>(thmScoreMap);
 		//add bonus points to thms with most number of query words, judging from size of value set
 		//in thmWordSpanMMap
-		addWordSpanBonus(thmScoreMap, scoreThmMMap, thmWordSpanMMap, numHighest, ((double)totalWordsScore)/numWordsAdded);
+		addWordSpanBonus(thmScoreMap, scoreThmMMap, thmWordSpanMMap, thmSpanMap, numHighest, ((double)totalWordsScore)/numWordsAdded);
 		//System.out.println("AFTER " + g.equals(scoreThmMMap));
 		
 		//lower the thm scores for ones that match words with high wordCountArray counts
@@ -241,11 +292,13 @@ public class SearchIntersection {
 				wordWrapperList, ((double)totalWordsScore)/numWordsAdded);*/
 		
 		//new map to record of the final scores (this obliterates scoreThmMMap)
-		TreeMultimap<Integer, Integer> scoreThmMMap2 = TreeMultimap.create();
+		//make values into pairs of thms with their span scores
+		TreeMultimap<Integer, ThmSpanPair> scoreThmMMap2 = TreeMultimap.create();
 		for(Map.Entry<Integer, Integer> thmScoreEntry : thmScoreMap.entrySet()){
 			int thmIndex = thmScoreEntry.getKey();
 			int thmScore = thmScoreEntry.getValue();
-			scoreThmMMap2.put(thmScore, thmIndex);
+			int spanScore = thmSpanMap.get(thmIndex);
+			scoreThmMMap2.put(thmScore, new ThmSpanPair(thmIndex, spanScore));
 		}
 		
 		if(DEBUG) {
@@ -254,14 +307,16 @@ public class SearchIntersection {
 		List<Integer> highestThmList = new ArrayList<Integer>();
 		
 		//get the thms having the highest k scores. Keys are scores.
-		NavigableMap<Integer, Collection<Integer>> thmMap = scoreThmMMap2.asMap().descendingMap();
+		// ****** does this order the value set accordingly as well??
+		NavigableMap<Integer, Collection<ThmSpanPair>> thmMap = scoreThmMMap2.asMap().descendingMap();
 		
 		//pick up numHighest number of unique thms
 		Set<Integer> pickedThmSet = new HashSet<Integer>();
 		
 		int counter = numHighest;
-		for(Entry<Integer, Collection<Integer>> entry : thmMap.entrySet()){			
-			for(Integer thmIndex : entry.getValue()){
+		for(Entry<Integer, Collection<ThmSpanPair>> entry : thmMap.entrySet()){			
+			for(ThmSpanPair pair : entry.getValue()){
+				Integer thmIndex = pair.thmIndex;
 				if(counter == 0) break;				
 				if(pickedThmSet.contains(thmIndex)) continue;
 				pickedThmSet.add(thmIndex);
@@ -359,7 +414,7 @@ public class SearchIntersection {
 			//for this thm already that's higher than the new score.
 			//scoreThmMMap.remove(prevScore, thmIndex);
 			int newThmScore = prevScore - scoreToDeduct;
-			///////*****need customize this score based on avg score
+			//customize this score more based on avg score
 			scoreThmMMap.put(newThmScore, thmIndex);
 			thmScoreMap.put(thmIndex, newThmScore);
 		}
@@ -371,9 +426,10 @@ public class SearchIntersection {
 	 * @param thmScoreMap
 	 * @param scoreThmMMap
 	 * @param thmWordSpanMMap
+	 * @param thmSpanMap map of theorem indices and their spans
 	 */
 	private static void addWordSpanBonus(Map<Integer, Integer> thmScoreMap, TreeMultimap<Integer, Integer> scoreThmMMap,
-			ListMultimap<Integer, Integer> thmWordSpanMMap, int N, double avgWordScore){
+			ListMultimap<Integer, Integer> thmWordSpanMMap, Map<Integer, Integer> thmSpanMap, int N, double avgWordScore){
 		//add  according to score
 		//gather the sizes of the value maps for thmWordSpanMMap, and keep track of order based on scores using a TreeMultimap		
 		TreeMultimap<Integer, Integer> spanScoreThmMMap = TreeMultimap.create();
@@ -381,6 +437,7 @@ public class SearchIntersection {
 		for(int thmIndex : thmWordSpanMMap.keySet()){
 			//System.out.println(thmWordSpanMMap.get(thmIndex));
 			int thmWordsSetSize = thmWordSpanMMap.get(thmIndex).size();
+			thmSpanMap.put(thmIndex, thmWordsSetSize);
 			spanScoreThmMMap.put(thmWordsSetSize, thmIndex);
 		}
 		//add bonus proportional to the avg word score (not span score)
@@ -393,12 +450,12 @@ public class SearchIntersection {
 				if(counter == 0) break;
 				int prevScore = thmScoreMap.get(thmIndex);
 				//refine this! using the highest or average score (not span score) *******			
-				int newThmScore = (int)(prevScore + avgWordScore*3.0/2 + counter);
+				int newThmScore = (int)(prevScore + avgWordScore*3.0/2 + counter/2.0);
 				scoreThmMMap.put(newThmScore, thmIndex);
 				thmScoreMap.put(thmIndex, newThmScore);
 				if(DEBUG){ 
 					String thm = thmList.get(thmIndex);
-					System.out.println("theorem whose score is upped. size "+ entry.getKey() + " value " + thm);
+					System.out.println("theorem whose score is upped. size "+ entry.getKey() + " thm " + thm);
 					//System.out.println("PREV SCORE " + prevScore + " NEW SCORE " + newThmScore + thm);
 				}
 				counter--;
@@ -499,10 +556,7 @@ public class SearchIntersection {
 					thmWordSpanMMap.put(thmIndex, index);
 					//System.out.println("thmIndex " + thmIndex +  " index of word " + index);					
 				}
-				scoreAdded = curScoreToAdd;
-				//but this will always be 1*****
-				//int numTimesAdded = dominantWordsMap.get(word);
-				//dominantWordsMap.put(word, numTimesAdded+1);
+				scoreAdded = curScoreToAdd;				
 			}				
 		}
 		return scoreAdded;
@@ -530,6 +584,7 @@ public class SearchIntersection {
 		
 		return foundThmList;
 	}
+	
 	/**
 	 * Reads in keywords. Gets theorems with highest scores for this.
 	 * @param args
@@ -549,7 +604,6 @@ public class SearchIntersection {
 			}
 		}		
 		sc.close();
-	}
-	
+	}	
 
 }

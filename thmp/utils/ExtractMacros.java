@@ -15,10 +15,8 @@ import java.util.regex.Pattern;
  *
  */
 public class ExtractMacros {
-
 	
-	
-	public static Map<String, String> extractDefs(){
+	/*public static Map<String, String> extractDefs(){
 		//read in from file
 				//FileInputStream texSrcStream = new FileInputStream(TEX_SRC);
 		FileReader texSrcFileReader = null;
@@ -29,7 +27,7 @@ public class ExtractMacros {
 		}
 		BufferedReader texSrcFileBReader = new BufferedReader(texSrcFileReader);
 		return extractDefs(texSrcFileBReader);
-	}
+	}*/
 	
 	/**use regex to get the customized commands and their definitions
 	 * e.g. \def\Spec{\mathop{\rm Spec}}.
@@ -67,7 +65,13 @@ public class ExtractMacros {
 	}
 	
 	public static void main(String[] args){
-		Map<String, String> defMap = extractDefs();
-		System.out.println(defMap);
+		try{
+			FileReader macrosReader = new FileReader("src/thmp/data/texMacros.txt");
+			BufferedReader macrosBReader = new BufferedReader(macrosReader);
+			Map<String, String> defMap = extractDefs(macrosBReader);
+			System.out.println(defMap);
+		}catch(FileNotFoundException e){
+			e.printStackTrace();
+		}
 	}
 }

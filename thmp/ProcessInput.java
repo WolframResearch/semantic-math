@@ -3,6 +3,7 @@ package thmp;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMultimap;
@@ -39,9 +41,15 @@ public class ProcessInput {
 	//character that would mark the end of a latex command
 	private static final String COMMAND_STOP_CHAR = "\\\\|\\s+|\\$|\\^|_|-|:|\\.|;";
 	private static final ImmutableMultimap<String, String> texCommandWordsMMap;
-	private static final Map<String, String> macrosMap = ExtractMacros.extractDefs();
+	private static final String MACROS_SRC = "src/thmp/data/texMacros.txt";
+	
+	//private static final Map<String, String> macrosMap = ExtractMacros.extractDefs();
 	//list of thms with macros replaced
 	private static List<String> macroReplacedThmList;
+	
+	private static final Pattern TEX_CONTENT_PATTERN;
+	//set this reader when called from servlet with FileInputStream info
+	private static BufferedReader macrosBReader;
 	
 	static{
 		
@@ -50,14 +58,20 @@ public class ProcessInput {
 		addCommandWords(texCommandWordsPreMMap, "oplus", new String[]{"direct sum"});
 		addCommandWords(texCommandWordsPreMMap, "otimes", new String[]{"direct product"});
 		texCommandWordsMMap = ImmutableMultimap.copyOf(texCommandWordsPreMMap);
+		//pattern to match latex symbols between "$", also include \[ \] ****
+		String TEX_CONTENT = "\\$[^$]+\\$|\\$\\$[^$]+\\$\\$";
+		TEX_CONTENT_PATTERN = Pattern.compile(TEX_CONTENT);
+		
 	}	
 	
 	private static void addCommandWords(ListMultimap<String, String> texCommandWordsPreMMap, String texCommand, String[] words){
 		texCommandWordsPreMMap.putAll(texCommand, Arrays.asList(words));
 	}
 	
+	//**where is this used??
 	public static List<String> processInput(File inputFile, boolean replaceTex, boolean replaceMacros) throws FileNotFoundException{
-		return processInput(inputFile, replaceTex, false, replaceMacros);
+		BufferedReader macrosReader = getMacrosBReader();
+		return processInput(inputFile, macrosReader, replaceTex, false, replaceMacros);
 	}
 	
 	/**
@@ -75,22 +89,32 @@ public class ProcessInput {
 	}
 	
 	/**
+	 * Sets the BufferedReader of the macro file InputStream 
+	 * @param macrosReader
+	 */
+	public static void setResources(BufferedReader macrosReader){
+		macrosBReader = macrosReader;
+	}
+	
+	/**
 	 * Reads in from file, potentially replaces latex, puts thms into a list, 
 	 * @param inputFile
 	 * @param replaceTex replaces the tex inside $ $ with "tex"
 	 * @return List of Strings with latex such as \\cite removed.
 	 * @throws FileNotFoundException
 	 */
-	private static List<String> processInput(File inputFile, boolean replaceTex, 
+	private static List<String> processInput(File inputFile, BufferedReader macrosReader, boolean replaceTex, 
 			boolean texToWords, boolean replaceMacros) throws FileNotFoundException {
 		Scanner sc = new Scanner(inputFile);		
 		List<String> macroReplacedThmPreList = new ArrayList<String>();
 		List<String> noTexStringList = new ArrayList<String>();
+		Map<String, String> macrosMap = ExtractMacros.extractDefs(macrosReader);
 		
 		while(sc.hasNextLine()){
 			String thm = sc.nextLine();
 			if(thm.matches("")) continue;			
-			String noTexString = inputReplace(thm, replaceTex, texToWords, replaceMacros, macroReplacedThmPreList);
+			String noTexString = inputReplace(thm, macrosMap, replaceTex, texToWords, 
+					replaceMacros, macroReplacedThmPreList);
 			noTexStringList.add(noTexString);
 		}
 		
@@ -101,13 +125,32 @@ public class ProcessInput {
 	}
 	
 	/**
+	 * Get the bufferedReader for the file containing macros definitions.
+	 * @return
+	 */
+	private static BufferedReader getMacrosBReader(){
+		FileReader texSrcFileReader = null;
+		try{
+			texSrcFileReader = new FileReader(MACROS_SRC);
+		}catch(FileNotFoundException e){
+			e.printStackTrace();
+		}
+		return new BufferedReader(texSrcFileReader);
+	}
+	
+	/**
 	 * Redirect method for processInput.
 	 * @param thmInputList
 	 * @param replaceTex
 	 * @return
 	 */
-	public static List<String> processInput(List<String> thmInputList, boolean replaceTex){
-		return processInput(thmInputList, replaceTex, false);
+	public static List<String> processInput(List<String> thmInputList, boolean replaceTex){			
+		BufferedReader texSrcFileBReader = macrosBReader;
+		if(texSrcFileBReader == null){
+			//set to the default local value if not set externally
+			texSrcFileBReader = getMacrosBReader();		
+		}
+		return processInput(thmInputList, texSrcFileBReader, replaceTex, false, false);
 	}
 	
 	/**
@@ -126,7 +169,8 @@ public class ProcessInput {
 	/**
 	 * Processes list of inputs, for instance, strip tex etc.
 	 * @param thmInputList
-	 * @param replaceTex Whether to replace latex between $ $ as simply tex
+	 * @param macrosReader BufferedReader containing macros.
+	 * @param replaceTex Whether to replace latex between $ $ as simply tex.
 	 * @param texToWords Whether to convert tex symbols to words, eg \oplus->direct sum.
 	 * Places these words at beginning of the tex command, so to stay at same part with regard
 	 * to "hyp/stm"
@@ -137,10 +181,12 @@ public class ProcessInput {
 			boolean replaceTex, boolean texToWords, boolean replaceMacros){
 		List<String> inputProcessedList = new ArrayList<String>();
 		List<String> macroReplacedThmPreList = new ArrayList<String>();
+		Map<String, String> macrosMap = ExtractMacros.extractDefs(macrosReader);
 		
 		for(int i = 0; i < thmInputList.size(); i++){
 			String thm = thmInputList.get(i);
-			String thmProcessed = inputReplace(thm, replaceTex, texToWords, replaceMacros, macroReplacedThmPreList);
+			String thmProcessed = inputReplace(thm, macrosMap, replaceTex, texToWords, 
+					replaceMacros, macroReplacedThmPreList);
 			inputProcessedList.add(thmProcessed);
 		}
 		macroReplacedThmList = macroReplacedThmPreList;
@@ -154,7 +200,7 @@ public class ProcessInput {
 	 * @param replaceMacros
 	 * @return
 	 */
-	private static String inputReplace(String thm, boolean replaceTex, boolean texToWords, 
+	private static String inputReplace(String thm, Map<String, String> macrosMap, boolean replaceTex, boolean texToWords, 
 			boolean replaceMacros, List<String> macroReplacedThmPreList){
 		//sorry vegetarians.
 		String[] meat = thm.split("\\\\label\\{([a-zA-Z]|-)*\\} ");
@@ -164,7 +210,7 @@ public class ProcessInput {
 			thm = meat[1];
 			//System.out.println(thm);
 		}
-		noTexString = replaceThm(thm, replaceTex, texToWords, replaceMacros, macroReplacedThmPreList);			
+		noTexString = replaceThm(thm, macrosMap, replaceTex, texToWords, replaceMacros, macroReplacedThmPreList);			
 		
 		return noTexString;
 	}
@@ -175,24 +221,27 @@ public class ProcessInput {
 	 * @param texToWords whether to replace tex symbols, eg "\oplus", with words, eg "direct sum"
 	 * @return
 	 */
-	private static String replaceThm(String thm, boolean replaceTex, boolean texToWords, 
+	private static String replaceThm(String thm, Map<String, String> macrosMap, boolean replaceTex, boolean texToWords, 
 			boolean replaceMacros, List<String> macroReplacedThmPreList) {
 		String noTexString;
 		
 		//replace the latex symbols e.g. \oplus into words, e.g. direct sum, 
 		if(texToWords || replaceMacros){
-			thm = turnTexToWords(thm, texToWords, replaceMacros, macroReplacedThmPreList);
+			thm = turnTexToWords(thm, macrosMap, texToWords, replaceMacros, macroReplacedThmPreList);
 		}
 		if(replaceTex){
-			thm = thm.replaceAll("\\$[^$]+\\$|\\$\\$[^$]+\\$\\$", "tex");
-		}		
+			//"\\$[^$]+\\$|\\$\\$[^$]+\\$\\$"
+			Matcher m = TEX_CONTENT_PATTERN.matcher(thm);
+			m.replaceAll("tex");
+			//thm = thm.replaceAll(TEX_CONTENT, "tex");
+		}
 		
-		//Compile this pattern!!
+		//Compile this pattern!!		
 		
-		//thm.replaceAll("$[^$]\\$", "tex");
 		//replaceAll("(?:\\$[^$]+\\$)|(?:\\$\\$[^$]+\\$\\$)", "tex").
 		//use capturing groups to capture text inside {\it ... } etc.
 		//replace the others with non-captureing groups to speed up.
+		//"\\\\begin\\{ali[^}]*\\}|\\\\end\\{ali[^}]*\\}|\\\\begin\\{equ[^}]*\\}|\\\\end\\{equ[^}]*\\}"
 		String tempThm = thm.replaceAll("\\\\begin\\{ali[^}]*\\}|\\\\end\\{ali[^}]*\\}|\\\\begin\\{equ[^}]*\\}|\\\\end\\{equ[^}]*\\}", "\\$\\$")
 				.replaceAll("\\\\begin\\{[^}]*\\}|\\\\end\\{[^}]*\\}|\\\\cite\\{[^}]*\\}|\\\\item"
 						+ "|\\\\ref\\{[^}]*\\}", "").replaceAll("\\{\\\\it([^}]*)\\}", "$1")
@@ -213,7 +262,7 @@ public class ProcessInput {
 	 * @param thm
 	 * @return
 	 */
-	private static String turnTexToWords(String thm, boolean texToWords, boolean replaceMacros,
+	private static String turnTexToWords(String thm, Map<String, String> macrosMap, boolean texToWords, boolean replaceMacros,
 			List<String> macroReplacedThmPreList){
 		//if word contains the startWords		
 		//StringBuilder thmBuilder = new StringBuilder(thm);
@@ -225,7 +274,7 @@ public class ProcessInput {
 		//Need two separate calls, since looping indices are shifted.
 		
 		if(replaceMacros){
-			replaceTexOrMacros(!replaceMacros, thmWordsList);	
+			replaceTexOrMacros(!replaceMacros, thmWordsList, macrosMap);	
 			StringBuilder thmBuilder = new StringBuilder();			
 			for(String word : thmWordsList){
 				thmBuilder.append(word + " ");
@@ -233,7 +282,7 @@ public class ProcessInput {
 			macroReplacedThmPreList.add(thmBuilder.toString());
 		}
 		if(texToWords){
-			replaceTexOrMacros(texToWords, thmWordsList);
+			replaceTexOrMacros(texToWords, thmWordsList, macrosMap);
 		}
 		
 		StringBuilder thmBuilder = new StringBuilder();
@@ -249,7 +298,8 @@ public class ProcessInput {
 	 * @param texToWordsOrReplaceMacros whether to call texToWords (true) or replaceMacros (false).
 	 * @param thmWordsList
 	 */
-	private static void replaceTexOrMacros(boolean texToWordsOrReplaceMacros, List<String> thmWordsList) {
+	private static void replaceTexOrMacros(boolean texToWordsOrReplaceMacros, List<String> thmWordsList,
+			Map<String, String> macrosMap) {
 		int curTexStartIndex = 0;
 		boolean texToWords = texToWordsOrReplaceMacros;
 		boolean replaceMacros = !texToWordsOrReplaceMacros;
@@ -268,7 +318,7 @@ public class ProcessInput {
 				//replace macros if replaceMacros == true.				
 				if(replaceMacros){
 					//pass in builder
-					i = replaceMacros(thmWordsList, curTexStartIndex);
+					i = replaceMacros(thmWordsList, curTexStartIndex, macrosMap);
 				}
 				
 				//keep replaceMacros and addToIndex separate despite similar code,
@@ -288,7 +338,8 @@ public class ProcessInput {
 	 * @param curTexStartIndex Starting index of current tex block.
 	 * @return index of end of tex block.
 	 */
-	private static int replaceMacros(List<String> thmWordsList, int curTexStartIndex){
+	private static int replaceMacros(List<String> thmWordsList, int curTexStartIndex, 
+			Map<String, String> macrosMap){
 		//list that's being modified with words inserted that come from tex 
 		//List<String> texAddedThmWordsList = new ArrayList<String>(thmWordsList);
 		int i;		
@@ -329,8 +380,8 @@ public class ProcessInput {
 				}
 				commandBuilder.append(curChar);	
 				
-				replaceMacros(thmWordsList, i, commandBuilder);				
-			}					
+				replaceMacros(thmWordsList, i, commandBuilder, macrosMap);				
+			}		
 			
 			if(texEnded){
 				break;
@@ -411,7 +462,8 @@ public class ProcessInput {
 	 * @param curTexStartIndex
 	 * @param sbList
 	 */
-	private static void replaceMacros(List<String> thmWordsList, int i, StringBuilder commandBuilder){
+	private static void replaceMacros(List<String> thmWordsList, int i, StringBuilder commandBuilder,
+			Map<String, String> macrosMap){
 		
 		//check to see if a command keyword, eg \Spec
 		String command = commandBuilder.toString();
@@ -467,9 +519,11 @@ public class ProcessInput {
 		}
 		//System.out.println(turnTexToWords("this is $\\oplus r$ ", true, false));
 		//System.out.println(turnTexToWords(" \\[\\oplus r\\] ", true, false));
+		BufferedReader macrosBReader = getMacrosBReader();
+		Map<String, String> macrosMap = ExtractMacros.extractDefs(macrosBReader);
 		List<String> list = new ArrayList<String>();
-		System.out.println(turnTexToWords(" \\[\\oplus r\\] $\\Spec R$", true, true, list));
-		System.out.println(turnTexToWords("$$ G = \\lim_{\\lambda \\in \\Lambda} G_\\lambda $$", true, true, list));
+		System.out.println(turnTexToWords(" \\[\\oplus r\\] $\\Spec R$", macrosMap, true, true, list));
+		System.out.println(turnTexToWords("$$ G = \\lim_{\\lambda \\in \\Lambda} G_\\lambda $$", macrosMap, true, true, list));
 		System.out.println(list);
 	}
 

@@ -45,13 +45,11 @@ public class WordFrequency {
 	//words that should be included in trueFluffWordsSet, but were left out by algorithm.
 	private static final String[] ADDITIONAL_FLUFF_WORDS = new String[]{"an", "are", "has", "tex", "between"};
 	
-	static {
-		
+	static {		
 		// build wordFreqMap
 		List<String> extractedThms = ThmList.get_thmList();
-		// the third boolean argument means to extract words from latex symbols,
-		// eg oplus->direct sum.
-		List<String> thmList = ProcessInput.processInput(extractedThms, true, false);
+		// the boolean argument indicates whether to replace tex symbols with "tex"
+		List<String> thmList = ProcessInput.processInput(extractedThms, true);
 		
 		int totalCorpusWordCount = extractFreq(thmList);
 		

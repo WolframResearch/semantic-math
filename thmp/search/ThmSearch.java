@@ -148,8 +148,8 @@ public class ThmSearch {
 			//write matrix to file, so no need to form it each time
 			
 			//System.out.println(nearestVec.length() + "  " + Arrays.toString((int[])nearestVec.part(1).asArray(Expr.INTEGER, 1)));
-			
-			System.out.print("Dimensions of docMx: " + docMx.length + " " +docMx[0].length);
+			int mxColDim = docMx[0].length;
+			System.out.print("Dimensions of docMx: " + docMx.length + " " +mxColDim);
 			//System.out.println(mx);
 			
 			//ml.evaluate("mx=" + mx +"//N;");
@@ -178,7 +178,10 @@ public class ThmSearch {
 			//ml.evaluate("mx=mx.Transpose[mx].mx;");
 			//ml.discardAnswer();
 			
-			int k = NUM_SINGULAR_VAL_TO_KEEP;
+			//number of singular values to keep. Determined (roughly) based on the number of
+			//theorems (col dimension of mx)
+			//int k = NUM_SINGULAR_VAL_TO_KEEP;
+			int k = mxColDim < 400 ? 25 : (mxColDim < 1000 ? 35 : (mxColDim < 3000 ? 45 : 50)) ;
 			ml.evaluate("{u, d, v} = SingularValueDecomposition[mx//N, " + k +"];");
 			//ml.waitForAnswer();
 			ml.discardAnswer();

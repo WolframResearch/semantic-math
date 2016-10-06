@@ -6,9 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 
-import thmp.ThmP1;
 import thmp.utils.WordForms;
 
 /**
@@ -39,7 +37,7 @@ public class SearchWordPreprocess {
 	private static final String STM_WORDS = "conclusion|result|then|therefore";
 	//trigger words that indicate conclusion, the analogue of HYP_WORDS for conclusions
 	//e.g. "therefore V is smooth"
-	private static final String CONCLUSION_WORDS = "then|therefore|hence";
+	//private static final String CONCLUSION_WORDS = "then|therefore|hence";
 	
 	static{
 		Map<String, Integer> multipleWordTriggersPreMap = new HashMap<String, Integer>();
@@ -137,10 +135,12 @@ public class SearchWordPreprocess {
 		}
 		//System.out.print("wrapperList: "+wrapperList);
 		//add word "definition" if wrapperList length <3, as those query probably want definition
-		if(wrapperList.size() < 3){
+		//disabled, since interfers with intersection search scoring algorithm, and is not great 
+		//algorithm
+		/*if(wrapperList.size() < 3){
 			WordWrapper wordWrapper = new WordWrapper(STM, "definition");
 			wrapperList.add(wordWrapper);
-		}
+		}*/
 		return wrapperList;
 	}
 	

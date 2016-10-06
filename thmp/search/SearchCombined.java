@@ -12,6 +12,8 @@ import com.google.common.collect.TreeMultimap;
 import com.wolfram.jlink.Expr;
 import com.wolfram.jlink.MathLinkException;
 
+import thmp.ProcessInput;
+
 /**
  * Search that combines svd/nearest and intersection.
  * @author yihed
@@ -23,27 +25,25 @@ public class SearchCombined {
 	//combined number of vectors to take from search results of
 	//svd/nearest and intersection
 	private static final int NUM_COMMON_VECS = 4;
+	private static final int LIST_INDEX_SHIFT = 1;
 	
 	public static void initializeSearchWithResource(BufferedReader freqWordsFileBuffer, BufferedReader texSourceFileBuffer){
 		CollectFreqWords.setResources(freqWordsFileBuffer);
 		CollectThm.setResources(texSourceFileBuffer);		
 	}
 	
+	/**
+	 * Set resources for list of resource files.
+	 * @param freqWordsFileBuffer
+	 * @param texSourceFileBuffer
+	 * @param macrosReader
+	 */
 	public static void initializeSearchWithResource(BufferedReader freqWordsFileBuffer, List<BufferedReader> texSourceFileBuffer,
 			BufferedReader macrosReader){
 		CollectFreqWords.setResources(freqWordsFileBuffer);
-		CollectThm.setResources(texSourceFileBuffer, macrosReader);		
+		CollectThm.setResources(texSourceFileBuffer, macrosReader);	
+		ProcessInput.setResources(macrosReader);
 	}
-	
-	/**
-	 * SearchIntersection interface.
-	 * Searches intersection. Should run after SVD. 
-	 * Takes the result nearest vectors from SVD and combines
-	 * picks out the highest-scoring ones based on intersection.
-	 */
-	/*private static void searchIntersection(){
-		
-	} */
 	
 	/**
 	 * Gets highest scored vectors that are the common to both lists.
@@ -77,10 +77,14 @@ public class SearchCombined {
 			int intersectionThm = intersectionVecList.get(i);
 			//intersection list is 0-based!
 			Integer nearestListThmIndex = nearestVecListPositionsMap.remove(intersectionThm+1);
+			//first check if spanning is good, if spanning above a threshold, say contains more than
+			//(total #relevant words) - 2, 
+			//then don't need to be contained in nearestVecList
+			
 			if(nearestListThmIndex != null){
 				int score = i+nearestListThmIndex;
 				if(score > maxScore) maxScore = score;
-				scoreThmTreeMMap.put(score, intersectionThm+1);
+				scoreThmTreeMMap.put(score, intersectionThm + LIST_INDEX_SHIFT);
 			}//else add the length of nearestVecList to the score
 			else{
 				int score = i+nearestVecListSz;

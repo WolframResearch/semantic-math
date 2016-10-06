@@ -15,7 +15,7 @@ public class WordForms {
 	//small lists of fluff words, used in, e.g., n gram extraction.
 	//*don't* put "of" here, will interfere with 3 gram collection
 	private static final String FLUFF_WORDS_SMALL = "a|the|tex|of|and|on|let|lemma|for|to|that|with|is|be|are|there|by"
-			+ "|any|as|if|we|suppose|then|which|in|from|this|assume|this|have|just|may|an|every|it|between|given|itself";
+			+ "|any|as|if|we|suppose|then|which|in|from|this|assume|this|have|just|may|an|every|it|between|given|itself|has";
 	private static final ImmutableSet<String> freqWordsSet; 
 	
 	static{
