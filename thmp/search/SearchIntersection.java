@@ -179,19 +179,24 @@ public class SearchIntersection {
 		
 	}
 	//computes singleton scores for words in list
-	private static int[] computeSingletonScores(List<WordWrapper> wordWrapperList){
+	private static int computeSingletonScores(List<WordWrapper> wordWrapperList, int[] singletonScoresAr){
 		int wrapperListSz = wordWrapperList.size();
-		//array instead of list for lower overhead.
-		int[] singletonScoresAr = new int[wrapperListSz];
+		int totalSingletonAdded = 0;
 		for(int i = 0; i < wrapperListSz; i++){
 			String word = wordWrapperList.get(i).word();
 			Integer score = wordsScoreMap.get(word);
 			if(score == null){
 				word = WordForms.getSingularForm(word);
 			}
-			singletonScoresAr[i] = score == null ? 0 : score;
+			//singletonScoresAr[i] = score == null ? 0 : score;
+			if(score != null){
+				singletonScoresAr[i] = score;
+				totalSingletonAdded++;
+			}else{
+				singletonScoresAr[i] = 0;
+			}
 		}
-		return singletonScoresAr;
+		return totalSingletonAdded;
 	}
 	
 	/**
@@ -286,15 +291,19 @@ public class SearchIntersection {
 		//multimap of indices in wrapper list and the words that start at that index
 		Multimap<Integer, String> indexStartingWordsMMap = ArrayListMultimap.create();
 		
+		int wordWrapperListSz = wordWrapperList.size();
+		//array instead of list for lower overhead.
+		int[] singletonScoresAr = new int[wordWrapperListSz];
 		//pre-compute the scores for singleton words in query
-		int[] singletonScoresAr = computeSingletonScores(wordWrapperList);
+		int totalSingletonAdded = computeSingletonScores(wordWrapperList, singletonScoresAr);
+		searchState.set_totalWordAdded(totalSingletonAdded);
 		
 		//array of words to indicate frequencies that this word was included in either 
 		//a singleton or n-gram
-		int[] wordCountArray = new int[wordWrapperList.size()];
+		int[] wordCountArray = new int[wordWrapperListSz];
 		//whether current word has been included in a singleton or n-gram
 		
-		for(int i = firstIndex; i < wordWrapperList.size(); i++){
+		for(int i = firstIndex; i < wordWrapperListSz; i++){
 			WordWrapper curWrapper = wordWrapperList.get(i);
 			String word = curWrapper.word();			
 			
@@ -306,13 +315,13 @@ public class SearchIntersection {
 			int scoreAdded = 0;			
 		
 			//check for 2 grams
-			if(i < wordWrapperList.size()-1){			
+			if(i < wordWrapperListSz-1){			
 				String nextWord = wordWrapperList.get(i+1).word();
 				String nextWordCombined = wordLong + " " + nextWord;
 				String twoGram = word + " " + nextWord;				
 				
 				//check for 3 grams. Again only first word is annotated.
-				if(i < wordWrapperList.size()-2){
+				if(i < wordWrapperListSz-2){
 					String thirdWord = wordWrapperList.get(i+2).word();
 					String threeWordsCombined = wordLong + " " + thirdWord;
 					String threeGram = twoGram + " " + thirdWord;
@@ -370,7 +379,6 @@ public class SearchIntersection {
 		addWordSpanBonus(thmScoreMap, scoreThmMMap, thmWordSpanMMap, thmSpanMap, numHighest, ((double)totalWordsScore)/numWordsAdded);
 		//System.out.println("AFTER " + g.equals(scoreThmMMap));
 		searchState.addThmSpan(thmSpanMap);
-		searchState.set_totalWordAdded(numWordsAdded);
 		
 		//lower the thm scores for ones that match words with high wordCountArray counts
 		/*lowerThmScores(thmScoreMap, scoreThmMMap, thmWordSpanMMap, wordThmIndexMMap, //dominantWordsMap, 

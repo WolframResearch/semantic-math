@@ -62,7 +62,7 @@ public class ThmInput {
 		while((line=srcFileReader.readLine()) != null){
 			//while(sc.hasNextLine()){
 			if(line.matches("\\s*")) continue;
-			
+			//compile before loop!
 			//if(line.matches("(?:\\\\begin\\{def[^}]*\\}|\\\\begin\\{lem[^}]*\\}|\\\\begin\\{th[^}]*\\}|\\\\begin\\{prop[^}]*\\})(?:.)*")){	
 			if(line.matches("\\\\begin\\{def(?:.*)|\\\\begin\\{lem(?:.*)|\\\\begin\\{th(?:.*)|\\\\begin\\{prop(?:.*)|\\\\begin\\{proclaim(?:.*)")){	
 				//if(line.matches("\\\\begin\\{definition\\}|\\\\begin\\{lemma\\}")){
@@ -76,6 +76,15 @@ public class ThmInput {
 			//else if(line.matches("\\\\end\\{definition\\}|\\\\end\\{lemma\\}|\\\\end\\{thm\\}|\\\\end\\{theorem\\}")){
 				inThm = false;
 				newThm += "\n";
+				//process here, return two versions, one for bag of words, one for display
+				//strip \df, \empf. Index followed by % strip, not percent don't strip
+				/*String[] meat = thm.split("\\\\label\\{([a-zA-Z]|-)*\\} ");
+				String noTexString = "";
+				//get the second part, meat[1], if separated by "\label{...}"
+				if(meat.length > 1){
+					thm = meat[1];
+					//System.out.println(thm);
+				}*/
 				if(!newThm.matches("\\s*")) thms.add(newThm);
 				newThm = "";
 				continue;
