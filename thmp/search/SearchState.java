@@ -16,13 +16,11 @@ import java.util.Map;
  */
 public class SearchState {
 
-	//list of relevant tokens 
-	private List<String> relevantTokens;
-	//scores for the tokens in relevantTokens
-	private List<Integer> tokenScores;
-	
 	//map of relevant tokens and their scores
 	private Map<String, Integer> tokenScoreMap;
+	
+	//total number of words added, including overlapping 2/3 grams
+	private int totalWordAdded;
 	
 	//list of indices of thms of returned by intersection search.
 	private List<Integer> intersectionVecList;
@@ -34,19 +32,16 @@ public class SearchState {
 	//make thread-safe!
 	Map<String, Integer> map = new LinkedHashMap<>();
 	
-	static{
-		
-	}
-	
 	public SearchState(){
 		
 		this.tokenScoreMap = new HashMap<String, Integer>();
+		this.thmSpanMap = new HashMap<Integer, Integer>();
 	}
 	
-	public SearchState( List<Integer> intersectionVecList){	
+	/*public SearchState( List<Integer> intersectionVecList){	
 		this.intersectionVecList = intersectionVecList;
 		this.tokenScoreMap = new HashMap<String, Integer>();
-	}
+	}*/
 	
 	/**
 	 * Adds token and its score to tokenScoreMap. 
@@ -57,15 +52,36 @@ public class SearchState {
 		tokenScoreMap.put(token, score);
 	}
 	
-	public List<String> relevantTokensList(){
-		return relevantTokens;
+	/**
+	 * Adds token and its score to tokenScoreMap. 
+	 * @param thmIndex
+	 * @param span Span of the current query for thmIndex as derived in SearchIntersection.
+	 */
+	public void addThmSpan(Integer thmIndex, Integer span){
+		thmSpanMap.put(thmIndex, span);
 	}
 	
-	public List<Integer> tokenScoresList(){
-		return tokenScores;
+	public void addThmSpan(Map<Integer, Integer> spanMap){
+		thmSpanMap.putAll(spanMap);
+	}
+	
+	public void set_totalWordAdded(int totalWordAdded){
+		this.totalWordAdded = totalWordAdded;
+	}
+	
+	public int totalWordAdded(){
+		return totalWordAdded;
+	}
+	
+	public Map<Integer, Integer> thmSpanMap(){
+		return thmSpanMap;
 	}
 	
 	public List<Integer> intersectionVecList(){
 		return intersectionVecList;
+	}
+
+	public void set_intersectionVecList(List<Integer> intersectionVecList){
+		this.intersectionVecList = intersectionVecList;
 	}
 }

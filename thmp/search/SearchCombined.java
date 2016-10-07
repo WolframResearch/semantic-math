@@ -54,7 +54,7 @@ public class SearchCombined {
 	 * @param numVectors is the total number of vectors to get 
 	 * @return
 	 */
-	private static List<Integer> findListsIntersection(List<Integer> nearestVecList, List<Integer> intersectionVecList, 
+	private static List<Integer> findListsIntersection(List<Integer> nearestVecList, SearchState searchState, 
 			int numVectors){
 		List<Integer> bestCommonVecList = new ArrayList<Integer>();
 		//map to keep track of scores in first list
@@ -63,6 +63,9 @@ public class SearchCombined {
 		//keys are scores, and values are indices of thms that have that score
 		Multimap<Integer, Integer> scoreThmTreeMMap = TreeMultimap.create();
 		int nearestVecListSz = nearestVecList.size();
+		Map<Integer, Integer> thmSpanMap = searchState.thmSpanMap();
+		
+		List<Integer> intersectionVecList = searchState.intersectionVecList();
 		int intersectionVecListSz = intersectionVecList.size();
 		
 		for(int i = 0; i < nearestVecList.size(); i++){
@@ -70,18 +73,26 @@ public class SearchCombined {
 			nearestVecListPositionsMap.put(thmIndex, i);
 		}
 		
+		int totalWordAdded = searchState.totalWordAdded();
+		//avoid magic numbers
+		int threshold = totalWordAdded < 3 ? totalWordAdded : (totalWordAdded < 7 ? totalWordAdded-1 
+				: totalWordAdded - (int)(totalWordAdded/3.5));
 		int maxScore = 0;
 		//should iterate to include more pairs! 
-		for(int i = 0; i < intersectionVecList.size(); i++){
+		for(int i = 0; i < intersectionVecListSz; i++){
 			//index of thm
 			int intersectionThm = intersectionVecList.get(i);
 			//intersection list is 0-based!
 			Integer nearestListThmIndex = nearestVecListPositionsMap.remove(intersectionThm+1);
 			//first check if spanning is good, if spanning above a threshold, say contains more than
-			//(total #relevant words) - 2, 
-			//then don't need to be contained in nearestVecList
-			
-			if(nearestListThmIndex != null){
+			//(total #relevant words) - 2, threshold determined by relative size
+			//then don't need to be contained in nearestVecList	
+			if(thmSpanMap.get(intersectionThm) >= threshold){
+				int score = i;
+				if(score > maxScore) maxScore = score;
+				scoreThmTreeMMap.put(score, intersectionThm + LIST_INDEX_SHIFT);
+			}			
+			else if(nearestListThmIndex != null){
 				int score = i+nearestListThmIndex;
 				if(score > maxScore) maxScore = score;
 				scoreThmTreeMMap.put(score, intersectionThm + LIST_INDEX_SHIFT);
@@ -131,7 +142,9 @@ public class SearchCombined {
 			System.out.println("I've got nothing for you yet. Try again.");
 			return null;
 		}
-		List<Integer> intersectionVecList = SearchIntersection.getHighestThm(input, NUM_NEAREST);
+		
+		SearchState searchState = SearchIntersection.getHighestThm(input, NUM_NEAREST);
+		//List<Integer> intersectionVecList;
 		int numCommonVecs = NUM_COMMON_VECS;
 		
 		String firstWord = input.split("\\s+")[0];
@@ -139,7 +152,7 @@ public class SearchCombined {
 			numCommonVecs = Integer.parseInt(firstWord);			
 		}		
 		//find best intersection of these two lists. nearestVecList is 1-based, but intersectionVecList is 0-based! 
-		List<Integer> bestCommonVecs = findListsIntersection(nearestVecList, intersectionVecList, numCommonVecs);
+		List<Integer> bestCommonVecs = findListsIntersection(nearestVecList, searchState, numCommonVecs);
 		List<String> bestCommonThms = new ArrayList<String>();
 		for(int d : bestCommonVecs){
 			String thm = TriggerMathThm2.getThm(d);
@@ -183,7 +196,7 @@ public class SearchCombined {
 				System.out.println("I've got nothing for you yet. Try again.");
 				continue;
 			}
-			List<Integer> intersectionVecList = SearchIntersection.getHighestThm(thm, NUM_NEAREST);
+			SearchState searchState = SearchIntersection.getHighestThm(thm, NUM_NEAREST);
 			int numCommonVecs = NUM_COMMON_VECS;
 			
 			String firstWord = thm.split("\\s+")[0];
@@ -191,7 +204,7 @@ public class SearchCombined {
 				numCommonVecs = Integer.parseInt(firstWord);			
 			}
 			//find best intersection of these two lists. nearestVecList is 1-based, but intersectionVecList is 0-based! 
-			List<Integer> bestCommonVecs = findListsIntersection(nearestVecList, intersectionVecList, numCommonVecs);
+			List<Integer> bestCommonVecs = findListsIntersection(nearestVecList, searchState, numCommonVecs);
 			
 			for(int d : bestCommonVecs){
 				System.out.println(TriggerMathThm2.getThm(d));

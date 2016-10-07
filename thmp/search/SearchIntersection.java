@@ -120,25 +120,101 @@ public class SearchIntersection {
 		}
 	}
 	
+	public static List<Integer> getHighestThmList(String input, int ... num){
+		return getHighestThm(input, num).intersectionVecList();
+	}
+	
+	private static enum TokenType{
+		SINGLETON(1), TWOGRAM(2), THREEGRAM(3);
+		int indexShift;
+		static int TWO_GRAM_BONUS = 1;
+		static int THREE_GRAM_BONUS = 1;
+		
+		TokenType(int shift){
+			this.indexShift = shift;
+		}
+		
+		void addToMap(Multimap<Integer, Integer> thmWordSpanMMap, int thmIndex, int wordIndex){
+			for(int i = wordIndex; i < wordIndex+indexShift; i++){
+				thmWordSpanMMap.put(thmIndex, i);
+			}
+		}
+		
+		int adjustNGramScore(int curScoreToAdd, int[] singletonScoresAr, int wordIndex){
+			switch(this){
+				case SINGLETON:
+					return curScoreToAdd;
+				case TWOGRAM:
+					return Math.max(curScoreToAdd, singletonScoresAr[wordIndex] 
+							+ singletonScoresAr[wordIndex+1] + TWO_GRAM_BONUS);
+				case THREEGRAM:
+					return Math.max(curScoreToAdd, singletonScoresAr[wordIndex] + singletonScoresAr[wordIndex+1]
+							+ singletonScoresAr[wordIndex+2] + THREE_GRAM_BONUS);
+				default:
+					return curScoreToAdd;
+			}
+		}
+		
+		/**
+		 * Whether current word at wordIndex has been added to thm already under a previous 2/3-gram.
+		 * @param thmWordSpanMMap
+		 * @param thmIndex
+		 * @param wordIndex
+		 */
+		boolean ifAddedToMap(Multimap<Integer, Integer> thmWordSpanMMap, int thmIndex, int wordIndex){
+			
+			if(this.equals(THREEGRAM)) return false;
+			
+			if(this.equals(TWOGRAM)){ 
+				return thmWordSpanMMap.containsEntry(thmIndex, wordIndex)
+						&& thmWordSpanMMap.containsEntry(thmIndex, wordIndex+1);
+			}
+			
+			if(this.equals(SINGLETON)){ 
+				return thmWordSpanMMap.containsEntry(thmIndex, wordIndex);
+			}
+			
+			return false;
+		}
+		
+	}
+	//computes singleton scores for words in list
+	private static int[] computeSingletonScores(List<WordWrapper> wordWrapperList){
+		int wrapperListSz = wordWrapperList.size();
+		//array instead of list for lower overhead.
+		int[] singletonScoresAr = new int[wrapperListSz];
+		for(int i = 0; i < wrapperListSz; i++){
+			String word = wordWrapperList.get(i).word();
+			Integer score = wordsScoreMap.get(word);
+			if(score == null){
+				word = WordForms.getSingularForm(word);
+			}
+			singletonScoresAr[i] = score == null ? 0 : score;
+		}
+		return singletonScoresAr;
+	}
+	
 	/**
 	 * Builds scoreThmMMap 
 	 * @param input input String
 	 * @param numHighest number of highest-scored thms to retrieve.
-	 * @return List of indices of highest-scored thms. Sorted in ascending
+	 * @return SearchState containing list of indices of highest-scored thms. Sorted in ascending
 	 * order, best first. List is 0-based.
 	 */
-	public static List<Integer> getHighestThm(String input, int ... num){
+	public static SearchState getHighestThm(String input, int ... num){
 		if(input.matches("\\s*")) return null;
 		//map containing the indices of theorems added so far, where values are sets (hashset)
 		//of indices of words that have been added. This is to reward theorems that cover
 		//the more number of words. Actually just use SetMultimap.
-		ListMultimap<Integer, Integer> thmWordSpanMMap = ArrayListMultimap.create();
+		//if 2/3-grams added, add indices of all words in 2/3-gram to set for that thm.
+		SetMultimap<Integer, Integer> thmWordSpanMMap = HashMultimap.create();
 		
 		//make input list of words
 		//String[] inputAr = input.toLowerCase().split(SPLIT_DELIM);
 		List<WordWrapper> wordWrapperList = SearchWordPreprocess.sortWordsType(input);
 		
-		//create searchState to record the intersectionVecList, and map of tokens and their scores.
+		//create searchState to record the intersectionVecList, and map of tokens and their span scores.
+		//
 		SearchState searchState = new SearchState();
 		
 		//determine if first token is integer, if yes, use it as the number of 
@@ -210,6 +286,9 @@ public class SearchIntersection {
 		//multimap of indices in wrapper list and the words that start at that index
 		Multimap<Integer, String> indexStartingWordsMMap = ArrayListMultimap.create();
 		
+		//pre-compute the scores for singleton words in query
+		int[] singletonScoresAr = computeSingletonScores(wordWrapperList);
+		
 		//array of words to indicate frequencies that this word was included in either 
 		//a singleton or n-gram
 		int[] wordCountArray = new int[wordWrapperList.size()];
@@ -224,58 +303,63 @@ public class SearchIntersection {
 			//elicit higher score if wordLong fits
 			//also turn into singular form if applicable
 			String wordLong = curWrapper.hashToString();
-			int scoreAdded = 0;
-			
-			//if the words in a three gram collectively (3 gram + 2 gram + individual words) weigh a lot, 
-			//then scale down the overall words? e.g. "linear map with closed range", "closed", "range", 
-			//"closed range" all weigh a lot. Scale proportionally down with respect to the average 
-			//score of all words added.
-			scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, wordThmIndexMMap, curWrapper, 
-					word, wordLong, i);
-			if(scoreAdded > 0){
-				wordCountArray[i] = wordCountArray[i] + 1;
-				totalWordsScore += scoreAdded;
-				numWordsAdded++;
-				indexStartingWordsMMap.put(i, word);
-			}
+			int scoreAdded = 0;			
+		
 			//check for 2 grams
-			if(i < wordWrapperList.size()-1){				
+			if(i < wordWrapperList.size()-1){			
 				String nextWord = wordWrapperList.get(i+1).word();
 				String nextWordCombined = wordLong + " " + nextWord;
-				word = word + " " + nextWord;
+				String twoGram = word + " " + nextWord;				
 				
-				if(twoGramsMap.containsKey(word)){
-					
-					scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, wordThmIndexMMap, curWrapper, word, 
-							nextWordCombined, i);	
-					
-					if(scoreAdded > 0){
-						wordCountArray[i] = wordCountArray[i] + 1;
-						wordCountArray[i+1] = wordCountArray[i+1] + 1;
-						totalWordsScore += scoreAdded;
-						numWordsAdded++;
-						indexStartingWordsMMap.put(i, word);
-					}
-					
-				}
 				//check for 3 grams. Again only first word is annotated.
 				if(i < wordWrapperList.size()-2){
 					String thirdWord = wordWrapperList.get(i+2).word();
 					String threeWordsCombined = wordLong + " " + thirdWord;
-					word = word + " " + thirdWord;
-					if(threeGramsMap.containsKey(word)){
-						scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, wordThmIndexMMap, curWrapper, word, 
-								threeWordsCombined, i);	
+					String threeGram = twoGram + " " + thirdWord;
+					if(threeGramsMap.containsKey(threeGram)){
+						scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, wordThmIndexMMap, curWrapper, threeGram, 
+								threeWordsCombined, i, TokenType.THREEGRAM, singletonScoresAr);	
 						if(scoreAdded > 0){
 							wordCountArray[i] = wordCountArray[i] + 1;
 							wordCountArray[i+1] = wordCountArray[i+1] + 1;
 							wordCountArray[i+2] = wordCountArray[i+2] + 1;
 							totalWordsScore += scoreAdded;
+							
 							numWordsAdded++;
-							indexStartingWordsMMap.put(i, word);
+							indexStartingWordsMMap.put(i, threeGram);
 						}
 					}
+					
 				}
+				
+				if(twoGramsMap.containsKey(twoGram)){
+					
+					scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, wordThmIndexMMap, curWrapper, twoGram, 
+							nextWordCombined, i, TokenType.TWOGRAM, singletonScoresAr);	
+					
+					if(scoreAdded > 0){
+						wordCountArray[i] = wordCountArray[i] + 1;
+						wordCountArray[i+1] = wordCountArray[i+1] + 1;
+						totalWordsScore += scoreAdded;
+						searchState.addTokenScore(twoGram, scoreAdded);
+						numWordsAdded++;
+						indexStartingWordsMMap.put(i, twoGram);
+					}
+					
+				}			
+			}
+			//if the words in a three gram collectively (3 gram + 2 gram + individual words) weigh a lot, 
+			//then scale down the overall words? e.g. "linear map with closed range", "closed", "range", 
+			//"closed range" all weigh a lot. Scale proportionally down with respect to the average 
+			//score of all words added.
+			scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, wordThmIndexMMap, curWrapper, 
+					word, wordLong, i, TokenType.SINGLETON, singletonScoresAr);
+			if(scoreAdded > 0){
+				wordCountArray[i] = wordCountArray[i] + 1;
+				totalWordsScore += scoreAdded;
+				searchState.addTokenScore(word, scoreAdded);
+				numWordsAdded++;
+				indexStartingWordsMMap.put(i, word);
 			}
 		}
 		
@@ -285,6 +369,8 @@ public class SearchIntersection {
 		//in thmWordSpanMMap
 		addWordSpanBonus(thmScoreMap, scoreThmMMap, thmWordSpanMMap, thmSpanMap, numHighest, ((double)totalWordsScore)/numWordsAdded);
 		//System.out.println("AFTER " + g.equals(scoreThmMMap));
+		searchState.addThmSpan(thmSpanMap);
+		searchState.set_totalWordAdded(numWordsAdded);
 		
 		//lower the thm scores for ones that match words with high wordCountArray counts
 		/*lowerThmScores(thmScoreMap, scoreThmMMap, thmWordSpanMMap, wordThmIndexMMap, //dominantWordsMap, 
@@ -328,7 +414,8 @@ public class SearchIntersection {
 			}
 			
 		}
-		return highestThmList ;
+		searchState.set_intersectionVecList(highestThmList);
+		return searchState;
 	}
 
 	/**
@@ -337,6 +424,7 @@ public class SearchIntersection {
 	 * then scale down the overall words proportionally.
 	 * e.g. "linear map with closed range", "closed", "range",
 	 * "closed range" all weigh a lot. Scale proportionally down with respect to the average score.
+	 * Just reduce token initial scores instead!
 	 * @param thmScoreMap
 	 * @param scoreThmMMap
 	 * @param thmWordSpanMMap
@@ -429,7 +517,7 @@ public class SearchIntersection {
 	 * @param thmSpanMap map of theorem indices and their spans
 	 */
 	private static void addWordSpanBonus(Map<Integer, Integer> thmScoreMap, TreeMultimap<Integer, Integer> scoreThmMMap,
-			ListMultimap<Integer, Integer> thmWordSpanMMap, Map<Integer, Integer> thmSpanMap, int N, double avgWordScore){
+			SetMultimap<Integer, Integer> thmWordSpanMMap, Map<Integer, Integer> thmSpanMap, int N, double avgWordScore){
 		//add  according to score
 		//gather the sizes of the value maps for thmWordSpanMMap, and keep track of order based on scores using a TreeMultimap		
 		TreeMultimap<Integer, Integer> spanScoreThmMMap = TreeMultimap.create();
@@ -444,13 +532,15 @@ public class SearchIntersection {
 		NavigableMap<Integer, Collection<Integer>> r = spanScoreThmMMap.asMap().descendingMap();
 		
 		int counter = N;
+		//counts which span level is being iterated over currently
+		int spanCounter = 1;		
 		for(Entry<Integer, Collection<Integer>> entry : r.entrySet()){	
 			
 			for(int thmIndex : entry.getValue()){				
 				if(counter == 0) break;
 				int prevScore = thmScoreMap.get(thmIndex);
-				//refine this! using the highest or average score (not span score) *******			
-				int newThmScore = (int)(prevScore + avgWordScore*3.0/2 + counter/2.0);
+				//refine this! using the highest or average score (not span score) *******	
+				int newThmScore = (int)(prevScore + avgWordScore/(double)spanCounter);
 				scoreThmMMap.put(newThmScore, thmIndex);
 				thmScoreMap.put(thmIndex, newThmScore);
 				if(DEBUG){ 
@@ -460,6 +550,7 @@ public class SearchIntersection {
 				}
 				counter--;
 			}
+			spanCounter++;
 		}
 		
 	}
@@ -474,11 +565,12 @@ public class SearchIntersection {
 	 * @param word
 	 * @param wordLong
 	 * @param wordIndices array of indices of words in query
+	 * @param singletonScoresAr Array of scores for singleton words
 	 * @return List of theorem indices that have been added, 
 	 */
 	private static int addWordThms(Map<Integer, Integer> thmScoreMap, TreeMultimap<Integer, Integer> scoreThmMMap,
 			Multimap<Integer, Integer> thmWordSpanMMap, ListMultimap<String, Integer> wordThmIndexMMap, //Map<String, Integer> dominantWordsMap,
-			WordWrapper curWrapper, String word, String wordLong, int ... wordIndices) {		
+			WordWrapper curWrapper, String word, String wordLong, int wordIndex, TokenType tokenType, int[] singletonScoresAr) {		
 		//update scores map
 		int curScoreToAdd = 0;
 		int scoreAdded = 0;
@@ -517,7 +609,7 @@ public class SearchIntersection {
 				}
 				//wordScore = wordsScoreMap.get(singFormLong);
 				wordScore = wordsScoreMap.get(singForm);
-				wordScore = wordScore == null ? 0 : wordScore;
+				wordScore = wordScore == null ? 0 : wordScore;				
 				curScoreToAdd = wordScore + CONTEXT_WORD_BONUS 
 						+ curWrapper.matchExtraPoints();
 				word = singForm;
@@ -534,7 +626,9 @@ public class SearchIntersection {
 				wordScore = wordsScoreMap.get(singWordOtherForm);
 				curScoreToAdd = wordScore;		
 			}			*/	
-		}			
+		}
+		//adjust curScoreToAdd, boost 2/3-gram scores when applicable
+		curScoreToAdd = tokenType.adjustNGramScore(curScoreToAdd, singletonScoresAr, wordIndex);
 		
 		if(wordThms != null && curScoreToAdd != 0){
 			//System.out.println("wordThms " + wordThms);
@@ -542,7 +636,9 @@ public class SearchIntersection {
 			if(DEBUG){
 				System.out.println("Word added: " + word + ". Score: " + curScoreToAdd);
 			}
-			for(Integer thmIndex : wordThms){					
+			for(Integer thmIndex : wordThms){
+				//skip thm if current word already been covered by previous 2/3-gram
+				if(tokenType.ifAddedToMap(thmWordSpanMMap, thmIndex, wordIndex)) continue;
 				Integer prevScore = thmScoreMap.get(thmIndex);
 				prevScore = prevScore == null ? 0 : prevScore;
 				Integer newScore = prevScore + curScoreToAdd;
@@ -551,11 +647,9 @@ public class SearchIntersection {
 				thmScoreMap.put(thmIndex, newScore);
 				//System.out.println("*** " + thmScoreMap);
 				scoreThmMMap.put(newScore, thmIndex);
-				//put in thmIndex, and the index of word in the query.
-				for(int index : wordIndices){
-					thmWordSpanMMap.put(thmIndex, index);
-					//System.out.println("thmIndex " + thmIndex +  " index of word " + index);					
-				}
+				//put in thmIndex, and the index of word in the query, to thmWordSpanMMap.				
+				tokenType.addToMap(thmWordSpanMMap, thmIndex, wordIndex);
+				
 				scoreAdded = curScoreToAdd;				
 			}				
 		}
@@ -571,7 +665,7 @@ public class SearchIntersection {
 		
 		List<String> foundThmList = new ArrayList<String>();
 
-		List<Integer> highestThms = getHighestThm(inputStr);
+		List<Integer> highestThms = getHighestThmList(inputStr);
 		
 		if(highestThms == null){
 			foundThmList.add("Close, but no cigar. I don't have a theorem on that yet.");
@@ -595,7 +689,7 @@ public class SearchIntersection {
 		while(sc.hasNextLine()){
 			String thm = sc.nextLine();			
 			
-			List<Integer> highestThms = getHighestThm(thm);
+			List<Integer> highestThms = getHighestThmList(thm);
 			
 			if(highestThms == null) continue;
 			
