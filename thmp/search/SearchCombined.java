@@ -75,8 +75,8 @@ public class SearchCombined {
 		
 		int totalWordAdded = searchState.totalWordAdded();
 		//avoid magic numbers
-		int threshold = totalWordAdded < 3 ? totalWordAdded : (totalWordAdded < 7 ? totalWordAdded-1 
-				: totalWordAdded - (int)(totalWordAdded/3.5));
+		int threshold = totalWordAdded < 3 ? totalWordAdded : (totalWordAdded < 6 ? totalWordAdded-1 
+				: totalWordAdded - totalWordAdded/3);
 		int maxScore = 0;
 		//should iterate to include more pairs! 
 		for(int i = 0; i < intersectionVecListSz; i++){

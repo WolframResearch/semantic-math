@@ -57,7 +57,7 @@ public class SearchIntersection {
 	private static final Map<String, Integer> threeGramsMap = ThreeGramSearch.get3GramsMap();
 	
 	//debug flag for development. Prints out the words used and their scores.
-	private static final boolean DEBUG = true;
+	private static final boolean DEBUG = false;
 	private static final boolean anno = false;
 	//priority words that should be weighed higher, eg "define"
 	//private static final String PRIORITY_WORDS = ConstantsInSearch.get_priorityWords();

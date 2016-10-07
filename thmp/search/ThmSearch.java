@@ -31,7 +31,7 @@ public class ThmSearch {
 	
 	//number of nearest vectors to get for Nearest[]
 	private static final int NUM_NEAREST = 3;
-	private static final int NUM_SINGULAR_VAL_TO_KEEP = 20;
+	//private static final int NUM_SINGULAR_VAL_TO_KEEP = 20;
 	//cutoff for a correlated term to be considered
 	private static final int COR_THRESHOLD = 3;
 	//mx to keep track of correlations between terms, mx.mx^T
@@ -65,6 +65,7 @@ public class ThmSearch {
 			//adjust mx entries based on correlation first			
 			String mx = toNestedList(docMx);
 			int rowDimension = docMx.length;
+			int mxColDim = docMx[0].length;
 			
 			System.out.println("nested mx " + Arrays.deepToString(docMx));
 			boolean getMx = false;
@@ -148,7 +149,7 @@ public class ThmSearch {
 			//write matrix to file, so no need to form it each time
 			
 			//System.out.println(nearestVec.length() + "  " + Arrays.toString((int[])nearestVec.part(1).asArray(Expr.INTEGER, 1)));
-			int mxColDim = docMx[0].length;
+			
 			System.out.print("Dimensions of docMx: " + docMx.length + " " +mxColDim);
 			//System.out.println(mx);
 			
@@ -181,15 +182,19 @@ public class ThmSearch {
 			//number of singular values to keep. Determined (roughly) based on the number of
 			//theorems (col dimension of mx)
 			//int k = NUM_SINGULAR_VAL_TO_KEEP;
-			int k = mxColDim < 400 ? 25 : (mxColDim < 1000 ? 35 : (mxColDim < 3000 ? 45 : 50)) ;
+			int k = mxColDim < 400 ? 35 : (mxColDim < 1000 ? 45 : (mxColDim < 3000 ? 55 : 65)) ;
 			ml.evaluate("{u, d, v} = SingularValueDecomposition[mx//N, " + k +"];");
 			//ml.waitForAnswer();
 			ml.discardAnswer();
 			System.out.println("Finished SVD");
 			
-			ml.evaluate("vMeanValue = Mean[Flatten[v]];");
+			//randomly select column vectors to approximate mean
+			//adjust these!
+			int numRandomVecs = mxColDim < 500 ? 60 : (mxColDim < 5000 ? 100 : 150);
+			ml.evaluate("mxMeanValue = Mean[Flatten[mx[[All, #]]& /@ RandomInteger[{1,"+ mxColDim +"}," + numRandomVecs + "]]];");
+			//ml.evaluate("mxMeanValue = Mean[Flatten[v]];");
 			ml.discardAnswer();
-			//System.out.println("vMeanValue " + ml.getExpr());
+			//System.out.println("mxMeanValue " + ml.getExpr());
 			/*ml.evaluate("mxMeanValue = Mean[Flatten[mx]];");
 			ml.discardAnswer();	*/
 			//System.out.println(" mean of flattened mx " + ml.getExpr().part(1));
@@ -340,19 +345,19 @@ public class ThmSearch {
 		//ml.discardAnswer();
 		
 		//process query first with corMx		
-		//ml.evaluate("q = Round[Transpose[" + queryStr + "] + 0.1*corMx.Transpose["+ queryStr +"]]//N;");
-		//ml.discardAnswer();
+		ml.evaluate("q = Transpose[" + queryStr + "] + 0.1*corMx.Transpose["+ queryStr +"]//N;");
+		ml.discardAnswer();
 		//ml.evaluate(queryStr+"/.{0.0->30}");
 		//System.out.println("QUERY " + ml.getExpr().part(1));
 		
-		ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"];");
+		//ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"];");
 		//ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"/.{0.0->mxMeanValue}];");
-		//ml.evaluate("q = Inverse[d].Transpose[u].q;");
+		ml.evaluate("q = Inverse[d].Transpose[u].(q/.{0.0->mxMeanValue});");
 		//ml.evaluate("q = Inverse[d].Transpose[u].Transpose[q];");
 		ml.discardAnswer();
 		//System.out.println("@@q " + ml.getExpr());
-		ml.evaluate("q = q + vMeanValue;");
-		ml.discardAnswer();
+		/*ml.evaluate("q = q + vMeanValue;");
+		ml.discardAnswer();*/
 		//System.out.println("q + vMeanValue: " + ml.getExpr());
 		
 		//vMeanValue
