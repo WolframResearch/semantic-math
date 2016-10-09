@@ -28,6 +28,9 @@ public class SearchState {
 	//map of thmIndex and their span scores
 	private Map<Integer, Integer> thmSpanMap;
 	
+	//map of thmIndex and their word-weight scores
+	private Map<Integer, Integer> thmScoreMap;
+	
 	//the keyset of which is intersectionVecList
 	//make thread-safe!
 	Map<String, Integer> map = new LinkedHashMap<>();
@@ -52,6 +55,16 @@ public class SearchState {
 		tokenScoreMap.put(token, score);
 	}
 	
+	//should be consistent with set/add!
+	public void setThmScoreMap(Map<Integer, Integer> scoreMap){
+		this.thmScoreMap = scoreMap;
+	}
+	
+	//should be consistent with set/add!
+		public Map<Integer, Integer> thmScoreMap(){
+			return this.thmScoreMap;
+		}
+		
 	/**
 	 * Adds token and its score to tokenScoreMap. 
 	 * @param thmIndex

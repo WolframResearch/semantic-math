@@ -42,12 +42,15 @@ public class TriggerMathThm2 {
 	 */
 	private static final List<String> mathObjList;
 	
+	private static final List<String> webDisplayThmList;
+	
 	/**
 	 * Dictionary of keywords -> their index/row number in mathObjMx.
 	 * ImmutableMap. Java indexing, starts at 0.
 	 */
 	private static final Map<String, Integer> keywordDict;
 	
+	private static final int LIST_INDEX_SHIFT = 1;
 	/**
 	 * Map of math objects, eg function, field, with list of keywords. don't
 	 * need this either
@@ -60,13 +63,14 @@ public class TriggerMathThm2 {
 	 */
 	//private static final int[][] mathObjMx;
 	private static final double[][] mathObjMx;
+	//list of thms, same order as in thmList, and the indices of their words in words maps.
 	private static final List<ImmutableMap<String,Integer>> thmWordsList;
 	private static final ImmutableMap<String, Integer> docWordsFreqMapNoAnno = CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno();
 	
 	/**
 	 * Debug variables
 	 */
-	private static final boolean showWordScore = false;
+	private static final boolean DEBUG = false;
 	
 	static {
 		thmWordsList = CollectThm.ThmWordsMaps.get_thmWordsListNoAnno();
@@ -79,8 +83,9 @@ public class TriggerMathThm2 {
 		Map<String, Integer> keywordMap = new HashMap<String, Integer>();
 		//ImmutableList.Builder<String> mathObjListBuilder = ImmutableList.builder();
 		//to be list that contains the theorems, in the order they are inserted
-		ImmutableList.Builder<String> mathObjListBuilder = ImmutableList.builder();
-		// math object pre map. keys are theorems, values are keywords.
+		//ImmutableList.Builder<String> mathObjListBuilder = ImmutableList.builder();
+		
+		// math object pre map. keys are theorems, values are keywords in that thm.
 		Multimap<String, String> mathObjMMap = ArrayListMultimap.create();
 
 		// first String should be theorem, the rest are key words of this theorem 
@@ -105,9 +110,12 @@ public class TriggerMathThm2 {
 		//System.out.println("BEFORE mathObjMMap" +mathObjMMap);
 		//pass in thmList to ensure the right order (insertion order) of thms 
 		//is preserved or MathObjList and mathObjMMap. Multimaps don't preserve insertion order
-		buildMathObjMx(keywordList, mathObjMMap, mathObjListBuilder, thmList);
+		buildMathObjMx(keywordList, mathObjMMap, thmList);
 
-		mathObjList = mathObjListBuilder.build();
+		mathObjList = ImmutableList.copyOf(thmList);
+		
+		webDisplayThmList = ImmutableList.copyOf(CollectThm.ThmList.get_webDisplayThmList());
+		
 		//System.out.println("===");
 		
 		/*for(int i = 0; i < thmWordsList.size(); i++){
@@ -193,7 +201,7 @@ public class TriggerMathThm2 {
 	 * CollectThm.java.
 	 */
 	private static void buildMathObjMx(List<String> keywordList, Multimap<String, String> mathObjMMap,
-			ImmutableList.Builder<String> mathObjListBuilder, ImmutableList<String> thmList) {
+			ImmutableList<String> thmList) {
 		
 		//map of annotated words and their scores
 		Map<String, Integer> wordsScoreMap = CollectThm.ThmWordsMaps.get_wordsScoreMapNoAnno();
@@ -207,7 +215,7 @@ public class TriggerMathThm2 {
 			String thm = thmListIter.next();
 			//String curMathObj = mathObjMMapkeysIter.next();
 			//System.out.println("BUILDING mathObjList " +curMathObj);
-			mathObjListBuilder.add(thm);
+			//mathObjListBuilder.add(thm);
 			Collection<String> curMathObjCol = mathObjMMap.get(thm);
 			//Iterator<String> curMathObjColIter = curMathObjCol.iterator();
 			double norm = 0;
@@ -462,24 +470,38 @@ public class TriggerMathThm2 {
 	}
 	
 	/**
-	 * Get theorem given its index (column number) in mathThmMx.
-	 * @param index
+	 * Get theorem given its index (column number) in mathThmMx. Not the displayed web version.
+	 * @param index 1-based index!
 	 * @return
 	 */
 	public static String getThm(int index){
 		//System.out.println("docWrodsFreqMap " + docWordsFreqMap);
-		System.out.print("index of thm: " + index + "\t");
+		System.out.print("Thm index: " + index + "\t");
 		//index is 1-based indexing, not 0-based.
 		//System.out.println(CollectThm.get_thmWordsListNoAnno().get(index-1));
 		
-		if(showWordScore){
+		if(DEBUG){
 			Map<String, Integer> wordsScoreMap = CollectThm.ThmWordsMaps.get_wordsScoreMapNoAnno();		
 			for(String word : thmWordsList.get(index-1).keySet()){
 				System.out.print(word + " " + wordsScoreMap.get(word) + " " + docWordsFreqMapNoAnno.get(word));
 			}
 		}
 		//System.out.println(thmWordsList.get(index-1));
-		return mathObjList.get(index-1);
+		return mathObjList.get(index-LIST_INDEX_SHIFT);
+	}
+	
+	/**
+	 * Get theorem given its index (column number) in mathThmMx. For web display.
+	 * without \index, \label etc.
+	 * @param index 1-based index!
+	 * @return
+	 */
+	public static String getWebDisplayThm(int index){
+		//System.out.println("docWrodsFreqMap " + docWordsFreqMap);
+		System.out.print("Thm index: " + index + "\t");
+		//index is 1-based indexing, not 0-based.
+		//System.out.println(CollectThm.get_thmWordsListNoAnno().get(index-1));
+		return webDisplayThmList.get(index-LIST_INDEX_SHIFT);
 	}
 	
 	/*public static void main(String[] args){

@@ -57,7 +57,7 @@ public class SearchIntersection {
 	private static final Map<String, Integer> threeGramsMap = ThreeGramSearch.get3GramsMap();
 	
 	//debug flag for development. Prints out the words used and their scores.
-	private static final boolean DEBUG = false;
+	private static final boolean DEBUG = true;
 	private static final boolean anno = false;
 	//priority words that should be weighed higher, eg "define"
 	//private static final String PRIORITY_WORDS = ConstantsInSearch.get_priorityWords();
@@ -99,7 +99,9 @@ public class SearchIntersection {
 		public int compareTo(ThmSpanPair other){
 			//return this.spanScore > other.spanScore ? 1 : (this.spanScore < other.spanScore ? -1 : 0);
 			//reverse because treemap naturally has ascending order
-			return this.spanScore > other.spanScore ? -1 : (this.spanScore < other.spanScore ? 1 : 0);
+			//
+			return this.spanScore > other.spanScore ? -1 : (this.spanScore < other.spanScore ? 1 : 
+				(this == other ? 0 : -1));
 		}
 	}
 	
@@ -379,6 +381,7 @@ public class SearchIntersection {
 		addWordSpanBonus(thmScoreMap, scoreThmMMap, thmWordSpanMMap, thmSpanMap, numHighest, ((double)totalWordsScore)/numWordsAdded);
 		//System.out.println("AFTER " + g.equals(scoreThmMMap));
 		searchState.addThmSpan(thmSpanMap);
+		searchState.setThmScoreMap(thmScoreMap);
 		
 		//lower the thm scores for ones that match words with high wordCountArray counts
 		/*lowerThmScores(thmScoreMap, scoreThmMMap, thmWordSpanMMap, wordThmIndexMMap, //dominantWordsMap, 
@@ -417,7 +420,8 @@ public class SearchIntersection {
 				highestThmList.add(thmIndex);		
 				counter--;			
 				if(DEBUG) {
-					System.out.println("thm Score " + entry.getKey() + " thmIndex "+ thmIndex + " thm " + thmList.get(thmIndex));					
+					System.out.println("thm Score " + entry.getKey() + " thmIndex "+ thmIndex + " thm " 
+				+ thmList.get(thmIndex));					
 				}
 			}
 			
@@ -553,7 +557,7 @@ public class SearchIntersection {
 				thmScoreMap.put(thmIndex, newThmScore);
 				if(DEBUG){ 
 					String thm = thmList.get(thmIndex);
-					System.out.println("theorem whose score is upped. size "+ entry.getKey() + " thm " + thm);
+					System.out.println("theorem whose score is upped. size "+ entry.getKey() + " newThmScore: " + newThmScore+ " thm: " + thm);
 					//System.out.println("PREV SCORE " + prevScore + " NEW SCORE " + newThmScore + thm);
 				}
 				counter--;

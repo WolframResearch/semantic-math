@@ -604,6 +604,8 @@ public class CollectThm {
 		private static final ImmutableList<String> thmList;
 		//processed with options to replace tex with latex, and expand macros with their definitions
 		private static final ImmutableList<String> processedThmList;
+		//list of theorems for web display, without \label{} or \index{} etc
+		private static final ImmutableList<String> webDisplayThmList;		
 		//thm list with just macros replaced
 		private static final ImmutableList<String> macroReplacedThmList;
 		//whether to replace latex symbols with the word "tex"
@@ -618,6 +620,7 @@ public class CollectThm {
 			List<String> extractedThms = new ArrayList<String>();
 			List<String> processedThms = new ArrayList<String>();
 			List<String> macroReplacedThms = new ArrayList<String>();
+			List<String> webDisplayThms = new ArrayList<String>();
 			//System.out.print("rawFileReader: " + rawFileReader);
 			//extractedThms = ThmList.get_thmList();
 			try {
@@ -627,7 +630,7 @@ public class CollectThm {
 						FileReader rawFileReader = new FileReader(fileStr);
 						BufferedReader rawFileBReader = new BufferedReader(rawFileReader);
 						//System.out.println("rawFileReader is null ");
-						extractedThms.addAll(ThmInput.readThm(rawFileBReader));							
+						extractedThms.addAll(ThmInput.readThm(rawFileBReader, webDisplayThms));							
 						//System.out.print("Should be extracting theorems here: " + extractedThms);
 					}
 					//the third true means to extract words from latex symbols, eg oplus->direct sum.
@@ -646,7 +649,7 @@ public class CollectThm {
 						System.out.println(line);
 					}*/ 
 					for(BufferedReader fileReader : rawFileReaderList){
-						extractedThms.addAll(ThmInput.readThm(fileReader));
+						extractedThms.addAll(ThmInput.readThm(fileReader, webDisplayThms));
 					}
 					processedThms = ProcessInput.processInput(extractedThms, macrosDefReader, REPLACE_TEX, TEX_TO_WORDS, REPLACE_MACROS);
 					//the BufferedStream containing macros is set when rawFileReaderList is set.
@@ -657,6 +660,7 @@ public class CollectThm {
 			}
 			thmListBuilder.addAll(extractedThms);
 			thmList = thmListBuilder.build();
+			webDisplayThmList = ImmutableList.copyOf(webDisplayThms);
 			processedThmList = ImmutableList.copyOf(processedThms);
 			macroReplacedThmList = ImmutableList.copyOf(macroReplacedThms);
 		}
@@ -667,6 +671,14 @@ public class CollectThm {
 		 */
 		public static ImmutableList<String> get_thmList(){
 			return thmList;
+		}
+		
+		/**
+		 * Get thmList. List of theorems for web display, without \label{} or \index{} etc.
+		 * @return
+		 */
+		public static ImmutableList<String> get_webDisplayThmList(){
+			return webDisplayThmList;
 		}
 		
 		public static ImmutableList<String> get_processedThmList(){

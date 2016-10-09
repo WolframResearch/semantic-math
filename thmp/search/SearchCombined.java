@@ -3,6 +3,7 @@ package thmp.search;
 import java.io.BufferedReader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -56,6 +57,15 @@ public class SearchCombined {
 	 */
 	private static List<Integer> findListsIntersection(List<Integer> nearestVecList, SearchState searchState, 
 			int numVectors){
+		
+		List<Integer> intersectionVecList = searchState.intersectionVecList();
+		//short-circuit
+		if(intersectionVecList.isEmpty()){
+			return nearestVecList;
+		}
+		int intersectionVecListSz = intersectionVecList.size();
+		
+		Map<Integer, Integer> thmScoreMap = searchState.thmScoreMap();
 		List<Integer> bestCommonVecList = new ArrayList<Integer>();
 		//map to keep track of scores in first list
 		Map<Integer, Integer> nearestVecListPositionsMap = new HashMap<Integer, Integer>();
@@ -64,9 +74,6 @@ public class SearchCombined {
 		Multimap<Integer, Integer> scoreThmTreeMMap = TreeMultimap.create();
 		int nearestVecListSz = nearestVecList.size();
 		Map<Integer, Integer> thmSpanMap = searchState.thmSpanMap();
-		
-		List<Integer> intersectionVecList = searchState.intersectionVecList();
-		int intersectionVecListSz = intersectionVecList.size();
 		
 		for(int i = 0; i < nearestVecList.size(); i++){
 			int thmIndex = nearestVecList.get(i);
@@ -83,7 +90,7 @@ public class SearchCombined {
 			//index of thm
 			int intersectionThm = intersectionVecList.get(i);
 			//intersection list is 0-based!
-			Integer nearestListThmIndex = nearestVecListPositionsMap.remove(intersectionThm+1);
+			Integer nearestListThmIndex = nearestVecListPositionsMap.remove(intersectionThm+LIST_INDEX_SHIFT);
 			//first check if spanning is good, if spanning above a threshold, say contains more than
 			//(total #relevant words) - 2, threshold determined by relative size
 			//then don't need to be contained in nearestVecList	
@@ -100,7 +107,7 @@ public class SearchCombined {
 			else{
 				int score = i+nearestVecListSz;
 				if(score > maxScore) maxScore = score;
-				scoreThmTreeMMap.put(score, intersectionThm+1);
+				scoreThmTreeMMap.put(score, intersectionThm+LIST_INDEX_SHIFT);
 			}			
 		}
 		
@@ -118,8 +125,28 @@ public class SearchCombined {
 		//System.out.println("values size " + scoreThmTreeMMap.values().size());
 		//pick out top vecs
 		int counter = numVectors;
-		for(Integer thmIndex : scoreThmTreeMMap.values()){
-			if(counter == 0) break;			
+		Iterator<Integer> scoreThmTreeMMapValIter = scoreThmTreeMMap.values().iterator();
+		//take first one from intersectionList if span for top result is not ideal,
+		//and score gap not too large
+		Integer topThmIndex = scoreThmTreeMMapValIter.next();
+		
+		int topIntersectionThmIndex = intersectionVecList.get(0);
+		int topIntersectionThmScore = thmScoreMap.get(topIntersectionThmIndex);
+		int topQueryIndex;
+		//intersectionVecList not empty at this point. Remove magic numbers.
+		if( thmSpanMap.get(topThmIndex) < thmSpanMap.get(topIntersectionThmIndex)*4.0/5
+				&& thmScoreMap.get(topThmIndex) < topIntersectionThmScore){
+			bestCommonVecList.add(topIntersectionThmIndex);
+			topQueryIndex = topIntersectionThmIndex;
+		}else{
+			bestCommonVecList.add(topThmIndex);		
+			topQueryIndex = topThmIndex;
+		}		
+		counter--;
+		
+		while(scoreThmTreeMMapValIter.hasNext()){
+			int thmIndex = scoreThmTreeMMapValIter.next();
+			if(counter == 0 || thmIndex == topQueryIndex) break;			
 			bestCommonVecList.add(thmIndex);	
 			counter--;
 		}
@@ -155,7 +182,8 @@ public class SearchCombined {
 		List<Integer> bestCommonVecs = findListsIntersection(nearestVecList, searchState, numCommonVecs);
 		List<String> bestCommonThms = new ArrayList<String>();
 		for(int d : bestCommonVecs){
-			String thm = TriggerMathThm2.getThm(d);
+			//String thm = TriggerMathThm2.getThm(d);
+			String thm = TriggerMathThm2.getWebDisplayThm(d);
 			System.out.println(thm);
 			bestCommonThms.add(thm);
 		}
