@@ -471,7 +471,7 @@ public class TriggerMathThm2 {
 	
 	/**
 	 * Get theorem given its index (column number) in mathThmMx. Not the displayed web version.
-	 * @param index 1-based index!
+	 * @param index 0-based index
 	 * @return
 	 */
 	public static String getThm(int index){
@@ -487,13 +487,14 @@ public class TriggerMathThm2 {
 			}
 		}
 		//System.out.println(thmWordsList.get(index-1));
-		return mathObjList.get(index-LIST_INDEX_SHIFT);
+		//return mathObjList.get(index-LIST_INDEX_SHIFT);
+		return mathObjList.get(index);
 	}
 	
 	/**
 	 * Get theorem given its index (column number) in mathThmMx. For web display.
 	 * without \index, \label etc.
-	 * @param index 1-based index!
+	 * @param index 0-based index
 	 * @return
 	 */
 	public static String getWebDisplayThm(int index){
@@ -501,7 +502,8 @@ public class TriggerMathThm2 {
 		System.out.print("Thm index: " + index + "\t");
 		//index is 1-based indexing, not 0-based.
 		//System.out.println(CollectThm.get_thmWordsListNoAnno().get(index-1));
-		return webDisplayThmList.get(index-LIST_INDEX_SHIFT);
+		//return webDisplayThmList.get(index-LIST_INDEX_SHIFT);
+		return webDisplayThmList.get(index);
 	}
 	
 	/*public static void main(String[] args){

@@ -34,6 +34,7 @@ public class ThmSearch {
 	//private static final int NUM_SINGULAR_VAL_TO_KEEP = 20;
 	//cutoff for a correlated term to be considered
 	private static final int COR_THRESHOLD = 3;
+	private static final int LIST_INDEX_SHIFT = 1;
 	//mx to keep track of correlations between terms, mx.mx^T
 	private static final List<List<Integer>> corMxList;
 	private static KernelLink ml;
@@ -376,7 +377,8 @@ public class ThmSearch {
 		ml.waitForAnswer();
 		System.out.println("q " +ml.getExpr()); */
 		
-		ml.evaluate("Nearest[v->Range[Dimensions[v][[1]]], First@Transpose[q],"+numNearest+"]");
+		ml.evaluate("Nearest[v->Range[Dimensions[v][[1]]], First@Transpose[q],"+numNearest+"] - " + LIST_INDEX_SHIFT);
+		
 		//take largest inner product
 		//ml.evaluate("Keys[TakeLargest[AssociationThread[Range[Dimensions[v][[1]]] -> v.First[Transpose[q]]], "+numNearest+"]]");
 		//ml.evaluate("Ordering[v.First[Transpose[q]], -"+numNearest+"]");

@@ -24,10 +24,18 @@ import java.util.regex.Pattern;
 public class ThmInput {
 
 	private static Pattern THM_START_PATTERN = Pattern.
-			compile("\\\\begin\\{def(?:.*)|\\\\begin\\{lem(?:.*)|\\\\begin\\{th(?:.*)|\\\\begin\\{prop(?:.*)|\\\\begin\\{proclaim(?:.*)");
+			compile("\\\\begin\\{def(?:.*)|\\\\begin\\{lem(?:.*)|\\\\begin\\{th(?:.*)|\\\\begin\\{prop(?:.*)"
+					+ "|\\\\begin\\{proclaim(?:.*)|\\\\begin\\{cor(?:.*)");
+	//start of theorem, to remove words such as \begin[prop]
+	/*private static Pattern SENTENCE_START_PATTERN = Pattern.
+			compile("^\\\\begin\\{def(?:[^}]*)\\}\\s*|^\\\\begin\\{lem(?:[^}]*)\\}\\s*|^\\\\begin\\{th(?:[^}]*)\\}\\s*"
+					+ "|^\\\\begin\\{prop(?:[^}]*)\\}\\s*|^\\\\begin\\{proclaim(?:[^}]*)\\}\\s*");*/
 	private static Pattern THM_END_PATTERN = Pattern.
-			compile("\\\\end\\{def(?:.*)|\\\\end\\{lem(?:.*)|\\\\end\\{th(?:.*)|\\\\end\\{prop(?:.*)|\\\\endproclaim(?:.*)");
-	private static Pattern LABEL_PATTERN = Pattern.compile("(?:^.*)\\\\label\\{((?:[a-zA-Z]|-)*)\\} (.*)");
+			compile("\\\\end\\{def(?:.*)|\\\\end\\{lem(?:.*)|\\\\end\\{th(?:.*)|\\\\end\\{prop(?:.*)|\\\\endproclaim(?:.*)"
+					+ "|\\\\end\\{cor(?:.*)");
+	private static Pattern LABEL_PATTERN = Pattern.compile("(?:^.*)\\\\label\\{([^}]*)\\} (.*)");
+	private static Pattern DIGIT_PATTERN = Pattern.compile(".*\\d+.*");
+	
 	//boldface typesetting. \cat{} refers to category.
 	//private static Pattern DF_EMPH_PATTERN = Pattern.compile("\\\\df\\{([^\\}]*)\\}|\\\\emph\\{([^\\}]*)\\}"
 		//	+ "|\\\\cat\\{([^}]*)\\}|\\{\\\\it([^}]*)\\}");
@@ -36,23 +44,28 @@ public class ThmInput {
 			Pattern.compile("\\\\cat\\{([^}]*)\\}"),
 			Pattern.compile("\\{\\\\it\\s*([^}]*)\\}") //\\{\\\\it([^}]*)\\}
 			};
-	private static Pattern INDEX_PATTERN = Pattern.compile("\\\\index\\{(^\\})\\}");
+	private static Pattern INDEX_PATTERN = Pattern.compile("\\\\index\\{([^\\}]*)\\}%*");
 	//pattern for eliminating the command completely for web display. E.g. \fml
-	private static Pattern ELIMINATE_PATTERN = Pattern.compile("\\\\fml|\\\\ofml|\\\\begin\\{enumerate\\}|\\\\end\\{enumerate\\}");
+	private static Pattern ELIMINATE_PATTERN = Pattern.compile("\\\\fml|\\\\ofml|\\\\begin\\{enumerate\\}|\\\\end\\{enumerate\\}"
+			+ "|^\\\\begin\\{def(?:[^}]*)\\}\\s*|^\\\\begin\\{lem(?:[^}]*)\\}\\s*|^\\\\begin\\{th(?:[^}]*)\\}\\s*"
+			+ "|^\\\\begin\\{prop(?:[^}]*)\\}\\s*|^\\\\begin\\{proclaim(?:[^}]*)\\}\\s*|^\\\\begin\\{cor\\}\\s*");
 	private static Pattern ITEM_PATTERN = Pattern.compile("\\\\item");
+	
 	
 	public static void main(String[] args) throws IOException{
 		boolean writeToFile = true;
 		if(writeToFile){
 			//File file = new File("src/thmp/data/commAlg5.txt");
 			//String srcFileStr = "src/thmp/data/commAlg5.txt";
-			//String srcFileStr = "src/thmp/data/multilinearAlgebra.txt";
+			String srcFileStr = "src/thmp/data/multilinearAlgebra.txt";
 			//String srcFileStr = "src/thmp/data/functionalAnalysis.txt";
-			String srcFileStr = "src/thmp/data/fieldsRawTex.txt";			
+			//String srcFileStr = "src/thmp/data/fieldsRawTex.txt";			
+			//String srcFileStr = "src/thmp/data/test1.txt";
 			
 			//Path fileTo = Paths.get("src/thmp/data/thmFile5.txt");
-			//Path fileTo = Paths.get("src/thmp/data/multilinearAlgebraThms.txt");
-			Path fileTo = Paths.get("src/thmp/data/fieldsThms2.txt");
+			Path fileTo = Paths.get("src/thmp/data/multilinearAlgebraThms2.txt");
+			//Path fileTo = Paths.get("src/thmp/data/test1Thms.txt");
+			//Path fileTo = Paths.get("src/thmp/data/fieldsThms2.txt");
 			
 			FileReader srcFileReader = new FileReader(srcFileStr);
 			BufferedReader srcFileBReader = new BufferedReader(srcFileReader);
@@ -95,8 +108,8 @@ public class ThmInput {
 				//if(line.matches("\\\\begin\\{definition\\}|\\\\begin\\{lemma\\}")){
 				//if(line.matches("\\\\begin\\{definition\\}|\\\\begin\\{lemma\\}|\\\\begin\\{thm\\}|\\\\begin\\{theorem\\}")){	
 				//newThm = line;	
-				newThmSB.append(line);
-				line = srcFileReader.readLine();
+				//newThmSB.append(line);
+				//line = srcFileReader.readLine();
 				inThm = true;
 			}			
 			//else if(line.matches("\\\\end\\{definition\\}|\\\\end\\{lemma\\}")){
@@ -129,12 +142,13 @@ public class ThmInput {
 			
 			if(inThm){
 				//newThm = newThm + " " + line;
-				newThmSB.append(" " + line);
+				newThmSB.append(line);
 			}
 		}
 		
 		//srcFileReader.close();
 		//System.out.println("Inside ThmInput, thmsList " + thms);
+		System.out.println("thms " + thms);
 		return thms;
 	}
 	
@@ -159,12 +173,15 @@ public class ThmInput {
 			}
 		}
 		
+		//matcher = SENTENCE_START_PATTERN.matcher(noLabelThmStr);
+		//noLabelThmStr = matcher.replaceAll("");
+		
 		//eliminate symbols such as \fml
 		matcher = ELIMINATE_PATTERN.matcher(noLabelThmStr);
 		noLabelThmStr = matcher.replaceAll("");
 		
 		matcher = ITEM_PATTERN.matcher(noLabelThmStr);
-		noLabelThmStr = matcher.replaceAll("*");
+		noLabelThmStr = matcher.replaceAll("**");
 		
 		//containing the words inside \label and \index etc, but not the words "\label", "\index", 
 		// for bag-of-words searching.
@@ -173,15 +190,30 @@ public class ThmInput {
 		//remove label 
 		//StringBuilder a;
 		matcher = LABEL_PATTERN.matcher(noLabelThmStr);
-		if(matcher.find()){			
-			wordsThmStr = matcher.group(1) + ":: " + matcher.group(2);
+		if(matcher.find()){	
+			String labelContent = matcher.group(1);
+			Matcher matcher2 = DIGIT_PATTERN.matcher(labelContent);
+			if(!matcher2.find()){
+				wordsThmStr = matcher.group(1) + ":: " + matcher.group(2);
+			}else{
+				wordsThmStr = matcher.group(2);
+			}
 			//get thm content
 			noLabelThmStr = matcher.group(2);
 		}
 		
+		
 		//replace \index{...} with its content for wordsThmStr and nothing for web display version
 		matcher = INDEX_PATTERN.matcher(wordsThmStr);
-		wordsThmStr = matcher.replaceAll("$1");
+		
+		if(matcher.find()){	
+			//String insideIndexStr = new String(matcher.group(1));					
+			//insideIndexStr = insideIndexStr.replaceAll("!", " ");
+			//System.out.println(insideIndexStr);
+			wordsThmStr = matcher.replaceAll("$1");
+			//replace a!b!c inside \index with spaced-out versions
+			wordsThmStr = wordsThmStr.replaceAll("!", " ");
+		}
 		
 		matcher = INDEX_PATTERN.matcher(noLabelThmStr);
 		noLabelThmStr = matcher.replaceAll("");

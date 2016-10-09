@@ -46,6 +46,7 @@ public class SearchIntersection {
 	 * List of theorems.
 	 */
 	private static final ImmutableList<String> thmList;
+	private static final ImmutableList<String> webDisplayThmList;
 	
 	/**
 	 * Multimap of words, and the theorems (their indices) in thmList, the word shows up in.
@@ -73,6 +74,7 @@ public class SearchIntersection {
 		wordThmMMapNoAnno = CollectThm.ThmWordsMaps.get_wordThmsMMapNoAnno();
 		//System.out.println(wordsScoreMap);
 		thmList = CollectThm.ThmList.get_macroReplacedThmList();
+		webDisplayThmList = CollectThm.ThmList.get_webDisplayThmList();
 	}
 	
 	/**
@@ -681,11 +683,13 @@ public class SearchIntersection {
 		
 		if(highestThms == null){
 			foundThmList.add("Close, but no cigar. I don't have a theorem on that yet.");
-			return thmList;
+			//return thmList;
+			return null;
 		}
 		
 		for(Integer thmIndex : highestThms){
-			foundThmList.add(thmList.get(thmIndex));
+			//foundThmList.add(thmList.get(thmIndex));
+			foundThmList.add(webDisplayThmList.get(thmIndex));			
 		}
 		
 		return foundThmList;

@@ -26,7 +26,8 @@ public class SearchCombined {
 	//combined number of vectors to take from search results of
 	//svd/nearest and intersection
 	private static final int NUM_COMMON_VECS = 4;
-	private static final int LIST_INDEX_SHIFT = 1;
+	//should update at the very beginning!
+	//private static final int LIST_INDEX_SHIFT = 1;
 	
 	public static void initializeSearchWithResource(BufferedReader freqWordsFileBuffer, BufferedReader texSourceFileBuffer){
 		CollectFreqWords.setResources(freqWordsFileBuffer);
@@ -90,24 +91,24 @@ public class SearchCombined {
 			//index of thm
 			int intersectionThm = intersectionVecList.get(i);
 			//intersection list is 0-based!
-			Integer nearestListThmIndex = nearestVecListPositionsMap.remove(intersectionThm+LIST_INDEX_SHIFT);
+			Integer nearestListThmIndex = nearestVecListPositionsMap.remove(intersectionThm);
 			//first check if spanning is good, if spanning above a threshold, say contains more than
 			//(total #relevant words) - 2, threshold determined by relative size
 			//then don't need to be contained in nearestVecList	
 			if(thmSpanMap.get(intersectionThm) >= threshold){
 				int score = i;
 				if(score > maxScore) maxScore = score;
-				scoreThmTreeMMap.put(score, intersectionThm + LIST_INDEX_SHIFT);
+				scoreThmTreeMMap.put(score, intersectionThm);
 			}			
 			else if(nearestListThmIndex != null){
 				int score = i+nearestListThmIndex;
 				if(score > maxScore) maxScore = score;
-				scoreThmTreeMMap.put(score, intersectionThm + LIST_INDEX_SHIFT);
+				scoreThmTreeMMap.put(score, intersectionThm);
 			}//else add the length of nearestVecList to the score
 			else{
 				int score = i+nearestVecListSz;
 				if(score > maxScore) maxScore = score;
-				scoreThmTreeMMap.put(score, intersectionThm+LIST_INDEX_SHIFT);
+				scoreThmTreeMMap.put(score, intersectionThm);
 			}			
 		}
 		
@@ -133,8 +134,10 @@ public class SearchCombined {
 		int topIntersectionThmIndex = intersectionVecList.get(0);
 		int topIntersectionThmScore = thmScoreMap.get(topIntersectionThmIndex);
 		int topQueryIndex;
-		//intersectionVecList not empty at this point. Remove magic numbers.
-		if( thmSpanMap.get(topThmIndex) < thmSpanMap.get(topIntersectionThmIndex)*4.0/5
+		//intersectionVecList guranteed not empty at this point. Remove magic numbers.
+		//thmSpanMap.get(topThmIndex) < thmSpanMap.get(topIntersectionThmIndex)*4.0/5
+		if( (!intersectionVecList.contains(topThmIndex)
+				|| thmSpanMap.get(topThmIndex) < thmSpanMap.get(topIntersectionThmIndex)*4.0/5)
 				&& thmScoreMap.get(topThmIndex) < topIntersectionThmScore){
 			bestCommonVecList.add(topIntersectionThmIndex);
 			topQueryIndex = topIntersectionThmIndex;
@@ -229,9 +232,10 @@ public class SearchCombined {
 			
 			String firstWord = thm.split("\\s+")[0];
 			if(firstWord.matches("\\d+")){
-				numCommonVecs = Integer.parseInt(firstWord);			
+				numCommonVecs = Integer.parseInt(firstWord);
 			}
 			//find best intersection of these two lists. nearestVecList is 1-based, but intersectionVecList is 0-based! 
+			//now both are 0-based.
 			List<Integer> bestCommonVecs = findListsIntersection(nearestVecList, searchState, numCommonVecs);
 			
 			for(int d : bestCommonVecs){
