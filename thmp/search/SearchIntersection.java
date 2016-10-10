@@ -66,7 +66,7 @@ public class SearchIntersection {
 	/**
 	 * Static initializer, builds the maps using CollectThm.java. 
 	 */
-	static{		
+	static{	
 		//System.out.println(thmList);
 		wordsScoreMap = CollectThm.ThmWordsMaps.get_wordsScoreMapNoAnno();
 		//System.out.println(CollectThm.get_wordsScoreMap());

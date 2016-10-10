@@ -35,7 +35,7 @@ public class NGramSearch {
 	// in 2 grams, and entries are frequency counts.
 	//this field will be exposed to build 3-grams
 	private static final Map<String, Map<String, Integer>> nGramMap;
-	private static final String[] ADDITIONAL_TWO_GRAMS = new String[]{"local ring", "local field", "direct sum",
+	private static final String[] ADDITIONAL_TWO_GRAMS = new String[]{"local field", "direct sum",
 			"finitely many", "open mapping"};
 	//default two-gram count when total number of two grams is 0
 	private static final int ADDITIONAL_TWO_GRAM_DEFAULT_COUNT = 5;

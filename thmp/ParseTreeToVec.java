@@ -35,6 +35,7 @@ public class ParseTreeToVec {
 		//System.out.println("parseRelation headVecEntry " + headVecEntry);
 		//System.out.println("headStruct " + headStruct);
 		
+		System.out.println("HERE" + WLCommandStr);
 		//set the contextVec entry of the headStruct, returns the index of the entry being set
 		//should set it for both children!
 		String termStr = headStruct.contentStr();
@@ -82,9 +83,15 @@ public class ParseTreeToVec {
 		//should also set indices of ppt's of StructH, e.g. "maximal ideal", maximal is ppt of ideal 
 		Set<String> propertySet = struct.getPropertySet();
 		//mark indices for words that are properties
-		for(String propertyStr : propertySet){
-			//split properties by whitespace? E.g. "all maximal" -> "all", "maximal"
+		for(String propertyStr : propertySet){			
 			setContextVecEntry(struct, propertyStr, structIndex, contextVec);
+			//split properties by whitespace. E.g. "all maximal" -> "all", "maximal"
+			String[] propertyStrAr = propertyStr.split(" ");
+			if(propertyStrAr.length > 1){
+				for(String property : propertyStrAr){
+					setContextVecEntry(struct, property, structIndex, contextVec);
+				}
+			}
 		}
 	}
 	
@@ -100,14 +107,13 @@ public class ParseTreeToVec {
 		String termStr = struct.contentStr();
 		//add struct itself, then its prev1 and prev2
 		int structIndex = setContextVecEntry(struct, termStr, structParentIndex, contextVec);
-		
 		//do prev1 and prev2
 		if(struct.prev1NodeType().equals(NodeType.STRUCTA) || struct.prev1NodeType().equals(NodeType.STRUCTH)){
-			tree2vec((Struct)struct.prev1(), structIndex, contextVec);
+			tree2vec((Struct)(struct.prev1()), structIndex, contextVec);
 		}
 		
-		if(struct.prev2NodeType().equals(NodeType.STRUCTA) || struct.prev1NodeType().equals(NodeType.STRUCTH)){
-			tree2vec((Struct)struct.prev2(), structIndex, contextVec);
+		if(struct.prev2NodeType().equals(NodeType.STRUCTA) || struct.prev2NodeType().equals(NodeType.STRUCTH)){
+			tree2vec((Struct)(struct.prev2()), structIndex, contextVec);
 		}				
 	}
 	
@@ -127,6 +133,7 @@ public class ParseTreeToVec {
 		//sets the entry to the index of the parent	
 		
 		//String termStr = struct.contentStr();
+		if(termStr.matches("\\s*")) return structParentIndex;
 		
 		Integer termRowIndex = keywordDict.get(termStr);
 		if(termRowIndex == null){
@@ -136,7 +143,7 @@ public class ParseTreeToVec {
 		//System.out.println("##### Setting context vec, termStr " + termStr + " termRowIndex " + termRowIndex);
 		if(termRowIndex != null){			
 			contextVec[termRowIndex] = structParentIndex;
-			System.out.println("termStr " + termStr + " ### rowIndex " + termRowIndex + " parent index " + structParentIndex);
+			System.out.println("struct " + struct + " termStr " + termStr + " ### rowIndex " + termRowIndex + " parent index " + structParentIndex);
 		}else{
 			//pass parentIndex down to children, in case of intermediate StructA that doesn't have a content string.
 			//eg assert[A, B], the assert does not have content string.
@@ -153,7 +160,8 @@ public class ParseTreeToVec {
 	public enum ParseRelation{
 		ELEMENT(-1),
 		EXISTS(-2),
-		HASPPT(-3);
+		HASPPT(-3),
+		FORALL(-4);
 		
 		private final int relationNum;
 		
@@ -179,6 +187,8 @@ public class ParseTreeToVec {
 				return EXISTS.relationNum;
 			}else if(WLCommandStr.contains("HasProperty")){
 				return HASPPT.relationNum;
+			}else if(WLCommandStr.contains("\\[ForAll]")){
+				return FORALL.relationNum;
 			}else{
 				return 0;
 			}

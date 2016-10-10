@@ -73,7 +73,7 @@ public class ThmP1 {
 	private static final ImmutableListMultimap<String, FixedPhrase> fixedPhraseMap;	
 	
 	//private static final Map<String, Integer> twoGramMap = NGramSearch.get2GramsMap();
-	private static final Map<String, Integer> threeGramMap = ThreeGramSearch.get3GramsMap();
+	//private static final Map<String, Integer> threeGramMap = ThreeGramSearch.get3GramsMap();
 	
 	/**
 	 * List of Stringified Map of parts used to build up a theorem/def etc.  
