@@ -54,7 +54,7 @@ nullset ent
 inverse ent
 image ent
 three adj
-mapping
+degree ent
 view verb
 cartesian adj
 product ent

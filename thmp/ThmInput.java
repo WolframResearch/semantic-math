@@ -41,17 +41,18 @@ public class ThmInput {
 	private static final Pattern LABEL_PATTERN = Pattern.compile("(?:^.*)\\\\label\\{([^}]*)\\}\\s*(.*)");
 	private static final Pattern DIGIT_PATTERN = Pattern.compile(".*\\d+.*");
 
-	// boldface typesetting. \cat{} refers to category.
-	private static final Pattern DF_EMPH_PATTERN =
-			Pattern.compile("\\\\df\\{([^\\}]*)\\}|\\\\emph\\{([^\\}]*)\\}"
-			+ "|\\\\cat\\{([^}]*)\\}|\\{\\\\it\\s*([^}]*)\\}");
-	//replacement for DF_EMPH_PATTERN, should have same number of groups as number of patterns in DF_EMPH_PATTERN.
-	private static final String DF_EMPH_PATTERN_REPLACEMENT = "$1$2$3$4";
-	
-	private static Pattern[] GROUP1_PATTERN_ARRAY = new Pattern[] { Pattern.compile("\\\\df\\{([^\\}]*)\\}"),
+	// boldface typesetting. \cat{} refers to category. Update DF_EMPH_PATTERN_REPLACEMENT when updating this!
+	private static final Pattern DF_EMPH_PATTERN = Pattern
+			.compile("\\\\df\\{([^\\}]*)\\}|\\\\emph\\{([^\\}]*)\\}" + "|\\\\cat\\{([^}]*)\\}|\\{\\\\it\\s*([^}]*)\\}"
+					+ "|\\\\ref\\{([^}]*)\\}");
+	// replacement for DF_EMPH_PATTERN, should have same number of groups as
+	// number of patterns in DF_EMPH_PATTERN.
+	private static final String DF_EMPH_PATTERN_REPLACEMENT = "$1$2$3$4$5";
+
+	/*private static Pattern[] GROUP1_PATTERN_ARRAY = new Pattern[] { Pattern.compile("\\\\df\\{([^\\}]*)\\}"),
 			Pattern.compile("\\\\emph\\{([^}]*)\\}"), Pattern.compile("\\\\cat\\{([^}]*)\\}"),
 			Pattern.compile("\\{\\\\it\\s*([^}]*)\\}") // \\{\\\\it([^}]*)\\}
-	};
+	};*/
 	private static final Pattern INDEX_PATTERN = Pattern.compile("\\\\index\\{([^\\}]*)\\}%*");
 	// pattern for eliminating the command completely for web display. E.g. \fml
 	private static Pattern ELIMINATE_PATTERN = Pattern
@@ -59,6 +60,7 @@ public class ThmInput {
 					+ "|^\\\\begin\\{def(?:[^}]*)\\}\\s*|^\\\\begin\\{lem(?:[^}]*)\\}\\s*|^\\\\begin\\{th(?:[^}]*)\\}\\s*"
 					+ "|^\\\\begin\\{prop(?:[^}]*)\\}\\s*|^\\\\begin\\{proclaim(?:[^}]*)\\}\\s*|^\\\\begin\\{cor\\}\\s*"
 					+ "|\\\\begin\\{slogan\\}|\\\\end\\{slogan\\}");
+	
 	private static final Pattern ITEM_PATTERN = Pattern.compile("\\\\item");
 
 	public static void main(String[] args) throws IOException {
@@ -67,21 +69,22 @@ public class ThmInput {
 		// File file = new File("src/thmp/data/commAlg5.txt");
 		// String srcFileStr = "src/thmp/data/commAlg5.txt";
 		// String srcFileStr = "src/thmp/data/multilinearAlgebra.txt";
-		 String srcFileStr = "src/thmp/data/functionalAnalysis.txt";
-		//String srcFileStr = "src/thmp/data/fieldsRawTex.txt";
+		String srcFileStr = "src/thmp/data/functionalAnalysis.txt";
+		// String srcFileStr = "src/thmp/data/fieldsRawTex.txt";
 		// String srcFileStr = "src/thmp/data/test1.txt";
 		FileReader srcFileReader = new FileReader(srcFileStr);
 		BufferedReader srcFileBReader = new BufferedReader(srcFileReader);
 
 		List<String> thmWebDisplayList = new ArrayList<String>();
-		List<String> thmList = readThm(srcFileBReader, thmWebDisplayList);
+		List<String> bareThmList = new ArrayList<String>();
+		List<String> thmList = readThm(srcFileBReader, thmWebDisplayList, bareThmList);
 		if (writeToFile) {
 			// Path fileTo = Paths.get("src/thmp/data/thmFile5.txt");
 			// Path fileTo =
 			// Paths.get("src/thmp/data/multilinearAlgebraThms2.txt");
-			Path fileTo = Paths.get("src/thmp/data/functionalAnalysisThms2.txt");			
+			Path fileTo = Paths.get("src/thmp/data/functionalAnalysisThms2.txt");
 			// Path fileTo = Paths.get("src/thmp/data/test1Thms.txt");
-			//Path fileTo = Paths.get("src/thmp/data/fieldsThms2.txt");
+			// Path fileTo = Paths.get("src/thmp/data/fieldsThms2.txt");
 
 			System.out.println(thmWebDisplayList);
 
@@ -95,13 +98,16 @@ public class ThmInput {
 	 *            BufferedReader to get tex from.
 	 * @param thmWebDisplayList
 	 *            List to contain theorems to display for the web. without
-	 *            \labels, \index, etc.
+	 *            \labels, \index, etc. Can be null, for callers who don't need it.
+	 * @param bareThmList
+	 * 				bareThmList for parsing, without label content. Can be null.
 	 * @return List of unprocessed theorems read in from srcFileReader, for bag
 	 *         of words search.
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
-	public static List<String> readThm(BufferedReader srcFileReader, List<String> thmWebDisplayList)
+	public static List<String> readThm(BufferedReader srcFileReader, List<String> thmWebDisplayList,
+			List<String> bareThmList)
 			throws FileNotFoundException, IOException {
 		// BufferedReader is faster than scanner
 
@@ -140,7 +146,7 @@ public class ThmInput {
 				// strip \df, \empf. Index followed by % strip, not percent
 				// don't strip.
 				// replace enumerate and \item with *
-				String thm = processTex(newThmSB, thmWebDisplayList) + "\n";
+				String thm = processTex(newThmSB, thmWebDisplayList, bareThmList) + "\n";
 
 				// newThmSB.append("\n");
 				/*
@@ -160,38 +166,42 @@ public class ThmInput {
 
 			if (inThm) {
 				// newThm = newThm + " " + line;
-				newThmSB.append(line);
+				newThmSB.append(" " + line);
 			}
 		}
 
 		// srcFileReader.close();
 		// System.out.println("Inside ThmInput, thmsList " + thms);
-		//System.out.println("thmWebDisplayList " + thmWebDisplayList);
+		// System.out.println("thmWebDisplayList " + thmWebDisplayList);
 		return thms;
 	}
 
 	/**
 	 * 
-	 * @param newThmSB
-	 * @param thmWebDisplayList
+	 * @param newThmSB 
+	 * @param thmWebDisplayList Can be null.
+	 * @param bareThmList Can be null.
 	 * @return Thm without the "\begin{lemma}", "\label{}", etc parts.
 	 */
-	private static String processTex(StringBuilder newThmSB, List<String> thmWebDisplayList) {
+	private static String processTex(StringBuilder newThmSB, List<String> thmWebDisplayList,
+			List<String> bareThmList) {
+
+		boolean getWebDisplayList = thmWebDisplayList == null ? false : true;
+		boolean getBareThmList = bareThmList == null ? false : true;		
 
 		String noLabelThmStr = newThmSB.toString();
 
 		// replace \df{} and \emph{} with their content
-		Matcher matcher = DF_EMPH_PATTERN.matcher(noLabelThmStr);		
+		Matcher matcher = DF_EMPH_PATTERN.matcher(noLabelThmStr);
 		noLabelThmStr = matcher.replaceAll(DF_EMPH_PATTERN_REPLACEMENT);
-		
-		/*for (Pattern pattern : GROUP1_PATTERN_ARRAY) {
-			matcher = pattern.matcher(noLabelThmStr);
 
-			if (matcher.find()) {
-				// System.out.println(matcher.group(1));
-				noLabelThmStr = matcher.replaceAll("$1");
-			}
-		} */
+		/*
+		 * for (Pattern pattern : GROUP1_PATTERN_ARRAY) { matcher =
+		 * pattern.matcher(noLabelThmStr);
+		 * 
+		 * if (matcher.find()) { // System.out.println(matcher.group(1));
+		 * noLabelThmStr = matcher.replaceAll("$1"); } }
+		 */
 
 		// matcher = SENTENCE_START_PATTERN.matcher(noLabelThmStr);
 		// noLabelThmStr = matcher.replaceAll("");
@@ -208,22 +218,6 @@ public class ThmInput {
 		// for bag-of-words searching.
 		String wordsThmStr = noLabelThmStr;
 
-		// remove label
-		// StringBuilder a;
-		matcher = LABEL_PATTERN.matcher(noLabelThmStr);
-		if (matcher.find()) {
-			String labelContent = matcher.group(1);
-			Matcher matcher2 = DIGIT_PATTERN.matcher(labelContent);
-			if (!matcher2.find()) {
-				String withLabelContent = matcher.group(1) + ":: " + matcher.group(2);
-				wordsThmStr = withLabelContent;
-				// get thm content			
-				noLabelThmStr = withLabelContent;
-			} else {
-				wordsThmStr = matcher.group(2);
-			}
-		}
-
 		// replace \index{...} with its content for wordsThmStr and nothing for
 		// web display version
 		matcher = INDEX_PATTERN.matcher(wordsThmStr);
@@ -237,10 +231,35 @@ public class ThmInput {
 			wordsThmStr = wordsThmStr.replaceAll("!", " ");
 		}
 
-		matcher = INDEX_PATTERN.matcher(noLabelThmStr);
-		noLabelThmStr = matcher.replaceAll("");
+		if(getWebDisplayList || getBareThmList){
+			matcher = INDEX_PATTERN.matcher(noLabelThmStr);
+			noLabelThmStr = matcher.replaceAll("");
+		}
+		
+		//bare thm string with no label content at the beginning.
+		String bareThmStr = noLabelThmStr;
+		// remove label
+		matcher = LABEL_PATTERN.matcher(noLabelThmStr);
+		if (matcher.find()) {
+			String labelContent = matcher.group(1);
+			Matcher matcher2 = DIGIT_PATTERN.matcher(labelContent);
+			if (!matcher2.find()) {
+				String withLabelContent = matcher.group(1) + ":: " + matcher.group(2);
+				wordsThmStr = withLabelContent;
+				// get thm content
+				noLabelThmStr = withLabelContent;
+			} else {
+				wordsThmStr = matcher.group(2);
+			}
+			bareThmStr = matcher.group(2);
+		}
 
-		thmWebDisplayList.add(noLabelThmStr);
+		if(getBareThmList){
+			bareThmList.add(bareThmStr);
+		}
+		if(getWebDisplayList){
+			thmWebDisplayList.add(noLabelThmStr);
+		}
 		return wordsThmStr;
 	}
 

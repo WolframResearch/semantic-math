@@ -150,10 +150,8 @@ public class UnzipFile {
 				BufferedReader fileBufferedReader = new BufferedReader(fileReader);
 
 				Path fileTo = Paths.get(file.replaceAll("([^.]*)(\\.txt)", "$1_thms$2"));
-
-				//the webDisplay version is not used.
-				List<String> thmWebDisplayList = new ArrayList<String>();
-				List<String> thmList = ThmInput.readThm(fileBufferedReader, thmWebDisplayList);
+				
+				List<String> thmList = ThmInput.readThm(fileBufferedReader, null, null);
 
 				// write list of theorems to file
 				Files.write(fileTo, thmList, Charset.forName("UTF-8"));

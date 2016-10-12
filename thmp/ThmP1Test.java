@@ -290,6 +290,7 @@ public class ThmP1Test {
 			st = "$R_\\mathfrak m$ is universally catenary for all maximal ideals $\\mathfrak m$";
 			st = "disjoint finite chains of primes $\\mathfrak p = \\mathfrak q$ have the same length";
 			st = "f is a function with radius of convergence r and finitely many roots";
+			//st = "minimal polynomial of degree $p$, whose coefficients are real";
 			
 			//st = "a field is a ring";
 			//st = "Assume that $B$ is Noetherian and Cohen-Macaulay and that $\\mathfrak m_B = (\\mathfrak m_A) B}$"; //**<--revisit!

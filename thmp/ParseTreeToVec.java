@@ -39,10 +39,11 @@ public class ParseTreeToVec {
 		//set the contextVec entry of the headStruct, returns the index of the entry being set
 		//should set it for both children!
 		String termStr = headStruct.contentStr();
-		int termRowIndex = setContextVecEntry(headStruct, termStr, headVecEntry, contextVec);
+		//int termRowIndex = setContextVecEntry(headStruct, termStr, headVecEntry, contextVec);
 		//System.out.println("termRowIndex " + termRowIndex);
 		
-		return tree2vec(headStruct, termRowIndex, contextVec);
+		return tree2vec(headStruct, headVecEntry, contextVec);
+		//return tree2vec(headStruct, termRowIndex, contextVec);
 	}
 	
 	/**

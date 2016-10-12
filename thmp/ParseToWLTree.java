@@ -576,13 +576,14 @@ public class ParseToWLTree {
 	 *	component count, since those commands don't interfere with anything else.
 	 * @param struct is Struct that the commandStr has been appended to, i.e. head struct.
 	 * @param contextVec is context vector for this WLCommand. 
+	 * @return whether contextVecConstructed
 	 */
 	private static boolean appendWLCommandStr(Struct struct, StringBuilder parsedSB, Multimap<ParseStructType, ParsedPair> partsMap, 
-			int[] contextVec){
+			int[] contextVec, boolean contextVecConstructed){
 		
 		List<WLCommandWrapper> structWrapperList = struct.WLCommandWrapperList();
 		int structWrapperListSz = structWrapperList.size();
-		boolean contextVecConstructed = false;		
+		//boolean contextVecConstructed = false;		
 		
 		//System.out.println("HEAD: " + WLCommand.totalComponentCount(structWrapperList.get(0).WLCommand));
 		for(int i = structWrapperListSz - 1; i > -1; i--){
@@ -598,10 +599,11 @@ public class ParseToWLTree {
 				
 				//form the int[] contex vector by going down struct				
 				// curCommand's type determines the num attached to head of structH,
-				// e.g. "Exists[structH]" writes enum ParseRelation -2 at the index of structH				
-				ParseTreeToVec.tree2vec(struct, contextVec, curWrapper.WLCommandStr);
-				contextVecConstructed = true;
-				
+				// e.g. "Exists[structH]" writes enum ParseRelation -2 at the index of structH	
+				if(!contextVecConstructed){
+					ParseTreeToVec.tree2vec(struct, contextVec, curWrapper.WLCommandStr);
+					contextVecConstructed = true;
+				}
 				//get the ParseStruct based on type
 				ParseStructType type = ParseStructType.getType(struct);
 				ParsedPair pair = new ParsedPair(curWrapper.WLCommandStr, struct.maxDownPathScore(), 
@@ -633,14 +635,14 @@ public class ParseToWLTree {
 	 * @param struct
 	 * @param parsedSB
 	 */
-	public static void dfs(Multimap<ParseStructType, ParsedPair> partsMap, Struct struct, StringBuilder parsedSB, 
-			int[] curStructContextVec, boolean shouldPrint) {
+	public static boolean dfs(Multimap<ParseStructType, ParsedPair> partsMap, Struct struct, StringBuilder parsedSB, 
+			int[] curStructContextVec, boolean shouldPrint, boolean contextVecConstructed) {
 		//don't append if already incorporated into a higher command
 		//System.out.print(struct.WLCommandStrVisitedCount());
 		//WLComamnd() should not be null if WLCommandStr is not null
-		//if(struct.WLCommandStr() != null && struct.WLCommandStrVisitedCount(k) < 1){		
+		//if(struct.WLCommandStr() != null && struct.WLCommandStrVisitedCount(k) < 1){	
 		//whether context vec has been constructed
-		boolean contextVecConstructed = false;
+		//boolean contextVecConstructed = false;
 		
 		if(struct.WLCommandWrapperList() != null && struct.WLCommandStrVisitedCount() < 1){	
 		//if(struct.WLCommandWrapperList() != null){	
@@ -650,7 +652,8 @@ public class ParseToWLTree {
 				parsedSB.append(struct.WLCommandStr());
 			} */
 			
-			contextVecConstructed = appendWLCommandStr(struct, parsedSB, partsMap, curStructContextVec);			
+			contextVecConstructed = appendWLCommandStr(struct, parsedSB, partsMap, curStructContextVec,
+					contextVecConstructed);			
 			
 			shouldPrint = false;
 			//reset WLCommandStr back to null, so next 
@@ -674,7 +677,8 @@ public class ParseToWLTree {
 			
 			// don't know type at compile time
 			if (struct.prev1() instanceof Struct) {
-				dfs(partsMap, (Struct) struct.prev1(), parsedSB, curStructContextVec, shouldPrint);
+				dfs(partsMap, (Struct) struct.prev1(), parsedSB, curStructContextVec, shouldPrint,
+						contextVecConstructed);
 			}
 
 			// if(struct.prev2() != null && !struct.prev2().equals(""))
@@ -683,7 +687,8 @@ public class ParseToWLTree {
 				// avoid printing is[is], ie case when parent has same type as
 				// child
 				if(shouldPrint) parsedSB.append(", ");
-				dfs(partsMap, (Struct) struct.prev2(), parsedSB, curStructContextVec, shouldPrint);
+				dfs(partsMap, (Struct) struct.prev2(), parsedSB, curStructContextVec, shouldPrint,
+						contextVecConstructed);
 			}
 
 			if (struct.prev1() instanceof String) {
@@ -705,17 +710,19 @@ public class ParseToWLTree {
 			List<String> childRelation = struct.childRelation();
 
 			if (children == null || children.size() == 0)
-				return;
+				return contextVecConstructed;
 
 			if(shouldPrint) parsedSB.append("[");
 
 			for (int i = 0; i < children.size(); i++) {
 				if(shouldPrint) parsedSB.append(childRelation.get(i) + " ");
 
-				dfs(partsMap, children.get(i), parsedSB, curStructContextVec, shouldPrint);
+				dfs(partsMap, children.get(i), parsedSB, curStructContextVec, shouldPrint,
+						contextVecConstructed);
 			}
 			if(shouldPrint) parsedSB.append("]");
 		}
+		return contextVecConstructed;
 	}
 	
 	/**

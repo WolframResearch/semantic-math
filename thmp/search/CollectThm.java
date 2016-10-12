@@ -45,8 +45,8 @@ public class CollectThm {
 	private static final String rawFileStr = "src/thmp/data/CommAlg5.txt";
 	//read in from list of files streams instead of just one
 	private static final List<String> rawFileStrList = Arrays.asList(new String[]{
-			//"src/thmp/data/fieldsRawTex.txt",
-			"src/thmp/data/CommAlg5.txt", 
+			"src/thmp/data/fieldsRawTex.txt",
+			//"src/thmp/data/CommAlg5.txt", 
 			//"src/thmp/data/multilinearAlgebra.txt",
 			//"src/thmp/data/functionalAnalysis.txt"
 			});
@@ -605,7 +605,9 @@ public class CollectThm {
 		//processed with options to replace tex with latex, and expand macros with their definitions
 		private static final ImmutableList<String> processedThmList;
 		//list of theorems for web display, without \label{} or \index{} etc
-		private static final ImmutableList<String> webDisplayThmList;		
+		private static final ImmutableList<String> webDisplayThmList;	
+		//list of bare theorems, without label content 
+		private static final ImmutableList<String> bareThmList;	
 		//thm list with just macros replaced
 		private static final ImmutableList<String> macroReplacedThmList;
 		//whether to replace latex symbols with the word "tex"
@@ -621,6 +623,7 @@ public class CollectThm {
 			List<String> processedThms = new ArrayList<String>();
 			List<String> macroReplacedThms = new ArrayList<String>();
 			List<String> webDisplayThms = new ArrayList<String>();
+			List<String> bareThms = new ArrayList<String>();
 			//System.out.print("rawFileReader: " + rawFileReader);
 			//extractedThms = ThmList.get_thmList();
 			try {
@@ -630,7 +633,7 @@ public class CollectThm {
 						FileReader rawFileReader = new FileReader(fileStr);
 						BufferedReader rawFileBReader = new BufferedReader(rawFileReader);
 						//System.out.println("rawFileReader is null ");
-						extractedThms.addAll(ThmInput.readThm(rawFileBReader, webDisplayThms));							
+						extractedThms.addAll(ThmInput.readThm(rawFileBReader, webDisplayThms, bareThms));							
 						//System.out.print("Should be extracting theorems here: " + extractedThms);
 					}
 					//the third true means to extract words from latex symbols, eg oplus->direct sum.
@@ -649,7 +652,7 @@ public class CollectThm {
 						System.out.println(line);
 					}*/ 
 					for(BufferedReader fileReader : rawFileReaderList){
-						extractedThms.addAll(ThmInput.readThm(fileReader, webDisplayThms));
+						extractedThms.addAll(ThmInput.readThm(fileReader, webDisplayThms, bareThms));
 					}
 					processedThms = ProcessInput.processInput(extractedThms, macrosDefReader, REPLACE_TEX, TEX_TO_WORDS, REPLACE_MACROS);
 					//the BufferedStream containing macros is set when rawFileReaderList is set.
@@ -661,6 +664,7 @@ public class CollectThm {
 			thmListBuilder.addAll(extractedThms);
 			thmList = thmListBuilder.build();
 			webDisplayThmList = ImmutableList.copyOf(webDisplayThms);
+			bareThmList = ImmutableList.copyOf(bareThms);
 			processedThmList = ImmutableList.copyOf(processedThms);
 			macroReplacedThmList = ImmutableList.copyOf(macroReplacedThms);
 		}
@@ -679,6 +683,14 @@ public class CollectThm {
 		 */
 		public static ImmutableList<String> get_webDisplayThmList(){
 			return webDisplayThmList;
+		}
+		
+		/**
+		 * List of theorems for web parsing, without \label{} or \index{}, or label content etc.
+		 * @return
+		 */
+		public static ImmutableList<String> get_bareThmList(){
+			return bareThmList;
 		}
 		
 		public static ImmutableList<String> get_processedThmList(){

@@ -321,13 +321,12 @@ public class ThmP1 {
 		// list of each word with their initial type, adj, noun,
 		List<Pair> pairs = new ArrayList<Pair>();
 		//boolean addIndex = true; // whether to add to pairIndex
-		// str: unfortunate naming
-		String[] str = sentence.split(" ");
+		String[] strAr = sentence.split(" ");
 		
 		// int pairIndex = 0;
-		strloop: for (int i = 0; i < str.length; i++) {
+		strloop: for (int i = 0; i < strAr.length; i++) {
 
-			String curWord = str[i];
+			String curWord = strAr[i];
 			
 			if (curWord.matches("^\\s*,*$"))
 				continue;
@@ -337,22 +336,22 @@ public class ThmP1 {
 			// curWord = curWord.replaceAll("\\(|\\)", "");
 			// remove this and ensure curWord is used subsequently
 			// instead of str[i]
-			str[i] = curWord;
+			strAr[i] = curWord;
 
 			String type = "mathObj";
-			int wordlen = str[i].length();
+			int wordlen = strAr[i].length();
 
 			// detect latex expressions, set their pos as "mathObj" for now
 			if (curWord.charAt(0) == '$') {
 				String latexExpr = curWord;
-				int stringLength = str.length;
+				int stringLength = strAr.length;
 				//not a single-word latex expression, i.e. $R$-module
 				if (i < stringLength - 1 && !curWord.matches("\\$[^$]+\\$[^\\s]*")
 						&& (curWord.charAt(wordlen - 1) != '$' || wordlen == 2 || wordlen == 1)) {
 					i++;
-					curWord = str[i];
+					curWord = strAr[i];
 					if (i < stringLength - 1 && curWord.equals("")) {
-						curWord = str[++i];
+						curWord = strAr[++i];
 					//}
 					//else if (curWord.matches("[^$]*\\$.*")) {
 						//latexExpr += " " + curWord;
@@ -366,16 +365,16 @@ public class ThmP1 {
 							if (i == stringLength)
 								break;
 
-							curWord = i < stringLength - 1 && str[i].equals("") ? str[++i] : str[i];
+							curWord = i < stringLength - 1 && strAr[i].equals("") ? strAr[++i] : strAr[i];
 
 						}
 					}
 					//add the end of the latex expression, only if it's the end bit
 					if (i < stringLength ) {
-						int tempWordlen = str[i].length();
+						int tempWordlen = strAr[i].length();
 
-						if (tempWordlen > 0 && str[i].charAt(tempWordlen - 1) == '$')
-							latexExpr += " " + str[i];
+						if (tempWordlen > 0 && strAr[i].charAt(tempWordlen - 1) == '$')
+							latexExpr += " " + strAr[i];
 					}
 					/*
 					if (latexExpr.matches("[^=]+=.+|[^\\\\cong]+\\\\cong.+")
@@ -403,8 +402,8 @@ public class ThmP1 {
 				continue;
 			}
 			// check for trigger words
-			else if (i < str.length - 1) {
-				String potentialTrigger = curWord + " " + str[i + 1];
+			else if (i < strAr.length - 1) {
+				String potentialTrigger = curWord + " " + strAr[i + 1];
 				if (fixedPhraseMap.containsKey(potentialTrigger)) {
 					
 					// need multimap!! same trigger could apply to many phrases
@@ -425,11 +424,11 @@ public class ThmP1 {
 						// str.length) );
 						String joined = "";
 						int k = i;
-						while (k < str.length && k - i < numWordsDown) {
+						while (k < strAr.length && k - i < numWordsDown) {
 							// String joined =
 							// String.join(Arrays.copyOfRange(str, i,
 							// str.length) );
-							joined += str[k] + " ";
+							joined += strAr[k] + " ";
 							k++;
 						}
 						
@@ -451,7 +450,7 @@ public class ThmP1 {
 
 				}				
 				
-				int newIndex = gatherTwoThreeGram(i, str, pairs, mathIndexList);
+				int newIndex = gatherTwoThreeGram(i, strAr, pairs, mathIndexList);
 				//a two or three gram was picked up
 				if(newIndex > i){ 
 					i = newIndex;
@@ -473,13 +472,13 @@ public class ThmP1 {
 				
 				//should be superceded by using the two-gram map above!
 				// if composite math noun, eg "finite field"
-				while (i - k > -1 && mathObjMap.containsKey(str[i - k] + " " + tempWord)
-						&& mathObjMap.get(str[i - k] + " " + tempWord).equals("mathObj")) {
+				while (i - k > -1 && mathObjMap.containsKey(strAr[i - k] + " " + tempWord)
+						&& mathObjMap.get(strAr[i - k] + " " + tempWord).equals("mathObj")) {
 
 					// remove previous pair from pairs if it has new match
 					// pairs.size should be > 0, ie previous word should be
 					// classified already
-					if (pairs.size() > 0 && pairs.get(pairsSize - 1).word().equals(str[i - k])) {
+					if (pairs.size() > 0 && pairs.get(pairsSize - 1).word().equals(strAr[i - k])) {
 
 						// remove from mathIndexList if already counted
 						if (mathObjMap.containsKey(pairs.get(pairs.size() - 1).word())) {
@@ -490,8 +489,8 @@ public class ThmP1 {
 						//addIndex = false;
 					}
 
-					tempWord = str[i - k] + " " + tempWord;
-					curWord = str[i - k] + " " + curWord;
+					tempWord = strAr[i - k] + " " + tempWord;
+					curWord = strAr[i - k] + " " + curWord;
 					k++;
 				}
 
@@ -527,10 +526,10 @@ public class ThmP1 {
 
 				while (tempPos.length() > 4
 						&& tempPos.substring(tempPos.length() - 4, tempPos.length()).matches("COMP|comp")
-						&& i < str.length - 1) {
+						&& i < strAr.length - 1) {
 
 					curWord = temp;
-					temp = temp + " " + str[i + 1];
+					temp = temp + " " + strAr[i + 1];
 					if (!posMap.containsKey(temp)) {
 						break;
 					}
@@ -605,36 +604,36 @@ public class ThmP1 {
 			}
 			// check again for verbs ending in 'es' & 's'
 			else if (wordlen > 0 && curWord.charAt(wordlen - 1) == 's'
-					&& posMap.containsKey(str[i].substring(0, wordlen - 1))
-					&& posMap.get(str[i].substring(0, wordlen - 1)).equals("verb")) {
+					&& posMap.containsKey(strAr[i].substring(0, wordlen - 1))
+					&& posMap.get(strAr[i].substring(0, wordlen - 1)).equals("verb")) {
 
-				Pair pair = new Pair(str[i], "verb");
+				Pair pair = new Pair(strAr[i], "verb");
 				pairs.add(pair);
-			} else if (wordlen > 1 && curWord.charAt(wordlen - 1) == 's' && str[i].charAt(str[i].length() - 2) == 'e'
-					&& posMap.containsKey(str[i].substring(0, wordlen - 2))
-					&& posMap.get(str[i].substring(0, wordlen - 2)).equals("verb")) {
-				Pair pair = new Pair(str[i], "verb");
+			} else if (wordlen > 1 && curWord.charAt(wordlen - 1) == 's' && strAr[i].charAt(strAr[i].length() - 2) == 'e'
+					&& posMap.containsKey(strAr[i].substring(0, wordlen - 2))
+					&& posMap.get(strAr[i].substring(0, wordlen - 2)).equals("verb")) {
+				Pair pair = new Pair(strAr[i], "verb");
 				pairs.add(pair);
 
 			}
 			// adverbs that end with -ly that haven't been screened off before
 			else if (wordlen > 1 && curWord.substring(wordlen - 2, wordlen).equals("ly")) {
-				Pair pair = new Pair(str[i], "adverb");
+				Pair pair = new Pair(strAr[i], "adverb");
 				pairs.add(pair);
 			}
 			// participles and gerunds. Need special list for words such as
 			// "given"
 			else if (wordlen > 1 && curWord.substring(wordlen - 2, wordlen).equals("ed")
-					&& (posMap.containsKey(str[i].substring(0, wordlen - 2))
-							&& posMap.get(str[i].substring(0, wordlen - 2)).equals("verb")
-							|| posMap.containsKey(str[i].substring(0, wordlen - 1))
-									&& posMap.get(str[i].substring(0, wordlen - 1)).equals("verb"))) {
+					&& (posMap.containsKey(strAr[i].substring(0, wordlen - 2))
+							&& posMap.get(strAr[i].substring(0, wordlen - 2)).equals("verb")
+							|| posMap.containsKey(strAr[i].substring(0, wordlen - 1))
+									&& posMap.get(strAr[i].substring(0, wordlen - 1)).equals("verb"))) {
 
 				// if next word is "by", then
 				String curPos = "parti";
 				int pairsSize = pairs.size();
 				// if next word is "by"
-				if (str.length > i + 1 && str[i + 1].equals("by")) {
+				if (strAr.length > i + 1 && strAr[i + 1].equals("by")) {
 					curPos = "partiby";
 					curWord = curWord + " by";
 					// if previous word is a verb, combine to form verb
@@ -664,7 +663,7 @@ public class ThmP1 {
 					curPos = "adj";
 				}
 				// if next word is entity, then adj
-				else if (str.length > i + 1 && mathObjMap.containsKey(str[i + 1])) {
+				else if (strAr.length > i + 1 && mathObjMap.containsKey(strAr[i + 1])) {
 
 					// combine with adverb if previous one is adverb
 					if (pairsSize > 0 && pairs.get(pairsSize - 1).pos().equals("adverb")) {
@@ -683,12 +682,12 @@ public class ThmP1 {
 							|| (posMap.containsKey(curWord.substring(0, wordlen - 3) + 'e')
 									&& posMap.get(curWord.substring(0, wordlen - 3) + 'e').matches("verb|vbs")))) {
 				String curType = "gerund";
-				if (i < str.length - 1 && posMap.containsKey(str[i + 1]) && posMap.get(str[i + 1]).equals("pre")) {
+				if (i < strAr.length - 1 && posMap.containsKey(strAr[i + 1]) && posMap.get(strAr[i + 1]).equals("pre")) {
 					// eg "consisting of" functions as pre
-					curWord = curWord + " " + str[++i];
+					curWord = curWord + " " + strAr[++i];
 					curType = "pre";
-				} else if (i < str.length - 1 && (mathObjMap.containsKey(str[i+1]) ||
-						posMap.containsKey(str[i + 1]) && posMap.get(str[i + 1]).matches("noun"))) 
+				} else if (i < strAr.length - 1 && (mathObjMap.containsKey(strAr[i+1]) ||
+						posMap.containsKey(strAr[i + 1]) && posMap.get(strAr[i + 1]).matches("noun"))) 
 				{
 					// eg "vanishing locus" functions as amod: adjectivial
 					// modifier
@@ -701,12 +700,12 @@ public class ThmP1 {
 			} else if (curWord.matches("[a-zA-Z]")) {
 				// variable/symbols
 
-				Pair pair = new Pair(str[i], "symb");
+				Pair pair = new Pair(strAr[i], "symb");
 				pairs.add(pair);
 			}
 			// Get numbers. Incorporate written-out numbers, eg "two"
 			else if (curWord.matches("^\\d+$")) {
-				Pair pair = new Pair(str[i], "num");
+				Pair pair = new Pair(strAr[i], "num");
 				pairs.add(pair);
 			} else if (!curWord.matches(" ")) { // try to minimize this case.
 
@@ -741,9 +740,9 @@ public class ThmP1 {
 						pairs.remove(pairsSize - 2);
 					}
 
-					if (i + 1 < str.length && str[i + 1].matches("not|no")) {
+					if (i + 1 < strAr.length && strAr[i + 1].matches("not|no")) {
 						//String newWord = pair.word().matches("is|are") ? "not" : "not " + pair.word();
-						String newWord = pair.word() + " " + str[i+1];
+						String newWord = pair.word() + " " + strAr[i+1];
 						pair.set_word(newWord);
 						i++;
 					}
@@ -761,7 +760,7 @@ public class ThmP1 {
 		String prevType = "", nextType = "", tempCurType = "", tempPrevType = "", tempNextType = "", bestCurType = "";
 
 		int posListSz = posList.size();
-
+		
 		for (int index = 0; index < len; index++) {
 			curpair = pairs.get(index);
 			if (curpair.pos().equals("")) {
@@ -1878,7 +1877,12 @@ public class ThmP1 {
 		//int[] curStructContextVec = new int[TriggerMathThm2.keywordDictSize()];
 		
 		//fills the parseStructMap and produces String representation		
-		ParseToWLTree.dfs(parseStructMap, uHeadStruct, wlSB, curStructContextVec, true);				
+		boolean contextVecConstructed = false;
+		contextVecConstructed = ParseToWLTree.dfs(parseStructMap, uHeadStruct, wlSB, curStructContextVec, true,
+				contextVecConstructed);
+		if(!contextVecConstructed){
+			ParseTreeToVec.tree2vec(uHeadStruct, curStructContextVec, "");
+		}
 		//System.out.println("curStructContextVec " + curStructContextVec);		
 		
 		System.out.println("Parts: " + parseStructMap);

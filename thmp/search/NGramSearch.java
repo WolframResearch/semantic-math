@@ -37,6 +37,8 @@ public class NGramSearch {
 	private static final Map<String, Map<String, Integer>> nGramMap;
 	private static final String[] ADDITIONAL_TWO_GRAMS = new String[]{"local field", "direct sum",
 			"finitely many", "open mapping"};
+	//words to be taken off of two-gram map
+	private static final String[] NOT_TWO_GRAMS = new String[]{"field is"};
 	//default two-gram count when total number of two grams is 0
 	private static final int ADDITIONAL_TWO_GRAM_DEFAULT_COUNT = 5;
 	//should use this to detect fluff in first word.
@@ -196,6 +198,10 @@ public class NGramSearch {
 		}		
 		for(String twoGram : ADDITIONAL_TWO_GRAMS){
 			twoGramMap.put(twoGram, averageFreqCount);
+		}
+		//take away false positive two-grams
+		for(String token : NOT_TWO_GRAMS){
+			twoGramMap.remove(token);
 		}
 		//System.out.println("averageFreqCount " + averageFreqCount);
 		return twoGramMap;
