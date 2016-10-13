@@ -75,14 +75,20 @@ public class ContextSearch {
 	}
 	
 	/**
-	 * @param queryVec already in WL list form: {1, 5, ...}
+	 * @param query input query, in English 
 	 * @param nearestThmIndexList List of thm indices, resulting from other 
 	 * search algorithms such as SVD and/or intersection.
 	 * Gets list of vectors from GenerateContextVectors.java, 
 	 * pick out the nearest structual vectors using Nearest[].
 	 * @return Gives an ordered list of vectors based on context.
 	 */
-	public static List<Integer> contextSearch(String queryVec, List<Integer> nearestThmIndexList){
+	public static List<Integer> contextSearch(String query, List<Integer> nearestThmIndexList){
+		
+		String queryContextVec = thmp.GenerateContextVector.createContextVector(query);
+		//short-circuit if context vec not created
+		
+		/////////
+		
 		StringBuffer nearestThmsContextVecSB = new StringBuffer("{");
 		int nearestThmIndexListSz = nearestThmIndexList.size();
 		List<Integer> nearestVecList = null;
@@ -103,7 +109,7 @@ public class ContextSearch {
 			//get average of the nearestThmsContextVecSB!
 			ml.evaluate("contextVecMean = Mean[Flatten[" + nearestThmsContextVecSB + "]];");
 			ml.discardAnswer();
-			ml.evaluate("q=" + queryVec + "/.{0->contextVecMean};");
+			ml.evaluate("q=" + queryContextVec + "/.{0->contextVecMean};");
 			ml.discardAnswer();
 			
 			//ml.evaluate("Nearest[v->Range[Dimensions[v][[1]]], First@Transpose[q],"+numNearest+"] - " + LIST_INDEX_SHIFT);
@@ -134,11 +140,15 @@ public class ContextSearch {
 	
 	
 	/**
-	 * Creates query vector given String input.
+	 * Creates query vector given String input, parse query same
+	 * way as theorem base.
 	 * @param input Query input.
-	 * @return
+	 * @return whether query context vec was created, skip context search
+	 * if not created.
 	 */
-	private static String createQueryVector(String input){
+	private static boolean createQueryVector(String input, int[] queryContextVec){
+		//parse query
+		
 		
 	}
 	

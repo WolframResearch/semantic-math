@@ -32,7 +32,9 @@ import thmp.search.CollectThm;
 public class GenerateContextVector {
 
 	private static String contextVecFileStr = "src/thmp/data/contextVectors.txt";
-	private static Path contextVecFilePath;
+	private static Path contextVecFilePath;	
+	//brackets pattern
+	private static final Pattern BRACKETS_PATTERN = Pattern.compile("\\[([^\\]]*)\\]");
 	
 	public static void set_contextVecFilePath(String pathStr){
 		Path path = Paths.get(pathStr);
@@ -51,8 +53,7 @@ public class GenerateContextVector {
 		private static final List<int[]> contextVecList = new ArrayList<int[]>();
 		//list of strings
 		private static final List<String> contextVecStringList = new ArrayList<String>();
-		//brackets pattern
-		private static final Pattern BRACKETS_PATTERN = Pattern.compile("\\[([^\\]]*)\\]");
+		
 		//private static final KernelLink ml = thmp.utils.FileUtils.getKernelLink();
 
 	static{
@@ -138,31 +139,52 @@ public class GenerateContextVector {
 	 */
 	private static void generateContextVec(List<String> bareThmList, List<int[]> contextVecList,
 			List<String> contextVecStringList){
-		
-		String[] strAr;
-		for(String thm : bareThmList){
-			
-			strAr = ThmP1.preprocess(thm);
-			
-			List<int[]> parseContextVecList = new ArrayList<int[]>();
-			for(int i = 0; i < strAr.length; i++){				
-				//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim())));				
-				ThmP1.parse(ThmP1.tokenize(strAr[i].trim()));
-				parseContextVecList.add(ThmP1.getParseContextVector());	
-			}
-			
-			int[] contextVec = combineContextVectors(parseContextVecList);
-			//get context vector and add to contextVecMx
-			contextVecList.add(contextVec);
-			
-			//System.out.println("Context vec: " + Arrays.toString(ThmP1.getParseContextVector()));
-			String contextVecStr = Arrays.toString(contextVec);
-			Matcher matcher = BRACKETS_PATTERN.matcher(contextVecStr);
-			contextVecStr = matcher.replaceAll("{$1}");
+
+		for(String thm : bareThmList){			
+			String contextVecStr = createContextVector(contextVecList, thm);
 			contextVecStringList.add(contextVecStr);
 		}
 	}
 	
+	}
+	
+	/**
+	 * Creates context vector given input string.
+	 * @param input
+	 * @return
+	 */
+	public static String createContextVector(String input) {
+		//should check if actually created, return null if not
+		return createContextVector(null, input);
+	}
+	
+	/**
+	 * @param contextVecList
+	 * @param thm
+	 * @return
+	 */
+	private static String createContextVector(List<int[]> contextVecList, String thm) {
+		
+		String[] strAr;
+		strAr = ThmP1.preprocess(thm);
+		
+		List<int[]> parseContextVecList = new ArrayList<int[]>();
+		for(int i = 0; i < strAr.length; i++){				
+			//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim())));				
+			ThmP1.parse(ThmP1.tokenize(strAr[i].trim()));
+			parseContextVecList.add(ThmP1.getParseContextVector());	
+		}
+		
+		int[] contextVec = combineContextVectors(parseContextVecList);
+		//get context vector and add to contextVecMx
+		if(contextVecList != null){
+			contextVecList.add(contextVec);
+		}		
+		//System.out.println("Context vec: " + Arrays.toString(ThmP1.getParseContextVector()));
+		String contextVecStr = Arrays.toString(contextVec);
+		Matcher matcher = BRACKETS_PATTERN.matcher(contextVecStr);
+		contextVecStr = matcher.replaceAll("{$1}");
+		return contextVecStr;
 	}
 	
 	/**

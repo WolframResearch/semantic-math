@@ -2348,6 +2348,7 @@ public class ThmP1 {
 	 * @return the context vector of highest-ranking parse.
 	 */
 	public static int[] getParseContextVector(){
+		//return null if context vec not meaningful! Like for 2 terms.
 		int[] parseContextVectorCopy = Arrays.copyOf(parseContextVector, parseContextVectorSz);
 		//parseContextVector = new int[parseContextVectorSz];
 		return parseContextVectorCopy;
