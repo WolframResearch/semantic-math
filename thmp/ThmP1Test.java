@@ -3,7 +3,9 @@ package thmp;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Scanner;
 
 import com.wolfram.alpha.parser.preparser.TexConverter;
@@ -289,9 +291,13 @@ public class ThmP1Test {
 			st = "$R/\\mathfrak p$ is catenary for every minimal prime $\\mathfrak p$";
 			st = "$R_\\mathfrak m$ is universally catenary for all maximal ideals $\\mathfrak m$";
 			st = "disjoint finite chains of primes $\\mathfrak p = \\mathfrak q$ have the same length";
-			st = "f is a function with radius of convergence r and finitely many roots";
-			//st = "minimal polynomial of degree $p$, whose coefficients are real";
-			
+			st = "minimal polynomial of degree $p$, whose coefficients are real";			
+			st = "f is a function with radius of convergence r and finitely many roots"; 
+			st = "f is a function with pole and finitely many roots";
+			st = "f is a function with perfect and perfect";
+			st = "whose coefficients are finite";	
+			st = "finite coefficients";
+			//st = "$pth$ power in field";
 			//st = "a field is a ring";
 			//st = "Assume that $B$ is Noetherian and Cohen-Macaulay and that $\\mathfrak m_B = (\\mathfrak m_A) B}$"; //**<--revisit!
 			//st = "ring $R_p$ is regular, for every $p$";
@@ -325,14 +331,22 @@ public class ThmP1Test {
 			
 			strAr = ThmP1.preprocess(st);
 			
+			List<int[]> parseContextVecList = new ArrayList<int[]>();
+			
 			for(int i = 0; i < strAr.length; i++){
 				//alternate commented out line to enable tex converter
 				//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim()) ));
-				ThmP1.parse(ThmP1.tokenize(strAr[i].trim()));				
+				ThmP1.parse(ThmP1.tokenize(strAr[i].trim()));
+				int[] curContextVec = ThmP1.getParseContextVector();
+				parseContextVecList.add(curContextVec);
+				//get context vector
+				System.out.println("cur vec: " + Arrays.toString(curContextVec));
 			}
 			
-			//get context vector
-			System.out.println("Context vec: " + Arrays.toString(ThmP1.getParseContextVector()));
+			//combine these vectors together, only add subsequent vector entry
+			//if that entry is 0 in all previous vectors int[].
+			int[] combinedVec = GenerateContextVector.combineContextVectors(parseContextVecList);
+			System.out.println("combinedVec: " + Arrays.toString(combinedVec));
 			
 			String parsedOutput = ThmP1.getParseStructMapList().toString();
 			//String parsedOutput = Arrays.toString(ThmP1.getParseStructMapList().toArray());			

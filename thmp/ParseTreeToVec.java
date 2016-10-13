@@ -38,7 +38,7 @@ public class ParseTreeToVec {
 		System.out.println("HERE" + WLCommandStr);
 		//set the contextVec entry of the headStruct, returns the index of the entry being set
 		//should set it for both children!
-		String termStr = headStruct.contentStr();
+		//String termStr = headStruct.contentStr();
 		//int termRowIndex = setContextVecEntry(headStruct, termStr, headVecEntry, contextVec);
 		//System.out.println("termRowIndex " + termRowIndex);
 		
@@ -136,6 +136,30 @@ public class ParseTreeToVec {
 		//String termStr = struct.contentStr();
 		if(termStr.matches("\\s*")) return structParentIndex;
 		
+		//add each individual word.
+		//to further differentiate the vector, and add useful words if applicable
+		String[] termStrAr = termStr.split(" ");
+		
+		if(termStrAr.length > 1){
+			for(String word : termStrAr){
+				addTermStrToVec(struct, word, structParentIndex, contextVec);
+			}
+		}
+		
+		int termRowIndex = addTermStrToVec(struct, termStr, structParentIndex, contextVec);		
+		
+		return termRowIndex;
+	}
+
+	/**
+	 * Auxiliary method for setContextVecEntry.
+	 * @param struct
+	 * @param termStr
+	 * @param structParentIndex
+	 * @param contextVec
+	 * @return
+	 */
+	private static int addTermStrToVec(Struct struct, String termStr, int structParentIndex, int[] contextVec) {
 		Integer termRowIndex = keywordDict.get(termStr);
 		if(termRowIndex == null){
 			//de-singularize, and remove "-ed" and "ing"!
@@ -149,7 +173,7 @@ public class ParseTreeToVec {
 			//pass parentIndex down to children, in case of intermediate StructA that doesn't have a content string.
 			//eg assert[A, B], the assert does not have content string.
 			termRowIndex = structParentIndex;
-		}		
+		}
 		return termRowIndex;
 	}		
 	
@@ -159,11 +183,15 @@ public class ParseTreeToVec {
 	 *
 	 */
 	public enum ParseRelation{
-		ELEMENT(-1),
+		
 		EXISTS(-2),
 		HASPPT(-3),
-		FORALL(-4);
+		FORALL(-4),
+		ELEMENT(-5);
 		
+		//default is 1, to differentiate between the words
+		//used and the words that are not used
+		private static final int DEFAULT_RELATION_NUM = -1;
 		private final int relationNum;
 		
 		ParseRelation(int relation){
@@ -191,7 +219,7 @@ public class ParseTreeToVec {
 			}else if(WLCommandStr.contains("\\[ForAll]")){
 				return FORALL.relationNum;
 			}else{
-				return 0;
+				return DEFAULT_RELATION_NUM;
 			}
 		}
 	}

@@ -15,6 +15,7 @@ import java.util.regex.Pattern;
 
 import org.apache.logging.log4j.core.util.FileUtils;
 
+import com.wolfram.jlink.Expr;
 import com.wolfram.jlink.KernelLink;
 import com.wolfram.jlink.MathLinkException;
 import com.wolfram.jlink.MathLinkFactory;
@@ -30,16 +31,30 @@ import thmp.search.CollectThm;
 
 public class GenerateContextVector {
 
-	// bare thm list, without latex \label's or \index's, or \ref's, etc
-	private static final List<String> bareThmList;
-	// matrix, same dimension of term-document matrix in search. 
-	private static final List<int[]> contextVecList = new ArrayList<int[]>();
-	//list of strings
-	private static final List<String> contextVecStringList = new ArrayList<String>();
-	//brackets pattern
-	private static final Pattern BRACKETS_PATTERN = Pattern.compile("\\[([^\\]]*)\\]");
-	private static final KernelLink ml = thmp.utils.FileUtils.getKernelLink();
+	private static String contextVecFileStr = "src/thmp/data/contextVectors.txt";
+	private static Path contextVecFilePath;
 	
+	public static void set_contextVecFilePath(String pathStr){
+		Path path = Paths.get(pathStr);
+		contextVecFilePath = path;
+	}
+	
+	/**
+	 * Encapsulate subclass, so can set resources such as contextVecFileStr.
+	 * And can call combineContextVectors() in outer class without initializing everything here.
+	 * 
+	 */
+	public static class GetContextVec{
+		// bare thm list, without latex \label's or \index's, or \ref's, etc
+		private static final List<String> bareThmList;
+		// matrix, same dimension of term-document matrix in search. 
+		private static final List<int[]> contextVecList = new ArrayList<int[]>();
+		//list of strings
+		private static final List<String> contextVecStringList = new ArrayList<String>();
+		//brackets pattern
+		private static final Pattern BRACKETS_PATTERN = Pattern.compile("\\[([^\\]]*)\\]");
+		//private static final KernelLink ml = thmp.utils.FileUtils.getKernelLink();
+
 	static{
 		Maps.buildMap();
 		try {
@@ -55,49 +70,60 @@ public class GenerateContextVector {
 		//obtain the average value of entries by sampling, and 
 		//replace 0 by this avg.
 		
-		
-		//get avg
-		getAverageEntryVal(contextVecStringList, ml);
+		//get avg value, but should get average of the particular short-listed thms. 
+		//getAverageEntryVal(contextVecStringList, ml);
 		
 		//convert contextVecList 
 		//write context vec list to file, with curly braces
-		Path fileTo = Paths.get("src/thmp/data/contextVectors.txt");
+		Path fileTo = contextVecFilePath;
+		if(fileTo == null){
+			fileTo = Paths.get(contextVecFileStr);
+		}
 		
 		try {
 			Files.write(fileTo, contextVecStringList, Charset.forName("UTF-8"));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
+	}
+
+	//used for testing from with outer class main().
+	private static void initialize(){			
 	}
 	
 	/**
 	 * Gets average entry values of contextVecStringList
-	 * to this average.
+	 * to this average, saves to file.
 	 * @param contextVecStringList
 	 */
 	private static void getAverageEntryVal(List<String> contextVecStringList, KernelLink ml){
+		String contextVecAvgFileStr = "src/thmp/data/contextVecAvg.txt";
+		Path contextVecAvgFilePath = Paths.get(contextVecAvgFileStr);
+		int contextVecStringListSz = contextVecStringList.size();
 		
 		try{
-			//get random indices
-			int numIndicesToTake = ;
-			int[] randomIndices = new int[numIndicesToTake];
+			//get random indices. Make this more accurate!
+			int numIndicesToTake = contextVecStringListSz < 500 ? 60 : (contextVecStringListSz < 5000 ? 100 : 150);;
+			
 			Random rand = new Random();
 			StringBuffer randomContextVecsSB = new StringBuffer();
 			randomContextVecsSB.append("{");
-			for(int i = 0; i < numIndicesToTake; i++){
-				int nextRandNum = rand.nextInt(   );
-				//randomIndices[i] = rand.nextInt(   );
-				randomContextVecsSB.append(contextVecStringList.get(i) + ", ");
-				
-			}
-			randomContextVecsSB.append("}");
 			
+			for(int i = 0; i < numIndicesToTake; i++){
+				int nextRandNum = rand.nextInt(   contextVecStringListSz  );
+				//randomIndices[i] = rand.nextInt(   );
+				randomContextVecsSB.append(contextVecStringList.get(nextRandNum) + ", ");				
+			}
+			randomContextVecsSB.append("}");			
 			
 			ml.evaluate("Flatten[" + randomContextVecsSB + "];");
 			ml.waitForAnswer();
 			Expr expr = ml.getExpr();
-			//store the average somewhere
-			
+			List<String> contextVecAvgList = new ArrayList<String>();
+			contextVecAvgList.add(expr.toString());
+			//store the average somewhere, write to a file
+			thmp.utils.FileUtils.writeToFile(contextVecAvgList, contextVecAvgFilePath);
 			
 		}catch(MathLinkException e){
 			e.printStackTrace();
@@ -113,24 +139,22 @@ public class GenerateContextVector {
 	private static void generateContextVec(List<String> bareThmList, List<int[]> contextVecList,
 			List<String> contextVecStringList){
 		
-		
 		String[] strAr;
 		for(String thm : bareThmList){
 			
 			strAr = ThmP1.preprocess(thm);
 			
+			List<int[]> parseContextVecList = new ArrayList<int[]>();
 			for(int i = 0; i < strAr.length; i++){				
-				//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim())));
-				try {
-					ThmP1.parse(ThmP1.tokenize(strAr[i].trim()));
-				} catch (IOException e) {
-					e.printStackTrace();
-				}				
+				//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim())));				
+				ThmP1.parse(ThmP1.tokenize(strAr[i].trim()));
+				parseContextVecList.add(ThmP1.getParseContextVector());	
 			}
 			
-			int[] contextVec = ThmP1.getParseContextVector();
+			int[] contextVec = combineContextVectors(parseContextVecList);
 			//get context vector and add to contextVecMx
 			contextVecList.add(contextVec);
+			
 			//System.out.println("Context vec: " + Arrays.toString(ThmP1.getParseContextVector()));
 			String contextVecStr = Arrays.toString(contextVec);
 			Matcher matcher = BRACKETS_PATTERN.matcher(contextVecStr);
@@ -139,7 +163,30 @@ public class GenerateContextVector {
 		}
 	}
 	
-	public static void main(String[] args){
+	}
+	
+	/**
+	 * Combine context vectors in list, only add terms from higher-indexed vectors
+	 * if the corresponding terms in previous vectors are 0.
+	 * @param contextVecList
+	 * @return
+	 */
+	public static int[] combineContextVectors(List<int[]> contextVecList){
+		int contextVecLength = contextVecList.get(0).length;
+		int contextVecListSz = contextVecList.size();
 		
+		int[] combinedVector = new int[contextVecLength];
+		for(int i = 0; i < contextVecLength; i++){
+			for(int j = 0; j < contextVecListSz; j++){
+				int entry = contextVecList.get(j)[i];
+				combinedVector[i] = entry;
+				if(entry != 0) break;
+			}
+		}
+		return combinedVector;
+	}
+	
+	public static void main(String[] args){
+		GetContextVec.initialize();
 	}
 }

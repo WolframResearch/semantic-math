@@ -88,7 +88,12 @@ public class ThmP1 {
 	//will be cleared every time this list is retrieved, which should be once per 
 	//parse. Default values of context vec entry is the average val over all context vecs.
 	//For Nearest[] to work. *Not* final because need reassignment.
-	private static int[] parseContextVector = new int[TriggerMathThm2.keywordDictSize()];
+	private static final int parseContextVectorSz = TriggerMathThm2.keywordDictSize();
+	//this is cumulative, should be cleared per parse!
+	private static int[] parseContextVector = new int[parseContextVectorSz];
+	//list of context vectors, need list instead of single vec, for non-spanning parses
+	//private static List<int[]> parseContextVectorList = new ArrayList<int[]>();
+	
 	//private static List<String> contextVectorList = new ArrayList<String>();	
 	
 	// part of speech, last resort after looking up entity property maps
@@ -306,7 +311,7 @@ public class ThmP1 {
 	 * @return List of Struct's
 	 * @throws IOException
 	 */
-	public static ArrayList<Struct> tokenize(String sentence) throws IOException {
+	public static ArrayList<Struct> tokenize(String sentence)  {
 		
 		// .....change to arraylist of Pairs, create Pair class
 		// LinkedHashMap<String, String> linkedMap = new LinkedHashMap<String,
@@ -1602,7 +1607,8 @@ public class ThmP1 {
 				Struct uHeadStruct = headStructList.structList().get(u);
 				uHeadStruct.set_dfsDepth(0);
 				
-				int[] curStructContextvec = new int[TriggerMathThm2.keywordDictSize()];				
+				int[] curStructContextvec = new int[parseContextVectorSz];		
+				
 				//get the "long" form, not WL form, with this dfs
 				dfs(uHeadStruct, parsedSB);
 				//now get the WL form build from WLCommand's
@@ -1840,7 +1846,8 @@ public class ThmP1 {
 		}	
 		//assign the global context vec as the vec of the highest-ranked parse
 		if(contextVecList.size() == 1){
-			//in case there was no full parse
+			//in case there was no full parse, list should only contain one element.
+			//since same vector was passed around to be filled.
 			parseContextVector = contextVecList.get(0);
 		}else{
 			parseContextVector = contextVecList.get(finalOrderingList.get(0));
@@ -2336,10 +2343,14 @@ public class ThmP1 {
 	}
 	
 	/**
+	 * Should be called once per parse segment to capture value,
+	 * for each String in return array of ThmP1.preprocess(input).
 	 * @return the context vector of highest-ranking parse.
 	 */
 	public static int[] getParseContextVector(){
-		return parseContextVector;
+		int[] parseContextVectorCopy = Arrays.copyOf(parseContextVector, parseContextVectorSz);
+		//parseContextVector = new int[parseContextVectorSz];
+		return parseContextVectorCopy;
 	}
 	
 	/** 

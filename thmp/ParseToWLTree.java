@@ -568,6 +568,7 @@ public class ParseToWLTree {
 		}
 		
 	}
+	
 	/**
 	 * Iterate through the WrapperList (list of potential commands) backwards, append the first encounter 
 	 *	whose structsWithOtherHeadCount() lies above the set threshold.
@@ -677,7 +678,7 @@ public class ParseToWLTree {
 			
 			// don't know type at compile time
 			if (struct.prev1() instanceof Struct) {
-				dfs(partsMap, (Struct) struct.prev1(), parsedSB, curStructContextVec, shouldPrint,
+				contextVecConstructed = dfs(partsMap, (Struct) struct.prev1(), parsedSB, curStructContextVec, shouldPrint,
 						contextVecConstructed);
 			}
 
@@ -687,7 +688,7 @@ public class ParseToWLTree {
 				// avoid printing is[is], ie case when parent has same type as
 				// child
 				if(shouldPrint) parsedSB.append(", ");
-				dfs(partsMap, (Struct) struct.prev2(), parsedSB, curStructContextVec, shouldPrint,
+				contextVecConstructed = dfs(partsMap, (Struct) struct.prev2(), parsedSB, curStructContextVec, shouldPrint,
 						contextVecConstructed);
 			}
 
@@ -717,7 +718,7 @@ public class ParseToWLTree {
 			for (int i = 0; i < children.size(); i++) {
 				if(shouldPrint) parsedSB.append(childRelation.get(i) + " ");
 
-				dfs(partsMap, children.get(i), parsedSB, curStructContextVec, shouldPrint,
+				contextVecConstructed = dfs(partsMap, children.get(i), parsedSB, curStructContextVec, shouldPrint,
 						contextVecConstructed);
 			}
 			if(shouldPrint) parsedSB.append("]");

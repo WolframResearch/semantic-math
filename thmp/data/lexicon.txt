@@ -137,8 +137,10 @@ universal adj
 topology ent
 chain ent
 depth ent
+coefficient ent
 dimension ent
 length noun
+pole ent
 correct adj
 something noun
 characterize verb
