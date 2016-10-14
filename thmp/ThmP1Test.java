@@ -18,13 +18,13 @@ import thmp.ThmP1.ParsedPair;
 public class ThmP1Test {
 	
 	static{
-		Maps.buildMap();
+		/*Maps.buildMap();
 		try {
 			Maps.readLexicon();
 			Maps.readFixedPhrases();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
-		}
+		}*/
 	}
 
 	//the char of F_p is p
@@ -297,6 +297,10 @@ public class ThmP1Test {
 			st = "f is a function with perfect and perfect";
 			st = "whose coefficients are finite";	
 			st = "finite coefficients";
+			st = "Here the right hand side is the set of $n$-tuples $(beta_n)$ of elements of $overline{F}$ such that $beta_i$ is a root of $P_ivarphi$.";
+			st = "here right hand side is the set";
+			st = "The {it compositum of $K$ and $L$ in $Omega$} written $KL$.";
+			st = "definition linearly disjoint. Consider a diagram of fields as in (equation inside omega). We say that $K$ and $L$ are linearly disjoint over $k$ in $Omega$ if the map $$ K $$ is injective.. Consider a diagram of fields as in (equation-inside-omega). We say that $K$ and $L$ are linearly disjoint over $k$ in $Omega$ if the map $$  y_i $$ is injective.";
 			//st = "$pth$ power in field";
 			//st = "a field is a ring";
 			//st = "Assume that $B$ is Noetherian and Cohen-Macaulay and that $\\mathfrak m_B = (\\mathfrak m_A) B}$"; //**<--revisit!

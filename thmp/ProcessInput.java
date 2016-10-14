@@ -194,6 +194,29 @@ public class ProcessInput {
 	}
 	
 	/**
+	 * Processes list of inputs, for instance, strip tex etc.
+	 * @param thmInputList
+	 * @param replaceTex Whether to replace latex between $ $ as simply tex.
+	 * @param texToWords Whether to convert tex symbols to words, eg \oplus->direct sum.
+	 * Places these words at beginning of the tex command, so to stay at same part with regard
+	 * to "hyp/stm"
+	 * @param replaceMacros whether to replace macros in tex
+	 * @return
+	 */
+	public static List<String> processInput(List<String> thmInputList,
+			boolean replaceTex, boolean texToWords, boolean replaceMacros){
+		List<String> inputProcessedList = new ArrayList<String>();
+		for(int i = 0; i < thmInputList.size(); i++){
+			String thm = thmInputList.get(i);
+			String thmProcessed = inputReplace(thm, null, replaceTex, texToWords, 
+					replaceMacros, null);
+			inputProcessedList.add(thmProcessed);
+		}
+		
+		return inputProcessedList;
+	}
+	
+	/**
 	 * Simplifies input string by making various string replacements.
 	 * @param thm
 	 * @param replaceTex
@@ -227,6 +250,10 @@ public class ProcessInput {
 		
 		//replace the latex symbols e.g. \oplus into words, e.g. direct sum, 
 		if(texToWords || replaceMacros){
+			if(macrosMap == null || macroReplacedThmPreList == null){
+				throw new IllegalArgumentException("No macros resource provided. "
+						+ "macrosMap and macroReplacedThmPreList cannot be null.");
+			}
 			thm = turnTexToWords(thm, macrosMap, texToWords, replaceMacros, macroReplacedThmPreList);
 		}
 		if(replaceTex){

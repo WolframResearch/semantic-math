@@ -640,6 +640,7 @@ public class CollectThm {
 					//last boolean is whether to replace macros, 
 					FileReader macrosReader = new FileReader(MACROS_SRC);
 					BufferedReader macrosBReader = new BufferedReader(macrosReader);
+					bareThms = ProcessInput.processInput(bareThms, false, false, false);
 					processedThms = ProcessInput.processInput(extractedThms, macrosBReader, REPLACE_TEX, TEX_TO_WORDS, REPLACE_MACROS);					
 					macroReplacedThms = ProcessInput.get_macroReplacedThmList();
 				}else{
@@ -654,6 +655,8 @@ public class CollectThm {
 					for(BufferedReader fileReader : rawFileReaderList){
 						extractedThms.addAll(ThmInput.readThm(fileReader, webDisplayThms, bareThms));
 					}
+					//for parsing
+					bareThms = ProcessInput.processInput(bareThms, true, false, false);
 					processedThms = ProcessInput.processInput(extractedThms, macrosDefReader, REPLACE_TEX, TEX_TO_WORDS, REPLACE_MACROS);
 					//the BufferedStream containing macros is set when rawFileReaderList is set.
 					macroReplacedThms = ProcessInput.get_macroReplacedThmList();
@@ -690,6 +693,7 @@ public class CollectThm {
 		 * @return
 		 */
 		public static ImmutableList<String> get_bareThmList(){
+			//System.out.println("bare thms " + bareThmList);
 			return bareThmList;
 		}
 		

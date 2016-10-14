@@ -2,6 +2,7 @@ package thmp.utils;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -15,9 +16,12 @@ public class WordForms {
 	//small lists of fluff words, used in, e.g., n gram extraction.
 	//*don't* put "of" here, will interfere with 3 gram collection
 	private static final String FLUFF_WORDS_SMALL = "a|the|tex|of|and|on|let|lemma|for|to|that|with|is|be|are|there|by"
-			+ "|any|as|if|we|suppose|then|which|in|from|this|assume|this|have|just|may|an|every|it|between|given|itself|has";
+			+ "|any|as|if|we|suppose|then|which|in|from|this|assume|this|have|just|may|an|every|it|between|given|itself|has"
+			+ "|more";
 	private static final ImmutableSet<String> freqWordsSet; 
-	
+	//brackets pattern
+	private static final Pattern BRACKETS_PATTERN = Pattern.compile("\\[([^\\]]*)\\]");
+		
 	static{
 		freqWordsSet = CollectFreqWords.GetFreqWords.get_nonMathFluffWordsSet2();
 	}
@@ -98,5 +102,13 @@ public class WordForms {
 	 */
 	public static String splitDelim(){
 		return SPLIT_DELIM;
+	}
+	
+	/**
+	 * Return brackets pattern: "\\[([^\\]]*)\\]"
+	 * @return
+	 */
+	public static Pattern BRACKETS_PATTERN(){
+		return BRACKETS_PATTERN;
 	}
 }

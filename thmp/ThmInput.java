@@ -243,15 +243,27 @@ public class ThmInput {
 		if (matcher.find()) {
 			String labelContent = matcher.group(1);
 			Matcher matcher2 = DIGIT_PATTERN.matcher(labelContent);
+			String withLabelContent = null;
 			if (!matcher2.find()) {
-				String withLabelContent = matcher.group(1) + ":: " + matcher.group(2);
+				withLabelContent = matcher.group(1) + ":: " + matcher.group(2);
 				wordsThmStr = withLabelContent;
 				// get thm content
 				noLabelThmStr = withLabelContent;
 			} else {
 				wordsThmStr = matcher.group(2);
 			}
-			bareThmStr = matcher.group(2);
+			//this is only executed when getting theorems for context parsing.
+			if(getBareThmList){			
+				StringBuilder sb = new StringBuilder();
+				if(withLabelContent != null){					
+					//label often contains dashes "-"
+					String[] labelAr = (labelContent + ".").split(" |-");
+					for(String word : labelAr){
+						sb.append(word + " ");
+					}					
+				}
+				bareThmStr = sb + matcher.group(2);
+			}
 		}
 
 		if(getBareThmList){

@@ -336,11 +336,14 @@ public class StructA<A, B> extends Struct{
 	
 	@Override
 	public String contentStr(){		
+		String contentStr = "";
 		if(PREV1_TYPE != null && PREV1_TYPE.equals(NodeType.STR)){
-			return (String) prev1;
-		}else{
-			return "";
+			contentStr = (String) prev1;			
 		}
+		if(PREV2_TYPE != null && PREV2_TYPE.equals(NodeType.STR)){
+			contentStr += " " + (String) prev2;
+		}
+		return contentStr;
 	}
 	
 	/**
@@ -450,10 +453,14 @@ public class StructA<A, B> extends Struct{
 	}
 
 	//use carefully: must know the declared type
-	/////get rid of @suppresswarnings
+	/////remove necessity to cast!
 	@SuppressWarnings("unchecked")
 	public void set_prev1(Object prev1){
-		this.prev1 = (A)prev1;		
+		this.prev1 = (A)prev1;	
+		if(prev1 instanceof Struct){
+			this.PREV1_TYPE = ((Struct) prev1).isStructA() ? NodeType.STRUCTA : NodeType.STRUCTH;			
+		}
+
 	}
 	
 	//***this is terrible! Cannot just cast String
@@ -466,7 +473,10 @@ public class StructA<A, B> extends Struct{
 	
 	@SuppressWarnings("unchecked")
 	public void set_prev2(Object prev2){
-		this.prev2 = (B)prev2;		
+		this.prev2 = (B)prev2;
+		if(prev2 instanceof Struct){
+			this.PREV2_TYPE = ((Struct) prev2).isStructA() ? NodeType.STRUCTA : NodeType.STRUCTH;			
+		}
 	}
 
 	@SuppressWarnings("unchecked")

@@ -434,7 +434,6 @@ public class ThmSearch {
 	 * @return list of indices of nearest thms. 
 	 */
 	public static List<Integer> readThmInput(String thm, int numVec){
-		
 		List<Integer> nearestVecList = null;
 		try{			
 			String query = TriggerMathThm2.createQueryNoAnno(thm);

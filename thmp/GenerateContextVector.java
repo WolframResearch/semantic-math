@@ -57,13 +57,13 @@ public class GenerateContextVector {
 		//private static final KernelLink ml = thmp.utils.FileUtils.getKernelLink();
 
 	static{
-		Maps.buildMap();
+		/*Maps.buildMap();
 		try {
 			Maps.readLexicon();
 			Maps.readFixedPhrases();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
-		}
+		}*/
 		
 		bareThmList = CollectThm.ThmList.get_bareThmList();
 		generateContextVec(bareThmList, contextVecList, contextVecStringList);
@@ -165,8 +165,11 @@ public class GenerateContextVector {
 	 */
 	private static String createContextVector(List<int[]> contextVecList, String thm) {
 		
-		String[] strAr;
-		strAr = ThmP1.preprocess(thm);
+		//if(thm.matches("\\s*")) return "";
+		
+		String[] strAr = ThmP1.preprocess(thm);
+		System.out.println("****length " + strAr.length + " " + thm);
+		//strAr = ThmP1.preprocess(thm);
 		
 		List<int[]> parseContextVecList = new ArrayList<int[]>();
 		for(int i = 0; i < strAr.length; i++){				

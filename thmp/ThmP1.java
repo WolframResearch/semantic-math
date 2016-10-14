@@ -100,13 +100,23 @@ public class ThmP1 {
 	// private static HashMap<String, String> pos;
 	
 	static{
+		//should not rely on this check! fix Maps.java initialization
+		if(Maps.fixedPhraseMap() == null){
+			try {
+				Maps.readLexicon();
+				Maps.readFixedPhrases();
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+		}
 		/*Maps.buildMap();
 		try {
 			Maps.readLexicon();
 			Maps.readFixedPhrases();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
-		}*/
+		}*/		
+		
 		fixedPhraseMap = Maps.fixedPhraseMap();
 		structMap = Maps.structMap;
 		anchorMap = Maps.anchorMap;
@@ -1040,14 +1050,14 @@ public class ThmP1 {
 
 				String curWord = curPair.word();
 
-				// is leaf of prev2 is empty string ""
+				//  leaf of prev2 is empty string ""
 				StructA<String, String> newStruct = 
 						new StructA<String, String>(curWord, NodeType.STR, "", NodeType.STR, curPair.pos());
 
 				if (curPair.pos().equals("adj")) {
 					if (structListSize > 0 && structList.get(structListSize - 1).type().equals("adverb")) {
 						Struct adverbStruct = structList.get(structListSize - 1);
-						newStruct.set_prev2(adverbStruct);
+						newStruct.set_prev2(adverbStruct);						
 						// remove the adverb Struct
 						structList.remove(structListSize - 1);
 					}

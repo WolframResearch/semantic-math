@@ -184,14 +184,14 @@ public class ParseTreeToVec {
 	 */
 	public enum ParseRelation{
 		
-		EXISTS(-2),
-		HASPPT(-3),
-		FORALL(-4),
-		ELEMENT(-5);
+		EXISTS(-8),
+		HASPPT(-8),
+		FORALL(-8),
+		ELEMENT(-7);
 		
 		//default is 1, to differentiate between the words
 		//used and the words that are not used
-		private static final int DEFAULT_RELATION_NUM = -1;
+		private static final int DEFAULT_RELATION_NUM = -10;
 		private final int relationNum;
 		
 		ParseRelation(int relation){

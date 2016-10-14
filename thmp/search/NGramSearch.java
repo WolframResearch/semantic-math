@@ -38,7 +38,7 @@ public class NGramSearch {
 	private static final String[] ADDITIONAL_TWO_GRAMS = new String[]{"local field", "direct sum",
 			"finitely many", "open mapping"};
 	//words to be taken off of two-gram map
-	private static final String[] NOT_TWO_GRAMS = new String[]{"field is"};
+	private static final String[] NOT_TWO_GRAMS = new String[]{"field is", "more generally"};
 	//default two-gram count when total number of two grams is 0
 	private static final int ADDITIONAL_TWO_GRAM_DEFAULT_COUNT = 5;
 	//should use this to detect fluff in first word.
