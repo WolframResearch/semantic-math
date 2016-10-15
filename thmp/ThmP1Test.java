@@ -294,13 +294,20 @@ public class ThmP1Test {
 			st = "minimal polynomial of degree $p$, whose coefficients are real";			
 			st = "f is a function with radius of convergence r and finitely many roots"; 
 			st = "f is a function with pole and finitely many roots";
-			st = "f is a function with perfect and perfect";
+			
 			st = "whose coefficients are finite";	
 			st = "finite coefficients";
 			st = "Here the right hand side is the set of $n$-tuples $(beta_n)$ of elements of $overline{F}$ such that $beta_i$ is a root of $P_ivarphi$.";
 			st = "here right hand side is the set";
 			st = "The {it compositum of $K$ and $L$ in $Omega$} written $KL$.";
 			st = "definition linearly disjoint. Consider a diagram of fields as in (equation inside omega). We say that $K$ and $L$ are linearly disjoint over $k$ in $Omega$ if the map $$ K $$ is injective.. Consider a diagram of fields as in (equation-inside-omega). We say that $K$ and $L$ are linearly disjoint over $k$ in $Omega$ if the map $$  y_i $$ is injective.";
+			st = "finite extension";
+			st = "definition algebraic";
+			
+			st = "f is a function with perfect";
+			st = "a field is a ring";
+			st = "i' $r$ item as an abelian group for $m in M_i$ and $m' in M_{i'}$ we define the sum of the classes of $m$ and $m'$ in $M$ to be the class of $mu_{ij}(m) + mu_{i'j}(m')$ where $j  I$ is any index with $i q j$ and $i' leq j$";
+			st = " and item as an $R$-module define for $m in M_i$ and $x in R$ the product of $x$ and the class of $m$ in $M$ to be the class of $xm$ in $M$.";
 			//st = "$pth$ power in field";
 			//st = "a field is a ring";
 			//st = "Assume that $B$ is Noetherian and Cohen-Macaulay and that $\\mathfrak m_B = (\\mathfrak m_A) B}$"; //**<--revisit!

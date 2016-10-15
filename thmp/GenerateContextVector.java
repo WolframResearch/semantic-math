@@ -159,8 +159,8 @@ public class GenerateContextVector {
 	}
 	
 	/**
-	 * @param contextVecList
-	 * @param thm
+	 * @param contextVecList List of context vecs.
+	 * @param thm User's input string.
 	 * @return
 	 */
 	private static String createContextVector(List<int[]> contextVecList, String thm) {

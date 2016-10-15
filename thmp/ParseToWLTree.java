@@ -602,7 +602,7 @@ public class ParseToWLTree {
 				// curCommand's type determines the num attached to head of structH,
 				// e.g. "Exists[structH]" writes enum ParseRelation -2 at the index of structH	
 				if(!contextVecConstructed){
-					ParseTreeToVec.tree2vec(struct, contextVec, curWrapper.WLCommandStr);
+					ParseTreeToVec.tree2vec(struct, contextVec, curWrapper);
 					contextVecConstructed = true;
 				}
 				//get the ParseStruct based on type

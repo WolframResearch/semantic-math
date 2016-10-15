@@ -141,6 +141,9 @@ coefficient ent
 dimension ent
 length noun
 pole ent
+algebraic adj
+closure ent
+definition ent
 correct adj
 something noun
 characterize verb

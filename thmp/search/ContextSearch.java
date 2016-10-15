@@ -121,10 +121,12 @@ public class ContextSearch {
 		//get the nearest thms from the list of thm (indices) passed in
 		try{
 			//get the average of the nonzero elements			
-			ml.evaluate("nearestThmListFlat = Flatten["+ nearestThmsContextVecSB 
-					+ "]; thmNonZeroEntries = Position[nearestThmListFlat, _?(# != 0 &)];");
-			ml.discardAnswer();
-			
+			ml.evaluate("nearestThmList = "+ nearestThmsContextVecSB 
+					+ "; thmNonZeroEntries = Position[nearestThmList, _?(# != 0 &)][[All,2]]");
+			//ml.discardAnswer();
+			ml.waitForAnswer();
+			System.out.println("thmNonZeroEntries " + ml.getExpr());
+
 			ml.evaluate("numberNonZeroEntrySize = Length[thmNonZeroEntries]");
 			ml.waitForAnswer();
 			Expr expr = ml.getExpr();
@@ -134,13 +136,13 @@ public class ContextSearch {
 				return nearestThmIndexList;
 			}
 			
-			ml.evaluate("nonZeroContextVecMean = Total[nearestThmListFlat]/numberNonZeroEntrySize //N;");
-			ml.discardAnswer();	
-			//ml.waitForAnswer();
-			//System.out.println("nonZeroContextVecMean " + ml.getExpr());
+			ml.evaluate("nonZeroContextVecMean = Total[Flatten[nearestThmList]]/numberNonZeroEntrySize //N");
+			//ml.discardAnswer();	
+			ml.waitForAnswer();
+			System.out.println("nonZeroContextVecMean " + ml.getExpr());
 
 			//get nonzero entries of query context vector
-			ml.evaluate("query = " + queryContextVec + "; queryContextVecPositions = Position[query, _?(# != 0 &)]");
+			ml.evaluate("{query = " + queryContextVec + ", queryContextVecPositions = Position[query, _?(# != 0 &)][[All,1]]}");
 			//ml.discardAnswer();
 			ml.waitForAnswer();			
 			System.out.println("queryContextVecPositions " + ml.getExpr());
@@ -152,14 +154,14 @@ public class ContextSearch {
 			System.out.println("thmNonZeroEntryPositions " + ml.getExpr());
 			//replace the query at union of indices, with averages of nonzero entries in nearestThmsContextVecSB.
 			//ReplacePart[{1, 2, 4, 5}, Transpose[{{1, 3, 4}}] -> 3]
-			ml.evaluate("q = ReplacePart[query, thmNonZeroEntryPositions->nonZeroContextVecMean]");
+			ml.evaluate("q = ReplacePart[query, Transpose[{thmNonZeroEntryPositions}]->nonZeroContextVecMean]");
 			//ml.discardAnswer();
 			
 			//get average of the nearestThmsContextVecSB!
 			/*ml.evaluate("contextVecMean = Mean[Flatten[" + nearestThmsContextVecSB + "//N]];");
 			ml.discardAnswer();
 			ml.evaluate("q=" + queryContextVec + "/.{0->contextVecMean}");*/
-			
+			ml.waitForAnswer();
 			Expr qExpr = ml.getExpr();
 			System.out.println("query vector " + qExpr);
 			//ml.discardAnswer();
@@ -200,7 +202,7 @@ public class ContextSearch {
 			if(thm.matches("\\s*")) continue;
 			
 			thm = thm.toLowerCase();
-			int NUM_NEAREST = 10;
+			int NUM_NEAREST = 6;
 			List<Integer> nearestVecList = ThmSearch.readThmInput(thm, NUM_NEAREST);
 			if(nearestVecList.isEmpty()){
 				System.out.println("I've got nothing for you yet. Try again.");

@@ -316,7 +316,7 @@ public class TriggerMathThm2 {
 		String[] thmAr = thm.split(WordForms.splitDelim());
 		//map of non-annotated words and their scores
 		Map<String, Integer> wordsScoreMap = CollectThm.ThmWordsMaps.get_wordsScoreMapNoAnno();		
-		System.out.println("wordsScoreMap inside TriggerMathThm: " + wordsScoreMap);
+		//System.out.println("wordsScoreMap inside TriggerMathThm: " + wordsScoreMap);
 		//should eliminate unnecessary words first, then send to get wrapped.
 		//<--can only do that if leave the hyp words in, eg if.
 		

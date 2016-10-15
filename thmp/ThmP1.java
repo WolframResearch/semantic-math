@@ -238,7 +238,8 @@ public class ThmP1 {
 	//check 3-gram first. 
 	private static int gatherTwoThreeGram(int i, String[] str, List<Pair> pairs, List<Integer> mathIndexList){
 		String curWord = str[i];
-		String nextWord = str[i+1];
+		String middleWord = str[i+1];
+		String nextWord = middleWord;
 		String nextWordSingular = WordForms.getSingularForm(nextWord);
 		String twoGram = curWord + " " + nextWord;
 		String twoGramSingular = curWord + " " + nextWordSingular;
@@ -255,7 +256,8 @@ public class ThmP1 {
 			
 			//System.out.println("^^^Adding three gram " + threeGram);
 			
-			if(threeGramMap.containsKey(threeGram)){
+			//don't want to combine three-grams with "of" in middle
+			if(threeGramMap.containsKey(threeGram) && !middleWord.equals("of")){
 				addNGramToPairs(pairs, mathIndexList, thirdWord, threeGram);
 				return i+2;
 			}else if(threeGramMap.containsKey(threeGramSingular)){
@@ -1297,6 +1299,8 @@ public class ThmP1 {
 								// create new child
 								///
 								List<Struct> childrenList = struct1.children();
+								//*****
+								System.out.println("STRUCT1 " + struct1);
 								boolean childAdded = false;
 								//iterate backwards, want the latest-added child that fits
 								int childrenListSize = childrenList.size();
@@ -1898,7 +1902,7 @@ public class ThmP1 {
 		contextVecConstructed = ParseToWLTree.dfs(parseStructMap, uHeadStruct, wlSB, curStructContextVec, true,
 				contextVecConstructed);
 		if(!contextVecConstructed){
-			ParseTreeToVec.tree2vec(uHeadStruct, curStructContextVec, "");
+			ParseTreeToVec.tree2vec(uHeadStruct, curStructContextVec);
 		}
 		//System.out.println("curStructContextVec " + curStructContextVec);		
 		

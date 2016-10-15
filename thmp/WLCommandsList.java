@@ -89,8 +89,11 @@ public class WLCommandsList {
 		// included in final command, so indicates false)
 		// 5th element used for defining custom order for now, 4th term defines
 		// whether to trigger TriggerMathObj term
+		// If Commands involving \[Element] deviate from item1 \[Element] item2, 
+		// should re-examine ParseTreeTwoVec.java.
 		WLCommandMapBuilder.put("element", addCommand(
 				new String[] { "symb|ent, , true", "\\[Element]", ", element, trigger", "pre, of, false", "symb|ent, , true" }));		
+		//e.g. "is given by an element of the ring"
 		WLCommandMapBuilder.put("element", addCommand(
 				new String[] { "parti, , false", ", element, trigger", "x", "\\[Element]", "pre, of, false", "symb|ent, , true" }));
 		WLCommandMapBuilder.put("given", addCommand(

@@ -128,14 +128,14 @@ public class WLCommand {
 	 */
 	public static class PosTerm{
 		/**
-		 * posTerm can be the terms that are used in structMap, 
-		 * eg ent, symb, entsymb (either ent or symb works), pre, etc
+		 * CommandComponent 
 		 */
 		private WLCommandComponent commandComponent;
 		
 		/**
 		 * Struct filling the current posTerm. Have to be careful eg for "of",
 		 * which often is not a Struct itself, just part of a Struct.
+		 * Could be null.
 		 */
 		private Struct posTermStruct;
 		
@@ -390,7 +390,7 @@ public class WLCommand {
 	 * Builds the WLCommand from commandsMap & posTermList after it's satisfied.
 	 * Should be called after being satisfied. 
 	 * @param curCommand command being built
-	 * @param structToAppendCommandStr Struct to append the built CommandStr to.
+	 * @param firstPosTermStruct Struct to append the built CommandStr to.
 	 * Right now not using this struct value, just to set previousBuiltStruct to not be null.
 	 * @return String form of the resulting WLCommand
 	 */
@@ -413,8 +413,9 @@ public class WLCommand {
 			
 			if(!term.includeInBuiltString){ 				
 				//set its head Struct to structToAppendCommandStr,
+				// ***This appears to always be null!?!
 				Struct nextStruct = term.posTermStruct;				
-				
+				System.out.println("&&&posTermStruct " + nextStruct);
 				//get WLCommandWrapperList
 				if(nextStruct != null){
 					updateWrapper(nextStruct, structToAppendCommandStr);
@@ -455,7 +456,7 @@ public class WLCommand {
 				//prevStruct = nextStruct;				
 				if(nextStruct.previousBuiltStruct() != null){ 
 					//set to null for next parse dfs iteration
-					//****it should be better to not set to null here, but 
+					//****don't need to set to null here, but 
 					// set to null altogether after entire dfs iteration
 					nextStruct.set_previousBuiltStruct(null);						
 					//continue;	
@@ -609,6 +610,8 @@ public class WLCommand {
 				&& commandComponentCount > 0
 				&& structName.matches(commandComponentName)){
 			curCommand.commandsMap.put(commandComponent, newStruct);
+			//sets the posTermStruct for the posTerm. No effect?!?***
+			posList.get(i).set_posTermStruct(newStruct);
 			//here newComponent must have been in the original required set
 			curCommand.commandsCountMap.put(commandComponent, commandComponentCount - 1);
 			//use counter to track whether map is satisfied
@@ -726,7 +729,7 @@ public class WLCommand {
 	}
 	
 	/**
-	 * 
+	 * Index of trigger word in posTermList.
 	 * @return
 	 */
 	public static int triggerWordIndex(WLCommand curCommand){
