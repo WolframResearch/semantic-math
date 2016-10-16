@@ -68,7 +68,7 @@ public class ThmSearch {
 			int rowDimension = docMx.length;
 			int mxColDim = docMx[0].length;
 			
-			System.out.println("nested mx " + Arrays.deepToString(docMx));
+			//System.out.println("nested mx " + Arrays.deepToString(docMx));
 			boolean getMx = false;
 			
 			//ml.evaluate("m=IntegerPart[" + mx +"]//N");

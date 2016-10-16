@@ -170,6 +170,10 @@ public class StructA<A, B> extends Struct{
 		return null;
 	}
 	
+	/**
+	 * Sets the depth from root of the tree. Root has depth 0. *Not* intrinsic to the Struct,
+	 * depends on the DFS path.
+	 */
 	@Override
 	public void set_dfsDepth(int depth){
 		this.depth = depth;
@@ -527,7 +531,8 @@ public class StructA<A, B> extends Struct{
 		}
 		
 		//str += "[";
-		//temporary string used to add to main str later.
+		//temporary string used to add to main str later. Use StringBuilder
+		//in revamp!
 		String tempStr = "";
 		
 		if(prev1 != null && !prev1.equals("")){

@@ -99,7 +99,7 @@ public class ContextSearch {
 		//create range vector for Nearest
 		Matcher bracketsMatcher = BRACKETS_PATTERN.matcher(nearestThmIndexList.toString());
 		String rangeVec = bracketsMatcher.replaceAll("{$1}");
-		System.out.println("rangeVec "+rangeVec);
+		System.out.println("selected thm indices: "+rangeVec);
 		
 		StringBuffer nearestThmsContextVecSB = new StringBuffer("{");
 		int nearestThmIndexListSz = nearestThmIndexList.size();
@@ -122,12 +122,14 @@ public class ContextSearch {
 		try{
 			//get the average of the nonzero elements			
 			ml.evaluate("nearestThmList = "+ nearestThmsContextVecSB 
-					+ "; thmNonZeroEntries = Position[nearestThmList, _?(# != 0 &)][[All,2]]");
+					+ "; nearestThmListFlat = Flatten[nearestThmList];"
+					//+ "thmNonZeroValues = Select[nearestThmListFlat, UnsameQ[0, #]&];"
+					+ "thmNonZeroPositions = Position[nearestThmList, _?(# != 0 &)][[All,2]]");
 			//ml.discardAnswer();
 			ml.waitForAnswer();
-			System.out.println("thmNonZeroEntries " + ml.getExpr());
+			System.out.println("thmNonZeroPositions " + ml.getExpr());
 
-			ml.evaluate("numberNonZeroEntrySize = Length[thmNonZeroEntries]");
+			ml.evaluate("numberNonZeroEntrySize = Length[thmNonZeroPositions]");
 			ml.waitForAnswer();
 			Expr expr = ml.getExpr();
 			if(!expr.integerQ() || expr.asInt() == 0){
@@ -136,19 +138,19 @@ public class ContextSearch {
 				return nearestThmIndexList;
 			}
 			
-			ml.evaluate("nonZeroContextVecMean = Total[Flatten[nearestThmList]]/numberNonZeroEntrySize //N");
+			ml.evaluate("nonZeroContextVecMean = Total[nearestThmListFlat]/numberNonZeroEntrySize //N");
 			//ml.discardAnswer();	
 			ml.waitForAnswer();
 			System.out.println("nonZeroContextVecMean " + ml.getExpr());
 
 			//get nonzero entries of query context vector
-			ml.evaluate("{query = " + queryContextVec + ", queryContextVecPositions = Position[query, _?(# != 0 &)][[All,1]]}");
+			ml.evaluate("query = " + queryContextVec + "; queryContextVecPositions = Position[query, _?(# != 0 &)][[All,1]]");
 			//ml.discardAnswer();
 			ml.waitForAnswer();			
 			System.out.println("queryContextVecPositions " + ml.getExpr());
 			
 			//take complement of queryContextVecPositions in numberNonZeroEntries
-			ml.evaluate("thmNonZeroEntryPositions = Complement[Union[thmNonZeroEntries], queryContextVecPositions]");
+			ml.evaluate("thmNonZeroEntryPositions = Complement[Union[thmNonZeroPositions], queryContextVecPositions]");
 			//ml.discardAnswer();
 			ml.waitForAnswer();			
 			System.out.println("thmNonZeroEntryPositions " + ml.getExpr());

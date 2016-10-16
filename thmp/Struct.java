@@ -68,6 +68,10 @@ public abstract class Struct {
 	
 	public abstract Struct possessivePrev();
 	
+	/**
+	 * Sets the depth from root of the tree. Root has depth 0. *Not* intrinsic to the Struct,
+	 * depends on the DFS path.
+	 */
 	public abstract void set_dfsDepth(int depth);
 	
 	public abstract int dfsDepth();

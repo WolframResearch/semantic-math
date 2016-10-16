@@ -577,6 +577,7 @@ public class ParseToWLTree {
 	 *	component count, since those commands don't interfere with anything else.
 	 * @param struct is Struct that the commandStr has been appended to, i.e. head struct.
 	 * @param contextVec is context vector for this WLCommand. 
+	 * @param parsedSB WLCommand string builder, in form A\[Element] B
 	 * @return whether contextVecConstructed
 	 */
 	private static boolean appendWLCommandStr(Struct struct, StringBuilder parsedSB, Multimap<ParseStructType, ParsedPair> partsMap, 

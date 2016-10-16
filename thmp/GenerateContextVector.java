@@ -192,11 +192,17 @@ public class GenerateContextVector {
 	
 	/**
 	 * Combine context vectors in list, only add terms from higher-indexed vectors
-	 * if the corresponding terms in previous vectors are 0.
+	 * if the corresponding terms in previous vectors are 0. This is to create one single 
+	 * context vector per theorem rather than multiple.
 	 * @param contextVecList
 	 * @return
 	 */
 	public static int[] combineContextVectors(List<int[]> contextVecList){
+		
+		/*System.out.println("^^^ contextVecList to combine ");
+		for(int i = 0; i < contextVecList.size(); i++){
+			System.out.println(Arrays.toString(contextVecList.get(i)));
+		}*/
 		int contextVecLength = contextVecList.get(0).length;
 		int contextVecListSz = contextVecList.size();
 		
@@ -204,8 +210,11 @@ public class GenerateContextVector {
 		for(int i = 0; i < contextVecLength; i++){
 			for(int j = 0; j < contextVecListSz; j++){
 				int entry = contextVecList.get(j)[i];
-				combinedVector[i] = entry;
-				if(entry != 0) break;
+				int prevEntry = combinedVector[i];
+				if(prevEntry == 0 || prevEntry < 0 && entry > 0){					
+					combinedVector[i] = entry;
+				}
+				if(entry > 0) break;
 			}
 		}
 		return combinedVector;

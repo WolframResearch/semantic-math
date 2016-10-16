@@ -307,7 +307,15 @@ public class ThmP1Test {
 			st = "f is a function with perfect";
 			st = "a field is a ring";
 			st = "i' $r$ item as an abelian group for $m in M_i$ and $m' in M_{i'}$ we define the sum of the classes of $m$ and $m'$ in $M$ to be the class of $mu_{ij}(m) + mu_{i'j}(m')$ where $j  I$ is any index with $i q j$ and $i' leq j$";
-			st = " and item as an $R$-module define for $m in M_i$ and $x in R$ the product of $x$ and the class of $m$ in $M$ to be the class of $xm$ in $M$.";
+			st = "Let $R$ be a ring. Let $S subset R$ be a multiplicative subset. ";
+			st = "The category of $S^{-1}R$-modules is equivalent to the category "
+					+ "of $R$-modules $N$ with the property that every $s in S$ acts as an automorphism on $N$.";
+			st = "A Noetherian domain of characteristic zero is N-1 if and only if it is N-2 (i.e., Japanese).";
+			st = "$X$ has a basis for the topology consisting of quasi-compact opens";
+			st = "lemma-topology-spec:: Let $R$ be a ring. The topology on $X = Spec(R)$ has the following properties:   (*) $X$ is quasi-compact,  (*) $X$ has a basis for the topology consisting of quasi-compact opens, and  (*) the intersection of any two quasi-compact opens is quasi-compact. ";
+			st = "This induces a 1-1 correspondence between open and closed subsets $U subset Spec(R)$ and idempotents $e in R$";
+			//st = "The category of $S^{-1}R$-modules is $R$-modules $N$ with the property that every $s in S$ acts as an automorphism on $N$.";
+			//st = " and item as an $R$-module define for $m in M_i$ and $x in R$ the product of $x$ and the class of $m$ in $M$ to be the class of $xm$ in $M$.";
 			//st = "$pth$ power in field";
 			//st = "a field is a ring";
 			//st = "Assume that $B$ is Noetherian and Cohen-Macaulay and that $\\mathfrak m_B = (\\mathfrak m_A) B}$"; //**<--revisit!

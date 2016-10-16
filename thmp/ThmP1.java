@@ -90,9 +90,12 @@ public class ThmP1 {
 	//For Nearest[] to work. *Not* final because need reassignment.
 	private static final int parseContextVectorSz = TriggerMathThm2.keywordDictSize();
 	//this is cumulative, should be cleared per parse!
-	private static int[] parseContextVector = new int[parseContextVectorSz];
+	private static int[] parseContextVector = new int[parseContextVectorSz]; 
+	//private static int[] parseContextVector;
+	//private static int parseContextVectorSz;
 	//list of context vectors, need list instead of single vec, for non-spanning parses
 	//private static List<int[]> parseContextVectorList = new ArrayList<int[]>();
+	private static final boolean PROCESS_NGRAM = false;
 	
 	//private static List<String> contextVectorList = new ArrayList<String>();	
 	
@@ -172,6 +175,10 @@ public class ThmP1 {
 			this.numUnits = numUnits;
 			this.commandNumUnits = commandNumUnits;
 			this.stringForm = this.toString();
+		}
+		
+		public ParsedPair(double score, int numUnits){
+			this("", score, numUnits, 0);
 		}
 		
 		public ParsedPair(String parsedStr, double score, int numUnits, int commandNumUnits, ParseStructType type){
@@ -270,6 +277,7 @@ public class ThmP1 {
 		}
 		//String twoGram = potentialTrigger;
 		//Integer twoGram = twoGramMap.get(potentialTrigger);
+		
 		if(twoGramMap.containsKey(twoGram)){
 			addNGramToPairs(pairs, mathIndexList, nextWord, twoGram);			
 			i++;
@@ -277,6 +285,7 @@ public class ThmP1 {
 			addNGramToPairs(pairs, mathIndexList, nextWordSingular, twoGramSingular);
 			i++;
 		}
+		
 		return i;
 	}
 
@@ -467,11 +476,13 @@ public class ThmP1 {
 
 				}				
 				
+				if(PROCESS_NGRAM){
 				int newIndex = gatherTwoThreeGram(i, strAr, pairs, mathIndexList);
 				//a two or three gram was picked up
 				if(newIndex > i){ 
 					i = newIndex;
 					continue;				
+				}
 				}
 			}
 			
@@ -1125,11 +1136,17 @@ public class ThmP1 {
 		return pair;
 	}
 
-	/*
+	/**
 	 * Takes in LinkedHashMap of entities/ppt, and connectives parse using
 	 * structMap, and obtain sentence structures Chart parser.
 	 */
 	public static void parse(ArrayList<Struct> inputList) {
+		//
+		//int parseContextVectorSz = TriggerMathThm2.keywordDictSize();
+		//this is cumulative, should be cleared per parse! Move this back
+		//to initializer after debugging!
+		//parseContextVector = new int[parseContextVectorSz];
+		
 		int len = inputList.size();
 		// shouldn't be 0 to start with?!
 		if (len == 0)
@@ -1229,7 +1246,8 @@ public class ThmP1 {
 							// for types such as conj_verbphrase
 
 							String[] split1 = type1.split("_");
-
+							//this causes conj_ent to be counted as ent, so should *not*
+							//use "ent" type to determine whether StructH or not!
 							if (split1.length > 1 && split1[0].matches("conj|disj")) {
 								// if (split1.length > 1) {
 								type1 = split1[1];
@@ -1293,14 +1311,17 @@ public class ThmP1 {
 							String combined = type1 + "_" + type2;
 							
 							// handle pattern ent_of_symb
-							if (combined.matches("ent_pre") && struct2.prev1() != null
+							//should *not* use "ent" type to determine whether StructH or not!
+							//since conj_ent is counted as ent. Also this code is terrible.
+							if (!struct1.isStructA() && type2.matches("pre") && struct2.prev1() != null
 									&& struct2.prev1().toString().matches("of") && j + 1 < len
 									&& inputList.get(j + 1).type().equals("symb")) {
 								// create new child
 								///
 								List<Struct> childrenList = struct1.children();
 								//*****
-								System.out.println("STRUCT1 " + struct1);
+								//System.out.println("STRUCT1 " + struct1 + " CHILDREN " + struct1.children());
+								
 								boolean childAdded = false;
 								//iterate backwards, want the latest-added child that fits
 								int childrenListSize = childrenList.size();
@@ -1331,7 +1352,7 @@ public class ThmP1 {
 								}
 							}
 
-							if (combined.equals("adj_ent")) {
+							if (combined.equals("adj_ent") && !struct2.isStructA()) {
 								// update struct
 								
 									// should be StructH
@@ -1791,6 +1812,7 @@ public class ThmP1 {
 			firstNumUnits += parsedPair.numUnits;
 			firstCommandNumUnits += parsedPair.commandNumUnits;
 		}
+		System.out.println("****parsedPairMMapList " + parsedPairMMapList);
 		numUnitsList.add(firstNumUnits);
 		commandNumUnitsList.add(firstCommandNumUnits);
 		//finalOrderingList.add(0, 0);
@@ -1840,7 +1862,7 @@ public class ThmP1 {
 			}
 			
 		}
-		
+		System.out.println("##commandNumUnitsList " + commandNumUnitsList );
 		for(int i = 0; i < sortedParsedPairMMapList.size(); i++){
 			Multimap<ParseStructType, ParsedPair> map = sortedParsedPairMMapList.get(i);
 			
@@ -1856,7 +1878,7 @@ public class ThmP1 {
 			}
 			//add the long form to parsedExpr
 			parsedExpr.add(longFormParsedPairList.get(finalOrderingList.get(i)));
-			
+			System.out.println("longForm, commandUnits: " + commandNumUnitsList.get(i) +". numUnits: " +numUnitsList.get(i) + " "+ longFormParsedPairList.get(finalOrderingList.get(i)));
 		}	
 		//assign the global context vec as the vec of the highest-ranked parse
 		if(contextVecList.size() == 1){
@@ -1865,6 +1887,7 @@ public class ThmP1 {
 			parseContextVector = contextVecList.get(0);
 		}else{
 			parseContextVector = contextVecList.get(finalOrderingList.get(0));
+			System.out.println("Best context vector added: " +  Arrays.toString(parseContextVector));
 		}
 		
 	}
@@ -1878,7 +1901,7 @@ public class ThmP1 {
 	 */
 	private static StringBuilder treeTraversal(Struct uHeadStruct, List<Multimap<ParseStructType, ParsedPair>> parsedPairMMapList,
 			int[] curStructContextVec) {
-		//System.out.println("\n START ParseStruct DFS");
+		
 		StringBuilder parseStructSB = new StringBuilder();
 		ParseStructType parseStructType = ParseStructType.getType(uHeadStruct);
 		ParseStruct headParseStruct = new ParseStruct(parseStructType, "", uHeadStruct);
@@ -1886,7 +1909,7 @@ public class ThmP1 {
 		boolean printTiers = false;
 		//builds the parse tree by matching triggered commands. 
 		ParseToWLTree.dfs(uHeadStruct, parseStructSB, headParseStruct, 0, printTiers);
-		System.out.println("\n DONE ParseStruct DFS \n");
+		System.out.println("\n DONE ParseStruct DFS  + parseStructSB:" + parseStructSB + "  \n");
 		StringBuilder wlSB = new StringBuilder();
 		/**
 		 * Map of parts used to build up a theorem/def etc. 
@@ -1908,6 +1931,14 @@ public class ThmP1 {
 		
 		System.out.println("Parts: " + parseStructMap);
 		//**parseStructMapList.add(parseStructMap.toString() + "\n");
+		//if parseStructMap empty, ie no WLCommand was found, but long parse form might still be good
+		if(parseStructMap.isEmpty()){
+			ParsedPair pair = new ParsedPair(uHeadStruct.maxDownPathScore(), 
+					uHeadStruct.numUnits());
+			//partsMap.put(type, curWrapper.WLCommandStr);	
+			parseStructMap.put(ParseStructType.NONE, pair);
+		}
+		
 		parsedPairMMapList.add(parseStructMap);
 		
 		//ParseToWLTree.dfs(uHeadStruct, wlSB, true);		
@@ -1963,7 +1994,6 @@ public class ThmP1 {
 		double newDownPathScore = struct1.maxDownPathScore() * struct2.maxDownPathScore() * newScore;
 
 		// newChild means to fuse second entity into first one
-
 		if (newType.equals("newchild")) {
 			// struct1 should be of type StructH to receive a
 			// child
@@ -1977,7 +2007,7 @@ public class ThmP1 {
 			// that are not picked up by the eventual parse
 			Struct newStruct = struct1.copy();
 
-			// update firstEnt so to have the right children
+			// update firstEnt so firstEnt has the right children
 			if (firstEnt == struct1) {
 				firstEnt = newStruct;
 			}
@@ -1994,33 +2024,33 @@ public class ThmP1 {
 			// String childRelation = mx.get(k + 1).get(k +
 			// 1).prev1().toString();
 			//should not even call add child if struct1 is a StructA
-			if (struct1 instanceof StructH) {
-				// why does this cast not trigger unchecked warning
-				// Because wildcard.
-				//if already has child that's pre_ent, attach to that child
-				List<Struct> childrenList = newStruct.children();
+			if (!struct1.isStructA()) {
+				// why does this cast not trigger unchecked warning <-- Because wildcard.
+				//if already has child that's pre_ent, attach to that child,
+				//e.g. A with B over C. <--This led to bug with too many children added!
+				/*List<Struct> childrenList = newStruct.children();
 				boolean childAdded = false;
 				//iterate backwards, want the latest-added child that fits
 				int childrenListSize = childrenList.size();
 				for(int p = childrenListSize - 1; p > -1; p--){
 					Struct child = childrenList.get(p);
-					if(child.type().equals("ent") && child instanceof StructH){
+					if(child.type().equals("ent") && !child.isStructA()){
 						child.add_child(struct2, childRelation);
 						struct2.set_parentStruct(child);
 						childAdded = true;
 						break;
 					}
-				}
-				if(!childAdded){ 
+				}*/
+				 
 					//if struct2 is eg a prep, only want the ent in the prep
 					//to be added. Try to avoid the "instanceof" and cast.
-					Struct childToAdd = struct2;
-					if(struct2.type().equals("prep") && struct2.prev2() instanceof StructH){
-						childToAdd = (StructH<?>)struct2.prev2();
-					}
-					((StructH<?>) newStruct).add_child(childToAdd, childRelation); 
-					struct2.set_parentStruct(newStruct);
+				Struct childToAdd = struct2;
+				if(struct2.type().equals("prep") && struct2.prev2() instanceof StructH){
+					childToAdd = (Struct)struct2.prev2();
 				}
+				((StructH<?>) newStruct).add_child(childToAdd, childRelation); 
+				struct2.set_parentStruct(newStruct);
+				
 			}
 
 			recentEnt = newStruct;
@@ -2469,8 +2499,9 @@ public class ThmP1 {
 
 			System.out.print("[");
 			parsedSB.append("[");
-
+						
 			for (int i = 0; i < children.size(); i++) {
+				
 				System.out.print(childRelation.get(i) + " ");
 				parsedSB.append(childRelation.get(i) + " ");
 				
@@ -2494,8 +2525,9 @@ public class ThmP1 {
 	public static String[] preprocess(String inputStr) {
 
 		ArrayList<String> sentenceList = new ArrayList<String>();
-		//separate out words away from punctuations.
-		String[] wordsArray = inputStr.replaceAll("([^.,!:;]*)([.,:!;]{1})", "$1 $2").split("\\s+");
+		//separate out puncturations, separate out words away from punctuations.
+		String[] wordsArray = inputStr.replaceAll("([^\\.,!:;]*)([\\.,:!;]{1})", "$1 $2").split("\\s+");
+		System.out.println("wordsArray " + Arrays.toString(wordsArray));
 		int wordsArrayLen = wordsArray.length;
 
 		StringBuilder sentenceBuilder = new StringBuilder();
@@ -2512,15 +2544,15 @@ public class ThmP1 {
 			curWord = wordsArray[i];
 
 			if (!inTex) {
-				if (inParen || curWord.matches("\\([^)]*\\)")) {
+				if (inParen && curWord.matches("[^)]*\\)")) {
+					inParen = false;
+					continue;
+				}else if (inParen || curWord.matches("\\([^)]*\\)")) {
 					continue;
 				} else if (curWord.matches("\\([^)]*")) {
 					inParen = true;
 					continue;
-				} else if (inParen && curWord.matches("[^)]*)")) {
-					inParen = false;
-					continue;
-				}
+				} 
 			}
 
 			if (!inTex && curWord.matches("\\$.*") && !curWord.matches("\\$[^$]+\\$.*")) {
@@ -2551,7 +2583,7 @@ public class ThmP1 {
 						tempWord += " " + wordsArray[++j];
 					}
 					
-					//******************tempWord invokes too many strings!**********
+					//**tempWord sometimes invokes too many strings!***** <--when?
 					//System.out.println("tempWord: " + tempWord);
 					
 					String replacement = fluffMap.get(tempWord.toLowerCase());
@@ -2576,8 +2608,7 @@ public class ThmP1 {
 			}
 			madeReplacement = false;
 
-			if (curWord.matches("\\.|,|!") || i == wordsArrayLen - 1) {
-
+			if (curWord.matches("\\.|,|!|;") || i == wordsArrayLen - 1) {
 				if (!inTex) {
 					sentenceList.add(sentenceBuilder.toString());
 					sentenceBuilder.setLength(0);
@@ -2585,7 +2616,6 @@ public class ThmP1 {
 					sentenceBuilder.append(curWord);
 				}
 			}
-
 		}
 		return sentenceList.toArray(new String[0]);
 	}

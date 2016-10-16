@@ -311,7 +311,7 @@ public class TriggerMathObj {
 				childrenNameList.addAll(Arrays.asList(namePptAr));
 				getChildrenNames(child, childrenNameList);
 			}else{
-				System.out.println("\n namePPT " + child.present(""));
+				System.out.println("\nnamePPT " + child.present(""));
 			}			
 		}		
 	}	

@@ -1,6 +1,5 @@
 package thmp;
 
-import java.util.ArrayList;
 
 /**
  * Transforms parse tree to WL
@@ -11,11 +10,12 @@ import java.util.ArrayList;
 public class ParseToWL {
 	
 	private static boolean inAssert = false;
+	//*Not* safe!
 	private static String assertVerb = "";
 	//private static boolean showPrev1 = true;
 	public static String parseString = "";	
 	//flag for debugging
-	private static boolean debugging = false;
+	private static final boolean DEBUG = false;
 	
 	public static String parseToWL(Struct headStruct){
 		parseString = "";
@@ -38,7 +38,7 @@ public class ParseToWL {
 		//if structH
 		if( headStruct.struct() != null && headStruct.struct().size() > 0 ){
 			
-			if(debugging) System.out.print(headStruct.present(""));		
+			if(DEBUG) System.out.print(headStruct.present(""));		
 			
 			parseString += headStruct.present("");
 		}
@@ -123,11 +123,11 @@ public class ParseToWL {
 			}
 			
 			if(showPrev1){
-				if(debugging) System.out.print(type);
+				if(DEBUG) System.out.print(type);
 				parseString += type;
 			}
 			if(showprev1){
-				if(debugging) System.out.print("[");
+				if(DEBUG) System.out.print("[");
 				parseString += "[";
 			}
 			
@@ -139,15 +139,15 @@ public class ParseToWL {
 				}
 				else if(headStruct.prev1() instanceof String && !headStruct.prev1().equals("") 
 						&& showprev1){					
-					if(debugging) System.out.print(headStruct.prev1());
+					if(DEBUG) System.out.print(headStruct.prev1());
 					parseString += headStruct.prev1();
 				}
 				if(headStruct.prev2() != null && headStruct.prev2().equals("") && showPrev1){////
-					if(debugging) System.out.print("*]*");
+					if(DEBUG) System.out.print("*]*");
 					parseString += "]";
 				}
 				if(headStruct.prev2() != null && !headStruct.prev2().equals("") && showprev1){
-					if(debugging) System.out.print(", ");
+					if(DEBUG) System.out.print(", ");
 					parseString += ", ";
 				}
 				//if(headStruct.prev1() instanceof Struct && inAssert) showprev1 = true;
@@ -160,23 +160,23 @@ public class ParseToWL {
 					parseToWL((Struct)headStruct.prev2(), showPrev1);////
 					
 					if(headStruct.type().equals("assert")){
-						if(debugging) System.out.print(", "+ assertVerb );
+						if(DEBUG) System.out.print(", "+ assertVerb );
 						parseString += ", "+ assertVerb;
 						//showPrev1Return = true;
 						inAssert = false;
 					}
 					
 					if(showprev1 ){
-						if(debugging) System.out.print("`]");
+						if(DEBUG) System.out.print("`]");
 						parseString += "]";
 					}
 				}
 				else if(headStruct.prev2() instanceof String && !headStruct.prev2().equals("")){						
 				
-					if(debugging) System.out.print(headStruct.prev2());
+					if(DEBUG) System.out.print(headStruct.prev2());
 					parseString += headStruct.prev2();
 					if(showprev1){ 
-						if(debugging) System.out.print("~]");
+						if(DEBUG) System.out.print("~]");
 						parseString += "]";					
 					}
 				}

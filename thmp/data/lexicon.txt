@@ -142,10 +142,12 @@ dimension ent
 length noun
 pole ent
 algebraic adj
+equivalent adj
 closure ent
 definition ent
 correct adj
 something noun
+spectrum ent
 characterize verb
 good adj
 above adj
