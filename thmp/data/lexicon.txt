@@ -137,6 +137,7 @@ universal adj
 topology ent
 chain ent
 depth ent
+component ent
 coefficient ent
 dimension ent
 length noun
@@ -144,6 +145,8 @@ pole ent
 algebraic adj
 equivalent adj
 closure ent
+correspondence ent
+idempotent ent
 definition ent
 correct adj
 something noun

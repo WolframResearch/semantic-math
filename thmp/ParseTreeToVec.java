@@ -198,6 +198,7 @@ public class ParseTreeToVec {
 	 * Given a contentStr of a Struct, get the index most likely
 	 * to correspond to the String.
 	 * @param termStr
+	 * @return likely index for termStr, could be null
 	 */
 	private static Integer getTermStrIndex(String termStr){
 		Integer rowIndex = keywordDict.get(termStr);
@@ -346,8 +347,17 @@ public class ParseTreeToVec {
 					curStruct = WLCommand.getStructList(command, posTerm.commandComponent()).get(posTerm.positionInMap());
 					System.out.println("***TPYE " + curStruct);
 					if(curStruct != null && curStruct.type().matches("ent|symb|pro")){
+						//set entry of parent in contextVec to itself, if existing entry is <=0, 
+						//so not to differentiate the term too much from likely counterpart in corpus
+						//vectors. Experimentation.
+						String termStr = curStruct.contentStr();						
+						Integer parentIndex = getTermStrIndex(termStr);
 						
-						parentStruct = curStruct;						
+						if(parentIndex != null && contextVec[parentIndex] <= 0){
+							contextVec[parentIndex] = parentIndex;
+						}
+						
+						parentStruct = curStruct;					
 						break;
 					}
 				}
@@ -358,8 +368,8 @@ public class ParseTreeToVec {
 				
 				//get termStr for parentStruct
 				String parentTermStr = parentStruct.contentStr();
-				//get an index for contentStr, should already been singularized
 				
+				//get an index for contentStr, should already been singularized				
 				Integer parentTermRowIndex = getTermStrIndex(parentTermStr);
 				if(null == parentTermRowIndex){
 					return;

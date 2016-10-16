@@ -169,7 +169,7 @@ public class ContextSearch {
 			//ml.discardAnswer();
 			
 			//ml.evaluate("Nearest[v->Range[Dimensions[v][[1]]], First@Transpose[q],"+numNearest+"] - " + LIST_INDEX_SHIFT);
-			ml.evaluate("Nearest[" + nearestThmsContextVecSB + "->"+ rangeVec +", q," 
+			ml.evaluate("Nearest[" + nearestThmsContextVecSB + "->"+ rangeVec +", query," 
 					+ nearestThmIndexListSz +"]");
 			ml.waitForAnswer();
 			Expr nearestContextVecs = ml.getExpr();

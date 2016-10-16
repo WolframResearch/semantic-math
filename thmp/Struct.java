@@ -110,6 +110,10 @@ public abstract class Struct {
 	
 	public abstract void set_maxDownPathScore(double pathScore);
 	
+	/**
+	 * Return value cannot be null.
+	 * @return
+	 */
 	public abstract String contentStr();
 	
 	public abstract StructList StructList();

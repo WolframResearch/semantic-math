@@ -314,6 +314,9 @@ public class ThmP1Test {
 			st = "$X$ has a basis for the topology consisting of quasi-compact opens";
 			st = "lemma-topology-spec:: Let $R$ be a ring. The topology on $X = Spec(R)$ has the following properties:   (*) $X$ is quasi-compact,  (*) $X$ has a basis for the topology consisting of quasi-compact opens, and  (*) the intersection of any two quasi-compact opens is quasi-compact. ";
 			st = "This induces a 1-1 correspondence between open and closed subsets $U subset Spec(R)$ and idempotents $e in R$";
+			
+			//st = "it gives a group between field and ring";
+			//st = "field between field and ring";
 			//st = "The category of $S^{-1}R$-modules is $R$-modules $N$ with the property that every $s in S$ acts as an automorphism on $N$.";
 			//st = " and item as an $R$-module define for $m in M_i$ and $x in R$ the product of $x$ and the class of $m$ in $M$ to be the class of $xm$ in $M$.";
 			//st = "$pth$ power in field";

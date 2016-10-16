@@ -176,9 +176,15 @@ public class ThmP1 {
 			this.commandNumUnits = commandNumUnits;
 			this.stringForm = this.toString();
 		}
-		
-		public ParsedPair(double score, int numUnits){
-			this("", score, numUnits, 0);
+		/**
+		 * Used in case of no WLCommand parse string, then use alternate measure
+		 * of span, deduced from longForm dfs.
+		 * @param score
+		 * @param numUnits
+		 * @param commandNumUnits
+		 */
+		public ParsedPair(double score, int numUnits, int commandNumUnits){
+			this("", score, numUnits, commandNumUnits);
 		}
 		
 		public ParsedPair(String parsedStr, double score, int numUnits, int commandNumUnits, ParseStructType type){
@@ -209,6 +215,7 @@ public class ThmP1 {
 		/**
 		 * commandNumUnits of the WLCommands involved in this parse.
 		 * I.e. number of leaf nodes covered. Higher is better.
+		 * If no WLCommand triggered, measures span of longform.
 		 * @return
 		 */
 		public int commandNumUnits(){
@@ -1643,12 +1650,14 @@ public class ThmP1 {
 				uHeadStruct.set_dfsDepth(0);
 				
 				int[] curStructContextvec = new int[parseContextVectorSz];		
-				
+				//keep track of span of longForm, used as commandNumUnits in case
+				//no WLCommand parse. The bigger the better.
+				int span = 0;
 				//get the "long" form, not WL form, with this dfs
-				dfs(uHeadStruct, parsedSB);
+				span = dfs(uHeadStruct, parsedSB, span);
 				//now get the WL form build from WLCommand's
 				//should pass in the wlSB, instead of creating one anew each time. <--It's ok.
-				StringBuilder wlSB = treeTraversal(uHeadStruct, parsedPairMMapList, curStructContextvec);
+				StringBuilder wlSB = treeTraversal(uHeadStruct, parsedPairMMapList, curStructContextvec, span);
 				contextVecList.add(curStructContextvec);
 				
 				System.out.println("+++Previous long parse: " + parsedSB);
@@ -1728,9 +1737,11 @@ public class ThmP1 {
 				// int highestScoreIndex = ArrayDFS(parsedStructList.get(k));
 				int highestScoreIndex = 0; //*******
 				Struct kHeadStruct = parsedStructList.get(k).structList().get(highestScoreIndex);
-				
+				//measures span of longForm (how many leaf nodes reached), to be used in place of 
+				//commandNumUnits if no WLCommand parse.
+				int span = 0;
 				kHeadStruct.set_dfsDepth(0);
-				dfs(kHeadStruct, parsedSB);
+				span = dfs(kHeadStruct, parsedSB, span);
 				
 				//only getting first component parse. Should use priority queue instead of list?
 				//or at least get highest score
@@ -1743,7 +1754,7 @@ public class ThmP1 {
 					parsedSB.append("; ");
 				}
 				
-				StringBuilder wlSB = treeTraversal(kHeadStruct, parsedPairMMapList, curStructContextvec);
+				StringBuilder wlSB = treeTraversal(kHeadStruct, parsedPairMMapList, curStructContextvec, span);
 				longFormParsedPairList.add(new ParsedPair(parsedSB.toString(), totalScore, "long"));
 			}
 			
@@ -1788,7 +1799,7 @@ public class ThmP1 {
 	private static void orderPairsAndPutToLists(List<Multimap<ParseStructType, ParsedPair>> parsedPairMMapList,
 			List<ParsedPair> longFormParsedPairList, List<int[]> contextVecList){
 		
-		//use insertion sort, since list of maps is usually very small, ~1-3
+		//use insertion sort, since list of maps is usually very small, ~1-5
 		//for maps with multiple entries (e.g. one sentence with both a HYP and a STM), add the numUnits and 
 		//commandNumUnits across entries.
 		List<Multimap<ParseStructType, ParsedPair>> sortedParsedPairMMapList = new ArrayList<Multimap<ParseStructType, ParsedPair>>();
@@ -1800,6 +1811,7 @@ public class ThmP1 {
 		
 		//ordering in the sorted list, the value list.get(i) is the index of the pair in the original parsedPairMMapList
 		List<Integer> finalOrderingList = new ArrayList<Integer>();
+		//this shouldn't be necessary, since can use .add to finalOrderingList works instead of .set
 		for(int i = 0; i < parsedPairMMapList.size(); i++){
 			finalOrderingList.add(0);
 		}
@@ -1837,15 +1849,17 @@ public class ThmP1 {
 				//simplify this to use only one if!
 				int sortedNumUnits = numUnitsList.get(j);
 				int sortedCommandNumUnits = commandNumUnitsList.get(j);
-				if(sortedCommandNumUnits < commandNumUnits 
-						|| (sortedNumUnits - numUnits) > ((double)commandNumUnits - sortedCommandNumUnits)*3/2){
+				//double commandNumUnitsDiff = ((double)sortedCommandNumUnits - commandNumUnits)*3/2;				
+				if(sortedCommandNumUnits < commandNumUnits 						
+						|| (sortedNumUnits - numUnits) > ((double)sortedCommandNumUnits - commandNumUnits)*3/2){
 					//insert
 					sortedParsedPairMMapList.add(j, mmap);
 					numUnitsList.add(j, numUnits);
 					commandNumUnitsList.add(j, commandNumUnits);
 					finalOrderingList.add(j, i);
 					break;
-				}else if(sortedCommandNumUnits == commandNumUnits && sortedNumUnits > numUnits){
+				}//but this case was already included above
+				else if(sortedCommandNumUnits == commandNumUnits && sortedNumUnits > numUnits){
 					//sort based on numUnits if commandNumUnits are the same 
 					sortedParsedPairMMapList.add(j, mmap);
 					numUnitsList.add(j, numUnits);
@@ -1900,7 +1914,7 @@ public class ThmP1 {
 	 * @return
 	 */
 	private static StringBuilder treeTraversal(Struct uHeadStruct, List<Multimap<ParseStructType, ParsedPair>> parsedPairMMapList,
-			int[] curStructContextVec) {
+			int[] curStructContextVec, int span) {
 		
 		StringBuilder parseStructSB = new StringBuilder();
 		ParseStructType parseStructType = ParseStructType.getType(uHeadStruct);
@@ -1934,7 +1948,7 @@ public class ThmP1 {
 		//if parseStructMap empty, ie no WLCommand was found, but long parse form might still be good
 		if(parseStructMap.isEmpty()){
 			ParsedPair pair = new ParsedPair(uHeadStruct.maxDownPathScore(), 
-					uHeadStruct.numUnits());
+					uHeadStruct.numUnits(), span);
 			//partsMap.put(type, curWrapper.WLCommandStr);	
 			parseStructMap.put(ParseStructType.NONE, pair);
 		}
@@ -2440,7 +2454,7 @@ public class ThmP1 {
 
 	}
 
-	public static void dfs(Struct struct, StringBuilder parsedSB) {
+	private static int dfs(Struct struct, StringBuilder parsedSB, int span) {
 		
 		int structDepth = struct.dfsDepth();
 		
@@ -2456,7 +2470,7 @@ public class ThmP1 {
 			if (struct.prev1() instanceof Struct) {
 				Struct prev1Struct = (Struct) struct.prev1();
 				prev1Struct.set_dfsDepth(structDepth + 1);
-				dfs(prev1Struct, parsedSB);
+				span = dfs(prev1Struct, parsedSB, span);
 			}
 			
 			// if(struct.prev2() != null && !struct.prev2().equals(""))
@@ -2468,18 +2482,20 @@ public class ThmP1 {
 				parsedSB.append(", ");
 				Struct prev2Struct = (Struct) struct.prev2();
 				prev2Struct.set_dfsDepth(structDepth + 1);
-				dfs(prev2Struct, parsedSB);
+				span = dfs(prev2Struct, parsedSB, span);
 			}
 
 			if (struct.prev1() instanceof String) {
 				System.out.print(struct.prev1());
 				parsedSB.append(struct.prev1());
+				span++;
 			}
 			if (struct.prev2() instanceof String) {
 				if (!struct.prev2().equals("")){
 					System.out.print(", ");
-					parsedSB.append(", ");
+					parsedSB.append(", ");					
 				}
+				span++;
 				System.out.print(struct.prev2());
 				parsedSB.append(struct.prev2());
 			}
@@ -2490,12 +2506,13 @@ public class ThmP1 {
 			
 			System.out.print(struct.toString());
 			parsedSB.append(struct.toString());
+			span++;
 			
 			List<Struct> children = struct.children();
 			List<String> childRelation = struct.childRelation();
 			
 			if (children == null || children.size() == 0)
-				return;
+				return span;
 
 			System.out.print("[");
 			parsedSB.append("[");
@@ -2508,11 +2525,12 @@ public class ThmP1 {
 				Struct child_i = children.get(i);
 				child_i.set_dfsDepth(structDepth + 1);
 				
-				dfs(child_i, parsedSB);
+				span = dfs(child_i, parsedSB, span);
 			}
 			System.out.print("]");
 			parsedSB.append("]");
 		}
+		return span;
 	}
 
 	/**
