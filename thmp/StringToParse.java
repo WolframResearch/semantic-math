@@ -55,8 +55,11 @@ public class StringToParse {
 			str = sc.nextLine();
 			strAr = ThmP1.preprocess(str);
 			
+			Struct recentEnt = null;
 			for(int i = 0; i < strAr.length; i++){
-				ThmP1.parse(ThmP1.tokenize(strAr[i].trim() ));				
+				List<Struct> inputList = ThmP1.tokenize(strAr[i].trim());
+				recentEnt = ThmP1.parse(inputList, recentEnt);
+				ThmP1.parse(inputList, recentEnt);				
 			}
 			
 			List<ParsedPair> parsedList = ThmP1.getParsedExpr();

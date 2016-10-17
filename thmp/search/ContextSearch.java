@@ -122,14 +122,17 @@ public class ContextSearch {
 		try{
 			//get the average of the nonzero elements			
 			ml.evaluate("nearestThmList = "+ nearestThmsContextVecSB 
-					+ "; nearestThmListFlat = Flatten[nearestThmList];"
-					//+ "thmNonZeroValues = Select[nearestThmListFlat, UnsameQ[0, #]&];"
-					+ "thmNonZeroPositions = Position[nearestThmList, _?(# != 0 &)][[All,2]]");
+					//+ "; nearestThmListFlat = Flatten[nearestThmList];"
+					//+ "thmNonZeroPositions = Position[nearestThmList, _?(# != 0 &)][[All,2]]"
+					);
 			//ml.discardAnswer();
 			ml.waitForAnswer();
-			System.out.println("thmNonZeroPositions " + ml.getExpr());
-
-			ml.evaluate("numberNonZeroEntrySize = Length[thmNonZeroPositions]");
+			System.out.println("nearestThmList " + ml.getExpr());
+			
+			ml.evaluate("query = " + queryContextVec);
+			ml.waitForAnswer();
+			System.out.println("query vector " + ml.getExpr());
+			/*ml.evaluate("numberNonZeroEntrySize = Length[thmNonZeroPositions]");
 			ml.waitForAnswer();
 			Expr expr = ml.getExpr();
 			if(!expr.integerQ() || expr.asInt() == 0){
@@ -144,7 +147,7 @@ public class ContextSearch {
 			System.out.println("nonZeroContextVecMean " + ml.getExpr());
 
 			//get nonzero entries of query context vector
-			ml.evaluate("query = " + queryContextVec + "; queryContextVecPositions = Position[query, _?(# != 0 &)][[All,1]]");
+			ml.evaluate("queryContextVecPositions = Position[query, _?(# != 0 &)][[All,1]]");
 			//ml.discardAnswer();
 			ml.waitForAnswer();			
 			System.out.println("queryContextVecPositions " + ml.getExpr());
@@ -153,24 +156,32 @@ public class ContextSearch {
 			ml.evaluate("thmNonZeroEntryPositions = Complement[Union[thmNonZeroPositions], queryContextVecPositions]");
 			//ml.discardAnswer();
 			ml.waitForAnswer();			
-			System.out.println("thmNonZeroEntryPositions " + ml.getExpr());
+			System.out.println("thmNonZeroEntryPositions " + ml.getExpr());*/
 			//replace the query at union of indices, with averages of nonzero entries in nearestThmsContextVecSB.
 			//ReplacePart[{1, 2, 4, 5}, Transpose[{{1, 3, 4}}] -> 3]
-			ml.evaluate("q = ReplacePart[query, Transpose[{thmNonZeroEntryPositions}]->nonZeroContextVecMean]");
+			//ml.evaluate("q = ReplacePart[query, Transpose[{thmNonZeroEntryPositions}]->nonZeroContextVecMean]");
 			//ml.discardAnswer();
 			
 			//get average of the nearestThmsContextVecSB!
 			/*ml.evaluate("contextVecMean = Mean[Flatten[" + nearestThmsContextVecSB + "//N]];");
 			ml.discardAnswer();
 			ml.evaluate("q=" + queryContextVec + "/.{0->contextVecMean}");*/
+			
+			//ml.discardAnswer();
+			//extract the few positions from thm vectors, so Nearest only needs to find it for vecs of small lengths!!
+			
+			ml.evaluate("PositionsToReplace = Transpose[{Complement[Range[Length[query]], queryContextVecPositions]}]; "
+					+ "nearestThmsPartReplaced = Map[ReplacePart[#, PositionsToReplace->0] &, nearestThmList]" );
 			ml.waitForAnswer();
-			Expr qExpr = ml.getExpr();
-			System.out.println("query vector " + qExpr);
+			System.out.println("nearestThmsPartReplaced" + ml.getExpr());
 			//ml.discardAnswer();
 			
 			//ml.evaluate("Nearest[v->Range[Dimensions[v][[1]]], First@Transpose[q],"+numNearest+"] - " + LIST_INDEX_SHIFT);
-			ml.evaluate("Nearest[" + nearestThmsContextVecSB + "->"+ rangeVec +", query," 
+			ml.evaluate("Nearest[nearestThmsPartReplaced->"+ rangeVec +", query," 
 					+ nearestThmIndexListSz +"]");
+			
+			/*ml.evaluate("Nearest[" + nearestThmsContextVecSB + "->"+ rangeVec +", query," 
+					+ nearestThmIndexListSz +"]"); */
 			ml.waitForAnswer();
 			Expr nearestContextVecs = ml.getExpr();
 			

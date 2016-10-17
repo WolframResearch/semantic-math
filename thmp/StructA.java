@@ -248,8 +248,15 @@ public class StructA<A, B> extends Struct{
 			return curWrapper.WLCommandStr();			
 		}		
 		
-		A name = this.prev1;
-		return name instanceof String ? (String)name : this.simpleToString2(includeType, curCommand);
+		if(PREV1_TYPE.equals(NodeType.STR)){
+			String fullName = (String)this.prev1;
+			if(PREV2_TYPE.equals(NodeType.STR) && !prev2.equals("")){
+				fullName = "{" + fullName + ", " + (String)this.prev2 + "}";
+			}
+			return fullName;
+		}else{
+			return this.simpleToString2(includeType, curCommand);
+		}
 	}
 	
 	//auxilliary method for simpleToString and called inside StructH.simpleToString2

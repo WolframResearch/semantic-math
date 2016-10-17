@@ -227,6 +227,10 @@ public class SearchCombined {
 				System.out.println("I've got nothing for you yet. Try again.");
 				continue;
 			}
+			//filter nearestVecList through context search, to re-arrange list output based on context
+			List<Integer> nearestContextVecs = ContextSearch.contextSearch(thm, nearestVecList);
+			//need to run GenerateContext.java to generate the context vectors during build, but ensure 
+			//context vectors are up to date!
 			SearchState searchState = SearchIntersection.getHighestThm(thm, NUM_NEAREST);
 			int numCommonVecs = NUM_COMMON_VECS;
 			
@@ -236,7 +240,7 @@ public class SearchCombined {
 			}
 			//find best intersection of these two lists. nearestVecList is 1-based, but intersectionVecList is 0-based! 
 			//now both are 0-based.
-			List<Integer> bestCommonVecs = findListsIntersection(nearestVecList, searchState, numCommonVecs);
+			List<Integer> bestCommonVecs = findListsIntersection(nearestContextVecs, searchState, numCommonVecs);
 			
 			for(int d : bestCommonVecs){
 				System.out.println(TriggerMathThm2.getThm(d));

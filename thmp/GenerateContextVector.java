@@ -1,6 +1,5 @@
 package thmp;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -13,12 +12,9 @@ import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.logging.log4j.core.util.FileUtils;
-
 import com.wolfram.jlink.Expr;
 import com.wolfram.jlink.KernelLink;
 import com.wolfram.jlink.MathLinkException;
-import com.wolfram.jlink.MathLinkFactory;
 
 import thmp.search.CollectThm;
 
@@ -31,7 +27,7 @@ import thmp.search.CollectThm;
 
 public class GenerateContextVector {
 
-	private static String contextVecFileStr = "src/thmp/data/contextVectors.txt";
+	private static String contextVecFileStr = "src/thmp/data/contextVectorsTest.txt";
 	private static Path contextVecFilePath;	
 	//brackets pattern
 	private static final Pattern BRACKETS_PATTERN = Pattern.compile("\\[([^\\]]*)\\]");
@@ -171,10 +167,12 @@ public class GenerateContextVector {
 		System.out.println("****length " + strAr.length + " " + thm);
 		//strAr = ThmP1.preprocess(thm);
 		
+		Struct recentEnt = null;
 		List<int[]> parseContextVecList = new ArrayList<int[]>();
 		for(int i = 0; i < strAr.length; i++){				
-			//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim())));				
-			ThmP1.parse(ThmP1.tokenize(strAr[i].trim()));
+			//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim())));
+			List<Struct> inputList = ThmP1.tokenize(strAr[i].trim());
+			recentEnt = ThmP1.parse(inputList, recentEnt);
 			parseContextVecList.add(ThmP1.getParseContextVector());	
 		}
 		

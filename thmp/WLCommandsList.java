@@ -155,7 +155,8 @@ public class WLCommandsList {
 		//we have ...
 		WLCommandMapBuilder.put("have", addCommand(new String[] { "pro, we, false", "verb, have, trigger", ", , true"}));
 		// "A has property B", eg "chains of ideals have same length"
-		WLCommandMapBuilder.put("have", addCommand(new String[] { "ent, , true", "verb, have|has, trigger", "\\HasProperty[", ", , true", "]"}));
+		WLCommandMapBuilder.put("have", addCommand(new String[] { "ent|symb|pro, , true", "verb, have|has, trigger", "\\HasProperty[", ", , true", "]"}));
+		
 		// label string if to be used as trigger ent/symb, then use these words
 		// as trigger system
 		// function with radius of convergence
@@ -196,10 +197,10 @@ public class WLCommandsList {
 			String commandStr = commandStringAr[i];
 
 			String[] commandStrParts = commandStr.split(",");
-
+			int commandStrPartsLen = commandStrParts.length;
 			// auxilliary String like brackets. Just put in posTermList, don't
 			// put in commandsMap
-			if (commandStrParts.length == 1) {
+			if (commandStrPartsLen == 1) {
 				String posStr = commandStrParts[0];
 				String nameStr = "AUX"; // auxilliary string
 				WLCommandComponent commandComponent = new WLCommandComponent(posStr, nameStr);
@@ -228,7 +229,7 @@ public class WLCommandsList {
 				int positionInMap = curOcc;
 				// check length of commandStrParts to see if custom order is
 				// required
-				if (commandStrParts.length > 3) {
+				if (commandStrPartsLen > 3) {
 					//if trigger triggerMathObj
 					triggerMathObj = commandStrParts[3].trim().equals(TRIGGERMATHOBJSTR);
 					if (commandStrParts.length > 4) {
@@ -236,8 +237,8 @@ public class WLCommandsList {
 					}
 				}
 				// check if WL command, ie if name is "-2", in which case put -2
-				// as posInMap in PosTerm
-				else if (nameStr.matches("WL.*")) {
+				// as posInMap in PosTerm. This shouldn't be needed anymore.
+				/*else if (nameStr.matches("WL.*")) {
 					positionInMap = WLCOMMANDINDEX;
 					componentCounter--;
 					//triggerWordIndex hasn't been touched
@@ -245,11 +246,14 @@ public class WLCommandsList {
 						triggerWordIndex = i;
 					}
 					
-				}
+				}*/
 
-				if (commandStrParts[2].trim().matches("trigger.*")) {
-					triggerWordIndex = i;
-					//componentCounter--;
+				if(commandStrPartsLen > 2){
+					if (commandStrParts[2].trim().matches("trigger.*")) {
+						//System.out.println("*^^^^^^^^^^%% trigger index " + i);
+						triggerWordIndex = i;
+						//componentCounter--;
+					}
 				}
 				
 				// curOcc is the position inside the list in commandsMap.

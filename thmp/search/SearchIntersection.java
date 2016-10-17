@@ -400,9 +400,6 @@ public class SearchIntersection {
 			scoreThmMMap2.put(thmScore, new ThmSpanPair(thmIndex, spanScore));
 		}
 		
-		if(DEBUG) {
-			System.out.println("scoreThmMMap2 "+ scoreThmMMap2);
-		}
 		List<Integer> highestThmList = new ArrayList<Integer>();
 		
 		//get the thms having the highest k scores. Keys are scores.

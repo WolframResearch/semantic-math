@@ -1,6 +1,5 @@
 package thmp;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -12,7 +11,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -21,7 +19,6 @@ import java.util.regex.Matcher;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 
 import thmp.Struct.NodeType;
@@ -1146,9 +1143,10 @@ public class ThmP1 {
 	/**
 	 * Takes in LinkedHashMap of entities/ppt, and connectives parse using
 	 * structMap, and obtain sentence structures Chart parser.
+	 * @param recentEnt, ent used to keep track of recent MathObj/Ent, for pronoun
+	 * reference assignment.
 	 */
-	public static void parse(ArrayList<Struct> inputList) {
-		//
+	public static Struct parse(List<Struct> inputList, Struct recentEnt) {
 		//int parseContextVectorSz = TriggerMathThm2.keywordDictSize();
 		//this is cumulative, should be cleared per parse! Move this back
 		//to initializer after debugging!
@@ -1157,13 +1155,13 @@ public class ThmP1 {
 		int len = inputList.size();
 		// shouldn't be 0 to start with?!
 		if (len == 0)
-			return;
+			return null;
 
 		// first Struct
 		Struct firstEnt = null;
 		boolean foundFirstEnt = false;
 		// track the most recent entity for use for pronouns
-		Struct recentEnt = null;
+		//Struct recentEnt = null;
 		// index for recentEnt, ensure we don't count later structs
 		// for pronouns
 		int recentEntIndex = -1;
@@ -1742,7 +1740,6 @@ public class ThmP1 {
 				int span = 0;
 				kHeadStruct.set_dfsDepth(0);
 				span = dfs(kHeadStruct, parsedSB, span);
-				
 				//only getting first component parse. Should use priority queue instead of list?
 				//or at least get highest score
 				totalScore *= kHeadStruct.maxDownPathScore();
@@ -1785,7 +1782,7 @@ public class ThmP1 {
 		 * headStructList = mx.get(len - 1).get(len - 1); //should pick out best
 		 * parse before WL and just parse to WL for that particular parse!
 		 */
-
+		return recentEnt;
 	}
 
 	/**
@@ -1911,7 +1908,7 @@ public class ThmP1 {
 	 * by matching commands. Returns
 	 * string representation of the parse tree. Tree uses WLCommands.
 	 * @param uHeadStruct
-	 * @return
+	 * @return LongForm parse
 	 */
 	private static StringBuilder treeTraversal(Struct uHeadStruct, List<Multimap<ParseStructType, ParsedPair>> parsedPairMMapList,
 			int[] curStructContextVec, int span) {
@@ -1947,7 +1944,7 @@ public class ThmP1 {
 		//**parseStructMapList.add(parseStructMap.toString() + "\n");
 		//if parseStructMap empty, ie no WLCommand was found, but long parse form might still be good
 		if(parseStructMap.isEmpty()){
-			ParsedPair pair = new ParsedPair(uHeadStruct.maxDownPathScore(), 
+			ParsedPair pair = new ParsedPair(wlSB.toString(), uHeadStruct.maxDownPathScore(), 
 					uHeadStruct.numUnits(), span);
 			//partsMap.put(type, curWrapper.WLCommandStr);	
 			parseStructMap.put(ParseStructType.NONE, pair);

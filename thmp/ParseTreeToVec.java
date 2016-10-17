@@ -313,6 +313,11 @@ public class ParseTreeToVec {
 				//set entry at B to the row index of A: B points to A.
 				setContextVec(struct, contextVec, commandWrapper, ELEMENT);
 				
+			}else if(parseRelation.equals(HASPPT)){
+				//use the WLCommand structure to determine A and B in A\[Element]B,
+				//set entry at B to the row index of A: B points to A.
+				setContextVec(struct, contextVec, commandWrapper, HASPPT);
+				
 			}
 			
 		}
@@ -329,69 +334,83 @@ public class ParseTreeToVec {
 			System.out.println("posTermList " + posTermList + " triggerTermIndex " + triggerTermIndex);
 			switch(relation){
 			case ELEMENT:
-				/*for(int i = 0; i < posTermList.size(); i++){
-					PosTerm posTerm = posTermList.get(i);
-					System.out.println(" STRUCT " + posTermList.get(i).commandComponent());
-					System.out.println(" STRUCTLIST " + WLCommand.getStructList(command, posTermList.get(i).commandComponent()));
-					System.out.println(" CommandsMap " + WLCommand.getStructList(command, posTermList.get(i).commandComponent()).get(posTerm.positionInMap()));
-				}*/
-				//elements are of form A\[Element] B, get A and then B. 
-				Struct parentStruct = null;
-				for(int i = 0; i < triggerTermIndex; i++){
-					if(i == triggerTermIndex){
-						continue;
-					}
-					PosTerm posTerm = posTermList.get(i);
-					Struct curStruct = posTerm.posTermStruct();
-					//obfuscated!
-					curStruct = WLCommand.getStructList(command, posTerm.commandComponent()).get(posTerm.positionInMap());
-					System.out.println("***TPYE " + curStruct);
-					if(curStruct != null && curStruct.type().matches("ent|symb|pro")){
-						//set entry of parent in contextVec to itself, if existing entry is <=0, 
-						//so not to differentiate the term too much from likely counterpart in corpus
-						//vectors. Experimentation.
-						String termStr = curStruct.contentStr();						
-						Integer parentIndex = getTermStrIndex(termStr);
-						
-						if(parentIndex != null && contextVec[parentIndex] <= 0){
-							contextVec[parentIndex] = parentIndex;
-						}
-						
-						parentStruct = curStruct;					
-						break;
-					}
-				}
-				
-				if(null == parentStruct){
-					return;
-				}
-				
-				//get termStr for parentStruct
-				String parentTermStr = parentStruct.contentStr();
-				
-				//get an index for contentStr, should already been singularized				
-				Integer parentTermRowIndex = getTermStrIndex(parentTermStr);
-				if(null == parentTermRowIndex){
-					return;
-				}
-				//parentTermRowIndex = parentTermRowIndex == null ? ELEMENT.relationNum : parentTermRowIndex;
-				System.out.println("***** *got to adjust" );
-				for(int i = triggerTermIndex+1; i < posTermList.size(); i++){
-					Struct curStruct = posTermList.get(i).posTermStruct();
-					if(null != curStruct){
-						
-						//String curStructTermStr = curStruct.contentStr();
-						//addTermStrToVec(curStruct, curStructTermStr, parentTermRowIndex, contextVec);
-						curStruct.setContextVecEntry(parentTermRowIndex, contextVec);
-					}
-				}
-				break;
+				adjustParentIndex(posTermList, command, triggerTermIndex, contextVec);
+			case HASPPT:
+				System.out.println("HASPPT! triggerIndex " + triggerTermIndex);
+				adjustParentIndex(posTermList, command, triggerTermIndex, contextVec);
 			default:
 				
 			}
 				
 		}
 		
+		/**
+		 * Adjusts context vec entry for parent, to take into account e.g. A \[Element] B, 
+		 * so B points to A.
+		 * @param posTermList
+		 * @param command
+		 * @param triggerTermIndex
+		 * @param contextVec
+		 */
+		private static void adjustParentIndex(List<PosTerm> posTermList, WLCommand command, int triggerTermIndex, int[] contextVec){
+			/*for(int i = 0; i < posTermList.size(); i++){
+			PosTerm posTerm = posTermList.get(i);
+			System.out.println(" STRUCT " + posTermList.get(i).commandComponent());
+			System.out.println(" STRUCTLIST " + WLCommand.getStructList(command, posTermList.get(i).commandComponent()));
+			System.out.println(" CommandsMap " + WLCommand.getStructList(command, posTermList.get(i).commandComponent()).get(posTerm.positionInMap()));
+		}*/
+		//elements are of form A\[Element] B, get A and then B. 
+		Struct parentStruct = null;
+		for(int i = 0; i < triggerTermIndex; i++){
+			if(i == triggerTermIndex){
+				continue;
+			}
+			PosTerm posTerm = posTermList.get(i);
+			Struct curStruct = posTerm.posTermStruct();
+			//obfuscated!
+			curStruct = WLCommand.getStructList(command, posTerm.commandComponent()).get(posTerm.positionInMap());
+			System.out.println("***TPYE " + curStruct);
+			if(curStruct != null && curStruct.type().matches("ent|symb|pro")){
+				//set entry of parent in contextVec to itself, if existing entry is <=0, 
+				//so not to differentiate the term too much from likely counterpart in corpus
+				//vectors. Experimentation.
+				//disable this since setting all irrelevant thm terms to 0
+				/*String termStr = curStruct.contentStr();						
+				Integer parentIndex = getTermStrIndex(termStr);
+				
+				if(parentIndex != null && contextVec[parentIndex] <= 0){
+					contextVec[parentIndex] = parentIndex;
+				} */
+				
+				parentStruct = curStruct;					
+				break;
+			}
+		}
 		
+		if(null == parentStruct){
+			//System.out.println("Parent struct not found! triggerIndex " + triggerTermIndex);
+			return;
+		}
+		
+		//get termStr for parentStruct
+		String parentTermStr = parentStruct.contentStr();
+		
+		//get an index for contentStr, should already been singularized				
+		Integer parentTermRowIndex = getTermStrIndex(parentTermStr);
+		if(null == parentTermRowIndex){
+			return;
+		}
+		//parentTermRowIndex = parentTermRowIndex == null ? ELEMENT.relationNum : parentTermRowIndex;
+		System.out.println("***** *got to adjust" );
+		for(int i = triggerTermIndex+1; i < posTermList.size(); i++){
+			Struct curStruct = posTermList.get(i).posTermStruct();
+			if(null != curStruct){
+				
+				//String curStructTermStr = curStruct.contentStr();
+				//addTermStrToVec(curStruct, curStructTermStr, parentTermRowIndex, contextVec);
+				curStruct.setContextVecEntry(parentTermRowIndex, contextVec);
+			}
+		}
+		}
 	}
 }

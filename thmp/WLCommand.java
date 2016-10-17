@@ -480,6 +480,7 @@ public class WLCommand {
 						nextWord = nextStruct.simpleToString(true, null);
 					}
 				}else{
+					//takes into account pro, and the ent it should refer to
 					nextWord = nextStruct.simpleToString(true, curCommand);
 				}
 				//simple way to present the Struct
