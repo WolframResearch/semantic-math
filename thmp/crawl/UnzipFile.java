@@ -31,7 +31,8 @@ public class UnzipFile {
 	private static final String[] srcBasePaths = new String[] { "/Users/yihed/Documents/A/arxiv/0002_1",
 			"/Users/yihed/Documents/A/arxiv/0003" };
 
-	// uses zip4j to unzip files, except zip4j doesn't work on gz files.
+	
+	// uses zip4j to unzip files. <-- Except zip4j doesn't work on gz files.
 	// this unzip method did not work, so had to resort to Java utility method
 	// with streams
 	private static void unzip() {

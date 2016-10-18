@@ -61,7 +61,7 @@ public class ThmP1 {
 	private static final String FLUFF = "Fluff";
 	
 	// private static final File unknownWordsFile;
-	private static final Path unknownWordsFile = Paths.get("src/thmp/data/unknownWords.txt");
+	private static final Path unknownWordsFile = Paths.get("src/thmp/data/unknownWords1.txt");
 	private static final Path parsedExprFile = Paths.get("src/thmp/data/parsedExpr.txt");
 
 	private static final List<String> unknownWords = new ArrayList<String>();
@@ -1267,9 +1267,10 @@ public class ThmP1 {
 							}
 
 							// if recentEntIndex < j, it was deliberately
-							// skipped
-							// in a previous pair when it was the 2nd struct
-							if (type1.equals("ent") && (!(recentEntIndex < j) || !foundFirstEnt)) {
+							// skipped in a previous pair when it was the 2nd struct.
+							//Check type too, in case in future StructH can have types other than ent
+							if (!struct1.isStructA() && type1.equals("ent") 
+									&& (!(recentEntIndex < j) || !foundFirstEnt)) {
 								if (!foundFirstEnt) {
 									firstEnt = struct1;
 									foundFirstEnt = true;
@@ -1284,7 +1285,7 @@ public class ThmP1 {
 							// sentence, or "complete" phrase
 							// Note that different pronouns might need diferent
 							// rules
-							if (type1.equals("pro") && struct1.prev1() instanceof String
+							if (type1.equals("pro") && struct1.prev1NodeType().equals(NodeType.STR)
 									&& ((String) struct1.prev1()).matches("it|they") && struct1.prev2() != null
 									&& struct1.prev2().equals("")) {
 								if (recentEnt != null && recentEntIndex < j) {
@@ -1298,7 +1299,7 @@ public class ThmP1 {
 								}
 							}
 
-							if (type2.equals("ent") && !(type1.matches("verb|pre"))) {
+							if (type2.equals("ent") && !struct2.isStructA() && !(type1.matches("verb|pre"))) {
 								if (!foundFirstEnt) {
 									firstEnt = struct1;
 									foundFirstEnt = true;
@@ -2062,10 +2063,9 @@ public class ThmP1 {
 				((StructH<?>) newStruct).add_child(childToAdd, childRelation); 
 				struct2.set_parentStruct(newStruct);
 				
+				recentEnt = newStruct;
+				recentEntIndex = j;
 			}
-
-			recentEnt = newStruct;
-			recentEntIndex = j;
 
 			newStruct.set_maxDownPathScore(newDownPathScore);
 
@@ -2366,8 +2366,12 @@ public class ThmP1 {
 	 * 
 	 * @throws IOException
 	 */
-	public static void writeUnknownWordsToFile() throws IOException {
-		Files.write(unknownWordsFile, unknownWords, Charset.forName("UTF-8"));
+	public static void writeUnknownWordsToFile() {
+		try{
+			Files.write(unknownWordsFile, unknownWords, Charset.forName("UTF-8"));
+		}catch(IOException e){
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -2631,6 +2635,9 @@ public class ThmP1 {
 					sentenceBuilder.append(curWord);
 				}
 			}
+		}
+		if(sentenceList.isEmpty()){
+			sentenceList.add(sentenceBuilder.toString());
 		}
 		return sentenceList.toArray(new String[0]);
 	}

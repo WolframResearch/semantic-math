@@ -415,7 +415,7 @@ public class WLCommand {
 				//set its head Struct to structToAppendCommandStr,
 				// ***This appears to always be null!?!
 				Struct nextStruct = term.posTermStruct;				
-				System.out.println("&&&posTermStruct " + nextStruct);
+				//System.out.println("&&&posTermStruct " + nextStruct);
 				//get WLCommandWrapperList
 				if(nextStruct != null){
 					updateWrapper(nextStruct, structToAppendCommandStr);

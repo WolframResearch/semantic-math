@@ -335,9 +335,10 @@ public class ParseTreeToVec {
 			switch(relation){
 			case ELEMENT:
 				adjustParentIndex(posTermList, command, triggerTermIndex, contextVec);
+				break;
 			case HASPPT:
-				System.out.println("HASPPT! triggerIndex " + triggerTermIndex);
 				adjustParentIndex(posTermList, command, triggerTermIndex, contextVec);
+				break;
 			default:
 				
 			}

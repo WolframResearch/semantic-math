@@ -27,8 +27,9 @@ import thmp.search.CollectThm;
 
 public class GenerateContextVector {
 
-	private static String contextVecFileStr = "src/thmp/data/contextVectorsTest.txt";
+	private static String contextVecFileStr = "src/thmp/data/functionalAnalysis.txt";
 	private static Path contextVecFilePath;	
+	private static final boolean WRITE_UNKNOWNWORDS = false;
 	//brackets pattern
 	private static final Pattern BRACKETS_PATTERN = Pattern.compile("\\[([^\\]]*)\\]");
 	
@@ -64,6 +65,9 @@ public class GenerateContextVector {
 		bareThmList = CollectThm.ThmList.get_bareThmList();
 		generateContextVec(bareThmList, contextVecList, contextVecStringList);
 		
+		if(WRITE_UNKNOWNWORDS){
+			ThmP1.writeUnknownWordsToFile();
+		}
 		//obtain the average value of entries by sampling, and 
 		//replace 0 by this avg.
 		
