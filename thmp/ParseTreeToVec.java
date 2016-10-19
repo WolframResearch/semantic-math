@@ -363,13 +363,17 @@ public class ParseTreeToVec {
 		//elements are of form A\[Element] B, get A and then B. 
 		Struct parentStruct = null;
 		for(int i = 0; i < triggerTermIndex; i++){
-			if(i == triggerTermIndex){
+			
+			PosTerm posTerm = posTermList.get(i);
+			int positionInCommandMap = posTerm.positionInMap();
+			//e.g. -2 indicates it's an AUX/auxiliary term
+			if(positionInCommandMap < 0){
 				continue;
 			}
-			PosTerm posTerm = posTermList.get(i);
+			
 			Struct curStruct = posTerm.posTermStruct();
 			//obfuscated!
-			curStruct = WLCommand.getStructList(command, posTerm.commandComponent()).get(posTerm.positionInMap());
+			curStruct = WLCommand.getStructList(command, posTerm.commandComponent()).get(positionInCommandMap);
 			System.out.println("***TPYE " + curStruct);
 			if(curStruct != null && curStruct.type().matches("ent|symb|pro")){
 				//set entry of parent in contextVec to itself, if existing entry is <=0, 

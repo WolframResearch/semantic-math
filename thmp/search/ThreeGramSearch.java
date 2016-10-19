@@ -46,7 +46,7 @@ public class ThreeGramSearch {
 	private static final String[] ADDITIONAL_THREE_GRAMS = new String[]{"local ring", "local field"};
 	//map of maps containing first words of 2 grams as keys, and maps of 2nd words and their counts as values
 	private static final Map<String, Map<String, Integer>> twoGramFreqMap = NGramSearch.get_nGramMap();
-	
+	private static int averageThreeGramFreqCount;
 	//should put these in map
 	//private static final String FLUFF_WORDS = "a|the|tex|of|and|on|let|lemma|for|to|that|with|is|be|are|there|by"
 		//	+ "|any|as|if|we|suppose|then|which|in|from|this|assume|this|have";
@@ -74,6 +74,7 @@ public class ThreeGramSearch {
 		buildThreeGramMap(threeGramMap);
 		
 		threeGramFreqMap = new HashMap<String, Integer>();
+		//obtain the most frequent three grams from the previous threeGramMap
 		threeGramList = filterThreeGrams(threeGramMap, threeGramFreqMap);
 		System.out.println(threeGramFreqMap);
 		System.out.println("Done with 3-grams.");
@@ -163,11 +164,14 @@ public class ThreeGramSearch {
 	
 	/**
 	 * Obtains the most frequent three grams from threeGramMap, 
+	 * to build final threeGramMap.
 	 * @param threeGramMap
 	 */
 	private static List<String> filterThreeGrams(TreeMultimap<String, String> threeGramMap, Map<String, Integer> threeGramFreqMap){
 		List<String> threeGramList = new ArrayList<String>();
 		//System.out.println(threeGramMap);
+		int threeGramFreqSum = 0;
+		int totalThreeGramAdded = 0;
 		
 		for(String firstWord : threeGramMap.keySet()){
 			NavigableSet<String> threeGramSet = threeGramMap.get(firstWord);
@@ -183,10 +187,14 @@ public class ThreeGramSearch {
 			while(upTo > 0){
 				String threeGram = threeGramSetIter.next();
 				threeGramList.add(threeGram);
-				threeGramFreqMap.put(threeGram, threeGramCountsMap.get(threeGram));
+				int threeGramFreq = threeGramCountsMap.get(threeGram);
+				threeGramFreqMap.put(threeGram, threeGramFreq);
+				threeGramFreqSum += threeGramFreq;
+				totalThreeGramAdded++;
 				threeGramFirstWordsSet.add(firstWord);
 				upTo--;
 			}
+			
 			//pick the rest according to pairs frequencies gathered in twoGramFreqMap
 			while(threeGramSetIter.hasNext()){
 				String threeGram = threeGramSetIter.next();
@@ -209,11 +217,19 @@ public class ThreeGramSearch {
 						Map<String, Integer> word1Map = twoGramFreqMap.get(word1);
 						if(word1Map != null){
 							addTo3GramList(threeGramList, word1Map, threeGram, word2, threeGramFreq, firstWord);
+							threeGramFreqSum += threeGramFreq;
+							totalThreeGramAdded++;
 						}
 					}
 				}
 			}
 		}
+		if(totalThreeGramAdded != 0){
+			averageThreeGramFreqCount = threeGramFreqSum / totalThreeGramAdded;
+		}else{
+			averageThreeGramFreqCount = 0;
+		}
+		
 		return threeGramList;
 	}
 
@@ -272,6 +288,14 @@ public class ThreeGramSearch {
 	 */
 	public static Map<String, Integer> get3GramsMap(){
 		return threeGramFreqMap;
+	}
+	
+	/**
+	 * Retrieve average frequency of three grams.
+	 * @return
+	 */
+	public static int averageThreeGramFreqCount(){
+		return averageThreeGramFreqCount;
 	}
 	
 	/** 

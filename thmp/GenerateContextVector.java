@@ -27,7 +27,7 @@ import thmp.search.CollectThm;
 
 public class GenerateContextVector {
 
-	private static String contextVecFileStr = "src/thmp/data/functionalAnalysis.txt";
+	private static String contextVecFileStr = "src/thmp/data/ContextVecFunctionalAnalysis.txt";
 	private static Path contextVecFilePath;	
 	private static final boolean WRITE_UNKNOWNWORDS = false;
 	//brackets pattern

@@ -32,7 +32,7 @@ public class ContextSearch {
 
 	//bare thm list, without latex \label's or \index's, or refs, etc
 	//private static final List<String> bareThmList = CollectThm.ThmList.get_bareThmList();
-	private static final KernelLink ml = FileUtils.getKernelLink();
+	private static final KernelLink ml = FileUtils.getKernelLinkInstance();
 	//list of strings "{1, 0, ...}" corresponding to contexts of thms, same indexing as in thmList.
 	private static final List<String> contextVecStringList = new ArrayList<String>();
 	//private static final int LIST_INDEX_SHIFT = 1;

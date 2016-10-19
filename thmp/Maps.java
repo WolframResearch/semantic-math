@@ -735,7 +735,7 @@ public class Maps {
 		structMap.put("adverb_adj", new Rule("adj", 1)); /// *******
 		structMap.put("adverb_verbphrase", new Rule("assert", 1));
 
-		// grammar rules for 2nd run
+		// grammar rules for 2nd run <-- not used!
 		structMap2 = new HashMap<String, String>();
 		structMap2.put("ent_verb", "assert");
 		structMap2.put("ent_verb", "assert");
@@ -778,6 +778,13 @@ public class Maps {
 
 	}
 
+	/**
+	 * Put word and part-of-speech pair into posMap
+	 */
+	public static void putWordToPosMap(String word, String pos){
+		posMap.put(word, pos);
+	}
+	
 	/**
 	 * reads in list of words not in dictionary yet, puts them in appropriate
 	 * dictionaries according to classification in the text

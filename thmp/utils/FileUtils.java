@@ -18,7 +18,8 @@ import com.wolfram.jlink.MathLinkFactory;
  */
 public class FileUtils {
 
-	//
+	//singleton, only one instance should exist
+	private static volatile KernelLink ml;
 	
 	/**
 	 * Write content to file at absolute path.
@@ -35,9 +36,34 @@ public class FileUtils {
 
 	}
 
-	public static KernelLink getKernelLink() {
+	/**
+	 * Get KernelLink instance, 
+	 * create one is none exists already.
+	 * @return KernelLink instance.
+	 */
+	public static KernelLink getKernelLinkInstance() {
+		//double-checked locking
+		if(null == ml){
+			//finer-grained locking than synchronizing whole method
+			synchronized(FileUtils.class){
+				//need to check again, in case ml was initialized while 
+				//acquiring the lock.
+				if(null == ml){
+					ml = createKernelLink();
+				}
+			}			
+		}	
+		return ml;		
+	}
+	
+	/**
+	 * Creates the kernel link instance if none exists yet in this
+	 * JVM session. Ensures only a single link instance is created, since 
+	 * only one is needed.
+	 * @return
+	 */
+	private static KernelLink createKernelLink() {
 
-		KernelLink ml = null;
 		String[] ARGV;
 		
 		String OS_name = System.getProperty("os.name");
@@ -45,7 +71,7 @@ public class FileUtils {
 			ARGV = new String[] { "-linkmode", "launch", "-linkname",
 					"\"/Applications/Mathematica2.app/Contents/MacOS/MathKernel\" -mathlink" };
 		} else {
-			// path on Linux VM
+			// path on Linux VM (i.e. puremath.wolfram.com)
 			// ARGV = new String[]{"-linkmode", "launch", "-linkname",
 			// "\"/usr/local/Wolfram/Mathematica/11.0/Executables/MathKernel\"
 			// -mathlink"};

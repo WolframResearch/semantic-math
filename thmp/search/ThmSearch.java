@@ -10,6 +10,8 @@ import org.apache.commons.lang3.ArrayUtils;
 
 import com.wolfram.jlink.*;
 
+import thmp.utils.FileUtils;
+
 /**
  * Theorem search. Does the computation in WL using JLink. 
  * @author yihed
@@ -27,7 +29,7 @@ public class ThmSearch {
 	//"\"/Applications/Mathematica2.app/Contents/MacOS/MathKernel\" -mathlink"};
 	
 	//path for on Linux VM 
-	private static final String[] ARGV;
+	//private static final String[] ARGV;
 	
 	//number of nearest vectors to get for Nearest[]
 	private static final int NUM_NEAREST = 3;
@@ -39,11 +41,10 @@ public class ThmSearch {
 	private static final List<List<Integer>> corMxList;
 	private static KernelLink ml;
 	
-	static{
-		
+	static{		
 		//use OS system variable to tell whether on VM or local machine, and set InstallDirectory 
 		//path accordingly.
-		String OS_name = System.getProperty("os.name");
+		/*String OS_name = System.getProperty("os.name");
 		if(OS_name.equals("Mac OS X")){
 			ARGV = new String[]{"-linkmode", "launch", "-linkname", 
 					"\"/Applications/Mathematica2.app/Contents/MacOS/MathKernel\" -mathlink"};
@@ -52,16 +53,18 @@ public class ThmSearch {
 			//ARGV = new String[]{"-linkmode", "launch", "-linkname", 
 					//"\"/usr/local/Wolfram/Mathematica/11.0/Executables/MathKernel\" -mathlink"};
 			ARGV = new String[]{"-linkmode", "launch", "-linkname", "math -mathlink"};
-		}
+		}*/
 		
 		//docMx = new int[][]{{0, 1, 0}, {1, 1, 0}, {0, 0, 1}, {1, 0, 0}};
 		docMx = TriggerMathThm2.mathThmMx();
 		corMxList = new ArrayList<List<Integer>>();
 		try{			
-			ml = MathLinkFactory.createKernelLink(ARGV);
+			/*ml = MathLinkFactory.createKernelLink(ARGV);
 			System.out.println("MathLink created! "+ ml);
 			//discard initial pakets the kernel sends over.
-			ml.discardAnswer();
+			ml.discardAnswer();*/
+			ml = FileUtils.getKernelLinkInstance();
+			
 			//set up the matrix corresponding to docMx, to be SVD'd. 
 			//adjust mx entries based on correlation first			
 			String mx = toNestedList(docMx);

@@ -37,10 +37,12 @@ public class NGramSearch {
 	private static final Map<String, Map<String, Integer>> nGramMap;
 	private static final String[] ADDITIONAL_TWO_GRAMS = new String[]{"local field", "direct sum",
 			"finitely many", "open mapping"};
+	private static int averageTwoGramFreqCount;
+	//default two-gram averageFreqCount when total number of two grams is 0
+	private static final int ADDITIONAL_TWO_GRAM_DEFAULT_COUNT = 5;
 	//words to be taken off of two-gram map
 	private static final String[] NOT_TWO_GRAMS = new String[]{"field is", "more generally"};
-	//default two-gram count when total number of two grams is 0
-	private static final int ADDITIONAL_TWO_GRAM_DEFAULT_COUNT = 5;
+	
 	//should use this to detect fluff in first word.
 	private static final Set<String> fluffWordsSet = WordForms.makeFluffSet();
 	//set that contains the first word of each n-grams.
@@ -190,15 +192,21 @@ public class NGramSearch {
 			}
 		}
 		//add additional two grams that were not programmatically selected
-		int averageFreqCount;
+		
+		//totalTwoGrams should not be null, unless really tiny source set.
 		if(totalTwoGrams != 0){ 
-			averageFreqCount = totalFreqCount/totalTwoGrams;
+			averageTwoGramFreqCount = totalFreqCount/totalTwoGrams;
 		}else{
-			averageFreqCount = ADDITIONAL_TWO_GRAM_DEFAULT_COUNT;
+			averageTwoGramFreqCount = ADDITIONAL_TWO_GRAM_DEFAULT_COUNT;
 		}		
+		
 		for(String twoGram : ADDITIONAL_TWO_GRAMS){
-			twoGramMap.put(twoGram, averageFreqCount);
+			if(!twoGramMap.containsKey(twoGram)){
+				twoGramMap.put(twoGram, averageTwoGramFreqCount);
+			}
 		}
+		//put additional n-grams in
+		
 		//take away false positive two-grams
 		for(String token : NOT_TWO_GRAMS){
 			twoGramMap.remove(token);
@@ -215,6 +223,10 @@ public class NGramSearch {
 		return twoGramsMap;
 	}
 
+	public static int averageTwoGramFreqCount(){
+		return averageTwoGramFreqCount;
+	}
+	
 	/**
 	 * Get 2-grams and their frequencies.
 	 * @return
