@@ -27,13 +27,13 @@ public class TestParseMain {
 
 	@Before
 	public void setUp() throws Exception {
-		Maps.buildMap();
+		/*Maps.buildMap();
 		try {
 			Maps.readLexicon();
 			Maps.readFixedPhrases();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
-		}
+		}*/
 	}
 
 	@Test

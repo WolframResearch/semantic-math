@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 import com.wolfram.jlink.KernelLink;
@@ -33,9 +34,18 @@ public class FileUtils {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
 	}
 
+	/**
+	 * Write content to file at absolute path.
+	 * 
+	 * @param contentList
+	 * @param fileTo
+	 */
+	public static void writeToFile(List<String> contentList, String fileToStr) {
+		Path toPath = Paths.get(fileToStr);
+		writeToFile(contentList, toPath);
+	}
 	/**
 	 * Get KernelLink instance, 
 	 * create one is none exists already.

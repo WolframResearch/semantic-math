@@ -13,6 +13,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
+
 import thmp.ProcessInput;
 import thmp.search.CollectThm.ThmList;
 import thmp.utils.FileUtils;
@@ -34,7 +37,7 @@ public class WordFrequency {
 	private static final Map<String, Integer> stockFreqMap = new HashMap<String, Integer>();
 	
 	//subset of words and their pos from the stock file that only stores word and its pos of true fluff words
-	private static final Map<String, String> trueFluffWordsPosMap = new HashMap<String, String>();
+	private static final ListMultimap<String, String> trueFluffWordsPosMap = ArrayListMultimap.create();
 	
 	private static final Set<String> trueFluffWordsSet = new HashSet<String>();
 	private static final String WORDS_FILE_STR = "src/thmp/data/wordFrequency.txt";
@@ -170,7 +173,7 @@ public class WordFrequency {
 	 * Retrieves map of true fluff words and their pos. 
 	 * @return
 	 */
-	public static Map<String, String> trueFluffWordsPosMap() {
+	public static ListMultimap<String, String> trueFluffWordsPosMap() {
 		return trueFluffWordsPosMap;
 	}	
 

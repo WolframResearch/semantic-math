@@ -19,6 +19,7 @@ import java.util.regex.Matcher;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 
 import thmp.Struct.NodeType;
@@ -42,7 +43,7 @@ public class ThmP1 {
 	private static final Multimap<String, Rule> structMap;
 	private static final Map<String, String> anchorMap;
 	// parts of speech map, e.g. "open", "adj"
-	private static final Map<String, String> posMap;
+	private static final ListMultimap<String, String> posMMap;
 	// fluff words, e.g. "the", "a"
 	private static final Map<String, String> fluffMap;
 
@@ -101,14 +102,14 @@ public class ThmP1 {
 	
 	static{
 		//should not rely on this check! fix Maps.java initialization
-		if(Maps.fixedPhraseMap() == null){
+		/*if(Maps.fixedPhraseMap() == null){
 			try {
 				Maps.readLexicon();
 				Maps.readFixedPhrases();
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 			}
-		}
+		}*/
 		/*Maps.buildMap();
 		try {
 			Maps.readLexicon();
@@ -120,7 +121,7 @@ public class ThmP1 {
 		fixedPhraseMap = Maps.fixedPhraseMap();
 		structMap = Maps.structMap;
 		anchorMap = Maps.anchorMap;
-		posMap = Maps.posMap;
+		posMMap = Maps.posMMap();
 		fluffMap = Maps.fluffMap;
 		mathObjMap = Maps.mathObjMap;
 		adjMap = Maps.adjMap;
@@ -292,7 +293,7 @@ public class ThmP1 {
 		
 		return i;
 	}
-
+	
 	/**
 	 * Add n gram to pairs list
 	 * @param pairs
@@ -302,7 +303,7 @@ public class ThmP1 {
 	 */
 	private static void addNGramToPairs(List<Pair> pairs, List<Integer> mathIndexList, String thirdWord,
 			String threeGram) {
-		String pos = posMap.get(thirdWord);
+		String pos = posMMap.get(thirdWord).get(0);
 		
 		if(mathObjMap.containsKey(thirdWord)){
 			pos = "ent";
@@ -418,7 +419,7 @@ public class ThmP1 {
 				else if (curWord.matches("\\$[^$]+\\$[^-\\s]*-[^\\s]*")) {
 					String[] curWordAr = curWord.split("-");
 					String tempWord = curWordAr[curWordAr.length - 1];
-					String tempPos = posMap.get(tempWord);
+					String tempPos = posMMap.get(tempWord).get(0);
 					if (tempPos != null) {
 						type = tempPos;
 					}
@@ -548,13 +549,13 @@ public class ThmP1 {
 				anchorList.add(pairsSize - 1);
 			}
 			// check part of speech
-			else if (posMap.containsKey(curWord) || posMap.containsKey(curWord.toLowerCase())) {
-				if(posMap.containsKey(curWord.toLowerCase())){
+			else if (posMMap.containsKey(curWord) || posMMap.containsKey(curWord.toLowerCase())) {
+				if(posMMap.containsKey(curWord.toLowerCase())){
 					curWord = curWord.toLowerCase();
 				}
 				// composite words, such as "for all",
 				String temp = curWord, pos = curWord;
-				String tempPos = posMap.get(temp);
+				String tempPos = posMMap.get(temp).get(0);
 
 				while (tempPos.length() > 4
 						&& tempPos.substring(tempPos.length() - 4, tempPos.length()).matches("COMP|comp")
@@ -562,20 +563,20 @@ public class ThmP1 {
 
 					curWord = temp;
 					temp = temp + " " + strAr[i + 1];
-					if (!posMap.containsKey(temp)) {
+					if (!posMMap.containsKey(temp)) {
 						break;
 					}
-					tempPos = posMap.get(temp);
+					tempPos = posMMap.get(temp).get(0);
 					i++;
 				}
 				
 				Pair pair;
-				if (posMap.containsKey(temp)) {
-					pos = posMap.get(temp);
+				if (posMMap.containsKey(temp)) {
+					pos = posMMap.get(temp).get(0);
 					pos = pos.split("_")[0];
 					pair = new Pair(temp, pos);
 				} else {
-					pos = posMap.get(curWord);
+					pos = posMMap.get(curWord).get(0);
 					pos = pos.split("_")[0];
 					pair = new Pair(curWord, pos);
 				}
@@ -585,21 +586,21 @@ public class ThmP1 {
 				pairs.add(pair);
 			}
 			// if plural form of noun
-			else if (posMap.containsKey(singular) && posMap.get(singular).equals("noun")
-					|| posMap.containsKey(singular2) && posMap.get(singular2).equals("noun")
-					|| posMap.containsKey(singular3) && posMap.get(singular3).equals("noun")) {
+			else if (posMMap.containsKey(singular) && posMMap.get(singular).get(0).equals("noun")
+					|| posMMap.containsKey(singular2) && posMMap.get(singular2).get(0).equals("noun")
+					|| posMMap.containsKey(singular3) && posMMap.get(singular3).get(0).equals("noun")) {
 				pairs.add(new Pair(curWord, "noun"));
 			}
-			else if (posMap.containsKey(singular) && posMap.get(singular).matches("verb|vbs")
-					|| posMap.containsKey(singular2) && posMap.get(singular2).matches("verb|vbs")
-					|| posMap.containsKey(singular3) && posMap.get(singular3).matches("verb|vbs")) {
+			else if (posMMap.containsKey(singular) && posMMap.get(singular).get(0).matches("verb|vbs")
+					|| posMMap.containsKey(singular2) && posMMap.get(singular2).get(0).matches("verb|vbs")
+					|| posMMap.containsKey(singular3) && posMMap.get(singular3).get(0).matches("verb|vbs")) {
 				pairs.add(new Pair(curWord, "verb"));
 			}
 			// classify words with dashes; eg sesqui-linear
 			else if (curWord.split("-").length > 1) {
 				
 				//first check if curWord is in dictionary as written
-				if(posMap.containsKey(curWord)){
+				if(posMMap.containsKey(curWord)){
 					
 				}
 				
@@ -612,18 +613,18 @@ public class ThmP1 {
 				String lastTermS3 = singular3 == null ? "" : singular3.split("-")[splitWords.length - 1];
 
 				String searchKey = "";
-				if (posMap.containsKey(lastTerm))
+				if (posMMap.containsKey(lastTerm))
 					searchKey = lastTerm;
-				else if (posMap.containsKey(lastTermS1))
+				else if (posMMap.containsKey(lastTermS1))
 					searchKey = lastTermS1;
-				else if (posMap.containsKey(lastTermS2))
+				else if (posMMap.containsKey(lastTermS2))
 					searchKey = lastTermS2;
-				else if (posMap.containsKey(lastTermS3))
+				else if (posMMap.containsKey(lastTermS3))
 					searchKey = lastTermS3;
 
 				if (!searchKey.equals("")) {
 
-					Pair pair = new Pair(curWord, posMap.get(searchKey).split("_")[0]);
+					Pair pair = new Pair(curWord, posMMap.get(searchKey).get(0).split("_")[0]);
 					pairs.add(pair);
 				} // if lastTerm is entity, eg A-module
 				if (mathObjMap.containsKey(lastTerm) || mathObjMap.containsKey(lastTermS1)
@@ -636,14 +637,14 @@ public class ThmP1 {
 			}
 			// check again for verbs ending in 'es' & 's'
 			else if (wordlen > 0 && curWord.charAt(wordlen - 1) == 's'
-					&& posMap.containsKey(strAr[i].substring(0, wordlen - 1))
-					&& posMap.get(strAr[i].substring(0, wordlen - 1)).equals("verb")) {
+					&& posMMap.containsKey(strAr[i].substring(0, wordlen - 1))
+					&& posMMap.get(strAr[i].substring(0, wordlen - 1)).get(0).equals("verb")) {
 
 				Pair pair = new Pair(strAr[i], "verb");
 				pairs.add(pair);
 			} else if (wordlen > 1 && curWord.charAt(wordlen - 1) == 's' && strAr[i].charAt(strAr[i].length() - 2) == 'e'
-					&& posMap.containsKey(strAr[i].substring(0, wordlen - 2))
-					&& posMap.get(strAr[i].substring(0, wordlen - 2)).equals("verb")) {
+					&& posMMap.containsKey(strAr[i].substring(0, wordlen - 2))
+					&& posMMap.get(strAr[i].substring(0, wordlen - 2)).get(0).equals("verb")) {
 				Pair pair = new Pair(strAr[i], "verb");
 				pairs.add(pair);
 
@@ -656,10 +657,10 @@ public class ThmP1 {
 			// participles and gerunds. Need special list for words such as
 			// "given"
 			else if (wordlen > 1 && curWord.substring(wordlen - 2, wordlen).equals("ed")
-					&& (posMap.containsKey(strAr[i].substring(0, wordlen - 2))
-							&& posMap.get(strAr[i].substring(0, wordlen - 2)).equals("verb")
-							|| posMap.containsKey(strAr[i].substring(0, wordlen - 1))
-									&& posMap.get(strAr[i].substring(0, wordlen - 1)).equals("verb"))) {
+					&& (posMMap.containsKey(strAr[i].substring(0, wordlen - 2))
+							&& posMMap.get(strAr[i].substring(0, wordlen - 2)).get(0).equals("verb")
+							|| posMMap.containsKey(strAr[i].substring(0, wordlen - 1))
+									&& posMMap.get(strAr[i].substring(0, wordlen - 1)).get(0).equals("verb"))) {
 
 				// if next word is "by", then
 				String curPos = "parti";
@@ -708,18 +709,18 @@ public class ThmP1 {
 				Pair pair = new Pair(curWord, curPos);
 				pairs.add(pair);
 			} else if (wordlen > 2 && curWord.substring(wordlen - 3, wordlen).equals("ing")
-					&& (posMap.containsKey(curWord.substring(0, wordlen - 3))
-							&& posMap.get(curWord.substring(0, wordlen - 3)).matches("verb|vbs")
+					&& (posMMap.containsKey(curWord.substring(0, wordlen - 3))
+							&& posMMap.get(curWord.substring(0, wordlen - 3)).get(0).matches("verb|vbs")
 							// verbs ending in "e"
-							|| (posMap.containsKey(curWord.substring(0, wordlen - 3) + 'e')
-									&& posMap.get(curWord.substring(0, wordlen - 3) + 'e').matches("verb|vbs")))) {
+							|| (posMMap.containsKey(curWord.substring(0, wordlen - 3) + 'e')
+									&& posMMap.get(curWord.substring(0, wordlen - 3) + 'e').get(0).matches("verb|vbs")))) {
 				String curType = "gerund";
-				if (i < strAr.length - 1 && posMap.containsKey(strAr[i + 1]) && posMap.get(strAr[i + 1]).equals("pre")) {
+				if (i < strAr.length - 1 && posMMap.containsKey(strAr[i + 1]) && posMMap.get(strAr[i + 1]).get(0).equals("pre")) {
 					// eg "consisting of" functions as pre
 					curWord = curWord + " " + strAr[++i];
 					curType = "pre";
 				} else if (i < strAr.length - 1 && (mathObjMap.containsKey(strAr[i+1]) ||
-						posMap.containsKey(strAr[i + 1]) && posMap.get(strAr[i + 1]).matches("noun"))) 
+						posMMap.containsKey(strAr[i + 1]) && posMMap.get(strAr[i + 1]).get(0).matches("noun"))) 
 				{
 					// eg "vanishing locus" functions as amod: adjectivial
 					// modifier
@@ -926,7 +927,7 @@ public class ThmP1 {
 			// eg " "
 			if (index - k - 2 > -1 && pairs.get(index - k).pos().matches("or|and")
 					&& pairs.get(index - k - 1).pos().equals("adj")) {
-				String tempPos = posMap.get(pairs.get(index - k - 2).word());
+				String tempPos = posMMap.get(pairs.get(index - k - 2).word()).get(0);
 				if (tempPos != null && !tempPos.matches("verb|vbs|verb_comp|vbs_comp")) {
 					// set pos() of or/and to the right index
 					pairs.get(index - k).set_pos(String.valueOf(j));
@@ -1002,14 +1003,14 @@ public class ThmP1 {
 						// set anchor to its normal part of speech word, like
 						// "of" to pre
 
-						pairs.get(index).set_pos(posMap.get(anchor));
+						pairs.get(index).set_pos(posMMap.get(anchor).get(0));
 					}
 
 				} // if the previous token is not an ent
 				else {
 					// set anchor to its normal part of speech word, like "of"
 					// to pre
-					pairs.get(index).set_pos(posMap.get(anchor));
+					pairs.get(index).set_pos(posMMap.get(anchor).get(0));
 				}
 
 				break;
@@ -1127,7 +1128,7 @@ public class ThmP1 {
 		
 		// if adverb-adj pair, eg "clearly good"
 		// And combine adj_adj to adj, eg right exact
-		if (pairs.size() > 0 && posMap.get(curWord).equals("adj")) {
+		if (pairs.size() > 0 && posMMap.get(curWord).get(0).equals("adj")) {
 			if (pairs.get(pairsSize - 1).pos().matches("adverb|adj")) {
 				curWord = pairs.get(pairsSize - 1).word() + " " + curWord;
 				// remove previous Pair
@@ -1978,18 +1979,18 @@ public class ThmP1 {
 			return false;
 
 		// strip away 's'
-		String pos = posMap.get(word.substring(0, wordLen - 2));
+		String pos = posMMap.get(word.substring(0, wordLen - 2)).get(0);
 		if (pos != null && pos.matches("verb|verb_comp")) {
 			return true;
 		}
 		// strip away es if applicable
 		else if (wordLen > 2 && word.charAt(wordLen - 2) == 'e') {
-			pos = posMap.get(word.substring(0, wordLen - 3));
+			pos = posMMap.get(word.substring(0, wordLen - 3)).get(0);
 			if (pos != null && pos.matches("verb|verb_comp"))
 				return true;
 		}
 		// could be special singular form, eg "is"
-		else if ((pos = posMap.get(word)) != null && pos.matches("vbs|vbs_comp")) {
+		else if ((pos = posMMap.get(word).get(0)) != null && pos.matches("vbs|vbs_comp")) {
 			return true;
 		}
 		return false;
@@ -2586,8 +2587,8 @@ public class ThmP1 {
 
 			// fluff phrases all start in posMap
 			String curWordLower = curWord.toLowerCase();
-			if (posMap.containsKey(curWordLower)) {
-				String pos = posMap.get(curWordLower);
+			if (posMMap.containsKey(curWordLower)) {
+				String pos = posMMap.get(curWordLower).get(0);
 				String[] posAr = pos.split("_");
 				String tempWord = curWord;
 
@@ -2598,7 +2599,7 @@ public class ThmP1 {
 					// match
 					tempWord += " " + wordsArray[++j];
 					
-					while (posMap.containsKey(tempWord.toLowerCase()) && j < wordsArrayLen - 1) {
+					while (posMMap.containsKey(tempWord.toLowerCase()) && j < wordsArrayLen - 1) {
 						tempWord += " " + wordsArray[++j];
 					}
 					

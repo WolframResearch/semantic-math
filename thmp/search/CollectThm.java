@@ -173,10 +173,10 @@ public class CollectThm {
 			
 			// name of n gram data file containing n-grams that should be included. These don't have
 			//frequencies associated with them.
-			String NGRAM_DATA_FILESTR = "src/thmp/data/NGramData.txt";
+			//String NGRAM_DATA_FILESTR = "src/thmp/data/NGramData.txt";
 			//read in n-grams from file named NGRAM_DATA_FILESTR and put in appropriate maps, 
 			//either twogrammap or threegrammap
-			readAdditionalNGrams(NGRAM_DATA_FILESTR);
+			//readAdditionalNGrams(NGRAM_DATA_FILESTR);
 			
 			nGramFirstWordsSet.addAll(NGramSearch.get_2GramFirstWordsSet());
 			nGramFirstWordsSet.addAll(ThreeGramSearch.get_3GramFirstWordsSet());
@@ -218,49 +218,6 @@ public class CollectThm {
 			wordsScoreMapNoAnno = ImmutableMap.copyOf(wordsScorePreMap);
 		}
 		
-		/**
-		 * Adds additional words scraped from resources.
-		 * @param NGRAM_DATA_FILESTR name of file containing additional n-grams
-		 * and words scraped from the web.
-		 */
-		private static void readAdditionalNGrams(String NGRAM_DATA_FILESTR){
-			BufferedReader fileBufferedReader;
-			try{
-				fileBufferedReader = new BufferedReader(new FileReader(NGRAM_DATA_FILESTR));
-			}catch(FileNotFoundException e){
-				e.printStackTrace();
-				return;
-			}
-			String word;
-			try{
-				while((word = fileBufferedReader.readLine()) != null){
-					word = word.toLowerCase();					
-					//determine if 2 or 3 gram
-					int wordLen = word.split("\\s+|-").length;
-					if(wordLen == 2){
-							//put in average two-gram frequency
-						//average word frequency is low, should compute
-						//but on the other hand, it probably did not show up often
-						//in text either, so probably shouldn't count for much.
-						if(!twoGramsMap.containsKey(word)){
-							twoGramsMap.put(word, NGramSearch.averageTwoGramFreqCount());
-						}
-					}else if(wordLen == 3){
-						if(!threeGramsMap.containsKey(word)){
-							threeGramsMap.put(word, ThreeGramSearch.averageThreeGramFreqCount());
-						}
-					}//single word, need to be careful about initialization sequence with Maps!
-						/*else if(wordLen == 1){
-							Maps.putWordToPosMap(word, "ent");
-						}*/
-						
-					
-				}
-			}catch(IOException e){
-				e.printStackTrace();
-			}
-			
-		}
 		
 		/**
 		 * the frequency of bare words, without annocation such as H or C attached, is 

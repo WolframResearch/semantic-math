@@ -24,13 +24,13 @@ import thmp.ThmP1.ParsedPair;
 public class StringToParse {
 	
 	static{
-		Maps.buildMap();
+		/*Maps.buildMap();
 		try {
 			Maps.readLexicon();
 			Maps.readFixedPhrases();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
-		}
+		}*/
 	}
 	
 	public static void main(String[] args) throws IOException{

@@ -3,6 +3,7 @@ package thmp;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,6 +12,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,7 +20,10 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.SetMultimap;
 
 import thmp.search.CollectFreqWords;
 import thmp.search.WordFrequency;
@@ -48,8 +53,7 @@ public class Maps {
 	protected static Map<String, Double> probMap;
 
 	protected static Map<String, String> anchorMap;
-	// parts of speech map, e.g. "open", "adj"
-	protected static Map<String, String> posMap;
+	
 	// fluff words, e.g. "the", "a"
 	protected static Map<String, String> fluffMap;
 
@@ -61,21 +65,72 @@ public class Maps {
 	// implmented via ImmutableMultimap. String is trigger word.
 	//private static final ImmutableListMultimap<String, FixedPhrase> fixedPhraseMMap;
 	private static ImmutableListMultimap<String, FixedPhrase> fixedPhraseMMap;
-
+	
+	private static BufferedReader fixedPhraseBuffer;
+	private static BufferedReader lexiconBuffer;
+	
 	// replace string with a break, usully a comma
-	protected static ArrayList<String> breakList;
-
+	//protected static List<String> breakList;
+	
 	// list of parts of speech, ent, verb etc
-	protected static ArrayList<String> posList;
+	protected static List<String> posList;	
+	//initialize with resource
 	
-	static{
-		buildMap();
+	public static void setResources(BufferedReader fixedPhraseBuf, BufferedReader lexiconBuf){
+		fixedPhraseBuffer = fixedPhraseBuf;
+		lexiconBuffer = lexiconBuf;
 	}
 	
-	public static void initializeWithResource(BufferedReader fixedPhraseBuffer, BufferedReader lexiconBuffer) throws IOException{
+	//subclass, to allow for setting resource in parent class.
+	public static class BuildMaps{
+		// parts of speech map, e.g. "open", "adj"
+		//specify it's a ListMultimap, to make known that insertion order is preserved
+		protected static final ListMultimap<String, String> posMMap;
+		
+		static{
+			
+			String fixedPhraseFileStr = "src/thmp/data/fixedPhrases.txt";
+			String lexiconFileStr = "src/thmp/data/fixedPhrases.txt";
+			//create temporary hashMultimap to avoid duplicates, 
+			//temporary since ListMultimap is a better structure for this.
+			SetMultimap<String, String> posPreMMap = LinkedHashMultimap.create();			
+			posPreMMap = buildMap(posPreMMap);
+			
+			if(fixedPhraseBuffer != null && lexiconBuffer != null){
+				readFixedPhrases(fixedPhraseBuffer);
+		    	readLexicon(lexiconBuffer, posPreMMap);
+			}else{
+				try{
+					fixedPhraseBuffer = new BufferedReader(new FileReader(fixedPhraseFileStr));
+					lexiconBuffer = new BufferedReader(new FileReader(lexiconFileStr));
+					readFixedPhrases(fixedPhraseBuffer);
+					readLexicon(lexiconBuffer, posPreMMap);
+				}catch(FileNotFoundException e){
+					e.printStackTrace();
+					throw new RuntimeException(e);
+				}
+		    	
+			}
+			posMMap = ArrayListMultimap.create(posPreMMap);
+		}
+		
+		
+	}
+	
+	/**
+	 * Retrieve part of speech map.
+	 * @return
+	 */
+	public static ListMultimap<String, String> posMMap(){
+		return BuildMaps.posMMap;
+	}
+	
+	/*public static void initializeWithResource(BufferedReader fixedPhraseBuffer, BufferedReader lexiconBuffer) throws IOException{
 		readFixedPhrases(fixedPhraseBuffer);
-    	readLexicon(lexiconBuffer);	 
-	}
+		//
+    	readLexicon(lexiconBuffer, );	 
+	}*/
+	
 	/*
 	// build fixedPhraseMap
 	static {
@@ -109,11 +164,12 @@ public class Maps {
 		fixedPhraseMMap = fixedPhraseMMapBuilder.build();
 	} */
 	
-	public static void readFixedPhrases(){
+	/*public static void readFixedPhrases(){
 		ImmutableListMultimap.Builder<String, FixedPhrase> fixedPhraseMMapBuilder = ImmutableListMultimap
 				.<String, FixedPhrase> builder();
 		// read in from file
 		File file = new File("src/thmp/data/fixedPhrases.txt");
+		
 		try {
 			Scanner sc = new Scanner(file);
 
@@ -138,7 +194,7 @@ public class Maps {
 
 		fixedPhraseMMap = fixedPhraseMMapBuilder.build();
 		//System.out.print("^^^^fixedPhraseMMap "+fixedPhraseMMap);
-	} 
+	} */
 
 	// get fixed phrase map containing phrases such as "if and only if"
 	public static ImmutableListMultimap<String, FixedPhrase> fixedPhraseMap() {
@@ -151,44 +207,51 @@ public class Maps {
 	 * @return pos
 	 */
 	public static String getPos(String word){
-		return posMap.get(word);
+		List<String> posList = BuildMaps.posMMap.get(word);
+		//simulate prior API where posMap was not a Multimap
+		return posList.isEmpty() ? null : posList.get(0);
 	}
+	
 	/**
-	 * Read in files using stream
+	 * Read in files using stream. Called during static initializer.
 	 * @throws IOException
 	 */
-	private static void readFixedPhrases(BufferedReader fixedPhraseReader) throws IOException {
+	private static void readFixedPhrases(BufferedReader fixedPhraseReader) {
 		ImmutableListMultimap.Builder<String, FixedPhrase> fixedPhraseMMapBuilder = ImmutableListMultimap
 				.<String, FixedPhrase> builder();
 		// should read in from file
 		// File file = new File("src/thmp/data/fixedPhrases.txt");
 		// System.out.println("cur working dir in Maps.java: " +
 		// System.getProperty("user.dir"));
-		String line;
-		while ((line = fixedPhraseReader.readLine()) != null) {
-
-			// String line = sc.nextLine();
-			String[] fixedPhraseData = line.split("\\s*\\|\\s*");
-
-			if (fixedPhraseData.length < 3)
-				continue;
-
-			String trigger = fixedPhraseData[0];
-			String triggerRegex = fixedPhraseData[1];
-			String pos = fixedPhraseData[2];
-
-			fixedPhraseMMapBuilder.put(trigger, new FixedPhrase(triggerRegex, pos));
+		
+		try{
+			String line;
+			while ((line = fixedPhraseReader.readLine()) != null) {
+				
+				// String line = sc.nextLine();
+				String[] fixedPhraseData = line.split("\\s*\\|\\s*");
+	
+				if (fixedPhraseData.length < 3)
+					continue;
+	
+				String trigger = fixedPhraseData[0];
+				String triggerRegex = fixedPhraseData[1];
+				String pos = fixedPhraseData[2];
+	
+				fixedPhraseMMapBuilder.put(trigger, new FixedPhrase(triggerRegex, pos));
+			}
+		}catch(IOException e){
+			e.printStackTrace();
 		}
-
 		fixedPhraseMMap = fixedPhraseMMapBuilder.build();
 		
 	}
 
-	/*
-	 * build hashmap
-	 * 
+	/**
+	 * This should not be public!
+	 * Build the various maps
 	 */
-	public static void buildMap() {
+	private static SetMultimap<String, String> buildMap(SetMultimap<String, String> posPreMMap) {
 		// entityMap = new HashMap<String, ArrayList<String>>();
 		// ArrayList<String> ppt = new ArrayList<String>();
 		// ppt.add("characteristic");
@@ -283,160 +346,161 @@ public class Maps {
 		 * i++){ pList.add(new String[]{nouns[i], "noun"}); }
 		 */
 
-		posMap = new HashMap<String, String>();
-
+		//pre map used to build posMMap.
+		//Multimap<String, String> posPreMMap = LinkedHashMultimap.create();
+		
 		for (int i = 0; i < pList.size(); i++) {
-			posMap.put(pList.get(i)[0], pList.get(i)[1]);
+			posPreMMap.put(pList.get(i)[0], pList.get(i)[1]);
 		}
 
 		//adds all words from the stock frequent words
-		posMap.putAll(WordFrequency.trueFluffWordsPosMap());
-		posMap.put("disjoint", "adj");
-		posMap.put("perfect", "adj");
-		posMap.put("equivalent", "adj");
-		posMap.put("finite", "adj");
-		posMap.put("linear", "adj");
-		posMap.put("invertible", "adj");
-		posMap.put("independent", "adj");
-		posMap.put("many", "adj");
-		posMap.put("every", "adj");
-		posMap.put("same", "adj");
-		posMap.put("conjugate", "adj");
-		posMap.put("symmetric", "adj");
-		posMap.put("equal", "adj");
-		posMap.put("all", "adj"); //predet
-		posMap.put("isomorphic", "adj");
-		posMap.put("for", "pre_COMP"); // can be composite word, use first pos
+		posPreMMap.putAll(WordFrequency.trueFluffWordsPosMap());
+		posPreMMap.put("disjoint", "adj");
+		posPreMMap.put("perfect", "adj");
+		posPreMMap.put("equivalent", "adj");
+		posPreMMap.put("finite", "adj");
+		posPreMMap.put("linear", "adj");
+		posPreMMap.put("invertible", "adj");
+		posPreMMap.put("independent", "adj");
+		posPreMMap.put("many", "adj");
+		posPreMMap.put("every", "adj");
+		posPreMMap.put("same", "adj");
+		posPreMMap.put("conjugate", "adj");
+		posPreMMap.put("symmetric", "adj");
+		posPreMMap.put("equal", "adj");
+		posPreMMap.put("all", "adj"); //predet
+		posPreMMap.put("isomorphic", "adj");
+		posPreMMap.put("for", "pre_COMP"); // can be composite word, use first pos
 										// if composite not in posmap
-		posMap.put("measurable", "adj");
-		posMap.put("nondecreasing", "adj");
-		posMap.put("positive", "adj");
-		posMap.put("negative", "adj");
-		posMap.put("abelian", "adj");
-		posMap.put("normal", "adj");
-		posMap.put("cyclic", "adj");
-		posMap.put("dimensional", "adj");
-		posMap.put("odd", "adj");
-		posMap.put("even", "adj");
-		posMap.put("any", "adj");
-		posMap.put("simple", "adj");
-		posMap.put("unique", "adj");
-		posMap.put("more", "adj_COMP");
-		posMap.put("more than", "pre");
-		posMap.put("nilpotent", "adj");
-		posMap.put("most", "adj");
-		posMap.put("nontrivial", "adj");
-		posMap.put("only", "adj");
-		posMap.put("commutative", "adj");
-		posMap.put("canonical", "adj");
-		posMap.put("exact", "adj");
-		posMap.put("injective", "adj");
-		posMap.put("surjective", "adj");
-		posMap.put("last", "adj");
+		posPreMMap.put("measurable", "adj");
+		posPreMMap.put("nondecreasing", "adj");
+		posPreMMap.put("positive", "adj");
+		posPreMMap.put("negative", "adj");
+		posPreMMap.put("abelian", "adj");
+		posPreMMap.put("normal", "adj");
+		posPreMMap.put("cyclic", "adj");
+		posPreMMap.put("dimensional", "adj");
+		posPreMMap.put("odd", "adj");
+		posPreMMap.put("even", "adj");
+		posPreMMap.put("any", "adj");
+		posPreMMap.put("simple", "adj");
+		posPreMMap.put("unique", "adj");
+		posPreMMap.put("more", "adj_COMP");
+		posPreMMap.put("more than", "pre");
+		posPreMMap.put("nilpotent", "adj");
+		posPreMMap.put("most", "adj");
+		posPreMMap.put("nontrivial", "adj");
+		posPreMMap.put("only", "adj");
+		posPreMMap.put("commutative", "adj");
+		posPreMMap.put("canonical", "adj");
+		posPreMMap.put("exact", "adj");
+		posPreMMap.put("injective", "adj");
+		posPreMMap.put("surjective", "adj");
+		posPreMMap.put("last", "adj");
 
 		// adverbs. Adverbs of the form "adj-ly" are detected by code
-		posMap.put("there", "det");
+		posPreMMap.put("there", "det");
 
 		// adverbs qualify verbs, adj, noun phrases, determiners, clauses etc
-		posMap.put("does", "verb_COMP");
-		posMap.put("do", "verb_COMP");
-		posMap.put("does not", "not");
-		posMap.put("do not", "not");
-		posMap.put("not", "adverb");
+		posPreMMap.put("does", "verb_COMP");
+		posPreMMap.put("do", "verb_COMP");
+		posPreMMap.put("does not", "not");
+		posPreMMap.put("do not", "not");
+		posPreMMap.put("not", "adverb");
 
 		// nouns that are not mathObj, only put not-so-relevant terms here
-		posMap.put("property", "noun");
-		posMap.put("form", "noun_COMP");
+		posPreMMap.put("property", "noun");
+		posPreMMap.put("form", "noun_COMP");
 
 		// determiners qualify nouns or noun phrases
-		posMap.put("each", "adj");
-		posMap.put("this", "det");
-		posMap.put("both", "det");
-		posMap.put("no", "det");
+		posPreMMap.put("each", "adj");
+		posPreMMap.put("this", "det");
+		posPreMMap.put("both", "det");
+		posPreMMap.put("no", "det");
 
 		// parts of speech
-		posMap.put("for every", "hyp");
-		posMap.put("suppose", "hyp");
-		posMap.put("assume", "hyp");
-		posMap.put("assuming", "hyp");
-		posMap.put("for all", "hyp");
-		posMap.put("for each", "hyp");
-		posMap.put("for any", "hyp");
+		posPreMMap.put("for every", "hyp");
+		posPreMMap.put("suppose", "hyp");
+		posPreMMap.put("assume", "hyp");
+		posPreMMap.put("assuming", "hyp");
+		posPreMMap.put("for all", "hyp");
+		posPreMMap.put("for each", "hyp");
+		posPreMMap.put("for any", "hyp");
 
 		// prepositions
-		posMap.put("or", "or");
-		posMap.put("and", "and");
-		posMap.put("at most", "pre");
-		posMap.put("is", "vbs_comp");
-		posMap.put("at", "pre_COMP");
-		posMap.put("if", "if_COMP");
-		posMap.put("if and", "if_COMP");
-		posMap.put("if and only", "if_COMP");
-		posMap.put("if and only if", "iff");
-		posMap.put("then", "then");
-		posMap.put("between", "pre");
+		posPreMMap.put("or", "or");
+		posPreMMap.put("and", "and");
+		posPreMMap.put("at most", "pre");
+		posPreMMap.put("is", "vbs_comp");
+		posPreMMap.put("at", "pre_COMP");
+		posPreMMap.put("if", "if_COMP");
+		posPreMMap.put("if and", "if_COMP");
+		posPreMMap.put("if and only", "if_COMP");
+		posPreMMap.put("if and only if", "iff");
+		posPreMMap.put("then", "then");
+		posPreMMap.put("between", "pre");
 		// between... -> between, and...->and, between_and->between_and
 
-		posMap.put("in", "pre_comp");
-		posMap.put("from", "pre");
-		posMap.put("to", "pre");
+		posPreMMap.put("in", "pre_comp");
+		posPreMMap.put("from", "pre");
+		posPreMMap.put("to", "pre");
 
-		posMap.put("equal", "verb_COMP");
-		posMap.put("equal to", "pre");
-		posMap.put("on", "pre");
-		posMap.put("let", "let");
-		posMap.put("be", "be");
-		posMap.put("of", "pre"); // of is primarily used as anchor
-		posMap.put("over", "pre");
-		posMap.put("with", "pre");
-		posMap.put("by", "pre");
-		posMap.put("as", "pre");
-		posMap.put("such", "pre_COMP");
-		posMap.put("such that", "cond");
-		posMap.put("where", "hyp");
-		posMap.put("which is", "hyp");
-		posMap.put("which are", "hyp");
-		posMap.put("that is", "hyp");
-		posMap.put("that are", "hyp");
+		posPreMMap.put("equal", "verb_COMP");
+		posPreMMap.put("equal to", "pre");
+		posPreMMap.put("on", "pre");
+		posPreMMap.put("let", "let");
+		posPreMMap.put("be", "be");
+		posPreMMap.put("of", "pre"); // of is primarily used as anchor
+		posPreMMap.put("over", "pre");
+		posPreMMap.put("with", "pre");
+		posPreMMap.put("by", "pre");
+		posPreMMap.put("as", "pre");
+		posPreMMap.put("such", "pre_COMP");
+		posPreMMap.put("such that", "cond");
+		posPreMMap.put("where", "hyp");
+		posPreMMap.put("which is", "hyp");
+		posPreMMap.put("which are", "hyp");
+		posPreMMap.put("that is", "hyp");
+		posPreMMap.put("that are", "hyp");
 
 		// pronouns
-		posMap.put("it", "pro");
-		posMap.put("we", "pro");
-		posMap.put("they", "pro");
-		posMap.put("their", "poss");
-		posMap.put("its", "poss");
+		posPreMMap.put("it", "pro");
+		posPreMMap.put("we", "pro");
+		posPreMMap.put("they", "pro");
+		posPreMMap.put("their", "poss");
+		posPreMMap.put("its", "poss");
 		// relative pronouns
-		posMap.put("whose", "rpro");
-		posMap.put("which", "rpro_COMP");
-		posMap.put("that", "rpro_COMP");
-		posMap.put("whom", "rpro");
+		posPreMMap.put("whose", "rpro");
+		posPreMMap.put("which", "rpro_COMP");
+		posPreMMap.put("that", "rpro_COMP");
+		posPreMMap.put("whom", "rpro");
 
 		// verbs, verbs map does not support -ing form, ie divide->dividing
 		// 3rd person singular form that ends in "es" are checked with
 		// the "es" stripped
-		posMap.put("belong", "verb");
-		posMap.put("divide", "verb");
-		posMap.put("extend", "verb");
-		posMap.put("exist", "verb");
-		posMap.put("consist", "verb");
-		posMap.put("call", "verb");
-		posMap.put("contain", "verb");
-		posMap.put("are", "verb"); //////////// ***
-		posMap.put("have", "verb");
-		posMap.put("obtain", "verb");
-		posMap.put("generate", "verb");
-		posMap.put("replace", "verb");
-		posMap.put("act", "verb");
-		posMap.put("follow", "verb");
-		posMap.put("denote", "verb");
-		posMap.put("define", "verb");
-		posMap.put("has", "vbs");
+		posPreMMap.put("belong", "verb");
+		posPreMMap.put("divide", "verb");
+		posPreMMap.put("extend", "verb");
+		posPreMMap.put("exist", "verb");
+		posPreMMap.put("consist", "verb");
+		posPreMMap.put("call", "verb");
+		posPreMMap.put("contain", "verb");
+		posPreMMap.put("are", "verb"); //////////// ***
+		posPreMMap.put("have", "verb");
+		posPreMMap.put("obtain", "verb");
+		posPreMMap.put("generate", "verb");
+		posPreMMap.put("replace", "verb");
+		posPreMMap.put("act", "verb");
+		posPreMMap.put("follow", "verb");
+		posPreMMap.put("denote", "verb");
+		posPreMMap.put("define", "verb");
+		posPreMMap.put("has", "vbs");
 
 		// special participles
-		posMap.put("given", "parti_COMP");		
-		posMap.put("been", "parti");
-		posMap.put("written", "parti");
-		posMap.put("given by", "partiby");
+		posPreMMap.put("given", "parti_COMP");		
+		posPreMMap.put("been", "parti");
+		posPreMMap.put("written", "parti");
+		posPreMMap.put("given by", "partiby");
 
 		// build in quantifiers into structures, forall (indicated
 		// by for all, has)
@@ -775,14 +839,14 @@ public class Maps {
 		 * 
 		 * }
 		 */
-
+		return posPreMMap;
 	}
 
 	/**
-	 * Put word and part-of-speech pair into posMap
+	 * Put word and part-of-speech pair into posMap.
 	 */
 	public static void putWordToPosMap(String word, String pos){
-		posMap.put(word, pos);
+		BuildMaps.posMMap.put(word, pos);
 	}
 	
 	/**
@@ -791,7 +855,7 @@ public class Maps {
 	 * 
 	 * @throws FileNotFoundException
 	 */
-	public static void readLexicon() throws FileNotFoundException {
+	/*private static void readLexicon() throws FileNotFoundException {
 		File file = new File("src/thmp/data/lexicon.txt");
 		Scanner sc = new Scanner(file);
 		String[] lineAr;		
@@ -847,59 +911,64 @@ public class Maps {
 				fluffMap.put(word, replacement);
 				break;
 			default:
-				posMap.put(word, pos);
+				BuildMaps.posMMap.put(word, pos);
 			}
 		}
 		sc.close();
-	}
+	}*/
 
 	/**
-	 * Reads from BufferedReader
+	 * Reads from BufferedReader into temporary map. 
+	 * @param lexiconReader BufferedReader for lexicon
+	 * @param posPreMMap Premap used to build the lexicon
 	 * @throws FileNotFoundException
 	 */
-	private static void readLexicon(BufferedReader lexiconReader) throws IOException {
+	private static void readLexicon(BufferedReader lexiconReader, SetMultimap<String, String> posPreMMap) {
 		String[] lineAr;
 		String pos = "", word = "", replacement = "";
 		String nextLine;
-		
-		while ((nextLine = lexiconReader.readLine()) != null) {
-			lineAr = nextLine.split(" ");
-			if (lineAr.length < 2)
-				continue;
-			else if (lineAr.length == 2) {
-				word = lineAr[0];
-				pos = lineAr[1];
-			}
-			// compound first word, e.g "comm alg"
-			else {
-				Pattern pattern = Pattern.compile("\"(.*)\" ([^\\s]+) \"(.*)\"");
-				Matcher matcher = pattern.matcher(nextLine);
-				// what about partial finds?
-				if (matcher.find()) {
-					word = matcher.group(1);
-					pos = matcher.group(2);
-					replacement = matcher.group(3);
+		try{
+			while ((nextLine = lexiconReader.readLine()) != null) {
+				lineAr = nextLine.split(" ");
+				if (lineAr.length < 2)
+					continue;
+				else if (lineAr.length == 2) {
+					word = lineAr[0];
+					pos = lineAr[1];
 				}
-
+				// compound first word, e.g "comm alg"
+				else {
+					Pattern pattern = Pattern.compile("\"(.*)\" ([^\\s]+) \"(.*)\"");
+					Matcher matcher = pattern.matcher(nextLine);
+					// what about partial finds?
+					if (matcher.find()) {
+						word = matcher.group(1);
+						pos = matcher.group(2);
+						replacement = matcher.group(3);
+					}
+	
+				}
+	
+				// format: "new_word pos"
+				// if fluff word: "new_word fluff replacement", eg "to be" fluff
+				// "as"
+				switch (pos) {
+				case "ent":
+					mathObjMap.put(word, "mathObj");
+					break;
+				case "ent_comp":
+					mathObjMap.put(word, "mathObj_COMP");
+					break;
+				case "fluff":
+					replacement = replacement.equals("") ? word : replacement;
+					fluffMap.put(word, replacement);
+					break;
+				default:
+					posPreMMap.put(word, pos);
+				}
 			}
-
-			// format: "new_word pos"
-			// if fluff word: "new_word fluff replacement", eg "to be" fluff
-			// "as"
-			switch (pos) {
-			case "ent":
-				mathObjMap.put(word, "mathObj");
-				break;
-			case "ent_comp":
-				mathObjMap.put(word, "mathObj_COMP");
-				break;
-			case "fluff":
-				replacement = replacement.equals("") ? word : replacement;
-				fluffMap.put(word, replacement);
-				break;
-			default:
-				posMap.put(word, pos);
-			}
+		}catch(IOException e){
+			e.printStackTrace();
 		}
 	}
 }

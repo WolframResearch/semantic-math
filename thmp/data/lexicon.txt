@@ -143,6 +143,9 @@ dimension ent
 length noun
 pole ent
 algebraic adj
+quasicompact adj
+quasi-compact adj
+quasi compact adj
 equivalent adj
 closure ent
 correspondence ent
