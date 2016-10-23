@@ -1,6 +1,5 @@
 package thmp;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -86,14 +85,14 @@ public class ThmP1 {
 	//will be cleared every time this list is retrieved, which should be once per 
 	//parse. Default values of context vec entry is the average val over all context vecs.
 	//For Nearest[] to work. *Not* final because need reassignment.
-	private static final int parseContextVectorSz = TriggerMathThm2.keywordDictSize();
+	private static final int parseContextVectorSz;
 	//this is cumulative, should be cleared per parse!
-	private static int[] parseContextVector = new int[parseContextVectorSz]; 
+	private static int[] parseContextVector; 
 	//private static int[] parseContextVector;
 	//private static int parseContextVectorSz;
 	//list of context vectors, need list instead of single vec, for non-spanning parses
 	//private static List<int[]> parseContextVectorList = new ArrayList<int[]>();
-	private static final boolean PROCESS_NGRAM = false;
+	//private static final boolean PROCESS_NGRAM = false;
 	
 	//private static List<String> contextVectorList = new ArrayList<String>();	
 	
@@ -117,13 +116,12 @@ public class ThmP1 {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}*/		
-		
+		fluffMap = Maps.BuildMaps.fluffMap;
+		mathObjMap = Maps.BuildMaps.mathObjMap;
 		fixedPhraseMap = Maps.fixedPhraseMap();
 		structMap = Maps.structMap;
 		anchorMap = Maps.anchorMap;
-		posMMap = Maps.posMMap();
-		fluffMap = Maps.fluffMap;
-		mathObjMap = Maps.mathObjMap;
+		posMMap = Maps.posMMap();		
 		adjMap = Maps.adjMap;
 		probMap = Maps.probMap;
 		posList = Maps.posList;
@@ -132,6 +130,8 @@ public class ThmP1 {
 		// need to incorporate multi-letter names, like sigma
 		namesMap = new HashMap<String, Struct>();
 
+		parseContextVectorSz = TriggerMathThm2.keywordDictSize();
+		parseContextVector = new int[parseContextVectorSz];
 	}
 	
 	/**
@@ -174,6 +174,7 @@ public class ThmP1 {
 			this.commandNumUnits = commandNumUnits;
 			this.stringForm = this.toString();
 		}
+		
 		/**
 		 * Used in case of no WLCommand parse string, then use alternate measure
 		 * of span, deduced from longForm dfs.
@@ -319,6 +320,18 @@ public class ThmP1 {
 	}
 	
 	/**
+	 * Add additional extra pos to given pair.
+	 * @param pair
+	 * @param posList
+	 */
+	private static void addExtraPosToPair(Pair pair, List<String> posList){
+		//start from 1, since first pos is already added.
+		for(int k = 1; k < posList.size(); k++){
+			pair.addExtraPos(posList.get(k));
+		}
+	}
+	
+	/**
 	 * Tokenizes by splitting into comma-separated strings
 	 * 
 	 * @param str A full sentence.
@@ -335,9 +348,8 @@ public class ThmP1 {
 	 * 
 	 * @param sentence string to be tokenized
 	 * @return List of Struct's
-	 * @throws IOException
 	 */
-	public static ArrayList<Struct> tokenize(String sentence)  {
+	public static List<Struct> tokenize(String sentence)  {
 		
 		// .....change to arraylist of Pairs, create Pair class
 		// LinkedHashMap<String, String> linkedMap = new LinkedHashMap<String,
@@ -368,7 +380,7 @@ public class ThmP1 {
 			// remove this and ensure curWord is used subsequently
 			// instead of str[i]
 			strAr[i] = curWord;
-
+			//change to enum!
 			String type = "mathObj";
 			int wordlen = strAr[i].length();
 
@@ -480,15 +492,13 @@ public class ThmP1 {
 					}
 
 				}				
-				
-				if(PROCESS_NGRAM){
 				int newIndex = gatherTwoThreeGram(i, strAr, pairs, mathIndexList);
 				//a two or three gram was picked up
 				if(newIndex > i){ 
 					i = newIndex;
 					continue;				
 				}
-				}
+				
 			}
 			
 			String[] singularForms = WordForms.getSingularForms(curWord);
@@ -496,17 +506,23 @@ public class ThmP1 {
 			String singular = singularForms[0];
 			String singular2 = singularForms[1]; // ending in "es"
 			String singular3 = singularForms[2]; // ending in "ies"
-
-			if (Maps.mathObjMap.containsKey(curWord) || mathObjMap.containsKey(singular)) {
-
-				String tempWord = mathObjMap.containsKey(singular) ? singular : curWord;
+			
+			boolean containsCurWord = posMMap.containsKey(curWord);
+			boolean containsCurWordSingular = posMMap.containsKey(singular);
+			
+			String wordPos = containsCurWord ? posMMap.get(curWord).get(0) : 
+				(containsCurWordSingular ? posMMap.get(singular).get(0) : null);
+			
+			//last condition should be temporary, should eliminate mathObjMap
+			if (wordPos != null && wordPos.equals("ent") || mathObjMap.containsKey(curWord)) { 
+				String tempWord = containsCurWord ? curWord : singular;;
 				int pairsSize = pairs.size();
 				int k = 1;
 				
 				//should be superceded by using the two-gram map above!
 				// if composite math noun, eg "finite field"
-				while (i - k > -1 && mathObjMap.containsKey(strAr[i - k] + " " + tempWord)
-						&& mathObjMap.get(strAr[i - k] + " " + tempWord).equals("mathObj")) {
+				while (i - k > -1 && posMMap.containsKey(strAr[i - k] + " " + tempWord)
+						&& posMMap.get(strAr[i - k] + " " + tempWord).get(0).equals("ent")) {
 
 					// remove previous pair from pairs if it has new match
 					// pairs.size should be > 0, ie previous word should be
@@ -514,12 +530,12 @@ public class ThmP1 {
 					if (pairs.size() > 0 && pairs.get(pairsSize - 1).word().equals(strAr[i - k])) {
 
 						// remove from mathIndexList if already counted
-						if (mathObjMap.containsKey(pairs.get(pairs.size() - 1).word())) {
+						List<String> posList = posMMap.get(pairs.get(pairs.size() - 1).word());
+						if (!posList.isEmpty() && posList.get(0).equals("ent")) {
+							
 							mathIndexList.remove(mathIndexList.size() - 1);
 						}
 						pairs.remove(pairsSize - 1);
-
-						//addIndex = false;
 					}
 
 					tempWord = strAr[i - k] + " " + tempWord;
@@ -533,7 +549,7 @@ public class ThmP1 {
 					pairs.get(pairsSize - 1).set_word(pairs.get(pairsSize - 1).word() + " " + curWord);
 					continue;
 				}
-
+				//System.out.println("^^^^^^^^curWord " + curWord);
 				Pair pair = new Pair(curWord, "mathObj");
 				pairs.add(pair);
 				mathIndexList.add(pairs.size() - 1);
@@ -549,18 +565,17 @@ public class ThmP1 {
 				anchorList.add(pairsSize - 1);
 			}
 			// check part of speech
-			else if (posMMap.containsKey(curWord) || posMMap.containsKey(curWord.toLowerCase())) {
-				if(posMMap.containsKey(curWord.toLowerCase())){
+			else if (posMMap.containsKey(curWord)){ //|| posMMap.containsKey(curWord.toLowerCase())) {
+				/*if(posMMap.containsKey(curWord.toLowerCase())){
 					curWord = curWord.toLowerCase();
-				}
-				// composite words, such as "for all",
-				String temp = curWord, pos = curWord;
-				String tempPos = posMMap.get(temp).get(0);
-
-				while (tempPos.length() > 4
-						&& tempPos.substring(tempPos.length() - 4, tempPos.length()).matches("COMP|comp")
-						&& i < strAr.length - 1) {
-
+				}*/
+				// composite words, such as "for all".
+				String temp = curWord;
+				String pos;
+				List<String> posList = posMMap.get(temp);
+				String tempPos = posList.get(0);
+				//keep going until all words in an n-gram are gathered
+				while (tempPos.matches("[^_]*_COMP|[^_]*_comp") && i < strAr.length - 1) {
 					curWord = temp;
 					temp = temp + " " + strAr[i + 1];
 					if (!posMMap.containsKey(temp)) {
@@ -572,37 +587,45 @@ public class ThmP1 {
 				
 				Pair pair;
 				if (posMMap.containsKey(temp)) {
-					pos = posMMap.get(temp).get(0);
-					pos = pos.split("_")[0];
+					posList = posMMap.get(temp);
+					pos = posList.get(0).split("_")[0];
 					pair = new Pair(temp, pos);
+					addExtraPosToPair(pair, posList);
 				} else {
-					pos = posMMap.get(curWord).get(0);
-					pos = pos.split("_")[0];
+					//guaranteed to contain curWord 
+					posList = posMMap.get(curWord);
+					pos = posList.get(0).split("_")[0];
 					pair = new Pair(curWord, pos);
-				}
-				
-				pair = fuseEntAdj(pairs, curWord, pair);
+					addExtraPosToPair(pair, posList);
+				}				
+				pair = fuseAdverbAdj(pairs, curWord, pair);
 				
 				pairs.add(pair);
 			}
-			// if plural form of noun
-			else if (posMMap.containsKey(singular) && posMMap.get(singular).get(0).equals("noun")
-					|| posMMap.containsKey(singular2) && posMMap.get(singular2).get(0).equals("noun")
-					|| posMMap.containsKey(singular3) && posMMap.get(singular3).get(0).equals("noun")) {
-				pairs.add(new Pair(curWord, "noun"));
+			// if plural form
+			else if (posMMap.containsKey(singular)){
+				List<String> posList = posMMap.get(singular);
+				//split in case type is of form "blah_comp" <--should be superceded by n-grams
+				Pair pair = new Pair(singular, posList.get(0).split("_")[0]);
+				pairs.add(pair);
+				addExtraPosToPair(pair, posList);
 			}
-			else if (posMMap.containsKey(singular) && posMMap.get(singular).get(0).matches("verb|vbs")
-					|| posMMap.containsKey(singular2) && posMMap.get(singular2).get(0).matches("verb|vbs")
-					|| posMMap.containsKey(singular3) && posMMap.get(singular3).get(0).matches("verb|vbs")) {
-				pairs.add(new Pair(curWord, "verb"));
+			else if (posMMap.containsKey(singular2)){
+				List<String> posList = posMMap.get(singular2);
+				Pair pair = new Pair(singular, posList.get(0).split("_")[0]);
+				pairs.add(pair);				
+				addExtraPosToPair(pair, posList);
+			}
+			else if (posMMap.containsKey(singular3)){
+				List<String> posList = posMMap.get(singular3);
+				Pair pair = new Pair(singular, posList.get(0).split("_")[0]);
+				pairs.add(pair);	
+				addExtraPosToPair(pair, posList);
 			}
 			// classify words with dashes; eg sesqui-linear
+			// <-- these should be split during pre-processing!
 			else if (curWord.split("-").length > 1) {
 				
-				//first check if curWord is in dictionary as written
-				if(posMMap.containsKey(curWord)){
-					
-				}
 				
 				String[] splitWords = curWord.split("-");
 				System.out.println("splitWords: " + Arrays.toString(splitWords));
@@ -635,7 +658,7 @@ public class ThmP1 {
 					mathIndexList.add(pairs.size() - 1);
 				}
 			}
-			// check again for verbs ending in 'es' & 's'
+			// check for verbs ending in 'es' & 's'
 			else if (wordlen > 0 && curWord.charAt(wordlen - 1) == 's'
 					&& posMMap.containsKey(strAr[i].substring(0, wordlen - 1))
 					&& posMMap.get(strAr[i].substring(0, wordlen - 1)).get(0).equals("verb")) {
@@ -708,7 +731,8 @@ public class ThmP1 {
 
 				Pair pair = new Pair(curWord, curPos);
 				pairs.add(pair);
-			} else if (wordlen > 2 && curWord.substring(wordlen - 3, wordlen).equals("ing")
+			}//obfuscated! 
+			else if (wordlen > 2 && curWord.substring(wordlen - 3, wordlen).equals("ing")
 					&& (posMMap.containsKey(curWord.substring(0, wordlen - 3))
 							&& posMMap.get(curWord.substring(0, wordlen - 3)).get(0).matches("verb|vbs")
 							// verbs ending in "e"
@@ -828,19 +852,24 @@ public class ThmP1 {
 		}
 
 		// map of math entities, has mathObj + ppt's
-		ArrayList<StructH<HashMap<String, String>>> mathEntList = new ArrayList<StructH<HashMap<String, String>>>();
+		List<StructH<HashMap<String, String>>> mathEntList = new ArrayList<StructH<HashMap<String, String>>>();
 
 		// second run, combine adj with math ent's
 		for (int j = 0; j < mathIndexList.size(); j++) {
-
+			
 			int index = mathIndexList.get(j);
-			String mathObj = pairs.get(index).word();
+			String mathObjName = pairs.get(index).word();
 			pairs.get(index).set_pos(String.valueOf(j));
-
+			
 			StructH<HashMap<String, String>> tempStructH = new StructH<HashMap<String, String>>("ent");
+			List<String> posList = posMMap.get(mathObjName);
+			for(int l = 0; l < posList.size(); l++){
+				tempStructH.addExtraPos(posList.get(l));
+			}
+			
 			HashMap<String, String> tempMap = new HashMap<String, String>();
-			tempMap.put("name", mathObj);
-
+			tempMap.put("name", mathObjName);
+			
 			// if next pair is also ent, and is latex expression
 			if (j < mathIndexList.size() - 1 && mathIndexList.get(j + 1) == index + 1) {
 				Pair nextPair = pairs.get(index + 1);
@@ -881,7 +910,7 @@ public class ThmP1 {
 
 			}
 			// combine nouns with ent's right after, ie noun_ent
-			else if (index > 0 && pairs.get(index - 1).pos().matches("noun")) {
+			else if (index > 0 && pairs.get(index - 1).pos()  .matches("noun")) {
 				pairs.get(index - 1).set_pos(String.valueOf(j));
 				String prevNoun = pairs.get(index - 1).word();
 				tempMap.put("name", prevNoun + " " + tempMap.get("name"));
@@ -1018,8 +1047,8 @@ public class ThmP1 {
 
 		}
 
-		// arraylist of structs
-		ArrayList<Struct> structList = new ArrayList<Struct>();
+		// list of structs to return
+		List<Struct> structList = new ArrayList<Struct>();
 
 		ListIterator<Pair> pairsIter = pairs.listIterator();
 
@@ -1027,10 +1056,10 @@ public class ThmP1 {
 		// use anchors (of, with) to gather terms together into entities
 		while (pairsIter.hasNext()) {
 			Pair curPair = pairsIter.next();
-
+			//can pos ever be null?
 			if (curPair.pos() == null)
 				continue;
-
+			//if has type "ent"
 			if (curPair.pos().matches("^\\d+$")) {
 
 				if (curPair.pos().equals(prevPos)) {
@@ -1046,8 +1075,7 @@ public class ThmP1 {
 				prevPos = curPair.pos();
 
 			} else {
-				// current word hasn't classified into an ent
-
+				// current word hasn't classified into an ent, make structA
 				int structListSize = structList.size();
 
 				// combine adverbs into verbs/adjectives, look 2 words before
@@ -1055,8 +1083,8 @@ public class ThmP1 {
 
 					if (structListSize > 1 && structList.get(structListSize - 2).type().matches("verb|vbs")) {
 						StructA<?, ?> verbStruct = (StructA<?, ?>) structList.get(structListSize - 2);
-						// verbStruct should not have prev2, also prev2 type
-						// should be String
+						// verbStruct should not have prev2, set prev2 type
+						// to String
 						verbStruct.set_prev2(curPair.word());
 						continue;
 					} else if (structListSize > 0 && structList.get(structListSize - 1).type().matches("verb|vbs")) {
@@ -1071,7 +1099,15 @@ public class ThmP1 {
 				//  leaf of prev2 is empty string ""
 				StructA<String, String> newStruct = 
 						new StructA<String, String>(curWord, NodeType.STR, "", NodeType.STR, curPair.pos());
-
+				//add extra pos from curPair's extraPosList. In the other case when extraPos is not added, 
+				//that's when the primary pos fits well already.
+				List<String> posList = curPair.extraPosList();
+				if(posList != null){
+					for(int l = 0; l < posList.size(); l++){
+						newStruct.addExtraPos(posList.get(l));
+					}
+				}
+				
 				if (curPair.pos().equals("adj")) {
 					if (structListSize > 0 && structList.get(structListSize - 1).type().equals("adverb")) {
 						Struct adverbStruct = structList.get(structListSize - 1);
@@ -1080,7 +1116,7 @@ public class ThmP1 {
 						structList.remove(structListSize - 1);
 					}
 				}
-
+				
 				/*
 				 * else if (curPair.pos().equals("pre"))
 				 * {////////////////////////////// if (structListSize > 0 &&
@@ -1116,13 +1152,13 @@ public class ThmP1 {
 	}
 	
 	/**
-	 * 
+	 * Fuses adverb-adj pair, e.g. "fantastically awesome".
 	 * @param pairs
 	 * @param curWord
 	 * @param pair
 	 * @return
 	 */
-	private static Pair fuseEntAdj(List<Pair> pairs, String curWord, Pair pair) {
+	private static Pair fuseAdverbAdj(List<Pair> pairs, String curWord, Pair pair) {
 		//boolean addIndex;
 		int pairsSize = pairs.size();
 		
@@ -1133,7 +1169,7 @@ public class ThmP1 {
 				curWord = pairs.get(pairsSize - 1).word() + " " + curWord;
 				// remove previous Pair
 				pairs.remove(pairsSize - 1);
-				pair = new Pair(curWord, "adj");
+				pair = new Pair(curWord, "adj");				
 				//addIndex = false;
 			}
 			
@@ -1142,18 +1178,21 @@ public class ThmP1 {
 	}
 
 	/**
-	 * Takes in LinkedHashMap of entities/ppt, and connectives parse using
-	 * structMap, and obtain sentence structures Chart parser.
+	 * Takes in list of entities/ppt, and connectives parse using
+	 * structMap, and obtain sentence structures with Chart parser.
 	 * @param recentEnt, ent used to keep track of recent MathObj/Ent, for pronoun
 	 * reference assignment.
 	 */
-	public static Struct parse(List<Struct> inputList, Struct recentEnt) {
+	public static Struct parse(List<Struct> inputStructList, Struct recentEnt) {
+		System.out.println("**********");
+		System.out.println("Pos of open " + posMMap.get("open"));
+		System.out.println("**********");
 		//int parseContextVectorSz = TriggerMathThm2.keywordDictSize();
 		//this is cumulative, should be cleared per parse! Move this back
 		//to initializer after debugging!
 		//parseContextVector = new int[parseContextVectorSz];
 		
-		int len = inputList.size();
+		int len = inputStructList.size();
 		// shouldn't be 0 to start with?!
 		if (len == 0)
 			return null;
@@ -1169,10 +1208,10 @@ public class ThmP1 {
 
 		// A matrix of List's. Dimenions of first two Lists are same: square
 		// matrix
-		ArrayList<ArrayList<StructList>> mx = new ArrayList<ArrayList<StructList>>(len);
+		List<List<StructList>> mx = new ArrayList<List<StructList>>(len);
 
 		for (int l = 0; l < len; l++) {
-			ArrayList<StructList> tempList = new ArrayList<StructList>();
+			List<StructList> tempList = new ArrayList<StructList>();
 
 			for (int i = 0; i < len; i++) {
 				// initialize Lists now so no need to repeatedly check if null
@@ -1199,11 +1238,37 @@ public class ThmP1 {
 			// ArrayList<Struct> diagonalStruct = new ArrayList<Struct>();
 
 			// mx.get(j).set(j, diagonalStruct);
-			Struct diagonalStruct = inputList.get(j);
+			Struct diagonalStruct = inputStructList.get(j);
 			diagonalStruct.set_structList(mx.get(j).get(j));
-
 			mx.get(j).get(j).add(diagonalStruct);
-
+			
+			String structName;
+			if(diagonalStruct.isStructA()){
+				//prev1 should be string, since this is a leaf struct.
+				structName = diagonalStruct.prev1().toString();
+			}else{
+				structName = diagonalStruct.struct().get("name");
+			}
+			
+			//create additional structs on the diagonal if extra pos present.
+			List<String> extraPosList = diagonalStruct.extraPosList();
+			if(extraPosList != null){
+				for(int p = 0; p < extraPosList.size(); p++){
+					String pos = extraPosList.get(p);
+					Struct newStruct;
+					if(pos.equals("ent")){
+						StructH<HashMap<String, String>> tempStruct = new StructH<HashMap<String, String>>("ent");
+						HashMap<String, String> tempMap = new HashMap<String, String>();
+						tempMap.put("name", structName);
+						tempStruct.set_struct(tempMap);
+						newStruct = tempStruct;
+					}else{
+						newStruct = new StructA<String, String>(structName, NodeType.STR, "", NodeType.STR, pos);					
+					}
+					//System.out.println("NEW STRUCT ADDED " + newStruct);
+					mx.get(j).get(j).add(newStruct);
+				}
+			}
 			// mx.get(j).set(j, inputList.get(j));
 
 			// startRow should actually *always* be < j
@@ -1222,13 +1287,12 @@ public class ThmP1 {
 
 					StructList structList1 = mx.get(i).get(k);
 					StructList structList2 = mx.get(k + 1).get(j);
-
+					//System.out.println("structList1: " + structList1);
 					// Struct struct1 = mx.get(i).get(k);
 					// Struct struct2 = mx.get(k + 1).get(j);
 
 					if (structList1 == null || structList2 == null || structList1.size() == 0
-							|| structList2.size() == 0) {
-						
+							|| structList2.size() == 0) {						
 						continue;
 					}
 
@@ -1248,9 +1312,8 @@ public class ThmP1 {
 							// in_ent
 							String type1 = struct1.type();
 							String type2 = struct2.type();
-
+							//System.out.println("***struct1 " + struct1 + " struct2: " + struct2 );
 							// for types such as conj_verbphrase
-
 							String[] split1 = type1.split("_");
 							//this causes conj_ent to be counted as ent, so should *not*
 							//use "ent" type to determine whether StructH or not!
@@ -1322,7 +1385,7 @@ public class ThmP1 {
 							//since conj_ent is counted as ent. Also this code is terrible.
 							if (!struct1.isStructA() && type2.matches("pre") && struct2.prev1() != null
 									&& struct2.prev1().toString().matches("of") && j + 1 < len
-									&& inputList.get(j + 1).type().equals("symb")) {
+									&& inputStructList.get(j + 1).type().equals("symb")) {
 								// create new child
 								///
 								List<Struct> childrenList = struct1.children();
@@ -1335,16 +1398,16 @@ public class ThmP1 {
 								for(int p = childrenListSize - 1; p > -1; p--){
 									Struct child = childrenList.get(p);
 									if(child.type().equals("ent") && child instanceof StructH){
-										child.add_child(inputList.get(j + 1), "of");
-										inputList.get(j + 1).set_parentStruct(child);
+										child.add_child(inputStructList.get(j + 1), "of");
+										inputStructList.get(j + 1).set_parentStruct(child);
 										childAdded = true;
 										break;
 									}
 								}
 								if(!childAdded){
 									//((StructH<?>) newStruct).add_child(struct2, childRelation);
-									struct1.add_child(inputList.get(j + 1), "of");
-									inputList.get(j + 1).set_parentStruct(struct1);
+									struct1.add_child(inputStructList.get(j + 1), "of");
+									inputStructList.get(j + 1).set_parentStruct(struct1);
 								}
 								
 								// mx.get(i).set(j + 1, struct1);
@@ -1373,11 +1436,12 @@ public class ThmP1 {
 										newPpt += ((Struct) struct1.prev2()).prev1();
 									}
 								} else {
-									// check if String and cast instead
+									
 									newPpt += struct1.prev1();
 								}
 								newStruct.struct().put(newPpt, "ppt");
 								// mx.get(i).set(j, newStruct);
+								System.out.println("newStruct added!! " + newStruct);
 								mx.get(i).get(j).add(newStruct);
 								continue innerloop;
 								
@@ -1408,7 +1472,7 @@ public class ThmP1 {
 								boolean defStarted = false;
 								while (l < len) {
 
-									Struct nextStruct = inputList.get(l);
+									Struct nextStruct = inputStructList.get(l);
 									if (!nextStruct.type().matches("pre|prep|be|verb")) {
 										defStarted = true;
 
@@ -1543,7 +1607,7 @@ public class ThmP1 {
 												// case){ // }then{do_something}
 												// // over if(not
 												// this // case){do_something}
-												Struct nextStruct = j + 1 < len ? inputList.get(j + 1) : null;
+												Struct nextStruct = j + 1 < len ? inputStructList.get(j + 1) : null;
 												if (nextStruct != null && type1.equals("and")
 														&& nextStruct.prev1() instanceof String
 														&& isSingularVerb((String) nextStruct.prev1())) {
@@ -1708,7 +1772,7 @@ public class ThmP1 {
 				if (tempStructList.size() > 0) {
 					parsedStructList.add(0, tempStructList);
 				}
-				// a singleton on the diagonal
+				// a singleton on the diagonal <--not necessarily true any more
 				if (i == j) {
 					j--;
 				} else {
@@ -1724,7 +1788,7 @@ public class ThmP1 {
 
 			// print out the components
 			int parsedStructListSize = parsedStructList.size();
-			String totalParsedString = "";
+			//String totalParsedString = "";
 			double totalScore = 1; //product of component scores
 			List<Multimap<ParseStructType, ParsedPair>> parsedPairMMapList = new ArrayList<Multimap<ParseStructType, ParsedPair>>();
 			//list of long forms, with flattened tree structure.
@@ -1735,7 +1799,7 @@ public class ThmP1 {
 			for (int k = 0; k < parsedStructListSize; k++) {
 				StringBuilder parsedSB = new StringBuilder();
 				// int highestScoreIndex = ArrayDFS(parsedStructList.get(k));
-				int highestScoreIndex = 0; //*******
+				int highestScoreIndex = 0;
 				Struct kHeadStruct = parsedStructList.get(k).structList().get(highestScoreIndex);
 				//measures span of longForm (how many leaf nodes reached), to be used in place of 
 				//commandNumUnits if no WLCommand parse.
@@ -1748,7 +1812,7 @@ public class ThmP1 {
 				String parsedString = ParseToWL.parseToWL(kHeadStruct);
 				
 				if (k < parsedStructListSize - 1){
-					totalParsedString += parsedString + "; ";
+					//totalParsedString += parsedString + "; ";
 					System.out.print(";  ");
 					parsedSB.append("; ");
 				}
@@ -1999,7 +2063,7 @@ public class ThmP1 {
 	/**
 	 * reduce if structMap contains combined
 	 */
-	public static void reduce(ArrayList<ArrayList<StructList>> mx, Rule newRule, Struct struct1, Struct struct2,
+	public static void reduce(List<List<StructList>> mx, Rule newRule, Struct struct1, Struct struct2,
 			Struct firstEnt, Struct recentEnt, int recentEntIndex, int i, int j, int k, String type1, String type2) {
 
 		String newType = newRule.relation();
@@ -2027,12 +2091,21 @@ public class ThmP1 {
 
 			// add to child relation, usually a preposition, eg
 			// "from", "over"
-			// could also be verb, "consist", "lies"
-
+			// could also be verb, "consist", "lies"			
 			List<Struct> kPlus1StructArrayList = mx.get(k + 1).get(k + 1).structList();
-
-			// diagonal element can have only 1 Struct in its structList
-			String childRelation = kPlus1StructArrayList.get(0).prev1().toString();
+			String childRelation = null;
+			for(int p = 0; p < kPlus1StructArrayList.size(); p++){
+				Struct struct = kPlus1StructArrayList.get(p);
+				if(struct.prev1NodeType().equals(NodeType.STR)){
+					childRelation = struct.prev1().toString();
+					break;
+				}
+			}
+			if(childRelation == null){
+				//should not be null!
+				System.out.println("Inside ThmP1.reduce(), childRelation should not be null!");
+				return;
+			}
 			
 			// String childRelation = mx.get(k + 1).get(k +
 			// 1).prev1().toString();
@@ -2093,6 +2166,22 @@ public class ThmP1 {
 				
 				newStruct.set_maxDownPathScore(newDownPathScore);
 
+				mx.get(i).get(j).add(newStruct);
+			}
+		}else if(newType.equals("absorb")){
+			//absorb struct1 into struct2
+			if(struct1.isStructA() && !struct2.isStructA()){
+				Struct newStruct = struct2.copy();				
+				//add as property
+				String ppt = struct1.prev1().toString();
+				newStruct.struct().put(ppt, "ppt");
+				// update firstEnt so to have the right children
+				if (firstEnt == struct2) {
+					firstEnt = newStruct;
+				}
+				recentEnt = newStruct;
+				recentEntIndex = j;
+				newStruct.set_maxDownPathScore(newDownPathScore);
 				mx.get(i).get(j).add(newStruct);
 			}
 		}
@@ -2247,7 +2336,7 @@ public class ThmP1 {
 	public static double ArrayDFS(MatrixPathNode mxPathNode) {
 
 		Struct mxPathNodeStruct = mxPathNode.curStruct();
-		StructList structList = mxPathNodeStruct.StructList();
+		StructList structList = mxPathNodeStruct.get_StructList();
 
 		// highest down score encountered so far in list
 		double highestDownScore = 0;
@@ -2322,7 +2411,7 @@ public class ThmP1 {
 				} else if (struct instanceof StructH) {
 
 					// System.out.print(struct.toString());
-					ArrayList<Struct> childrenStructList = struct.children();
+					List<Struct> childrenStructList = struct.children();
 
 					if (childrenStructList != null && childrenStructList.size() > 0) {
 						// return 1;

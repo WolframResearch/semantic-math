@@ -15,7 +15,10 @@ public class StructH<H> extends Struct{
 
 	private HashMap<String, String> struct; //hashmap
 	//ent (entity) is only structure that uses hashmap
-	private String type; //ent, adj, etc
+	//Primary part of speech, ent, adj, etc. 
+	private String type; 
+	//additional part of speech
+	private volatile List<String> extraPosList;
 	private String WLCommandStr;
 	//the number of times this WLCommandStr has been visited.
 	//To not repeat, print only when this is even
@@ -24,7 +27,7 @@ public class StructH<H> extends Struct{
 	//corresponding WLCommandStr. Each Wrapper contains its index in list.
 	//private WLCommand WLCommand;
 	private List<WLCommandWrapper> WLCommandWrapperList;
-
+	
 	//pointer to the head of a previously built Struct that already
 	//contains this Struct, so no need to build this Struct again into the current 
 	//WLCommand in build(), remember to reset to null after iterating through
@@ -39,9 +42,9 @@ public class StructH<H> extends Struct{
 	//depends on the DFS path.
 	private int depth;
 	private boolean hasChild = false;
-	private ArrayList<Struct> children; 
+	private List<Struct> children; 
 	//relation to child, eg "of," "enjoyed"
-	private ArrayList<String> childRelation;	
+	private List<String> childRelation;	
 	private double score;
 	private double DOWNPATHSCOREDEFAULT = 1;
 	private double maxDownPathScore = DOWNPATHSCOREDEFAULT;
@@ -80,9 +83,7 @@ public class StructH<H> extends Struct{
 		this.structList = structList;
 	}
 
-	//when is this used??
-	public StructH(String type){
-		
+	public StructH(String type){		
 		this.type = type;
 		this.children = new ArrayList<Struct>();
 		this.childRelation = new ArrayList<String>();
@@ -116,6 +117,7 @@ public class StructH<H> extends Struct{
 	public Struct possessivePrev(){
 		return this.possessivePrev;
 	}
+	
 	@Override
 	public void set_dfsDepth(int depth){
 		this.depth = depth;
@@ -162,8 +164,34 @@ public class StructH<H> extends Struct{
 	}
 	
 	@Override
-	public StructList StructList(){
+	public StructList get_StructList(){
 		return this.structList;
+	}
+	
+	/**
+	 * List of additional pos, e.g. "prime" has pos adj, but is 
+	 * often used as an "ent". "type()" contains primary pos.
+	 * @return
+	 */
+	@Override
+	public List<String> extraPosList(){
+		return this.extraPosList;
+	}
+	
+	/**
+	 * Add additional parts of speech to this struct.
+	 */
+	@Override
+	public void addExtraPos(String pos){
+		//Lazy initialization with double-check locking.
+		if(extraPosList == null){
+			synchronized(this){
+				if(extraPosList == null){
+					extraPosList = new ArrayList<String>();
+				}
+			}
+		}
+		extraPosList.add(pos);		
 	}
 	
 	@Override
@@ -224,12 +252,12 @@ public class StructH<H> extends Struct{
 	}
 	
 	@Override
-	public ArrayList<Struct> children(){
+	public List<Struct> children(){
 		return children;		
 	}
 	
 	@Override
-	public ArrayList<String> childRelation(){
+	public List<String> childRelation(){
 		return childRelation;		
 	}
 	

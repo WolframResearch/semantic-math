@@ -59,4 +59,8 @@ public class StructList {
 	public void add(Struct newStruct){
 		this.structList.add(newStruct);
 	}
+	
+	public String toString(){
+		return structList.toString();
+	}
 }

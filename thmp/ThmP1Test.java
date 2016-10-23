@@ -320,6 +320,9 @@ public class ThmP1Test {
 			//st = "$B_p$ is a subspace of the vector space~$Z_p$. Thus we may  \\index{hpk@$H_p(K)$";
 			//st = "\\xy qtriangle/{<-}`{<-}`{<--}/[B`\ftr F(A)`ftr F(A');u`f`\ftr F(tilde f)] morphism(1000,500)|r|/{<--}/<0,-500>[A`A';tilde f]   endxy end{equation}Some authors reverse the convention and call the morphism in~\ref{00078}co-universal and the one here universal.  Other authors, this one included,call both universal morphisms.";
 			st = "$M/gM$ is Cohen-Macaulay with maximal regular sequence $f_1, \\ldots, f_{d-1}$.";
+			
+			st = "$Z$ is a compact open in $X$";
+			//st = "$Z$ is a an open set in $X$";
 			//st = "it gives a group between field and ring";
 			//st = "field between field and ring";
 			//st = "The category of $S^{-1}R$-modules is $R$-modules $N$ with the property that every $s in S$ acts as an automorphism on $N$.";

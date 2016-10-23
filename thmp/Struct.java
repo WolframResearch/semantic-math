@@ -50,7 +50,10 @@ public abstract class Struct {
 	public abstract int WLCommandStrVisitedCount();
 	
 	public abstract void clear_WLCommandStrVisitedCount();
-	
+	/**
+	 * Set list of structs in mx that this struct is attached to.
+	 * @param structList
+	 */
 	public abstract void set_structList(StructList structList);
 
 	/**
@@ -111,12 +114,23 @@ public abstract class Struct {
 	public abstract void set_maxDownPathScore(double pathScore);
 	
 	/**
+	 * List of additional pos, e.g. "prime" has pos adj, but is 
+	 * often used as an "ent". "type()" contains primary pos.
+	 * @return
+	 */
+	public abstract List<String> extraPosList();
+	/**
+	 * Add additional parts of speech to this struct.
+	 */
+	public abstract void addExtraPos(String pos);
+	
+	/**
 	 * Return value cannot be null.
 	 * @return
 	 */
 	public abstract String contentStr();
 	
-	public abstract StructList StructList();
+	public abstract StructList get_StructList();
 	
 	public abstract void set_score(double score);
 	
@@ -129,7 +143,7 @@ public abstract class Struct {
 	public abstract String type();
 	
 	//to be overwritten in StructH
-	public abstract ArrayList<Struct> children();
+	public abstract List<Struct> children();
 
 	//to be overwritten in StructH
 	public abstract List<String> childRelation();

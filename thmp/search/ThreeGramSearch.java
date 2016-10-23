@@ -54,6 +54,7 @@ public class ThreeGramSearch {
 	//map of maps containing first words of 2 grams as keys, and maps of 2nd words and their counts as values
 	private static final Map<String, Map<String, Integer>> twoGramFreqMap = NGramSearch.get_nGramMap();
 	private static int averageThreeGramFreqCount;
+	private static final int DEFAULT_THREE_GRAM_FREQ_COUNT = 5;
 	//should put these in map
 	//private static final String FLUFF_WORDS = "a|the|tex|of|and|on|let|lemma|for|to|that|with|is|be|are|there|by"
 		//	+ "|any|as|if|we|suppose|then|which|in|from|this|assume|this|have";
@@ -248,11 +249,12 @@ public class ThreeGramSearch {
 				}
 			}
 		}
-		if(totalThreeGramAdded != 0){
+		if(totalThreeGramAdded != 0){			
 			averageThreeGramFreqCount = threeGramFreqSum / totalThreeGramAdded;
 		}else{
-			averageThreeGramFreqCount = 0;
+			averageThreeGramFreqCount = DEFAULT_THREE_GRAM_FREQ_COUNT;
 		}
+		//double averageThreeGramFreqCountHalved = averageThreeGramFreqCount*2.0/3;
 		//add the remaining threegrams from initialThreeGramsSet
 		for(String threeGram : initialThreeGramsSet){
 			threeGramList.add(threeGram);

@@ -6,6 +6,9 @@ homology ent
 category ent_comp
 satisfy verb
 assumption noun
+sum ent
+direct sum ent
+set ent
 categories ent_comp
 lemma noun
 take verb
@@ -16,15 +19,13 @@ formal adj
 series ent_comp
 power series ent_comp
 formal power series ent
-la ent_comp
-li la ent
-li adj
 power noun
 closed adj
 analytic adj
 along pre
 great adj
 open adj
+open ent
 small adj
 continuous adj
 differentiable adj
@@ -143,6 +144,7 @@ dimension ent
 length noun
 pole ent
 algebraic adj
+compact adj
 quasicompact adj
 quasi-compact adj
 quasi compact adj

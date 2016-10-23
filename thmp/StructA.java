@@ -28,6 +28,8 @@ public class StructA<A, B> extends Struct{
 	private NodeType PREV1_TYPE;
 	private NodeType PREV2_TYPE;
 	
+	//additional part of speech
+	private volatile List<String> extraPosList;
 	//list of Struct at mx element, to which this Struct belongs
 	//pointer to mx.get(i).get(j)
 	//if not null, means this is head of some parsed WLCommand. 
@@ -45,6 +47,7 @@ public class StructA<A, B> extends Struct{
 	//the head Struct (to append to) of a WLCommand this Struct currently belongs to.
 	//Not intrinsic to this Struct!
 	private Struct structToAppendCommandStr;
+	//list of structs in mx that this struct is attached to.
 	private StructList structList;
 	//includes this/current Struct's score!
 	private double DOWNPATHSCOREDEFAULT = 1;
@@ -422,8 +425,34 @@ public class StructA<A, B> extends Struct{
 	}
 
 	@Override
-	public StructList StructList(){
+	public StructList get_StructList(){
 		return this.structList;
+	}
+	
+	/**
+	 * List of additional pos, e.g. "prime" has pos adj, but is 
+	 * often used as an "ent". "type()" contains primary pos.
+	 * @return
+	 */
+	@Override
+	public List<String> extraPosList(){
+		return this.extraPosList;
+	}
+	
+	/**
+	 * Add additional parts of speech to this struct.
+	 */
+	@Override
+	public void addExtraPos(String pos){
+		//Lazy initialization with double-check locking.
+		if(extraPosList == null){
+			synchronized(this){
+				if(extraPosList == null){
+					extraPosList = new ArrayList<String>();
+				}
+			}
+		}
+		extraPosList.add(pos);		
 	}
 	
 	@Override
