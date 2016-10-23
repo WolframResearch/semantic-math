@@ -49,7 +49,7 @@ public class ThmP1 {
 	private static final Map<String, String> mathObjMap;
 	// map for composite adjectives, eg positive semidefinite
 	// value is regex string to be matched
-	private static final Map<String, String> adjMap;
+	//private static final Map<String, String> adjMap;
 	private static final Map<String, Double> probMap;
 	// split a sentence into parts, separated by commas, semicolons etc
 	// private String[] subSentences;
@@ -122,7 +122,7 @@ public class ThmP1 {
 		structMap = Maps.structMap;
 		anchorMap = Maps.anchorMap;
 		posMMap = Maps.posMMap();		
-		adjMap = Maps.adjMap;
+		//adjMap = Maps.adjMap;
 		probMap = Maps.probMap;
 		posList = Maps.posList;
 		// list of given names, like F in "field F", for bookkeeping later
@@ -932,16 +932,15 @@ public class ThmP1 {
 
 				String curWord = pairs.get(index - k).word();
 				// look for composite adj (two for now)
-				if (index - k - 1 > -1 && adjMap.containsKey(curWord)) {
+				/*if (index - k - 1 > -1 && !posMMap.get(curWord).isEmpty() && posMMap.get(curWord).get(0).matches("adj")) {
 					// if composite adj
-					////////// develop adjMap further
 					if (pairs.get(index - k - 1).word().matches(adjMap.get(curWord))) {
 						curWord = pairs.get(index - k - 1).word() + " " + curWord;
 						// mark pos field to indicate entity
 						pairs.get(index - k).set_pos(String.valueOf(j));
 						k++;
 					}
-				}
+				}*/
 
 				tempMap.put(curWord, "ppt");
 				// mark the pos field in those absorbed pairs as index in
@@ -1184,9 +1183,9 @@ public class ThmP1 {
 	 * reference assignment.
 	 */
 	public static Struct parse(List<Struct> inputStructList, Struct recentEnt) {
-		System.out.println("**********");
+		/*System.out.println("**********");
 		System.out.println("Pos of open " + posMMap.get("open"));
-		System.out.println("**********");
+		System.out.println("**********");*/
 		//int parseContextVectorSz = TriggerMathThm2.keywordDictSize();
 		//this is cumulative, should be cleared per parse! Move this back
 		//to initializer after debugging!
@@ -1229,9 +1228,8 @@ public class ThmP1 {
 			 */
 		}
 
-		boolean skipCol = false;
 		// which row to start at for the next column
-		int startRow = -1;
+		int nextColStartRow = -1;
 		outerloop: for (int j = 0; j < len; j++) {
 
 			// fill in diagonal elements
@@ -1273,13 +1271,13 @@ public class ThmP1 {
 
 			// startRow should actually *always* be < j
 			int i = j - 1;
-			if (startRow != -1 && startRow < j) {
-				if (startRow == 0) {
-					startRow = -1;
+			if (nextColStartRow != -1 && nextColStartRow < j) {
+				if (nextColStartRow == 0) {
+					nextColStartRow = -1;
 					continue;
 				}
-				i = startRow - 1;
-				startRow = -1;
+				i = nextColStartRow - 1;
+				nextColStartRow = -1;
 			}
 			innerloop: for (; i >= 0; i--) {
 				for (int k = j - 1; k >= i; k--) {
@@ -1312,7 +1310,10 @@ public class ThmP1 {
 							// in_ent
 							String type1 = struct1.type();
 							String type2 = struct2.type();
-							//System.out.println("***struct1 " + struct1 + " struct2: " + struct2 );
+							/*if(type2.contentEquals("adj")){
+								System.out.println("***struct1: " + struct1 + ". struct2: " + struct2 );
+								System.out.println("isStructA? " + struct2.isStructA());
+							}*/
 							// for types such as conj_verbphrase
 							String[] split1 = type1.split("_");
 							//this causes conj_ent to be counted as ent, so should *not*
@@ -1397,7 +1398,7 @@ public class ThmP1 {
 								int childrenListSize = childrenList.size();
 								for(int p = childrenListSize - 1; p > -1; p--){
 									Struct child = childrenList.get(p);
-									if(child.type().equals("ent") && child instanceof StructH){
+									if(child.type().equals("ent") && !child.isStructA()){
 										child.add_child(inputStructList.get(j + 1), "of");
 										inputStructList.get(j + 1).set_parentStruct(child);
 										childAdded = true;
@@ -1412,8 +1413,8 @@ public class ThmP1 {
 								
 								// mx.get(i).set(j + 1, struct1);
 								mx.get(i).get(j + 1).add(struct1);
-								skipCol = true;
-								startRow = i;
+								//skipCol = true;
+								nextColStartRow = i;
 							} else if (combined.equals("pro_verb")) {
 								if (struct1.prev1().equals("we") && struct2.prev1().equals("say")) {
 									struct1.set_type(FLUFF);
@@ -1499,7 +1500,8 @@ public class ThmP1 {
 
 								// ******* be careful using first ent
 								// record the symbol/given name associated to an
-								// ent
+								// ent, in case referring to it later. Should use custom map
+								//instead of mathObjMap
 								if (firstEnt != null) {
 									StructA<Struct, String> parentStruct = 
 											new StructA<Struct, String>(firstEnt, NodeType.STRUCTH, 
@@ -1509,7 +1511,8 @@ public class ThmP1 {
 									// mx.get(0).set(len - 1, parentStruct);
 									mx.get(0).get(len - 1).add(parentStruct);
 
-									// add to mathObj map
+									// add to mathObj map, <--should not modify during runtime! Should add to 
+									//custom map
 									int q = 0;
 									String[] calledArray = called.split(" ");
 									String curWord = "";
@@ -1655,14 +1658,14 @@ public class ThmP1 {
 							}
 
 							// potentially change assert to latex expr
-							if (type2.equals("assert") && struct2.prev1() instanceof String
+							if (type2.equals("assert") && struct2.prev1NodeType().equals(NodeType.STR)
 									&& ((String) struct2.prev1()).charAt(0) == '$'
 									&& !structMap.containsKey(combined)) {
 								struct2.set_type("expr");
 								combined = type1 + "_" + "expr";
 							}
 							// update namesMap
-							if (type1.equals("ent") && struct1 instanceof StructH) {
+							if (type1.equals("ent") && !struct1.isStructA()) {
 								String called = struct1.struct().get("called");
 								if (called != null)
 									namesMap.put(called, struct1);
@@ -2066,6 +2069,9 @@ public class ThmP1 {
 	public static void reduce(List<List<StructList>> mx, Rule newRule, Struct struct1, Struct struct2,
 			Struct firstEnt, Struct recentEnt, int recentEntIndex, int i, int j, int k, String type1, String type2) {
 
+		/*if(type2.equals("verbphrase")){
+			System.out.println("Reducing _verbphrase! i " + newRule.relation() + ". struct2.pre2: " + struct2.prev2());
+		}*/
 		String newType = newRule.relation();
 		double newScore = newRule.prob();
 		double newDownPathScore = struct1.maxDownPathScore() * struct2.maxDownPathScore() * newScore;
@@ -2198,7 +2204,7 @@ public class ThmP1 {
 		else {
 			// if symbol and a given name to some entity
 			// use "called" to relate entities
-			if (type1.equals("symb") && struct1.prev1() instanceof String) {
+			if (type1.equals("symb") && struct1.prev1NodeType().equals(NodeType.STR)) {
 				String entKey = (String) struct1.prev1();
 				if (namesMap.containsKey(entKey)) {
 					Struct entity = namesMap.get(entKey);
@@ -2209,7 +2215,7 @@ public class ThmP1 {
 
 			// update struct2 with name if applicable
 			// type could have been stripped down from conj_symb
-			if (type2.equals("symb") && struct2.prev1() instanceof String) {
+			if (type2.equals("symb") && struct2.prev1NodeType().equals(NodeType.STR)) {
 
 				String entKey = (String) struct2.prev1();
 
@@ -2217,9 +2223,8 @@ public class ThmP1 {
 					Struct entity = namesMap.get(entKey);
 					struct2.set_prev2(entity.struct().get("name"));
 				}
-			} 
-			
-			if(newType.equals("assert_prep")){
+			} 			
+			else if(newType.equals("assert_prep")){
 				//make 2nd type into "hypo"
 				struct2.set_type("hypo");
 			}

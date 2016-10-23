@@ -21,6 +21,7 @@ power series ent_comp
 formal power series ent
 power noun
 closed adj
+boundary ent
 analytic adj
 along pre
 great adj

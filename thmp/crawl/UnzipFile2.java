@@ -26,26 +26,7 @@ import thmp.ThmInput;
  * @author yihed
  *
  */
-public class UnzipFile {
-
-	private static final String[] srcBasePaths = new String[] { "/Users/yihed/Documents/A/arxiv/0002_1",
-			"/Users/yihed/Documents/A/arxiv/0003" };
-
-	
-	// uses zip4j to unzip files. <-- Except zip4j doesn't work on gz files.
-	// this unzip method did not work, so had to resort to Java utility method
-	// with streams
-	/*private static void unzip() {
-		String src = "/Users/yihed/Documents/A/arxiv/0002/math0002001.gz";
-		String dest = "/Users/yihed/Documents/A/arxiv/0002content";
-		try {
-			ZipFile zipFile = new ZipFile(src);
-			zipFile.extractAll(dest);
-		} catch (ZipException e) {
-			e.printStackTrace();
-		}
-
-	}*/
+public class UnzipFile2 {
 
 	/**
 	 * Retrieves list of filenames in this directory. In this case .gz files to
@@ -66,7 +47,7 @@ public class UnzipFile {
 		File[] files = dir.listFiles();
 		for (File file : files) {
 			String fileName = file.getName();
-			System.out.println(fileName);
+			//System.out.println(fileName);
 			// only append ones with .gz extension
 			if (fileName.matches("[^.]*\\.gz$")) {
 				fileNames.add(fileName);
@@ -77,7 +58,6 @@ public class UnzipFile {
 
 	/**
 	 * Unzips gz file. List of .gz fileNames, to be appended to the base path.
-	 * 
 	 * @return list of fileNames of extracted files.
 	 */
 	private static List<String> unzipGz(String srcBasePath, String destBasePath, List<String> fileNames) {
@@ -85,12 +65,6 @@ public class UnzipFile {
 			return null;
 
 		List<String> extractedFileNames = new ArrayList<String>();
-		// String src = "/Users/yihed/Documents/A/arxiv/0002/math0002077.gz";
-		// String dest =
-		// "/Users/yihed/Documents/A/arxiv/0002content/output.txt";
-		// path to append the string names to
-		//srcBasePath = "/Users/yihed/Documents/A/arxiv/0002_1/";
-		//destBasePath = "/Users/yihed/Documents/A/arxiv/0002Content/";
 
 		// length of buffer read in, optimal size?
 		byte[] buf = new byte[1024];
@@ -100,11 +74,12 @@ public class UnzipFile {
 			FileOutputStream gzipOutputStream = null;
 
 			for (String fileName : fileNames) {
-				//if not .gz file or a math file		
+				// if not .gz file or a math file
 				if (!fileName.matches("math[^.]*\\.gz$")) {
-					System.out.println("Not a .gz or math file!");
+					//System.out.println("Not a .gz or math file!");
 					continue;
 				}
+				System.out.print("Current file being unzipped: " + fileName + "\t");
 				String src = srcBasePath + fileName;
 				String dest = destBasePath + fileName.replaceAll("([^\\.]*).gz$", "$1.txt");
 				extractedFileNames.add(dest);
@@ -127,36 +102,44 @@ public class UnzipFile {
 		return extractedFileNames;
 	}
 
+	/**
+	 * Reads in a directory name, should be un-tar'ed directory containing many
+	 * .gzip files.
+	 * 
+	 * @param args Directory path
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
 	public static void main(String[] args) throws FileNotFoundException, IOException {
 		System.out.println(System.getProperty("user.dir"));
-		// File file = new
-		// File("/Users/yihed/Documents/A/arxiv/0002/math0002001.gz");
-		// System.out.println(file.isFile());
-		// String srcDir = "/Users/yihed/Documents/A/arxiv/0002content";
-		// String srcBasePath = "/Users/yihed/Documents/A/arxiv/0002_1/";
-		// String destBasePath = "/Users/yihed/Documents/A/arxiv/0002Content/";
-
-		for (String srcBasePath : srcBasePaths) {
-			String destBasePath = srcBasePath + "Content";
-			//get all file names in the directory, eg directory "/0002/"
-			List<String> fileNames = getFileNames(srcBasePath);
-			System.out.println(fileNames);
-			// list of files we just extracted. These should be .txt files.
-			List<String> extractedFiles = unzipGz(srcBasePath, destBasePath, fileNames);
-			// reads in those files and extract theorems
-			for (String file : extractedFiles) {
-				//File fileFrom = new File(file);
-				// InputStream fileStream = new FileInputStream(file);
-				FileReader fileReader = new FileReader(file);
-				BufferedReader fileBufferedReader = new BufferedReader(fileReader);
-
-				Path fileTo = Paths.get(file.replaceAll("([^.]*)(\\.txt)", "$1_thms$2"));
-				
-				List<String> thmList = ThmInput.readThm(fileBufferedReader, null, null);
-
-				// write list of theorems to file
-				Files.write(fileTo, thmList, Charset.forName("UTF-8"));
-			}
+		
+		if(args.length == 0){
+			System.out.println("Supply a directory of gzip files!");
+			return;
 		}
+		
+		String srcBasePath = System.getProperty("user.dir") + "/" + args[0];
+		String destBasePath = srcBasePath + "Content";
+		srcBasePath = srcBasePath + "/";
+		// get all file names in the directory, eg directory "/0002/"
+		List<String> fileNames = getFileNames(srcBasePath);
+		//System.out.println(fileNames);
+		// list of files we just extracted. These should be .txt files.
+		List<String> extractedFiles = unzipGz(srcBasePath, destBasePath, fileNames);
+		// reads in those files and extract theorems
+		for (String file : extractedFiles) {
+			// File fileFrom = new File(file);
+			// InputStream fileStream = new FileInputStream(file);
+			FileReader fileReader = new FileReader(file);
+			BufferedReader fileBufferedReader = new BufferedReader(fileReader);
+
+			Path fileTo = Paths.get(file.replaceAll("([^.]*)(\\.txt)", "$1_thms$2"));
+
+			List<String> thmList = ThmInput.readThm(fileBufferedReader, null, null);
+
+			// write list of theorems to file
+			Files.write(fileTo, thmList, Charset.forName("UTF-8"));
+		}
+
 	}
 }

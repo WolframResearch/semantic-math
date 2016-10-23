@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
 public class ThmInput {
 
 	private static Pattern THM_START_PATTERN = Pattern
-			.compile("\\\\begin\\{def(?:.*)|\\\\begin\\{lem(?:.*)|\\\\begin\\{th(?:.*)|\\\\begin\\{prop(?:.*)"
+			.compile("\\\\begin\\{def(?:.*)|\\\\begin\\{lem(?:.*)|\\\\begin\\{thm(?:.*)|\\\\begin\\{theo(?:.*)|\\\\begin\\{prop(?:.*)"
 					+ "|\\\\begin\\{proclaim(?:.*)|\\\\begin\\{cor(?:.*)");
 	// start of theorem, to remove words such as \begin[prop]
 	/*
@@ -36,7 +36,7 @@ public class ThmInput {
 	 * );
 	 */
 	private static final Pattern THM_END_PATTERN = Pattern.compile(
-			"\\\\end\\{def(?:.*)|\\\\end\\{lem(?:.*)|\\\\end\\{th(?:.*)|\\\\end\\{prop(?:.*)|\\\\endproclaim(?:.*)"
+			"\\\\end\\{def(?:.*)|\\\\end\\{lem(?:.*)|\\\\end\\{thm(?:.*)|\\\\end\\{theo(?:.*)|\\\\end\\{prop(?:.*)|\\\\endproclaim(?:.*)"
 					+ "|\\\\end\\{cor(?:.*)");
 	private static final Pattern LABEL_PATTERN = Pattern.compile("(?:^.*)\\\\label\\{([^}]*)\\}\\s*(.*)");
 	private static final Pattern DIGIT_PATTERN = Pattern.compile(".*\\d+.*");
@@ -57,8 +57,8 @@ public class ThmInput {
 	// pattern for eliminating the command completely for web display. E.g. \fml
 	private static Pattern ELIMINATE_PATTERN = Pattern
 			.compile("\\\\fml|\\\\ofml|\\\\begin\\{enumerate\\}|\\\\end\\{enumerate\\}"
-					+ "|^\\\\begin\\{def(?:[^}]*)\\}\\s*|^\\\\begin\\{lem(?:[^}]*)\\}\\s*|^\\\\begin\\{th(?:[^}]*)\\}\\s*"
-					+ "|^\\\\begin\\{prop(?:[^}]*)\\}\\s*|^\\\\begin\\{proclaim(?:[^}]*)\\}\\s*|^\\\\begin\\{cor\\}\\s*"
+					+ "|\\\\begin\\{def(?:[^}]*)\\}\\s*|\\\\begin\\{lem(?:[^}]*)\\}\\s*|\\\\begin\\{th(?:[^}]*)\\}\\s*"
+					+ "|\\\\begin\\{prop(?:[^}]*)\\}\\s*|\\\\begin\\{proclaim(?:[^}]*)\\}\\s*|\\\\begin\\{cor(?:[^}]*)\\}\\s*"
 					+ "|\\\\begin\\{slogan\\}|\\\\end\\{slogan\\}");
 	
 	private static final Pattern ITEM_PATTERN = Pattern.compile("\\\\item");

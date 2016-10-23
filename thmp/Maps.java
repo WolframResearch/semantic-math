@@ -50,7 +50,7 @@ public class Maps {
 	
 	// map for composite adjectives, eg positive semidefinite
 	// value is regex string to be matched
-	protected static Map<String, String> adjMap;
+	//protected static Map<String, String> adjMap;
 
 	// implmented via ImmutableMultimap. String is trigger word.
 	//private static final ImmutableListMultimap<String, FixedPhrase> fixedPhraseMMap;
@@ -105,7 +105,7 @@ public class Maps {
 			mathObjMap = new HashMap<String, String>();
 			fluffMap = new HashMap<String, String>();
 			
-			adjMap = new HashMap<String, String>();
+			//adjMap = new HashMap<String, String>();
 			
 			if(fixedPhraseBuffer != null && lexiconBuffer != null){
 				readFixedPhrases(fixedPhraseBuffer);
@@ -196,8 +196,8 @@ public class Maps {
 
 			
 			// value is regex string to be matched
-			adjMap.put("semidefinite", "positive|negative");
-			adjMap.put("independent", "linearly");
+			//adjMap.put("semidefinite", "positive|negative");
+			//adjMap.put("independent", "linearly");
 
 			
 			fluffMap.put("the", "");
@@ -389,6 +389,7 @@ public class Maps {
 			posPreMMap.put("of", "pre"); // of is primarily used as anchor
 			posPreMMap.put("over", "pre");
 			posPreMMap.put("with", "pre");
+			posPreMMap.put("without", "pre");
 			posPreMMap.put("by", "pre");
 			posPreMMap.put("as", "pre");
 			posPreMMap.put("such", "pre_COMP");

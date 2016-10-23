@@ -13,7 +13,7 @@ import java.util.List;
 import thmp.utils.FileUtils;
 
 /**
- * Extract content from .tex files and put it to a .txt file
+ * Extract content from set of .tex files and put it to a single .txt file
  * @author yihed
  */
 public class TexToTxt {
