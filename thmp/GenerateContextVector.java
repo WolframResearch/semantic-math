@@ -27,7 +27,9 @@ import thmp.search.CollectThm;
 
 public class GenerateContextVector {
 
-	private static String contextVecFileStr = "src/thmp/data/ContextVecFunctionalAnalysis.txt";
+	//private static String CONTEXT_VEC_FILE_STR = "src/thmp/data/contextVecCommm5.txt";
+	private static String CONTEXT_VEC_FILE_STR = "src/thmp/data/contextVectorsMultilinearAlgebra.txt";
+	
 	private static Path contextVecFilePath;	
 	private static final boolean WRITE_UNKNOWNWORDS = false;
 	//brackets pattern
@@ -52,7 +54,7 @@ public class GenerateContextVector {
 		private static final List<String> contextVecStringList = new ArrayList<String>();
 		
 		//private static final KernelLink ml = thmp.utils.FileUtils.getKernelLink();
-
+		
 	static{
 		/*Maps.buildMap();
 		try {
@@ -78,7 +80,7 @@ public class GenerateContextVector {
 		//write context vec list to file, with curly braces
 		Path fileTo = contextVecFilePath;
 		if(fileTo == null){
-			fileTo = Paths.get(contextVecFileStr);
+			fileTo = Paths.get(CONTEXT_VEC_FILE_STR);
 		}
 		
 		try {

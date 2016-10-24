@@ -27,6 +27,7 @@ import thmp.search.ThmSearch;
  */
 public class TestSearch {
 
+	private static final boolean CONTEXT_SEARCH_BOOL = false;
 	@Before
 	public void setUp() throws Exception {
 		//Maps.buildMap();
@@ -39,7 +40,7 @@ public class TestSearch {
 	}
 	
 	public void testSearch(String inputStr, String desiredOutput){
-		List<String> nearestThmsList = SearchCombined.searchCombined(inputStr);
+		List<String> nearestThmsList = SearchCombined.searchCombined(inputStr, CONTEXT_SEARCH_BOOL);
 		//List<Integer> nearestThmsList = SearchIntersection.getHighestThm(inputStr);
 		assertTrue(nearestThmsList.size() > 1);
 		String desiredOutputLower = desiredOutput.toLowerCase();

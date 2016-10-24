@@ -216,6 +216,7 @@ public class SearchIntersection {
 		//of indices of words that have been added. This is to reward theorems that cover
 		//the more number of words. Actually just use SetMultimap.
 		//if 2/3-grams added, add indices of all words in 2/3-gram to set for that thm.
+		
 		SetMultimap<Integer, Integer> thmWordSpanMMap = HashMultimap.create();
 		
 		//make input list of words

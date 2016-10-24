@@ -32,20 +32,10 @@ public class Maps {
 
 	// make all maps private!
 
-	// protected static HashMap<String, ArrayList<String>> entityMap;
-	// map of structures, for all, disj, etc
-	// protected static HashMap<String, Rule> structMap;
-	protected static Multimap<String, Rule> structMap;
-
 	// structMap for the second run, grammars that shouldn't be
 	// used in first run, like ent_verb: there exists
-	protected static HashMap<String, String> structMap2;
+	protected static Map<String, String> structMap2;
 	//make these private!
-	// probability hashmap for pairs of phrase constructs
-	// vs noun_verb high prob, verb_verb low prob
-	protected static Map<String, Double> probMap;
-
-	protected static Map<String, String> anchorMap;
 	
 	
 	// map for composite adjectives, eg positive semidefinite
@@ -67,12 +57,12 @@ public class Maps {
 	protected static List<String> posList;	
 	//initialize with resource
 	
-	static{
-		//initialize, so doesn't matter which order the maps are being called
-		BuildMaps.initialize();
-	}
-	
-	public static void setResources(BufferedReader fixedPhraseBuf, BufferedReader lexiconBuf){
+	/**
+	 * Sets buffered readers.
+	 * @param fixedPhraseBuf
+	 * @param lexiconBuf
+	 */
+	public static void setBufferedReaders(BufferedReader fixedPhraseBuf, BufferedReader lexiconBuf){
 		fixedPhraseBuffer = fixedPhraseBuf;
 		lexiconBuffer = lexiconBuf;
 	}
@@ -85,15 +75,49 @@ public class Maps {
 		return BuildMaps.posMMap;
 	}
 	
+	/**
+	 * Map of anchoring words, e.g. "of"
+	 * @return
+	 */
+	public static Map<String, String> anchorMap(){
+		return BuildMaps.anchorMap;
+	}
+	
+	/**
+	 * Map of pairs of word pairs and their probabilities of 
+	 * occurence.
+	 * @return
+	 */
+	public static Map<String, Double> probMap(){
+		return BuildMaps.probMap;
+	}
+	
+	/**
+	 * structMap gives reduction rules for parts of speech. 
+	 * @return
+	 */
+	public static Multimap<String, Rule> structMap(){
+		return BuildMaps.structMap;
+	}	
+	
 	//subclass, to allow for setting resource in parent class.
 	public static class BuildMaps{
 		// parts of speech map, e.g. "open", "adj"
 		//specify it's a ListMultimap, to make known that insertion order is preserved
 		protected static final ListMultimap<String, String> posMMap;
+		// map of structures, for all, disj, etc
+		// protected static HashMap<String, Rule> structMap;
+		protected static final Multimap<String, Rule> structMap;
 		
 		protected static final Map<String, String> mathObjMap;
 		// fluff words, e.g. "the", "a"
-		protected static Map<String, String> fluffMap;
+		protected static final Map<String, String> fluffMap;
+
+		// probability hashmap for pairs of phrase constructs
+		// vs noun_verb high prob, verb_verb low prob
+		protected static final Map<String, Double> probMap;
+
+		protected static final Map<String, String> anchorMap;
 
 		static{
 			
@@ -101,11 +125,14 @@ public class Maps {
 			String lexiconFileStr = "src/thmp/data/lexicon.txt";
 			//create temporary hashMultimap to avoid duplicates, 
 			//temporary since ListMultimap is a better structure for this.
-			SetMultimap<String, String> posPreMMap = LinkedHashMultimap.create();			
+			SetMultimap<String, String> posPreMMap = LinkedHashMultimap.create();	
+			structMap = ArrayListMultimap.create();
 			mathObjMap = new HashMap<String, String>();
 			fluffMap = new HashMap<String, String>();
-			
-			//adjMap = new HashMap<String, String>();
+			// anchors, contains of, with
+			anchorMap = new HashMap<String, String>();
+			// probabilities for pair constructs.
+			probMap = new HashMap<String, Double>();
 			
 			if(fixedPhraseBuffer != null && lexiconBuffer != null){
 				readFixedPhrases(fixedPhraseBuffer);
@@ -505,11 +532,6 @@ public class Maps {
 			
 			// put in template matching, prepositions, of, by, with
 
-			// conjunctions, and, or, for
-			anchorMap = new HashMap<String, String>();
-
-			// anchors, contains of, with
-			anchorMap = new HashMap<String, String>();
 			anchorMap.put("of", "of");
 			// anchorMap.put("that is", "that is"); //careful with spaces
 			// local "or", ie or of the same types
@@ -519,7 +541,7 @@ public class Maps {
 			// can be written as,
 			// structMap = new HashMap<String, String>();
 			// structMap = new HashMap<String, Rule>();
-			structMap = ArrayListMultimap.<String, Rule> create();
+			
 			// structMap.put("for all", "forall");
 
 			// "is" implies assertion <--remove this case, "is" should be
@@ -745,7 +767,6 @@ public class Maps {
 			// need to gather/compute prob from labeled data
 			// used in round 1 parsing
 			// "FIRST"/"LAST" indicate positions in sentence.
-			probMap = new HashMap<String, Double>();
 			probMap.put("FIRST", 1.);
 			probMap.put("LAST", 1.);
 			// ent_

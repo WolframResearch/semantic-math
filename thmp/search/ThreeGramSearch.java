@@ -51,6 +51,8 @@ public class ThreeGramSearch {
 	// name of two gram data file containing additional 2-grams that should be included. These don't have
 	//frequencies associated with them.
 	private static final String THREE_GRAM_DATA_FILESTR = "src/thmp/data/threeGramData.txt";
+	
+	
 	//map of maps containing first words of 2 grams as keys, and maps of 2nd words and their counts as values
 	private static final Map<String, Map<String, Integer>> twoGramFreqMap = NGramSearch.get_nGramMap();
 	private static int averageThreeGramFreqCount;
@@ -82,8 +84,17 @@ public class ThreeGramSearch {
 		buildThreeGramMap(threeGramMap);
 		Set<String> initialThreeGramsSet = new HashSet<String>();
 		//fill in initial default set of scraped three grams
-		readAdditionalThreeGrams(THREE_GRAM_DATA_FILESTR, initialThreeGramsSet);
-		
+		BufferedReader threeGramBR = NGramSearch.THREE_GRAM_DATA_BR();
+		if(threeGramBR == null){
+			try{
+				BufferedReader threeGramBF = new BufferedReader(new FileReader(THREE_GRAM_DATA_FILESTR));
+				readAdditionalThreeGrams(threeGramBF, initialThreeGramsSet);
+			}catch(FileNotFoundException e){
+				e.printStackTrace();
+			}
+		}else{
+			readAdditionalThreeGrams(threeGramBR, initialThreeGramsSet);
+		}
 		threeGramFreqMap = new HashMap<String, Integer>();
 		//obtain the most frequent three grams from the previous threeGramMap, definitely
 		//keep the ones from initialThreeGramsSet
@@ -301,17 +312,17 @@ public class ThreeGramSearch {
 	 * and words scraped from the web.
 	 * @param initialTwoGramsSet Initial set of two grams to put into map.
 	 */
-	private static void readAdditionalThreeGrams(String THREE_GRAM_DATA_FILESTR, Set<String> initialThreeGramsSet){
-		BufferedReader fileBufferedReader;
+	private static void readAdditionalThreeGrams(BufferedReader threeGramBR, Set<String> initialThreeGramsSet){
+		/*BufferedReader fileBufferedReader;
 		try{
 			fileBufferedReader = new BufferedReader(new FileReader(THREE_GRAM_DATA_FILESTR));
 		}catch(FileNotFoundException e){
 			e.printStackTrace();
 			return;
-		}
+		}*/
 		String word;
 		try{
-			while((word = fileBufferedReader.readLine()) != null){
+			while((word = threeGramBR.readLine()) != null){
 				//this should have been done when sorting the words into maps
 				//word = word.toLowerCase();						
 				initialThreeGramsSet.add(word);				

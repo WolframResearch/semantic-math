@@ -119,11 +119,11 @@ public class ThmP1 {
 		fluffMap = Maps.BuildMaps.fluffMap;
 		mathObjMap = Maps.BuildMaps.mathObjMap;
 		fixedPhraseMap = Maps.fixedPhraseMap();
-		structMap = Maps.structMap;
-		anchorMap = Maps.anchorMap;
+		structMap = Maps.structMap();
+		anchorMap = Maps.anchorMap();
 		posMMap = Maps.posMMap();		
 		//adjMap = Maps.adjMap;
-		probMap = Maps.probMap;
+		probMap = Maps.probMap();
 		posList = Maps.posList;
 		// list of given names, like F in "field F", for bookkeeping later
 		// hashmap contains <name, entity> pairs
@@ -297,26 +297,25 @@ public class ThmP1 {
 	
 	/**
 	 * Add n gram to pairs list
-	 * @param pairs
+	 * @param pairsList
 	 * @param mathIndexList
 	 * @param thirdWord
 	 * @param threeGram
 	 */
-	private static void addNGramToPairs(List<Pair> pairs, List<Integer> mathIndexList, String thirdWord,
+	private static void addNGramToPairs(List<Pair> pairsList, List<Integer> mathIndexList, String thirdWord,
 			String threeGram) {
-		String pos = posMMap.get(thirdWord).get(0);
 		
-		if(mathObjMap.containsKey(thirdWord)){
-			pos = "ent";
-		}else if(pos == null){
-			///************need better solution!
-			//pos = "ent";
+		String pos;
+		List<String> posList = posMMap.get(thirdWord);		
+		if(!posList.isEmpty()){
+			pos = posList.get(0);
+		}else {
 			//better no parse and know, rather than wrong parse
 			pos = "";
 		}
 		Pair phrasePair = new Pair(threeGram, pos);								
-		pairs.add(phrasePair);
-		if(pos.matches("ent")) mathIndexList.add(pairs.size() - 1);
+		pairsList.add(phrasePair);
+		if(pos.matches("ent")) mathIndexList.add(pairsList.size() - 1);
 	}
 	
 	/**
@@ -431,9 +430,9 @@ public class ThmP1 {
 				else if (curWord.matches("\\$[^$]+\\$[^-\\s]*-[^\\s]*")) {
 					String[] curWordAr = curWord.split("-");
 					String tempWord = curWordAr[curWordAr.length - 1];
-					String tempPos = posMMap.get(tempWord).get(0);
-					if (tempPos != null) {
-						type = tempPos;
+					List<String> tempPosList = posMMap.get(tempWord);
+					if (!tempPosList.isEmpty()) {
+						type = tempPosList.get(0);
 					}
 				}
 
@@ -955,8 +954,8 @@ public class ThmP1 {
 			// eg " "
 			if (index - k - 2 > -1 && pairs.get(index - k).pos().matches("or|and")
 					&& pairs.get(index - k - 1).pos().equals("adj")) {
-				String tempPos = posMMap.get(pairs.get(index - k - 2).word()).get(0);
-				if (tempPos != null && !tempPos.matches("verb|vbs|verb_comp|vbs_comp")) {
+				List<String> tempPosList = posMMap.get(pairs.get(index - k - 2).word());
+				if (!tempPosList.isEmpty() && !tempPosList.get(0).matches("verb|vbs|verb_comp|vbs_comp")) {
 					// set pos() of or/and to the right index
 					pairs.get(index - k).set_pos(String.valueOf(j));
 					String curWord = pairs.get(index - k - 1).word();
@@ -2046,18 +2045,21 @@ public class ThmP1 {
 			return false;
 
 		// strip away 's'
-		String pos = posMMap.get(word.substring(0, wordLen - 2)).get(0);
-		if (pos != null && pos.matches("verb|verb_comp")) {
+		List<String> posList = posMMap.get(word.substring(0, wordLen - 2));
+		//String pos = posMMap.get(word.substring(0, wordLen - 2)).get(0);
+		if (!posList.isEmpty() && posList.get(0).matches("verb|verb_comp")) {
 			return true;
 		}
 		// strip away es if applicable
 		else if (wordLen > 2 && word.charAt(wordLen - 2) == 'e') {
-			pos = posMMap.get(word.substring(0, wordLen - 3)).get(0);
-			if (pos != null && pos.matches("verb|verb_comp"))
+			posList = posMMap.get(word.substring(0, wordLen - 3));
+
+
+			if (!posList.isEmpty() && posList.get(0).matches("verb|verb_comp"))
 				return true;
 		}
 		// could be special singular form, eg "is"
-		else if ((pos = posMMap.get(word).get(0)) != null && pos.matches("vbs|vbs_comp")) {
+		else if (!(posList = posMMap.get(word)).isEmpty() && posList.get(0).matches("vbs|vbs_comp")) {
 			return true;
 		}
 		return false;
@@ -2248,7 +2250,7 @@ public class ThmP1 {
 						for (int q = 0; q < tempSymStructList.size(); q++) {
 
 							Struct tempEntStruct = tempEntStructList.get(q);
-							if (tempEntStruct.type().equals("ent")) {
+							if (!tempEntStruct.isStructA() && tempEntStruct.type().equals("ent")) {
 
 								// assumes that symb is a leaf struct! Need to
 								// make more robust
@@ -2641,7 +2643,7 @@ public class ThmP1 {
 		ArrayList<String> sentenceList = new ArrayList<String>();
 		//separate out puncturations, separate out words away from punctuations.
 		String[] wordsArray = inputStr.replaceAll("([^\\.,!:;]*)([\\.,:!;]{1})", "$1 $2").split("\\s+");
-		System.out.println("wordsArray " + Arrays.toString(wordsArray));
+		//System.out.println("wordsArray " + Arrays.toString(wordsArray));
 		int wordsArrayLen = wordsArray.length;
 
 		StringBuilder sentenceBuilder = new StringBuilder();

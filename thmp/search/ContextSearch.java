@@ -37,19 +37,30 @@ public class ContextSearch {
 	private static final List<String> contextVecStringList = new ArrayList<String>();
 	//private static final int LIST_INDEX_SHIFT = 1;
 	private static final Pattern BRACKETS_PATTERN = WordForms.BRACKETS_PATTERN();
-	private static final boolean DEBUG = true;
+	private static final boolean DEBUG = false;
 	
 	static{
 		//need to set this when deployed to VM
-		String contextVecFileStr = "src/thmp/data/contextVectors.txt";
+		//String contextVecFileStr = "src/thmp/data/contextVecAll.txt";
+		//String contextVecFileStr = "src/thmp/data/contextVecCommm5.txt";
+		String contextVecFileStr = "src/thmp/data/contextVectorsMultilinearAlgebra.txt";
+		
 		//read in contextVecStringList from file, result of GenerateContextVectors.
 		//FileReader contextVecFile;
 		//BufferedReader contextVecFileBReader;
 		
-		BufferedReader contextVecFileBReader = null;
-		try{
-			FileReader contextVecFileReader = new FileReader(contextVecFileStr);
-			contextVecFileBReader = new BufferedReader(contextVecFileReader);
+		BufferedReader contextVecFileBReader = CollectThm.contextVecBR();
+		if(contextVecFileBReader == null){
+			try{
+				FileReader contextVecFileReader = new FileReader(contextVecFileStr);
+				contextVecFileBReader = new BufferedReader(contextVecFileReader);
+			}catch(FileNotFoundException e){
+				System.out.println("Context vectors file not found!");
+				e.printStackTrace();
+			}
+		}
+		
+		try{			
 			String line;
 			while((line = contextVecFileBReader.readLine()) != null){
 				//a line is a String of the form "{1, 0, ...}"

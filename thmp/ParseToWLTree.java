@@ -148,7 +148,7 @@ public class ParseToWLTree {
 					nameStr = curStructInDeque.struct().get("name");
 				}
 				
-				String curStructInDequeType = curStructInDeque.type().matches("conj_.*|disj_.*") ?
+				String curStructInDequeType = curStructInDeque.type().matches("conj_.+|disj_.+") ?
 						curStructInDeque.type().split("_")[1] : curStructInDeque.type();
 						
 				if(curStructInDequeType.matches(curCommandComponent.posTerm())
@@ -160,7 +160,7 @@ public class ParseToWLTree {
 					Struct structToAdd = curStructInDeque;
 					Struct curStructInDequeParent = curStructInDeque.parentStruct();
 					while(curStructInDequeParent != null){
-						String parentType = curStructInDequeParent.type().matches("conj_.*|disj_.*") ?
+						String parentType = curStructInDequeParent.type().matches("conj_.+|disj_.+") ?
 								curStructInDequeParent.type().split("_")[1] : curStructInDequeParent.type();
 						String componentType = curCommandComponent.posTerm();
 						String parentNameStr = "";

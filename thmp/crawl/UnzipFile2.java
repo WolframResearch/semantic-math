@@ -119,7 +119,7 @@ public class UnzipFile2 {
 		}
 		
 		String srcBasePath = System.getProperty("user.dir") + "/" + args[0];
-		String destBasePath = srcBasePath + "Content";
+		String destBasePath = srcBasePath + "Content/";
 		srcBasePath = srcBasePath + "/";
 		// get all file names in the directory, eg directory "/0002/"
 		List<String> fileNames = getFileNames(srcBasePath);

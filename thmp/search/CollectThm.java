@@ -47,9 +47,9 @@ public class CollectThm {
 	//read in from list of files streams instead of just one
 	private static final List<String> rawFileStrList = Arrays.asList(new String[]{
 			//"src/thmp/data/testContextVector.txt", 
-			"src/thmp/data/fieldsRawTex.txt",
+			//"src/thmp/data/fieldsRawTex.txt",
 			//"src/thmp/data/CommAlg5.txt", 
-			//"src/thmp/data/multilinearAlgebra.txt",
+			"src/thmp/data/multilinearAlgebra.txt",
 			//"src/thmp/data/functionalAnalysis.txt"
 			});
 	
@@ -57,8 +57,10 @@ public class CollectThm {
 	private static final String MACROS_SRC = "src/thmp/data/texMacros.txt";
 	//private static final List<String> rawFileStrList = Arrays.asList(new String[]{"src/thmp/data/functional_analysis_operator_algebras/distributions.txt"});
 
-	//intentionally not final.
+	//There are intentionally *not* final.
 	private static volatile BufferedReader rawFileReader;
+	//BufferedReader for context vectors.
+	private static volatile BufferedReader contextVecBR;
 	//corresponding list of file readers
 	private static volatile List<BufferedReader> rawFileReaderList;
 	//macros file
@@ -100,8 +102,19 @@ public class CollectThm {
 	 */
 	public static void setResources(BufferedReader srcFileReader) {
 		rawFileReader = srcFileReader;
-		System.out.print("first passed in: " +srcFileReader);
-		
+		System.out.print("first passed in: " +srcFileReader);		
+	}
+	
+	/**
+	 * Set context vector BufferedReader.
+	 * @param srcFileReader
+	 */
+	public static void setContextVecBF(BufferedReader contextVectorsBR) {
+		contextVecBR = contextVectorsBR;		
+	}
+	
+	public static BufferedReader contextVecBR(){
+		return contextVecBR;
 	}
 	
 	/**

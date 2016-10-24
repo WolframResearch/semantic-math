@@ -57,7 +57,7 @@ public class SearchCombined {
 	 * @return
 	 */
 	private static List<Integer> findListsIntersection(List<Integer> nearestVecList, SearchState searchState, 
-			int numVectors){
+			int numVectors, String input, boolean searchContextBool){
 		
 		List<Integer> intersectionVecList = searchState.intersectionVecList();
 		//short-circuit
@@ -137,6 +137,7 @@ public class SearchCombined {
 		//intersectionVecList guranteed not empty at this point. Remove magic numbers.
 		//thmSpanMap.get(topThmIndex) < thmSpanMap.get(topIntersectionThmIndex)*4.0/5
 		if( (!intersectionVecList.contains(topThmIndex)
+				//make the 4.0/5 into constant after done with tinkering
 				|| thmSpanMap.get(topThmIndex) < thmSpanMap.get(topIntersectionThmIndex)*4.0/5)
 				&& thmScoreMap.get(topThmIndex) < topIntersectionThmScore){
 			bestCommonVecList.add(topIntersectionThmIndex);
@@ -154,6 +155,9 @@ public class SearchCombined {
 			counter--;
 		}
 		
+		if(searchContextBool){
+			bestCommonVecList = ContextSearch.contextSearch(input, bestCommonVecList);
+		}
 		return bestCommonVecList;
 	}
 	
@@ -162,7 +166,7 @@ public class SearchCombined {
 	 * Resources should have been set prior to this if called externally.
 	 * @param inputStr search input
 	 */
-	public static List<String> searchCombined(String input){
+	public static List<String> searchCombined(String input, boolean searchContextBool){
 		if(input.matches("\\s*")) return null;
 		
 		input = input.toLowerCase();
@@ -182,7 +186,8 @@ public class SearchCombined {
 			numCommonVecs = Integer.parseInt(firstWord);			
 		}		
 		//find best intersection of these two lists. nearestVecList is 1-based, but intersectionVecList is 0-based! 
-		List<Integer> bestCommonVecs = findListsIntersection(nearestVecList, searchState, numCommonVecs);
+		List<Integer> bestCommonVecs = findListsIntersection(nearestVecList, searchState, 
+				numCommonVecs, input, searchContextBool);
 		List<String> bestCommonThms = new ArrayList<String>();
 		for(int d : bestCommonVecs){
 			//String thm = TriggerMathThm2.getThm(d);
@@ -228,7 +233,10 @@ public class SearchCombined {
 				continue;
 			}
 			//filter nearestVecList through context search, to re-arrange list output based on context
-			List<Integer> nearestContextVecs = ContextSearch.contextSearch(thm, nearestVecList);
+			String[] thmAr = thm.split("\\s+");
+			if(thmAr.length > 1 && thmAr[0].equals("context")){
+				nearestVecList = ContextSearch.contextSearch(thm, nearestVecList);
+			}
 			//need to run GenerateContext.java to generate the context vectors during build, but ensure 
 			//context vectors are up to date!
 			SearchState searchState = SearchIntersection.getHighestThm(thm, NUM_NEAREST);
@@ -238,9 +246,14 @@ public class SearchCombined {
 			if(firstWord.matches("\\d+")){
 				numCommonVecs = Integer.parseInt(firstWord);
 			}
+			boolean searchContextBool = false;
+			if(thmAr.length > 1 && thmAr[0].equals("context")){				
+				searchContextBool = true;
+			}
 			//find best intersection of these two lists. nearestVecList is 1-based, but intersectionVecList is 0-based! 
 			//now both are 0-based.
-			List<Integer> bestCommonVecs = findListsIntersection(nearestContextVecs, searchState, numCommonVecs);
+			List<Integer> bestCommonVecs = findListsIntersection(nearestVecList, searchState, numCommonVecs,
+					thm, searchContextBool);
 			
 			for(int d : bestCommonVecs){
 				System.out.println(TriggerMathThm2.getThm(d));
