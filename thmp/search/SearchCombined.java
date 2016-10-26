@@ -29,8 +29,8 @@ public class SearchCombined {
 	//should update at the very beginning!
 	//private static final int LIST_INDEX_SHIFT = 1;
 	
-	public static void initializeSearchWithResource(BufferedReader freqWordsFileBuffer, BufferedReader texSourceFileBuffer){
-		CollectFreqWords.setResources(freqWordsFileBuffer);
+	public static void initializeSearchWithResource(BufferedReader freqWordsFileBuffer, BufferedReader texSourceFileBuffer){		
+		CollectThm.setWordFrequencyBR(freqWordsFileBuffer);
 		CollectThm.setResources(texSourceFileBuffer);		
 	}
 	
@@ -42,7 +42,8 @@ public class SearchCombined {
 	 */
 	public static void initializeSearchWithResource(BufferedReader freqWordsFileBuffer, List<BufferedReader> texSourceFileBuffer,
 			BufferedReader macrosReader){
-		CollectFreqWords.setResources(freqWordsFileBuffer);
+		//CollectFreqWords.setResources(freqWordsFileBuffer);
+		CollectThm.setWordFrequencyBR(freqWordsFileBuffer);
 		CollectThm.setResources(texSourceFileBuffer, macrosReader);	
 		ProcessInput.setResources(macrosReader);
 	}

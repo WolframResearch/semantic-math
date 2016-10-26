@@ -801,7 +801,7 @@ public class Maps {
 			//adds all words from the stock frequent words. Add these last,
 			//to give conflicting pos the least priority. E.g. "open" should
 			//have pos "adj" and "ent" before "verb"
-			posPreMMap.putAll(WordFrequency.trueFluffWordsPosMap());
+			posPreMMap.putAll(WordFrequency.ComputeFrequencyData.trueFluffWordsPosMap());
 					
 			return posPreMMap;
 		}

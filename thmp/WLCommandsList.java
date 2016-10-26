@@ -132,6 +132,9 @@ public class WLCommandsList {
 		WLCommandMapBuilder.put("is called", addCommand(new String[] { "symb|ent|pro, , true", "auxpass, is called, trigger",
 				"\\[Element]", "symb|ent|adj|phrase, , true, TriggerMathObj" }));
 		
+		WLCommandMapBuilder.put("is contained", addCommand(new String[] { "symb|ent|pro, , true", "auxpass, is contained, trigger",
+				"\\[Element]", "symb|ent|adj|phrase, , true, TriggerMathObj" }));
+		
 		//if_assert. As well as "let", etc
 		WLCommandMapBuilder.put("if", addCommand(new String[] { "if|If|let, , trigger", "assert, , true" }));
 		

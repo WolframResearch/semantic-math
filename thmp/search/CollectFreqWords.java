@@ -28,11 +28,12 @@ import thmp.search.CollectThm.ThmWordsMaps;
  * Read in the most frequently-used words from file, along with their POS
  *
  */
+@Deprecated
 public class CollectFreqWords {
 	// Source file of list containing 5000 most frequent words, ordered by freq.
 	// Oftentimes we need fewer than those,
 	// maybe only top 500, so words such as "ring" don't get screened out.
-	private static final File wordsFile = new File("src/thmp/data/wordFrequency.txt");
+	//private static final File wordsFile = new File("src/thmp/data/wordFrequency.txt");
 	private static final String wordsFileStr = "src/thmp/data/wordFrequency.txt";
 	// reader when wordsFile is passed in in a buffer, eg when run from servlet.
 	// intentionally not final. But should be thread-safe, since this resource
@@ -60,79 +61,7 @@ public class CollectFreqWords {
 	 */
 	public static BufferedReader getWordFrequencyBR(){
 		return wordsFileBufferedReader;
-	}
-	
-	/**
-	 * Get the part of speech corresponding to the pos tag/symbol.
-	 * E.g. i -> "pre". Placed here instead of in subclass, so it can
-	 * be used by WordFrequency.java as well.
-	 * @param word
-	 * @param wordPos
-	 * @return
-	 */
-	public static String getPos(String word, String wordPos){
-		String pos;
-		switch (wordPos) {
-		case "i":
-			pos = "pre";
-			break;
-		case "p":
-			pos = "pro";
-			break;
-		case "v":
-			pos = "verb";
-			break;
-		case "n":
-			pos = "noun";
-			break;
-		case "x":
-			// not, no etc
-			pos = "not";
-			break;
-		case "d":
-			// determiner
-			pos = "det";
-			break;
-		case "j":
-			pos = "adj";
-			break;
-		case "r":
-			pos = "adverb";
-			break;
-		case "e":
-			// "existential there"
-			pos = "det";
-			break;
-		case "a":
-			// article, eg the, every, a.
-			// classify as adj because of the rules for
-			// fusing adj and ent's
-			pos = "adj";
-			break;
-		case "m":
-			pos = "num";
-			break;
-		case "u":
-			// interjection, eg oh, yes, um.
-			pos = "intj";
-			break;
-		case "c":
-			// conjunctions, eg before, until, although
-			// and/or should be parsed as conj/disj, will
-			// be overwritten in Maps.java
-			pos = "con";
-			break;
-		case "t":
-			//only word with this type is "to"
-			pos = "pre";
-			break;
-		default:
-			pos = word;
-			//System.out.println("default pos: "+ word + " "+ lineAr[2]);
-			// defaultList.add(lineAr[2]);
-		}
-		return pos;
-	}
+	}	
 	
 	/**
 	 * Static nested class, created so that the objects do *not* does not
@@ -140,6 +69,7 @@ public class CollectFreqWords {
 	 * moment the outer class is invoked. Need to initialize this subclass to
 	 * build all the maps.
 	 */
+	@Deprecated
 	public static class GetFreqWords {
 		// Map of most frequent words and their pos.
 		// entrySet of immutable maps preserve the order the entries are
@@ -202,7 +132,7 @@ public class CollectFreqWords {
 				String word = lineAr[1].trim();
 				String wordPos = lineAr[2].trim();
 				
-				String pos = getPos(word, wordPos);
+				String pos = WordFrequency.ComputeFrequencyData.getPos(word, wordPos);
 
 				wordPosPreMap.put(word, pos);
 				// record the word's rank
@@ -215,27 +145,7 @@ public class CollectFreqWords {
 			wordsFileBufferedReader.close();
 		}
 
-		/**
-		 * Gets non math fluff words differently, by taking the math words that
-		 * are marked as fluff out of the wordPosMap.
-		 * 
-		 * @return
-		 */
-		public static ImmutableSet<String> get_nonMathFluffWordsSet2() {
-			Set<String> nonMathFluffWordsSet = new HashSet<String>(wordPosMap.keySet());
-			String[] score1mathWords = CollectThm.score1MathWords();
-			String[] additionalFluffWords = CollectThm.additionalFluffWords();
-
-			for (String word : score1mathWords) {
-				nonMathFluffWordsSet.remove(word);
-			}
-
-			for (String word : additionalFluffWords) {
-				nonMathFluffWordsSet.add(word);
-			}
-			return ImmutableSet.copyOf(nonMathFluffWordsSet);
-		}
-
+		
 		/**
 		 * Returns the top most frequent words.
 		 * 

@@ -30,7 +30,7 @@ import thmp.utils.WordForms;
 public class NGramSearch {
 
 	//get the non math fluff words
-	private static final Set<String> nonMathFluffWordsSet = WordFrequency.trueFluffWordsSet();	
+	private static final Set<String> nonMathFluffWordsSet = WordFrequency.ComputeFrequencyData.trueFluffWordsSet();	
 	//file to write 2 grams to
 	private static final Path twoGramsFilePath = Paths.get("src/thmp/data/twoGrams.txt");
 	
@@ -64,6 +64,7 @@ public class NGramSearch {
 	public static BufferedReader THREE_GRAM_DATA_BR(){
 		return THREE_GRAM_DATA_BR;
 	}
+	
 	public static class TwoGramSearch{
 		//private static final File twoGramsFile = new File("src/thmp/data/twoGrams.txt");
 		//list of 2 grams that show up with above-average frequency, with their frequencies

@@ -79,7 +79,6 @@ public class SearchIntersection {
 	
 	/**
 	 * Pair of theorem index and its span score.
-	 *
 	 */
 	private static class ThmSpanPair implements Comparable<ThmSpanPair>{
 		private int thmIndex;
@@ -105,8 +104,7 @@ public class SearchIntersection {
 			return this.spanScore > other.spanScore ? -1 : (this.spanScore < other.spanScore ? 1 : 
 				(this == other ? 0 : -1));
 		}
-	}
-	
+	}	
 	
 	private static class ThmScorePair implements Comparable<ThmScorePair>{
 		private int thmIndex;

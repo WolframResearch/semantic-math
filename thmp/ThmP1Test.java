@@ -321,6 +321,7 @@ public class ThmP1Test {
 			st = "$M/gM$ is Cohen-Macaulay with maximal regular sequence $f_1, \\ldots, f_{d-1}$.";			
 			st = "$U$ is open without boundary";
 			st = "abelian group is unique";
+			st = "field F is contained in field H";
 			//st = "$Z$ is a an open set in $X$";
 			//st = "it gives a group between field and ring";
 			//st = "field between field and ring";

@@ -8,6 +8,7 @@ import com.google.common.collect.ImmutableSet;
 
 import thmp.ThmP1;
 import thmp.search.CollectFreqWords;
+import thmp.search.WordFrequency;
 
 public class WordForms {
 
@@ -18,12 +19,19 @@ public class WordForms {
 	private static final String FLUFF_WORDS_SMALL = "a|the|tex|of|and|on|let|lemma|for|to|that|with|is|be|are|there|by"
 			+ "|any|as|if|we|suppose|then|which|in|from|this|assume|this|have|just|may|an|every|it|between|given|itself|has"
 			+ "|more";
-	private static final ImmutableSet<String> freqWordsSet; 
+	private static ImmutableSet<String> freqWordsSet; 
 	//brackets pattern
-	private static final Pattern BRACKETS_PATTERN = Pattern.compile("\\[([^\\]]*)\\]");
-		
-	static{
-		freqWordsSet = CollectFreqWords.GetFreqWords.get_nonMathFluffWordsSet2();
+	private static final Pattern BRACKETS_PATTERN = Pattern.compile("\\[([^\\]]*)\\]");	
+	
+	private static Set<String> getFreqWordsSet(){
+		if(freqWordsSet == null){
+			synchronized(WordForms.class){
+				if(freqWordsSet == null){
+					freqWordsSet = WordFrequency.ComputeFrequencyData.get_FreqWords();
+				}
+			}
+		}
+		return freqWordsSet;
 	}
 	
 	/**
@@ -34,7 +42,7 @@ public class WordForms {
 	 */
 	public static String getSingularForm(String word){
 		//if word in dictionary, should not be processed. Eg "continuous"
-		if(freqWordsSet.contains(word)) return word;
+		if(getFreqWordsSet().contains(word)) return word;
 		
 		String[] singFormsAr = getSingularForms(word);
 		//singFormsAr successively replaces words ending in "s", "es", "ies"

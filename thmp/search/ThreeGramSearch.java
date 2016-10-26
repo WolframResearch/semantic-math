@@ -44,7 +44,6 @@ public class ThreeGramSearch {
 	//
 	private static final Set<String> threeGramFirstWordsSet = new HashSet<String>();
 	
-	//private static final Set<String> nonMathFluffWordsSet = CollectFreqWords.GetFreqWords.get_nonMathFluffWordsSet2();	
 	private static final Path threeGramsFilePath = Paths.get("src/thmp/data/threeGramData.txt");
 	//additional three grams to be intetionally added. 
 	private static final String[] ADDITIONAL_THREE_GRAMS = new String[]{"local ring", "local field"};

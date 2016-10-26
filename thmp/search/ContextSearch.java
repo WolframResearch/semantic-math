@@ -227,7 +227,7 @@ public class ContextSearch {
 			throw new RuntimeException("thmVecDim: " + thmVecDim + " queryVecDim: " + queryVecDim + " keywordDict: " + 
 			TriggerMathThm2.keywordDict(), e);
 		}
-		System.out.println("keywordDict: " + TriggerMathThm2.keywordDict());
+		//System.out.println("keywordDict: " + TriggerMathThm2.keywordDict());
 		return nearestVecList;
 	}
 	

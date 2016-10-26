@@ -65,7 +65,8 @@ public class CollectThm {
 	private static volatile List<BufferedReader> rawFileReaderList;
 	//macros file
 	private static volatile BufferedReader macrosDefReader;
-	
+	//wordFrequency.txt containing word frequencies and their part of speech (pos)
+	private static BufferedReader wordFrequencyBR;
 	//words that should be included as math words, but occur too frequently in math texts
 	//to be detected as non-fluff words.
 	private static final String[] SCORE1MATH_WORDS = new String[]{"ring", "field", "ideal", "finite", "series",
@@ -84,8 +85,7 @@ public class CollectThm {
 		
 		static{
 			//only get the top N words
-			//freqWordsSet = CollectFreqWords.GetFreqWords.get_nonMathFluffWordsSet2();
-			freqWordsSet = WordFrequency.trueFluffWordsSet();
+			freqWordsSet = WordFrequency.ComputeFrequencyData.trueFluffWordsSet();
 		}
 		
 		public static Set<String> freqWordsSet(){
@@ -125,6 +125,14 @@ public class CollectThm {
 		rawFileReaderList = srcFileReaderList;
 		macrosDefReader = macrosReader;
 		System.out.print("buffered readers first passed in: " + srcFileReaderList);		
+	}
+	
+	public static void setWordFrequencyBR(BufferedReader freqWordsBR) {
+		wordFrequencyBR = freqWordsBR;
+	}
+	
+	public static BufferedReader get_wordFrequencyBR() {
+		return wordFrequencyBR;
 	}
 	
 	public static class ThmWordsMaps{
