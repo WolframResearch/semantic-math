@@ -136,10 +136,13 @@ public class SearchCombined {
 		int topQueryIndex;
 		//intersectionVecList guranteed not empty at this point. Remove magic numbers.
 		//thmSpanMap.get(topThmIndex) < thmSpanMap.get(topIntersectionThmIndex)*4.0/5
+		//System.out.println("topThmIndex: " + topThmIndex + " thmScoreMap: " + thmScoreMap);
+		
+		//adjust top search result
 		if( (!intersectionVecList.contains(topThmIndex)
 				//make the 4.0/5 into constant after done with tinkering
 				|| thmSpanMap.get(topThmIndex) < thmSpanMap.get(topIntersectionThmIndex)*4.0/5)
-				&& thmScoreMap.get(topThmIndex) < topIntersectionThmScore){
+				&& (!thmScoreMap.containsKey(topThmIndex) || thmScoreMap.get(topThmIndex) < topIntersectionThmScore)){
 			bestCommonVecList.add(topIntersectionThmIndex);
 			topQueryIndex = topIntersectionThmIndex;
 		}else{

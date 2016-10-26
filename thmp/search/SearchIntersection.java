@@ -699,6 +699,7 @@ public class SearchIntersection {
 	 */
 	public static void main(String[] args){
 		Scanner sc = new Scanner(System.in);
+		boolean contextSearch = true;
 		
 		while(sc.hasNextLine()){
 			String thm = sc.nextLine();			
@@ -706,6 +707,10 @@ public class SearchIntersection {
 			List<Integer> highestThms = getHighestThmList(thm);
 			
 			if(highestThms == null) continue;
+			
+			if(contextSearch){
+				highestThms = ContextSearch.contextSearch(thm, highestThms);
+			}
 			
 			for(Integer thmIndex : highestThms){
 				System.out.println(thmList.get(thmIndex));

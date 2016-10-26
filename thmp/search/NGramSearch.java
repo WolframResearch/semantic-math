@@ -105,6 +105,7 @@ public class NGramSearch {
 					readAdditionalTwoGrams(twoGramBF, initialTwoGramsSet);
 				}catch(FileNotFoundException e){
 					e.printStackTrace();
+					throw new RuntimeException(e);
 				}
 			}else{
 				readAdditionalTwoGrams(TWO_GRAM_DATA_BR, initialTwoGramsSet);

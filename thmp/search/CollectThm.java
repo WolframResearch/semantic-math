@@ -124,8 +124,7 @@ public class CollectThm {
 	public static void setResources(List<BufferedReader> srcFileReaderList, BufferedReader macrosReader) {
 		rawFileReaderList = srcFileReaderList;
 		macrosDefReader = macrosReader;
-		System.out.print("buffered readers first passed in: " +srcFileReaderList);
-		
+		System.out.print("buffered readers first passed in: " + srcFileReaderList);		
 	}
 	
 	public static class ThmWordsMaps{
@@ -206,6 +205,7 @@ public class CollectThm {
 				buildMapsNoAnno(thmWordsListBuilderNoAnno, docWordsFreqPreMapNoAnno, wordThmsMMapBuilderNoAnno, processedThmList);				
 			} catch (IOException e) {
 				e.printStackTrace();
+				throw new RuntimeException("Calls to readThm and building maps failed!\n", e);
 			}
 			
 			thmWordsList = thmWordsListBuilder.build();	
@@ -687,6 +687,7 @@ public class CollectThm {
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
+				throw new RuntimeException("Processing input via ProcessInput failed!\n", e);
 			}
 			thmListBuilder.addAll(extractedThms);
 			thmList = thmListBuilder.build();

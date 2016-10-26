@@ -226,6 +226,7 @@ public class ThmSearch {
 		}catch(MathLinkException e){
 			System.out.println("error at launch!");
 			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
 		
 	}
@@ -325,7 +326,7 @@ public class ThmSearch {
 		}catch(MathLinkException|IndexOutOfBoundsException e){
 			System.out.println("error during eval!" + e.getMessage());
 			e.printStackTrace();
-			return;
+			throw new RuntimeException("error during eval!", e);
 		}finally{
 			ml.close();
 		}		
@@ -339,8 +340,7 @@ public class ThmSearch {
 	 * @throws MathLinkException 
 	 * @throws ExprFormatException 
 	 */
-	private static List<Integer> findNearestVecs(KernelLink ml, String queryStr, int ... num) 
-			throws MathLinkException, ExprFormatException{
+	private static List<Integer> findNearestVecs(KernelLink ml, String queryStr, int ... num){
 		//System.out.println("queryStr: " + queryStr);
 		//String s = "";
 		//transform query vector to low dimensional space 
@@ -348,22 +348,25 @@ public class ThmSearch {
 		//ml.evaluate("q = " + queryStr + ".mx.Transpose[mx];");
 		//ml.discardAnswer();
 		
-		//process query first with corMx		
-		ml.evaluate("q = Transpose[" + queryStr + "] + 0.1*corMx.Transpose["+ queryStr +"]//N;");
-		ml.discardAnswer();
-		//ml.evaluate(queryStr+"/.{0.0->30}");
-		//System.out.println("QUERY " + ml.getExpr().part(1));
-		
-		//ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"];");
-		//ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"/.{0.0->mxMeanValue}];");
-		ml.evaluate("q = Inverse[d].Transpose[u].(q/.{0.0->mxMeanValue});");
-		//ml.evaluate("q = Inverse[d].Transpose[u].Transpose[q];");
-		ml.discardAnswer();
-		//System.out.println("@@q " + ml.getExpr());
-		/*ml.evaluate("q = q + vMeanValue;");
-		ml.discardAnswer();*/
-		//System.out.println("q + vMeanValue: " + ml.getExpr());
-		
+		try{
+			//process query first with corMx		
+			ml.evaluate("q = Transpose[" + queryStr + "] + 0.1*corMx.Transpose["+ queryStr +"]//N;");
+			ml.discardAnswer();
+			//ml.evaluate(queryStr+"/.{0.0->30}");
+			//System.out.println("QUERY " + ml.getExpr().part(1));
+			
+			//ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"];");
+			//ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"/.{0.0->mxMeanValue}];");
+			ml.evaluate("q = Inverse[d].Transpose[u].(q/.{0.0->mxMeanValue});");
+			//ml.evaluate("q = Inverse[d].Transpose[u].Transpose[q];");
+			ml.discardAnswer();
+			//System.out.println("@@q " + ml.getExpr());
+			/*ml.evaluate("q = q + vMeanValue;");
+			ml.discardAnswer();*/
+			//System.out.println("q + vMeanValue: " + ml.getExpr());
+		}catch(MathLinkException e){
+			throw new RuntimeException(e);
+		}
 		//vMeanValue
 		//use Nearest to get numNearest number of nearest vectors, 
 		int numNearest;
@@ -378,21 +381,26 @@ public class ThmSearch {
 		
 		/*ml.evaluate("q");
 		ml.waitForAnswer();
-		System.out.println("q " +ml.getExpr()); */
+		System.out.println("q " +ml.getExpr()); */		
 		
-		ml.evaluate("Nearest[v->Range[Dimensions[v][[1]]], First@Transpose[q],"+numNearest+"] - " + LIST_INDEX_SHIFT);
-		
-		//take largest inner product
-		//ml.evaluate("Keys[TakeLargest[AssociationThread[Range[Dimensions[v][[1]]] -> v.First[Transpose[q]]], "+numNearest+"]]");
-		//ml.evaluate("Ordering[v.First[Transpose[q]], -"+numNearest+"]");
-		ml.waitForAnswer();
-		Expr nearestVec = ml.getExpr();
-		//System.out.println(nearestVec.length() + "  " + Arrays.toString((int[])nearestVec.part(1).asArray(Expr.INTEGER, 1)));
-		//turn into list.
-		System.out.println(nearestVec);
-		//use this when using Nearest
-		//int[] nearestVecArray = (int[])nearestVec.part(1).asArray(Expr.INTEGER, 1);
-		int[] nearestVecArray = (int[])nearestVec.asArray(Expr.INTEGER, 1);
+		int[] nearestVecArray;
+		try{
+			ml.evaluate("Nearest[v->Range[Dimensions[v][[1]]], First@Transpose[q],"+numNearest+"] - " + LIST_INDEX_SHIFT);
+			
+			//take largest inner product
+			//ml.evaluate("Keys[TakeLargest[AssociationThread[Range[Dimensions[v][[1]]] -> v.First[Transpose[q]]], "+numNearest+"]]");
+			//ml.evaluate("Ordering[v.First[Transpose[q]], -"+numNearest+"]");
+			ml.waitForAnswer();
+			Expr nearestVec = ml.getExpr();
+			//System.out.println(nearestVec.length() + "  " + Arrays.toString((int[])nearestVec.part(1).asArray(Expr.INTEGER, 1)));
+			//turn into list.
+			System.out.println(nearestVec);
+			//use this when using Nearest
+			//int[] nearestVecArray = (int[])nearestVec.part(1).asArray(Expr.INTEGER, 1);
+			nearestVecArray = (int[])nearestVec.asArray(Expr.INTEGER, 1);
+		}catch(MathLinkException | ExprFormatException e){
+			throw new RuntimeException(e);
+		}
 		Integer[] nearestVecArrayBoxed = ArrayUtils.toObject(nearestVecArray);
 		List<Integer> nearestVecList = Arrays.asList(nearestVecArrayBoxed);
 		
@@ -411,22 +419,20 @@ public class ThmSearch {
 		
 		String query = "";
 		Scanner sc = new Scanner(System.in);
-		try{
-			while(sc.hasNextLine()){
-				String thm = sc.nextLine();
-				query = TriggerMathThm2.createQueryNoAnno(thm);
-				if(query.equals("")){
-					System.out.println("I've got nothing for you yet. Try again.");
-					continue;
-				}
+		
+		while(sc.hasNextLine()){
+			String thm = sc.nextLine();
+			query = TriggerMathThm2.createQueryNoAnno(thm);
+			if(query.equals("")){
+				System.out.println("I've got nothing for you yet. Try again.");
+				continue;
+			}
 				//processes query				
-				findNearestVecs(ml, query);
-			}	
-		}catch(MathLinkException|ExprFormatException e){
-			e.printStackTrace();
-		}finally{
-			sc.close();
-		}
+			findNearestVecs(ml, query);
+		}			
+	
+		sc.close();
+	
 		return query;
 	}
 	
@@ -438,17 +444,14 @@ public class ThmSearch {
 	 */
 	public static List<Integer> readThmInput(String thm, int numVec){
 		List<Integer> nearestVecList = null;
-		try{			
-			String query = TriggerMathThm2.createQueryNoAnno(thm);
-			if(query.equals("")){
-				return Collections.emptyList();
-			}
-			//processes query
-			nearestVecList = findNearestVecs(ml, query, numVec);
-				
-		}catch(MathLinkException|ExprFormatException e){
-			e.printStackTrace();
+			
+		String query = TriggerMathThm2.createQueryNoAnno(thm);
+		if(query.equals("")){
+			return Collections.emptyList();
 		}
+			//processes query
+		nearestVecList = findNearestVecs(ml, query, numVec);
+		
 		//System.out.print("Within ThmSearch, nearestVecList: " + nearestVecList);
 		return nearestVecList;
 	}

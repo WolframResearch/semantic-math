@@ -2468,6 +2468,8 @@ public class ThmP1 {
 			Files.write(unknownWordsFile, unknownWords, Charset.forName("UTF-8"));
 		}catch(IOException e){
 			e.printStackTrace();
+			throw new RuntimeException(e);
+			
 		}
 	}
 

@@ -57,6 +57,7 @@ public class ContextSearch {
 			}catch(FileNotFoundException e){
 				System.out.println("Context vectors file not found!");
 				e.printStackTrace();
+				throw new RuntimeException(e);
 			}
 		}
 		
@@ -69,8 +70,10 @@ public class ContextSearch {
 			contextVecFileBReader.close();
 		}catch(FileNotFoundException e){
 			e.printStackTrace();
+			throw new RuntimeException(e);
 		}catch(IOException e){
 			e.printStackTrace();
+			throw new RuntimeException(e);
 		}finally{
 			if(contextVecFileBReader != null){
 				closeBuffer(contextVecFileBReader);
@@ -86,7 +89,7 @@ public class ContextSearch {
 	private static void closeBuffer(BufferedReader bf){
 		try{
 			bf.close();
-		}catch(Exception e){
+		}catch(IOException e){
 			e.printStackTrace();
 		}
 	}
@@ -100,8 +103,7 @@ public class ContextSearch {
 	 * @return Gives an ordered list of vectors based on context.
 	 */
 	public static List<Integer> contextSearch(String query, List<Integer> nearestThmIndexList){
-		//short-circuit if query contains only 1 word
-		
+		//short-circuit if query contains only 1 word		
 		
 		String queryContextVec = thmp.GenerateContextVector.createContextVector(query);
 		//short-circuit if context vec not meaninful (insignificant entries created)
@@ -130,19 +132,28 @@ public class ContextSearch {
 			System.out.println("nearestThmsContextVecSB " + nearestThmsContextVecSB);
 		}
 		//get the nearest thms from the list of thm (indices) passed in
+		//String nearestContextVecsStr = null;
+		String thmVecDim = null;
+		String queryVecDim = null;
 		try{
 			//get the average of the nonzero elements			
-			ml.evaluate("nearestThmList = "+ nearestThmsContextVecSB 
+			ml.evaluate("nearestThmList = "+ nearestThmsContextVecSB +
 					//+ "; nearestThmListFlat = Flatten[nearestThmList];"
 					//+ "thmNonZeroPositions = Position[nearestThmList, _?(# != 0 &)][[All,2]]"
+						"; Length[nearestThmList[[1]]]"
 					);
 			//ml.discardAnswer();
 			ml.waitForAnswer();
-			System.out.println("nearestThmList " + ml.getExpr());
+			thmVecDim = ml.getExpr().toString();
+			System.out.println("nearestThmVecDim " + thmVecDim);
 			
 			ml.evaluate("query = " + queryContextVec);
 			ml.waitForAnswer();
 			System.out.println("query vector " + ml.getExpr());
+			
+			ml.evaluate("Length[query]");
+			ml.waitForAnswer();
+			queryVecDim = ml.getExpr().toString();
 			/*ml.evaluate("numberNonZeroEntrySize = Length[thmNonZeroPositions]");
 			ml.waitForAnswer();
 			Expr expr = ml.getExpr();
@@ -196,6 +207,7 @@ public class ContextSearch {
 			ml.waitForAnswer();
 			Expr nearestContextVecs = ml.getExpr();
 			
+			//nearestContextVecsStr = nearestContextVecs.toString();
 			System.out.println(nearestContextVecs);
 			//use this when using Nearest
 			//int[] nearestVecArray = (int[])nearestVec.part(1).asArray(Expr.INTEGER, 1);
@@ -212,7 +224,10 @@ public class ContextSearch {
 			
 		}catch(MathLinkException | ExprFormatException e){
 			e.printStackTrace();
+			throw new RuntimeException("thmVecDim: " + thmVecDim + " queryVecDim: " + queryVecDim + " keywordDict: " + 
+			TriggerMathThm2.keywordDict(), e);
 		}
+		System.out.println("keywordDict: " + TriggerMathThm2.keywordDict());
 		return nearestVecList;
 	}
 	

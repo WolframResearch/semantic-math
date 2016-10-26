@@ -1,6 +1,8 @@
 package thmp;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -28,16 +30,23 @@ import thmp.search.CollectThm;
 public class GenerateContextVector {
 
 	//private static String CONTEXT_VEC_FILE_STR = "src/thmp/data/contextVecCommm5.txt";
-	private static String CONTEXT_VEC_FILE_STR = "src/thmp/data/contextVectorsMultilinearAlgebra.txt";
+	//private static String CONTEXT_VEC_FILE_STR = "src/thmp/data/contextVectorsMultilinearAlgebra.txt";
+	private static String CONTEXT_VEC_FILE_STR = "src/thmp/data/contextVecAll.txt";
 	
 	private static Path contextVecFilePath;	
+	private static URL outputStreamURL;
+	
 	private static final boolean WRITE_UNKNOWNWORDS = false;
 	//brackets pattern
 	private static final Pattern BRACKETS_PATTERN = Pattern.compile("\\[([^\\]]*)\\]");
 	
-	public static void set_contextVecFilePath(String pathStr){
+	public static void set_contextVecFilePathStr(String pathStr){
 		Path path = Paths.get(pathStr);
 		contextVecFilePath = path;
+	}
+	
+	public static void set_contextVecOutputURL(URL url){
+		outputStreamURL = url;
 	}
 	
 	/**
@@ -63,8 +72,10 @@ public class GenerateContextVector {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}*/
-		
 		bareThmList = CollectThm.ThmList.get_bareThmList();
+		
+		//if(outputStreamURL == null){
+		
 		generateContextVec(bareThmList, contextVecList, contextVecStringList);
 		
 		if(WRITE_UNKNOWNWORDS){
@@ -87,12 +98,13 @@ public class GenerateContextVector {
 			Files.write(fileTo, contextVecStringList, Charset.forName("UTF-8"));
 		} catch (IOException e) {
 			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
-		
+		//}
 	}
 
 	//used for testing from with outer class main().
-	private static void initialize(){			
+	public static void initialize(){			
 	}
 	
 	/**

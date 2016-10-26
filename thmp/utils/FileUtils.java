@@ -28,9 +28,9 @@ public class FileUtils {
 	 * @param contentList
 	 * @param fileTo
 	 */
-	public static void writeToFile(List<String> contentList, Path fileTo) {
+	public static void writeToFile(List<String> contentList, Path fileToPath) {
 		try {
-			Files.write(fileTo, contentList, Charset.forName("UTF-8"));
+			Files.write(fileToPath, contentList, Charset.forName("UTF-8"));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

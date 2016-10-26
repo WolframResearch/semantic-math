@@ -208,6 +208,7 @@ public class Maps {
 				}
 			}catch(IOException e){
 				e.printStackTrace();
+				throw new RuntimeException(e);
 			}
 		}
 		
@@ -924,6 +925,7 @@ public class Maps {
 			}
 		}catch(IOException e){
 			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
 		fixedPhraseMMap = fixedPhraseMMapBuilder.build();
 		

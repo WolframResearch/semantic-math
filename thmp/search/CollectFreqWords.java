@@ -43,21 +43,25 @@ public class CollectFreqWords {
 	private static final Path nonMathFluffWordsFilePath = Paths.get("src/thmp/data/nonMathFluffWords.txt");
 	private static final File nonMathFluffWordsFile = new File("src/thmp/data/nonMathFluffWords.txt");
 
-	static {
-
-	}
 
 	/**
 	 * Initialize class with reader, same as in static initializer. This needs
 	 * to be called before initializing GetFreqWords subclass, if the maps are
 	 * to be built from a particular bufferedReader.
-	 * 
+	 * Frequent words file.
 	 * @param wordsFileReader
 	 */
 	public static void setResources(BufferedReader wordsFileReader) {
 		wordsFileBufferedReader = wordsFileReader;
 	}
-
+	
+	/**
+	 * Returns BufferedReader to wordFrequency.txt.
+	 */
+	public static BufferedReader getWordFrequencyBR(){
+		return wordsFileBufferedReader;
+	}
+	
 	/**
 	 * Get the part of speech corresponding to the pos tag/symbol.
 	 * E.g. i -> "pre". Placed here instead of in subclass, so it can
@@ -160,6 +164,7 @@ public class CollectFreqWords {
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
+				throw new RuntimeException(e);
 			}
 			wordPosMap = ImmutableMap.copyOf(wordPosPreMap);
 			wordRankMap = ImmutableMap.copyOf(wordRankPreMap);
@@ -315,14 +320,12 @@ public class CollectFreqWords {
 			sc.close();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
 
 		return ImmutableSet.copyOf(nonMathFluffWordsSet);
 	}
 
-	private static void wordsRank() {
-
-	}
 
 	/**
 	 * Tests the methods here.

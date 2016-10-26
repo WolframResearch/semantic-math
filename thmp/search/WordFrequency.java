@@ -40,7 +40,10 @@ public class WordFrequency {
 	private static final ListMultimap<String, String> trueFluffWordsPosMap = ArrayListMultimap.create();
 	
 	private static final Set<String> trueFluffWordsSet = new HashSet<String>();
+	
 	private static final String WORDS_FILE_STR = "src/thmp/data/wordFrequency.txt";
+	private static BufferedReader wordFrequencyBR;
+	
 	//450 million total words in stock word frequency list
 	private static final int TOTAL_STOCK_WORD_COUNT = (int)Math.pow(10, 7)*45;
 	private static final Path trueFluffWordsPath = Paths.get("src/thmp/data/trueFluffWords.txt");
@@ -56,17 +59,21 @@ public class WordFrequency {
 		
 		int totalCorpusWordCount = extractFreq(thmList);
 		
-		FileReader wordsFileReader;
-		try {
-			wordsFileReader = new FileReader(WORDS_FILE_STR);
-			BufferedReader wordsFileBufferedReader = new BufferedReader(wordsFileReader);
-			//fills in trueFluffWordsSet, based on freq in stockFreqMap
-			getStockFreq(wordsFileBufferedReader, totalCorpusWordCount);
-			
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+		wordFrequencyBR = CollectFreqWords.getWordFrequencyBR();
+		if(wordFrequencyBR == null){
+			try {
+				FileReader wordsFileReader = new FileReader(WORDS_FILE_STR);
+				BufferedReader wordsFileBufferedReader = new BufferedReader(wordsFileReader);
+				//fills in trueFluffWordsSet, based on freq in stockFreqMap
+				getStockFreq(wordsFileBufferedReader, totalCorpusWordCount);
+				
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+				throw new RuntimeException(e);
+			}
+		}else{
+			getStockFreq(wordFrequencyBR, totalCorpusWordCount);
 		}
-		
 	}
 
 	private static int extractFreq(List<String> thmList) {
@@ -102,7 +109,7 @@ public class WordFrequency {
 		return totalCorpusWordCount;
 	}
 
-	// computes and returns list of "true" fluff words, ie the ones where
+	// computes list of "true" fluff words, ie the ones where
 	// whose freq in math texts are not higher than their freq in English text.
 	// have to be careful for words such as "let", "say"
 	private static void getStockFreq(BufferedReader wordsFileBufferedReader, int totalCorpusWordCount) {
