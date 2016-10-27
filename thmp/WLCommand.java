@@ -480,6 +480,7 @@ public class WLCommand {
 						nextWord = nextStruct.simpleToString(true, null);
 					}
 				}else{
+					System.out.println("^^^Triggering command " + curCommand);
 					//takes into account pro, and the ent it should refer to
 					nextWord = nextStruct.simpleToString(true, curCommand);
 				}
@@ -802,7 +803,7 @@ public class WLCommand {
 	
 	@Override
 	public String toString(){
-		return this.commandsCountMap.toString();
+		return this.posTermList.toString();
 	}
 	
 	/**

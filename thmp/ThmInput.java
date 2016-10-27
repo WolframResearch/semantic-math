@@ -59,7 +59,7 @@ public class ThmInput {
 			.compile("\\\\fml|\\\\ofml|\\\\begin\\{enumerate\\}|\\\\end\\{enumerate\\}"
 					+ "|\\\\begin\\{def(?:[^}]*)\\}\\s*|\\\\begin\\{lem(?:[^}]*)\\}\\s*|\\\\begin\\{th(?:[^}]*)\\}\\s*"
 					+ "|\\\\begin\\{prop(?:[^}]*)\\}\\s*|\\\\begin\\{proclaim(?:[^}]*)\\}\\s*|\\\\begin\\{cor(?:[^}]*)\\}\\s*"
-					+ "|\\\\begin\\{slogan\\}|\\\\end\\{slogan\\}");
+					+ "|\\\\begin\\{slogan\\}|\\\\end\\{slogan\\}|\\\\sbsb");
 	
 	private static final Pattern ITEM_PATTERN = Pattern.compile("\\\\item");
 

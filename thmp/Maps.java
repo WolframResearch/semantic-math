@@ -17,6 +17,7 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 
 import thmp.search.WordFrequency;
@@ -387,6 +388,7 @@ public class Maps {
 			posPreMMap.put("suppose", "hyp");
 			posPreMMap.put("assume", "hyp");
 			posPreMMap.put("assuming", "hyp");
+			posPreMMap.put("consider", "hyp");
 			posPreMMap.put("for all", "hyp");
 			posPreMMap.put("for each", "hyp");
 			posPreMMap.put("for any", "hyp");
@@ -620,7 +622,7 @@ public class Maps {
 			structMap.put("adj_symb", new Rule("phrase", 1));
 			
 			structMap.put("adj_noun", new Rule("phrase", 1));
-			structMap.put("adj_prep", new Rule("phrase", .85));
+			structMap.put("adj_prep", new Rule("phrase", .9));
 			structMap.put("gerund_noun", new Rule("gerundp", 1)); // gerundphrase
 			structMap.put("ent_gerundp", new Rule("newchild", 1));
 
@@ -731,7 +733,8 @@ public class Maps {
 			structMap.put("hyp_hyp", new Rule("hyp", 1));
 			structMap.put("hyp_assert", new Rule("hypo", 1));
 			structMap.put("hyp_ent", new Rule("hypo", 1));
-			structMap.put("cond_ent", new Rule("Cond", 1));
+			structMap.put("cond_ent", new Rule("Cond", .9));
+			structMap.put("cond_assert", new Rule("Cond", .9));			
 			structMap.put("hyp_phrase", new Rule("hypo", 1));
 			structMap.put("hyp_adj", new Rule("hypo", 1));
 			structMap.put("hyp_symb", new Rule("hypo", 1));
@@ -751,6 +754,7 @@ public class Maps {
 			// eg "property that a is b"
 			structMap.put("noun_phrase", new Rule("np", 1));
 			structMap.put("ent_phrase", new Rule("newchild", 1));
+			structMap.put("ent_Cond", new Rule("newchild", 1));
 			structMap.put("ent_ppt", new Rule("newchild", 1));
 			structMap.put("ent_expr", new Rule("addstruct", 1)); // ent_tex. Add
 																	// member to
@@ -801,7 +805,7 @@ public class Maps {
 			//adds all words from the stock frequent words. Add these last,
 			//to give conflicting pos the least priority. E.g. "open" should
 			//have pos "adj" and "ent" before "verb"
-			posPreMMap.putAll(WordFrequency.ComputeFrequencyData.trueFluffWordsPosMap());
+			posPreMMap.putAll(Multimaps.forMap(WordFrequency.ComputeFrequencyData.freqWordsPosMap()));
 					
 			return posPreMMap;
 		}

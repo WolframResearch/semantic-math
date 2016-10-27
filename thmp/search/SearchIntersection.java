@@ -122,8 +122,16 @@ public class SearchIntersection {
 		}
 	}
 	
-	public static List<Integer> getHighestThmList(String input, int ... num){
-		return getHighestThm(input, num).intersectionVecList();
+	/**
+	 * 
+	 * @param input
+	 * @param contextSearch Whether to use context search.
+	 * @param num
+	 * @return
+	 */
+	public static List<Integer> getHighestThmList(String input, Set<String> searchWordsSet, 
+			boolean contextSearchBool, int ... num){
+		return getHighestThm(input, searchWordsSet, contextSearchBool, num).intersectionVecList();
 	}
 	
 	private static enum TokenType{
@@ -204,11 +212,14 @@ public class SearchIntersection {
 	/**
 	 * Builds scoreThmMMap 
 	 * @param input input String
+	 * @param contextSearchBool whether to context search.
+	 * @param searchWordsSet set of words used in search.
 	 * @param numHighest number of highest-scored thms to retrieve.
 	 * @return SearchState containing list of indices of highest-scored thms. Sorted in ascending
 	 * order, best first. List is 0-based.
 	 */
-	public static SearchState getHighestThm(String input, int ... num){
+	public static SearchState getHighestThm(String input, Set<String> searchWordsSet, 
+			boolean contextSearchBool, int ... num){
 		if(input.matches("\\s*")) return null;
 		//map containing the indices of theorems added so far, where values are sets (hashset)
 		//of indices of words that have been added. This is to reward theorems that cover
@@ -222,7 +233,6 @@ public class SearchIntersection {
 		List<WordWrapper> wordWrapperList = SearchWordPreprocess.sortWordsType(input);
 		
 		//create searchState to record the intersectionVecList, and map of tokens and their span scores.
-		//
 		SearchState searchState = new SearchState();
 		
 		//determine if first token is integer, if yes, use it as the number of 
@@ -330,7 +340,7 @@ public class SearchIntersection {
 					String threeGram = twoGram + " " + thirdWord;
 					if(threeGramsMap.containsKey(threeGram)){
 						scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, wordThmIndexMMap, curWrapper, threeGram, 
-								threeWordsCombined, i, TokenType.THREEGRAM, singletonScoresAr);	
+								threeWordsCombined, i, TokenType.THREEGRAM, singletonScoresAr, searchWordsSet);	
 						if(scoreAdded > 0){
 							wordCountArray[i] = wordCountArray[i] + 1;
 							wordCountArray[i+1] = wordCountArray[i+1] + 1;
@@ -347,7 +357,7 @@ public class SearchIntersection {
 				if(twoGramsMap.containsKey(twoGram)){
 					
 					scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, wordThmIndexMMap, curWrapper, twoGram, 
-							nextWordCombined, i, TokenType.TWOGRAM, singletonScoresAr);	
+							nextWordCombined, i, TokenType.TWOGRAM, singletonScoresAr, searchWordsSet);	
 					
 					if(scoreAdded > 0){
 						wordCountArray[i] = wordCountArray[i] + 1;
@@ -365,8 +375,8 @@ public class SearchIntersection {
 			//"closed range" all weigh a lot. Scale proportionally down with respect to the average 
 			//score of all words added.
 			scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, wordThmIndexMMap, curWrapper, 
-					word, wordLong, i, TokenType.SINGLETON, singletonScoresAr);
-			if(scoreAdded > 0){
+					word, wordLong, i, TokenType.SINGLETON, singletonScoresAr, searchWordsSet);
+			if(scoreAdded > 0){ //HERE
 				wordCountArray[i] = wordCountArray[i] + 1;
 				totalWordsScore += scoreAdded;
 				searchState.addTokenScore(word, scoreAdded);
@@ -402,17 +412,20 @@ public class SearchIntersection {
 		List<Integer> highestThmList = new ArrayList<Integer>();
 		
 		//get the thms having the highest k scores. Keys are scores.
-		// ****** does this order the value set accordingly as well??
+		// ****** does this order the value set accordingly as well? <--it should
 		NavigableMap<Integer, Collection<ThmSpanPair>> thmMap = scoreThmMMap2.asMap().descendingMap();
 		
 		//pick up numHighest number of unique thms
 		Set<Integer> pickedThmSet = new HashSet<Integer>();
 		
-		int counter = numHighest;
-		for(Entry<Integer, Collection<ThmSpanPair>> entry : thmMap.entrySet()){			
+		//list to track the top entries		
+		int counter = numHighest*2;
+		for(Entry<Integer, Collection<ThmSpanPair>> entry : thmMap.entrySet()){	
 			for(ThmSpanPair pair : entry.getValue()){
 				Integer thmIndex = pair.thmIndex;
-				if(counter == 0) break;				
+				if(counter == 0) break;	
+				//avoid duplicates, since the scoreThmMMap leaves outdated
+				//score-thm pair in map, rather than deleting them, after updating score
 				if(pickedThmSet.contains(thmIndex)) continue;
 				pickedThmSet.add(thmIndex);
 				highestThmList.add(thmIndex);		
@@ -422,8 +435,13 @@ public class SearchIntersection {
 				+ thmList.get(thmIndex));					
 				}
 			}
-			
 		}
+		
+		//re-order top entries based on context search, if enabled
+		if(contextSearchBool){
+			highestThmList = ContextSearch.contextSearch(input, highestThmList);
+		}
+		
 		searchState.set_intersectionVecList(highestThmList);
 		return searchState;
 	}
@@ -555,7 +573,8 @@ public class SearchIntersection {
 				thmScoreMap.put(thmIndex, newThmScore);
 				if(DEBUG){ 
 					String thm = thmList.get(thmIndex);
-					System.out.println("theorem whose score is upped. size "+ entry.getKey() + " newThmScore: " + newThmScore+ " thm: " + thm);
+					System.out.println("theorem whose score is upped. size "+ entry.getKey() 
+					+ " newThmScore: " + newThmScore+ " thm: " + thm);
 					//System.out.println("PREV SCORE " + prevScore + " NEW SCORE " + newThmScore + thm);
 				}
 				counter--;
@@ -576,11 +595,13 @@ public class SearchIntersection {
 	 * @param wordLong
 	 * @param wordIndices array of indices of words in query
 	 * @param singletonScoresAr Array of scores for singleton words
+	 * @param set of words, separated into singletons, used during search
 	 * @return List of theorem indices that have been added, 
 	 */
 	private static int addWordThms(Map<Integer, Integer> thmScoreMap, TreeMultimap<Integer, Integer> scoreThmMMap,
 			Multimap<Integer, Integer> thmWordSpanMMap, ListMultimap<String, Integer> wordThmIndexMMap, //Map<String, Integer> dominantWordsMap,
-			WordWrapper curWrapper, String word, String wordLong, int wordIndex, TokenType tokenType, int[] singletonScoresAr) {		
+			WordWrapper curWrapper, String word, String wordLong, int wordIndex, TokenType tokenType, int[] singletonScoresAr,
+			Set<String> searchWordsSet) {		
 		//update scores map
 		int curScoreToAdd = 0;
 		int scoreAdded = 0;
@@ -659,23 +680,42 @@ public class SearchIntersection {
 				scoreThmMMap.put(newScore, thmIndex);
 				//put in thmIndex, and the index of word in the query, to thmWordSpanMMap.				
 				tokenType.addToMap(thmWordSpanMMap, thmIndex, wordIndex);
-				
-				scoreAdded = curScoreToAdd;				
-			}				
+								
+			}
+			scoreAdded = curScoreToAdd;
+			//add singletons to searchWordsSet, so 
+			//searchWordsSet could be null if not interested in searchWordsSet.
+			if(scoreAdded > 0 && searchWordsSet != null){
+				String[] wordAr = word.split("\\s+");
+				for(String w : wordAr){
+					searchWordsSet.add(w);
+				}				
+			}
 		}
 		return scoreAdded;
 	}	
 	
 	/**
 	 * Searches the theorem base using just the intersection algorithm.
+	 * Public facing, don't call within this class, call getHighestThm directly
+	 * instead (so not to duplicate work).
 	 * @param inputStr Query string.
+	 * @param searchWordsSet set of terms (singletons) used during search.
 	 * @return
 	 */
-	public static List<String> search(String inputStr){
+	public static List<String> search(String inputStr, Set<String> searchWordsSet){
 		
 		List<String> foundThmList = new ArrayList<String>();
 
-		List<Integer> highestThms = getHighestThmList(inputStr);
+		int numVecs = NUM_NEAREST_VECS;
+		String firstWord = inputStr.split("\\s+")[0];
+		
+		if(firstWord.matches("\\d+")){
+			numVecs = Integer.parseInt(firstWord);
+		}	
+		boolean contextSearchBool = false;
+		
+		List<Integer> highestThms = getHighestThmList(inputStr, searchWordsSet, contextSearchBool, numVecs);
 		
 		if(highestThms == null){
 			foundThmList.add("Close, but no cigar. I don't have a theorem on that yet.");
@@ -683,9 +723,12 @@ public class SearchIntersection {
 			return null;
 		}
 		
+		int counter = numVecs;
 		for(Integer thmIndex : highestThms){
+			if(counter == 0) break;
 			//foundThmList.add(thmList.get(thmIndex));
-			foundThmList.add(webDisplayThmList.get(thmIndex));			
+			foundThmList.add(webDisplayThmList.get(thmIndex));	
+			counter--;
 		}
 		
 		return foundThmList;
@@ -697,18 +740,27 @@ public class SearchIntersection {
 	 */
 	public static void main(String[] args){
 		Scanner sc = new Scanner(System.in);
-		boolean contextSearch = true;
+		//boolean contextSearch = true;
 		
 		while(sc.hasNextLine()){
 			String thm = sc.nextLine();			
 			
-			List<Integer> highestThms = getHighestThmList(thm);
-			
-			if(highestThms == null) continue;
-			
-			if(contextSearch){
-				highestThms = ContextSearch.contextSearch(thm, highestThms);
+			boolean contextSearchBool = false;
+			String[] thmAr = thm.split("\\s+");
+			if(thmAr.length > 1 && thmAr[0].equals("context")){
+				contextSearchBool = true;
+				//highestThms = ContextSearch.contextSearch(thm, highestThms);
 			}
+			
+			//searchWordsSet is null.
+			List<Integer> highestThms = getHighestThmList(thm, null, contextSearchBool, NUM_NEAREST_VECS);
+			
+			if(highestThms == null) continue;			
+			
+			/*String[] thmAr = thm.split("\\s+");
+			if(thmAr.length > 1 && thmAr[0].equals("context")){
+				highestThms = ContextSearch.contextSearch(thm, highestThms);
+			}*/
 			
 			for(Integer thmIndex : highestThms){
 				System.out.println(thmList.get(thmIndex));

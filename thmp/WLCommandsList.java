@@ -57,6 +57,9 @@ public class WLCommandsList {
 		triggerWordLookupMapBuilder.put("for all", "for every");
 		triggerWordLookupMapBuilder.put("if", "suppose");
 		triggerWordLookupMapBuilder.put("if and only if", "suppose");
+		triggerWordLookupMapBuilder.put("is included", "is contained");
+		triggerWordLookupMapBuilder.put("are included", "is contained");
+		triggerWordLookupMapBuilder.put("are contained", "is contained");
 		// triggerWordLookupMapBuilder.put("radius", "is");
 
 		triggerWordLookupMap = triggerWordLookupMapBuilder.build();
@@ -132,8 +135,8 @@ public class WLCommandsList {
 		WLCommandMapBuilder.put("is called", addCommand(new String[] { "symb|ent|pro, , true", "auxpass, is called, trigger",
 				"\\[Element]", "symb|ent|adj|phrase, , true, TriggerMathObj" }));
 		
-		WLCommandMapBuilder.put("is contained", addCommand(new String[] { "symb|ent|pro, , true", "auxpass, is contained, trigger",
-				"\\[Element]", "symb|ent|adj|phrase, , true, TriggerMathObj" }));
+		WLCommandMapBuilder.put("is contained", addCommand(new String[] { "symb|ent|pro, , true", "auxpass, , trigger",
+				"\\[Element]", "symb|ent|adj|phrase, , true, TriggerMathObj" }));		
 		
 		//if_assert. As well as "let", etc
 		WLCommandMapBuilder.put("if", addCommand(new String[] { "if|If|let, , trigger", "assert, , true" }));
@@ -144,7 +147,7 @@ public class WLCommandsList {
 		WLCommandMapBuilder.put("at most", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is|are|be, false",
 				"<=", "pre, at most, trigger", "symb|ent, , true, TriggerMathObj" }));
 		
-		WLCommandMapBuilder.put("such that", addCommand(new String[] { "such that, , trigger", "symb|ent, , true" }));
+		//WLCommandMapBuilder.put("such that", addCommand(new String[] { "such that, , trigger", "symb|ent, , true" }));
 		
 		WLCommandMapBuilder.put("auxpass", addCommand(new String[] { "ent, , true",
 				"auxpass, , trigger_true", "ent|csubj, , true" }));
@@ -155,6 +158,8 @@ public class WLCommandsList {
 				 "ent|symb, , true", "]" }));
 		WLCommandMapBuilder.put("suppose", addCommand(new String[] { "hyp, , trigger",
 				 "assert, , true" }));
+		WLCommandMapBuilder.put("consider", addCommand(new String[] { "verb, , trigger", "ent|phrase, , true" }));
+
 		//assert_hypo: 
 		//WLCommandMapBuilder.put("hyp", addCommand(new String[] { "assert, , true", "hyp, , trigger", "ent|symb, , true"
 		  //}));

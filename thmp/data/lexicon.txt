@@ -27,7 +27,9 @@ along pre
 great adj
 open adj
 open ent
+extension ent
 small adj
+irreducible adj
 continuous adj
 differentiable adj
 symb symb

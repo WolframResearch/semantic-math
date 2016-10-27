@@ -40,7 +40,7 @@ public class TestSearch {
 	}
 	
 	public void testSearch(String inputStr, String desiredOutput){
-		List<String> nearestThmsList = SearchCombined.searchCombined(inputStr, CONTEXT_SEARCH_BOOL);
+		List<String> nearestThmsList = SearchCombined.searchCombined(inputStr, null, CONTEXT_SEARCH_BOOL);
 		//List<Integer> nearestThmsList = SearchIntersection.getHighestThm(inputStr);
 		assertTrue(nearestThmsList.size() > 1);
 		String desiredOutputLower = desiredOutput.toLowerCase();

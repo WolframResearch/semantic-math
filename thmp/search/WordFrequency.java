@@ -17,6 +17,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Multimap;
 
 import thmp.ProcessInput;
 import thmp.search.CollectThm.ThmList;
@@ -253,13 +254,14 @@ public class WordFrequency {
 		}	
 
 		/**
-		 * Retrieves map of true fluff words and their pos. 
+		 * Retrieves map of true fluff words and their pos. Subset of
+		 * freqWordsPosMap().
 		 * @return
 		 */
 		public static ListMultimap<String, String> trueFluffWordsPosMap() {
-			if(trueFluffWordsSet == null){
+			if(trueFluffWordsPosMap == null){
 				synchronized(WordFrequency.class){
-					if(trueFluffWordsSet == null){
+					if(trueFluffWordsPosMap == null){
 						//build trueFluffWordsSet
 						buildTrueFluffWordsSet(stockFreqMap, wordPosMap, corpusWordFreqMap);
 					}
@@ -268,6 +270,14 @@ public class WordFrequency {
 			return trueFluffWordsPosMap;
 		}	
 
+		/**
+		 * Retrieves map of true fluff words and their pos. 
+		 * @return
+		 */
+		public static Map<String, String> freqWordsPosMap() {			
+			return wordPosMap;
+		}
+		
 		/**
 		 * Get the part of speech corresponding to the pos tag/symbol.
 		 * E.g. i -> "pre". Placed here instead of in subclass, so it can

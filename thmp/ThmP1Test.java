@@ -322,6 +322,17 @@ public class ThmP1Test {
 			st = "$U$ is open without boundary";
 			st = "abelian group is unique";
 			st = "field F is contained in field H";
+			st = "A maximal smooth atlas on a topological manifold $M$ is a  differential structure  structure differential differential structure on~$M$. A topological $n$-manifold which has been given a differential structure is a  smooth manifold  manifold smooth smooth $n$-manifold (or a  manifold differential  differential manifold differential $n$-manifold, or a  Cinfinity@$ C^infty$ (smooth) -manifold $ C^infty$ $n$-manifold).";
+			st = "algebraically closed field";
+			st = "Let $k subset K$ be a field extension. If $k$ is algebraically closed in $K$, then $K$ is geometrically irreducible over $k$.";
+			st = "let $k$ be a separably algebraically closed field";
+			st = "separably algebraically closed field";
+			st = "Let $k subset K$ be a field extension.";
+			st = "Consider the subextension $k subset k' subset K$ such that $k subset k'$ is separable algebraic and $k' subset K$ is maximal with this property.";
+			st = "consider this ring such that $k subset k'$ is separable algebraic";
+			st = "a ring such that $k subset k'$ is separable algebraic is a ring";
+			st = "consider a ring such that field is ring";
+			//st = "$k subset k' subset K$";			
 			//st = "$Z$ is a an open set in $X$";
 			//st = "it gives a group between field and ring";
 			//st = "field between field and ring";

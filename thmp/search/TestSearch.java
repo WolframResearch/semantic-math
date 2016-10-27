@@ -16,6 +16,6 @@ public class TestSearch {
 		
 		SearchCombined.initializeSearchWithResource(freqWordsFileBuffer, texSourceFileBuffer);
 		boolean thmSearchBool = false;
-		SearchCombined.searchCombined("regular ring", thmSearchBool);
+		SearchCombined.searchCombined("regular ring", null, thmSearchBool);
 	}
 }

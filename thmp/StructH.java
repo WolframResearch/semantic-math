@@ -384,6 +384,7 @@ public class StructH<H> extends Struct{
 				int commandNumUnits = WLCommand.commandNumUnits(curWrapper.WLCommand());
 			 	WLCommand.increment_commandNumUnits(curCommand, commandNumUnits);
 			}
+			//System.out.println("^^^curWrapper: " + curWrapper);
 			return curWrapper.WLCommandStr();			
 		}		
 		//String name = this.struct.get("name");
@@ -413,6 +414,7 @@ public class StructH<H> extends Struct{
 				continue;
 			//str += ", ";
 			//str += childRelation.get(i) + " ";	
+			
 			String childStr = child.simpleToString2(includeType, curCommand);
 			//str += childStr;	
 			if(!childStr.matches("\\s*")){

@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
 
 import com.google.common.collect.Multimap;
 import com.google.common.collect.TreeMultimap;
@@ -159,9 +160,9 @@ public class SearchCombined {
 			counter--;
 		}
 		
-		if(searchContextBool){
+		/*if(searchContextBool){
 			bestCommonVecList = ContextSearch.contextSearch(input, bestCommonVecList);
-		}
+		}*/
 		return bestCommonVecList;
 	}
 	
@@ -170,7 +171,7 @@ public class SearchCombined {
 	 * Resources should have been set prior to this if called externally.
 	 * @param inputStr search input
 	 */
-	public static List<String> searchCombined(String input, boolean searchContextBool){
+	public static List<String> searchCombined(String input, Set<String> searchWordsSet, boolean searchContextBool){
 		if(input.matches("\\s*")) return null;
 		
 		input = input.toLowerCase();
@@ -181,14 +182,21 @@ public class SearchCombined {
 			return null;
 		}
 		
-		SearchState searchState = SearchIntersection.getHighestThm(input, NUM_NEAREST);
+		SearchState searchState = SearchIntersection.getHighestThm(input, searchWordsSet, searchContextBool, NUM_NEAREST);
 		//List<Integer> intersectionVecList;
 		int numCommonVecs = NUM_COMMON_VECS;
 		
-		String firstWord = input.split("\\s+")[0];
+		String[] inputAr = input.split("\\s+");
+		String firstWord = inputAr[0];
 		if(firstWord.matches("\\d+")){
 			numCommonVecs = Integer.parseInt(firstWord);			
 		}		
+		
+		//context search doesn't do anything if only one token.
+		if(inputAr.length == 1){
+			searchContextBool = false;
+		}
+		
 		//find best intersection of these two lists. nearestVecList is 1-based, but intersectionVecList is 0-based! 
 		List<Integer> bestCommonVecs = findListsIntersection(nearestVecList, searchState, 
 				numCommonVecs, input, searchContextBool);
@@ -237,23 +245,26 @@ public class SearchCombined {
 				continue;
 			}
 			//filter nearestVecList through context search, to re-arrange list output based on context
-			String[] thmAr = thm.split("\\s+");
+			/*String[] thmAr = thm.split("\\s+");
 			if(thmAr.length > 1 && thmAr[0].equals("context")){
 				nearestVecList = ContextSearch.contextSearch(thm, nearestVecList);
-			}
+			}*/
 			//need to run GenerateContext.java to generate the context vectors during build, but ensure 
 			//context vectors are up to date!
-			SearchState searchState = SearchIntersection.getHighestThm(thm, NUM_NEAREST);
+			String[] thmAr = thm.split("\\s+");
+			boolean searchContextBool = false;
+			if(thmAr.length > 1 && thmAr[0].equals("context")){				
+				searchContextBool = true;
+			}
+			//searchWordsSet is null.
+			SearchState searchState = SearchIntersection.getHighestThm(thm, null, searchContextBool, NUM_NEAREST);
 			int numCommonVecs = NUM_COMMON_VECS;
 			
 			String firstWord = thm.split("\\s+")[0];
 			if(firstWord.matches("\\d+")){
 				numCommonVecs = Integer.parseInt(firstWord);
-			}
-			boolean searchContextBool = false;
-			if(thmAr.length > 1 && thmAr[0].equals("context")){				
-				searchContextBool = true;
-			}
+			}			
+			
 			//find best intersection of these two lists. nearestVecList is 1-based, but intersectionVecList is 0-based! 
 			//now both are 0-based.
 			List<Integer> bestCommonVecs = findListsIntersection(nearestVecList, searchState, numCommonVecs,

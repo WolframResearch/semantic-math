@@ -245,9 +245,9 @@ public class NGramSearch {
 						//	|| curWord.matches("\\s*") || curWord.contains("\\")){	
 					continue;
 				}
-				
-				if(nonMathFluffWordsSet.contains(nextWord) || nextWord.length() < 2
-					|| nextWord.matches("\\s*") || curWord.contains("\\")){					
+				//screen off 2nd word more discriminantly.
+				if(fluffWordsSet.contains(nextWord) || nonMathFluffWordsSet.contains(nextWord) 
+						|| nextWord.length() < 2 || nextWord.matches("\\s*") || curWord.contains("\\")){					
 					i++;
 					continue;
 				}
