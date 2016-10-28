@@ -327,12 +327,21 @@ public class ThmP1Test {
 			st = "Let $k subset K$ be a field extension. If $k$ is algebraically closed in $K$, then $K$ is geometrically irreducible over $k$.";
 			st = "let $k$ be a separably algebraically closed field";
 			st = "separably algebraically closed field";
-			st = "Let $k subset K$ be a field extension.";
-			st = "Consider the subextension $k subset k' subset K$ such that $k subset k'$ is separable algebraic and $k' subset K$ is maximal with this property.";
-			st = "consider this ring such that $k subset k'$ is separable algebraic";
-			st = "a ring such that $k subset k'$ is separable algebraic is a ring";
+			st = "Let $k subset K$ be a field extension.";			
+			
 			st = "consider a ring such that field is ring";
-			//st = "$k subset k' subset K$";			
+			st = "the log of derivative of $f$";
+			st = "consider this ring such that field is separable algebraic";
+			st = "Consider the subextension $k subset k' subset K$ such that $k subset k'$ is separable algebraic and $k' subset K$ is maximal with this property.";
+			st = "If $K/k$ is a finitely generated field extension, then $[k' : k] < infty$.";
+			st = "If $K/k$ is a finitely generated field extension";
+			st = "Let $k subset K$ be an extension of fields.";
+			st = "Then $text{Gal}(overline{k}/k)$ acts transitively on the primes of $overline{k} otimes_k K$.";
+			st = "Let $R$, $S$ be $k$-algebras. If $Spec(R)$, and $Spec(S)$ are connected, then so is $Spec(R otimes_k S)$.";
+			
+			//st = "$k subset k' subset K$ is a field";
+			//st = "consider a ring such that field is separable algebraic and field is ring";
+			//st = "$k subset k' subset K$ is field";			
 			//st = "$Z$ is a an open set in $X$";
 			//st = "it gives a group between field and ring";
 			//st = "field between field and ring";

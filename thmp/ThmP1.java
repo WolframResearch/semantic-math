@@ -26,6 +26,7 @@ import thmp.search.NGramSearch;
 import thmp.search.ThreeGramSearch;
 import thmp.search.TriggerMathThm2;
 import thmp.utils.WordForms;
+import thmp.utils.WordForms.TokenType;
 
 /* 
  * contains hashtable of entities (keys) and properties (values)
@@ -256,6 +257,7 @@ public class ThmP1 {
 		String nextWordSingular = WordForms.getSingularForm(nextWord);
 		String twoGram = curWord + " " + nextWord;
 		String twoGramSingular = curWord + " " + nextWordSingular;
+		int newIndex = i;
 		
 		Map<String, Integer> twoGramMap = NGramSearch.get2GramsMap();
 		Map<String, Integer> threeGramMap = ThreeGramSearch.get3GramsMap();
@@ -265,57 +267,99 @@ public class ThmP1 {
 			String thirdWordSingular = WordForms.getSingularForm(thirdWord);
 			String threeGram = twoGram + " " + thirdWord;
 			String threeGramSingular = twoGram + " " + thirdWordSingular;
-			String threeGramSingularSingular = twoGramSingular + " " + thirdWordSingular;
-			
-			//System.out.println("^^^Adding three gram " + threeGram);
+			String threeGramSingularSingular = twoGramSingular + " " + thirdWordSingular;				
+			TokenType tokenType = TokenType.THREEGRAM;
 			
 			//don't want to combine three-grams with "of" in middle
-			if(threeGramMap.containsKey(threeGram) && !middleWord.equals("of")){
-				addNGramToPairs(pairs, mathIndexList, thirdWord, threeGram);
-				return i+2;
-			}else if(threeGramMap.containsKey(threeGramSingular)){
-				addNGramToPairs(pairs, mathIndexList, thirdWordSingular, threeGramSingular);
-				return i+2;
-			}else if(threeGramMap.containsKey(threeGramSingularSingular)){
-				addNGramToPairs(pairs, mathIndexList, thirdWordSingular, threeGramSingularSingular);
-				return i+2;
-			}			
+			if(threeGramMap.containsKey(threeGram) && !middleWord.equals("of")){				
+				if(addNGramToPairs(pairs, mathIndexList, thirdWord, threeGram, tokenType)){
+					newIndex = i+2;
+				}
+			}else if(threeGramMap.containsKey(threeGramSingular)){				
+				if(addNGramToPairs(pairs, mathIndexList, thirdWordSingular, threeGramSingular, tokenType)){
+					newIndex = i+2;
+				}
+			}else if(threeGramMap.containsKey(threeGramSingularSingular)){				
+				if(addNGramToPairs(pairs, mathIndexList, thirdWordSingular, threeGramSingularSingular, tokenType)){
+					newIndex = i+2;
+				}
+			}	
 		}
 		//String twoGram = potentialTrigger;
 		//Integer twoGram = twoGramMap.get(potentialTrigger);
-		
-		if(twoGramMap.containsKey(twoGram)){
-			addNGramToPairs(pairs, mathIndexList, nextWord, twoGram);			
-			i++;
-		}else if(twoGramMap.containsKey(twoGramSingular)){
-			addNGramToPairs(pairs, mathIndexList, nextWordSingular, twoGramSingular);
-			i++;
+		if(newIndex == i && i < str.length - 1){
+			TokenType tokenType = TokenType.TWOGRAM;
+			if(twoGramMap.containsKey(twoGram)){			
+				if(addNGramToPairs(pairs, mathIndexList, nextWord, twoGram, tokenType)){
+					newIndex = i+1;
+				}	
+			}else if(twoGramMap.containsKey(twoGramSingular)){
+				if(addNGramToPairs(pairs, mathIndexList, nextWordSingular, twoGramSingular, tokenType)){
+					newIndex = i+1;
+				}
+			}
 		}
-		
-		return i;
+		return newIndex;
 	}
 	
 	/**
 	 * Add n gram to pairs list
 	 * @param pairsList
 	 * @param mathIndexList
-	 * @param thirdWord
-	 * @param threeGram
+	 * @param lastWord
+	 * @param nGram
+	 * @return Whether n-gram was added to pairs
 	 */
-	private static void addNGramToPairs(List<Pair> pairsList, List<Integer> mathIndexList, String thirdWord,
-			String threeGram) {
+	private static boolean addNGramToPairs(List<Pair> pairsList, List<Integer> mathIndexList, String lastWord,
+			String nGram, TokenType tokenType) {
+		//don't want 2/3 grams to end with a preposition, which can break parsing down the line
+		if(posMMap.containsKey(lastWord) && posMMap.get(lastWord).get(0).equals("pre")){
+			return false;
+		}
 		
 		String pos;
-		List<String> posList = posMMap.get(thirdWord);		
+		List<String> posList = posMMap.get(lastWord);		
 		if(!posList.isEmpty()){
 			pos = posList.get(0);
-		}else {
-			//better no parse and know, rather than wrong parse
-			pos = "";
+		}else{
+			//try to find part of speech algorithmically
+			pos = computeNGramPos(nGram, tokenType);
 		}
-		Pair phrasePair = new Pair(threeGram, pos);								
+		Pair phrasePair = new Pair(nGram, pos);								
 		pairsList.add(phrasePair);
-		if(pos.matches("ent")) mathIndexList.add(pairsList.size() - 1);
+		if(pos.matches("ent")){ 
+			mathIndexList.add(pairsList.size() - 1);
+		}
+		return true;
+	}
+	
+	/**
+	 * Attemps to compute part of speech of n-grams.
+	 * @return
+	 */
+	private static String computeNGramPos(String nGram, TokenType tokenType){
+		
+		int nGramLen = nGram.length();
+		String[] nGramAr = nGram.split("\\s+");
+		//use enum instead!
+		String pos = "";
+		String firstWord = nGramAr[0];
+		int firstWordLen = firstWord.length();
+		
+		if(tokenType.equals(TokenType.TWOGRAM)){			
+			
+			List<String> posList = posMMap.get(firstWord);
+			boolean isFirstWordAdverb = !posList.isEmpty() ? posList.get(0).equals("adverb") : 
+				(firstWord.substring(firstWordLen-2, firstWordLen).equals("ly") ? true : false);
+			//adverb past-participle pair, e.g "finitely generated"
+			if (isFirstWordAdverb && nGram.substring(nGramLen - 2, nGramLen).equals("ed")) {
+				pos = "adj";
+				
+			}
+		}else{
+			
+		}
+		return pos;
 	}
 	
 	/**
@@ -369,8 +413,8 @@ public class ThmP1 {
 		strloop: for (int i = 0; i < strAr.length; i++) {
 
 			String curWord = strAr[i];
-			
-			if (curWord.matches("^\\s*,*$"))
+			//why this?
+			if (curWord.matches("\\s*,*"))
 				continue;
 
 			// strip away special chars '(', ')', etc ///should not
@@ -382,37 +426,41 @@ public class ThmP1 {
 			//change to enum!
 			String type = "mathObj";
 			int wordlen = strAr[i].length();
-
+			
 			// detect latex expressions, set their pos as "mathObj" for now
 			if (curWord.charAt(0) == '$') {
+				
 				String latexExpr = curWord;
-				int stringLength = strAr.length;
+				int strArLength = strAr.length;
+				
 				//not a single-word latex expression, i.e. $R$-module
-				if (i < stringLength - 1 && !curWord.matches("\\$[^$]+\\$[^\\s]*")
+				if (i < strArLength - 1 && !curWord.matches("\\$[^$]+\\$[^\\s]*")
 						&& (curWord.charAt(wordlen - 1) != '$' || wordlen == 2 || wordlen == 1)) {
 					i++;
 					curWord = strAr[i];
-					if (i < stringLength - 1 && curWord.equals("")) {
+					
+					if (i < strArLength - 1 && curWord.equals("")) {
 						curWord = strAr[++i];
 					//}
 					//else if (curWord.matches("[^$]*\\$.*")) {
 						//latexExpr += " " + curWord;
 						//i++;
 					} else {
-						while (i < stringLength && curWord.length() > 0
+						
+						while (i < strArLength && curWord.length() > 0
 								&& !curWord.matches("[^$]*\\$.*") ){//curWord.charAt(curWord.length() - 1) != '$') {
 							latexExpr += " " + curWord;
 							i++;
 
-							if (i == stringLength)
+							if (i == strArLength)
 								break;
 
-							curWord = i < stringLength - 1 && strAr[i].equals("") ? strAr[++i] : strAr[i];
+							curWord = i < strArLength - 1 && strAr[i].equals("") ? strAr[++i] : strAr[i];
 
 						}
 					}
 					//add the end of the latex expression, only if it's the end bit
-					if (i < stringLength ) {
+					if (i < strArLength ) {
 						int tempWordlen = strAr[i].length();
 
 						if (tempWordlen > 0 && strAr[i].charAt(tempWordlen - 1) == '$')
@@ -423,7 +471,7 @@ public class ThmP1 {
 							&& (i+1 == stringLength || i+1 < stringLength && !posMap.get(str[i+1] ).matches("verb|vbs")) ) {
 						type = "assert";
 					} */
-				} else if (curWord.matches("\\$[^$]\\$")) {
+				} else if (curWord.matches("\\$[^$]{1,2}\\$")) {
 					type = "symb";
 				}
 				// go with the pos of the last word
@@ -435,7 +483,7 @@ public class ThmP1 {
 						type = tempPosList.get(0);
 					}
 				}
-
+				
 				Pair pair = new Pair(latexExpr, type);
 				pairs.add(pair);
 				if (type.equals("mathObj")){
@@ -494,6 +542,7 @@ public class ThmP1 {
 				int newIndex = gatherTwoThreeGram(i, strAr, pairs, mathIndexList);
 				//a two or three gram was picked up
 				if(newIndex > i){ 
+					
 					i = newIndex;
 					continue;				
 				}
@@ -522,7 +571,7 @@ public class ThmP1 {
 				// if composite math noun, eg "finite field"
 				while (i - k > -1 && posMMap.containsKey(strAr[i - k] + " " + tempWord)
 						&& posMMap.get(strAr[i - k] + " " + tempWord).get(0).equals("ent")) {
-
+					
 					// remove previous pair from pairs if it has new match
 					// pairs.size should be > 0, ie previous word should be
 					// classified already
@@ -624,8 +673,6 @@ public class ThmP1 {
 			// classify words with dashes; eg sesqui-linear
 			// <-- these should be split during pre-processing!
 			else if (curWord.split("-").length > 1) {
-				
-				
 				String[] splitWords = curWord.split("-");
 				System.out.println("splitWords: " + Arrays.toString(splitWords));
 				
@@ -755,15 +802,14 @@ public class ThmP1 {
 				pairs.add(pair);
 			} else if (curWord.matches("[a-zA-Z]")) {
 				// variable/symbols
-
 				Pair pair = new Pair(strAr[i], "symb");
 				pairs.add(pair);
 			}
 			// Get numbers. Incorporate written-out numbers, eg "two"
-			else if (curWord.matches("^\\d+$")) {
+			else if (curWord.matches("\\d+")) {
 				Pair pair = new Pair(strAr[i], "num");
 				pairs.add(pair);
-			} else if (!curWord.matches(" ")) { // try to minimize this case.
+			} else if (!curWord.matches("\\s+")) { // try to minimize this case.
 
 				System.out.println("word not in dictionary: " + curWord);
 				pairs.add(new Pair(curWord, ""));
@@ -772,7 +818,7 @@ public class ThmP1 {
 				unknownWords.add(curWord);
 
 			} else { // curWord doesn't count
-
+				
 				continue;
 			}
 
@@ -845,8 +891,9 @@ public class ThmP1 {
 				}
 				pairs.get(index).set_pos(bestCurType);
 
-				if (bestCurType.equals("mathObj"))
+				if (bestCurType.equals("mathObj")){
 					mathIndexList.add(index);
+				}
 			}
 		}
 
@@ -994,7 +1041,7 @@ public class ThmP1 {
 					Pair prevPair = pairs.get(index - 1);
 					// should handle later with grammar rules in mx!
 					// ent of ent
-					if (prevPair.pos().matches("\\d+$") && nextPair.pos().matches("\\d+$")) {
+					if (prevPair.pos().matches("\\d+") && nextPair.pos().matches("\\d+")) {
 						int mathObjIndex = Integer.valueOf(prevPair.pos());
 						StructH<HashMap<String, String>> tempStruct = mathEntList.get(mathObjIndex);
 
@@ -1008,7 +1055,7 @@ public class ThmP1 {
 							mathEntList.set(Integer.valueOf(nextPair.pos()), null);
 
 					} // "noun of ent".
-					else if (prevPair.pos().matches("noun") && nextPair.pos().matches("\\d+$")) {
+					else if (prevPair.pos().matches("noun") && nextPair.pos().matches("\\d+")) {
 						int mathObjIndex = Integer.valueOf(nextPair.pos());
 						// Combine the something into the ent
 						StructH<HashMap<String, String>> tempStruct = mathEntList.get(mathObjIndex);
@@ -1048,17 +1095,19 @@ public class ThmP1 {
 		// list of structs to return
 		List<Struct> structList = new ArrayList<Struct>();
 
-		ListIterator<Pair> pairsIter = pairs.listIterator();
+		//ListIterator<Pair> pairsIter = pairs.listIterator();
 
 		String prevPos = "-1";
 		// use anchors (of, with) to gather terms together into entities
-		while (pairsIter.hasNext()) {
-			Pair curPair = pairsIter.next();
+		int pairsSz = pairs.size();
+		
+		for (int i = 0; i < pairsSz; i++) {
+			Pair curPair = pairs.get(i);
 			//can pos ever be null?
 			if (curPair.pos() == null)
 				continue;
 			//if has type "ent"
-			if (curPair.pos().matches("^\\d+$")) {
+			if (curPair.pos().matches("\\d+")) {
 
 				if (curPair.pos().equals(prevPos)) {
 					continue;
@@ -1079,16 +1128,16 @@ public class ThmP1 {
 				// combine adverbs into verbs/adjectives, look 2 words before
 				if (curPair.pos().equals("adverb")) {
 
-					if (structListSize > 1 && structList.get(structListSize - 2).type().matches("verb|vbs")) {
-						StructA<?, ?> verbStruct = (StructA<?, ?>) structList.get(structListSize - 2);
-						// verbStruct should not have prev2, set prev2 type
-						// to String
-						verbStruct.set_prev2(curPair.word());
-						continue;
-					} else if (structListSize > 0 && structList.get(structListSize - 1).type().matches("verb|vbs")) {
-						StructA<?, ?> verbStruct = (StructA<?, ?>) structList.get(structListSize - 1);
-						verbStruct.set_prev2(curPair.word());
-						continue;
+					if (structListSize > 1 && structList.get(structListSize - 1).type().matches("verb|vbs")) {
+						//only if the subsequent word is not an adjective, or no subsequent word
+						if(i == pairsSz - 1 || !pairs.get(i+1).pos().equals("adj")){
+							
+							StructA<?, ?> verbStruct = (StructA<?, ?>) structList.get(structListSize - 1);
+							// verbStruct should not have prev2, set prev2 type
+							// to String <--improve this.
+							verbStruct.set_prev2(curPair.word());
+							continue;
+						}
 					}
 				}
 

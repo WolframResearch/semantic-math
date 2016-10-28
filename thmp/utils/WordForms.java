@@ -5,6 +5,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Multimap;
 
 import thmp.ThmP1;
 import thmp.search.CollectFreqWords;
@@ -118,5 +119,61 @@ public class WordForms {
 	 */
 	public static Pattern BRACKETS_PATTERN(){
 		return BRACKETS_PATTERN;
+	}
+	
+	
+	public static enum TokenType{
+		SINGLETON(1), TWOGRAM(2), THREEGRAM(3);
+		int indexShift;
+		static int TWO_GRAM_BONUS = 1;
+		static int THREE_GRAM_BONUS = 1;
+		
+		TokenType(int shift){
+			this.indexShift = shift;
+		}
+		
+		public void addToMap(Multimap<Integer, Integer> thmWordSpanMMap, int thmIndex, int wordIndex){
+			for(int i = wordIndex; i < wordIndex+indexShift; i++){
+				thmWordSpanMMap.put(thmIndex, i);
+			}
+		}
+		
+		public int adjustNGramScore(int curScoreToAdd, int[] singletonScoresAr, int wordIndex){
+			switch(this){
+				case SINGLETON:
+					return curScoreToAdd;
+				case TWOGRAM:
+					return Math.max(curScoreToAdd, singletonScoresAr[wordIndex] 
+							+ singletonScoresAr[wordIndex+1] + TWO_GRAM_BONUS);
+				case THREEGRAM:
+					return Math.max(curScoreToAdd, singletonScoresAr[wordIndex] + singletonScoresAr[wordIndex+1]
+							+ singletonScoresAr[wordIndex+2] + THREE_GRAM_BONUS);
+				default:
+					return curScoreToAdd;
+			}
+		}
+		
+		/**
+		 * Whether current word at wordIndex has been added to thm already under a previous 2/3-gram.
+		 * @param thmWordSpanMMap
+		 * @param thmIndex
+		 * @param wordIndex
+		 */
+		public boolean ifAddedToMap(Multimap<Integer, Integer> thmWordSpanMMap, int thmIndex, int wordIndex){
+			
+			if(this.equals(THREEGRAM)) return false;
+			
+			if(this.equals(TWOGRAM)){ 
+				return thmWordSpanMMap.containsEntry(thmIndex, wordIndex)
+						&& thmWordSpanMMap.containsEntry(thmIndex, wordIndex+1);
+			}
+			
+			if(this.equals(SINGLETON)){ 
+				return thmWordSpanMMap.containsEntry(thmIndex, wordIndex);
+			}
+			
+			return false;
+		}
+		
 	}
 }

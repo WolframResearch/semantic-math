@@ -41,6 +41,7 @@ public enum ParseStructType {
 		builder.putAll(RES, Arrays.asList("where", "assuming"));
 		builder.putAll(OBJ, Arrays.asList("ent", "MathObj"));
 		builder.putAll(RES, Arrays.asList("Cond"));
+		builder.putAll(STM, Arrays.asList("then"));
 		
 		StringParseStructTypeMap = builder.build().inverse();	
 	}

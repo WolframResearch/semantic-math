@@ -280,6 +280,9 @@ public class StructH<H> extends Struct{
 	public String toString(){
 		String str = this.type;
 		str += this.struct; //struct is hashmap for structH
+		/*for(Map.Entry<String, String> e: this.struct.entrySet()){
+			str += e;
+		}*/
 		if(this.possessivePrev != null){
 			str += "possessivePrev: " + possessivePrev.type();
 		}
@@ -393,6 +396,7 @@ public class StructH<H> extends Struct{
 	}
 	
 	//auxilliary method for simpleToString and StructA.simpleToString
+	@Override
 	public String simpleToString2(boolean includeType, WLCommand curCommand){
 		
 		if(curCommand != null) WLCommand.increment_commandNumUnits(curCommand, this);
@@ -414,6 +418,7 @@ public class StructH<H> extends Struct{
 				continue;
 			//str += ", ";
 			//str += childRelation.get(i) + " ";	
+			//System.out.println("^^^cur child: " + child);
 			
 			String childStr = child.simpleToString2(includeType, curCommand);
 			//str += childStr;	

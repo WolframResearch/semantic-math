@@ -240,14 +240,15 @@ public class NGramSearch {
 				//words such as "purely inseparable" might be filtered out.
 				//maybe first word could be the small fluff words list from ThreeGramSearch?
 				if(fluffWordsSet.contains(curWord) || curWord.length() < 2 
-						|| curWord.matches("\\s*") || curWord.contains("\\")){	
+						|| curWord.matches("\\s*") || curWord.contains("\\") || curWord.contains("$")){	
 					//if(nonMathFluffWordsSet.contains(curWord) || curWord.length() < 2 
 						//	|| curWord.matches("\\s*") || curWord.contains("\\")){	
 					continue;
 				}
 				//screen off 2nd word more discriminantly.
 				if(fluffWordsSet.contains(nextWord) || nonMathFluffWordsSet.contains(nextWord) 
-						|| nextWord.length() < 2 || nextWord.matches("\\s*") || curWord.contains("\\")){					
+						|| nextWord.length() < 2 || nextWord.matches("\\s*") || nextWord.contains("\\")
+						|| nextWord.contains("$")){					
 					i++;
 					continue;
 				}

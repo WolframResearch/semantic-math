@@ -3,6 +3,8 @@ morphism ent
 complex ent_comp
 CW complex ent
 homology ent
+log ent
+subextension ent
 category ent_comp
 satisfy verb
 assumption noun
@@ -20,11 +22,13 @@ series ent_comp
 power series ent_comp
 formal power series ent
 power noun
+field ent
 closed adj
 boundary ent
 analytic adj
 along pre
 great adj
+finite adj
 open adj
 open ent
 extension ent
@@ -148,6 +152,8 @@ length noun
 pole ent
 algebraic adj
 compact adj
+prime ent
+prime adj
 quasicompact adj
 quasi-compact adj
 quasi compact adj

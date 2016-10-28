@@ -738,9 +738,10 @@ public class ParseToWLTree {
 		struct.set_previousBuiltStruct(null);
 		struct.set_structToAppendCommandStr(null);
 		
-		if (struct instanceof StructA) {
+		if (struct.isStructA()) {
 			
-			if (struct.prev1() instanceof Struct) {
+			if (struct.prev1NodeType().equals(NodeType.STRUCTA) 
+					|| struct.prev1NodeType().equals(NodeType.STRUCTH) ) {
 				dfsCleanUp((Struct) struct.prev1());
 			}
 

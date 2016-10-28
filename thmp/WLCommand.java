@@ -480,7 +480,7 @@ public class WLCommand {
 						nextWord = nextStruct.simpleToString(true, null);
 					}
 				}else{
-					System.out.println("^^^Triggering command " + curCommand);
+					//System.out.println("^^^Triggering command " + curCommand);
 					//takes into account pro, and the ent it should refer to
 					nextWord = nextStruct.simpleToString(true, curCommand);
 				}

@@ -62,7 +62,6 @@ public class WordFrequency {
 
 				String word = thmAr[j];
 				// only keep words with lengths > 2
-				// System.out.println(word);
 				if (word.length() < 3 || word.contains("\\"))
 					continue;
 
@@ -118,7 +117,7 @@ public class WordFrequency {
 			}else{
 				getStockFreq(wordFrequencyBR, wordPosPreMap);
 			}
-			System.out.println(wordPosPreMap);
+			
 			wordPosMap = ImmutableMap.copyOf(wordPosPreMap);
 			//build trueFluffWordsSet
 			//buildTrueFluffWordsSet(totalCorpusWordCount, stockFreqMap, wordPosMap, corpusWordFreqMap);

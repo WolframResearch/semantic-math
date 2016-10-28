@@ -263,6 +263,7 @@ public class StructA<A, B> extends Struct{
 	}
 	
 	//auxilliary method for simpleToString and called inside StructH.simpleToString2
+	@Override
 	public String simpleToString2(boolean includeType, WLCommand curCommand){
 		//return "" if commandStr is not null (??)
 		//if(this.WLCommandStr != null) return "";
@@ -276,7 +277,7 @@ public class StructA<A, B> extends Struct{
 		boolean inConj = false;
 		String str = "";
 		//tempStr to add to
-		String tempStr = "";
+		//String tempStr = "";
 		StringBuilder tempSB = new StringBuilder();
 		
 		//str += this.type.matches("conj_.*|disj_.*") ? this.type.split("_")[0] +  " " : "";		
@@ -287,60 +288,72 @@ public class StructA<A, B> extends Struct{
 			str += toAppend;
 			inConj = true;
 			//wrapBraces = true;
-			tempStr += "[";
+			//tempStr += "[";
 			tempSB.append("[");
 		}
 		
 		if(this.type.matches("phrase|prep")){
 			wrapBraces = true;		
-			tempStr += "{";
+			//tempStr += "{";
 			tempSB.append("{");
 		}		
 		
 		if(this.prev1 != null){
-			if(inConj){ tempStr += "{";
+			if(inConj){ //tempStr += "{";
 				tempSB.append("{");
 			}
 			//if(prev1 instanceof Struct && ((Struct) prev1).WLCommandStr() == null){
-			if(prev1 instanceof Struct && ((Struct) prev1).WLCommandWrapperList() == null){
-				String prev1Str = ((Struct) prev1).simpleToString2(includeType, curCommand);
-				if(!prev1Str.matches("\\s*")){
-					tempStr += prev1Str;
-					tempSB.append(prev1Str);
+			if((PREV1_TYPE.equals(NodeType.STRUCTA) || PREV1_TYPE.equals(NodeType.STRUCTH)) ){
+					//&& ((Struct) prev1).WLCommandWrapperList() == null){
+				List<WLCommandWrapper> prev1WrapperList = ((Struct)prev1).WLCommandWrapperList();
+				if(prev1WrapperList == null){
+					String prev1Str = ((Struct) prev1).simpleToString2(includeType, curCommand);
+					if(!prev1Str.matches("\\s*")){
+						//tempStr += prev1Str;
+						tempSB.append(prev1Str);
+					}
+				}else{
+					tempSB.append(prev1WrapperList.get(0));
 				}
-			}else if(prev1 instanceof String && !prev1.equals("")){
+			}else if(PREV1_TYPE.equals(NodeType.STR) && !prev1.equals("")){
 				//if(!type.matches("pre|partiby")){
 				if(!type.matches("partiby")){
-					tempStr += prev1;
+					//tempStr += prev1;
 					tempSB.append(prev1);
 				}
 			}
-			if(inConj){ tempStr += "}";
+			
+			if(inConj){ //tempStr += "}";
 				tempSB.append("}");
 			}
 		}
 		
 		if(prev2 != null){
 			String prev2String = "";
-			if(prev2 instanceof Struct && ((Struct) prev2).WLCommandWrapperList() == null){
-				String prev2Str = ((Struct) prev2).simpleToString2(includeType, curCommand);
-				if(!prev2Str.matches("\\s*")){
-					if(!tempSB.toString().matches("\\s*")){ tempStr += ", ";
-						tempSB.append(", ");
+			if((PREV2_TYPE.equals(NodeType.STRUCTA) || PREV2_TYPE.equals(NodeType.STRUCTH))  ){
+				List<WLCommandWrapper> prev2WrapperList = ((Struct)prev2).WLCommandWrapperList();
+				 if(prev2WrapperList == null){
+					//System.out.println("######prev2: " + prev2);
+					String prev2Str = ((Struct) prev2).simpleToString2(includeType, curCommand);
+					if(!prev2Str.matches("\\s*")){
+						if(!tempSB.toString().matches("\\s*")){ //tempStr += ", ";
+							tempSB.append(", ");
+						}
+						prev2String += prev2Str;						
 					}
-					prev2String += prev2Str;
-					
-				}
-			}else if(prev2 instanceof String && !((String)prev2).matches("\\s*")){			
+				 }else{
+					 prev2String += prev2WrapperList.get(0);
+				 }
+			}else if(PREV2_TYPE.equals(NodeType.STR) && !((String)prev2).matches("\\s*")){			
 				prev2String += ", " + prev2;			
 			}
-			tempStr += inConj ? "{" + prev2String + "}" : prev2String;
+			//tempStr += inConj ? "{" + prev2String + "}" : prev2String;
 			tempSB.append(inConj ? "{" + prev2String + "}" : prev2String);
 		}
-		if(wrapBraces){ tempStr += "}";
+		if(wrapBraces){ //tempStr += "}";
 			tempSB.append("}");
 		}
-		if(inConj){ tempStr += "]";
+		if(inConj){ //tempStr += "]";
 			tempSB.append("]");
 		}
 		//str += tempStr;
