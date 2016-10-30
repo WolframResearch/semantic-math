@@ -14,6 +14,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
 import thmp.Maps;
+import thmp.ParseState;
 import thmp.ParseStructType;
 import thmp.Struct;
 import thmp.ThmP1;
@@ -114,12 +115,12 @@ public class TestParseMain {
 	private void parseThm(String st, Multimap<ParseStructType, String> desiredParseMap) {
 		String[] strAr = ThmP1.preprocess(st);
 		
-		Struct recentEnt = null;
+		ParseState parseState = new ParseState();
 		for(int i = 0; i < strAr.length; i++){
 			//alternate commented out line to enable tex converter
 			//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim()) ));
-			List<Struct> inputList = ThmP1.tokenize(strAr[i].trim());
-			ThmP1.parse(inputList, recentEnt);
+			parseState = ThmP1.tokenize(strAr[i].trim(), parseState);
+			parseState = ThmP1.parse(parseState);
 		}
 	
 		//List<String> parseStructMapList = ThmP1.getParseStructMapList();

@@ -56,6 +56,7 @@ public class StructA<A, B> extends Struct{
 	//number of units down from this Struct (descendents), used for tie-breaking.
 	//StructH counts as one unit. Lower numUnits wins, since it means more consolidation.
 	//e.g. children of MathObj's grouped together with the MathObj.
+	//The lower the better.
 	private int numUnits;
 	//don't need mxPathNodeList. The path down from this Struct should 
 	//be unique. It's the parents' paths to here that can differ
@@ -73,7 +74,9 @@ public class StructA<A, B> extends Struct{
 		this.prev1 = prev1;		
 		this.prev2 = prev2;
 		this.type = type; 
+		//if(!type.equals("pre")){
 		this.numUnits = 1;
+		//}
 		this.score = 1;
 	}
 	
@@ -246,7 +249,9 @@ public class StructA<A, B> extends Struct{
 			WLCommandWrapper curWrapper = WLCommandWrapperList.get(wrapperListSz - 1);
 			if(curCommand != null){
 				int commandNumUnits = WLCommand.commandNumUnits(curWrapper.WLCommand());
-			 	WLCommand.increment_commandNumUnits(curCommand, commandNumUnits);
+				if(!this.type.equals("pre")){
+					WLCommand.increment_commandNumUnits(curCommand, commandNumUnits);
+				}
 			}
 			return curWrapper.WLCommandStr();			
 		}		
@@ -269,8 +274,13 @@ public class StructA<A, B> extends Struct{
 		//if(this.WLCommandStr != null) return "";
 		if(this.WLCommandWrapperList != null) return "";
 		
-		if(curCommand != null) WLCommand.increment_commandNumUnits(curCommand, this);
-		
+		//don't include prepositions for spanning purposes, since prepositions are almost 
+		//always counted if its subsequent entity is, but counting it gives false high span
+		//scores, especially compared to the case when they are absorbed into a StructH, in
+		//which case they are not counted.
+		if(curCommand != null && !this.type.equals("pre")){ 
+			WLCommand.increment_commandNumUnits(curCommand, this);
+		}
 		//whether to wrap braces around the subcontent, to group terms together.
 		//wrap if type is phrase, etc
 		boolean wrapBraces = false;
@@ -475,7 +485,7 @@ public class StructA<A, B> extends Struct{
 	
 	/**
 	 * This sets the max path score among any mxPathNode's that
-	 * pass here. *down* score or total path score??
+	 * pass here. *down* score
 	 * 
 	 * These scores will in turn be selected for the max score 
 	 * inside the StructList this Struct is on.

@@ -184,13 +184,14 @@ public class GenerateContextVector {
 		String[] strAr = ThmP1.preprocess(thm);
 		System.out.println("****length " + strAr.length + " " + thm);
 		//strAr = ThmP1.preprocess(thm);
-		
-		Struct recentEnt = null;
 		List<int[]> parseContextVecList = new ArrayList<int[]>();
-		for(int i = 0; i < strAr.length; i++){				
-			//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim())));
-			List<Struct> inputList = ThmP1.tokenize(strAr[i].trim());
-			recentEnt = ThmP1.parse(inputList, recentEnt);
+
+		ParseState parseState = new ParseState();
+		for(int i = 0; i < strAr.length; i++){
+			//alternate commented out line to enable tex converter
+			//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim()) ));
+			parseState = ThmP1.tokenize(strAr[i].trim(), parseState);
+			parseState = ThmP1.parse(parseState);
 			parseContextVecList.add(ThmP1.getParseContextVector());	
 		}
 		

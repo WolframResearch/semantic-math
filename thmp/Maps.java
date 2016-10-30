@@ -229,9 +229,9 @@ public class Maps {
 			//adjMap.put("independent", "linearly");
 
 			
-			fluffMap.put("the", "");
-			fluffMap.put("an", "");
-			fluffMap.put("a", "");
+			//fluffMap.put("the", "");
+			//fluffMap.put("an", "");
+			//fluffMap.put("a", "");
 			fluffMap.put("moreover", "");
 
 			// list of parts of speech
@@ -383,6 +383,11 @@ public class Maps {
 			posPreMMap.put("both", "det");
 			posPreMMap.put("no", "det");
 
+			//articles
+			posPreMMap.put("a", "art");
+			posPreMMap.put("an", "art");
+			posPreMMap.put("the", "art");
+			
 			// parts of speech
 			posPreMMap.put("for every", "hyp");
 			posPreMMap.put("suppose", "hyp");
@@ -429,7 +434,7 @@ public class Maps {
 			posPreMMap.put("which are", "hyp");
 			posPreMMap.put("that is", "hyp");
 			posPreMMap.put("that are", "hyp");
-
+			
 			// pronouns
 			posPreMMap.put("it", "pro");
 			posPreMMap.put("we", "pro");
@@ -659,7 +664,7 @@ public class Maps {
 			structMap.put("verb_prep", new Rule("verbphrase", 1));
 			structMap.put("verb_num", new Rule("verbphrase", 1));
 			structMap.put("verb_np", new Rule("verbphrase", 1));
-			structMap.put("verb_pre", new Rule("verbphrase", 1));
+			structMap.put("verb_pre", new Rule("verbphrase", .8));
 			structMap.put("verb_phrase", new Rule("verbphrase", 1));
 			structMap.put("verb_partient", new Rule("verbphrase", 1));
 			structMap.put("verb_noun", new Rule("verbphrase", 1));
@@ -689,6 +694,8 @@ public class Maps {
 			structMap.put("symb_verbphrase", new Rule("assert", 1));
 			structMap.put("ent_verbphrase", new Rule("assert", 1));
 			structMap.put("pro_verbphrase", new Rule("assert", 1));
+			//"A is p, so is B"
+			structMap.put("so_verbphrase", new Rule("So", 1));
 			structMap.put("pro_csubj", new Rule("pobj", 1)); // could be iobj ->
 																// indirect obj
 			structMap.put("poss_csubj", new Rule("pobj", .95));
@@ -790,7 +797,11 @@ public class Maps {
 
 			// adj_
 			probMap.put("adj_mathObj", .9);
-
+			probMap.put("adj_pre", .85);
+			
+			// adverb_
+			probMap.put("adverb_adj", .9);
+			
 			// for adding combinations to structMap
 			/*
 			 * ArrayList<String> structs = new ArrayList<String>();

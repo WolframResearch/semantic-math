@@ -337,8 +337,15 @@ public class ThmP1Test {
 			st = "If $K/k$ is a finitely generated field extension";
 			st = "Let $k subset K$ be an extension of fields.";
 			st = "Then $text{Gal}(overline{k}/k)$ acts transitively on the primes of $overline{k} otimes_k K$.";
-			st = "Let $R$, $S$ be $k$-algebras. If $Spec(R)$, and $Spec(S)$ are connected, then so is $Spec(R otimes_k S)$.";
-			
+			st = "Let $R$, $S$ be $k$-algebras. If $Spec(R)$, and $Spec(S)$ are connected, then so is $Spec(R otimes_k S)$."; //<--revisit!
+			st = "Let $k$ be a field. Let $R$ be a $k$-algebra. for every field extension $k \\subset k'$ the spectrum of $R \\otimes_k k'$ is connected";// and for every finite separable field extension $k subset k'$ the spectrum of $R otimes_k k'$ is connected.";
+			st = "for every field extension $k \\subset k'$ the spectrum of $R \\otimes_k k'$ is connected";
+			st = "If $S$ is geometrically connected over $k$, so is every $k$-subalgebra.";
+			st = "A directed colimit of geometrically connected $k$-algebras is geometrically connected.";
+			st = "The map $$ R \\longrightarrow R \\otimes_k S $$ induces a bijection on idempotents";
+			st = "We say $S$ is geometrically integral over $k$ if for every field extension $k \\subset k'$ the ring of $S \\otimes_k k'$ is a domain.";
+			st = "In this case $S$ is geometrically integral over $k$ if and only if $S$ is geometrically irreducible as well as geometrically reduced over $k$.";
+			st = "$S$ is geometrically integral";
 			//st = "$k subset k' subset K$ is a field";
 			//st = "consider a ring such that field is separable algebraic and field is ring";
 			//st = "$k subset k' subset K$ is field";			
@@ -383,12 +390,12 @@ public class ThmP1Test {
 			
 			List<int[]> parseContextVecList = new ArrayList<int[]>();
 			
-			Struct recentEnt = null;
+			ParseState parseState = new ParseState();
 			for(int i = 0; i < strAr.length; i++){
 				//alternate commented out line to enable tex converter
 				//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim()) ));
-				List<Struct> inputList = ThmP1.tokenize(strAr[i].trim());
-				recentEnt = ThmP1.parse(inputList, recentEnt);
+				parseState = ThmP1.tokenize(strAr[i].trim(), parseState);
+				parseState = ThmP1.parse(parseState);
 				int[] curContextVec = ThmP1.getParseContextVector();
 				parseContextVecList.add(curContextVec);
 				//get context vector
@@ -426,9 +433,12 @@ public class ThmP1Test {
 					//array of sentences separated by . or !
 					strAr = ThmP1.preprocess(st);
 					
+					parseState = new ParseState();
 					for(int i = 0; i < strAr.length; i++){
-						List<Struct> inputList = ThmP1.tokenize(strAr[i].trim());
-						recentEnt = ThmP1.parse(inputList, recentEnt);
+						//alternate commented out line to enable tex converter
+						//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim()) ));
+						parseState = ThmP1.tokenize(strAr[i].trim(), parseState);
+						parseState = ThmP1.parse(parseState);
 					}
 					System.out.println();
 					

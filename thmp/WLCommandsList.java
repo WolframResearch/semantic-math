@@ -126,7 +126,10 @@ public class WLCommandsList {
 		// trigger TriggerMathObj
 		// should handle "have" differently ////******
 		WLCommandMapBuilder.put("is", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is|are|be, trigger",
-				"\\[Element]", "symb|ent|adj|phrase, , true, TriggerMathObj" }));		
+				"\\[Element]", "symb|ent|phrase, , true, TriggerMathObj" }));
+		//e.g. "$X$ is connected"
+		WLCommandMapBuilder.put("is", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is|are|be, trigger",
+				"\\[HasProperty]", "adj, , true, TriggerMathObj" }));
 		//negative of above
 		WLCommandMapBuilder.put("is not", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is not|are not|be not, trigger",
 				"Not[\\[Element]]", "symb|ent|adj|phrase, , true, TriggerMathObj" }));

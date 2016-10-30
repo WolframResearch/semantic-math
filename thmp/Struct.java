@@ -27,6 +27,21 @@ public abstract class Struct {
 	}
 	*/
 
+	private Article article = Article.NONE;
+	
+	public void setArticle(Article article){
+		this.article = article;
+	}
+	
+	/**
+	 * Article of struct, e.g. "a", "an", "the" 
+	 * Default is NONE.
+	 * @return
+	 */
+	public Article article(){
+		return this.article;
+	}
+	
 	/**
 	 * 
 	 * @return whether this struct is StructA or not
@@ -107,6 +122,13 @@ public abstract class Struct {
 	
 	public abstract void clear_WLCommandWrapperList();
 	
+	/**
+ 	 * number of units down from this Struct (descendents), used for tie-breaking.
+ 	 * StructH counts as one unit. Lower numUnits wins, since it means more consolidation.
+ 	 * e.g. children of MathObj's grouped together with the MathObj.
+ 	 * The lower the better.
+	 * @return
+	 */
 	public abstract int numUnits();
 	
 	public abstract double maxDownPathScore();
@@ -178,5 +200,42 @@ public abstract class Struct {
 		//NONE type indicates that this is none of the previous ones
 		//used for instance for StructH.
 		STR, STRUCTA, STRUCTH, NONE;
+		
+		/**
+		 * Whether has type either StructA or StructH
+		 * @return
+		 */
+		boolean isTypeStruct(){
+			return this.equals(STRUCTA) || this.equals(STRUCTH);
+		}
 	}
+
+	
+	/**
+	 * Definite (the) or indefinite (a/an) article
+	 */
+	enum Article{
+		//NONE type indicates that this is none of the previous ones
+		THE, A, NONE;
+		
+		static Article getArticle(String articleStr){
+			Article article;
+			switch(articleStr){
+			case "a":
+				article = A;
+				break;
+			case "an":
+				article = A;
+				break;
+			case "the":
+				article = THE;
+				break;
+			default:
+				article = NONE;
+			}
+			return article;
+		}
+	}
+	
+	
 }

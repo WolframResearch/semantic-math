@@ -55,11 +55,12 @@ public class StringToParse {
 			str = sc.nextLine();
 			strAr = ThmP1.preprocess(str);
 			
-			Struct recentEnt = null;
+			ParseState parseState = new ParseState();
 			for(int i = 0; i < strAr.length; i++){
-				List<Struct> inputList = ThmP1.tokenize(strAr[i].trim());
-				recentEnt = ThmP1.parse(inputList, recentEnt);
-				ThmP1.parse(inputList, recentEnt);				
+				//alternate commented out line to enable tex converter
+				//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim()) ));
+				parseState = ThmP1.tokenize(strAr[i].trim(), parseState);
+				parseState = ThmP1.parse(parseState);				
 			}
 			
 			List<ParsedPair> parsedList = ThmP1.getParsedExpr();

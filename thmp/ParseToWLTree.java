@@ -678,14 +678,14 @@ public class ParseToWLTree {
 			if(shouldPrint) parsedSB.append("[");
 			
 			// don't know type at compile time
-			if (struct.prev1() instanceof Struct) {
+			if (struct.prev1NodeType().isTypeStruct()) {
 				contextVecConstructed = dfs(partsMap, (Struct) struct.prev1(), parsedSB, curStructContextVec, shouldPrint,
 						contextVecConstructed);
 			}
 
 			// if(struct.prev2() != null && !struct.prev2().equals(""))
 			// System.out.print(", ");
-			if (((StructA<?, ?>) struct).prev2() instanceof Struct) {
+			if (((StructA<?, ?>) struct).prev2NodeType().isTypeStruct()) {
 				// avoid printing is[is], ie case when parent has same type as
 				// child
 				if(shouldPrint) parsedSB.append(", ");
@@ -693,10 +693,10 @@ public class ParseToWLTree {
 						contextVecConstructed);
 			}
 
-			if (struct.prev1() instanceof String) {
+			if (struct.prev1NodeType().equals(NodeType.STR)) {
 				if(shouldPrint) parsedSB.append(struct.prev1());
 			}
-			if (struct.prev2() instanceof String) {
+			if (struct.prev2NodeType().equals(NodeType.STR)) {
 				if (!struct.prev2().equals("")){
 					if(shouldPrint) parsedSB.append(", ");
 				}
@@ -704,7 +704,7 @@ public class ParseToWLTree {
 			}
 
 			if(shouldPrint) parsedSB.append("]");
-		} else if (struct instanceof StructH) {
+		} else if (!struct.isStructA()) {
 
 			if(shouldPrint) parsedSB.append(struct.toString());
 
