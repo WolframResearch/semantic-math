@@ -782,21 +782,24 @@ public class Maps {
 			probMap.put("FIRST", 1.);
 			probMap.put("LAST", 1.);
 			// ent_
-			probMap.put("mathObj_anchor", .85);
-			probMap.put("mathObj_verb", .8);
-			probMap.put("mathObj_pre", .8);
+			probMap.put("ent_anchor", .85);
+			probMap.put("ent_verb", .8);
+			probMap.put("ent_pre", .8);
 
 			// pre_
-			probMap.put("pre_mathObj", .8);
+			probMap.put("pre_ent", .8);
 			probMap.put("pre_adj", .6);
-			probMap.put("pre_mathObj", .6);
+			probMap.put("pre_ent", .6);
 
 			// verb_
-			probMap.put("verb_mathObj", .6);
-			probMap.put("vbs_mathObj", .6); // probMap.put("verb_adj", .6);
-
+			probMap.put("verb_ent", .6);
+			probMap.put("vbs_ent", .6); // probMap.put("verb_adj", .6);
+			probMap.put("vbs_adj", .75);
+			probMap.put("verb_ent", .75);
+			probMap.put("be_adj", .75);
+			
 			// adj_
-			probMap.put("adj_mathObj", .9);
+			probMap.put("adj_ent", .9);
 			probMap.put("adj_pre", .85);
 			
 			// adverb_

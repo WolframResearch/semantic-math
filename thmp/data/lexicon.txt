@@ -139,6 +139,7 @@ particular fluff
 "in particular" fluff ""
 domain ent
 graded adj
+integral adj
 algebra ent
 catenary adj
 universal adj

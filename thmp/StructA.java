@@ -313,9 +313,9 @@ public class StructA<A, B> extends Struct{
 				tempSB.append("{");
 			}
 			//if(prev1 instanceof Struct && ((Struct) prev1).WLCommandStr() == null){
-			if((PREV1_TYPE.equals(NodeType.STRUCTA) || PREV1_TYPE.equals(NodeType.STRUCTH)) ){
+			if((PREV1_TYPE.isTypeStruct()) ){
 					//&& ((Struct) prev1).WLCommandWrapperList() == null){
-				List<WLCommandWrapper> prev1WrapperList = ((Struct)prev1).WLCommandWrapperList();
+				List<WLCommandWrapper> prev1WrapperList = ((Struct) prev1).WLCommandWrapperList();
 				if(prev1WrapperList == null){
 					String prev1Str = ((Struct) prev1).simpleToString2(includeType, curCommand);
 					if(!prev1Str.matches("\\s*")){
@@ -340,7 +340,7 @@ public class StructA<A, B> extends Struct{
 		
 		if(prev2 != null){
 			String prev2String = "";
-			if((PREV2_TYPE.equals(NodeType.STRUCTA) || PREV2_TYPE.equals(NodeType.STRUCTH))  ){
+			if((PREV2_TYPE.isTypeStruct())  ){
 				List<WLCommandWrapper> prev2WrapperList = ((Struct)prev2).WLCommandWrapperList();
 				 if(prev2WrapperList == null){
 					//System.out.println("######prev2: " + prev2);

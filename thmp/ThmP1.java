@@ -428,7 +428,7 @@ public class ThmP1 {
 			// instead of str[i]
 			strAr[i] = curWord;
 			//change to enum!
-			String type = "mathObj";
+			String type = "ent"; //mathObj
 			int wordlen = strAr[i].length();
 			
 			// detect latex expressions, set their pos as "mathObj" for now
@@ -436,10 +436,10 @@ public class ThmP1 {
 				
 				String latexExpr = curWord;
 				int strArLength = strAr.length;
-				
 				//not a single-word latex expression, i.e. $R$-module
 				if (i < strArLength - 1 && !curWord.matches("\\$[^$]+\\$[^\\s]*")
 						&& (curWord.charAt(wordlen - 1) != '$' || wordlen == 2 || wordlen == 1)) {
+					
 					i++;
 					curWord = strAr[i];
 					
@@ -478,19 +478,21 @@ public class ThmP1 {
 				} else if (curWord.matches("\\$[^$]{1,2}\\$")) {
 					type = "symb";
 				}
-				// go with the pos of the last word
-				else if (curWord.matches("\\$[^$]+\\$[^-\\s]*-[^\\s]*")) {
+				// go with the pos of the last word, e.g. $k$-algebra
+				else if (curWord.matches("\\$[^$]+\\$[^-\\s]*-[^\\s]*")) { //\\$[^$]+\\$[^-\\s]*-[^\\s]*
+					
 					String[] curWordAr = curWord.split("-");
 					String tempWord = curWordAr[curWordAr.length - 1];
 					List<String> tempPosList = posMMap.get(tempWord);
 					if (!tempPosList.isEmpty()) {
 						type = tempPosList.get(0);
 					}
+					
 				}
 				
 				Pair pair = new Pair(latexExpr, type);
 				pairs.add(pair);
-				if (type.equals("mathObj")){
+				if (type.equals("ent")){
 					mathIndexList.add(pairs.size() - 1);
 				}				
 				continue;
@@ -565,7 +567,7 @@ public class ThmP1 {
 			String wordPos = containsCurWord ? posMMap.get(curWord).get(0) : 
 				(containsCurWordSingular ? posMMap.get(singular).get(0) : null);
 			
-			//last condition should be temporary, should eliminate mathObjMap
+			//last condition should be temporary: should eliminate mathObjMap
 			if (wordPos != null && wordPos.equals("ent") || mathObjMap.containsKey(curWord)) { 
 				String tempWord = containsCurWord ? curWord : singular;;
 				int pairsSize = pairs.size();
@@ -597,12 +599,12 @@ public class ThmP1 {
 
 				// if previous Pair is also an ent, fuse them
 				pairsSize = pairs.size();
-				if (pairs.size() > 0 && pairs.get(pairsSize - 1).pos().matches("mathObj")) {
+				if (pairs.size() > 0 && pairs.get(pairsSize - 1).pos().matches("ent")) {
 					pairs.get(pairsSize - 1).set_word(pairs.get(pairsSize - 1).word() + " " + curWord);
 					continue;
 				}
 				//System.out.println("^^^^^^^^curWord " + curWord);
-				Pair pair = new Pair(curWord, "mathObj");
+				Pair pair = new Pair(curWord, "ent");
 				pairs.add(pair);
 				mathIndexList.add(pairs.size() - 1);
 
@@ -644,7 +646,7 @@ public class ThmP1 {
 					pair = new Pair(temp, pos);
 					addExtraPosToPair(pair, posList);
 				} else {
-					//guaranteed to contain curWord 
+					//guaranteed to contain curWord at this point.
 					posList = posMMap.get(curWord);
 					pos = posList.get(0).split("_")[0];
 					pair = new Pair(curWord, pos);
@@ -703,7 +705,7 @@ public class ThmP1 {
 				if (mathObjMap.containsKey(lastTerm) || mathObjMap.containsKey(lastTermS1)
 						|| mathObjMap.containsKey(lastTermS2) || mathObjMap.containsKey(lastTermS3)) {
 
-					Pair pair = new Pair(curWord, "mathObj");
+					Pair pair = new Pair(curWord, "ent");
 					pairs.add(pair);
 					mathIndexList.add(pairs.size() - 1);
 				}
@@ -869,30 +871,32 @@ public class ThmP1 {
 		// If phrase isn't in dictionary, ie has type "", then use probMap to
 		// postulate type, if possible
 		Pair curpair;
-		int len = pairs.size();
+		int pairsLen = pairs.size();
 
 		double bestCurProb = 0;
 		String prevType = "", nextType = "", tempCurType = "", tempPrevType = "", tempNextType = "", bestCurType = "";
 
 		int posListSz = posList.size();
 		
-		for (int index = 0; index < len; index++) {
+		for (int index = 0; index < pairsLen; index++) {
+			//int pairsLen = pairs.size();
 			curpair = pairs.get(index);
+			//System.out.println("curpair " + curpair);
 			if (curpair.pos().equals("")) {
 
 				prevType = index > 0 ? pairs.get(index - 1).pos() : "";
-				nextType = index < len - 1 ? pairs.get(index + 1).pos() : "";
+				nextType = index < pairsLen - 1 ? pairs.get(index + 1).pos() : "";
 
 				prevType = prevType.equals("anchor") ? "pre" : prevType;
 				nextType = nextType.equals("anchor") ? "pre" : nextType;
 
-				// iterate through list of types, ent, verb etc
+				// iterate through list of types, ent, verb etc, to make best guess
 				for (int k = 0; k < posListSz; k++) {
 					tempCurType = posList.get(k);
 
 					// FIRST/LAST indicate positions
 					tempPrevType = index > 0 ? prevType + "_" + tempCurType : "FIRST";
-					tempNextType = index < len - 1 ? tempCurType + "_" + nextType : "LAST";
+					tempNextType = index < pairsLen - 1 ? tempCurType + "_" + nextType : "LAST";
 
 					if (probMap.get(tempPrevType) != null && probMap.get(tempNextType) != null) {
 						double score = probMap.get(tempPrevType) * probMap.get(tempNextType);
@@ -902,9 +906,12 @@ public class ThmP1 {
 						}
 					}
 				}
-				pairs.get(index).set_pos(bestCurType);
-
-				if (bestCurType.equals("mathObj")){
+				curpair.set_pos(bestCurType);
+				/*if(bestCurType.equals("adj")){ 
+					System.out.println("#### adj word: " + pairs.get(index).word());
+					
+				}*/
+				if (bestCurType.equals("ent")){
 					mathIndexList.add(index);
 				}
 			}
@@ -969,7 +976,7 @@ public class ThmP1 {
 
 			}
 			// combine nouns with ent's right after, ie noun_ent
-			else if (index > 0 && pairs.get(index - 1).pos()  .matches("noun")) {
+			else if (index > 0 && pairs.get(index - 1).pos().matches("noun")) {
 				pairs.get(index - 1).set_pos(String.valueOf(j));
 				String prevNoun = pairs.get(index - 1).word();
 				tempMap.put("name", prevNoun + " " + tempMap.get("name"));
@@ -987,9 +994,21 @@ public class ThmP1 {
 			// ...get more than adj ... multi-word descriptions
 			// set the pos as the current index in mathEntList
 			// adjectives or determiners
-			while (index - k > -1 && pairs.get(index - k).pos().matches("adj|det|num")) {
+			Pair curPair = pairs.get(index - k);
+			while (index - k > -1 && curPair.pos().matches("adj|det|num")) {
 
-				String curWord = pairs.get(index - k).word();
+				String curWord = curPair.word();
+				String curPos = curPair.pos();
+				
+				//combine adverb-adj pair
+				if(curPos.equals("adj") && index-k-1 > -1){
+					Pair prevPair = pairs.get(index-k-1);
+					if(prevPair.pos().equals("adverb")){
+						curWord = prevPair.word() + " " + curWord;
+						prevPair.set_pos(String.valueOf(j));
+					}
+				}
+				
 				// look for composite adj (two for now)
 				/*if (index - k - 1 > -1 && !posMMap.get(curWord).isEmpty() && posMMap.get(curWord).get(0).matches("adj")) {
 					// if composite adj
@@ -1004,8 +1023,9 @@ public class ThmP1 {
 				tempMap.put(curWord, "ppt");
 				// mark the pos field in those absorbed pairs as index in
 				// mathEntList
-				pairs.get(index - k).set_pos(String.valueOf(j));
+				curPair.set_pos(String.valueOf(j));
 				k++;
+				curPair = pairs.get(index - k);
 			}
 
 			// combine multiple adj connected by "and/or"
@@ -1151,7 +1171,7 @@ public class ThmP1 {
 				// current word hasn't classified into an ent, make structA
 				int structListSize = structList.size();
 				
-				// combine adverbs into verbs/adjectives, look 2 words before
+				// combine adverbs into the prior verb if applicable.
 				if (curPair.pos().equals("adverb")) {
 
 					if (structListSize > 1 && structList.get(structListSize - 1).type().matches("verb|vbs")) {
@@ -1181,12 +1201,18 @@ public class ThmP1 {
 					}
 				}
 				
+				//combine adverb-adjective together
 				if (curPair.pos().equals("adj")) {
 					if (structListSize > 0 && structList.get(structListSize - 1).type().equals("adverb")) {
-						Struct adverbStruct = structList.get(structListSize - 1);
-						newStruct.set_prev2(adverbStruct);						
-						// remove the adverb Struct
-						structList.remove(structListSize - 1);
+						
+						//if(structListSize == 1 || !structList.get(structListSize - 2).type().matches("verb|vbs")){
+							Struct adverbStruct = structList.get(structListSize - 1);
+							String newContent = adverbStruct.prev1().toString() + " " + curWord;
+							newStruct.set_prev1(newContent);
+							//newStruct.set_prev2(adverbStruct);						
+							// remove the adverb Struct
+							structList.remove(structListSize - 1);
+						//}
 					}
 				}
 				
@@ -1603,7 +1629,7 @@ public class ThmP1 {
 										q++;
 									}
 									curWord += calledArray[calledArray.length - 1];
-									mathObjMap.put(curWord, "mathObj");
+									mathObjMap.put(curWord, "ent");
 
 									// recentEnt is defined to be "called"
 									variableNamesMap.put(called, recentEnt);
@@ -2698,19 +2724,7 @@ public class ThmP1 {
 				Struct prev1Struct = (Struct) struct.prev1();
 				prev1Struct.set_dfsDepth(structDepth + 1);
 				span = dfs(prev1Struct, parsedSB, span);
-			}
-			
-			// if(struct.prev2() != null && !struct.prev2().equals(""))
-			// System.out.print(", ");
-			if (struct.prev2NodeType().isTypeStruct()) {
-				// avoid printing is[is], ie case when parent has same type as
-				// child
-				System.out.print(", ");
-				parsedSB.append(", ");
-				Struct prev2Struct = (Struct) struct.prev2();
-				prev2Struct.set_dfsDepth(structDepth + 1);
-				span = dfs(prev2Struct, parsedSB, span);
-			}
+			}			
 
 			if (struct.prev1NodeType().equals(NodeType.STR)) {
 				System.out.print(struct.prev1());
@@ -2722,7 +2736,20 @@ public class ThmP1 {
 				if(!struct.type().equals("pre")){
 					span++;
 				}
+			}			
+
+			// if(struct.prev2() != null && !struct.prev2().equals(""))
+			// System.out.print(", ");
+			if (struct.prev2NodeType().isTypeStruct()) {
+				// avoid printing is[is], ie case when parent has same type as
+				// child
+				System.out.print(", ");
+				parsedSB.append(", ");
+				Struct prev2Struct = (Struct) struct.prev2();
+				prev2Struct.set_dfsDepth(structDepth + 1);
+				span = dfs(prev2Struct, parsedSB, span);
 			}
+			
 			if (struct.prev2NodeType().equals(NodeType.STR)) {
 				if (!struct.prev2().equals("")){
 					System.out.print(", ");

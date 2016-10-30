@@ -346,6 +346,10 @@ public class ThmP1Test {
 			st = "We say $S$ is geometrically integral over $k$ if for every field extension $k \\subset k'$ the ring of $S \\otimes_k k'$ is a domain.";
 			st = "In this case $S$ is geometrically integral over $k$ if and only if $S$ is geometrically irreducible as well as geometrically reduced over $k$.";
 			st = "$S$ is geometrically integral";
+			st = "$S$ is perfectly integral";
+			st = "Let $S$ be a geometrically integral $K$-algebra";
+			st = "Let $R$ be a $k$-algebra and an integral domain";
+			//st = "Let $R$ be integral domain";
 			//st = "$k subset k' subset K$ is a field";
 			//st = "consider a ring such that field is separable algebraic and field is ring";
 			//st = "$k subset k' subset K$ is field";			
