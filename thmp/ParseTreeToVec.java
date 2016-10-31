@@ -4,6 +4,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Multimap;
+
 import thmp.ParseToWLTree.WLCommandWrapper;
 import thmp.Struct.NodeType;
 import thmp.WLCommand.PosTerm;
@@ -20,6 +23,7 @@ import thmp.utils.WordForms;
 public class ParseTreeToVec {
 
 	private static final Map<String, Integer> keywordDict = TriggerMathThm2.keywordDict();
+	private static final ListMultimap<String, String> posMMap = Maps.posMMap();
 	
 	/**
 	 * Entry method from ParseToWLTree, sets the term corresponding to head using WLCommandStr. 
@@ -95,7 +99,7 @@ public class ParseTreeToVec {
 	 * @return
 	 */
 	public static void setStructHContextVecEntry(StructH<?> struct, int structParentIndex, int[] contextVec){
-		
+		//termsStr only contains name of struct, properties are considered below 
 		String termStr = struct.contentStr();
 		int structIndex = 0;
 		//add struct itself, then its children
@@ -203,8 +207,27 @@ public class ParseTreeToVec {
 				addTermStrToVec(struct, lastWord, structParentIndex, contextVec);
 			}//else do nothing, because lastWord does not have an entry in term-document matrix anyway
 			
+			//set the parent of the prior words as the index of the last word. But if word-pair
+			//is adverb-adj, point adverb to adj.
 			for(int i = 0; i < termStrArLen - 1; i++){
 				String word = termStrAr[i];
+				Integer wordIndex = keywordDict.get(word);;
+				if(i > 0 && wordIndex != null){
+					List<String> posList = posMMap.get(word);
+					boolean isAdj = false;
+					for(String pos : posList){
+						if(pos.equals("adj")){
+							isAdj = true;
+						}
+					}
+					if(isAdj){
+						String prevWord = termStrAr[i-1];
+						if(prevWord.matches(".*ly") || posMMap.containsEntry(prevWord, "adverb")){
+							//modify parent index of prevWord.
+							addTermStrToVec(struct, prevWord, wordIndex, contextVec);
+						}
+					}
+				}
 				addTermStrToVec(struct, word, parentIndex, contextVec);
 			}
 		}

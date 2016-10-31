@@ -472,7 +472,6 @@ public class WLCommand {
 				if(term.triggerMathObj){
 					//should check first if contains WLCommandStr, i.e. has been converted to some 
 					//commands already
-					/////******Changing this to TriggerMathObj2 generate Exception?!
 					nextWord = TriggerMathObj2.get_mathObjFromStruct(nextStruct, curCommand);
 					
 					if(nextWord.equals("")){

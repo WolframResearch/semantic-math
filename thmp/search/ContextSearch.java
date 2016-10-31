@@ -41,7 +41,8 @@ public class ContextSearch {
 	
 	static{
 		//need to set this when deployed to VM
-		String contextVecFileStr = "src/thmp/data/contextVecAll.txt";
+		//String contextVecFileStr = "src/thmp/data/contextVecAll.txt";
+		String contextVecFileStr = "src/thmp/data/contextVectorsFields.txt";
 		//String contextVecFileStr = "src/thmp/data/contextVecCommm5.txt";
 		//String contextVecFileStr = "src/thmp/data/contextVectorsMultilinearAlgebra.txt";
 		

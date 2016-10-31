@@ -138,6 +138,7 @@ well adj
 particular fluff
 "in particular" fluff ""
 domain ent
+ring ent
 graded adj
 integral adj
 algebra ent

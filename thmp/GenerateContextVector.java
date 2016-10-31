@@ -31,7 +31,8 @@ public class GenerateContextVector {
 
 	//private static String CONTEXT_VEC_FILE_STR = "src/thmp/data/contextVecCommm5.txt";
 	//private static String CONTEXT_VEC_FILE_STR = "src/thmp/data/contextVectorsMultilinearAlgebra.txt";
-	private static String CONTEXT_VEC_FILE_STR = "src/thmp/data/contextVecAll.txt";
+	private static String CONTEXT_VEC_FILE_STR = "src/thmp/data/contextVectorsFields.txt";
+	//private static String CONTEXT_VEC_FILE_STR = "src/thmp/data/contextVecAll.txt";
 	
 	private static Path contextVecFilePath;	
 	private static URL outputStreamURL;

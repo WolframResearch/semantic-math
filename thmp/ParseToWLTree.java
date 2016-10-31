@@ -8,6 +8,8 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableCollection;
@@ -51,8 +53,7 @@ public class ParseToWLTree {
 	 */
 	private static final Multimap<String, WLCommand> WLCommandMap = WLCommandsList.WLCommandMap();
 	
-	
-	
+	private static final Pattern PLURAL_PATTERN = Pattern.compile("(.+)s");
 	
 	/**
 	 * Entry point for depth first search.
@@ -81,24 +82,30 @@ public class ParseToWLTree {
 		
 		//if(triggeredCol.isEmpty()){
 		//add words from triggerWords redirects in case there's an entry there.
-			//trigger word redirects: eg are -> is, since they are functionally equivalent
-			if(triggerWordLookupMap.containsKey(triggerKeyWord)){
+		//trigger word redirects: eg are -> is, since they are functionally equivalent
+		if(triggerWordLookupMap.containsKey(triggerKeyWord)){
 				
 				//if(triggeredCol.isEmpty()){
 					//triggeredCol = new ArrayList<WLCommand>();
 				//}
 				//look up again with fetched list of keywords
 				
-				Collection<String> col= triggerWordLookupMap.get(triggerKeyWord);
-				for(String s : col){
-					triggeredCol.addAll(WLCommandMap.get(s));
-				}
+			Collection<String> col= triggerWordLookupMap.get(triggerKeyWord);
+			for(String s : col){
+				triggeredCol.addAll(WLCommandMap.get(s));
 			}
+		}
 			//look up using type
-			if(triggeredCol.isEmpty() && WLCommandMap.containsKey(triggerType)){
-				triggeredCol = WLCommandMap.get(triggerType);
-				
-			}
+		if(triggeredCol.isEmpty() && WLCommandMap.containsKey(triggerType)){
+			triggeredCol = WLCommandMap.get(triggerType);				
+		}
+		
+		Matcher pluralMatcher;
+		if(triggeredCol.isEmpty() && (pluralMatcher = PLURAL_PATTERN.matcher(triggerKeyWord)).find() ){
+			String keyWordSingular = pluralMatcher.group("$1");
+			triggeredCol.addAll(WLCommandMap.get(keyWordSingular));
+		}
+		
 		//}
 		return triggeredCol;
 	}

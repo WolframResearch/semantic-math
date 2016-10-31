@@ -74,7 +74,7 @@ public class WLCommandsList {
 		// eg "of" in "element of" is not used, but should be there to determine
 		// if a command is satisfied.
 		// all Strings go into commandsMap and PosList, but only those with true
-		// goes to final command String built
+		// goes to final command String built.
 		// "symb|ent" "pre, of" "symb|ent"; All regexes to be matched
 		// type and name are always specified, if name left empty, will become
 		// wildcard.
@@ -89,7 +89,7 @@ public class WLCommandsList {
 		// Just a String represents an auxilliary String, eg just a bracket.
 		// 3rd element could be true/false (includes/not includes in command),
 		// or trigger (trigger word, but not
-		// included in final command, so indicates false)
+		// included in final command, so indicates false).
 		// 5th element used for defining custom order for now, 4th term defines
 		// whether to trigger TriggerMathObj term
 		// If Commands involving \[Element] deviate from item1 \[Element] item2, 
@@ -124,7 +124,7 @@ public class WLCommandsList {
 				", radius, false", ", convergence, trigger", "Function[ 'radius' ", "]" }));
 		
 		// trigger TriggerMathObj
-		// should handle "have" differently ////******
+		//actions.
 		WLCommandMapBuilder.put("is", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is|are|be, trigger",
 				"\\[Element]", "symb|ent|phrase, , true, TriggerMathObj" }));
 		//e.g. "$X$ is connected"
@@ -133,6 +133,9 @@ public class WLCommandsList {
 		//negative of above
 		WLCommandMapBuilder.put("is not", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is not|are not|be not, trigger",
 				"Not[\\[Element]]", "symb|ent|adj|phrase, , true, TriggerMathObj" }));
+		
+		WLCommandMapBuilder.put("act", addCommand(new String[] { "Action[", "symb|ent|pro, , true", ", act|acts, trigger",
+				";", "symb|ent|pro, , true, TriggerMathObj", "]" }));		
 		
 		//auxpass, eg "is called"
 		WLCommandMapBuilder.put("is called", addCommand(new String[] { "symb|ent|pro, , true", "auxpass, is called, trigger",

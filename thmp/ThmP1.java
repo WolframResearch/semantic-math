@@ -56,8 +56,10 @@ public class ThmP1 {
 	private static final Map<String, Double> probMap;
 	// split a sentence into parts, separated by commas, semicolons etc
 	// private String[] subSentences;
+	//pattern for matching negative of adjectives: "un..."
+	private static final Pattern NEGATIVE_ADJECTIVE_PATTERN = Pattern.compile("un(.+)");
 	
-	// list of parts of speech, ent, verb etc
+	// list of parts of speech, ent, verb etc <--should make immutable
 	private static final List<String> posList;
 	
 	// fluff type, skip when adding to parsed ArrayList
@@ -371,8 +373,16 @@ public class ThmP1 {
 	 * @param posList
 	 */
 	private static void addExtraPosToPair(Pair pair, List<String> posList){
+		//don't add "noun" if "ent" already added, since these are mostly equivalent.
+		boolean entAdded = posList.get(0).equals("ent");
 		//start from 1, since first pos is already added.
 		for(int k = 1; k < posList.size(); k++){
+			String pos = posList.get(k);
+			if(pos.equals("noun") && entAdded){
+				continue;
+			}else if(pos.equals("ent")){
+				entAdded = true;
+			}
 			pair.addExtraPos(posList.get(k));
 		}
 	}
@@ -418,9 +428,10 @@ public class ThmP1 {
 
 			String curWord = strAr[i];
 			//why this?
-			if (curWord.matches("\\s*,*"))
+			if (curWord.matches("\\s*,*")){
 				continue;
-
+			}
+			Matcher negativeAdjMatcher;
 			// strip away special chars '(', ')', etc ///should not
 			// remove......
 			// curWord = curWord.replaceAll("\\(|\\)", "");
@@ -618,7 +629,7 @@ public class ThmP1 {
 				int pairsSize = pairs.size();
 				anchorList.add(pairsSize - 1);
 			}
-			// check part of speech
+			// check part of speech (pos)
 			else if (posMMap.containsKey(curWord)){ //|| posMMap.containsKey(curWord.toLowerCase())) {
 				/*if(posMMap.containsKey(curWord.toLowerCase())){
 					curWord = curWord.toLowerCase();
@@ -644,6 +655,7 @@ public class ThmP1 {
 					posList = posMMap.get(temp);
 					pos = posList.get(0).split("_")[0];
 					pair = new Pair(temp, pos);
+					//add any additional pos to pair if applicable.
 					addExtraPosToPair(pair, posList);
 				} else {
 					//guaranteed to contain curWord at this point.
@@ -655,6 +667,22 @@ public class ThmP1 {
 				pair = fuseAdverbAdj(pairs, curWord, pair);
 				
 				pairs.add(pair);
+			}//negative adjective word, not that unusual.
+			else if((negativeAdjMatcher = NEGATIVE_ADJECTIVE_PATTERN.matcher(curWord)).find()){
+				
+				String curAdjWord = negativeAdjMatcher.group("$1");
+				
+				List<String> posList = posMMap.get(curAdjWord);
+				
+				if (!posList.isEmpty()) {
+					String pos = posList.get(0).split("_")[0];
+					Pair pair = new Pair(curAdjWord, pos);
+					//add any additional pos to pair if applicable.
+					addExtraPosToPair(pair, posList);
+					pair = fuseAdverbAdj(pairs, curWord, pair);					
+					pairs.add(pair);
+				}
+				
 			}
 			// if plural form
 			else if (posMMap.containsKey(singular)){
@@ -929,8 +957,15 @@ public class ThmP1 {
 			
 			StructH<HashMap<String, String>> tempStructH = new StructH<HashMap<String, String>>("ent");
 			List<String> posList = posMMap.get(mathObjName);
+			boolean entAdded = false;
 			for(int l = 0; l < posList.size(); l++){
-				tempStructH.addExtraPos(posList.get(l));
+				String pos = posList.get(l);
+				if(pos.equals("ent")){
+					entAdded = true;
+				}else if(pos.equals("noun") && entAdded){
+					continue;
+				}
+				tempStructH.addExtraPos(pos); 
 			}
 			
 			HashMap<String, String> tempMap = new HashMap<String, String>();
@@ -994,9 +1029,9 @@ public class ThmP1 {
 			// ...get more than adj ... multi-word descriptions
 			// set the pos as the current index in mathEntList
 			// adjectives or determiners
-			Pair curPair = pairs.get(index - k);
-			while (index - k > -1 && curPair.pos().matches("adj|det|num")) {
-
+				
+			while (index - k > -1 && pairs.get(index - k).pos().matches("adj|det|num")) {
+				Pair curPair = pairs.get(index - k);
 				String curWord = curPair.word();
 				String curPos = curPair.pos();
 				
@@ -1008,26 +1043,25 @@ public class ThmP1 {
 						prevPair.set_pos(String.valueOf(j));
 					}
 				}
-				
-				// look for composite adj (two for now)
-				/*if (index - k - 1 > -1 && !posMMap.get(curWord).isEmpty() && posMMap.get(curWord).get(0).matches("adj")) {
-					// if composite adj
-					if (pairs.get(index - k - 1).word().matches(adjMap.get(curWord))) {
-						curWord = pairs.get(index - k - 1).word() + " " + curWord;
-						// mark pos field to indicate entity
-						pairs.get(index - k).set_pos(String.valueOf(j));
-						k++;
-					}
-				}*/
-
+					
+					// look for composite adj (two for now)
+					/*if (index - k - 1 > -1 && !posMMap.get(curWord).isEmpty() && posMMap.get(curWord).get(0).matches("adj")) {
+						// if composite adj
+						if (pairs.get(index - k - 1).word().matches(adjMap.get(curWord))) {
+							curWord = pairs.get(index - k - 1).word() + " " + curWord;
+							// mark pos field to indicate entity
+							pairs.get(index - k).set_pos(String.valueOf(j));
+							k++;
+						}
+					}*/
+	
 				tempMap.put(curWord, "ppt");
 				// mark the pos field in those absorbed pairs as index in
-				// mathEntList
+					// mathEntList
 				curPair.set_pos(String.valueOf(j));
 				k++;
-				curPair = pairs.get(index - k);
 			}
-
+			
 			// combine multiple adj connected by "and/or"
 			// hacky way: check if index-k-2 is a verb, only combine adj's if
 			// not
@@ -1247,6 +1281,7 @@ public class ThmP1 {
 
 		}
 		//System.out.println("^^^^structList: " + structList);
+		
 		parseState.setTokenList(structList);
 		return parseState;
 	}
@@ -1298,7 +1333,7 @@ public class ThmP1 {
 		int len = inputStructList.size();
 		// shouldn't be 0 to start with?!
 		if (len == 0)
-			return null;
+			return parseState;
 
 		// first Struct
 		Struct firstEnt = null;
@@ -1907,8 +1942,8 @@ public class ThmP1 {
 				// int highestScoreIndex = ArrayDFS(parsedStructList.get(k));
 				int highestScoreIndex = 0;
 				Struct kHeadStruct = parsedStructList.get(k).structList().get(highestScoreIndex);
-				//measures span of longForm (how many leaf nodes reached), to be used in place of 
-				//commandNumUnits if no WLCommand parse.
+				//measures span of longForm (how many leaf nodes reached), use in place of 
+				//commandNumUnits if no full WLCommand parse.
 				int span = 0;
 				kHeadStruct.set_dfsDepth(0);
 				span = dfs(kHeadStruct, parsedSB, span);
@@ -2333,7 +2368,7 @@ public class ThmP1 {
 					StructA<Struct, Struct> parentStruct = new StructA<Struct, Struct>(parentPrev1, struct1Type, 
 							parentPrev2, struct2Type, updatedType, newScore, mx.get(i).get(j), parentDownPathScore, parentNumUnits);
 					
-					struct1.set_parentStruct(parentStruct);
+					parentPrev1.set_parentStruct(parentStruct);
 					//struct2.set_parentStruct(parentStruct);
 					
 					// mx.get(i).set(j, parentStruct);
@@ -2753,11 +2788,11 @@ public class ThmP1 {
 			if (struct.prev2NodeType().equals(NodeType.STR)) {
 				if (!struct.prev2().equals("")){
 					System.out.print(", ");
-					parsedSB.append(", ");					
-				}
-				if(!struct.type().equals("pre")){
-					span++;
-				}
+					parsedSB.append(", ");	
+					if(!struct.type().equals("pre")){
+						span++;
+					}
+				}				
 				System.out.print(struct.prev2());
 				parsedSB.append(struct.prev2());
 			}

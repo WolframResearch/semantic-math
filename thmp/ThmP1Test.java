@@ -349,6 +349,9 @@ public class ThmP1Test {
 			st = "$S$ is perfectly integral";
 			st = "Let $S$ be a geometrically integral $K$-algebra";
 			st = "Let $R$ be a $k$-algebra and an integral domain";
+			st = "Group $G$ acts on space $X$";
+			st = "$F$ is field, so is $G$";
+			//st = "regular local ring";
 			//st = "Let $R$ be integral domain";
 			//st = "$k subset k' subset K$ is a field";
 			//st = "consider a ring such that field is separable algebraic and field is ring";
@@ -422,6 +425,17 @@ public class ThmP1Test {
 				System.out.println(pair);
 			}
 			
+			boolean streamInput = false;
+			if(streamInput){
+				Scanner sc = new Scanner(System.in);
+				String inputStr;
+				while(sc.hasNextLine()){
+					inputStr = sc.nextLine();
+					parseInput(inputStr);
+				}
+				sc.close();
+			}
+			
 			//System.out.println("****" + ThmP1.getParsedExpr() + "******");
 			boolean processFile = false;
 			
@@ -462,4 +476,37 @@ public class ThmP1Test {
 			
 		}
 		
+		private static void parseInput(String inputStr){
+			String[] strAr = ThmP1.preprocess(inputStr);
+			
+			List<int[]> parseContextVecList = new ArrayList<int[]>();
+			
+			ParseState parseState = new ParseState();
+			for(int i = 0; i < strAr.length; i++){
+				//alternate commented out line to enable tex converter
+				//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim()) ));
+				parseState = ThmP1.tokenize(strAr[i].trim(), parseState);
+				parseState = ThmP1.parse(parseState);
+				int[] curContextVec = ThmP1.getParseContextVector();
+				parseContextVecList.add(curContextVec);
+				//get context vector
+				System.out.println("cur vec: " + Arrays.toString(curContextVec));
+			}
+			
+			//combine these vectors together, only add subsequent vector entry
+			//if that entry is 0 in all previous vectors int[].
+			int[] combinedVec = GenerateContextVector.combineContextVectors(parseContextVecList);
+			System.out.println("combinedVec: " + Arrays.toString(combinedVec));
+			
+			String parsedOutput = ThmP1.getParseStructMapList().toString();
+			//String parsedOutput = Arrays.toString(ThmP1.getParseStructMapList().toArray());			
+			//String processedOutput = parsedOutput.replaceAll("MathObj", "MathObject").replaceAll("\\$([^$]+)\\$", "LaTEXMath[\"$1\"]")
+					//.replaceAll("MathObject\\{([^}]+)\\}", "MathObject\\[$1\\]");					
+			
+			System.out.println("PARTS: " + parsedOutput);			
+			System.out.println("****ParsedExpr ");
+			for(ParsedPair pair : ThmP1.getParsedExpr()){
+				System.out.println(pair);
+			}
+		}
 }

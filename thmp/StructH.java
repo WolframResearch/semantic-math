@@ -9,7 +9,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import thmp.ParseToWLTree.WLCommandWrapper;
-import thmp.Struct.NodeType;
 
 public class StructH<H> extends Struct{
 
@@ -442,10 +441,8 @@ public class StructH<H> extends Struct{
 	 */
 	public Set<String> getPropertySet(){
 		//seek out the properties in struct
-		//Not thread-safe: can give rise to race conditions if append_name_pptStr()
-		//is called by another thread and propertySet is being modified. <--now safe
-		//with volatile boolean isPropertySetEmpty. But could add to map multiple times
-		//if called by multiple threads, could be wasteful but no race condition.
+		//thread-safe with volatile boolean isPropertySetEmpty. But could add to map multiple times
+		//if called by multiple threads, could be little wasteful but no race condition.
 		if(isPropertySetEmpty){
 			for(Map.Entry<String, String> entry : struct.entrySet()){
 				if(entry.getValue().equals("ppt")){
