@@ -11,6 +11,7 @@ assumption noun
 sum ent
 direct sum ent
 set ent
+conjugation ent
 categories ent_comp
 lemma noun
 take verb

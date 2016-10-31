@@ -39,6 +39,7 @@ public class WLCommandsList {
 	public static final int WLCOMMANDINDEX = -1;
 	public static final int AUXINDEX = -2;
 	private static final String TRIGGERMATHOBJSTR = "TriggerMathObj";
+	private static final String OPTIONAL_TOKEN_STR = "OPT";
 	
 	/**
 	 * 
@@ -124,7 +125,7 @@ public class WLCommandsList {
 				", radius, false", ", convergence, trigger", "Function[ 'radius' ", "]" }));
 		
 		// trigger TriggerMathObj
-		//actions.
+		//***action*** commands
 		WLCommandMapBuilder.put("is", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is|are|be, trigger",
 				"\\[Element]", "symb|ent|phrase, , true, TriggerMathObj" }));
 		//e.g. "$X$ is connected"
@@ -135,7 +136,7 @@ public class WLCommandsList {
 				"Not[\\[Element]]", "symb|ent|adj|phrase, , true, TriggerMathObj" }));
 		
 		WLCommandMapBuilder.put("act", addCommand(new String[] { "Action[", "symb|ent|pro, , true", ", act|acts, trigger",
-				";", "symb|ent|pro, , true, TriggerMathObj", "]" }));		
+				";", "symb|ent|pro, , true, TriggerMathObj", ", by, false, OPT", ", conjugation, true, OPT", "]" }));		
 		
 		//auxpass, eg "is called"
 		WLCommandMapBuilder.put("is called", addCommand(new String[] { "symb|ent|pro, , true", "auxpass, is called, trigger",
@@ -222,7 +223,8 @@ public class WLCommandsList {
 				String posStr = commandStrParts[0];
 				String nameStr = "AUX"; // auxilliary string
 				WLCommandComponent commandComponent = new WLCommandComponent(posStr, nameStr);
-				PosTerm curTerm = new PosTerm(commandComponent, AUXINDEX, true, false);
+				//
+				PosTerm curTerm = new PosTerm(commandComponent, AUXINDEX, true, false, false);
 				posList.add(curTerm);
 			} else {
 
@@ -236,20 +238,22 @@ public class WLCommandsList {
 				boolean useInPosList = cmdPart2Ar.length > 1 ? Boolean.valueOf(cmdPart2Ar[1])
 						: Boolean.valueOf(cmdPart2Ar[0]);	
 				
-				boolean triggerMathObj = false;
+				boolean isTriggerMathObj = false;
+				boolean isOptionalTerm = false;
 				// process command and create WLCommandComponent and PosList
 				WLCommandComponent commandComponent = new WLCommandComponent(posStr, nameStr);
 				
-				// how many have we added so far
+				// how many of this component have we added so far
 				Integer temp;
-				int curOcc = (temp = commandsCountPreMap.get(commandComponent)) == null ? 0 : temp;
+				int curComponentCount = (temp = commandsCountPreMap.get(commandComponent)) == null ? 0 : temp;
 				
-				int positionInMap = curOcc;
+				int positionInMap = curComponentCount;
 				// check length of commandStrParts to see if custom order is
 				// required
 				if (commandStrPartsLen > 3) {
 					//if trigger triggerMathObj
-					triggerMathObj = commandStrParts[3].trim().equals(TRIGGERMATHOBJSTR);
+					isTriggerMathObj = commandStrParts[3].trim().equals(TRIGGERMATHOBJSTR);
+					isOptionalTerm = commandStrParts[3].trim().equals(OPTIONAL_TOKEN_STR);
 					if (commandStrParts.length > 4) {
 						positionInMap = Integer.valueOf(commandStrParts[4]);
 					}
@@ -278,14 +282,18 @@ public class WLCommandsList {
 				// but sometimes want to switch order of occurence in final
 				// command and order
 				// in original sentence
-				PosTerm curTerm = new PosTerm(commandComponent, positionInMap, useInPosList, triggerMathObj);
+				PosTerm curTerm = new PosTerm(commandComponent, positionInMap, useInPosList, isTriggerMathObj, isOptionalTerm);
 				posList.add(curTerm);
 				// }
 				// PosTerm(WLCommandComponent commandComponent, int position,
 				// boolean includeInBuiltString){
 
-				commandsCountPreMap.put(commandComponent, curOcc + 1);
-				componentCounter++;
+				//optional CommandComponents are stored in commandsCountMap, but don't count
+				//towards componentCounter, which determines satisfiability.
+				commandsCountPreMap.put(commandComponent, curComponentCount + 1);
+				if(!isOptionalTerm){					
+					componentCounter++;
+				}
 			}
 		}
 

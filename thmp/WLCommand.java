@@ -147,7 +147,7 @@ public class WLCommand {
 		private int positionInMap;
 		
 		/**
-		 * Whether or not to include in the built String created by build()
+		 * Whether or not to include in the built String created by WLCommand.build()
 		 */
 		private boolean includeInBuiltString;
 		
@@ -156,14 +156,27 @@ public class WLCommand {
 		 */
 		private boolean triggerMathObj;
 		
+		/**
+		 * Whether this term is optional.
+		 */
+		private boolean isOptionalTerm;
+		
 		public PosTerm(WLCommandComponent commandComponent, int position, boolean includeInBuiltString,
-				boolean triggerMathObj){
+				boolean triggerMathObj, boolean isOptionalTerm){
 			this.commandComponent = commandComponent;
 			this.positionInMap = position;
 			this.includeInBuiltString = includeInBuiltString;
 			this.triggerMathObj = triggerMathObj;
+			this.isOptionalTerm = isOptionalTerm;
 		}
 		
+		/**
+		 * @return the isOptionalTerm
+		 */
+		public boolean isOptionalTerm() {
+			return isOptionalTerm;
+		}
+
 		@Override
 		public String toString(){
 			return "{" + this.commandComponent + ", " + this.positionInMap + "}";
@@ -440,12 +453,14 @@ public class WLCommand {
 			WLCommandComponent commandComponent = term.commandComponent;
 			
 			int positionInMap = term.positionInMap;
+			boolean isOptionalTerm = term.isOptionalTerm();
 			
 			String nextWord = "";			
 			//-1 if WL command or auxilliary String
 			if(positionInMap != WLCommandsList.AUXINDEX && positionInMap != WLCommandsList.WLCOMMANDINDEX){
+				
 				List<Struct> curCommandComponentList = commandsMap.get(commandComponent);
-				if(positionInMap >= curCommandComponentList.size()){
+				if(positionInMap >= curCommandComponentList.size() && !isOptionalTerm){
 					System.out.println("positionInMap: " + positionInMap +" list size: "+curCommandComponentList.size() +" Should not happen!");
 					System.out.println("COMPONENT" + commandComponent);
 					System.out.println("COMMAND" + curCommand);
@@ -498,7 +513,8 @@ public class WLCommand {
 				}
 				nextStruct.set_structToAppendCommandStr(structToAppendCommandStr); */
 				
-			}else if(positionInMap == WLCommandsList.WLCOMMANDINDEX){
+			}//index indicating this is a WL command.
+			else if(positionInMap == WLCommandsList.WLCOMMANDINDEX){
 				//should change to use simpletoString from Struct
 				nextWord = term.commandComponent.posTerm;
 				
@@ -551,6 +567,31 @@ public class WLCommand {
 		return commandString;
 	}
 	
+	
+	public static class CommandSat{
+		boolean isCommandSat;
+		//whether has optional terms remainining
+		boolean hasOptionalTermsLeft;
+		
+		public CommandSat(boolean isCommandSat, boolean hasOptionalTermsLeft){
+			this.isCommandSat = isCommandSat;
+			this.hasOptionalTermsLeft = hasOptionalTermsLeft;
+		}
+
+		/**
+		 * @return the isCommandSat
+		 */
+		public boolean isCommandSat() {
+			return isCommandSat;
+		}
+
+		/**
+		 * @return the hasOptionalTermsLeft
+		 */
+		public boolean isHasOptionalTermsLeft() {
+			return hasOptionalTermsLeft;
+		}
+	}
 	/**
 	 * Adds new Struct to commandsMap.
 	 * @param curCommand	WLCommand we are adding PosTerm to
@@ -561,7 +602,7 @@ public class WLCommand {
 	 * BUT: what if the Struct just added isn't the one needed? Keep adding.
 	 * If the name could be several optional ones, eg "in" or "of", so use regex .match("in|of")
 	 */
-	public static boolean addComponent(WLCommand curCommand, Struct newStruct, boolean before){
+	public static CommandSat addComponent(WLCommand curCommand, Struct newStruct, boolean before){
 		
 		//if key.name .matches()
 		//be careful with type, could be conj_, all sorts of stuff
@@ -578,16 +619,17 @@ public class WLCommand {
 		// Keep track of index in posList of component added before, and go backwards if before,
 		// forwards if after.
 		//before the trigger word
-		List<PosTerm> posList = curCommand.posTermList;
+		List<PosTerm> posTermList = curCommand.posTermList;
 		int lastAddedComponentIndex = curCommand.lastAddedCompIndex;
 		int triggerWordIndex = curCommand.triggerWordIndex;
 		
 		WLCommandComponent commandComponent;
 		String commandComponentPosTerm;
 		String commandComponentName;
+		int posTermListSz =  posTermList.size();
 		
 		int i = lastAddedComponentIndex;		
-		//if the first time we add a component that's after triggerWordIndex
+		//if the first time we add a component that's after triggerWordIndex.
 		if(!before && lastAddedComponentIndex < triggerWordIndex){			
 			i = triggerWordIndex;
 		}
@@ -596,39 +638,65 @@ public class WLCommand {
 		if(before){			
 			i--;
 			//if auxilliary terms, eg "["
-			while(i > -1 && posList.get(i).positionInMap < 0) i--;			
+			while(i > -1 && posTermList.get(i).positionInMap < 0) i--;			
 		}else{
 			i++;
-			while(i < posList.size() && posList.get(i).positionInMap < 0) i++;		
+			while(i < posTermListSz && posTermList.get(i).positionInMap < 0) i++;		
 		}
-		//if no match, return
-		commandComponent = posList.get(i).commandComponent;
+		
+		PosTerm curPosTerm = posTermList.get(i);
+		commandComponent = curPosTerm.commandComponent;
+		boolean isOptionalTerm = curPosTerm.isOptionalTerm();
+		//int posTermPositionInMap = curPosTerm.positionInMap;
+		
 		commandComponentPosTerm = commandComponent.posTerm;
 		commandComponentName = commandComponent.name;
 		int commandComponentCount = curCommand.commandsCountMap.get(commandComponent);
 		
+		while((!structType.matches(commandComponentPosTerm) 	
+				|| !(commandComponentCount > 0)
+				|| !structName.matches(commandComponentName)) && isOptionalTerm){
+			
+			curPosTerm = posTermList.get(i);
+			
+			commandComponent = curPosTerm.commandComponent;
+			isOptionalTerm = curPosTerm.isOptionalTerm();
+			//posTermPositionInMap = curPosTerm.positionInMap;
+			
+			commandComponentPosTerm = commandComponent.posTerm;
+			commandComponentName = commandComponent.name;
+			commandComponentCount = curCommand.commandsCountMap.get(commandComponent);
+			i++;
+		}
+		
 		if(structType.matches(commandComponentPosTerm) 	
 				&& commandComponentCount > 0
 				&& structName.matches(commandComponentName)){
+			
 			curCommand.commandsMap.put(commandComponent, newStruct);
 			//sets the posTermStruct for the posTerm. No effect?!?***
-			posList.get(i).set_posTermStruct(newStruct);
+			posTermList.get(i).set_posTermStruct(newStruct);
 			//here newComponent must have been in the original required set
 			curCommand.commandsCountMap.put(commandComponent, commandComponentCount - 1);
 			//use counter to track whether map is satisfied
-			curCommand.componentCounter--;
+			if(!isOptionalTerm){
+				curCommand.componentCounter--;
+			}
 			increment_commandNumUnits(curCommand, newStruct);
 			curCommand.lastAddedCompIndex = i;
-			return curCommand.componentCounter < 1;
+			boolean hasOptionalTermsLeft = i < posTermListSz - 1;
+			//should iterate to see if only negative-indexed commands left.
+			return new CommandSat(curCommand.componentCounter < 1, hasOptionalTermsLeft);
 			
-		}else{
+		}else {
 			/*System.out.println("Component not matching inside addComponent");
 			System.out.println("curCommand" + curCommand);
 			System.out.println("commandComponentName" + commandComponentName);
 			System.out.println("commandComponentPosTerm" + commandComponentPosTerm);
 			System.out.println("structName" + structName);
 			System.out.println("BEFORE? " + before); */
-			return false;
+			boolean hasOptionalTermsLeft = i < posTermListSz - 1;
+			return new CommandSat(false, hasOptionalTermsLeft);
 		}
 		//}
 		//System.out.println("~~~commandComponentName" + commandComponentName);

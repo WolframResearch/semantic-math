@@ -18,6 +18,7 @@ import com.google.common.collect.Multimap;
 
 import thmp.Struct.NodeType;
 import thmp.ThmP1.ParsedPair;
+import thmp.WLCommand.CommandSat;
 import thmp.WLCommand.PosTerm;
 import thmp.WLCommand.WLCommandComponent;
 
@@ -245,7 +246,7 @@ public class ParseToWLTree {
 			Iterator<WLCommand> WLCommandListIter = WLCommandList.iterator();
 			while (WLCommandListIter.hasNext()) {
 				WLCommand curCommand = WLCommandListIter.next();
-				boolean commandSat = WLCommand.addComponent(curCommand, struct, false);
+				CommandSat commandSat = WLCommand.addComponent(curCommand, struct, false);
 				
 				// if commandSat, remove all the waiting, triggered commands for
 				// now, except current struct,
@@ -253,8 +254,10 @@ public class ParseToWLTree {
 				// WLCommandList.
 				// But what if a longer WLCommand later fits better? Like
 				// "derivative of f wrt x"
-				if (commandSat) {
-					satisfiedCommands.add(curCommand);
+				if (commandSat.isCommandSat()) {
+					satisfiedCommands.add(curCommand);					
+				}
+				if(!commandSat.isHasOptionalTermsLeft()){
 					WLCommandListIter.remove();
 				}
 			}
@@ -311,17 +314,22 @@ public class ParseToWLTree {
 				//curCommand's terms before trigger word are satisfied. Add them to triggered WLCommand.
 				if(curCommandSat){
 					boolean curCommandSatWhole = false;
+					boolean hasOptionalTermsLeft = false;
 					//add Struct corresponding to trigger word
 					WLCommand.addTriggerComponent(curCommand, struct);
 					
 					for(Struct curStruct : waitingStructList){
 						//see if the whole command is satisfied, not just the part before trigger word
 						//namely the trigger word is last word
-						curCommandSatWhole = WLCommand.addComponent(curCommand, curStruct, true);						
+						CommandSat commandSat = WLCommand.addComponent(curCommand, curStruct, true);
+						curCommandSatWhole = commandSat.isCommandSat();		
+						hasOptionalTermsLeft = commandSat.isHasOptionalTermsLeft();
 					}
 					if(curCommandSatWhole){
 						satisfiedCommands.add(curCommand);
-					}else{
+					}
+					
+					if(!curCommandSatWhole || hasOptionalTermsLeft){
 						WLCommandList.add(curCommand);
 					}
 				}
@@ -512,11 +520,15 @@ public class ParseToWLTree {
 				Iterator<WLCommand> ChildWLCommandListIter = WLCommandList.iterator();
 				while(ChildWLCommandListIter.hasNext()){
 					WLCommand curCommand = ChildWLCommandListIter.next();
-					boolean commandSat = WLCommand.addComponent(curCommand, childRelationStruct, false);
+					CommandSat commandSat = WLCommand.addComponent(curCommand, childRelationStruct, false);
+					boolean isCommandSat = commandSat.isCommandSat();
+					boolean hasOptionalTermsLeft = commandSat.isHasOptionalTermsLeft();
 					////add struct to posTerm to posTermList! ////////////
 					
-					if(commandSat){
-						satisfiedCommands.add(curCommand);
+					if(isCommandSat){
+						satisfiedCommands.add(curCommand);						
+					}
+					if(!hasOptionalTermsLeft){
 						//need to remove from WLCommandList
 						ChildWLCommandListIter.remove();
 					}
