@@ -96,6 +96,7 @@ public class WLCommand {
 	 */
 	private int optionalTermsCount;
 	
+	private int defaultOptionalTermsCount;
 	/**
 	 * Index in list of WLCommand in Struct that 
 	 * *Not* intrinsic to a WLCommand instance, create custom wrapper to put around this?
@@ -108,6 +109,13 @@ public class WLCommand {
 	 */
 	//private Struct headStruct;
 	
+	/**
+	 * @return the defaultOptionalTermsCount
+	 */
+	public int getDefaultOptionalTermsCount() {
+		return defaultOptionalTermsCount;
+	}
+
 	/**
 	 * @param optionalTermsCount the optionalTermsCount to set
 	 */
@@ -279,7 +287,7 @@ public class WLCommand {
 		curCommand.triggerWordIndex = triggerWordIndex;
 		curCommand.lastAddedCompIndex = triggerWordIndex;
 		curCommand.optionalTermsCount = optionalTermsCount;
-		
+		curCommand.defaultOptionalTermsCount = optionalTermsCount;
 		return curCommand;
 	}
 	
@@ -300,6 +308,7 @@ public class WLCommand {
 		newCommand.lastAddedCompIndex = curCommand.lastAddedCompIndex;
 		newCommand.commandWrapper = curCommand.commandWrapper;
 		newCommand.optionalTermsCount = curCommand.optionalTermsCount;
+		newCommand.defaultOptionalTermsCount = curCommand.defaultOptionalTermsCount;
 		return newCommand;
 	}
 	
@@ -808,6 +817,7 @@ public class WLCommand {
 	 * @param newStruct new Struct to be added
  	 */
 	public static void addTriggerComponent(WLCommand curCommand, Struct newStruct){
+		
 		WLCommandComponent commandComponent = curCommand.posTermList.get(curCommand.triggerWordIndex).commandComponent;
 		int commandComponentCount = curCommand.commandsCountMap.get(commandComponent);
 		

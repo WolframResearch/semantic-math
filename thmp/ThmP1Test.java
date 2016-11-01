@@ -350,7 +350,7 @@ public class ThmP1Test {
 			st = "Let $S$ be a geometrically integral $K$-algebra";
 			st = "Let $R$ be a $k$-algebra and an integral domain";
 			st = "Group $G$ acts on space $X$ by conjugation";
-			st = "Group $G$ acts on space $X$";
+			st = "Group $G$ acts on space $X$ by conjugation";
 			//st = "$F$ is field, so is $G$";
 			//st = "regular local ring";
 			//st = "Let $R$ be integral domain";
