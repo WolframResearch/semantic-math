@@ -348,6 +348,7 @@ public class StructH<H> extends Struct{
 	/**
 	 * Create WLCommandWrapper from WLCommand.
 	 * Add it to list of WLCommandWrappers.
+	 * Consider making moving this to parent class Struct.java.
 	 * @return
 	 */
 	public WLCommandWrapper add_WLCommandWrapper(WLCommand curCommand){		
@@ -356,6 +357,8 @@ public class StructH<H> extends Struct{
 		}
 		int listIndex = this.WLCommandWrapperList.size();
 		WLCommandWrapper curCommandWrapper = new WLCommandWrapper(curCommand, listIndex);
+		//add wrapper reference to curCommand
+		curCommand.setCommandWrapper(curCommandWrapper);
 		this.WLCommandWrapperList.add(curCommandWrapper);
 		return curCommandWrapper;
 	}

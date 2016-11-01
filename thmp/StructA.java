@@ -225,6 +225,8 @@ public class StructA<A, B> extends Struct{
 		}
 		int listIndex = this.WLCommandWrapperList.size();
 		WLCommandWrapper curCommandWrapper = new WLCommandWrapper(curCommand, listIndex);
+		//add wrapper reference to curCommand
+		curCommand.setCommandWrapper(curCommandWrapper);
 		this.WLCommandWrapperList.add(curCommandWrapper);
 		return curCommandWrapper;
 	}

@@ -136,7 +136,7 @@ public class WLCommandsList {
 				"Not[\\[Element]]", "symb|ent|adj|phrase, , true, TriggerMathObj" }));
 		
 		WLCommandMapBuilder.put("act", addCommand(new String[] { "Action[", "symb|ent|pro, , true", ", act|acts, trigger",
-				";", "symb|ent|pro, , true, TriggerMathObj", ", by, false, OPT", ", conjugation, true, OPT", "]" }));		
+				";", "symb|ent|pro, , true, TriggerMathObj", ";", ", by, false, OPT", ", conjugation, true, OPT", "]" }));		
 		
 		//auxpass, eg "is called"
 		WLCommandMapBuilder.put("is called", addCommand(new String[] { "symb|ent|pro, , true", "auxpass, is called, trigger",
@@ -209,7 +209,8 @@ public class WLCommandsList {
 		int componentCounter = 0;
 		// assert(commandStringAr.length == useAr.length);
 		int triggerWordIndex = -1;
-
+		int optionalTermsCount = 0;
+		
 		for (int i = 0; i < commandStringAr.length; i++) {
 
 			// those are regexes to be matched
@@ -253,7 +254,13 @@ public class WLCommandsList {
 				if (commandStrPartsLen > 3) {
 					//if trigger triggerMathObj
 					isTriggerMathObj = commandStrParts[3].trim().equals(TRIGGERMATHOBJSTR);
+					
 					isOptionalTerm = commandStrParts[3].trim().equals(OPTIONAL_TOKEN_STR);
+					
+					if(isOptionalTerm){
+						optionalTermsCount++;
+					}
+					
 					if (commandStrParts.length > 4) {
 						positionInMap = Integer.valueOf(commandStrParts[4]);
 					}
@@ -303,7 +310,7 @@ public class WLCommandsList {
 		}
 		
 		commandsCountMap = ImmutableMap.copyOf(commandsCountPreMap);
-		return WLCommand.create(commandsCountMap, posList, componentCounter, triggerWordIndex);
+		return WLCommand.create(commandsCountMap, posList, componentCounter, triggerWordIndex, optionalTermsCount);
 		
 	}
 
