@@ -4,12 +4,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 
+import thmp.WLCommand.OptionalPosTerm;
 import thmp.WLCommand.PosTerm;
 import thmp.WLCommand.WLCommandComponent;
 
@@ -40,6 +43,7 @@ public class WLCommandsList {
 	public static final int AUXINDEX = -2;
 	private static final String TRIGGERMATHOBJSTR = "TriggerMathObj";
 	private static final String OPTIONAL_TOKEN_STR = "OPT";
+	private static final Pattern OPTIONAL_TOKEN_PATTERN = Pattern.compile("OPT(\\d*)");
 	
 	/**
 	 * 
@@ -199,9 +203,12 @@ public class WLCommandsList {
 	///// name should be there already!
 	public static WLCommand addCommand(String[] commandStringAr) {
 		ImmutableMap<WLCommandComponent, Integer> commandsCountMap;
+		ImmutableMap<Integer, Integer> optionalTermsGroupCountMap = null;
 		// used to build commandsCountMap
 		Map<WLCommandComponent, Integer> commandsCountPreMap = new HashMap<WLCommandComponent, Integer>();
 
+		Map<Integer, Integer> optionalTermsGroupCountPreMap = null;
+		
 		List<PosTerm> posList = new ArrayList<PosTerm>();
 		// total number of components, it's sum of all entries in
 		// ComponentCountMap,
@@ -212,7 +219,8 @@ public class WLCommandsList {
 		int optionalTermsCount = 0;
 		
 		for (int i = 0; i < commandStringAr.length; i++) {
-
+			
+			int optionalGroupNum = 0;
 			// those are regexes to be matched
 			String commandStr = commandStringAr[i];
 
@@ -225,7 +233,7 @@ public class WLCommandsList {
 				String nameStr = "AUX"; // auxilliary string
 				WLCommandComponent commandComponent = new WLCommandComponent(posStr, nameStr);
 				//
-				PosTerm curTerm = new PosTerm(commandComponent, AUXINDEX, true, false, false);
+				PosTerm curTerm = new PosTerm(commandComponent, AUXINDEX, true, false);
 				posList.add(curTerm);
 			} else {
 
@@ -252,15 +260,40 @@ public class WLCommandsList {
 				// check length of commandStrParts to see if custom order is
 				// required
 				if (commandStrPartsLen > 3) {
+					String commandStrParts3 = commandStrParts[3].trim();
 					//if trigger triggerMathObj
-					isTriggerMathObj = commandStrParts[3].trim().equals(TRIGGERMATHOBJSTR);
-					
-					isOptionalTerm = commandStrParts[3].trim().equals(OPTIONAL_TOKEN_STR);
-					
-					if(isOptionalTerm){
-						optionalTermsCount++;
+					isTriggerMathObj = commandStrParts3.equals(TRIGGERMATHOBJSTR);
+					if(!isTriggerMathObj){
+						Matcher optionalTermMatcher = OPTIONAL_TOKEN_PATTERN.matcher(commandStrParts3);
+						
+						if(optionalTermMatcher.find()){
+							String groupNum = optionalTermMatcher.group(1);
+							//should only need to check if null, so why "" is no match?
+							if(groupNum != null && !groupNum.equals("")){
+								//System.out.println(groupNum + " groupNum");
+								optionalGroupNum = Integer.valueOf(groupNum);
+							}
+							
+							if(null == optionalTermsGroupCountPreMap){
+								optionalTermsGroupCountPreMap = new HashMap<Integer, Integer>();
+							}
+							
+							Integer num = optionalTermsGroupCountPreMap.get(optionalGroupNum);
+							if(null == num){
+								optionalTermsGroupCountPreMap.put(optionalGroupNum, 1);
+							}else{
+								optionalTermsGroupCountPreMap.put(optionalGroupNum, num + 1);
+							}
+							
+							optionalTermsCount++;
+							isOptionalTerm = true;
+						}
+						/*isOptionalTerm = OPTIONAL_TOKEN_PATTERN.matcher(commandStrParts[3].trim()).find();
+						
+						if(isOptionalTerm){
+							optionalTermsCount++;
+						}*/
 					}
-					
 					if (commandStrParts.length > 4) {
 						positionInMap = Integer.valueOf(commandStrParts[4]);
 					}
@@ -287,9 +320,13 @@ public class WLCommandsList {
 				
 				// curOcc is the position inside the list in commandsMap.
 				// but sometimes want to switch order of occurence in final
-				// command and order
-				// in original sentence
-				PosTerm curTerm = new PosTerm(commandComponent, positionInMap, useInPosList, isTriggerMathObj, isOptionalTerm);
+				// command and order in original sentence
+				PosTerm curTerm;
+				if(!isOptionalTerm){
+					curTerm = new PosTerm(commandComponent, positionInMap, useInPosList, isTriggerMathObj);
+				}else{
+					curTerm = new OptionalPosTerm(commandComponent, positionInMap, useInPosList, isTriggerMathObj, optionalGroupNum);
+				}
 				posList.add(curTerm);
 				// }
 				// PosTerm(WLCommandComponent commandComponent, int position,
@@ -298,6 +335,7 @@ public class WLCommandsList {
 				//optional CommandComponents are stored in commandsCountMap, but don't count
 				//towards componentCounter, which determines satisfiability.
 				commandsCountPreMap.put(commandComponent, curComponentCount + 1);
+				
 				if(!isOptionalTerm){					
 					componentCounter++;
 				}
@@ -310,7 +348,12 @@ public class WLCommandsList {
 		}
 		
 		commandsCountMap = ImmutableMap.copyOf(commandsCountPreMap);
-		return WLCommand.create(commandsCountMap, posList, componentCounter, triggerWordIndex, optionalTermsCount);
+		if(null != optionalTermsGroupCountPreMap){
+			optionalTermsGroupCountMap = ImmutableMap.copyOf(optionalTermsGroupCountPreMap);
+		}
+		
+		return WLCommand.create(commandsCountMap, posList, componentCounter, triggerWordIndex, 
+				optionalTermsCount, optionalTermsGroupCountMap);
 		
 	}
 

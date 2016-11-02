@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.naming.OperationNotSupportedException;
+
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 
@@ -73,10 +75,11 @@ public class WLCommand {
 	private int totalComponentCount;
 	
 	/**
-	 * Counter to keep track of which Structs, with which the current Struct this WLCommand
+	 * Counter to keep track of how many Structs, with which the current Struct this WLCommand
 	 * instance is associated to (has this struct as StructWLCommandStr), are associated with
-	 * another head. If this number is > totalComponentCount/2, do not use this WLCommand.
-	 * Only set to totalComponentCount when WLCommand first copied.
+	 * another head. If this number is above some threshold (e.g. > totalComponentCount-1), 
+	 * do not use this WLCommand. Initial value is 0;
+	 * Set to totalComponentCount *only* when WLCommand first copied.
 	 */
 	private int structsWithOtherHeadCount;
 	
@@ -97,6 +100,14 @@ public class WLCommand {
 	private int optionalTermsCount;
 	
 	private int defaultOptionalTermsCount;
+	
+	/**
+	 * Map of group numbers of optional terms and their terms counts, so values are number of terms
+	 * needed in that group for it to be considered satisfied. Decremented at runtime
+	 * (in copied WLCommand).
+	 */
+	private Map<Integer, Integer> optionalTermsGroupCountMap = new HashMap<Integer, Integer>();
+	
 	/**
 	 * Index in list of WLCommand in Struct that 
 	 * *Not* intrinsic to a WLCommand instance, create custom wrapper to put around this?
@@ -109,6 +120,13 @@ public class WLCommand {
 	 */
 	//private Struct headStruct;
 	
+	/**
+	 * @return the optionalTermsGroupCountMap
+	 */
+	public Map<Integer, Integer> getOptionalTermsGroupCountMap() {
+		return optionalTermsGroupCountMap;
+	}
+
 	/**
 	 * @return the defaultOptionalTermsCount
 	 */
@@ -199,25 +217,19 @@ public class WLCommand {
 		 */
 		private boolean triggerMathObj;
 		
-		/**
-		 * Whether this term is optional.
-		 */
-		private boolean isOptionalTerm;
-		
 		public PosTerm(WLCommandComponent commandComponent, int position, boolean includeInBuiltString,
-				boolean triggerMathObj, boolean isOptionalTerm){
+				boolean triggerMathObj){
 			this.commandComponent = commandComponent;
 			this.positionInMap = position;
 			this.includeInBuiltString = includeInBuiltString;
 			this.triggerMathObj = triggerMathObj;
-			this.isOptionalTerm = isOptionalTerm;
 		}
 		
 		/**
 		 * @return the isOptionalTerm
 		 */
 		public boolean isOptionalTerm() {
-			return isOptionalTerm;
+			return false;
 		}
 
 		@Override
@@ -227,6 +239,15 @@ public class WLCommand {
 		
 		public WLCommandComponent commandComponent(){
 			return this.commandComponent;
+		}
+		
+		/**
+		 * optionalGroupNum can only be called on optionalPosTerm.
+		 * @return
+		 */
+		public int optionalGroupNum(){			
+			throw new UnsupportedOperationException("Cannot call optionalGroupNum()"
+					+ "on a non-optional PosTerm!");
 		}
 		
 		/**
@@ -257,6 +278,37 @@ public class WLCommand {
 		}
 	}
 	
+	public static class OptionalPosTerm extends PosTerm{
+
+		/**
+		 * The group number for this optional term.
+		 */
+		private int optionalGroupNum;
+		
+		public OptionalPosTerm(WLCommandComponent commandComponent, int position, boolean includeInBuiltString,
+				boolean triggerMathObj, int optionalGroupNum) {
+			super(commandComponent, position, includeInBuiltString, triggerMathObj);
+			this.optionalGroupNum = optionalGroupNum;
+			
+		}
+		
+		/**
+		 * @return the isOptionalTerm
+		 */
+		public boolean isOptionalTerm() {
+			return true;
+		}
+		
+		/**
+		 * Get group number for this optional term.
+		 * @return
+		 */
+		public int optionalGroupNum(){
+			return optionalGroupNum;
+		}
+				
+	}
+	
 	//build list of commands?
 	//private String ; // 
 	// compiled bits to command
@@ -272,11 +324,18 @@ public class WLCommand {
 	 * Static factory pattern.
 	 * @param commands   Multimap of WLCommandComponent and the quantity needed for a WLCommand
 	 * Also need posList
+	 * @param commandsCountMap Immutable.
+	 * @param posList
+	 * @param componentCount
+	 * @param triggerWordIndex
+	 * @param optionalTermsCount
+	 * @param optionalTermsMap Immutable. Could be null.
+	 * @return
 	 */
 	public static WLCommand create(Map<WLCommandComponent, Integer> commandsCountMap, 
 			List<PosTerm> posList, int componentCount, int triggerWordIndex,
-			int optionalTermsCount){
-		//defensively copy?? Even though not external-facing
+			int optionalTermsCount, Map<Integer, Integer> optionalTermsMap){
+		//*Not* defensive/deep copy, should copy via copyCommand() before actually using.
 		WLCommand curCommand = new WLCommand();
 		curCommand.commandsMap = ArrayListMultimap.create();	
 		curCommand.commandsCountMap = commandsCountMap;		
@@ -288,14 +347,18 @@ public class WLCommand {
 		curCommand.lastAddedCompIndex = triggerWordIndex;
 		curCommand.optionalTermsCount = optionalTermsCount;
 		curCommand.defaultOptionalTermsCount = optionalTermsCount;
+		curCommand.optionalTermsGroupCountMap = optionalTermsMap;
+		
 		return curCommand;
 	}
 	
 	/**
+	 * Deep copy of the current WLCommand.
+	 * Deliberately don't copy commandWrapper, as that's set depending on how command is used.
 	 * @param curCommand To be copied
 	 * @return Deep copy of curCommand
 	 */
-	public static WLCommand copy(WLCommand curCommand){	
+	public static WLCommand copyCommand(WLCommand curCommand){	
 		WLCommand newCommand = new WLCommand();
 		newCommand.commandsMap = ArrayListMultimap.create(curCommand.commandsMap) ;
 		newCommand.commandsCountMap = new HashMap<WLCommandComponent, Integer>(curCommand.commandsCountMap) ; 
@@ -304,11 +367,14 @@ public class WLCommand {
 		newCommand.componentCounter = curCommand.componentCounter;
 		newCommand.triggerWordIndex = curCommand.triggerWordIndex;
 		newCommand.totalComponentCount = curCommand.totalComponentCount;
-		newCommand.structsWithOtherHeadCount = curCommand.totalComponentCount;
+		newCommand.structsWithOtherHeadCount = 0;
 		newCommand.lastAddedCompIndex = curCommand.lastAddedCompIndex;
-		newCommand.commandWrapper = curCommand.commandWrapper;
 		newCommand.optionalTermsCount = curCommand.optionalTermsCount;
 		newCommand.defaultOptionalTermsCount = curCommand.defaultOptionalTermsCount;
+		if(null != curCommand.optionalTermsGroupCountMap){
+			newCommand.optionalTermsGroupCountMap 
+				= new HashMap<Integer, Integer>(curCommand.optionalTermsGroupCountMap);
+		}
 		return newCommand;
 	}
 	
@@ -421,7 +487,7 @@ public class WLCommand {
 	}
 	
 	/**
-	 * Update the wrapper list to incorporate current struct.
+	 * Update the wrapper list to add current struct.
 	 * @param nextStruct
 	 * @param structToAppendCommandStr
 	 * @return Whether nextStruct already has associated head.
@@ -432,18 +498,23 @@ public class WLCommand {
 		Struct headStruct = nextStruct.structToAppendCommandStr();
 		boolean prevStructHeaded = false; 
 		if (headStruct != null) {
-			// in this case structToAppendCommandStr should not be
-			// null either
-			//System.out.println("listSIZE" + nextStructWrapperList.size());
-			//System.out.println("NEXTSTRUCT" + nextStruct);
-			// set the headCount of the last wrapper object
-			List<WLCommandWrapper> headStructWrapperList = headStruct.WLCommandWrapperList();
-			int wrapperListSz = headStructWrapperList.size();			
-			WLCommand lastWrapperCommand = headStructWrapperList.get(wrapperListSz-1).WLCommand();			
-			lastWrapperCommand.structsWithOtherHeadCount--;
-			System.out.println("Wrapper command struct" + headStruct);
-			//System.out.println("Wrapper Command to update: " + lastWrapperCommand);
-			prevStructHeaded = true;
+			//no need to update structsWithOtherHeadCount if the heads are already same. Note the two
+			//commands could be different, just with the same head.
+			if(structToAppendCommandStr != headStruct){
+				// in this case structToAppendCommandStr should not be
+				// null either
+				//System.out.println("listSIZE" + nextStructWrapperList.size());
+				//System.out.println("NEXTSTRUCT" + nextStruct);
+				// set the headCount of the last wrapper object
+				List<WLCommandWrapper> headStructWrapperList = headStruct.WLCommandWrapperList();
+				int wrapperListSz = headStructWrapperList.size();	
+				//get the last-added command
+				WLCommand lastWrapperCommand = headStructWrapperList.get(wrapperListSz-1).WLCommand();	
+				lastWrapperCommand.structsWithOtherHeadCount++;
+				System.out.println("Wrapper command struct " + headStruct);
+				//System.out.println("Wrapper Command to update: " + lastWrapperCommand);
+			}
+			prevStructHeaded = true;			
 		}
 		nextStruct.set_structToAppendCommandStr(structToAppendCommandStr);
 		return prevStructHeaded;
@@ -460,6 +531,9 @@ public class WLCommand {
 	public static String build(WLCommand curCommand, Struct firstPosTermStruct){
 		if(curCommand.componentCounter > 0) return "";
 		ListMultimap<WLCommandComponent, Struct> commandsMap = curCommand.commandsMap;
+		//value is 0 if that group is satisfied
+		Map<Integer, Integer> optionalTermsGroupCountMap = curCommand.optionalTermsGroupCountMap;
+		
 		//counts should now be all 0
 		Map<WLCommandComponent, Integer> commandsCountMap = curCommand.commandsCountMap;
 		List<PosTerm> posTermList = curCommand.posTermList;
@@ -503,7 +577,7 @@ public class WLCommand {
 			WLCommandComponent commandComponent = term.commandComponent;
 			
 			int positionInMap = term.positionInMap;
-			boolean isOptionalTerm = term.isOptionalTerm();
+			//boolean isOptionalTerm = term.isOptionalTerm();
 			
 			String nextWord = "";			
 			//-1 if WL command or auxilliary String
@@ -513,7 +587,7 @@ public class WLCommand {
 				if(positionInMap >= curCommandComponentList.size()){
 					System.out.println("positionInMap: " + positionInMap +" list size: "+curCommandComponentList.size() +" Should not happen!");
 					System.out.println("COMPONENT" + commandComponent);
-					System.out.println("COMMAND" + curCommand);
+					System.out.println("COMMAND" + commandsCountMap);
 					continue;
 				}
 				
@@ -552,7 +626,7 @@ public class WLCommand {
 				//set to the head struct the currently built command will be appended to
 				nextStruct.set_previousBuiltStruct(structToAppendCommandStr);
 				structToAppendCommandStr.set_posteriorBuiltStruct(nextStruct);				
-				
+				//check if been assigned to a different head
 				prevStructHeaded = updateWrapper(nextStruct, structToAppendCommandStr);
 				
 				/*if(nextStruct.structToAppendCommandStr() == null){						
@@ -588,7 +662,7 @@ public class WLCommand {
 						nextStruct.set_structToAppendCommandStr(structToAppendCommandStr);
 					} */
 				}				
-			}else {
+			} else {
 				//if(prevStruct != null && prevStruct.structToAppendCommandStr() == null )
 				//auxilliary Strings inside a WLCommand, eg "[", "\[Element]"	
 				if(!prevStructHeaded){
@@ -599,7 +673,14 @@ public class WLCommand {
 				//System.out.print("nextWord : " + nextWord + "prevStruct: " + prevStructHeaded);
 			}
 			
-			commandString += nextWord + " ";
+			if(term.isOptionalTerm()){
+				int optionalGroupNum = term.optionalGroupNum();
+				if(0 == optionalTermsGroupCountMap.get(optionalGroupNum)){
+					commandString += nextWord + " ";
+				}
+			}else{			
+				commandString += nextWord + " ";
+			}
 		}
 		System.out.println("\n CUR COMMAND: " + curCommand + " ");
 		System.out.print("BUILT COMMAND: " + commandString);
@@ -688,6 +769,8 @@ public class WLCommand {
 		List<PosTerm> posTermList = curCommand.posTermList;
 		int lastAddedComponentIndex = curCommand.lastAddedCompIndex;
 		int triggerWordIndex = curCommand.triggerWordIndex;
+		//could be null.
+		Map<Integer, Integer> optionalTermsGroupCountMap = curCommand.optionalTermsGroupCountMap;
 		
 		WLCommandComponent commandComponent;
 		String commandComponentPosTerm;
@@ -711,7 +794,7 @@ public class WLCommand {
 		}
 		
 		if(i == posTermListSz){
-			boolean hasOptionalTermsLeft = (curCommand.optionalTermsCount <= 0);
+			boolean hasOptionalTermsLeft = (curCommand.optionalTermsCount > 0);
 			return new CommandSat(curCommand.componentCounter < 1, hasOptionalTermsLeft, componentAdded);
 		}
 		
@@ -734,7 +817,7 @@ public class WLCommand {
 			i++;
 			curPosTerm = posTermList.get(i);
 			
-			System.out.println("curPosTerm " + curPosTerm.isOptionalTerm);
+			System.out.println("curPosTerm " + curPosTerm.isOptionalTerm());
 			commandComponent = curPosTerm.commandComponent;
 			isOptionalTerm = curPosTerm.isOptionalTerm();
 			posTermPositionInMap = curPosTerm.positionInMap;
@@ -749,8 +832,9 @@ public class WLCommand {
 		}
 		
 		if(structType.matches(commandComponentPosTerm) 	
-				&& curCommand.commandsCountMap.get(commandComponent) > 0
-				&& structName.matches(commandComponentName)){
+				&& structName.matches(commandComponentName)
+				//this component is actually needed
+				&& curCommand.commandsCountMap.get(commandComponent) > 0){
 		
 			System.out.println("!Matched current commandComponent: " + commandComponent + " " + structName);
 			curCommand.commandsMap.put(commandComponent, newStruct);
@@ -764,11 +848,21 @@ public class WLCommand {
 				curCommand.componentCounter--;
 			}else{
 				curCommand.optionalTermsCount--;
+				
+				int optionalGroupNum = curPosTerm.optionalGroupNum();
+				//decrement optional terms
+				//optionalTermsGroupCountMap cannot be null if grammar rules are valid.
+				assert(null != optionalTermsGroupCountMap);
+				
+				Integer curCount = optionalTermsGroupCountMap.get(optionalGroupNum);
+				if(null != curCount){
+					optionalTermsGroupCountMap.put(optionalGroupNum, curCount-1);
+				}
 			}
 			increment_commandNumUnits(curCommand, newStruct);
 			curCommand.lastAddedCompIndex = i;
 			componentAdded = true;			
-			boolean hasOptionalTermsLeft = (curCommand.optionalTermsCount <= 0);
+			boolean hasOptionalTermsLeft = (curCommand.optionalTermsCount > 0);
 			
 			return new CommandSat(curCommand.componentCounter < 1, hasOptionalTermsLeft, componentAdded);
 			
@@ -779,7 +873,7 @@ public class WLCommand {
 			System.out.println("commandComponentPosTerm" + commandComponentPosTerm);
 			System.out.println("structName" + structName);
 			System.out.println("BEFORE? " + before); */
-			boolean hasOptionalTermsLeft = (curCommand.optionalTermsCount <= 0);
+			boolean hasOptionalTermsLeft = (curCommand.optionalTermsCount > 0);
 			return new CommandSat(curCommand.componentCounter < 1, hasOptionalTermsLeft, componentAdded);
 		}
 		//}
@@ -890,13 +984,21 @@ public class WLCommand {
 		return curCommand.triggerWordIndex;
 	}
 	
+	/**
+	 * Counter to keep track of which Structs, with which the current Struct this WLCommand
+	 * instance is associated to (has this struct as structToAppendWLCommandStr), are associated with
+	 * another head. If this number is above some threshold (e.g. > totalComponentCount-1), 
+	 * do not use this WLCommand.
+	 * @param curCommand
+	 * @return
+	 */
 	public static int structsWithOtherHeadCount(WLCommand curCommand){
 		return curCommand.structsWithOtherHeadCount;
 	}
 	
-	public static void set_structsWithOtherHeadCount(WLCommand curCommand, int newCount){
+	/*public static void set_structsWithOtherHeadCount(WLCommand curCommand, int newCount){
 		 curCommand.structsWithOtherHeadCount = newCount;
-	}
+	}*/
 	
 	public static int totalComponentCount(WLCommand curCommand){
 		return curCommand.totalComponentCount;

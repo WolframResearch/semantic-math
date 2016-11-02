@@ -378,10 +378,10 @@ public class ThmP1 {
 		//start from 1, since first pos is already added.
 		for(int k = 1; k < posList.size(); k++){
 			String pos = posList.get(k);
-			if(pos.equals("noun") && entAdded){
-				continue;
-			}else if(pos.equals("ent")){
+			if(pos.equals("ent")){
 				entAdded = true;
+			}else if(pos.equals("noun") && entAdded){
+				continue;
 			}
 			pair.addExtraPos(posList.get(k));
 		}
@@ -730,8 +730,10 @@ public class ThmP1 {
 					Pair pair = new Pair(curWord, posMMap.get(searchKey).get(0).split("_")[0]);
 					pairs.add(pair);
 				} // if lastTerm is entity, eg A-module
-				if (mathObjMap.containsKey(lastTerm) || mathObjMap.containsKey(lastTermS1)
-						|| mathObjMap.containsKey(lastTermS2) || mathObjMap.containsKey(lastTermS3)) {
+				
+				
+				if (isTokenEnt(lastTerm) || isTokenEnt(lastTermS1)
+						|| isTokenEnt(lastTermS2) || isTokenEnt(lastTermS3)) {
 
 					Pair pair = new Pair(curWord, "ent");
 					pairs.add(pair);
@@ -833,7 +835,7 @@ public class ThmP1 {
 					curWord = curWord + " " + strAr[++i];
 					curType = "pre";
 				} else if (i < strAr.length - 1 && (mathObjMap.containsKey(strAr[i+1]) ||
-						posMMap.containsKey(strAr[i + 1]) && posMMap.get(strAr[i + 1]).get(0).matches("noun"))) 
+						posMMap.containsKey(strAr[i + 1]) && posMMap.get(strAr[i + 1]).get(0).equals("noun"))) 
 				{
 					// eg "vanishing locus" functions as amod: adjectivial
 					// modifier
@@ -935,8 +937,8 @@ public class ThmP1 {
 					}
 				}
 				curpair.set_pos(bestCurType);
-				/*if(bestCurType.equals("adj")){ 
-					System.out.println("#### adj word: " + pairs.get(index).word());
+				/*if(bestCurType.equals("ent")){ 
+					System.out.println("#### ent word: " + pairs.get(index).word());
 					
 				}*/
 				if (bestCurType.equals("ent")){
@@ -1284,6 +1286,22 @@ public class ThmP1 {
 		
 		parseState.setTokenList(structList);
 		return parseState;
+	}
+	
+	/**
+	 * Determines whether the token string represents a math
+	 * entity.
+	 * @return
+	 */
+	private static boolean isTokenEnt(String word){
+		List<String> lastTermPosList = posMMap.get(word);
+		if(!lastTermPosList.isEmpty()){
+			//iterate through list?
+			if(lastTermPosList.get(0).equals("ent")){
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	/**

@@ -51,7 +51,7 @@ public class Pair {
 				extraPosList = new ArrayList<String>();
 				}
 			}
-		}
+		}		
 		this.extraPosList.add(pos);
 	}
 	

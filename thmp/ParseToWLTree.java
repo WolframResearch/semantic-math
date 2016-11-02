@@ -247,7 +247,7 @@ public class ParseToWLTree {
 			while (WLCommandListIter.hasNext()) {
 				WLCommand curCommand = WLCommandListIter.next();
 				boolean beforeTriggerIndex = false;
-				System.out.println("ADDING COMMAND " + curCommand + " for STRUCT " + struct);
+				//System.out.println("ADDING COMMAND " + curCommand + " for STRUCT " + struct);
 				CommandSat commandSat = WLCommand.addComponent(curCommand, struct, beforeTriggerIndex);
 				
 				// if commandSat, remove all the waiting, triggered commands for
@@ -257,12 +257,14 @@ public class ParseToWLTree {
 				// But what if a longer WLCommand later fits better? Like
 				// "derivative of f wrt x"
 				//is no component added, means command already satisfied & built previously.
-				if (commandSat.isCommandSat() ){//&& commandSat.isComponentAdded()) {	
-					System.out.println("ADDED TO SAT LIST");
+				if (commandSat.isCommandSat() && commandSat.isComponentAdded()) {	
+					System.out.println("ADDED TO SAT LIST" + " defaultOptionalTermsCount " + curCommand.getDefaultOptionalTermsCount());
 
 					satisfiedCommandsList.add(curCommand);
-					if(curCommand.getDefaultOptionalTermsCount() == 0 || 
-							!commandSat.hasOptionalTermsLeft() ){					
+					if(curCommand.getDefaultOptionalTermsCount() == 0
+							|| !commandSat.hasOptionalTermsLeft() ){
+						System.out.println("commandsMap " + curCommand);
+						System.out.println("REMOVED COMMAND" + " " +commandSat.hasOptionalTermsLeft());
 						WLCommandListIter.remove();
 					}
 				}
@@ -297,7 +299,7 @@ public class ParseToWLTree {
 			//WLCommand curCommand;
 			for(WLCommand curCommandInCol : triggeredCol){
 				//Deelp copy the WLCommands! So not to modify the ones in WLCommandMap
-				WLCommand curCommand = WLCommand.copy(curCommandInCol);
+				WLCommand curCommand = WLCommand.copyCommand(curCommandInCol);
 				
 				//backtrack until either stop words (ones that trigger ParseStructs) are reached.
 				//or the beginning of structDeque is reached.
@@ -339,7 +341,7 @@ public class ParseToWLTree {
 						isComponentAdded |= commandSat.isComponentAdded();
 					}					
 					
-					if(curCommandSatWhole ){//&& isComponentAdded){
+					if(curCommandSatWhole && isComponentAdded){
 						System.out.println("ADDED TO SAT LIST");
 
 						satisfiedCommandsList.add(curCommand);
@@ -546,13 +548,14 @@ public class ParseToWLTree {
 					boolean isComponentAdded = commandSat.isComponentAdded();
 					////add struct to posTerm to posTermList! ////////////
 					
-					if(isCommandSat){// && isComponentAdded){
+					if(isCommandSat && isComponentAdded){
 						System.out.println("ADDED TO SAT LIST");
 						satisfiedCommandsList.add(curCommand);	
 						
 						if(curCommand.getDefaultOptionalTermsCount() == 0 || !hasOptionalTermsLeft){
 							//need to remove from WLCommandList
 							ChildWLCommandListIter.remove();
+							System.out.println("REMOVED COMMAND");
 						}
 					}
 					
@@ -633,14 +636,16 @@ public class ParseToWLTree {
 		//System.out.println("HEAD: " + WLCommand.totalComponentCount(structWrapperList.get(0).WLCommand));
 		for(int i = structWrapperListSz - 1; i > -1; i--){
 			WLCommandWrapper curWrapper = structWrapperList.get(i);
-			WLCommand curCommand = curWrapper.WLCommand;
+			WLCommand curCommand = curWrapper.wlCommand;
+			System.out.println("********about to append string " + curWrapper.wlCommandStr);
+			System.out.println(WLCommand.structsWithOtherHeadCount(curCommand) + " "+
+					 WLCommand.totalComponentCount(curCommand));
 			//right now that threshold is: all components must be included.
-			if(WLCommand.structsWithOtherHeadCount(curCommand) 
-					> WLCommand.totalComponentCount(curCommand) - 1){
+			if(WLCommand.structsWithOtherHeadCount(curCommand) < 1){
 				//System.out.println("wrapperList Size" + structWrapperListSz);
 				//System.out.println(struct.WLCommandStr());
 				//parsedSB.append(struct.WLCommandStr());
-				parsedSB.append(curWrapper.WLCommandStr);
+				parsedSB.append(curWrapper.wlCommandStr);
 				
 				//form the int[] contex vector by going down struct				
 				// curCommand's type determines the num attached to head of structH,
@@ -651,7 +656,7 @@ public class ParseToWLTree {
 				}
 				//get the ParseStruct based on type
 				ParseStructType type = ParseStructType.getType(struct);
-				ParsedPair pair = new ParsedPair(curWrapper.WLCommandStr, struct.maxDownPathScore(), 
+				ParsedPair pair = new ParsedPair(curWrapper.wlCommandStr, struct.maxDownPathScore(), 
 						struct.numUnits(), WLCommand.commandNumUnits(curCommand));
 				//partsMap.put(type, curWrapper.WLCommandStr);	
 				partsMap.put(type, pair);
@@ -825,20 +830,20 @@ public class ParseToWLTree {
 		 * in the order the commands are built: inner -> outer, earlier ->
 		 * later.
 		 */
-		private WLCommand WLCommand;
+		private WLCommand wlCommand;
 		//WLCommand's index in list
 		private int listIndex;
 		//built command String associated with this command.
-		private String WLCommandStr;
+		private String wlCommandStr;
 		//depth of highestStruct
 		private int leastDepth;
 		//highest struct in tree amongst Structs that build this WLCommand, ie closest to root.
 		private Struct highestStruct;
 		
 		public WLCommandWrapper(WLCommand curCommand, int listIndex){			
-			this.WLCommand = curCommand;
+			this.wlCommand = curCommand;
 			this.listIndex = listIndex;
-		}
+		}		
 		
 		public void set_leastDepth(int depth){
 			this.leastDepth = depth;
@@ -866,11 +871,11 @@ public class ParseToWLTree {
 		}
 		
 		public WLCommand WLCommand(){
-			return this.WLCommand;
+			return this.wlCommand;
 		}
 		
 		public String WLCommandStr(){
-			return this.WLCommandStr;
+			return this.wlCommandStr;
 		}
 		
 		/**
@@ -878,20 +883,21 @@ public class ParseToWLTree {
 		 * @param WLCommandStr
 		 */
 		public void set_WLCommandStr(String WLCommandStr){
-			this.WLCommandStr = this.WLCommandStr == null ? "" : this.WLCommandStr;
+			this.wlCommandStr = this.wlCommandStr == null ? "" : this.wlCommandStr; //<--now not necessary
 			//System.out.println("&******&&&&&&&****** WLCommandStr before setting " + this.WLCommandStr);
 			//Why append and not just set??
 			//this.WLCommandStr += " " + WLCommandStr;
-			this.WLCommandStr = WLCommandStr;
+			//System.out.println("SETTING COMMAND STR " + WLCommandStr);
+			this.wlCommandStr = WLCommandStr;
 		}		
 		
 		public void clear_WLCommandStr(){
-			this.WLCommandStr = null;
+			this.wlCommandStr = null;
 		}
 		
 		@Override
 		public String toString(){
-			return "Wrapper around: " + this.WLCommand.toString();
+			return "Wrapper around: " + this.wlCommand.toString();
 		}
 	}
 }
