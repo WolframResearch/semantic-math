@@ -6,13 +6,18 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import javax.naming.OperationNotSupportedException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ListMultimap;
 
 import thmp.ParseToWLTree.WLCommandWrapper;
+import thmp.Struct.NodeType;
+import thmp.WLCommand.PosTerm;
+import thmp.WLCommand.WLCommandComponent;
 
 /**
  * WL command, containing the components that need to be hashed. 
@@ -108,6 +113,8 @@ public class WLCommand {
 	 */
 	private Map<Integer, Integer> optionalTermsGroupCountMap = new HashMap<Integer, Integer>();
 	
+	private static final boolean DEBUG = true;
+	
 	/**
 	 * Index in list of WLCommand in Struct that 
 	 * *Not* intrinsic to a WLCommand instance, create custom wrapper to put around this?
@@ -183,6 +190,88 @@ public class WLCommand {
 	private static final int NEITHERCHILD = 2;
 	
 	/**
+	 * Immutable subclass .
+	 * The mutable version created by WLCommand copies from this immutable version 
+	 * every time a copy is needed. 
+	 */
+	public static class ImmutableWLCommand extends WLCommand{
+		
+		public ImmutableWLCommand(){
+		}
+		
+		/**
+		 * Static factory pattern.
+		 * @param commands   Multimap of WLCommandComponent and the quantity needed for a WLCommand
+		 * Also need posList
+		 * @param commandsCountMap Immutable.
+		 * @param posList
+		 * @param componentCount
+		 * @param triggerWordIndex
+		 * @param optionalTermsCount
+		 * @param optionalTermsMap Immutable. Could be null.
+		 * @return
+		 */
+		private ImmutableWLCommand(Map<WLCommandComponent, Integer> commandsCountMap, 
+				List<PosTerm> posList, int componentCount, int triggerWordIndex,
+				int optionalTermsCount, Map<Integer, Integer> optionalTermsMap){
+			
+			//use setters instead!?
+			super.commandsMap = ArrayListMultimap.create();	
+			super.commandsCountMap = commandsCountMap;		
+			super.posTermList = posList;
+			super.componentCounter = componentCount;
+			super.totalComponentCount = componentCount;
+			
+			super.triggerWordIndex = triggerWordIndex;
+			super.lastAddedCompIndex = triggerWordIndex;
+			super.optionalTermsCount = optionalTermsCount;
+			super.defaultOptionalTermsCount = optionalTermsCount;
+			super.optionalTermsGroupCountMap = optionalTermsMap;
+			
+		}
+		
+		/**
+		 * Builder for ImmutableWLCommand objects, to  
+		 * enhance immutability.
+		 */
+		public static class Builder{
+			//should be ok without modifiers , thus package-private
+			Map<WLCommandComponent, Integer> commandsCountMap; 
+			ImmutableList<PosTerm> posTermList; 
+			
+			//lastAddedCompIndex defaults to triggerWordIndex
+			int triggerWordIndex;
+			//defaultOptionalTermsCount defaults to optionalTermsCount
+			int optionalTermsCount; 
+			//componentCounter defaults to totalComponentCount
+			int totalComponentCount;
+			
+			ImmutableMap<Integer, Integer> optionalTermsMap;
+			ImmutableMap<Integer, Integer> optionalTermsGroupCountMap;
+			
+			public Builder(Map<WLCommandComponent, Integer> commandsCountMap, 
+					ImmutableList<PosTerm> posList, int componentCount, int triggerWordIndex,
+					int optionalTermsCount, ImmutableMap<Integer, Integer> optionalTermsMap){
+				
+				this.commandsCountMap = commandsCountMap;		
+				this.posTermList = posList;
+				this.totalComponentCount = componentCount;				
+				this.triggerWordIndex = triggerWordIndex;
+				this.optionalTermsCount = optionalTermsCount;
+				this.optionalTermsGroupCountMap = optionalTermsMap;
+			}
+			
+			public ImmutableWLCommand build(){
+				return new ImmutableWLCommand(commandsCountMap, posTermList, totalComponentCount, triggerWordIndex, 
+						optionalTermsCount, optionalTermsMap);				
+			}
+			
+		}
+		
+		
+	}
+	
+	/**
 	 * PosTerm stores a part of speech term, and the position in commandsMap
 	 * it occurs, to build a WLCommand, ie turn triggered phrases into WL commands.
 	 * 
@@ -203,10 +292,11 @@ public class WLCommand {
 		/**
 		 * position of the relevant term inside a list in commandsMap.
 		 * Ie the order it shows up in in the built-out command.
-		 * -1 if it's a WL command, eg \[Element].
+		 * -1 if it's a WL command, eg \[Element]. This should be set
+		 * before building.
 		 */
 		private int positionInMap;
-		
+
 		/**
 		 * Whether or not to include in the built String created by WLCommand.build()
 		 */
@@ -217,12 +307,202 @@ public class WLCommand {
 		 */
 		private boolean triggerMathObj;
 		
-		public PosTerm(WLCommandComponent commandComponent, int position, boolean includeInBuiltString,
-				boolean triggerMathObj){
+		private boolean isTrigger;
+		
+		/**
+		 * Builder class for PosTerm.
+		 * Named PBuilder instead of PosTermBuilder, to 
+		 */
+		public static class PBuilder{
+			private static final int WLCOMMANDINDEX = WLCommandsList.WLCOMMANDINDEX;
+			private static final int AUXINDEX = WLCommandsList.AUXINDEX;
+			private static final int DEFAULT_POSITION_IN_MAP = WLCommandsList.getDefaultPositionInMap();
+			private static final Pattern OPTIONAL_TOKEN_PATTERN = Pattern.compile("OPT(\\d*)");
+			//private static final String TRIGGERMATHOBJSTR = "TriggerMathObj";				
+			
+			private WLCommandComponent commandComponent;			
+			
+			//private Struct posTermStruct;
+			//this value is only used if it's set to a non-negative
+			//value in one of the constructors
+			private int positionInMap = DEFAULT_POSITION_IN_MAP;			
+			/**
+			 * @return the positionInMap
+			 */
+			public int getPositionInMap() {
+				return positionInMap;
+			}
+
+			private boolean includeInBuiltString;	
+			//whether or not to trigger math object inner product computation.
+			private boolean isTriggerMathObj;
+			//whether this term is the trigger term.
+			private boolean isTrigger;
+			
+			private static final String DEFAULT_AUX_NAME_STR = "AUX";
+			
+			/**
+			 * @return the isTrigger
+			 */
+			public boolean isTrigger() {
+				return this.isTrigger;
+			}
+
+			private boolean isOptionalTerm;
+			//0 by default
+			private int optionalGroupNum;
+			
+			/**
+			 * Builder for 4 terms.
+			 * @param posStr
+			 * @param nameStr
+			 * @param includeInBuiltString
+			 * @param isTrigger
+			 */
+			public PBuilder(String posStr, String nameStr, boolean includeInBuiltString){
+				
+				posStr = (null == posStr) ? ".*" : posStr.trim();
+				posStr = posStr.matches("\\s*") ? ".*" : posStr;
+				// String nameStr = commandStrParts.length > 2 ?
+				// commandStrParts[1] : "*";
+				nameStr = (null == nameStr) ? ".*" : nameStr;
+				
+				//String[] cmdPart2Ar = commandStrParts[2].trim().split("_");
+				
+				//could be trigger_true, to indicate inclusion in posString
+				//boolean useInPosList = cmdPart2Ar.length > 1 ? Boolean.valueOf(cmdPart2Ar[1])
+						//: Boolean.valueOf(cmdPart2Ar[0]);	
+				
+				// process command and create WLCommandComponent and PosList
+				this.commandComponent = new WLCommandComponent(posStr, nameStr);
+			
+			}
+			
+			/**
+			 * 
+			 * @param posStr Part of speech string
+			 * @param nameStr
+			 * @param includeInBuiltString
+			 * @param isTrigger
+			 * @param isTriggerMathObj
+			 */
+			public PBuilder(String posStr, String nameStr, boolean includeInBuiltString, boolean isTrigger,
+					boolean isTriggerMathObj){
+				this(posStr, nameStr, includeInBuiltString);
+				this.isTrigger = isTrigger;
+				this.isTriggerMathObj = isTriggerMathObj;
+			}
+			
+			/**
+			 * Builder for 4 terms or more, optional case.
+			 * isTrigger must be false in this case, as trigger word is not optional.
+			 * @param posStr
+			 * @param nameStr
+			 * @param includeInBuiltString
+			 * @param isTrigger
+			 * @param isTriggerMathObj
+			 * @param optionGroup  Which optional group this term belongs to.
+			 */
+			public PBuilder(String posStr, String nameStr, boolean includeInBuiltString,
+					boolean isTriggerMathObj, String optionGroup){
+				//isTrigger = false, as trigger word is not optional.
+				this(posStr, nameStr, includeInBuiltString, false, isTriggerMathObj);
+				
+				int optionalGroupNum = 0;
+				
+				Matcher optionalTermMatcher = OPTIONAL_TOKEN_PATTERN.matcher(optionGroup);
+				
+				if(optionalTermMatcher.find()){
+					String groupNum = optionalTermMatcher.group(1);
+						//should only need to check if null, so why "" is no match?
+					if(groupNum != null && !groupNum.equals("")){
+							//System.out.println(groupNum + " groupNum");
+						optionalGroupNum = Integer.valueOf(groupNum);
+					}	
+					this.optionalGroupNum = optionalGroupNum;
+					this.isOptionalTerm = true;
+				}					
+			}
+			
+			/**
+			 * Builder for 5 terms, with positionInMap (position of term in commandsMap).
+			 * @param posStr
+			 * @param nameStr
+			 * @param includeInBuiltString
+			 * @param isTrigger
+			 * @param isTriggerMathObj
+			 * @param optionGroup  Which optional group this term belongs to.
+			 */
+			public PBuilder(String posStr, String nameStr, boolean includeInBuiltString, boolean isTrigger,
+					boolean isTriggerMathObj, int positionInMap){
+				
+				this(posStr, nameStr, includeInBuiltString, isTrigger, isTriggerMathObj);
+				this.positionInMap = positionInMap;
+
+			}
+	
+			public PBuilder(String posStr, String nameStr, boolean includeInBuiltString,
+					boolean isTriggerMathObj, String optionGroup, int positionInMap){
+				
+				this(posStr, nameStr, includeInBuiltString, isTriggerMathObj, optionGroup);
+				this.positionInMap = positionInMap;
+			}
+			
+			/**
+			 * Auxiliary Strings, e.g. brackets.
+			 */
+			public PBuilder(String posStr){				
+				this.commandComponent = new WLCommandComponent(posStr, DEFAULT_AUX_NAME_STR);	
+				this.positionInMap = AUXINDEX;
+				this.includeInBuiltString = true;
+			}	
+			
+			/**
+			 * Sets positionInMap, should be called before build'ing.
+			 * @param positionInMap the positionInMap to set
+			 */
+			public void setPositionInMap(int positionInMap) {
+				this.positionInMap = positionInMap;
+			}
+			
+			/**
+			 * @return the commandComponent
+			 */
+			public WLCommandComponent getCommandComponent() {
+				return commandComponent;
+			}
+
+			/**
+			 * Creates PosTerm from this PBuilder.
+			 * @return
+			 */
+			public PosTerm build(){				
+				
+				if(this.isOptionalTerm){
+					return new OptionalPosTerm(commandComponent, positionInMap, includeInBuiltString,
+							isTriggerMathObj, optionalGroupNum);
+				}else{
+					return new PosTerm(commandComponent, positionInMap, includeInBuiltString,
+							isTrigger, isTriggerMathObj);
+				}
+			}		
+			
+		}
+		
+		private PosTerm(WLCommandComponent commandComponent, int position, boolean includeInBuiltString,
+				boolean isTrigger, boolean isTriggerMathObj){
 			this.commandComponent = commandComponent;
 			this.positionInMap = position;
 			this.includeInBuiltString = includeInBuiltString;
-			this.triggerMathObj = triggerMathObj;
+			this.triggerMathObj = isTriggerMathObj;
+			this.isTrigger = isTrigger;
+		}
+		
+		/**
+		 * @return the isOptionalTerm
+		 */
+		public boolean isTrigger() {
+			return this.isTrigger;
 		}
 		
 		/**
@@ -287,7 +567,8 @@ public class WLCommand {
 		
 		public OptionalPosTerm(WLCommandComponent commandComponent, int position, boolean includeInBuiltString,
 				boolean triggerMathObj, int optionalGroupNum) {
-			super(commandComponent, position, includeInBuiltString, triggerMathObj);
+			//cannot be trigger if optional term
+			super(commandComponent, position, includeInBuiltString, false, triggerMathObj);
 			this.optionalGroupNum = optionalGroupNum;
 			
 		}
@@ -321,62 +602,50 @@ public class WLCommand {
 	}
 	
 	/**
-	 * Static factory pattern.
-	 * @param commands   Multimap of WLCommandComponent and the quantity needed for a WLCommand
-	 * Also need posList
-	 * @param commandsCountMap Immutable.
-	 * @param posList
-	 * @param componentCount
-	 * @param triggerWordIndex
-	 * @param optionalTermsCount
-	 * @param optionalTermsMap Immutable. Could be null.
-	 * @return
-	 */
-	public static WLCommand create(Map<WLCommandComponent, Integer> commandsCountMap, 
-			List<PosTerm> posList, int componentCount, int triggerWordIndex,
-			int optionalTermsCount, Map<Integer, Integer> optionalTermsMap){
-		//*Not* defensive/deep copy, should copy via copyCommand() before actually using.
-		WLCommand curCommand = new WLCommand();
-		curCommand.commandsMap = ArrayListMultimap.create();	
-		curCommand.commandsCountMap = commandsCountMap;		
-		curCommand.posTermList = posList;
-		curCommand.componentCounter = componentCount;
-		curCommand.totalComponentCount = componentCount;
-		
-		curCommand.triggerWordIndex = triggerWordIndex;
-		curCommand.lastAddedCompIndex = triggerWordIndex;
-		curCommand.optionalTermsCount = optionalTermsCount;
-		curCommand.defaultOptionalTermsCount = optionalTermsCount;
-		curCommand.optionalTermsGroupCountMap = optionalTermsMap;
-		
-		return curCommand;
-	}
-	
-	/**
 	 * Deep copy of the current WLCommand.
 	 * Deliberately don't copy commandWrapper, as that's set depending on how command is used.
 	 * @param curCommand To be copied
 	 * @return Deep copy of curCommand
 	 */
-	public static WLCommand copyCommand(WLCommand curCommand){	
+	public static WLCommand createMutableWLCommandCopy(ImmutableWLCommand curCommand){	
+		
 		WLCommand newCommand = new WLCommand();
-		newCommand.commandsMap = ArrayListMultimap.create(curCommand.commandsMap) ;
-		newCommand.commandsCountMap = new HashMap<WLCommandComponent, Integer>(curCommand.commandsCountMap) ; 
+		//trivial cast so the compiler can see the private fields of the superclass (WLCommand)
+		//this trivial cast does not cost anything.
+		newCommand.commandsMap = ArrayListMultimap.create(((WLCommand)curCommand).commandsMap);
+		newCommand.commandsCountMap = new HashMap<WLCommandComponent, Integer>(((WLCommand)curCommand).commandsCountMap) ; 
 		//ImmutableMap.copyOf(curCommand.commandsCountMap);
-		newCommand.posTermList = new ArrayList<PosTerm>(curCommand.posTermList);
-		newCommand.componentCounter = curCommand.componentCounter;
-		newCommand.triggerWordIndex = curCommand.triggerWordIndex;
-		newCommand.totalComponentCount = curCommand.totalComponentCount;
+		newCommand.posTermList = new ArrayList<PosTerm>(((WLCommand)curCommand).posTermList);
+		
+		newCommand.totalComponentCount = ((WLCommand)curCommand).totalComponentCount;
+		newCommand.componentCounter = ((WLCommand)curCommand).totalComponentCount;
+
 		newCommand.structsWithOtherHeadCount = 0;
-		newCommand.lastAddedCompIndex = curCommand.lastAddedCompIndex;
-		newCommand.optionalTermsCount = curCommand.optionalTermsCount;
-		newCommand.defaultOptionalTermsCount = curCommand.defaultOptionalTermsCount;
-		if(null != curCommand.optionalTermsGroupCountMap){
+		newCommand.lastAddedCompIndex = ((WLCommand) curCommand).triggerWordIndex;
+		newCommand.triggerWordIndex = ((WLCommand) curCommand).triggerWordIndex;
+
+		newCommand.optionalTermsCount = ((WLCommand) curCommand).optionalTermsCount;
+		newCommand.defaultOptionalTermsCount = ((WLCommand)curCommand).optionalTermsCount;
+		
+		if(null != ((WLCommand)curCommand).optionalTermsGroupCountMap){
 			newCommand.optionalTermsGroupCountMap 
-				= new HashMap<Integer, Integer>(curCommand.optionalTermsGroupCountMap);
+				= new HashMap<Integer, Integer>(((WLCommand)curCommand).optionalTermsGroupCountMap);
 		}
 		return newCommand;
-	}
+	}	
+	/*
+	 *super.commandsMap = ArrayListMultimap.create();	
+			super.commandsCountMap = commandsCountMap;		
+			super.posTermList = posList;
+			super.componentCounter = componentCount;
+			super.totalComponentCount = componentCount;
+			
+			super.triggerWordIndex = triggerWordIndex;
+			super.lastAddedCompIndex = triggerWordIndex;
+			super.optionalTermsCount = optionalTermsCount;
+			super.defaultOptionalTermsCount = optionalTermsCount;
+			super.optionalTermsGroupCountMap = optionalTermsMap; 
+	 */
 	
 	/**
 	 * Find struct with least depth amongst Structs that build this WLCommand
@@ -503,7 +772,6 @@ public class WLCommand {
 			if(structToAppendCommandStr != headStruct){
 				// in this case structToAppendCommandStr should not be
 				// null either
-				//System.out.println("listSIZE" + nextStructWrapperList.size());
 				//System.out.println("NEXTSTRUCT" + nextStruct);
 				// set the headCount of the last wrapper object
 				List<WLCommandWrapper> headStructWrapperList = headStruct.WLCommandWrapperList();
@@ -511,7 +779,7 @@ public class WLCommand {
 				//get the last-added command
 				WLCommand lastWrapperCommand = headStructWrapperList.get(wrapperListSz-1).WLCommand();	
 				lastWrapperCommand.structsWithOtherHeadCount++;
-				System.out.println("Wrapper command struct " + headStruct);
+				//System.out.println("Wrapper command struct " + headStruct);
 				//System.out.println("Wrapper Command to update: " + lastWrapperCommand);
 			}
 			prevStructHeaded = true;			
@@ -585,9 +853,11 @@ public class WLCommand {
 				
 				List<Struct> curCommandComponentList = commandsMap.get(commandComponent);
 				if(positionInMap >= curCommandComponentList.size()){
-					System.out.println("positionInMap: " + positionInMap +" list size: "+curCommandComponentList.size() +" Should not happen!");
-					System.out.println("COMPONENT" + commandComponent);
-					System.out.println("COMMAND" + commandsCountMap);
+					if(DEBUG){
+						System.out.println("positionInMap: " + positionInMap +" list size: "+curCommandComponentList.size() +" Should not happen!");
+						System.out.println("COMPONENT" + commandComponent);
+						System.out.println("COMMAND" + commandsCountMap);
+					}
 					continue;
 				}
 				
@@ -682,15 +952,21 @@ public class WLCommand {
 				commandString += nextWord + " ";
 			}
 		}
-		System.out.println("\n CUR COMMAND: " + curCommand + " ");
-		System.out.print("BUILT COMMAND: " + commandString);
-		System.out.println("HEAD STRUCT: " + structToAppendCommandStr);
+		
+		if(DEBUG){
+			System.out.println("\n CUR COMMAND: " + curCommand + " ");
+			System.out.print("BUILT COMMAND: " + commandString);
+			System.out.println("HEAD STRUCT: " + structToAppendCommandStr);
+		}
 		
 		//make WLCommand refer to list of WLCommands rather than just one.
 		//Wrapper used here during build().
 		WLCommandWrapper curCommandWrapper = structToAppendCommandStr.add_WLCommandWrapper(curCommand);
-		System.out.println("~~~structToAppendCommandStr to append wrapper: " + structToAppendCommandStr);
-		System.out.println("curCommand just appended: " + curCommand);
+		
+		if(DEBUG){
+			System.out.println("~~~structToAppendCommandStr to append wrapper: " + structToAppendCommandStr);
+			System.out.println("curCommand just appended: " + curCommand);
+		}
 		//structToAppendCommandStr.set_WLCommand(curCommand);
 		
 		curCommandWrapper.set_highestStruct(structToAppendCommandStr);
@@ -746,15 +1022,14 @@ public class WLCommand {
 	 */
 	public static CommandSat addComponent(WLCommand curCommand, Struct newStruct, boolean before){
 		
-		System.out.println("addComponent CALLED. newStruct: " + newStruct);
 		//if key.name .matches()
 		//be careful with type, could be conj_, all sorts of stuff
 		String structPreType = newStruct.type();
 		String structType = structPreType.matches("conj_.*|disj_.*") ?
 				structPreType.split("_")[1] : structPreType;
 		
-		String structName = newStruct instanceof StructH ? newStruct.struct().get("name") : 
-			newStruct.prev1() instanceof String ? (String)newStruct.prev1() : "";
+		String structName = !newStruct.isStructA() ? newStruct.struct().get("name") : 
+			newStruct.prev1NodeType().equals(NodeType.STR) ? (String)newStruct.prev1() : "";
 		
 		//whether component has been added. Useful to avoid rebuilding commands 
 		//
@@ -817,33 +1092,26 @@ public class WLCommand {
 			i++;
 			curPosTerm = posTermList.get(i);
 			
-			System.out.println("curPosTerm " + curPosTerm.isOptionalTerm());
 			commandComponent = curPosTerm.commandComponent;
 			isOptionalTerm = curPosTerm.isOptionalTerm();
 			posTermPositionInMap = curPosTerm.positionInMap;
 			
 			commandComponentPosTerm = commandComponent.posTerm;
 			commandComponentName = commandComponent.name;
-			System.out.println("current commandComponent: " + commandComponent);
-			
-			/*if(posTermPositionInMap < 0 && i < posTermListSz - 1){
-				i++;
-			}*/
+		
 		}
 		
 		if(structType.matches(commandComponentPosTerm) 	
 				&& structName.matches(commandComponentName)
 				//this component is actually needed
 				&& curCommand.commandsCountMap.get(commandComponent) > 0){
-		
-			System.out.println("!Matched current commandComponent: " + commandComponent + " " + structName);
+					
 			curCommand.commandsMap.put(commandComponent, newStruct);
 			//sets the posTermStruct for the posTerm. No effect?!?***
 			posTermList.get(i).set_posTermStruct(newStruct);
 			//here newComponent must have been in the original required set
 			curCommand.commandsCountMap.put(commandComponent, commandComponentCount - 1);
 			//use counter to track whether map is satisfied
-			System.out.println("curCommand.componentCounter" + curCommand.componentCounter );
 			if(!isOptionalTerm){
 				curCommand.componentCounter--;
 			}else{
@@ -1067,12 +1335,32 @@ public class WLCommand {
 		//types should be consistent with types in Map
 		//eg ent, symb, pre, etc
 		private String posTerm;
+		
+		//pattern for posTerm
+		private Pattern posPattern;
 		//eg "of". Regex expression to be matched, eg .* to match anything
 		private String name;
+		Pattern namePattern;
 		
 		public WLCommandComponent(String posTerm, String name){
 			this.posTerm = posTerm;
+			this.posPattern = Pattern.compile(posTerm);
 			this.name = name;
+			this.namePattern = Pattern.compile(name);
+		}		
+		
+		/**
+		 * @return the posPattern
+		 */
+		public Pattern getPosPattern() {
+			return posPattern;
+		}
+
+		/**
+		 * @return the namePattern
+		 */
+		public Pattern getNamePattern() {
+			return namePattern;
 		}
 		
 		public String posTerm(){

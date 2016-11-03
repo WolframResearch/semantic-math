@@ -2,7 +2,6 @@ package thmp.test;
 
 import static org.junit.Assert.*;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,10 +12,8 @@ import org.junit.Test;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
-import thmp.Maps;
 import thmp.ParseState;
 import thmp.ParseStructType;
-import thmp.Struct;
 import thmp.ThmP1;
 
 /**
@@ -142,7 +139,7 @@ public class TestParseMain {
 	 */
 	@Test
 	public void test2(){
-		//           "$R/\\mathfrak p$ is catenary for every minimal prime $\\mathfrak p$"
+		//"$R/\\mathfrak p$ is catenary for every minimal prime $\\mathfrak p$"
 		String thm = "$R_\\mathfrak m$ is universally catenary for all maximal ideals $\\mathfrak m$";
 		//String parsed = "{HYP=[ \\[ForAll][ MathObj{maximal ideal, $\\mathfrak m$} ]  1.0  2  3], STM=[ MathObj{$R_\\mathfrak m$} \\[Element] MathObj{universally catenary}  0.9  3  4]}\n";
 		

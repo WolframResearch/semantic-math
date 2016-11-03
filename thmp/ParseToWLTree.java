@@ -19,6 +19,7 @@ import com.google.common.collect.Multimap;
 import thmp.Struct.NodeType;
 import thmp.ThmP1.ParsedPair;
 import thmp.WLCommand.CommandSat;
+import thmp.WLCommand.ImmutableWLCommand;
 import thmp.WLCommand.PosTerm;
 import thmp.WLCommand.WLCommandComponent;
 
@@ -52,7 +53,7 @@ public class ParseToWLTree {
 	/**
 	 * Trigger word lookup map.
 	 */
-	private static final Multimap<String, WLCommand> WLCommandMap = WLCommandsList.WLCommandMap();
+	private static final Multimap<String, ImmutableWLCommand> WLCommandMap = WLCommandsList.WLCommandMap();
 	
 	private static final Pattern PLURAL_PATTERN = Pattern.compile("(.+)s");
 	
@@ -75,11 +76,11 @@ public class ParseToWLTree {
 	 * Get the triggered collection 
 	 * @param struct
 	 */
-	private static Collection<WLCommand> get_triggerCol(String triggerKeyWord, String triggerType){
+	private static Collection<ImmutableWLCommand> get_triggerCol(String triggerKeyWord, String triggerType){
 		
-		Collection<WLCommand> triggeredCol;
+		Collection<ImmutableWLCommand> triggeredCol;
 		//copy into mutable collection
-		triggeredCol = new ArrayList<WLCommand>(WLCommandMap.get(triggerKeyWord));
+		triggeredCol = new ArrayList<ImmutableWLCommand>(WLCommandMap.get(triggerKeyWord));
 		
 		//if(triggeredCol.isEmpty()){
 		//add words from triggerWords redirects in case there's an entry there.
@@ -103,7 +104,7 @@ public class ParseToWLTree {
 		
 		Matcher pluralMatcher;
 		if(triggeredCol.isEmpty() && (pluralMatcher = PLURAL_PATTERN.matcher(triggerKeyWord)).find() ){
-			String keyWordSingular = pluralMatcher.group("$1");
+			String keyWordSingular = pluralMatcher.group(1);
 			triggeredCol.addAll(WLCommandMap.get(keyWordSingular));
 		}
 		
@@ -258,13 +259,10 @@ public class ParseToWLTree {
 				// "derivative of f wrt x"
 				//is no component added, means command already satisfied & built previously.
 				if (commandSat.isCommandSat() && commandSat.isComponentAdded()) {	
-					System.out.println("ADDED TO SAT LIST" + " defaultOptionalTermsCount " + curCommand.getDefaultOptionalTermsCount());
 
 					satisfiedCommandsList.add(curCommand);
 					if(curCommand.getDefaultOptionalTermsCount() == 0
 							|| !commandSat.hasOptionalTermsLeft() ){
-						System.out.println("commandsMap " + curCommand);
-						System.out.println("REMOVED COMMAND" + " " +commandSat.hasOptionalTermsLeft());
 						WLCommandListIter.remove();
 					}
 				}
@@ -283,7 +281,7 @@ public class ParseToWLTree {
 		
 		//if trigger a WLCommand, 
 		boolean isTrigger = false;
-		Collection<WLCommand> triggeredCol = get_triggerCol(triggerKeyWord, triggerType);
+		Collection<ImmutableWLCommand> triggeredCol = get_triggerCol(triggerKeyWord, triggerType);
 
 		//use getSingular
 		if(triggeredCol.isEmpty() && triggerKeyWord.length() > 1 
@@ -297,9 +295,9 @@ public class ParseToWLTree {
 			
 			//is trigger, add all commands in list 
 			//WLCommand curCommand;
-			for(WLCommand curCommandInCol : triggeredCol){
-				//Deelp copy the WLCommands! So not to modify the ones in WLCommandMap
-				WLCommand curCommand = WLCommand.copyCommand(curCommandInCol);
+			for(ImmutableWLCommand curCommandInCol : triggeredCol){
+				//create mutable copy of the immutable command
+				WLCommand curCommand = WLCommand.createMutableWLCommandCopy(curCommandInCol);
 				
 				//backtrack until either stop words (ones that trigger ParseStructs) are reached.
 				//or the beginning of structDeque is reached.
@@ -328,22 +326,21 @@ public class ParseToWLTree {
 					boolean isComponentAdded = false;
 					//add Struct corresponding to trigger word
 					WLCommand.addTriggerComponent(curCommand, struct);
-					//System.out.println("BEFORETRIGGERSAT*********");
+					
 					for(Struct curStruct : waitingStructList){
 						//see if the whole command is satisfied, not just the part before trigger word
 						//namely the trigger word is last word
 						boolean beforeTrigger = true;
-						System.out.println("curCommandSatWhole*********"  +" "  + curStruct);
+						//System.out.println("curCommandSatWhole*********"  +" "  + curStruct);
 						CommandSat commandSat = WLCommand.addComponent(curCommand, curStruct, beforeTrigger);
 						curCommandSatWhole = commandSat.isCommandSat();		
-						System.out.println("curCommandSatWhole " + curCommandSatWhole);
+						//System.out.println("curCommandSatWhole " + curCommandSatWhole);
 						hasOptionalTermsLeft = commandSat.hasOptionalTermsLeft();
 						isComponentAdded |= commandSat.isComponentAdded();
 					}					
 					
 					if(curCommandSatWhole && isComponentAdded){
-						System.out.println("ADDED TO SAT LIST");
-
+						
 						satisfiedCommandsList.add(curCommand);
 					}
 					
@@ -549,13 +546,11 @@ public class ParseToWLTree {
 					////add struct to posTerm to posTermList! ////////////
 					
 					if(isCommandSat && isComponentAdded){
-						System.out.println("ADDED TO SAT LIST");
 						satisfiedCommandsList.add(curCommand);	
 						
 						if(curCommand.getDefaultOptionalTermsCount() == 0 || !hasOptionalTermsLeft){
 							//need to remove from WLCommandList
 							ChildWLCommandListIter.remove();
-							System.out.println("REMOVED COMMAND");
 						}
 					}
 					
@@ -633,13 +628,10 @@ public class ParseToWLTree {
 		int structWrapperListSz = structWrapperList.size();
 		//boolean contextVecConstructed = false;		
 		
-		//System.out.println("HEAD: " + WLCommand.totalComponentCount(structWrapperList.get(0).WLCommand));
 		for(int i = structWrapperListSz - 1; i > -1; i--){
 			WLCommandWrapper curWrapper = structWrapperList.get(i);
 			WLCommand curCommand = curWrapper.wlCommand;
-			System.out.println("********about to append string " + curWrapper.wlCommandStr);
-			System.out.println(WLCommand.structsWithOtherHeadCount(curCommand) + " "+
-					 WLCommand.totalComponentCount(curCommand));
+			
 			//right now that threshold is: all components must be included.
 			if(WLCommand.structsWithOtherHeadCount(curCommand) < 1){
 				//System.out.println("wrapperList Size" + structWrapperListSz);

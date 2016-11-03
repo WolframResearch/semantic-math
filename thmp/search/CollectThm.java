@@ -48,8 +48,8 @@ public class CollectThm {
 	private static final List<String> rawFileStrList = Arrays.asList(new String[]{
 			//"src/thmp/data/testContextVector.txt", 
 			
-			"src/thmp/data/fieldsRawTex.txt",
-			//"src/thmp/data/CommAlg5.txt", 
+			//"src/thmp/data/fieldsRawTex.txt",
+			"src/thmp/data/CommAlg5.txt", 
 			//"src/thmp/data/multilinearAlgebra.txt",
 			//"src/thmp/data/functionalAnalysis.txt"
 			});
@@ -652,11 +652,11 @@ public class CollectThm {
 		
 		static{
 			ImmutableList.Builder<String> thmListBuilder = ImmutableList.builder();
-			List<String> extractedThms = new ArrayList<String>();
-			List<String> processedThms = new ArrayList<String>();
-			List<String> macroReplacedThms = new ArrayList<String>();
-			List<String> webDisplayThms = new ArrayList<String>();
-			List<String> bareThms = new ArrayList<String>();
+			List<String> extractedThmsList = new ArrayList<String>();
+			List<String> processedThmsList = new ArrayList<String>();
+			List<String> macroReplacedThmsList = new ArrayList<String>();
+			List<String> webDisplayThmsList = new ArrayList<String>();
+			List<String> bareThmsList = new ArrayList<String>();
 			//System.out.print("rawFileReader: " + rawFileReader);
 			//extractedThms = ThmList.get_thmList();
 			try {
@@ -666,16 +666,16 @@ public class CollectThm {
 						FileReader rawFileReader = new FileReader(fileStr);
 						BufferedReader rawFileBReader = new BufferedReader(rawFileReader);
 						//System.out.println("rawFileReader is null ");
-						extractedThms.addAll(ThmInput.readThm(rawFileBReader, webDisplayThms, bareThms));							
+						extractedThmsList.addAll(ThmInput.readThm(rawFileBReader, webDisplayThmsList, bareThmsList));							
 						//System.out.print("Should be extracting theorems here: " + extractedThms);
 					}
 					//the third true means to extract words from latex symbols, eg oplus->direct sum.
 					//last boolean is whether to replace macros, 
 					FileReader macrosReader = new FileReader(MACROS_SRC);
 					BufferedReader macrosBReader = new BufferedReader(macrosReader);
-					bareThms = ProcessInput.processInput(bareThms, false, false, false);
-					processedThms = ProcessInput.processInput(extractedThms, macrosBReader, REPLACE_TEX, TEX_TO_WORDS, REPLACE_MACROS);					
-					macroReplacedThms = ProcessInput.get_macroReplacedThmList();
+					bareThmsList = ProcessInput.processInput(bareThmsList, false, false, false);
+					processedThmsList = ProcessInput.processInput(extractedThmsList, macrosBReader, REPLACE_TEX, TEX_TO_WORDS, REPLACE_MACROS);					
+					macroReplacedThmsList = ProcessInput.get_macroReplacedThmList();
 				}else{
 					//System.out.println("read from rawFileReader");
 					//System.out.print("ready for processing: " +rawFileReader);
@@ -686,24 +686,24 @@ public class CollectThm {
 						System.out.println(line);
 					}*/ 
 					for(BufferedReader fileReader : rawFileReaderList){
-						extractedThms.addAll(ThmInput.readThm(fileReader, webDisplayThms, bareThms));
+						extractedThmsList.addAll(ThmInput.readThm(fileReader, webDisplayThmsList, bareThmsList));
 					}
-					//for parsing
-					bareThms = ProcessInput.processInput(bareThms, true, false, false);
-					processedThms = ProcessInput.processInput(extractedThms, macrosDefReader, REPLACE_TEX, TEX_TO_WORDS, REPLACE_MACROS);
+					//to be used for parsing
+					bareThmsList = ProcessInput.processInput(bareThmsList, true, false, false);
+					processedThmsList = ProcessInput.processInput(extractedThmsList, macrosDefReader, REPLACE_TEX, TEX_TO_WORDS, REPLACE_MACROS);
 					//the BufferedStream containing macros is set when rawFileReaderList is set.
-					macroReplacedThms = ProcessInput.get_macroReplacedThmList();
+					macroReplacedThmsList = ProcessInput.get_macroReplacedThmList();
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
 				throw new RuntimeException("Processing input via ProcessInput failed!\n", e);
 			}
-			thmListBuilder.addAll(extractedThms);
+			thmListBuilder.addAll(extractedThmsList);
 			thmList = thmListBuilder.build();
-			webDisplayThmList = ImmutableList.copyOf(webDisplayThms);
-			bareThmList = ImmutableList.copyOf(bareThms);
-			processedThmList = ImmutableList.copyOf(processedThms);
-			macroReplacedThmList = ImmutableList.copyOf(macroReplacedThms);
+			webDisplayThmList = ImmutableList.copyOf(webDisplayThmsList);
+			bareThmList = ImmutableList.copyOf(bareThmsList);
+			processedThmList = ImmutableList.copyOf(processedThmsList);
+			macroReplacedThmList = ImmutableList.copyOf(macroReplacedThmsList);
 		}
 		
 		/**

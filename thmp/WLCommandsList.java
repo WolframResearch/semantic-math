@@ -7,13 +7,17 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 
+import thmp.WLCommand.ImmutableWLCommand;
+import thmp.WLCommand.ImmutableWLCommand.Builder;
 import thmp.WLCommand.OptionalPosTerm;
 import thmp.WLCommand.PosTerm;
+import thmp.WLCommand.PosTerm.PBuilder;
 import thmp.WLCommand.WLCommandComponent;
 
 /**
@@ -26,7 +30,7 @@ public class WLCommandsList {
 	/**
 	 * Map, keys are trigger words, values are pointers to WLCommand's
 	 */
-	private static final ImmutableMultimap<String, WLCommand> WLCommandMap; 
+	private static final ImmutableMultimap<String, ImmutableWLCommand> WLCommandMap; 
 	
 	/**
 	 * ImmutableMultimap of which strings lead/direct to which trigger words. It's a
@@ -38,11 +42,23 @@ public class WLCommandsList {
 
 	/**
 	 * Final constants used to indicate WLCommand/Aux String as posIndex in PosList.
+	 * Use the getter below instead of public!
 	 */
 	public static final int WLCOMMANDINDEX = -1;
+
 	public static final int AUXINDEX = -2;
+	private static final int DEFAULT_POSITION_IN_MAP = Integer.MIN_VALUE;
+	
+	/**
+	 * @return the defaultPositionInMap
+	 */
+	public static int getDefaultPositionInMap() {
+		return DEFAULT_POSITION_IN_MAP;
+	}
+
 	private static final String TRIGGERMATHOBJSTR = "TriggerMathObj";
 	private static final String OPTIONAL_TOKEN_STR = "OPT";
+	//should put these in WLCommand
 	private static final Pattern OPTIONAL_TOKEN_PATTERN = Pattern.compile("OPT(\\d*)");
 	
 	/**
@@ -70,7 +86,7 @@ public class WLCommandsList {
 		triggerWordLookupMap = triggerWordLookupMapBuilder.build();
 
 		// builder for WLComamndMap,
-		ImmutableMultimap.Builder<String, WLCommand> WLCommandMapBuilder = ImmutableMultimap.builder();
+		ImmutableMultimap.Builder<String, ImmutableWLCommand> WLCommandMapBuilder = ImmutableMultimap.builder();
 
 		// create(Map<WLCommandComponent, Integer> commandsCountMap)
 		// The words go in order they are expected to appear in sentence.
@@ -99,19 +115,36 @@ public class WLCommandsList {
 		// whether to trigger TriggerMathObj term
 		// If Commands involving \[Element] deviate from item1 \[Element] item2, 
 		// should re-examine ParseTreeTwoVec.java.
-		WLCommandMapBuilder.put("element", addCommand(
-				new String[] { "symb|ent, , true", "\\[Element]", ", element, trigger", "pre, of, false", "symb|ent, , true" }));		
-		//e.g. "is given by an element of the ring"
-		WLCommandMapBuilder.put("element", addCommand(
-				new String[] { "parti, , false", ", element, trigger", "x", "\\[Element]", "pre, of, false", "symb|ent, , true" }));
-		WLCommandMapBuilder.put("given", addCommand(
-				new String[] { "parti, given, trigger", "symb|ent, , true" }));
+		// OPTi, where i is the group number for this optional term, represents an optional 
+		// term. An optional group is only included if all optional terms in this group
+		// are satisfied.
+		//String posStr, String nameStr, boolean includeInBuiltString, boolean isTrigger, boolean isTriggerMathObj, int positionInMap
+		//WLCommandMapBuilder.put("element", addCommand(
+			//	new String[] { "symb|ent, , true", "\\[Element]", ", element, trigger", "pre, of, false", "symb|ent, , true" }));	
 		
-		WLCommandMapBuilder.put("exist", addCommand(
-				new String[] { ", there, false", "Exists[", ", exists*, trigger",  "ent|symb|phrase|noun, , true", "]"}));
+		WLCommandMapBuilder.put("element", addCommand(new PBuilder("symb|ent", null, true), new PBuilder("\\[Element]"),
+				new PBuilder(null, "element", false, true, false), new PBuilder("pre", "of", false), new PBuilder("symb|ent", null, true) ));		
+		
+		//e.g. "is given by an element of the ring"
+		/*WLCommandMapBuilder.put("element", addCommand(
+				new String[] { "parti, , false", ", element, trigger", "x", "\\[Element]", "pre, of, false", "symb|ent, , true" }));*/
+		WLCommandMapBuilder.put("element", addCommand(new PBuilder("parti", null, false), new PBuilder(null, "element", false, true, false),
+				new PBuilder("\\[Element]"), new PBuilder("pre", "of", false), new PBuilder("symb|ent", null, true) ));		
+		
+		/*WLCommandMapBuilder.put("given", addCommand(
+				new String[] { "parti, given, trigger", "symb|ent, , true" }));*/
+		WLCommandMapBuilder.put("given", addCommand(new PBuilder("parti", "given", false, true, false), 
+				new PBuilder("symb|ent", null, true) ));	
+		
+		/*WLCommandMapBuilder.put("exist", addCommand(
+				new String[] { ", there, false", "Exists[", ", exists*, trigger",  "ent|symb|phrase|noun, , true", "]"}));*/
+		WLCommandMapBuilder.put("exist", addCommand(new PBuilder(null, "there", false), new PBuilder("Exists["),
+				new PBuilder(null, "exists*", false, true, false), new PBuilder("ent|symb|phrase|noun", null, true),
+				 new PBuilder("]") ));	
+		
 		//WLCommandMapBuilder.put("derivative",
 			//	addCommand(new String[] { "Derivative[", ", derivative, trigger", "pre, of, false", "symb|ent, , true", "]" }));
-		WLCommandMapBuilder.put("derivative",
+		/*WLCommandMapBuilder.put("derivative",
 				addCommand(new String[] { ", derivative, trigger", "Derivative[", "pre, of, false", "symb|ent, , true", "]" }));
 		WLCommandMapBuilder.put("log",
 				addCommand(new String[] { ", log, trigger", "Log[", "pre, of, false", "symb|ent, , true", "]" }));
@@ -140,7 +173,7 @@ public class WLCommandsList {
 				"Not[\\[Element]]", "symb|ent|adj|phrase, , true, TriggerMathObj" }));
 		
 		WLCommandMapBuilder.put("act", addCommand(new String[] { "Action[", "symb|ent|pro, , true", ", act|acts, trigger",
-				";", "symb|ent|pro, , true, TriggerMathObj", ";", ", by, false, OPT", ", conjugation, true, OPT", "]" }));		
+				";", "symb|ent|pro, , true, TriggerMathObj", ";", ", by, false, OPT", "ent, , true, OPT", "]" }));		
 		
 		//auxpass, eg "is called"
 		WLCommandMapBuilder.put("is called", addCommand(new String[] { "symb|ent|pro, , true", "auxpass, is called, trigger",
@@ -179,6 +212,7 @@ public class WLCommandsList {
 		WLCommandMapBuilder.put("have", addCommand(new String[] { "pro, we, false", "verb, have, trigger", ", , true"}));
 		// "A has property B", eg "chains of ideals have same length"
 		WLCommandMapBuilder.put("have", addCommand(new String[] { "ent|symb|pro, , true", "verb, have|has, trigger", "\\HasProperty[", ", , true", "]"}));
+		*/
 		
 		// label string if to be used as trigger ent/symb, then use these words
 		// as trigger system
@@ -193,6 +227,101 @@ public class WLCommandsList {
 	}
 
 	/**
+	 * @return the auxindex
+	 */
+	public static int getAUXINDEX() {
+		return AUXINDEX;
+	}
+	
+	/**
+	 * @return the wlcommandindex
+	 */
+	public static int getWLCOMMANDINDEX() {
+		return WLCOMMANDINDEX;
+	}	
+	
+	private static ImmutableWLCommand addCommand(PBuilder ... pBuilderAr) {
+		
+		final ImmutableMap<WLCommandComponent, Integer> commandsCountMap;
+		ImmutableMap<Integer, Integer> optionalTermsGroupCountMap = null;
+		final ImmutableList<PosTerm> posTermList;
+		// used to build commandsCountMap
+		Map<WLCommandComponent, Integer> commandsCountPreMap = new HashMap<WLCommandComponent, Integer>();
+
+		Map<Integer, Integer> optionalTermsGroupCountPreMap = null;
+		
+		final List<PosTerm> posList = new ArrayList<PosTerm>();
+		// total number of components, it's sum of all entries in
+		// ComponentCountMap,
+		// minus the number of WL commands.
+		int componentCount = 0;
+		// assert(commandStringAr.length == useAr.length);
+		int triggerWordIndex = -1;
+		int optionalTermsCount = 0;
+		
+		for (int i = 0; i < pBuilderAr.length; i++) {
+			PBuilder curBuilder = pBuilderAr[i];
+			
+			WLCommandComponent curCommandComponent = curBuilder.getCommandComponent();
+			Integer temp;
+			int curComponentCount = (temp = commandsCountPreMap.get(curCommandComponent)) == null ? 0 : temp;
+			
+			if(curBuilder.getPositionInMap() == DEFAULT_POSITION_IN_MAP){
+				int positionInMap = curComponentCount;
+				curBuilder.setPositionInMap(positionInMap);
+			}
+			
+			PosTerm curPosTerm = curBuilder.build();
+			posList.add(curPosTerm);
+			
+			if(curPosTerm.isOptionalTerm()){
+				
+				optionalTermsCount++;
+				int optionalGroupNum = curPosTerm.optionalGroupNum();
+				
+				if(null == optionalTermsGroupCountPreMap){
+					optionalTermsGroupCountPreMap = new HashMap<Integer, Integer>();
+				}
+				
+				Integer num = optionalTermsGroupCountPreMap.get(optionalGroupNum);
+				if(null == num){
+					optionalTermsGroupCountPreMap.put(optionalGroupNum, 1);
+				}else{
+					optionalTermsGroupCountPreMap.put(optionalGroupNum, num + 1);
+				}
+				
+			}else{
+				componentCount++;
+				//optional terms can't be trigger terms
+				if(curPosTerm.isTrigger()){
+					triggerWordIndex = i;
+				}
+			}
+			
+			commandsCountPreMap.put(curCommandComponent, curComponentCount + 1);
+		}
+		
+		if(triggerWordIndex < 0){
+			throw new IllegalArgumentException("Trigger word index in a command cannot be negative!");
+		}
+		
+		commandsCountMap = ImmutableMap.copyOf(commandsCountPreMap);
+		posTermList = ImmutableList.copyOf(posList);
+
+		if(null != optionalTermsGroupCountPreMap){
+			optionalTermsGroupCountMap = ImmutableMap.copyOf(optionalTermsGroupCountPreMap);
+		}
+		/*(Map<WLCommandComponent, Integer> commandsCountMap, 
+		ImmutableList<PosTerm> posList, int componentCount, int triggerWordIndex,
+		int optionalTermsCount, ImmutableMap<Integer, Integer> optionalTermsMap){*/
+		
+		ImmutableWLCommand.Builder immutableWLCommandBuilder = new ImmutableWLCommand.Builder(commandsCountMap, posTermList, 
+				componentCount, triggerWordIndex, optionalTermsCount, optionalTermsGroupCountMap);
+		
+		return immutableWLCommandBuilder.build();
+	}
+	
+	/**
 	 * Create WLCommands using input data and add them to an immutable list.
 	 * Specifically, create commandsCountMap with WLCommandComponent and
 	 * supplied integer.
@@ -201,7 +330,8 @@ public class WLCommandsList {
 	 *            Array of command Strings
 	 */
 	///// name should be there already!
-	public static WLCommand addCommand(String[] commandStringAr) {
+	/*public static WLCommand addCommand(String[] commandStringAr) {
+		
 		ImmutableMap<WLCommandComponent, Integer> commandsCountMap;
 		ImmutableMap<Integer, Integer> optionalTermsGroupCountMap = null;
 		// used to build commandsCountMap
@@ -288,27 +418,13 @@ public class WLCommandsList {
 							optionalTermsCount++;
 							isOptionalTerm = true;
 						}
-						/*isOptionalTerm = OPTIONAL_TOKEN_PATTERN.matcher(commandStrParts[3].trim()).find();
 						
-						if(isOptionalTerm){
-							optionalTermsCount++;
-						}*/
 					}
 					if (commandStrParts.length > 4) {
 						positionInMap = Integer.valueOf(commandStrParts[4]);
 					}
 				}
-				// check if WL command, ie if name is "-2", in which case put -2
-				// as posInMap in PosTerm. This shouldn't be needed anymore.
-				/*else if (nameStr.matches("WL.*")) {
-					positionInMap = WLCOMMANDINDEX;
-					componentCounter--;
-					//triggerWordIndex hasn't been touched
-					if(triggerWordIndex == -1){
-						triggerWordIndex = i;
-					}
-					
-				}*/
+			
 
 				if(commandStrPartsLen > 2){
 					if (commandStrParts[2].trim().matches("trigger.*")) {
@@ -348,6 +464,7 @@ public class WLCommandsList {
 		}
 		
 		commandsCountMap = ImmutableMap.copyOf(commandsCountPreMap);
+		
 		if(null != optionalTermsGroupCountPreMap){
 			optionalTermsGroupCountMap = ImmutableMap.copyOf(optionalTermsGroupCountPreMap);
 		}
@@ -355,13 +472,13 @@ public class WLCommandsList {
 		return WLCommand.create(commandsCountMap, posList, componentCounter, triggerWordIndex, 
 				optionalTermsCount, optionalTermsGroupCountMap);
 		
-	}
+	}*/
 
 	/**
 	 * 
 	 * @return ImmutableMap WLCommandMap
 	 */
-	public static Multimap<String, WLCommand> WLCommandMap() {
+	public static Multimap<String, ImmutableWLCommand> WLCommandMap() {
 		return WLCommandMap;
 	}
 

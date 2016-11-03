@@ -670,7 +670,7 @@ public class ThmP1 {
 			}//negative adjective word, not that unusual.
 			else if((negativeAdjMatcher = NEGATIVE_ADJECTIVE_PATTERN.matcher(curWord)).find()){
 				
-				String curAdjWord = negativeAdjMatcher.group("$1");
+				String curAdjWord = negativeAdjMatcher.group(1);
 				
 				List<String> posList = posMMap.get(curAdjWord);
 				
@@ -1317,15 +1317,15 @@ public class ThmP1 {
 		
 		// if adverb-adj pair, eg "clearly good"
 		// And combine adj_adj to adj, eg right exact
-		if (pairs.size() > 0 && posMMap.get(curWord).get(0).equals("adj")) {
+		List<String> posList = posMMap.get(curWord);
+		if (pairs.size() > 0 && !posList.isEmpty() && posList.get(0).equals("adj")) {
 			if (pairs.get(pairsSize - 1).pos().matches("adverb|adj")) {
 				curWord = pairs.get(pairsSize - 1).word() + " " + curWord;
 				// remove previous Pair
 				pairs.remove(pairsSize - 1);
 				pair = new Pair(curWord, "adj");				
 				//addIndex = false;
-			}
-			
+			}			
 		}
 		return pair;
 	}

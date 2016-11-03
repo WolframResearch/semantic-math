@@ -1,6 +1,5 @@
 package thmp;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.Charset;
@@ -29,9 +28,10 @@ import thmp.search.CollectThm;
 
 public class GenerateContextVector {
 
-	//private static String CONTEXT_VEC_FILE_STR = "src/thmp/data/contextVecCommm5.txt";
+	private static String CONTEXT_VEC_FILE_STR = "src/thmp/data/contextVecCommm5.txt";
 	//private static String CONTEXT_VEC_FILE_STR = "src/thmp/data/contextVectorsMultilinearAlgebra.txt";
-	private static String CONTEXT_VEC_FILE_STR = "src/thmp/data/contextVectorsFields.txt";
+	//private static String CONTEXT_VEC_FILE_STR = "src/thmp/data/contextVectorsFields.txt";
+	//private static String CONTEXT_VEC_FILE_STR = "src/thmp/data/contextVecFunctionalAnalysis.txt";
 	//private static String CONTEXT_VEC_FILE_STR = "src/thmp/data/contextVecAll.txt";
 	
 	private static Path contextVecFilePath;	
