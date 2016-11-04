@@ -2,6 +2,7 @@ package thmp.utils;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.google.common.collect.ImmutableSet;
@@ -23,6 +24,7 @@ public class WordForms {
 	private static ImmutableSet<String> freqWordsSet; 
 	//brackets pattern
 	private static final Pattern BRACKETS_PATTERN = Pattern.compile("\\[([^\\]]*)\\]");	
+	private static final Pattern LATEX_PATTERN = Pattern.compile("\\$([^$]+)\\$");
 	
 	private static Set<String> getFreqWordsSet(){
 		if(freqWordsSet == null){
@@ -176,4 +178,43 @@ public class WordForms {
 		}
 		
 	}
+	
+	/**
+	 * Heuristic for determining if two latex expressions are similar 
+	 * enough, to warrant them being grouped together via conjunction or
+	 * disjunction. E.g. let $S$, $T$ be rings.
+	 * Parameters *can* be wrapped inside $$ signs.
+	 * Marks of similarity: 
+	 * -one is a tilde or prime of another.
+	 * @param tex1 
+	 * @param tex2 
+	 */
+	public static boolean areWordsSimilar(String tex1, String tex2){
+		
+		Matcher tex1Matcher = LATEX_PATTERN.matcher(tex1);
+		Matcher tex2Matcher = LATEX_PATTERN.matcher(tex2);
+		//strip $ $ signs.
+		if(tex1Matcher.find() && tex2Matcher.find()){
+			tex1 = tex1Matcher.group(1);
+			tex2 = tex1Matcher.group(1);
+		}else{
+			return false;
+		}
+		
+		//if tex1 and tex2 have the same "form". E.g. S, T.
+		if(tex1.length() < 3 && tex1.length() == tex2.length()){
+			return true;
+		}
+		
+		//if tex2 is a variation of tex1
+		//create regex from one to match the other. Expand this!
+		String tex1Regex = "\\\tilde\\{" + tex1 + "\\}|" + tex1 + "'";
+		Pattern tex1Pattern = Pattern.compile(tex1Regex);
+		if(tex1Pattern.matcher(tex2).find()){
+			return true;
+		}
+		
+		return false;
+	}
+	
 }

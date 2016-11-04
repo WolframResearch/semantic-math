@@ -16,7 +16,7 @@ public class StructH<H> extends Struct{
 	//ent (entity) is only structure that uses hashmap
 	//Primary part of speech, ent, adj, etc. 
 	private String type; 
-	//additional part of speech
+	//*additional* part of speech
 	private volatile List<String> extraPosList;
 	private String WLCommandStr;
 	//the number of times this WLCommandStr has been visited.
@@ -179,6 +179,7 @@ public class StructH<H> extends Struct{
 	
 	/**
 	 * Add additional parts of speech to this struct.
+	 * (Beyond the first/default pos.)
 	 */
 	@Override
 	public void addExtraPos(String pos){

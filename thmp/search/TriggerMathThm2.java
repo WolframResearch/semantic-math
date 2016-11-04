@@ -27,6 +27,7 @@ public class TriggerMathThm2 {
 	 * of convergence and root likely in column for function. And ideals for
 	 * column for ring.
 	 * 
+	 * 
 	 * @author yihed
 	 *
 	 */
@@ -50,7 +51,7 @@ public class TriggerMathThm2 {
 	 */
 	private static final Map<String, Integer> keywordDict;
 	
-	private static final int LIST_INDEX_SHIFT = 1;
+	//private static final int LIST_INDEX_SHIFT = 1;
 	/**
 	 * Map of math objects, eg function, field, with list of keywords. don't
 	 * need this either

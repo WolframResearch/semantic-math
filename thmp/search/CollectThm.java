@@ -48,8 +48,8 @@ public class CollectThm {
 	private static final List<String> rawFileStrList = Arrays.asList(new String[]{
 			//"src/thmp/data/testContextVector.txt", 
 			
-			//"src/thmp/data/fieldsRawTex.txt",
-			"src/thmp/data/CommAlg5.txt", 
+			"src/thmp/data/fieldsRawTex.txt",
+			//src/thmp/data/CommAlg5.txt", 
 			//"src/thmp/data/multilinearAlgebra.txt",
 			//"src/thmp/data/functionalAnalysis.txt"
 			});

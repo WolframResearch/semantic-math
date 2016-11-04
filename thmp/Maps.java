@@ -267,7 +267,7 @@ public class Maps {
 			// partsOfSpeech must be ordered the same way as posArraysList
 
 			Map<String, String[]> posArraysMap = new HashMap<String, String[]>();
-			posArraysMap.put("mathObj", ents);
+			posArraysMap.put("ent", ents);
 			posArraysMap.put("adverb", adverbs);
 			posArraysMap.put("verb", verbs);
 			posArraysMap.put("noun", nouns);
@@ -623,7 +623,7 @@ public class Maps {
 			// symb_adj
 			// noun_symb should be combined in code
 
-			structMap.put("pre_noun", new Rule("ppt", 1)); // nounphrase
+			//structMap.put("pre_noun", new Rule("ppt", 1)); // nounphrase
 			structMap.put("adj_symb", new Rule("phrase", 1));
 			
 			structMap.put("adj_noun", new Rule("phrase", 1));

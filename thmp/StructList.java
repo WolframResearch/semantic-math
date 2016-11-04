@@ -1,10 +1,11 @@
 package thmp;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
- * List of Struct's to be filled inside a matrix entry
+ * List of Struct's to be filled inside a matrix entry.
  * 
  * The scoreSoFar in MatrixPathNodes corresponding to the same Struct
  * could be different, because the paths above this MatrixPathNodes could differ.
@@ -32,8 +33,7 @@ public class StructList {
 	
 	/**
 	 * Shallow copy of this.structList, as structList is a list
-	 * of pointers to Struct's, so even deep copy would only be
-	 * copying pointers and not Struct's being pointed to.
+	 * of pointers to Struct's.
 	 * @return
 	 */
 	public StructList copy(){
@@ -57,6 +57,7 @@ public class StructList {
 	}
 	
 	public void add(Struct newStruct){
+		//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
 		this.structList.add(newStruct);
 	}
 	

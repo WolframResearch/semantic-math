@@ -351,7 +351,13 @@ public class ThmP1Test {
 			st = "Let $R$ be a $k$-algebra and an integral domain";
 			st = "Group $G$ acts on space $X$ by conjugation";
 			st = "$s$ is an element of $X$";
-			st = "";
+			st = "Let $v : K^* to Gamma$ be a homomorphism of abelian groups such that $v(a + b) geq min(v(a), v(b))$ for $a, b in K$ with $a, b, a + b$ not zero.";
+			st = "let $s$ and $t$ be elements, and $s$ is a point";
+			st = "let $a, b$ be points with $a$ not zero";
+			st = "$A$ is a ring with maximal ideal $ mathfrak m = 1$ and with group of units $ A^* = 0 . $";
+			st = "$A$ is a ring with maximal ideal $$ mathfrak m = 1$$";
+			st = "$A$ is ring";
+			//st = "$A$ is a ring";
 			//st = "Group $G$ acts on space $X$";
 			//st = "$F$ is field, so is $G$";
 			//st = "regular local ring";

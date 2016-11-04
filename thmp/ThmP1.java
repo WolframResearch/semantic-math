@@ -58,6 +58,7 @@ public class ThmP1 {
 	// private String[] subSentences;
 	//pattern for matching negative of adjectives: "un..."
 	private static final Pattern NEGATIVE_ADJECTIVE_PATTERN = Pattern.compile("un(.+)");
+	private static final Pattern AND_OR_PATTERN = Pattern.compile("and|or");
 	
 	// list of parts of speech, ent, verb etc <--should make immutable
 	private static final List<String> posList;
@@ -373,7 +374,9 @@ public class ThmP1 {
 	 * @param posList
 	 */
 	private static void addExtraPosToPair(Pair pair, List<String> posList){
-		//don't add "noun" if "ent" already added, since these are mostly equivalent.
+		//don't add "noun" if "ent" already added, since these fulfill equivalent
+		//roles in practice.
+		
 		boolean entAdded = posList.get(0).equals("ent");
 		//start from 1, since first pos is already added.
 		for(int k = 1; k < posList.size(); k++){
@@ -960,7 +963,11 @@ public class ThmP1 {
 			StructH<HashMap<String, String>> tempStructH = new StructH<HashMap<String, String>>("ent");
 			List<String> posList = posMMap.get(mathObjName);
 			boolean entAdded = false;
-			for(int l = 0; l < posList.size(); l++){
+			if(!posList.isEmpty()){
+				entAdded = posList.get(0).equals("ent");
+			}
+			//start from 1, as extraPosList only contains *additional* pos
+			for(int l = 1; l < posList.size(); l++){
 				String pos = posList.get(l);
 				if(pos.equals("ent")){
 					entAdded = true;
@@ -1395,6 +1402,7 @@ public class ThmP1 {
 			// mx.get(j).set(j, diagonalStruct);
 			Struct diagonalStruct = inputStructList.get(j);
 			diagonalStruct.set_structList(mx.get(j).get(j));
+			
 			mx.get(j).get(j).add(diagonalStruct);
 			
 			String structName;
@@ -1408,6 +1416,7 @@ public class ThmP1 {
 			//create additional structs on the diagonal if extra pos present.
 			List<String> extraPosList = diagonalStruct.extraPosList();
 			if(extraPosList != null){
+				
 				for(int p = 0; p < extraPosList.size(); p++){
 					String pos = extraPosList.get(p);
 					Struct newStruct;
@@ -1455,7 +1464,10 @@ public class ThmP1 {
 
 					Iterator<Struct> structList1Iter = structList1.structList().iterator();
 					Iterator<Struct> structList2Iter = structList2.structList().iterator();
-
+					
+					//System.out.println("!structList1: " + structList1.structList() + " " + structList1.structList().size());
+					//System.out.println("!structList2: " + structList2.structList() + " " + structList2.structList().size());
+					
 					while (structList1Iter.hasNext()) {
 
 						Struct struct1 = structList1Iter.next();
@@ -1830,6 +1842,7 @@ public class ThmP1 {
 							// reduce if structMap contains combined
 							if (structMap.containsKey(combined)) {
 								Collection<Rule> ruleCol = structMap.get(combined);
+
 								Iterator<Rule> ruleColIter = ruleCol.iterator();
 								while (ruleColIter.hasNext()) {
 									Rule ruleColNext = ruleColIter.next();
@@ -2242,7 +2255,7 @@ public class ThmP1 {
 	public static void reduce(List<List<StructList>> mx, Rule newRule, Struct struct1, Struct struct2,
 			Struct firstEnt, Struct recentEnt, int recentEntIndex, int i, int j, int k, String type1, String type2,
 			ParseState parseState) {
-
+		
 		/*if(type2.equals("verbphrase")){
 			System.out.println("Reducing _verbphrase! i " + newRule.relation() + ". struct2.pre2: " + struct2.prev2());
 		}*/
@@ -2482,7 +2495,9 @@ public class ThmP1 {
 
 			if(newType.equals("assert")){
 				parseState.setRecentAssert(parentStruct);
+				//System.out.println("Assert added! parentStruct" + parentStruct);
 			}
+			
 			// mx.get(i).set(j, parentStruct);
 			mx.get(i).get(j).add(parentStruct);
 		}
@@ -2859,6 +2874,7 @@ public class ThmP1 {
 
 		ArrayList<String> sentenceList = new ArrayList<String>();
 		//separate out punctuations, separate out words away from punctuations.
+		//compile this!
 		String[] wordsArray = inputStr.replaceAll("([^\\.,!:;]*)([\\.,:!;]{1})", "$1 $2").split("\\s+");
 		//System.out.println("wordsArray " + Arrays.toString(wordsArray));
 		int wordsArrayLen = wordsArray.length;
@@ -2866,12 +2882,15 @@ public class ThmP1 {
 		StringBuilder sentenceBuilder = new StringBuilder();
 		// String newSentence = "";
 		String curWord;
-
-		boolean inTex = false; // in latex expression?
+		// whether in latex expression
+		boolean inTex = false; 
 		boolean madeReplacement = false;
 		boolean toLowerCase = true;
-		boolean inParen = false; // in parenthetical remark?
-
+		// whether in parenthetical remark
+		boolean inParen = false; 
+		
+		String lastWordAdded = "";
+		
 		for (int i = 0; i < wordsArrayLen; i++) {
 
 			curWord = wordsArray[i];
@@ -2883,7 +2902,7 @@ public class ThmP1 {
 					continue;
 				}
 			}*/
-			
+			//compile these!
 			if (!inTex) {
 				if (inParen && curWord.matches("[^)]*\\)")) {
 					inParen = false;
@@ -2914,10 +2933,10 @@ public class ThmP1 {
 				String tempWord = curWord;
 
 				int j = i;
-				// potentially a fluff phrase
+				// potentially a fluff phrase <--improve defluffing!
 				if (posAr[posAr.length - 1].equals("comp") && j < wordsArrayLen - 1) {
 					// keep reading in string characters, until there is no
-					// match
+					// match.
 					tempWord += " " + wordsArray[++j];
 					
 					while (posMMap.containsKey(tempWord.toLowerCase()) && j < wordsArrayLen - 1) {
@@ -2930,6 +2949,7 @@ public class ThmP1 {
 					String replacement = fluffMap.get(tempWord.toLowerCase());
 					if (replacement != null) {
 						sentenceBuilder.append(" " + replacement);
+						lastWordAdded = replacement;
 						madeReplacement = true;
 						i = j;
 					}
@@ -2943,17 +2963,43 @@ public class ThmP1 {
 				// !fluffMap.containsKey(curWord)){
 				if (inTex || !toLowerCase) {
 					sentenceBuilder.append(" " + curWord);
+					lastWordAdded = curWord;
 					toLowerCase = true;
-				} else
-					sentenceBuilder.append(" " + curWord.toLowerCase());
+				} else{
+					String wordToAdd = curWord.toLowerCase();
+					sentenceBuilder.append(" " + wordToAdd);
+					lastWordAdded = wordToAdd;
+				}
 			}
 			madeReplacement = false;
-
+			//compile!
 			if (curWord.matches("\\.|,|!|;") || i == wordsArrayLen - 1) {
+				//if not in middle of tex
 				if (!inTex) {
+					//if the token before and after the comma 
+					//are not similar enough.
+					if(curWord.matches(",") && i < wordsArrayLen - 1){
+						//get next word
+						String nextWord = wordsArray[i+1].toLowerCase();
+						List<String> nextWordPosList = posMMap.get(nextWord);
+						//e.g. $F$ is a ring, with no nontrivial elements. 
+						if(!nextWordPosList.isEmpty() && nextWordPosList.get(0).equals("pre")
+								|| AND_OR_PATTERN.matcher(nextWord).find()){
+							//don't add curWord in this case, let the sentence continue.
+							continue;
+						}
+						//else, because we don't want 
+						else if(WordForms.areWordsSimilar(lastWordAdded, nextWord)){
+							//substitute the comma with "and"
+							sentenceBuilder.append(" and ");
+							continue;
+						}						
+					}					
 					sentenceList.add(sentenceBuilder.toString());
 					sentenceBuilder.setLength(0);
+					
 				} else {
+					lastWordAdded = curWord;
 					sentenceBuilder.append(curWord);
 				}
 			}

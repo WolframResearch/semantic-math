@@ -362,7 +362,7 @@ public class WLCommand {
 			public PBuilder(String posStr, String nameStr, boolean includeInBuiltString){
 				
 				posStr = (null == posStr) ? ".*" : posStr.trim();
-				posStr = posStr.matches("\\s*") ? ".*" : posStr;
+				
 				// String nameStr = commandStrParts.length > 2 ?
 				// commandStrParts[1] : "*";
 				nameStr = (null == nameStr) ? ".*" : nameStr;
@@ -1108,8 +1108,10 @@ public class WLCommand {
 		
 		}
 		
-		if(structType.matches(commandComponentPosTerm) 	
-				&& structName.matches(commandComponentName)
+		if(commandComponentPosPattern.matcher(structType).find()
+				//structType.matches(commandComponentPosTerm) 	
+				&& commandComponentNamePattern.matcher(structName).find()
+				//&& structName.matches(commandComponentName)
 				//this component is actually needed
 				&& curCommand.commandsCountMap.get(commandComponent) > 0){
 			

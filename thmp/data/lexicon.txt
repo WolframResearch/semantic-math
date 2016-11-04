@@ -12,6 +12,7 @@ assumption noun
 sum ent
 direct sum ent
 set ent
+point ent
 conjugation ent
 categories ent_comp
 lemma noun
@@ -130,6 +131,7 @@ local adj
 regular adj
 noetherian adj
 transition noun
+zero adj
 zerodivisor ent
 nonzerodivisor ent
 non-zerodivisor ent
