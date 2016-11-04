@@ -56,6 +56,7 @@ public class ParseToWLTree {
 	private static final Multimap<String, ImmutableWLCommand> WLCommandMap = WLCommandsList.WLCommandMap();
 	
 	private static final Pattern PLURAL_PATTERN = Pattern.compile("(.+)s");
+	private static final Pattern CONJ_DISJ_PATTERN = Pattern.compile("conj_.+|disj_.+");
 	
 	/**
 	 * Entry point for depth first search.
@@ -157,21 +158,28 @@ public class ParseToWLTree {
 					nameStr = curStructInDeque.struct().get("name");
 				}
 				
-				String curStructInDequeType = curStructInDeque.type().matches("conj_.+|disj_.+") ?
+				String curStructInDequeType = CONJ_DISJ_PATTERN.matcher(curStructInDeque.type()).find() ?
+						//curStructInDeque.type().matches("conj_.+|disj_.+") ?
 						curStructInDeque.type().split("_")[1] : curStructInDeque.type();
 						
-				if(curStructInDequeType.matches(curCommandComponent.posTerm())
-						&& nameStr.matches(curCommandComponent.name())
+				if(//curStructInDequeType.matches(curCommandComponent.posStr())						
+						curCommandComponent.getPosPattern().matcher(curStructInDequeType).find()
+						&& curCommandComponent.getNamePattern().matcher(nameStr).find()
+						//&& nameStr.matches(curCommandComponent.nameStr())
 						&& !usedStructsBool[k] ){
 					//see if name matches, if match, move on, continue outer loop
 					//need a way to mark structs already matched! 
 					
 					Struct structToAdd = curStructInDeque;
 					Struct curStructInDequeParent = curStructInDeque.parentStruct();
+					
 					while(curStructInDequeParent != null){
-						String parentType = curStructInDequeParent.type().matches("conj_.+|disj_.+") ?
+						
+						String parentType = CONJ_DISJ_PATTERN.matcher(curStructInDeque.type()).find() ?
+								//curStructInDequeParent.type().matches("conj_.+|disj_.+") ?
 								curStructInDequeParent.type().split("_")[1] : curStructInDequeParent.type();
-						String componentType = curCommandComponent.posTerm();
+								
+						String componentType = curCommandComponent.posStr();
 						String parentNameStr = "";
 						if(curStructInDequeParent.isStructA() && curStructInDequeParent.prev1NodeType().equals(NodeType.STR)){
 							parentNameStr = (String)curStructInDequeParent.prev1();
@@ -183,7 +191,9 @@ public class ParseToWLTree {
 						
 						//System.out.println("\n^^^^^^^^" + ".name(): " + curCommandComponent.name() + " parentStr: " + parentNameStr+" type " +
 						//componentType + " parentType " + parentType);						
-						if(parentNameStr.matches(curCommandComponent.name()) && parentType.matches(componentType)){
+						if(curCommandComponent.getNamePattern().matcher(parentNameStr).find()								
+								//parentNameStr.matches(curCommandComponent.nameStr()) 
+								&& parentType.matches(componentType)){
 							structToAdd = curStructInDequeParent;
 							curStructInDequeParent = curStructInDequeParent.parentStruct();
 						}else{
@@ -573,7 +583,7 @@ public class ParseToWLTree {
 			//to get the parent Struct of the first non-WL Struct
 			
 			int i = 0;
-			while(posTermList.get(i).commandComponent().name().matches("WL|AUX")) i++;
+			while(posTermList.get(i).commandComponent().nameStr().matches("WL|AUX")) i++;
 			
 			PosTerm firstPosTerm = posTermList.get(i);
 			//Struct posTermStruct = posTermList.get(0).posTermStruct(); 

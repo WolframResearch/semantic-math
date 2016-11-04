@@ -112,6 +112,8 @@ public class WLCommand {
 	 * (in copied WLCommand).
 	 */
 	private Map<Integer, Integer> optionalTermsGroupCountMap = new HashMap<Integer, Integer>();
+	private static final String DEFAULT_AUX_NAME_STR = "AUX";
+	private static final Pattern CONJ_DISJ_PATTERN = Pattern.compile("conj_.*|disj_.*");
 	
 	private static final boolean DEBUG = true;
 	
@@ -337,9 +339,7 @@ public class WLCommand {
 			//whether or not to trigger math object inner product computation.
 			private boolean isTriggerMathObj;
 			//whether this term is the trigger term.
-			private boolean isTrigger;
-			
-			private static final String DEFAULT_AUX_NAME_STR = "AUX";
+			private boolean isTrigger;			
 			
 			/**
 			 * @return the isTrigger
@@ -375,7 +375,7 @@ public class WLCommand {
 				
 				// process command and create WLCommandComponent and PosList
 				this.commandComponent = new WLCommandComponent(posStr, nameStr);
-			
+				this.includeInBuiltString = includeInBuiltString;
 			}
 			
 			/**
@@ -797,7 +797,10 @@ public class WLCommand {
 	 * @return String form of the resulting WLCommand
 	 */
 	public static String build(WLCommand curCommand, Struct firstPosTermStruct){
-		if(curCommand.componentCounter > 0) return "";
+		
+		if(curCommand.componentCounter > 0){ 
+			return "";		
+		}
 		ListMultimap<WLCommandComponent, Struct> commandsMap = curCommand.commandsMap;
 		//value is 0 if that group is satisfied
 		Map<Integer, Integer> optionalTermsGroupCountMap = curCommand.optionalTermsGroupCountMap;
@@ -860,6 +863,7 @@ public class WLCommand {
 					}
 					continue;
 				}
+
 				
 				Struct nextStruct = curCommandComponentList.get(positionInMap);
 				//prevStruct = nextStruct;				
@@ -910,7 +914,7 @@ public class WLCommand {
 			}//index indicating this is a WL command.
 			else if(positionInMap == WLCommandsList.WLCOMMANDINDEX){
 				//should change to use simpletoString from Struct
-				nextWord = term.commandComponent.posTerm;
+				nextWord = term.commandComponent.posStr;
 				
 				//in case of WLCommand eg \\[ELement]
 				//this list should contain Structs that corresponds to a WLCommand
@@ -938,7 +942,7 @@ public class WLCommand {
 				if(!prevStructHeaded){
 					//nextWord = term.commandComponent.posTerm;
 				}
-				nextWord = term.commandComponent.posTerm;
+				nextWord = term.commandComponent.posStr;
 				
 				//System.out.print("nextWord : " + nextWord + "prevStruct: " + prevStructHeaded);
 			}
@@ -1022,17 +1026,16 @@ public class WLCommand {
 	 */
 	public static CommandSat addComponent(WLCommand curCommand, Struct newStruct, boolean before){
 		
-		//if key.name .matches()
-		//be careful with type, could be conj_, all sorts of stuff
+		//be careful with type, could be conj_.
 		String structPreType = newStruct.type();
-		String structType = structPreType.matches("conj_.*|disj_.*") ?
+		String structType = CONJ_DISJ_PATTERN.matcher(structPreType).find() ?
 				structPreType.split("_")[1] : structPreType;
-		
+				
 		String structName = !newStruct.isStructA() ? newStruct.struct().get("name") : 
 			newStruct.prev1NodeType().equals(NodeType.STR) ? (String)newStruct.prev1() : "";
 		
 		//whether component has been added. Useful to avoid rebuilding commands 
-		//
+		
 		boolean componentAdded = false;
 		
 		//need to iterate through the keys of countMap instead of just getting, 
@@ -1077,12 +1080,16 @@ public class WLCommand {
 		commandComponent = curPosTerm.commandComponent;
 		boolean isOptionalTerm = curPosTerm.isOptionalTerm();
 		int posTermPositionInMap = curPosTerm.positionInMap;
+		//use pattern!
+		commandComponentPosTerm = commandComponent.posStr;
+		commandComponentName = commandComponent.nameStr;
+		Pattern commandComponentPosPattern = commandComponent.getPosPattern();
+		Pattern commandComponentNamePattern = commandComponent.getNamePattern();
 		
-		commandComponentPosTerm = commandComponent.posTerm;
-		commandComponentName = commandComponent.name;
 		int commandComponentCount = curCommand.commandsCountMap.get(commandComponent);
 		
-		while(((!structType.matches(commandComponentPosTerm) || !structName.matches(commandComponentName)) 
+		while(( (!commandComponentPosPattern.matcher(structType).find() || !commandComponentNamePattern.matcher(structName).find())
+				//!structType.matches(commandComponentPosTerm) || !structName.matches(commandComponentName)) 
 				&& isOptionalTerm
 				/*or auxilliary term*/
 				|| posTermPositionInMap < 0)
@@ -1096,8 +1103,8 @@ public class WLCommand {
 			isOptionalTerm = curPosTerm.isOptionalTerm();
 			posTermPositionInMap = curPosTerm.positionInMap;
 			
-			commandComponentPosTerm = commandComponent.posTerm;
-			commandComponentName = commandComponent.name;
+			commandComponentPosTerm = commandComponent.posStr;
+			commandComponentName = commandComponent.nameStr;
 		
 		}
 		
@@ -1105,7 +1112,8 @@ public class WLCommand {
 				&& structName.matches(commandComponentName)
 				//this component is actually needed
 				&& curCommand.commandsCountMap.get(commandComponent) > 0){
-					
+			
+
 			curCommand.commandsMap.put(commandComponent, newStruct);
 			//sets the posTermStruct for the posTerm. No effect?!?***
 			posTermList.get(i).set_posTermStruct(newStruct);
@@ -1334,25 +1342,33 @@ public class WLCommand {
 	public static class WLCommandComponent{
 		//types should be consistent with types in Map
 		//eg ent, symb, pre, etc
-		private String posTerm;
+		private String posStr;
 		
 		//pattern for posTerm
 		private Pattern posPattern;
 		//eg "of". Regex expression to be matched, eg .* to match anything
-		private String name;
+		private String nameStr;
 		Pattern namePattern;
 		
 		public WLCommandComponent(String posTerm, String name){
-			this.posTerm = posTerm;
-			this.posPattern = Pattern.compile(posTerm);
-			this.name = name;
-			this.namePattern = Pattern.compile(name);
+			this.posStr = posTerm;			
+			this.nameStr = name;
+			//default auxiliary terms should not be compiled, as
+			//they are not meant to be compared with anything.
+			if(!name.equals(DEFAULT_AUX_NAME_STR)){
+				this.posPattern = Pattern.compile(posTerm);
+				this.namePattern = Pattern.compile(name);
+			}
 		}		
 		
 		/**
 		 * @return the posPattern
 		 */
 		public Pattern getPosPattern() {
+			if(posStr.equals(DEFAULT_AUX_NAME_STR)){
+				throw new IllegalArgumentException("Auxiliary terms "
+						+ "are not compiled into patterns!");
+			}
 			return posPattern;
 		}
 
@@ -1360,20 +1376,24 @@ public class WLCommand {
 		 * @return the namePattern
 		 */
 		public Pattern getNamePattern() {
+			if(posStr.equals(DEFAULT_AUX_NAME_STR)){
+				throw new IllegalArgumentException("Auxiliary terms "
+						+ "are not compiled into patterns!");
+			}
 			return namePattern;
 		}
 		
-		public String posTerm(){
-			return this.posTerm;
+		public String posStr(){
+			return this.posStr;
 		}
 		
-		public String name(){
-			return this.name;
+		public String nameStr(){
+			return this.nameStr;
 		}
 		
 		@Override
 		public String toString(){
-			return "{" + this.posTerm + ", " + this.name + "}";
+			return "{" + this.posStr + ", " + this.nameStr + "}";
 		}
 		
 		/**
@@ -1388,8 +1408,8 @@ public class WLCommand {
 			//matching as regexes; This is ok since the only times we 
 			//look up we have the original Pos terms
 			//should not be able to access   .posTerm directly!
-			if(!this.posTerm.equals(other.posTerm)) return false;
-			if(!this.name.equals(other.name)) return false;
+			if(!this.posStr.equals(other.posStr)) return false;
+			if(!this.nameStr.equals(other.nameStr)) return false;
 			
 			return true;
 		}
@@ -1397,8 +1417,8 @@ public class WLCommand {
 		@Override
 		public int hashCode(){
 			//this does not produce uniform distribution! Need to do some shifting
-			int hashcode = this.posTerm.hashCode();
-			hashcode += 19 * hashcode + this.name.hashCode();
+			int hashcode = this.posStr.hashCode();
+			hashcode += 19 * hashcode + this.nameStr.hashCode();
 			return hashcode;
 		}
 	}

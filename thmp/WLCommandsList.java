@@ -60,6 +60,7 @@ public class WLCommandsList {
 	private static final String OPTIONAL_TOKEN_STR = "OPT";
 	//should put these in WLCommand
 	private static final Pattern OPTIONAL_TOKEN_PATTERN = Pattern.compile("OPT(\\d*)");
+	private static final String DEFAULT_AUX_NAME_STR = "AUX";
 	
 	/**
 	 * 
@@ -260,9 +261,16 @@ public class WLCommandsList {
 		int optionalTermsCount = 0;
 		
 		for (int i = 0; i < pBuilderAr.length; i++) {
-			PBuilder curBuilder = pBuilderAr[i];
-			
+
+			PBuilder curBuilder = pBuilderAr[i];			
 			WLCommandComponent curCommandComponent = curBuilder.getCommandComponent();
+
+			if(curCommandComponent.nameStr().equals(DEFAULT_AUX_NAME_STR)){
+				PosTerm curPosTerm = curBuilder.build();
+				posList.add(curPosTerm);
+				continue;
+			}
+			
 			Integer temp;
 			int curComponentCount = (temp = commandsCountPreMap.get(curCommandComponent)) == null ? 0 : temp;
 			
@@ -297,8 +305,8 @@ public class WLCommandsList {
 					triggerWordIndex = i;
 				}
 			}
-			
 			commandsCountPreMap.put(curCommandComponent, curComponentCount + 1);
+
 		}
 		
 		if(triggerWordIndex < 0){
