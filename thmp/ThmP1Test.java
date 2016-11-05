@@ -357,6 +357,7 @@ public class ThmP1Test {
 			st = "$A$ is a ring with maximal ideal $ mathfrak m = 1$ and with group of units $ A^* = 0 . $";
 			st = "$A$ is a ring with maximal ideal $$ mathfrak m = 1$$";
 			st = "$A$ is ring";
+			st = "$R$ is a ring with ideal $I$";
 			//st = "$A$ is a ring";
 			//st = "Group $G$ acts on space $X$";
 			//st = "$F$ is field, so is $G$";

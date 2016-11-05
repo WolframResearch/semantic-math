@@ -142,6 +142,11 @@ public class WLCommandsList {
 		WLCommandMapBuilder.put("exist", addCommand(new PBuilder(null, "there", false), new PBuilder("Exists["),
 				new PBuilder(null, "exists*", false, true, false), new PBuilder("ent|symb|phrase|noun", null, true),
 				 new PBuilder("]") ));	
+		//WLCommandMapBuilder.put("is", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is|are|be, trigger",
+			//	"\\[Element]", "symb|ent|phrase, , true, TriggerMathObj" }));
+		WLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro", null, true), 
+				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), new PBuilder("\\[Element]"),
+				new PBuilder("symb|ent|phrase", null, true, false, true) ));
 		
 		//WLCommandMapBuilder.put("derivative",
 			//	addCommand(new String[] { "Derivative[", ", derivative, trigger", "pre, of, false", "symb|ent, , true", "]" }));

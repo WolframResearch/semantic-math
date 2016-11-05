@@ -885,7 +885,7 @@ public class WLCommand {
 				if(term.triggerMathObj){
 					//should check first if contains WLCommandStr, i.e. has been converted to some 
 					//commands already
-					nextWord = TriggerMathObj2.get_mathObjFromStruct(nextStruct, curCommand);
+					nextWord = TriggerMathObj3.get_mathObjFromStruct(nextStruct, curCommand);
 					
 					if(nextWord.equals("")){
 						//already added numUnits to Struct above, don't do it again.
