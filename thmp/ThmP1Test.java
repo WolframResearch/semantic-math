@@ -365,8 +365,10 @@ public class ThmP1Test {
 			st = "This bijection is inclusion preserving, and maps prime ideals to prime ideals.";
 			st = "$f$ map prime ideals to prime ideals";
 			st = "A valuation ring is Noetherian if and only if it is a discrete valuation ring or a field";
-			//st = "if ring is ring";
-			
+			st = "A valuation ring is Noetherian if it is a discrete valuation ring or a field";
+			st = "Group $G$ acts on space $X$ by conjugation";
+			st = "Any $F$-algebra map $f : E to E$ is an automorphism";
+			st = " Let $A$, $A'$, $A_{fin}$, $B$, and $B_{fin}$ be the subsets of $Spec(S)$ introduced above.";
 			//st = "$f$ maps $a$ to $b$";
 			//st = "$f$ map ring";
 			//st = "Group $G$ acts on space $X$";

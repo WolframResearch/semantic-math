@@ -525,8 +525,8 @@ public class StructA<A, B> extends Struct{
 	/////remove necessity to cast!
 	@SuppressWarnings("unchecked")
 	public void set_prev1(Object prev1){
-		this.prev1 = (A)prev1;	
-		if(prev1 instanceof Struct){
+		this.prev1 = (A)prev1;	 
+		if(PREV1_TYPE.isTypeStruct()){
 			this.PREV1_TYPE = ((Struct) prev1).isStructA() ? NodeType.STRUCTA : NodeType.STRUCTH;			
 		}
 
@@ -535,7 +535,7 @@ public class StructA<A, B> extends Struct{
 	//***this is terrible! Cannot just cast String
 	@SuppressWarnings("unchecked")
 	public void set_prev1(String prev1){	
-		if(!(prev1 instanceof String)) 
+		if(!(PREV1_TYPE.equals(NodeType.STR))) 
 			System.out.println("Cannot cast String to " + this.prev1.getClass() + "!");
 		this.prev1 = (A)prev1;
 	}

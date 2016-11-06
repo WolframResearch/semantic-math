@@ -128,6 +128,29 @@ structure noun
 epimorphism ent
 cardinality ent
 formula noun
+automorphism ent
+measure ent
+sequent ent
+integer ent
+conjugacy class ent
+subgroup ent
+group ent
+order ent
+conjugation ent
+power ent
+module ent
+characteristic ent
+set ent
+transformation ent
+matrix ent
+function ent
+basis ent
+sum ent
+partition ent
+bilinear form ent
+direct sum ent
+vector space ent
+angle ent
 generator ent
 lye verb
 either det

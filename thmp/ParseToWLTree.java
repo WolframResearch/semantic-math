@@ -275,6 +275,8 @@ public class ParseToWLTree {
 							|| !commandSat.hasOptionalTermsLeft() ){
 						WLCommandListIter.remove();
 					}
+				}else if(commandSat.isDisqualified()){
+					WLCommandListIter.remove();
 				}
 				
 			}
@@ -342,6 +344,7 @@ public class ParseToWLTree {
 						//namely the trigger word is last word
 						boolean beforeTrigger = true;
 						//System.out.println("curCommandSatWhole*********"  +" "  + curStruct);
+						//System.out.println("ADDING COMMAND " + curCommand + " for STRUCT " + curStruct);
 						CommandSat commandSat = WLCommand.addComponent(curCommand, curStruct, beforeTrigger);
 						curCommandSatWhole = commandSat.isCommandSat();		
 						//System.out.println("curCommandSatWhole " + curCommandSatWhole);
@@ -455,6 +458,7 @@ public class ParseToWLTree {
 				String prev2Type = prev2.type();
 				ParseStructType parseStructType = ParseStructType.getType(prev2);
 				curHeadParseStruct = headParseStruct;
+				
 				//check if need to create new ParseStruct
 				boolean checkParseStructType = checkParseStructType(parseStructType);
 				if(checkParseStructType){
@@ -549,6 +553,7 @@ public class ParseToWLTree {
 				
 				while(ChildWLCommandListIter.hasNext()){
 					WLCommand curCommand = ChildWLCommandListIter.next();
+					//System.out.println("ADDING COMMAND " + curCommand + " for STRUCT " + childRelationStruct);
 					CommandSat commandSat = WLCommand.addComponent(curCommand, childRelationStruct, false);
 					boolean isCommandSat = commandSat.isCommandSat();
 					boolean hasOptionalTermsLeft = commandSat.hasOptionalTermsLeft();
@@ -562,6 +567,8 @@ public class ParseToWLTree {
 							//need to remove from WLCommandList
 							ChildWLCommandListIter.remove();
 						}
+					}else if(commandSat.isDisqualified()){
+						ChildWLCommandListIter.remove();
 					}
 					
 				}
@@ -637,13 +644,15 @@ public class ParseToWLTree {
 		List<WLCommandWrapper> structWrapperList = struct.WLCommandWrapperList();
 		int structWrapperListSz = structWrapperList.size();
 		//boolean contextVecConstructed = false;		
-		
+		//iterate backwards, so last-added ones (presumably longer span) come first
 		for(int i = structWrapperListSz - 1; i > -1; i--){
+		//for(int i = 0; i < structWrapperListSz; i++){	
 			WLCommandWrapper curWrapper = structWrapperList.get(i);
 			WLCommand curCommand = curWrapper.wlCommand;
 			
 			//right now that threshold is: all components must be included.
-			if(WLCommand.structsWithOtherHeadCount(curCommand) < 1){
+			//Now: 1 component can have other head
+			if(WLCommand.structsWithOtherHeadCount(curCommand) < 2){
 				//System.out.println("wrapperList Size" + structWrapperListSz);
 				//System.out.println(struct.WLCommandStr());
 				//parsedSB.append(struct.WLCommandStr());

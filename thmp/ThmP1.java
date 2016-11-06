@@ -621,7 +621,7 @@ public class ThmP1 {
 			}
 			
 			//last condition should be temporary: should eliminate mathObjMap
-			if (wordPos != null && wordPos.equals("ent") || mathObjMap.containsKey(curWord)) { 
+			if (wordPos != null && wordPos.equals("ent")) { 
 				
 				curWord = posList.isEmpty() ? singular : curWord;
 				String tempWord = curWord;
@@ -896,7 +896,7 @@ public class ThmP1 {
 					curPos = "adj";
 				}
 				// if next word is entity, then adj
-				else if (strAr.length > i + 1 && !posMMap.containsKey(strAr[i+1]) && 
+				else if (strAr.length > i + 1 && posMMap.containsKey(strAr[i+1]) && 
 						posMMap.get(strAr[i+1]).get(0).equals("ent")) {
 
 					// combine with adverb if previous one is adverb
@@ -1068,7 +1068,7 @@ public class ThmP1 {
 			
 			//pos will be added later
 			boolean fuseSymbEnt = true;
-			System.out.println("posMap for word " + mathObjName + ": " + posList);
+			//System.out.println("posMap for word " + mathObjName + ": " + posList);
 			//start from 1, as extraPosList only contains *additional* pos
 			for(int l = 1; l < posList.size(); l++){
 				String pos = posList.get(l);
@@ -1086,6 +1086,9 @@ public class ThmP1 {
 			}
 			
 			HashMap<String, String> tempMap = new HashMap<String, String>();
+			if(mathObjName==null){
+				throw new IllegalArgumentException( pairs.toString());
+			}
 			tempMap.put("name", mathObjName);
 			
 			// if next pair is also ent, and is latex expression
@@ -1533,7 +1536,7 @@ public class ThmP1 {
 			
 			//create additional structs on the diagonal if extra pos present.
 			Set<String> extraPosSet = diagonalStruct.extraPosSet();
-			System.out.println("@@@@@@ diagonalStruct " + diagonalStruct + "|||" +extraPosSet);
+			//System.out.println("@@@@@@ diagonalStruct " + diagonalStruct + "|||" +extraPosSet);
 			if(extraPosSet != null){
 				
 				for(String pos : extraPosSet){
@@ -1547,7 +1550,7 @@ public class ThmP1 {
 					}else{
 						newStruct = new StructA<String, String>(structName, NodeType.STR, "", NodeType.STR, pos);					
 					}
-					System.out.println("NEW STRUCT ADDED " + newStruct + " " + extraPosSet.size());
+					//System.out.println("NEW STRUCT ADDED " + newStruct + " " + extraPosSet.size());
 					mx.get(j).get(j).add(newStruct);
 					newStruct.set_structList(mx.get(j).get(j));
 				}
@@ -1570,8 +1573,8 @@ public class ThmP1 {
 
 					StructList structList1 = mx.get(i).get(k);
 					StructList structList2 = mx.get(k + 1).get(j);
-					System.out.println("++++ "+i + " " + k + " structList1: " + structList1);
-					System.out.println("---- "+(k+1) + " " + j + " structList2: " + structList2);
+					//System.out.println("++++ "+i + " " + k + " structList1: " + structList1);
+					//System.out.println("---- "+(k+1) + " " + j + " structList2: " + structList2);
 					// Struct struct1 = mx.get(i).get(k);
 					// Struct struct2 = mx.get(k + 1).get(j);
 
@@ -1591,21 +1594,18 @@ public class ThmP1 {
 					while (structList1Iter.hasNext()) {
 						
 						Struct struct1 = structList1Iter.next();
-						System.out.println("STRUCT1 " + struct1);						
+						//System.out.println("STRUCT1 " + struct1);						
 						Iterator<Struct> structList2Iter = struct2List.iterator();
 						
 						while (structList2Iter.hasNext()) {
 							Struct struct2 = structList2Iter.next();
-							System.out.println("...with STRUCT2 " + struct2);
+							//System.out.println("...with STRUCT2 " + struct2);
 							
 							// combine/reduce types, like or_ppt, for_ent,
 							// in_ent
 							String type1 = struct1.type();
 							String type2 = struct2.type();
-							if(type2.contentEquals("ent")){
-								System.out.println("***struct1: " + struct1 + ". struct2: " + struct2 );
-								System.out.println("isStructA? " + struct2.isStructA());
-							}
+							
 							// for types such as conj_verbphrase
 							String[] split1 = type1.split("_");
 							//this causes conj_ent to be counted as ent, so should
@@ -2379,9 +2379,9 @@ public class ThmP1 {
 			Struct firstEnt, Struct recentEnt, int recentEntIndex, int i, int j, int k, String type1, String type2,
 			ParseState parseState) {
 		
-		if(type2.equals("ent")){
+		/*if(type2.equals("ent")){
 			System.out.println("Reducing _ent! i " + newRule.relation() + ". struct1: " + struct1 +  "  " + struct2);
-		}
+		}*/
 		String newType = newRule.relation();
 		double newScore = newRule.prob();
 		double newDownPathScore = struct1.maxDownPathScore() * struct2.maxDownPathScore() * newScore;

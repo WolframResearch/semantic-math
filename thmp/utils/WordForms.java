@@ -16,6 +16,8 @@ public class WordForms {
 
 	//delimiters to split on when making words out of input
 	private static final String SPLIT_DELIM = "\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:|-|_|~|!";
+	private static final Pattern BACKSLASH_PATTERN = Pattern.compile("(?<!\\\\)\\\\(?!\\\\)");
+	private static final Pattern BRACES_PATTERN = Pattern.compile("(\\{|\\})");
 	//small lists of fluff words, used in, e.g., n gram extraction.
 	//*don't* put "of" here, will interfere with 3 gram collection
 	private static final String FLUFF_WORDS_SMALL = "a|the|tex|of|and|on|let|lemma|for|to|that|with|is|be|are|there|by"
@@ -208,7 +210,11 @@ public class WordForms {
 		
 		//if tex2 is a variation of tex1
 		//create regex from one to match the other. Expand this!
-		String tex1Regex = "\\\tilde\\{" + tex1 + "\\}|" + tex1 + "'";
+		//turn '\' into "\\\\" to create legal regex
+		//tex1 = BACKSLASH_PATTERN.matcher(tex1).replaceAll("\\\\");
+		tex1 = BRACES_PATTERN.matcher(tex1).replaceAll("\\$1");
+		tex1 = Matcher.quoteReplacement(tex1);
+		String tex1Regex = "\\\\tilde\\{" + tex1 + "\\}|" + tex1 + "'";
 		Pattern tex1Pattern = Pattern.compile(tex1Regex);
 		if(tex1Pattern.matcher(tex2).find()){
 			return true;

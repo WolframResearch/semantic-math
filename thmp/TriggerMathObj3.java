@@ -4,22 +4,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multiset;
-import com.google.common.collect.SetMultimap;
 
 import thmp.search.CollectThm;
 import thmp.utils.WordForms;
@@ -104,7 +99,7 @@ public class TriggerMathObj3 {
 				triggerTermsMMap);
 		addTriggerTermsToMap("PowerSeries", new String[]{"radius of convergence", "Power Series", "analytic", "holomorphic",
 				"zero", "root"}, triggerTermsMMap);
-		addTriggerTermsToMap("ring", new String[]{"ideal", "ring", "pure", "cohen-macaulay", "catenary"}, triggerTermsMMap);		
+		addTriggerTermsToMap("ring", new String[]{"ideal", "ring", "pure", "cohen-macaulay", "catenary", "noetherian"}, triggerTermsMMap);		
 		addTriggerTermsToMap("field", new String[]{"algebraically closed"}, triggerTermsMMap);
 		//////
 		

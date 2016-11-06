@@ -184,7 +184,7 @@ public class StructH<H> extends Struct{
 	 */
 	@Override
 	public void addExtraPos(String pos){
-		System.out.println("StructH addExtraPos" + this + Arrays.toString(Thread.currentThread().getStackTrace()));
+		//System.out.println("StructH addExtraPos" + this + Arrays.toString(Thread.currentThread().getStackTrace()));
 		//Lazy initialization with double-check locking.
 		if(extraPosSet == null){
 			synchronized(this){
@@ -470,6 +470,7 @@ public class StructH<H> extends Struct{
 		
 		while(structIter.hasNext()){
 			Entry<String, String> entry = structIter.next();
+			
 			if(entry.getValue().matches("ppt") ){
 				String newPpt = entry.getKey();
 				ppt += newPpt + ", ";
