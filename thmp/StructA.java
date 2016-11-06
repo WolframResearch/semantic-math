@@ -1,7 +1,10 @@
 package thmp;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import thmp.ParseToWLTree.WLCommandWrapper;
 import thmp.Struct.NodeType;
@@ -29,7 +32,7 @@ public class StructA<A, B> extends Struct{
 	private NodeType PREV2_TYPE;
 	
 	//additional part of speech
-	private volatile List<String> extraPosList;
+	private volatile Set<String> extraPosSet;
 	//list of Struct at mx element, to which this Struct belongs
 	//pointer to mx.get(i).get(j)
 	//if not null, means this is head of some parsed WLCommand. 
@@ -460,8 +463,8 @@ public class StructA<A, B> extends Struct{
 	 * @return
 	 */
 	@Override
-	public List<String> extraPosList(){
-		return this.extraPosList;
+	public Set<String> extraPosSet(){
+		return this.extraPosSet;
 	}
 	
 	/**
@@ -469,15 +472,16 @@ public class StructA<A, B> extends Struct{
 	 */
 	@Override
 	public void addExtraPos(String pos){
+		
 		//Lazy initialization with double-check locking.
-		if(extraPosList == null){
+		if(extraPosSet == null){
 			synchronized(this){
-				if(extraPosList == null){
-					extraPosList = new ArrayList<String>();
+				if(extraPosSet == null){
+					extraPosSet = new HashSet<String>();
 				}
 			}
 		}
-		extraPosList.add(pos);		
+		extraPosSet.add(pos);		
 	}
 	
 	@Override

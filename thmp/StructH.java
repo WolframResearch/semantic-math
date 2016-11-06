@@ -1,5 +1,6 @@
 package thmp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -17,7 +18,7 @@ public class StructH<H> extends Struct{
 	//Primary part of speech, ent, adj, etc. 
 	private String type; 
 	//*additional* part of speech
-	private volatile List<String> extraPosList;
+	private volatile Set<String> extraPosSet;
 	private String WLCommandStr;
 	//the number of times this WLCommandStr has been visited.
 	//To not repeat, print only when this is even
@@ -173,8 +174,8 @@ public class StructH<H> extends Struct{
 	 * @return
 	 */
 	@Override
-	public List<String> extraPosList(){
-		return this.extraPosList;
+	public Set<String> extraPosSet(){
+		return this.extraPosSet;
 	}
 	
 	/**
@@ -183,15 +184,16 @@ public class StructH<H> extends Struct{
 	 */
 	@Override
 	public void addExtraPos(String pos){
+		System.out.println("StructH addExtraPos" + this + Arrays.toString(Thread.currentThread().getStackTrace()));
 		//Lazy initialization with double-check locking.
-		if(extraPosList == null){
+		if(extraPosSet == null){
 			synchronized(this){
-				if(extraPosList == null){
-					extraPosList = new ArrayList<String>();
+				if(extraPosSet == null){
+					extraPosSet = new HashSet<String>();
 				}
 			}
 		}
-		extraPosList.add(pos);		
+		extraPosSet.add(pos);		
 	}
 	
 	@Override

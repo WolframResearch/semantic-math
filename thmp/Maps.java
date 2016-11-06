@@ -189,8 +189,8 @@ public class Maps {
 					}
 		
 					// format: "new_word pos"
-					// if fluff word: "new_word fluff replacement", eg "to be" fluff
-					// "as"
+					// if fluff word: "new_word fluff replacement", 
+					//eg "to be" fluff, goes to "as"
 					switch (pos) {
 					case "ent":
 						//mathObjMap.put(word, "mathObj");
@@ -531,7 +531,7 @@ public class Maps {
 			mathObjMap.put("prime", "mathObj");
 			mathObjMap.put("power", "mathObj");
 			mathObjMap.put("nilpotence", "mathObj");
-			mathObjMap.put("map", "mathObj");
+			//mathObjMap.put("map", "mathObj");
 			mathObjMap.put("diagram", "mathObj_COMP");
 			mathObjMap.put("commutative diagram", "mathObj");
 			mathObjMap.put("module", "mathObj");
@@ -786,6 +786,10 @@ public class Maps {
 			probMap.put("ent_verb", .8);
 			probMap.put("ent_pre", .8);
 
+			// symb_
+			probMap.put("symb_verb", .8);
+			probMap.put("symb_pre", .6);
+			
 			// pre_
 			probMap.put("pre_ent", .8);
 			probMap.put("pre_adj", .6);

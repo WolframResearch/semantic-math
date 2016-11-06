@@ -10,6 +10,8 @@ category ent_comp
 satisfy verb
 assumption noun
 sum ent
+valuation ent
+discrete adj
 direct sum ent
 set ent
 point ent
@@ -85,8 +87,10 @@ two adj
 done parti
 pair noun
 bilinear adj
-mapping
-universal
+map ent
+map verb
+mapping ent
+universal adj
 property noun
 mapping noun
 homomorphism ent_comp

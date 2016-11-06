@@ -1,6 +1,7 @@
 package thmp;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.ArrayList;
 
 import thmp.ParseToWLTree.WLCommandWrapper;
@@ -47,7 +48,12 @@ public abstract class Struct {
 	 * @return whether this struct is StructA or not
 	 */
 	public boolean isStructA(){
-		return this.struct() == null;
+		boolean isStructA = this.struct() == null;
+		//enforcing principle that all StructH should be of type "ent"
+		if(!isStructA){
+			assert(this.type().equals("ent"));
+		}
+		return isStructA;
 	}
 	
 	public abstract Struct previousBuiltStruct();
@@ -140,7 +146,7 @@ public abstract class Struct {
 	 * often used as an "ent". "type()" contains primary pos.
 	 * @return
 	 */
-	public abstract List<String> extraPosList();
+	public abstract Set<String> extraPosSet();
 	/**
 	 * Add additional parts of speech to this struct.
 	 */

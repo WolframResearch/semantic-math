@@ -358,7 +358,17 @@ public class ThmP1Test {
 			st = "$A$ is a ring with maximal ideal $$ mathfrak m = 1$$";
 			st = "$A$ is ring";
 			st = "$R$ is a ring with ideal $I$";
-			//st = "$A$ is a ring";
+			st = "Ideals in $A$ correspond $1 - 1$ with ideals of $Gamma$.";
+			
+			st = "$A$ is $B$, and is $C$";
+			st = "$f$ map ring to field";
+			st = "This bijection is inclusion preserving, and maps prime ideals to prime ideals.";
+			st = "$f$ map prime ideals to prime ideals";
+			st = "A valuation ring is Noetherian if and only if it is a discrete valuation ring or a field";
+			//st = "if ring is ring";
+			
+			//st = "$f$ maps $a$ to $b$";
+			//st = "$f$ map ring";
 			//st = "Group $G$ acts on space $X$";
 			//st = "$F$ is field, so is $G$";
 			//st = "regular local ring";

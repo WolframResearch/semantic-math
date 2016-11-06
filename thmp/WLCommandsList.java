@@ -149,38 +149,78 @@ public class WLCommandsList {
 				new PBuilder("symb|ent|phrase", null, true, false, true) ));
 		
 		//WLCommandMapBuilder.put("derivative",
-			//	addCommand(new String[] { "Derivative[", ", derivative, trigger", "pre, of, false", "symb|ent, , true", "]" }));
-		/*WLCommandMapBuilder.put("derivative",
-				addCommand(new String[] { ", derivative, trigger", "Derivative[", "pre, of, false", "symb|ent, , true", "]" }));
-		WLCommandMapBuilder.put("log",
-				addCommand(new String[] { ", log, trigger", "Log[", "pre, of, false", "symb|ent, , true", "]" }));
-		WLCommandMapBuilder.put("union",
-				addCommand(new String[] { ", union, trigger", "Union[", "pre, of, false", "symb|ent, , true", "]" }));
+			//	addCommand(new String[] { ", derivative, trigger", "Derivative[", "pre, of, false", "symb|ent, , true", "]" }));
+		WLCommandMapBuilder.put("derivative", addCommand(new PBuilder(null, "derivative", false, true, false), 
+				new PBuilder("Derivative["), new PBuilder("pre", "of", false), 
+				new PBuilder("symb|ent", null, true), new PBuilder("]") ));
+		//WLCommandMapBuilder.put("log",
+			//addCommand(new String[] { ", log, trigger", "Log[", "pre, of, false", "symb|ent, , true", "]" }));
+		WLCommandMapBuilder.put("log", addCommand(new PBuilder(null, "log", false, true, false), 
+				new PBuilder("Log["), new PBuilder("pre", "of", false), 
+				new PBuilder("symb|ent", null, true), new PBuilder("]") ));
+		//WLCommandMapBuilder.put("union",
+			//addCommand(new String[] { ", union, trigger", "Union[", "pre, of, false", "symb|ent, , true", "]" }));
+		WLCommandMapBuilder.put("union", addCommand(new PBuilder(null, "union", false, true, false), 
+				new PBuilder("Union["), new PBuilder("pre", "of", false), 
+				new PBuilder("symb|ent", null, true), new PBuilder("]") ));
+		
 		// label a term to use to trigger a mathObj, communicate to posList,
 		// posList dynamically builds command
 		// using TriggerMathObj.
 		//WLCommandMapBuilder.put("is", addCommand(new String[] { "symb|ent, , true", "verb|vbs, is|are|be, trigger",
 			//	"\\[Element]", "symb|ent, , true" }));
-		WLCommandMapBuilder.put("subset",
-				addCommand(new String[] { ", subset, trigger", "Subset[", "pre, of, false", "symb|ent, , true", "]" }));
-		// $f=\sum i$ with radius of convergence $r$
-		WLCommandMapBuilder.put("convergence", addCommand(new String[] { "symb|ent, , true", "\\subset",
-				", radius, false", ", convergence, trigger", "Function[ 'radius' ", "]" }));
+		
+		//WLCommandMapBuilder.put("subset",
+			//	addCommand(new String[] { ", subset, trigger", "Subset[", "pre, of, false", "symb|ent, , true", "]" }));
+		WLCommandMapBuilder.put("subset", addCommand(new PBuilder(null, "subset", false, true, false), 
+				new PBuilder("Subset["), new PBuilder("pre", "of", false), 
+				new PBuilder("symb|ent", null, true), new PBuilder("]") ));
 		
 		// trigger TriggerMathObj
 		//***action*** commands
-		WLCommandMapBuilder.put("is", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is|are|be, trigger",
-				"\\[Element]", "symb|ent|phrase, , true, TriggerMathObj" }));
+		//WLCommandMapBuilder.put("is", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is|are|be, trigger",
+			//	"\\[Element]", "symb|ent|phrase, , true, TriggerMathObj" }));
+		WLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro", null, true), 
+				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), 
+				new PBuilder("\\[Element]"), new PBuilder("symb|ent|phrase", null, true, false, true) ));
+		
 		//e.g. "$X$ is connected"
-		WLCommandMapBuilder.put("is", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is|are|be, trigger",
-				"\\[HasProperty]", "adj, , true, TriggerMathObj" }));
+		//WLCommandMapBuilder.put("is", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is|are|be, trigger",
+			//"\\[HasProperty]", "adj, , true, TriggerMathObj" }));
+		WLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro", null, true), 
+				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), 
+				new PBuilder("\\[HasProperty]"), new PBuilder("adj", null, true, false, true) ));		
+		
 		//negative of above
-		WLCommandMapBuilder.put("is not", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is not|are not|be not, trigger",
-				"Not[\\[Element]]", "symb|ent|adj|phrase, , true, TriggerMathObj" }));
+		//WLCommandMapBuilder.put("is not", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is not|are not|be not, trigger",
+				//"Not[\\[Element]]", "symb|ent|adj|phrase, , true, TriggerMathObj" }));
+		WLCommandMapBuilder.put("is not", addCommand(new PBuilder("symb|ent|pro", null, true), 
+				new PBuilder("verb|vbs|be", "is not|are not|be not", false, true, false), 
+				new PBuilder("Not[\\[Element]]"), new PBuilder("symb|ent|adj|phrase", null, true, false, true) ));
 		
-		WLCommandMapBuilder.put("act", addCommand(new String[] { "Action[", "symb|ent|pro, , true", ", act|acts, trigger",
-				";", "symb|ent|pro, , true, TriggerMathObj", ";", ", by, false, OPT", "ent, , true, OPT", "]" }));		
+		//WLCommandMapBuilder.put("act", addCommand(new String[] { "Action[", "symb|ent|pro, , true", ", act|acts, trigger",
+				//";", "symb|ent|pro, , true, TriggerMathObj", ";", ", by, false, OPT", "ent, , true, OPT", "]" }));		
+		WLCommandMapBuilder.put("act", addCommand(new PBuilder("Action["), new PBuilder("symb|ent|pro", null, true), 
+				new PBuilder(null, "act|acts", false, true, false), new PBuilder(","),
+				new PBuilder("symb|ent|pro", null, true, false, true), new PBuilder(","), 
+				new PBuilder(null, "by", false, false, "OPT"), new PBuilder(null, "by", true, false, "OPT") ));	
 		
+		//if_assert. As well as "let", etc
+		//WLCommandMapBuilder.put("if", addCommand(new String[] { "if|If|let, , trigger", "assert, , true" }));
+		WLCommandMapBuilder.put("if", addCommand(new PBuilder("if|If|let", null, false, true, false), 
+				new PBuilder("assert", null, true) ));
+		
+		//WLCommandMapBuilder.put("equal to", addCommand(new String[] { "symb|ent, , true",
+		//"==", "equal to, , trigger", "symb|ent|phrase, , true, TriggerMathObj" }));
+		
+		
+		//assert_hypo: 
+				//WLCommandMapBuilder.put("hyp", addCommand(new String[] { "assert, , true", "hyp, , trigger", "ent|symb, , true"
+				  //}));
+		WLCommandMapBuilder.put("hyp", addCommand(new PBuilder("assert", null, true), new PBuilder("hyp", null, false, true, false), 
+				new PBuilder("ent|symb", null, true) ));
+		
+		/*
 		//auxpass, eg "is called"
 		WLCommandMapBuilder.put("is called", addCommand(new String[] { "symb|ent|pro, , true", "auxpass, is called, trigger",
 				"\\[Element]", "symb|ent|adj|phrase, , true, TriggerMathObj" }));
@@ -188,11 +228,7 @@ public class WLCommandsList {
 		WLCommandMapBuilder.put("is contained", addCommand(new String[] { "symb|ent|pro, , true", "auxpass, , trigger",
 				"\\[Element]", "symb|ent|adj|phrase, , true, TriggerMathObj" }));		
 		
-		//if_assert. As well as "let", etc
-		WLCommandMapBuilder.put("if", addCommand(new String[] { "if|If|let, , trigger", "assert, , true" }));
 		
-		WLCommandMapBuilder.put("equal to", addCommand(new String[] { "symb|ent, , true",
-				"==", "equal to, , trigger", "symb|ent|phrase, , true, TriggerMathObj" }));
 		
 		WLCommandMapBuilder.put("at most", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is|are|be, false",
 				"<=", "pre, at most, trigger", "symb|ent, , true, TriggerMathObj" }));
@@ -210,9 +246,7 @@ public class WLCommandsList {
 				 "assert, , true" }));
 		WLCommandMapBuilder.put("consider", addCommand(new String[] { "verb, , trigger", "ent|phrase, , true" }));
 
-		//assert_hypo: 
-		//WLCommandMapBuilder.put("hyp", addCommand(new String[] { "assert, , true", "hyp, , trigger", "ent|symb, , true"
-		  //}));
+		
 		
 		//we have ...
 		WLCommandMapBuilder.put("have", addCommand(new String[] { "pro, we, false", "verb, have, trigger", ", , true"}));

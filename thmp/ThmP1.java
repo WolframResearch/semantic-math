@@ -9,10 +9,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -95,6 +97,13 @@ public class ThmP1 {
 	private static final int parseContextVectorSz;
 	//this is cumulative, should be cleared per parse!
 	private static int[] parseContextVector; 
+	/*Array of strings that should not be fused with neighboring ent's. As
+	* these often act as verbs. Did it programmatically initially, but too 
+	* many ent's that should be fused (e.g. ring) were not, leading to parse
+	* explosions. */
+	//move to initializer!
+	private static final String[] NO_FUSE_ENT = new String[]{"map"};
+	private static final Set<String> noFuseEntSet;
 	//private static int[] parseContextVector;
 	//private static int parseContextVectorSz;
 	//list of context vectors, need list instead of single vec, for non-spanning parses
@@ -139,6 +148,11 @@ public class ThmP1 {
 
 		parseContextVectorSz = TriggerMathThm2.keywordDictSize();
 		parseContextVector = new int[parseContextVectorSz];
+		
+		noFuseEntSet = new HashSet<String>();
+		for(String ent : NO_FUSE_ENT){
+			noFuseEntSet.add(ent);
+		}
 	}
 	
 	/**
@@ -253,9 +267,16 @@ public class ThmP1 {
 		}
 	}
 
-	//check in 2- and 3-gram maps. Then determine the type based on 
-	//last word, e.g. "regular local ring"
-	//check 3-gram first. 
+	/**
+	 * check in 2- and 3-gram maps. Then determine the type based on 
+	 * last word, e.g. "regular local ring"
+	 * check 3-gram first. 
+	 * @param i
+	 * @param str
+	 * @param pairs
+	 * @param mathIndexList
+	 * @return
+	 */
 	private static int gatherTwoThreeGram(int i, String[] str, List<Pair> pairs, List<Integer> mathIndexList){
 		String curWord = str[i];
 		String middleWord = str[i+1];
@@ -374,9 +395,12 @@ public class ThmP1 {
 	 * @param posList
 	 */
 	private static void addExtraPosToPair(Pair pair, List<String> posList){
-		//don't add "noun" if "ent" already added, since these fulfill equivalent
-		//roles in practice.
 		
+		if(posList.isEmpty()){
+			return;
+		}
+		//don't add "noun" if "ent" already added, since these fulfill equivalent
+		//roles in practice.		
 		boolean entAdded = posList.get(0).equals("ent");
 		//start from 1, since first pos is already added.
 		for(int k = 1; k < posList.size(); k++){
@@ -386,7 +410,7 @@ public class ThmP1 {
 			}else if(pos.equals("noun") && entAdded){
 				continue;
 			}
-			pair.addExtraPos(posList.get(k));
+			pair.addExtraPos(pos);
 		}
 	}
 	
@@ -430,6 +454,7 @@ public class ThmP1 {
 		strloop: for (int i = 0; i < strAr.length; i++) {
 
 			String curWord = strAr[i];
+			
 			//why this?
 			if (curWord.matches("\\s*,*")){
 				continue;
@@ -463,8 +488,7 @@ public class ThmP1 {
 					//else if (curWord.matches("[^$]*\\$.*")) {
 						//latexExpr += " " + curWord;
 						//i++;
-					} else {
-						
+					} else {						
 						while (i < strArLength && curWord.length() > 0
 								&& !curWord.matches("[^$]*\\$.*") ){//curWord.charAt(curWord.length() - 1) != '$') {
 							latexExpr += " " + curWord;
@@ -477,7 +501,7 @@ public class ThmP1 {
 
 						}
 					}
-					//add the end of the latex expression, only if it's the end bit
+					//add the end of the latex expression, only if it's the last part (i.e. $)
 					if (i < strArLength ) {
 						int tempWordlen = strAr[i].length();
 
@@ -506,12 +530,13 @@ public class ThmP1 {
 				
 				Pair pair = new Pair(latexExpr, type);
 				pairs.add(pair);
+				
 				if (type.equals("ent")){
 					mathIndexList.add(pairs.size() - 1);
 				}				
 				continue;
 			}
-			// check for trigger words
+			// check for trigger words of fixed phrases, e.g. "with this said"
 			else if (i < strAr.length - 1) {
 				String potentialTrigger = curWord + " " + strAr[i + 1];
 				if (fixedPhraseMap.containsKey(potentialTrigger)) {
@@ -575,20 +600,36 @@ public class ThmP1 {
 			String singular2 = singularForms[1]; // ending in "es"
 			String singular3 = singularForms[2]; // ending in "ies"
 			
-			boolean containsCurWord = posMMap.containsKey(curWord);
-			boolean containsCurWordSingular = posMMap.containsKey(singular);
+			List<String> posList = posMMap.get(curWord);
+			List<String> singularPosList = posMMap.get(singular);
 			
-			String wordPos = containsCurWord ? posMMap.get(curWord).get(0) : 
-				(containsCurWordSingular ? posMMap.get(singular).get(0) : null);
+			List<String> posListInUse = posList;
+			//List<String> posListInUse = posList.isEmpty() ? singularPosList : posList;
+			
+			String wordPos = null;
+					/*posList.isEmpty() 
+					? (singularPosList.isEmpty() ? null : posMMap.get(singular).get(0)) 
+					: posMMap.get(curWord).get(0);	 */
+					
+			if(posList.isEmpty()){
+				posListInUse = singularPosList;
+				if(!singularPosList.isEmpty()){
+					wordPos = posMMap.get(singular).get(0);
+				}
+			}else{
+				wordPos = posMMap.get(curWord).get(0);
+			}
 			
 			//last condition should be temporary: should eliminate mathObjMap
 			if (wordPos != null && wordPos.equals("ent") || mathObjMap.containsKey(curWord)) { 
-				String tempWord = containsCurWord ? curWord : singular;;
+				
+				curWord = posList.isEmpty() ? singular : curWord;
+				String tempWord = curWord;
 				int pairsSize = pairs.size();
 				int k = 1;
 				
 				//should be superceded by using the two-gram map above! <--this way can be more deliberate 
-				// if composite math noun, eg "finite field"
+				// than using n-grams, e.g. if composite math noun, eg "finite field"
 				while (i - k > -1 && posMMap.containsKey(strAr[i - k] + " " + tempWord)
 						&& posMMap.get(strAr[i - k] + " " + tempWord).get(0).equals("ent")) {
 					
@@ -598,8 +639,8 @@ public class ThmP1 {
 					if (pairs.size() > 0 && pairs.get(pairsSize - 1).word().equals(strAr[i - k])) {
 
 						// remove from mathIndexList if already counted
-						List<String> posList = posMMap.get(pairs.get(pairs.size() - 1).word());
-						if (!posList.isEmpty() && posList.get(0).equals("ent")) {
+						List<String> preWordPosList = posMMap.get(pairs.get(pairsSize - 1).word());
+						if (!preWordPosList.isEmpty() && preWordPosList.get(0).equals("ent")) {
 							
 							mathIndexList.remove(mathIndexList.size() - 1);
 						}
@@ -611,19 +652,51 @@ public class ThmP1 {
 					k++;
 				}
 
-				// if previous Pair is also an ent, fuse them
+				// if previous Pair is also an ent, fuse them, but only if current ent
+				// does not have other relevant pos such as verb. 
+						
 				pairsSize = pairs.size();
 				if (pairs.size() > 0 && pairs.get(pairsSize - 1).pos().matches("ent")) {
-					pairs.get(pairsSize - 1).set_word(pairs.get(pairsSize - 1).word() + " " + curWord);
-					continue;
+					boolean fuseEnt = true;
+					String prevWord = pairs.get(pairsSize-1).word();
+					//Also check previous ent, ensure its posList does not contain "verb". Do this 
+					//instead of including "adj" in above check, to avoid parse explosion.
+					//e.g. "f maps prime ideals to prime ideals"
+					if(noFuseEntSet.contains(curWord) || noFuseEntSet.contains(prevWord)){
+						fuseEnt = false;
+					}
+					/*for(int l = 1; l < posListInUse.size(); l++){
+						//limit this, as this contributes to parse explosion!
+						//in particular, don't include "adj" here, too many
+						//ents also have adj as alternative pos.
+						if(posListInUse.get(l).matches("verb")){
+							fuseEnt = false;
+							break;
+						}
+					}	
+					
+					Set<String> prevPairPosSet = pairs.get(pairsSize-1).extraPosSet();
+					if(prevPairPosSet != null){
+						for(String p : prevPairPosSet){
+							if(p.equals("verb")){
+								fuseEnt = false;
+								break;
+							}
+						}
+					}*/
+					
+					if(fuseEnt){
+						pairs.get(pairsSize - 1).set_word(pairs.get(pairsSize - 1).word() + " " + curWord);
+						continue;
+					}
 				}
-				//System.out.println("^^^^^^^^curWord " + curWord);
+				
 				Pair pair = new Pair(curWord, "ent");
+				addExtraPosToPair(pair, posList);
 				pairs.add(pair);
 				mathIndexList.add(pairs.size() - 1);
-
+				
 			}
-
 			else if (anchorMap.containsKey(curWord)) {
 				Pair pair = new Pair(curWord, "anchor");
 				// anchorList.add(pairIndex);
@@ -640,8 +713,8 @@ public class ThmP1 {
 				// composite words, such as "for all".
 				String temp = curWord;
 				String pos;
-				List<String> posList = posMMap.get(temp);
-				String tempPos = posList.get(0);
+				List<String> tempPosList = posMMap.get(temp);
+				String tempPos = tempPosList.get(0);
 				//keep going until all words in an n-gram are gathered
 				while (tempPos.matches("[^_]*_COMP|[^_]*_comp") && i < strAr.length - 1) {					
 					curWord = temp;
@@ -675,7 +748,7 @@ public class ThmP1 {
 				
 				String curAdjWord = negativeAdjMatcher.group(1);
 				
-				List<String> posList = posMMap.get(curAdjWord);
+				posList = posMMap.get(curAdjWord);
 				
 				if (!posList.isEmpty()) {
 					String pos = posList.get(0).split("_")[0];
@@ -689,21 +762,21 @@ public class ThmP1 {
 			}
 			// if plural form
 			else if (posMMap.containsKey(singular)){
-				List<String> posList = posMMap.get(singular);
+				posList = posMMap.get(singular);
 				//split in case type is of form "blah_comp" <--should be superceded by n-grams
 				Pair pair = new Pair(singular, posList.get(0).split("_")[0]);
 				pairs.add(pair);
 				addExtraPosToPair(pair, posList);
 			}
 			else if (posMMap.containsKey(singular2)){
-				List<String> posList = posMMap.get(singular2);
-				Pair pair = new Pair(singular, posList.get(0).split("_")[0]);
+				posList = posMMap.get(singular2);
+				Pair pair = new Pair(singular2, posList.get(0).split("_")[0]);
 				pairs.add(pair);				
 				addExtraPosToPair(pair, posList);
 			}
 			else if (posMMap.containsKey(singular3)){
-				List<String> posList = posMMap.get(singular3);
-				Pair pair = new Pair(singular, posList.get(0).split("_")[0]);
+				posList = posMMap.get(singular3);
+				Pair pair = new Pair(singular3, posList.get(0).split("_")[0]);
 				pairs.add(pair);	
 				addExtraPosToPair(pair, posList);
 			}
@@ -719,26 +792,37 @@ public class ThmP1 {
 				String lastTermS3 = singular3 == null ? "" : singular3.split("-")[splitWords.length - 1];
 
 				String searchKey = "";
-				if (posMMap.containsKey(lastTerm))
+				String s = "";
+				if (posMMap.containsKey(lastTerm)){
 					searchKey = lastTerm;
-				else if (posMMap.containsKey(lastTermS1))
+					s = curWord;
+				}else if (posMMap.containsKey(lastTermS1)){
 					searchKey = lastTermS1;
-				else if (posMMap.containsKey(lastTermS2))
+					s = singular;
+				}else if (posMMap.containsKey(lastTermS2)){
 					searchKey = lastTermS2;
-				else if (posMMap.containsKey(lastTermS3))
+					s = singular2;
+				}else if (posMMap.containsKey(lastTermS3)){
 					searchKey = lastTermS3;
-
+					s = singular3;
+				}
+				
 				if (!searchKey.equals("")) {
 
 					Pair pair = new Pair(curWord, posMMap.get(searchKey).get(0).split("_")[0]);
 					pairs.add(pair);
 				} // if lastTerm is entity, eg A-module
 				
+				/*String entName = isTokenEnt(lastTerm) ? lastTerm
+					: (isTokenEnt(lastTermS1) ? lastTermS1 
+					: (isTokenEnt(lastTermS2) ? lastTermS2
+					: (isTokenEnt(lastTermS3) ? lastTermS3 : null)));*/
 				
 				if (isTokenEnt(lastTerm) || isTokenEnt(lastTermS1)
 						|| isTokenEnt(lastTermS2) || isTokenEnt(lastTermS3)) {
-
-					Pair pair = new Pair(curWord, "ent");
+					//use this if want to preserve original plurality
+					/*Pair pair = new Pair(curWord, "ent"); */
+					Pair pair = new Pair(s, "ent");
 					pairs.add(pair);
 					mathIndexList.add(pairs.size() - 1);
 				}
@@ -812,7 +896,7 @@ public class ThmP1 {
 					curPos = "adj";
 				}
 				// if next word is entity, then adj
-				else if (strAr.length > i + 1 && !posMMap.get(strAr[i+1]).isEmpty() && 
+				else if (strAr.length > i + 1 && !posMMap.containsKey(strAr[i+1]) && 
 						posMMap.get(strAr[i+1]).get(0).equals("ent")) {
 
 					// combine with adverb if previous one is adverb
@@ -837,17 +921,30 @@ public class ThmP1 {
 					// eg "consisting of" functions as pre
 					curWord = curWord + " " + strAr[++i];
 					curType = "pre";
-				} else if (i < strAr.length - 1 && (mathObjMap.containsKey(strAr[i+1]) ||
-						posMMap.containsKey(strAr[i + 1]) && posMMap.get(strAr[i + 1]).get(0).equals("noun"))) 
+				} else if (i < strAr.length - 1 &&
+						posMMap.containsKey(strAr[i + 1]) && posMMap.get(strAr[i + 1]).get(0).matches("ent|noun")
+						) 
 				{
 					// eg "vanishing locus" functions as amod: adjectivial
 					// modifier
 					//curWord = curWord + " " + str[++i];
-					curType = "amod";
+					//curType = "amod";
 					curType = "adj"; //adj, so can be grouped together with ent's later
 				}
-				Pair pair = new Pair(curWord, curType);
-				pairs.add(pair);
+				int pairsSz = pairs.size();
+				//e.g. $f$ is inclusion-preserving
+				if(i > 1 && pairsSz > 1//e.g. inclusion preserving
+						 && pairs.get(pairsSz-1).pos().matches("noun|\\d+|ent")
+						 && pairs.get(pairsSz-2).pos().matches("verb|vbs")
+						 //&& posMMap.containsKey(strAr[i - 1]) && posMMap.get(strAr[i - 1]).get(0).matches("ent|noun")
+						 ){
+					Pair prevPair = pairs.get(pairsSz-1);
+					prevPair.set_pos("adj");
+					prevPair.set_word(prevPair.word() + " " + curWord);
+				}else{				
+					Pair pair = new Pair(curWord, curType);
+					pairs.add(pair);
+				}
 			} else if (curWord.matches("[a-zA-Z]")) {
 				// variable/symbols
 				Pair pair = new Pair(strAr[i], "symb");
@@ -902,7 +999,7 @@ public class ThmP1 {
 		}
 
 		// If phrase isn't in dictionary, ie has type "", then use probMap to
-		// postulate type, if possible
+		// postulate type probabilistically.
 		Pair curpair;
 		int pairsLen = pairs.size();
 
@@ -953,28 +1050,39 @@ public class ThmP1 {
 		// map of math entities, has mathObj + ppt's
 		List<StructH<HashMap<String, String>>> mathEntList = new ArrayList<StructH<HashMap<String, String>>>();
 
-		// second run, combine adj with math ent's
+		// combine adj with math ent's
 		for (int j = 0; j < mathIndexList.size(); j++) {
 			
 			int index = mathIndexList.get(j);
 			String mathObjName = pairs.get(index).word();
-			pairs.get(index).set_pos(String.valueOf(j));
+			String entPosStr = String.valueOf(j);
+			pairs.get(index).set_pos(entPosStr);
 			
 			StructH<HashMap<String, String>> tempStructH = new StructH<HashMap<String, String>>("ent");
-			List<String> posList = posMMap.get(mathObjName);
+			List<String> posList = posMMap.get(mathObjName); //HERE
+			
 			boolean entAdded = false;
 			if(!posList.isEmpty()){
 				entAdded = posList.get(0).equals("ent");
 			}
+			
+			//pos will be added later
+			boolean fuseSymbEnt = true;
+			System.out.println("posMap for word " + mathObjName + ": " + posList);
 			//start from 1, as extraPosList only contains *additional* pos
 			for(int l = 1; l < posList.size(); l++){
 				String pos = posList.get(l);
 				if(pos.equals("ent")){
 					entAdded = true;
-				}else if(pos.equals("noun") && entAdded){
+				}
+				else if(pos.equals("noun") && entAdded){
 					continue;
 				}
-				tempStructH.addExtraPos(pos); 
+				else if(pos.equals("verb")){
+					fuseSymbEnt = false;
+					//break;
+				}
+				tempStructH.addExtraPos(pos);//HERE
 			}
 			
 			HashMap<String, String> tempMap = new HashMap<String, String>();
@@ -986,7 +1094,7 @@ public class ThmP1 {
 				String name = nextPair.word();
 				if (name.contains("$")) {
 					tempMap.put("tex", name);
-					nextPair.set_pos(String.valueOf(j));
+					nextPair.set_pos(entPosStr);
 					mathIndexList.remove(j + 1);
 				}
 			}
@@ -997,7 +1105,7 @@ public class ThmP1 {
 			// Combine gerund with ent
 			int pairsSize = pairs.size();
 			if (index + 1 < pairsSize && pairs.get(index + 1).pos().equals("symb")) {
-				pairs.get(index + 1).set_pos(String.valueOf(j));
+				pairs.get(index + 1).set_pos(entPosStr);
 				String givenName = pairs.get(index + 1).word();
 				tempMap.put("called", givenName);
 				// do not overwrite previously named symbol
@@ -1011,23 +1119,27 @@ public class ThmP1 {
 				 * pairs.get(index + 2).word(); tempMap.put("called",
 				 * givenName); namesMap.put(givenName, tempStructH); }
 				 */
-			// look left one place
+			// look left one place, combine symb_ent, but only if curWord
+			// doesn't also have other pos, e.g. verb, as in "$f$ maps a to b".
 			if (index > 0 && pairs.get(index - 1).pos().equals("symb")) {
-				pairs.get(index - 1).set_pos(String.valueOf(j));
-				String givenName = pairs.get(index - 1).word();
-				// combine the symbol with ent's name together
-				tempMap.put("name", givenName + " " + tempMap.get("name"));
+				
+				if(fuseSymbEnt){
+					pairs.get(index - 1).set_pos(entPosStr);
+					String givenName = pairs.get(index - 1).word();
+					// combine the symbol with ent's name together
+					tempMap.put("name", givenName + " " + tempMap.get("name"));
+				}
 
 			}
 			// combine nouns with ent's right after, ie noun_ent
-			else if (index > 0 && pairs.get(index - 1).pos().matches("noun")) {
-				pairs.get(index - 1).set_pos(String.valueOf(j));
+			else if (index > 0 && pairs.get(index - 1).pos().equals("noun")) {
+				pairs.get(index - 1).set_pos(entPosStr);
 				String prevNoun = pairs.get(index - 1).word();
 				tempMap.put("name", prevNoun + " " + tempMap.get("name"));
 			}
 			// and combine ent_noun together
-			else if (index + 1 < pairsSize && pairs.get(index + 1).pos().matches("noun")) {
-				pairs.get(index + 1).set_pos(String.valueOf(j));
+			else if (index + 1 < pairsSize && pairs.get(index + 1).pos().equals("noun")) {
+				pairs.get(index + 1).set_pos(entPosStr);
 				String prevNoun = pairs.get(index + 1).word();
 				tempMap.put("name", tempMap.get("name") + " " + prevNoun);
 			}
@@ -1044,12 +1156,12 @@ public class ThmP1 {
 				String curWord = curPair.word();
 				String curPos = curPair.pos();
 				
-				//combine adverb-adj pair
+				//combine adverb-adj pair (not redundant with prior calls to fuseAdjAdverbPair())
 				if(curPos.equals("adj") && index-k-1 > -1){
 					Pair prevPair = pairs.get(index-k-1);
 					if(prevPair.pos().equals("adverb")){
 						curWord = prevPair.word() + " " + curWord;
-						prevPair.set_pos(String.valueOf(j));
+						prevPair.set_pos(entPosStr);
 					}
 				}
 					
@@ -1063,30 +1175,29 @@ public class ThmP1 {
 							k++;
 						}
 					}*/
-	
+				//System.out.println("^^^^^^^^^^put word " + curWord);
 				tempMap.put(curWord, "ppt");
 				// mark the pos field in those absorbed pairs as index in
 					// mathEntList
-				curPair.set_pos(String.valueOf(j));
+				curPair.set_pos(entPosStr);
 				k++;
 			}
 			
 			// combine multiple adj connected by "and/or"
 			// hacky way: check if index-k-2 is a verb, only combine adj's if
-			// not
-			// eg " "
-			if (index - k - 2 > -1 && pairs.get(index - k).pos().matches("or|and")
+			// not. Obsolete because of adj_ent rule later
+			/*if (index - k - 2 > -1 && pairs.get(index - k).pos().matches("or|and")
 					&& pairs.get(index - k - 1).pos().equals("adj")) {
 				List<String> tempPosList = posMMap.get(pairs.get(index - k - 2).word());
 				if (!tempPosList.isEmpty() && !tempPosList.get(0).matches("verb|vbs|verb_comp|vbs_comp")) {
 					// set pos() of or/and to the right index
-					pairs.get(index - k).set_pos(String.valueOf(j));
+					pairs.get(index - k).set_pos(entPosStr);
 					String curWord = pairs.get(index - k - 1).word();
 					tempMap.put(curWord, "ppt");
 					pairs.get(index - k - 1).set_pos(String.valueOf(j));
 
 				}
-			}
+			}*/
 
 			// look forwards
 			k = 1;
@@ -1094,7 +1205,7 @@ public class ThmP1 {
 				/// implement same as above
 
 				tempMap.put(pairs.get(index + k).word(), "ppt");
-				pairs.get(index + k).set_pos(String.valueOf(j));
+				pairs.get(index + k).set_pos(entPosStr);
 				k++;
 			}
 
@@ -1172,11 +1283,12 @@ public class ThmP1 {
 		List<Struct> structList = new ArrayList<Struct>();
 
 		String prevPos = "-1";
-		// use anchors (of, with) to gather terms together into entities
+		// use anchors ("of") to gather terms together into entities
 		int pairsSz = pairs.size();
 		
 		for (int i = 0; i < pairsSz; i++) {
 			Pair curPair = pairs.get(i);
+			
 			//can pos ever be null?
 			if (curPair.pos() == null)
 				continue;
@@ -1188,13 +1300,28 @@ public class ThmP1 {
 				}
 				StructH<HashMap<String, String>> curStruct = mathEntList.get(Integer.valueOf(curPair.pos()));
 				
+				Set<String> posList = curPair.extraPosSet();
+				/*if(posList != null){
+					for(int l = 0; l < posList.size(); l++){
+						curStruct.addExtraPos(posList.get(l));
+					}
+				}*/
+				if(posList != null){
+				//start from 1, as extraPosList only contains *additional* pos
+					for(String pos : posList){
+						 if(pos.equals("noun")){
+							continue;
+						}
+						curStruct.addExtraPos(pos);
+					}
+				}
 				//could have been set to null
 				if (curStruct != null) {
 					structList.add(curStruct);
 				}
 
 				prevPos = curPair.pos();
-
+				
 			} else {				
 				//check if article
 				if(curPair.pos().equals("art")){					
@@ -1237,10 +1364,10 @@ public class ThmP1 {
 						new StructA<String, String>(curWord, NodeType.STR, "", NodeType.STR, curPair.pos());
 				//add extra pos from curPair's extraPosList. In the other case when extraPos is not added, 
 				//that's when the primary pos fits well already.
-				List<String> posList = curPair.extraPosList();
-				if(posList != null){
-					for(int l = 0; l < posList.size(); l++){
-						newStruct.addExtraPos(posList.get(l));
+				Set<String> posSet = curPair.extraPosSet();
+				if(posSet != null){
+					for(String pos : posSet){
+						newStruct.addExtraPos(pos);
 					}
 				}
 				
@@ -1249,26 +1376,17 @@ public class ThmP1 {
 					if (structListSize > 0 && structList.get(structListSize - 1).type().equals("adverb")) {
 						
 						//if(structListSize == 1 || !structList.get(structListSize - 2).type().matches("verb|vbs")){
-							Struct adverbStruct = structList.get(structListSize - 1);
-							String newContent = adverbStruct.prev1().toString() + " " + curWord;
-							newStruct.set_prev1(newContent);
+						Struct adverbStruct = structList.get(structListSize - 1);
+						String newContent = adverbStruct.prev1().toString() + " " + curWord;
+						newStruct.set_prev1(newContent);
 							//newStruct.set_prev2(adverbStruct);						
 							// remove the adverb Struct
-							structList.remove(structListSize - 1);
+						structList.remove(structListSize - 1);
 						//}
 					}
 				}
 				
-				/*
-				 * else if (curPair.pos().equals("pre"))
-				 * {////////////////////////////// if (structListSize > 0 &&
-				 * structList.get(structListSize - 1).type().equals("gerund")) {
-				 * Struct gerundStruct = structList.get(structListSize - 1);
-				 * 
-				 * newStruct.set_prev2(adverbStruct); //////////// // remove the
-				 * adverb Struct structList.remove(structListSize - 1); } }
-				 */
-
+				
 				// combine det into nouns and verbs, change
 				else if (curPair.pos().equals("noun") && structListSize > 0
 						&& structList.get(structListSize - 1).type().equals("det")) {
@@ -1414,11 +1532,11 @@ public class ThmP1 {
 			}
 			
 			//create additional structs on the diagonal if extra pos present.
-			List<String> extraPosList = diagonalStruct.extraPosList();
-			if(extraPosList != null){
+			Set<String> extraPosSet = diagonalStruct.extraPosSet();
+			System.out.println("@@@@@@ diagonalStruct " + diagonalStruct + "|||" +extraPosSet);
+			if(extraPosSet != null){
 				
-				for(int p = 0; p < extraPosList.size(); p++){
-					String pos = extraPosList.get(p);
+				for(String pos : extraPosSet){
 					Struct newStruct;
 					if(pos.equals("ent")){
 						StructH<HashMap<String, String>> tempStruct = new StructH<HashMap<String, String>>("ent");
@@ -1429,8 +1547,9 @@ public class ThmP1 {
 					}else{
 						newStruct = new StructA<String, String>(structName, NodeType.STR, "", NodeType.STR, pos);					
 					}
-					//System.out.println("NEW STRUCT ADDED " + newStruct);
+					System.out.println("NEW STRUCT ADDED " + newStruct + " " + extraPosSet.size());
 					mx.get(j).get(j).add(newStruct);
+					newStruct.set_structList(mx.get(j).get(j));
 				}
 			}
 			// mx.get(j).set(j, inputList.get(j));
@@ -1451,7 +1570,8 @@ public class ThmP1 {
 
 					StructList structList1 = mx.get(i).get(k);
 					StructList structList2 = mx.get(k + 1).get(j);
-					//System.out.println("structList1: " + structList1);
+					System.out.println("++++ "+i + " " + k + " structList1: " + structList1);
+					System.out.println("---- "+(k+1) + " " + j + " structList2: " + structList2);
 					// Struct struct1 = mx.get(i).get(k);
 					// Struct struct2 = mx.get(k + 1).get(j);
 
@@ -1463,30 +1583,33 @@ public class ThmP1 {
 					// need to refactor to make methods more modular!
 
 					Iterator<Struct> structList1Iter = structList1.structList().iterator();
-					Iterator<Struct> structList2Iter = structList2.structList().iterator();
+					List<Struct> struct2List = structList2.structList();
 					
 					//System.out.println("!structList1: " + structList1.structList() + " " + structList1.structList().size());
 					//System.out.println("!structList2: " + structList2.structList() + " " + structList2.structList().size());
 					
 					while (structList1Iter.hasNext()) {
-
+						
 						Struct struct1 = structList1Iter.next();
+						System.out.println("STRUCT1 " + struct1);						
+						Iterator<Struct> structList2Iter = struct2List.iterator();
 						
 						while (structList2Iter.hasNext()) {
 							Struct struct2 = structList2Iter.next();
+							System.out.println("...with STRUCT2 " + struct2);
 							
 							// combine/reduce types, like or_ppt, for_ent,
 							// in_ent
 							String type1 = struct1.type();
 							String type2 = struct2.type();
-							/*if(type2.contentEquals("adj")){
+							if(type2.contentEquals("ent")){
 								System.out.println("***struct1: " + struct1 + ". struct2: " + struct2 );
 								System.out.println("isStructA? " + struct2.isStructA());
-							}*/
+							}
 							// for types such as conj_verbphrase
 							String[] split1 = type1.split("_");
-							//this causes conj_ent to be counted as ent, so should *not*
-							//use "ent" type to determine whether StructH or not!
+							//this causes conj_ent to be counted as ent, so should
+							//*not* use "ent" type to determine whether StructH or not!
 							if (split1.length > 1 && split1[0].matches("conj|disj")) {
 								// if (split1.length > 1) {
 								type1 = split1[1];
@@ -1502,8 +1625,7 @@ public class ThmP1 {
 
 							// if recentEntIndex < j, it was deliberately
 							// skipped in a previous pair when it was the 2nd struct.
-							//Check type too, in case in future StructH can have types other than ent
-							if (!struct1.isStructA() && type1.equals("ent") 
+							if (!struct1.isStructA()
 									&& (!(recentEntIndex < j) || !foundFirstEnt)) {
 								if (!foundFirstEnt) {
 									firstEnt = struct1;
@@ -1552,7 +1674,7 @@ public class ThmP1 {
 							
 							// handle pattern ent_of_symb
 							//should *not* use "ent" type to determine whether StructH or not!
-							//since conj_ent is counted as ent. Also this code is terrible.
+							//since conj_ent is counted as ent. Also these checks are terrible.
 							if (!struct1.isStructA() && type2.matches("pre") && struct2.prev1() != null
 									&& struct2.prev1().toString().matches("of") && j + 1 < len
 									&& inputStructList.get(j + 1).type().equals("symb")) {
@@ -1699,6 +1821,7 @@ public class ThmP1 {
 									// recentEnt is defined to be "called"
 									variableNamesMap.put(called, recentEnt);
 									continue outerloop;
+									//continue innerloop;
 								}
 							}
 
@@ -2256,9 +2379,9 @@ public class ThmP1 {
 			Struct firstEnt, Struct recentEnt, int recentEntIndex, int i, int j, int k, String type1, String type2,
 			ParseState parseState) {
 		
-		/*if(type2.equals("verbphrase")){
-			System.out.println("Reducing _verbphrase! i " + newRule.relation() + ". struct2.pre2: " + struct2.prev2());
-		}*/
+		if(type2.equals("ent")){
+			System.out.println("Reducing _ent! i " + newRule.relation() + ". struct1: " + struct1 +  "  " + struct2);
+		}
 		String newType = newRule.relation();
 		double newScore = newRule.prob();
 		double newDownPathScore = struct1.maxDownPathScore() * struct2.maxDownPathScore() * newScore;
