@@ -1103,8 +1103,8 @@ public class WLCommand {
 				
 		String structName = !newStruct.isStructA() ? newStruct.struct().get("name") : 
 			newStruct.prev1NodeType().equals(NodeType.STR) ? (String)newStruct.prev1() : "";
-		System.out.println("inside addComponent, newStruct: " + newStruct);
-		System.out.println("###COMPONENT commandsCountMap " + curCommand.commandsMap);
+		//System.out.println("inside addComponent, newStruct: " + newStruct);
+		//System.out.println("###COMPONENT commandsCountMap " + curCommand.commandsMap);
 		//whether component has been added. Useful to avoid rebuilding commands 
 		
 		boolean componentAdded = false;

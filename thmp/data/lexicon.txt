@@ -149,6 +149,7 @@ sum ent
 partition ent
 bilinear form ent
 direct sum ent
+vector ent
 vector space ent
 angle ent
 generator ent

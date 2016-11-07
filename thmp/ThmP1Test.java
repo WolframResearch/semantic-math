@@ -374,6 +374,11 @@ public class ThmP1Test {
 			st = "A valuation ring is Noetherian if it is a discrete valuation ring or a field";
 			st = "for every element $x$";
 			
+			st = "indexed family of morphisms";
+			st = "If $x$ is a indexed family of vectors";
+			st = "If $x$ is a summable indexed family of vectors";
+			st = "$C$ is an indexed family $x$ of morphisms";
+			st = "relatively prime polynomials";
 			//st = "$f$ maps $a$ to $b$";
 			//st = "$f$ map ring";
 			//st = "Group $G$ acts on space $X$";

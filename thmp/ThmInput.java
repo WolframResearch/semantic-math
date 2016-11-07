@@ -24,20 +24,32 @@ import java.util.regex.Pattern;
  */
 public class ThmInput {
 
-	private static Pattern THM_START_PATTERN = Pattern
-			.compile("\\\\begin\\{def(?:.*)|\\\\begin\\{lem(?:.*)|\\\\begin\\{thm(?:.*)|\\\\begin\\{theo(?:.*)|\\\\begin\\{prop(?:.*)"
-					+ "|\\\\begin\\{proclaim(?:.*)|\\\\begin\\{cor(?:.*)");
+	//Intentionally *not* final, as must append custom author-defined macros and compile the pattern
+	private static String THM_START_STR = "\\\\begin\\{def(?:.*)|\\\\begin\\{lem(?:.*)|\\\\begin\\{thm(?:.*)|\\\\begin\\{theo(?:.*)|\\\\begin\\{prop(?:.*)"
+			+ "|\\\\begin\\{proclaim(?:.*)|\\\\begin\\{cor(?:.*)";
+	
+	private static final Pattern THM_START_PATTERN = Pattern.compile(THM_START_STR);
+	
 	// start of theorem, to remove words such as \begin[prop]
-	/*
+	 /*
 	 * private static Pattern SENTENCE_START_PATTERN = Pattern. compile(
 	 * "^\\\\begin\\{def(?:[^}]*)\\}\\s*|^\\\\begin\\{lem(?:[^}]*)\\}\\s*|^\\\\begin\\{th(?:[^}]*)\\}\\s*"
 	 * +
 	 * "|^\\\\begin\\{prop(?:[^}]*)\\}\\s*|^\\\\begin\\{proclaim(?:[^}]*)\\}\\s*"
 	 * );
 	 */
-	private static final Pattern THM_END_PATTERN = Pattern.compile(
-			"\\\\end\\{def(?:.*)|\\\\end\\{lem(?:.*)|\\\\end\\{thm(?:.*)|\\\\end\\{theo(?:.*)|\\\\end\\{prop(?:.*)|\\\\endproclaim(?:.*)"
-					+ "|\\\\end\\{cor(?:.*)");
+	
+	private static String THM_END_STR = "\\\\end\\{def(?:.*)|\\\\end\\{lem(?:.*)|\\\\end\\{thm(?:.*)|\\\\end\\{theo(?:.*)|\\\\end\\{prop(?:.*)|\\\\endproclaim(?:.*)"
+			+ "|\\\\end\\{cor(?:.*)";
+	private static final Pattern THM_END_PATTERN = Pattern.compile(THM_END_STR);
+	
+	//begin of latex expression
+	private static final Pattern BEGIN_PATTERN = Pattern.compile("\\\\begin.*");
+	
+	//new theorem pattern
+	private static final Pattern NEW_THM_PATTERN = Pattern.compile("\\\\newtheorem\\{([^}]\\} (?:[^{]*) \\{([^}]) .* ");
+		
+	private static final Pattern F = Pattern.compile("Theorem|Proposition|Lemma|Corollary");
 	private static final Pattern LABEL_PATTERN = Pattern.compile("(?:^.*)\\\\label\\{([^}]*)\\}\\s*(.*)");
 	private static final Pattern DIGIT_PATTERN = Pattern.compile(".*\\d+.*");
 
@@ -59,7 +71,7 @@ public class ThmInput {
 			.compile("\\\\fml|\\\\ofml|\\\\begin\\{enumerate\\}|\\\\end\\{enumerate\\}"
 					+ "|\\\\begin\\{def(?:[^}]*)\\}\\s*|\\\\begin\\{lem(?:[^}]*)\\}\\s*|\\\\begin\\{th(?:[^}]*)\\}\\s*"
 					+ "|\\\\begin\\{prop(?:[^}]*)\\}\\s*|\\\\begin\\{proclaim(?:[^}]*)\\}\\s*|\\\\begin\\{cor(?:[^}]*)\\}\\s*"
-					+ "|\\\\begin\\{slogan\\}|\\\\end\\{slogan\\}|\\\\sbsb");
+					+ "|\\\\begin\\{slogan\\}|\\\\end\\{slogan\\}|\\\\sbsb|\\\\cat|\\\\bs");
 	
 	private static final Pattern ITEM_PATTERN = Pattern.compile("\\\\item");
 
@@ -94,6 +106,17 @@ public class ThmInput {
 	}
 
 	/**
+	 * Read in theorems, with list of custom \newtheorem commands
+	 * @param srcFileReader
+	 * @return
+	 */
+	/*public static List<String> readThm(BufferedReader srcFileReader, List<String> thmWebDisplayList,
+			List<String> bareThmList)
+			throws FileNotFoundException, IOException {
+		return ThmInput.readThm(srcFileReader, thmWebDisplayList, bareThmList, null);
+	}*/
+	
+	/**
 	 * @param srcFileReader
 	 *            BufferedReader to get tex from.
 	 * @param thmWebDisplayList
@@ -101,30 +124,59 @@ public class ThmInput {
 	 *            \labels, \index, etc. Can be null, for callers who don't need it.
 	 * @param bareThmList
 	 * 				bareThmList for parsing, without label content. Can be null.
+	 * @param macros author-defined macros using \newtheorem
 	 * @return List of unprocessed theorems read in from srcFileReader, for bag
 	 *         of words search.
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
 	public static List<String> readThm(BufferedReader srcFileReader, List<String> thmWebDisplayList,
-			List<String> bareThmList)
+			List<String> bareThmList)	
 			throws FileNotFoundException, IOException {
-		// BufferedReader is faster than scanner
-
-		// Scanner sc = new Scanner(file);
+		
+		// \\\\end\\{def(?:.*)
+		Pattern thmStartPattern = THM_START_PATTERN;
+		Pattern thmEndPattern = THM_END_PATTERN;
+		List<String> macrosList = new ArrayList<String>();
+		
 		List<String> thms = new ArrayList<String>();
 
-		// String newThm = "";
+		String line;
+		
+		//read in custom macros, break as soon as \begin{document} encountered
+		while ((line = srcFileReader.readLine()) != null) {
+			Matcher f = F.matcher(line);
+			
+			if(BEGIN_PATTERN.matcher(line).find()){
+				break;
+			}else if(f.find()){
+				macrosList.add(f.group(2));				
+			}			
+		}
+		
+		//append list of macros to THM_START_STR and THM_END_STR
+		if(!macrosList.isEmpty()){
+			StringBuilder startBuilder = new StringBuilder();
+			StringBuilder endBuilder = new StringBuilder();
+			for(String macro : macrosList){
+				//create start and end macros
+				startBuilder.append("\\\\begin\\{" + macro + ".*");
+				endBuilder.append("\\\\end\\{" + macro + ".*");
+			}
+			thmStartPattern = Pattern.compile(THM_START_STR + startBuilder);
+			thmEndPattern = Pattern.compile(THM_END_STR + endBuilder);	
+		}
+			
 		StringBuilder newThmSB = new StringBuilder();
 		boolean inThm = false;
-		String line;
 		while ((line = srcFileReader.readLine()) != null) {
 			// while(sc.hasNextLine()){
-			if (line.matches("\\s*"))
+			if (line.matches("\\s*")){
 				continue;
-
+			}
+						
 			// if(line.matches("(?:\\\\begin\\{def[^}]*\\}|\\\\begin\\{lem[^}]*\\}|\\\\begin\\{th[^}]*\\}|\\\\begin\\{prop[^}]*\\})(?:.)*")){
-			Matcher matcher = THM_START_PATTERN.matcher(line);
+			Matcher matcher = thmStartPattern.matcher(line);
 			if (matcher.find()) {
 				// if(line.matches("\\\\begin\\{definition\\}|\\\\begin\\{lemma\\}")){
 				// if(line.matches("\\\\begin\\{definition\\}|\\\\begin\\{lemma\\}|\\\\begin\\{thm\\}|\\\\begin\\{theorem\\}")){
@@ -135,7 +187,7 @@ public class ThmInput {
 			}
 			// else
 			// if(line.matches("\\\\end\\{definition\\}|\\\\end\\{lemma\\}")){
-			else if (THM_END_PATTERN.matcher(line).find()) {
+			else if (thmEndPattern.matcher(line).find()) {
 				// else
 				// if(line.matches("\\\\end\\{definition\\}|\\\\end\\{lemma\\}|\\\\end\\{thm\\}|\\\\end\\{theorem\\}")){
 				inThm = false;

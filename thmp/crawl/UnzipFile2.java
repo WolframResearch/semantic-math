@@ -13,6 +13,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
 //import net.lingala.zip4j.core.ZipFile;
@@ -28,6 +29,8 @@ import thmp.ThmInput;
  */
 public class UnzipFile2 {
 
+	private static final Pattern TXT_PATTERN = Pattern.compile("([^.]*)(\\.txt)");
+	
 	/**
 	 * Retrieves list of filenames in this directory. In this case .gz files to
 	 * be uncompressed.
@@ -103,8 +106,8 @@ public class UnzipFile2 {
 	}
 
 	/**
-	 * Reads in a directory name, should be un-tar'ed directory containing many
-	 * .gzip files.
+	 * Reads in a directory, e.g. 0002, should be un-tar'ed directory containing many
+	 * .gzip (.gz) files. 
 	 * 
 	 * @param args Directory path
 	 * @throws FileNotFoundException
@@ -121,6 +124,9 @@ public class UnzipFile2 {
 		String srcBasePath = System.getProperty("user.dir") + "/" + args[0];
 		String destBasePath = srcBasePath + "Content/";
 		srcBasePath = srcBasePath + "/";
+		//make base directory that the will contain the extracted files
+		new File(destBasePath).mkdirs();
+		
 		// get all file names in the directory, eg directory "/0002/"
 		List<String> fileNames = getFileNames(srcBasePath);
 		//System.out.println(fileNames);
@@ -133,8 +139,9 @@ public class UnzipFile2 {
 			FileReader fileReader = new FileReader(file);
 			BufferedReader fileBufferedReader = new BufferedReader(fileReader);
 
-			Path fileTo = Paths.get(file.replaceAll("([^.]*)(\\.txt)", "$1_thms$2"));
-
+			Path fileTo = Paths.get(TXT_PATTERN.matcher(file).replaceAll("$1_thms$2"));
+			//Path fileTo = Paths.get(file.replaceAll("([^.]*)(\\.txt)", "$1_thms$2"));
+			
 			List<String> thmList = ThmInput.readThm(fileBufferedReader, null, null);
 
 			// write list of theorems to file

@@ -224,7 +224,8 @@ public class ParseTreeToVec {
 						String prevWord = termStrAr[i-1];
 						if(prevWord.matches(".*ly") || posMMap.containsEntry(prevWord, "adverb")){
 							//modify parent index of prevWord.
-							addTermStrToVec(struct, prevWord, wordIndex, contextVec);
+							boolean forceAdjust = true;
+							addTermStrToVec(struct, prevWord, wordIndex, contextVec, forceAdjust);
 						}
 					}
 				}
@@ -258,6 +259,10 @@ public class ParseTreeToVec {
 		return rowIndex;
 	}
 	
+	private static int addTermStrToVec(Struct struct, String termStr, int structParentIndex, int[] contextVec) {
+		boolean forceAdjust = false;
+		return addTermStrToVec(struct, termStr, structParentIndex, contextVec, forceAdjust);
+	}
 	/**
 	 * Auxiliary method for setContextVecEntry.
 	 * *Should* return structParentIndex if termStr not added to contextVec, else update
@@ -268,7 +273,8 @@ public class ParseTreeToVec {
 	 * @param contextVec
 	 * @return
 	 */
-	private static int addTermStrToVec(Struct struct, String termStr, int structParentIndex, int[] contextVec) {
+	private static int addTermStrToVec(Struct struct, String termStr, int structParentIndex, int[] contextVec, 
+			boolean forceAdjust) {
 		Integer termRowIndex = keywordDict.get(termStr);
 		if(termRowIndex == null){
 			//de-singularize, and remove "-ed" and "ing"! But parsed Strings should already been singularized!
@@ -277,7 +283,7 @@ public class ParseTreeToVec {
 		//System.out.println("##### Setting context vec, termStr " + termStr + " termRowIndex " + termRowIndex);
 		if(termRowIndex != null){	
 			//if hasn't been assigned to a valid index before, or only relational index
-			if(contextVec[termRowIndex] <= 0){
+			if(contextVec[termRowIndex] <= 0 || forceAdjust){
 				contextVec[termRowIndex] = structParentIndex;
 			}
 			System.out.println("struct " + struct + " termStr " + termStr + " ### rowIndex " + termRowIndex + " parent index " + structParentIndex);
@@ -362,8 +368,7 @@ public class ParseTreeToVec {
 			}else if(parseRelation.equals(HASPPT)){
 				//use the WLCommand structure to determine A and B in A\[Element]B,
 				//set entry at B to the row index of A: B points to A.
-				setContextVec(struct, contextVec, commandWrapper, HASPPT);
-				
+				setContextVec(struct, contextVec, commandWrapper, HASPPT);				
 			}
 			
 		}
@@ -418,9 +423,10 @@ public class ParseTreeToVec {
 			}
 			
 			Struct curStruct = posTerm.posTermStruct();
-			//obfuscated!
+			//not a better way around this.
 			curStruct = WLCommand.getStructList(command, posTerm.commandComponent()).get(positionInCommandMap);
-			System.out.println("***TPYE " + curStruct);
+			
+			//System.out.println("***TPYE " + curStruct);
 			if(curStruct != null && curStruct.type().matches("ent|symb|pro")){
 				//set entry of parent in contextVec to itself, if existing entry is <=0, 
 				//so not to differentiate the term too much from likely counterpart in corpus

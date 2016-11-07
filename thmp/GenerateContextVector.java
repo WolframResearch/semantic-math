@@ -29,9 +29,10 @@ import thmp.search.CollectThm;
 public class GenerateContextVector {
 
 	//private static String CONTEXT_VEC_FILE_STR = "src/thmp/data/contextVecCommm5.txt";
-	private static String CONTEXT_VEC_FILE_STR = "src/thmp/data/contextVectorsMultilinearAlgebra.txt";
+	//private static String CONTEXT_VEC_FILE_STR = "src/thmp/data/contextVectorsMultilinearAlgebra.txt";
 	//private static String CONTEXT_VEC_FILE_STR = "src/thmp/data/contextVectorsFields.txt";
 	//private static String CONTEXT_VEC_FILE_STR = "src/thmp/data/contextVecFunctionalAnalysis.txt";
+	private static String CONTEXT_VEC_FILE_STR = "src/thmp/data/contextVecTopology.txt";
 	//private static String CONTEXT_VEC_FILE_STR = "src/thmp/data/contextVecAll.txt";
 	
 	private static Path contextVecFilePath;	
@@ -183,7 +184,7 @@ public class GenerateContextVector {
 		//if(thm.matches("\\s*")) return "";
 		
 		String[] strAr = ThmP1.preprocess(thm);
-		System.out.println("****length " + strAr.length + " " + thm);
+		//System.out.println("****length " + strAr.length + " " + thm);
 		//strAr = ThmP1.preprocess(thm);
 		List<int[]> parseContextVecList = new ArrayList<int[]>();
 

@@ -267,7 +267,7 @@ public class ParseToWLTree {
 			while (WLCommandListIter.hasNext()) {
 				WLCommand curCommand = WLCommandListIter.next();
 				boolean beforeTriggerIndex = false;
-				System.out.println("ADDING COMMAND  for STRUCT " + struct);
+				//System.out.println("ADDING COMMAND  for STRUCT " + struct);
 				CommandSat commandSat = WLCommand.addComponent(curCommand, struct, beforeTriggerIndex);
 				
 				// if commandSat, remove all the waiting, triggered commands for

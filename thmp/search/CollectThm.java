@@ -50,8 +50,10 @@ public class CollectThm {
 			
 			//"src/thmp/data/fieldsRawTex.txt",
 			//"src/thmp/data/CommAlg5.txt", 
-			"src/thmp/data/multilinearAlgebra.txt",
-			//"src/thmp/data/functionalAnalysis.txt"
+			//"src/thmp/data/multilinearAlgebra.txt",
+			//"src/thmp/data/functionalAnalysis.txt",
+			
+			"src/thmp/data/topology.txt"
 			});
 	
 	//latex macros source file name src/thmp/data/CommAlg5.txt
