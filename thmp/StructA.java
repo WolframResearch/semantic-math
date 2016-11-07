@@ -223,6 +223,7 @@ public class StructA<A, B> extends Struct{
 	 * @return the created Wrapper.
 	 */
 	public WLCommandWrapper add_WLCommandWrapper(WLCommand curCommand){		
+		//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
 		if(this.WLCommandWrapperList == null){
 			this.WLCommandWrapperList = new ArrayList<WLCommandWrapper>();
 		}

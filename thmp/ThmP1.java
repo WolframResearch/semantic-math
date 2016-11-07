@@ -61,6 +61,7 @@ public class ThmP1 {
 	//pattern for matching negative of adjectives: "un..."
 	private static final Pattern NEGATIVE_ADJECTIVE_PATTERN = Pattern.compile("un(.+)");
 	private static final Pattern AND_OR_PATTERN = Pattern.compile("and|or");
+	private static final Pattern IS_ARE_BE_PATTERN = Pattern.compile("is|are|be");
 	
 	// list of parts of speech, ent, verb etc <--should make immutable
 	private static final List<String> posList;
@@ -162,7 +163,7 @@ public class ThmP1 {
 		private String parsedStr;
 		private double score;
 		//long form or WL-like expr. Useful for "under the hood"
-		//can be "long" or "wl". Should use an enum.
+		//can be "long" or "wl". Switch to an enum!
 		private String form;
 		//parsedExprSz used to group parse components together 
 		//when full parse is unavailable
@@ -872,7 +873,7 @@ public class ThmP1 {
 				// previous word is "is, are", then group with previous word to
 				// verb
 				// e.g. "is called"
-				else if (pairsSize > 0 && pairs.get(pairsSize - 1).word().matches("is|are|be")) {
+				else if (pairsSize > 0 && IS_ARE_BE_PATTERN.matcher(pairs.get(pairsSize - 1).word()).find()) {
 					
 					//if next word is a preposition
 					if(strAr.length > i + 1 && !posMMap.get(strAr[i+1]).isEmpty() && 
@@ -2236,7 +2237,17 @@ public class ThmP1 {
 			
 		}
 		System.out.println("##commandNumUnitsList " + commandNumUnitsList );
+		//only add nontrivial results, but add trivial results if no nontrivial ones exist.
+		//This works as the results are sorted, and nontrivial ones come first in sorted list.
+		boolean parsedExprAdded = false;
 		for(int i = 0; i < sortedParsedPairMMapList.size(); i++){
+			//only add nontrivial results
+			if(parsedExprAdded && numUnitsList.get(i) < 3){				
+				continue;
+			}else{
+				parsedExprAdded = true;
+			}
+			
 			Multimap<ParseStructType, ParsedPair> map = sortedParsedPairMMapList.get(i);
 			
 			parseStructMapList.add(map.toString() + "\n");
@@ -2249,7 +2260,8 @@ public class ThmP1 {
 				ParseStructType parseStructType = structTypePair.getKey();
 				parsedExpr.add(new ParsedPair(pair.parsedStr, pair.score, pair.numUnits, pair.commandNumUnits, parseStructType));				
 			}
-			//add the long form to parsedExpr
+			
+			//Also add the long form to parsedExpr	
 			parsedExpr.add(longFormParsedPairList.get(finalOrderingList.get(i)));
 			System.out.println("longForm, commandUnits: " + commandNumUnitsList.get(i) +". numUnits: " +numUnitsList.get(i) + " "+ longFormParsedPairList.get(finalOrderingList.get(i)));
 		}	

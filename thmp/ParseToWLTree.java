@@ -8,6 +8,7 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -153,8 +154,8 @@ public class ParseToWLTree {
 				//avoid repeating this: 
 				String nameStr = "";
 				if(curStructInDeque.isStructA() && curStructInDeque.prev1NodeType().equals(NodeType.STR)){
-					nameStr = (String)curStructInDeque.prev1();
-				}else if(curStructInDeque instanceof StructH){
+					nameStr = curStructInDeque.prev1().toString();
+				}else if(!curStructInDeque.isStructA()){
 					nameStr = curStructInDeque.struct().get("name");
 				}
 				
@@ -168,7 +169,6 @@ public class ParseToWLTree {
 						//&& nameStr.matches(curCommandComponent.nameStr())
 						&& !usedStructsBool[k] ){
 					//see if name matches, if match, move on, continue outer loop
-					//need a way to mark structs already matched! 
 					
 					Struct structToAdd = curStructInDeque;
 					Struct curStructInDequeParent = curStructInDeque.parentStruct();
@@ -217,6 +217,15 @@ public class ParseToWLTree {
 					structDequeStartIndex = k - 1;
 					continue posTermListLoop;
 				}
+				//no match, see if command should be disqualified, to prevent overshooting
+				//commands, i.e. encounter components of the command that has already been satisfied
+				//such as "is".
+				/*else{
+					if(WLCommand.disqualifyCommand(curStructInDequeType, commandsCountMap)){
+						boolean disqualified = true;
+						return new CommandSat(disqualified);
+					}
+				}*/
 				//dequeIterCounter--;
 			}
 			curCommandSat = false;
@@ -249,16 +258,16 @@ public class ParseToWLTree {
 		List<WLCommand> satisfiedCommandsList = new ArrayList<WLCommand>();
 		
 		//add struct to all WLCommands in WLCommandList (triggered commands so far.)
-		//check if satisfied. 
+		//check if satisfied. "is" is not added?!
 		//Skip if immediate parents are conj or disj, ie already been added
 		if (struct.parentStruct() == null 
 				|| (struct.parentStruct() != null && !struct.parentStruct().type().matches("conj.*|disj.*"))) {
-
+			
 			Iterator<WLCommand> WLCommandListIter = WLCommandList.iterator();
 			while (WLCommandListIter.hasNext()) {
 				WLCommand curCommand = WLCommandListIter.next();
 				boolean beforeTriggerIndex = false;
-				//System.out.println("ADDING COMMAND " + curCommand + " for STRUCT " + struct);
+				System.out.println("ADDING COMMAND  for STRUCT " + struct);
 				CommandSat commandSat = WLCommand.addComponent(curCommand, struct, beforeTriggerIndex);
 				
 				// if commandSat, remove all the waiting, triggered commands for
@@ -327,7 +336,7 @@ public class ParseToWLTree {
 
 				//first set the headStruct to struct
 				//WLCommand.set_headStruct(curCommand, struct);
-				//match the slots in posTermList with Structs in structDeque
+				//match the slots in posTermList before the trigger term with Structs in structList.
 				beforeTriggerSat = findStructs(structList, curCommand, usedStructsBool, 
 						waitingStructList);
 				
@@ -422,6 +431,7 @@ public class ParseToWLTree {
 				String prev1Type = prev1.type();
 				ParseStructType parseStructType = ParseStructType.getType(prev1);
 				boolean checkParseStructType = checkParseStructType(parseStructType);
+				
 				if(checkParseStructType){
 					curHeadParseStruct = new ParseStruct(parseStructType, "", (Struct)struct.prev1());
 					headParseStruct.addToSubtree(parseStructType, curHeadParseStruct);

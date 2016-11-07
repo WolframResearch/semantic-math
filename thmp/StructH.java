@@ -315,13 +315,13 @@ public class StructH<H> extends Struct{
 		this.posteriorBuiltStruct = posteriorBuiltStruct;
 	}
 	
-	public Struct structToAppendCommandStr(){
+	public Struct structToAppendCommandStr(){		
 		return this.structToAppendCommandStr;
 	}
 	
 	public void set_structToAppendCommandStr(Struct structToAppendCommandStr){
 		this.structToAppendCommandStr = structToAppendCommandStr;
-		//System.out.println("CALLED BY: " + this);
+		
 	}
 	
 	/**
@@ -355,6 +355,7 @@ public class StructH<H> extends Struct{
 	 * @return
 	 */
 	public WLCommandWrapper add_WLCommandWrapper(WLCommand curCommand){		
+		//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
 		if(this.WLCommandWrapperList == null){
 			this.WLCommandWrapperList = new ArrayList<WLCommandWrapper>();
 		}

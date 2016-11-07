@@ -61,6 +61,8 @@ public class WLCommandsList {
 	//should put these in WLCommand
 	private static final Pattern OPTIONAL_TOKEN_PATTERN = Pattern.compile("OPT(\\d*)");
 	private static final String DEFAULT_AUX_NAME_STR = "AUX";
+	private static final String VERB_PARAM = "verb|vbs|be";
+	private static final Pattern VERB_PARAM_PATTERN = Pattern.compile(VERB_PARAM);
 	
 	/**
 	 * 
@@ -202,7 +204,7 @@ public class WLCommandsList {
 				//";", "symb|ent|pro, , true, TriggerMathObj", ";", ", by, false, OPT", "ent, , true, OPT", "]" }));		
 		WLCommandMapBuilder.put("act", addCommand(new PBuilder("Action["), new PBuilder("symb|ent|pro", null, true), 
 				new PBuilder(null, "act|acts", false, true, false), new PBuilder(","),
-				new PBuilder("symb|ent|pro", null, true, false, true), new PBuilder(","), 
+				new PBuilder("symb|ent|pro", null, true, false, true), new PBuilder(",", "OPT"), 
 				new PBuilder(null, "by", false, false, "OPT"), new PBuilder(null, null, true, false, "OPT") ));	
 		
 		//if_assert. As well as "let", etc
@@ -212,7 +214,9 @@ public class WLCommandsList {
 		
 		//WLCommandMapBuilder.put("equal to", addCommand(new String[] { "symb|ent, , true",
 		//"==", "equal to, , trigger", "symb|ent|phrase, , true, TriggerMathObj" }));
-		
+		WLCommandMapBuilder.put("equal to", addCommand(new PBuilder("symb|ent", null, true), 
+				new PBuilder("=="), new PBuilder("equal to", null, false, true, false), 
+				new PBuilder("symb|ent|phrase", null, true, false, true) ));
 		
 		//assert_hypo: 
 				//WLCommandMapBuilder.put("hyp", addCommand(new String[] { "assert, , true", "hyp, , trigger", "ent|symb, , true"
@@ -317,9 +321,11 @@ public class WLCommandsList {
 			WLCommandComponent curCommandComponent = curBuilder.getCommandComponent();
 
 			if(curCommandComponent.nameStr().equals(DEFAULT_AUX_NAME_STR)){
+				//if(!curBuilder.isOptionalTerm()){
 				PosTerm curPosTerm = curBuilder.build();
 				posList.add(curPosTerm);
 				continue;
+				//}
 			}
 			
 			Integer temp;
@@ -533,6 +539,14 @@ public class WLCommandsList {
 		
 	}*/
 
+	/**
+	 * Returns probable command 
+	 * 
+	 */
+	public enum f {
+		
+	}
+	
 	/**
 	 * 
 	 * @return ImmutableMap WLCommandMap
