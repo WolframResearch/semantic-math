@@ -3,10 +3,12 @@ package thmp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -116,6 +118,8 @@ public class WLCommand {
 	private Map<Integer, Integer> optionalTermsGroupCountMap = new HashMap<Integer, Integer>();
 	private static final String DEFAULT_AUX_NAME_STR = "AUX";
 	private static final Pattern CONJ_DISJ_PATTERN = Pattern.compile("conj_.*|disj_.*");
+	private static final Pattern DISQUALIFY_PATTERN = Pattern.compile("(if|If)");
+	private static final String[] DISQUALIFY_STR_ARRAY = new String[]{"if", "If"};
 	
 	private static final boolean DEBUG = true;
 	
@@ -809,6 +813,7 @@ public class WLCommand {
 		//List<WLCommandWrapper> nextStructWrapperList = nextStruct.WLCommandWrapperList();
 		Struct headStruct = nextStruct.structToAppendCommandStr();
 		boolean prevStructHeaded = false; 
+		
 		if (headStruct != null) {
 			List<WLCommandWrapper> headStructWrapperList = headStruct.WLCommandWrapperList();
 			//no need to update structsWithOtherHeadCount if the heads are already same. Note the two
@@ -870,7 +875,9 @@ public class WLCommand {
 				//System.out.println("&&&posTermStruct " + nextStruct);
 				//get WLCommandWrapperList
 				if(nextStruct != null){
-					updateWrapper(nextStruct, structToAppendCommandStr);
+					if(updateWrapper(nextStruct, structToAppendCommandStr)){
+						//curCommand.structsWithOtherHeadCount++;
+					}
 					
 				//if(nextStruct != null){
 				//if != null, some Wrappers have been added, so already associated to some commands.
@@ -944,7 +951,10 @@ public class WLCommand {
 				nextStruct.set_previousBuiltStruct(structToAppendCommandStr);
 				structToAppendCommandStr.set_posteriorBuiltStruct(nextStruct);				
 				//check if been assigned to a different head
-				prevStructHeaded = updateWrapper(nextStruct, structToAppendCommandStr);
+				//prevStructHeaded = updateWrapper(nextStruct, structToAppendCommandStr);
+				if(updateWrapper(nextStruct, structToAppendCommandStr)){
+					//curCommand.structsWithOtherHeadCount++;
+				}
 				
 				/*if(nextStruct.structToAppendCommandStr() == null){						
 					prevStructHeaded = false;
@@ -966,8 +976,9 @@ public class WLCommand {
 				//should have size > 0 always <--nope! if element is not a true WLCommand, like an auxilliary string
 				if(curCommandComponentList.size() > 0){					
 					Struct nextStruct = curCommandComponentList.get(0);
-					updateWrapper(nextStruct, structToAppendCommandStr);
-					
+					if(updateWrapper(nextStruct, structToAppendCommandStr)){
+						//curCommand.structsWithOtherHeadCount++;
+					}					
 					nextStruct.set_previousBuiltStruct(structToAppendCommandStr);
 					structToAppendCommandStr.set_posteriorBuiltStruct(nextStruct);
 					
@@ -1092,7 +1103,7 @@ public class WLCommand {
 		String structPreType = newStruct.type();
 		String structType = CONJ_DISJ_PATTERN.matcher(structPreType).find() ?
 				structPreType.split("_")[1] : structPreType;			
-		
+				
 		Map<WLCommandComponent, Integer> commandsCountMap = curCommand.commandsCountMap;
 		if(disqualifyCommand(structType, commandsCountMap)){
 			boolean disqualified = true;
@@ -1100,7 +1111,7 @@ public class WLCommand {
 		}
 
 		Multimap<WLCommandComponent, Struct> commandsMap = curCommand.commandsMap;
-				
+		
 		String structName = !newStruct.isStructA() ? newStruct.struct().get("name") : 
 			newStruct.prev1NodeType().equals(NodeType.STR) ? (String)newStruct.prev1() : "";
 		//System.out.println("inside addComponent, newStruct: " + newStruct);
@@ -1180,24 +1191,30 @@ public class WLCommand {
 			//commandComponentName = commandComponent.nameStr;
 		
 		}
-		//System.out.println("GOT HERE****** commandComponent " + curCommand.componentCounter);
+		//System.out.println("GOT HERE****** newStruct " + newStruct);
 		
 		int commandComponentCount = commandsCountMap.get(commandComponent);
-		int addedComponentsColSz = commandsMap.get(commandComponent).size();
+		//int addedComponentsColSz = commandsMap.get(commandComponent).size();
 		
 		if(commandComponentPosPattern.matcher(structType).find()
 				//structType.matches(commandComponentPosTerm) 	
 				&& commandComponentNamePattern.matcher(structName).find()
 				//&& structName.matches(commandComponentName)
 				//this component is actually needed
-				//&& commandsCountMap.get(commandComponent) > 0
-				&& addedComponentsColSz < commandComponentCount){
+				&& commandsCountMap.get(commandComponent) > 0
+				//&& addedComponentsColSz < commandComponentCount
+				){
+			//System.out.println("#####inside addComponent, newStruct: " + newStruct);
 			
 			commandsMap.put(commandComponent, newStruct);
 			//sets the posTermStruct for the posTerm. No effect?!?***
 			posTermList.get(i).set_posTermStruct(newStruct);
 			//here newComponent must have been in the original required set
 			commandsCountMap.put(commandComponent, commandComponentCount - 1);
+			
+			if(!newStruct.isStructA()){
+				newStruct.set_usedInOtherCommandComponent(true);
+			}
 			//use counter to track whether map is satisfied
 			if(!isOptionalTerm){
 				curCommand.componentCounter--;
@@ -1270,6 +1287,7 @@ public class WLCommand {
 	 * disqualify curCommand if encountering additional components of a type that's been 
 	 * satisfied for curCommand, to avoid overreaching commands, i.e. skip nontrivial terms
 	 * to match commands too eagerly.
+	 * This method is only called if the current struct does not match the next commandComponent.
 	 * @param commandComponent
 	 * @param commandComponentPosPattern
 	 * @param commandsCountMap
@@ -1278,20 +1296,52 @@ public class WLCommand {
 	public static boolean disqualifyCommand(String structPosStr,
 			Map<WLCommandComponent, Integer> commandsCountMap) {
 		
-		//Need to iterate over commandsCountMap, discard command if nontrivial parts
+		//if structPosStr is of a type that likely interrupts a command, e.g. "if"
+		//Need to be smarter about "and". But only if these commands don't 
+		//appear as commandComponents down the road.
+		//the disqualify word triggered
+		String disqualifyPos = null;
+		//Set<String> disqualifyTriggerSet = new HashSet<String>();
+		for(String pos : DISQUALIFY_STR_ARRAY){
+			if(pos.equals(structPosStr)){
+				disqualifyPos = pos;
+				break;
+			}
+		}
+		
+		Matcher disqualifyMatcher = DISQUALIFY_PATTERN.matcher(structPosStr);
+		if(disqualifyMatcher.find()){			
+			disqualifyPos = disqualifyMatcher.group(1);
+		}
+		
+		//Or, need to iterate over commandsCountMap, discard command if nontrivial parts
 		//e.g. "verb" have already been satisfied. Not worth making a separate 
 		for(Map.Entry<WLCommandComponent, Integer> entry : commandsCountMap.entrySet()){
-			Pattern posPattern = entry.getKey().posPattern;
+			
+			WLCommandComponent component = entry.getKey();
+			Pattern posPattern = component.posPattern;
+			boolean isPosWildCard = component.isPosWildCard();
+			
 			//if pos matches, and this component has been satisfied already.
 			if(posPattern.matcher(structPosStr).find() && entry.getValue() == 0){
 				//additional restriction on pos so we don't abandon commands based on trivial
 				//additionally encountered terms such as prepositions. Only disqualify
 				//based on extraneous terms such as "if" or verbs.
-				if(posPattern.matcher("verb").find()){
+				if(posPattern.matcher("verb").find() && !isPosWildCard){
+					//System.out.println("DISQUALIFYING COMMAND. structPosStr " + structPosStr);
 					return true;					
 				}
 			}
+			if(disqualifyPos != null && posPattern.matcher(disqualifyPos).find() && !isPosWildCard /*not .* */){
+				disqualifyPos = null;
+			}
 		}
+		
+		//disqualified 
+		if(disqualifyPos != null){
+			return true;
+		}
+		
 		/*int addedComponentColSz = commandsMap.get(commandComponent).size();
 		if(addedComponentColSz > 0 && addedComponentColSz == commandsCountMap.get(commandComponent)){
 			System.out.println("^^^^^COMMAND REMOVED");
@@ -1313,6 +1363,7 @@ public class WLCommand {
 	 * @param newStruct new Struct to be added
  	 */
 	public static void addTriggerComponent(WLCommand curCommand, Struct newStruct){
+		//System.out.println("Adding trigger component " + newStruct + " " + curCommand);
 		
 		WLCommandComponent commandComponent = curCommand.posTermList.get(curCommand.triggerWordIndex).commandComponent;
 		int commandComponentCount = curCommand.commandsCountMap.get(commandComponent);
@@ -1472,12 +1523,23 @@ public class WLCommand {
 		
 		//pattern for posTerm
 		private Pattern posPattern;
+		
+		//whether the regex for making posPattern 
+		private boolean isPosWildCard;
+		
 		//eg "of". Regex expression to be matched, eg .* to match anything
 		private String nameStr;
+		
 		Pattern namePattern;
 		
 		public WLCommandComponent(String posTerm, String name){
-			this.posStr = posTerm;			
+			
+			this.posStr = posTerm;
+			
+			if(posTerm.equals(".*")){
+				isPosWildCard = true;
+			}
+			
 			this.nameStr = name;
 			//default auxiliary terms should not be compiled, as
 			//they are not meant to be compared with anything.
@@ -1486,6 +1548,10 @@ public class WLCommand {
 				this.namePattern = Pattern.compile(name);
 			}
 		}		
+		
+		public boolean isPosWildCard(){
+			return isPosWildCard;
+		}
 		
 		/**
 		 * @return the posPattern

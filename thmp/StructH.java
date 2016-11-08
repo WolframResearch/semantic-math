@@ -405,8 +405,11 @@ public class StructH<H> extends Struct{
 	@Override
 	public String simpleToString2(boolean includeType, WLCommand curCommand){
 		
-		if(curCommand != null) WLCommand.increment_commandNumUnits(curCommand, this);
-
+		if(curCommand != null) {
+			WLCommand.increment_commandNumUnits(curCommand, this);
+		}
+		
+		
 		String str = "";
 		if(includeType){ 			
 			str += this.type.equals("ent") ? "MathObj" : this.type;
@@ -431,9 +434,12 @@ public class StructH<H> extends Struct{
 			if(!childStr.matches("\\s*")){
 				//only append curChidRelation if child is a StructH, to avoid
 				//including the relation twice, eg in case child is of type "prep"
-				curChildRelation = child.isStructA() ? "" : curChildRelation + " ";
-				str += ", " + curChildRelation + childStr;
+				//if this child has been used in another component of the same command.
+				if(!child.usedInOtherCommandComponent()){
+					curChildRelation = child.isStructA() ? "" : curChildRelation + " ";
 				
+					str += ", " + curChildRelation + childStr;
+				}
 			}
 		}		
 		if(includeType) str += "}";

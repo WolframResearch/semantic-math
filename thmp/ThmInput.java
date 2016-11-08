@@ -47,7 +47,7 @@ public class ThmInput {
 	private static final Pattern BEGIN_PATTERN = Pattern.compile("\\\\begin.*");
 	
 	//new theorem pattern
-	private static final Pattern NEW_THM_PATTERN = Pattern.compile("\\\\newtheorem\\{([^}]\\} (?:[^{]*) \\{([^}]) .* ");
+	private static final Pattern NEW_THM_PATTERN = Pattern.compile("\\\\newtheorem\\{([^}])\\}(?:[^{]*)\\{([^}]).*");
 		
 	private static final Pattern F = Pattern.compile("Theorem|Proposition|Lemma|Corollary");
 	private static final Pattern LABEL_PATTERN = Pattern.compile("(?:^.*)\\\\label\\{([^}]*)\\}\\s*(.*)");
@@ -76,7 +76,7 @@ public class ThmInput {
 	private static final Pattern ITEM_PATTERN = Pattern.compile("\\\\item");
 
 	public static void main(String[] args) throws IOException {
-		boolean writeToFile = true;
+		boolean writeToFile = false;
 
 		// File file = new File("src/thmp/data/commAlg5.txt");
 		// String srcFileStr = "src/thmp/data/commAlg5.txt";
@@ -145,12 +145,15 @@ public class ThmInput {
 		
 		//read in custom macros, break as soon as \begin{document} encountered
 		while ((line = srcFileReader.readLine()) != null) {
-			Matcher f = F.matcher(line);
+			Matcher f = NEW_THM_PATTERN.matcher(line);
 			
 			if(BEGIN_PATTERN.matcher(line).find()){
 				break;
 			}else if(f.find()){
-				macrosList.add(f.group(2));				
+				//should be a proposition, hypothesis, etc
+				if(F.matcher(f.group(2)).find()){
+					macrosList.add(f.group(2));		
+				}
 			}			
 		}
 		

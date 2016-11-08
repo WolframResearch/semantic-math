@@ -630,7 +630,7 @@ public class Maps {
 			structMap.put("adj_prep", new Rule("phrase", .9));
 			structMap.put("gerund_noun", new Rule("gerundp", 1)); // gerundphrase
 			structMap.put("ent_gerundp", new Rule("newchild", 1));
-
+			
 			// involving nums
 			structMap.put("pre_num", new Rule("prep", 1));
 
@@ -755,8 +755,10 @@ public class Maps {
 																// new Rule("csubj",
 																// 1));
 			structMap.put("pro_ent", new Rule("csubj", 1));
-			//absorb first struct into second struct
-			structMap.put("adj_ent", new Rule("absorb", 1));
+			//absorb the non-struct into the struct. Should only 
+			//have one non-ent
+			structMap.put("adj_ent", new Rule("absorb1", 1));
+			//structMap.put("ent_symb", new Rule("absorb2", 1));
 			
 			// eg "property that a is b"
 			structMap.put("noun_phrase", new Rule("np", 1));

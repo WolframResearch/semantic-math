@@ -368,17 +368,22 @@ public class ThmP1Test {
 			
 			st = "Group $G$ acts on space $X$ by conjugation";
 			st = "Any $F$-algebra map $f : E to E$ is an automorphism";
-			st = " Let $A$, $A'$, $A_{fin}$, $B$, and $B_{fin}$ be the subsets of $Spec(S)$ introduced above.";
-			
-			st = "the group $G$ acts on the subgroup $H$ by conjugation";
-			st = "A valuation ring is Noetherian if it is a discrete valuation ring or a field";
-			st = "for every element $x$";
-			
+			st = " Let $A$, $A'$, $A_{fin}$, $B$, and $B_{fin}$ be the subsets of $Spec(S)$ introduced above.";			
+			st = "for every element $x$";			
 			st = "indexed family of morphisms";
 			st = "If $x$ is a indexed family of vectors";
-			st = "If $x$ is a summable indexed family of vectors";
+			
 			st = "$C$ is an indexed family $x$ of morphisms";
 			st = "relatively prime polynomials";
+			st = "the group $G$ acts on the subgroup $H$ by conjugation";
+			st = "A valuation ring is Noetherian if and only if it is a discrete valuation ring or a field";
+			st = "If $x$ is a summable indexed family of vectors";
+			st = "if $R$ is commutative and $S$ is commutative, $S$ is abelian if $S$ is abelian";
+			st = "if $R$ is commutative and $S$ is commutative";
+			st = "if $R$ is a ring, $M$ is an $R$ module if $R$ is commutative";
+			//st = "$f$ map $x$ to $y$";
+			//st = "the map $f$ is linear";
+			
 			//st = "$f$ maps $a$ to $b$";
 			//st = "$f$ map ring";
 			//st = "Group $G$ acts on space $X$";

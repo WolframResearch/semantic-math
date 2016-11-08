@@ -286,15 +286,16 @@ public class ParseToWLTree {
 					}
 				}else if(commandSat.isDisqualified()){
 					WLCommandListIter.remove();
+					//System.out.println("\n***COMMAND REMOVED. struc "+ struct );
 				}
 				
 			}
 		}		
 		
 		String triggerKeyWord = "";
-		if (struct instanceof StructA && struct.prev1() instanceof String) {
+		if (struct.isStructA() && struct.prev1NodeType().equals(NodeType.STR)) {
 			triggerKeyWord = (String)struct.prev1();			
-		}else if(struct instanceof StructH){
+		}else if(!struct.isStructA()){
 			triggerKeyWord = struct.struct().get("name");
 		}
 		
@@ -579,6 +580,7 @@ public class ParseToWLTree {
 						}
 					}else if(commandSat.isDisqualified()){
 						ChildWLCommandListIter.remove();
+						//System.out.println("\n***COMMAND REMOVED " + struct);
 					}
 					
 				}
@@ -661,8 +663,8 @@ public class ParseToWLTree {
 			WLCommand curCommand = curWrapper.wlCommand;
 			
 			//right now that threshold is: all components must be included.
-			//Now: 1 component can have other head
-			if(WLCommand.structsWithOtherHeadCount(curCommand) < 2){
+			// //Now: 1 component can have other head
+			if(WLCommand.structsWithOtherHeadCount(curCommand) < 1){
 				//System.out.println("wrapperList Size" + structWrapperListSz);
 				//System.out.println(struct.WLCommandStr());
 				//parsedSB.append(struct.WLCommandStr());
@@ -806,6 +808,7 @@ public class ParseToWLTree {
 		struct.clear_WLCommandStrVisitedCount();		
 		struct.set_previousBuiltStruct(null);
 		struct.set_structToAppendCommandStr(null);
+		struct.set_usedInOtherCommandComponent(false);
 		
 		if (struct.isStructA()) {
 			

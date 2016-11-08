@@ -205,7 +205,12 @@ public class WLCommandsList {
 		WLCommandMapBuilder.put("act", addCommand(new PBuilder("Action["), new PBuilder("symb|ent|pro", null, true), 
 				new PBuilder(null, "act|acts", false, true, false), new PBuilder(","),
 				new PBuilder("symb|ent|pro", null, true, false, true), new PBuilder(",", "OPT"), 
-				new PBuilder(null, "by", false, false, "OPT"), new PBuilder(null, null, true, false, "OPT") ));	
+				new PBuilder(null, "by", false, false, "OPT"), new PBuilder(null, null, true, false, "OPT"), new PBuilder("]") ));	
+		//$f$ maps $x$ to $y$
+		WLCommandMapBuilder.put("map", addCommand(new PBuilder("Map["), new PBuilder("symb|ent|pro", null, true), 
+				new PBuilder("verb|vbs", "map|maps", false, true, false), new PBuilder(","),
+				new PBuilder("symb|ent|pro", null, true, false, true), new PBuilder(","), new PBuilder(null, "to", false), 
+				new PBuilder("symb|ent|pro", null, true, false, true), new PBuilder("]") ));
 		
 		//if_assert. As well as "let", etc
 		//WLCommandMapBuilder.put("if", addCommand(new String[] { "if|If|let, , trigger", "assert, , true" }));

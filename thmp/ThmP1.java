@@ -525,8 +525,7 @@ public class ThmP1 {
 					List<String> tempPosList = posMMap.get(tempWord);
 					if (!tempPosList.isEmpty()) {
 						type = tempPosList.get(0);
-					}
-					
+					}					
 				}
 				
 				Pair pair = new Pair(latexExpr, type);
@@ -587,12 +586,10 @@ public class ThmP1 {
 				}				
 				int newIndex = gatherTwoThreeGram(i, strAr, pairs, mathIndexList);
 				//a two or three gram was picked up
-				if(newIndex > i){ 
-					
+				if(newIndex > i){ 					
 					i = newIndex;
 					continue;				
-				}
-				
+				}				
 			}
 			
 			String[] singularForms = WordForms.getSingularForms(curWord);
@@ -654,8 +651,7 @@ public class ThmP1 {
 				}
 
 				// if previous Pair is also an ent, fuse them, but only if current ent
-				// does not have other relevant pos such as verb. 
-						
+				// does not have other relevant pos such as verb. 						
 				pairsSize = pairs.size();
 				if (pairs.size() > 0 && pairs.get(pairsSize - 1).pos().matches("ent")) {
 					boolean fuseEnt = true;
@@ -666,25 +662,6 @@ public class ThmP1 {
 					if(noFuseEntSet.contains(curWord) || noFuseEntSet.contains(prevWord)){
 						fuseEnt = false;
 					}
-					/*for(int l = 1; l < posListInUse.size(); l++){
-						//limit this, as this contributes to parse explosion!
-						//in particular, don't include "adj" here, too many
-						//ents also have adj as alternative pos.
-						if(posListInUse.get(l).matches("verb")){
-							fuseEnt = false;
-							break;
-						}
-					}	
-					
-					Set<String> prevPairPosSet = pairs.get(pairsSize-1).extraPosSet();
-					if(prevPairPosSet != null){
-						for(String p : prevPairPosSet){
-							if(p.equals("verb")){
-								fuseEnt = false;
-								break;
-							}
-						}
-					}*/
 					
 					if(fuseEnt){
 						pairs.get(pairsSize - 1).set_word(pairs.get(pairsSize - 1).word() + " " + curWord);
@@ -853,8 +830,8 @@ public class ThmP1 {
 					&& (posMMap.containsKey(strAr[i].substring(0, wordlen - 2))
 							&& posMMap.get(strAr[i].substring(0, wordlen - 2)).get(0).equals("verb")
 							|| posMMap.containsKey(strAr[i].substring(0, wordlen - 1))
-									&& posMMap.get(strAr[i].substring(0, wordlen - 1)).get(0).equals("verb"))) {
-
+									&& posMMap.get(strAr[i].substring(0, wordlen - 1)).get(0).equals("verb"))) 
+			{
 				// if next word is "by", then
 				String curPos = "parti";
 				int pairsSize = pairs.size();
@@ -873,18 +850,25 @@ public class ThmP1 {
 				// previous word is "is, are", then group with previous word to
 				// verb
 				// e.g. "is called"
-				else if (pairsSize > 0 && IS_ARE_BE_PATTERN.matcher(pairs.get(pairsSize - 1).word()).find()) {
-					
-					//if next word is a preposition
-					if(strAr.length > i + 1 && !posMMap.get(strAr[i+1]).isEmpty() && 
-							posMMap.get(strAr[i+1]).get(0).equals("pre")){
-						curWord = pairs.get(pairsSize - 1).word() + " " + curWord;
-						pairs.remove(pairsSize - 1);
-						
-						curPos = "auxpass";
+				else if (pairsSize > 0) {
+					Pair prevPair = pairs.get(pairsSize - 1);
+					if(IS_ARE_BE_PATTERN.matcher(prevPair.word()).find()){
+						//if next word is a preposition
+						if(strAr.length > i + 1 && !posMMap.get(strAr[i+1]).isEmpty() && 
+								posMMap.get(strAr[i+1]).get(0).equals("pre")){
+							curWord = pairs.get(pairsSize - 1).word() + " " + curWord;
+							pairs.remove(pairsSize - 1);
+							
+							curPos = "auxpass";
+						}
+						//otherwise likely used as adjective, e.g. "is connected"
+						else {
+							curPos = "adj";
+						}
 					}
-					//otherwise likely used as adjective, e.g. "is connected"
-					else {
+					//e.g. "summable indexed family", note the next word cannot be "by"
+					//at this point.
+					else if(prevPair.pos().equals("adj")){
 						curPos = "adj";
 					}
 				}
@@ -911,7 +895,7 @@ public class ThmP1 {
 				Pair pair = new Pair(curWord, curPos);
 				pairs.add(pair);
 			}//obfuscated! 
-			else if (wordlen > 2 && curWord.substring(wordlen - 3, wordlen).equals("ing")
+			else if (wordlen > 3 && curWord.substring(wordlen - 3, wordlen).equals("ing")
 					&& (posMMap.containsKey(curWord.substring(0, wordlen - 3))
 							&& posMMap.get(curWord.substring(0, wordlen - 3)).get(0).matches("verb|vbs")
 							// verbs ending in "e"
@@ -923,9 +907,7 @@ public class ThmP1 {
 					curWord = curWord + " " + strAr[++i];
 					curType = "pre";
 				} else if (i < strAr.length - 1 &&
-						posMMap.containsKey(strAr[i + 1]) && posMMap.get(strAr[i + 1]).get(0).matches("ent|noun")
-						) 
-				{
+						posMMap.containsKey(strAr[i + 1]) && posMMap.get(strAr[i + 1]).get(0).matches("ent|noun")){
 					// eg "vanishing locus" functions as amod: adjectivial
 					// modifier
 					//curWord = curWord + " " + str[++i];
@@ -946,7 +928,12 @@ public class ThmP1 {
 					Pair pair = new Pair(curWord, curType);
 					pairs.add(pair);
 				}
-			} else if (curWord.matches("[a-zA-Z]")) {
+			}//e.g. summable
+			else if(wordlen > 4 && curWord.substring(wordlen - 4, wordlen).equals("able")){
+				Pair pair = new Pair(curWord, "adj");
+				pairs.add(pair);
+			}
+			else if (curWord.matches("[a-zA-Z]")) {
 				// variable/symbols
 				Pair pair = new Pair(strAr[i], "symb");
 				pairs.add(pair);
@@ -1106,9 +1093,11 @@ public class ThmP1 {
 			// look right one place in pairs, if symbol found, add it to
 			// namesMap
 			// if it's the given name for an ent.
-			// Combine gerund with ent
 			int pairsSize = pairs.size();
-			if (index + 1 < pairsSize && pairs.get(index + 1).pos().equals("symb")) {
+			if (index + 1 < pairsSize && pairs.get(index + 1).pos().equals("symb")
+					//don't fuse if e.g. mathObjName is "map"
+					&& !noFuseEntSet.contains(mathObjName)
+					) {
 				pairs.get(index + 1).set_pos(entPosStr);
 				String givenName = pairs.get(index + 1).word();
 				tempMap.put("called", givenName);
@@ -2498,22 +2487,34 @@ public class ThmP1 {
 
 				mx.get(i).get(j).add(newStruct);
 			}
-		}else if(newType.equals("absorb")){
-			//absorb struct1 into struct2
-			if(struct1.isStructA() && !struct2.isStructA()){
-				Struct newStruct = struct2.copy();				
-				//add as property
-				String ppt = struct1.prev1().toString();
-				newStruct.struct().put(ppt, "ppt");
-				// update firstEnt so to have the right children
-				if (firstEnt == struct2) {
-					firstEnt = newStruct;
-				}
-				recentEnt = newStruct;
-				recentEntIndex = j;
-				newStruct.set_maxDownPathScore(newDownPathScore);
-				mx.get(i).get(j).add(newStruct);
+		}
+		//absorb first into second
+		else if(newType.equals("absorb1")){
+			
+			assert(struct1.isStructA() && !struct2.isStructA());
+
+			if(!struct1.isStructA() || struct2.isStructA()){
+				return;
 			}
+			
+			//absorb the non-struct into the struct
+			Struct absorbingStruct = struct2;
+			Struct absorbedStruct = struct1;
+			
+			absorbStruct(mx, firstEnt, i, j, newDownPathScore, absorbingStruct, absorbedStruct);
+		}
+		//absorb second into first
+		else if(newType.equals("absorb2")){
+			assert(!struct1.isStructA() && struct2.isStructA());
+			
+			if(struct1.isStructA() || !struct2.isStructA()){
+				return;
+			}
+			
+			Struct absorbingStruct = struct1;
+			Struct absorbedStruct = struct2;
+			
+			absorbStruct(mx, firstEnt, i, j, newDownPathScore, absorbingStruct, absorbedStruct);
 		}
 		//"if A is p so is B", make substitution with recent Ent
 		else if(newType.equals("So")){
@@ -2593,18 +2594,19 @@ public class ThmP1 {
 				List<Struct> tempSymStructList = mx.get(i + 1).get(k).structList();
 				List<Struct> tempEntStructList = mx.get(k + 2).get(j).structList();
 
-				ploop: for (int p = 0; p < tempSymStructList.size(); p++) {
+				int tempSymStructListSz = tempSymStructList.size();
+				ploop: for (int p = 0; p < tempSymStructListSz; p++) {
 					Struct tempSymStruct = tempSymStructList.get(p);
 
 					if (tempSymStruct.type().equals("symb")) {
 
-						for (int q = 0; q < tempSymStructList.size(); q++) {
+						for (int q = 0; q < tempSymStructListSz; q++) {
 
 							Struct tempEntStruct = tempEntStructList.get(q);
-							if (!tempEntStruct.isStructA() && tempEntStruct.type().equals("ent")) {
-
+							if (!tempEntStruct.isStructA()) {
+								
 								// assumes that symb is a leaf struct! Need to
-								// make more robust
+								// make more robust. check to ensure symb is in fact a leaf.
 								variableNamesMap.put(tempSymStruct.prev1().toString(), tempEntStruct);
 
 								tempEntStruct.struct().put("called", tempSymStruct.prev1().toString());
@@ -2640,6 +2642,39 @@ public class ThmP1 {
 		// *****actually, should keep going and keep scores!
 		// break;
 
+	}
+
+	/**
+	 * @param mx
+	 * @param firstEnt
+	 * @param i
+	 * @param j
+	 * @param newDownPathScore
+	 * @param absorbingStruct
+	 * @param absorbedStruct
+	 */
+	private static void absorbStruct(List<List<StructList>> mx, Struct firstEnt, int i, int j, double newDownPathScore,
+			Struct absorbingStruct, Struct absorbedStruct) {
+		Struct recentEnt;
+		int recentEntIndex;
+		//if(struct1.isStructA() && !struct2.isStructA()){
+			Struct newStruct = absorbingStruct.copy();				
+			//add as property
+			String ppt = absorbedStruct.prev1().toString();
+			if(absorbedStruct.type().equals("symb")){
+				newStruct.struct().put("called", ppt);
+			}else{
+				newStruct.struct().put(ppt, "ppt");
+			}
+			// update firstEnt so to have the right children
+			if (firstEnt == absorbingStruct) {
+				firstEnt = newStruct;
+			}
+			recentEnt = newStruct;
+			recentEntIndex = j;
+			newStruct.set_maxDownPathScore(newDownPathScore);
+			mx.get(i).get(j).add(newStruct);
+		//}
 	}
 
 	/**

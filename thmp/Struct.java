@@ -27,6 +27,12 @@ public abstract class Struct {
 		this.type = type;
 	}
 	*/
+	
+	//whether this struct has been used in another component
+	//e.g. Action[ MathObj{group, $G$} , MathObj{{subgroup, $H$, by conjugation}} , MathObj{conjugation}
+	//want to exclude "by conjugation" from middle term. Must clear this flag for new dfs walkdowns.
+	//Should only set if command is satisfied.
+	private boolean usedInOtherCommandComponent;
 
 	private Article article = Article.NONE;
 	
@@ -54,6 +60,26 @@ public abstract class Struct {
 			assert(this.type().equals("ent"));
 		}
 		return isStructA;
+	}
+	
+	/**
+	 * Set whether this struct has been used in another component.
+	 * e.g. Action[ MathObj{group, $G$} , MathObj{{subgroup, $H$, by conjugation}} , MathObj{conjugation}
+	 * want to exclude "by conjugation" from middle term. Must clear this flag for new dfs walkdowns.
+	 * Should only set if command is satisfied.
+	 */
+	public void set_usedInOtherCommandComponent(boolean usedInOtherCommandComponent){
+		this.usedInOtherCommandComponent = usedInOtherCommandComponent;
+	}
+	
+	/**
+	 * Whether this struct has been used in another component.
+	 * Currently only used in the case when a child of a StructH has
+	 * been used as another *entire* component in same command.
+	 * @return
+	 */
+	public boolean usedInOtherCommandComponent(){
+		return this.usedInOtherCommandComponent;
 	}
 	
 	public abstract Struct previousBuiltStruct();
