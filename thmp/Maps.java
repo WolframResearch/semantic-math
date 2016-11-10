@@ -758,7 +758,7 @@ public class Maps {
 			//absorb the non-struct into the struct. Should only 
 			//have one non-ent
 			structMap.put("adj_ent", new Rule("absorb1", 1));
-			//structMap.put("ent_symb", new Rule("absorb2", 1));
+			structMap.put("ent_symb", new Rule("absorb2", 1));
 			
 			// eg "property that a is b"
 			structMap.put("noun_phrase", new Rule("np", 1));

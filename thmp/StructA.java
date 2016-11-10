@@ -329,7 +329,7 @@ public class StructA<A, B> extends Struct{
 						tempSB.append(prev1Str);
 					}
 				}else{
-					tempSB.append(prev1WrapperList.get(0));
+					tempSB.append(prev1WrapperList.get(0).WLCommandStr());
 				}
 			}else if(PREV1_TYPE.equals(NodeType.STR) && !prev1.equals("")){
 				//if(!type.matches("pre|partiby")){
@@ -358,7 +358,7 @@ public class StructA<A, B> extends Struct{
 						prev2String += prev2Str;						
 					}
 				 }else{
-					 prev2String += prev2WrapperList.get(0);
+					 prev2String += prev2WrapperList.get(0).WLCommandStr();
 				 }
 			}else if(PREV2_TYPE.equals(NodeType.STR) && !((String)prev2).matches("\\s*")){			
 				prev2String += ", " + prev2;			
@@ -579,8 +579,8 @@ public class StructA<A, B> extends Struct{
 
 	@Override
 	public String toString(){
-		String str = " type: " + this.type 				
-				+ ", " + this.prev1;
+		String str = "[Type: " + this.type 				
+				+ ", " + this.prev1 + "]";
 		
 		return str;
 	}

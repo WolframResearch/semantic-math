@@ -1,6 +1,7 @@
 package thmp;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -334,7 +335,7 @@ public class WLCommand {
 		 * Named PBuilder instead of PosTermBuilder, to 
 		 */
 		public static class PBuilder{
-			private static final int WLCOMMANDINDEX = WLCommandsList.WLCOMMANDINDEX;
+			//private static final int WLCOMMANDINDEX = WLCommandsList.WLCOMMANDINDEX;
 			private static final int AUXINDEX = WLCommandsList.AUXINDEX;
 			private static final int DEFAULT_POSITION_IN_MAP = WLCommandsList.getDefaultPositionInMap();
 			private static final Pattern OPTIONAL_TOKEN_PATTERN = Pattern.compile("OPT(\\d*)");
@@ -353,6 +354,8 @@ public class WLCommand {
 			//whether this term is the trigger term.
 			private boolean isTrigger;			
 			private boolean isOptionalTerm;
+			//used to "untrigger" commands
+			private boolean isNegativeTerm;
 			//0 by default
 			private int optionalGroupNum;
 			
@@ -500,6 +503,18 @@ public class WLCommand {
 			}
 			
 			/**
+			 * Construct negative terms, to untrigger commands.
+			 * @param posStr
+			 * @param type
+			 */
+			public PBuilder(String posStr, String nameStr, PosTermType type){	
+				this(posStr, nameStr, false);
+				if(type.equals(PosTermType.NEGATIVE)){					
+					this.isNegativeTerm = true;
+				}
+			}
+			
+			/**
 			 * Sets positionInMap, should be called before build'ing.
 			 * @param positionInMap the positionInMap to set
 			 */
@@ -523,6 +538,8 @@ public class WLCommand {
 				if(this.isOptionalTerm){
 					return new OptionalPosTerm(commandComponent, positionInMap, includeInBuiltString,
 							isTriggerMathObj, optionalGroupNum);
+				}else if(this.isNegativeTerm){
+					return new NegativePosTerm(commandComponent, positionInMap);
 				}else{
 					return new PosTerm(commandComponent, positionInMap, includeInBuiltString,
 							isTrigger, isTriggerMathObj);
@@ -554,6 +571,10 @@ public class WLCommand {
 			return false;
 		}
 
+		public boolean isNegativeTerm(){
+			return false;
+		}
+		
 		@Override
 		public String toString(){
 			return "{" + this.commandComponent + ", " + this.positionInMap + "}";
@@ -597,6 +618,19 @@ public class WLCommand {
 		
 		public boolean triggerMathObj(){
 			return this.triggerMathObj;
+		}
+	}
+	
+	public static class NegativePosTerm extends PosTerm{
+		
+		public NegativePosTerm(WLCommandComponent commandComponent, int position){
+			super(commandComponent, position, false, false, false);
+			
+		}
+		
+		@Override
+		public boolean isNegativeTerm(){
+			return true;
 		}
 	}
 	
@@ -697,7 +731,7 @@ public class WLCommand {
 	/**
 	 * Find struct with least depth amongst Structs that build this WLCommand
 	 */
-	private static Struct findCommandHead(ListMultimap<WLCommandComponent, Struct> commandsMap, Struct firstPosTermStruct){
+	private static Struct findCommandHead(ListMultimap<WLCommandComponent, Struct> commandsMap){
 		Struct structToAppendCommandStr;
 		//map to store Structs' parents. The integer can be left child (-1)
 		//right child (1), or 0 (both children covered)
@@ -845,7 +879,7 @@ public class WLCommand {
 	 * Right now not using this struct value, just to set previousBuiltStruct to not be null.
 	 * @return String form of the resulting WLCommand
 	 */
-	public static String build(WLCommand curCommand, Struct firstPosTermStruct){
+	public static String build(WLCommand curCommand){
 		
 		if(curCommand.componentCounter > 0){ 
 			return "";		
@@ -858,15 +892,19 @@ public class WLCommand {
 		Map<WLCommandComponent, Integer> commandsCountMap = curCommand.commandsCountMap;
 		List<PosTerm> posTermList = curCommand.posTermList;
 		//use StringBuilder!
-		String commandString = "";
+		StringBuilder commandSB = new StringBuilder();
 		//the latest Struct to be touched, for determining if an aux String should be displayed
 		boolean prevStructHeaded = false;
 	
 		//Struct headStruct = curCommand.headStruct;
 		//determine which head to attach this command to
-		Struct structToAppendCommandStr = findCommandHead(commandsMap, firstPosTermStruct);
+		Struct structToAppendCommandStr = findCommandHead(commandsMap);
 		
 		for(PosTerm term : posTermList){
+			
+			if(term.isNegativeTerm()){
+				continue;
+			}
 			
 			if(!term.includeInBuiltString){ 				
 				//set its head Struct to structToAppendCommandStr,
@@ -936,15 +974,17 @@ public class WLCommand {
 					//should check first if contains WLCommandStr, i.e. has been converted to some 
 					//commands already
 					nextWord = TriggerMathObj3.get_mathObjFromStruct(nextStruct, curCommand);
-					
+
 					if(nextWord.equals("")){
 						//already added numUnits to Struct above, don't do it again.
 						nextWord = nextStruct.simpleToString(true, null);
+						
 					}
 				}else{
 					//System.out.println("^^^Triggering command " + curCommand);
 					//takes into account pro, and the ent it should refer to
 					nextWord = nextStruct.simpleToString(true, curCommand);
+
 				}
 				//simple way to present the Struct
 				//set to the head struct the currently built command will be appended to
@@ -952,9 +992,7 @@ public class WLCommand {
 				structToAppendCommandStr.set_posteriorBuiltStruct(nextStruct);				
 				//check if been assigned to a different head
 				//prevStructHeaded = updateWrapper(nextStruct, structToAppendCommandStr);
-				if(updateWrapper(nextStruct, structToAppendCommandStr)){
-					//curCommand.structsWithOtherHeadCount++;
-				}
+				updateWrapper(nextStruct, structToAppendCommandStr);
 				
 				/*if(nextStruct.structToAppendCommandStr() == null){						
 					prevStructHeaded = false;
@@ -968,7 +1006,6 @@ public class WLCommand {
 			else if(positionInMap == WLCommandsList.WLCOMMANDINDEX){
 				//should change to use simpletoString from Struct
 				nextWord = term.commandComponent.posStr;
-				
 				//in case of WLCommand eg \\[ELement]
 				//this list should contain Structs that corresponds to a WLCommand
 				List<Struct> curCommandComponentList = commandsMap.get(commandComponent);
@@ -976,9 +1013,9 @@ public class WLCommand {
 				//should have size > 0 always <--nope! if element is not a true WLCommand, like an auxilliary string
 				if(curCommandComponentList.size() > 0){					
 					Struct nextStruct = curCommandComponentList.get(0);
-					if(updateWrapper(nextStruct, structToAppendCommandStr)){
+					updateWrapper(nextStruct, structToAppendCommandStr);
 						//curCommand.structsWithOtherHeadCount++;
-					}					
+										
 					nextStruct.set_previousBuiltStruct(structToAppendCommandStr);
 					structToAppendCommandStr.set_posteriorBuiltStruct(nextStruct);
 					
@@ -991,13 +1028,10 @@ public class WLCommand {
 					} */
 				}				
 			} else {
-				//if(prevStruct != null && prevStruct.structToAppendCommandStr() == null )
 				//auxilliary Strings inside a WLCommand, eg "[", "\[Element]"	
-				if(!prevStructHeaded){
-					//nextWord = term.commandComponent.posTerm;
-				}
+			
 				nextWord = term.commandComponent.posStr;
-				
+
 				//System.out.print("nextWord : " + nextWord + "prevStruct: " + prevStructHeaded);
 			}
 			
@@ -1005,16 +1039,17 @@ public class WLCommand {
 				int optionalGroupNum = term.optionalGroupNum();
 				
 				if(0 == optionalTermsGroupCountMap.get(optionalGroupNum)){
-					commandString += nextWord + " ";
+					commandSB.append(nextWord + " ");
 				}
 			}else{			
-				commandString += nextWord + " ";
+				commandSB.append(nextWord + " ");
 			}
 		}
 		
+		System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
 		if(DEBUG){
 			System.out.println("\n CUR COMMAND: " + curCommand + " ");
-			System.out.print("BUILT COMMAND: " + commandString);
+			System.out.print("BUILT COMMAND: " + commandSB);
 			System.out.println("HEAD STRUCT: " + structToAppendCommandStr);
 		}
 		
@@ -1030,8 +1065,8 @@ public class WLCommand {
 		
 		curCommandWrapper.set_highestStruct(structToAppendCommandStr);
 		//why append and not just set??
-		curCommandWrapper.set_WLCommandStr(commandString);
-		return commandString;
+		curCommandWrapper.set_WLCommandStr(commandSB);
+		return commandSB.toString();
 	}
 	
 	
@@ -1155,7 +1190,7 @@ public class WLCommand {
 			while(i < posTermListSz && posTermList.get(i).positionInMap < 0) i++;		
 		}
 		
-		if(i == posTermListSz){
+		if(i == posTermListSz || i < 0){
 			boolean hasOptionalTermsLeft = (curCommand.optionalTermsCount > 0);
 			return new CommandSat(curCommand.componentCounter < 1, hasOptionalTermsLeft, componentAdded);
 		}
@@ -1172,13 +1207,25 @@ public class WLCommand {
 		
 		while(( (!commandComponentPosPattern.matcher(structType).find() || !commandComponentNamePattern.matcher(structName).find())
 				//!structType.matches(commandComponentPosTerm) || !structName.matches(commandComponentName)) 
-				&& isOptionalTerm
+				&& (isOptionalTerm || curPosTerm.isNegativeTerm())
 				/* or auxilliary term*/
 				|| posTermPositionInMap < 0)
 				/* ensure index within bounds*/
-				&& i < posTermListSz - 1 ){			
+				//&& i < posTermListSz - 1 
+				){
 			
-			i++;
+			if(before){
+				if(i < 0){
+					break;
+				}
+				i--;
+			}else{
+				if(i > posTermListSz - 1){
+					break;
+				}
+				i++;
+			}
+			
 			curPosTerm = posTermList.get(i);
 			
 			commandComponent = curPosTerm.commandComponent;
@@ -1192,9 +1239,18 @@ public class WLCommand {
 		
 		}
 		//System.out.println("GOT HERE****** newStruct " + newStruct);
+
+		//int addedComponentsColSz = commandsMap.get(commandComponent).size();
+		
+		//disqualify term if negative term triggered
+		if(curPosTerm.isNegativeTerm() 
+				&& commandComponentPosPattern.matcher(structType).find()
+				&& commandComponentNamePattern.matcher(structName).find()){
+			boolean disqualified = true;
+			return new CommandSat(disqualified);
+		}
 		
 		int commandComponentCount = commandsCountMap.get(commandComponent);
-		//int addedComponentsColSz = commandsMap.get(commandComponent).size();
 		
 		if(commandComponentPosPattern.matcher(structType).find()
 				//structType.matches(commandComponentPosTerm) 	
@@ -1613,6 +1669,16 @@ public class WLCommand {
 			hashcode += 19 * hashcode + this.nameStr.hashCode();
 			return hashcode;
 		}
+	}	
+	
+	/**
+	 * Type of component, i.e. negative.
+	 * 
+	 */
+	public enum PosTermType{
+		//stop the command (untrigger) once encountered.
+		NEGATIVE;
+		
 	}
 	
 }

@@ -32,6 +32,7 @@ public class StructH<H> extends Struct{
 	//contains this Struct, so no need to build this Struct again into the current 
 	//WLCommand in build(), remember to reset to null after iterating through
 	private Struct previousBuiltStruct;
+	//don't think the posterior one is used.
 	private Struct posteriorBuiltStruct;
 	//the head Struct (to append to) of a WLCommand this Struct currently belongs to.
 	//Not intrinsic to this Struct!
@@ -280,7 +281,7 @@ public class StructH<H> extends Struct{
 	
 	@Override
 	public String toString(){
-		String str = this.type;
+		String str = "[" + this.type;
 		str += this.struct; //struct is hashmap for structH
 		/*for(Map.Entry<String, String> e: this.struct.entrySet()){
 			str += e;
@@ -288,7 +289,7 @@ public class StructH<H> extends Struct{
 		if(this.possessivePrev != null){
 			str += "possessivePrev: " + possessivePrev.type();
 		}
-		return str;
+		return str + "]";
 	}
 	
 	public int WLCommandStrVisitedCount(){

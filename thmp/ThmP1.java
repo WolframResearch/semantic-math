@@ -1959,8 +1959,11 @@ public class ThmP1 {
 								Iterator<Rule> ruleColIter = ruleCol.iterator();
 								while (ruleColIter.hasNext()) {
 									Rule ruleColNext = ruleColIter.next();
-									reduce(mx, ruleColNext, struct1, struct2, firstEnt, recentEnt, recentEntIndex, i, j,
+									EntityBundle entityBundle = reduce(mx, ruleColNext, struct1, struct2, firstEnt, recentEnt, recentEntIndex, i, j,
 											k, type1, type2, parseState);
+									recentEnt = entityBundle.recentEnt;
+									firstEnt = entityBundle.firstEnt;
+									recentEntIndex = entityBundle.recentEntIndex;
 								}
 							}
 
@@ -2376,7 +2379,7 @@ public class ThmP1 {
 	 * @param type2
 	 * @param parseState
 	 */
-	public static void reduce(List<List<StructList>> mx, Rule newRule, Struct struct1, Struct struct2,
+	public static EntityBundle reduce(List<List<StructList>> mx, Rule newRule, Struct struct1, Struct struct2,
 			Struct firstEnt, Struct recentEnt, int recentEntIndex, int i, int j, int k, String type1, String type2,
 			ParseState parseState) {
 		
@@ -2423,7 +2426,7 @@ public class ThmP1 {
 			if(childRelation == null){
 				//should not be null!
 				System.out.println("Inside ThmP1.reduce(), childRelation should not be null!");
-				return;
+				return new EntityBundle(firstEnt, recentEnt, recentEntIndex);
 			}
 			
 			// String childRelation = mx.get(k + 1).get(k +
@@ -2494,27 +2497,35 @@ public class ThmP1 {
 			assert(struct1.isStructA() && !struct2.isStructA());
 
 			if(!struct1.isStructA() || struct2.isStructA()){
-				return;
+				return new EntityBundle(firstEnt, recentEnt, recentEntIndex);
 			}
 			
 			//absorb the non-struct into the struct
 			Struct absorbingStruct = struct2;
 			Struct absorbedStruct = struct1;
 			
-			absorbStruct(mx, firstEnt, i, j, newDownPathScore, absorbingStruct, absorbedStruct);
+			Struct tempEnt = absorbStruct(mx, firstEnt, i, j, newDownPathScore, absorbingStruct, absorbedStruct);
+			if(tempEnt != null){
+				recentEnt = tempEnt;
+				recentEntIndex = j;
+			}
 		}
 		//absorb second into first
 		else if(newType.equals("absorb2")){
 			assert(!struct1.isStructA() && struct2.isStructA());
 			
 			if(struct1.isStructA() || !struct2.isStructA()){
-				return;
+				return new EntityBundle(firstEnt, recentEnt, recentEntIndex);
 			}
 			
 			Struct absorbingStruct = struct1;
 			Struct absorbedStruct = struct2;
 			
-			absorbStruct(mx, firstEnt, i, j, newDownPathScore, absorbingStruct, absorbedStruct);
+			Struct tempEnt = absorbStruct(mx, firstEnt, i, j, newDownPathScore, absorbingStruct, absorbedStruct);
+			if(tempEnt != null){
+				recentEnt = tempEnt;
+				recentEntIndex = j;
+			}
 		}
 		//"if A is p so is B", make substitution with recent Ent
 		else if(newType.equals("So")){
@@ -2556,28 +2567,58 @@ public class ThmP1 {
 		else {
 			// if symbol and a given name to some entity
 			// use "called" to relate entities
+			Struct structToSet = null; //update those names pls
+			
 			if (type1.equals("symb") && struct1.prev1NodeType().equals(NodeType.STR)) {
-				String entKey = struct1.prev1().toString();
+				
+				structToSet = struct1; 
+				
+				/*String entKey = struct1.prev1().toString();
 				List<Struct> namesList = variableNamesMap.get(entKey);
 				if (!namesList.isEmpty()) {
 					int namesListLen = namesList.size();
 					Struct curEnt = namesList.get(namesListLen-1);
-					struct1.set_prev2(curEnt.struct().get("name"));					
-				}
+					String structName = curEnt.struct().get("name");
+					//don't combine for structs with names such as "map"
+					if(!noFuseEntSet.contains(structName)){
+						struct1.set_prev2(curEnt.struct().get("name"));
+						//System.out.println("\n=======SETTING NAME curEnt: " + curEnt);
+					}					
+				}*/
 			}
 
 			// update struct2 with name if applicable
 			// type could have been stripped down from conj_symb
 			if (type2.equals("symb") && struct2.prev1NodeType().equals(NodeType.STR)) {
 
-				String entKey = struct2.prev1().toString();
+				structToSet = struct2; 
+				/*String entKey = struct2.prev1().toString();
 				List<Struct> namesList = variableNamesMap.get(entKey);
 				if (!namesList.isEmpty()) {
 					int namesListLen = namesList.size();
 					Struct curEnt = namesList.get(namesListLen-1);
+					
 					struct2.set_prev2(curEnt.struct().get("name"));
+				}*/
+			}
+			
+			if(structToSet != null){
+				if (structToSet.equals("symb") && structToSet.prev1NodeType().equals(NodeType.STR)) {
+					
+					String entKey = structToSet.prev1().toString();
+					List<Struct> namesList = variableNamesMap.get(entKey);
+					if (!namesList.isEmpty()) {
+						int namesListLen = namesList.size();
+						Struct curEnt = namesList.get(namesListLen-1);
+						String structName = curEnt.struct().get("name");
+						//don't combine for structs with names such as "map"
+						if(!noFuseEntSet.contains(structName)){
+							structToSet.set_prev2(curEnt.struct().get("name"));
+							//System.out.println("\n=======SETTING NAME curEnt: " + curEnt);
+						}					
+					}
 				}
-			} 			
+			}
 			else if(newType.equals("assert_prep")){
 				//make 2nd type into "hypo"
 				struct2.set_type("hypo");
@@ -2641,7 +2682,45 @@ public class ThmP1 {
 		// found a grammar rule match, move on to next mx column
 		// *****actually, should keep going and keep scores!
 		// break;
+		return new EntityBundle(firstEnt, recentEnt, recentEntIndex);
+	}
+	
+	/**
+	 * Use as return type to wrap around recentEnt and firstEnt
+	 */
+	private static class EntityBundle{
+		
+		private Struct recentEnt;
+		private Struct firstEnt;
+		private int recentEntIndex;
+		
+		/**
+		 * @return the recentEnt
+		 */
+		public Struct getRecentEnt() {
+			return recentEnt;
+		}
 
+		/**
+		 * @return the firstEnt
+		 */
+		public Struct getFirstEnt() {
+			return firstEnt;
+		}
+
+		/**
+		 * @return the recentEntIndex
+		 */
+		public int getRecentEntIndex() {
+			return recentEntIndex;
+		}
+
+		
+		public EntityBundle(Struct firstEnt, Struct recentEnt, int recentEntIndex){
+			this.recentEnt = recentEnt;
+			this.firstEnt = firstEnt;
+			this.recentEntIndex = recentEntIndex;
+		}
 	}
 
 	/**
@@ -2653,10 +2732,9 @@ public class ThmP1 {
 	 * @param absorbingStruct
 	 * @param absorbedStruct
 	 */
-	private static void absorbStruct(List<List<StructList>> mx, Struct firstEnt, int i, int j, double newDownPathScore,
+	private static Struct absorbStruct(List<List<StructList>> mx, Struct firstEnt, int i, int j, double newDownPathScore,
 			Struct absorbingStruct, Struct absorbedStruct) {
-		Struct recentEnt;
-		int recentEntIndex;
+		Struct recentEnt = null;
 		//if(struct1.isStructA() && !struct2.isStructA()){
 			Struct newStruct = absorbingStruct.copy();				
 			//add as property
@@ -2671,10 +2749,10 @@ public class ThmP1 {
 				firstEnt = newStruct;
 			}
 			recentEnt = newStruct;
-			recentEntIndex = j;
 			newStruct.set_maxDownPathScore(newDownPathScore);
 			mx.get(i).get(j).add(newStruct);
 		//}
+			return recentEnt;
 	}
 
 	/**

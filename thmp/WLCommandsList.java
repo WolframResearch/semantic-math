@@ -146,9 +146,9 @@ public class WLCommandsList {
 				 new PBuilder("]") ));	
 		//WLCommandMapBuilder.put("is", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is|are|be, trigger",
 			//	"\\[Element]", "symb|ent|phrase, , true, TriggerMathObj" }));
-		WLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro", null, true), 
+		/*WLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro", null, true), 
 				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), new PBuilder("\\[Element]"),
-				new PBuilder("symb|ent|phrase", null, true, false, true) ));
+				new PBuilder("symb|ent|phrase", null, true, false, true) ));*/
 		
 		//WLCommandMapBuilder.put("derivative",
 			//	addCommand(new String[] { ", derivative, trigger", "Derivative[", "pre, of, false", "symb|ent, , true", "]" }));
@@ -183,9 +183,10 @@ public class WLCommandsList {
 		//WLCommandMapBuilder.put("is", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is|are|be, trigger",
 			//	"\\[Element]", "symb|ent|phrase, , true, TriggerMathObj" }));
 		WLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro", null, true), 
-				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), 
-				new PBuilder("\\[Element]"), new PBuilder("symb|ent|phrase", null, true, false, true) ));
-		
+				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), new PBuilder("\\[Element]"),
+				//negative term, to stop command if encountered
+				new PBuilder("adj", null, WLCommand.PosTermType.NEGATIVE),				
+				new PBuilder("symb|ent|phrase", null, true, false, true) ));
 		//e.g. "$X$ is connected"
 		//WLCommandMapBuilder.put("is", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is|are|be, trigger",
 			//"\\[HasProperty]", "adj, , true, TriggerMathObj" }));
@@ -343,6 +344,11 @@ public class WLCommandsList {
 			
 			PosTerm curPosTerm = curBuilder.build();
 			posList.add(curPosTerm);
+			
+			//term used to eliminate commands.
+			if(curPosTerm.isNegativeTerm()){				
+				continue;
+			}
 			
 			if(curPosTerm.isOptionalTerm()){
 				
@@ -566,4 +572,5 @@ public class WLCommandsList {
 	public static Multimap<String, String> triggerWordLookupMap() {
 		return triggerWordLookupMap;
 	}
+
 }

@@ -378,11 +378,13 @@ public class ThmP1Test {
 			st = "the group $G$ acts on the subgroup $H$ by conjugation";
 			st = "A valuation ring is Noetherian if and only if it is a discrete valuation ring or a field";
 			st = "If $x$ is a summable indexed family of vectors";
-			st = "if $R$ is commutative and $S$ is commutative, $S$ is abelian if $S$ is abelian";
 			st = "if $R$ is commutative and $S$ is commutative";
 			st = "if $R$ is a ring, $M$ is an $R$ module if $R$ is commutative";
-			//st = "$f$ map $x$ to $y$";
-			//st = "the map $f$ is linear";
+			st = "if $R$ is commutative and $S$ is commutative";
+			st = "if $R$ is commutative and $S$ is commutative, $S$ is abelian if $S$ is abelian";
+			
+			st = "the map $f$ is linear";
+			//st = "$f$ maps $x$ to $y$";
 			
 			//st = "$f$ maps $a$ to $b$";
 			//st = "$f$ map ring";
@@ -392,7 +394,7 @@ public class ThmP1Test {
 			//st = "Let $R$ be integral domain";
 			//st = "$k subset k' subset K$ is a field";
 			//st = "consider a ring such that field is separable algebraic and field is ring";
-			//st = "$k subset k' subset K$ is field";			
+			//st = "$k subset k' subset K$ is field";
 			//st = "$Z$ is a an open set in $X$";
 			//st = "it gives a group between field and ring";
 			//st = "field between field and ring";
