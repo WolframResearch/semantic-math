@@ -376,7 +376,7 @@ public class ThmP1Test {
 			st = "$C$ is an indexed family $x$ of morphisms";
 			st = "relatively prime polynomials";
 			st = "the group $G$ acts on the subgroup $H$ by conjugation";
-			st = "A valuation ring is Noetherian if and only if it is a discrete valuation ring or a field";
+			
 			st = "If $x$ is a summable indexed family of vectors";
 			st = "if $R$ is commutative and $S$ is commutative";
 			st = "if $R$ is a ring, $M$ is an $R$ module if $R$ is commutative";
@@ -385,7 +385,7 @@ public class ThmP1Test {
 			
 			st = "the map $f$ is linear";
 			//st = "$f$ maps $x$ to $y$";
-			
+			st = "A valuation ring is Noetherian if and only if it is a discrete valuation ring or a field";
 			//st = "$f$ maps $a$ to $b$";
 			//st = "$f$ map ring";
 			//st = "Group $G$ acts on space $X$";

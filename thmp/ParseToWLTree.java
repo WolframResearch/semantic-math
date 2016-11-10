@@ -124,15 +124,14 @@ public class ParseToWLTree {
 	 */
 	private static boolean findStructs(List<Struct> structDeque, WLCommand curCommand, 
 			boolean[] usedStructsBool, List<Struct> waitingStructList){
-		System.out.println(" ******* structDeque " + structDeque);
+		//System.out.println(" ******* structDeque " + structDeque);
 		List<PosTerm> posTermList = WLCommand.posTermList(curCommand);
 		int triggerWordIndex = WLCommand.triggerWordIndex(curCommand);
 		//start from the word before the trigger word
 		//iterate through posTermList
 		//start index for next iteration of posTermListLoop		
 		boolean curCommandSat = true;
-		int structDequeStartIndex = structDeque.size() - 1;
-		
+		int structDequeStartIndex = structDeque.size() - 1;		
 		
 		posTermListLoop: for(int i = triggerWordIndex - 1; i > -1; i--){
 			PosTerm curPosTerm = posTermList.get(i);			
@@ -244,6 +243,13 @@ public class ParseToWLTree {
 		return curCommandSat;
 	}
 	
+	
+	private static boolean findStructs2(List<Struct> structDeque, WLCommand curCommand, 
+			boolean[] usedStructsBool, List<Struct> waitingStructList){
+	
+		
+		return true;
+	}
 	/**
 	 * Searches through parse tree and matches with ParseStruct's.
 	 * Builds tree of WLCommands.
@@ -254,7 +260,7 @@ public class ParseToWLTree {
 	 * @param parsedSB StringBuilder. Don't actually need it here for now.
 	 * @param headStruct the nearest ParseStruct that's collecting parses
 	 * @param numSpaces is the number of spaces to print. Increment space if number is 
-	 * @param structList List of Struct's collected so far
+	 * @param structList List of Struct's collected so far, in dfs traversal order.
 	 */
 	public static void dfs(Struct struct, 
 			StringBuilder parsedSB, ParseStruct headParseStruct, int numSpaces,
@@ -340,51 +346,66 @@ public class ParseToWLTree {
 				//or until commands prior to triggerWordIndex are filled.
 				
 				//whether terms prior to trigger word are satisfied
-				boolean beforeTriggerSat = true;
+				//boolean beforeTriggerSat = true;
 				//list of structs waiting to be inserted to curCommand via addComponent.
 				//Temporary list instead of adding directly, since the terms prior need 
 				//to be added backwards (always add at beginning), and list will not be 
 				//added if !curCommandSat.
-				List<Struct> waitingStructList = new ArrayList<Struct>();
+				//List<Struct> waitingStructList = new ArrayList<Struct>();
 				//array of booleans to keep track of which deque Struct's have been used
-				boolean[] usedStructsBool = new boolean[structList.size()];
+				//boolean[] usedStructsBool = new boolean[structList.size()];
 
 				//first set the headStruct to struct
 				//WLCommand.set_headStruct(curCommand, struct);
 				//match the slots in posTermList before the trigger term with Structs in structList.
 				//Need to SKIP/rewire this (inefficient), just find and add at the same time!
-				beforeTriggerSat = findStructs(structList, curCommand, usedStructsBool, 
-						waitingStructList);
+				//beforeTriggerSat = findStructs(structList, curCommand, usedStructsBool, 
+					//	waitingStructList);
 				
 				//curCommand's terms before trigger word are satisfied. Add them to triggered WLCommand.
-				if(beforeTriggerSat){
+				if(true){
 					boolean curCommandSatWhole = false;
 					boolean hasOptionalTermsLeft = false;
 					boolean isComponentAdded = false;
+					boolean beforeTriggerSat = false;
 					//add Struct corresponding to trigger word
 					WLCommand.addTriggerComponent(curCommand, struct);
+					CommandSat commandSat = null;
 					
-					for(Struct curStruct : waitingStructList){
+					for(int i = structList.size()-1; i > -1; i--){
+						Struct curStruct = structList.get(i);
 						//see if the whole command is satisfied, not just the part before trigger word
 						//namely the trigger word is last word
 						boolean beforeTrigger = true;
 						//System.out.println("curCommandSatWhole*********"  +" "  + curStruct);
-						System.out.println("ADDING COMMAND for STRUCT " + curStruct + " for Command + " + curCommand);
-						CommandSat commandSat = WLCommand.addComponent(curCommand, curStruct, beforeTrigger);
+						System.out.println("ADDING COMMAND (before) for STRUCT " + curStruct + " for Command + " + curCommand);
+						commandSat = WLCommand.addComponent(curCommand, curStruct, beforeTrigger);
+						
 						curCommandSatWhole = commandSat.isCommandSat();		
 						//System.out.println("curCommandSatWhole " + curCommandSatWhole);
 						hasOptionalTermsLeft = commandSat.hasOptionalTermsLeft();
 						isComponentAdded |= commandSat.isComponentAdded();
+						
+						beforeTriggerSat = commandSat.beforeTriggerSat();
+						if(beforeTriggerSat){
+							break;
+						}
 					}					
 					
-					if(curCommandSatWhole && isComponentAdded){
-						
-						satisfiedCommandsList.add(curCommand);
-					}
-					
-					if(!curCommandSatWhole || hasOptionalTermsLeft){
-						
-						WLCommandList.add(curCommand);
+					if(commandSat != null){						
+						if(beforeTriggerSat){
+							//System.out.println("****got BEFORE as TRUE");
+							if(curCommandSatWhole && isComponentAdded){							
+								satisfiedCommandsList.add(curCommand);
+							}
+							
+							if(!curCommandSatWhole || hasOptionalTermsLeft){							
+								WLCommandList.add(curCommand);
+							}
+						}
+					}//trigger term was first term
+					else{						
+						WLCommandList.add(curCommand);						
 					}
 				}
 			}			
@@ -804,11 +825,11 @@ public class ParseToWLTree {
 				dfsCleanUp((Struct) struct.prev1());
 			}
 
-			if (struct.prev2() instanceof Struct) {				
+			if (struct.prev2NodeType().isTypeStruct()) {				
 				dfsCleanUp((Struct) struct.prev2());
 			}
 			
-		} else if (struct instanceof StructH) {
+		} else {
 
 			List<Struct> children = struct.children();
 			

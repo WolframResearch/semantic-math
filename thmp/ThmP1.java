@@ -12,7 +12,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -2397,7 +2396,7 @@ public class ThmP1 {
 			// struct1 should be of type StructH to receive a
 			// child
 			// assert ensures rule correctness
-			assert struct1 instanceof StructH;
+			assert !struct1.isStructA();
 
 			// get a (semi)deep copy of this StructH, since
 			// later-added children may not
@@ -2426,7 +2425,8 @@ public class ThmP1 {
 			if(childRelation == null){
 				//should not be null!
 				System.out.println("Inside ThmP1.reduce(), childRelation should not be null!");
-				return new EntityBundle(firstEnt, recentEnt, recentEntIndex);
+				throw new IllegalStateException("childRelation should not be null!");
+				//return new EntityBundle(firstEnt, recentEnt, recentEntIndex);
 			}
 			
 			// String childRelation = mx.get(k + 1).get(k +
@@ -2451,7 +2451,7 @@ public class ThmP1 {
 				}*/
 				 
 					//if struct2 is eg a prep, only want the ent in the prep
-					//to be added. Try to avoid the "instanceof" and cast.
+					//to be added.
 				Struct childToAdd = struct2;
 				if(struct2.type().equals("prep") && struct2.prev2() instanceof StructH){
 					childToAdd = (Struct)struct2.prev2();

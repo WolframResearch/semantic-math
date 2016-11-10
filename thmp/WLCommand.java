@@ -1069,7 +1069,9 @@ public class WLCommand {
 		return commandSB.toString();
 	}
 	
-	
+	/**
+	 * Contains data for different command satisfiability conditions.
+	 */
 	public static class CommandSat{
 		private boolean isCommandSat;
 		//whether has optional terms remainining
@@ -1078,6 +1080,8 @@ public class WLCommand {
 		//whether current command has been disqualified, used
 		//to prevent overshooting.
 		private boolean disqualified;
+		//satisfied before trigger
+		private boolean beforeTriggerSat;
 		
 		/**
 		 * @return the disqualified
@@ -1092,6 +1096,20 @@ public class WLCommand {
 			this.componentAdded = componentAdded;
 		}
 
+		public CommandSat(boolean isCommandSat, boolean hasOptionalTermsLeft, boolean componentAdded,
+				boolean beforeTriggerSat){
+			this(isCommandSat, hasOptionalTermsLeft, componentAdded);
+			this.beforeTriggerSat = beforeTriggerSat;
+		}
+		
+		public boolean beforeTriggerSat(){
+			return this.beforeTriggerSat;
+		}
+		
+		public void setBeforeTriggerSatToTrue(){
+			this.beforeTriggerSat = true;
+		}
+		
 		/**
 		 * Used to disqualify commands.
 		 * @param disqualified
@@ -1121,6 +1139,24 @@ public class WLCommand {
 			return hasOptionalTermsLeft;
 		}
 	}
+	
+	/**
+	 * Check if only trivial terms left in posTermList before curIndex.
+	 * Auxiliary to addComponent.
+	 * @param posTermList
+	 * @param curIndex
+	 * @return
+	 */
+	private static boolean onlyTrivialTermsBefore(List<PosTerm> posTermList, int curIndex){
+		for(int i = curIndex; i > -1; i--){
+			PosTerm posTerm = posTermList.get(i);
+			if(!posTerm.isNegativeTerm() && !posTerm.isOptionalTerm() && posTerm.positionInMap() > -1){
+				return false;
+			}
+		}
+		return true;
+	}
+	
 	/**
 	 * Adds new Struct to commandsMap.
 	 * @param curCommand	WLCommand we are adding PosTerm to
@@ -1191,9 +1227,11 @@ public class WLCommand {
 		}
 		
 		if(i == posTermListSz || i < 0){
+			
 			boolean hasOptionalTermsLeft = (curCommand.optionalTermsCount > 0);
 			return new CommandSat(curCommand.componentCounter < 1, hasOptionalTermsLeft, componentAdded);
 		}
+		
 		
 		PosTerm curPosTerm = posTermList.get(i);
 		commandComponent = curPosTerm.commandComponent;
@@ -1238,6 +1276,7 @@ public class WLCommand {
 			//commandComponentName = commandComponent.nameStr;
 		
 		}
+		
 		//System.out.println("GOT HERE****** newStruct " + newStruct);
 
 		//int addedComponentsColSz = commandsMap.get(commandComponent).size();
@@ -1261,6 +1300,11 @@ public class WLCommand {
 				//&& addedComponentsColSz < commandComponentCount
 				){
 			//System.out.println("#####inside addComponent, newStruct: " + newStruct);
+			
+			//check for parent, see if has same type & name etc, if going backwards.
+			if(before){
+				newStruct = findMatchingParent(commandComponentPosPattern, commandComponentNamePattern, newStruct);
+			}
 			
 			commandsMap.put(commandComponent, newStruct);
 			//sets the posTermStruct for the posTerm. No effect?!?***
@@ -1292,7 +1336,14 @@ public class WLCommand {
 			componentAdded = true;			
 			boolean hasOptionalTermsLeft = (curCommand.optionalTermsCount > 0);
 			
-			return new CommandSat(curCommand.componentCounter < 1, hasOptionalTermsLeft, componentAdded);
+			CommandSat commandSat = 
+					new CommandSat(curCommand.componentCounter < 1, hasOptionalTermsLeft, componentAdded);
+			
+			if(before && onlyTrivialTermsBefore(posTermList, i-1)){
+				commandSat.setBeforeTriggerSatToTrue();
+			}
+			
+			return commandSat;
 			
 		} else {
 			
@@ -1301,6 +1352,12 @@ public class WLCommand {
 				return new CommandSat(disqualified);
 			}*/
 
+			//before trigger, and non-optional component not found, so command before trigger 
+			//cannot be satisfied
+			/*if(i < 0 && before && !isOptionalTerm){
+				boolean disqualified = true;
+				return new CommandSat(disqualified);
+			}*/
 			/*System.out.println("Component not matching inside addComponent");
 			System.out.println("curCommand" + curCommand);
 			System.out.println("commandComponentName" + commandComponentName);
@@ -1339,6 +1396,55 @@ public class WLCommand {
 		*/
 	}
 
+	/**
+	 * Find parent/ancestors if they satisfy same type/name requirements, if going backwards
+	 * through the parse tree in dfs traversal order.
+	 * @param componentPosPattern
+	 * @param componentNamePattern
+	 * @param struct
+	 * @return
+	 */
+	private static Struct findMatchingParent(Pattern componentPosPattern, Pattern componentNamePattern,
+			Struct struct){
+		
+		Struct structToAdd = struct;
+		Struct structParent = struct.parentStruct();
+		
+		while(structParent != null){
+			
+			String structParentType = structParent.type();
+			String parentType = CONJ_DISJ_PATTERN.matcher(structParentType).find() ?
+					//curStructInDequeParent.type().matches("conj_.+|disj_.+") ?
+					structParentType.split("_")[1] : structParentType;
+					
+			String parentNameStr = "";
+			
+			if(structParent.isStructA()){
+				if(structParent.prev1NodeType().equals(NodeType.STR)){
+					parentNameStr = (String)structParent.prev1();
+				}
+			}else{
+				parentNameStr = structParent.struct().get("name");
+			}
+			
+			//should match both type and term. Get parent of struct, e.g. "log of f is g" should get all of
+			//"log of f", instead of just "f". I.e. get all of StructH.
+			
+			//System.out.println("\n^^^^^^^^" + ".name(): " + curCommandComponent.name() + " parentStr: " + parentNameStr+" type " +
+			//componentType + " parentType " + parentType);						
+			if(componentNamePattern.matcher(parentNameStr).find()								
+					//parentNameStr.matches(curCommandComponent.nameStr()) 
+					&& componentPosPattern.matcher(parentType).find()){
+				
+				structToAdd = structParent;
+				structParent = structParent.parentStruct();
+			}else{
+				break;
+			}
+		}
+		return structToAdd;
+	}
+	
 	/**
 	 * disqualify curCommand if encountering additional components of a type that's been 
 	 * satisfied for curCommand, to avoid overreaching commands, i.e. skip nontrivial terms
