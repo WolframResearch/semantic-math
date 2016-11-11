@@ -18,13 +18,33 @@ public class ParseState {
 	//tokenized input list
 	private List<Struct> tokenList;
 	
+	//parseStruct, for layering built WLCommands
+	private ParseStruct headParseStruct;
+	
+	//current parse struct, somewhere down the tree from headParseStruct
+	private ParseStruct curParseStruct;
+	
+	/**
+	 * @return the curParseStruct
+	 */
+	public ParseStruct getCurParseStruct() {
+		return curParseStruct;
+	}
+
+	/**
+	 * @param curParseStruct the curParseStruct to set
+	 */
+	public void setCurParseStruct(ParseStruct curParseStruct) {
+		this.curParseStruct = curParseStruct;
+	}
+
 	/**
 	 * @return the tokenList
 	 */
 	public List<Struct> getTokenList() {
 		return tokenList;
 	}
-
+	
 	/**
 	 * @param tokenList the tokenList to set
 	 */
@@ -32,6 +52,20 @@ public class ParseState {
 		this.tokenList = tokenList;
 	}
 
+	/**
+	 * @return 
+	 */
+	public ParseStruct getHeadParseStruct() {
+		return headParseStruct;
+	}
+	
+	/**
+	 * @return the tokenList
+	 */
+	public void setHeadParseStruct(ParseStruct parseStruct) {
+		this.headParseStruct = parseStruct;
+	}
+	
 	/**
 	 * @return the recentEnt
 	 */
@@ -59,7 +93,5 @@ public class ParseState {
 	public void setRecentAssert(Struct recentAssert) {
 		this.recentAssert = recentAssert;
 	}
-	
-	
 	
 }

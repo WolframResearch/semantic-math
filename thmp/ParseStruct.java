@@ -1,5 +1,9 @@
 package thmp;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 
@@ -7,65 +11,80 @@ import com.google.common.collect.ListMultimap;
  * ParseStruct is a structure in the parse, can be 
  * STRUCT -- MathematicalStructure.
  * THM, HYP, DEF, PROP
- * Generic type T could be ParseStruct or Struct, ParseStruct
- * if overall head (eg MathThm), Struct if leaf (e.g. Restriction)
  * 
  * @author yihed
  */
 public class ParseStruct {
-	//enum
+	//enum for type, e.g. "HYP", "STM", etc.
 	private ParseStructType componentType;
-	//map of structures such as qualifyingobject, quantifying variables, 
-	//the keys are enums!
+	//map of structures such as qualifying object, quantifying variables. 
+	//The keys are enums. Should preserve keys as well!
 	private ListMultimap<ParseStructType, ParseStruct> parseStructMap;
-	//map of Structs
-	//**might not be used
-	private ListMultimap<ParseStructType, Struct> structMap;
+	//map of Structs, i.e. heads of statements. 
 	//pointer to head Struct that leads this ParseStruct
-	private Struct headStruct;
+	//private Struct headStruct;
+	//structs on this layer of the tree.
+	private List<Struct> structList;
+
+	String WLCommandStr;
 	
-	//name of thm/hyp etc. Some ParseStructs don't need a name
-	private String name;
+	/**
+	 * @return the structList, list of structs associated with this 
+	 * layer.
+	 */
+	public List<Struct> getStructList() {
+		return structList;
+	}
+
+	/**
+	 * Adds additional struct to the structList.
+	 */
+	public void addStruct(Struct newStruct) {
+		this.structList.add(newStruct);
+	}
 	
-	public ParseStruct(ParseStructType type, String name, Struct headStruct){
+	/**
+	 * @return the wLCommandStr
+	 */
+	public String getWLCommandStr() {
+		return WLCommandStr;
+	}
+
+	/**
+	 * @param wLCommandStr the wLCommandStr to set
+	 */
+	public void setWLCommandStr(String wLCommandStr) {
+		WLCommandStr = wLCommandStr;
+	}
+
+	//the parent ParseStruct
+	private ParseStruct parentParseStruct;
+	
+	public ParseStruct(ParseStructType type, Struct headStruct){
 		this.componentType = type;
-		this.name = name;
 		this.parseStructMap = ArrayListMultimap.create();
-		this.structMap = ArrayListMultimap.create();
-		this.headStruct = headStruct;
-		
+		this.structList = new ArrayList<Struct>();
+		this.structList.add(headStruct);		
 		//how about just point to the same tree?
 		//this.map = ArrayListMultimap.create(subParseTree);
 	}
 	
-	public ParseStruct(ParseStructType type, Struct headStruct){
-		this(type, null, headStruct);
-	}
-	
-	public ParseStruct(Struct headStruct){
-		this(null, null, headStruct);
-	}
-	
-	public void addToStructMap(ParseStructType type, Struct struct){
-		this.structMap.put(type, struct);
-	}
-	
 	/**
-	 * 
 	 * @param type
 	 * @param subStruct	Struct to be added to this ParseStruct 
 	 */
-	public void addToSubtree(ParseStructType type, ParseStruct subStruct){
-		this.parseStructMap.put(type, subStruct);
+	public void addToSubtree(ParseStructType type, ParseStruct subParseStruct){
+		this.parseStructMap.put(type, subParseStruct);
 	}
 	
-	public String name(){
-		return this.name;
+	public ParseStruct parentParseStruct(){
+		return this.parentParseStruct;
 	}
 	
-	public Struct headStruct(){
-		return this.headStruct;
+	public void set_parentParseStruct(ParseStruct parent){
+		this.parentParseStruct = parent;
 	}
+	
 	
 	public ParseStructType type(){
 		return this.componentType;
@@ -73,6 +92,25 @@ public class ParseStruct {
 
 	public void set_type(ParseStructType type){
 		this.componentType = type;
+	}
+	
+	@Override
+	public String toString(){
+		StringBuilder sb = new StringBuilder();
+		return this.toString(sb);
+	}
+	
+	private String toString(StringBuilder sb){
+		//recursively call toString
+		for(Map.Entry<ParseStructType, ParseStruct> entry : parseStructMap.entries()){
+			sb.append(entry.getKey().toString() + ". ");
+		}
+		
+		for(Struct struct : structList){
+			sb.append(struct + "; ");
+		}
+		
+		return sb.toString();
 	}
 	
 }

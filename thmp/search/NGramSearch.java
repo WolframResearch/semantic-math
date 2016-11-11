@@ -336,7 +336,9 @@ public class NGramSearch {
 	public static void main(String[] args){
 		//System.out.println(CollectThm.get_wordsScoreMapNoAnno());
 		boolean write2gramsToFile = false;
-		if(write2gramsToFile) write2gramsToFile(TwoGramSearch.twoGramsMap);
+		if(write2gramsToFile){ 
+			write2gramsToFile(TwoGramSearch.twoGramsMap);		
+		}
 	}
 	
 }

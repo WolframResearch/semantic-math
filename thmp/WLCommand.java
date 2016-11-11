@@ -1046,7 +1046,7 @@ public class WLCommand {
 			}
 		}
 		
-		System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
+		//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
 		if(DEBUG){
 			System.out.println("\n CUR COMMAND: " + curCommand + " ");
 			System.out.print("BUILT COMMAND: " + commandSB);

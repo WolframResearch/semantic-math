@@ -49,8 +49,7 @@ public class ThreeGramSearch {
 	private static final String[] ADDITIONAL_THREE_GRAMS = new String[]{"local ring", "local field"};
 	// name of two gram data file containing additional 2-grams that should be included. These don't have
 	//frequencies associated with them.
-	private static final String THREE_GRAM_DATA_FILESTR = "src/thmp/data/threeGramData.txt";
-	
+	private static final String THREE_GRAM_DATA_FILESTR = "src/thmp/data/threeGramData.txt";	
 	
 	//map of maps containing first words of 2 grams as keys, and maps of 2nd words and their counts as values
 	private static final Map<String, Map<String, Integer>> twoGramFreqMap = NGramSearch.get_nGramMap();

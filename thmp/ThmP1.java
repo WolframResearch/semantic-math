@@ -383,8 +383,6 @@ public class ThmP1 {
 				pos = "adj";
 				
 			}
-		}else{
-			
 		}
 		return pos;
 	}
@@ -2008,7 +2006,8 @@ public class ThmP1 {
 				span = dfs(uHeadStruct, parsedSB, span);
 				//now get the WL form build from WLCommand's
 				//should pass in the wlSB, instead of creating one anew each time. <--It's ok.
-				StringBuilder wlSB = treeTraversal(uHeadStruct, parsedPairMMapList, curStructContextvec, span);
+				StringBuilder wlSB = treeTraversal(uHeadStruct, parsedPairMMapList, curStructContextvec, span,
+						parseState);
 				contextVecList.add(curStructContextvec);
 				
 				System.out.println("+++Previous long parse: " + parsedSB);
@@ -2104,7 +2103,8 @@ public class ThmP1 {
 					parsedSB.append("; ");
 				}
 				
-				StringBuilder wlSB = treeTraversal(kHeadStruct, parsedPairMMapList, curStructContextvec, span);
+				StringBuilder wlSB = treeTraversal(kHeadStruct, parsedPairMMapList, curStructContextvec, 
+						span, parseState);
 				longFormParsedPairList.add(new ParsedPair(parsedSB.toString(), totalScore, "long"));
 			}
 			
@@ -2273,18 +2273,29 @@ public class ThmP1 {
 	 * by matching commands. Returns
 	 * string representation of the parse tree. Tree uses WLCommands.
 	 * @param uHeadStruct
+	 * @param parseState current parseState
 	 * @return LongForm parse
 	 */
 	private static StringBuilder treeTraversal(Struct uHeadStruct, List<Multimap<ParseStructType, ParsedPair>> parsedPairMMapList,
-			int[] curStructContextVec, int span) {
+			int[] curStructContextVec, int span, ParseState parseState) {
 		
 		StringBuilder parseStructSB = new StringBuilder();
 		ParseStructType parseStructType = ParseStructType.getType(uHeadStruct);
-		ParseStruct headParseStruct = new ParseStruct(parseStructType, "", uHeadStruct);
+		ParseStruct headParseStruct;
+		
+		if(null == parseState.getHeadParseStruct()){
+			headParseStruct = new ParseStruct(parseStructType, uHeadStruct);
+			parseState.setHeadParseStruct(headParseStruct);
+		}else{
+			headParseStruct = parseState.getHeadParseStruct();
+		}
+		
+		parseState.setCurParseStruct(headParseStruct);
+		
 		//whether to print the commands in tiers with the spaces in subsequent lines.
 		boolean printTiers = false;
 		//builds the parse tree by matching triggered commands. 
-		ParseToWLTree.dfs(uHeadStruct, parseStructSB, headParseStruct, 0, printTiers);
+		ParseToWLTree.dfs(uHeadStruct, parseStructSB, 0, printTiers);
 		System.out.println("\n DONE ParseStruct DFS  + parseStructSB:" + parseStructSB + "  \n");
 		StringBuilder wlSB = new StringBuilder();
 		/**
@@ -2296,10 +2307,11 @@ public class ThmP1 {
 		//length is total number of terms in corpus, i.e. row dimension in term-document matrix in search
 		//int[] curStructContextVec = new int[TriggerMathThm2.keywordDictSize()];
 		
-		//fills the parseStructMap and produces String representation		
+		//fills the parseStructMap and produces String representation, collect commands built above.	
 		boolean contextVecConstructed = false;
-		contextVecConstructed = ParseToWLTree.dfs(parseStructMap, uHeadStruct, wlSB, curStructContextVec, true,
-				contextVecConstructed);
+		contextVecConstructed = ParseToWLTree.collectCommandsDfs(parseStructMap, uHeadStruct, wlSB, curStructContextVec, true,
+				contextVecConstructed, parseState);
+		
 		if(!contextVecConstructed){
 			ParseTreeToVec.tree2vec(uHeadStruct, curStructContextVec);
 		}
