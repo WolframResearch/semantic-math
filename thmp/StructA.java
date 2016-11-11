@@ -240,6 +240,7 @@ public class StructA<A, B> extends Struct{
 	 * @param includeType
 	 * @param curCommand Command that the returned String is built towards.
 	 * curCommand is null if this struct should not be counted towards commandNumUnits.
+	 * Should only be called during building command, WLCommand.build()!
 	 * @return
 	 */
 	@Override
@@ -253,12 +254,15 @@ public class StructA<A, B> extends Struct{
 			//wrapperListSz should be > 0, since list is created when first wrapper is added
 			
 			WLCommandWrapper curWrapper = WLCommandWrapperList.get(wrapperListSz - 1);
-			if(curCommand != null){
+			if(curWrapper != null){
 				int commandNumUnits = WLCommand.commandNumUnits(curWrapper.WLCommand());
 				if(!this.type.equals("pre")){
 					WLCommand.increment_commandNumUnits(curCommand, commandNumUnits);
 				}
+				//this Struct is now a subcomponent of a bigger command that's built
+				//WLCommand.increment_structsWithOtherHeadCount(curWrapper.WLCommand());
 			}
+			
 			return curWrapper.WLCommandStr();			
 		}		
 		

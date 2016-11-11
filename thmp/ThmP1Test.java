@@ -379,13 +379,18 @@ public class ThmP1Test {
 			st = "A valuation ring is Noetherian if and only if it is a discrete valuation ring or a field";	
 			st = "If $x$ is a summable indexed family of vectors";
 			st = "if $R$ is commutative and $S$ is commutative";
-			st = "if $R$ is a ring, $M$ is an $R$ module if $R$ is commutative";
+			
 			st = "if $R$ is commutative and $S$ is commutative";
-			st = "if $R$ is commutative and $S$ is commutative, $S$ is abelian if $S$ is abelian";
 			
 			st = "the map $f$ is linear";
 			//st = "$f$ maps $x$ to $y$";
-			st = "if $R$ is a ring, $R$ is commutative if $S$ is commutative";
+			st = "if $R$ is a ring, if $S$ is commutative then $R$ is commutative";
+			st = "if $R$ is commutative and $S$ is commutative, $S$ is abelian if $T$ is abelian";
+			st = "if $R$ is commutative and $S$ is commutative, if $T$ is abelian then $S$ is abelian";
+			st = "if $R$ is a ring, $M$ is an $R$ module if $R$ is commutative";
+			st = "Let $R to S$ be a ring of finite presentation.";
+			//st = "if $R$ is commutative, $S$ is abelian if $T$ is abelian";
+
 			//st = "$f$ maps $a$ to $b$";
 			//st = "$f$ map ring";
 			//st = "Group $G$ acts on space $X$";
@@ -432,12 +437,13 @@ public class ThmP1Test {
 
 			//System.out.println("from TexConverter: " + TexConverter.convert("let $m \\subset M$ be an element"));			
 			
-			strAr = ThmP1.preprocess(st);
 			
 			List<int[]> parseContextVecList = new ArrayList<int[]>();
 			
+			strAr = ThmP1.preprocess(st);
 			
 			ParseState parseState = new ParseState();
+			
 			for(int i = 0; i < strAr.length; i++){
 				//alternate commented out line to enable tex converter
 				//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim()) ));

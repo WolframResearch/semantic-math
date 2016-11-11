@@ -857,13 +857,12 @@ public class WLCommand {
 				// null either				
 				int wrapperListSz = headStructWrapperList.size();	
 				//get the last-added command. <--should iterate and add count to all previous commands
-				//with this wrapper? <--actually should update current wrapper, since triggered later.
-				//<--but could also mean wider span, which we want, e.g. "log of deriv. of f"
+				//with this wrapper? <--command building goes inside-out
 				WLCommand lastWrapperCommand = headStructWrapperList.get(wrapperListSz-1).WLCommand();	
 				// increment the headCount of the last wrapper object
 				lastWrapperCommand.structsWithOtherHeadCount++;
 				//System.out.println("Wrapper command struct " + headStruct);
-				//System.out.println("Wrapper Command to update: " + lastWrapperCommand);
+				//System.out.println("***Wrapper Command to update: " + lastWrapperCommand);
 			}
 			prevStructHeaded = true;			
 		}
@@ -1209,11 +1208,18 @@ public class WLCommand {
 		//String commandComponentName;
 		int posTermListSz =  posTermList.size();
 		
-		int i = lastAddedComponentIndex;		
+		int i = lastAddedComponentIndex;
+		//short-circuit if trigger is the first nontrivial term.
+		if(before && onlyTrivialTermsBefore(posTermList, i-1)){
+			
+			return new CommandSat(false, curCommand.optionalTermsCount > 0, false, true);
+		}
+		
 		//if the first time we add a component that's after triggerWordIndex.
 		if(!before && lastAddedComponentIndex < triggerWordIndex){			
 			i = triggerWordIndex;
 		}
+		
 		//if(lastAddedComponentIndex != curCommand.triggerWordIndex){
 		
 		//determine what the next-to-be-added commandComponent is.
@@ -1611,9 +1617,9 @@ public class WLCommand {
 		return curCommand.structsWithOtherHeadCount;
 	}
 	
-	/*public static void set_structsWithOtherHeadCount(WLCommand curCommand, int newCount){
-		 curCommand.structsWithOtherHeadCount = newCount;
-	}*/
+	public static void increment_structsWithOtherHeadCount(WLCommand curCommand){
+		 curCommand.structsWithOtherHeadCount++;
+	}
 	
 	public static int totalComponentCount(WLCommand curCommand){
 		return curCommand.totalComponentCount;

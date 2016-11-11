@@ -21,7 +21,7 @@ public enum ParseStructType {
 	// thm and prop are prety much the same (in terms of structure)
 	// NONE means shoud retain original type
 	//difference between HYP and RES??
-	HYP, HYP_iff, PPT, OBJ, RES, STM, NONE;
+	HYP, HYP_iff, PPT, OBJ, STM, NONE;
 	
 	/**
 	 * Map of which String maps to which ParseStructType enum.
@@ -36,14 +36,23 @@ public enum ParseStructType {
 		//should be as specific as possible. E.g. use "for all" rather than "hyp"
 		ImmutableListMultimap.Builder<ParseStructType, String> builder =
 				new ImmutableListMultimap.Builder<ParseStructType, String>();
-		builder.putAll(HYP, Arrays.asList("letbe", "hypo", "partient", "if", "If"));
+		builder.putAll(HYP, Arrays.asList("letbe", "hypo", "partient", "if", "If", "where", "assuming", "Cond"));
 		builder.putAll(HYP_iff, Arrays.asList("if and only if"));
-		builder.putAll(RES, Arrays.asList("where", "assuming"));
 		builder.putAll(OBJ, Arrays.asList("ent", "MathObj"));
-		builder.putAll(RES, Arrays.asList("Cond"));
 		builder.putAll(STM, Arrays.asList("then"));
 		
 		StringParseStructTypeMap = builder.build().inverse();	
+	}
+	
+	/**
+	 * Whether the type is a hypothesis type.
+	 * @return
+	 */
+	public boolean isHypType(){
+		if(this.equals(HYP) || this.equals(HYP_iff)){
+			return true;
+		}
+		return false;
 	}
 	
 	/**
@@ -53,7 +62,7 @@ public enum ParseStructType {
 	 * @return
 	 */
 	public static ParseStructType getType(Struct struct) {
-		
+		//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
 		String typeStr = struct.type();
 		
 		ParseStructType type;		

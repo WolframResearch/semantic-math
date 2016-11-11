@@ -33,8 +33,48 @@ public abstract class Struct {
 	//want to exclude "by conjugation" from middle term. Must clear this flag for new dfs walkdowns.
 	//Should only set if command is satisfied.
 	private boolean usedInOtherCommandComponent;
-
+	
+	//whether this struct has a hypothesis construct (if..., assume...)
+	//down the tree. Used for constructing ParseStruct tree.
+	private boolean containsHyp;
+	
 	private Article article = Article.NONE;
+	
+	/**
+	 * Should be set during dfs when building up parse tree and commands.
+	 * @param containsHyp Whether this struct has a hypothesis construct (if..., assume...)
+	 * down the tree. Used for constructing ParseStruct tree.
+	 */
+	public void setContainsHyp(boolean containsHyp){
+		this.containsHyp = containsHyp;
+	}
+	
+	/**
+	 * Whether this struct has a hypothesis construct (if..., assume...)
+	 * down the tree. Used for constructing ParseStruct tree.
+	 * @return
+	 */
+	public boolean containsHyp(){
+		return this.containsHyp;
+	}
+	
+	/**
+	 * Does this tree contain 
+	 * Avg performance is O(log n), where n is number of nodes in parse tree,
+	 * with small constant factor.
+	 * Look through ancestors.
+	 * @return
+	 */
+	public boolean parseTreeContainsHyp(){
+		Struct curStruct = this;
+		while(curStruct != null){
+			if(curStruct.containsHyp()){
+				return true;
+			}
+			curStruct = curStruct.parentStruct();
+		}
+		return false;
+	}
 	
 	public void setArticle(Article article){
 		this.article = article;

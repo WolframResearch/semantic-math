@@ -1,6 +1,12 @@
 package thmp;
 
+import java.util.Arrays;
 import java.util.List;
+
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+
+import thmp.ParseToWLTree.WLCommandWrapper;
 
 /**
  * Captures state of the parse, such as recent entities used (recentEnt).
@@ -24,6 +30,47 @@ public class ParseState {
 	//current parse struct, somewhere down the tree from headParseStruct
 	private ParseStruct curParseStruct;
 	
+	//punctuation at end of current parse segment, segments are separated
+	//by punctuations
+	private String punctuation;	
+
+	//waiting WLCommandWrapper map on deck, waiting to be added. Necessary 
+	//because don't know if need to add to next logic layer, or to current
+	//layer, until the entire tree is read.
+	private Multimap<ParseStructType, WLCommandWrapper> waitingWrapperMMap;
+	
+	public ParseState(){
+		this.waitingWrapperMMap = ArrayListMultimap.create();
+	}	
+
+	/**
+	 * punctuation at end of current parse segment, segments are separated
+	 * by punctuations.
+	 * @return the punctuation
+	 */
+	public String getAndClearCurPunctuation() {
+		String punctuationCopy = punctuation;
+		this.punctuation = null;
+		return punctuationCopy;
+	}
+
+	/**
+	 * @param punctuation the punctuation to set
+	 */
+	public void setPunctuation(String punctuation) {
+		this.punctuation = punctuation;
+	}
+	
+	public void addParseStructWrapperPair(ParseStructType type, WLCommandWrapper wrapper){
+		this.waitingWrapperMMap.put(type, wrapper);
+	}
+	
+	public Multimap<ParseStructType, WLCommandWrapper> retrieveAndClearWrapperMMap(){
+		Multimap<ParseStructType, WLCommandWrapper> mapCopy = ArrayListMultimap.create(this.waitingWrapperMMap);
+		this.waitingWrapperMMap = ArrayListMultimap.create();
+		return mapCopy;		
+	}
+	
 	/**
 	 * @return the curParseStruct
 	 */
@@ -35,6 +82,7 @@ public class ParseState {
 	 * @param curParseStruct the curParseStruct to set
 	 */
 	public void setCurParseStruct(ParseStruct curParseStruct) {
+		//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
 		this.curParseStruct = curParseStruct;
 	}
 

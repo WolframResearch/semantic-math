@@ -66,7 +66,7 @@ public class ParseToWLTree {
 	 * @param headParseStruct
 	 * @param numSpaces
 	 */
-	public static void dfs(Struct struct, StringBuilder parsedSB, //ParseStruct headParseStruct, 
+	public static void buildCommandsDfs(Struct struct, StringBuilder parsedSB, //ParseStruct headParseStruct, 
 			int numSpaces, boolean printTiers) {
 		structDeque = new ArrayList<Struct>();
 		WLCommandList = new ArrayList<WLCommand>();
@@ -271,10 +271,13 @@ public class ParseToWLTree {
 				|| (struct.parentStruct() != null && !struct.parentStruct().type().matches("conj.*|disj.*"))) {
 			
 			Iterator<WLCommand> WLCommandListIter = WLCommandList.iterator();
-			while (WLCommandListIter.hasNext()) {
+			int WLCommandListSz = WLCommandList.size();
+			for (int i = WLCommandListSz-1; i > -1; i--) {
+				
 				WLCommand curCommand = WLCommandListIter.next();
+				curCommand = WLCommandList.get(i);
 				boolean beforeTriggerIndex = false;
-				System.out.println("ADDING STRUCT " + struct + " for command " + curCommand);
+				//System.out.println("ADDING STRUCT " + struct + " for command " + curCommand);
 				CommandSat commandSat = WLCommand.addComponent(curCommand, struct, beforeTriggerIndex);
 				
 				// if commandSat, remove all the waiting, triggered commands for
@@ -357,14 +360,16 @@ public class ParseToWLTree {
 				//curCommand's terms before trigger word are satisfied. Add them to triggered WLCommand.
 				if(true){
 					boolean curCommandSatWhole = false;
-					boolean hasOptionalTermsLeft = false;
+					//boolean hasOptionalTermsLeft = false;
 					boolean isComponentAdded = false;
 					boolean beforeTriggerSat = false;
 					//add Struct corresponding to trigger word
 					WLCommand.addTriggerComponent(curCommand, struct);
+					
 					CommandSat commandSat = null;
 					
 					for(int i = structList.size()-1; i > -1; i--){
+						
 						Struct curStruct = structList.get(i);
 						//see if the whole command is satisfied, not just the part before trigger word
 						//namely the trigger word is last word
@@ -375,7 +380,7 @@ public class ParseToWLTree {
 						
 						curCommandSatWhole = commandSat.isCommandSat();		
 						//System.out.println("curCommandSatWhole " + curCommandSatWhole);
-						hasOptionalTermsLeft = commandSat.hasOptionalTermsLeft();
+						//hasOptionalTermsLeft = commandSat.hasOptionalTermsLeft();
 						isComponentAdded |= commandSat.isComponentAdded();
 						
 						beforeTriggerSat = commandSat.beforeTriggerSat();
@@ -383,22 +388,22 @@ public class ParseToWLTree {
 							break;
 						}
 					}					
-					
-					if(commandSat != null){						
-						if(beforeTriggerSat){
-							//System.out.println("****got BEFORE as TRUE");
-							if(curCommandSatWhole && isComponentAdded){							
-								satisfiedCommandsList.add(curCommand);
-							}
-							
-							if(!curCommandSatWhole || hasOptionalTermsLeft){							
-								WLCommandList.add(curCommand);
-							}
+					//System.out.println("*********COMMAND before trigger satisfied "+ beforeTriggerSat+ " " + curCommand);
+					//if(commandSat != null){						
+					if(beforeTriggerSat){
+						//System.out.println("****got BEFORE as TRUE");
+						if(curCommandSatWhole && isComponentAdded){							
+							satisfiedCommandsList.add(curCommand);
+						}else{							
+							//if(!curCommandSatWhole || hasOptionalTermsLeft){
+							WLCommandList.add(curCommand);
 						}
-					}//trigger term was first term
-					else{						
-						WLCommandList.add(curCommand);						
 					}
+					/*}//trigger term was first term
+					else{		
+						
+						WLCommandList.add(curCommand);						
+					}*/
 				}
 			}			
 			isTrigger = true;			
@@ -661,9 +666,22 @@ public class ParseToWLTree {
 			WLCommandWrapper curWrapper = structWrapperList.get(i);
 			WLCommand curCommand = curWrapper.wlCommand;
 			
+			//parent might have been used already, e.g. if A and B, parent of
+			//A and B is "conj_..."
+			boolean shouldAppendCommandStr = true;
+			Struct parentStruct = struct.parentStruct();
+			if(parentStruct != null){
+				if(CONJ_DISJ_PATTERN.matcher(parentStruct.type()).find()
+						&& parentStruct.WLCommandStrVisitedCount() > 0){
+					shouldAppendCommandStr = false;
+				}
+			}
 			//right now that threshold is: all components must be included.
 			// //Now: 1 component can have other head
-			if(WLCommand.structsWithOtherHeadCount(curCommand) < 1){
+			if(WLCommand.structsWithOtherHeadCount(curCommand) < 1
+					&& shouldAppendCommandStr
+					//&& struct.WLCommandStrVisitedCount() == 0
+					){
 				//System.out.println("wrapperList Size" + structWrapperListSz);
 				//System.out.println(struct.WLCommandStr());
 				//parsedSB.append(struct.WLCommandStr());
@@ -678,6 +696,22 @@ public class ParseToWLTree {
 				}
 				//get the ParseStruct based on type
 				ParseStructType parseStructType = ParseStructType.getType(struct);
+				//see if parent's type is "HYP or HYP_iff"
+				//Struct parentStruct = struct.parentStruct();
+				/*if(parentStruct != null){										
+					ParseStructType parentParseStructType = ParseStructType.getType(parentStruct);
+					Struct grandparentStruct = parentStruct.parentStruct();
+					if(parentParseStructType.isHypType()){
+						parseStructType = parentParseStructType;
+					}//conj_assert[if[...], if[...]]
+					else if(CONJ_DISJ_PATTERN.matcher(parentStruct.type()).find() 
+							&& grandparentStruct != null){
+						ParseStructType grandParentParseType = ParseStructType.getType(grandparentStruct);
+						if(grandParentParseType.isHypType()){
+							parseStructType = grandParentParseType;
+						}
+					}
+				}*/
 				ParsedPair pair = new ParsedPair(curWrapper.wlCommandStr, struct.maxDownPathScore(), 
 						struct.numUnits(), WLCommand.commandNumUnits(curCommand));
 				//partsMap.put(type, curWrapper.WLCommandStr);	
@@ -685,17 +719,23 @@ public class ParseToWLTree {
 				
 				//determine whether to create new child ParseStruct, or add to current
 				//layer
-				if(checkParseStructType(parseStructType)){
-					ParseStruct childParseStruct = new ParseStruct(parseStructType, struct);
+				/*if(checkParseStructType(parseStructType)){
+					
+					ParseStruct childParseStruct = new ParseStruct();
 					//append child to headParseStruct
 					curParseStruct.addToSubtree(parseStructType, childParseStruct);
 					childParseStruct.set_parentParseStruct(curParseStruct);
+					childParseStruct.addParseStructWrapper(parseStructType, curWrapper);
+					//this struct already in hyp, don't create additional layers.
 					//set the reference of the current struct to point to the newly created struct
 					parseState.setCurParseStruct(childParseStruct);
+					//System.out.println("curParseStruct " + childParseStruct);
+					//throw new IllegalStateException("Created new struct!");
 					
 				}else{
-					curParseStruct.addStruct(struct);
-				}
+					curParseStruct.addParseStructWrapper(parseStructType, curWrapper);					
+				}*/
+				parseState.addParseStructWrapperPair(parseStructType, curWrapper);
 				
 				//System.out.println("partsMap being put in: " + curWrapper.WLCommandStr);
 				break;

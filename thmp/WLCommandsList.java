@@ -281,9 +281,7 @@ public class WLCommandsList {
 		// function with radius of convergence
 		
 		// logical operators
-		//WLCommandMapBuilder.put("and",
-				//addCommand(new String[] { "Subset, WL, true", "[", "pre, of, false", "symb|ent, , true", "]" }));
-
+		
 		WLCommandMap = WLCommandMapBuilder.build();
 
 	}

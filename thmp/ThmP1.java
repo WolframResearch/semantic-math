@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 
+import thmp.ParseToWLTree.WLCommandWrapper;
 import thmp.Struct.Article;
 import thmp.Struct.NodeType;
 import thmp.search.NGramSearch;
@@ -104,6 +105,8 @@ public class ThmP1 {
 	//move to initializer!
 	private static final String[] NO_FUSE_ENT = new String[]{"map"};
 	private static final Set<String> noFuseEntSet;
+	private static final Pattern PUNCTUATION_PATTERN = Pattern.compile("(\\.|;|,|!|:)");
+	
 	//private static int[] parseContextVector;
 	//private static int parseContextVectorSz;
 	//list of context vectors, need list instead of single vec, for non-spanning parses
@@ -380,8 +383,7 @@ public class ThmP1 {
 				(firstWord.substring(firstWordLen-2, firstWordLen).equals("ly") ? true : false);
 			//adverb past-participle pair, e.g "finitely generated"
 			if (isFirstWordAdverb && nGram.substring(nGramLen - 2, nGramLen).equals("ed")) {
-				pos = "adj";
-				
+				pos = "adj";				
 			}
 		}
 		return pos;
@@ -412,6 +414,26 @@ public class ThmP1 {
 		}
 	}
 	
+	private static void setParseStateFromPunctuation(String punctuation, ParseState parseState){
+		
+		ParseStruct curParseStruct = parseState.getCurParseStruct();
+		
+		if(curParseStruct != null){
+			ParseStruct parentParseStruct = curParseStruct.parentParseStruct();
+			switch(punctuation){
+				case ".":
+					
+					parseState.setCurParseStruct(parentParseStruct);
+					break;
+				case "!":
+					parseState.setCurParseStruct(parentParseStruct);
+					break;
+				default:
+						
+			}
+		}
+	}
+	
 	/**
 	 * Tokenizes by splitting into comma-separated strings
 	 * 
@@ -431,7 +453,20 @@ public class ThmP1 {
 	 * @param parseState current state of the parse.
 	 * @return List of Struct's
 	 */
-	public static ParseState tokenize(String sentence, ParseState parseState)  {
+	public static ParseState tokenize(String sentence, ParseState parseState){
+		
+		//check for punctuation, set parseState to reflect punctuation.
+		int sentenceLen = sentence.length();
+		String lastChar = String.valueOf(sentence.charAt(sentenceLen-1));
+		Matcher punctuationMatcher = PUNCTUATION_PATTERN.matcher(lastChar);
+		
+		if(punctuationMatcher.find()){
+			sentence = sentence.substring(0, sentenceLen-1);
+			parseState.setPunctuation(punctuationMatcher.group(1));
+			/*if(parseState != null){
+				setParseStateFromPunctuation(punctuationMatcher.group(1), parseState);
+			}*/
+		}
 		
 		// .....change to arraylist of Pairs, create Pair class
 		// LinkedHashMap<String, String> linkedMap = new LinkedHashMap<String,
@@ -447,6 +482,7 @@ public class ThmP1 {
 		List<Pair> pairs = new ArrayList<Pair>();
 		//boolean addIndex = true; // whether to add to pairIndex
 		String[] strAr = sentence.split(" ");
+		
 		
 		// int pairIndex = 0;
 		strloop: for (int i = 0; i < strAr.length; i++) {
@@ -891,7 +927,7 @@ public class ThmP1 {
 
 				Pair pair = new Pair(curWord, curPos);
 				pairs.add(pair);
-			}//obfuscated! 
+			}//too ad hoc! 
 			else if (wordlen > 3 && curWord.substring(wordlen - 3, wordlen).equals("ing")
 					&& (posMMap.containsKey(curWord.substring(0, wordlen - 3))
 							&& posMMap.get(curWord.substring(0, wordlen - 3)).get(0).matches("verb|vbs")
@@ -2280,22 +2316,18 @@ public class ThmP1 {
 			int[] curStructContextVec, int span, ParseState parseState) {
 		
 		StringBuilder parseStructSB = new StringBuilder();
-		ParseStructType parseStructType = ParseStructType.getType(uHeadStruct);
-		ParseStruct headParseStruct;
+		//ParseStructType parseStructType = ParseStructType.getType(uHeadStruct);
 		
-		if(null == parseState.getHeadParseStruct()){
-			headParseStruct = new ParseStruct(parseStructType, uHeadStruct);
-			parseState.setHeadParseStruct(headParseStruct);
-		}else{
-			headParseStruct = parseState.getHeadParseStruct();
+		if(null == parseState.getCurParseStruct()){
+			ParseStruct curParseStruct = new ParseStruct();
+			parseState.setCurParseStruct(curParseStruct);
+			parseState.setHeadParseStruct(curParseStruct);
 		}
-		
-		parseState.setCurParseStruct(headParseStruct);
 		
 		//whether to print the commands in tiers with the spaces in subsequent lines.
 		boolean printTiers = false;
 		//builds the parse tree by matching triggered commands. 
-		ParseToWLTree.dfs(uHeadStruct, parseStructSB, 0, printTiers);
+		ParseToWLTree.buildCommandsDfs(uHeadStruct, parseStructSB, 0, printTiers);
 		System.out.println("\n DONE ParseStruct DFS  + parseStructSB:" + parseStructSB + "  \n");
 		StringBuilder wlSB = new StringBuilder();
 		/**
@@ -2316,6 +2348,14 @@ public class ThmP1 {
 			ParseTreeToVec.tree2vec(uHeadStruct, curStructContextVec);
 		}
 		//System.out.println("curStructContextVec " + curStructContextVec);		
+		//add the relevant wrapper (and so command strings) to curParseStruct in parseState		
+		applyWrappersToParseState(parseState);
+		
+		//decide whether to jump out of current ParseStruct layer
+		String punctuation = parseState.getAndClearCurPunctuation();
+		if(punctuation != null){
+			setParseStateFromPunctuation(punctuation, parseState);
+		}
 		
 		System.out.println("Parts: " + parseStructMap);
 		//**parseStructMapList.add(parseStructMap.toString() + "\n");
@@ -2338,6 +2378,29 @@ public class ThmP1 {
 		return wlSB;
 	}
 
+	private static void applyWrappersToParseState(ParseState parseState){
+		
+		ParseStruct curParseStruct = parseState.getCurParseStruct();
+		Multimap<ParseStructType, WLCommandWrapper> wrapperMap = parseState.retrieveAndClearWrapperMMap();
+		
+		if(wrapperMap.containsKey(ParseStructType.HYP) || wrapperMap.containsKey(ParseStructType.HYP_iff)){
+			//create new parseStruct
+			ParseStruct childParseStruct = new ParseStruct();
+			
+			childParseStruct.addParseStructWrapper(wrapperMap);
+			curParseStruct.addToSubtree(childParseStruct);
+
+			childParseStruct.set_parentParseStruct(curParseStruct);
+			parseState.setCurParseStruct(childParseStruct);
+
+			//set the reference of the current struct to point to the newly created struct
+			parseState.setCurParseStruct(childParseStruct);
+		}else{
+			curParseStruct.addParseStructWrapper(wrapperMap);
+		}
+	
+	}
+	
 	/**
 	 * Returns true iff word is a singular verb (meaning associated to singular
 	 * subj, eg "gives")
@@ -3035,23 +3098,37 @@ public class ThmP1 {
 
 	}
 
+	/**
+	 * Depth first search.
+	 * @param struct
+	 * @param parsedSB
+	 * @param span
+	 * @return
+	 */
 	private static int dfs(Struct struct, StringBuilder parsedSB, int span) {
 		
 		int structDepth = struct.dfsDepth();
 		
-		// don't like instanceof here
-		if (struct instanceof StructA) {
-
+		if (struct.isStructA()) {
+			
+			if(struct.type().equals("hyp") || struct.type().equals("if")){
+				struct.setContainsHyp(true);
+			}
+			
 			System.out.print(struct.type());
 			parsedSB.append(struct.type());
 			
 			System.out.print("[");
 			parsedSB.append("[");
 			
-			if (struct.prev1() instanceof Struct) {
+			if (struct.prev1NodeType().isTypeStruct()) {
 				Struct prev1Struct = (Struct) struct.prev1();
 				prev1Struct.set_dfsDepth(structDepth + 1);
 				span = dfs(prev1Struct, parsedSB, span);
+				
+				if(prev1Struct.containsHyp()){
+					struct.setContainsHyp(true);
+				}
 			}			
 
 			if (struct.prev1NodeType().equals(NodeType.STR)) {
@@ -3076,6 +3153,10 @@ public class ThmP1 {
 				Struct prev2Struct = (Struct) struct.prev2();
 				prev2Struct.set_dfsDepth(structDepth + 1);
 				span = dfs(prev2Struct, parsedSB, span);
+				
+				if(prev2Struct.containsHyp()){
+					struct.setContainsHyp(true);
+				}
 			}
 			
 			if (struct.prev2NodeType().equals(NodeType.STR)) {
@@ -3092,7 +3173,7 @@ public class ThmP1 {
 
 			System.out.print("]");
 			parsedSB.append("]");
-		} else if (!struct.isStructA()) {
+		} else {
 			
 			System.out.print(struct.toString());
 			parsedSB.append(struct.toString());
@@ -3218,7 +3299,8 @@ public class ThmP1 {
 			}
 
 			// if composite fluff word ?? already taken care of
-			if (!madeReplacement && !curWord.matches("\\.|,|!") && !fluffMap.containsKey(curWord.toLowerCase())) {
+			if (!madeReplacement && !PUNCTUATION_PATTERN.matcher(curWord).find() 
+					&& !fluffMap.containsKey(curWord.toLowerCase())) {
 				// if (!curWord.matches("\\.|,|!") &&
 				// !fluffMap.containsKey(curWord)){
 				if (inTex || !toLowerCase) {
@@ -3233,12 +3315,12 @@ public class ThmP1 {
 			}
 			madeReplacement = false;
 			//compile!
-			if (curWord.matches("\\.|,|!|;") || i == wordsArrayLen - 1) {
+			if (PUNCTUATION_PATTERN.matcher(curWord).find() ) {
 				//if not in middle of tex
 				if (!inTex) {
 					//if the token before and after the comma 
 					//are not similar enough.
-					if(curWord.matches(",") && i < wordsArrayLen - 1){
+					if(curWord.equals(",") && i < wordsArrayLen - 1){
 						//get next word
 						String nextWord = wordsArray[i+1].toLowerCase();
 						List<String> nextWordPosList = posMMap.get(nextWord);
@@ -3254,14 +3336,19 @@ public class ThmP1 {
 							sentenceBuilder.append(" and ");
 							continue;
 						}						
-					}					
+					}
+					//add the punctuation to use later
+					sentenceBuilder.append(" " + curWord);
 					sentenceList.add(sentenceBuilder.toString());
 					sentenceBuilder.setLength(0);
 					
-				} else {
+				} else { //in Latex
 					lastWordAdded = curWord;
-					sentenceBuilder.append(curWord);
+					sentenceBuilder.append(" " + curWord);
 				}
+			} else if(i == wordsArrayLen - 1){ //
+				sentenceList.add(sentenceBuilder.toString());
+				sentenceBuilder.setLength(0);				
 			}
 		}
 		if(sentenceList.isEmpty()){
