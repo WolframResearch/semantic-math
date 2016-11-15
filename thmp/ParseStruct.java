@@ -63,6 +63,7 @@ public class ParseStruct {
 	 * Adds additional struct to the structList.
 	 */
 	public void addParseStructWrapper(Multimap<ParseStructType, WLCommandWrapper> map) {
+		
 		this.wrapperMMap.putAll(map);
 	}
 	

@@ -409,9 +409,9 @@ public class TriggerMathObj3 {
 		//String namePpt = ((StructH<?>)struct).append_name_pptStr();
 		String namePpt = struct.simpleToString(false, curCommand);
 		if(struct.type().equals("ent")){
-			namePpt = "{" + namePpt + "}";
+			namePpt = "[\"" + namePpt + "\"]";
 		}
-		String r = (null == highestMathObj) ? "MathObj{" + namePpt + "}": highestMathObj + "[" + namePpt + "]";
+		String r = (null == highestMathObj) ? "Math[\"" + namePpt + "\"]": highestMathObj + "[\"" + namePpt + "\"]";
 		
 		//return r + "[" + namePpt + "]";
 		return r;

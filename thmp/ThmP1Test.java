@@ -378,19 +378,23 @@ public class ThmP1Test {
 			st = "the group $G$ acts on the subgroup $H$ by conjugation";
 			st = "A valuation ring is Noetherian if and only if it is a discrete valuation ring or a field";	
 			st = "If $x$ is a summable indexed family of vectors";
-			st = "if $R$ is commutative and $S$ is commutative";
-			
-			st = "if $R$ is commutative and $S$ is commutative";
+			st = "if $R$ is commutative and $S$ is commutative";			
 			
 			st = "the map $f$ is linear";
 			//st = "$f$ maps $x$ to $y$";
 			st = "if $R$ is a ring, if $S$ is commutative then $R$ is commutative";
 			st = "if $R$ is commutative and $S$ is commutative, $S$ is abelian if $T$ is abelian";
-			st = "if $R$ is commutative and $S$ is commutative, if $T$ is abelian then $S$ is abelian";
 			st = "if $R$ is a ring, $M$ is an $R$ module if $R$ is commutative";
 			st = "Let $R to S$ be a ring of finite presentation.";
+			st = "if $R to S$ is of finite type and $M$ is finitely presented as an $R$-module, "
+					+ "Then $M$ is finitely presented as an $S$-module.";			
+			st = "if $M$ is finitely presented as an $R$-module, then $M$ is finitely presented";
+			st = "Let $R \\to S$ be a ring map. Let $M$ be an $S$-module. If $M$ is finite as an $R$-module, then $M$ is finite as an $S$-module.";
+			st = "$R \\to S$ is of finite type or $S$ is a finite type $R$-algebra, if there exists an $n in mathbf{N}$ and an surjection of $R$-algebras $R[x_1, ldots, x_n] \\to S$.";
+			//st = "if $R$ is commutative and $S$ is commutative, then $S$ is abelian if $T$ is abelian";
+			//st = "then $M$ is finitely presented as an $S$-module.";
+			//st = "Assume $R to S$ is of finite type";
 			//st = "if $R$ is commutative, $S$ is abelian if $T$ is abelian";
-
 			//st = "$f$ maps $a$ to $b$";
 			//st = "$f$ map ring";
 			//st = "Group $G$ acts on space $X$";
@@ -455,6 +459,10 @@ public class ThmP1Test {
 				System.out.println("cur vec: " + Arrays.toString(curContextVec));
 			}
 			
+			/*List<ParseStruct> headParseStructList = parseState.getHeadParseStructList();
+			for(ParseStruct headParseStruct : headParseStructList){
+				System.out.println("@@@" + headParseStruct);
+			}*/
 			System.out.println("@@@" + parseState.getHeadParseStruct());
 			
 			//combine these vectors together, only add subsequent vector entry

@@ -245,10 +245,8 @@ public class StructA<A, B> extends Struct{
 	 */
 	@Override
 	public String simpleToString(boolean includeType, WLCommand curCommand){
-		//if(this.posteriorBuiltStruct != null) return "";
-		
-		//been built into one command already
-		this.WLCommandStrVisitedCount++;
+		//if(this.posteriorBuiltStruct != null) return "";		
+
 		if(this.WLCommandWrapperList != null){
 			int wrapperListSz = WLCommandWrapperList.size();
 			//wrapperListSz should be > 0, since list is created when first wrapper is added
@@ -258,31 +256,42 @@ public class StructA<A, B> extends Struct{
 				int commandNumUnits = WLCommand.commandNumUnits(curWrapper.WLCommand());
 				if(!this.type.equals("pre")){
 					WLCommand.increment_commandNumUnits(curCommand, commandNumUnits);
-				}
-				//this Struct is now a subcomponent of a bigger command that's built
-				//WLCommand.increment_structsWithOtherHeadCount(curWrapper.WLCommand());
+				}				
 			}
-			
+			//been built into one command already
+			this.WLCommandStrVisitedCount++;
+			System.out.println("WLCommandStrVisitedCount" + this.WLCommandStrVisitedCount);
+			System.out.println("++++++===curWrapper " +curWrapper.WLCommandStr() + " " + this );
 			return curWrapper.WLCommandStr();			
 		}		
 		
 		if(PREV1_TYPE.equals(NodeType.STR)){
 			String fullName = (String)this.prev1;
 			if(PREV2_TYPE.equals(NodeType.STR) && !prev2.equals("")){
-				fullName = "{" + fullName + ", " + (String)this.prev2 + "}";
+				fullName = "[" + fullName + ", " + (String)this.prev2 + "]";
 			}
+			//been built into one command already
+			this.WLCommandStrVisitedCount++;
 			return fullName;
 		}else{
+			
+			//System.out.println("+++" + this.simpleToString2(includeType, curCommand));
 			return this.simpleToString2(includeType, curCommand);
 		}
 	}
 	
 	//auxilliary method for simpleToString and called inside StructH.simpleToString2
 	@Override
-	public String simpleToString2(boolean includeType, WLCommand curCommand){
-		//return "" if commandStr is not null (??)
+	public String simpleToString2(boolean includeType, WLCommand curCommand){		
+		
+		//return "" if commandStr is not null, so to not repeat commands.
 		//if(this.WLCommandStr != null) return "";
-		if(this.WLCommandWrapperList != null) return "";
+		if(this.WLCommandWrapperList != null){ 
+			return "";
+		}
+		
+		//been built into one command already
+		this.WLCommandStrVisitedCount++;
 		
 		//don't include prepositions for spanning purposes, since prepositions are almost 
 		//always counted if its subsequent entity is, but counting it gives false high span
@@ -312,15 +321,15 @@ public class StructA<A, B> extends Struct{
 			tempSB.append("[");
 		}
 		
-		if(this.type.matches("phrase|prep")){
+		if(this.type.equals("phrase") || this.type.equals("prep")){
 			wrapBraces = true;		
 			//tempStr += "{";
-			tempSB.append("{");
+			tempSB.append("[");
 		}		
 		
 		if(this.prev1 != null){
 			if(inConj){ //tempStr += "{";
-				tempSB.append("{");
+				tempSB.append("[");
 			}
 			//if(prev1 instanceof Struct && ((Struct) prev1).WLCommandStr() == null){
 			if((PREV1_TYPE.isTypeStruct()) ){
@@ -344,12 +353,13 @@ public class StructA<A, B> extends Struct{
 			}
 			
 			if(inConj){ //tempStr += "}";
-				tempSB.append("}");
+				tempSB.append("]");
 			}
 		}
 		
 		if(prev2 != null){
 			String prev2String = "";
+		
 			if((PREV2_TYPE.isTypeStruct())  ){
 				List<WLCommandWrapper> prev2WrapperList = ((Struct)prev2).WLCommandWrapperList();
 				 if(prev2WrapperList == null){
@@ -368,10 +378,10 @@ public class StructA<A, B> extends Struct{
 				prev2String += ", " + prev2;			
 			}
 			//tempStr += inConj ? "{" + prev2String + "}" : prev2String;
-			tempSB.append(inConj ? "{" + prev2String + "}" : prev2String);
+			tempSB.append(inConj ? "[" + prev2String + "]" : prev2String);
 		}
 		if(wrapBraces){ //tempStr += "}";
-			tempSB.append("}");
+			tempSB.append("]");
 		}
 		if(inConj){ //tempStr += "]";
 			tempSB.append("]");

@@ -845,24 +845,26 @@ public class WLCommand {
 	private static boolean updateWrapper(Struct nextStruct, Struct structToAppendCommandStr){
 		
 		//List<WLCommandWrapper> nextStructWrapperList = nextStruct.WLCommandWrapperList();
-		Struct headStruct = nextStruct.structToAppendCommandStr();
+		Struct prevHeadStruct = nextStruct.structToAppendCommandStr();
 		boolean prevStructHeaded = false; 
 		
-		if (headStruct != null) {
-			List<WLCommandWrapper> headStructWrapperList = headStruct.WLCommandWrapperList();
+		if (prevHeadStruct != null) {
+			List<WLCommandWrapper> prevHeadStructWrapperList = prevHeadStruct.WLCommandWrapperList();
 			//no need to update structsWithOtherHeadCount if the heads are already same. Note the two
 			//commands could be different, just with the same head.
-			if(structToAppendCommandStr != headStruct && headStructWrapperList != null){
+			
+			if(structToAppendCommandStr != prevHeadStruct && prevHeadStructWrapperList != null){
 				// in this case structToAppendCommandStr should not be
 				// null either				
-				int wrapperListSz = headStructWrapperList.size();	
+				int wrapperListSz = prevHeadStructWrapperList.size();	
 				//get the last-added command. <--should iterate and add count to all previous commands
 				//with this wrapper? <--command building goes inside-out
-				WLCommand lastWrapperCommand = headStructWrapperList.get(wrapperListSz-1).WLCommand();	
-				// increment the headCount of the last wrapper object
+				WLCommand lastWrapperCommand = prevHeadStructWrapperList.get(wrapperListSz-1).WLCommand();	
+				// increment the headCount of the last wrapper object, should update every command's count!
 				lastWrapperCommand.structsWithOtherHeadCount++;
 				//System.out.println("Wrapper command struct " + headStruct);
 				//System.out.println("***Wrapper Command to update: " + lastWrapperCommand);
+				
 			}
 			prevStructHeaded = true;			
 		}
@@ -1617,9 +1619,9 @@ public class WLCommand {
 		return curCommand.structsWithOtherHeadCount;
 	}
 	
-	public static void increment_structsWithOtherHeadCount(WLCommand curCommand){
+	/*public static void increment_structsWithOtherHeadCount(WLCommand curCommand){
 		 curCommand.structsWithOtherHeadCount++;
-	}
+	}*/
 	
 	public static int totalComponentCount(WLCommand curCommand){
 		return curCommand.totalComponentCount;

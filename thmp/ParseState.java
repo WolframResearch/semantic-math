@@ -1,5 +1,6 @@
 package thmp;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -27,6 +28,9 @@ public class ParseState {
 	//parseStruct, for layering built WLCommands
 	private ParseStruct headParseStruct;
 	
+	//list of ParseStruct's, one for each parse tree.
+	private List<ParseStruct> headParseStructList;
+	
 	//current parse struct, somewhere down the tree from headParseStruct
 	private ParseStruct curParseStruct;
 	
@@ -37,10 +41,11 @@ public class ParseState {
 	//waiting WLCommandWrapper map on deck, waiting to be added. Necessary 
 	//because don't know if need to add to next logic layer, or to current
 	//layer, until the entire tree is read.
-	private Multimap<ParseStructType, WLCommandWrapper> waitingWrapperMMap;
+	//private Multimap<ParseStructType, WLCommandWrapper> waitingWrapperMMap;
 	
 	public ParseState(){
-		this.waitingWrapperMMap = ArrayListMultimap.create();
+		//this.waitingWrapperMMap = ArrayListMultimap.create();
+		//this.headParseStructList = new ArrayList<ParseStruct>();
 	}	
 
 	/**
@@ -61,15 +66,15 @@ public class ParseState {
 		this.punctuation = punctuation;
 	}
 	
-	public void addParseStructWrapperPair(ParseStructType type, WLCommandWrapper wrapper){
+	/*public void addParseStructWrapperPair(ParseStructType type, WLCommandWrapper wrapper){
 		this.waitingWrapperMMap.put(type, wrapper);
-	}
+	}*/
 	
-	public Multimap<ParseStructType, WLCommandWrapper> retrieveAndClearWrapperMMap(){
+	/*public Multimap<ParseStructType, WLCommandWrapper> retrieveAndClearWrapperMMap(){
 		Multimap<ParseStructType, WLCommandWrapper> mapCopy = ArrayListMultimap.create(this.waitingWrapperMMap);
 		this.waitingWrapperMMap = ArrayListMultimap.create();
 		return mapCopy;		
-	}
+	}*/
 	
 	/**
 	 * @return the curParseStruct
@@ -84,6 +89,13 @@ public class ParseState {
 	public void setCurParseStruct(ParseStruct curParseStruct) {
 		//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
 		this.curParseStruct = curParseStruct;
+		if(headParseStruct == null){
+			synchronized(ParseState.class){
+				if(null == headParseStruct){
+					this.headParseStruct = curParseStruct;
+				}
+			}
+		}
 	}
 
 	/**
@@ -108,9 +120,24 @@ public class ParseState {
 	}
 	
 	/**
+	 * @return 
+	 */
+	public List<ParseStruct> getHeadParseStructList() {
+		return this.headParseStructList;
+	}	
+	
+	/**
+	 * @return the tokenList
+	 */
+	/*public void addToHeadParseStructList(ParseStruct headParseStruct) {
+		this.headParseStructList.add(headParseStruct);
+	}*/
+	
+	/**
 	 * @return the tokenList
 	 */
 	public void setHeadParseStruct(ParseStruct parseStruct) {
+		//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
 		this.headParseStruct = parseStruct;
 	}
 	

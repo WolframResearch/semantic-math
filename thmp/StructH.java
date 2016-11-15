@@ -378,7 +378,7 @@ public class StructH<H> extends Struct{
 	@Override
 	public String simpleToString(boolean includeType, WLCommand curCommand){
 		//if(this.posteriorBuiltStruct != null) return "";
-		this.WLCommandStrVisitedCount++;
+		//this.WLCommandStrVisitedCount++;
 		// instead of checking WLCommandStr, check if wrapperList is null
 		// ie if any command has been assigned to this Struct yet. If yes,
 		// get the last one (might want the one with highest commandsWithOtherHead
@@ -395,6 +395,8 @@ public class StructH<H> extends Struct{
 			 	WLCommand.increment_commandNumUnits(curCommand, commandNumUnits);
 			}
 			//System.out.println("^^^curWrapper: " + curWrapper);
+			//been built into one command already
+			this.WLCommandStrVisitedCount++;
 			return curWrapper.WLCommandStr();			
 		}		
 		//String name = this.struct.get("name");
@@ -409,12 +411,13 @@ public class StructH<H> extends Struct{
 		if(curCommand != null) {
 			WLCommand.increment_commandNumUnits(curCommand, this);
 		}
-		
+		//been built into one command already
+		this.WLCommandStrVisitedCount++;
 		
 		String str = "";
 		if(includeType){ 			
-			str += this.type.equals("ent") ? "MathObj" : this.type;
-			str += "{";
+			str += this.type.equals("ent") ? "Math" : this.type;
+			str += "[\"";
 		}
 		//str += "{";
 		str += append_name_pptStr();
@@ -443,7 +446,7 @@ public class StructH<H> extends Struct{
 				}
 			}
 		}		
-		if(includeType) str += "}";
+		if(includeType) str += "\"]";
 		//str += "}";
 		
 		return str;
@@ -510,8 +513,8 @@ public class StructH<H> extends Struct{
 	//similar to toString(). Presents StructH as a String
 	@Override
 	public String present(String str){
-		str += this.type.equals("ent") ? "MathObj" : this.type;
-		str += "{";
+		str += this.type.equals("ent") ? "Math" : this.type;
+		str += "[";
 		
 		str += append_name_pptStr();
 		
@@ -527,7 +530,7 @@ public class StructH<H> extends Struct{
 				str += ", ";
 		}
 		
-		str += "}";
+		str += "]";
 
 		return str;
 	}

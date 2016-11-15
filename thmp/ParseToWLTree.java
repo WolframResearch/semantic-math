@@ -255,7 +255,7 @@ public class ParseToWLTree {
 	 * @param numSpaces is the number of spaces to print. Increment space if number is 
 	 * @param structList List of Struct's collected so far, in dfs traversal order.
 	 */
-	public static void dfs(Struct struct, StringBuilder parsedSB, //ParseStruct headParseStruct, 
+	private static void dfs(Struct struct, StringBuilder parsedSB, //ParseStruct headParseStruct, 
 			int numSpaces, List<Struct> structList, List<WLCommand> WLCommandList, boolean printTiers) {
 		//index used to keep track of where in Deque this stuct is
 		//to pop off at correct index later
@@ -648,16 +648,20 @@ public class ParseToWLTree {
 	 *	Append all that has structsWithOtherHeadCount equal to the total 
 	 *	component count, since those commands don't interfere with anything else.
 	 * @param struct is Struct that the commandStr has been appended to, i.e. head struct.
+	 * @param curParseStruct current parse struct used for collecting the parsed commands
+	 * in this parse segment (punctuation-delimited). Store in parseStruct, to be sorted later,
+	 * according to the mmap.
 	 * @param contextVec is context vector for this WLCommand. 
 	 * @param parsedSB WLCommand string builder, in form A\[Element] B
 	 * @return whether contextVecConstructed
 	 */
-	private static boolean appendWLCommandStr(Struct struct, StringBuilder parsedSB, Multimap<ParseStructType, ParsedPair> partsMap, 
+	private static boolean appendWLCommandStr(Struct struct, ParseStruct curParseStruct,
+			StringBuilder parsedSB, Multimap<ParseStructType, ParsedPair> partsMap, 
 			int[] contextVec, boolean contextVecConstructed, ParseState parseState){
 		
 		List<WLCommandWrapper> structWrapperList = struct.WLCommandWrapperList();
 		int structWrapperListSz = structWrapperList.size();
-		ParseStruct curParseStruct = parseState.getCurParseStruct();
+		//ParseStruct curParseStruct = parseState.getCurParseStruct();
 		
 		//boolean contextVecConstructed = false;		
 		//iterate backwards, so last-added ones (presumably longer span) come first
@@ -712,7 +716,7 @@ public class ParseToWLTree {
 						}
 					}
 				}*/
-				ParsedPair pair = new ParsedPair(curWrapper.wlCommandStr, struct.maxDownPathScore(), 
+				ParsedPair pair = new ParsedPair(curWrapper.wlCommandStr, null, struct.maxDownPathScore(), 
 						struct.numUnits(), WLCommand.commandNumUnits(curCommand));
 				//partsMap.put(type, curWrapper.WLCommandStr);	
 				partsMap.put(parseStructType, pair);
@@ -735,7 +739,9 @@ public class ParseToWLTree {
 				}else{
 					curParseStruct.addParseStructWrapper(parseStructType, curWrapper);					
 				}*/
-				parseState.addParseStructWrapperPair(parseStructType, curWrapper);
+				//add to hold current command contained in curWrapper
+				curParseStruct.addParseStructWrapper(parseStructType, curWrapper);
+				//parseState.addParseStructWrapperPair(parseStructType, curWrapper);
 				
 				//System.out.println("partsMap being put in: " + curWrapper.WLCommandStr);
 				break;
@@ -750,9 +756,12 @@ public class ParseToWLTree {
 	 * to WL commands. Parse tree should have already finished building, with
 	 * WLCommands attached.
 	 * @param struct
+	 * @param curParseStruct struct used to collect commands for this parse segment 
+	 * (corresponding to one parse segment, could be multiple commands).
 	 * @param parsedSB
 	 */
-	public static boolean collectCommandsDfs(Multimap<ParseStructType, ParsedPair> partsMap, Struct struct, StringBuilder parsedSB, 
+	public static boolean collectCommandsDfs(Multimap<ParseStructType, ParsedPair> partsMap, ParseStruct curParseStruct,
+			Struct struct, StringBuilder parsedSB, 
 			int[] curStructContextVec, boolean shouldPrint, boolean contextVecConstructed,
 			ParseState parseState) {
 		//don't append if already incorporated into a higher command
@@ -763,7 +772,9 @@ public class ParseToWLTree {
 		//boolean contextVecConstructed = false;
 		
 		//ParseStruct curParseStruct = headParseStruct;
-		
+		if(struct.type().equals("assert")){
+			System.out.println("^^^^^^" + struct + " " + struct.WLCommandStrVisitedCount());
+		}
 		if(struct.WLCommandWrapperList() != null && struct.WLCommandStrVisitedCount() < 1){	
 		//if(struct.WLCommandWrapperList() != null){	
 			/*if(WLCommand.structsWithOtherHeadCount(struct.WLCommand()) 
@@ -772,7 +783,7 @@ public class ParseToWLTree {
 				parsedSB.append(struct.WLCommandStr());
 			} */
 			//collects the built WLCommand strings.
-			contextVecConstructed = appendWLCommandStr(struct, parsedSB, partsMap, curStructContextVec,
+			contextVecConstructed = appendWLCommandStr(struct, curParseStruct, parsedSB, partsMap, curStructContextVec,
 					contextVecConstructed, parseState);			
 			
 			shouldPrint = false;
@@ -796,7 +807,8 @@ public class ParseToWLTree {
 			if(shouldPrint) parsedSB.append("[");
 			
 			if (struct.prev1NodeType().isTypeStruct()) {
-				contextVecConstructed = collectCommandsDfs(partsMap, (Struct) struct.prev1(), parsedSB, curStructContextVec, shouldPrint,
+				contextVecConstructed = collectCommandsDfs(partsMap, curParseStruct,
+						(Struct) struct.prev1(), parsedSB, curStructContextVec, shouldPrint,
 						contextVecConstructed, parseState);
 			}
 
@@ -806,7 +818,8 @@ public class ParseToWLTree {
 				// avoid printing is[is], ie case when parent has same type as
 				// child
 				if(shouldPrint) parsedSB.append(", ");
-				contextVecConstructed = collectCommandsDfs(partsMap, (Struct) struct.prev2(), parsedSB, curStructContextVec, shouldPrint,
+				contextVecConstructed = collectCommandsDfs(partsMap, curParseStruct, 
+						(Struct) struct.prev2(), parsedSB, curStructContextVec, shouldPrint,
 						contextVecConstructed, parseState);
 			}
 
@@ -837,7 +850,8 @@ public class ParseToWLTree {
 			for (int i = 0; i < children.size(); i++) {
 				if(shouldPrint) parsedSB.append(childRelation.get(i) + " ");
 
-				contextVecConstructed = collectCommandsDfs(partsMap, children.get(i), parsedSB, curStructContextVec, shouldPrint,
+				contextVecConstructed = collectCommandsDfs(partsMap, curParseStruct,
+						children.get(i), parsedSB, curStructContextVec, shouldPrint,
 						contextVecConstructed, parseState);
 			}
 			if(shouldPrint) parsedSB.append("]");

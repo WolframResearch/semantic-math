@@ -81,6 +81,7 @@ public class WLCommandsList {
 		triggerWordLookupMapBuilder.put("for all", "for every");
 		triggerWordLookupMapBuilder.put("if", "suppose");
 		triggerWordLookupMapBuilder.put("if and only if", "suppose");
+		triggerWordLookupMapBuilder.put("assume", "if");
 		triggerWordLookupMapBuilder.put("is included", "is contained");
 		triggerWordLookupMapBuilder.put("are included", "is contained");
 		triggerWordLookupMapBuilder.put("are contained", "is contained");
@@ -132,7 +133,7 @@ public class WLCommandsList {
 		/*WLCommandMapBuilder.put("element", addCommand(
 				new String[] { "parti, , false", ", element, trigger", "x", "\\[Element]", "pre, of, false", "symb|ent, , true" }));*/
 		WLCommandMapBuilder.put("element", addCommand(new PBuilder("parti", null, false), new PBuilder(null, "element", false, true, false),
-				new PBuilder("\\[Element]"), new PBuilder("pre", "of", false), new PBuilder("symb|ent", null, true) ));		
+				new PBuilder("\\[Element]"), new PBuilder("pre", "of", false), new PBuilder("symb|ent|noun", null, true) ));		
 		
 		/*WLCommandMapBuilder.put("given", addCommand(
 				new String[] { "parti, given, trigger", "symb|ent, , true" }));*/

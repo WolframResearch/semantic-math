@@ -176,6 +176,9 @@ public class ThmP1 {
 		private int commandNumUnits;
 		//the ParseStructType of this parsedStr, eg "STM", "HYP", etc.
 		private ParseStructType parseStructType;
+		//parse struct corresponding to the parseStructType
+		private ParseStruct parseStruct;
+		
 		private String stringForm;
 		
 		public ParsedPair(String parsedStr, double score, String form){
@@ -192,11 +195,15 @@ public class ThmP1 {
 			}
 		}
 		
-		public ParsedPair(String parsedStr, double score, int numUnits, int commandNumUnits){
+		public ParsedPair(String parsedStr, ParseStruct parseStruct, double score, int numUnits, 
+				int commandNumUnits){
 			this(parsedStr, score, "", false);
 			this.numUnits = numUnits;
 			this.commandNumUnits = commandNumUnits;
 			this.stringForm = this.toString();
+			if(null != parseStruct){
+				this.parseStruct = parseStruct;
+			}
 		}
 		
 		/**
@@ -207,11 +214,18 @@ public class ThmP1 {
 		 * @param commandNumUnits
 		 */
 		public ParsedPair(double score, int numUnits, int commandNumUnits){
-			this("", score, numUnits, commandNumUnits);
+			this("", null, score, numUnits, commandNumUnits);
 		}
 		
 		public ParsedPair(String parsedStr, double score, int numUnits, int commandNumUnits, ParseStructType type){
-			this(parsedStr, score, numUnits, commandNumUnits);
+			this(parsedStr, null, score, numUnits, commandNumUnits);
+			this.parseStructType = type;
+			this.stringForm = this.toString();
+		}
+		
+		public ParsedPair(String parsedStr, double score, int numUnits, int commandNumUnits, 
+				ParseStruct parseStruct, ParseStructType type){
+			this(parsedStr, parseStruct, score, numUnits, commandNumUnits);
 			this.parseStructType = type;
 			this.stringForm = this.toString();
 		}
@@ -420,16 +434,16 @@ public class ThmP1 {
 		
 		if(curParseStruct != null){
 			ParseStruct parentParseStruct = curParseStruct.parentParseStruct();
-			switch(punctuation){
-				case ".":
-					
-					parseState.setCurParseStruct(parentParseStruct);
-					break;
-				case "!":
-					parseState.setCurParseStruct(parentParseStruct);
-					break;
-				default:
-						
+			if(parentParseStruct != null){
+				switch(punctuation){
+					case ".":					
+						parseState.setCurParseStruct(parentParseStruct);
+						break;
+					case "!":
+						parseState.setCurParseStruct(parentParseStruct);
+						break;
+					default:
+				}
 			}
 		}
 	}
@@ -2028,8 +2042,11 @@ public class ThmP1 {
 			// ArrayDFS(headStructList));
 			//temporary list to store the ParsedPairs to be sorted
 			List<Multimap<ParseStructType, ParsedPair>> parsedPairMMapList = new ArrayList<Multimap<ParseStructType, ParsedPair>>();
+			//List of headParseStruct's, each entry corresponds to the entry of same index in parsedPairMMapList.
+			List<ParseStruct> headParseStructList = new ArrayList<ParseStruct>();
 			//list of ParsedPairs used to store long forms, same order of pairs as in parsedPairMMapList
 			List<ParsedPair> longFormParsedPairList = new ArrayList<ParsedPair>();
+			
 			for (int u = 0; u < headStructListSz; u++) {
 				Struct uHeadStruct = headStructList.structList().get(u);
 				uHeadStruct.set_dfsDepth(0);
@@ -2040,10 +2057,12 @@ public class ThmP1 {
 				int span = 0;
 				//get the "long" form, not WL form, with this dfs
 				span = dfs(uHeadStruct, parsedSB, span);
+				//ParseStruct headParseStruct = new ParseStruct();
 				//now get the WL form build from WLCommand's
 				//should pass in the wlSB, instead of creating one anew each time. <--It's ok.
-				StringBuilder wlSB = treeTraversal(uHeadStruct, parsedPairMMapList, curStructContextvec, span,
+				StringBuilder wlSB = treeTraversal(uHeadStruct, headParseStructList, parsedPairMMapList, curStructContextvec, span,
 						parseState);
+				//headParseStructList.add(headParseStruct);
 				contextVecList.add(curStructContextvec);
 				
 				System.out.println("+++Previous long parse: " + parsedSB);
@@ -2068,8 +2087,10 @@ public class ThmP1 {
 			//order maps from parsedPairMMapList and put into parseStructMapList and parsedExpr.
 			//Also add context vector of highest scores
 			
-			orderPairsAndPutToLists(parsedPairMMapList, longFormParsedPairList, contextVecList);
+			orderPairsAndPutToLists(parsedPairMMapList, headParseStructList, parseState, longFormParsedPairList, contextVecList);
 			//parseStructMapList.add(parseStructMap.toString() + "\n");
+			//append the highest-ranked parse to parseState.curParseStruct
+			
 		}
 		// if no full parse. Also add to parsedExpr List.
 		else {
@@ -2113,6 +2134,7 @@ public class ThmP1 {
 			//String totalParsedString = "";
 			double totalScore = 1; //product of component scores
 			List<Multimap<ParseStructType, ParsedPair>> parsedPairMMapList = new ArrayList<Multimap<ParseStructType, ParsedPair>>();
+			List<ParseStruct> headParseStructList = new ArrayList<ParseStruct>();
 			//list of long forms, with flattened tree structure.
 			List<ParsedPair> longFormParsedPairList = new ArrayList<ParsedPair>();
 			
@@ -2139,7 +2161,7 @@ public class ThmP1 {
 					parsedSB.append("; ");
 				}
 				
-				StringBuilder wlSB = treeTraversal(kHeadStruct, parsedPairMMapList, curStructContextvec, 
+				StringBuilder wlSB = treeTraversal(kHeadStruct, headParseStructList, parsedPairMMapList, curStructContextvec, 
 						span, parseState);
 				longFormParsedPairList.add(new ParsedPair(parsedSB.toString(), totalScore, "long"));
 			}
@@ -2153,10 +2175,11 @@ public class ThmP1 {
 			//System.out.println(totalParsedString + "; ");
 			//parsedExpr.add(new ParsedPair(totalParsedString, totalScore, "wl"));
 			
-			orderPairsAndPutToLists(parsedPairMMapList, longFormParsedPairList, contextVecList);
+			orderPairsAndPutToLists(parsedPairMMapList, headParseStructList, parseState, longFormParsedPairList, contextVecList);
 			
 			System.out.println("%%%%%\n");
 		}
+		
 		// print out scores
 		/*
 		 * StructList headStructList = mx.get(0).get(len-1); int
@@ -2184,6 +2207,7 @@ public class ThmP1 {
 	 * the same length. Length 1 if no spanning parse.
 	 */
 	private static void orderPairsAndPutToLists(List<Multimap<ParseStructType, ParsedPair>> parsedPairMMapList,
+			List<ParseStruct> headParseStructList, ParseState parseState,
 			List<ParsedPair> longFormParsedPairList, List<int[]> contextVecList){
 		
 		//use insertion sort, since list of maps is usually very small, ~1-5
@@ -2293,36 +2317,83 @@ public class ThmP1 {
 			System.out.println("longForm, commandUnits: " + commandNumUnitsList.get(i) +". numUnits: " +numUnitsList.get(i) + " "+ longFormParsedPairList.get(finalOrderingList.get(i)));
 		}	
 		//assign the global context vec as the vec of the highest-ranked parse
+		int bestIndex = finalOrderingList.get(0);
 		if(contextVecList.size() == 1){
 			//in case there was no full parse, list should only contain one element.
 			//since same vector was passed around to be filled.
 			parseContextVector = contextVecList.get(0);
 		}else{
 			parseContextVector = contextVecList.get(finalOrderingList.get(0));
+			
 			System.out.println("Best context vector added: " +  Arrays.toString(parseContextVector));
 		}
+
+		ParseStruct bestParseStruct = headParseStructList.get(bestIndex);
+		bestParseStruct.set_parentParseStruct(parseState.getCurParseStruct());
 		
+		//set head for this run of current part that triggered the command.
+		if(null == parseState.getHeadParseStruct()){ //curParseStruct must be null too.
+			parseState.setHeadParseStruct(bestParseStruct);
+			parseState.setCurParseStruct(bestParseStruct);
+		}
+		else{
+			applyWrappersToParseState(parseState, bestParseStruct);
+		}
+		//parseState.addToHeadParseStructList(bestParseStruct);
+		
+
+		///apply
+		//System.out.println("curStructContextVec " + curStructContextVec);		
+				//add the relevant wrapper (and so command strings) to curParseStruct in parseState		
+				
+				
+				//decide whether to jump out of current ParseStruct layer
+				String punctuation = parseState.getAndClearCurPunctuation();
+				if(punctuation != null){
+					setParseStateFromPunctuation(punctuation, parseState);
+				}
+				
 	}
 	
 	/**
 	 * Traverses and produces parse tree by calling various dfs methods,
 	 * by matching commands. Returns
 	 * string representation of the parse tree. Tree uses WLCommands.
+	 * Not recursive.
 	 * @param uHeadStruct
+	 * @param headParseStruct, head ParseStruct list corresponding to parsedPairMMapList.
 	 * @param parseState current parseState
 	 * @return LongForm parse
 	 */
-	private static StringBuilder treeTraversal(Struct uHeadStruct, List<Multimap<ParseStructType, ParsedPair>> parsedPairMMapList,
+	private static StringBuilder treeTraversal(Struct uHeadStruct, List<ParseStruct> headParseStructList, 
+			List<Multimap<ParseStructType, ParsedPair>> parsedPairMMapList,
 			int[] curStructContextVec, int span, ParseState parseState) {
 		
 		StringBuilder parseStructSB = new StringBuilder();
 		//ParseStructType parseStructType = ParseStructType.getType(uHeadStruct);
+		//gathering a new round of parseStruct's, i.e. new parse tree.
+		//only gather the highest ranked parse for each parse segment (separated by 
+		//punctuation) <--don't know highest ranked parse yet!
 		
-		if(null == parseState.getCurParseStruct()){
+		ParseStruct curParseStruct = new ParseStruct();
+		//set current parse struct for this run of the parse segment (delimited
+		//by punctuations).
+		//parseState.setCurParseStruct(curParseStruct);		
+		headParseStructList.add(curParseStruct);
+		
+		/*if(0 == uHeadStructIndex){
+			if(null == parseState.getCurParseStruct()){
+				ParseStruct curParseStruct = new ParseStruct();
+				parseState.setCurParseStruct(curParseStruct);
+				parseState.setHeadParseStruct(curParseStruct);
+				parseState.addToHeadParseStructList(curParseStruct);
+			}
+		}else{
+			//don't set the headParseStruct to lesser-ranked parses.
 			ParseStruct curParseStruct = new ParseStruct();
 			parseState.setCurParseStruct(curParseStruct);
-			parseState.setHeadParseStruct(curParseStruct);
-		}
+			parseState.addToHeadParseStructList(curParseStruct);
+		}*/
 		
 		//whether to print the commands in tiers with the spaces in subsequent lines.
 		boolean printTiers = false;
@@ -2341,27 +2412,18 @@ public class ThmP1 {
 		
 		//fills the parseStructMap and produces String representation, collect commands built above.	
 		boolean contextVecConstructed = false;
-		contextVecConstructed = ParseToWLTree.collectCommandsDfs(parseStructMap, uHeadStruct, wlSB, curStructContextVec, true,
+		contextVecConstructed = ParseToWLTree.collectCommandsDfs(parseStructMap, curParseStruct, uHeadStruct, wlSB, curStructContextVec, true,
 				contextVecConstructed, parseState);
 		
 		if(!contextVecConstructed){
 			ParseTreeToVec.tree2vec(uHeadStruct, curStructContextVec);
-		}
-		//System.out.println("curStructContextVec " + curStructContextVec);		
-		//add the relevant wrapper (and so command strings) to curParseStruct in parseState		
-		applyWrappersToParseState(parseState);
-		
-		//decide whether to jump out of current ParseStruct layer
-		String punctuation = parseState.getAndClearCurPunctuation();
-		if(punctuation != null){
-			setParseStateFromPunctuation(punctuation, parseState);
 		}
 		
 		System.out.println("Parts: " + parseStructMap);
 		//**parseStructMapList.add(parseStructMap.toString() + "\n");
 		//if parseStructMap empty, ie no WLCommand was found, but long parse form might still be good
 		if(parseStructMap.isEmpty()){
-			ParsedPair pair = new ParsedPair(wlSB.toString(), uHeadStruct.maxDownPathScore(), 
+			ParsedPair pair = new ParsedPair(wlSB.toString(), parseState.getCurParseStruct(), uHeadStruct.maxDownPathScore(), 
 					uHeadStruct.numUnits(), span);
 			//partsMap.put(type, curWrapper.WLCommandStr);	
 			parseStructMap.put(ParseStructType.NONE, pair);
@@ -2378,16 +2440,32 @@ public class ThmP1 {
 		return wlSB;
 	}
 
-	private static void applyWrappersToParseState(ParseState parseState){
+	/**
+	 * Append wrappers to parseStruct appropriately, either create new layer,
+	 * or continue adding to wrapperList of current layer.
+	 * Take them from the
+	 * waiting map of wrappers (wrapperMap), waiting because don't know 
+	 * if HYP is amongst them, so don't know if need to jump out one layer.
+	 * @param parseState
+	 * @param waitingParseStruct parseStruct containing wrapperList (for parse segment), that need
+	 * to be applied to parseState's curParseStruct. No depth! Meaning only one layer, no sublists
+	 * of ParseStructs, can only have non-empty wrapperList. We don't expect more depth within the 
+	 * same parse segment.
+	 * Temporary placeholder.
+	 */
+	private static void applyWrappersToParseState(ParseState parseState, ParseStruct waitingParseStruct){
 		
 		ParseStruct curParseStruct = parseState.getCurParseStruct();
-		Multimap<ParseStructType, WLCommandWrapper> wrapperMap = parseState.retrieveAndClearWrapperMMap();
+		//Multimap<ParseStructType, WLCommandWrapper> wrapperMap = parseState.retrieveAndClearWrapperMMap();
 		
+		Multimap<ParseStructType, WLCommandWrapper> wrapperMap = waitingParseStruct.getStructMMap();
+		//System.out.println("********WRAPPER MAP" + wrapperMap);
 		if(wrapperMap.containsKey(ParseStructType.HYP) || wrapperMap.containsKey(ParseStructType.HYP_iff)){
 			//create new parseStruct
 			ParseStruct childParseStruct = new ParseStruct();
 			
 			childParseStruct.addParseStructWrapper(wrapperMap);
+			System.out.println("curParseStruct: " + curParseStruct);
 			curParseStruct.addToSubtree(childParseStruct);
 
 			childParseStruct.set_parentParseStruct(curParseStruct);

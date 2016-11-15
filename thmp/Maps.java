@@ -627,7 +627,7 @@ public class Maps {
 			structMap.put("adj_symb", new Rule("phrase", 1));
 			
 			structMap.put("adj_noun", new Rule("phrase", 1));
-			structMap.put("adj_prep", new Rule("phrase", .9));
+			structMap.put("adj_prep", new Rule("phrase", .97));
 			structMap.put("gerund_noun", new Rule("gerundp", 1)); // gerundphrase
 			structMap.put("ent_gerundp", new Rule("newchild", 1));
 			
@@ -733,6 +733,8 @@ public class Maps {
 			structMap.put("let_be", new Rule("letbe", 1));
 			structMap.put("let_ent", new Rule("let", 1));
 			structMap.put("if_assert", new Rule("If", 1));
+			structMap.put("hyp_assert", new Rule("If", 1));
+			
 			structMap.put("assert_If", new Rule("assert", 1));
 			structMap.put("assert_hypo", new Rule("assert", 1));
 			structMap.put("assert_prep", new Rule("assert", 1));
