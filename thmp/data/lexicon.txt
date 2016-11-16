@@ -5,6 +5,7 @@ CW complex ent
 homology ent
 log ent
 space ent
+following ent
 subextension ent
 category ent_comp
 satisfy verb

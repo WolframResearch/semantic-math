@@ -17,6 +17,7 @@ import com.wolfram.jlink.Expr;
 import com.wolfram.jlink.KernelLink;
 import com.wolfram.jlink.MathLinkException;
 
+import thmp.ParseState.ParseStateBuilder;
 import thmp.search.CollectThm;
 
 /**
@@ -54,7 +55,6 @@ public class GenerateContextVector {
 	/**
 	 * Encapsulate subclass, so can set resources such as contextVecFileStr.
 	 * And can call combineContextVectors() in outer class without initializing everything here.
-	 * 
 	 */
 	public static class GetContextVec{
 		// bare thm list, without latex \label's or \index's, or \ref's, etc
@@ -102,7 +102,7 @@ public class GenerateContextVector {
 			e.printStackTrace();
 			throw new RuntimeException(e);
 		}
-		//}
+		
 	}
 
 	//used for testing from with outer class main().
@@ -121,7 +121,7 @@ public class GenerateContextVector {
 		
 		try{
 			//get random indices. Make this more accurate!
-			int numIndicesToTake = contextVecStringListSz < 500 ? 60 : (contextVecStringListSz < 5000 ? 100 : 150);;
+			int numIndicesToTake = contextVecStringListSz < 500 ? 60 : (contextVecStringListSz < 5000 ? 100 : 150);
 			
 			Random rand = new Random();
 			StringBuffer randomContextVecsSB = new StringBuffer();
@@ -188,7 +188,10 @@ public class GenerateContextVector {
 		//strAr = ThmP1.preprocess(thm);
 		List<int[]> parseContextVecList = new ArrayList<int[]>();
 
-		ParseState parseState = new ParseState();
+		ParseStateBuilder parseStateBuilder = new ParseStateBuilder();
+		parseStateBuilder.setWriteUnknownWordsToFile(WRITE_UNKNOWNWORDS);
+		ParseState parseState = parseStateBuilder.build();
+		
 		for(int i = 0; i < strAr.length; i++){
 			//alternate commented out line to enable tex converter
 			//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim()) ));

@@ -665,6 +665,8 @@ public class ParseToWLTree {
 		
 		//boolean contextVecConstructed = false;		
 		//iterate backwards, so last-added ones (presumably longer span) come first
+		//pick out the one with highest commandNumUnits.
+		
 		for(int i = structWrapperListSz - 1; i > -1; i--){
 		//for(int i = 0; i < structWrapperListSz; i++){	
 			WLCommandWrapper curWrapper = structWrapperList.get(i);
@@ -681,7 +683,6 @@ public class ParseToWLTree {
 				}
 			}
 			//right now that threshold is: all components must be included.
-			// //Now: 1 component can have other head
 			if(WLCommand.structsWithOtherHeadCount(curCommand) < 1
 					&& shouldAppendCommandStr
 					//&& struct.WLCommandStrVisitedCount() == 0
@@ -775,6 +776,7 @@ public class ParseToWLTree {
 		if(struct.type().equals("assert")){
 			System.out.println("^^^^^^" + struct + " " + struct.WLCommandStrVisitedCount());
 		}
+		
 		if(struct.WLCommandWrapperList() != null && struct.WLCommandStrVisitedCount() < 1){	
 		//if(struct.WLCommandWrapperList() != null){	
 			/*if(WLCommand.structsWithOtherHeadCount(struct.WLCommand()) 

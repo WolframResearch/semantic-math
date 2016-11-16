@@ -193,7 +193,12 @@ public class WLCommandsList {
 			//"\\[HasProperty]", "adj, , true, TriggerMathObj" }));
 		WLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro", null, true), 
 				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), 
-				new PBuilder("\\[HasProperty]"), new PBuilder("adj", null, true, false, true) ));		
+				new PBuilder("\\[HasProperty]"), new PBuilder("adj", null, true, false, true) ));
+		//e.g. "R is of finite type"
+		WLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro", null, true), 
+				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), 
+				new PBuilder("\\[HasProperty]"), new PBuilder("pre", "of", false),
+				new PBuilder("noun|ent", null, true, false, true) ));
 		
 		//negative of above
 		//WLCommandMapBuilder.put("is not", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is not|are not|be not, trigger",

@@ -415,41 +415,59 @@ public class StructH<H> extends Struct{
 		this.WLCommandStrVisitedCount++;
 		
 		String str = "";
-		if(includeType){ 			
-			str += this.type.equals("ent") ? "Math" : this.type;
-			str += "[\"";
+		StringBuilder sb = new StringBuilder();
+		
+		if(includeType){ 		
+			sb.append(this.type.equals("ent") ? "Math" : this.type);
+			sb.append("[\"");
+			//str += this.type.equals("ent") ? "Math" : this.type;
+			//str += "[\"";
 		}
 		//str += "{";
-		str += append_name_pptStr();
+		//str += append_name_pptStr();
+		sb.append(append_name_pptStr());
+		
+		if(includeType){ 
+			//str += "\"]";
+			sb.append("\"");
+		}
 		
 		//iterate through children		
 		int childrenSize = children.size();
-		for(int i = 0; i < childrenSize; i++){			
-			Struct child = children.get(i);
-			String curChildRelation = childRelation.get(i);
-			if(child.WLCommandWrapperList() != null)
-				continue;
-			//str += ", ";
-			//str += childRelation.get(i) + " ";	
-			//System.out.println("^^^cur child: " + child);
-			
-			String childStr = child.simpleToString2(includeType, curCommand);
-			//str += childStr;	
-			if(!childStr.matches("\\s*")){
-				//only append curChidRelation if child is a StructH, to avoid
-				//including the relation twice, eg in case child is of type "prep"
-				//if this child has been used in another component of the same command.
-				if(!child.usedInOtherCommandComponent()){
-					curChildRelation = child.isStructA() ? "" : curChildRelation + " ";
+		if(childrenSize > 0){
+			StringBuilder childSb = new StringBuilder();
+			for(int i = 0; i < childrenSize; i++){			
+				Struct child = children.get(i);
+				String curChildRelation = childRelation.get(i);
+				if(child.WLCommandWrapperList() != null)
+					continue;
+				//str += ", ";
+				//str += childRelation.get(i) + " ";	
+				//System.out.println("^^^cur child: " + child);
 				
-					str += ", " + curChildRelation + childStr;
+				String childStr = child.simpleToString2(includeType, curCommand);
+				//str += childStr;	
+				if(!childStr.matches("\\s*")){
+					//only append curChidRelation if child is a StructH, to avoid
+					//including the relation twice, eg in case child is of type "prep"
+					//if this child has been used in another component of the same command.
+					if(!child.usedInOtherCommandComponent()){
+						curChildRelation = child.isStructA() ? "" : curChildRelation + " ";
+					
+						//str += ", " + curChildRelation + childStr;
+						childSb.append(", " + curChildRelation + childStr);
+					}
 				}
 			}
-		}		
-		if(includeType) str += "\"]";
+			sb.append(childSb);
+		}
+		if(includeType){ 
+			//str += "\"]";
+			sb.append("]");
+		}
 		//str += "}";
 		
-		return str;
+		return sb.toString();
 	}
 	
 	/**

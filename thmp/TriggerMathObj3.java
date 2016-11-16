@@ -99,7 +99,9 @@ public class TriggerMathObj3 {
 				triggerTermsMMap);
 		addTriggerTermsToMap("PowerSeries", new String[]{"radius of convergence", "Power Series", "analytic", "holomorphic",
 				"zero", "root"}, triggerTermsMMap);
-		addTriggerTermsToMap("ring", new String[]{"ideal", "ring", "pure", "cohen-macaulay", "catenary", "noetherian"}, triggerTermsMMap);		
+		addTriggerTermsToMap("ring", new String[]{"ring", "pure", "cohen-macaulay", "catenary", "noetherian"}, triggerTermsMMap);		
+		addTriggerTermsToMap("ideal", new String[]{"ideal"}, triggerTermsMMap);		
+
 		addTriggerTermsToMap("field", new String[]{"algebraically closed"}, triggerTermsMMap);
 		//////
 		

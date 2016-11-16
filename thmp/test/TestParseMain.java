@@ -15,6 +15,7 @@ import com.google.common.collect.Multimap;
 import thmp.ParseState;
 import thmp.ParseStructType;
 import thmp.ThmP1;
+import thmp.ParseState.ParseStateBuilder;
 
 /**
  * Parses preliminary set of Strings.
@@ -22,6 +23,8 @@ import thmp.ThmP1;
  *
  */
 public class TestParseMain {
+
+	private static final boolean WRITE_UNKNOWN_WORDS_TO_FILE = false;
 
 	@Before
 	public void setUp() throws Exception {
@@ -112,7 +115,10 @@ public class TestParseMain {
 	private void parseThm(String st, Multimap<ParseStructType, String> desiredParseMap) {
 		String[] strAr = ThmP1.preprocess(st);
 		
-		ParseState parseState = new ParseState();
+		ParseStateBuilder parseStateBuilder = new ParseStateBuilder();
+		parseStateBuilder.setWriteUnknownWordsToFile(WRITE_UNKNOWN_WORDS_TO_FILE);
+		ParseState parseState = parseStateBuilder.build();
+		
 		for(int i = 0; i < strAr.length; i++){
 			//alternate commented out line to enable tex converter
 			//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim()) ));

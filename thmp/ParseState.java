@@ -1,13 +1,15 @@
 package thmp;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
+import com.google.common.collect.ListMultimap;
 
-import thmp.ParseToWLTree.WLCommandWrapper;
+import thmp.ThmP1.ParsedPair;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+
 
 /**
  * Captures state of the parse, such as recent entities used (recentEnt).
@@ -34,20 +36,107 @@ public class ParseState {
 	//current parse struct, somewhere down the tree from headParseStruct
 	private ParseStruct curParseStruct;
 	
+	private boolean writeUnknownWordsToFile;
+	
 	//punctuation at end of current parse segment, segments are separated
-	//by punctuations
+	//by punctuations.
 	private String punctuation;	
 
+	//what each symbol stands for in the text so far.
+	//Make clear it's ListMultimap, since symbol order matters.
+	private ListMultimap<String, Struct> variableNamesMMap;
+	
+	//parsedExpr to record parsed pairs during parsing. 
+	private static List<ParsedPair> parsedExpr = new ArrayList<ParsedPair>();
+	
 	//waiting WLCommandWrapper map on deck, waiting to be added. Necessary 
 	//because don't know if need to add to next logic layer, or to current
 	//layer, until the entire tree is read.
 	//private Multimap<ParseStructType, WLCommandWrapper> waitingWrapperMMap;
 	
-	public ParseState(){
-		//this.waitingWrapperMMap = ArrayListMultimap.create();
+	private ParseState(ParseStateBuilder builder){
+		this.variableNamesMMap = ArrayListMultimap.create();
+		this.writeUnknownWordsToFile = builder.writeUnknownWordsToFile;		
 		//this.headParseStructList = new ArrayList<ParseStruct>();
-	}	
+	}
+	
+	/**
+	 * Whether to write unknown words to file. Also determines
+	 * if need to collect unknown words or not.
+	 * @return
+	 */
+	public boolean writeUnknownWordsToFile(){
+		return this.writeUnknownWordsToFile;
+	}
+	
+	/**
+	 * Build ParseState using builder, to avoid occurrences of half-baked states,
+	 * and to avoid .
+	 */
+	public static class ParseStateBuilder{
+		
+		private boolean writeUnknownWordsToFile;
+		
+		//fill in something...
+		public ParseStateBuilder(){
+			
+		}
+		
+		public void setWriteUnknownWordsToFile(boolean bool){
+			this.writeUnknownWordsToFile = bool;
+		}		
+		
+		public ParseState build(){
+			return new ParseState(this);
+		}
+	}
 
+	/**
+	 * What each symbol stands for in the text so far.
+	 * Make clear it's ListMultimap, since symbol order matters.
+	 * @return
+	 */
+	public ListMultimap<String, Struct> getAndClearVariableNamesMMap(){
+		ListMultimap<String, Struct> tempMap = ArrayListMultimap.create(this.variableNamesMMap);
+		this.variableNamesMMap = ArrayListMultimap.create();
+		return tempMap;
+	}
+	
+	/**
+	 * 
+	 * @param name Name of entStruct.
+	 * @param entStruct Entity to be added with name entStruct.
+	 */
+	public void addLocalVariableStructPair(String name, Struct entStruct){
+		this.variableNamesMMap.put(name, entStruct);
+	}
+	
+	/**
+	 * @param name Name of entStruct.
+	 * @param entStruct Entity to be added with name entStruct.
+	 * @return Return most recently-added Struct with this name.
+	 */
+	public Struct getNamedStruct(String name){		
+		
+		List<Struct> r = this.variableNamesMMap.get(name);
+		int listSz = r.size();
+		
+		if(r.isEmpty()){
+			return null;
+		}
+		return r.get(listSz-1);		
+	}
+	
+	/**
+	 * Get list of Structs with specified name.
+	 * @param name
+	 * @return
+	 */
+	public List<Struct> getNamedStructList(String name){		
+		
+		return this.variableNamesMMap.get(name);			
+	}
+	
 	/**
 	 * punctuation at end of current parse segment, segments are separated
 	 * by punctuations.

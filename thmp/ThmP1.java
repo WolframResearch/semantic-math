@@ -39,8 +39,7 @@ import thmp.utils.WordForms.TokenType;
 public class ThmP1 {
 
 	// should all be StructH's, since these are ent's. 
-	// make into multimap, so to get wider scope??
-	private static final ListMultimap<String, Struct> variableNamesMap;
+	//private static final ListMultimap<String, Struct> variableNamesMap;
 	// private static HashMap<String, ArrayList<String>> entityMap =
 	// Maps.entityMap;
 	// map of structures, for all, disj, etc
@@ -51,7 +50,7 @@ public class ThmP1 {
 	// fluff words, e.g. "the", "a"
 	private static final Map<String, String> fluffMap;
 
-	private static final Map<String, String> mathObjMap;
+	//private static final Map<String, String> mathObjMap;
 	// map for composite adjectives, eg positive semidefinite
 	// value is regex string to be matched
 	//private static final Map<String, String> adjMap;
@@ -62,19 +61,22 @@ public class ThmP1 {
 	private static final Pattern NEGATIVE_ADJECTIVE_PATTERN = Pattern.compile("un(.+)");
 	private static final Pattern AND_OR_PATTERN = Pattern.compile("and|or");
 	private static final Pattern IS_ARE_BE_PATTERN = Pattern.compile("is|are|be");
+	private static final Pattern CALLED_PATTERN = Pattern.compile("called|defined|said|denoted");
+	private static final Pattern CONJ_DISJ_PATTERN1 = Pattern.compile("conj|disj");
 	
 	// list of parts of speech, ent, verb etc <--should make immutable
 	private static final List<String> posList;
 	
 	// fluff type, skip when adding to parsed ArrayList
 	private static final String FLUFF = "Fluff";
-	//private static final Pattern ARTICLE_PATTERN = Pattern.compile("a|the|an");
+	private static final Pattern ARTICLE_PATTERN = Pattern.compile("a|the|an");
 	
 	// private static final File unknownWordsFile;
 	private static final Path unknownWordsFile = Paths.get("src/thmp/data/unknownWords1.txt");
 	private static final Path parsedExprFile = Paths.get("src/thmp/data/parsedExpr.txt");
 
 	private static final List<String> unknownWords = new ArrayList<String>();
+	//moving to parseState...
 	private static List<ParsedPair> parsedExpr = new ArrayList<ParsedPair>();
 	
 	private static final ImmutableListMultimap<String, FixedPhrase> fixedPhraseMap;	
@@ -106,6 +108,7 @@ public class ThmP1 {
 	private static final String[] NO_FUSE_ENT = new String[]{"map"};
 	private static final Set<String> noFuseEntSet;
 	private static final Pattern PUNCTUATION_PATTERN = Pattern.compile("(\\.|;|,|!|:)");
+	private static final boolean COLLECT_UNKNOWN_WORDS = false;
 	
 	//private static int[] parseContextVector;
 	//private static int parseContextVectorSz;
@@ -136,7 +139,7 @@ public class ThmP1 {
 			e.printStackTrace();
 		}*/		
 		fluffMap = Maps.BuildMaps.fluffMap;
-		mathObjMap = Maps.BuildMaps.mathObjMap;
+		//mathObjMap = Maps.BuildMaps.mathObjMap;
 		fixedPhraseMap = Maps.fixedPhraseMap();
 		structMap = Maps.structMap();
 		anchorMap = Maps.anchorMap();
@@ -147,7 +150,7 @@ public class ThmP1 {
 		// list of given names, like F in "field F", for bookkeeping later
 		// hashmap contains <name, entity> pairs
 		// need to incorporate multi-letter names, like sigma
-		variableNamesMap = ArrayListMultimap.create();
+		//variableNamesMap = ArrayListMultimap.create();
 
 		parseContextVectorSz = TriggerMathThm2.keywordDictSize();
 		parseContextVector = new int[parseContextVectorSz];
@@ -495,10 +498,16 @@ public class ThmP1 {
 		// list of each word with their initial type, adj, noun,
 		List<Pair> pairs = new ArrayList<Pair>();
 		//boolean addIndex = true; // whether to add to pairIndex
-		String[] strAr = sentence.split(" ");
+		String[] strAr = sentence.split("\\s+");
 		
+		//\begin{enumerate} should be the first word in the sentence, based on how they are built
+		//in the preprocessor.
+		if(strAr[0].equals("\\begin{enumerate}")){
+			TexParseUtils.parseEnumerate(strAr, parseState);
+			//parseEnumerate takes care of rest of parsing.
+			return parseState;
+		}
 		
-		// int pairIndex = 0;
 		strloop: for (int i = 0; i < strAr.length; i++) {
 
 			String curWord = strAr[i];
@@ -871,7 +880,7 @@ public class ThmP1 {
 				Pair pair = new Pair(strAr[i], "adverb");
 				pairs.add(pair);
 			}
-			// participles and gerunds. Need special list for words such as
+			// participles. Need special list for words such as
 			// "given"
 			else if (wordlen > 1 && curWord.substring(wordlen - 2, wordlen).equals("ed")
 					&& (posMMap.containsKey(strAr[i].substring(0, wordlen - 2))
@@ -948,6 +957,7 @@ public class ThmP1 {
 							// verbs ending in "e"
 							|| (posMMap.containsKey(curWord.substring(0, wordlen - 3) + 'e')
 									&& posMMap.get(curWord.substring(0, wordlen - 3) + 'e').get(0).matches("verb|vbs")))) {
+				
 				String curType = "gerund";
 				if (i < strAr.length - 1 && posMMap.containsKey(strAr[i + 1]) && posMMap.get(strAr[i + 1]).get(0).equals("pre")) {
 					// eg "consisting of" functions as pre
@@ -960,7 +970,11 @@ public class ThmP1 {
 					//curWord = curWord + " " + str[++i];
 					//curType = "amod";
 					curType = "adj"; //adj, so can be grouped together with ent's later
+				}//the following are equivalent
+				else if (i > 0 && ARTICLE_PATTERN.matcher(strAr[i - 1]).find()){
+					curType = "ent";
 				}
+				
 				int pairsSz = pairs.size();
 				//e.g. $f$ is inclusion-preserving
 				if(i > 1 && pairsSz > 1//e.g. inclusion preserving
@@ -994,9 +1008,10 @@ public class ThmP1 {
 				System.out.println("word not in dictionary: " + curWord);
 				pairs.add(new Pair(curWord, ""));
 
-				// write unknown words to file
-				unknownWords.add(curWord);
-
+				if(parseState.writeUnknownWordsToFile()){
+				// collect & write unknown words to file
+					unknownWords.add(curWord);
+				}
 			} else { // curWord doesn't count
 				
 				continue;
@@ -1266,23 +1281,25 @@ public class ThmP1 {
 
 					Pair nextPair = pairs.get(index + 1);
 					Pair prevPair = pairs.get(index - 1);
-					// should handle later with grammar rules in mx!
-					// ent of ent
-					if (prevPair.pos().matches("\\d+") && nextPair.pos().matches("\\d+")) {
+					// should handle later with grammar rules in mx! commented out 11/14/16.				
+					/*if (prevPair.pos().matches("\\d+") ) {
+						// ent of ent
 						int mathObjIndex = Integer.valueOf(prevPair.pos());
 						StructH<HashMap<String, String>> tempStruct = mathEntList.get(mathObjIndex);
-
-						pairs.get(index).set_pos(nextPair.pos());
-						Struct childStruct = mathEntList.get(Integer.valueOf(nextPair.pos()));						
-						tempStruct.add_child(childStruct, "of");
-						
-						// set to null instead of removing, to keep indices
-						// right. If nextPair.pos != prevPair.pos().
-						if (nextPair.pos() != prevPair.pos())
-							mathEntList.set(Integer.valueOf(nextPair.pos()), null);
-
+						Struct childStruct = null;
+						if(nextPair.pos().matches("\\d+")){							
+	
+							pairs.get(index).set_pos(nextPair.pos());
+							childStruct = mathEntList.get(Integer.valueOf(nextPair.pos()));						
+							// set to null instead of removing, to keep indices
+							// right.
+							if (nextPair.pos() != prevPair.pos()){
+								mathEntList.set(Integer.valueOf(nextPair.pos()), null);
+							}							
+							tempStruct.add_child(childStruct, "of");
+						}
 					} // "noun of ent".
-					else if (prevPair.pos().matches("noun") && nextPair.pos().matches("\\d+")) {
+					else */ if (prevPair.pos().equals("noun") && nextPair.pos().matches("\\d+")) {
 						int mathObjIndex = Integer.valueOf(nextPair.pos());
 						// Combine the something into the ent
 						StructH<HashMap<String, String>> tempStruct = mathEntList.get(mathObjIndex);
@@ -1296,14 +1313,14 @@ public class ThmP1 {
 					} // special case: "of form"
 
 					// if verb_of: "consists of" -> verb
-					else if (prevPair.pos().matches("verb|vbs")) {
+					/*else if (prevPair.pos().matches("verb|vbs")) {
 						String prevWord = prevPair.word();
 						prevPair.set_word(prevWord + " of");
 						pairs.remove(index);
-					} else {
+					}*/ 
+					else { 
 						// set anchor to its normal part of speech word, like
 						// "of" to pre
-
 						pairs.get(index).set_pos(posMMap.get(anchor).get(0));
 					}
 
@@ -1312,11 +1329,9 @@ public class ThmP1 {
 					// set anchor to its normal part of speech word, like "of"
 					// to pre
 					pairs.get(index).set_pos(posMMap.get(anchor).get(0));
-				}
-
+				}				
 				break;
 			}
-
 		}
 
 		// list of structs to return
@@ -1606,7 +1621,7 @@ public class ThmP1 {
 			}
 			innerloop: for (; i >= 0; i--) {
 				for (int k = j - 1; k >= i; k--) {
-					// pairs are (i,k), and (k+1,j)
+					/* pairs are at mx positions (i,k), and (k+1,j) */
 
 					StructList structList1 = mx.get(i).get(k);
 					StructList structList2 = mx.get(k + 1).get(j);
@@ -1619,7 +1634,8 @@ public class ThmP1 {
 							|| structList2.size() == 0) {						
 						continue;
 					}
-
+					//System.out.println("=====++++ i, j pairs " + (i) + " " + k + ", " + " col " + (k+1) + " " +j );
+					//if(j==7) System.out.println(structList2);
 					// need to refactor to make methods more modular!
 
 					Iterator<Struct> structList1Iter = structList1.structList().iterator();
@@ -1647,15 +1663,15 @@ public class ThmP1 {
 							String[] split1 = type1.split("_");
 							//this causes conj_ent to be counted as ent, so should
 							//*not* use "ent" type to determine whether StructH or not!
-							if (split1.length > 1 && split1[0].matches("conj|disj")) {
-								// if (split1.length > 1) {
+							
+							if (split1.length > 1 && CONJ_DISJ_PATTERN1.matcher(split1[0]).find()) {
+
 								type1 = split1[1];
 							}
 
 							String[] split2 = type2.split("_");
 
-							if (split2.length > 1 && split2[0].matches("conj|disj")) {
-								// if (split2.length > 1) {
+							if (split2.length > 1 && CONJ_DISJ_PATTERN1.matcher(split2[0]).find()) {
 
 								type2 = split2[1];
 							}
@@ -1692,7 +1708,7 @@ public class ThmP1 {
 								}
 							}
 
-							if (type2.equals("ent") && !struct2.isStructA() && !(type1.matches("verb|pre"))) {
+							if (!struct2.isStructA() && !type1.matches("verb|pre")) {
 								if (!foundFirstEnt) {
 									firstEnt = struct1;
 									foundFirstEnt = true;
@@ -1758,10 +1774,10 @@ public class ThmP1 {
 								Struct newStruct = struct2.copy();
 								String newPpt = "";
 								if (struct1.type().equals("conj_adj")) {
-									if (struct1.prev1() instanceof Struct) {
+									if (struct1.prev1NodeType().isTypeStruct()) {
 										newPpt += ((Struct) struct1.prev1()).prev1();
 									}
-									if (struct1.prev2() instanceof Struct) {
+									if (struct1.prev2NodeType().isTypeStruct()) {
 										newPpt += ((Struct) struct1.prev2()).prev1();
 									}
 								} else {
@@ -1791,8 +1807,8 @@ public class ThmP1 {
 							// handle "is called" -- "verb_parti", also "is
 							// defined"
 							// for definitions
-							else if (combined.matches("verb_parti") && struct1.prev1().toString().matches("is|are|be")
-									&& struct2.prev1().toString().matches("called|defined|said|denoted")) {
+							else if (combined.matches("verb_parti") && IS_ARE_BE_PATTERN.matcher(struct1.prev1().toString()).find()
+									&& CALLED_PATTERN.matcher(struct2.prev1().toString()).find()) {
 								String called = "";
 								int l = j + 1;
 								// whether definition has started, ie "is called
@@ -1804,7 +1820,7 @@ public class ThmP1 {
 									if (!nextStruct.type().matches("pre|prep|be|verb")) {
 										defStarted = true;
 
-										if (nextStruct instanceof StructA) {
+										if (nextStruct.isStructA()) {
 											called += nextStruct.prev1();
 										} else {
 											called += nextStruct.struct().get("name");
@@ -1827,8 +1843,7 @@ public class ThmP1 {
 
 								// ******* be careful using first ent
 								// record the symbol/given name associated to an
-								// ent, in case referring to it later. Should use custom map
-								//instead of mathObjMap
+								// ent, in case referring to it later.
 								if (firstEnt != null) {
 									StructA<Struct, String> parentStruct = 
 											new StructA<Struct, String>(firstEnt, NodeType.STRUCTH, 
@@ -1849,14 +1864,15 @@ public class ThmP1 {
 										// if(q != calledArray.length - 1)
 										curWord += " ";
 
-										mathObjMap.put(curWord, "COMP");
+										//mathObjMap.put(curWord, "COMP");
 										q++;
 									}
 									curWord += calledArray[calledArray.length - 1];
-									mathObjMap.put(curWord, "ent");
+									//mathObjMap.put(curWord, "ent");
 
 									// recentEnt is defined to be "called"
-									variableNamesMap.put(called, recentEnt);
+									parseState.addLocalVariableStructPair(called, recentEnt);
+									
 									continue outerloop;
 									//continue innerloop;
 								}
@@ -1877,7 +1893,7 @@ public class ThmP1 {
 							// because G gets null'ed out after "of". Need
 							//////// better strategy!
 							
-							// iterate through the List at position (i-1, i-1)
+							// iterate through the List at position (i-t, i-1), for conj/disj
 							if (i > 0 && i + 1 < len) {
 
 								/*
@@ -1910,23 +1926,37 @@ public class ThmP1 {
 								 * above, use single while loop } else
 								 */
 								if (type1.matches("or|and")) {
-									int l = 1;
+									int t = 1;
 									//boolean stopLoop = false;
 
-									searchConjLoop: while (i - l > -1 && i + 1 < len) {
-
-										List<Struct> structArrayList = mx.get(i - l).get(i - 1).structList();
+									searchConjLoop: while (i - t > -1) {
+										//i-1 because looking at the column before i.
+										List<Struct> structArrayList = mx.get(i - t).get(i - 1).structList();
 
 										int structArrayListSz = structArrayList.size();
 										if (structArrayListSz == 0) {
-											l++;
+											t++;
 											continue;
+										}
+										//search for the farthest allowable ent
+										//e.g. "Given ring of finite presentation and field of finite type"	
+										if(type2.equals("ent") && i - t - 2 > -1){
+											List<Struct> structArrayList2 = mx.get(i-t-1).get(i-1).structList();
+											List<Struct> structArrayList3 = mx.get(i-t-2).get(i-1).structList();
+											//go further than first choice? First choice should be more certain.
+											if(structArrayList2.get(0).type().equals("prep")
+													&& structArrayList3.get(0).type().equals("ent")){
+												t++;
+												continue;
+											}
+											
 										}
 										// iterate over Structs at (i-l, i-1)
 										for (int p = 0; p < structArrayListSz; p++) {
+											
 											Struct p_struct = structArrayList.get(p);
 											if (type2.equals(p_struct.type())) {
-
+												
 												// In case of conj, only proceed
 												// if // next
 												// word is not a singular verb.
@@ -1939,13 +1969,16 @@ public class ThmP1 {
 												// // over if(not
 												// this // case){do_something}
 												Struct nextStruct = j + 1 < len ? inputStructList.get(j + 1) : null;
+												
 												if (nextStruct != null && type1.equals("and")
-														&& nextStruct.prev1() instanceof String
+														&& nextStruct.prev1NodeType().equals(NodeType.STR)
 														&& isSingularVerb((String) nextStruct.prev1())) {
-
+													/* Intentionally left blank, for improved clarity. */
+													//In case of conj, only proceed if next
+													// word is not a singular verb.
 												} else {
 
-													String newType = type1.matches("or") ? "disj" : "conj";
+													String newType = type1.equals("or") ? "disj" : "conj";
 													// type is expression, eg "a
 													// and
 													// b".
@@ -1958,9 +1991,11 @@ public class ThmP1 {
 													NodeType struct1Type = struct1.isStructA() ? NodeType.STRUCTA : NodeType.STRUCTH;
 													NodeType struct2Type = struct2.isStructA() ? NodeType.STRUCTA : NodeType.STRUCTH;
 													
+													//System.out.println("^^^Inside CONJ/DISJ. Struct1 " + struct1 + " Struct2 " + struct2);
+													
 													StructA<Struct, Struct> parentStruct = new StructA<Struct, Struct>(
 															p_struct, struct1Type, struct2, struct2Type, newType + "_" + type2,
-															mx.get(i - l).get(j));
+															mx.get(i - t).get(j));
 													p_struct.set_parentStruct(parentStruct);
 													struct2.set_parentStruct(parentStruct);
 													//types are same, so scores should be same, so should only be punished once
@@ -1968,7 +2003,7 @@ public class ThmP1 {
 													double maxDownPathScore = p_struct.maxDownPathScore();
 													parentStruct.set_maxDownPathScore(maxDownPathScore);
 
-													mx.get(i - l).get(j).add(parentStruct);
+													mx.get(i - t).get(j).add(parentStruct);
 													// mx.get(i - l).set(j,
 													// parentStruct);
 													// mx.get(i+1).set(j, null);
@@ -1979,7 +2014,7 @@ public class ThmP1 {
 										}
 										// if (stopLoop)
 										// break;
-										l++;
+										t++;
 									}
 
 								}
@@ -1995,8 +2030,10 @@ public class ThmP1 {
 							// update namesMap
 							if (type1.equals("ent") && !struct1.isStructA()) {
 								String called = struct1.struct().get("called");
-								if (called != null)
-									variableNamesMap.put(called, struct1);
+								if (called != null){
+									parseState.addLocalVariableStructPair(called, struct1);
+									
+								}
 							}
 
 							// reduce if structMap contains combined
@@ -2288,12 +2325,12 @@ public class ThmP1 {
 			
 		}
 		System.out.println("##commandNumUnitsList " + commandNumUnitsList );
-		//only add nontrivial results, but add trivial results if no nontrivial ones exist.
+		//only add nontrivial results, but add trivial results (>=3) if no nontrivial ones exist.
 		//This works as the results are sorted, and nontrivial ones come first in sorted list.
 		boolean parsedExprAdded = false;
 		for(int i = 0; i < sortedParsedPairMMapList.size(); i++){
 			//only add nontrivial results
-			if(parsedExprAdded && numUnitsList.get(i) < 3){				
+			if(parsedExprAdded && numUnitsList.get(i) < 2){				
 				continue;
 			}else{
 				parsedExprAdded = true;
@@ -2314,7 +2351,8 @@ public class ThmP1 {
 			
 			//Also add the long form to parsedExpr	
 			parsedExpr.add(longFormParsedPairList.get(finalOrderingList.get(i)));
-			System.out.println("longForm, commandUnits: " + commandNumUnitsList.get(i) +". numUnits: " +numUnitsList.get(i) + " "+ longFormParsedPairList.get(finalOrderingList.get(i)));
+			System.out.println("longForm, commandUnits: " + commandNumUnitsList.get(i) +". numUnits: " +numUnitsList.get(i) 
+				+ " "+ longFormParsedPairList.get(finalOrderingList.get(i)));
 		}	
 		//assign the global context vec as the vec of the highest-ranked parse
 		int bestIndex = finalOrderingList.get(0);
@@ -2549,7 +2587,7 @@ public class ThmP1 {
 			// struct1 should be of type StructH to receive a
 			// child
 			// assert ensures rule correctness
-			assert !struct1.isStructA();
+			assert !struct1.isStructA() : "struct1 does not have type StructH in reduce()!";
 
 			// get a (semi)deep copy of this StructH, since
 			// later-added children may not
@@ -2708,7 +2746,7 @@ public class ThmP1 {
 			}
 		}
 		else if (newType.equals("noun")) {
-			if (type1.matches("adj") && type2.matches("noun")) {
+			if (type1.equals("adj") && type2.equals("noun")) {
 				// combine adj and noun
 				String adj = (String) struct1.prev1();
 				struct2.set_prev1(adj + " " + struct2.prev1());
@@ -2716,7 +2754,13 @@ public class ThmP1 {
 				// mx.get(i).set(j, struct2);
 				mx.get(i).get(j).add(struct2);
 			}
-		} 
+		}else if(type1.equals("rpro") && type2.equals("assert")){
+			//e.g. "we say that $p$ is prime."
+			if(struct1.prev1().equals("that")){
+				//put the assert in the parent mx entry, ignore "that".
+				mx.get(i).get(j).add(struct2);
+			}
+		}
 		else {
 			// if symbol and a given name to some entity
 			// use "called" to relate entities
@@ -2759,7 +2803,8 @@ public class ThmP1 {
 				if (structToSet.equals("symb") && structToSet.prev1NodeType().equals(NodeType.STR)) {
 					
 					String entKey = structToSet.prev1().toString();
-					List<Struct> namesList = variableNamesMap.get(entKey);
+					
+					List<Struct> namesList = parseState.getNamedStructList(entKey);
 					if (!namesList.isEmpty()) {
 						int namesListLen = namesList.size();
 						Struct curEnt = namesList.get(namesListLen-1);
@@ -2801,8 +2846,8 @@ public class ThmP1 {
 								
 								// assumes that symb is a leaf struct! Need to
 								// make more robust. check to ensure symb is in fact a leaf.
-								variableNamesMap.put(tempSymStruct.prev1().toString(), tempEntStruct);
-
+								//variableNamesMap.put(tempSymStruct.prev1().toString(), tempEntStruct);
+								parseState.addLocalVariableStructPair(tempSymStruct.prev1().toString(), tempEntStruct);
 								tempEntStruct.struct().put("called", tempSymStruct.prev1().toString());
 								break ploop;
 							}
@@ -3090,8 +3135,7 @@ public class ThmP1 {
 			Files.write(unknownWordsFile, unknownWords, Charset.forName("UTF-8"));
 		}catch(IOException e){
 			e.printStackTrace();
-			throw new RuntimeException(e);
-			
+			throw new IllegalArgumentException(e);			
 		}
 	}
 
@@ -3115,9 +3159,9 @@ public class ThmP1 {
 	 * Resets parsedExpr by re-initializing.
 	 * Defensively copies List and returns copy.
 	 */
-	public static List<ParsedPair> getParsedExpr(){
-		ImmutableList<ParsedPair> parsedExprCopy = ImmutableList.copyOf(parsedExpr);
+	public static List<ParsedPair> getAndClearParsedExpr(){
 		
+		ImmutableList<ParsedPair> parsedExprCopy = ImmutableList.copyOf(parsedExpr);		
 		parsedExpr = new ArrayList<ParsedPair>();
 		return parsedExprCopy;
 	}
@@ -3137,10 +3181,10 @@ public class ThmP1 {
 	/** 
 	 * @return The ParseStruct parts of each parse since last retrieval.
 	 */
-	public static List<String> getParseStructMapList(){		
+	public static List<String> getAndClearParseStructMapList(){		
 		//List<String> parseStructMapListCopy = new ArrayList<String>(parseStructMapList);
 		ImmutableList<String> parseStructMapListCopy = ImmutableList.copyOf(parseStructMapList);
-		parseStructMapList = new ArrayList<String>();;
+		parseStructMapList = new ArrayList<String>();
 		return parseStructMapListCopy;
 	}
 	
@@ -3342,6 +3386,31 @@ public class ThmP1 {
 				toLowerCase = false;
 			} else if (curWord.matches("\\$[^$]+\\$.*")) {
 				toLowerCase = false;
+			}
+
+			//take entire \begin{enumerate} block as one sentence
+			if(curWord.equals("\\begin{enumerate}")){
+				if(sentenceBuilder.length() > 0){
+					sentenceList.add(sentenceBuilder.toString());
+					sentenceBuilder.setLength(0);
+				}
+				//StringBuilder enumerateSb = new StringBuilder();
+				while(i < wordsArrayLen && !curWord.equals("\\end{enumerate}")){
+					curWord = wordsArray[i];
+					sentenceBuilder.append(" " + curWord);
+					i++;
+				}
+				
+				if(curWord.equals("\\end{enumerate}")){
+					sentenceBuilder.append(" " + curWord);
+				}
+				
+				sentenceList.add(sentenceBuilder.toString().trim());
+				sentenceBuilder.setLength(0);
+				
+				if(i == wordsArrayLen){					
+					return sentenceList.toArray(new String[0]);
+				}
 			}
 
 			// fluff phrases all start in posMap

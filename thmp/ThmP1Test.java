@@ -10,6 +10,7 @@ import java.util.Scanner;
 
 import com.wolfram.alpha.parser.preparser.TexConverter;
 
+import thmp.ParseState.ParseStateBuilder;
 import thmp.ThmP1.ParsedPair;
 
 /*
@@ -17,6 +18,8 @@ import thmp.ThmP1.ParsedPair;
  */
 public class ThmP1Test {
 	
+	private static final boolean WRITE_UNKNOWN_WORDS_TO_FILE = false;
+
 	static{
 		/*Maps.buildMap();
 		try {
@@ -381,7 +384,8 @@ public class ThmP1Test {
 			st = "if $R$ is commutative and $S$ is commutative";			
 			
 			st = "the map $f$ is linear";
-			//st = "$f$ maps $x$ to $y$";
+			st = "$f$ maps $x$ to $y$";
+			
 			st = "if $R$ is a ring, if $S$ is commutative then $R$ is commutative";
 			st = "if $R$ is commutative and $S$ is commutative, $S$ is abelian if $T$ is abelian";
 			st = "if $R$ is a ring, $M$ is an $R$ module if $R$ is commutative";
@@ -390,7 +394,21 @@ public class ThmP1Test {
 					+ "Then $M$ is finitely presented as an $S$-module.";			
 			st = "if $M$ is finitely presented as an $R$-module, then $M$ is finitely presented";
 			st = "Let $R \\to S$ be a ring map. Let $M$ be an $S$-module. If $M$ is finite as an $R$-module, then $M$ is finite as an $S$-module.";
+			st = "we say that $q$ is prime, and that $p$ is non-prime";
+		
+			st = "$p$ is prime or $q$ is prime";
+			st = "$R \\to S$ is of finite type ";
 			st = "$R \\to S$ is of finite type or $S$ is a finite type $R$-algebra, if there exists an $n in mathbf{N}$ and an surjection of $R$-algebras $R[x_1, ldots, x_n] \\to S$.";
+			st = "A composition of ring maps of finite type is of finite type.";
+			st = "Given $R \\to S' \\to S$ with $R \\to S$ of finite type, then $S' \\to S$ is of finite type.";
+			st = "the following are equivalent: \\begin{enumerate} \\item $q$ is prime \\item $p$ is prime \\end{enumerate}";
+			st = "Given $R \to S' \to S$, with $R \to S$ of finite presentation, and $R \to S'$ of finite type, then $S' \to S$ is of finite presentation.";
+			st = "For any surjection $alpha : R[x_1, \\ldots, x_n] \to S$ the kernel of $alpha$ is a finitely generated ideal in $R[x_1, \\ldots, x_n]$";
+			st = "Let $R$ be a ring. For a principal ideal $J \\subset R$, and for any ideal $I \\subset J$ we have $I = J (I : J)$.";
+			st = "Given $R \\to S' \\to S$, with $R \\to S$ of finite presentation, and $R \\to S'$ of finite type, then $S' \\to S$ is of finite presentation.";
+			
+			st = "Given ring of finite presentation and field of finite type";			
+			st = "Given $R \\to S' \\to S$, with $R \\to S$ of finite presentation, and $R \\to S'$ of finite type, then $S' \\to S$ is of finite presentation";
 			//st = "if $R$ is commutative and $S$ is commutative, then $S$ is abelian if $T$ is abelian";
 			//st = "then $M$ is finitely presented as an $S$-module.";
 			//st = "Assume $R to S$ is of finite type";
@@ -446,7 +464,9 @@ public class ThmP1Test {
 			
 			strAr = ThmP1.preprocess(st);
 			
-			ParseState parseState = new ParseState();
+			ParseStateBuilder parseStateBuilder = new ParseStateBuilder();
+			parseStateBuilder.setWriteUnknownWordsToFile(WRITE_UNKNOWN_WORDS_TO_FILE);
+			ParseState parseState = parseStateBuilder.build();
 			
 			for(int i = 0; i < strAr.length; i++){
 				//alternate commented out line to enable tex converter
@@ -470,14 +490,14 @@ public class ThmP1Test {
 			int[] combinedVec = GenerateContextVector.combineContextVectors(parseContextVecList);
 			System.out.println("combinedVec: " + Arrays.toString(combinedVec));
 			
-			String parsedOutput = ThmP1.getParseStructMapList().toString();
+			String parsedOutput = ThmP1.getAndClearParseStructMapList().toString();
 			//String parsedOutput = Arrays.toString(ThmP1.getParseStructMapList().toArray());			
 			//String processedOutput = parsedOutput.replaceAll("MathObj", "MathObject").replaceAll("\\$([^$]+)\\$", "LaTEXMath[\"$1\"]")
 					//.replaceAll("MathObject\\{([^}]+)\\}", "MathObject\\[$1\\]");					
 			
 			System.out.println("PARTS: " + parsedOutput);			
 			System.out.println("****ParsedExpr ");
-			for(ParsedPair pair : ThmP1.getParsedExpr()){
+			for(ParsedPair pair : ThmP1.getAndClearParsedExpr()){
 				System.out.println(pair);
 			}
 			
@@ -505,9 +525,12 @@ public class ThmP1Test {
 					System.out.println("*~~~*");
 					System.out.println(nextLine + "\n");
 					//array of sentences separated by . or !
-					strAr = ThmP1.preprocess(st);
+					strAr = ThmP1.preprocess(st);					
 					
-					parseState = new ParseState();
+					//ParseStateBuilder parseStateBuilder2 = new ParseStateBuilder();
+					//parseStateBuilder2.setWriteUnknownWordsToFile(WRITE_UNKNOWN_WORDS_TO_FILE);
+					parseState = parseStateBuilder.build();
+					
 					for(int i = 0; i < strAr.length; i++){
 						//alternate commented out line to enable tex converter
 						//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim()) ));
@@ -517,14 +540,17 @@ public class ThmP1Test {
 					System.out.println();
 					
 					//parsedOutput = Arrays.toString(ThmP1.getParseStructMapList().toArray());			
-					parsedOutput = ThmP1.getParseStructMapList().toString();
+					parsedOutput = ThmP1.getAndClearParseStructMapList().toString();
 					
 					System.out.println("PARTS: " + parsedOutput);
-					System.out.println("****ParsedExpr " + ThmP1.getParsedExpr());
+					System.out.println("****ParsedExpr " + ThmP1.getAndClearParsedExpr());
 					System.out.println("*~~~*");
 				}
 				
-				//ThmP1.writeUnknownWordsToFile();
+				
+				if(WRITE_UNKNOWN_WORDS_TO_FILE){
+					ThmP1.writeUnknownWordsToFile();
+				}
 				//ThmP1.writeParsedExprToFile();
 				sc.close();
 			}
@@ -537,7 +563,10 @@ public class ThmP1Test {
 			
 			List<int[]> parseContextVecList = new ArrayList<int[]>();
 			
-			ParseState parseState = new ParseState();
+			ParseStateBuilder parseStateBuilder = new ParseStateBuilder();
+			parseStateBuilder.setWriteUnknownWordsToFile(WRITE_UNKNOWN_WORDS_TO_FILE);
+			ParseState parseState = parseStateBuilder.build();
+			
 			for(int i = 0; i < strAr.length; i++){
 				//alternate commented out line to enable tex converter
 				//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim()) ));
@@ -554,14 +583,14 @@ public class ThmP1Test {
 			int[] combinedVec = GenerateContextVector.combineContextVectors(parseContextVecList);
 			System.out.println("combinedVec: " + Arrays.toString(combinedVec));
 			
-			String parsedOutput = ThmP1.getParseStructMapList().toString();
+			String parsedOutput = ThmP1.getAndClearParseStructMapList().toString();
 			//String parsedOutput = Arrays.toString(ThmP1.getParseStructMapList().toArray());			
 			//String processedOutput = parsedOutput.replaceAll("MathObj", "MathObject").replaceAll("\\$([^$]+)\\$", "LaTEXMath[\"$1\"]")
 					//.replaceAll("MathObject\\{([^}]+)\\}", "MathObject\\[$1\\]");					
 			
 			System.out.println("PARTS: " + parsedOutput);			
 			System.out.println("****ParsedExpr ");
-			for(ParsedPair pair : ThmP1.getParsedExpr()){
+			for(ParsedPair pair : ThmP1.getAndClearParsedExpr()){
 				System.out.println(pair);
 			}
 		}
