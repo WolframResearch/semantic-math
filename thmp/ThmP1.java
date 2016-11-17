@@ -452,20 +452,7 @@ public class ThmP1 {
 	}
 	
 	/**
-	 * Tokenizes by splitting into comma-separated strings
-	 * 
-	 * @param str A full sentence.
-	 * @return
-	 */
-	/*
-	 * public static void process(String sentence) throws IOException{ //can't
-	 * just split! Might be in latex expression String[] subSentences =
-	 * sentence.split(",|;|:"); int subSentLen = subSentences.length; for(int i
-	 * = 0; i < subSentLen; i++){ parse(tokenize(subSentences[i])); }
-	 * System.out.println(); }
-	 */
-	/**
-	 * 
+	 * 	 * Tokenizes by splitting into comma-separated strings
 	 * @param sentence string to be tokenized
 	 * @param parseState current state of the parse.
 	 * @return List of Struct's
@@ -595,9 +582,7 @@ public class ThmP1 {
 			// check for trigger words of fixed phrases, e.g. "with this said"
 			else if (i < strAr.length - 1) {
 				String potentialTrigger = curWord + " " + strAr[i + 1];
-				if (fixedPhraseMap.containsKey(potentialTrigger)) {
-					
-					// need multimap!! same trigger could apply to many phrases
+				if (fixedPhraseMap.containsKey(potentialTrigger)) {					
 					// do first two words instead of 1, e.g. "for all" instead
 					// of just "for"
 					// since compound words contain at least 2 words
@@ -656,17 +641,13 @@ public class ThmP1 {
 			
 			List<String> posList = posMMap.get(curWord);
 			List<String> singularPosList = posMMap.get(singular);
-			
-			List<String> posListInUse = posList;
-			//List<String> posListInUse = posList.isEmpty() ? singularPosList : posList;
-			
+						
 			String wordPos = null;
 					/*posList.isEmpty() 
 					? (singularPosList.isEmpty() ? null : posMMap.get(singular).get(0)) 
 					: posMMap.get(curWord).get(0);	 */
 					
 			if(posList.isEmpty()){
-				posListInUse = singularPosList;
 				if(!singularPosList.isEmpty()){
 					wordPos = posMMap.get(singular).get(0);
 				}
@@ -749,6 +730,14 @@ public class ThmP1 {
 				String pos;
 				List<String> tempPosList = posMMap.get(temp);
 				String tempPos = tempPosList.get(0);
+				
+				if(curWord.equals("for")){
+					//turn "a" into "any" in e.g. "for a field F over Q"	
+					if(i < strAr.length-1 && strAr[i+1].equals("a")){
+						strAr[i+1] = "any";
+					}
+				}
+				
 				//keep going until all words in an n-gram are gathered
 				while (tempPos.matches("[^_]*_COMP|[^_]*_comp") && i < strAr.length - 1) {					
 					curWord = temp;
@@ -791,8 +780,7 @@ public class ThmP1 {
 					addExtraPosToPair(pair, posList);
 					pair = fuseAdverbAdj(pairs, curWord, pair);					
 					pairs.add(pair);
-				}
-				
+				}				
 			}
 			// if plural form
 			else if (posMMap.containsKey(singular)){
@@ -970,13 +958,14 @@ public class ThmP1 {
 					//curWord = curWord + " " + str[++i];
 					//curType = "amod";
 					curType = "adj"; //adj, so can be grouped together with ent's later
-				}//the following are equivalent
+				}//e.g. "the following are equivalent"
 				else if (i > 0 && ARTICLE_PATTERN.matcher(strAr[i - 1]).find()){
 					curType = "ent";
 				}
 				
 				int pairsSz = pairs.size();
 				//e.g. $f$ is inclusion-preserving
+				
 				if(i > 1 && pairsSz > 1//e.g. inclusion preserving
 						 && pairs.get(pairsSz-1).pos().matches("noun|\\d+|ent")
 						 && pairs.get(pairsSz-2).pos().matches("verb|vbs")
@@ -1379,8 +1368,10 @@ public class ThmP1 {
 				
 			} else {				
 				//check if article
-				if(curPair.pos().equals("art")){					
+				if(curPair.pos().equals("art")){	
+					
 					if(i < pairsSz-1){
+						//combine into subsequent ent
 						Pair nextPair = pairs.get(i+1);
 						if(nextPair.pos().matches("\\d+")){
 							
@@ -1938,18 +1929,29 @@ public class ThmP1 {
 											t++;
 											continue;
 										}
-										//search for the farthest allowable ent
+										//search for the farthest allowable ent, keep going up along the column.
 										//e.g. "Given ring of finite presentation and field of finite type"	
 										if(type2.equals("ent") && i - t - 2 > -1){
 											List<Struct> structArrayList2 = mx.get(i-t-1).get(i-1).structList();
 											List<Struct> structArrayList3 = mx.get(i-t-2).get(i-1).structList();
-											//go further than first choice? First choice should be more certain.
-											if(structArrayList2.get(0).type().equals("prep")
+											//not double-looping O(mn) on average because of the conditionals.
+											for(Struct list2Struct : structArrayList2){
+												if(list2Struct.type().equals("prep")){
+													for(Struct list3Struct : structArrayList3){
+														if(list3Struct.type().equals("ent")){
+															t++;
+															//System.out.println("!!! list2Struct: " + list2Struct + " " + list3Struct);
+															continue searchConjLoop;
+														}
+													}
+													break;
+												}
+											}
+											/*if(structArrayList2.get(0).type().equals("prep")
 													&& structArrayList3.get(0).type().equals("ent")){
 												t++;
 												continue;
-											}
-											
+											}*/											
 										}
 										// iterate over Structs at (i-l, i-1)
 										for (int p = 0; p < structArrayListSz; p++) {
@@ -2329,7 +2331,7 @@ public class ThmP1 {
 		//This works as the results are sorted, and nontrivial ones come first in sorted list.
 		boolean parsedExprAdded = false;
 		for(int i = 0; i < sortedParsedPairMMapList.size(); i++){
-			//only add nontrivial results
+			//only add nontrivial results //finalOrderingList.get(i)
 			if(parsedExprAdded && numUnitsList.get(i) < 2){				
 				continue;
 			}else{
@@ -2606,18 +2608,21 @@ public class ThmP1 {
 			// could also be verb, "consist", "lies"			
 			List<Struct> kPlus1StructArrayList = mx.get(k + 1).get(k + 1).structList();
 			String childRelation = null;
+			
 			for(int p = 0; p < kPlus1StructArrayList.size(); p++){
 				Struct struct = kPlus1StructArrayList.get(p);
 				if(struct.prev1NodeType().equals(NodeType.STR)){
 					childRelation = struct.prev1().toString();
+					if(struct.type().equals("hyp")){
+						//e.g. "Field which is perfect"
+						kk;
+					}
 					break;
 				}
 			}
 			if(childRelation == null){
-				//should not be null!
-				System.out.println("Inside ThmP1.reduce(), childRelation should not be null!");
-				throw new IllegalStateException("childRelation should not be null!");
-				//return new EntityBundle(firstEnt, recentEnt, recentEntIndex);
+				
+				throw new IllegalStateException("Inside ThmP1.reduce(), childRelation should not be null!");
 			}
 			
 			// String childRelation = mx.get(k + 1).get(k +
@@ -2644,7 +2649,7 @@ public class ThmP1 {
 					//if struct2 is eg a prep, only want the ent in the prep
 					//to be added.
 				Struct childToAdd = struct2;
-				if(struct2.type().equals("prep") && struct2.prev2() instanceof StructH){
+				if(struct2.type().equals("prep") && struct2.prev2NodeType().equals(NodeType.STRUCTH)){
 					childToAdd = (Struct)struct2.prev2();
 				}
 				((StructH<?>) newStruct).add_child(childToAdd, childRelation); 

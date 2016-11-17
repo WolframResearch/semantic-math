@@ -409,14 +409,15 @@ public class TriggerMathObj3 {
 		String highestMathObj = getTopTerm(triggerTermList);
 		
 		//String namePpt = ((StructH<?>)struct).append_name_pptStr();
-		String namePpt = struct.simpleToString(false, curCommand);
-		if(struct.type().equals("ent")){
-			namePpt = "[\"" + namePpt + "\"]";
-		}
-		String r = (null == highestMathObj) ? "Math[\"" + namePpt + "\"]": highestMathObj + "[\"" + namePpt + "\"]";
+		boolean includeType = false;
+		String namePpt = struct.simpleToString(includeType, curCommand);
+		/*if(struct.type().equals("ent")){
+			namePpt = "[" + namePpt + "]";
+		}*/
+		String mathStr = (null == highestMathObj) ? "Math[\"" + namePpt + "\"]": highestMathObj + "[\"" + namePpt + "\"]";
 		
 		//return r + "[" + namePpt + "]";
-		return r;
+		return mathStr;
 	}
 	
 	// Analogous method for StructA as getChildrenNames for StructH. 

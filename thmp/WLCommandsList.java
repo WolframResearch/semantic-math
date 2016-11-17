@@ -23,6 +23,10 @@ import thmp.WLCommand.WLCommandComponent;
 /**
  * list of WLCommand's. Creates WLCommands using data here and stores them in an
  * immutable Multimap, keys being trigger words.
+ * Commands/grammar rules should be added *judiciously*, for best parse efficiency. 
+ * When possible, bundle newly desired patterns into existing rules. Math theorems 
+ * in general follow a limited set of sentence structures, and hence should not require many
+ * rules.
  *
  */
 public class WLCommandsList {
@@ -193,11 +197,11 @@ public class WLCommandsList {
 			//"\\[HasProperty]", "adj, , true, TriggerMathObj" }));
 		WLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro", null, true), 
 				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), 
-				new PBuilder("\\[HasProperty]"), new PBuilder("adj", null, true, false, true) ));
+				new PBuilder("~HasProperty~"), new PBuilder("adj", null, true, false, true) ));
 		//e.g. "R is of finite type"
 		WLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro", null, true), 
 				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), 
-				new PBuilder("\\[HasProperty]"), new PBuilder("pre", "of", false),
+				new PBuilder("~HasProperty~"), new PBuilder("pre", "of", false),
 				new PBuilder("noun|ent", null, true, false, true) ));
 		
 		//negative of above
@@ -270,9 +274,17 @@ public class WLCommandsList {
 				new PBuilder(null, null, true) ));
 		// "A has property B", eg "chains of ideals have same length"
 		//WLCommandMapBuilder.put("have", addCommand(new String[] { "ent|symb|pro, , true", "verb, have|has, trigger", "\\HasProperty[", ", , true", "]"}));
-		WLCommandMapBuilder.put("have", addCommand(new PBuilder("ent|symb|pro", null, true), new PBuilder("verb", "have|has", false, true, false), 
-				new PBuilder("\\HasProperty["), new PBuilder(null, null, true), new PBuilder("]") ));
+		WLCommandMapBuilder.put("have", addCommand(new PBuilder("ent|symb|pro", null, true),
+				new PBuilder("verb", "have|has", false, true, false), 
+				new PBuilder("~HasProperty~"), new PBuilder(null, null, true) ));
+		//"we have "A \subset B"
+		WLCommandMapBuilder.put("have", addCommand(new PBuilder("pro", "we", true),
+				new PBuilder("verb", "have", false, true, false), new PBuilder(null, "that", false, false, "OPT"), 
+				new PBuilder("assert|ent", null, true) ));
 		
+		//"for a principal ideal"
+		
+				
 		/*
 		WLCommandMapBuilder.put("is contained", addCommand(new String[] { "symb|ent|pro, , true", "auxpass, , trigger",
 				"\\[Element]", "symb|ent|adj|phrase, , true, TriggerMathObj" }));		

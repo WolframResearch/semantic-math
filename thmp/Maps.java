@@ -24,9 +24,17 @@ import thmp.search.WordFrequency;
 
 import java.util.Map.Entry;
 
-/* contains the dictionaries and hashmaps 
+/** contains the dictionaries and hashmaps 
  * used as vocabulary and rules in parsing
- * in ThmP1
+ * in ThmP1.java.
+ * Part of speech atlas:
+ * pre: preposition.
+ * prep: prepositional phrase.
+ * ent: math entity.
+ * adj: adjective.
+ * adverb: adverb.
+ * verb: verb.
+ * vbs: singular verb.
  */
 
 public class Maps {
@@ -609,6 +617,7 @@ public class Maps {
 			// participle: called, need to take care of "said" etc
 			structMap.put("parti_ent", new Rule("partient", 1));
 			structMap.put("ent_partient", new Rule("newchild", 1));
+			//"field which is perfect."
 			structMap.put("ent_hypo", new Rule("newchild", .9));
 			// phrases: been there, x in X,
 			structMap.put("parti_adj", new Rule("phrase", 1));

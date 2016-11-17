@@ -404,11 +404,19 @@ public class ThmP1Test {
 			st = "the following are equivalent: \\begin{enumerate} \\item $q$ is prime \\item $p$ is prime \\end{enumerate}";
 			st = "Given $R \to S' \to S$, with $R \to S$ of finite presentation, and $R \to S'$ of finite type, then $S' \to S$ is of finite presentation.";
 			st = "For any surjection $alpha : R[x_1, \\ldots, x_n] \to S$ the kernel of $alpha$ is a finitely generated ideal in $R[x_1, \\ldots, x_n]$";
-			st = "Let $R$ be a ring. For a principal ideal $J \\subset R$, and for any ideal $I \\subset J$ we have $I = J (I : J)$.";
 			st = "Given $R \\to S' \\to S$, with $R \\to S$ of finite presentation, and $R \\to S'$ of finite type, then $S' \\to S$ is of finite presentation.";
 			
 			st = "Given ring of finite presentation and field of finite type";			
+			st = "Let $R$ be a ring. For a principal ideal $J \\subset R$, and for any ideal $I \\subset J$ we have $I = J (I : J)$.";
 			st = "Given $R \\to S' \\to S$, with $R \\to S$ of finite presentation, and $R \\to S'$ of finite type, then $S' \\to S$ is of finite presentation";
+			st = "Let $\\mathcal{F}$ be a set of ideals of $R$.";
+			st = "An ideal $I \\subset R$ which is maximal with respect to the property that $I \\cap S = \\emptyset$ is prime";
+			st = "If every prime ideal of $R$ is finitely generated, then every ideal of $R$ is finitely generated";
+			st = "An ideal maximal among the ideals which do not contain a nonzerodivisor is prime.";
+			st = "given an ideal maximal among the ideals which are prime"; //<--to parse!
+			
+			//st = "given field, with $F $ of presentation, and $G $ of finite type";
+						
 			//st = "if $R$ is commutative and $S$ is commutative, then $S$ is abelian if $T$ is abelian";
 			//st = "then $M$ is finitely presented as an $S$-module.";
 			//st = "Assume $R to S$ is of finite type";

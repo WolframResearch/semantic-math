@@ -44,8 +44,9 @@ public class StructH<H> extends Struct{
 	private int depth;
 	private boolean hasChild = false;
 	private List<Struct> children; 
-	//relation to child, eg "of," "enjoyed"
-	private List<String> childRelation;	
+	//relation to child, eg "of," "which is", "over", 
+	//as in "field over Q."
+	private List<ChildRelation> childRelation;	
 	private double score;
 	private double DOWNPATHSCOREDEFAULT = 1;
 	private double maxDownPathScore = DOWNPATHSCOREDEFAULT;
@@ -69,7 +70,7 @@ public class StructH<H> extends Struct{
 		this.struct = struct;
 		this.type = type;
 		this.children = new ArrayList<Struct>();
-		this.childRelation = new ArrayList<String>();
+		this.childRelation = new ArrayList<ChildRelation>();
 		this.score = 1;
 	}
 	
@@ -79,7 +80,7 @@ public class StructH<H> extends Struct{
 		this.struct = struct;
 		this.type = type;
 		this.children = new ArrayList<Struct>();
-		this.childRelation = new ArrayList<String>();
+		this.childRelation = new ArrayList<ChildRelation>();
 		this.score = 1;
 		this.structList = structList;
 	}
@@ -87,13 +88,14 @@ public class StructH<H> extends Struct{
 	public StructH(String type){		
 		this.type = type;
 		this.children = new ArrayList<Struct>();
-		this.childRelation = new ArrayList<String>();
+		this.childRelation = new ArrayList<ChildRelation>();
 		this.score = 1;
 	}
 	
+	
 	/**
 	 * Set parent pointer
-	 * @param parent	parent Struct
+	 * @param parent  parent Struct
 	 */
 	@Override
 	public void set_parentStruct(Struct parent){
@@ -240,11 +242,11 @@ public class StructH<H> extends Struct{
 		hasChild = true;
 		children.add(prev);
 		//if no relation specified
-		childRelation.add("");
+		childRelation.add(new ChildRelation(""));
 	}
 
 	@Override
-	public void add_child(Struct child, String relation){
+	public void add_child(Struct child, ChildRelation relation){
 		hasChild = true;
 		children.add(child);
 		childRelation.add(relation);
@@ -260,7 +262,7 @@ public class StructH<H> extends Struct{
 	}
 	
 	@Override
-	public List<String> childRelation(){
+	public List<ChildRelation> childRelation(){
 		return childRelation;		
 	}
 	
@@ -414,7 +416,7 @@ public class StructH<H> extends Struct{
 		//been built into one command already
 		this.WLCommandStrVisitedCount++;
 		
-		String str = "";
+		//String str = "";
 		StringBuilder sb = new StringBuilder();
 		
 		if(includeType){ 		
@@ -438,7 +440,7 @@ public class StructH<H> extends Struct{
 			StringBuilder childSb = new StringBuilder();
 			for(int i = 0; i < childrenSize; i++){			
 				Struct child = children.get(i);
-				String curChildRelation = childRelation.get(i);
+				ChildRelation curChildRelation = childRelation.get(i);
 				if(child.WLCommandWrapperList() != null)
 					continue;
 				//str += ", ";
@@ -452,8 +454,12 @@ public class StructH<H> extends Struct{
 					//including the relation twice, eg in case child is of type "prep"
 					//if this child has been used in another component of the same command.
 					if(!child.usedInOtherCommandComponent()){
-						curChildRelation = child.isStructA() ? "" : curChildRelation + " ";
-					
+						//don't want "symb", e.g. $G$ with $H$ prime. 
+						curChildRelation = (child.isStructA() && !child.type().equals("symb") 
+								//e.g. "field which is perfect", don't want "which"
+								|| child.type().equals("hyp"))
+								? "" : curChildRelation.childRelation() + " ";
+						
 						//str += ", " + curChildRelation + childStr;
 						childSb.append(", " + curChildRelation + childStr);
 					}

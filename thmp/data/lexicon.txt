@@ -54,7 +54,7 @@ than pre
 under pre
 cohen-macaulay adj
 multilinear adj
-multiplication noun
+multiplication ent
 union ent
 localization ent
 respect verb
@@ -77,7 +77,6 @@ into pre
 also pre
 so so
 universal adj
-property noun
 mapping ent
 other adj
 word noun
@@ -93,7 +92,7 @@ map verb
 mapping ent
 universal adj
 property noun
-mapping noun
+mapping ent
 homomorphism ent_comp
 up pre_comp
 "up to" pre ""
@@ -124,7 +123,7 @@ regular adj
 term noun
 original adj
 preserve verb
-exactness noun
+exactness ent
 structure noun
 epimorphism ent
 cardinality ent

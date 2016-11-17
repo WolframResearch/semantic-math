@@ -5,6 +5,7 @@ import java.util.Set;
 import java.util.ArrayList;
 
 import thmp.ParseToWLTree.WLCommandWrapper;
+import thmp.StructH.ChildRelation;
 
 /*
  * Struct to contain entities in sentence
@@ -240,10 +241,10 @@ public abstract class Struct {
 	public abstract List<Struct> children();
 
 	//to be overwritten in StructH
-	public abstract List<String> childRelation();
+	public abstract List<ChildRelation> childRelation();
 	
 	//to be overwritten in StructH
-	public abstract void add_child(Struct child, String relation);
+	public abstract void add_child(Struct child, ChildRelation relation);
 	
 	// to be overriden
 	public abstract Map<String, String> struct();
@@ -307,6 +308,45 @@ public abstract class Struct {
 			}
 			return article;
 		}
+	}
+	
+	/**
+	 * Class for describing parent to child relation.
+	 * e.g. "prime ideal of $R$" -- "of" is the relation String.
+	 * 
+	 */
+	public static class ChildRelation{
+		
+		String childRelation;
+		
+		public ChildRelation(String relation){
+			this.childRelation = relation;
+		}
+		
+		public boolean isHyp(){
+			return false;
+		}
+		
+		public String childRelation(){
+			return this.childRelation;
+		}
+		
+		/**
+		 * e.g. "ideal which is prime" -- "which is" is the relation String,
+		 * and has type "hyp"
+		 */
+		public static class HypChildRelation extends ChildRelation{
+			
+			public HypChildRelation(String relation){
+				super(relation);
+			}
+			
+			@Override
+			public boolean isHyp(){
+				return true;
+			}
+		}
+		
 	}
 	
 	

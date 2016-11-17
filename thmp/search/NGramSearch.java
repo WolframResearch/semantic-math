@@ -71,7 +71,7 @@ public class NGramSearch {
 		private static final Map<String, Integer> twoGramsMap;
 		
 		private static final String[] ADDITIONAL_TWO_GRAMS = new String[]{"local field", "direct sum",
-				"finitely many", "open mapping"};
+				"finitely many", "open mapping", "finite type", "finite presentation", "principal ideal"};
 		
 		// name of two gram data file containing additional 2-grams that should be included. These don't have
 		// frequencies associated with them. Load these into maps first and accumulate their frequencies.

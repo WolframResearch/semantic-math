@@ -417,7 +417,7 @@ public class ParseTreeToVec {
 			PosTerm posTerm = posTermList.get(i);
 			int positionInCommandMap = posTerm.positionInMap();
 			//e.g. -2 indicates it's an AUX/auxiliary term
-			if(positionInCommandMap < 0){
+			if(positionInCommandMap < 0 || posTerm.isNegativeTerm()){
 				continue;
 			}
 			
