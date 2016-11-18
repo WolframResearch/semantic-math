@@ -1419,7 +1419,7 @@ public class WLCommand {
 		Struct structParent = struct.parentStruct();
 		
 		while(structParent != null){
-			
+			//System.out.println("***@@*@@*@@*****parent: " + structParent );
 			String structParentType = structParent.type();
 			String parentType = CONJ_DISJ_PATTERN.matcher(structParentType).find() ?
 					//curStructInDequeParent.type().matches("conj_.+|disj_.+") ?
@@ -1429,7 +1429,7 @@ public class WLCommand {
 			
 			if(structParent.isStructA()){
 				if(structParent.prev1NodeType().equals(NodeType.STR)){
-					parentNameStr = (String)structParent.prev1();
+					parentNameStr = structParent.prev1().toString();
 				}
 			}else{
 				parentNameStr = structParent.struct().get("name");
@@ -1450,6 +1450,7 @@ public class WLCommand {
 				break;
 			}
 		}
+		
 		return structToAdd;
 	}
 	

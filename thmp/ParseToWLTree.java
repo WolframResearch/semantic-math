@@ -9,20 +9,25 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 
+import thmp.Struct.ChildRelation;
 import thmp.Struct.NodeType;
 import thmp.ThmP1.ParsedPair;
 import thmp.WLCommand.CommandSat;
 import thmp.WLCommand.ImmutableWLCommand;
 import thmp.WLCommand.PosTerm;
 import thmp.WLCommand.WLCommandComponent;
+import thmp.utils.Buggy;
 
 /**
  * Parses to WL Tree. Using more WL-like structures.
@@ -55,6 +60,8 @@ public class ParseToWLTree {
 	 * Trigger word lookup map.
 	 */
 	private static final Multimap<String, ImmutableWLCommand> WLCommandMap = WLCommandsList.WLCommandMap();
+	
+	private static final Logger logger = Buggy.getLogger();
 	
 	private static final Pattern PLURAL_PATTERN = Pattern.compile("(.+)s");
 	private static final Pattern CONJ_DISJ_PATTERN = Pattern.compile("conj_.+|disj_.+");
@@ -239,7 +246,13 @@ public class ParseToWLTree {
 			//done iterating through deque, but no match found; curCommand cannot be satisfied
 			break;
 		}
-		System.out.println("---waitingStructList " + waitingStructList + " for command " + curCommand);
+		
+		if(logger.getLevel().equals(Level.INFO)){
+			String msg = "---waitingStructList " + waitingStructList + " for command " + curCommand;
+			System.out.println(msg);
+			logger.info(msg);
+		}
+		
 		return curCommandSat;
 	}
 	
@@ -539,7 +552,7 @@ public class ParseToWLTree {
 			parsedSB.append(struct.toString());
 
 			List<Struct> children = struct.children();
-			List<String> childRelation = struct.childRelation();
+			List<ChildRelation> childRelation = struct.childRelationList();
 
 			//if (children == null || children.size() == 0)
 				//return;
@@ -553,7 +566,7 @@ public class ParseToWLTree {
 				parsedSB.append(childRelation.get(i) + " ");
 				Struct ithChild = children.get(i);
 				
-				Struct childRelationStruct = new StructA<String, String>(childRelation.get(i), 
+				Struct childRelationStruct = new StructA<String, String>(childRelation.get(i).childRelation(), 
 						NodeType.STR, "", NodeType.STR, "pre");
 				childRelationStruct.set_parentStruct(struct);
 				childRelationStruct.set_dfsDepth(struct.dfsDepth() + 1);
@@ -773,9 +786,9 @@ public class ParseToWLTree {
 		//boolean contextVecConstructed = false;
 		
 		//ParseStruct curParseStruct = headParseStruct;
-		if(struct.type().equals("assert")){
+		/*if(struct.type().equals("assert")){
 			System.out.println("^^^^^^" + struct + " " + struct.WLCommandStrVisitedCount());
-		}
+		}*/
 		
 		if(struct.WLCommandWrapperList() != null && struct.WLCommandStrVisitedCount() < 1){	
 		//if(struct.WLCommandWrapperList() != null){	
@@ -841,7 +854,7 @@ public class ParseToWLTree {
 			if(shouldPrint) parsedSB.append(struct.toString());
 
 			List<Struct> children = struct.children();
-			List<String> childRelation = struct.childRelation();
+			List<ChildRelation> childRelation = struct.childRelationList();
 
 			if (children == null || children.size() == 0){
 				return contextVecConstructed;

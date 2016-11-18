@@ -163,6 +163,7 @@ zero adj
 zerodivisor ent
 nonzerodivisor ent
 non-zerodivisor ent
+constructible adj
 free adj
 maximal adj
 minimal adj

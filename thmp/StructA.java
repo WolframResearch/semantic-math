@@ -594,7 +594,7 @@ public class StructA<A, B> extends Struct{
 	@Override
 	public String toString(){
 		String str = "[Type: " + this.type 				
-				+ ", " + this.prev1 + "]";
+				+ ", prev1:" + this.prev1 + "]";
 		
 		return str;
 	}
@@ -605,7 +605,7 @@ public class StructA<A, B> extends Struct{
 	public String present(String str){
 		//str += this.type + "[";
 		boolean showprev1 = true;
-		if(this.type.matches("hyp") && this.prev1 instanceof String
+		if(this.type.matches("hyp") && this.prev1NodeType().equals(NodeType.STR)
 				&& !((String)this.prev1).matches("for all|for every")){
 			showprev1 = false;
 		}
@@ -616,10 +616,10 @@ public class StructA<A, B> extends Struct{
 		String tempStr = "";
 		
 		if(prev1 != null && !prev1.equals("")){
-			if(prev1 instanceof Struct){
+			if(PREV1_TYPE.isTypeStruct()){
 				tempStr = ((Struct) prev1).present(str);
 				
-			}else if(prev1 instanceof String && showprev1){
+			}else if(PREV1_TYPE.equals(NodeType.STR) && showprev1){
 				if(!type.matches("pre|partiby")){
 					tempStr += prev1;
 				}
@@ -627,9 +627,9 @@ public class StructA<A, B> extends Struct{
 		}
 		
 		if(prev2 != null && !prev2.equals("")){
-			if(prev2 instanceof Struct){
+			if(PREV2_TYPE.equals(NodeType.STR)){
 				tempStr = ((Struct) prev2).present(str + ", ");
-			}else if(prev2 instanceof String){
+			}else{
 				tempStr += ", " + prev2;
 			}
 		}
@@ -646,12 +646,8 @@ public class StructA<A, B> extends Struct{
 	}
 
 	@Override
-	public List<String> childRelation() {
+	public List<ChildRelation> childRelationList() {
 		return null;
-	}
-
-	@Override
-	public void add_child(Struct child, String relation) {		
 	}
 	
 }

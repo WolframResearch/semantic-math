@@ -17,6 +17,9 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.Level;
+
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
@@ -25,10 +28,12 @@ import com.google.common.collect.Multimap;
 
 import thmp.ParseToWLTree.WLCommandWrapper;
 import thmp.Struct.Article;
+import thmp.Struct.ChildRelation;
 import thmp.Struct.NodeType;
 import thmp.search.NGramSearch;
 import thmp.search.ThreeGramSearch;
 import thmp.search.TriggerMathThm2;
+import thmp.utils.Buggy;
 import thmp.utils.WordForms;
 import thmp.utils.WordForms.TokenType;
 
@@ -70,7 +75,9 @@ public class ThmP1 {
 	// fluff type, skip when adding to parsed ArrayList
 	private static final String FLUFF = "Fluff";
 	private static final Pattern ARTICLE_PATTERN = Pattern.compile("a|the|an");
-	
+
+	private static final Logger logger = Buggy.getLogger();
+
 	// private static final File unknownWordsFile;
 	private static final Path unknownWordsFile = Paths.get("src/thmp/data/unknownWords1.txt");
 	private static final Path parsedExprFile = Paths.get("src/thmp/data/parsedExpr.txt");
@@ -698,6 +705,18 @@ public class ThmP1 {
 					//e.g. "f maps prime ideals to prime ideals"
 					if(noFuseEntSet.contains(curWord) || noFuseEntSet.contains(prevWord)){
 						fuseEnt = false;
+						//check for next word, if pre such as "of", then do fuse.
+						//e.g. "ring map of finite type."
+						if(i < strAr.length - 1){
+							String nextWord = strAr[i+1];
+
+							List<String> nextWordPosList = posMMap.get(nextWord);
+							if(!nextWordPosList.isEmpty() && nextWordPosList.get(0).equals("pre")
+									//or a latx symbol name
+									|| nextWord.charAt(0) == '$'){
+								fuseEnt = true;
+							}
+						}						
 					}
 					
 					if(fuseEnt){
@@ -1018,17 +1037,18 @@ public class ThmP1 {
 
 				// combine "no" and "not" with verbs
 				if (pair.pos().matches("verb|vbs")) {
-					if (pairs.size() > 1 && (pairs.get(pairsSize - 2).word().matches("not|no")
+					String word = pairs.get(pairsSize - 2).word();
+					if (pairs.size() > 1 && (word.matches("not|no")
 							|| pairs.get(pairsSize - 2).pos().matches("not"))) {
 						//String newWord = pair.word().matches("is|are") ? "not" : "not " + pair.word();
-						String newWord = pair.word() + " " + pairs.get(pairsSize - 2).word();
+						String newWord = word + " " + pair.word();
 						pair.set_word(newWord);
 						pairs.remove(pairsSize - 2);
 					}
 
 					if (i + 1 < strAr.length && strAr[i + 1].matches("not|no")) {
 						//String newWord = pair.word().matches("is|are") ? "not" : "not " + pair.word();
-						String newWord = pair.word() + " " + strAr[i+1];
+						String newWord = strAr[i+1] + " " + pair.word();
 						pair.set_word(newWord);
 						i++;
 					}
@@ -1734,7 +1754,7 @@ public class ThmP1 {
 								for(int p = childrenListSize - 1; p > -1; p--){
 									Struct child = childrenList.get(p);
 									if(child.type().equals("ent") && !child.isStructA()){
-										child.add_child(inputStructList.get(j + 1), "of");
+										child.add_child(inputStructList.get(j + 1), new ChildRelation("of"));
 										inputStructList.get(j + 1).set_parentStruct(child);
 										childAdded = true;
 										break;
@@ -1742,7 +1762,7 @@ public class ThmP1 {
 								}
 								if(!childAdded){
 									//((StructH<?>) newStruct).add_child(struct2, childRelation);
-									struct1.add_child(inputStructList.get(j + 1), "of");
+									struct1.add_child(inputStructList.get(j + 1), new ChildRelation("of"));
 									inputStructList.get(j + 1).set_parentStruct(struct1);
 								}
 								
@@ -2069,7 +2089,14 @@ public class ThmP1 {
 		// iterating over all headStruct
 		StructList headStructList = mx.get(0).get(len - 1);
 		int headStructListSz = headStructList.size();
-		System.out.println("headStructListSz " + headStructListSz);
+		//System.out.println("headStructListSz " + headStructListSz);
+		if(logger.getLevel().equals(Level.INFO)){
+			String msg = "headStructListSz " + headStructListSz;
+			System.out.println(msg);
+			logger.info(msg);
+		}
+		
+		//logger.info("headStructListSz " + headStructListSz);
 		//the default entry value in context vec should be the average of all entries in matrix.
 		//list of context vectors.
 		List<int[]> contextVecList = new ArrayList<int[]>();		
@@ -2332,7 +2359,7 @@ public class ThmP1 {
 		boolean parsedExprAdded = false;
 		for(int i = 0; i < sortedParsedPairMMapList.size(); i++){
 			//only add nontrivial results //finalOrderingList.get(i)
-			if(parsedExprAdded && numUnitsList.get(i) < 2){				
+			if(parsedExprAdded && commandNumUnitsList.get(i) < 3){				
 				continue;
 			}else{
 				parsedExprAdded = true;
@@ -2589,7 +2616,7 @@ public class ThmP1 {
 			// struct1 should be of type StructH to receive a
 			// child
 			// assert ensures rule correctness
-			assert !struct1.isStructA() : "struct1 does not have type StructH in reduce()!";
+			assert !struct1.isStructA() : "struct1 does not have type StructH in reduce() for \"newchild\" relation!";
 
 			// get a (semi)deep copy of this StructH, since
 			// later-added children may not
@@ -2603,26 +2630,55 @@ public class ThmP1 {
 				firstEnt = newStruct;
 			}
 
-			// add to child relation, usually a preposition, eg
-			// "from", "over"
+			ChildRelation childRelation = null;
+			if(struct2.type().equals("hypo")){
+				
+				//prev1 has type Struct
+				//e.g. "Field which is perfect", ...hypo[hyp[which is], perfect]
+				//e.g. "which do not contain" is of type "hyp", but is parsed
+				//to a StructA	...hypo[rpro[which], verb[do not contain]]
+				assert struct2.prev1NodeType().equals(NodeType.STRUCTA);
+				
+				StructA<?, ?> hypStruct = (StructA<?, ?>)struct2.prev1();
+				if(hypStruct.type().equals("hyp") ){
+
+					childRelation = extractChildRelation(hypStruct);					
+				}
+			}else if(struct2.type().equals("Cond")){
+				//e.g. "prime $I$ such that it's maximal."
+				//prev1 should be of type "cond", and have content e.g. "such that"
+				assert struct2.prev1NodeType().equals(NodeType.STRUCTA);
+				
+				StructA<?, ?> hypStruct = (StructA<?, ?>)struct2.prev1();
+				if(hypStruct.type().equals("cond") ){
+					childRelation = extractChildRelation(hypStruct);
+				}
+			}
+			else{			
+			// add to child relation, usually a preposition, 
+			//eg  "from", "over"
 			// could also be verb, "consist", "lies"			
-			List<Struct> kPlus1StructArrayList = mx.get(k + 1).get(k + 1).structList();
-			String childRelation = null;
+			List<Struct> kPlus1StructArrayList = mx.get(k + 1).get(k + 1).structList();			
 			
 			for(int p = 0; p < kPlus1StructArrayList.size(); p++){
 				Struct struct = kPlus1StructArrayList.get(p);
 				if(struct.prev1NodeType().equals(NodeType.STR)){
-					childRelation = struct.prev1().toString();
-					if(struct.type().equals("hyp")){
-						//e.g. "Field which is perfect"
-						kk;
-					}
+					
+					String childRelationStr = struct.prev1().toString();					
+					childRelation = new ChildRelation(childRelationStr);
+					
 					break;
 				}
 			}
-			if(childRelation == null){
-				
+			}
+			if(childRelation == null){				
 				throw new IllegalStateException("Inside ThmP1.reduce(), childRelation should not be null!");
+			}
+			
+			//if type equivalent to to-be-parent's type, don't add, 
+			//e.g. "field F in C over Q"			
+			if(childRelation.childRelationType().equals(struct1.childRelationType())){
+				return new EntityBundle(firstEnt, recentEnt, recentEntIndex);
 			}
 			
 			// String childRelation = mx.get(k + 1).get(k +
@@ -2646,12 +2702,19 @@ public class ThmP1 {
 					}
 				}*/
 				 
-					//if struct2 is eg a prep, only want the ent in the prep
-					//to be added.
+				//if struct2 is e.g. a prep, only want the ent in the prep
+				//to be added.
 				Struct childToAdd = struct2;
-				if(struct2.type().equals("prep") && struct2.prev2NodeType().equals(NodeType.STRUCTH)){
+				if(struct2.type().equals("prep") && struct2.prev2NodeType().equals(NodeType.STRUCTH)
+						//if struct2 is of type "hypo", only add the condition, i.e. second
+						//e.g. "ideal which is prime"
+						|| struct2.type().equals("hypo") && struct2.prev2NodeType().isTypeStruct()){
 					childToAdd = (Struct)struct2.prev2();
 				}
+				//set the type, corresponds to whether the relation is via preposition or conditional.
+				//e.g. "over" vs "such as".
+				childToAdd.set_childRelationType(childRelation.childRelationType());
+				
 				((StructH<?>) newStruct).add_child(childToAdd, childRelation); 
 				struct2.set_parentStruct(newStruct);
 				
@@ -2886,6 +2949,30 @@ public class ThmP1 {
 		// *****actually, should keep going and keep scores!
 		// break;
 		return new EntityBundle(firstEnt, recentEnt, recentEntIndex);
+	}
+
+	/**
+	 * @param hypStruct
+	 * @return
+	 */
+	private static ChildRelation extractChildRelation(StructA<?, ?> hypStruct) {
+		ChildRelation childRelation;
+		String hypStructPrev1Str = "";
+		String hypStructPrev2Str = "";
+		
+		if(hypStruct.prev1NodeType().equals(NodeType.STRUCTA) ){
+			hypStructPrev1Str = ((Struct)hypStruct.prev1()).prev1().toString();
+		}
+		
+		if(hypStruct.prev2NodeType().equals(NodeType.STRUCTA) ){
+			hypStructPrev2Str = ((Struct)hypStruct.prev2()).prev1().toString();
+		}
+		
+		String relationStr = hypStructPrev1Str + " " + hypStructPrev2Str;	
+		
+		//System.out.println("=++++++=========++++ HYPO " + relationStr);
+		childRelation = new ChildRelation.HypChildRelation(relationStr);
+		return childRelation;
 	}
 	
 	/**
@@ -3307,7 +3394,7 @@ public class ThmP1 {
 			span++;
 			
 			List<Struct> children = struct.children();
-			List<String> childRelation = struct.childRelation();
+			List<ChildRelation> childRelation = struct.childRelationList();
 			
 			if (children == null || children.size() == 0)
 				return span;
@@ -3340,6 +3427,10 @@ public class ThmP1 {
 	 */
 	public static String[] preprocess(String inputStr) {
 
+		if(logger.getLevel().equals(Level.INFO)){
+			logger.info("Input: " + inputStr);
+		}
+		
 		ArrayList<String> sentenceList = new ArrayList<String>();
 		//separate out punctuations, separate out words away from punctuations.
 		//compile this!

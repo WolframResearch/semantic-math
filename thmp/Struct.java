@@ -5,7 +5,6 @@ import java.util.Set;
 import java.util.ArrayList;
 
 import thmp.ParseToWLTree.WLCommandWrapper;
-import thmp.StructH.ChildRelation;
 
 /*
  * Struct to contain entities in sentence
@@ -39,6 +38,10 @@ public abstract class Struct {
 	//down the tree. Used for constructing ParseStruct tree.
 	private boolean containsHyp;
 	
+	/*  childRelationType to its parent, if this struct is a child.
+	 */
+	private ChildRelationType childRelationType = ChildRelationType.OTHER;
+	
 	private Article article = Article.NONE;
 	
 	/**
@@ -57,6 +60,14 @@ public abstract class Struct {
 	 */
 	public boolean containsHyp(){
 		return this.containsHyp;
+	}
+	
+	public ChildRelationType childRelationType(){
+		return this.childRelationType;
+	}
+	
+	public void set_childRelationType(ChildRelationType type){
+		this.childRelationType = type;
 	}
 	
 	/**
@@ -241,10 +252,12 @@ public abstract class Struct {
 	public abstract List<Struct> children();
 
 	//to be overwritten in StructH
-	public abstract List<ChildRelation> childRelation();
+	public abstract List<ChildRelation> childRelationList();
 	
-	//to be overwritten in StructH
-	public abstract void add_child(Struct child, ChildRelation relation);
+	//to be overwritten in StructH. Not abstract, not applicable
+	//to StructA
+	public void add_child(Struct child, ChildRelation relation){		
+	}
 	
 	// to be overriden
 	public abstract Map<String, String> struct();
@@ -332,13 +345,34 @@ public abstract class Struct {
 		}
 		
 		/**
+		 * Type of ChildRelation, determined by the relation 
+		 * word, e.g. "over", "of", vs "such as", "which is" etc.
+		 * @return
+		 */
+		public ChildRelationType childRelationType(){
+			//the default is prep
+			return ChildRelationType.PREP;
+		}
+		
+		@Override
+		public String toString(){
+			return this.childRelation;
+		}
+		
+		/**
 		 * e.g. "ideal which is prime" -- "which is" is the relation String,
 		 * and has type "hyp"
 		 */
 		public static class HypChildRelation extends ChildRelation{
 			
+			private ChildRelationType childRelationType= ChildRelationType.HYP;
+			
 			public HypChildRelation(String relation){
 				super(relation);
+			}
+			
+			public ChildRelationType childRelationType(){
+				return this.childRelationType;
 			}
 			
 			@Override
@@ -347,7 +381,32 @@ public abstract class Struct {
 			}
 		}
 		
+		/**
+		 * e.g. "field over $Q$" -- "over" is the relation String,
+		 * and has type "pre"
+		 */
+		public static class PrepChildRelation extends ChildRelation{
+			
+			private ChildRelationType childRelationType= ChildRelationType.PREP;
+			
+			public PrepChildRelation(String relation){
+				super(relation);
+			}
+			
+			public ChildRelationType childRelationType(){
+				return this.childRelationType;
+			}
+		}
+		
 	}
 	
+	/**
+	 * enum for child relation. 
+	 *
+	 */
+	public enum ChildRelationType{
+		//preppy child or hippie child?
+		PREP, HYP, OTHER;
+	}
 	
 }

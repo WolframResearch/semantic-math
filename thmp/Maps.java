@@ -715,7 +715,7 @@ public class Maps {
 			structMap.put("ent_auxpass", new Rule("assert", .8));
 			structMap.put("pro_auxpass", new Rule("assert", .8));
 
-			structMap.put("verb_assert", new Rule("verbphrase", 1));
+			structMap.put("verb_assert", new Rule("verbphrase", .75));
 			structMap.put("vbs_assert", new Rule("verbphrase", 1));
 			structMap.put("hypo_assert", new Rule("assert", 1));
 			structMap.put("verbphrase_prep", new Rule("verbphrase", 1));
@@ -759,6 +759,8 @@ public class Maps {
 			structMap.put("rpro_ent", new Rule("rproent", 1));
 			structMap.put("ent_rproent", new Rule("newchild", 1));
 			structMap.put("rpro_verbphrase", new Rule("phrase", 1));
+			//e.g. "which contains"
+			structMap.put("rpro_verb", new Rule("hyp", .9));
 			structMap.put("rpro_assert", new Rule("phrase", 1));
 			structMap.put("parti_phrase", new Rule("hypo", .8));
 			structMap.put("amod_noun", new Rule("csubj", 1));
@@ -821,6 +823,10 @@ public class Maps {
 			
 			// adverb_
 			probMap.put("adverb_adj", .9);
+			
+			// hyp_
+			probMap.put("hyp_ent", .8);
+			probMap.put("hyp_adj", .7);
 			
 			// for adding combinations to structMap
 			/*

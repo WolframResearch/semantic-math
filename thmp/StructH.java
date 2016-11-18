@@ -46,7 +46,7 @@ public class StructH<H> extends Struct{
 	private List<Struct> children; 
 	//relation to child, eg "of," "which is", "over", 
 	//as in "field over Q."
-	private List<ChildRelation> childRelation;	
+	private List<ChildRelation> childRelationList;	
 	private double score;
 	private double DOWNPATHSCOREDEFAULT = 1;
 	private double maxDownPathScore = DOWNPATHSCOREDEFAULT;
@@ -70,7 +70,7 @@ public class StructH<H> extends Struct{
 		this.struct = struct;
 		this.type = type;
 		this.children = new ArrayList<Struct>();
-		this.childRelation = new ArrayList<ChildRelation>();
+		this.childRelationList = new ArrayList<ChildRelation>();
 		this.score = 1;
 	}
 	
@@ -80,7 +80,7 @@ public class StructH<H> extends Struct{
 		this.struct = struct;
 		this.type = type;
 		this.children = new ArrayList<Struct>();
-		this.childRelation = new ArrayList<ChildRelation>();
+		this.childRelationList = new ArrayList<ChildRelation>();
 		this.score = 1;
 		this.structList = structList;
 	}
@@ -88,7 +88,7 @@ public class StructH<H> extends Struct{
 	public StructH(String type){		
 		this.type = type;
 		this.children = new ArrayList<Struct>();
-		this.childRelation = new ArrayList<ChildRelation>();
+		this.childRelationList = new ArrayList<ChildRelation>();
 		this.score = 1;
 	}
 	
@@ -232,7 +232,7 @@ public class StructH<H> extends Struct{
 				this.maxDownPathScore);
 		
 		for(int i = 0; i < this.children.size(); i++){
-			newStructH.add_child(this.children.get(i), this.childRelation.get(i));
+			newStructH.add_child(this.children.get(i), this.childRelationList.get(i));
 		}
 		
 		return newStructH;
@@ -242,14 +242,14 @@ public class StructH<H> extends Struct{
 		hasChild = true;
 		children.add(prev);
 		//if no relation specified
-		childRelation.add(new ChildRelation(""));
+		childRelationList.add(new ChildRelation(""));
 	}
 
 	@Override
 	public void add_child(Struct child, ChildRelation relation){
 		hasChild = true;
 		children.add(child);
-		childRelation.add(relation);
+		childRelationList.add(relation);
 	}
 	
 	public boolean has_child(){
@@ -262,8 +262,8 @@ public class StructH<H> extends Struct{
 	}
 	
 	@Override
-	public List<ChildRelation> childRelation(){
-		return childRelation;		
+	public List<ChildRelation> childRelationList(){
+		return childRelationList;		
 	}
 	
 	@Override
@@ -406,7 +406,9 @@ public class StructH<H> extends Struct{
 		return this.simpleToString2(includeType, curCommand);
 	}
 	
-	//auxilliary method for simpleToString and StructA.simpleToString
+	/**
+	 * Auxilliary method for simpleToString and StructA.simpleToString.
+	 */
 	@Override
 	public String simpleToString2(boolean includeType, WLCommand curCommand){
 		
@@ -440,7 +442,7 @@ public class StructH<H> extends Struct{
 			StringBuilder childSb = new StringBuilder();
 			for(int i = 0; i < childrenSize; i++){			
 				Struct child = children.get(i);
-				ChildRelation curChildRelation = childRelation.get(i);
+				String childRelationStr = childRelationList.get(i).childRelation;
 				if(child.WLCommandWrapperList() != null)
 					continue;
 				//str += ", ";
@@ -455,13 +457,18 @@ public class StructH<H> extends Struct{
 					//if this child has been used in another component of the same command.
 					if(!child.usedInOtherCommandComponent()){
 						//don't want "symb", e.g. $G$ with $H$ prime. 
-						curChildRelation = (child.isStructA() && !child.type().equals("symb") 
+						childRelationStr = (child.isStructA() && !child.type().equals("symb") 
 								//e.g. "field which is perfect", don't want "which"
-								|| child.type().equals("hyp"))
-								? "" : curChildRelation.childRelation() + " ";
-						
+								
+								)
+								? "" : childRelationStr;
 						//str += ", " + curChildRelation + childStr;
-						childSb.append(", " + curChildRelation + childStr);
+						//System.out.println("\n **^^^*** childRelation" + childRelationStr);
+						if(childRelationStr.equals("")){
+							childSb.append(", {" + childStr + "}");
+						}else{
+							childSb.append(", {\"" + childRelationStr + "\", " + childStr + "}");
+						}
 					}
 				}
 			}
@@ -547,7 +554,7 @@ public class StructH<H> extends Struct{
 		//iterate through children		
 		int childrenSize = children.size();
 		for(int i = 0; i < childrenSize; i++){
-			str += childRelation.get(i) + " ";
+			str += childRelationList.get(i) + " ";
 			Struct child = children.get(i);
 			str = child.present(str);	
 			if(i < childrenSize - 1)

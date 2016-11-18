@@ -31,7 +31,7 @@ public class ThmP1Test {
 	}
 
 	//the char of F_p is p
-		public static void main(String[] args) throws IOException{
+	public static void main(String[] args) throws IOException{
 			//System.out.print("Got to main!");
 			//ThmP1.buildMap();
 			
@@ -412,11 +412,16 @@ public class ThmP1Test {
 			st = "Let $\\mathcal{F}$ be a set of ideals of $R$.";
 			st = "An ideal $I \\subset R$ which is maximal with respect to the property that $I \\cap S = \\emptyset$ is prime";
 			st = "If every prime ideal of $R$ is finitely generated, then every ideal of $R$ is finitely generated";
-			st = "An ideal maximal among the ideals which do not contain a nonzerodivisor is prime.";
-			st = "given an ideal maximal among the ideals which are prime"; //<--to parse!
+			st = "an ideal maximal among the ideals which do not contain nonzerodivisor is prime";
+			
+			st = "For any constructible set $E \\subset \\Spec(R)$ the inverse image $f^{-1}(E)$ is constructible in $\\Spec(S)$";
+			
+			st = "there exists a ring map $R \\to S$ of finite presentation such that $T$ is the image of $\\Spec(S)$ in $\\Spec(R)$";
+			
+			//st = "there exists a ring map $R \\to S$ of finite presentation such that $T$ is the image of $\\Spec(S)$ in $\\Spec(R)$."; //<--too many parses!!
 			
 			//st = "given field, with $F $ of presentation, and $G $ of finite type";
-						
+			
 			//st = "if $R$ is commutative and $S$ is commutative, then $S$ is abelian if $T$ is abelian";
 			//st = "then $M$ is finitely presented as an $S$-module.";
 			//st = "Assume $R to S$ is of finite type";
@@ -491,6 +496,7 @@ public class ThmP1Test {
 			for(ParseStruct headParseStruct : headParseStructList){
 				System.out.println("@@@" + headParseStruct);
 			}*/
+			
 			System.out.println("@@@" + parseState.getHeadParseStruct());
 			
 			//combine these vectors together, only add subsequent vector entry
