@@ -46,7 +46,7 @@ public class ThreeGramSearch {
 	
 	private static final Path threeGramsFilePath = Paths.get("src/thmp/data/threeGramData.txt");
 	//additional three grams to be intetionally added. 
-	private static final String[] ADDITIONAL_THREE_GRAMS = new String[]{"local ring", "local field"};
+	private static final String[] ADDITIONAL_THREE_GRAMS = new String[]{"formal power series"};
 	// name of two gram data file containing additional 2-grams that should be included. These don't have
 	//frequencies associated with them.
 	private static final String THREE_GRAM_DATA_FILESTR = "src/thmp/data/threeGramData.txt";	
@@ -266,11 +266,26 @@ public class ThreeGramSearch {
 		//double averageThreeGramFreqCountHalved = averageThreeGramFreqCount*2.0/3;
 		//add the remaining threegrams from initialThreeGramsSet
 		for(String threeGram : initialThreeGramsSet){
+			addAdditionalThreeGramsToMap(threeGramFreqMap, threeGramList, threeGram);
+		}
+		for(String threeGram : ADDITIONAL_THREE_GRAMS){
+			addAdditionalThreeGramsToMap(threeGramFreqMap, threeGramList, threeGram);
+		}
+		return threeGramList;
+	}
+
+	/**
+	 * @param threeGramFreqMap
+	 * @param threeGramList
+	 * @param threeGram
+	 */
+	private static void addAdditionalThreeGramsToMap(Map<String, Integer> threeGramFreqMap, List<String> threeGramList,
+			String threeGram) {
+		if(!threeGramFreqMap.containsKey(threeGram)){
 			threeGramList.add(threeGram);
 			threeGramFreqMap.put(threeGram, averageThreeGramFreqCount);
 			threeGramFirstWordsSet.add(threeGram.split("\\s+")[0]);
 		}
-		return threeGramList;
 	}
 
 	/**

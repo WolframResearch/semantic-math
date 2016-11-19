@@ -27,7 +27,9 @@ formal adj
 series ent_comp
 power series ent_comp
 formal power series ent
+power series ring ent
 power noun
+generalization noun
 field ent
 closed adj
 boundary ent

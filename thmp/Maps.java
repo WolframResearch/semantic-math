@@ -409,7 +409,7 @@ public class Maps {
 			// prepositions
 			posPreMMap.put("or", "or");
 			posPreMMap.put("and", "and");
-			posPreMMap.put("at most", "pre");
+			posPreMMap.put("at most", "adj");
 			posPreMMap.put("is", "vbs_comp");
 			posPreMMap.put("at", "pre_COMP");
 			posPreMMap.put("if", "if_COMP");
@@ -635,7 +635,7 @@ public class Maps {
 			//structMap.put("pre_noun", new Rule("ppt", 1)); // nounphrase
 			structMap.put("adj_symb", new Rule("phrase", 1));
 			
-			structMap.put("adj_noun", new Rule("phrase", 1));
+			structMap.put("adj_noun", new Rule("noun", 1));
 			structMap.put("adj_prep", new Rule("phrase", .97));
 			structMap.put("gerund_noun", new Rule("gerundp", 1)); // gerundphrase
 			structMap.put("ent_gerundp", new Rule("newchild", 1));
@@ -744,10 +744,10 @@ public class Maps {
 			structMap.put("if_assert", new Rule("If", 1));
 			structMap.put("hyp_assert", new Rule("If", 1));
 			
-			structMap.put("assert_If", new Rule("assert", 1));
-			structMap.put("assert_hypo", new Rule("assert", 1));
-			structMap.put("assert_prep", new Rule("assert", 1));
-			structMap.put("assert_iff", new Rule("assert", 1));
+			structMap.put("assert_If", new Rule("assert", .5));
+			structMap.put("assert_hypo", new Rule("assert", .5));
+			structMap.put("assert_prep", new Rule("assert", .5));
+			structMap.put("assert_iff", new Rule("assert", .5));
 			structMap.put("hyp_hyp", new Rule("hyp", 1));
 			structMap.put("hyp_assert", new Rule("hypo", 1));
 			structMap.put("hyp_ent", new Rule("hypo", 1));
@@ -820,6 +820,7 @@ public class Maps {
 			// adj_
 			probMap.put("adj_ent", .9);
 			probMap.put("adj_pre", .85);
+			probMap.put("adj_adj", .6);
 			
 			// adverb_
 			probMap.put("adverb_adj", .9);

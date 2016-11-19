@@ -388,7 +388,8 @@ public class TriggerMathObj3 {
 	/**
 	 * Get list of triggers from Struct.
 	 * One string for now, the one with highest inner product.
-	 * @param struct
+	 * @param struct The triggering struct.
+	 * @param curCommand WLCommand in which this triggering struct is part of.
 	 * @return
 	 */
 	public static String get_mathObjFromStruct(Struct struct, WLCommand curCommand){
@@ -398,6 +399,7 @@ public class TriggerMathObj3 {
 		
 		List<String> triggerTermList = new ArrayList<String>();
 		Map<String, String> map = struct.struct();		
+		
 		if(map != null && map.containsKey("name")){
 			triggerTermList.add(map.get("name"));
 		}
@@ -414,7 +416,8 @@ public class TriggerMathObj3 {
 		/*if(struct.type().equals("ent")){
 			namePpt = "[" + namePpt + "]";
 		}*/
-		String mathStr = (null == highestMathObj) ? "Math[\"" + namePpt + "\"]": highestMathObj + "[\"" + namePpt + "\"]";
+		//String mathStr = (null == highestMathObj) ? "Math[\"" + namePpt + "\"]": highestMathObj + "[\"" + namePpt + "\"]";
+		String mathStr = (null == highestMathObj) ? "Math[" + namePpt + "]": highestMathObj + "[" + namePpt + "]";
 		
 		//return r + "[" + namePpt + "]";
 		return mathStr;

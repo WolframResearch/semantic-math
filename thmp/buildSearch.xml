@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Build the thm search project -->
 
-<project name="thmSearch" default="dist" basedir=".">
+<project name="thmSearch" basedir=".">
 	
 	<property name="builddir" value="${basedir}/build/"/>
 	<property name="srcdir" value="${basedir}/src/thmp/search/"/>

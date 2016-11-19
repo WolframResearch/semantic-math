@@ -8,6 +8,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -116,6 +118,10 @@ public class ThmP1 {
 	private static final Set<String> noFuseEntSet;
 	private static final Pattern PUNCTUATION_PATTERN = Pattern.compile("(\\.|;|,|!|:)");
 	private static final boolean COLLECT_UNKNOWN_WORDS = false;
+	//used in dfs, to determine whether to iterate over.
+	private static final double LONG_FORM_SCORE_THRESHOLD = .7;
+	//least num of iterations, even if scores are below LONG_FORM_SCORE_THRESHOLD.
+	private static final int MIN_PARSE_ITERATED_COUNT = 3;
 	
 	//private static int[] parseContextVector;
 	//private static int parseContextVectorSz;
@@ -173,6 +179,7 @@ public class ThmP1 {
 	 */
 	public static class ParsedPair{
 		private String parsedStr;
+		//score based on probabilities as defined in Maps.posMMap.
 		private double score;
 		//long form or WL-like expr. Useful for "under the hood"
 		//can be "long" or "wl". Switch to an enum!
@@ -1070,6 +1077,9 @@ public class ThmP1 {
 		for (int index = 0; index < pairsLen; index++) {
 			//int pairsLen = pairs.size();
 			curpair = pairs.get(index);
+			String curWord = curpair.word();
+			int curWordLen = curWord.length();
+			
 			//System.out.println("curpair " + curpair);
 			if (curpair.pos().equals("")) {
 
@@ -1092,6 +1102,14 @@ public class ThmP1 {
 						if (score > bestCurProb) {
 							bestCurProb = score;
 							bestCurType = tempCurType;
+						}
+						//check for patterns
+						if(curWordLen > 3){
+							//e.g. "generic"
+							if(curWord.charAt(curWordLen-1) == 'c' && curWord.charAt(curWordLen-2) == 'i' 
+									&& tempCurType.equals("adj")){
+								break;
+							}
 						}
 					}
 				}
@@ -1266,8 +1284,11 @@ public class ThmP1 {
 			// look forwards
 			k = 1;
 			while (index + k < pairs.size() && pairs.get(index + k).pos().matches("adj|num")) {
-				/// implement same as above
-
+				//but don't add if next word is of type "pre"
+				//e.g. "ideal maximal among ..."
+				if(index + k + 1 < pairs.size() && pairs.get(index+k+1).pos().equals("pre")){					
+					break;
+				}
 				tempMap.put(pairs.get(index + k).word(), "ppt");
 				pairs.get(index + k).set_pos(entPosStr);
 				k++;
@@ -1407,12 +1428,16 @@ public class ThmP1 {
 				// current word hasn't classified into an ent, make structA
 				int structListSize = structList.size();
 				
-				// combine adverbs into the prior verb if applicable.
+				// combine adverbs into the prior verb if applicable,
+				//but only if subsequent word is not of type "parti", 
+				//e.g. "$K$ is separably generated over $k$"
 				if (curPair.pos().equals("adverb")) {
 
 					if (structListSize > 1 && structList.get(structListSize - 1).type().matches("verb|vbs")) {
 						//only if the subsequent word is not an adjective, or no subsequent word
-						if(i == pairsSz - 1 || !pairs.get(i+1).pos().equals("adj")){
+						String nextPairPos;
+						if(i == pairsSz - 1 || !(nextPairPos = pairs.get(i+1).pos()).equals("adj")
+								&& !nextPairPos.equals("parti")){
 							
 							StructA<?, ?> verbStruct = (StructA<?, ?>) structList.get(structListSize - 1);
 							// verbStruct should not have prev2, set prev2 type
@@ -1451,8 +1476,6 @@ public class ThmP1 {
 						//}
 					}
 				}
-				
-				
 				// combine det into nouns and verbs, change
 				else if (curPair.pos().equals("noun") && structListSize > 0
 						&& structList.get(structListSize - 1).type().equals("det")) {
@@ -2089,6 +2112,7 @@ public class ThmP1 {
 		// iterating over all headStruct
 		StructList headStructList = mx.get(0).get(len - 1);
 		int headStructListSz = headStructList.size();
+		
 		//System.out.println("headStructListSz " + headStructListSz);
 		if(logger.getLevel().equals(Level.INFO)){
 			String msg = "headStructListSz " + headStructListSz;
@@ -2102,6 +2126,13 @@ public class ThmP1 {
 		List<int[]> contextVecList = new ArrayList<int[]>();		
 		
 		if (headStructListSz > 0) {		
+			
+			List<Struct> structList = headStructList.structList();
+			//sort headStructList so that only dfs over the head structs whose
+			//scores are above a certain threshold, and to guarantee that a minimum 
+			//number of spanning parses have been counted
+			Collections.sort(structList, new HeadStructComparator());
+			
 			StringBuilder parsedSB = new StringBuilder();
 			
 			// System.out.println("index of highest score: " +
@@ -2113,16 +2144,34 @@ public class ThmP1 {
 			//list of ParsedPairs used to store long forms, same order of pairs as in parsedPairMMapList
 			List<ParsedPair> longFormParsedPairList = new ArrayList<ParsedPair>();
 			
+			//to compare with headStructListSz.
+			int actualCommandsIteratedCount = 0;
+			//should just sort headStructList, but that costs time.
+			//boolean someParseCounted = false;
+			
 			for (int u = 0; u < headStructListSz; u++) {
-				Struct uHeadStruct = headStructList.structList().get(u);
+				Struct uHeadStruct = structList.get(u);
+				
+				double maxDownPathScore = uHeadStruct.maxDownPathScore();
+				//System.out.println("*&&*#*&%%%##### ");
+				//don't keep iterating if sufficiently many long parses have been built
+				//with scores above a certain threshold. But only if some, however bad,
+				//has been counted.
+				// Reduces parse explosion.
+				if(maxDownPathScore < LONG_FORM_SCORE_THRESHOLD 
+						&& actualCommandsIteratedCount > MIN_PARSE_ITERATED_COUNT){					
+					continue;
+				}
+				actualCommandsIteratedCount++;
+				
 				uHeadStruct.set_dfsDepth(0);
 				
 				int[] curStructContextvec = new int[parseContextVectorSz];		
 				//keep track of span of longForm, used as commandNumUnits in case
 				//no WLCommand parse. The bigger the better.
 				int span = 0;
-				//get the "long" form, not WL form, with this dfs
-				span = dfs(uHeadStruct, parsedSB, span);
+				//get the "long" form, not WL form, with this dfs()
+				span = buildLongFormParseDFS(uHeadStruct, parsedSB, span);
 				//ParseStruct headParseStruct = new ParseStruct();
 				//now get the WL form build from WLCommand's
 				//should pass in the wlSB, instead of creating one anew each time. <--It's ok.
@@ -2133,7 +2182,7 @@ public class ThmP1 {
 				
 				System.out.println("+++Previous long parse: " + parsedSB);
 				
-				double maxDownPathScore = uHeadStruct.maxDownPathScore();
+				
 				//defer these additions to orderPairsAndPutToLists()
 				//parsedExpr.add(new ParsedPair(wlSB.toString(), maxDownPathScore, "short"));		
 				//System.out.println("*******SHORT FORM: " + wlSB);
@@ -2149,6 +2198,10 @@ public class ThmP1 {
 				System.out.print(parsedString + " \n ** ");
 				
 				parsedSB.setLength(0); //should just declare new StringBuilder instead!
+			}
+			
+			if(logger.getLevel().equals(Level.INFO)){
+				logger.info("actualCommandsIteratedCount: " + actualCommandsIteratedCount);
 			}
 			//order maps from parsedPairMMapList and put into parseStructMapList and parsedExpr.
 			//Also add context vector of highest scores
@@ -2215,7 +2268,7 @@ public class ThmP1 {
 				//commandNumUnits if no full WLCommand parse.
 				int span = 0;
 				kHeadStruct.set_dfsDepth(0);
-				span = dfs(kHeadStruct, parsedSB, span);
+				span = buildLongFormParseDFS(kHeadStruct, parsedSB, span);
 				//only getting first component parse. Should use priority queue instead of list?
 				//or at least get highest score
 				totalScore *= kHeadStruct.maxDownPathScore();
@@ -2264,6 +2317,17 @@ public class ThmP1 {
 		return parseState;
 	}
 
+	private static class HeadStructComparator implements Comparator<Struct>{
+		
+		//want the highest-scoring ones first, while iterating.
+		@Override
+		public int compare(Struct struct1, Struct struct2){
+			double score1 = struct1.maxDownPathScore();
+			double score2 = struct2.maxDownPathScore();
+			return score1 < score2 ? 1 : (score1 > score2 ? -1 : 0);
+		}
+	}
+	
 	/**
 	 * Order parsedPairMMapList and add to parseStructMapList and parsedExpr (both static members).
 	 * @param parsedPairMMapList
@@ -2284,7 +2348,7 @@ public class ThmP1 {
 		List<Integer> numUnitsList = new ArrayList<Integer>();
 		List<Integer> commandNumUnitsList = new ArrayList<Integer>();
 		//use scores to tie-break once scores become more comprehensive
-		//List<Double> scoresList = new ArrayList<Double>();
+		List<Double> scoresList = new ArrayList<Double>();
 		
 		//ordering in the sorted list, the value list.get(i) is the index of the pair in the original parsedPairMMapList
 		List<Integer> finalOrderingList = new ArrayList<Integer>();
@@ -2297,22 +2361,32 @@ public class ThmP1 {
 		
 		int firstNumUnits = 0;
 		int firstCommandNumUnits = 0;
+		double firstScore = 1;
+		
 		for(ParsedPair parsedPair : firstMMap.values()){
-			firstNumUnits += parsedPair.numUnits;
-			firstCommandNumUnits += parsedPair.commandNumUnits;
+			firstNumUnits += parsedPair.numUnits();
+			firstCommandNumUnits += parsedPair.commandNumUnits();
+			firstScore *= parsedPair.score();
 		}
 		System.out.println("****parsedPairMMapList " + parsedPairMMapList);
 		numUnitsList.add(firstNumUnits);
 		commandNumUnitsList.add(firstCommandNumUnits);
+		scoresList.add(firstScore);
 		//finalOrderingList.add(0, 0);
 		
 		for(int i = 1; i < parsedPairMMapList.size(); i++){
 			int numUnits = 0;
 			int commandNumUnits = 0;
+			double score = 1;
 			Multimap<ParseStructType, ParsedPair> mmap = parsedPairMMapList.get(i);
+			
 			for(ParsedPair parsedPair : mmap.values()){
-				numUnits += parsedPair.numUnits;
-				commandNumUnits += parsedPair.commandNumUnits;
+				numUnits += parsedPair.numUnits();
+				commandNumUnits += parsedPair.commandNumUnits();
+				//multiplying score has the added benefit that
+				//extraneous parses (extra commands triggered
+				//but not eliminated) will lower the score.
+				score *= parsedPair.score();
 			}
 			
 			int listSz = sortedParsedPairMMapList.size();
@@ -2326,21 +2400,29 @@ public class ThmP1 {
 				//simplify this to use only one if!
 				int sortedNumUnits = numUnitsList.get(j);
 				int sortedCommandNumUnits = commandNumUnitsList.get(j);
-				//double commandNumUnitsDiff = ((double)sortedCommandNumUnits - commandNumUnits)*3/2;				
+				double sortedScore = scoresList.get(j);
+				
+				//current ParsedPair will rank higher if the following:			
 				if(sortedCommandNumUnits < commandNumUnits 						
 						|| (sortedNumUnits - numUnits) > ((double)sortedCommandNumUnits - commandNumUnits)*3/2){
-					//insert
+					//insert with right order
 					sortedParsedPairMMapList.add(j, mmap);
 					numUnitsList.add(j, numUnits);
 					commandNumUnitsList.add(j, commandNumUnits);
+					scoresList.add(j, score);
 					finalOrderingList.add(j, i);
 					break;
-				}//but this case was already included above
-				else if(sortedCommandNumUnits == commandNumUnits && sortedNumUnits > numUnits){
-					//sort based on numUnits if commandNumUnits are the same 
+				}
+				//numUnits can be a little worse, but not more worse by more than 1 unit.
+				else if(sortedCommandNumUnits == commandNumUnits && sortedNumUnits+1 >= numUnits 
+						&& sortedScore < score){
+					//now sortedNumUnits
+					//use scoresList to tie-break
+					//insert with right order
 					sortedParsedPairMMapList.add(j, mmap);
 					numUnitsList.add(j, numUnits);
 					commandNumUnitsList.add(j, commandNumUnits);
+					scoresList.add(j, score);
 					finalOrderingList.add(j, i);
 					break;
 				}
@@ -2349,6 +2431,7 @@ public class ThmP1 {
 				sortedParsedPairMMapList.add(listSz, mmap);
 				numUnitsList.add(listSz, numUnits);
 				commandNumUnitsList.add(listSz, commandNumUnits);
+				scoresList.add(listSz, score);
 				finalOrderingList.add(listSz, i);
 			}
 			
@@ -2625,12 +2708,8 @@ public class ThmP1 {
 			// that are not picked up by the eventual parse
 			Struct newStruct = struct1.copy();
 
-			// update firstEnt so firstEnt has the right children
-			if (firstEnt == struct1) {
-				firstEnt = newStruct;
-			}
-
 			ChildRelation childRelation = null;
+			
 			if(struct2.type().equals("hypo")){
 				
 				//prev1 has type Struct
@@ -2658,19 +2737,31 @@ public class ThmP1 {
 			// add to child relation, usually a preposition, 
 			//eg  "from", "over"
 			// could also be verb, "consist", "lies"			
-			List<Struct> kPlus1StructArrayList = mx.get(k + 1).get(k + 1).structList();			
-			
-			for(int p = 0; p < kPlus1StructArrayList.size(); p++){
-				Struct struct = kPlus1StructArrayList.get(p);
-				if(struct.prev1NodeType().equals(NodeType.STR)){
-					
-					String childRelationStr = struct.prev1().toString();					
-					childRelation = new ChildRelation(childRelationStr);
-					
-					break;
+				List<Struct> kPlus1StructArrayList = mx.get(k + 1).get(k + 1).structList();			
+				
+				for(int p = 0; p < kPlus1StructArrayList.size(); p++){
+					Struct struct = kPlus1StructArrayList.get(p);
+					if(struct.prev1NodeType().equals(NodeType.STR)){
+						
+						String childRelationStr = struct.prev1().toString();
+						childRelation = new ChildRelation(childRelationStr);
+						
+						break;
+					}
 				}
 			}
+			
+			if(struct2.type().equals("phrase")){
+				//e.g. "ideal maximal among ..."
+				// in which case treat as hyp
+				assert struct2.prev1NodeType().equals(NodeType.STRUCTA);
+				
+				StructA<?, ?> hypStruct = (StructA<?, ?>)struct2.prev1();
+				if(hypStruct.type().equals("adj") ){
+					childRelation = new ChildRelation.HypChildRelation(hypStruct.prev1().toString());					
+				}
 			}
+			System.out.println(".............childRelation " + childRelation);
 			if(childRelation == null){				
 				throw new IllegalStateException("Inside ThmP1.reduce(), childRelation should not be null!");
 			}
@@ -2681,6 +2772,11 @@ public class ThmP1 {
 				return new EntityBundle(firstEnt, recentEnt, recentEntIndex);
 			}
 			
+			// update firstEnt so firstEnt has the right children
+			if (firstEnt == struct1) {
+				firstEnt = newStruct;
+			}
+
 			// String childRelation = mx.get(k + 1).get(k +
 			// 1).prev1().toString();
 			//should not even call add child if struct1 is a StructA
@@ -3313,13 +3409,13 @@ public class ThmP1 {
 	}
 
 	/**
-	 * Depth first search.
+	 * Depth first search, to build initial parse tree.
 	 * @param struct
 	 * @param parsedSB
 	 * @param span
 	 * @return
 	 */
-	private static int dfs(Struct struct, StringBuilder parsedSB, int span) {
+	private static int buildLongFormParseDFS(Struct struct, StringBuilder parsedSB, int span) {
 		
 		int structDepth = struct.dfsDepth();
 		
@@ -3338,7 +3434,7 @@ public class ThmP1 {
 			if (struct.prev1NodeType().isTypeStruct()) {
 				Struct prev1Struct = (Struct) struct.prev1();
 				prev1Struct.set_dfsDepth(structDepth + 1);
-				span = dfs(prev1Struct, parsedSB, span);
+				span = buildLongFormParseDFS(prev1Struct, parsedSB, span);
 				
 				if(prev1Struct.containsHyp()){
 					struct.setContainsHyp(true);
@@ -3366,7 +3462,7 @@ public class ThmP1 {
 				parsedSB.append(", ");
 				Struct prev2Struct = (Struct) struct.prev2();
 				prev2Struct.set_dfsDepth(structDepth + 1);
-				span = dfs(prev2Struct, parsedSB, span);
+				span = buildLongFormParseDFS(prev2Struct, parsedSB, span);
 				
 				if(prev2Struct.containsHyp()){
 					struct.setContainsHyp(true);
@@ -3410,7 +3506,7 @@ public class ThmP1 {
 				Struct child_i = children.get(i);
 				child_i.set_dfsDepth(structDepth + 1);
 				
-				span = dfs(child_i, parsedSB, span);
+				span = buildLongFormParseDFS(child_i, parsedSB, span);
 			}
 			System.out.print("]");
 			parsedSB.append("]");

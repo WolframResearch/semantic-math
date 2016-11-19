@@ -265,7 +265,7 @@ public class StructA<A, B> extends Struct{
 			return curWrapper.WLCommandStr();			
 		}		
 		
-		if(PREV1_TYPE.equals(NodeType.STR)){
+		if(PREV1_TYPE.equals(NodeType.STR) && PREV2_TYPE.equals(NodeType.STR)){
 			String fullName = (String)this.prev1;
 			if(PREV2_TYPE.equals(NodeType.STR) && !prev2.equals("")){
 				fullName = "[" + fullName + ", " + (String)this.prev2 + "]";

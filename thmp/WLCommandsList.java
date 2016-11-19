@@ -127,9 +127,16 @@ public class WLCommandsList {
 		// term. An optional group is only included if all optional terms in this group
 		// are satisfied.
 		//String posStr, String nameStr, boolean includeInBuiltString, boolean isTrigger, boolean isTriggerMathObj, int positionInMap
-		//WLCommandMapBuilder.put("element", addCommand(
-			//	new String[] { "symb|ent, , true", "\\[Element]", ", element, trigger", "pre, of, false", "symb|ent, , true" }));	
+		/*****General-scope commands******/
+		//triggered by types. Add such judiciously.
+		//the commands with types as keys are triggered only if no specific-scope commands have been triggered
+		WLCommandMapBuilder.put("verb", addCommand(new PBuilder("symb|ent|pro|noun", null, true), 				
+				new PBuilder("Connective["),  new PBuilder("verb", null, true, true, false), new PBuilder("]"),
+				new PBuilder("symb|ent|noun|prep", null, true, false, false)));		
 		
+		/*****More specific commands******/
+		//WLCommandMapBuilder.put("element", addCommand(
+			//	new String[] { "symb|ent, , true", "\\[Element]", ", element, trigger", "pre, of, false", "symb|ent, , true" }));			
 		WLCommandMapBuilder.put("element", addCommand(new PBuilder("symb|ent", null, true), new PBuilder("\\[Element]"),
 				new PBuilder(null, "element", false, true, false), new PBuilder("pre", "of", false), new PBuilder("symb|ent", null, true) ));		
 		
@@ -146,9 +153,10 @@ public class WLCommandsList {
 		
 		/*WLCommandMapBuilder.put("exist", addCommand(
 				new String[] { ", there, false", "Exists[", ", exists*, trigger",  "ent|symb|phrase|noun, , true", "]"}));*/
-		WLCommandMapBuilder.put("exist", addCommand(new PBuilder(null, "there", false), new PBuilder("Exists["),
-				new PBuilder(null, "exists*", false, true, false), new PBuilder("ent|symb|phrase|noun", null, true),
+		WLCommandMapBuilder.put("there", addCommand(new PBuilder(null, "there", false, true, false), new PBuilder("Exists["),
+				new PBuilder(null, "exists*|is", false), new PBuilder("ent|symb|phrase|noun", null, true),
 				 new PBuilder("]") ));	
+		
 		//WLCommandMapBuilder.put("is", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is|are|be, trigger",
 			//	"\\[Element]", "symb|ent|phrase, , true, TriggerMathObj" }));
 		/*WLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro", null, true), 
@@ -195,9 +203,9 @@ public class WLCommandsList {
 		//e.g. "$X$ is connected"
 		//WLCommandMapBuilder.put("is", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is|are|be, trigger",
 			//"\\[HasProperty]", "adj, , true, TriggerMathObj" }));
-		WLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro", null, true), 
+		WLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro|noun", null, true), 
 				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), 
-				new PBuilder("~HasProperty~"), new PBuilder("adj", null, true, false, true) ));
+				new PBuilder("~HasProperty~"), new PBuilder("adj|phrase|noun", null, true, false, true) ));
 		//e.g. "R is of finite type"
 		WLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro", null, true), 
 				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), 
@@ -272,18 +280,15 @@ public class WLCommandsList {
 		//WLCommandMapBuilder.put("have", addCommand(new String[] { "pro, we, false", "verb, have, trigger", ", , true"}));
 		WLCommandMapBuilder.put("have", addCommand(new PBuilder("pro", "we", false), new PBuilder("verb", "have", false, true, false), 
 				new PBuilder(null, null, true) ));
-		// "A has property B", eg "chains of ideals have same length"
-		//WLCommandMapBuilder.put("have", addCommand(new String[] { "ent|symb|pro, , true", "verb, have|has, trigger", "\\HasProperty[", ", , true", "]"}));
-		WLCommandMapBuilder.put("have", addCommand(new PBuilder("ent|symb|pro", null, true),
-				new PBuilder("verb", "have|has", false, true, false), 
-				new PBuilder("~HasProperty~"), new PBuilder(null, null, true) ));
 		//"we have "A \subset B"
 		WLCommandMapBuilder.put("have", addCommand(new PBuilder("pro", "we", true),
 				new PBuilder("verb", "have", false, true, false), new PBuilder(null, "that", false, false, "OPT"), 
 				new PBuilder("assert|ent", null, true) ));
-		
-		//"for a principal ideal"
-		
+		// "A has property B", eg "chains of ideals have same length"
+		//WLCommandMapBuilder.put("have", addCommand(new String[] { "ent|symb|pro, , true", "verb, have|has, trigger", "\\HasProperty[", ", , true", "]"}));
+		WLCommandMapBuilder.put("have", addCommand(new PBuilder("ent|symb|pro|noun", null, true),
+				new PBuilder("verb", "have|has", false, true, false), 
+				new PBuilder("~HasProperty~"), new PBuilder(null, null, true) ));
 				
 		/*
 		WLCommandMapBuilder.put("is contained", addCommand(new String[] { "symb|ent|pro, , true", "auxpass, , trigger",

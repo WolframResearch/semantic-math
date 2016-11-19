@@ -458,8 +458,7 @@ public class StructH<H> extends Struct{
 					if(!child.usedInOtherCommandComponent()){
 						//don't want "symb", e.g. $G$ with $H$ prime. 
 						childRelationStr = (child.isStructA() && !child.type().equals("symb") 
-								//e.g. "field which is perfect", don't want "which"
-								
+								//e.g. "field which is perfect", don't want "which"								
 								)
 								? "" : childRelationStr;
 						//str += ", " + curChildRelation + childStr;

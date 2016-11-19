@@ -412,12 +412,25 @@ public class ThmP1Test {
 			st = "Let $\\mathcal{F}$ be a set of ideals of $R$.";
 			st = "An ideal $I \\subset R$ which is maximal with respect to the property that $I \\cap S = \\emptyset$ is prime";
 			st = "If every prime ideal of $R$ is finitely generated, then every ideal of $R$ is finitely generated";
-			st = "an ideal maximal among the ideals which do not contain nonzerodivisor is prime";
 			
 			st = "For any constructible set $E \\subset \\Spec(R)$ the inverse image $f^{-1}(E)$ is constructible in $\\Spec(S)$";
+			st = "there exists a ring map $R \\to S$ of finite presentation such that $T$ is the image of $\\Spec(S)$ in $\\Spec(R)$"; //Example
+			st = "the image of a constructible subset of $\\Spec(S)$ is constructible in $\\Spec(R)$";
+			st = "Noetherian property is stable by passage to finite type extension and localization";
+			st = "Any finitely generated ring over a Noetherian ring is Noetherian";
+			st = "If $R$ is a Noetherian ring, then so is the formal power series ring $R[[x_1, \\ldots, x_n]]$";
+			st = "A noetherian affine scheme has finitely many generic points.";
+			st = "going down holds for $R \\to S$ and there is at most one prime of $S$ above every prime of $R$";
+			st = "there is at most one prime of $S$ above every prime of $R$";
+			st = "there is one prime of $S$ above every prime of $R$"; //<--to parse!
+			st = "there is one prime of $ S$ above every prime of $ R$";
+			st = "Then morphisms lift along $\\text{Supp}(N) \\to \\Spec(R)$.";
+			st = "We say $K$ is separably generated over $k$"; //<--to parse/group together
+			st = "an ideal maximal among the ideals which do not contain nonzerodivisor is prime"; //Example for explosion
+			st = "\\begin{enumerate}\\item ring \\item field \\end{enumerate}";
+			st = "the following are equivalent: \\begin{enumerate} \\item $q$ is prime \\item $p$ is prime \\end{enumerate}"; //<--parse this!
 			
-			st = "there exists a ring map $R \\to S$ of finite presentation such that $T$ is the image of $\\Spec(S)$ in $\\Spec(R)$";
-			
+
 			//st = "there exists a ring map $R \\to S$ of finite presentation such that $T$ is the image of $\\Spec(S)$ in $\\Spec(R)$."; //<--too many parses!!
 			
 			//st = "given field, with $F $ of presentation, and $G $ of finite type";
