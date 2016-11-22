@@ -99,8 +99,8 @@ public class StructH<H> extends Struct{
 	 */
 	@Override
 	public void set_parentStruct(Struct parent){
-		//if(struct.get("name").equals("ring"))
-			//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
+		if(struct.get("name").equals("field"))
+			System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
 		this.parentStruct = parent;
 	}
 	
@@ -233,21 +233,25 @@ public class StructH<H> extends Struct{
 	 */
 	@Override
 	public StructH<H> copy(){
-		if(struct.get("name").equals("ring"))
-			System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
+		//if(struct.get("name").equals("ring"))
+			//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
 		HashMap<String, String> structCopy = new HashMap<String, String>(this.struct);
 		StructH<H> newStructH = new StructH<H>(structCopy, this.type, this.structList,
 				this.maxDownPathScore);
 		
 		for(int i = 0; i < this.children.size(); i++){
-			newStructH.add_child(this.children.get(i), this.childRelationList.get(i));
+			Struct child = children.get(i);
+			newStructH.add_child(child, this.childRelationList.get(i));
+			//copy should not modify the state of the original struct, change name.
+			child.set_parentStruct(newStructH);
 		}
 		
 		//newStructH.set_childRelationType(this.childRelationType());
-		if(null != parentStruct && !parentStruct.isStructA()){
+		//if(null != parentStruct //&& !parentStruct.isStructA()
+			//	){
 			
 			newStructH.set_parentStruct(parentStruct);
-		}
+		//}
 		
 		return newStructH;
 	}
@@ -264,6 +268,7 @@ public class StructH<H> extends Struct{
 		hasChild = true;
 		children.add(child);
 		childRelationList.add(relation);
+		child.set_parentStruct(this);
 	}
 	
 	public boolean has_child(){
@@ -297,15 +302,26 @@ public class StructH<H> extends Struct{
 	
 	@Override
 	public String toString(){
-		String str = "[" + this.type;
-		str += this.struct; //struct is hashmap for structH
+		StringBuilder sb = new StringBuilder();
+		sb.append("[" + this.type);
+		//String str = "[" + this.type;
+		sb.append(this.struct);
+		//str += this.struct; //struct is hashmap for structH
 		/*for(Map.Entry<String, String> e: this.struct.entrySet()){
 			str += e;
 		}*/
 		if(this.possessivePrev != null){
-			str += "possessivePrev: " + possessivePrev.type();
+			sb.append("possessivePrev: ");
+			sb.append(possessivePrev.type());
+			//str += "possessivePrev: " + possessivePrev.type();
 		}
-		return str + "]";
+		if(children.size() > 0){
+			sb.append(" children: ");
+			sb.append(children);
+		}
+		//str+= " children.size(): ";
+		//str += children.size();
+		return sb.append(']').toString();
 	}
 	
 	public int WLCommandStrVisitedCount(){

@@ -134,6 +134,8 @@ public class StructA<A, B> extends Struct{
 		newStruct.maxDownPathScore = this.maxDownPathScore;
 		newStruct.numUnits = this.numUnits;
 		newStruct.score = this.score;
+		newStruct.parentStruct = this.parentStruct;
+		newStruct.set_childRelationType(this.childRelationType());
 		//newStruct.WLCommandStr = this.WLCommandStr;
 		return newStruct;
 	}

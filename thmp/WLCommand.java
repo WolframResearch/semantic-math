@@ -1457,7 +1457,7 @@ public class WLCommand {
 				
 			}//super hacky, find a better way!! By setting the parent, couldn't set for some reason this time
 			// <--Nov 2016. All ents such that ent's could skip two generations, i.e. be grandparent of ent.
-			else if( (structParent.type().equals("prep") || structParent.type().equals("phrase"))
+			/*else if( (structParent.type().equals("prep") || structParent.type().equals("phrase"))
 					//&& !structParent.childRelationType().equals(ChildRelationType.OTHER) 
 					&& componentPosPattern.matcher("ent").find()
 					){
@@ -1478,7 +1478,7 @@ public class WLCommand {
 					break;
 				}
 			}
-			/*else if(!structParent.isStructA() && !structParent.childRelationType().equals(ChildRelationType.OTHER)){
+			else if(!structParent.isStructA() && !structParent.childRelationType().equals(ChildRelationType.OTHER)){
 				System.out.println("^^^^^^^^" + structParent + " is parent of " + structToAdd + " componentNamePattern " + componentPosPattern);
 				System.out.println("further parent: " + structParent.parentStruct());
 				structToAdd = structParent;

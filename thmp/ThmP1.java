@@ -2710,6 +2710,7 @@ public class ThmP1 {
 			Struct newStruct = struct1.copy();
 
 			ChildRelation childRelation = null;
+			Struct childToAdd = struct2;
 			
 			if(struct2.type().equals("hypo")){
 				
@@ -2721,12 +2722,13 @@ public class ThmP1 {
 				
 				StructA<?, ?> hypStruct = (StructA<?, ?>)struct2.prev1();
 				if(hypStruct.type().equals("hyp") ){
-					childRelation = extractChildRelation(hypStruct);					
+					childRelation = extractHypChildRelation(hypStruct);					
 				}
 				//which should be attached to immediately prior word
 				if(childRelation.childRelation().contains("which") && struct1.children().size() > 0){
 					return new EntityBundle(firstEnt, recentEnt, recentEntIndex);
 				}
+				childToAdd = (Struct)struct2.prev2();
 			}else if(struct2.type().equals("Cond")){
 				//e.g. "prime $I$ such that it's maximal."
 				//prev1 should be of type "cond", and have content e.g. "such that"
@@ -2734,8 +2736,9 @@ public class ThmP1 {
 				
 				StructA<?, ?> hypStruct = (StructA<?, ?>)struct2.prev1();
 				if(hypStruct.type().equals("cond") ){
-					childRelation = extractChildRelation(hypStruct);
+					childRelation = extractHypChildRelation(hypStruct);
 				}
+				childToAdd = (Struct)struct2.prev2();
 			}
 			else{			
 			// add to child relation, usually a preposition, 
@@ -2748,7 +2751,7 @@ public class ThmP1 {
 					if(struct.prev1NodeType().equals(NodeType.STR)){
 						
 						String childRelationStr = struct.prev1().toString();
-						childRelation = new ChildRelation(childRelationStr);
+						childRelation = new ChildRelation.PrepChildRelation(childRelationStr);
 						
 						break;
 					}
@@ -2776,34 +2779,39 @@ public class ThmP1 {
 				//phrase is a compound pos
 				assert struct2.prev2NodeType().isTypeStruct();
 				
-				StructA<?, ?> hypStruct = (StructA<?, ?>)struct2.prev1();
-				if(hypStruct.type().equals("adj") ){
-					childRelation = new ChildRelation.HypChildRelation(hypStruct.prev1().toString());					
+				StructA<?, ?> struct2Prev1 = (StructA<?, ?>)struct2.prev1();
+				if(struct2Prev1.type().equals("adj") ){
+					childRelation = new ChildRelation.HypChildRelation(struct2Prev1.prev1().toString());
+					childToAdd = (Struct)struct2.prev2();
 				}
 				
-				Struct prev2Struct = (Struct)struct2.prev2();
-				
+				Struct struct2Prev2 = (Struct)struct2.prev2();				
 				
 				if(struct2.prev2NodeType().equals(NodeType.STRUCTH)){
-					//e.g. "phrase[adj[maximal], prep[pre[among], [ent{name=ring}]]]"						
-					//childRelation = new ChildRelation.HypChildRelation(hypStruct.prev1().toString());	
-					((Struct)prev2Struct).set_parentStruct(newStruct);
-				}else if(prev2Struct.prev2NodeType().equals(NodeType.STRUCTH)){
+					//e.g. "phrase[adj[maximal], prep[pre[among], [ent{name=ring}]]]"
+					//childRelation = extractHypChildRelation(struct2Prev1);
+					//childRelation = new ChildRelation.HypChildRelation(((Struct)struct2Prev1.prev1()).contentStr());
+					childRelation = new ChildRelation.HypChildRelation(struct2Prev1.prev1().toString());	
+					((Struct)struct2Prev2).set_parentStruct(newStruct);
+					childToAdd = struct2Prev2;
+				}else if(struct2Prev2.prev2NodeType().equals(NodeType.STRUCTH)){
 					//the right-most grandchild
-					System.out.println("^######^#^##^#^#^!@@ prev2Struct.prev2 " + prev2Struct.prev2());
-					//childRelation = new ChildRelation.HypChildRelation(hypStruct.prev1().toString());
-					((Struct)(prev2Struct.prev2())).set_parentStruct(newStruct);
-					System.out.println("&^^^^setting (Struct)(prev2Struct.prev2()) " + (Struct)(prev2Struct.prev2()) + 
+					System.out.println("^######^#^##^#^#^!@@ prev2Struct.prev2 " + struct2Prev2.prev2());
+					//childRelation = extractHypChildRelation((Struct)struct2Prev2.prev1());
+					childRelation = new ChildRelation.HypChildRelation(struct2Prev2.prev1().toString());
+					((Struct)(struct2Prev2.prev2())).set_parentStruct(newStruct);
+					childToAdd = (Struct)struct2Prev2.prev2();
+					System.out.println("&^^^^setting (Struct)(prev2Struct.prev2()) " + (Struct)(struct2Prev2.prev2()) + 
 							" for parent " + newStruct);					
 				}
 				
-				if(((Struct)struct2.prev2()).type().equals("prep")){
-					if(((Struct)struct2.prev2()).prev2() instanceof StructH){
-						
-						((Struct)prev2Struct.prev2()).set_parentStruct(newStruct);
-						//throw new IllegalStateException("should be ideal" + newStruct);
+				/*if(((Struct)struct2.prev2()).type().equals("prep")){
+					if(((Struct)struct2.prev2()).prev2() instanceof StructH){						
+						//((Struct)prev2Child.prev2()).set_parentStruct(newStruct);
+						//logger.info("should be field, should have children " +prev2Child.prev2());
+						//throw new IllegalStateException("should be field " + prev2Child.prev2());
 					}
-				}
+				}*/
 				
 			}
 			
@@ -2835,7 +2843,7 @@ public class ThmP1 {
 				 
 				//if struct2 is e.g. a prep, only want the ent in the prep
 				//to be added.
-				Struct childToAdd = struct2;
+				
 				if(struct2.type().equals("prep") && struct2.prev2NodeType().equals(NodeType.STRUCTH)
 						//if struct2 is of type "hypo", only add the condition, i.e. second
 						//e.g. "ideal which is prime"
@@ -2848,8 +2856,9 @@ public class ThmP1 {
 				
 				((StructH<?>) newStruct).add_child(childToAdd, childRelation); 
 				
-				struct2.set_parentStruct(newStruct);
-				childToAdd.set_parentStruct(newStruct);
+				
+				struct2.set_parentStruct(newStruct); //redundant
+				childToAdd.set_parentStruct(newStruct); //redundant
 				
 				recentEnt = newStruct;
 				recentEntIndex = j;
@@ -3092,20 +3101,24 @@ public class ThmP1 {
 	 * @param hypStruct
 	 * @return
 	 */
-	private static ChildRelation extractChildRelation(StructA<?, ?> hypStruct) {
+	private static ChildRelation extractHypChildRelation(Struct hypStruct) {
 		ChildRelation childRelation;
 		String hypStructPrev1Str = "";
 		String hypStructPrev2Str = "";
 		
 		if(hypStruct.prev1NodeType().equals(NodeType.STRUCTA) ){
 			hypStructPrev1Str = ((Struct)hypStruct.prev1()).prev1().toString();
+		}else if(hypStruct.prev1NodeType().equals(NodeType.STR)){
+			hypStructPrev1Str = hypStruct.prev1().toString();
 		}
 		
 		if(hypStruct.prev2NodeType().equals(NodeType.STRUCTA) ){
 			hypStructPrev2Str = ((Struct)hypStruct.prev2()).prev1().toString();
+		}else if(hypStruct.prev2NodeType().equals(NodeType.STR)){
+			hypStructPrev1Str = hypStruct.prev2().toString();
 		}
 		
-		String relationStr = hypStructPrev1Str + " " + hypStructPrev2Str;	
+		String relationStr = hypStructPrev1Str + (hypStructPrev2Str.equals("") ? "" : " " + hypStructPrev2Str);	
 		
 		//System.out.println("=++++++=========++++ HYPO " + relationStr);
 		childRelation = new ChildRelation.HypChildRelation(relationStr);

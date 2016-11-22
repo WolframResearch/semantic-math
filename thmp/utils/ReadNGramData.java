@@ -12,7 +12,8 @@ import java.util.regex.Pattern;
 
 /**
  * Read in scraped n-grams from file, sort words into 
- * various files. 
+ * various files according to whether they are singleton,
+ * or n-grams.
  * 
  * @author yihed
  */
@@ -21,8 +22,10 @@ public class ReadNGramData {
 	private static final String TWO_GRAM_DATA_FILESTR = "src/thmp/data/twoGramData.txt";
 	private static final String THREE_GRAM_DATA_FILESTR = "src/thmp/data/threeGramData.txt";
 	//name of file containing additional n-grams and words scraped from the web.
-	private static final String NGRAM_DATA_FILESTR = "src/thmp/data/NGramData.txt";
+	private static final String NGRAM_DATA_FILESTR = "src/thmp/data/NGramData2.txt";
 	private static final Pattern SEPARATOR_PATTERN = Pattern.compile("\\s+|-|–");
+	private static final Pattern COMMA_PATTERN = Pattern.compile("(.+), (.+)");
+	private static final Pattern END_SLASH_PATTERN = Pattern.compile("(.+)\\s+([^-\\s]+)-$");
 	
 	public static void main(String[] args){
 		
@@ -39,6 +42,10 @@ public class ReadNGramData {
 		String word;
 		try{
 			while((word = fileBufferedReader.readLine()) != null){
+				//pre-process, e.g. turn "Lie algebra, algebraic" into
+				//"algebraic Lie algebra", and "adic l-" into "l-adic"
+				word = preprocessWord(word);
+				
 				Matcher matcher = SEPARATOR_PATTERN.matcher(word);
 				word = matcher.replaceAll(" ").toLowerCase();
 				//determine if 2 or 3 gram
@@ -57,6 +64,30 @@ public class ReadNGramData {
 		}
 		FileUtils.writeToFile(twoGramsList, TWO_GRAM_DATA_FILESTR);
 		FileUtils.writeToFile(threeGramsList, THREE_GRAM_DATA_FILESTR);
+	}
+
+	/**
+	 * Pre-process, e.g. turn "Lie algebra, algebraic" into
+	 * "algebraic Lie algebra", and "adic l-" into "l-adic".
+	 * @param word
+	 * @return
+	 */
+	private static String preprocessWord(String word) {
+		String updatedWord = word;
+		//if word ends in slash, e.g. "adic l-"
+		Matcher slashMatcher = END_SLASH_PATTERN.matcher(word);
+		if(slashMatcher.find()){
+			updatedWord = slashMatcher.group(2) + " " + slashMatcher.group(1);
+		}
+		
+		//if word is separated by comma, e.g.
+		//"Lie algebra, algebraic"
+		Matcher commaMatcher = COMMA_PATTERN.matcher(word);
+		if(commaMatcher.find()){
+			updatedWord = commaMatcher.group(2) + " " + commaMatcher.group(1);
+		}
+		
+		return updatedWord;
 	}
 	
 }

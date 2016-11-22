@@ -434,8 +434,10 @@ public class ThmP1Test {
 			st = "An ideal maximal among the ideals which do not contain nonzerodivisor is prime";
 			st = "If $R$ is a Noetherian ring, then so is the formal power series ring $R[[x_ 1, \\ ldots, x_n]]$";
 			st = "there is one prime of $ S $ above every prime of $ R $";
-			st = "an ideal maximal among ring which do not contain nonzerodivisor is prime"; //<--bad!
-			st = "ring in field which is perfect is prime";
+			//st = "ring in field which do not contain zerodivisor is prime";
+			st = "an ideal maximal among ring which do not contain nonzerodivisor is prime";
+			st = "ring maximal among field which do not contain zerodivisor is prime";
+			st = "We say $K$ is separable over $k$ if for every subextension $k \\subset K' \\subset K$ with $K'$ finitely generated over $k$";
 			//st = "there exists a ring map $R \\to S$ of finite presentation such that $T$ is the image of $\\Spec(S)$ in $\\Spec(R)$."; //<--too many parses!!
 			//st = "given field, with $F $ of presentation, and $G $ of finite type";
 			//st = "if $R$ is commutative and $S$ is commutative, then $S$ is abelian if $T$ is abelian";
