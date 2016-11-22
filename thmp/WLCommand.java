@@ -20,6 +20,7 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 
 import thmp.ParseToWLTree.WLCommandWrapper;
+import thmp.Struct.ChildRelationType;
 import thmp.Struct.NodeType;
 import thmp.WLCommand.PosTerm;
 import thmp.WLCommand.WLCommandComponent;
@@ -1417,6 +1418,11 @@ public class WLCommand {
 		
 		Struct structToAdd = struct;
 		Struct structParent = struct.parentStruct();
+		boolean print = false;
+		if(!structToAdd.isStructA()){
+			print = true;
+			System.out.println("**************************** before: " + structToAdd);
+		}
 		
 		while(structParent != null){
 			//System.out.println("***@@*@@*@@*****parent: " + structParent );
@@ -1434,7 +1440,7 @@ public class WLCommand {
 			}else{
 				parentNameStr = structParent.struct().get("name");
 			}
-			
+			System.out.println("###################parentNameStr " + parentNameStr + " parentType " +  parentType);
 			//should match both type and term. Get parent of struct, e.g. "log of f is g" should get all of
 			//"log of f", instead of just "f". I.e. get all of StructH.
 			
@@ -1443,14 +1449,50 @@ public class WLCommand {
 			if(componentNamePattern.matcher(parentNameStr).find()								
 					//parentNameStr.matches(curCommandComponent.nameStr()) 
 					&& componentPosPattern.matcher(parentType).find()){
-				
+				if(!structToAdd.isStructA()){
+					System.out.println("++++structToAdd " + structToAdd + " parent : " + structToAdd.parentStruct());
+				}
 				structToAdd = structParent;
 				structParent = structParent.parentStruct();
-			}else{
+				
+			}//super hacky, find a better way!! By setting the parent, couldn't set for some reason this time
+			// <--Nov 2016. All ents such that ent's could skip two generations, i.e. be grandparent of ent.
+			else if( (structParent.type().equals("prep") || structParent.type().equals("phrase"))
+					//&& !structParent.childRelationType().equals(ChildRelationType.OTHER) 
+					&& componentPosPattern.matcher("ent").find()
+					){
+				Struct parent = structParent.parentStruct();
+				boolean added = false;
+				
+				if(parent != null ){
+					Struct grandParent = structParent.parentStruct();
+					if(grandParent != null && !grandParent.isStructA()
+							|| !parent.isStructA()){
+						//structToAdd = structParent;
+						//structParent = structParent.parentStruct();
+						//added = true;
+					}
+				}
+				
+				if(!added){
+					break;
+				}
+			}
+			/*else if(!structParent.isStructA() && !structParent.childRelationType().equals(ChildRelationType.OTHER)){
+				System.out.println("^^^^^^^^" + structParent + " is parent of " + structToAdd + " componentNamePattern " + componentPosPattern);
+				System.out.println("further parent: " + structParent.parentStruct());
+				structToAdd = structParent;
+				structParent = structParent.parentStruct();
+
+			}*/
+			else{
+				
 				break;
 			}
 		}
-		
+		if(print){
+			System.out.println("**************************** after: " + structToAdd);
+		}
 		return structToAdd;
 	}
 	

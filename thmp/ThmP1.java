@@ -31,6 +31,7 @@ import com.google.common.collect.Multimap;
 import thmp.ParseToWLTree.WLCommandWrapper;
 import thmp.Struct.Article;
 import thmp.Struct.ChildRelation;
+import thmp.Struct.ChildRelationType;
 import thmp.Struct.NodeType;
 import thmp.search.NGramSearch;
 import thmp.search.ThreeGramSearch;
@@ -2720,8 +2721,11 @@ public class ThmP1 {
 				
 				StructA<?, ?> hypStruct = (StructA<?, ?>)struct2.prev1();
 				if(hypStruct.type().equals("hyp") ){
-
 					childRelation = extractChildRelation(hypStruct);					
+				}
+				//which should be attached to immediately prior word
+				if(childRelation.childRelation().contains("which") && struct1.children().size() > 0){
+					return new EntityBundle(firstEnt, recentEnt, recentEntIndex);
 				}
 			}else if(struct2.type().equals("Cond")){
 				//e.g. "prime $I$ such that it's maximal."
@@ -2751,25 +2755,56 @@ public class ThmP1 {
 				}
 			}
 			
+			if(childRelation == null){
+				//should throw checked exception, and let the program keep running, rather than
+				//runtime exception
+				throw new IllegalStateException("Inside ThmP1.reduce(), childRelation should not be null!");
+			}
+			
+			//if type equivalent to to-be-parent's type and is "pre", don't add, 
+			//e.g. "field F in C over Q"
+			ChildRelationType childRelationType = childRelation.childRelationType();
+			if(childRelationType.equals(ChildRelationType.PREP) && 
+					struct1.childRelationType().equals(ChildRelationType.PREP)){
+				return new EntityBundle(firstEnt, recentEnt, recentEntIndex);
+			}
+			
 			if(struct2.type().equals("phrase")){
 				//e.g. "ideal maximal among ..."
 				// in which case treat as hyp
 				assert struct2.prev1NodeType().equals(NodeType.STRUCTA);
+				//phrase is a compound pos
+				assert struct2.prev2NodeType().isTypeStruct();
 				
 				StructA<?, ?> hypStruct = (StructA<?, ?>)struct2.prev1();
 				if(hypStruct.type().equals("adj") ){
 					childRelation = new ChildRelation.HypChildRelation(hypStruct.prev1().toString());					
 				}
-			}
-			System.out.println(".............childRelation " + childRelation);
-			if(childRelation == null){				
-				throw new IllegalStateException("Inside ThmP1.reduce(), childRelation should not be null!");
-			}
-			
-			//if type equivalent to to-be-parent's type, don't add, 
-			//e.g. "field F in C over Q"			
-			if(childRelation.childRelationType().equals(struct1.childRelationType())){
-				return new EntityBundle(firstEnt, recentEnt, recentEntIndex);
+				
+				Struct prev2Struct = (Struct)struct2.prev2();
+				
+				
+				if(struct2.prev2NodeType().equals(NodeType.STRUCTH)){
+					//e.g. "phrase[adj[maximal], prep[pre[among], [ent{name=ring}]]]"						
+					//childRelation = new ChildRelation.HypChildRelation(hypStruct.prev1().toString());	
+					((Struct)prev2Struct).set_parentStruct(newStruct);
+				}else if(prev2Struct.prev2NodeType().equals(NodeType.STRUCTH)){
+					//the right-most grandchild
+					System.out.println("^######^#^##^#^#^!@@ prev2Struct.prev2 " + prev2Struct.prev2());
+					//childRelation = new ChildRelation.HypChildRelation(hypStruct.prev1().toString());
+					((Struct)(prev2Struct.prev2())).set_parentStruct(newStruct);
+					System.out.println("&^^^^setting (Struct)(prev2Struct.prev2()) " + (Struct)(prev2Struct.prev2()) + 
+							" for parent " + newStruct);					
+				}
+				
+				if(((Struct)struct2.prev2()).type().equals("prep")){
+					if(((Struct)struct2.prev2()).prev2() instanceof StructH){
+						
+						((Struct)prev2Struct.prev2()).set_parentStruct(newStruct);
+						//throw new IllegalStateException("should be ideal" + newStruct);
+					}
+				}
+				
 			}
 			
 			// update firstEnt so firstEnt has the right children
@@ -2812,7 +2847,9 @@ public class ThmP1 {
 				childToAdd.set_childRelationType(childRelation.childRelationType());
 				
 				((StructH<?>) newStruct).add_child(childToAdd, childRelation); 
+				
 				struct2.set_parentStruct(newStruct);
+				childToAdd.set_parentStruct(newStruct);
 				
 				recentEnt = newStruct;
 				recentEntIndex = j;
@@ -3030,9 +3067,13 @@ public class ThmP1 {
 			
 			StructA<Struct, Struct> parentStruct = new StructA<Struct, Struct>(struct1, struct1Type, 
 					struct2, struct2Type, newType, newScore, mx.get(i).get(j), parentDownPathScore, parentNumUnits);
-			struct1.set_parentStruct(parentStruct);
-			struct2.set_parentStruct(parentStruct);
-
+			if(null == struct1.parentStruct()){
+				struct1.set_parentStruct(parentStruct);
+			}
+			if(null == struct2.parentStruct()){
+				struct2.set_parentStruct(parentStruct);
+			}
+			
 			if(newType.equals("assert")){
 				parseState.setRecentAssert(parentStruct);
 				//System.out.println("Assert added! parentStruct" + parentStruct);

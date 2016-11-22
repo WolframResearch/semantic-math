@@ -715,8 +715,8 @@ public class Maps {
 			structMap.put("ent_auxpass", new Rule("assert", .8));
 			structMap.put("pro_auxpass", new Rule("assert", .8));
 
-			structMap.put("verb_assert", new Rule("verbphrase", .75));
-			structMap.put("vbs_assert", new Rule("verbphrase", 1));
+			//structMap.put("verb_assert", new Rule("verbphrase", .75));
+			//structMap.put("vbs_assert", new Rule("verbphrase", 1));
 			structMap.put("hypo_assert", new Rule("assert", 1));
 			structMap.put("verbphrase_prep", new Rule("verbphrase", 1));
 			structMap.put("vbs_partiby", new Rule("verb", 1));

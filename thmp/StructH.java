@@ -19,7 +19,7 @@ public class StructH<H> extends Struct{
 	private String type; 
 	//*additional* part of speech
 	private volatile Set<String> extraPosSet;
-	private String WLCommandStr;
+	
 	//the number of times this WLCommandStr has been visited.
 	//To not repeat, print only when this is even
 	private int WLCommandStrVisitedCount;
@@ -99,6 +99,8 @@ public class StructH<H> extends Struct{
 	 */
 	@Override
 	public void set_parentStruct(Struct parent){
+		//if(struct.get("name").equals("ring"))
+			//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
 		this.parentStruct = parent;
 	}
 	
@@ -224,15 +226,27 @@ public class StructH<H> extends Struct{
 		return NUMUNITS;
 	}
 	
-	//make deep copy, struct and children children are copied
+	/**
+	 * make deep copy, struct and children children are copied.
+	 * Parent of newly copied structs is previous Struct's parent
+	 * @return
+	 */
 	@Override
 	public StructH<H> copy(){
+		if(struct.get("name").equals("ring"))
+			System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
 		HashMap<String, String> structCopy = new HashMap<String, String>(this.struct);
 		StructH<H> newStructH = new StructH<H>(structCopy, this.type, this.structList,
 				this.maxDownPathScore);
 		
 		for(int i = 0; i < this.children.size(); i++){
 			newStructH.add_child(this.children.get(i), this.childRelationList.get(i));
+		}
+		
+		//newStructH.set_childRelationType(this.childRelationType());
+		if(null != parentStruct && !parentStruct.isStructA()){
+			
+			newStructH.set_parentStruct(parentStruct);
 		}
 		
 		return newStructH;
@@ -421,24 +435,47 @@ public class StructH<H> extends Struct{
 		//String str = "";
 		StringBuilder sb = new StringBuilder();
 		
-		if(includeType){ 		
+		if(includeType){
+			
 			sb.append(this.type.equals("ent") ? "Math" : this.type);
-			sb.append("[\"");
+			sb.append("[");
 			//str += this.type.equals("ent") ? "Math" : this.type;
 			//str += "[\"";
 		}
 		//str += "{";
 		//str += append_name_pptStr();
-		sb.append(append_name_pptStr());
+		/*if(includeType){
+			sb.append("\"");
+		}*/
 		
-		if(includeType){ 
+		Iterator<String> pptStrListIter = get_name_pptStr_List().iterator();
+		
+		if(pptStrListIter.hasNext()){			
+			sb.append("\"Type\"->");
+		}
+		
+		while(pptStrListIter.hasNext()){
+			String nextStr = pptStrListIter.next();
+			if(pptStrListIter.hasNext()){
+				sb.append("\"" + nextStr + "\", ");
+			}else{
+				sb.append("\"" + nextStr + "\"");
+			}
+		}
+		
+		//sb.append(append_name_pptStr());
+		
+		/*if(includeType){ 
 			//str += "\"]";
 			sb.append("\"");
-		}
+		}*/
 		
 		//iterate through children		
 		int childrenSize = children.size();
 		if(childrenSize > 0){
+			
+			sb.append(", \"Qualifiers\" -> ");
+			
 			StringBuilder childSb = new StringBuilder();
 			for(int i = 0; i < childrenSize; i++){			
 				Struct child = children.get(i);
@@ -464,9 +501,15 @@ public class StructH<H> extends Struct{
 						//str += ", " + curChildRelation + childStr;
 						//System.out.println("\n **^^^*** childRelation" + childRelationStr);
 						if(childRelationStr.equals("")){
-							childSb.append(", {" + childStr + "}");
+							childSb.append("{" + childStr + "}");
+							if(i < childrenSize-1){
+								childSb.append(", ");
+							}
 						}else{
-							childSb.append(", {\"" + childRelationStr + "\", " + childStr + "}");
+							childSb.append("{\"" + childRelationStr + "\", " + childStr + "}");
+							if(i < childrenSize-1){
+								childSb.append(", ");
+							}
 						}
 					}
 				}
@@ -503,8 +546,11 @@ public class StructH<H> extends Struct{
 	
 	/**
 	 * Retrieve name, ppt, called, tex info.
+	 * @return List of name, ppt, strings, etc.
 	 */
-	public String append_name_pptStr(){
+	private List<String> get_name_pptStr_List(){
+		
+		List<String> namePptStrList = new ArrayList<String>();
 		Iterator<Entry<String, String>> structIter = struct.entrySet().iterator();
 		String name = "", called = "", ppt = "", tex = "";
 		//boolean addToPropertySet = propertySet.isEmpty();
@@ -532,12 +578,51 @@ public class StructH<H> extends Struct{
 		
 		isPropertySetEmpty = false;
 		
+		if(!name.equals("")) namePptStrList.add(name);
+		if(!tex.equals("")) namePptStrList.add(tex);
+		if(!called.equals("")) namePptStrList.add(called);
+		if(!ppt.equals("")){ 
+			String pptStr = ppt;
+			pptStr = pptStr.length() > 2 ? pptStr.substring(0, pptStr.length() - 2) : pptStr;
+			namePptStrList.add(pptStr);
+		}
+		return namePptStrList;
+	}
+	
+	/**
+	 * Retrieve name, ppt, called, tex info.
+	 */
+	public String append_name_pptStr(){
+		
+		List<String> namePptStrList = get_name_pptStr_List();
+		int namePptStrListLen = namePptStrList.size();
+		StringBuilder sb = new StringBuilder();
+				
+		for(int i = 0; i < namePptStrListLen-1; i++){
+			String namePptStr = namePptStrList.get(i);
+			String nextStr = namePptStrList.get(i+1);
+			
+			if(!nextStr.equals("")){
+				sb.append(namePptStr + ", ");
+			}else{
+				sb.append(namePptStr);
+			}			
+		}
+		
+		String pptStr = namePptStrList.get(namePptStrListLen-1);
+		
+		sb.append(pptStr.length() > 2 ? pptStr.substring(0, pptStr.length() - 2) : pptStr);
+		/*
 		name = tex.length() > 0 ? name + ", ": name;
 		tex = called.length() > 0 ? tex + ", ": tex;
 		called = !(ppt.length() == 0) ? called + ", " : called;
-		ppt = ppt.length() > 2 ? ppt.substring(0, ppt.length() - 2) : ppt;		
+		ppt = ppt.length() > 2 ? ppt.substring(0, ppt.length() - 2) : ppt;	
 		
-		return name + tex + called + ppt;
+
+		for(String str : ){
+			sb.append(str);
+		}*/
+		return sb.toString();
 	}
 	
 	//similar to toString(). Presents StructH as a String

@@ -387,7 +387,7 @@ public abstract class Struct {
 		 */
 		public static class PrepChildRelation extends ChildRelation{
 			
-			private ChildRelationType childRelationType= ChildRelationType.PREP;
+			private ChildRelationType childRelationType = ChildRelationType.PREP;
 			
 			public PrepChildRelation(String relation){
 				super(relation);

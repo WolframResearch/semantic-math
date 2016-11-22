@@ -93,7 +93,7 @@ map ent
 map verb
 mapping ent
 universal adj
-property noun
+property ent
 mapping ent
 homomorphism ent_comp
 up pre_comp
