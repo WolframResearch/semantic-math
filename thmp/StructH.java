@@ -10,6 +10,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import thmp.ParseToWLTree.WLCommandWrapper;
+import thmp.Struct.NodeType;
 
 public class StructH<H> extends Struct{
 
@@ -99,8 +100,7 @@ public class StructH<H> extends Struct{
 	 */
 	@Override
 	public void set_parentStruct(Struct parent){
-		if(struct.get("name").equals("field"))
-			System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
+		
 		this.parentStruct = parent;
 	}
 	
@@ -687,8 +687,12 @@ public class StructH<H> extends Struct{
 	public String contentStr(){
 		String str = struct.get("name");
 		String contentStr = str == null ? "" : str; 
-		return contentStr;
-		
+		return contentStr;		
+	}
+	
+	@Override
+	public String nameStr(){		
+		return contentStr();
 	}
 	
 	/**

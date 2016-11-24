@@ -3,6 +3,7 @@ package thmp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -19,11 +20,13 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 
+import exceptions.IllegalWLCommandStateException;
 import thmp.ParseToWLTree.WLCommandWrapper;
 import thmp.Struct.ChildRelationType;
 import thmp.Struct.NodeType;
 import thmp.WLCommand.PosTerm;
 import thmp.WLCommand.WLCommandComponent;
+import thmp.WLCommand.PosTerm.PosTermConnotation;
 
 /**
  * WL command, containing the components that need to be hashed. 
@@ -293,12 +296,24 @@ public class WLCommand {
 		
 	}
 	
+	
 	/**
 	 * PosTerm stores a part of speech term, and the position in commandsMap
 	 * it occurs, to build a WLCommand, ie turn triggered phrases into WL commands.
 	 * 
 	 */
-	public static class PosTerm{
+	public static class PosTerm{		
+
+		/**
+		 * Enums used to indicate special connotations of PosTerm, 
+		 * e.g. defining and defined terms 
+		 */
+		public static enum PosTermConnotation{
+			DEFINING, /*e.g. entity field*/
+			DEFINED, /*e.g. variable $F$*/
+			NONE;			
+		}
+		
 		/**
 		 * CommandComponent 
 		 */
@@ -310,6 +325,8 @@ public class WLCommand {
 		 * Could be null.
 		 */
 		private Struct posTermStruct;
+		
+		private PosTermConnotation posTermConnotation;
 		
 		/**
 		 * position of the relevant term inside a list in commandsMap.
@@ -359,6 +376,8 @@ public class WLCommand {
 			private boolean isNegativeTerm;
 			//0 by default
 			private int optionalGroupNum;
+			
+			private PosTermConnotation posTermConnotation = PosTermConnotation.NONE;
 			
 			/**
 			 * @return the isTrigger
@@ -424,6 +443,21 @@ public class WLCommand {
 			}
 			
 			/**
+			 * @param posStr Part of speech string
+			 * @param nameStr
+			 * @param includeInBuiltString
+			 * @param isTrigger
+			 * @param isTriggerMathObj
+			 */
+			public PBuilder(String posStr, String nameStr, boolean includeInBuiltString, boolean isTrigger,
+					boolean isTriggerMathObj, PosTermConnotation posTermConnotation){
+				this(posStr, nameStr, includeInBuiltString);
+				this.isTrigger = isTrigger;
+				this.isTriggerMathObj = isTriggerMathObj;
+				this.posTermConnotation = posTermConnotation;
+			}
+			
+			/**
 			 * Builder for 4 terms or more, optional case.
 			 * isTrigger must be false in this case, as trigger word is not optional.
 			 * @param posStr
@@ -469,7 +503,23 @@ public class WLCommand {
 				
 				this(posStr, nameStr, includeInBuiltString, isTrigger, isTriggerMathObj);
 				this.positionInMap = positionInMap;
-
+			}
+			
+			/**
+			 * Builder for 5 terms, with positionInMap (position of term in commandsMap).
+			 * @param posStr
+			 * @param nameStr
+			 * @param includeInBuiltString
+			 * @param isTrigger
+			 * @param isTriggerMathObj
+			 * @param optionGroup  Which optional group this term belongs to.
+			 */
+			public PBuilder(String posStr, String nameStr, boolean includeInBuiltString, boolean isTrigger,
+					boolean isTriggerMathObj, int positionInMap, PosTermConnotation posTermConnotation){
+				
+				this(posStr, nameStr, includeInBuiltString, isTrigger, isTriggerMathObj);
+				this.positionInMap = positionInMap;
+				this.posTermConnotation = posTermConnotation;
 			}
 	
 			public PBuilder(String posStr, String nameStr, boolean includeInBuiltString,
@@ -534,7 +584,7 @@ public class WLCommand {
 			 * Creates PosTerm from this PBuilder.
 			 * @return
 			 */
-			public PosTerm build(){				
+			public PosTerm build(){	
 				
 				if(this.isOptionalTerm){
 					return new OptionalPosTerm(commandComponent, positionInMap, includeInBuiltString,
@@ -543,19 +593,20 @@ public class WLCommand {
 					return new NegativePosTerm(commandComponent, positionInMap);
 				}else{
 					return new PosTerm(commandComponent, positionInMap, includeInBuiltString,
-							isTrigger, isTriggerMathObj);
+							isTrigger, isTriggerMathObj, posTermConnotation);
 				}
 			}		
 			
 		}
 		
 		private PosTerm(WLCommandComponent commandComponent, int position, boolean includeInBuiltString,
-				boolean isTrigger, boolean isTriggerMathObj){
+				boolean isTrigger, boolean isTriggerMathObj, PosTermConnotation posTermConnotation){
 			this.commandComponent = commandComponent;
 			this.positionInMap = position;
 			this.includeInBuiltString = includeInBuiltString;
 			this.triggerMathObj = isTriggerMathObj;
 			this.isTrigger = isTrigger;
+			this.posTermConnotation = posTermConnotation;
 		}
 		
 		/**
@@ -620,13 +671,16 @@ public class WLCommand {
 		public boolean triggerMathObj(){
 			return this.triggerMathObj;
 		}
+		
+		public PosTermConnotation posTermConnotation(){
+			return this.posTermConnotation;
+		}
 	}
 	
 	public static class NegativePosTerm extends PosTerm{
 		
 		public NegativePosTerm(WLCommandComponent commandComponent, int position){
-			super(commandComponent, position, false, false, false);
-			
+			super(commandComponent, position, false, false, false, PosTermConnotation.NONE);			
 		}
 		
 		@Override
@@ -645,7 +699,8 @@ public class WLCommand {
 		public OptionalPosTerm(WLCommandComponent commandComponent, int position, boolean includeInBuiltString,
 				boolean triggerMathObj, int optionalGroupNum) {
 			//cannot be trigger if optional term
-			super(commandComponent, position, includeInBuiltString, false, triggerMathObj);
+			super(commandComponent, position, includeInBuiltString, false, triggerMathObj,
+					PosTermConnotation.NONE);
 			this.optionalGroupNum = optionalGroupNum;
 			
 		}
@@ -881,10 +936,11 @@ public class WLCommand {
 	 * Right now not using this struct value, just to set previousBuiltStruct to not be null.
 	 * @return String form of the resulting WLCommand
 	 */
-	public static String build(WLCommand curCommand){
-		
+	public static String build(WLCommand curCommand, ParseState parseState) throws IllegalWLCommandStateException{
+		//command is satisfied only if componentCounter is 0
 		if(curCommand.componentCounter > 0){ 
-			return "";		
+			throw new IllegalWLCommandStateException("build() is called, but componentCounter "
+					+ "is still > 0! Current command: " + curCommand);
 		}
 		ListMultimap<WLCommandComponent, Struct> commandsMap = curCommand.commandsMap;
 		//value is 0 if that group is satisfied
@@ -901,6 +957,7 @@ public class WLCommand {
 		//Struct headStruct = curCommand.headStruct;
 		//determine which head to attach this command to
 		Struct structToAppendCommandStr = findCommandHead(commandsMap);
+		EnumMap<PosTermConnotation, Struct> connotationMap = null;
 		
 		for(PosTerm term : posTermList){
 			
@@ -908,7 +965,7 @@ public class WLCommand {
 				continue;
 			}
 			
-			if(!term.includeInBuiltString){ 				
+			if(!term.includeInBuiltString){		
 				//set its head Struct to structToAppendCommandStr,
 				// ***This appears to always be null!?!
 				Struct nextStruct = term.posTermStruct;				
@@ -938,6 +995,7 @@ public class WLCommand {
 			}
 			WLCommandComponent commandComponent = term.commandComponent;
 			
+			
 			int positionInMap = term.positionInMap;
 			//boolean isOptionalTerm = term.isOptionalTerm();
 			
@@ -965,11 +1023,13 @@ public class WLCommand {
 					//continue;	
 				}
 				
-				/*if(nextStruct.posteriorBuiltStruct() != null){ 
-					//set to null for next parse dfs iteration
-					nextStruct.set_posteriorBuiltStruct(null);
-					continue;					
-				} */
+				PosTermConnotation curConnotation = term.posTermConnotation();
+				if(PosTermConnotation.NONE != curConnotation){
+					if(null == connotationMap){
+						connotationMap = new EnumMap<PosTermConnotation, Struct>(PosTermConnotation.class);
+					}
+					connotationMap.put(curConnotation, nextStruct);
+				}
 				
 				//check if need to trigger triggerMathObj
 				if(term.triggerMathObj){
@@ -1065,6 +1125,16 @@ public class WLCommand {
 		}
 		//structToAppendCommandStr.set_WLCommand(curCommand);
 		
+		//add to parseState.vriablesNamesMMap
+		if(null != connotationMap && connotationMap.containsKey(PosTermConnotation.DEFINED)
+				&& connotationMap.containsKey(PosTermConnotation.DEFINING)){
+			Struct definingStruct = connotationMap.get(PosTermConnotation.DEFINING);
+			String variableName = connotationMap.get(PosTermConnotation.DEFINED).nameStr();
+			if(!variableName.equals("")){
+				parseState.addLocalVariableStructPair(variableName, definingStruct);
+			}
+		}
+		
 		curCommandWrapper.set_highestStruct(structToAppendCommandStr);
 		//why append and not just set??
 		curCommandWrapper.set_WLCommandStr(commandSB);
@@ -1152,6 +1222,7 @@ public class WLCommand {
 	private static boolean onlyTrivialTermsBefore(List<PosTerm> posTermList, int curIndex){
 		for(int i = curIndex; i > -1; i--){
 			PosTerm posTerm = posTermList.get(i);
+			
 			if(!posTerm.isNegativeTerm() && !posTerm.isOptionalTerm() && posTerm.positionInMap() > -1){
 				return false;
 			}
@@ -1180,6 +1251,7 @@ public class WLCommand {
 		Map<WLCommandComponent, Integer> commandsCountMap = curCommand.commandsCountMap;
 		if(disqualifyCommand(structType, commandsCountMap)){
 			boolean disqualified = true;
+			//throw new IllegalStateException(structType + " " + commandsCountMap);
 			return new CommandSat(disqualified);
 		}
 
@@ -1540,8 +1612,9 @@ public class WLCommand {
 				//additional restriction on pos so we don't abandon commands based on trivial
 				//additionally encountered terms such as prepositions. Only disqualify
 				//based on extraneous terms such as "if" or verbs.
+				//System.out.println(Pattern.compile("verb$").matcher("verbphrase").find());
 				if(posPattern.matcher("verb").find() && !isPosWildCard){
-					//System.out.println("DISQUALIFYING COMMAND. structPosStr " + structPosStr);
+					//System.out.println("DISQUALIFYING COMMAND. posPattern " + posPattern+"\t" + structPosStr);
 					return true;					
 				}
 			}
@@ -1757,7 +1830,8 @@ public class WLCommand {
 			//default auxiliary terms should not be compiled, as
 			//they are not meant to be compared with anything.
 			if(!name.equals(DEFAULT_AUX_NAME_STR)){
-				this.posPattern = Pattern.compile(posTerm);
+				//end of word. To prevent "verbphrase" from matching "verb"
+				this.posPattern = Pattern.compile(posTerm + "$");
 				this.namePattern = Pattern.compile(name);
 			}
 		}		

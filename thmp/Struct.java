@@ -236,6 +236,13 @@ public abstract class Struct {
 	 */
 	public abstract String contentStr();
 	
+	/**
+	 * What most qualifies as the Struct's name, for
+	 * StructH, it's "name" entry in the struct map.
+	 * For StructA, it's the prev1 string, if it is String.
+	 */
+	public abstract String nameStr();
+	
 	public abstract StructList get_StructList();
 	
 	public abstract void set_score(double score);

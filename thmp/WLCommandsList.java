@@ -1,6 +1,7 @@
 package thmp;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,11 +14,13 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 
+import exceptions.IllegalWLCommandException;
 import thmp.WLCommand.ImmutableWLCommand;
 import thmp.WLCommand.ImmutableWLCommand.Builder;
 import thmp.WLCommand.OptionalPosTerm;
 import thmp.WLCommand.PosTerm;
 import thmp.WLCommand.PosTerm.PBuilder;
+import thmp.WLCommand.PosTerm.PosTermConnotation;
 import thmp.WLCommand.WLCommandComponent;
 
 /**
@@ -95,7 +98,7 @@ public class WLCommandsList {
 
 		// builder for WLComamndMap,
 		ImmutableMultimap.Builder<String, ImmutableWLCommand> WLCommandMapBuilder = ImmutableMultimap.builder();
-
+		
 		// create(Map<WLCommandComponent, Integer> commandsCountMap)
 		// The words go in order they are expected to appear in sentence.
 		// In int array, 1 means to use in posList in final command, 0 means
@@ -130,7 +133,8 @@ public class WLCommandsList {
 		/*****General-scope commands******/
 		//triggered by types. Add such judiciously.
 		//the commands with types as keys are triggered only if no specific-scope commands have been triggered
-		WLCommandMapBuilder.put("verb", addCommand(new PBuilder("symb|ent|pro|noun", null, true), 				
+		WLCommandMapBuilder.put("verb", addCommand(new PBuilder("symb|ent|pro|noun", null, true), 
+				new PBuilder("pro", "we", WLCommand.PosTermType.NEGATIVE),
 				new PBuilder("Connective["),  new PBuilder("verb", null, true, true, false), new PBuilder("]"),
 				new PBuilder("symb|ent|noun|prep", null, true, false, false)));		
 		
@@ -195,11 +199,11 @@ public class WLCommandsList {
 		//***action*** commands
 		//WLCommandMapBuilder.put("is", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is|are|be, trigger",
 			//	"\\[Element]", "symb|ent|phrase, , true, TriggerMathObj" }));
-		WLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro", null, true), 
+		WLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro", null, true, false, false, PosTermConnotation.DEFINED), 
 				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), new PBuilder("\\[Element]"),
 				//negative term, to stop command if encountered
-				new PBuilder("adj", null, WLCommand.PosTermType.NEGATIVE),				
-				new PBuilder("symb|ent|phrase", null, true, false, true) ));
+				new PBuilder("adj", null, WLCommand.PosTermType.NEGATIVE),			
+				new PBuilder("symb|ent|phrase", null, true, false, true, PosTermConnotation.DEFINING) ));
 		//e.g. "$X$ is connected"
 		//WLCommandMapBuilder.put("is", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is|are|be, trigger",
 			//"\\[HasProperty]", "adj, , true, TriggerMathObj" }));
@@ -253,6 +257,26 @@ public class WLCommandsList {
 		WLCommandMapBuilder.put("auxpass", addCommand(new PBuilder("ent", null, true), new PBuilder("auxpass", null, true, true, false), 
 				new PBuilder("ent|csubj", null, true) ));
 		
+		//definitions: e.g. "denote by $F$ a field", but note that "call this field $F$" should have different order as to which
+		//is the variable and which is being named. The integers indicate their relative order (order in relation to each other)
+		//in the posTermList. So the connotation is the connotation of the term in that slot in the final WLCommand order, 
+		//*not* the connotation of the term picked up in the sentence in that slot.
+		WLCommandMapBuilder.put("denote by", addCommand(new PBuilder("def", null, false, true, false), 
+				new PBuilder("ent|symb", null, true, false, false, 1, PosTermConnotation.DEFINING), 
+				new PBuilder("~Named~"), new PBuilder("ent|symb", null, true, false, false, 0, PosTermConnotation.DEFINED) ));
+		
+		//definitions: e.g. "$F$ denotes a field"
+		WLCommandMapBuilder.put("denote", addCommand( 
+				new PBuilder("ent|symb", null, true, false, false, 1, PosTermConnotation.DEFINING), 
+				new PBuilder("verb", null, false, true, false),
+				new PBuilder("~Named~"), new PBuilder("ent|symb", null, true, false, false, 0, PosTermConnotation.DEFINED) ));
+		
+		//"define $F$ to be a field";
+		WLCommandMapBuilder.put("define", addCommand( new PBuilder("verb", null, false, true, false),
+				new PBuilder("ent|symb", null, true, false, false, PosTermConnotation.DEFINED), 
+				new PBuilder(null, "as|to be", false), new PBuilder("~Defined By~"), 
+				new PBuilder("ent|symb", null, true, false, false, PosTermConnotation.DEFINING)));
+		
 		//auxpass, eg "is called"
 		//WLCommandMapBuilder.put("is called", addCommand(new String[] { "symb|ent|pro, , true", "auxpass, is called, trigger",
 				//"\\[Element]", "symb|ent|adj|phrase, , true, TriggerMathObj" }));
@@ -295,8 +319,7 @@ public class WLCommandsList {
 				"\\[Element]", "symb|ent|adj|phrase, , true, TriggerMathObj" }));		
 		
 		WLCommandMapBuilder.put("at most", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is|are|be, false",
-				"<=", "pre, at most, trigger", "symb|ent, , true, TriggerMathObj" }));
-				
+				"<=", "pre, at most, trigger", "symb|ent, , true, TriggerMathObj" }));				
 		*/
 		
 		// label string if to be used as trigger ent/symb, then use these words
@@ -342,6 +365,8 @@ public class WLCommandsList {
 		int triggerWordIndex = -1;
 		int optionalTermsCount = 0;
 		
+		//the scope of this try is too big!
+		try{
 		for (int i = 0; i < pBuilderAr.length; i++) {
 
 			PBuilder curBuilder = pBuilderAr[i];			
@@ -367,9 +392,10 @@ public class WLCommandsList {
 			posList.add(curPosTerm);
 			
 			//term used to eliminate commands.
-			if(curPosTerm.isNegativeTerm()){				
+			if(curPosTerm.isNegativeTerm()){			
 				continue;
 			}
+			
 			
 			if(curPosTerm.isOptionalTerm()){
 				
@@ -395,11 +421,24 @@ public class WLCommandsList {
 				}
 			}
 			commandsCountPreMap.put(curCommandComponent, curComponentCount + 1);
-
 		}
 		
 		if(triggerWordIndex < 0){
-			throw new IllegalArgumentException("Trigger word index in a command cannot be negative!");
+			throw new IllegalWLCommandException("Trigger word index in command " + posList + " is negative!");
+			//throw new IllegalArgumentException("Trigger word index in a command cannot be negative!");
+		}
+		
+		//check integrity of WLCommand, e.g. the custom-specified positionInMap entered are correct
+		for(PosTerm posTerm : posList){
+			
+			WLCommandComponent commandComponent = posTerm.commandComponent();
+			Integer count = commandsCountPreMap.get(commandComponent);
+			
+			if(null != count && count <= posTerm.positionInMap()){
+				
+				throw new IllegalWLCommandException("Index of PosTerm " + posTerm 
+						+ " in command " + posList + " is out of bounds!");
+			}
 		}
 		
 		commandsCountMap = ImmutableMap.copyOf(commandsCountPreMap);
@@ -411,11 +450,18 @@ public class WLCommandsList {
 		/*(Map<WLCommandComponent, Integer> commandsCountMap, 
 		ImmutableList<PosTerm> posList, int componentCount, int triggerWordIndex,
 		int optionalTermsCount, ImmutableMap<Integer, Integer> optionalTermsMap){*/
+		}catch(IllegalWLCommandException e){
+			//but this would lead to NPE down the road! better not add to multimap at all,
+			//or have EMPTY_COMMAND.
+			e.printStackTrace();
+			return null;
+		}
 		
 		ImmutableWLCommand.Builder immutableWLCommandBuilder = new ImmutableWLCommand.Builder(commandsCountMap, posTermList, 
 				componentCount, triggerWordIndex, optionalTermsCount, optionalTermsGroupCountMap);
-
+		
 		return immutableWLCommandBuilder.build();
+		
 	}
 	
 	/**

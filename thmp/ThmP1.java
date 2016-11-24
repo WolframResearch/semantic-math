@@ -1039,8 +1039,8 @@ public class ThmP1 {
 			//addIndex = true;
 
 			int pairsSize = pairs.size();
-
-			if (pairsSize > 0) {
+			//case only meaningful if pairsSize>2
+			if (pairsSize > 2) {
 				Pair pair = pairs.get(pairsSize - 1);
 
 				// combine "no" and "not" with verbs
@@ -2549,7 +2549,7 @@ public class ThmP1 {
 		//whether to print the commands in tiers with the spaces in subsequent lines.
 		boolean printTiers = false;
 		//builds the parse tree by matching triggered commands. 
-		ParseToWLTree.buildCommandsDfs(uHeadStruct, parseStructSB, 0, printTiers);
+		ParseToWLTree.buildCommandsDfs(uHeadStruct, parseStructSB, 0, printTiers, parseState);
 		System.out.println("\n DONE ParseStruct DFS  + parseStructSB:" + parseStructSB + "  \n");
 		StringBuilder wlSB = new StringBuilder();
 		/**

@@ -1,25 +1,18 @@
 package thmp;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Deque;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.logging.log4j.Logger;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 
+import exceptions.IllegalWLCommandStateException;
 import thmp.Struct.ChildRelation;
 import thmp.Struct.NodeType;
 import thmp.ThmP1.ParsedPair;
@@ -74,13 +67,13 @@ public class ParseToWLTree {
 	 * @param numSpaces
 	 */
 	public static void buildCommandsDfs(Struct struct, StringBuilder parsedSB, //ParseStruct headParseStruct, 
-			int numSpaces, boolean printTiers) {
+			int numSpaces, boolean printTiers, ParseState parseState) {
 		structDeque = new ArrayList<Struct>();
 		WLCommandList = new ArrayList<WLCommand>();
 		
-		dfs(struct, parsedSB, numSpaces, structDeque, WLCommandList, printTiers);
+		dfs(struct, parsedSB, numSpaces, structDeque, WLCommandList, printTiers, parseState);
 	}
-		
+	
 	/**
 	 * Get the triggered collection.
 	 * @param struct
@@ -118,6 +111,7 @@ public class ParseToWLTree {
 		}
 		
 		//}
+		
 		return triggeredCol;
 	}
 	
@@ -269,7 +263,8 @@ public class ParseToWLTree {
 	 * @param structList List of Struct's collected so far, in dfs traversal order.
 	 */
 	private static void dfs(Struct struct, StringBuilder parsedSB, //ParseStruct headParseStruct, 
-			int numSpaces, List<Struct> structList, List<WLCommand> WLCommandList, boolean printTiers) {
+			int numSpaces, List<Struct> structList, List<WLCommand> WLCommandList, boolean printTiers,
+			ParseState parseState) {
 		//index used to keep track of where in Deque this stuct is
 		//to pop off at correct index later
 		//int structDequeIndex = structDeque.size();
@@ -371,7 +366,7 @@ public class ParseToWLTree {
 					//	waitingStructList);
 				
 				//curCommand's terms before trigger word are satisfied. Add them to triggered WLCommand.
-				if(true){
+				
 					boolean curCommandSatWhole = false;
 					//boolean hasOptionalTermsLeft = false;
 					boolean isComponentAdded = false;
@@ -404,7 +399,7 @@ public class ParseToWLTree {
 					//System.out.println("*********COMMAND before trigger satisfied "+ beforeTriggerSat+ " " + curCommand);
 					//if(commandSat != null){						
 					if(beforeTriggerSat){
-						//System.out.println("****got BEFORE as TRUE");
+						//System.out.println("***-----------*got BEFORE as TRUE");
 						if(curCommandSatWhole && isComponentAdded){							
 							satisfiedCommandsList.add(curCommand);
 						}else{							
@@ -417,7 +412,7 @@ public class ParseToWLTree {
 						
 						WLCommandList.add(curCommand);						
 					}*/
-				}
+				
 			}			
 			isTrigger = true;			
 		}
@@ -462,7 +457,8 @@ public class ParseToWLTree {
 				//set parent for this DFS path. The parent can change on each path!
 				((Struct) struct.prev1()).set_parentStruct(struct);				
 				//pass along headStruct, unless created new one here				
-				dfs((Struct) struct.prev1(), parsedSB, numSpaces, structList, WLCommandList, printTiers);
+				dfs((Struct) struct.prev1(), parsedSB, numSpaces, structList, WLCommandList, printTiers,
+						parseState);
 				
 				if(printTiers && checkParseStructType){
 					String space = "";
@@ -500,7 +496,7 @@ public class ParseToWLTree {
 				
 				((Struct) struct.prev2()).set_parentStruct(struct);				
 				dfs((Struct) struct.prev2(), parsedSB, numSpaces, structList, 
-						WLCommandList, printTiers);
+						WLCommandList, printTiers, parseState);
 				if(printTiers && checkParseStructType){
 					//setting to "" is necessary to not append duplicate messages, 
 					//duplicate meaning appears in both a struct and a parsedStruct.
@@ -601,7 +597,7 @@ public class ParseToWLTree {
 				}
 				
 				ithChild.set_parentStruct(struct);
-				dfs(ithChild, parsedSB, numSpaces, structList, WLCommandList, printTiers);
+				dfs(ithChild, parsedSB, numSpaces, structList, WLCommandList, printTiers, parseState);
 			}
 			if(printTiers) System.out.print("]");
 			parsedSB.append("]");
@@ -643,8 +639,13 @@ public class ParseToWLTree {
 					(parentStruct == null ? structToAppendCommandStr : parentStruct) : 
 						(grandparentStruct instanceof StructH ? parentStruct : grandparentStruct)); */
 			////////
-			String curCommandString = WLCommand.build(curCommand);
-			
+			try{
+				WLCommand.build(curCommand, parseState);
+			}catch(IllegalWLCommandStateException e){
+				e.printStackTrace();
+				logger.info(e.getStackTrace());
+				continue;
+			}
 			//now append Str to wrapper inside build()
 			//structToAppendCommandStr.append_WLCommandStr(curCommandString);
 			

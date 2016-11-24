@@ -405,6 +405,15 @@ public class StructA<A, B> extends Struct{
 		return contentStr;
 	}
 	
+	@Override
+	public String nameStr(){		
+		String nameStr = "";
+		if(PREV1_TYPE != null && PREV1_TYPE.equals(NodeType.STR)){
+			nameStr = (String) prev1;			
+		}
+		return nameStr;
+	}
+	
 	/**
 	 * Calling the applicable ParseTreeToVec with dynamic dispatch.
 	 * To avoid casting, and to distribute the logic.

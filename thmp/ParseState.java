@@ -2,10 +2,14 @@ package thmp;
 
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 
 import thmp.ThmP1.ParsedPair;
+import thmp.utils.Buggy;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -48,6 +52,8 @@ public class ParseState {
 	
 	//parsedExpr to record parsed pairs during parsing. 
 	private static List<ParsedPair> parsedExpr = new ArrayList<ParsedPair>();
+	
+	private static final Logger logger = LogManager.getLogger(ParseState.class);
 	
 	//waiting WLCommandWrapper map on deck, waiting to be added. Necessary 
 	//because don't know if need to add to next logic layer, or to current
@@ -135,6 +141,15 @@ public class ParseState {
 	public List<Struct> getNamedStructList(String name){		
 		
 		return this.variableNamesMMap.get(name);			
+	}
+	
+	/**
+	 * Logs various objects to file, e.g. variableNamesMMap.
+	 */
+	public void logState(){
+		//remove this on PRD
+		System.out.println("variableNamesMMap: " + this.variableNamesMMap);
+		logger.info(this.variableNamesMMap);
 	}
 	
 	/**

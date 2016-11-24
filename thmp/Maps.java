@@ -412,6 +412,7 @@ public class Maps {
 			posPreMMap.put("at most", "adj");
 			posPreMMap.put("is", "vbs_comp");
 			posPreMMap.put("at", "pre_COMP");
+			posPreMMap.put("when", "if");
 			posPreMMap.put("if", "if_COMP");
 			posPreMMap.put("if and", "if_COMP");
 			posPreMMap.put("if and only", "if_COMP");
@@ -422,8 +423,9 @@ public class Maps {
 
 			posPreMMap.put("in", "pre_comp");
 			posPreMMap.put("from", "pre");
-			posPreMMap.put("to", "pre");
-
+			posPreMMap.put("to", "pre_comp");
+			posPreMMap.put("to be", "tobe");
+			
 			posPreMMap.put("equal", "verb_COMP");
 			posPreMMap.put("equal to", "pre");
 			posPreMMap.put("on", "pre");
@@ -434,6 +436,7 @@ public class Maps {
 			posPreMMap.put("with", "pre");
 			posPreMMap.put("without", "pre");
 			posPreMMap.put("by", "pre");
+			posPreMMap.put("via", "pre");
 			posPreMMap.put("as", "pre");
 			posPreMMap.put("such", "pre_COMP");
 			posPreMMap.put("such that", "cond");
@@ -472,7 +475,7 @@ public class Maps {
 			posPreMMap.put("replace", "verb");
 			posPreMMap.put("act", "verb");
 			posPreMMap.put("follow", "verb");
-			posPreMMap.put("denote", "verb");
+			posPreMMap.put("denote", "verb_COMP");
 			posPreMMap.put("define", "verb");
 			posPreMMap.put("has", "vbs");
 
@@ -481,7 +484,13 @@ public class Maps {
 			posPreMMap.put("been", "parti");
 			posPreMMap.put("written", "parti");
 			posPreMMap.put("given by", "partiby");
-
+			
+			// Heads for starting definitions.
+			//"denote by...", "call...", 
+			posPreMMap.put("denote by", "def");
+			posPreMMap.put("call", "def");
+			//posPreMMap.put("define", "def");
+			
 			// build in quantifiers into structures, forall (indicated
 			// by for all, has)
 			// entityMap.put("for all", null); //change null, use regex
@@ -601,6 +610,9 @@ public class Maps {
 			// prep stands for "pre phrase"
 			structMap.put("pre_ent", new Rule("prep", 1));
 			structMap.put("pre_adj", new Rule("prep", 0.8));
+			structMap.put("tobe_ent", new Rule("Tobe", 0.85));
+			structMap.put("verbphrase_Tobe", new Rule("hypo", 0.85));
+			
 			structMap.put("ent_prep", new Rule("newchild", 1));
 			structMap.put("pre_symb", new Rule("prep", 1));
 			structMap.put("parti_prep", new Rule("phrase", 1));
@@ -751,6 +763,10 @@ public class Maps {
 			structMap.put("hyp_hyp", new Rule("hyp", 1));
 			structMap.put("hyp_assert", new Rule("hypo", 1));
 			structMap.put("hyp_ent", new Rule("hypo", 1));
+			structMap.put("def_ent", new Rule("Def", 1));
+			structMap.put("def_symb", new Rule("Def", 1));
+			//e.g. "denote by $F$ a field";
+			structMap.put("Def_ent", new Rule("hypo", .9));
 			structMap.put("cond_ent", new Rule("Cond", .9));
 			structMap.put("cond_assert", new Rule("Cond", .9));			
 			structMap.put("hyp_phrase", new Rule("hypo", 1));
