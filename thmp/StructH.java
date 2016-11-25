@@ -14,7 +14,7 @@ import thmp.Struct.NodeType;
 
 public class StructH<H> extends Struct{
 
-	private HashMap<String, String> struct; //hashmap
+	private Map<String, String> struct; //hashmap
 	//ent (entity) is only structure that uses hashmap
 	//Primary part of speech, ent, adj, etc. 
 	private String type; 
@@ -66,7 +66,7 @@ public class StructH<H> extends Struct{
 	//parent
 	//private Struct parent;
 	
-	public StructH(HashMap<String, String> struct, String type){
+	public StructH(Map<String, String> struct, String type){
 	
 		this.struct = struct;
 		this.type = type;
@@ -75,7 +75,7 @@ public class StructH<H> extends Struct{
 		this.score = 1;
 	}
 	
-	public StructH(HashMap<String, String> struct, String type, 
+	public StructH(Map<String, String> struct, String type, 
 			StructList structList, double downPathScore){
 		this.maxDownPathScore = downPathScore;
 		this.struct = struct;
@@ -235,7 +235,7 @@ public class StructH<H> extends Struct{
 	public StructH<H> copy(){
 		//if(struct.get("name").equals("ring"))
 			//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
-		HashMap<String, String> structCopy = new HashMap<String, String>(this.struct);
+		Map<String, String> structCopy = new HashMap<String, String>(this.struct);
 		StructH<H> newStructH = new StructH<H>(structCopy, this.type, this.structList,
 				this.maxDownPathScore);
 		
@@ -286,7 +286,7 @@ public class StructH<H> extends Struct{
 	}
 	
 	@Override
-	public HashMap<String, String> struct(){		
+	public Map<String, String> struct(){		
 		return this.struct;		
 	}
 	

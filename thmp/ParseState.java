@@ -220,6 +220,7 @@ public class ParseState {
 	 * @return 
 	 */
 	public ParseStruct getHeadParseStruct() {
+		logger.info("@@@headParseStruct" + headParseStruct);
 		return headParseStruct;
 	}
 	

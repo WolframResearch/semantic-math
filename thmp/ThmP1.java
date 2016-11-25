@@ -123,6 +123,8 @@ public class ThmP1 {
 	private static final double LONG_FORM_SCORE_THRESHOLD = .7;
 	//least num of iterations, even if scores are below LONG_FORM_SCORE_THRESHOLD.
 	private static final int MIN_PARSE_ITERATED_COUNT = 3;
+	//private static final String DASH_ENT_STRING = null;
+	private static final Pattern DASH_ENT_PATTERN = Pattern.compile("\\$[^$]+\\$[^-\\s]*-[^\\s]*");
 	
 	//private static int[] parseContextVector;
 	//private static int parseContextVectorSz;
@@ -576,7 +578,7 @@ public class ThmP1 {
 					type = "symb";
 				}
 				// go with the pos of the last word, e.g. $k$-algebra
-				else if (curWord.matches("\\$[^$]+\\$[^-\\s]*-[^\\s]*")) { //\\$[^$]+\\$[^-\\s]*-[^\\s]*
+				else if (DASH_ENT_PATTERN.matcher(curWord).find()) { //\\$[^$]+\\$[^-\\s]*-[^\\s]*
 					
 					String[] curWordAr = curWord.split("-");
 					String tempWord = curWordAr[curWordAr.length - 1];
@@ -670,7 +672,13 @@ public class ThmP1 {
 				wordPos = posMMap.get(curWord).get(0);
 			}
 			
-			//last condition should be temporary: should eliminate mathObjMap
+			//convert "noun" to "ent" if it's the most probable pos,
+			//most often does no damage, but could prevent spanning parse
+			//or commands from being picked up.
+			if(wordPos != null && wordPos.equals("noun")){
+				wordPos = "ent";
+			}			
+			
 			if (wordPos != null && wordPos.equals("ent")) { 
 				
 				curWord = posList.isEmpty() ? singular : curWord;
@@ -678,8 +686,9 @@ public class ThmP1 {
 				int pairsSize = pairs.size();
 				int k = 1;
 				
+				//check for previous words, fuse entities if necessary.
 				//should be superceded by using the two-gram map above! <--this way can be more deliberate 
-				// than using n-grams, e.g. if composite math noun, eg "finite field"
+				//and flexible than using n-grams, e.g. if composite math noun, eg "finite field"
 				while (i - k > -1 && posMMap.containsKey(strAr[i - k] + " " + tempWord)
 						&& posMMap.get(strAr[i - k] + " " + tempWord).get(0).equals("ent")) {
 					
@@ -703,7 +712,7 @@ public class ThmP1 {
 				}
 
 				// if previous Pair is also an ent, fuse them, but only if current ent
-				// does not have other relevant pos such as verb. 						
+				// does not belong to noFuseEntSet e.g. "map"			
 				pairsSize = pairs.size();
 				if (pairs.size() > 0 && pairs.get(pairsSize - 1).pos().matches("ent")) {
 					boolean fuseEnt = true;
@@ -727,10 +736,12 @@ public class ThmP1 {
 						}						
 					}
 					
+					
 					if(fuseEnt){
 						pairs.get(pairsSize - 1).set_word(pairs.get(pairsSize - 1).word() + " " + curWord);
 						continue;
 					}
+					
 				}
 				
 				Pair pair = new Pair(curWord, "ent");
@@ -1312,8 +1323,10 @@ public class ThmP1 {
 
 					Pair nextPair = pairs.get(index + 1);
 					Pair prevPair = pairs.get(index - 1);
-					// should handle later with grammar rules in mx! commented out 11/14/16.				
-					/*if (prevPair.pos().matches("\\d+") ) {
+					// should handle later with grammar rules in mx! commented out 11/14/16.	
+					//<--commented back in on 11/24, makes a difference in e.g.
+					//"I is a formal integer combination of curves"
+					if (prevPair.pos().matches("\\d+") ) { //begin comment
 						// ent of ent
 						int mathObjIndex = Integer.valueOf(prevPair.pos());
 						StructH<HashMap<String, String>> tempStruct = mathEntList.get(mathObjIndex);
@@ -1327,10 +1340,11 @@ public class ThmP1 {
 							if (nextPair.pos() != prevPair.pos()){
 								mathEntList.set(Integer.valueOf(nextPair.pos()), null);
 							}							
-							tempStruct.add_child(childStruct, "of");
+							tempStruct.add_child(childStruct, new ChildRelation("of"));
 						}
 					} // "noun of ent".
-					else */ if (prevPair.pos().equals("noun") && nextPair.pos().matches("\\d+")) {
+					else //end comment
+					if (prevPair.pos().equals("noun") && nextPair.pos().matches("\\d+")) {
 						int mathObjIndex = Integer.valueOf(nextPair.pos());
 						// Combine the something into the ent
 						StructH<HashMap<String, String>> tempStruct = mathEntList.get(mathObjIndex);
@@ -1375,7 +1389,7 @@ public class ThmP1 {
 		for (int i = 0; i < pairsSz; i++) {
 			Pair curPair = pairs.get(i);
 			
-			//can pos ever be null?
+			//can pos ever be null? <--could be set to null prior
 			if (curPair.pos() == null)
 				continue;
 			//if has type "ent"
@@ -1393,7 +1407,8 @@ public class ThmP1 {
 					}
 				}*/
 				if(posList != null){
-				//start from 1, as extraPosList only contains *additional* pos
+					//start from 1, as extraPosList only contains *additional* pos
+					//besides the most probable pos.
 					for(String pos : posList){
 						 if(pos.equals("noun")){
 							continue;
@@ -1410,7 +1425,7 @@ public class ThmP1 {
 				
 			} else {				
 				//check if article
-				if(curPair.pos().equals("art")){	
+				if(curPair.pos().equals("art")){
 					
 					if(i < pairsSz-1){
 						//combine into subsequent ent
@@ -1451,7 +1466,7 @@ public class ThmP1 {
 
 				String curWord = curPair.word();
 
-				//  leaf of prev2 is empty string ""
+				// leaf of prev2 is empty string ""
 				StructA<String, String> newStruct = 
 						new StructA<String, String>(curWord, NodeType.STR, "", NodeType.STR, curPair.pos());
 				//add extra pos from curPair's extraPosList. In the other case when extraPos is not added, 
@@ -2091,6 +2106,10 @@ public class ThmP1 {
 									Rule ruleColNext = ruleColIter.next();
 									EntityBundle entityBundle = reduce(mx, ruleColNext, struct1, struct2, firstEnt, recentEnt, recentEntIndex, i, j,
 											k, type1, type2, parseState);
+									//if nothing was updated
+									if(null == entityBundle){
+										continue;
+									}
 									recentEnt = entityBundle.recentEnt;
 									firstEnt = entityBundle.firstEnt;
 									recentEntIndex = entityBundle.recentEntIndex;
@@ -2681,6 +2700,8 @@ public class ThmP1 {
 	 * @param type1
 	 * @param type2
 	 * @param parseState
+	 * @return @Nullable EntityBundle containing entities such as recentEnt, etc.  
+	 * null if not changed, so no wasting resources creating new objects.
 	 */
 	public static EntityBundle reduce(List<List<StructList>> mx, Rule newRule, Struct struct1, Struct struct2,
 			Struct firstEnt, Struct recentEnt, int recentEntIndex, int i, int j, int k, String type1, String type2,
@@ -2872,6 +2893,7 @@ public class ThmP1 {
 		} 
 		else if (newType.equals("addstruct")){
 			// add struct2 content to struct1.struct, depending on type2
+		
 			if(type2.equals("expr")){
 				Struct newStruct = struct1.copy();
 
@@ -2880,7 +2902,7 @@ public class ThmP1 {
 					firstEnt = newStruct;
 				}
 
-				if (struct1 instanceof StructH && struct2.prev1() instanceof String) {
+				if (!struct1.isStructA()  && struct2.prev1NodeType().equals(NodeType.STR)) {
 					((StructH<?>) newStruct).struct().put("tex", (String)struct2.prev1());
 				}
 				
@@ -2891,6 +2913,33 @@ public class ThmP1 {
 
 				mx.get(i).get(j).add(newStruct);
 			}
+		}else if(newType.equals("fuse")){	
+			//fuse ent's, e.g. "integer linear combination"
+			if(type1.equals("ent") && type2.equals("ent")){
+				//first struct cannot have collected children for this
+				//rule to be meaningful
+				if(!struct1.children().isEmpty()){
+					return null;
+				}
+				Struct newStruct = struct2.copy();
+				
+				Map<String, String> structMap = newStruct.struct();
+				structMap.put("name", struct1.nameStr() + " " + structMap.get("name")) ;
+				
+				//put properties of struct1 to structMap
+				Map<String, String> struct1Map = struct1.struct();
+				for(Map.Entry<String, String> entry : struct1Map.entrySet()){
+					if(entry.getValue().equals("ppt")){
+						structMap.put(entry.getKey(), "ppt");
+					}
+				}
+				
+				recentEnt = newStruct;
+				recentEntIndex = j;
+				newStruct.set_maxDownPathScore(newDownPathScore);
+				
+				mx.get(i).get(j).add(newStruct);
+			}
 		}
 		//absorb first into second
 		else if(newType.equals("absorb1")){
@@ -2898,7 +2947,7 @@ public class ThmP1 {
 			assert(struct1.isStructA() && !struct2.isStructA());
 
 			if(!struct1.isStructA() || struct2.isStructA()){
-				return new EntityBundle(firstEnt, recentEnt, recentEntIndex);
+				return null;
 			}
 			
 			//absorb the non-struct into the struct
@@ -2916,7 +2965,7 @@ public class ThmP1 {
 			assert(!struct1.isStructA() && struct2.isStructA());
 			
 			if(struct1.isStructA() || !struct2.isStructA()){
-				return new EntityBundle(firstEnt, recentEnt, recentEntIndex);
+				return null;
 			}
 			
 			Struct absorbingStruct = struct1;
@@ -3010,7 +3059,7 @@ public class ThmP1 {
 			}
 			
 			if(structToSet != null){
-				if (structToSet.equals("symb") && structToSet.prev1NodeType().equals(NodeType.STR)) {
+				//if (structToSet.type().equals("symb") && structToSet.prev1NodeType().equals(NodeType.STR)) {
 					
 					String entKey = structToSet.prev1().toString();
 					
@@ -3025,7 +3074,7 @@ public class ThmP1 {
 							//System.out.println("\n=======SETTING NAME curEnt: " + curEnt);
 						}					
 					}
-				}
+				//}
 			}
 			else if(newType.equals("assert_prep")){
 				//make 2nd type into "hypo"

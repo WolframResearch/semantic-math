@@ -597,8 +597,9 @@ public class Maps {
 			structMap.put("or_is", new Rule("assert", 1));
 			structMap.put("assert_orass", new Rule("or", 1));
 			structMap.put("ent_ppt", new Rule("newchild", 1));
-			// structMap.put("ent_ent", new Rule("ent", 1));
-
+			//e.g. "integer linear combination"
+			structMap.put("ent_ent", new Rule("fuse", .7));
+			
 			// e.g. between A and B.
 			// structMap.put("pre_conj", new Rule("prep", 1));
 			// structMap.put("pre_disj", new Rule("prep", 1));
@@ -830,6 +831,7 @@ public class Maps {
 			probMap.put("verb_ent", .6);
 			probMap.put("vbs_ent", .6); // probMap.put("verb_adj", .6);
 			probMap.put("vbs_adj", .75);
+			probMap.put("verb_adj", .75);
 			probMap.put("verb_ent", .75);
 			probMap.put("be_adj", .75);
 			
@@ -837,6 +839,10 @@ public class Maps {
 			probMap.put("adj_ent", .9);
 			probMap.put("adj_pre", .85);
 			probMap.put("adj_adj", .6);
+			//could be used in new definitions
+			//e.g. "A is blah if..."
+			probMap.put("adj_if", .7);
+			probMap.put("adj_hyp", .7);
 			
 			// adverb_
 			probMap.put("adverb_adj", .9);

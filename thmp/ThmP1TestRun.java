@@ -448,6 +448,11 @@ public class ThmP1TestRun {
 			
 			st = "$F$ is said to be a field";
 			st = "We define $\\mathtt{Squares} \\subset (\\R^2)^4$ to be the set of all quadruples of vertices of squares in $\\R^2$ traversed in anticlockwise order";
+			st = "a $1$-chain in a manifold $M$ is a formal integer linear combination of curves $\\gamma: I \\to M$,";
+			
+			st = " a $1$-cycle is a $1$-chain that is zero boundary";
+			st = "Two $k$-cycles are homologous if they differ by a $k$-boundary";
+			st = "assume $F$ is a field, $F$ is perfect";
 			
 			//st = "there exists a ring map $R \\to S$ of finite presentation such that $T$ is the image of $\\Spec(S)$ in $\\Spec(R)$."; //<--too many parses!!
 			//st = "given field, with $F $ of presentation, and $G $ of finite type";
@@ -501,48 +506,15 @@ public class ThmP1TestRun {
 
 			//System.out.println("from TexConverter: " + TexConverter.convert("let $m \\subset M$ be an element"));			
 			
-			List<int[]> parseContextVecList = new ArrayList<int[]>();
-			
-			strAr = ThmP1.preprocess(st);
-			
 			ParseStateBuilder parseStateBuilder = new ParseStateBuilder();
 			parseStateBuilder.setWriteUnknownWordsToFile(WRITE_UNKNOWN_WORDS_TO_FILE);
-			ParseState parseState = parseStateBuilder.build();
 			
-			for(int i = 0; i < strAr.length; i++){
-				//alternate commented out line to enable tex converter
-				//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim()) ));
-				parseState = ThmP1.tokenize(strAr[i].trim(), parseState);
-				parseState = ThmP1.parse(parseState);
-				int[] curContextVec = ThmP1.getParseContextVector();
-				parseContextVecList.add(curContextVec);
-				//get context vector
-				System.out.println("cur vec: " + Arrays.toString(curContextVec));
-			}
+			/*******whether or not to process text from above********/			
+			boolean processText = false;
 			
-			/*List<ParseStruct> headParseStructList = parseState.getHeadParseStructList();
-			for(ParseStruct headParseStruct : headParseStructList){
-				System.out.println("@@@" + headParseStruct);
-			}*/
-			
-			System.out.println("@@@" + parseState.getHeadParseStruct());
-			
-			parseState.logState();
-			
-			//combine these vectors together, only add subsequent vector entry
-			//if that entry is 0 in all previous vectors int[].
-			int[] combinedVec = GenerateContextVector.combineContextVectors(parseContextVecList);
-			System.out.println("combinedVec: " + Arrays.toString(combinedVec));
-			
-			String parsedOutput = ThmP1.getAndClearParseStructMapList().toString();
-			//String parsedOutput = Arrays.toString(ThmP1.getParseStructMapList().toArray());			
-			//String processedOutput = parsedOutput.replaceAll("MathObj", "MathObject").replaceAll("\\$([^$]+)\\$", "LaTEXMath[\"$1\"]")
-					//.replaceAll("MathObject\\{([^}]+)\\}", "MathObject\\[$1\\]");					
-			
-			System.out.println("PARTS: " + parsedOutput);			
-			System.out.println("****ParsedExpr ");
-			for(ParsedPair pair : ThmP1.getAndClearParsedExpr()){
-				System.out.println(pair);
+			if(processText){
+				ParseState parseState = parseStateBuilder.build();
+				parseInputVerbose(st, parseState);
 			}
 			
 			boolean streamInput = false;
@@ -557,38 +529,22 @@ public class ThmP1TestRun {
 			}
 			
 			//System.out.println("****" + ThmP1.getParsedExpr() + "******");
-			boolean processFile = false;
+			/*******whether to process file or not********/
+			boolean processFile = true;
 			
 			if(processFile){
-				Scanner sc = new Scanner(new File("src/thmp/data/test1.txt"));
 				
-				while(sc.hasNextLine()){
+				Scanner sc = new Scanner(new File("src/thmp/data/samplePaper2.txt"));
+				ParseState parseState = parseStateBuilder.build();
+				
+				while(sc.hasNextLine()){					
+					
 					String nextLine = sc.nextLine();
 					st = nextLine;
 					if(st.matches("^\\s*$")) continue;
 					System.out.println("*~~~*");
 					System.out.println(nextLine + "\n");
-					//array of sentences separated by . or !
-					strAr = ThmP1.preprocess(st);					
-					
-					//ParseStateBuilder parseStateBuilder2 = new ParseStateBuilder();
-					//parseStateBuilder2.setWriteUnknownWordsToFile(WRITE_UNKNOWN_WORDS_TO_FILE);
-					parseState = parseStateBuilder.build();
-					
-					for(int i = 0; i < strAr.length; i++){
-						//alternate commented out line to enable tex converter
-						//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim()) ));
-						parseState = ThmP1.tokenize(strAr[i].trim(), parseState);
-						parseState = ThmP1.parse(parseState);
-					}
-					System.out.println();
-					
-					//parsedOutput = Arrays.toString(ThmP1.getParseStructMapList().toArray());			
-					parsedOutput = ThmP1.getAndClearParseStructMapList().toString();
-					
-					System.out.println("PARTS: " + parsedOutput);
-					System.out.println("****ParsedExpr " + ThmP1.getAndClearParsedExpr());
-					System.out.println("*~~~*");
+					parseInputVerbose(nextLine, parseState);
 				}
 				
 				
@@ -601,7 +557,56 @@ public class ThmP1TestRun {
 			//p1.parse(p1.tokenize(p1.preprocess("characteristic of Fp is p".split(" "))));
 			
 		}
+	
+	/**
+	 * Verbose way of parsing the input. With more print statements
+	 * @param inputStr
+	 */
+	private static void parseInputVerbose(String st, ParseState parseState){
 		
+		List<int[]> parseContextVecList = new ArrayList<int[]>();			
+		
+		
+		
+		String[] strAr = ThmP1.preprocess(st);			
+		
+		for(int i = 0; i < strAr.length; i++){
+			//alternate commented out line to enable tex converter
+			//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim()) ));
+			parseState = ThmP1.tokenize(strAr[i].trim(), parseState);
+			parseState = ThmP1.parse(parseState);
+			int[] curContextVec = ThmP1.getParseContextVector();
+			parseContextVecList.add(curContextVec);
+			//get context vector
+			System.out.println("cur vec: " + Arrays.toString(curContextVec));
+		}
+		
+		/*List<ParseStruct> headParseStructList = parseState.getHeadParseStructList();
+		for(ParseStruct headParseStruct : headParseStructList){
+			System.out.println("@@@" + headParseStruct);
+		}*/
+		
+		System.out.println("@@@" + parseState.getHeadParseStruct());
+		
+		parseState.logState();
+		
+		//combine these vectors together, only add subsequent vector entry
+		//if that entry is 0 in all previous vectors int[].
+		int[] combinedVec = GenerateContextVector.combineContextVectors(parseContextVecList);
+		System.out.println("combinedVec: " + Arrays.toString(combinedVec));
+		
+		String parsedOutput = ThmP1.getAndClearParseStructMapList().toString();
+		//String parsedOutput = Arrays.toString(ThmP1.getParseStructMapList().toArray());			
+		//String processedOutput = parsedOutput.replaceAll("MathObj", "MathObject").replaceAll("\\$([^$]+)\\$", "LaTEXMath[\"$1\"]")
+				//.replaceAll("MathObject\\{([^}]+)\\}", "MathObject\\[$1\\]");					
+		
+		System.out.println("PARTS: " + parsedOutput);			
+		System.out.println("****ParsedExpr ");
+		for(ParsedPair pair : ThmP1.getAndClearParsedExpr()){
+			System.out.println(pair);
+		}
+	}
+	
 		private static void parseInput(String inputStr){
 			String[] strAr = ThmP1.preprocess(inputStr);
 			

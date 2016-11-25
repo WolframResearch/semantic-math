@@ -199,7 +199,7 @@ public class WLCommandsList {
 		//***action*** commands
 		//WLCommandMapBuilder.put("is", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is|are|be, trigger",
 			//	"\\[Element]", "symb|ent|phrase, , true, TriggerMathObj" }));
-		WLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro", null, true, false, false, PosTermConnotation.DEFINED), 
+		WLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro|noun", null, true, false, false, PosTermConnotation.DEFINED), 
 				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), new PBuilder("\\[Element]"),
 				//negative term, to stop command if encountered
 				new PBuilder("adj", null, WLCommand.PosTermType.NEGATIVE),			
@@ -211,7 +211,7 @@ public class WLCommandsList {
 				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), 
 				new PBuilder("~HasProperty~"), new PBuilder("adj|phrase|noun", null, true, false, true) ));
 		//e.g. "R is of finite type"
-		WLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro", null, true), 
+		WLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro|noun", null, true), 
 				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), 
 				new PBuilder("~HasProperty~"), new PBuilder("pre", "of", false),
 				new PBuilder("noun|ent", null, true, false, true) ));
@@ -219,7 +219,7 @@ public class WLCommandsList {
 		//negative of above
 		//WLCommandMapBuilder.put("is not", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is not|are not|be not, trigger",
 				//"Not[\\[Element]]", "symb|ent|adj|phrase, , true, TriggerMathObj" }));
-		WLCommandMapBuilder.put("is not", addCommand(new PBuilder("symb|ent|pro", null, true), 
+		WLCommandMapBuilder.put("is not", addCommand(new PBuilder("symb|ent|pro|noun", null, true), 
 				new PBuilder("verb|vbs|be", "is not|are not|be not", false, true, false), 
 				new PBuilder("Not[\\[Element]]"), new PBuilder("symb|ent|adj|phrase", null, true, false, true) ));
 		
