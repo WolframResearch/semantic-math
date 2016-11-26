@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 
+import thmp.ParseState.VariableDefinition;
 import thmp.ParseToWLTree.WLCommandWrapper;
 import thmp.Struct.Article;
 import thmp.Struct.ChildRelation;
@@ -475,6 +476,8 @@ public class ThmP1 {
 	 * @return List of Struct's
 	 */
 	public static ParseState tokenize(String sentence, ParseState parseState){
+		
+		parseState.setCurrentInputStr(sentence);
 		
 		//check for punctuation, set parseState to reflect punctuation.
 		int sentenceLen = sentence.length();
@@ -3063,10 +3066,10 @@ public class ThmP1 {
 					
 					String entKey = structToSet.prev1().toString();
 					
-					List<Struct> namesList = parseState.getNamedStructList(entKey);
+					List<VariableDefinition> namesList = parseState.getNamedStructList(entKey);
 					if (!namesList.isEmpty()) {
 						int namesListLen = namesList.size();
-						Struct curEnt = namesList.get(namesListLen-1);
+						Struct curEnt = namesList.get(namesListLen-1).getDefiningStruct();
 						String structName = curEnt.struct().get("name");
 						//don't combine for structs with names such as "map"
 						if(!noFuseEntSet.contains(structName)){

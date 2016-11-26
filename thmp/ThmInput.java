@@ -15,6 +15,8 @@ import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import thmp.utils.WordForms;
+
 /**
  * Reads in text from file and extracts definitions, lemmas prepositions, and
  * theorems
@@ -25,10 +27,10 @@ import java.util.regex.Pattern;
 public class ThmInput {
 
 	//Intentionally *not* final, as must append custom author-defined macros and compile the pattern
-	private static String THM_START_STR = "\\\\begin\\{def(?:.*)|\\\\begin\\{lem(?:.*)|\\\\begin\\{thm(?:.*)|\\\\begin\\{theo(?:.*)|\\\\begin\\{prop(?:.*)"
+	static String THM_START_STR = "\\\\begin\\{def(?:.*)|\\\\begin\\{lem(?:.*)|\\\\begin\\{thm(?:.*)|\\\\begin\\{theo(?:.*)|\\\\begin\\{prop(?:.*)"
 			+ "|\\\\begin\\{proclaim(?:.*)|\\\\begin\\{cor(?:.*)";
 	
-	private static final Pattern THM_START_PATTERN = Pattern.compile(THM_START_STR);
+	static final Pattern THM_START_PATTERN = Pattern.compile(THM_START_STR);
 	
 	// start of theorem, to remove words such as \begin[prop]
 	 /*
@@ -39,17 +41,17 @@ public class ThmInput {
 	 * );
 	 */
 	
-	private static String THM_END_STR = "\\\\end\\{def(?:.*)|\\\\end\\{lem(?:.*)|\\\\end\\{thm(?:.*)|\\\\end\\{theo(?:.*)|\\\\end\\{prop(?:.*)|\\\\endproclaim(?:.*)"
+	static String THM_END_STR = "\\\\end\\{def(?:.*)|\\\\end\\{lem(?:.*)|\\\\end\\{thm(?:.*)|\\\\end\\{theo(?:.*)|\\\\end\\{prop(?:.*)|\\\\endproclaim(?:.*)"
 			+ "|\\\\end\\{cor(?:.*)";
-	private static final Pattern THM_END_PATTERN = Pattern.compile(THM_END_STR);
+	static final Pattern THM_END_PATTERN = Pattern.compile(THM_END_STR);
 	
 	//begin of latex expression
-	private static final Pattern BEGIN_PATTERN = Pattern.compile("\\\\begin.*");
+	static final Pattern BEGIN_PATTERN = Pattern.compile("\\\\begin.*");
 	
 	//new theorem pattern
-	private static final Pattern NEW_THM_PATTERN = Pattern.compile("\\\\newtheorem\\{([^}])\\}(?:[^{]*)\\{([^}]).*");
+	static final Pattern NEW_THM_PATTERN = Pattern.compile("\\\\newtheorem\\{([^}])\\}(?:[^{]*)\\{([^}]).*");
 		
-	private static final Pattern F = Pattern.compile("Theorem|Proposition|Lemma|Corollary");
+	static final Pattern THM_TERMS_PATTERN = Pattern.compile("Theorem|Proposition|Lemma|Corollary");
 	private static final Pattern LABEL_PATTERN = Pattern.compile("(?:^.*)\\\\label\\{([^}]*)\\}\\s*(.*)");
 	private static final Pattern DIGIT_PATTERN = Pattern.compile(".*\\d+.*");
 
@@ -117,6 +119,7 @@ public class ThmInput {
 	}*/
 	
 	/**
+	 * Extracts list of theorems/propositions/etc from provided BufferedReader.
 	 * @param srcFileReader
 	 *            BufferedReader to get tex from.
 	 * @param thmWebDisplayList
@@ -145,14 +148,14 @@ public class ThmInput {
 		
 		//read in custom macros, break as soon as \begin{document} encountered
 		while ((line = srcFileReader.readLine()) != null) {
-			Matcher f = NEW_THM_PATTERN.matcher(line);
+			Matcher newThmMatcher = NEW_THM_PATTERN.matcher(line);
 			
 			if(BEGIN_PATTERN.matcher(line).find()){
 				break;
-			}else if(f.find()){
+			}else if(newThmMatcher.find()){
 				//should be a proposition, hypothesis, etc
-				if(F.matcher(f.group(2)).find()){
-					macrosList.add(f.group(2));		
+				if(THM_TERMS_PATTERN.matcher(newThmMatcher.group(2)).find()){
+					macrosList.add(newThmMatcher.group(2));		
 				}
 			}			
 		}
@@ -163,8 +166,9 @@ public class ThmInput {
 			StringBuilder endBuilder = new StringBuilder();
 			for(String macro : macrosList){
 				//create start and end macros
-				startBuilder.append("\\\\begin\\{" + macro + ".*");
-				endBuilder.append("\\\\end\\{" + macro + ".*");
+				startBuilder.append("\\\\begin\\{").append(macro).append(".*");
+				
+				endBuilder.append("\\\\end\\{").append(macro).append(".*");
 			}
 			thmStartPattern = Pattern.compile(THM_START_STR + startBuilder);
 			thmEndPattern = Pattern.compile(THM_END_STR + endBuilder);	
@@ -174,10 +178,10 @@ public class ThmInput {
 		boolean inThm = false;
 		while ((line = srcFileReader.readLine()) != null) {
 			// while(sc.hasNextLine()){
-			if (line.matches("\\s*")){
+			if (WordForms.getWhitespacePattern().matcher(line).find()){
 				continue;
 			}
-						
+			
 			// if(line.matches("(?:\\\\begin\\{def[^}]*\\}|\\\\begin\\{lem[^}]*\\}|\\\\begin\\{th[^}]*\\}|\\\\begin\\{prop[^}]*\\})(?:.)*")){
 			Matcher matcher = thmStartPattern.matcher(line);
 			if (matcher.find()) {
@@ -211,7 +215,7 @@ public class ThmInput {
 				 * meat[1]; //System.out.println(thm); }
 				 */
 				// String thm = newThmSB.toString();
-				if (!thm.matches("\\s*")) {
+				if (!WordForms.getWhitespacePattern().matcher(thm).find()) {
 					thms.add(thm);
 				}
 				// newThm = "";
@@ -232,13 +236,15 @@ public class ThmInput {
 	}
 
 	/**
-	 * 
+	 * Processes Latex input, e.g. by removing syntax used purely for display and not
+	 * useful for parsing, such as \textit{ }.
+	 * But enumerate should not always be turned off.
 	 * @param newThmSB 
 	 * @param thmWebDisplayList Can be null.
 	 * @param bareThmList Can be null.
 	 * @return Thm without the "\begin{lemma}", "\label{}", etc parts.
 	 */
-	private static String processTex(StringBuilder newThmSB, List<String> thmWebDisplayList,
+	public static String processTex(StringBuilder newThmSB, List<String> thmWebDisplayList,
 			List<String> bareThmList) {
 
 		boolean getWebDisplayList = thmWebDisplayList == null ? false : true;

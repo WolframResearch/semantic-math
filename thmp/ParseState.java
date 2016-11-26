@@ -6,6 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ListMultimap;
 
 import thmp.ThmP1.ParsedPair;
@@ -22,6 +23,11 @@ import java.util.Arrays;
  * @author yihed
  */
 public class ParseState {
+	
+	//current String being parsed. I.e. the unit
+	//of the input that's being tokenized, so 
+	//delimiter-separated.
+	private String currentInputStr;
 
 	private Struct recentEnt;
 	
@@ -44,16 +50,61 @@ public class ParseState {
 	
 	//punctuation at end of current parse segment, segments are separated
 	//by punctuations.
-	private String punctuation;	
+	private String finalPunctuation;	
 
-	//what each symbol stands for in the text so far.
-	//Make clear it's ListMultimap, since symbol order matters.
-	private ListMultimap<String, Struct> variableNamesMMap;
+	/* 
+	 * Multimap of what each symbol stands for in the text so far.
+	 * Make clear it's ListMultimap, since symbol order matters.
+	 * Keys are variable Strings, and values are   that contain
+	 * Structs, and the input sentence that defines it.
+	 * When storing a definition such as "$f: X\to Y$", also store variable
+	 * name before the colon, i.e. "f"
+	 * 
+	 */
+	private ListMultimap<String, VariableDefinition> variableNamesMMap;
 	
 	//parsedExpr to record parsed pairs during parsing. 
 	private static List<ParsedPair> parsedExpr = new ArrayList<ParsedPair>();
 	
 	private static final Logger logger = LogManager.getLogger(ParseState.class);
+	
+	/**
+	 * Contain information that define variables, whose names are stored in 
+	 * variableNamesMMap.
+	 */
+	public static class VariableDefinition{
+		//the Struct defining the variable.
+		//E.g. in "$F$ is a field", the Struct for "field"
+		//is the defining Struct.
+		private Struct definingStruct;
+		
+		private String variableName;
+		
+		//
+		private String originalDefinitionSentence;
+
+		public VariableDefinition(String variableName, Struct definingStruct, String originalDefinitionStr){
+			this.definingStruct = definingStruct;
+			this.originalDefinitionSentence = originalDefinitionStr;
+		}
+		
+		/**
+		 * @return the definingStruct
+		 */
+		public Struct getDefiningStruct() {
+			return definingStruct;
+		}
+
+		/**
+		 * @return the originalDefinitionStr
+		 */
+		public String getOriginalDefinitionStr() {
+			return originalDefinitionSentence;
+		}
+		
+		
+		
+	}
 	
 	//waiting WLCommandWrapper map on deck, waiting to be added. Necessary 
 	//because don't know if need to add to next logic layer, or to current
@@ -98,13 +149,29 @@ public class ParseState {
 	}
 
 	/**
-	 * What each symbol stands for in the text so far.
+	 * Map of what each symbol stands for in the text so far.
 	 * Make clear it's ListMultimap, since symbol order matters.
+	 * Clears the map.
 	 * @return
 	 */
-	public ListMultimap<String, Struct> getAndClearVariableNamesMMap(){
-		ListMultimap<String, Struct> tempMap = ArrayListMultimap.create(this.variableNamesMMap);
+	public ImmutableListMultimap<String, VariableDefinition> getAndClearVariableNamesMMap(){
+		//ListMultimap<String, VariableDefinition> tempMap = ArrayListMultimap.create(this.variableNamesMMap);
+		ImmutableListMultimap<String, VariableDefinition> tempMap = ImmutableListMultimap.copyOf(this.variableNamesMMap);
 		this.variableNamesMMap = ArrayListMultimap.create();
+		return tempMap;
+	}
+	
+	/**
+	 * Map of what each symbol stands for in the text so far.
+	 * Make clear it's ListMultimap, since symbol order matters.
+	 * Returns immutable map, so the original map stays protected and 
+	 * can only be modified through the exposed modification method.
+	 * @return
+	 */
+	public ImmutableListMultimap<String, VariableDefinition> getVariableNamesMMap(){
+		//defensively copy.
+		//ListMultimap<String, VariableDefinition> tempMap = ArrayListMultimap.create(this.variableNamesMMap);
+		ImmutableListMultimap<String, VariableDefinition> tempMap = ImmutableListMultimap.copyOf(this.variableNamesMMap);
 		return tempMap;
 	}
 	
@@ -114,7 +181,8 @@ public class ParseState {
 	 * @param entStruct Entity to be added with name entStruct.
 	 */
 	public void addLocalVariableStructPair(String name, Struct entStruct){
-		this.variableNamesMMap.put(name, entStruct);
+		VariableDefinition def = new VariableDefinition(name, entStruct, this.currentInputStr);		
+		this.variableNamesMMap.put(name, def);		
 	}
 	
 	/**
@@ -124,21 +192,21 @@ public class ParseState {
 	 */
 	public Struct getNamedStruct(String name){		
 		
-		List<Struct> r = this.variableNamesMMap.get(name);
+		List<VariableDefinition> r = this.variableNamesMMap.get(name);
 		int listSz = r.size();
 		
 		if(r.isEmpty()){
 			return null;
 		}
-		return r.get(listSz-1);		
+		return r.get(listSz-1).getDefiningStruct();		
 	}
 	
 	/**
-	 * Get list of Structs with specified name.
+	 * Get list of VariableDefinition's with specified name.
 	 * @param name
 	 * @return
 	 */
-	public List<Struct> getNamedStructList(String name){		
+	public List<VariableDefinition> getNamedStructList(String name){		
 		
 		return this.variableNamesMMap.get(name);			
 	}
@@ -158,16 +226,30 @@ public class ParseState {
 	 * @return the punctuation
 	 */
 	public String getAndClearCurPunctuation() {
-		String punctuationCopy = punctuation;
-		this.punctuation = null;
+		String punctuationCopy = finalPunctuation;
+		this.finalPunctuation = null;
 		return punctuationCopy;
 	}
+	
+	/**
+	 * @return the currentInputStr
+	 */
+	public String getCurrentInputStr() {
+		return this.currentInputStr;
+	}
 
+	/**
+	 * @param currentInputStr the currentInputStr to set
+	 */
+	public void setCurrentInputStr(String currentInputStr) {
+		this.currentInputStr = currentInputStr;
+	}
+	
 	/**
 	 * @param punctuation the punctuation to set
 	 */
 	public void setPunctuation(String punctuation) {
-		this.punctuation = punctuation;
+		this.finalPunctuation = punctuation;
 	}
 	
 	/*public void addParseStructWrapperPair(ParseStructType type, WLCommandWrapper wrapper){
