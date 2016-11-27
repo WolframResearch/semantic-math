@@ -477,6 +477,9 @@ public class ThmP1 {
 	 */
 	public static ParseState tokenize(String sentence, ParseState parseState){
 		
+		if(WordForms.getWhitespacePattern().matcher(sentence).find()){
+			return parseState;
+		}
 		parseState.setCurrentInputStr(sentence);
 		
 		//check for punctuation, set parseState to reflect punctuation.
@@ -2514,11 +2517,8 @@ public class ThmP1 {
 		}
 		//parseState.addToHeadParseStructList(bestParseStruct);
 		
-
-		///apply
 		//System.out.println("curStructContextVec " + curStructContextVec);		
 				//add the relevant wrapper (and so command strings) to curParseStruct in parseState		
-				
 				
 				//decide whether to jump out of current ParseStruct layer
 				String punctuation = parseState.getAndClearCurPunctuation();
@@ -2585,8 +2585,8 @@ public class ThmP1 {
 		
 		//fills the parseStructMap and produces String representation, collect commands built above.	
 		boolean contextVecConstructed = false;
-		contextVecConstructed = ParseToWLTree.collectCommandsDfs(parseStructMap, curParseStruct, uHeadStruct, wlSB, curStructContextVec, true,
-				contextVecConstructed, parseState);
+		contextVecConstructed = ParseToWLTree.collectCommandsDfs(parseStructMap, curParseStruct, uHeadStruct, wlSB, 
+				curStructContextVec, true, contextVecConstructed, parseState);
 		
 		if(!contextVecConstructed){
 			ParseTreeToVec.tree2vec(uHeadStruct, curStructContextVec);
@@ -2638,12 +2638,11 @@ public class ThmP1 {
 			ParseStruct childParseStruct = new ParseStruct();
 			
 			childParseStruct.addParseStructWrapper(wrapperMap);
-			System.out.println("curParseStruct: " + curParseStruct);
+			
 			curParseStruct.addToSubtree(childParseStruct);
 
 			childParseStruct.set_parentParseStruct(curParseStruct);
-			parseState.setCurParseStruct(childParseStruct);
-
+			
 			//set the reference of the current struct to point to the newly created struct
 			parseState.setCurParseStruct(childParseStruct);
 		}else{
@@ -2820,13 +2819,13 @@ public class ThmP1 {
 					childToAdd = struct2Prev2;
 				}else if(struct2Prev2.prev2NodeType().equals(NodeType.STRUCTH)){
 					//the right-most grandchild
-					System.out.println("^######^#^##^#^#^!@@ prev2Struct.prev2 " + struct2Prev2.prev2());
+					//System.out.println("^######^#^##^#^#^!@@ prev2Struct.prev2 " + struct2Prev2.prev2());
 					//childRelation = extractHypChildRelation((Struct)struct2Prev2.prev1());
 					childRelation = new ChildRelation.HypChildRelation(struct2Prev2.prev1().toString());
 					((Struct)(struct2Prev2.prev2())).set_parentStruct(newStruct);
 					childToAdd = (Struct)struct2Prev2.prev2();
-					System.out.println("&^^^^setting (Struct)(prev2Struct.prev2()) " + (Struct)(struct2Prev2.prev2()) + 
-							" for parent " + newStruct);					
+					//System.out.println("&^^^^setting (Struct)(prev2Struct.prev2()) " + (Struct)(struct2Prev2.prev2()) + 
+						//	" for parent " + newStruct);					
 				}
 				
 				/*if(((Struct)struct2.prev2()).type().equals("prep")){
@@ -3636,7 +3635,9 @@ public class ThmP1 {
 		ArrayList<String> sentenceList = new ArrayList<String>();
 		//separate out punctuations, separate out words away from punctuations.
 		//compile this!
+		
 		String[] wordsArray = inputStr.replaceAll("([^\\.,!:;]*)([\\.,:!;]{1})", "$1 $2").split("\\s+");
+		
 		//System.out.println("wordsArray " + Arrays.toString(wordsArray));
 		int wordsArrayLen = wordsArray.length;
 
@@ -3655,14 +3656,7 @@ public class ThmP1 {
 		for (int i = 0; i < wordsArrayLen; i++) {
 
 			curWord = wordsArray[i];
-
-			//eliminate conditional-fluff words: words that are 
-			//fluff only when occurring at certain places.
-			/*if(curWord.matches("so")){
-				if(i==0){
-					continue;
-				}
-			}*/
+			
 			//compile these!
 			if (!inTex) {
 				if (inParen && curWord.matches("[^)]*\\)")) {
@@ -3695,12 +3689,12 @@ public class ThmP1 {
 				//StringBuilder enumerateSb = new StringBuilder();
 				while(i < wordsArrayLen && !curWord.equals("\\end{enumerate}")){
 					curWord = wordsArray[i];
-					sentenceBuilder.append(" " + curWord);
+					sentenceBuilder.append(" ").append(curWord);
 					i++;
 				}
 				
 				if(curWord.equals("\\end{enumerate}")){
-					sentenceBuilder.append(" " + curWord);
+					sentenceBuilder.append(" ").append(curWord);
 				}
 				
 				sentenceList.add(sentenceBuilder.toString().trim());
@@ -3734,7 +3728,7 @@ public class ThmP1 {
 					
 					String replacement = fluffMap.get(tempWord.toLowerCase());
 					if (replacement != null) {
-						sentenceBuilder.append(" " + replacement);
+						sentenceBuilder.append(" ").append(replacement);
 						lastWordAdded = replacement;
 						madeReplacement = true;
 						i = j;
@@ -3743,25 +3737,26 @@ public class ThmP1 {
 				}
 			}
 
-			// if composite fluff word ?? already taken care of
+			// if composite fluff word ?? <--already taken care of
 			if (!madeReplacement && !PUNCTUATION_PATTERN.matcher(curWord).find() 
 					&& !fluffMap.containsKey(curWord.toLowerCase())) {
 				// if (!curWord.matches("\\.|,|!") &&
 				// !fluffMap.containsKey(curWord)){
 				if (inTex || !toLowerCase) {
-					sentenceBuilder.append(" " + curWord);
+					sentenceBuilder.append(" ").append(curWord);
 					lastWordAdded = curWord;
 					toLowerCase = true;
 				} else{
 					String wordToAdd = curWord.toLowerCase();
-					sentenceBuilder.append(" " + wordToAdd);
+					sentenceBuilder.append(" ").append(wordToAdd);
 					lastWordAdded = wordToAdd;
 				}
 			}
 			madeReplacement = false;
 			//compile!
-			if (PUNCTUATION_PATTERN.matcher(curWord).find() ) {
+			if (PUNCTUATION_PATTERN.matcher(curWord).find()) {
 				//if not in middle of tex
+				
 				if (!inTex) {
 					//if the token before and after the comma 
 					//are not similar enough.
@@ -3783,14 +3778,16 @@ public class ThmP1 {
 						}						
 					}
 					//add the punctuation to use later
-					sentenceBuilder.append(" " + curWord);
+					sentenceBuilder.append(" ").append(curWord);
+					
 					sentenceList.add(sentenceBuilder.toString());
 					sentenceBuilder.setLength(0);
 					
 				} else { //in Latex
 					lastWordAdded = curWord;
-					sentenceBuilder.append(" " + curWord);
+					sentenceBuilder.append(" ").append(curWord);
 				}
+				//throw new IllegalStateException("punctuation: " + curWord);
 			} else if(i == wordsArrayLen - 1){ //
 				sentenceList.add(sentenceBuilder.toString());
 				sentenceBuilder.setLength(0);				

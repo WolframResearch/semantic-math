@@ -274,7 +274,7 @@ public class WLCommandsList {
 		//"define $F$ to be a field";
 		WLCommandMapBuilder.put("define", addCommand( new PBuilder("verb", null, false, true, false),
 				new PBuilder("ent|symb", null, true, false, false, PosTermConnotation.DEFINED), 
-				new PBuilder(null, "as|to be", false), new PBuilder("~Defined By~"), 
+				new PBuilder(null, "as|to be|by", false), new PBuilder("~DefinedBy~"), 
 				new PBuilder("ent|symb", null, true, false, false, PosTermConnotation.DEFINING)));
 		
 		//auxpass, eg "is called"

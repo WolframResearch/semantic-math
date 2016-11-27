@@ -2,6 +2,7 @@ package thmp;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.io.Serializable;
 import java.util.ArrayList;
 
 import thmp.ParseToWLTree.WLCommandWrapper;
@@ -11,7 +12,7 @@ import thmp.ParseToWLTree.WLCommandWrapper;
  * to be parsed
  */
 
-public abstract class Struct {
+public abstract class Struct implements Serializable{
 	//remove this 
 	//public int WLCommandStrVisitedCount;
 
@@ -28,6 +29,8 @@ public abstract class Struct {
 	}
 	*/
 	
+	private static final long serialVersionUID = 1L;
+
 	//whether this struct has been used in another component
 	//e.g. Action[ MathObj{group, $G$} , MathObj{{subgroup, $H$, by conjugation}} , MathObj{conjugation}
 	//want to exclude "by conjugation" from middle term. Must clear this flag for new dfs walkdowns.

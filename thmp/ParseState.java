@@ -1,6 +1,8 @@
 package thmp;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -12,6 +14,7 @@ import com.google.common.collect.ListMultimap;
 import thmp.ThmP1.ParsedPair;
 import thmp.utils.Buggy;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -52,6 +55,9 @@ public class ParseState {
 	//by punctuations.
 	private String finalPunctuation;	
 
+	//pattern for matching latex expressions wrapped in dollars
+	private static final Pattern LATEX_DOLLARS_PATTERN = Pattern.compile("^\\$([^$]+)\\$$");
+	
 	/* 
 	 * Multimap of what each symbol stands for in the text so far.
 	 * Make clear it's ListMultimap, since symbol order matters.
@@ -72,7 +78,10 @@ public class ParseState {
 	 * Contain information that define variables, whose names are stored in 
 	 * variableNamesMMap.
 	 */
-	public static class VariableDefinition{
+	public static class VariableDefinition implements Serializable {
+		
+		private static final long serialVersionUID = 1L;
+
 		//the Struct defining the variable.
 		//E.g. in "$F$ is a field", the Struct for "field"
 		//is the defining Struct.
@@ -80,12 +89,23 @@ public class ParseState {
 		
 		private String variableName;
 		
-		//
 		private String originalDefinitionSentence;
 
 		public VariableDefinition(String variableName, Struct definingStruct, String originalDefinitionStr){
 			this.definingStruct = definingStruct;
 			this.originalDefinitionSentence = originalDefinitionStr;
+		}
+
+		@Override
+		public String toString(){
+			return definingStruct.toString();
+		}
+		
+		/**
+		 * @return the variableName
+		 */
+		public String getVariableName() {
+			return variableName;
 		}
 		
 		/**
@@ -181,6 +201,11 @@ public class ParseState {
 	 * @param entStruct Entity to be added with name entStruct.
 	 */
 	public void addLocalVariableStructPair(String name, Struct entStruct){
+		
+		Matcher latexContentMatcher = LATEX_DOLLARS_PATTERN.matcher(name);
+		if(latexContentMatcher.find()){
+			name = latexContentMatcher.group(1);
+		}
 		VariableDefinition def = new VariableDefinition(name, entStruct, this.currentInputStr);		
 		this.variableNamesMMap.put(name, def);		
 	}
@@ -275,7 +300,7 @@ public class ParseState {
 	public void setCurParseStruct(ParseStruct curParseStruct) {
 		//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
 		this.curParseStruct = curParseStruct;
-		if(headParseStruct == null){
+		if(null == headParseStruct && null != curParseStruct){
 			synchronized(ParseState.class){
 				if(null == headParseStruct){
 					this.headParseStruct = curParseStruct;

@@ -1,5 +1,6 @@
 package thmp;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -13,8 +14,10 @@ import java.util.List;
  * @author yihed
  *
  */
-public class StructList {
+public class StructList implements Serializable{
 	
+	private static final long serialVersionUID = 1L;
+
 	//index in StructList of highest scores gathered from *downstream*,
 	//in particular the highest among all Struct's, and each path along 
 	//the different MatrixPathNode's

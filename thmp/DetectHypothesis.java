@@ -3,18 +3,22 @@ package thmp;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 
+import thmp.DetectHypothesis.DefinitionListWithThm;
 import thmp.ParseState.ParseStateBuilder;
 import thmp.ParseState.VariableDefinition;
 import thmp.ThmP1.ParsedPair;
@@ -29,21 +33,29 @@ public class DetectHypothesis {
 	
 	//pattern matching is faster than calling str.contains() repeatedly 
 	//which is O(mn) time.
-	private static final Pattern HYP_PATTERN = Pattern.compile(".*assume.*|.*denote.*|.*define.*") ;
-	private static final Pattern PUNCTUATION_PATTERN = Pattern.compile("(\\.|;|,|!|:)");
+	private static final Pattern HYP_PATTERN = Pattern.compile(".*assume.*|.*denote.*|.*define.*|.*let.*|.*is said.*|.*suppose.*") ;
+	//positive look behind to split on any punctuation before a space.
+	private static final Pattern PUNCTUATION_PATTERN = Pattern.compile("( ?<=[\\.|;|,|!|:])");
 	
 	//also incorporate the separator pattern from WordForms!
 	//deliberately excluding "\\\\", "\\$"
-	private static final Pattern SYMBOL_SEPARATOR_PATTERN = Pattern.compile("-|'|+|\\s+");
+	private static final Pattern SYMBOL_SEPARATOR_PATTERN = Pattern.compile("-|'|\\+|\\s+");
+	
+	//contains ParsedExpressions, to be serialized to persistent storage
+	private static final List<ParsedExpression> parsedExpressionList = new ArrayList<ParsedExpression>();
+	private static final String parsedExpressionOutputFileStr = "src/thmp/data/parsedExpressionList.ser";
 	
 	/**
 	 * Combination of theorem String and the list of
 	 * assumptions needed to define the variables in theorem.
 	 */
-	public static class DefinitionListWithThm{
+	public static class DefinitionListWithThm implements Serializable {
 		
+		private static final long serialVersionUID = 1L;
+
 		private String thmStr;
 		
+		//thmStr, with definition strings prepended.
 		private String thmWithDefStr;
 		
 		private List<VariableDefinition> definitionList = new ArrayList<VariableDefinition>();
@@ -53,6 +65,14 @@ public class DetectHypothesis {
 			this.thmStr = thmStr;
 			this.definitionList = definitionList;
 			this.thmWithDefStr = thmWithDefStr;
+		}
+		
+		@Override
+		public String toString(){
+			StringBuilder sb = new StringBuilder(70);
+			sb.append("thmWithDefStr: -").append(thmWithDefStr)
+				.append("- definitionList: ").append(definitionList);
+			return sb.toString();
 		}
 
 		/**
@@ -85,7 +105,7 @@ public class DetectHypothesis {
 	 * @return
 	 */
 	public static boolean isHypothesis(String inputStr){
-		if(HYP_PATTERN.matcher(inputStr).find()){
+		if(HYP_PATTERN.matcher(inputStr.toLowerCase()).find()){
 			return true;
 		}
 		return false;
@@ -95,7 +115,7 @@ public class DetectHypothesis {
 		//only parse if sentence is hypothesis, when parsing outside theorems.
 		//to build up variableNamesMMap. Should also collect the sentence that 
 		//defines a variable, to include inside the theorem for search.
-		Scanner sc = null;
+		//Scanner sc = null;
 		/*try{
 			sc = new Scanner(new File("src/thmp/data/samplePaper2.txt"));
 		}catch(FileNotFoundException e){
@@ -115,14 +135,15 @@ public class DetectHypothesis {
 		}
 		
 		try{
-			readThm(inputBF, parseState);
+			List<DefinitionListWithThm> defThmList = readThm(inputBF, parseState);
+			System.out.println("DefinitionListWithThm list: " + defThmList);
+			
 		}catch(IOException e){
 			e.printStackTrace();
 		}
 		
 		/*
-		while(sc.hasNextLine()){					
-			
+		while(sc.hasNextLine()){			
 			String nextLine = sc.nextLine();			
 			if(nextLine.matches("^\\s*$")) continue;
 			System.out.println("*~~~*");
@@ -130,10 +151,31 @@ public class DetectHypothesis {
 			parseInputVerbose(nextLine, parseState);
 		}*/
 		
-		sc.close();
+		//sc.close();
 		
-		//how to best detect substring?! for latex symbol matching
+		//serialize parsedExpressionList to persistent storage
+		FileOutputStream fileOuputStream = null;
+		ObjectOutputStream objectOutputStream = null;
+		try{
+			fileOuputStream = new FileOutputStream(parsedExpressionOutputFileStr);
+			objectOutputStream = new ObjectOutputStream(fileOuputStream);
+		}catch(FileNotFoundException e){
+			e.printStackTrace();
+			throw new IllegalStateException("ParsedExpressionList output file not found!");
+		}catch(IOException e){
+			e.printStackTrace();
+			throw new IllegalStateException("IOException while opening ObjectOutputStream");
+		}
 		
+		try{
+			objectOutputStream.writeObject(parsedExpressionList);
+			System.out.println("parsedExpressionList: " + parsedExpressionList);
+			objectOutputStream.close();
+			fileOuputStream.close();
+		}catch(IOException e){
+			e.printStackTrace();
+			throw new IllegalStateException("IOException while writing to file or closing resources");
+		}
 		
 	}
 	
@@ -157,7 +199,7 @@ public class DetectHypothesis {
 	private static List<DefinitionListWithThm> readThm(BufferedReader srcFileReader, 
 			//List<String> thmWebDisplayList,
 			//List<String> bareThmList, 
-			ParseState parseState) throws IOException	{
+			ParseState parseState) throws IOException{
 		
 		// \\\\end\\{def(?:.*)
 		//compiler will inline these, so don't count as extra calls.
@@ -175,7 +217,9 @@ public class DetectHypothesis {
 		//read in custom macros, break as soon as \begin{...} encountered, 
 		//in particular \begin{document}. There are no \begin{...} in the preamble
 		while ((line = srcFileReader.readLine()) != null) {
+			
 			Matcher newThmMatcher = ThmInput.NEW_THM_PATTERN.matcher(line);
+			
 			
 			if(ThmInput.BEGIN_PATTERN.matcher(line).find()){
 				break;
@@ -203,11 +247,12 @@ public class DetectHypothesis {
 			
 		StringBuilder newThmSB = new StringBuilder();
 		boolean inThm = false;
+		
 		while ((line = srcFileReader.readLine()) != null) {
 			if (WordForms.getWhitespacePattern().matcher(line).find()){
 				continue;
 			}
-			
+			//System.out.println("line " + line + " " + parseState.getVariableNamesMMap());
 			Matcher matcher = thmStartPattern.matcher(line);
 			if (matcher.find()) {
 				
@@ -215,7 +260,7 @@ public class DetectHypothesis {
 				
 				//scan contextSB for assumptions and definitions
 				//and parse the definitions
-				detectHypothesis(contextSB.toString(), parseState);
+				detectAndParseHypothesis(contextSB.toString(), parseState);
 				
 				contextSB.setLength(0);
 			}
@@ -235,8 +280,13 @@ public class DetectHypothesis {
 				//thmWebDisplayList, and bareThmList should both be null
 				String thm = ThmInput.processTex(newThmSB, null, null);
 				
-				//append to newThmSB additional hypotheses that are applicable to the theorem.
-				DefinitionListWithThm thmDef = appendHypotheses(thm, parseState);
+				//clear headParseStruct and curParseStruct of parseState, so newThm
+				//has its own stand-alone parse tree
+				parseState.setCurParseStruct(null);
+				parseState.setHeadParseStruct(null);
+				
+				//append to newThmSB additional hypotheses that are applicable to the theorem.				
+				DefinitionListWithThm thmDef = appendHypothesesAndParseThm(thm, parseState);
 				
 				definitionListWithThmList.add(thmDef);
 				
@@ -271,18 +321,17 @@ public class DetectHypothesis {
 	 * @param contextSB
 	 * @param parseState
 	 */
-	private static void detectHypothesis(String contextStr, ParseState parseState){
+	private static void detectAndParseHypothesis(String contextStr, ParseState parseState){
 		
 		String[] contextStrAr = PUNCTUATION_PATTERN.split(contextStr);
 		
 		for(int i = 0; i < contextStrAr.length; i++){
 			String sentence = contextStrAr[i];
-			if(isHypothesis(sentence)){				
+			if(isHypothesis(sentence)){	
+				System.out.println("isHypothesis! " + sentence);
 				parseInputVerbose(sentence, parseState);
 			}
-			
 		}
-		
 	}
 	
 	/**
@@ -292,19 +341,22 @@ public class DetectHypothesis {
 	 * @param thmSB
 	 * @param parseState
 	 */
-	private static DefinitionListWithThm appendHypotheses(String thmStr, ParseState parseState){
+	private static DefinitionListWithThm appendHypothesesAndParseThm(String thmStr, ParseState parseState){
 		
 		ListMultimap<String, VariableDefinition> variableNamesMMap = parseState.getVariableNamesMMap();
 		//String thmStr = thmSB.toString();
-		StringBuilder thmWithDefSB = new StringBuilder();
+		StringBuilder thmWithDefSB = new StringBuilder();		
+		StringBuilder latexExpr = new StringBuilder();
+		
 		List<VariableDefinition> variableDefinitionList = new ArrayList<VariableDefinition>();
 		
-		int thmStrLen = thmStr.length();	
+		int thmStrLen = thmStr.length();		
 		boolean mathMode = false;
+		
 		for(int i = 0; i < thmStrLen; i++){
 			
 			char curChar = thmStr.charAt(i);
-			StringBuilder latexExpr = new StringBuilder();
+			
 			//go through thm, get the variables that need to be defined
 			//once inside Latex, use delimiters, should also take into account
 			//the case of entering math mode with \[ !
@@ -321,16 +373,32 @@ public class DetectHypothesis {
 							thmWithDefSB);
 					
 					variableDefinitionList.addAll(varDefList);
+					latexExpr.setLength(0);
 				}			
 			}else if(mathMode){
 				latexExpr.append(curChar);
 			}
 			
 		}
+		//now can parse the thm, with the variableNamesMMap already updated to include contexual definitions.
+		//should return parsedExpression object, and serialize it. 
+		System.out.println("~~~~~~parsing~~~~~~~~~~");
+		parseInputVerbose(thmStr, parseState);
+		System.out.println("~~~~~~Done parsing~~~~~~~~~~");
 		
 		thmWithDefSB.append(thmStr);
+		DefinitionListWithThm defListWithThm = 
+				new DefinitionListWithThm(thmStr, variableDefinitionList, thmWithDefSB.toString());
 		
-		return new DefinitionListWithThm(thmStr, variableDefinitionList, thmWithDefSB.toString());
+		//create parsedExpression to serialize to persistent storage to be used later
+		//for search, etc
+		ParsedExpression parsedExpression = new ParsedExpression(thmStr, parseState.getHeadParseStruct(),
+						defListWithThm);
+		
+		parsedExpressionList.add(parsedExpression);
+		
+		//return this to supply to search later
+		return defListWithThm;
 	}
 	
 	/**
@@ -349,8 +417,9 @@ public class DetectHypothesis {
 		
 		//split the latexExpr with delimiters
 		String[] latexExprAr = SYMBOL_SEPARATOR_PATTERN.split(latexExpr);
-		
+		//System.out.println("=++++++++========= latexExpr " + latexExpr);
 		for(int i = 0; i < latexExprAr.length; i++){
+			
 			String possibleVar = latexExprAr[i];
 			
 			List<VariableDefinition> possibleVarDefList = variableNamesMMap.get(possibleVar);
@@ -359,7 +428,9 @@ public class DetectHypothesis {
 			if(possibleVarDefListLen > 0){
 				VariableDefinition latestVarDef = possibleVarDefList.get(possibleVarDefListLen-1);
 				varDefList.add(latestVarDef);
+				//System.out.println("latestVarDef.getOriginalDefinitionStr() " + latestVarDef.getOriginalDefinitionStr());
 				thmWithDefSB.append(latestVarDef.getOriginalDefinitionStr()).append(" ");
+				
 			}
 			
 		}
@@ -373,7 +444,7 @@ public class DetectHypothesis {
 	private static void parseInputVerbose(String st, ParseState parseState){
 		
 		List<int[]> parseContextVecList = new ArrayList<int[]>();			
-		
+		//System.out.println("inside parseInputVerbose, strAr " + st);
 		String[] strAr = ThmP1.preprocess(st);			
 		
 		for(int i = 0; i < strAr.length; i++){

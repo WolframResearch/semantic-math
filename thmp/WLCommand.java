@@ -1,5 +1,6 @@
 package thmp;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -55,8 +56,10 @@ import thmp.WLCommand.PosTerm.PosTermConnotation;
  *
  */
 
-public class WLCommand {
+public class WLCommand implements Serializable{
 	
+	private static final long serialVersionUID = 1L;
+
 	//bucket to keep track of components needed in this command
 	private ListMultimap<WLCommandComponent, Struct> commandsMap;  // e.g. element
 	
@@ -302,7 +305,9 @@ public class WLCommand {
 	 * it occurs, to build a WLCommand, ie turn triggered phrases into WL commands.
 	 * 
 	 */
-	public static class PosTerm{		
+	public static class PosTerm implements Serializable{		
+
+		private static final long serialVersionUID = 1L;
 
 		/**
 		 * Enums used to indicate special connotations of PosTerm, 
@@ -1512,7 +1517,7 @@ public class WLCommand {
 			}else{
 				parentNameStr = structParent.struct().get("name");
 			}
-			System.out.println("###################parentNameStr " + parentNameStr + " parentType " +  parentType);
+			//System.out.println("###################parentNameStr " + parentNameStr + " parentType " +  parentType);
 			//should match both type and term. Get parent of struct, e.g. "log of f is g" should get all of
 			//"log of f", instead of just "f". I.e. get all of StructH.
 			
@@ -1521,9 +1526,9 @@ public class WLCommand {
 			if(componentNamePattern.matcher(parentNameStr).find()								
 					//parentNameStr.matches(curCommandComponent.nameStr()) 
 					&& componentPosPattern.matcher(parentType).find()){
-				if(!structToAdd.isStructA()){
+				/*if(!structToAdd.isStructA()){
 					System.out.println("++++structToAdd " + structToAdd + " parent : " + structToAdd.parentStruct());
-				}
+				}*/
 				structToAdd = structParent;
 				structParent = structParent.parentStruct();
 				
@@ -1802,7 +1807,10 @@ public class WLCommand {
 	/**
 	 * 
 	 */
-	public static class WLCommandComponent{
+	public static class WLCommandComponent implements Serializable{
+		
+		private static final long serialVersionUID = 1L;
+
 		//types should be consistent with types in Map
 		//eg ent, symb, pre, etc
 		private String posStr;

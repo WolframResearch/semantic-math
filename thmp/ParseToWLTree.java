@@ -1,5 +1,6 @@
 package thmp;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -29,7 +30,7 @@ import thmp.utils.Buggy;
  * @author yihed
  *
  */
-public class ParseToWLTree {
+public class ParseToWLTree{
 	
 	/**
 	 * ArrayList used as Stack to store the Struct's that's being processed. 
@@ -755,6 +756,7 @@ public class ParseToWLTree {
 					curParseStruct.addParseStructWrapper(parseStructType, curWrapper);					
 				}*/
 				//add to hold current command contained in curWrapper
+				
 				curParseStruct.addParseStructWrapper(parseStructType, curWrapper);
 				//parseState.addParseStructWrapperPair(parseStructType, curWrapper);
 				
@@ -924,7 +926,10 @@ public class ParseToWLTree {
 		return true;
 	}
 	
-	public static class WLCommandWrapper{
+	public static class WLCommandWrapper implements Serializable{
+		
+		private static final long serialVersionUID = 1L;
+
 		/**
 		 * Wraps around a WLCommand to put in list in each Struct,
 		 * contains a WLCommand instance, and its index in list,

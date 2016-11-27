@@ -453,7 +453,10 @@ public class ThmP1TestRun {
 			st = " a $1$-cycle is a $1$-chain that is zero boundary";
 			st = "Two $k$-cycles are homologous if they differ by a $k$-boundary";
 			st = "assume $F$ is a field, $F$ is perfect"; // <--look at context vector of this!
+			st = "we define the winding number $W_{ii'}(y)$ by the similar formula $f = x$";
+			st = "define $A$ to be field, and $C$ to be $D $";
 			
+			//st = "we define $F$ by the field";
 			//st = "there exists a ring map $R \\to S$ of finite presentation such that $T$ is the image of $\\Spec(S)$ in $\\Spec(R)$."; //<--too many parses!!
 			//st = "given field, with $F $ of presentation, and $G $ of finite type";
 			//st = "if $R$ is commutative and $S$ is commutative, then $S$ is abelian if $T$ is abelian";
@@ -510,7 +513,7 @@ public class ThmP1TestRun {
 			parseStateBuilder.setWriteUnknownWordsToFile(WRITE_UNKNOWN_WORDS_TO_FILE);
 			
 			/*******whether or not to process text from above********/			
-			boolean processText = false;
+			boolean processText = true;
 			
 			if(processText){
 				ParseState parseState = parseStateBuilder.build();
@@ -530,7 +533,7 @@ public class ThmP1TestRun {
 			
 			//System.out.println("****" + ThmP1.getParsedExpr() + "******");
 			/*******whether to process file or not********/
-			boolean processFile = true;
+			boolean processFile = false;
 			
 			if(processFile){
 				

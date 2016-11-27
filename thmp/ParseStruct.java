@@ -1,6 +1,8 @@
 package thmp;
 
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -17,7 +19,10 @@ import thmp.ParseToWLTree.WLCommandWrapper;
  * 
  * @author yihed
  */
-public class ParseStruct {
+public class ParseStruct implements Serializable{
+	
+	private static final long serialVersionUID = 1L;
+
 	//enum for type, e.g. "HYP", "STM", etc.
 	//private ParseStructType componentType;
 	//map of structures such as qualifying object, quantifying variables. 
@@ -60,7 +65,7 @@ public class ParseStruct {
 	}
 	
 	/**
-	 * Adds additional struct to the structList.
+	 * Adds additional wrappers to the wrapperMMap.
 	 */
 	public void addParseStructWrapper(Multimap<ParseStructType, WLCommandWrapper> map) {
 		
@@ -139,9 +144,9 @@ public class ParseStruct {
 		//recursively call toString
 		for(ParseStruct childParseStruct : childrenParseStructList){
 			if(i > 1){
-				sb.append(" {" + childParseStruct + "};");
+				sb.append("CHILD {" + childParseStruct + "};");
 			}else{
-				sb.append(" {" + childParseStruct + "}");
+				sb.append("CHILD {" + childParseStruct + "}");
 			}
 			i--;
 			//throw new IllegalStateException(entry.getValue().toString());
