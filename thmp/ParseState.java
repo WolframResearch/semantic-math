@@ -40,6 +40,10 @@ public class ParseState {
 	//tokenized input list
 	private List<Struct> tokenList;
 	
+	//tokenList of previous parse segment, i.e. punctuation
+	//-delimited parts of the original sentence.
+	private List<Struct> prevTokenList;
+	
 	//parseStruct, for layering built WLCommands
 	private ParseStruct headParseStruct;
 	
@@ -121,8 +125,6 @@ public class ParseState {
 		public String getOriginalDefinitionStr() {
 			return originalDefinitionSentence;
 		}
-		
-		
 		
 	}
 	
@@ -319,8 +321,21 @@ public class ParseState {
 	/**
 	 * @param tokenList the tokenList to set
 	 */
-	public void setTokenList(List<Struct> tokenList) {
-		this.tokenList = tokenList;
+	public void setTokenList(List<Struct> tokenList_) {
+		this.prevTokenList = this.tokenList;
+		this.tokenList = tokenList_;
+	}
+	
+	/**
+	 * Get previous tokenlist, used for conditional parses,
+	 * i.e. parse if current sentence does not produce a spanning
+	 * parse, or does not satisfy any WLCommand, and that the prior 
+	 * sentence triggered a particular command, identified by the 
+	 * trigger word, e.g. "define", "suppose".
+	 * E.g. "Let $F$ be a field, and $R$ a ring."
+	 */
+	public List<Struct> getPrevTokenList() {
+		return this.prevTokenList;
 	}
 
 	/**

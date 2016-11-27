@@ -454,7 +454,12 @@ public class ThmP1TestRun {
 			st = "Two $k$-cycles are homologous if they differ by a $k$-boundary";
 			st = "assume $F$ is a field, $F$ is perfect"; // <--look at context vector of this!
 			st = "we define the winding number $W_{ii'}(y)$ by the similar formula $f = x$";
-			st = "define $A$ to be field, and $C$ to be $D $";
+			st = "define $F$ to be field, and $C$ a ring";
+			st = "a multiplicative subset of $R$";
+			st = "$R$-generating set of $M$ is also an $S$-generating set of $M$";
+			st = "define $F$ to be a field ";
+			//conditional parse, flat parsing, 
+			st = "define $F$ to be a field, ";
 			
 			//st = "we define $F$ by the field";
 			//st = "there exists a ring map $R \\to S$ of finite presentation such that $T$ is the image of $\\Spec(S)$ in $\\Spec(R)$."; //<--too many parses!!

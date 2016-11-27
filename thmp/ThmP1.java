@@ -1331,7 +1331,9 @@ public class ThmP1 {
 					Pair prevPair = pairs.get(index - 1);
 					// should handle later with grammar rules in mx! commented out 11/14/16.	
 					//<--commented back in on 11/24, makes a difference in e.g.
-					//"I is a formal integer combination of curves"
+					//"I is a formal integer combination of curves". And this gives more customization,
+					//also helps mitigate parse explosions, by associating the token after "of" with 
+					//the token immediately before "of", rather than allowing combinations with any prior token.
 					if (prevPair.pos().matches("\\d+") ) { //begin comment
 						// ent of ent
 						int mathObjIndex = Integer.valueOf(prevPair.pos());
@@ -1347,6 +1349,12 @@ public class ThmP1 {
 								mathEntList.set(Integer.valueOf(nextPair.pos()), null);
 							}							
 							tempStruct.add_child(childStruct, new ChildRelation("of"));
+						}else if(nextPair.pos().equals("symb")){
+							
+							pairs.get(index).set_pos(prevPair.pos());
+							childStruct = new StructA<String, String>(nextPair.word(), NodeType.STR, "", NodeType.STR, "symb");
+							tempStruct.add_child(childStruct, new ChildRelation("of"));
+							nextPair.set_pos(prevPair.pos());							
 						}
 					} // "noun of ent".
 					else //end comment
@@ -1565,14 +1573,28 @@ public class ThmP1 {
 		}
 		return pair;
 	}
-
+	
 	/**
 	 * Takes in list of entities/ppt, and connectives parse using
 	 * structMap, and obtain sentence structures with Chart parser.
 	 * @param recentEnt, ent used to keep track of recent MathObj/Ent, for pronoun
 	 * reference assignment.
+	 * @return parseState
 	 */
+
 	public static ParseState parse(ParseState parseState) {
+		return parse(parseState, false);
+	}
+	
+	/**
+	 * Takes in list of entities/ppt, and connectives parse using
+	 * structMap, and obtain sentence structures with Chart parser.
+	 * @param recentEnt, ent used to keep track of recent MathObj/Ent, for pronoun
+	 * reference assignment.
+	 * @param isReparse, whether this is a second time parse (only happen if certain 
+	 * conditions satisfied)
+	 */
+	private static ParseState parse(ParseState parseState, boolean isReparse) {
 		/*System.out.println("**********");
 		System.out.println("Pos of open " + posMMap.get("open"));
 		System.out.println("**********");*/
@@ -2237,7 +2259,19 @@ public class ThmP1 {
 			//append the highest-ranked parse to parseState.curParseStruct
 			
 		}
-		// if no full parse. Also add to parsedExpr List.
+		// if no full parse, try again with the previous parse segment's structure
+		//substituted with this segment's Structs.
+		//e.g. Let $F$ be a field, and $R$ a ring. But only if previous segment 
+		//generated a spanning parse and satisfied certain WLCommands.
+		else if(!isReparse    ){
+			
+			isReparse = true;
+			//negative side effects to parseState that should be discarded?
+			parseState.setTokenList(ConditionalParse.superimposeStructList(parseState.getPrevTokenList(), 
+					parseState.getTokenList()));
+			parseState = parse(parseState, isReparse);
+		}
+		// if again no full parse. Also add to parsedExpr List.
 		else {
 			List<StructList> parsedStructList = new ArrayList<StructList>();
 
@@ -2631,7 +2665,7 @@ public class ThmP1 {
 		ParseStruct curParseStruct = parseState.getCurParseStruct();
 		//Multimap<ParseStructType, WLCommandWrapper> wrapperMap = parseState.retrieveAndClearWrapperMMap();
 		
-		Multimap<ParseStructType, WLCommandWrapper> wrapperMap = waitingParseStruct.getStructMMap();
+		Multimap<ParseStructType, WLCommandWrapper> wrapperMap = waitingParseStruct.getWLCommandWrapperMMap();
 		//System.out.println("********WRAPPER MAP" + wrapperMap);
 		if(wrapperMap.containsKey(ParseStructType.HYP) || wrapperMap.containsKey(ParseStructType.HYP_iff)){
 			//create new parseStruct

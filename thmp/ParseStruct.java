@@ -32,7 +32,6 @@ public class ParseStruct implements Serializable{
 	//pointer to head Struct that leads this ParseStruct
 	//private Struct headStruct;
 	//structs on this layer of the tree.
-	//private List<Struct> structList;
 	private Multimap<ParseStructType, WLCommandWrapper> wrapperMMap;
 	
 	//whether this ParseStruct is currently in hypothetical mode, don't create 
@@ -45,7 +44,7 @@ public class ParseStruct implements Serializable{
 	 * @return the structList, list of structs associated with this 
 	 * layer.
 	 */
-	public Multimap<ParseStructType, WLCommandWrapper> getStructMMap() {
+	public Multimap<ParseStructType, WLCommandWrapper> getWLCommandWrapperMMap() {
 		return wrapperMMap;
 	}
 

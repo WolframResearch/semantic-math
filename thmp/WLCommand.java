@@ -60,6 +60,9 @@ public class WLCommand implements Serializable{
 	
 	private static final long serialVersionUID = 1L;
 
+	//word that would trigger this WLCommand
+	private String triggerWord;
+	
 	//bucket to keep track of components needed in this command
 	private ListMultimap<WLCommandComponent, Struct> commandsMap;  // e.g. element
 	
@@ -148,6 +151,13 @@ public class WLCommand implements Serializable{
 	 */
 	public Map<Integer, Integer> getOptionalTermsGroupCountMap() {
 		return optionalTermsGroupCountMap;
+	}
+
+	/**
+	 * @return the triggerWord
+	 */
+	public String getTriggerWord() {
+		return triggerWord;
 	}
 
 	/**
@@ -241,11 +251,12 @@ public class WLCommand implements Serializable{
 		 * @param optionalTermsMap Immutable. Could be null.
 		 * @return
 		 */
-		private ImmutableWLCommand(Map<WLCommandComponent, Integer> commandsCountMap, 
+		private ImmutableWLCommand(String triggerWord, Map<WLCommandComponent, Integer> commandsCountMap, 
 				List<PosTerm> posList, int componentCount, int triggerWordIndex,
 				int optionalTermsCount, Map<Integer, Integer> optionalTermsMap){
 			
 			//use setters instead!?
+			super.triggerWord = triggerWord;
 			super.commandsMap = ArrayListMultimap.create();	
 			super.commandsCountMap = commandsCountMap;		
 			super.posTermList = posList;
@@ -265,6 +276,7 @@ public class WLCommand implements Serializable{
 		 */
 		public static class Builder{
 			//should be ok without modifiers , thus package-private
+			String triggerWord;
 			Map<WLCommandComponent, Integer> commandsCountMap; 
 			ImmutableList<PosTerm> posTermList; 
 			
@@ -278,10 +290,11 @@ public class WLCommand implements Serializable{
 			ImmutableMap<Integer, Integer> optionalTermsMap;
 			ImmutableMap<Integer, Integer> optionalTermsGroupCountMap;
 			
-			public Builder(Map<WLCommandComponent, Integer> commandsCountMap, 
+			public Builder(String triggerWord, Map<WLCommandComponent, Integer> commandsCountMap, 
 					ImmutableList<PosTerm> posList, int componentCount, int triggerWordIndex,
 					int optionalTermsCount, ImmutableMap<Integer, Integer> optionalTermsMap){
 				
+				this.triggerWord = triggerWord;
 				this.commandsCountMap = commandsCountMap;		
 				this.posTermList = posList;
 				this.totalComponentCount = componentCount;				
@@ -291,7 +304,8 @@ public class WLCommand implements Serializable{
 			}
 			
 			public ImmutableWLCommand build(){
-				return new ImmutableWLCommand(commandsCountMap, posTermList, totalComponentCount, triggerWordIndex, 
+				return new ImmutableWLCommand(triggerWord, commandsCountMap, 
+						posTermList, totalComponentCount, triggerWordIndex, 
 						optionalTermsCount, optionalTermsGroupCountMap);				
 			}
 			

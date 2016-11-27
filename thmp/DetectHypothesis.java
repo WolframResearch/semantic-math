@@ -329,6 +329,9 @@ public class DetectHypothesis {
 			String sentence = contextStrAr[i];
 			if(isHypothesis(sentence)){	
 				System.out.println("isHypothesis! " + sentence);
+				
+				parseState.setCurParseStruct(null);
+				parseState.setHeadParseStruct(null);
 				parseInputVerbose(sentence, parseState);
 			}
 		}

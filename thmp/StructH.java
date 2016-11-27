@@ -315,10 +315,10 @@ public class StructH<H> extends Struct{
 			sb.append(possessivePrev.type());
 			//str += "possessivePrev: " + possessivePrev.type();
 		}
-		if(children.size() > 0){
+		/*if(children.size() > 0){
 			sb.append(" children: ");
 			sb.append(children);
-		}
+		}*/
 		//str+= " children.size(): ";
 		//str += children.size();
 		return sb.append(']').toString();
