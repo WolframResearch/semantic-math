@@ -2263,13 +2263,29 @@ public class ThmP1 {
 		//substituted with this segment's Structs.
 		//e.g. Let $F$ be a field, and $R$ a ring. But only if previous segment 
 		//generated a spanning parse and satisfied certain WLCommands.
-		else if(!isReparse    ){
+		else if(!isReparse && null != parseState.getHeadParseStruct()){
+			
+			//the headStruct is still from the parse of the previous parse segment,
+			//since there was no parse, and partial parses haven's happened yet.
+			Map<String, WLCommandWrapper> triggerWordsMap 
+				= parseState.getHeadParseStruct().getTriggerWordsMap();
+			
+			//See if desired trigger words are present.
+			//Since trigger words determine which conditional parse to use
+			//(should have an enum for conditionalParseType once more conditional parse
+			//methods are introduced). List to be extended.
+			
+			if( triggerWordsMap.containsKey("define") || triggerWordsMap.containsKey("let")){
 			
 			isReparse = true;
-			//negative side effects to parseState that should be discarded?
+			//negative side effects to parseState that should be discarded? <--side effects yet, 
+			//but don't think they are negative
 			parseState.setTokenList(ConditionalParse.superimposeStructList(parseState.getPrevTokenList(), 
 					parseState.getTokenList()));
 			parseState = parse(parseState, isReparse);
+			//throw new IllegalStateException(parseState.getTokenList().toString());
+			}
+			//throw new IllegalStateException(triggerWordsMap.toString());
 		}
 		// if again no full parse. Also add to parsedExpr List.
 		else {

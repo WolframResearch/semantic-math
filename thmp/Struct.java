@@ -338,8 +338,10 @@ public abstract class Struct implements Serializable{
 	 * e.g. "prime ideal of $R$" -- "of" is the relation String.
 	 * 
 	 */
-	public static class ChildRelation{
+	public static class ChildRelation implements Serializable{
 		
+		private static final long serialVersionUID = 1L;
+
 		String childRelation;
 		
 		public ChildRelation(String relation){

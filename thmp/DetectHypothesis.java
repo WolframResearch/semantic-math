@@ -39,7 +39,7 @@ public class DetectHypothesis {
 	
 	//also incorporate the separator pattern from WordForms!
 	//deliberately excluding "\\\\", "\\$"
-	private static final Pattern SYMBOL_SEPARATOR_PATTERN = Pattern.compile("-|'|\\+|\\s+");
+	private static final Pattern SYMBOL_SEPARATOR_PATTERN = Pattern.compile("-|'|\\+|\\s+|\\(|\\)");
 	
 	//contains ParsedExpressions, to be serialized to persistent storage
 	private static final List<ParsedExpression> parsedExpressionList = new ArrayList<ParsedExpression>();
@@ -81,14 +81,14 @@ public class DetectHypothesis {
 		public String getThmWithDefStr() {
 			return thmWithDefStr;
 		}
-
+		
 		/**
-		 * @return the thmSB
+		 * @return the theorem String.
 		 */
 		public String getThmStr() {
 			return thmStr;
 		}
-
+		
 		/**
 		 * @return the definitionList
 		 */
@@ -424,8 +424,10 @@ public class DetectHypothesis {
 		for(int i = 0; i < latexExprAr.length; i++){
 			
 			String possibleVar = latexExprAr[i];
-			
+			System.out.println("^^^$^%%% &^^^ possibleVar: "+ possibleVar);
+		
 			List<VariableDefinition> possibleVarDefList = variableNamesMMap.get(possibleVar);
+			System.out.println("^^^ variableNamesMMap: "+ variableNamesMMap);
 			//get the latest definition
 			int possibleVarDefListLen = possibleVarDefList.size();
 			if(possibleVarDefListLen > 0){
@@ -433,7 +435,7 @@ public class DetectHypothesis {
 				varDefList.add(latestVarDef);
 				//System.out.println("latestVarDef.getOriginalDefinitionStr() " + latestVarDef.getOriginalDefinitionStr());
 				thmWithDefSB.append(latestVarDef.getOriginalDefinitionStr()).append(" ");
-				
+				System.out.println("^^^ def: "+ latestVarDef.getOriginalDefinitionStr());
 			}
 			
 		}

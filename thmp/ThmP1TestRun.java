@@ -459,7 +459,9 @@ public class ThmP1TestRun {
 			st = "$R$-generating set of $M$ is also an $S$-generating set of $M$";
 			st = "define $F$ to be a field ";
 			//conditional parse, flat parsing, 
-			st = "define $F$ to be a field, ";
+			st = "define $F$ to be a field, $R$ a ring";
+			st = "We define $ \\ mathtt{Squares} \\ subset (\\ R^2)^4$ to be the set of all quadruples of vertices of squares in $ \\ R^2$ traversed in anticlockwise order ";
+			st = "function $f$ and $g$ are zero"; //<--make sure the and is parsed correctly!
 			
 			//st = "we define $F$ by the field";
 			//st = "there exists a ring map $R \\to S$ of finite presentation such that $T$ is the image of $\\Spec(S)$ in $\\Spec(R)$."; //<--too many parses!!

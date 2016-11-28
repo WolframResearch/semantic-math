@@ -44,6 +44,7 @@ public class ExtractMacros {
 		String line;
 		try {
 			while((line = texSrcFileBReader.readLine()) != null){
+				//what about newcommand?
 				if(!line.matches("\\\\def(?:.*)\\}$")) continue;
 				//Pattern pattern = Pattern.compile("\\\\def\\\\([^{]*)\\{(.*)(?!(\\}$))");
 				//either one from below works

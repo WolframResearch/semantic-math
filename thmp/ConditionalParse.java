@@ -12,7 +12,6 @@ import java.util.List;
  *
  */
 public class ConditionalParse {
-
 	
 	/**
 	 * 
@@ -33,24 +32,25 @@ public class ConditionalParse {
 		
 		//walk through list, and substitute as many Struct's in prevStructList 
 		//with Structs in curStructList as possible.
-		for(int i = 0; i < curStructList.size(); i++){
+		int prevStructListCount = 0;
+		curStructListLoop: for(int i = 0; i < curStructList.size(); i++){
 			//replace only StructH for now
 			Struct curStruct = curStructList.get(i);
 			
 			if(curStruct.isStructA() && !curStruct.type().equals("symb")){
-				i++;
 				continue;
 			}
 			
-			for(int j = 0; j < prevStructList.size(); j++){
+			for(int j = prevStructListCount; j < prevStructList.size(); j++){
+				
 				Struct prevStruct = prevStructList.get(j);
-				if(prevStruct.isStructA() && !curStruct.type().equals("symb")){
-					j++;
+				if(prevStruct.isStructA() && !prevStruct.type().equals("symb")){					
 					continue;					
 				}else{
 					prevStructList.set(j, curStruct);
-				}
-				
+					prevStructListCount = j + 1;
+					continue curStructListLoop;
+				}				
 			}			
 		}
 		return prevStructList;

@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -34,10 +35,21 @@ public class ParseStruct implements Serializable{
 	//structs on this layer of the tree.
 	private Multimap<ParseStructType, WLCommandWrapper> wrapperMMap;
 	
+	//keep track of the trigger words that appear in WLCommands 
+	//in WLCommandWrappers in the wrapperMMap. Created at construction.
+	private Map<String, WLCommandWrapper> triggerWordsMap;
+	
 	//whether this ParseStruct is currently in hypothetical mode, don't create 
 	//sub ParseStruct's once in hyp mode.
 	//private boolean inHyp;
 	
+	/**
+	 * @return the triggerWordsMMap
+	 */
+	public Map<String, WLCommandWrapper> getTriggerWordsMap() {
+		return triggerWordsMap;
+	}
+
 	String WLCommandStr;
 	
 	/**
@@ -47,27 +59,25 @@ public class ParseStruct implements Serializable{
 	public Multimap<ParseStructType, WLCommandWrapper> getWLCommandWrapperMMap() {
 		return wrapperMMap;
 	}
-
-	/*public boolean inHyp(){
-		return inHyp;
-	}
-	
-	public void setInHyp(boolean inHyp){
-		this.inHyp = inHyp;
-	}*/
 	
 	/**
-	 * Adds additional struct to the structList.
+	 * Adds additional struct to the wrapperMMap (for this layer of ParseStruct tree).
 	 */
 	public void addParseStructWrapper(ParseStructType type, WLCommandWrapper wrapper) {
+		//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
+		//keep track of trigger words for this layer
+		triggerWordsMap.put(wrapper.WLCommand().getTriggerWord(), wrapper);
 		this.wrapperMMap.put(type, wrapper);
 	}
 	
 	/**
-	 * Adds additional wrappers to the wrapperMMap.
+	 * Adds additional wrappers to the wrapperMMap (for this layer).
 	 */
 	public void addParseStructWrapper(Multimap<ParseStructType, WLCommandWrapper> map) {
-		
+		//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
+		for(WLCommandWrapper wrapper : map.values()){
+			triggerWordsMap.put(wrapper.WLCommand().getTriggerWord(), wrapper);
+		}		
 		this.wrapperMMap.putAll(map);
 	}
 	
@@ -92,6 +102,7 @@ public class ParseStruct implements Serializable{
 		//this.componentType = type;
 		this.childrenParseStructList = new ArrayList<ParseStruct>();
 		this.wrapperMMap = ArrayListMultimap.create();
+		this.triggerWordsMap = new HashMap<String, WLCommandWrapper>();
 		//this.wrapperMMap.put(type, headStruct);		
 		//how about just point to the same tree?
 		//this.map = ArrayListMultimap.create(subParseTree);
@@ -143,9 +154,9 @@ public class ParseStruct implements Serializable{
 		//recursively call toString
 		for(ParseStruct childParseStruct : childrenParseStructList){
 			if(i > 1){
-				sb.append("CHILD {" + childParseStruct + "};");
+				sb.append("{").append(childParseStruct).append("};");
 			}else{
-				sb.append("CHILD {" + childParseStruct + "}");
+				sb.append("{").append(childParseStruct).append("}");
 			}
 			i--;
 			//throw new IllegalStateException(entry.getValue().toString());

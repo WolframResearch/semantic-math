@@ -62,10 +62,16 @@ public class ParseState {
 	//pattern for matching latex expressions wrapped in dollars
 	private static final Pattern LATEX_DOLLARS_PATTERN = Pattern.compile("^\\$([^$]+)\\$$");
 	
+	//contains both text and latex e.g. "winding number $W_{ii'} (y)$"
+	private static final Pattern TEXT_LATEX_PATTERN = Pattern.compile("^[^$]+\\$([^$]+)\\$.*$");
+	
+	//contains both text and latex e.g. "winding number $W_{ii'} (y)$"
+	private static final Pattern COLON_PATTERN = Pattern.compile("([^:=\\s]+)\\s*[:=].*");
+		
 	/* 
 	 * Multimap of what each symbol stands for in the text so far.
 	 * Make clear it's ListMultimap, since symbol order matters.
-	 * Keys are variable Strings, and values are   that contain
+	 * Keys are variable Strings, and values   that contain
 	 * Structs, and the input sentence that defines it.
 	 * When storing a definition such as "$f: X\to Y$", also store variable
 	 * name before the colon, i.e. "f"
@@ -205,11 +211,38 @@ public class ParseState {
 	public void addLocalVariableStructPair(String name, Struct entStruct){
 		
 		Matcher latexContentMatcher = LATEX_DOLLARS_PATTERN.matcher(name);
+		Matcher textLatexMatcher;
+		//System.out.println("adding name: " +name +Arrays.toString(Thread.currentThread().getStackTrace()));
+		
 		if(latexContentMatcher.find()){
 			name = latexContentMatcher.group(1);
+			//if colon/equal sign present, record
+			//the expression before colon or equal. E.g. "f(x) = x", as well 
+			//as the entire expression
+			Matcher m = COLON_PATTERN.matcher(name);
+			
+			if(m.find()){
+				String latexName = m.group(1);
+				VariableDefinition latexDef = new VariableDefinition(latexName, entStruct, this.currentInputStr);
+				if(!variableNamesMMap.containsKey(latexName)){
+					this.variableNamesMMap.put(latexName, latexDef);
+				}
+			}
+		}//if name contains text and latex, e.g. "winding number $W_{ii'} (y)$"
+		//create a separate entry with just the latex part.
+		else if( (textLatexMatcher = TEXT_LATEX_PATTERN.matcher(name)).find() ){
+			
+			String latexName = textLatexMatcher.group(1);
+			VariableDefinition latexDef = new VariableDefinition(latexName, entStruct, this.currentInputStr);
+			if(!variableNamesMMap.containsKey(latexName)){
+				this.variableNamesMMap.put(latexName, latexDef);
+			}
 		}
+		
 		VariableDefinition def = new VariableDefinition(name, entStruct, this.currentInputStr);		
-		this.variableNamesMMap.put(name, def);		
+		if(!variableNamesMMap.containsKey(name)){
+			this.variableNamesMMap.put(name, def);	
+		}
 	}
 	
 	/**
@@ -217,7 +250,7 @@ public class ParseState {
 	 * @param entStruct Entity to be added with name entStruct.
 	 * @return Return most recently-added Struct with this name.
 	 */
-	public Struct getNamedStruct(String name){		
+	public Struct getVariableDefinition(String name){		
 		
 		List<VariableDefinition> r = this.variableNamesMMap.get(name);
 		int listSz = r.size();
@@ -228,6 +261,7 @@ public class ParseState {
 		return r.get(listSz-1).getDefiningStruct();		
 	}
 	
+
 	/**
 	 * Get list of VariableDefinition's with specified name.
 	 * @param name

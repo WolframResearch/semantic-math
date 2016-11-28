@@ -761,8 +761,10 @@ public class WLCommand implements Serializable{
 	public static WLCommand createMutableWLCommandCopy(ImmutableWLCommand curCommand){	
 		
 		WLCommand newCommand = new WLCommand();
+		
 		//trivial cast so the compiler can see the private fields of the superclass (WLCommand)
 		//this trivial cast does not cost anything.
+		newCommand.triggerWord = ((WLCommand)curCommand).triggerWord;
 		newCommand.commandsMap = ArrayListMultimap.create(((WLCommand)curCommand).commandsMap);
 		
 		//commandsCountMap deliberately immutable, should not be modified during runtime
@@ -1129,7 +1131,7 @@ public class WLCommand implements Serializable{
 		
 		//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
 		if(DEBUG){
-			System.out.println("\n CUR COMMAND: " + curCommand + " ");
+			System.out.println("\n CUR COMMAND: trigger " +curCommand.getTriggerWord() + ". " + curCommand + " ");
 			System.out.print("BUILT COMMAND: " + commandSB);
 			System.out.println("HEAD STRUCT: " + structToAppendCommandStr);
 		}
