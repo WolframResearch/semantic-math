@@ -67,7 +67,13 @@ public class ParseState {
 	
 	//contains both text and latex e.g. "winding number $W_{ii'} (y)$"
 	private static final Pattern COLON_PATTERN = Pattern.compile("([^:=\\s]+)\\s*[:=].*");
-		
+	//private static final Pattern COLON_PATTERN = Pattern.compile("([.]+)\\s*[:=].*");	
+	//first group captures name, second the parenthesis/bracket/brace. E.g. "f[x]"
+	private static final Pattern VARIABLE_NAME_PATTERN = Pattern.compile("([^\\[\\{\\(]+)([\\[\\{\\(]).*");
+	
+	//Only make first part disposable if it's within certain length; e.g. K-algebra
+	private static final Pattern VARIABLE_NAME_DASH_PATTERN = Pattern.compile("([^-]+){1,2}[-].*");
+	
 	/* 
 	 * Multimap of what each symbol stands for in the text so far.
 	 * Make clear it's ListMultimap, since symbol order matters.
@@ -77,12 +83,115 @@ public class ParseState {
 	 * name before the colon, i.e. "f"
 	 * 
 	 */
-	private ListMultimap<String, VariableDefinition> variableNamesMMap;
+	private ListMultimap<VariableName, VariableDefinition> variableNamesMMap;
 	
 	//parsedExpr to record parsed pairs during parsing. 
 	private static List<ParsedPair> parsedExpr = new ArrayList<ParsedPair>();
 	
 	private static final Logger logger = LogManager.getLogger(ParseState.class);
+	
+	/**
+	 * Wrapper class around variable string name (Head), also records
+	 * the type, e.g. head is "f" and type is BRACKET for the variable "f[x]".
+	 */
+	public static class VariableName implements Serializable{
+		
+		private static final long serialVersionUID = 1L;
+		
+		private String head;
+		private VariableNameType variableNameType;
+		
+		/**
+		 * Enum to represent different types of variables.
+		 */
+		static enum VariableNameType{
+			PAREN("("), BRACKET("["), BRACE("{"), DASH("-"), NONE("");
+			
+			String stringForm;
+			
+			VariableNameType(String form){
+				this.stringForm = form;
+			}
+			
+			/**
+			 * Whether of type parenthesis, bracket, or brace.
+			 * @return
+			 */
+			boolean isParenBracketBrace(){
+				return this == PAREN || this == BRACKET || this == BRACE;
+			}
+			
+			static VariableNameType getVariableNameTypeFromString(String typeStr){
+				//switch should be as efficient as keeping an internal map,
+				//since this switch is dense.
+				switch(typeStr){
+				case "(":
+					return PAREN;
+				case "[":
+					return BRACKET;
+				case "{":
+					return BRACE;
+				case "-":
+					return DASH;
+				default:
+					return NONE;
+				}
+			}
+		}
+		
+		@Override
+		public String toString(){
+			return (new StringBuilder(this.head)).append(": ")
+					.append(this.variableNameType).toString();
+		}
+		
+		public VariableName(String head, VariableNameType type){
+			this.head = head;
+			this.variableNameType = type;
+		}
+
+		public String head(){
+			return this.head;
+		}
+		
+		public VariableNameType variableType(){
+			return this.variableNameType;
+		}
+		
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + ((head == null) ? 0 : head.hashCode());
+			result = prime * result + ((variableNameType == null) ? 0 : variableNameType.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object other){
+			
+			if(this == other){
+				return true;
+			}
+			
+			//don't need null == other, because null is not instanceof anything.
+			if(!(other instanceof VariableName)){
+				return false;
+			}
+			
+			VariableName otherName = (VariableName)other;
+			if(otherName.head() == null && null != this.head){
+				return false;
+			}
+			
+			if(otherName.variableNameType != this.variableNameType
+					|| !otherName.head.equals(this.head)){
+				return false;
+			}
+			return true;
+		}
+		
+	}
 	
 	/**
 	 * Contain information that define variables, whose names are stored in 
@@ -97,11 +206,12 @@ public class ParseState {
 		//is the defining Struct.
 		private Struct definingStruct;
 		
-		private String variableName;
+		private VariableName variableName;
 		
 		private String originalDefinitionSentence;
 
-		public VariableDefinition(String variableName, Struct definingStruct, String originalDefinitionStr){
+		public VariableDefinition(VariableName variableName, Struct definingStruct, String originalDefinitionStr){
+			this.variableName = variableName;
 			this.definingStruct = definingStruct;
 			this.originalDefinitionSentence = originalDefinitionStr;
 		}
@@ -111,10 +221,32 @@ public class ParseState {
 			return definingStruct.toString();
 		}
 		
+		@Override
+		public boolean equals(Object other){
+			
+			if(this == other){
+				return true;
+			}			
+			if(!(other instanceof VariableDefinition)){
+				return false;
+			}
+			VariableDefinition otherDef = (VariableDefinition)other;
+			
+			if(!otherDef.definingStruct.nameStr().equals(this.definingStruct.nameStr())){
+				return false;
+			}
+			
+			if(null == otherDef.variableName 
+					|| !otherDef.variableName.equals(this.variableName)){
+				return false;
+			}
+			return true;
+		}
+		
 		/**
 		 * @return the variableName
 		 */
-		public String getVariableName() {
+		public VariableName getVariableName() {
 			return variableName;
 		}
 		
@@ -182,9 +314,9 @@ public class ParseState {
 	 * Clears the map.
 	 * @return
 	 */
-	public ImmutableListMultimap<String, VariableDefinition> getAndClearVariableNamesMMap(){
+	public ImmutableListMultimap<VariableName, VariableDefinition> getAndClearVariableNamesMMap(){
 		//ListMultimap<String, VariableDefinition> tempMap = ArrayListMultimap.create(this.variableNamesMMap);
-		ImmutableListMultimap<String, VariableDefinition> tempMap = ImmutableListMultimap.copyOf(this.variableNamesMMap);
+		ImmutableListMultimap<VariableName, VariableDefinition> tempMap = ImmutableListMultimap.copyOf(this.variableNamesMMap);
 		this.variableNamesMMap = ArrayListMultimap.create();
 		return tempMap;
 	}
@@ -196,10 +328,10 @@ public class ParseState {
 	 * can only be modified through the exposed modification method.
 	 * @return
 	 */
-	public ImmutableListMultimap<String, VariableDefinition> getVariableNamesMMap(){
+	public ImmutableListMultimap<VariableName, VariableDefinition> getVariableNamesMMap(){
 		//defensively copy.
 		//ListMultimap<String, VariableDefinition> tempMap = ArrayListMultimap.create(this.variableNamesMMap);
-		ImmutableListMultimap<String, VariableDefinition> tempMap = ImmutableListMultimap.copyOf(this.variableNamesMMap);
+		ImmutableListMultimap<VariableName, VariableDefinition> tempMap = ImmutableListMultimap.copyOf(this.variableNamesMMap);
 		return tempMap;
 	}
 	
@@ -223,26 +355,70 @@ public class ParseState {
 			
 			if(m.find()){
 				String latexName = m.group(1);
-				VariableDefinition latexDef = new VariableDefinition(latexName, entStruct, this.currentInputStr);
-				if(!variableNamesMMap.containsKey(latexName)){
-					this.variableNamesMMap.put(latexName, latexDef);
+				//define a VariableName of the right type. 
+				VariableName latexVariableName = getVariableName(latexName);
+				VariableDefinition latexDef = new VariableDefinition(latexVariableName, entStruct, this.currentInputStr);
+				
+				if(!variableNamesMMap.containsEntry(latexVariableName, latexDef)){				
+					this.variableNamesMMap.put(latexVariableName, latexDef);
+					
+					//if variableNameType is paren/brace/bracket, also include name without 
+					//the paren/brace/bracket in the map, e.g. $f(x) = x$, $f$ is smooth.
+					//nest inside so not to check for containment again.
+					if(latexVariableName.variableType().isParenBracketBrace()){
+						latexVariableName = new VariableName(latexVariableName.head, VariableName.VariableNameType.NONE);
+						this.variableNamesMMap.put(latexVariableName, latexDef);
+					}
 				}
+				
 			}
 		}//if name contains text and latex, e.g. "winding number $W_{ii'} (y)$"
 		//create a separate entry with just the latex part.
 		else if( (textLatexMatcher = TEXT_LATEX_PATTERN.matcher(name)).find() ){
 			
 			String latexName = textLatexMatcher.group(1);
-			VariableDefinition latexDef = new VariableDefinition(latexName, entStruct, this.currentInputStr);
-			if(!variableNamesMMap.containsKey(latexName)){
-				this.variableNamesMMap.put(latexName, latexDef);
+			VariableName latexVariableName = getVariableName(latexName);
+			
+			if(!variableNamesMMap.containsKey(latexVariableName)){
+				VariableDefinition latexDef = new VariableDefinition(latexVariableName, entStruct, this.currentInputStr);
+				this.variableNamesMMap.put(latexVariableName, latexDef);
 			}
 		}
 		
-		VariableDefinition def = new VariableDefinition(name, entStruct, this.currentInputStr);		
-		if(!variableNamesMMap.containsKey(name)){
-			this.variableNamesMMap.put(name, def);	
+		VariableName variableName = getVariableName(name);
+		if(!variableNamesMMap.containsKey(variableName)){
+			VariableDefinition def = new VariableDefinition(variableName, entStruct, this.currentInputStr);	
+			this.variableNamesMMap.put(variableName, def);	
 		}
+	}
+	
+	/**
+	 * Creates a VariableName instance of the appropriate type,
+	 * based on name.
+	 * @param name Should not contain $ $ around it.
+	 * @return
+	 */
+	public static VariableName getVariableName(String name){
+		
+		VariableName.VariableNameType variableNameType = VariableName.VariableNameType.NONE;
+		//figure out the VariableNameType
+		Matcher parenMatcher = VARIABLE_NAME_PATTERN.matcher(name);
+		Matcher dashMatcher;
+		
+		if(parenMatcher.find()){
+			
+			name = parenMatcher.group(1);
+			variableNameType = VariableName.VariableNameType
+					.getVariableNameTypeFromString(parenMatcher.group(2));
+			//throw new IllegalStateException(variableNameType + " " + name);
+		}else if((dashMatcher = VARIABLE_NAME_DASH_PATTERN.matcher(name)).find()){
+			
+			name = dashMatcher.group(1);
+			variableNameType = VariableName.VariableNameType
+					.getVariableNameTypeFromString("-");
+		}
+		
+		return new VariableName(name, variableNameType);
 	}
 	
 	/**
@@ -250,9 +426,10 @@ public class ParseState {
 	 * @param entStruct Entity to be added with name entStruct.
 	 * @return Return most recently-added Struct with this name.
 	 */
-	public Struct getVariableDefinition(String name){		
+	public Struct getVariableDefinition(String name){	
 		
-		List<VariableDefinition> r = this.variableNamesMMap.get(name);
+		VariableName variableName = getVariableName(name);
+		List<VariableDefinition> r = this.variableNamesMMap.get(variableName);
 		int listSz = r.size();
 		
 		if(r.isEmpty()){
@@ -269,7 +446,8 @@ public class ParseState {
 	 */
 	public List<VariableDefinition> getNamedStructList(String name){		
 		
-		return this.variableNamesMMap.get(name);			
+		VariableName variableName = getVariableName(name);
+		return this.variableNamesMMap.get(variableName);			
 	}
 	
 	/**

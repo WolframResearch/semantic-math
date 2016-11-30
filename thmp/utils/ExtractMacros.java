@@ -16,6 +16,14 @@ import java.util.regex.Pattern;
  */
 public class ExtractMacros {
 	
+	//defining macros using \def\newSymbol{definition}, e.g. \def\lim{\mathop{\rm lim}\nolimits}
+	private static final Pattern DEF_PATTERN = Pattern.compile("\\\\def\\\\([^{]*)\\{(.*)(?=\\}$)");
+	private static final Pattern DEF_SHORT_PATTERN = Pattern.compile("\\\\def(?:.*)\\}$");
+	
+	//defining macros using \newcommand{..., i.e. \newcommand{name}[num]{definition}
+	//why the positive lookahead at the end?
+	private static final Pattern NEWCOMMAND_PATTERN = Pattern.compile("\\\\newcommand\\{([^}]+)\\}\\[(?:[^{]+)\\{(.*)(?=\\})$");
+	
 	/*public static Map<String, String> extractDefs(){
 		//read in from file
 				//FileInputStream texSrcStream = new FileInputStream(TEX_SRC);
@@ -45,12 +53,11 @@ public class ExtractMacros {
 		try {
 			while((line = texSrcFileBReader.readLine()) != null){
 				//what about newcommand?
-				if(!line.matches("\\\\def(?:.*)\\}$")) continue;
+				if(!DEF_SHORT_PATTERN.matcher(line).find()) continue;
 				//Pattern pattern = Pattern.compile("\\\\def\\\\([^{]*)\\{(.*)(?!(\\}$))");
-				//either one from below works
-				Pattern pattern = Pattern.compile("\\\\def\\\\([^{]*)\\{(.*)(?=\\}$)"); 
+				//either one from below works				 
 				//Pattern pattern = Pattern.compile("\\\\def\\\\([^{]*)\\{(.*)[^(\\}$)]");
-				Matcher matcher = pattern.matcher(line);
+				Matcher matcher = DEF_PATTERN.matcher(line);
 				if(matcher.find()){
 					String command = matcher.group(1);
 					String val = matcher.group(2);

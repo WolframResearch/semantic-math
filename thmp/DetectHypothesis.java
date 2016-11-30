@@ -21,6 +21,7 @@ import com.google.common.collect.Multimap;
 import thmp.DetectHypothesis.DefinitionListWithThm;
 import thmp.ParseState.ParseStateBuilder;
 import thmp.ParseState.VariableDefinition;
+import thmp.ParseState.VariableName;
 import thmp.ThmP1.ParsedPair;
 import thmp.utils.WordForms;
 
@@ -39,7 +40,10 @@ public class DetectHypothesis {
 	
 	//also incorporate the separator pattern from WordForms!
 	//deliberately excluding "\\\\", "\\$"
-	private static final Pattern SYMBOL_SEPARATOR_PATTERN = Pattern.compile("-|'|\\+|\\s+|\\(|\\)");
+	//Positive look behind, split on empty space preceded by bracket/paren/brace, preceded by non-empty-space
+	private static final Pattern SYMBOL_SEPARATOR_PATTERN = Pattern.compile("-|'|\\+|\\s+|(?:(?:)?<=(?:[^\\s](?:[\\(\\[\\{])))|\\)|\\]\\}");
+	
+	private static final Pattern BRACKET_SEPARATOR_PATTERN = Pattern.compile("([^\\(\\[\\{]+)[\\(\\[\\{].*");
 	
 	//contains ParsedExpressions, to be serialized to persistent storage
 	private static final List<ParsedExpression> parsedExpressionList = new ArrayList<ParsedExpression>();
@@ -323,6 +327,7 @@ public class DetectHypothesis {
 	 */
 	private static void detectAndParseHypothesis(String contextStr, ParseState parseState){
 		
+		//split on punctuations precede a space, but keep the punctuation.
 		String[] contextStrAr = PUNCTUATION_PATTERN.split(contextStr);
 		
 		for(int i = 0; i < contextStrAr.length; i++){
@@ -346,7 +351,7 @@ public class DetectHypothesis {
 	 */
 	private static DefinitionListWithThm appendHypothesesAndParseThm(String thmStr, ParseState parseState){
 		
-		ListMultimap<String, VariableDefinition> variableNamesMMap = parseState.getVariableNamesMMap();
+		ListMultimap<VariableName, VariableDefinition> variableNamesMMap = parseState.getVariableNamesMMap();
 		//String thmStr = thmSB.toString();
 		StringBuilder thmWithDefSB = new StringBuilder();		
 		StringBuilder latexExpr = new StringBuilder();
@@ -412,7 +417,7 @@ public class DetectHypothesis {
 	 * to the definition strings.
 	 */
 	private static List<VariableDefinition> pickOutVariables(String latexExpr, 
-			ListMultimap<String, VariableDefinition> variableNamesMMap,
+			ListMultimap<VariableName, VariableDefinition> variableNamesMMap,
 			StringBuilder thmWithDefSB){
 		
 		//list of definitions needed in this latexExpr
@@ -424,18 +429,32 @@ public class DetectHypothesis {
 		for(int i = 0; i < latexExprAr.length; i++){
 			
 			String possibleVar = latexExprAr[i];
-			System.out.println("^^^$^%%% &^^^ possibleVar: "+ possibleVar);
-		
-			List<VariableDefinition> possibleVarDefList = variableNamesMMap.get(possibleVar);
+			//System.out.println("^^^$^%%% &^^^ possibleVar: "+ possibleVar);
+			
+			VariableName possibleVariableName = ParseState.getVariableName(possibleVar);
+			List<VariableDefinition> possibleVarDefList = variableNamesMMap.get(possibleVariableName);
+			
 			System.out.println("^^^ variableNamesMMap: "+ variableNamesMMap);
+			//System.out.println("^^^^^^^PossibleVar: " + possibleVar);
 			//get the latest definition
 			int possibleVarDefListLen = possibleVarDefList.size();
+			//if empty, check to see if bracket pattern, if so, check just the name without the brackets.
+			//e.g. x in x(yz)
+			if(0 == possibleVarDefListLen){
+				Matcher m = BRACKET_SEPARATOR_PATTERN.matcher(possibleVar);
+				if(m.find()){
+					possibleVariableName = ParseState.getVariableName(m.group(1));
+					possibleVarDefList = variableNamesMMap.get(possibleVariableName);
+					possibleVarDefListLen = possibleVarDefList.size();
+					
+				}
+			}
+			
 			if(possibleVarDefListLen > 0){
 				VariableDefinition latestVarDef = possibleVarDefList.get(possibleVarDefListLen-1);
 				varDefList.add(latestVarDef);
 				//System.out.println("latestVarDef.getOriginalDefinitionStr() " + latestVarDef.getOriginalDefinitionStr());
 				thmWithDefSB.append(latestVarDef.getOriginalDefinitionStr()).append(" ");
-				System.out.println("^^^ def: "+ latestVarDef.getOriginalDefinitionStr());
 			}
 			
 		}

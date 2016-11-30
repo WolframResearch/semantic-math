@@ -126,6 +126,7 @@ public class ThmP1 {
 	private static final int MIN_PARSE_ITERATED_COUNT = 3;
 	//private static final String DASH_ENT_STRING = null;
 	private static final Pattern DASH_ENT_PATTERN = Pattern.compile("\\$[^$]+\\$[^-\\s]*-[^\\s]*");
+	private static final int REPARSE_UPPER_SIZE_LIMIT = 6;
 	
 	//private static int[] parseContextVector;
 	//private static int parseContextVectorSz;
@@ -2263,7 +2264,9 @@ public class ThmP1 {
 		//substituted with this segment's Structs.
 		//e.g. Let $F$ be a field, and $R$ a ring. But only if previous segment 
 		//generated a spanning parse and satisfied certain WLCommands.
-		else if(!isReparse && null != parseState.getHeadParseStruct()){
+		//and current structlist is not too long
+		else if(!isReparse && null != parseState.getHeadParseStruct()
+				&& parseState.getTokenList().size() < REPARSE_UPPER_SIZE_LIMIT){
 			
 			//the headStruct is still from the parse of the previous parse segment,
 			//since there was no parse, and partial parses haven's happened yet.

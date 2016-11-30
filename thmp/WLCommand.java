@@ -1511,11 +1511,11 @@ public class WLCommand implements Serializable{
 		
 		Struct structToAdd = struct;
 		Struct structParent = struct.parentStruct();
-		boolean print = false;
+		/*boolean print = false;
 		if(!structToAdd.isStructA()){
 			print = true;
 			System.out.println("**************************** before: " + structToAdd);
-		}
+		}*/
 		
 		while(structParent != null){
 			//System.out.println("***@@*@@*@@*****parent: " + structParent );
@@ -1550,6 +1550,7 @@ public class WLCommand implements Serializable{
 				
 			}//super hacky, find a better way!! By setting the parent, couldn't set for some reason this time
 			// <--Nov 2016. All ents such that ent's could skip two generations, i.e. be grandparent of ent.
+			//commented out Nov 2016.
 			/*else if( (structParent.type().equals("prep") || structParent.type().equals("phrase"))
 					//&& !structParent.childRelationType().equals(ChildRelationType.OTHER) 
 					&& componentPosPattern.matcher("ent").find()
@@ -1583,9 +1584,9 @@ public class WLCommand implements Serializable{
 				break;
 			}
 		}
-		if(print){
+		/*if(print){
 			System.out.println("**************************** after: " + structToAdd);
-		}
+		}*/
 		return structToAdd;
 	}
 	
