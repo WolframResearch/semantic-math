@@ -641,13 +641,10 @@ public class ThmP1 {
 								if(pos.matches("ent")) mathIndexList.add(pairs.size() - 1);
 							}
 							
-							i += numWordsDown - 1;
-							
+							i += numWordsDown - 1;							
 							continue strloop;
 						}
-
 					}
-
 				}				
 				int newIndex = gatherTwoThreeGram(i, strAr, pairs, mathIndexList);
 				//a two or three gram was picked up
@@ -741,8 +738,7 @@ public class ThmP1 {
 								fuseEnt = true;
 							}
 						}						
-					}
-					
+					}					
 					
 					if(fuseEnt){
 						pairs.get(pairsSize - 1).set_word(pairs.get(pairsSize - 1).word() + " " + curWord);
@@ -942,16 +938,23 @@ public class ThmP1 {
 				else if (pairsSize > 0) {
 					Pair prevPair = pairs.get(pairsSize - 1);
 					if(IS_ARE_BE_PATTERN.matcher(prevPair.word()).find()){
-						//if next word is a preposition
-						if(strAr.length > i + 1 && !posMMap.get(strAr[i+1]).isEmpty() && 
-								posMMap.get(strAr[i+1]).get(0).equals("pre")){
-							curWord = pairs.get(pairsSize - 1).word() + " " + curWord;
-							pairs.remove(pairsSize - 1);
-							
-							curPos = "auxpass";
-						}
-						//otherwise likely used as adjective, e.g. "is connected"
-						else {
+						//if next word is a preposition, e.g. "is named by"
+						if(strAr.length > i + 1 && !posMMap.get(strAr[i+1]).isEmpty()){
+							String nextPos = posMMap.get(strAr[i+1]).get(0);
+						
+							if(nextPos.equals("pre")){
+								curWord = pairs.get(pairsSize - 1).word() + " " + curWord;
+								pairs.remove(pairsSize - 1);
+								
+								curPos = "auxpass";
+							}
+							//otherwise likely used as adjective, e.g. "is connected"
+							//<--but can't really distinguish from "is called".
+							else if(nextPos.equals("if_COMP") || nextPos.equals("if")){
+								curPos = "adj";
+								//throw new IllegalStateException(nextPos);
+							}
+						}else if(i == strAr.length - 1){
 							curPos = "adj";
 						}
 					}
@@ -959,16 +962,14 @@ public class ThmP1 {
 					//at this point.
 					else if(prevPair.pos().equals("adj")){
 						curPos = "adj";
+					}// if previous word is adj, "finitely presented"
+					else if (prevPair.pos().equals("adverb")) {
+
+						curWord = pairs.get(pairsSize - 1).word() + " " + curWord;
+						pairs.remove(pairsSize - 1);
+						curPos = "adj";
 					}
-				}
-				// if previous word is adj, "finitely presented"
-				else if (pairsSize > 0 && pairs.get(pairsSize - 1).pos().equals("adverb")) {
-
-					curWord = pairs.get(pairsSize - 1).word() + " " + curWord;
-					pairs.remove(pairsSize - 1);
-
-					curPos = "adj";
-				}
+				}				
 				// if next word is entity, then adj
 				else if (strAr.length > i + 1 && posMMap.containsKey(strAr[i+1]) && 
 						posMMap.get(strAr[i+1]).get(0).equals("ent")) {
@@ -1585,6 +1586,20 @@ public class ThmP1 {
 
 	public static ParseState parse(ParseState parseState) {
 		return parse(parseState, false);
+	}
+	
+	/**
+	 * Counts total num units contained in all structs in list.
+	 * @param structList
+	 * @return
+	 */
+	private static int totalNumUnitsInStructList(List<Struct> structList){
+		int totalNumUnits = 0;
+		
+		for(int i = 0; i < structList.size(); i++){
+			totalNumUnits += structList.get(i).numUnits();
+		}
+		return totalNumUnits;
 	}
 	
 	/**
@@ -2231,7 +2246,6 @@ public class ThmP1 {
 				
 				System.out.println("+++Previous long parse: " + parsedSB);
 				
-				
 				//defer these additions to orderPairsAndPutToLists()
 				//parsedExpr.add(new ParsedPair(wlSB.toString(), maxDownPathScore, "short"));		
 				//System.out.println("*******SHORT FORM: " + wlSB);
@@ -2291,7 +2305,7 @@ public class ThmP1 {
 			//throw new IllegalStateException(triggerWordsMap.toString());
 		}
 		// if again no full parse. Also add to parsedExpr List.
-		else {
+		else if(!isReparse || totalNumUnitsInStructList(inputStructList) > 2){
 			List<StructList> parsedStructList = new ArrayList<StructList>();
 
 			int i = 0, j = len - 1;
@@ -2307,10 +2321,10 @@ public class ThmP1 {
 
 				StructList tempStructList = mx.get(i).get(j);
 
-				// if not null or fluff.
-				// What kind of fluff can trickle down here??
-				// for the check !tempStruct.type().equals(FLUFF)
 				if (tempStructList.size() > 0) {
+					if(i == j){
+						tempStructList.setIsDiagonalElementInMx(true);
+					}
 					parsedStructList.add(0, tempStructList);
 				}
 				// a singleton on the diagonal <--not necessarily true any more
@@ -2322,11 +2336,34 @@ public class ThmP1 {
 			}
 
 			// if not full parse, try to make into full parse by fishing out the
-			// essential sentence structure, and discarding the phrases still
-			// not
-			// labeled after 2nd round
-			// parse2(parsedStructList);
-
+			// essential sentence structure, and discarding the singletons, i.e.
+			//ones that did not form into any grammar rules in previous round.
+			//recursively call this, discard bigger and bigger components, that are
+			//the smallest in each round.			
+			
+				//form new structList
+				List<Struct> structList = new ArrayList<Struct>();
+				for(int k = 0; k < parsedStructList.size(); k++){
+					StructList structList_i = parsedStructList.get(k);
+					if(structList_i.getIsDiagonalElementInMx()
+							//or is essential, e.g. ent, verb, symb
+							&& !structList_i.get(0).type().matches("ent|conj_ent|verb|vbs|if|symb|pro") //|pro|symb|if|hyp 
+							){ 
+						continue;					
+					}
+					//get something other than 0th??
+					structList.add(structList_i.get(0));
+					
+				}
+				parseState.setTokenList(structList);
+				
+				System.out.println("=___+++++++++_========= structList: " + structList);
+				
+				boolean isReparseAgain = true;
+				parseState = parse(parseState, isReparseAgain);
+			
+			if(!parseState.isRecentParseSpanning() && !isReparse){
+			
 			// print out the components
 			int parsedStructListSize = parsedStructList.size();
 			//String totalParsedString = "";
@@ -2377,7 +2414,7 @@ public class ThmP1 {
 			
 			System.out.println("%%%%%\n");
 		}
-		
+		}
 		// print out scores
 		/*
 		 * StructList headStructList = mx.get(0).get(len-1); int
@@ -2393,6 +2430,11 @@ public class ThmP1 {
 		 * parse before WL and just parse to WL for that particular parse!
 		 */
 		parseState.setRecentEnt(recentEnt);
+		if(headStructListSz > 0){
+			parseState.setRecentParseSpanning(true);
+		}else{
+			parseState.setRecentParseSpanning(false);
+		}
 		return parseState;
 	}
 
@@ -2970,9 +3012,10 @@ public class ThmP1 {
 			}
 		}else if(newType.equals("fuse")){	
 			//fuse ent's, e.g. "integer linear combination"
-			if(type1.equals("ent") && type2.equals("ent")){
+			if(!struct1.isStructA() && !struct2.isStructA()){
 				//first struct cannot have collected children for this
 				//rule to be meaningful
+				System.out.println("struct1 " + struct1);
 				if(!struct1.children().isEmpty()){
 					return null;
 				}
@@ -3062,7 +3105,8 @@ public class ThmP1 {
 		else if (newType.equals("noun")) {
 			if (type1.equals("adj") && type2.equals("noun")) {
 				// combine adj and noun
-				String adj = (String) struct1.prev1();
+				System.out.println("struct1 " + struct1);
+				String adj = struct1.prev1().toString();
 				struct2.set_prev1(adj + " " + struct2.prev1());
 				struct2.set_maxDownPathScore(struct2.maxDownPathScore() * newScore);
 				// mx.get(i).set(j, struct2);
@@ -3307,7 +3351,7 @@ public class ThmP1 {
 	 *            the head, at mx position (len-1, len-1)
 	 * @return
 	 */
-	public static int ArrayDFS(StructList structList) {
+	private static int ArrayDFS(StructList structList) {
 		// ArrayList<MatrixPathNode> mxPathNodeList = new
 		// ArrayList<MatrixPathNode>();
 		// fill in the list of MatrixPathNode's from structList
@@ -3353,7 +3397,7 @@ public class ThmP1 {
 	 * @return score
 	 */
 	// combine iteration of arraylist and recursion
-	public static double ArrayDFS(MatrixPathNode mxPathNode) {
+	private static double ArrayDFS(MatrixPathNode mxPathNode) {
 
 		Struct mxPathNodeStruct = mxPathNode.curStruct();
 		StructList structList = mxPathNodeStruct.get_StructList();

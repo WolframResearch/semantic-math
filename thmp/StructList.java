@@ -23,6 +23,8 @@ public class StructList implements Serializable{
 	//the different MatrixPathNode's
 	private int highestDownScoreIndex;
 	
+	private boolean isDiagonalElementInMx;
+	
 	private List<Struct> structList;	
 	
 	public StructList(){
@@ -30,9 +32,28 @@ public class StructList implements Serializable{
 		this.highestDownScoreIndex = -1;
 	}
 	
+	/**
+	 * @return the isDiagonalElementInMx
+	 */
+	public boolean getIsDiagonalElementInMx() {
+		return isDiagonalElementInMx;
+	}
+
+	/**
+	 * @param isDiagonalElementInMx the isDiagonalElementInMx to set
+	 */
+	public void setIsDiagonalElementInMx(boolean isDiagonalElementInMx) {
+		this.isDiagonalElementInMx = isDiagonalElementInMx;
+	}
+
+
 	public List<Struct> structList(){
 		return this.structList;
-	}	
+	}
+	
+	public Struct get(int i){
+		return this.structList.get(i);
+	}
 	
 	/**
 	 * Shallow copy of this.structList, as structList is a list

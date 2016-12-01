@@ -567,17 +567,6 @@ public class Maps {
 			// structMap = new HashMap<String, String>();
 			// structMap = new HashMap<String, Rule>();
 			
-			// structMap.put("for all", "forall");
-
-			// "is" implies assertion <--remove this case, "is" should be
-			// interpreted as verb
-			structMap.put("is_symb", new Rule("is", 1));
-			structMap.put("is_int", new Rule("is", 1));
-			structMap.put("is_ent", new Rule("is", 1));
-			structMap.put("is_or", new Rule("is", 1));
-			structMap.put("ent_is", new Rule("assert", 1));
-			structMap.put("symb_is", new Rule("assert", 1));
-			//structMap.put("if_assert", new Rule("ifstate", 1));
 			structMap.put("iff_assert", new Rule("Iff", 1));
 			structMap.put("if_hypo", new Rule("If", 1));
 			structMap.put("then_assert", new Rule("Then", 1));
@@ -799,7 +788,7 @@ public class Maps {
 																	// member to
 																	// Struct.struct
 
-			structMap.put("adverb_adj", new Rule("adj", 1)); /// *******
+			//structMap.put("adverb_adj", new Rule("adj", .7)); /// *******
 			structMap.put("adverb_verbphrase", new Rule("assert", 1));
 
 			// grammar rules for 2nd run <-- not used!

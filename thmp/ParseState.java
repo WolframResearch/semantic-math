@@ -36,7 +36,10 @@ public class ParseState {
 	
 	//recent assert
 	private Struct recentAssert;
-
+	
+	//whether the last parse spans or not
+	private boolean recentParseSpanning;
+	
 	//tokenized input list
 	private List<Struct> tokenList;
 	
@@ -66,7 +69,9 @@ public class ParseState {
 	private static final Pattern TEXT_LATEX_PATTERN = Pattern.compile("^[^$]+\\$([^$]+)\\$.*$");
 	
 	//contains both text and latex e.g. "winding number $W_{ii'} (y)$"
-	private static final Pattern COLON_PATTERN = Pattern.compile("([^:=\\s]+)\\s*[:=].*");
+	//private static final Pattern COLON_PATTERN = Pattern.compile("([^:=\\s]+)\\s*[:=].*|(?([.]+)(\\subset)).*");
+		private static final Pattern COLON_PATTERN = Pattern.compile("([^:=\\s]+)\\s*[:=].*");
+	
 	//private static final Pattern COLON_PATTERN = Pattern.compile("([.]+)\\s*[:=].*");	
 	//first group captures name, second the parenthesis/bracket/brace. E.g. "f[x]"
 	private static final Pattern VARIABLE_NAME_PATTERN = Pattern.compile("([^\\[\\{\\(]+)([\\[\\{\\(]).*");
@@ -287,6 +292,20 @@ public class ParseState {
 	}
 	
 	/**
+	 * @return the recentParseSpanning
+	 */
+	public boolean isRecentParseSpanning() {
+		return recentParseSpanning;
+	}
+
+	/**
+	 * @param recentParseSpanning the recentParseSpanning to set
+	 */
+	public void setRecentParseSpanning(boolean recentParseSpanning) {
+		this.recentParseSpanning = recentParseSpanning;
+	}
+
+	/**
 	 * Build ParseState using builder, to avoid occurrences of half-baked states,
 	 * and to avoid .
 	 */
@@ -351,10 +370,10 @@ public class ParseState {
 			//if colon/equal sign present, record
 			//the expression before colon or equal. E.g. "f(x) = x", as well 
 			//as the entire expression
-			Matcher m = COLON_PATTERN.matcher(name);
+			Matcher colonMatcher = COLON_PATTERN.matcher(name);
 			
-			if(m.find()){
-				String latexName = m.group(1);
+			if(colonMatcher.find()){
+				String latexName = colonMatcher.group(1);
 				//define a VariableName of the right type. 
 				VariableName latexVariableName = getVariableName(latexName);
 				VariableDefinition latexDef = new VariableDefinition(latexVariableName, entStruct, this.currentInputStr);

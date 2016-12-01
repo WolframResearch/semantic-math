@@ -2,6 +2,7 @@ package thmp;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -34,7 +35,8 @@ public class DetectHypothesis {
 	
 	//pattern matching is faster than calling str.contains() repeatedly 
 	//which is O(mn) time.
-	private static final Pattern HYP_PATTERN = Pattern.compile(".*assume.*|.*denote.*|.*define.*|.*let.*|.*is said.*|.*suppose.*") ;
+	private static final Pattern HYP_PATTERN = Pattern.compile(".*assume.*|.*denote.*|.*define.*|.*let.*|.*is said.*|.*suppose.*"
+			+ "|.*is called.*") ;
 	//positive look behind to split on any punctuation before a space.
 	private static final Pattern PUNCTUATION_PATTERN = Pattern.compile("( ?<=[\\.|;|,|!|:])");
 	
@@ -181,8 +183,47 @@ public class DetectHypothesis {
 			throw new IllegalStateException("IOException while writing to file or closing resources");
 		}
 		
+		//deserialize objects
+		boolean deserialize = false;
+		if(deserialize){
+			deserialize();
+		}
 	}
 	
+	private static void deserialize(){
+	
+		FileInputStream fileInputStream = null;
+		ObjectInputStream objectInputStream = null;
+		try{
+			fileInputStream = new FileInputStream(parsedExpressionOutputFileStr);
+			objectInputStream = new ObjectInputStream(fileInputStream);
+		}catch(FileNotFoundException e){
+			e.printStackTrace();
+			throw new IllegalStateException("ParsedExpressionList output file not found!");
+		}catch(IOException e){
+			e.printStackTrace();
+			throw new IllegalStateException("IOException while opening ObjectOutputStream");
+		}
+		
+		try{
+			Object o = objectInputStream.readObject();
+			System.out.println("object read: " + ((ParsedExpression)((List<?>)o).get(0)).getOriginalThmStr());			
+		}catch(IOException e){
+			e.printStackTrace();
+			throw new IllegalStateException("IOException while reading deserialized data!");
+		}catch(ClassNotFoundException e){
+			e.printStackTrace();
+			throw new IllegalStateException("ClassNotFoundException while writing to file or closing resources");
+		}finally{
+			try{
+				objectInputStream.close();
+				fileInputStream.close();
+			}catch(IOException e){
+				e.printStackTrace();
+				throw new IllegalStateException("IOException while closing resources");
+			}
+		}
+	}
 	
 	/**
 	 * Extracts list of theorems/propositions/etc from provided BufferedReader,
@@ -222,15 +263,14 @@ public class DetectHypothesis {
 		//in particular \begin{document}. There are no \begin{...} in the preamble
 		while ((line = srcFileReader.readLine()) != null) {
 			
-			Matcher newThmMatcher = ThmInput.NEW_THM_PATTERN.matcher(line);
-			
+			Matcher newThmMatcher = ThmInput.NEW_THM_PATTERN.matcher(line);	
 			
 			if(ThmInput.BEGIN_PATTERN.matcher(line).find()){
 				break;
 			}else if(newThmMatcher.find()){
-				//should be a proposition, hypothesis, etc
+				//should be a proposition, hypothesis, etc. E.g. don't look through proofs.
 				if(ThmInput.THM_TERMS_PATTERN.matcher(newThmMatcher.group(2)).find()){
-					macrosList.add(newThmMatcher.group(2));		
+					macrosList.add(newThmMatcher.group(2));	
 				}
 			}			
 		}
@@ -241,14 +281,13 @@ public class DetectHypothesis {
 			StringBuilder endBuilder = new StringBuilder();
 			for(String macro : macrosList){
 				//create start and end macros
-				startBuilder.append("\\\\begin\\{").append(macro).append(".*");
-				
+				startBuilder.append("\\\\begin\\{").append(macro).append(".*");				
 				endBuilder.append("\\\\end\\{").append(macro).append(".*");
 			}
 			thmStartPattern = Pattern.compile(ThmInput.THM_START_STR + startBuilder);
 			thmEndPattern = Pattern.compile(ThmInput.THM_END_STR + endBuilder);	
 		}
-			
+		
 		StringBuilder newThmSB = new StringBuilder();
 		boolean inThm = false;
 		
