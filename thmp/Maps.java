@@ -424,7 +424,7 @@ public class Maps {
 			posPreMMap.put("in", "pre_comp");
 			posPreMMap.put("from", "pre");
 			posPreMMap.put("to", "pre_comp");
-			posPreMMap.put("to be", "tobe");
+			posPreMMap.put("to be", "be");
 			
 			posPreMMap.put("equal", "verb_COMP");
 			posPreMMap.put("equal to", "pre");
@@ -600,8 +600,9 @@ public class Maps {
 			// prep stands for "pre phrase"
 			structMap.put("pre_ent", new Rule("prep", 1));
 			structMap.put("pre_adj", new Rule("prep", 0.8));
-			structMap.put("tobe_ent", new Rule("Tobe", 0.85));
-			structMap.put("verbphrase_Tobe", new Rule("hypo", 0.85));
+			//structMap.put("tobe_ent", new Rule("Tobe", 0.85));
+			//"$F$ is said to be a field."
+			//structMap.put("verbphrase_Tobe", new Rule("verbphrase", .85));
 			
 			structMap.put("ent_prep", new Rule("newchild", 1));
 			structMap.put("pre_symb", new Rule("prep", 1));
@@ -620,7 +621,8 @@ public class Maps {
 			structMap.put("parti_ent", new Rule("partient", 1));
 			structMap.put("ent_partient", new Rule("newchild", 1));
 			//"field which is perfect."
-			structMap.put("ent_hypo", new Rule("newchild", .9));
+			structMap.put("ent_hypo", new Rule("newchild", .85));
+			
 			// phrases: been there, x in X,
 			structMap.put("parti_adj", new Rule("phrase", 1));
 			structMap.put("symb_prep", new Rule("phrase", 1));
@@ -680,7 +682,8 @@ public class Maps {
 			structMap.put("verb_partient", new Rule("verbphrase", 1));
 			structMap.put("verb_noun", new Rule("verbphrase", 1));
 			structMap.put("det_verbphrase", new Rule("assert", 1));
-			structMap.put("verb_parti", new Rule("verbphrase", 1));
+			//remove, because verbphrase should be able to finish a sentence
+			//structMap.put("verb_parti", new Rule("verbphrase", 1));
 			structMap.put("auxpass_pobj", new Rule("verbphrase", 1)); // passive
 			structMap.put("auxpass_ent", new Rule("verbphrase", 1)); 
 			structMap.put("auxpass_adj", new Rule("verbphrase", 1));	// auxiliary
@@ -695,12 +698,13 @@ public class Maps {
 			structMap.put("vbs_np", new Rule("verbphrase", 1));
 			structMap.put("vbs_prep", new Rule("verbphrase", 1));
 			structMap.put("vbs_num", new Rule("verbphrase", 1));
-			structMap.put("vbs_np", new Rule("verbphrase", 1));
+			structMap.put("vbs_np", new Rule("verbphrase", 1));			
 			structMap.put("vbs_pre", new Rule("verbphrase", .7));
 			structMap.put("vbs_phrase", new Rule("verbphrase", 1));
 			structMap.put("vbs_partient", new Rule("verbphrase", 1));
 			structMap.put("vbs_noun", new Rule("verbphrase", 1));
-			structMap.put("vbs_parti", new Rule("verbphrase", 1));
+			//remove, because verbphrase should be able to finish a sentence
+			//structMap.put("vbs_parti", new Rule("verbphrase", 1));
 
 			structMap.put("symb_verbphrase", new Rule("assert", 1));
 			structMap.put("ent_verbphrase", new Rule("assert", 1));
@@ -717,8 +721,6 @@ public class Maps {
 			structMap.put("ent_auxpass", new Rule("assert", .8));
 			structMap.put("pro_auxpass", new Rule("assert", .8));
 
-			//structMap.put("verb_assert", new Rule("verbphrase", .75));
-			//structMap.put("vbs_assert", new Rule("verbphrase", 1));
 			structMap.put("hypo_assert", new Rule("assert", 1));
 			structMap.put("verbphrase_prep", new Rule("verbphrase", 1));
 			structMap.put("vbs_partiby", new Rule("verb", 1));

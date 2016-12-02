@@ -3,8 +3,10 @@ package thmp;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -81,39 +83,41 @@ public class ParseToWLTree{
 	 */
 	private static Collection<ImmutableWLCommand> get_triggerCol(String triggerKeyWord, String triggerType){
 		
-		Collection<ImmutableWLCommand> triggeredCol;
-		//copy into mutable collection
-		triggeredCol = new ArrayList<ImmutableWLCommand>(WLCommandMap.get(triggerKeyWord));
+		Collection<ImmutableWLCommand> triggeredSet;
+		//copy into mutable collection. 
+		//Note: using HashSet will introduce non-determinacy.		
+		triggeredSet = new ArrayList<ImmutableWLCommand>(WLCommandMap.get(triggerKeyWord));
 		
 		//if(triggeredCol.isEmpty()){
 		//add words from triggerWords redirects in case there's an entry there.
 		//trigger word redirects: eg are -> is, since they are functionally equivalent
-		if(triggerWordLookupMap.containsKey(triggerKeyWord)){
-				
-				//if(triggeredCol.isEmpty()){
-					//triggeredCol = new ArrayList<WLCommand>();
-				//}
-				//look up again with fetched list of keywords
-				
+		if(triggerWordLookupMap.containsKey(triggerKeyWord)
+				//Allow type to trigger entries in triggerWordLookupMap, e.g. type is "be"
+				//|| triggerWordLookupMap.containsKey(triggerType)
+				){
 			Collection<String> col= triggerWordLookupMap.get(triggerKeyWord);
 			for(String s : col){
-				triggeredCol.addAll(WLCommandMap.get(s));
-			}
+				triggeredSet.addAll(WLCommandMap.get(s));
+			}			
 		}
 			//look up using type
-		if(triggeredCol.isEmpty() && WLCommandMap.containsKey(triggerType)){
-			triggeredCol = WLCommandMap.get(triggerType);				
+		if(triggeredSet.isEmpty() && WLCommandMap.containsKey(triggerType)){
+			triggeredSet.addAll(WLCommandMap.get(triggerType));
 		}
 		
 		Matcher pluralMatcher;
-		if(triggeredCol.isEmpty() && (pluralMatcher = PLURAL_PATTERN.matcher(triggerKeyWord)).find() ){
+		if(triggeredSet.isEmpty() && (pluralMatcher = PLURAL_PATTERN.matcher(triggerKeyWord)).find() ){
 			String keyWordSingular = pluralMatcher.group(1);
-			triggeredCol.addAll(WLCommandMap.get(keyWordSingular));
+			triggeredSet.addAll(WLCommandMap.get(keyWordSingular));
 		}
-		
-		//}
-		
-		return triggeredCol;
+
+		if(triggeredSet.isEmpty() && triggerWordLookupMap.containsKey(triggerType)){			
+			Collection<String> col= triggerWordLookupMap.get(triggerType);
+			for(String s : col){
+				triggeredSet.addAll(WLCommandMap.get(s));
+			}			
+		}
+		return triggeredSet;
 	}
 	
 	/**
@@ -271,14 +275,14 @@ public class ParseToWLTree{
 		//int structDequeIndex = structDeque.size();
 		
 		//list of commands satisfied at this level
-		List<WLCommand> satisfiedCommandsList = new ArrayList<WLCommand>();
-		
+		List<WLCommand> satisfiedCommandsList = new ArrayList<WLCommand>();;
 		//add struct to all WLCommands in WLCommandList (triggered commands so far.)
 		//check if satisfied. "is" is not added?!
 		//Skip if immediate parents are conj or disj, i.e. already been added <--re-examine!!
 		if (struct.parentStruct() == null 
 				|| (struct.parentStruct() != null && !struct.parentStruct().type().matches("conj.*|disj.*"))) {
-			
+
+			//if(struct.nameStr().equals("field")) throw new IllegalStateException("*********"+ WLCommandList);
 			Iterator<WLCommand> WLCommandListIter = WLCommandList.iterator();
 			int WLCommandListSz = WLCommandList.size();
 			for (int i = WLCommandListSz-1; i > -1; i--) {
@@ -287,6 +291,7 @@ public class ParseToWLTree{
 				curCommand = WLCommandList.get(i);
 				boolean beforeTriggerIndex = false;
 				//System.out.println("ADDING STRUCT " + struct + " for command " + curCommand);
+
 				CommandSat commandSat = WLCommand.addComponent(curCommand, struct, beforeTriggerIndex);
 				
 				// if commandSat, remove all the waiting, triggered commands for
@@ -297,7 +302,7 @@ public class ParseToWLTree{
 				// "derivative of f wrt x"
 				//is no component added, means command already satisfied & built previously.
 				if (commandSat.isCommandSat() && commandSat.isComponentAdded()) {	
-
+					
 					satisfiedCommandsList.add(curCommand);
 					if(curCommand.getDefaultOptionalTermsCount() == 0
 							|| !commandSat.hasOptionalTermsLeft() ){
@@ -305,7 +310,7 @@ public class ParseToWLTree{
 					}
 				}else if(commandSat.isDisqualified()){
 					WLCommandListIter.remove();
-					//System.out.println("\n***COMMAND REMOVED. struc "+ struct );
+					System.out.println("\n***COMMAND REMOVED. struct "+ struct );
 				}
 				
 			}
@@ -330,15 +335,15 @@ public class ParseToWLTree{
 		Collection<ImmutableWLCommand> triggeredCol = get_triggerCol(triggerKeyWord, structType);
 
 		//use getSingular
-		if(triggeredCol.isEmpty() && triggerKeyWord.length() > 1 
+		if(triggeredCol.isEmpty() && triggerKeyWord.length() > 2 
 				&& triggerKeyWord.charAt(triggerKeyWord.length() - 1) == 's'){
 			//need to write out all other cases, like ending in "es"
 			String triggerWordSingular = triggerKeyWord.substring(0, triggerKeyWord.length() - 1);
 			triggeredCol = get_triggerCol(triggerWordSingular, structType);				
 		}
 		
-		if(!triggeredCol.isEmpty()){		
-			
+		if(!triggeredCol.isEmpty()){
+
 			//is trigger, add all commands in list 
 			//WLCommand curCommand;
 			for(ImmutableWLCommand curCommandInCol : triggeredCol){
@@ -376,7 +381,7 @@ public class ParseToWLTree{
 					WLCommand.addTriggerComponent(curCommand, struct);
 					
 					CommandSat commandSat = null;
-					
+
 					for(int i = structList.size()-1; i > -1; i--){
 						
 						Struct curStruct = structList.get(i);
@@ -437,6 +442,7 @@ public class ParseToWLTree{
 			parsedSB.append("[");
 			
 			if (struct.prev1NodeType().isTypeStruct()) {
+				
 				//ParseStruct curHeadParseStruct = headParseStruct;
 				//check if need to create new ParseStruct
 				Struct prev1 = (Struct)struct.prev1();
@@ -495,7 +501,8 @@ public class ParseToWLTree{
 					parsedSB.append("\n" + space + prev2Type + ":>");	
 				}
 				
-				((Struct) struct.prev2()).set_parentStruct(struct);				
+				((Struct) struct.prev2()).set_parentStruct(struct);	
+
 				dfs((Struct) struct.prev2(), parsedSB, numSpaces, structList, 
 						WLCommandList, printTiers, parseState);
 				if(printTiers && checkParseStructType){

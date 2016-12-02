@@ -186,6 +186,29 @@ public abstract class Struct implements Serializable{
 	
 	public abstract boolean has_child();
 	
+	/**
+	 * If any descendent has a child.
+	 * @return
+	 */
+	public boolean descendantHasChild(){
+		
+		if(!this.isStructA()){
+			return this.has_child();
+		}
+		
+		boolean hasOffspring = false;
+		if(this.prev1NodeType().isTypeStruct()){
+			hasOffspring = ((Struct)this.prev1()).descendantHasChild();
+		}
+		
+		if(hasOffspring) return true;
+			
+		if(this.prev2NodeType().isTypeStruct()){
+			hasOffspring |= ((Struct)this.prev2()).descendantHasChild();
+		}
+		return hasOffspring;
+	}
+	
 	//Simple toString to return the bare minimum to identify this Struct.
 	//To be used in ParseToWLTree.
 	public abstract String simpleToString(boolean includeType, WLCommand curCommand);

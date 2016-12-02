@@ -1060,14 +1060,13 @@ public class WLCommand implements Serializable{
 
 					if(nextWord.equals("")){
 						//already added numUnits to Struct above, don't do it again.
-						nextWord = nextStruct.simpleToString(true, null);
-						
+						nextWord = nextStruct.simpleToString(true, null);						
 					}
 				}else{
 					//System.out.println("^^^Triggering command " + curCommand);
 					//takes into account pro, and the ent it should refer to
 					nextWord = nextStruct.simpleToString(true, curCommand);
-
+					
 				}
 				//simple way to present the Struct
 				//set to the head struct the currently built command will be appended to
@@ -1272,7 +1271,7 @@ public class WLCommand implements Serializable{
 		Map<WLCommandComponent, Integer> commandsCountMap = curCommand.commandsCountMap;
 		if(disqualifyCommand(structType, commandsCountMap)){
 			boolean disqualified = true;
-			//throw new IllegalStateException(structType + " " + commandsCountMap);
+			//if(true)throw new IllegalStateException(structType + " " + commandsCountMap);
 			return new CommandSat(disqualified);
 		}
 
@@ -1636,7 +1635,7 @@ public class WLCommand implements Serializable{
 				//based on extraneous terms such as "if" or verbs.
 				//System.out.println(Pattern.compile("verb$").matcher("verbphrase").find());
 				if(posPattern.matcher("verb").find() && !isPosWildCard){
-					//System.out.println("DISQUALIFYING COMMAND. posPattern " + posPattern+"\t" + structPosStr);
+					System.out.println("DISQUALIFYING COMMAND. posPattern " + posPattern+"\t" + structPosStr);
 					return true;					
 				}
 			}
@@ -1856,7 +1855,7 @@ public class WLCommand implements Serializable{
 			//they are not meant to be compared with anything.
 			if(!name.equals(DEFAULT_AUX_NAME_STR)){
 				//end of word. To prevent "verbphrase" from matching "verb"
-				this.posPattern = Pattern.compile(posTerm + "$");
+				this.posPattern = Pattern.compile("^(?:" + posTerm + ")$");
 				this.namePattern = Pattern.compile(name);
 			}
 		}		

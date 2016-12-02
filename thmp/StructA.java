@@ -361,8 +361,9 @@ public class StructA<A, B> extends Struct{
 		
 		if(prev2 != null){
 			String prev2String = "";
-		
-			if((PREV2_TYPE.isTypeStruct())  ){
+			StringBuilder prev2SB = new StringBuilder(20);
+			
+			if((PREV2_TYPE.isTypeStruct())){
 				List<WLCommandWrapper> prev2WrapperList = ((Struct)prev2).WLCommandWrapperList();
 				 if(prev2WrapperList == null){
 					//System.out.println("######prev2: " + prev2);
@@ -371,16 +372,19 @@ public class StructA<A, B> extends Struct{
 						if(!tempSB.toString().matches("\\s*")){ //tempStr += ", ";
 							tempSB.append(", ");
 						}
-						prev2String += prev2Str;						
+						//prev2String += prev2Str;
+						prev2SB.append(prev2Str);
 					}
 				 }else{
-					 prev2String += prev2WrapperList.get(0).WLCommandStr();
+					// prev2String += prev2WrapperList.get(0).WLCommandStr();
+					 prev2SB.append(prev2WrapperList.get(0).WLCommandStr());
 				 }
 			}else if(PREV2_TYPE.equals(NodeType.STR) && !((String)prev2).matches("\\s*")){			
-				prev2String += ", " + prev2;			
+				prev2String += ", " + prev2;	
+				prev2SB.append(", " + prev2);
 			}
 			//tempStr += inConj ? "{" + prev2String + "}" : prev2String;
-			tempSB.append(inConj ? "[" + prev2String + "]" : prev2String);
+			tempSB.append(inConj ? "[" + prev2SB + "]" : prev2SB);
 		}
 		if(wrapBraces){ //tempStr += "}";
 			tempSB.append("]");
@@ -604,6 +608,7 @@ public class StructA<A, B> extends Struct{
 
 	@Override
 	public String toString(){
+		if(this.type.equals("symb")) System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
 		String str = "[Type: " + this.type 				
 				+ ", prev1:" + this.prev1 + "]";
 		

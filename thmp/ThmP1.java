@@ -72,7 +72,8 @@ public class ThmP1 {
 	private static final Pattern IS_ARE_BE_PATTERN = Pattern.compile("is|are|be");
 	private static final Pattern CALLED_PATTERN = Pattern.compile("called|defined|said|denoted");
 	private static final Pattern CONJ_DISJ_PATTERN1 = Pattern.compile("conj|disj");
-	
+	//end part of latex expressions, e.g. " B)$-module"
+	private static final Pattern LATEX_END_PATTER = Pattern.compile("[^$]*\\$.*");
 	// list of parts of speech, ent, verb etc <--should make immutable
 	private static final List<String> posList;
 	
@@ -192,7 +193,8 @@ public class ThmP1 {
 		//parsedExprSz used to group parse components together 
 		//when full parse is unavailable
 		//private int counter;
-		//number of units in this parse, as in numUnits (leaf nodes) in Class Struct
+		//number of units in this parse, as in numUnits (leaf nodes) in Class Struct.
+		//same as commandNumUnits when ParseStructType is NONE.
 		private int numUnits;
 		//the commandNumUnits associated to a WLCommand that gives this parsedStr.
 		private int commandNumUnits;
@@ -471,7 +473,7 @@ public class ThmP1 {
 	}
 	
 	/**
-	 * 	 * Tokenizes by splitting into comma-separated strings
+	 * Tokenizes input by splitting into comma-separated strings
 	 * @param sentence string to be tokenized
 	 * @param parseState current state of the parse.
 	 * @return List of Struct's
@@ -524,9 +526,9 @@ public class ThmP1 {
 			String curWord = strAr[i];
 			
 			//why this?
-			if (curWord.matches("\\s*,*")){
+			/*if (curWord.matches("\\s*,*")){
 				continue;
-			}
+			}*/
 			Matcher negativeAdjMatcher;
 			// strip away special chars '(', ')', etc ///should not
 			// remove......
@@ -538,7 +540,7 @@ public class ThmP1 {
 			String type = "ent"; //mathObj
 			int wordlen = strAr[i].length();
 			
-			// detect latex expressions, set their pos as "mathObj" for now
+			// detect latex expressions, set their pos as "ent" for now
 			if (curWord.charAt(0) == '$') {
 				
 				String latexExpr = curWord;
@@ -558,7 +560,7 @@ public class ThmP1 {
 						//i++;
 					} else {						
 						while (i < strArLength && curWord.length() > 0
-								&& !curWord.matches("[^$]*\\$.*") ){//curWord.charAt(curWord.length() - 1) != '$') {
+								&& !LATEX_END_PATTER.matcher(curWord).find()){//curWord.charAt(curWord.length() - 1) != '$') {
 							latexExpr += " " + curWord;
 							i++;
 
@@ -566,15 +568,18 @@ public class ThmP1 {
 								break;
 
 							curWord = i < strArLength - 1 && strAr[i].equals("") ? strAr[++i] : strAr[i];
-
+							
 						}
 					}
 					//add the end of the latex expression, only if it's the last part (i.e. $)
-					if (i < strArLength ) {
-						int tempWordlen = strAr[i].length();
-
-						if (tempWordlen > 0 && strAr[i].charAt(tempWordlen - 1) == '$')
+					//or matching "[^$]*\\$.*"
+					if (i < strArLength) {
+						//int tempWordlen = strAr[i].length();						
+						///if (tempWordlen > 0 && strAr[i].charAt(tempWordlen - 1) == '$')
+							//latexExpr += " " + strAr[i];
+						if(LATEX_END_PATTER.matcher(strAr[i]).find()){
 							latexExpr += " " + strAr[i];
+						}
 					}
 					/*
 					if (latexExpr.matches("[^=]+=.+|[^\\\\cong]+\\\\cong.+")
@@ -600,7 +605,8 @@ public class ThmP1 {
 				
 				if (type.equals("ent")){
 					mathIndexList.add(pairs.size() - 1);
-				}				
+				}
+				//if(true) throw new IllegalStateException("pair "+pair.word());
 				continue;
 			}
 			// check for trigger words of fixed phrases, e.g. "with this said"
@@ -1207,13 +1213,18 @@ public class ThmP1 {
 					//don't fuse if e.g. mathObjName is "map"
 					&& !noFuseEntSet.contains(mathObjName)
 					) {
-				pairs.get(index + 1).set_pos(entPosStr);
-				String givenName = pairs.get(index + 1).word();
-				tempMap.put("called", givenName);
-				// do not overwrite previously named symbol
-				// if(!namesMap.containsKey(givenName))
-				// namesMap.put(givenName, tempStructH);
-
+				//the word following symbol is "and"
+				if (index + 2 == pairsSize 
+						|| AND_OR_PATTERN.matcher(pairs.get(index+2).pos()).find()){
+								
+				}else{
+					pairs.get(index + 1).set_pos(entPosStr);
+					String givenName = pairs.get(index + 1).word();
+					tempMap.put("called", givenName);
+					// do not overwrite previously named symbol
+					// if(!namesMap.containsKey(givenName))
+					// namesMap.put(givenName, tempStructH);
+				}
 			} /*
 				 * else if ((index + 2 < pairsSize && pairs.get(index +
 				 * 2).pos().equals("symb"))) { pairs.get(index +
@@ -1610,7 +1621,7 @@ public class ThmP1 {
 	 * @param isReparse, whether this is a second time parse (only happen if certain 
 	 * conditions satisfied)
 	 */
-	private static ParseState parse(ParseState parseState, boolean isReparse) {
+	public static ParseState parse(ParseState parseState, boolean isReparse) {
 		/*System.out.println("**********");
 		System.out.println("Pos of open " + posMMap.get("open"));
 		System.out.println("**********");*/
@@ -2020,6 +2031,7 @@ public class ThmP1 {
 								 * above, use single while loop } else
 								 */
 								if (type1.matches("or|and")) {
+									
 									int t = 1;
 									//boolean stopLoop = false;
 
@@ -2054,12 +2066,13 @@ public class ThmP1 {
 													&& structArrayList3.get(0).type().equals("ent")){
 												t++;
 												continue;
-											}*/											
+											}*/		
 										}
 										// iterate over Structs at (i-l, i-1)
 										for (int p = 0; p < structArrayListSz; p++) {
 											
 											Struct p_struct = structArrayList.get(p);
+											
 											if (type2.equals(p_struct.type())) {
 												
 												// In case of conj, only proceed
@@ -2101,6 +2114,7 @@ public class ThmP1 {
 													StructA<Struct, Struct> parentStruct = new StructA<Struct, Struct>(
 															p_struct, struct1Type, struct2, struct2Type, newType + "_" + type2,
 															mx.get(i - t).get(j));
+													//if(true) throw new RuntimeException(parentStruct.toString());
 													p_struct.set_parentStruct(parentStruct);
 													struct2.set_parentStruct(parentStruct);
 													//types are same, so scores should be same, so should only be punished once
@@ -2201,7 +2215,9 @@ public class ThmP1 {
 			
 			// System.out.println("index of highest score: " +
 			// ArrayDFS(headStructList));
-			//temporary list to store the ParsedPairs to be sorted
+			//temporary list to store the ParsedPairs to be sorted. It's list of multimaps, 
+			//each Multimap corresponds to the commands picked up for the parse tree whose root
+			//is an element of headStructList.
 			List<Multimap<ParseStructType, ParsedPair>> parsedPairMMapList = new ArrayList<Multimap<ParseStructType, ParsedPair>>();
 			//List of headParseStruct's, each entry corresponds to the entry of same index in parsedPairMMapList.
 			List<ParseStruct> headParseStructList = new ArrayList<ParseStruct>();
@@ -2306,8 +2322,13 @@ public class ThmP1 {
 		}
 		// if again no full parse. Also add to parsedExpr List.
 		else if(!isReparse || totalNumUnitsInStructList(inputStructList) > 2){
+			
 			List<StructList> parsedStructList = new ArrayList<StructList>();
-
+			//list of integral 2-tuples with row and column coordinates.
+			//The coordinates at index i are those of the struct at index i
+			//in parsedStructList.
+			List<int[]> structCoordinates = new ArrayList<int[]>();
+			
 			int i = 0, j = len - 1;
 			while (j > -1) {
 				i = 0;
@@ -2318,14 +2339,13 @@ public class ThmP1 {
 						break;
 					}
 				}
-
+				
 				StructList tempStructList = mx.get(i).get(j);
 
-				if (tempStructList.size() > 0) {
-					if(i == j){
-						tempStructList.setIsDiagonalElementInMx(true);
-					}
+				if (tempStructList.size() > 0) {					
+					//but adding at 0 is slow! Add at end and reverse!
 					parsedStructList.add(0, tempStructList);
+					structCoordinates.add(0, new int[]{i, j});
 				}
 				// a singleton on the diagonal <--not necessarily true any more
 				if (i == j) {
@@ -2341,33 +2361,14 @@ public class ThmP1 {
 			//recursively call this, discard bigger and bigger components, that are
 			//the smallest in each round.			
 			
-				//form new structList
-				List<Struct> structList = new ArrayList<Struct>();
-				for(int k = 0; k < parsedStructList.size(); k++){
-					StructList structList_i = parsedStructList.get(k);
-					if(structList_i.getIsDiagonalElementInMx()
-							//or is essential, e.g. ent, verb, symb
-							&& !structList_i.get(0).type().matches("ent|conj_ent|verb|vbs|if|symb|pro") //|pro|symb|if|hyp 
-							){ 
-						continue;					
-					}
-					//get something other than 0th??
-					structList.add(structList_i.get(0));
-					
-				}
-				parseState.setTokenList(structList);
-				
-				System.out.println("=___+++++++++_========= structList: " + structList);
-				
-				boolean isReparseAgain = true;
-				parseState = parse(parseState, isReparseAgain);
-			
-			if(!parseState.isRecentParseSpanning() && !isReparse){
+			if(!isReparse){
 			
 			// print out the components
 			int parsedStructListSize = parsedStructList.size();
 			//String totalParsedString = "";
 			double totalScore = 1; //product of component scores
+			//list of multimaps, each Multimap corresponds to the commands picked up
+			//from a parsedStructList entry.
 			List<Multimap<ParseStructType, ParsedPair>> parsedPairMMapList = new ArrayList<Multimap<ParseStructType, ParsedPair>>();
 			List<ParseStruct> headParseStructList = new ArrayList<ParseStruct>();
 			//list of long forms, with flattened tree structure.
@@ -2405,12 +2406,70 @@ public class ThmP1 {
 			contextVecList.add(curStructContextvec);
 			
 			//defer these to ordered addition in orderPairsAndPutToLists!
-			//parsedExpr.add(new ParsedPair(parsedSB.toString(), totalScore, "long"));
+			//parsedExpr.add(new ParsedPair(parsedSB.toString(), totalScore, "long"));						
+
+			//get total number of commandNumUnits that belong to parsedPairs with "NONE" as head, e.g. NONE :> [vbs[is] 1.0  1  1],
+			//add up the e.g. 1's at the end. If the sum is below a certain percentage of inputStructList.size(), 
+			//which means the rest span well, don't spend time doing second parse.
+			int commandNumUnitsWithHeadNoneSum = 0;
 			
-			//System.out.println(totalParsedString + "; ");
-			//parsedExpr.add(new ParsedPair(totalParsedString, totalScore, "wl"));
-			
+			for(Multimap<ParseStructType, ParsedPair> mmap: parsedPairMMapList){
+				Collection<ParsedPair> pairColl = mmap.get(ParseStructType.NONE);
+				//there shouldn't be more than one per pairColl, since NONE indicates
+				//no commmands were picked up for this parsedStructList entry.
+				for(ParsedPair pair : pairColl){
+					//same as pair.numUnits.
+					commandNumUnitsWithHeadNoneSum += pair.commandNumUnits;
+				}
+			}
 			orderPairsAndPutToLists(parsedPairMMapList, headParseStructList, parseState, longFormParsedPairList, contextVecList);
+
+			//if commandNumUnitsWithHeadNoneSum sufficiently low: so sufficiently few parses
+			//with NONE, don't parse again. Half is a good threshold
+			if(commandNumUnitsWithHeadNoneSum > inputStructList.size()/2){
+				//parse again.
+				//form new structList
+				List<Struct> newStructList = new ArrayList<Struct>();
+				
+				for(int k = 0; k < parsedStructList.size(); k++){
+					StructList structList_i = parsedStructList.get(k);					
+					//get something other than 0th??
+					newStructList.add(structList_i.get(0));					
+				}
+				parseState.setTokenList(newStructList);
+				
+				ParseAgain.parseAgain(newStructList, structCoordinates, parseState);
+				
+				//if still no spanning parse found in above defluffing approach, now
+				//try another approach: exchanging elements 
+				if(!parseState.isRecentParseSpanning()){
+				
+				//form new structList
+				List<Struct> structList = new ArrayList<Struct>();
+				
+				for(int k = 0; k < newStructList.size(); k++){
+					Struct struct_k = newStructList.get(k);
+					//System.out.print(structList_i.get(0)+"\t");
+					//if diagonal element, so row index == column index.
+					if(structCoordinates.get(k)[0] == structCoordinates.get(k)[1]
+							//or is essential, e.g. ent, verb, symb <--too ad hoc
+							&& !struct_k.type().matches("ent|conj_ent|verb|vbs|if|symb|pro") //|pro|symb|if|hyp 
+							){ 
+						continue;					
+					}
+					
+					structList.add(struct_k);
+					
+				}
+				parseState.setTokenList(structList);
+				
+				System.out.println("\n=___+++++++++_========= structList: " + structList);
+				
+				boolean isReparseAgain = true;
+				parseState = parse(parseState, isReparseAgain);
+				
+			}
+			}
 			
 			System.out.println("%%%%%\n");
 		}
@@ -2461,6 +2520,7 @@ public class ThmP1 {
 			List<ParseStruct> headParseStructList, ParseState parseState,
 			List<ParsedPair> longFormParsedPairList, List<int[]> contextVecList){
 		
+		int commandNumUnitsWithHeadNoneSum = 0;
 		//use insertion sort, since list of maps is usually very small, ~1-5
 		//for maps with multiple entries (e.g. one sentence with both a HYP and a STM), add the numUnits and 
 		//commandNumUnits across entries.
@@ -3326,7 +3386,12 @@ public class ThmP1 {
 		//if(struct1.isStructA() && !struct2.isStructA()){
 			Struct newStruct = absorbingStruct.copy();				
 			//add as property
-			String ppt = absorbedStruct.prev1().toString();
+			String ppt;
+			if(absorbedStruct.prev1NodeType().isTypeStruct()){
+				ppt = ((Struct)absorbedStruct.prev1()).simpleToString(true,  ); //<--deal with ent_symb!
+			}else{
+				ppt = absorbedStruct.prev1().toString();
+			}
 			if(absorbedStruct.type().equals("symb")){
 				newStruct.struct().put("called", ppt);
 			}else{
@@ -3893,6 +3958,7 @@ public class ThmP1 {
 		if(sentenceList.isEmpty()){
 			sentenceList.add(sentenceBuilder.toString());
 		}
+		
 		return sentenceList.toArray(new String[0]);
 	}
 

@@ -76,7 +76,8 @@ public class WLCommandsList {
 	 */
 	static {
 		ImmutableListMultimap.Builder<String, String> triggerWordLookupMapBuilder = ImmutableListMultimap.builder();
-		//need to put all vbs in here programmatically
+		//need to put all vbs in here programmatically.
+		//keys can be types.
 		triggerWordLookupMapBuilder.put("be", "is");
 		triggerWordLookupMapBuilder.put("are", "is");
 		triggerWordLookupMapBuilder.put("has", "have");

@@ -461,16 +461,20 @@ public class ThmP1TestRun {
 			//conditional parse, flat parsing, 
 			st = "define $F$ to be a field, $R$ a ring";
 			st = "We define $ \\ mathtt{Squares} \\ subset (\\ R^2)^4$ to be the set of all quadruples of vertices of squares in $ \\ R^2$ traversed in anticlockwise order ";
-			st = "function $f$ and $g$ are zero"; //<--make sure the and is parsed correctly!
 			st = "a field over $ Q$ of numbers in $ R$";
 			st = "if $M$ is a finitely presented $R$-module";
-			st = "An abelian group $N$ is called an $(A, B)$-bimodule if it is an $A$-module and a $B$-module"; //<--parse this better
 			st = "An abelian group $N$ is called an $(A, B)$-bimodule"; //<--bimodule gets cut off!
+			st = "An abelian group $N$ is called an $(A, B)$-bimodule if it is an $A$-module and a $B$-module"; //<--parse this better			
+			st = "given an $(A, B)$-bimodule";
+			st = "function $f$ and $g$ are zero"; //<--make sure the and is parsed correctly!
 			
 			//st = "X is connected ";
-			st = "if it is both an $A$-module and a $B$-module"; //<--need to know which part to skip if doesn't lead to full parse
-			st = " $F$ is said to be a field";
-			st = "these fields without question are perfect";
+			//st = "$F$ is to be a field"; //<--defluff this one
+			//st = "$F$ is said to be a field.";
+			//st = "is these fields are perfect";
+			//st = "if it is both an $A$-module and a $B$-module"; //<--need to know which part to skip if doesn't lead to full parse
+			//st = "these fields without question are perfect"; //<--use this to test dropping out
+			
 			//st = "we define $F$ by the field";
 			//st = "there exists a ring map $R \\to S$ of finite presentation such that $T$ is the image of $\\Spec(S)$ in $\\Spec(R)$."; //<--too many parses!!
 			//st = "given field, with $F $ of presentation, and $G $ of finite type";
