@@ -23,6 +23,7 @@ import com.google.common.collect.Multimap;
 
 import exceptions.IllegalWLCommandStateException;
 import thmp.ParseToWLTree.WLCommandWrapper;
+import thmp.RelationVec.RelationType;
 import thmp.Struct.ChildRelationType;
 import thmp.Struct.NodeType;
 import thmp.WLCommand.PosTerm;
@@ -367,6 +368,9 @@ public class WLCommand implements Serializable{
 		
 		private boolean isTrigger;
 		
+		//relationType for building relation vectors. 
+		private RelationType relationType;
+		
 		/**
 		 * Builder class for PosTerm.
 		 * Named PBuilder instead of PosTermBuilder, to 
@@ -395,6 +399,8 @@ public class WLCommand implements Serializable{
 			private boolean isNegativeTerm;
 			//0 by default
 			private int optionalGroupNum;
+			//relationType for building relation vectors. 
+			RelationType relationType = RelationType.NONE;
 			
 			private PosTermConnotation posTermConnotation = PosTermConnotation.NONE;
 			
@@ -446,6 +452,12 @@ public class WLCommand implements Serializable{
 				this.includeInBuiltString = includeInBuiltString;
 			}
 			
+			public PBuilder(String posStr, String nameStr, boolean includeInBuiltString,
+					RelationType relationType){
+				this(posStr, nameStr, includeInBuiltString);
+				this.relationType = relationType;
+			}
+			
 			/**
 			 * 
 			 * @param posStr Part of speech string
@@ -459,6 +471,12 @@ public class WLCommand implements Serializable{
 				this(posStr, nameStr, includeInBuiltString);
 				this.isTrigger = isTrigger;
 				this.isTriggerMathObj = isTriggerMathObj;
+			}
+			
+			public PBuilder(String posStr, String nameStr, boolean includeInBuiltString, boolean isTrigger,
+					boolean isTriggerMathObj, RelationType relationType){
+				this(posStr, nameStr, includeInBuiltString, isTrigger, isTriggerMathObj);
+				this.relationType = relationType;
 			}
 			
 			/**
@@ -506,6 +524,12 @@ public class WLCommand implements Serializable{
 					this.optionalGroupNum = optionalGroupNum;
 					this.isOptionalTerm = true;
 				}					
+			}
+			
+			public PBuilder(String posStr, String nameStr, boolean includeInBuiltString,
+					boolean isTriggerMathObj, String optionGroup, RelationType relationType){
+				this(posStr, nameStr, includeInBuiltString, isTriggerMathObj, optionGroup);
+				this.relationType = relationType;
 			}
 			
 			/**
@@ -607,25 +631,27 @@ public class WLCommand implements Serializable{
 				
 				if(this.isOptionalTerm){
 					return new OptionalPosTerm(commandComponent, positionInMap, includeInBuiltString,
-							isTriggerMathObj, optionalGroupNum);
+							isTriggerMathObj, optionalGroupNum, relationType);
 				}else if(this.isNegativeTerm){
 					return new NegativePosTerm(commandComponent, positionInMap);
 				}else{
 					return new PosTerm(commandComponent, positionInMap, includeInBuiltString,
-							isTrigger, isTriggerMathObj, posTermConnotation);
+							isTrigger, isTriggerMathObj, posTermConnotation, relationType);
 				}
 			}		
 			
 		}
 		
 		private PosTerm(WLCommandComponent commandComponent, int position, boolean includeInBuiltString,
-				boolean isTrigger, boolean isTriggerMathObj, PosTermConnotation posTermConnotation){
+				boolean isTrigger, boolean isTriggerMathObj, PosTermConnotation posTermConnotation,
+				RelationType relationType){
 			this.commandComponent = commandComponent;
 			this.positionInMap = position;
 			this.includeInBuiltString = includeInBuiltString;
 			this.triggerMathObj = isTriggerMathObj;
 			this.isTrigger = isTrigger;
 			this.posTermConnotation = posTermConnotation;
+			this.relationType = relationType;
 		}
 		
 		/**
@@ -644,6 +670,10 @@ public class WLCommand implements Serializable{
 
 		public boolean isNegativeTerm(){
 			return false;
+		}
+		
+		public RelationType relationType(){
+			return this.relationType;
 		}
 		
 		@Override
@@ -699,7 +729,8 @@ public class WLCommand implements Serializable{
 	public static class NegativePosTerm extends PosTerm{
 		
 		public NegativePosTerm(WLCommandComponent commandComponent, int position){
-			super(commandComponent, position, false, false, false, PosTermConnotation.NONE);			
+			super(commandComponent, position, false, false, false, PosTermConnotation.NONE,
+					RelationType.NONE);			
 		}
 		
 		@Override
@@ -716,10 +747,10 @@ public class WLCommand implements Serializable{
 		private int optionalGroupNum;
 		
 		public OptionalPosTerm(WLCommandComponent commandComponent, int position, boolean includeInBuiltString,
-				boolean triggerMathObj, int optionalGroupNum) {
+				boolean triggerMathObj, int optionalGroupNum, RelationType relationType) {
 			//cannot be trigger if optional term
 			super(commandComponent, position, includeInBuiltString, false, triggerMathObj,
-					PosTermConnotation.NONE);
+					PosTermConnotation.NONE, relationType);
 			this.optionalGroupNum = optionalGroupNum;
 			
 		}
@@ -973,7 +1004,7 @@ public class WLCommand implements Serializable{
 		//use StringBuilder!
 		StringBuilder commandSB = new StringBuilder();
 		//the latest Struct to be touched, for determining if an aux String should be displayed
-		boolean prevStructHeaded = false;
+		//boolean prevStructHeaded = false;
 	
 		//Struct headStruct = curCommand.headStruct;
 		//determine which head to attach this command to
@@ -988,7 +1019,7 @@ public class WLCommand implements Serializable{
 			
 			if(!term.includeInBuiltString){		
 				//set its head Struct to structToAppendCommandStr,
-				// ***This appears to always be null!?!
+				// ***This should always be null, because haven't set it yet.
 				Struct nextStruct = term.posTermStruct;				
 				//System.out.println("&&&posTermStruct " + nextStruct);
 				//get WLCommandWrapperList
@@ -1035,6 +1066,8 @@ public class WLCommand implements Serializable{
 				}
 				
 				Struct nextStruct = curCommandComponentList.get(positionInMap);
+				term.set_posTermStruct(nextStruct);
+				
 				//prevStruct = nextStruct;				
 				if(nextStruct.previousBuiltStruct() != null){ 
 					//set to null for next parse dfs iteration
@@ -1044,6 +1077,7 @@ public class WLCommand implements Serializable{
 					//continue;	
 				}
 				
+				//connotation such as .DEFINING, .DEFINED, etc.
 				PosTermConnotation curConnotation = term.posTermConnotation();
 				if(PosTermConnotation.NONE != curConnotation){
 					if(null == connotationMap){
@@ -1065,8 +1099,7 @@ public class WLCommand implements Serializable{
 				}else{
 					//System.out.println("^^^Triggering command " + curCommand);
 					//takes into account pro, and the ent it should refer to
-					nextWord = nextStruct.simpleToString(true, curCommand);
-					
+					nextWord = nextStruct.simpleToString(true, curCommand);					
 				}
 				//simple way to present the Struct
 				//set to the head struct the currently built command will be appended to
@@ -1145,7 +1178,7 @@ public class WLCommand implements Serializable{
 		}
 		//structToAppendCommandStr.set_WLCommand(curCommand);
 		
-		//add to parseState.vriablesNamesMMap
+		//add to parseState.variableNamesMMap
 		if(null != connotationMap && connotationMap.containsKey(PosTermConnotation.DEFINED)
 				&& connotationMap.containsKey(PosTermConnotation.DEFINING)){
 			Struct definingStruct = connotationMap.get(PosTermConnotation.DEFINING);

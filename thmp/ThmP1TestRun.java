@@ -467,7 +467,11 @@ public class ThmP1TestRun {
 			st = "An abelian group $N$ is called an $(A, B)$-bimodule if it is an $A$-module and a $B$-module"; //<--parse this better			
 			st = "given an $(A, B)$-bimodule";
 			st = "function $f$ and $g$ are zero"; //<--make sure the and is parsed correctly!
-			
+			st = "if there exists an $n \\in \\mathbf{N}$ and an surjection of $R$-algebras $R[x_1, \\ldots, x_n] \to S$";
+			st = "$f$ maps $X$ to $Y$";
+			st = "$X$ is such that $Y$ is compact";
+			st = "each quotient $M_i/M_{i-1}$ is isomorphic to $R/I_i$ for some ideal $I_i$ of $R$";
+			st = "$X$ is compact where $Y$ is a space";
 			//st = "X is connected ";
 			//st = "$F$ is to be a field"; //<--defluff this one
 			//st = "$F$ is said to be a field.";

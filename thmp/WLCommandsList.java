@@ -15,6 +15,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 
 import exceptions.IllegalWLCommandException;
+import thmp.RelationVec.RelationType;
 import thmp.WLCommand.ImmutableWLCommand;
 import thmp.WLCommand.ImmutableWLCommand.Builder;
 import thmp.WLCommand.OptionalPosTerm;
@@ -84,10 +85,10 @@ public class WLCommandsList {
 		//triggerWordLookupMapBuilder.put("have", "is");
 		triggerWordLookupMapBuilder.put("belong", "is");
 		triggerWordLookupMapBuilder.put("lie", "is");
+		triggerWordLookupMapBuilder.put("where", "if");
 		triggerWordLookupMapBuilder.put("let", "if");
 		triggerWordLookupMapBuilder.put("for any", "for every");
 		triggerWordLookupMapBuilder.put("for all", "for every");
-		triggerWordLookupMapBuilder.put("if", "suppose");
 		triggerWordLookupMapBuilder.put("if and only if", "suppose");
 		triggerWordLookupMapBuilder.put("assume", "if");
 		triggerWordLookupMapBuilder.put("is included", "is contained");
@@ -212,10 +213,10 @@ public class WLCommandsList {
 				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), 
 				new PBuilder("~HasProperty~"), new PBuilder("adj|phrase|noun", null, true, false, true) ));
 		//e.g. "R is of finite type"
-		wLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro|noun", null, true), 
+		wLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro|noun", null, true, RelationType._IS), 
 				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), 
 				new PBuilder("~HasProperty~"), new PBuilder("pre", "of", false),
-				new PBuilder("noun|ent", null, true, false, true) ));
+				new PBuilder("noun|ent", null, true, false, true, RelationType.IS_) ));
 		
 		//negative of above
 		//WLCommandMapBuilder.put("is not", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is not|are not|be not, trigger",
@@ -293,7 +294,8 @@ public class WLCommandsList {
 				new PBuilder("\\[ForAll]["), new PBuilder("ent|symb", null, true), new PBuilder("]") ));
 		
 		//WLCommandMapBuilder.put("suppose", addCommand(new String[] { "hyp, , trigger",
-			//"assert, , true" }));
+			//"assert, , true" })); 
+		//note that "hyp" also includes "which is...", which can occur in statements, and not just hypotheses!
 		wLCommandMapBuilder.put("suppose", addCommand(new PBuilder("hyp", null, false, true, false), 
 				new PBuilder("assert", null, true) ));
 		
@@ -301,7 +303,7 @@ public class WLCommandsList {
 		wLCommandMapBuilder.put("consider", addCommand(new PBuilder("verb", null, false, true, false), 
 				new PBuilder("ent|phrase", null, true) ));
 		
-		//we have ...
+		//e.g. "we have ..."
 		//WLCommandMapBuilder.put("have", addCommand(new String[] { "pro, we, false", "verb, have, trigger", ", , true"}));
 		wLCommandMapBuilder.put("have", addCommand(new PBuilder("pro", "we", false), new PBuilder("verb", "have", false, true, false), 
 				new PBuilder(null, null, true) ));

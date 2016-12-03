@@ -14,7 +14,7 @@ import thmp.utils.WordForms;
 
 /**
  * Converts a parse tree produced by ThmP1 
- * into a vector, where the rows correspond 
+ * into a context vector, where the rows correspond 
  * to terms of the term-document matrix.
  * 
  * @author yihed
@@ -244,9 +244,9 @@ public class ParseTreeToVec {
 	 * Given a contentStr of a Struct, get the index most likely
 	 * to correspond to the String.
 	 * @param termStr
-	 * @return likely index for termStr, could be null
+	 * @return @Nullable likely index for termStr, could be null.
 	 */
-	private static Integer getTermStrIndex(String termStr){
+	public static Integer getTermStrIndex(String termStr){
 		Integer rowIndex = keywordDict.get(termStr);
 		if(null == rowIndex){
 			String[] termStrAr = termStr.split(" ");
@@ -262,6 +262,7 @@ public class ParseTreeToVec {
 		boolean forceAdjust = false;
 		return addTermStrToVec(struct, termStr, structParentIndex, contextVec, forceAdjust);
 	}
+	
 	/**
 	 * Auxiliary method for setContextVecEntry.
 	 * *Should* return structParentIndex if termStr not added to contextVec, else update

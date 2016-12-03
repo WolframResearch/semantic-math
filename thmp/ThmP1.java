@@ -196,8 +196,10 @@ public class ThmP1 {
 		//number of units in this parse, as in numUnits (leaf nodes) in Class Struct.
 		//same as commandNumUnits when ParseStructType is NONE.
 		private int numUnits;
-		//the commandNumUnits associated to a WLCommand that gives this parsedStr.
+		//the commandNumUnits associated to the WLCommand that gives this parsedStr.
 		private int commandNumUnits;
+		//the WLCommand associated to this ParsedPair.
+		private WLCommand wlCommand;
 		//the ParseStructType of this parsedStr, eg "STM", "HYP", etc.
 		private ParseStructType parseStructType;
 		//parse struct corresponding to the parseStructType
@@ -219,9 +221,18 @@ public class ThmP1 {
 			}
 		}
 		
+		/**
+		 * @param parsedStr
+		 * @param parseStruct
+		 * @param score
+		 * @param numUnits
+		 * @param commandNumUnits
+		 * @param wlCommand @Nullable null if no WLCommand was picked up.
+		 */
 		public ParsedPair(String parsedStr, ParseStruct parseStruct, double score, int numUnits, 
-				int commandNumUnits){
+				int commandNumUnits, WLCommand wlCommand){
 			this(parsedStr, score, "", false);
+			this.wlCommand = wlCommand;
 			this.numUnits = numUnits;
 			this.commandNumUnits = commandNumUnits;
 			this.stringForm = this.toString();
@@ -231,25 +242,32 @@ public class ThmP1 {
 		}
 		
 		/**
+		 * @return the wlCommand
+		 */
+		public WLCommand getWlCommand() {
+			return wlCommand;
+		}
+		/**
 		 * Used in case of no WLCommand parse string, then use alternate measure
 		 * of span, deduced from longForm dfs.
 		 * @param score
 		 * @param numUnits
 		 * @param commandNumUnits
 		 */
-		public ParsedPair(double score, int numUnits, int commandNumUnits){
-			this("", null, score, numUnits, commandNumUnits);
+		public ParsedPair(double score, int numUnits, int commandNumUnits, WLCommand wlCommand){
+			this("", null, score, numUnits, commandNumUnits, wlCommand);
 		}
 		
-		public ParsedPair(String parsedStr, double score, int numUnits, int commandNumUnits, ParseStructType type){
-			this(parsedStr, null, score, numUnits, commandNumUnits);
+		public ParsedPair(String parsedStr, double score, int numUnits, int commandNumUnits, WLCommand wlCommand, 
+				ParseStructType type){
+			this(parsedStr, null, score, numUnits, commandNumUnits, wlCommand);
 			this.parseStructType = type;
 			this.stringForm = this.toString();
 		}
 		
 		public ParsedPair(String parsedStr, double score, int numUnits, int commandNumUnits, 
-				ParseStruct parseStruct, ParseStructType type){
-			this(parsedStr, parseStruct, score, numUnits, commandNumUnits);
+				WLCommand wlCommand, ParseStruct parseStruct, ParseStructType type){
+			this(parsedStr, parseStruct, score, numUnits, commandNumUnits, wlCommand);
 			this.parseStructType = type;
 			this.stringForm = this.toString();
 		}
@@ -2520,7 +2538,6 @@ public class ThmP1 {
 			List<ParseStruct> headParseStructList, ParseState parseState,
 			List<ParsedPair> longFormParsedPairList, List<int[]> contextVecList){
 		
-		int commandNumUnitsWithHeadNoneSum = 0;
 		//use insertion sort, since list of maps is usually very small, ~1-5
 		//for maps with multiple entries (e.g. one sentence with both a HYP and a STM), add the numUnits and 
 		//commandNumUnits across entries.
@@ -2639,7 +2656,9 @@ public class ThmP1 {
 			for(Map.Entry<ParseStructType, ParsedPair> structTypePair : map.entries()){
 				ParsedPair pair = structTypePair.getValue();
 				ParseStructType parseStructType = structTypePair.getKey();
-				parsedExpr.add(new ParsedPair(pair.parsedStr, pair.score, pair.numUnits, pair.commandNumUnits, parseStructType));				
+				WLCommand wlCommand = pair.wlCommand;
+				parsedExpr.add(new ParsedPair(pair.parsedStr, pair.score, pair.numUnits, pair.commandNumUnits, 
+						wlCommand, parseStructType));				
 			}
 			
 			//Also add the long form to parsedExpr	
@@ -2662,6 +2681,10 @@ public class ThmP1 {
 		ParseStruct bestParseStruct = headParseStructList.get(bestIndex);
 		bestParseStruct.set_parentParseStruct(parseState.getCurParseStruct());
 		
+		//build relation vector for the highest-ranked parse, set relation vector to parseState.
+		Multimap<ParseStructType, ParsedPair> topParsedPairMMap = sortedParsedPairMMapList.get(0);
+		
+		
 		//set head for this run of current part that triggered the command.
 		if(null == parseState.getHeadParseStruct()){ //curParseStruct must be null too.
 			parseState.setHeadParseStruct(bestParseStruct);
@@ -2673,13 +2696,12 @@ public class ThmP1 {
 		//parseState.addToHeadParseStructList(bestParseStruct);
 		
 		//System.out.println("curStructContextVec " + curStructContextVec);		
-				//add the relevant wrapper (and so command strings) to curParseStruct in parseState		
-				
-				//decide whether to jump out of current ParseStruct layer
-				String punctuation = parseState.getAndClearCurPunctuation();
-				if(punctuation != null){
-					setParseStateFromPunctuation(punctuation, parseState);
-				}
+		//add the relevant wrapper (and so command strings) to curParseStruct in parseState.				
+		//Decide whether to jump out of current ParseStruct layer
+		String punctuation = parseState.getAndClearCurPunctuation();
+		if(punctuation != null){
+			setParseStateFromPunctuation(punctuation, parseState);
+		}
 				
 	}
 	
@@ -2734,9 +2756,6 @@ public class ThmP1 {
 		 * Parts can be any ParseStructType. Should make this a local var.
 		 */
 		Multimap<ParseStructType, ParsedPair> parseStructMap = ArrayListMultimap.create();
-		//initialize context vector for this command <--need to expose by adding to list
-		//length is total number of terms in corpus, i.e. row dimension in term-document matrix in search
-		//int[] curStructContextVec = new int[TriggerMathThm2.keywordDictSize()];
 		
 		//fills the parseStructMap and produces String representation, collect commands built above.	
 		boolean contextVecConstructed = false;
@@ -2752,7 +2771,7 @@ public class ThmP1 {
 		//if parseStructMap empty, ie no WLCommand was found, but long parse form might still be good
 		if(parseStructMap.isEmpty()){
 			ParsedPair pair = new ParsedPair(wlSB.toString(), parseState.getCurParseStruct(), uHeadStruct.maxDownPathScore(), 
-					uHeadStruct.numUnits(), span);
+					uHeadStruct.numUnits(), span, null);
 			//partsMap.put(type, curWrapper.WLCommandStr);	
 			parseStructMap.put(ParseStructType.NONE, pair);
 		}
@@ -3386,9 +3405,9 @@ public class ThmP1 {
 		//if(struct1.isStructA() && !struct2.isStructA()){
 			Struct newStruct = absorbingStruct.copy();				
 			//add as property
-			String ppt;
+			String ppt = "";
 			if(absorbedStruct.prev1NodeType().isTypeStruct()){
-				ppt = ((Struct)absorbedStruct.prev1()).simpleToString(true,  ); //<--deal with ent_symb!
+				//ppt = ((Struct)absorbedStruct.prev1()).simpleToString(true,  ); //<--deal with ent_symb!
 			}else{
 				ppt = absorbedStruct.prev1().toString();
 			}
@@ -3415,6 +3434,7 @@ public class ThmP1 {
 	 * @param structList,
 	 *            the head, at mx position (len-1, len-1)
 	 * @return
+	 * @deprecated
 	 */
 	private static int ArrayDFS(StructList structList) {
 		// ArrayList<MatrixPathNode> mxPathNodeList = new
@@ -3460,6 +3480,7 @@ public class ThmP1 {
 	 * @param mxPathNode
 	 *            MatrixPathNode, corresponding to current Struct
 	 * @return score
+	 * @deprecated
 	 */
 	// combine iteration of arraylist and recursion
 	private static double ArrayDFS(MatrixPathNode mxPathNode) {

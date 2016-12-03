@@ -740,7 +740,7 @@ public class ParseToWLTree{
 					}
 				}*/
 				ParsedPair pair = new ParsedPair(curWrapper.wlCommandStr, null, struct.maxDownPathScore(), 
-						struct.numUnits(), WLCommand.commandNumUnits(curCommand));
+						struct.numUnits(), WLCommand.commandNumUnits(curCommand), curCommand);
 				//partsMap.put(type, curWrapper.WLCommandStr);	
 				partsMap.put(parseStructType, pair);
 				
