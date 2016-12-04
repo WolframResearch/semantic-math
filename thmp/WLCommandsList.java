@@ -459,6 +459,7 @@ public class WLCommandsList {
 		
 		commandsCountMap = ImmutableMap.copyOf(commandsCountPreMap);
 		posTermList = ImmutableList.copyOf(posList);
+		//if(posTermList == null) throw new RuntimeException();
 
 		if(null != optionalTermsGroupCountPreMap){
 			optionalTermsGroupCountMap = ImmutableMap.copyOf(optionalTermsGroupCountPreMap);

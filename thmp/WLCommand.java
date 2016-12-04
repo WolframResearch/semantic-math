@@ -237,8 +237,8 @@ public class WLCommand implements Serializable{
 	 */
 	public static class ImmutableWLCommand extends WLCommand{
 		
-		public ImmutableWLCommand(){
-		}
+		//public ImmutableWLCommand(){
+		//}
 		
 		/**
 		 * Static factory pattern.
@@ -1766,6 +1766,7 @@ public class WLCommand implements Serializable{
 	 * @return posTermList of current command
 	 */
 	public static List<PosTerm> posTermList(WLCommand curCommand){
+		//System.out.println("curCommand " + curCommand + " " +Arrays.toString(Thread.currentThread().getStackTrace()));
 		return curCommand.posTermList;
 	}
 	

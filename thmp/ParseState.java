@@ -17,6 +17,7 @@ import thmp.utils.Buggy;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 
 
 /**
@@ -55,6 +56,10 @@ public class ParseState {
 	
 	//current parse struct, somewhere down the tree from headParseStruct
 	private ParseStruct curParseStruct;
+	
+	//context vector that takes into account structure of parse tree, i.e.
+	//the relations between different Structs.
+	private BitSet relationalContextVec;
 	
 	private boolean writeUnknownWordsToFile;
 	
@@ -274,8 +279,7 @@ public class ParseState {
 	//waiting WLCommandWrapper map on deck, waiting to be added. Necessary 
 	//because don't know if need to add to next logic layer, or to current
 	//layer, until the entire tree is read.
-	//private Multimap<ParseStructType, WLCommandWrapper> waitingWrapperMMap;
-	
+	//private Multimap<ParseStructType, WLCommandWrapper> waitingWrapperMMap;	
 	private ParseState(ParseStateBuilder builder){
 		this.variableNamesMMap = ArrayListMultimap.create();
 		this.writeUnknownWordsToFile = builder.writeUnknownWordsToFile;		
@@ -303,6 +307,20 @@ public class ParseState {
 	 */
 	public void setRecentParseSpanning(boolean recentParseSpanning) {
 		this.recentParseSpanning = recentParseSpanning;
+	}
+
+	/**
+	 * @return the relationalContextVec
+	 */
+	public BitSet getRelationalContextVec() {
+		return relationalContextVec;
+	}
+
+	/**
+	 * @param relationalContextVec the relationalContextVec to set
+	 */
+	public void setRelationalContextVec(BitSet relationalContextVec) {
+		this.relationalContextVec = relationalContextVec;
 	}
 
 	/**

@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -28,12 +29,14 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 
+import exceptions.ParseRuntimeException;
 import thmp.ParseState.VariableDefinition;
 import thmp.ParseToWLTree.WLCommandWrapper;
 import thmp.Struct.Article;
 import thmp.Struct.ChildRelation;
 import thmp.Struct.ChildRelationType;
 import thmp.Struct.NodeType;
+import thmp.ThmP1.ParsedPair;
 import thmp.search.NGramSearch;
 import thmp.search.ThreeGramSearch;
 import thmp.search.TriggerMathThm2;
@@ -543,7 +546,10 @@ public class ThmP1 {
 
 			String curWord = strAr[i];
 			
-			//why this?
+			//sometimes some blank space falls through, in which case just skip.
+			if(WordForms.getWhitespacePattern().matcher(curWord).find()){
+				continue;
+			}
 			/*if (curWord.matches("\\s*,*")){
 				continue;
 			}*/
@@ -2683,7 +2689,8 @@ public class ThmP1 {
 		
 		//build relation vector for the highest-ranked parse, set relation vector to parseState.
 		Multimap<ParseStructType, ParsedPair> topParsedPairMMap = sortedParsedPairMMapList.get(0);
-		
+		BitSet relationVec = RelationVec.buildRelationVec(topParsedPairMMap);
+		parseState.setRelationalContextVec(relationVec);
 		
 		//set head for this run of current part that triggered the command.
 		if(null == parseState.getHeadParseStruct()){ //curParseStruct must be null too.
@@ -2957,8 +2964,11 @@ public class ThmP1 {
 			
 			if(childRelation == null){
 				//should throw checked exception, and let the program keep running, rather than
-				//runtime exception
-				throw new IllegalStateException("Inside ThmP1.reduce(), childRelation should not be null!");
+				//runtime exception 				
+				logger.error("Inside ThmP1.reduce(), childRelation should not be null! " + parseState.getTokenList());
+				return null;
+				//throw new ParseRuntimeException("Inside ThmP1.reduce(), childRelation should not be null! " + parseState.getTokenList());
+				//throw new IllegalStateException("Inside ThmP1.reduce(), childRelation should not be null! " + parseState.getTokenList());
 			}
 			
 			//if type equivalent to to-be-parent's type and is "pre", don't add, 

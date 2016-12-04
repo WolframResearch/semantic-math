@@ -190,6 +190,9 @@ public class DetectHypothesis {
 		}
 	}
 	
+	/**
+	 * Deserialize objects in parsedExpressionOutputFileStr.
+	 */
 	private static void deserialize(){
 	
 		FileInputStream fileInputStream = null;

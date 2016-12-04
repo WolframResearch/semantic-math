@@ -472,6 +472,7 @@ public class ThmP1TestRun {
 			st = "$X$ is such that $Y$ is compact";
 			st = "each quotient $M_i/M_{i-1}$ is isomorphic to $R/I_i$ for some ideal $I_i$ of $R$";
 			st = "$X$ is compact where $Y$ is a space";
+			st = "$R$ is of principal ideal ring";
 			//st = "X is connected ";
 			//st = "$F$ is to be a field"; //<--defluff this one
 			//st = "$F$ is said to be a field.";
@@ -613,6 +614,7 @@ public class ThmP1TestRun {
 		}*/
 		
 		System.out.println("@@@" + parseState.getHeadParseStruct());
+		System.out.println("Relational Vector: " + parseState.getRelationalContextVec());
 		
 		parseState.logState();
 		

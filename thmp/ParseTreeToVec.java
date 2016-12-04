@@ -210,7 +210,7 @@ public class ParseTreeToVec {
 			//is adverb-adj, point adverb to adj.
 			for(int i = 0; i < termStrArLen - 1; i++){
 				String word = termStrAr[i];
-				Integer wordIndex = keywordDict.get(word);;
+				Integer wordIndex = keywordDict.get(word);
 				if(i > 0 && wordIndex != null){
 					List<String> posList = posMMap.get(word);
 					boolean isAdj = false;

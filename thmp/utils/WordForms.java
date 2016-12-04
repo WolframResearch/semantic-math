@@ -120,7 +120,8 @@ public class WordForms {
 	}
 	
 	/**
-	 * Return brackets pattern: "\\[([^\\]]*)\\]"
+	 * Return brackets pattern: "\\[([^\\]]*)\\]".
+	 * E.g. "...[...]..."
 	 * @return
 	 */
 	public static Pattern BRACKETS_PATTERN(){

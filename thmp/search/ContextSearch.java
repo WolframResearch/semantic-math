@@ -58,11 +58,11 @@ public class ContextSearch {
 			}catch(FileNotFoundException e){
 				System.out.println("Context vectors file not found!");
 				e.printStackTrace();
-				throw new RuntimeException(e);
+				throw new IllegalStateException(e);
 			}
 		}
 		
-		try{			
+		try{
 			String line;
 			while((line = contextVecFileBReader.readLine()) != null){
 				//a line is a String of the form "{1, 0, ...}"
@@ -109,7 +109,6 @@ public class ContextSearch {
 		String queryContextVec = thmp.GenerateContextVector.createContextVector(query);
 		//short-circuit if context vec not meaninful (insignificant entries created)
 		
-		/////////
 		//create range vector for Nearest
 		Matcher bracketsMatcher = BRACKETS_PATTERN.matcher(nearestThmIndexList.toString());
 		String rangeVec = bracketsMatcher.replaceAll("{$1}");
