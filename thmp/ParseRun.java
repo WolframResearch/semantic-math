@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import thmp.ThmP1.ParsedPair;
+import thmp.utils.WordForms;
 
 /**
  * Contains methods to parse verbosely or minimally without much output.
@@ -26,9 +27,13 @@ public class ParseRun {
 		String[] strAr = ThmP1.preprocess(st);			
 		
 		for(int i = 0; i < strAr.length; i++){
+			if(WordForms.getWhitespacePattern().matcher(strAr[i]).find()){
+				continue;
+			}
 			//alternate commented out line to enable tex converter
 			//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim()) ));
 			parseState = ThmP1.tokenize(strAr[i].trim(), parseState);
+			
 			parseState = ThmP1.parse(parseState);
 			int[] curContextVec = ThmP1.getParseContextVector();
 			parseContextVecList.add(curContextVec);

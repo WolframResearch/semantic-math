@@ -155,13 +155,13 @@ public class WLCommandsList {
 		/*WLCommandMapBuilder.put("given", addCommand(
 				new String[] { "parti, given, trigger", "symb|ent, , true" }));*/
 		wLCommandMapBuilder.put("given", addCommand(new PBuilder("parti", "given", false, true, false), 
-				new PBuilder("symb|ent", null, true) ));	
+				new PBuilder("symb|ent", null, true) ));
 		
 		/*WLCommandMapBuilder.put("exist", addCommand(
 				new String[] { ", there, false", "Exists[", ", exists*, trigger",  "ent|symb|phrase|noun, , true", "]"}));*/
 		wLCommandMapBuilder.put("there", addCommand(new PBuilder(null, "there", false, true, false), new PBuilder("Exists["),
-				new PBuilder(null, "exists*|is", false), new PBuilder("ent|symb|phrase|noun", null, true),
-				 new PBuilder("]") ));	
+				new PBuilder(null, "exists*|is", false), new PBuilder("ent|symb|phrase|noun", null, true, RelationType.EXIST),
+				 new PBuilder("]") ));
 		
 		//WLCommandMapBuilder.put("is", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is|are|be, trigger",
 			//	"\\[Element]", "symb|ent|phrase, , true, TriggerMathObj" }));
@@ -201,11 +201,12 @@ public class WLCommandsList {
 		//***action*** commands
 		//WLCommandMapBuilder.put("is", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is|are|be, trigger",
 			//	"\\[Element]", "symb|ent|phrase, , true, TriggerMathObj" }));
-		wLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro|noun", null, true, false, false, PosTermConnotation.DEFINED), 
+		wLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro|noun", null, true, false, false, PosTermConnotation.DEFINED,
+				RelationType._IS), 
 				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), new PBuilder("\\[Element]"),
 				//negative term, to stop command if encountered
 				new PBuilder("adj", null, WLCommand.PosTermType.NEGATIVE),			
-				new PBuilder("symb|ent|phrase", null, true, false, true, PosTermConnotation.DEFINING) ));
+				new PBuilder("symb|ent|phrase", null, true, false, true, PosTermConnotation.DEFINING, RelationType.IS_) ));
 		//e.g. "$X$ is connected"
 		//WLCommandMapBuilder.put("is", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is|are|be, trigger",
 			//"\\[HasProperty]", "adj, , true, TriggerMathObj" }));
@@ -221,9 +222,9 @@ public class WLCommandsList {
 		//negative of above
 		//WLCommandMapBuilder.put("is not", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is not|are not|be not, trigger",
 				//"Not[\\[Element]]", "symb|ent|adj|phrase, , true, TriggerMathObj" }));
-		wLCommandMapBuilder.put("is not", addCommand(new PBuilder("symb|ent|pro|noun", null, true), 
+		wLCommandMapBuilder.put("is not", addCommand(new PBuilder("symb|ent|pro|noun", null, true, RelationType._IS), 
 				new PBuilder("verb|vbs|be", "is not|are not|be not", false, true, false), 
-				new PBuilder("Not[\\[Element]]"), new PBuilder("symb|ent|adj|phrase", null, true, false, true) ));
+				new PBuilder("Not[\\[Element]]"), new PBuilder("symb|ent|adj|phrase", null, true, false, true, RelationType.IS_) ));
 		
 		//WLCommandMapBuilder.put("act", addCommand(new String[] { "Action[", "symb|ent|pro, , true", ", act|acts, trigger",
 				//";", "symb|ent|pro, , true, TriggerMathObj", ";", ", by, false, OPT", "ent, , true, OPT", "]" }));		
@@ -284,7 +285,7 @@ public class WLCommandsList {
 				//"\\[Element]", "symb|ent|adj|phrase, , true, TriggerMathObj" }));
 		wLCommandMapBuilder.put("is called", addCommand(new PBuilder("symb|ent|pro", null, true), 
 				new PBuilder("auxpass", "is called", false, true, false), new PBuilder("\\[Element]"),
-				new PBuilder("symb|ent|adj|phrase", null, true, false, true) ));
+				new PBuilder("symb|ent|adj|phrase", null, true, false, true, RelationType._IS) ));
 		
 		// ***Hypothesis commands***
 		//for every $x$

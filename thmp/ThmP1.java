@@ -1563,7 +1563,7 @@ public class ThmP1 {
 			// add as property
 
 		}
-		//System.out.println("^^^^structList: " + structList);
+		System.out.println("\n^^^^structList: " + structList + sentence);
 		
 		parseState.setTokenList(structList);
 		return parseState;
@@ -1618,7 +1618,6 @@ public class ThmP1 {
 	 * reference assignment.
 	 * @return parseState
 	 */
-
 	public static ParseState parse(ParseState parseState) {
 		return parse(parseState, false);
 	}
@@ -2553,6 +2552,8 @@ public class ThmP1 {
 		List<Integer> commandNumUnitsList = new ArrayList<Integer>();
 		//use scores to tie-break once scores become more comprehensive
 		List<Double> scoresList = new ArrayList<Double>();
+		//whether there exists nontrivial (non-None) ParseStructType's
+		boolean nonTrivialTypeExists = false;
 		
 		//ordering in the sorted list, the value list.get(i) is the index of the pair in the original parsedPairMMapList
 		List<Integer> finalOrderingList = new ArrayList<Integer>();
@@ -2567,11 +2568,19 @@ public class ThmP1 {
 		int firstCommandNumUnits = 0;
 		double firstScore = 1;
 		
+		if(firstMMap.containsKey(ParseStructType.HYP) 
+						|| firstMMap.containsKey(ParseStructType.STM)
+						|| firstMMap.containsKey(ParseStructType.HYP_iff)){
+			nonTrivialTypeExists = true;
+		}
+		
 		for(ParsedPair parsedPair : firstMMap.values()){
+			
 			firstNumUnits += parsedPair.numUnits();
 			firstCommandNumUnits += parsedPair.commandNumUnits();
 			firstScore *= parsedPair.score();
 		}
+		
 		System.out.println("****parsedPairMMapList " + parsedPairMMapList);
 		numUnitsList.add(firstNumUnits);
 		commandNumUnitsList.add(firstCommandNumUnits);
@@ -2583,6 +2592,13 @@ public class ThmP1 {
 			int commandNumUnits = 0;
 			double score = 1;
 			Multimap<ParseStructType, ParsedPair> mmap = parsedPairMMapList.get(i);
+			
+			if(!nonTrivialTypeExists 
+					&& (mmap.containsKey(ParseStructType.HYP) 
+							|| mmap.containsKey(ParseStructType.STM)
+							|| mmap.containsKey(ParseStructType.HYP_iff))){
+				nonTrivialTypeExists = true;
+			}
 			
 			for(ParsedPair parsedPair : mmap.values()){
 				numUnits += parsedPair.numUnits();
@@ -2601,7 +2617,6 @@ public class ThmP1 {
 				//commandNumUnits weigh the most, use numUnits as tie-breakers, use numUnits if
 				//commandNumUnits differ by more than 1. Count commandNumUnits diff 3/2 as much weight
 				//as numUnits diff
-				//simplify this to use only one if!
 				int sortedNumUnits = numUnitsList.get(j);
 				int sortedCommandNumUnits = commandNumUnitsList.get(j);
 				double sortedScore = scoresList.get(j);
@@ -2637,9 +2652,29 @@ public class ThmP1 {
 				commandNumUnitsList.add(listSz, commandNumUnits);
 				scoresList.add(listSz, score);
 				finalOrderingList.add(listSz, i);
-			}
-			
+			}			
 		}
+		//if top-ranked element has ParseStructType None and there exist lower-ranked
+		//ones that have nontrivial ParseStructType's
+		if(nonTrivialTypeExists){
+			
+			Multimap<ParseStructType, ParsedPair> firstMap = sortedParsedPairMMapList.get(0);
+			
+			if(1 == firstMap.size() && firstMap.containsKey(ParseStructType.NONE)){				
+				//the top-ranked one has type None, even when there are nontrivial ones that rank lower
+				for(int i = 1; i < sortedParsedPairMMapList.size(); i++){
+					Multimap<ParseStructType, ParsedPair> mmap = sortedParsedPairMMapList.get(i);
+					if(mmap.containsKey(ParseStructType.HYP) 
+							|| mmap.containsKey(ParseStructType.STM)
+							|| mmap.containsKey(ParseStructType.HYP_iff)){
+						sortedParsedPairMMapList.remove(i);
+						sortedParsedPairMMapList.add(0, mmap);	
+						break;
+					}
+				}				
+			}
+		}
+		
 		System.out.println("##commandNumUnitsList " + commandNumUnitsList );
 		//only add nontrivial results, but add trivial results (>=3) if no nontrivial ones exist.
 		//This works as the results are sorted, and nontrivial ones come first in sorted list.
@@ -2928,7 +2963,13 @@ public class ThmP1 {
 				if(hypStruct.type().equals("hyp") ){
 					childRelation = extractHypChildRelation(hypStruct);					
 				}
+				//sometimes hypStruct does not have type "hyp" despite struct2 having
+				//type "hypo"
+				if(null == childRelation){
+					childRelation = new ChildRelation("");
+				}
 				//which should be attached to immediately prior word
+				//System.out.println("children: " + hypStruct+ " &&&"+ struct1 + " *** " + struct2);
 				if(childRelation.childRelation().contains("which") && struct1.children().size() > 0){
 					return new EntityBundle(firstEnt, recentEnt, recentEntIndex);
 				}
@@ -2965,8 +3006,9 @@ public class ThmP1 {
 			if(childRelation == null){
 				//should throw checked exception, and let the program keep running, rather than
 				//runtime exception 				
-				logger.error("Inside ThmP1.reduce(), childRelation should not be null! " + parseState.getTokenList());
-				return null;
+				logger.info("Inside ThmP1.reduce(), childRelation should not be null! " + parseState.getTokenList());
+				childRelation = new ChildRelation("");
+				//return null;
 				//throw new ParseRuntimeException("Inside ThmP1.reduce(), childRelation should not be null! " + parseState.getTokenList());
 				//throw new IllegalStateException("Inside ThmP1.reduce(), childRelation should not be null! " + parseState.getTokenList());
 			}

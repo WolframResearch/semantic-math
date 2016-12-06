@@ -46,9 +46,9 @@ public class CollectThm {
 	private static final String rawFileStr = "src/thmp/data/CommAlg5.txt";
 	//read in from list of files streams instead of just one
 	private static final List<String> rawFileStrList = Arrays.asList(new String[]{
-			//"src/thmp/data/testContextVector.txt", 
+			"src/thmp/data/testContextVector.txt", 
 			
-			"src/thmp/data/fieldsRawTex.txt",
+			//"src/thmp/data/fieldsRawTex.txt",
 			//"src/thmp/data/CommAlg5.txt", 
 			//"src/thmp/data/multilinearAlgebra.txt",
 			//"src/thmp/data/functionalAnalysis.txt",
@@ -240,8 +240,7 @@ public class CollectThm {
 			Map<String, Integer> wordsScorePreMap = new HashMap<String, Integer>();
 			buildScoreMapNoAnno(wordsScorePreMap);
 			wordsScoreMapNoAnno = ImmutableMap.copyOf(wordsScorePreMap);
-		}
-		
+		}		
 		
 		/**
 		 * the frequency of bare words, without annocation such as H or C attached, is 
@@ -503,6 +502,7 @@ public class CollectThm {
 		public static ImmutableList<ImmutableMap<String, Integer>> get_thmWordsListNoAnno(){
 			return thmWordsListNoAnno;
 		}
+		
 		/**
 		 * Fills up wordsScoreMapBuilder
 		 * @param wordsScoreMapBuilder

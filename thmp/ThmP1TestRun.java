@@ -463,19 +463,24 @@ public class ThmP1TestRun {
 			st = "We define $ \\ mathtt{Squares} \\ subset (\\ R^2)^4$ to be the set of all quadruples of vertices of squares in $ \\ R^2$ traversed in anticlockwise order ";
 			st = "a field over $ Q$ of numbers in $ R$";
 			st = "if $M$ is a finitely presented $R$-module";
-			st = "An abelian group $N$ is called an $(A, B)$-bimodule"; //<--bimodule gets cut off!
+			st = "An abelian group $N$ is called an $(A, B)$-bimodule";
 			st = "An abelian group $N$ is called an $(A, B)$-bimodule if it is an $A$-module and a $B$-module"; //<--parse this better			
 			st = "given an $(A, B)$-bimodule";
 			st = "function $f$ and $g$ are zero"; //<--make sure the and is parsed correctly!
-			st = "if there exists an $n \\in \\mathbf{N}$ and an surjection of $R$-algebras $R[x_1, \\ldots, x_n] \to S$";
 			st = "$f$ maps $X$ to $Y$";
-			st = "$X$ is such that $Y$ is compact";
+			st = "$X$ is such that $X$ is compact";
 			st = "each quotient $M_i/M_{i-1}$ is isomorphic to $R/I_i$ for some ideal $I_i$ of $R$";
 			st = "$X$ is compact where $Y$ is a space";
 			st = "$R$ is of principal ideal ring";
+			st = "for any topological space $X$ and map $X \\to \\text{Aut}(E/F)$ such that the action $X \\times E \\to E$ is continuous the induced map $X to \\text{Gal}(E/F)$ is continuous";
+			st = "if there exists an $n \\in \\mathbf{N}$ and an surjection of $R$-algebras $R[x_1, \\ldots, x_n] \to S$";
+			st = "$R$ is such that it is of principal ideal ring";
+			st = "$F$ is to be a field"; //<--defluff this one!			
+			st = "these fields without question are algebraically closed";
+			st = "$F$ is said to be a field.";
+			st = "Let $K$ be a field of characteristic $p > 0$. Let $K \\subset L$ be a separable algebraic extension. ";
+			
 			//st = "X is connected ";
-			//st = "$F$ is to be a field"; //<--defluff this one
-			//st = "$F$ is said to be a field.";
 			//st = "is these fields are perfect";
 			//st = "if it is both an $A$-module and a $B$-module"; //<--need to know which part to skip if doesn't lead to full parse
 			//st = "these fields without question are perfect"; //<--use this to test dropping out
@@ -592,8 +597,6 @@ public class ThmP1TestRun {
 	private static void parseInputVerbose(String st, ParseState parseState){
 		
 		List<int[]> parseContextVecList = new ArrayList<int[]>();			
-		
-		
 		
 		String[] strAr = ThmP1.preprocess(st);			
 		

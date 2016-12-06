@@ -225,6 +225,9 @@ public class GenerateContextVector {
 		for(int i = 0; i < contextVecList.size(); i++){
 			System.out.println(Arrays.toString(contextVecList.get(i)));
 		}*/
+		if(0 == contextVecList.size()){
+			return null;
+		}
 		int contextVecLength = contextVecList.get(0).length;
 		int contextVecListSz = contextVecList.size();
 		

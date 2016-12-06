@@ -36,12 +36,13 @@ public class GenerateRelationVec {
 	public static void main(String[] args){
 		
 		ParseStateBuilder parseStateBuilder = new ParseStateBuilder();
-		ParseState parseState = parseStateBuilder.build();
+		
 		List<BitSet> bitSetList = new ArrayList<BitSet>(); 
 		
 		List<String> bareThmList = CollectThm.ThmList.get_bareThmList();
-		
+		//System.out.println("bareThmList" + bareThmList);
 		for(String thm : bareThmList){
+			ParseState parseState = parseStateBuilder.build();
 			BitSet bitVec = generateRelationVec(thm, parseState);	
 			bitSetList.add(bitVec);
 		}
@@ -50,9 +51,8 @@ public class GenerateRelationVec {
 		serializeRelationVecList(bitSetList);
 		
 		//test deserialization
-		System.out.println("Deserialized relation vectors: " + deserializeRelationVecList());
-	}
-	
+		//System.out.println("Deserialized relation vectors: " + deserializeRelationVecList());
+	}	
 	
 	/**
 	 * Silent so not to clobber the original stack trace.
@@ -119,12 +119,13 @@ public class GenerateRelationVec {
 			}*/
 		}catch(IOException e){
 			e.printStackTrace();
-			throw new IllegalStateException("IOException while reading object. " + e);			
+			throw new IllegalStateException("IOException while reading object. " + e);	
 		}catch(ClassNotFoundException e){
 			e.printStackTrace();
 			throw new IllegalStateException("Class not found while reading object. " + e);
 		}finally{
 			silentClose(fi);
+			
 		}
 		return relationVecList;
 	}

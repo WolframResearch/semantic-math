@@ -494,6 +494,15 @@ public class WLCommand implements Serializable{
 				this.posTermConnotation = posTermConnotation;
 			}
 			
+			public PBuilder(String posStr, String nameStr, boolean includeInBuiltString, boolean isTrigger,
+					boolean isTriggerMathObj, PosTermConnotation posTermConnotation, RelationType relationType){
+				this(posStr, nameStr, includeInBuiltString);
+				this.isTrigger = isTrigger;
+				this.isTriggerMathObj = isTriggerMathObj;
+				this.posTermConnotation = posTermConnotation;
+				this.relationType = relationType;
+			}
+			
 			/**
 			 * Builder for 4 terms or more, optional case.
 			 * isTrigger must be false in this case, as trigger word is not optional.

@@ -332,8 +332,7 @@ public class ParseState {
 		private boolean writeUnknownWordsToFile;
 		
 		//fill in something...
-		public ParseStateBuilder(){
-			
+		public ParseStateBuilder(){			
 		}
 		
 		public void setWriteUnknownWordsToFile(boolean bool){

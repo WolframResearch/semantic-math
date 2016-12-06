@@ -49,7 +49,12 @@ public class DetectHypothesis {
 	
 	//contains ParsedExpressions, to be serialized to persistent storage
 	private static final List<ParsedExpression> parsedExpressionList = new ArrayList<ParsedExpression>();
-	private static final String parsedExpressionOutputFileStr = "src/thmp/data/parsedExpressionList.ser";
+	private static final List<String> DefinitionListWithThmStrList = new ArrayList<String>();
+	private static final List<String> DefinitionList = new ArrayList<String>();
+	
+	private static final String parsedExpressionSerOutputFileStr = "src/thmp/data/parsedExpressionList.ser";
+	private static final String parsedExpressionStrOutputFileStr = "src/thmp/data/parsedExpressionList.txt";
+	private static final String definitionStrOutputFileStr = "src/thmp/data/parsedExpressionDefinitions.txt";
 	
 	/**
 	 * Combination of theorem String and the list of
@@ -76,8 +81,8 @@ public class DetectHypothesis {
 		@Override
 		public String toString(){
 			StringBuilder sb = new StringBuilder(70);
-			sb.append("thmWithDefStr: -").append(thmWithDefStr)
-				.append("- definitionList: ").append(definitionList);
+			sb.append("- definitionList: ").append(definitionList)
+				.append("thmWithDefStr: -").append(thmWithDefStr);
 			return sb.toString();
 		}
 
@@ -134,7 +139,7 @@ public class DetectHypothesis {
 		
 		BufferedReader inputBF = null;
 		try{
-			inputBF = new BufferedReader(new FileReader("src/thmp/data/samplePaper2.txt"));
+			inputBF = new BufferedReader(new FileReader("src/thmp/data/samplePaper1.txt"));
 		}catch(FileNotFoundException e){
 			e.printStackTrace();
 			throw new IllegalStateException("Source file not found!");
@@ -143,7 +148,11 @@ public class DetectHypothesis {
 		try{
 			List<DefinitionListWithThm> defThmList = readThm(inputBF, parseState);
 			System.out.println("DefinitionListWithThm list: " + defThmList);
-			
+			DefinitionListWithThmStrList.add(defThmList.toString()+ "\n");
+			for(DefinitionListWithThm def : defThmList){
+				
+				DefinitionList.add(def.getDefinitionList().toString());
+			}
 		}catch(IOException e){
 			e.printStackTrace();
 		}
@@ -157,13 +166,12 @@ public class DetectHypothesis {
 			parseInputVerbose(nextLine, parseState);
 		}*/
 		
-		//sc.close();
-		
+		//sc.close();	
 		//serialize parsedExpressionList to persistent storage
 		FileOutputStream fileOuputStream = null;
 		ObjectOutputStream objectOutputStream = null;
 		try{
-			fileOuputStream = new FileOutputStream(parsedExpressionOutputFileStr);
+			fileOuputStream = new FileOutputStream(parsedExpressionSerOutputFileStr);
 			objectOutputStream = new ObjectOutputStream(fileOuputStream);
 		}catch(FileNotFoundException e){
 			e.printStackTrace();
@@ -175,6 +183,7 @@ public class DetectHypothesis {
 		
 		try{
 			objectOutputStream.writeObject(parsedExpressionList);
+			
 			System.out.println("parsedExpressionList: " + parsedExpressionList);
 			objectOutputStream.close();
 			fileOuputStream.close();
@@ -182,6 +191,10 @@ public class DetectHypothesis {
 			e.printStackTrace();
 			throw new IllegalStateException("IOException while writing to file or closing resources");
 		}
+		
+		//write parsedExpressionList to file
+		thmp.utils.FileUtils.writeToFile(DefinitionListWithThmStrList, parsedExpressionStrOutputFileStr);
+		thmp.utils.FileUtils.writeToFile(DefinitionList, definitionStrOutputFileStr);
 		
 		//deserialize objects
 		boolean deserialize = false;
@@ -198,7 +211,7 @@ public class DetectHypothesis {
 		FileInputStream fileInputStream = null;
 		ObjectInputStream objectInputStream = null;
 		try{
-			fileInputStream = new FileInputStream(parsedExpressionOutputFileStr);
+			fileInputStream = new FileInputStream(parsedExpressionSerOutputFileStr);
 			objectInputStream = new ObjectInputStream(fileInputStream);
 		}catch(FileNotFoundException e){
 			e.printStackTrace();
@@ -335,7 +348,7 @@ public class DetectHypothesis {
 				DefinitionListWithThm thmDef = appendHypothesesAndParseThm(thm, parseState);
 				
 				definitionListWithThmList.add(thmDef);
-				
+				//System.out.println("___-------++++++++++++++" + thmDef);
 				//should parse the theorem.
 				//serialize the full parse, i.e. parsedExpression object, along with original input.				
 				
@@ -403,10 +416,10 @@ public class DetectHypothesis {
 		int thmStrLen = thmStr.length();		
 		boolean mathMode = false;
 		
+		//filter through text and try to pick up definitions.
 		for(int i = 0; i < thmStrLen; i++){
 			
-			char curChar = thmStr.charAt(i);
-			
+			char curChar = thmStr.charAt(i);			
 			//go through thm, get the variables that need to be defined
 			//once inside Latex, use delimiters, should also take into account
 			//the case of entering math mode with \[ !
