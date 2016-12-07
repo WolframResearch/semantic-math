@@ -1,4 +1,7 @@
-for all | for all but finitely many | adj
+all but | all but finitely many | adj
+all but | all but countably many | adj
+all but | all but at most finitely many | adj
+all but | all but at most countably many | adj
 if and | if and only if | hyp
 we say | we say that | fluff
 we say | we say | fluff

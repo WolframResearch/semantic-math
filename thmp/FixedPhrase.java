@@ -7,8 +7,9 @@ import java.util.regex.Pattern;
  * that definitively states something and serves as one 
  * part of speech.
  * Could incorporate scores in for later use during mx parsing. 
- * e.g. "for all but finitely many" should be grouped into nearby ent's
+ * e.g. "all but finitely many" should be grouped into nearby ent's
  * pos as adj.
+ * Should remain immutable, e.g. no setters.
  * @author yihed
  *
  */

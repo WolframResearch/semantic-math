@@ -1677,7 +1677,6 @@ public class WLCommand implements Serializable{
 				//based on extraneous terms such as "if" or verbs.
 				//System.out.println(Pattern.compile("verb$").matcher("verbphrase").find());
 				if(posPattern.matcher("verb").find() && !isPosWildCard){
-					System.out.println("DISQUALIFYING COMMAND. posPattern " + posPattern+"\t" + structPosStr);
 					return true;					
 				}
 			}

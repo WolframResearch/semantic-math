@@ -338,7 +338,7 @@ public class StructA<A, B> extends Struct{
 					//&& ((Struct) prev1).WLCommandWrapperList() == null){
 				List<WLCommandWrapper> prev1WrapperList = ((Struct) prev1).WLCommandWrapperList();
 				if(prev1WrapperList == null){
-					String prev1Str = ((Struct) prev1).simpleToString2(includeType, curCommand);
+					String prev1Str = ((Struct) prev1).simpleToString(includeType, curCommand);
 					if(!prev1Str.matches("\\s*")){
 						//tempStr += prev1Str;
 						tempSB.append(prev1Str);

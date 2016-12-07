@@ -479,7 +479,21 @@ public class ThmP1TestRun {
 			st = "these fields without question are algebraically closed";
 			st = "$F$ is said to be a field.";
 			st = "Let $K$ be a field of characteristic $p > 0$. Let $K \\subset L$ be a separable algebraic extension. ";
+			st = "Let $f$ be a continuous real-valued function on the compact interval $[a,b]$. Then there exists a point $c$ in $[a,b]$ such that $f(x) \\leq f(c)$ for all $x \\in [a,b]$.";
+			//st = "Then there exists a point $c$ in $[a,b]$ such that $f(x) \\leq f(c)$ for all $x \\in [a,b]$.";
+			st = "Let $X$ be a nonempty set, let $\\mathfrak{M} \\subset \\mathcal{P}(X)$ be an algebra and let $\\mu : \\mathfrak{M}$ be a finitely additive measure.";
+			st = "Then $\\mu$ can be written as the sum of a countably additive measure and a purely finitely additive measure.";
+			st = "Let $(X,\\mathfrak{M},\\mu)$ be a measure space with $\\mu$ finite and let ${E_j}_{j \\in J} \\subset \\mathfrak{M}$ be an arbitrary family of pairwise disjoint subsets of $X$.";
+			st = "let ${E_j}_{j \\in J} \\subset \\mathfrak{M}$ be an arbitrary family of pairwise disjoint subsets of $X$.";
+			st = "Then $\\mu(E_j)=0$ for all but at most countably many $j \\in J$.";
+			st = "Then $F_p$ is field for all but finitely many $p \\in J$.";
+			st = "$X$ is bounded above"; //<-- parse this!!
+			st = "Let $X$ be a locally compact Hausdorff space";
 			
+			//st = "then $\\mu(E_j)=0$"; //converting to assert!
+			
+			//st = "given disjoint subset of $X$";
+			//st = "given point $c$ in $[a,b]$ such that $f(x) \\leq f(c)$ for all $x \\in [a,b]$";			
 			//st = "X is connected ";
 			//st = "is these fields are perfect";
 			//st = "if it is both an $A$-module and a $B$-module"; //<--need to know which part to skip if doesn't lead to full parse

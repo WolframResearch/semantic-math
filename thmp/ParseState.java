@@ -231,6 +231,20 @@ public class ParseState {
 			return definingStruct.toString();
 		}
 		
+		
+		
+		/* (non-Javadoc)
+		 * @see java.lang.Object#hashCode()
+		 */
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + ((definingStruct.nameStr() == null) ? 0 : definingStruct.nameStr().hashCode());
+			result = prime * result + ((variableName == null) ? 0 : variableName.hashCode());
+			return result;
+		}
+
 		@Override
 		public boolean equals(Object other){
 			
@@ -252,7 +266,7 @@ public class ParseState {
 			}
 			return true;
 		}
-		
+
 		/**
 		 * @return the variableName
 		 */
@@ -378,6 +392,7 @@ public class ParseState {
 	 */
 	public void addLocalVariableStructPair(String name, Struct entStruct){
 		
+		
 		Matcher latexContentMatcher = LATEX_DOLLARS_PATTERN.matcher(name);
 		Matcher textLatexMatcher;
 		//System.out.println("adding name: " +name +Arrays.toString(Thread.currentThread().getStackTrace()));
@@ -395,7 +410,8 @@ public class ParseState {
 				VariableName latexVariableName = getVariableName(latexName);
 				VariableDefinition latexDef = new VariableDefinition(latexVariableName, entStruct, this.currentInputStr);
 				
-				if(!variableNamesMMap.containsEntry(latexVariableName, latexDef)){				
+				if(!variableNamesMMap.containsKey(latexVariableName) || !variableNamesMMap.containsEntry(latexVariableName, latexDef)){				
+					System.out.println("....********latexVariableName: " + latexVariableName);
 					this.variableNamesMMap.put(latexVariableName, latexDef);
 					
 					//if variableNameType is paren/brace/bracket, also include name without 
@@ -422,10 +438,14 @@ public class ParseState {
 		}
 		
 		VariableName variableName = getVariableName(name);
+
 		if(!variableNamesMMap.containsKey(variableName)){
+			//System.out.println(variableName + "-++-" + variableNamesMMap + " ===== "  +Arrays.toString(Thread.currentThread().getStackTrace()));
+			
 			VariableDefinition def = new VariableDefinition(variableName, entStruct, this.currentInputStr);	
 			this.variableNamesMMap.put(variableName, def);	
 		}
+		
 	}
 	
 	/**

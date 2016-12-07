@@ -838,6 +838,10 @@ public class Maps {
 			// adverb_
 			probMap.put("adverb_adj", .9);
 			
+			// art_ , e.g. "let $S$ be a nonempty set"
+			//probMap.put("art_adj", .6);
+			probMap.put("art_ent", .9);
+			
 			// hyp_
 			probMap.put("hyp_ent", .8);
 			probMap.put("hyp_adj", .7);

@@ -13,6 +13,7 @@ assumption noun
 sum ent
 valuation ent
 discrete adj
+additive adj
 direct sum ent
 set ent
 point ent

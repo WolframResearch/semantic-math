@@ -12,7 +12,9 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -412,6 +414,9 @@ public class DetectHypothesis {
 		StringBuilder latexExpr = new StringBuilder();
 		
 		List<VariableDefinition> variableDefinitionList = new ArrayList<VariableDefinition>();
+		//varDefSet set to keep track of which VariableDefinition's have been added, so not to 
+		//add duplicate ones.
+		Set<VariableDefinition> varDefSet = new HashSet<VariableDefinition>();
 		
 		int thmStrLen = thmStr.length();		
 		boolean mathMode = false;
@@ -433,7 +438,7 @@ public class DetectHypothesis {
 					//and try to find definitions for them. Appends original
 					//definition strings to thmWithDefSB
 					List<VariableDefinition> varDefList = pickOutVariables(latexExpr.toString(), variableNamesMMap,
-							thmWithDefSB);
+							varDefSet, thmWithDefSB);
 					
 					variableDefinitionList.addAll(varDefList);
 					latexExpr.setLength(0);
@@ -470,9 +475,12 @@ public class DetectHypothesis {
 	 * @param variableNamesMMap
 	 * @param thmWithDefSB StringBuilder that's the original input string appended
 	 * to the definition strings.
+	 * @param varDefSet set to keep track of which VariableDefinition's have been added, so not to 
+	 * add duplicate ones.
 	 */
 	private static List<VariableDefinition> pickOutVariables(String latexExpr, 
 			ListMultimap<VariableName, VariableDefinition> variableNamesMMap,
+			Set<VariableDefinition> varDefSet,
 			StringBuilder thmWithDefSB){
 		
 		//list of definitions needed in this latexExpr
@@ -496,22 +504,24 @@ public class DetectHypothesis {
 			//if empty, check to see if bracket pattern, if so, check just the name without the brackets.
 			//e.g. x in x(yz)
 			if(0 == possibleVarDefListLen){
-				Matcher m = BRACKET_SEPARATOR_PATTERN.matcher(possibleVar);
-				if(m.find()){
-					possibleVariableName = ParseState.getVariableName(m.group(1));
+				Matcher bracketSeparatorMatcher = BRACKET_SEPARATOR_PATTERN.matcher(possibleVar);
+				if(bracketSeparatorMatcher.find()){
+					possibleVariableName = ParseState.getVariableName(bracketSeparatorMatcher.group(1));
 					possibleVarDefList = variableNamesMMap.get(possibleVariableName);
-					possibleVarDefListLen = possibleVarDefList.size();
-					
+					possibleVarDefListLen = possibleVarDefList.size();					
 				}
 			}
 			
 			if(possibleVarDefListLen > 0){
 				VariableDefinition latestVarDef = possibleVarDefList.get(possibleVarDefListLen-1);
-				varDefList.add(latestVarDef);
-				//System.out.println("latestVarDef.getOriginalDefinitionStr() " + latestVarDef.getOriginalDefinitionStr());
-				thmWithDefSB.append(latestVarDef.getOriginalDefinitionStr()).append(" ");
-			}
 			
+				if(!varDefSet.contains(latestVarDef)){
+					varDefSet.add(latestVarDef);
+					varDefList.add(latestVarDef);
+					//System.out.println("latestVarDef.getOriginalDefinitionStr() " + latestVarDef.getOriginalDefinitionStr());
+					thmWithDefSB.append(latestVarDef.getOriginalDefinitionStr()).append(" ");
+				}
+			}			
 		}
 		return varDefList;
 	}

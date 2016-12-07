@@ -70,13 +70,15 @@ public class ThmP1 {
 	// split a sentence into parts, separated by commas, semicolons etc
 	// private String[] subSentences;
 	//pattern for matching negative of adjectives: "un..."
-	private static final Pattern NEGATIVE_ADJECTIVE_PATTERN = Pattern.compile("un(.+)");
+	private static final Pattern NEGATIVE_ADJECTIVE_PATTERN = Pattern.compile("un(.+)|non(.+)");	
 	private static final Pattern AND_OR_PATTERN = Pattern.compile("and|or");
 	private static final Pattern IS_ARE_BE_PATTERN = Pattern.compile("is|are|be");
 	private static final Pattern CALLED_PATTERN = Pattern.compile("called|defined|said|denoted");
 	private static final Pattern CONJ_DISJ_PATTERN1 = Pattern.compile("conj|disj");
 	//end part of latex expressions, e.g. " B)$-module"
 	private static final Pattern LATEX_END_PATTER = Pattern.compile("[^$]*\\$.*");
+	private static final Pattern POSSIBLE_ADJ_PATTERN = Pattern.compile("(?:.*tive|.*wise|.*ary)$");
+	
 	// list of parts of speech, ent, verb etc <--should make immutable
 	private static final List<String> posList;
 	
@@ -122,7 +124,7 @@ public class ThmP1 {
 	//move to initializer!
 	private static final String[] NO_FUSE_ENT = new String[]{"map"};
 	private static final Set<String> noFuseEntSet;
-	private static final Pattern PUNCTUATION_PATTERN = Pattern.compile("(\\.|;|,|!|:)");
+	private static final Pattern PUNCTUATION_PATTERN = Pattern.compile("(\\.|;|,|!|:)$");
 	private static final boolean COLLECT_UNKNOWN_WORDS = false;
 	//used in dfs, to determine whether to iterate over.
 	private static final double LONG_FORM_SCORE_THRESHOLD = .7;
@@ -633,47 +635,21 @@ public class ThmP1 {
 				//if(true) throw new IllegalStateException("pair "+pair.word());
 				continue;
 			}
-			// check for trigger words of fixed phrases, e.g. "with this said"
+			// check for trigger words of fixed phrases, e.g. "with this said",
+			// "all but finitely many", as well as 2- or 3-grams.
 			else if (i < strAr.length - 1) {
 				String potentialTrigger = curWord + " " + strAr[i + 1];
-				if (fixedPhraseMap.containsKey(potentialTrigger)) {					
-					// do first two words instead of 1, e.g. "for all" instead
-					// of just "for"
-					// since compound words contain at least 2 words
-					List<FixedPhrase> fixedPhraseList = fixedPhraseMap.get(potentialTrigger);
-					
-					Iterator<FixedPhrase> fixedPhraseListIter = fixedPhraseList.iterator();
-					while (fixedPhraseListIter.hasNext()) {
-						FixedPhrase fixedPhrase = fixedPhraseListIter.next();
-						int numWordsDown = fixedPhrase.numWordsDown();
-						// don't really need this check
-						// ... could have many pos!
-
-						// String joined =
-						// StringUtils.join(Arrays.copyOfRange(str, i,
-						// str.length) );
-						String joined = "";
-						int k = i;
-						while (k < strAr.length && k - i < numWordsDown) {
-							// String joined =
-							// String.join(Arrays.copyOfRange(str, i,
-							// str.length) );
-							joined += strAr[k] + " ";
-							k++;
-						}
-						
-						Matcher matcher = fixedPhrase.phrasePattern().matcher(joined.trim());
-						if (matcher.matches()) {
-							String pos = fixedPhrase.pos();
-							if(!pos.equals("fluff")){
-								Pair phrasePair = new Pair(joined.trim(), pos);								
-								pairs.add(phrasePair);								
-								if(pos.matches("ent")) mathIndexList.add(pairs.size() - 1);
-							}
-							
-							i += numWordsDown - 1;							
-							continue strloop;
-						}
+				if (fixedPhraseMap.containsKey(potentialTrigger)) {
+					//primordial pair to be set if valid fixed phrase is found.
+					//Ugly solution, but this avoids creating a whole new class
+					//with just an in and a Pair as members.
+					Pair emptyPair = new Pair(null, null);
+					int numWordsDown = findFixedPhrase(potentialTrigger, i, strAr, emptyPair);
+					if(null != emptyPair.pos()){
+						pairs.add(emptyPair);			
+						if(emptyPair.pos().equals("ent")) mathIndexList.add(pairs.size() - 1);						
+						i += numWordsDown - 1;						
+						continue strloop;
 					}
 				}				
 				int newIndex = gatherTwoThreeGram(i, strAr, pairs, mathIndexList);
@@ -797,9 +773,9 @@ public class ThmP1 {
 					curWord = curWord.toLowerCase();
 				}*/
 				// composite words, such as "for all".
-				String temp = curWord;
+				StringBuilder tempSB = new StringBuilder(curWord);
 				String pos;
-				List<String> tempPosList = posMMap.get(temp);
+				List<String> tempPosList = posMMap.get(curWord);
 				String tempPos = tempPosList.get(0);
 				
 				if(curWord.equals("for")){
@@ -809,18 +785,34 @@ public class ThmP1 {
 					}
 				}
 				
+				Pair emptyPair = new Pair(null, null);
 				//keep going until all words in an n-gram are gathered
 				while (tempPos.matches("[^_]*_COMP|[^_]*_comp") && i < strAr.length - 1) {					
-					curWord = temp;
-					temp = temp + " " + strAr[i + 1];
-					if (!posMMap.containsKey(temp)) {
+					
+					//if there's a next word, see if these words form triggers for fixed phrases
+					if(i < strAr.length - 2){
+						String potentialTrigger = strAr[i+1] + " " + strAr[i+2];
+						int numWordsDown = findFixedPhrase(potentialTrigger, i+1, strAr,
+								emptyPair);
+						if(null != emptyPair.pos()){
+							//-2 because we were looking ahead and fed i+1 to findFixedPhrase().
+							//
+							i += numWordsDown - 2;
+							break;
+						}
+					}
+					
+					tempSB = tempSB.append(" ").append(strAr[i+1]);
+					if (!posMMap.containsKey(tempSB.toString())) {
 						break;
 					}
-					tempPos = posMMap.get(temp).get(0);
+					
+					tempPos = posMMap.get(tempSB.toString()).get(0);
 					i++;
 				}
 				
 				Pair pair;
+				String temp = tempSB.toString();
 				if (posMMap.containsKey(temp)) {
 					posList = posMMap.get(temp);
 					pos = posList.get(0).split("_")[0];
@@ -834,19 +826,27 @@ public class ThmP1 {
 					pair = new Pair(curWord, pos);
 					addExtraPosToPair(pair, posList);
 				}				
-				pair = fuseAdverbAdj(pairs, curWord, pair);
-				
+				pair = fuseAdverbAdj(pairs, curWord, pair);				
 				pairs.add(pair);
+				
+				if(null != emptyPair.pos()){
+					emptyPair = fuseAdverbAdj(pairs, curWord, emptyPair);	
+					pairs.add(emptyPair);
+					if(emptyPair.pos().equals("ent")) mathIndexList.add(pairs.size() - 1);
+					System.out.println("emptyPair added! pairs: " + pairs);
+				}
+				
 			}//negative adjective word, not that unusual.
 			else if((negativeAdjMatcher = NEGATIVE_ADJECTIVE_PATTERN.matcher(curWord)).find()){
 				
-				String curAdjWord = negativeAdjMatcher.group(1);
+				String curAdjWord = null == negativeAdjMatcher.group(1)
+						? negativeAdjMatcher.group(2) : negativeAdjMatcher.group(1);
 				
 				posList = posMMap.get(curAdjWord);
 				
 				if (!posList.isEmpty()) {
 					String pos = posList.get(0).split("_")[0];
-					Pair pair = new Pair(curAdjWord, pos);
+					Pair pair = new Pair(curWord, pos);
 					//add any additional pos to pair if applicable.
 					addExtraPosToPair(pair, posList);
 					pair = fuseAdverbAdj(pairs, curWord, pair);					
@@ -1111,7 +1111,6 @@ public class ThmP1 {
 					}
 				}
 			}
-
 		}
 
 		// If phrase isn't in dictionary, ie has type "", then use probMap to
@@ -1172,8 +1171,15 @@ public class ThmP1 {
 					mathIndexList.add(index);
 				}
 			}
+			//if still no pos, try to guess part of speech based on endings 
+			if(curpair.pos().equals("")){
+				if(POSSIBLE_ADJ_PATTERN.matcher(curWord).find()){
+					curpair.set_pos("adj");
+				}
+				
+			}
 		}
-
+		
 		// map of math entities, has mathObj + ppt's
 		List<StructH<HashMap<String, String>>> mathEntList = new ArrayList<StructH<HashMap<String, String>>>();
 
@@ -1213,7 +1219,7 @@ public class ThmP1 {
 			}
 			
 			HashMap<String, String> tempMap = new HashMap<String, String>();
-			if(mathObjName==null){
+			if(null == mathObjName){
 				throw new IllegalArgumentException( pairs.toString());
 			}
 			tempMap.put("name", mathObjName);
@@ -1286,8 +1292,8 @@ public class ThmP1 {
 			// combine multiple adjectives into entities
 			// ...get more than adj ... multi-word descriptions
 			// set the pos as the current index in mathEntList
-			// adjectives or determiners
-				
+			// adjectives or determiners	
+			System.out.println("PAIRS! " + pairs);
 			while (index - k > -1 && pairs.get(index - k).pos().matches("adj|det|num")) {
 				Pair curPair = pairs.get(index - k);
 				String curWord = curPair.word();
@@ -1570,6 +1576,49 @@ public class ThmP1 {
 	}
 	
 	/**
+	 * 
+	 * @param potentialTrigger
+	 * @param i Starting index of this fixed phrase.
+	 * @param strAr
+	 * @param emptyPair
+	 * @return
+	 */
+	private static int findFixedPhrase(String potentialTrigger, int i, String[] strAr,
+			Pair emptyPair) {
+		// do first two words instead of 1, e.g. "for all" instead
+		// of just "for"
+		// since compound words contain at least 2 words
+		List<FixedPhrase> fixedPhraseList = fixedPhraseMap.get(potentialTrigger);
+		int numWordsDown = 0;
+		//fixedPhrases should actually reside in a trie instead a Multimap!
+		Iterator<FixedPhrase> fixedPhraseListIter = fixedPhraseList.iterator();
+		while (fixedPhraseListIter.hasNext()) {
+			FixedPhrase fixedPhrase = fixedPhraseListIter.next();
+			numWordsDown = fixedPhrase.numWordsDown();
+			
+			StringBuilder joinedSB = new StringBuilder(20);
+			
+			int k = i;
+			while (k < strAr.length && k - i < numWordsDown) {
+				
+				joinedSB.append(strAr[k]).append(" ");
+				k++;
+			}
+			
+			String joinedTrimmed = joinedSB.toString().trim();
+			Matcher matcher = fixedPhrase.phrasePattern().matcher(joinedTrimmed);
+			if (matcher.matches()) {
+				String pos = fixedPhrase.pos();
+				if(!pos.equals("fluff")){				
+					emptyPair.set_word(joinedTrimmed);
+					emptyPair.set_pos(pos);
+				}
+			}
+		}
+		return numWordsDown;
+	}
+
+	/**
 	 * Determines whether the token string represents a math
 	 * entity.
 	 * @return
@@ -1654,6 +1703,11 @@ public class ThmP1 {
 		//parseContextVector = new int[parseContextVectorSz];
 		
 		List<Struct> inputStructList = parseState.getTokenList();
+		
+		if(null == inputStructList){
+			return parseState;
+		}
+		
 		Struct recentEnt = parseState.getRecentEnt();
 		
 		int len = inputStructList.size();
@@ -2486,13 +2540,17 @@ public class ThmP1 {
 				}
 				parseState.setTokenList(structList);
 				
-				System.out.println("\n=___+++++++++_========= structList: " + structList);
+				System.out.println("\n=___+++++++++_=========Defluffing structList: " + structList);
 				
 				boolean isReparseAgain = true;
 				parseState = parse(parseState, isReparseAgain);
 				
 			}
 			}
+			
+			//if still no full parse try to see if converting latex expressions $...$ 
+			//from "ent" to "assert" helps.
+			
 			
 			System.out.println("%%%%%\n");
 		}
@@ -2912,7 +2970,7 @@ public class ThmP1 {
 	 * @param firstEnt
 	 * @param recentEnt
 	 * @param recentEntIndex
-	 * @param i
+	 * @param i Indices in mx.
 	 * @param j
 	 * @param k
 	 * @param type1
@@ -2940,7 +2998,7 @@ public class ThmP1 {
 			// child
 			// assert ensures rule correctness
 			assert !struct1.isStructA() : "struct1 does not have type StructH in reduce() for \"newchild\" relation!";
-
+			
 			// get a (semi)deep copy of this StructH, since
 			// later-added children may not
 			// get used eventually, ie hard to remove children
@@ -2984,8 +3042,8 @@ public class ThmP1 {
 					childRelation = extractHypChildRelation(hypStruct);
 				}
 				childToAdd = (Struct)struct2.prev2();
-			}
-			else{			
+				
+			}else{			
 			// add to child relation, usually a preposition, 
 			//eg  "from", "over"
 			// could also be verb, "consist", "lies"			
@@ -3862,7 +3920,7 @@ public class ThmP1 {
 	 * @return array of sentence Strings
 	 */
 	public static String[] preprocess(String inputStr) {
-
+		
 		if(logger.getLevel().equals(Level.INFO)){
 			logger.info("Input: " + inputStr);
 		}
@@ -3905,7 +3963,8 @@ public class ThmP1 {
 				} 
 			}
 
-			if (!inTex && curWord.matches("\\$.*") && !curWord.matches("\\$[^$]+\\$.*")) {
+			if (!inTex && curWord.matches("\\$.*") && !curWord.matches("^\\$[^$]+\\$.*$")) {
+				System.out.println("inTex: " + curWord);
 				inTex = true;
 			} else if (inTex && curWord.contains("$")) {
 				// }else if(curWord.matches("[^$]*\\$|\\$[^$]+\\$.*") ){
@@ -3959,7 +4018,7 @@ public class ThmP1 {
 					}
 					
 					//**tempWord sometimes invokes too many strings!***** <--when?
-					//System.out.println("tempWord: " + tempWord);					
+					//System.out.println("tempWord: " + tempWord);				
 					
 					String replacement = fluffMap.get(tempWord.toLowerCase());
 					if (replacement != null) {
@@ -3972,7 +4031,7 @@ public class ThmP1 {
 				}
 			}
 
-			// if composite fluff word ?? <--already taken care of
+			// composite fluff words taken care of, with e.g. fixed phrases
 			if (!madeReplacement && !PUNCTUATION_PATTERN.matcher(curWord).find() 
 					&& !fluffMap.containsKey(curWord.toLowerCase())) {
 				// if (!curWord.matches("\\.|,|!") &&
@@ -4014,6 +4073,7 @@ public class ThmP1 {
 					}
 					//add the punctuation to use later
 					sentenceBuilder.append(" ").append(curWord);
+					System.out.println("curWord: " +curWord+"sentence to append " + sentenceBuilder.toString());
 					
 					sentenceList.add(sentenceBuilder.toString());
 					sentenceBuilder.setLength(0);
@@ -4032,6 +4092,7 @@ public class ThmP1 {
 			sentenceList.add(sentenceBuilder.toString());
 		}
 		
+		System.out.println("sentenceList " + sentenceList);
 		return sentenceList.toArray(new String[0]);
 	}
 

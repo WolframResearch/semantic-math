@@ -426,7 +426,8 @@ public class StructH<H> extends Struct{
 				int commandNumUnits = WLCommand.commandNumUnits(curWrapper.WLCommand());
 			 	WLCommand.increment_commandNumUnits(curCommand, commandNumUnits);
 			}
-			//System.out.println("^^^curWrapper: " + curWrapper);
+			System.out.println("^^^curWrapper: " + curWrapper);
+			
 			//been built into one command already
 			this.WLCommandStrVisitedCount++;
 			return curWrapper.WLCommandStr();			
@@ -493,16 +494,17 @@ public class StructH<H> extends Struct{
 			sb.append(", \"Qualifiers\" -> ");
 			
 			StringBuilder childSb = new StringBuilder();
-			for(int i = 0; i < childrenSize; i++){			
+			for(int i = 0; i < childrenSize; i++){		
 				Struct child = children.get(i);
 				String childRelationStr = childRelationList.get(i).childRelation;
-				if(child.WLCommandWrapperList() != null)
+				/*if(child.WLCommandWrapperList() != null){
 					continue;
+				}*/
 				//str += ", ";
 				//str += childRelation.get(i) + " ";	
 				//System.out.println("^^^cur child: " + child);
 				
-				String childStr = child.simpleToString2(includeType, curCommand);
+				String childStr = child.simpleToString(includeType, curCommand);
 				//str += childStr;	
 				if(!childStr.matches("\\s*")){
 					//only append curChidRelation if child is a StructH, to avoid

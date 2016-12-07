@@ -94,6 +94,7 @@ public class WLCommandsList {
 		triggerWordLookupMapBuilder.put("is included", "is contained");
 		triggerWordLookupMapBuilder.put("are included", "is contained");
 		triggerWordLookupMapBuilder.put("are contained", "is contained");
+		triggerWordLookupMapBuilder.put("is said", "is called");
 		// triggerWordLookupMapBuilder.put("radius", "is");
 
 		triggerWordLookupMap = triggerWordLookupMapBuilder.build();
@@ -193,7 +194,8 @@ public class WLCommandsList {
 		
 		//WLCommandMapBuilder.put("subset",
 			//	addCommand(new String[] { ", subset, trigger", "Subset[", "pre, of, false", "symb|ent, , true", "]" }));
-		wLCommandMapBuilder.put("subset", addCommand(new PBuilder(null, "subset", false, true, false), 
+		wLCommandMapBuilder.put("subset", addCommand(
+				new PBuilder(null, "subset", false, true, false), 
 				new PBuilder("Subset["), new PBuilder("pre", "of", false), 
 				new PBuilder("symb|ent", null, true), new PBuilder("]") ));
 		
