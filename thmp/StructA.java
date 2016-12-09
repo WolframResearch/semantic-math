@@ -553,6 +553,7 @@ public class StructA<A, B> extends Struct{
 
 	//use carefully: must know the declared type
 	/////remove necessity to cast!
+	@Override
 	@SuppressWarnings("unchecked")
 	public void set_prev1(Object prev1){
 		this.prev1 = (A)prev1;	 
@@ -570,6 +571,7 @@ public class StructA<A, B> extends Struct{
 		this.prev1 = (A)prev1;
 	}
 	
+	@Override
 	@SuppressWarnings("unchecked")
 	public void set_prev2(Object prev2){
 		this.prev2 = (B)prev2;

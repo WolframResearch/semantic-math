@@ -32,9 +32,17 @@ power series ring ent
 power noun
 generalization noun
 field ent
+dual ent
 closed adj
 boundary ent
+bound ent
+bound verb
+almost adj
+bounded adj_COMP
+"bounded above" adj
+"bounded below" adj
 analytic adj
+converge verbAlone
 along pre
 great adj
 finite adj

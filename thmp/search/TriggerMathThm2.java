@@ -3,10 +3,12 @@ package thmp.search;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
@@ -49,7 +51,7 @@ public class TriggerMathThm2 {
 	 * Dictionary of keywords -> their index/row number in mathObjMx.
 	 * ImmutableMap. Java indexing, starts at 0.
 	 */
-	private static final Map<String, Integer> keywordDict;
+	private static final Map<String, Integer> keywordIndexDict;
 	
 	//private static final int LIST_INDEX_SHIFT = 1;
 	/**
@@ -74,14 +76,14 @@ public class TriggerMathThm2 {
 	private static final boolean DEBUG = false;
 	
 	static {
-		thmWordsList = CollectThm.ThmWordsMaps.get_thmWordsListNoAnno();
+		thmWordsList = CollectThm.ThmWordsMaps.get_thmWordsFreqListNoAnno();
 		// ImmutableList.Builder<String> keywordList = ImmutableList.builder();
 		List<String> keywordList = new ArrayList<String>();
 		
 		// which keyword corresponds to which index	in the keywords list
 		//ImmutableMap.Builder<String, Integer> keyDictBuilder = ImmutableMap.builder();
 		//map of String (keyword), and integer (index in keywordList) of keyword.
-		Map<String, Integer> keywordMap = new HashMap<String, Integer>();
+		Map<String, Integer> keywordIndexMap = new HashMap<String, Integer>();
 		//ImmutableList.Builder<String> mathObjListBuilder = ImmutableList.builder();
 		//to be list that contains the theorems, in the order they are inserted
 		//ImmutableList.Builder<String> mathObjListBuilder = ImmutableList.builder();
@@ -99,9 +101,18 @@ public class TriggerMathThm2 {
 		//addKeywordToMathObj(new String[] { "Godel's incompleteness theorem", "arithmetic", "incomplete"}, keywordList, keywordMap, mathObjMMap);
 		
 		//adds thms from CollectThm.thmWordsList. The thm name is its index in thmWordsList.
-		addThmsFromList(keywordList, keywordMap, mathObjMMap);
+		addThmsFromList(keywordList, keywordIndexMap, mathObjMMap);
 		
-		keywordDict = ImmutableMap.copyOf(keywordMap);
+		//re-order the list so the most frequent words appear first, as optimization
+		//so that search words can match the most frequently-occurring words.
+		Map<String, Integer> docWordsFreqMapNoAnno = CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno();
+		C comp = new C(docWordsFreqMapNoAnno);
+		Map<String, Integer> keyWordIndexTreeMap = new TreeMap<String, Integer>(comp);
+		keyWordIndexTreeMap.putAll(docWordsFreqMapNoAnno);
+		
+		keywordIndexDict = ImmutableMap.copyOf(keyWordIndexTreeMap);
+		System.out.println("!_-------keywordIndexDict: " + keywordIndexDict);
+		//keywordIndexDict = ImmutableMap.copyOf(keywordIndexMap);
 		
 		//mathObjMx = new int[keywordList.size()][mathObjMMap.keySet().size()];	
 		//mathObjMx = new int[keywordList.size()][thmWordsList.size()];
@@ -111,7 +122,8 @@ public class TriggerMathThm2 {
 		//System.out.println("BEFORE mathObjMMap" +mathObjMMap);
 		//pass in thmList to ensure the right order (insertion order) of thms 
 		//is preserved or MathObjList and mathObjMMap. Multimaps don't preserve insertion order
-		buildMathObjMx(keywordList, mathObjMMap, thmList);
+		buildMathObjMx(//keywordList, 
+				mathObjMMap, thmList);
 
 		mathObjList = ImmutableList.copyOf(thmList);
 		
@@ -125,18 +137,46 @@ public class TriggerMathThm2 {
 		}*/
 	}
 	
+	private static class C implements Comparator<String>{
+		
+		Map<String, Integer> wordFreqMap;
+		public C(Map<String, Integer> map){
+			this.wordFreqMap = map;
+		}
+		
+		/**
+		 * Higher freq ranked lower, so prioritized in sorting later.
+		 */
+		@Override
+		public int compare(String s1, String s2){
+			Integer freq1 = wordFreqMap.get(s1);
+			Integer freq2 = wordFreqMap.get(s2);
+			
+			if(null != freq1){
+				if(null != freq2){
+					return freq1 > freq2 ? -1 : 1;
+				}else{
+					return -1;
+				}
+			}else{
+				return 1;
+			}
+		}
+	}
+	
 	/**
 	 * Add keyword/term to mathObjList, in the process of building keywordList, mathObjMMap, etc.
 	 * @param keywords
 	 * @param keywordList
-	 * @param keywordMap
+	 * @param keywordIndexMap
 	 * @param mathObjMMap
 	 */
 	public static void addKeywordToMathObj(String[] keywords, List<String> keywordList,
-			Map<String, Integer> keywordMap, Multimap<String, String> mathObjMMap) {
-		if (keywords.length == 0)
-			return;
+			Map<String, Integer> keywordIndexMap, Multimap<String, String> mathObjMMap) {
 		
+		if (keywords.length == 0){
+			return;		
+		}
 		//String keyword = keywords[0];
 		//theorem
 		String thm = keywords[0];
@@ -145,8 +185,8 @@ public class TriggerMathThm2 {
 			String keyword = keywords[i];
 			mathObjMMap.put(thm, keyword); //version with tex, unprocessed
 			//add each keyword in. words should already have annotation.
-			if(!keywordMap.containsKey(keyword)){
-				keywordMap.put(keyword, keywordList.size());
+			if(!keywordIndexMap.containsKey(keyword)){
+				keywordIndexMap.put(keyword, keywordList.size());
 				keywordList.add(keyword);
 			}			
 		}		
@@ -169,11 +209,11 @@ public class TriggerMathThm2 {
 	 * Weighed by frequencies.
 	 * @param keywords
 	 * @param keywordList
-	 * @param keywordMap
+	 * @param keywordIndexMap
 	 * @param mathObjMMap
 	 */
 	private static void addThmsFromList(List<String> keywordList,
-			Map<String, Integer> keywordMap, Multimap<String, String> mathObjMMap){
+			Map<String, Integer> keywordIndexMap, Multimap<String, String> mathObjMMap){
 		//thmWordsList has annotations, such as hyp or stm
 		//ImmutableList<ImmutableMap<String, Integer>> thmWordsList = CollectThm.get_thmWordsListNoAnno();
 		//System.out.println("---thmWordsList " + thmWordsList);
@@ -192,7 +232,7 @@ public class TriggerMathThm2 {
 			//System.out.println("wordsMap " +wordsMap);
 			//thms added to mathObjMMap are *not* in the same order as thms are iterated here!! Cause Multimaps don't 
 			//need to preserve insertion order!
-			addKeywordToMathObj(keyWordsList.toArray(new String[keyWordsList.size()]), keywordList, keywordMap, mathObjMMap);
+			addKeywordToMathObj(keyWordsList.toArray(new String[keyWordsList.size()]), keywordList, keywordIndexMap, mathObjMMap);
 		}
 		//System.out.println("!!mathObjMMap " + mathObjMMap);
 	}
@@ -201,7 +241,8 @@ public class TriggerMathThm2 {
 	 * Builds the MathObjMx. Weigh inversely based on word frequencies extracted from 
 	 * CollectThm.java.
 	 */
-	private static void buildMathObjMx(List<String> keywordList, Multimap<String, String> mathObjMMap,
+	private static void buildMathObjMx(//List<String> keywordList, 
+			Multimap<String, String> mathObjMMap,
 			ImmutableList<String> thmList) {
 		
 		//map of annotated words and their scores
@@ -234,7 +275,7 @@ public class TriggerMathThm2 {
 			norm = Math.sqrt(norm);
 			//divide by log of norm
 			for (String keyword : curMathObjCol) {
-				Integer keyWordIndex = keywordDict.get(keyword);
+				Integer keyWordIndex = keywordIndexDict.get(keyword);
 				Integer wordScore = wordsScoreMap.get(keyword);
 				//divide by log of norm
 				//could be very small! ie 0 after rounding.
@@ -267,18 +308,18 @@ public class TriggerMathThm2 {
 		List<WordWrapper> wordWrapperList = SearchWordPreprocess.sortWordsType(thm);
 		//System.out.println(wordWrapperList);
 		//keywordDict is annotated with "hyp"/"stm"
-		int dictSz = keywordDict.keySet().size();
+		int dictSz = keywordIndexDict.keySet().size();
 		int[] triggerTermsVec = new int[dictSz];
 		
 		for (WordWrapper wordWrapper : wordWrapperList) {
 			//annotated form
 			String termAnno = wordWrapper.hashToString();
 			
-			Integer rowIndex = keywordDict.get(termAnno);
+			Integer rowIndex = keywordIndexDict.get(termAnno);
 			//System.out.println("first rowIndex " + rowIndex);
 			if(rowIndex == null){
 				termAnno = wordWrapper.otherHashForm();
-				rowIndex = keywordDict.get(termAnno);				
+				rowIndex = keywordIndexDict.get(termAnno);				
 			}
 			//should normalize!!
 			
@@ -323,7 +364,7 @@ public class TriggerMathThm2 {
 		
 		String priorityWords = ConstantsInSearch.get_priorityWords();
 		//keywordDict is annotated with "hyp"/"stm"
-		int dictSz = keywordDict.keySet().size();
+		int dictSz = keywordIndexDict.keySet().size();
 		//int[] triggerTermsVec = new int[dictSz];
 		double[] triggerTermsVec = new double[dictSz];
 		double norm = 0;
@@ -361,7 +402,7 @@ public class TriggerMathThm2 {
 		if(norm == 0) return "";
 		//fill in the priority words with highestWeight
 		for(int index : priorityWordsIndexList){
-			Integer rowIndex = keywordDict.get(thmAr[index]);
+			Integer rowIndex = keywordIndexDict.get(thmAr[index]);
 			if(rowIndex != null){
 				double prevWeight = triggerTermsVec[rowIndex];
 				double weightDiff = highestWeight - prevWeight;
@@ -432,7 +473,7 @@ public class TriggerMathThm2 {
 		//triggerTermsVec[rowIndex] = termScore;
 		//keywordDict starts indexing from 0!
 		//should not be necessary!
-		Integer rowIndex = keywordDict.get(term);
+		Integer rowIndex = keywordIndexDict.get(term);
 		
 		if(termScore != null && rowIndex != null){
 			//just adding the termscore, without squaring, works better
@@ -463,11 +504,11 @@ public class TriggerMathThm2 {
 	 * @return
 	 */
 	public static Map<String, Integer> keywordDict(){
-		return keywordDict;
+		return keywordIndexDict;
 	}
 
 	public static int keywordDictSize(){
-		return keywordDict.size();
+		return keywordIndexDict.size();
 	}
 	
 	/**

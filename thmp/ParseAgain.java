@@ -27,15 +27,14 @@ public class ParseAgain {
 		List<Struct> loneStructList = new ArrayList<Struct>();
 		List<Integer> loneStructIndexList = new ArrayList<Integer>();
 		//array to indicate which ones to exclude, 1 means exclude. Think of as bit vector.
-		//gradually turn entries at indices that are entries in loneStructIndexLis to 1.
+		//gradually turn entries at indices that are entries in loneStructIndexList to 1.
 		int[] indicesToExclude = new int[structList.size()];
 		
 		int structListSz = structList.size();	
 		
 		//don't need to deal with of first and last elements,
 		//since determining whether they are connected to their neighbors
-		//is less reliable, and they are dealt with in the later defluffing algorithm.
-		
+		//is less reliable, and they are dealt with in the later defluffing algorithm.		
 		for(int i = 1; i < structListSz-1; i++){
 			
 			Struct struct_i = structList.get(i);
@@ -58,11 +57,8 @@ public class ParseAgain {
 				loneStructIndexList.add(i);
 			}
 		}
+		System.out.println("!loneStructList! " + loneStructList);
 		
-		if(loneStructList.size() > 0){
-			indicesToExclude[loneStructIndexList.get(0)] = 1;
-			loneStructIndexList = loneStructIndexList.subList(1, loneStructList.size());
-		}
 		//iterate through combinations, in each of which a subset 
 		//of loneStructList is missing.
 		//all possible combinations amount to 2^m, where

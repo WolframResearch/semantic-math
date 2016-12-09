@@ -35,6 +35,8 @@ import java.util.Map.Entry;
  * adverb: adverb.
  * verb: verb.
  * vbs: singular verb.
+ * verbAlone: sentence could end here, does not need subsequent words to 
+ * complete, e.g. converge in "$f_n$ converges".
  */
 
 public class Maps {
@@ -567,8 +569,8 @@ public class Maps {
 			// structMap = new HashMap<String, String>();
 			// structMap = new HashMap<String, Rule>();
 			
-			structMap.put("iff_assert", new Rule("Iff", 1));
 			structMap.put("if_hypo", new Rule("If", 1));
+			structMap.put("iff_hypo", new Rule("Iff", 1));
 			structMap.put("then_assert", new Rule("Then", 1));
 
 			// expression, e.g. a map from A to B
@@ -681,6 +683,8 @@ public class Maps {
 			structMap.put("verb_phrase", new Rule("verbphrase", 1));
 			structMap.put("verb_partient", new Rule("verbphrase", 1));
 			structMap.put("verb_noun", new Rule("verbphrase", 1));
+			structMap.put("verbAlone_adverb", new Rule("verbphrase", .9));
+			
 			structMap.put("det_verbphrase", new Rule("assert", 1));
 			//remove, because verbphrase should be able to finish a sentence
 			//structMap.put("verb_parti", new Rule("verbphrase", 1));
@@ -746,9 +750,11 @@ public class Maps {
 			structMap.put("let_be", new Rule("letbe", 1));
 			structMap.put("let_ent", new Rule("let", 1));
 			structMap.put("if_assert", new Rule("If", 1));
+			structMap.put("iff_assert", new Rule("Iff", 1));
 			structMap.put("hyp_assert", new Rule("If", 1));
 			
 			structMap.put("assert_If", new Rule("assert", .5));
+			structMap.put("assert_Iff", new Rule("assert", .5));
 			structMap.put("assert_hypo", new Rule("assert", .5));
 			structMap.put("assert_prep", new Rule("assert", .5));
 			structMap.put("assert_iff", new Rule("assert", .5));

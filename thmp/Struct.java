@@ -297,12 +297,15 @@ public abstract class Struct implements Serializable{
 	
 	public abstract String toString();
 
+	public void set_prev1(Object prev1){		
+	}
+	
 	public abstract void set_prev1(String str);
 	
 	//not abstract, because not applicable to StructH
-	public void set_prev2(String str){		
+	public void set_prev2(Object obj){		
 	}
-	
+		
 	public abstract Object prev1();
 	
 	public abstract Object prev2();

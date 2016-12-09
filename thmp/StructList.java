@@ -55,6 +55,10 @@ public class StructList implements Serializable{
 		return this.structList.get(i);
 	}
 	
+	public void set(int index, Struct struct){
+		 this.structList.set(index, struct);
+	}
+
 	/**
 	 * Shallow copy of this.structList, as structList is a list
 	 * of pointers to Struct's.

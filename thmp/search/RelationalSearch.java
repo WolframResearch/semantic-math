@@ -1,5 +1,6 @@
 package thmp.search;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Comparator;
@@ -66,5 +67,15 @@ public class RelationalSearch {
 		bs2Copy.xor(bs1);
 		return bs2Copy.cardinality();
 	}
+	
+	//this should be inside RelationVec!!
+	//use xor rather than flip, to improved memory efficiency.
+		private static int hammingDistance2(BigInteger bi1, BigInteger bi2){
+			
+			BigInteger bi = bi1.and(bi2);
+			//get cardinality!!
+			//return bi.xor(bi1).    ; !!!
+			return 0;
+		}
 	
 }

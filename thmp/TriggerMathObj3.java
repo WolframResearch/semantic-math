@@ -268,7 +268,7 @@ public class TriggerMathObj3 {
 	
 	private static void addThmsFromList(List<String> keywordList,
 			Map<String, Integer> keywordMap, Multimap<String, String> mathObjMMap){
-		ImmutableList<ImmutableMap<String, Integer>> thmWordsList = CollectThm.ThmWordsMaps.get_thmWordsList();
+		ImmutableList<ImmutableMap<String, Integer>> thmWordsList = CollectThm.ThmWordsMaps.get_thmWordsFreqList();
 		//index of thm in thmWordsList, to be used as part of name
 		int thmIndex = 0;
 		for(ImmutableMap<String, Integer> wordsMap : thmWordsList){

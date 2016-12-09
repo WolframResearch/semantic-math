@@ -487,11 +487,21 @@ public class ThmP1TestRun {
 			st = "let ${E_j}_{j \\in J} \\subset \\mathfrak{M}$ be an arbitrary family of pairwise disjoint subsets of $X$.";
 			st = "Then $\\mu(E_j)=0$ for all but at most countably many $j \\in J$.";
 			st = "Then $F_p$ is field for all but finitely many $p \\in J$.";
-			st = "$X$ is bounded above"; //<-- parse this!!
-			st = "Let $X$ be a locally compact Hausdorff space";
+			st = "$X$ is bounded";
+			st = "If $u : X \\to \\mathbb{R}$ is an integrable function and $\\epsilon > 0$";
+			st = "$w$ is lower semicontinuous and bounded below"; //<--parse consecutive adj!
+			st = "Let $(X,\\mathfrak{M},\\mu)$ be a measure space with $\\mu$ finite";
+			st = "let $\\mu_n : X \\to \\mathbb{R}$ be measurable functions converging pointwise to $\\mu$ almost everywhere";
+			st = "$f_n$ is converging everywhere";
+			st = "Then $\\{\\mu_n\\}$ converges uniformly";
+			st = "Then the dual of $L^1(X)$ may be identified with $L^\\infty(X)$"; 
+			st = "if the measure $\\mu$ is localizable and has zero and has the finite subset property"; 
 			
-			//st = "then $\\mu(E_j)=0$"; //converting to assert!
+			st = "$R$ is a ring if and only if $R $ is a field and has a zero";
+			st = "Let $X$ be a locally compact Hausdorff space, and let $\\mu : \\mathcal{B}(X) \\to [0,infty]$ be a Radon measure";
 			
+			//st = "$R $ that is a field and that is a ring is a field";			
+			//st = "then $\\mu(E_j)=0$"; //converting to assert!			
 			//st = "given disjoint subset of $X$";
 			//st = "given point $c$ in $[a,b]$ such that $f(x) \\leq f(c)$ for all $x \\in [a,b]$";			
 			//st = "X is connected ";
@@ -591,8 +601,7 @@ public class ThmP1TestRun {
 					System.out.println("*~~~*");
 					System.out.println(nextLine + "\n");
 					parseInputVerbose(nextLine, parseState);
-				}
-				
+				}				
 				
 				if(WRITE_UNKNOWN_WORDS_TO_FILE){
 					ThmP1.writeUnknownWordsToFile();

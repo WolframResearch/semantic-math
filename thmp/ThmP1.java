@@ -37,6 +37,8 @@ import thmp.Struct.ChildRelation;
 import thmp.Struct.ChildRelationType;
 import thmp.Struct.NodeType;
 import thmp.ThmP1.ParsedPair;
+import thmp.ThmP1AuxiliaryClass.ConjDisjVerbphrase;
+import thmp.ThmP1AuxiliaryClass.ConjDisjVerbphrase.ConjDisjType;
 import thmp.search.NGramSearch;
 import thmp.search.ThreeGramSearch;
 import thmp.search.TriggerMathThm2;
@@ -70,14 +72,15 @@ public class ThmP1 {
 	// split a sentence into parts, separated by commas, semicolons etc
 	// private String[] subSentences;
 	//pattern for matching negative of adjectives: "un..."
-	private static final Pattern NEGATIVE_ADJECTIVE_PATTERN = Pattern.compile("un(.+)|non(.+)");	
+	private static final Pattern NEGATIVE_ADJECTIVE_PATTERN = Pattern.compile("^(?:un(.+)|non(.+))");	
 	private static final Pattern AND_OR_PATTERN = Pattern.compile("and|or");
 	private static final Pattern IS_ARE_BE_PATTERN = Pattern.compile("is|are|be");
 	private static final Pattern CALLED_PATTERN = Pattern.compile("called|defined|said|denoted");
 	private static final Pattern CONJ_DISJ_PATTERN1 = Pattern.compile("conj|disj");
 	//end part of latex expressions, e.g. " B)$-module"
 	private static final Pattern LATEX_END_PATTER = Pattern.compile("[^$]*\\$.*");
-	private static final Pattern POSSIBLE_ADJ_PATTERN = Pattern.compile("(?:.*tive|.*wise|.*ary)$");
+	private static final Pattern POSSIBLE_ADJ_PATTERN = Pattern.compile("(?:.*tive|.*wise|.*ary|.*able|.*ous)$");
+	private static final Pattern ESSENTIAL_POS_PATTERN = Pattern.compile("ent|conj_ent|verb|vbs|if|symb|pro");
 	
 	// list of parts of speech, ent, verb etc <--should make immutable
 	private static final List<String> posList;
@@ -133,6 +136,7 @@ public class ThmP1 {
 	//private static final String DASH_ENT_STRING = null;
 	private static final Pattern DASH_ENT_PATTERN = Pattern.compile("\\$[^$]+\\$[^-\\s]*-[^\\s]*");
 	private static final int REPARSE_UPPER_SIZE_LIMIT = 6;
+	private static final Pattern CONJ_DISJ_VP_PATTERN = Pattern.compile("(?:conj|disj)_verbphrase");
 	
 	//private static int[] parseContextVector;
 	//private static int parseContextVectorSz;
@@ -638,6 +642,7 @@ public class ThmP1 {
 			// check for trigger words of fixed phrases, e.g. "with this said",
 			// "all but finitely many", as well as 2- or 3-grams.
 			else if (i < strAr.length - 1) {
+				
 				String potentialTrigger = curWord + " " + strAr[i + 1];
 				if (fixedPhraseMap.containsKey(potentialTrigger)) {
 					//primordial pair to be set if valid fixed phrase is found.
@@ -659,6 +664,7 @@ public class ThmP1 {
 					continue;				
 				}				
 			}
+			
 			
 			String[] singularForms = WordForms.getSingularForms(curWord);
 			
@@ -688,7 +694,7 @@ public class ThmP1 {
 			if(wordPos != null && wordPos.equals("noun")){
 				wordPos = "ent";
 			}			
-			
+
 			if (wordPos != null && wordPos.equals("ent")) { 
 				
 				curWord = posList.isEmpty() ? singular : curWord;
@@ -749,15 +755,13 @@ public class ThmP1 {
 					if(fuseEnt){
 						pairs.get(pairsSize - 1).set_word(pairs.get(pairsSize - 1).word() + " " + curWord);
 						continue;
-					}
-					
+					}					
 				}
 				
 				Pair pair = new Pair(curWord, "ent");
 				addExtraPosToPair(pair, posList);
 				pairs.add(pair);
 				mathIndexList.add(pairs.size() - 1);
-				
 			}
 			else if (anchorMap.containsKey(curWord)) {
 				Pair pair = new Pair(curWord, "anchor");
@@ -836,22 +840,6 @@ public class ThmP1 {
 					System.out.println("emptyPair added! pairs: " + pairs);
 				}
 				
-			}//negative adjective word, not that unusual.
-			else if((negativeAdjMatcher = NEGATIVE_ADJECTIVE_PATTERN.matcher(curWord)).find()){
-				
-				String curAdjWord = null == negativeAdjMatcher.group(1)
-						? negativeAdjMatcher.group(2) : negativeAdjMatcher.group(1);
-				
-				posList = posMMap.get(curAdjWord);
-				
-				if (!posList.isEmpty()) {
-					String pos = posList.get(0).split("_")[0];
-					Pair pair = new Pair(curWord, pos);
-					//add any additional pos to pair if applicable.
-					addExtraPosToPair(pair, posList);
-					pair = fuseAdverbAdj(pairs, curWord, pair);					
-					pairs.add(pair);
-				}				
 			}
 			// if plural form
 			else if (posMMap.containsKey(singular)){
@@ -940,32 +928,42 @@ public class ThmP1 {
 				pairs.add(pair);
 			}
 			// participles. Need special list for words such as
-			// "given"
+			// "given". 
 			else if (wordlen > 1 && curWord.substring(wordlen - 2, wordlen).equals("ed")
 					&& (posMMap.containsKey(strAr[i].substring(0, wordlen - 2))
-							&& posMMap.get(strAr[i].substring(0, wordlen - 2)).get(0).equals("verb")
+							&& posMMap.get(strAr[i].substring(0, wordlen - 2)).contains("verb")
 							|| posMMap.containsKey(strAr[i].substring(0, wordlen - 1))
-									&& posMMap.get(strAr[i].substring(0, wordlen - 1)).get(0).equals("verb"))) 
+									&& posMMap.get(strAr[i].substring(0, wordlen - 1)).contains("verb"))) 
 			{
 				// if next word is "by", then
 				String curPos = "parti";
 				int pairsSize = pairs.size();
 				// if next word is "by"
-				if (strAr.length > i + 1 && strAr[i + 1].equals("by")) {
-					curPos = "partiby";
-					curWord = curWord + " by";
-					// if previous word is a verb, combine to form verb
-					if (pairsSize > 0 && pairs.get(pairsSize - 1).pos().matches("verb|vbs")) {
-						curWord = pairs.get(pairsSize - 1).word() + " " + curWord;
-						curPos = "auxpass"; // passive auxiliary, eg "is determined by"
-						pairs.remove(pairsSize - 1);
+				if (strAr.length > i + 1) {
+					String nextWord = strAr[i + 1];
+					if(nextWord.equals("by")){
+						curPos = "partiby";
+						curWord = curWord + " by";
+						String prevPos = pairs.get(pairsSize - 1).pos();
+						// if previous word is a verb, combine to form verb
+						if (pairsSize > 0 && (prevPos.equals("verb")
+								|| prevPos.equals("vbs"))) {
+							curWord = pairs.get(pairsSize - 1).word() + " " + curWord;
+							curPos = "auxpass"; // passive auxiliary, eg "is determined by"
+							pairs.remove(pairsSize - 1);
+						}
+						i++;
+					}else{
+						String nextPos = posMMap.get(strAr[i+1]).get(0);
+						if(nextPos.equals("pre")){
+							curPos = "adj";
+						}
 					}
-					i++;
 				}
 				// previous word is "is, are", then group with previous word to
 				// verb
 				// e.g. "is called"
-				else if (pairsSize > 0) {
+				if (pairsSize > 0) {
 					Pair prevPair = pairs.get(pairsSize - 1);
 					if(IS_ARE_BE_PATTERN.matcher(prevPair.word()).find()){
 						//if next word is a preposition, e.g. "is named by"
@@ -974,8 +972,7 @@ public class ThmP1 {
 						
 							if(nextPos.equals("pre")){
 								curWord = pairs.get(pairsSize - 1).word() + " " + curWord;
-								pairs.remove(pairsSize - 1);
-								
+								pairs.remove(pairsSize - 1);								
 								curPos = "auxpass";
 							}
 							//otherwise likely used as adjective, e.g. "is connected"
@@ -1014,7 +1011,7 @@ public class ThmP1 {
 
 				Pair pair = new Pair(curWord, curPos);
 				pairs.add(pair);
-			}//too ad hoc! 
+			}//this seems too fine grained! 
 			else if (wordlen > 3 && curWord.substring(wordlen - 3, wordlen).equals("ing")
 					&& (posMMap.containsKey(curWord.substring(0, wordlen - 3))
 							&& posMMap.get(curWord.substring(0, wordlen - 3)).get(0).matches("verb|vbs")
@@ -1023,7 +1020,7 @@ public class ThmP1 {
 									&& posMMap.get(curWord.substring(0, wordlen - 3) + 'e').get(0).matches("verb|vbs")))) {
 				
 				String curType = "gerund";
-				if (i < strAr.length - 1 && posMMap.containsKey(strAr[i + 1]) && posMMap.get(strAr[i + 1]).get(0).equals("pre")) {
+				if (i < strAr.length - 1 && posMMap.containsKey(strAr[i + 1]) && posMMap.get(strAr[i + 1]).contains("pre")) {
 					// eg "consisting of" functions as pre
 					curWord = curWord + " " + strAr[++i];
 					curType = "pre";
@@ -1041,7 +1038,6 @@ public class ThmP1 {
 				
 				int pairsSz = pairs.size();
 				//e.g. $f$ is inclusion-preserving
-				
 				if(i > 1 && pairsSz > 1//e.g. inclusion preserving
 						 && pairs.get(pairsSz-1).pos().matches("noun|\\d+|ent")
 						 && pairs.get(pairsSz-2).pos().matches("verb|vbs")
@@ -1054,10 +1050,6 @@ public class ThmP1 {
 					Pair pair = new Pair(curWord, curType);
 					pairs.add(pair);
 				}
-			}//e.g. summable
-			else if(wordlen > 4 && curWord.substring(wordlen - 4, wordlen).equals("able")){
-				Pair pair = new Pair(curWord, "adj");
-				pairs.add(pair);
 			}
 			else if (curWord.matches("[a-zA-Z]")) {
 				// variable/symbols
@@ -1068,7 +1060,27 @@ public class ThmP1 {
 			else if (curWord.matches("\\d+")) {
 				Pair pair = new Pair(strAr[i], "num");
 				pairs.add(pair);
-			} else if (!curWord.matches("\\s+")) { // try to minimize this case.
+			}//negative adjective word, not that unusual.
+			else if((negativeAdjMatcher = NEGATIVE_ADJECTIVE_PATTERN.matcher(curWord)).find()){
+				
+				String curAdjWord = null == negativeAdjMatcher.group(1)
+						? negativeAdjMatcher.group(2) : negativeAdjMatcher.group(1);
+				
+				posList = posMMap.get(curAdjWord);
+				
+				if (!posList.isEmpty()) {
+					String pos = posList.get(0).split("_")[0];
+					Pair pair = new Pair(curWord, pos);
+					//add any additional pos to pair if applicable.
+					addExtraPosToPair(pair, posList);
+					pair = fuseAdverbAdj(pairs, curWord, pair);					
+					pairs.add(pair);
+				}else{
+					pairs.add(new Pair(curWord, ""));
+				}
+				
+			}
+			else if (!curWord.matches("\\s+")) { // try to minimize this case.
 
 				System.out.println("word not in dictionary: " + curWord);
 				pairs.add(new Pair(curWord, ""));
@@ -1293,7 +1305,7 @@ public class ThmP1 {
 			// ...get more than adj ... multi-word descriptions
 			// set the pos as the current index in mathEntList
 			// adjectives or determiners	
-			System.out.println("PAIRS! " + pairs);
+			
 			while (index - k > -1 && pairs.get(index - k).pos().matches("adj|det|num")) {
 				Pair curPair = pairs.get(index - k);
 				String curWord = curPair.word();
@@ -1358,7 +1370,7 @@ public class ThmP1 {
 			tempStructH.set_struct(tempMap);
 			mathEntList.add(tempStructH);
 		}
-
+		System.out.println("PAIRS! " + pairs);
 		// combine anchors into entities. Such as "of," "has"
 		for (int j = anchorList.size() - 1; j > -1; j--) {
 			int index = anchorList.get(j);
@@ -1504,12 +1516,13 @@ public class ThmP1 {
 				// combine adverbs into the prior verb if applicable,
 				//but only if subsequent word is not of type "parti", 
 				//e.g. "$K$ is separably generated over $k$"
-				if (curPair.pos().equals("adverb")) {
-
+				/*if (curPair.pos().equals("adverb")) {
+			//bad because this adverb could be modifying subsequent words, e.g. "converges uniformly"
 					if (structListSize > 1 && structList.get(structListSize - 1).type().matches("verb|vbs")) {
 						//only if the subsequent word is not an adjective, or no subsequent word
 						String nextPairPos;
-						if(i == pairsSz - 1 || !(nextPairPos = pairs.get(i+1).pos()).equals("adj")
+						if(i == pairsSz - 1 
+								|| !(nextPairPos = pairs.get(i+1).pos()).equals("adj")
 								&& !nextPairPos.equals("parti")){
 							
 							StructA<?, ?> verbStruct = (StructA<?, ?>) structList.get(structListSize - 1);
@@ -1519,7 +1532,7 @@ public class ThmP1 {
 							continue;
 						}
 					}
-				}
+				}*/
 
 				String curWord = curPair.word();
 
@@ -1569,7 +1582,7 @@ public class ThmP1 {
 			// add as property
 
 		}
-		System.out.println("\n^^^^structList: " + structList + sentence);
+		System.out.println("\n^^^^structList: " + structList);
 		
 		parseState.setTokenList(structList);
 		return parseState;
@@ -2327,8 +2340,22 @@ public class ThmP1 {
 				//keep track of span of longForm, used as commandNumUnits in case
 				//no WLCommand parse. The bigger the better.
 				int span = 0;
+				ConjDisjVerbphrase conjDisjVerbphrase = new ConjDisjVerbphrase();
+				boolean isRightChild = true;
 				//get the "long" form, not WL form, with this dfs()
-				span = buildLongFormParseDFS(uHeadStruct, parsedSB, span);
+				span = buildLongFormParseDFS(uHeadStruct, parsedSB, span, conjDisjVerbphrase, isRightChild);
+				//if conj_verbphrase or disj_verbphrase encountered, and these conclude the 
+				//sentence, e.g. "if $R$ is a field and has a zero.", separate the conj_verbphrase
+				//out to "if $R$ is a field and if $R$ has a zero", this makes command-triggering
+				//much more feasible.
+				if(conjDisjVerbphrase.isHasConjDisjVerbphrase() && conjDisjVerbphrase.assertTypeFound()){
+					ConjDisjVerbphrase.reorganizeConjDisjVerbphraseTree(
+							conjDisjVerbphrase);
+					//no use, since parsedSB has been built already
+					//headStructList.set(u, uHeadStruct);
+					//throw new IllegalStateException();
+				}
+				
 				//ParseStruct headParseStruct = new ParseStruct();
 				//now get the WL form build from WLCommand's
 				//should pass in the wlSB, instead of creating one anew each time. <--It's ok.
@@ -2462,7 +2489,20 @@ public class ThmP1 {
 				//commandNumUnits if no full WLCommand parse.
 				int span = 0;
 				kHeadStruct.set_dfsDepth(0);
-				span = buildLongFormParseDFS(kHeadStruct, parsedSB, span);
+				
+				ConjDisjVerbphrase conjDisjVerbphrase = new ConjDisjVerbphrase();
+				boolean isRightChild = true;
+				//get the "long" form, not WL form, with this dfs()
+				span = buildLongFormParseDFS(kHeadStruct, parsedSB, span, conjDisjVerbphrase, isRightChild);
+				//if conj_verbphrase or disj_verbphrase encountered, and these conclude the 
+				//sentence, e.g. "if $R$ is a field and has a zero.", separate the conj_verbphrase
+				//out to "if $R$ is a field and if $R$ has a zero", this makes command-triggering
+				//much more feasible.
+				if(conjDisjVerbphrase.isHasConjDisjVerbphrase() && conjDisjVerbphrase.assertTypeFound()){
+					kHeadStruct = ConjDisjVerbphrase.reorganizeConjDisjVerbphraseTree(
+							conjDisjVerbphrase);
+				}
+				
 				//only getting first component parse. Should use priority queue instead of list?
 				//or at least get highest score
 				totalScore *= kHeadStruct.maxDownPathScore();
@@ -2530,7 +2570,7 @@ public class ThmP1 {
 					//if diagonal element, so row index == column index.
 					if(structCoordinates.get(k)[0] == structCoordinates.get(k)[1]
 							//or is essential, e.g. ent, verb, symb <--too ad hoc
-							&& !struct_k.type().matches("ent|conj_ent|verb|vbs|if|symb|pro") //|pro|symb|if|hyp 
+							&& !ESSENTIAL_POS_PATTERN.matcher(struct_k.type()).matches() //|pro|symb|if|hyp 
 							){ 
 						continue;					
 					}
@@ -2540,7 +2580,8 @@ public class ThmP1 {
 				}
 				parseState.setTokenList(structList);
 				
-				System.out.println("\n=___+++++++++_=========Defluffing structList: " + structList);
+				System.out.println("\n=___+++++++++_=========Defluffing structList: " + structList
+						+ "\n" + "newStructList: " +newStructList);
 				
 				boolean isReparseAgain = true;
 				parseState = parse(parseState, isReparseAgain);
@@ -2549,8 +2590,7 @@ public class ThmP1 {
 			}
 			
 			//if still no full parse try to see if converting latex expressions $...$ 
-			//from "ent" to "assert" helps.
-			
+			//from "ent" to "assert" helps.			
 			
 			System.out.println("%%%%%\n");
 		}
@@ -2577,6 +2617,7 @@ public class ThmP1 {
 		}
 		return parseState;
 	}
+
 
 	private static class HeadStructComparator implements Comparator<Struct>{
 		
@@ -3811,16 +3852,30 @@ public class ThmP1 {
 	 * @param struct
 	 * @param parsedSB
 	 * @param span
+	 * @param  conjDisjVerbphrase
+	 * Don't need isRightChild, will remove in a week if still not needed, Dec 2016.
 	 * @return
 	 */
-	private static int buildLongFormParseDFS(Struct struct, StringBuilder parsedSB, int span) {
+	private static int buildLongFormParseDFS(Struct struct, StringBuilder parsedSB, int span,
+			ConjDisjVerbphrase conjDisjVerbphrase, boolean isRightChild) {
 		
 		int structDepth = struct.dfsDepth();
+		String structType = struct.type();
 		
 		if (struct.isStructA()) {
 			
-			if(struct.type().equals("hyp") || struct.type().equals("if")){
+			if(structType.equals("hyp") || structType.equals("if")){
 				struct.setContainsHyp(true);
+			}else if(CONJ_DISJ_VP_PATTERN.matcher(structType).matches()){
+				conjDisjVerbphrase.setHasConjDisjVerbphrase(true);
+				Struct parentStruct = struct.parentStruct();
+				
+				if(parentStruct.type().equals("assert")){
+					conjDisjVerbphrase.setAssertParentFound(true);
+					conjDisjVerbphrase.setAssertStruct(parentStruct);
+				}
+				conjDisjVerbphrase.setConjDisjType(ConjDisjType.findConjDisjType(structType));
+				//throw new IllegalStateException(isRightChild+"");
 			}
 			
 			System.out.print(struct.type());
@@ -3832,7 +3887,8 @@ public class ThmP1 {
 			if (struct.prev1NodeType().isTypeStruct()) {
 				Struct prev1Struct = (Struct) struct.prev1();
 				prev1Struct.set_dfsDepth(structDepth + 1);
-				span = buildLongFormParseDFS(prev1Struct, parsedSB, span);
+				span = buildLongFormParseDFS(prev1Struct, parsedSB, span,
+						conjDisjVerbphrase, false);
 				
 				if(prev1Struct.containsHyp()){
 					struct.setContainsHyp(true);
@@ -3860,7 +3916,8 @@ public class ThmP1 {
 				parsedSB.append(", ");
 				Struct prev2Struct = (Struct) struct.prev2();
 				prev2Struct.set_dfsDepth(structDepth + 1);
-				span = buildLongFormParseDFS(prev2Struct, parsedSB, span);
+				span = buildLongFormParseDFS(prev2Struct, parsedSB, span, conjDisjVerbphrase,
+						isRightChild);
 				
 				if(prev2Struct.containsHyp()){
 					struct.setContainsHyp(true);
@@ -3904,7 +3961,7 @@ public class ThmP1 {
 				Struct child_i = children.get(i);
 				child_i.set_dfsDepth(structDepth + 1);
 				
-				span = buildLongFormParseDFS(child_i, parsedSB, span);
+				span = buildLongFormParseDFS(child_i, parsedSB, span, conjDisjVerbphrase, isRightChild);
 			}
 			System.out.print("]");
 			parsedSB.append("]");

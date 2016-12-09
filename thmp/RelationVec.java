@@ -83,7 +83,8 @@ public class RelationVec implements Serializable{
 		//Set<Integer> bitsIndexSet = new HashSet<Integer>();
 		//bit vector whose set indices at particular words indicate the relations 
 		//these words play in context. 
-		BitSet indexBitSet = new BitSet(parseContextVectorSz * RelationType.totalRelationsCount());
+		//BitSet indexBitSet = new BitSet(parseContextVectorSz * RelationType.totalRelationsCount());
+		BitSet indexBitSet = new BitSet();
 		
 		for(Map.Entry<ParseStructType, ParsedPair> pairEntry : parsedPairMMap.entries()){
 			
