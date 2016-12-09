@@ -10,12 +10,14 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
 import java.util.Scanner;
 
 import thmp.ParseState.ParseStateBuilder;
+import thmp.RelationVec.RelationType;
 import thmp.search.CollectThm;
 
 /**
@@ -25,33 +27,74 @@ import thmp.search.CollectThm;
  */
 public class GenerateRelationVec {
 
-	private static final String serializeFileName = "src/thmp/data/fieldsThmsRelationVecs.ser";
+	private static final String serializeFileName = "src/thmp/data/fieldsThmsRelationVecs.dat";
+	private static final List<BigInteger> relationVecList;
 	
-	public static BitSet generateRelationVec(String queryStr, ParseState parseState){
+	static{
+		//if timestamp on serializeFileName is outdated, parse and generate vectors
+		//again, else skip.
+		int maxNumHoursLag = 10;
+		int numMiliSecondsInHour = 3600000;
+		File serializationFile = new File(serializeFileName);
+		
+		if((System.currentTimeMillis() - serializationFile.lastModified()) > numMiliSecondsInHour*maxNumHoursLag){
+			parseAndSerializeThms();
+		}
+		relationVecList = deserializeRelationVecList();
+	}
+	
+	/**
+	 * Generate relational vector based on input String.
+	 * @param queryStr
+	 * @param parseState
+	 * @return
+	 */
+	public static BigInteger generateRelationVec(String queryStr, ParseState parseState){
 		boolean isVerbose = true;
 		ParseRun.parseInput(queryStr, parseState, isVerbose);
 		return parseState.getRelationalContextVec();		
 	}
 	
+	/**
+	 * Back up vector, if generateRelationVec() did not set anything, now
+	 * assume all relations are set, since none was specified.
+	 * Actually should just skip searching this way if no good vector produced.
+	 * @return
+	 */
+	/*public static BigInteger generateBackupRelationVec(String queryStr){
+		
+		setBitPosList(String termStr, List<Integer> bitPosList, int modulus, 
+				RelationType posTermRelationType, boolean isParseStructTypeHyp);		
+		fillByteArray(byte[] byteArray, List<Integer> bitPosList);		
+	}*/
+	
 	public static void main(String[] args){
 		
+		parseAndSerializeThms();
+		
+		//test deserialization
+		//System.out.println("Deserialized relation vectors: " + deserializeRelationVecList());
+	}
+
+	/**
+	 * 
+	 */
+	private static void parseAndSerializeThms() {
 		ParseStateBuilder parseStateBuilder = new ParseStateBuilder();
 		
-		List<BitSet> bitSetList = new ArrayList<BitSet>(); 
+		List<BigInteger> bitSetList = new ArrayList<BigInteger>(); 
 		
 		List<String> bareThmList = CollectThm.ThmList.get_bareThmList();
 		//System.out.println("bareThmList" + bareThmList);
 		for(String thm : bareThmList){
 			ParseState parseState = parseStateBuilder.build();
-			BitSet bitVec = generateRelationVec(thm, parseState);	
+			BigInteger bitVec = generateRelationVec(thm, parseState);	
 			bitSetList.add(bitVec);
 		}
 		
-		//serialize the bitSetList
+		//serialize the bitSetList. Should run this during static initializer
+		//in PRD.
 		serializeRelationVecList(bitSetList);
-		
-		//test deserialization
-		//System.out.println("Deserialized relation vectors: " + deserializeRelationVecList());
 	}	
 	
 	/**
@@ -68,16 +111,15 @@ public class GenerateRelationVec {
 		}
 	}
 	
-	private static void serializeRelationVecList(List<BitSet> relationVecList){
+	private static void serializeRelationVecList(List<BigInteger> relationVecList){
 		
 		FileOutputStream fo = null;
 		ObjectOutputStream oo = null;
 		
 		try{
 			fo = new FileOutputStream(serializeFileName);
-			oo = new ObjectOutputStream(fo);
-		
-		oo.writeObject(relationVecList);
+			oo = new ObjectOutputStream(fo);		
+			oo.writeObject(relationVecList);
 		}catch(IOException e){
 			e.printStackTrace();
 		}finally{
@@ -90,30 +132,32 @@ public class GenerateRelationVec {
 	/**
 	 * Deserializes the relationVecList.
 	 */
-	private static List<BitSet> deserializeRelationVecList(){
+	private static List<BigInteger> deserializeRelationVecList(){
 		
-		List<BitSet> relationVecList = null;
+		List<BigInteger> relationVecList = null;
 		
-		FileInputStream fi = null;
-		ObjectInputStream oi = null;
+		FileInputStream fileInputStream = null;
+		ObjectInputStream objectInputStream = null;
 		
 		try{
-			fi = new FileInputStream(serializeFileName);
-			oi = new ObjectInputStream(fi);
+			fileInputStream = new FileInputStream(serializeFileName);
+			objectInputStream = new ObjectInputStream(fileInputStream);
 		}catch(FileNotFoundException e){
 			e.printStackTrace();
+			silentClose(fileInputStream);
+			silentClose(objectInputStream);
 			throw new IllegalStateException("relation vectors file not found " + e);
 		}catch(IOException e){
 			e.printStackTrace();
+			silentClose(fileInputStream);
+			silentClose(objectInputStream);
 			throw new IllegalStateException("IOException while creating ObjectInputStream " + e);
-		}
-		finally{
-			silentClose(fi);
-		}
+		}		
 		
 		try{
-			Object o = oi.readObject();
-			relationVecList = (List<BitSet>)o;
+			Object o = objectInputStream.readObject();
+			relationVecList = (List<BigInteger>)o;
+			
 			/*for(BitSet relationVec : relationVecList){
 				System.out.println(relationVec);
 			}*/
@@ -124,14 +168,19 @@ public class GenerateRelationVec {
 			e.printStackTrace();
 			throw new IllegalStateException("Class not found while reading object. " + e);
 		}finally{
-			silentClose(fi);
-			
+			silentClose(fileInputStream);
+			silentClose(objectInputStream);
 		}
 		return relationVecList;
 	}
 	
-	public static List<BitSet> getRelationVecList(){
+	/*
+	public static List<BigInteger> getRelationVecBitSetList(){
 		return deserializeRelationVecList();
+	}*/
+	
+	public static List<BigInteger> getRelationVecList(){
+		return relationVecList;
 	}
 	
 	/**
@@ -139,7 +188,7 @@ public class GenerateRelationVec {
 	 * @param parseState
 	 * @param bitSetList
 	 */
-	private static void readThmFromFile(ParseState parseState, List<BitSet> bitSetList){
+	private static void readThmFromFile(ParseState parseState, List<BigInteger> bitSetList){
 		FileReader fileReader = null;
 		BufferedReader br = null;
 		
@@ -155,7 +204,7 @@ public class GenerateRelationVec {
 		try{
 			br = new BufferedReader(fileReader);
 			while((line = br.readLine()) != null){				
-				BitSet bitVec = generateRelationVec(line, parseState);	
+				BigInteger bitVec = generateRelationVec(line, parseState);	
 				bitSetList.add(bitVec);
 			}
 		}catch(IOException e){

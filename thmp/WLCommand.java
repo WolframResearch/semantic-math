@@ -618,6 +618,18 @@ public class WLCommand implements Serializable{
 			}
 			
 			/**
+			 * Adds relationType to current PBuilder. This obliviates the need for 
+			 * combinatorial number of constructors.
+			 * Does not compromise any later immutability, since still in Builder.
+			 * @param relationType
+			 * @return
+			 */
+			public PBuilder addRelationType(RelationType relationType){
+				this.relationType = relationType;
+				return this;
+			}
+			
+			/**
 			 * Sets positionInMap, should be called before build'ing.
 			 * @param positionInMap the positionInMap to set
 			 */

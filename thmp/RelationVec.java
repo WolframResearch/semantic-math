@@ -1,6 +1,8 @@
 package thmp;
 
 import java.io.Serializable;
+import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashSet;
 import java.util.List;
@@ -36,6 +38,8 @@ public class RelationVec implements Serializable{
 	
 	private static final int parseContextVectorSz = TriggerMathThm2.keywordDictSize();
 	private static final Map<String, Integer> keywordDict = TriggerMathThm2.keywordDict();
+
+	private static final int NUM_BITS_PER_BYTE = 8;
 	
 	//should be wrapper around bitsets and make the bitsets immutable!!
 	
@@ -76,15 +80,15 @@ public class RelationVec implements Serializable{
 	/**
 	 * Builds relation vec from ParsedPair's in parsedPairMMap, 
 	 * @param parsedPairMMap
+	 * @return a BigInteger with the bits set.
 	 */
-	public static BitSet buildRelationVec(Multimap<ParseStructType, ParsedPair> parsedPairMMap){
+	public static BigInteger buildRelationVec(Multimap<ParseStructType, ParsedPair> parsedPairMMap){
 		
-		//set of indices of set bits in the final bit vector.
-		//Set<Integer> bitsIndexSet = new HashSet<Integer>();
-		//bit vector whose set indices at particular words indicate the relations 
+		//bit vector whose set bits at particular words indicate the relations 
 		//these words play in context. 
-		//BitSet indexBitSet = new BitSet(parseContextVectorSz * RelationType.totalRelationsCount());
-		BitSet indexBitSet = new BitSet();
+		
+		int maxBitPos = 0;
+		List<Integer> bitPosList = new ArrayList<Integer>();
 		
 		for(Map.Entry<ParseStructType, ParsedPair> pairEntry : parsedPairMMap.entries()){
 			
@@ -105,16 +109,47 @@ public class RelationVec implements Serializable{
 				if(RelationType.NONE != posTermRelationType){
 					
 					String contentStr = posTerm.posTermStruct().contentStr();
-					//modulus and residue as used in abstract algebra.
+					//modulus and residue (like remainder) as in abstract algebra.
 					int modulus = posTermRelationType.vectorOffset();
-	
-					setBitVector(contentStr, indexBitSet, modulus, posTermRelationType, isParseStructTypeHyp);					
+					//add new indices to bitPosList
+					int curBitPos = setBitPosList(contentStr, bitPosList, modulus, posTermRelationType, isParseStructTypeHyp);
+					if(curBitPos > maxBitPos){
+						maxBitPos = curBitPos;
+					}
 				}
-			}
-			
+			}			
 		}
+		
+		int byteArrayLength = maxBitPos/NUM_BITS_PER_BYTE;
+		//byte array with capacity that corresponds to the position of the largest set bit.
+		//big-endian, so more significant byte on the right. Add 1 to accomodate the remainder
+		//left after division by 8.
+		byte[] byteArray = new byte[byteArrayLength + 1];
+		
+		//fill in byteArray given the list of positions of bits to set
+		fillByteArray(byteArray, bitPosList);
+		BigInteger indexBitBigInt = new BigInteger(1, byteArray);
 		//if(true) throw new IllegalStateException(indexBitSet.toString());
-		return indexBitSet;		
+		return indexBitBigInt;		
+	}
+	
+	/**
+	 * Fill in byteArray given the list of positions of bits to set. 
+	 * Auxiliary method to buildRelationVec().
+	 * @param byteArray
+	 * @param bitPosList
+	 */
+	private static void fillByteArray(byte[] byteArray, List<Integer> bitPosList) {
+		
+		//compute each byte and the position to place it.
+		int byteArrayLen = byteArray.length;
+		
+		for(int bitPos : bitPosList){
+			int modulus = bitPos/NUM_BITS_PER_BYTE;
+			int residue = bitPos - modulus*NUM_BITS_PER_BYTE;
+			byte curByte = (byte)(1<<residue);
+			byteArray[byteArrayLen - 1 - modulus] = curByte;
+		}		
 	}
 	
 	/**
@@ -149,19 +184,90 @@ public class RelationVec implements Serializable{
 			}
 		}
 		
-		//repeat for entire termStr:
-		Integer residue = keywordDict.get(termStr);	
+	}
+		/**
+		 * Auxilliary method for buildRelationVec() to set bits in BitSet.
+		 * @param termStr The input string. 
+		 * @param modulus Which segment of the index the current RelationType corresponds to.
+		 * @return max position this run in the new bit positions added.
+		 */
+		private static int setBitPosList(String termStr, List<Integer> bitPosList, int modulus, 
+				RelationType posTermRelationType, boolean isParseStructTypeHyp){
+			
+			int maxBitPos = 0;
+			String[] termStrAr = termStr.split(" ");		
+			int termStrArLen = termStrAr.length;
+			
+			if(termStrArLen > 1){
+				//set indices for all terms in compound words, 
+				//e.g. "... is regular local", sets "is regular, *and* "is local"
+				for(int i = 0; i < termStrArLen; i++){
+					
+					String word = termStrAr[i];
+					Integer residue = keywordDict.get(word);
+					if(null == residue){
+						continue;
+					}
+					
+					int bitPos = parseContextVectorSz*modulus + residue;					
+					maxBitPos = addToPosList(bitPosList, maxBitPos, bitPos);
+					
+					//if parseStructType is HYP, also add to the "IF" segment.
+					//e.g. "if $f$ is a surjection", should add to "if" segment
+					//besides "IS_" and "_IS" segments.
+					if(RelationType.IF != posTermRelationType && isParseStructTypeHyp){
+						bitPos = RelationType.IF.vectorOffset()*modulus + residue;
+						maxBitPos = addToPosList(bitPosList, maxBitPos, bitPos);
+					}
+				}
+			}
+		
+		//repeat for the whole of termStr:
+		Integer residue = keywordDict.get(termStr);
+		
 		if(null != residue){
-			indexBitSet.set(parseContextVectorSz*modulus + residue);
-	
+			int bitPos = parseContextVectorSz*modulus + residue;
+			maxBitPos = addToPosList(bitPosList, maxBitPos, bitPos);
 			//if parseStructType is HYP, also add to the "IF" segment.
 			//e.g. "if $f$ is a surjection", should add to "if" segment
 			//besides "IS_" and "_IS" segments.
 			if(RelationType.IF != posTermRelationType && isParseStructTypeHyp){
-				indexBitSet.set(RelationType.IF.vectorOffset()*modulus + residue);
+				bitPos = RelationType.IF.vectorOffset()*modulus + residue;
+				maxBitPos = addToPosList(bitPosList, maxBitPos, bitPos);
 			}
 		}
+		return maxBitPos;
 	}
+
+		/**
+		 * @param bitPosList
+		 * @param maxBitPos
+		 * @param bitPos
+		 * @return
+		 */
+		private static int addToPosList(List<Integer> bitPosList, int maxBitPos, int bitPos) {
+			bitPosList.add(bitPos);					
+			if(bitPos > maxBitPos){
+				maxBitPos = bitPos;
+			}
+			return maxBitPos;
+		}
 	
+		//use xor rather than flip, to improved memory efficiency.
+		/**
+		 * Gives the number of set bits in bi2 that differ from the set bits
+		 * in bi1, where we only consider bit positions that are set in bi1.
+		 * @param bi1 The base vector. Should correspond to query vector.
+		 * @param bi2
+		 * @return
+		 */
+		public static int hammingDistance2(BigInteger bi1, BigInteger bi2){
+			//first only restrict to bit positions in bi2 that are also set in bi1.
+			//System.out.println("bi2: " + bi2);
+			BigInteger bi = bi1.and(bi2);
+			//this gives the number of set bits in bi2 that differ from the set bits
+			//in bi1, where we only consider bit positions that are set in bi1.
+			return bi.xor(bi1).bitCount();
+		}
 	
 }

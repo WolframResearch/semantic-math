@@ -216,9 +216,9 @@ public class WLCommandsList {
 		//e.g. "$X$ is connected"
 		//WLCommandMapBuilder.put("is", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is|are|be, trigger",
 			//"\\[HasProperty]", "adj, , true, TriggerMathObj" }));
-		wLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro|noun", null, true), 
+		wLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro|noun", null, true, RelationType._IS), 
 				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), 
-				new PBuilder("~HasProperty~"), new PBuilder("adj|phrase|noun", null, true, false, true) ));
+				new PBuilder("~HasProperty~"), new PBuilder("adj|phrase|noun", null, true, false, true, RelationType.IS_) ));
 		//e.g. "R is of finite type"
 		wLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro|noun", null, true, RelationType._IS), 
 				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), 
@@ -251,9 +251,9 @@ public class WLCommandsList {
 		
 		//WLCommandMapBuilder.put("equal to", addCommand(new String[] { "symb|ent, , true",
 		//"==", "equal to, , trigger", "symb|ent|phrase, , true, TriggerMathObj" }));
-		wLCommandMapBuilder.put("equal to", addCommand(new PBuilder("symb|ent", null, true), 
+		wLCommandMapBuilder.put("equal to", addCommand(new PBuilder("symb|ent", null, true, RelationType._IS), 
 				new PBuilder("=="), new PBuilder("equal to", null, false, true, false), 
-				new PBuilder("symb|ent|phrase", null, true, false, true) ));
+				new PBuilder("symb|ent|phrase", null, true, false, true, RelationType._IS) ));
 		
 		//assert_hypo: 
 				//WLCommandMapBuilder.put("hyp", addCommand(new String[] { "assert, , true", "hyp, , trigger", "ent|symb, , true"
@@ -271,8 +271,9 @@ public class WLCommandsList {
 		//in the posTermList. So the connotation is the connotation of the term in that slot in the final WLCommand order, 
 		//*not* the connotation of the term picked up in the sentence in that slot.
 		wLCommandMapBuilder.put("denote by", addCommand(new PBuilder("def", null, false, true, false), 
-				new PBuilder("ent|symb", null, true, false, false, 1, PosTermConnotation.DEFINING), 
-				new PBuilder("~Named~"), new PBuilder("ent|symb", null, true, false, false, 0, PosTermConnotation.DEFINED) ));
+				new PBuilder("ent|symb", null, true, false, false, 1, PosTermConnotation.DEFINING).addRelationType(RelationType.IS_), 
+				new PBuilder("~Named~"), new PBuilder("ent|symb", null, true, false, false, 0, PosTermConnotation.DEFINED)
+				.addRelationType(RelationType._IS) ));
 		
 		//definitions: e.g. "$F$ denotes a field"
 		wLCommandMapBuilder.put("denote", addCommand( 

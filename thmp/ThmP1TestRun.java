@@ -640,7 +640,7 @@ public class ThmP1TestRun {
 		}*/
 		
 		System.out.println("@@@" + parseState.getHeadParseStruct());
-		System.out.println("Relational Vector: " + parseState.getRelationalContextVec());
+		System.out.println("Relational Vector num of bits set: " + parseState.getRelationalContextVec().bitCount());
 		
 		parseState.logState();
 		

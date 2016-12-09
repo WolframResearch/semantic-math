@@ -243,22 +243,16 @@ public class ContextSearch {
 			thm = thm.toLowerCase();
 			int NUM_NEAREST = 6;
 			List<Integer> nearestVecList = ThmSearch.readThmInput(thm, NUM_NEAREST);
+			
+			
 			if(nearestVecList.isEmpty()){
 				System.out.println("I've got nothing for you yet. Try again.");
 				continue;
 			}
-			/*SearchState searchState = SearchIntersection.getHighestThm(thm, NUM_NEAREST);
-			int numCommonVecs = 4;
 			
-			String firstWord = thm.split("\\s+")[0];
-			if(firstWord.matches("\\d+")){
-				numCommonVecs = Integer.parseInt(firstWord);
-			}
 			//find best intersection of these two lists. nearestVecList is 1-based, but intersectionVecList is 0-based! 
 			//now both are 0-based.
 			
-			List<Integer> bestCommonVecs = findListsIntersection(nearestVecList, searchState, numCommonVecs);
-			*/
 			List<Integer> bestCommonVecs = contextSearch(thm, nearestVecList);
 			
 			/*for(int d : bestCommonVecs){

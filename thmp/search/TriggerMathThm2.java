@@ -66,8 +66,8 @@ public class TriggerMathThm2 {
 	 */
 	//private static final int[][] mathObjMx;
 	private static final double[][] mathObjMx;
-	//list of thms, same order as in thmList, and the indices of their words in words maps.
-	private static final List<ImmutableMap<String,Integer>> thmWordsList;
+	//list of thms, same order as in thmList, and the frequencies of their words in words maps.
+	private static final List<ImmutableMap<String, Integer>> thmWordsList;
 	private static final ImmutableMap<String, Integer> docWordsFreqMapNoAnno = CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno();
 	
 	/**
@@ -221,16 +221,18 @@ public class TriggerMathThm2 {
 		//System.out.println("---thmList " + thmList);
 		
 		//index of thm in thmWordsList, to be used as part of name
+		//thm words and their frequencies.
 		int thmIndex = 0;
 		for(ImmutableMap<String, Integer> wordsMap : thmWordsList){
-			//make whole thm text as name
+			
+			//make whole thm text as name <--should make the index the key!			
 			String thmName = thmList.get(thmIndex++);
 			//System.out.println("!thmName " +thmName);
 			List<String> keyWordsList = new ArrayList<String>();
 			keyWordsList.add(thmName);
 			keyWordsList.addAll(wordsMap.keySet());
 			//System.out.println("wordsMap " +wordsMap);
-			//thms added to mathObjMMap are *not* in the same order as thms are iterated here!! Cause Multimaps don't 
+			//thms added to mathObjMMap are *not* in the same order as thms are iterated here! Because Multimaps don't 
 			//need to preserve insertion order!
 			addKeywordToMathObj(keyWordsList.toArray(new String[keyWordsList.size()]), keywordList, keywordIndexMap, mathObjMMap);
 		}

@@ -15,6 +15,7 @@ import thmp.ThmP1.ParsedPair;
 import thmp.utils.Buggy;
 
 import java.io.Serializable;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -59,7 +60,7 @@ public class ParseState {
 	
 	//context vector that takes into account structure of parse tree, i.e.
 	//the relations between different Structs.
-	private BitSet relationalContextVec;
+	private BigInteger relationalContextVec;
 	
 	private boolean writeUnknownWordsToFile;
 	
@@ -326,14 +327,14 @@ public class ParseState {
 	/**
 	 * @return the relationalContextVec
 	 */
-	public BitSet getRelationalContextVec() {
+	public BigInteger getRelationalContextVec() {
 		return relationalContextVec;
 	}
 
 	/**
 	 * @param relationalContextVec the relationalContextVec to set
 	 */
-	public void setRelationalContextVec(BitSet relationalContextVec) {
+	public void setRelationalContextVec(BigInteger relationalContextVec) {
 		this.relationalContextVec = relationalContextVec;
 	}
 

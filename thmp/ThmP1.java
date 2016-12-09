@@ -1,6 +1,7 @@
 package thmp;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -951,12 +952,16 @@ public class ThmP1 {
 							curWord = pairs.get(pairsSize - 1).word() + " " + curWord;
 							curPos = "auxpass"; // passive auxiliary, eg "is determined by"
 							pairs.remove(pairsSize - 1);
+							pairsSize--;
 						}
 						i++;
 					}else{
-						String nextPos = posMMap.get(strAr[i+1]).get(0);
-						if(nextPos.equals("pre")){
-							curPos = "adj";
+						List<String> curPosList = posMMap.get(strAr[i+1]);
+						if(curPosList.size() > 0){
+							String nextPos = curPosList.get(0);
+							if(nextPos.equals("pre")){
+								curPos = "adj";
+							}
 						}
 					}
 				}
@@ -2823,7 +2828,7 @@ public class ThmP1 {
 		
 		//build relation vector for the highest-ranked parse, set relation vector to parseState.
 		Multimap<ParseStructType, ParsedPair> topParsedPairMMap = sortedParsedPairMMapList.get(0);
-		BitSet relationVec = RelationVec.buildRelationVec(topParsedPairMMap);
+		BigInteger relationVec = RelationVec.buildRelationVec(topParsedPairMMap);
 		parseState.setRelationalContextVec(relationVec);
 		
 		//set head for this run of current part that triggered the command.

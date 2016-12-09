@@ -1,5 +1,6 @@
 package thmp;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -43,7 +44,8 @@ public class ParseRun {
 		
 		if(isVerbose) {
 			System.out.println("@@@" + parseState.getHeadParseStruct());
-			System.out.println("Relational Vector: " + parseState.getRelationalContextVec());
+			BigInteger relationVec = parseState.getRelationalContextVec();
+			System.out.println("Relational Vector num of bits set: " + (relationVec == null ? "" : relationVec.bitCount()));
 		}
 		parseState.logState();
 		
