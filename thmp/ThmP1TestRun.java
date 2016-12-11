@@ -499,7 +499,10 @@ public class ThmP1TestRun {
 			
 			st = "$R$ is a ring if and only if $R $ is a field and has a zero";
 			st = "Let $X$ be a locally compact Hausdorff space, and let $\\mu : \\mathcal{B}(X) \\to [0,infty]$ be a Radon measure";
+			st = "An field is a nonzero ring where every nonzero element is invertible";
+			st = "Every exact sequence of modules over a field ";
 			
+			//st = "field is finitely presented";			
 			//st = "$R $ that is a field and that is a ring is a field";			
 			//st = "then $\\mu(E_j)=0$"; //converting to assert!			
 			//st = "given disjoint subset of $X$";

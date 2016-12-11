@@ -712,6 +712,7 @@ public class Maps {
 
 			structMap.put("symb_verbphrase", new Rule("assert", 1));
 			structMap.put("ent_verbphrase", new Rule("assert", 1));
+			structMap.put("ent_verbAlone", new Rule("assert", 1));
 			structMap.put("pro_verbphrase", new Rule("assert", 1));
 			//"A is p, so is B"
 			structMap.put("so_verbphrase", new Rule("So", 1));
@@ -813,6 +814,7 @@ public class Maps {
 			// ent_
 			probMap.put("ent_anchor", .85);
 			probMap.put("ent_verb", .8);
+			probMap.put("ent_verbAlone", .81);
 			probMap.put("ent_pre", .8);
 
 			// symb_
@@ -832,6 +834,9 @@ public class Maps {
 			probMap.put("verb_ent", .75);
 			probMap.put("be_adj", .75);
 			
+			// verbAlone
+			probMap.put("verbAlone_LAST", 1.);
+						
 			// adj_
 			probMap.put("adj_ent", .9);
 			probMap.put("adj_pre", .85);

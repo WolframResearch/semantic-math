@@ -8,7 +8,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -30,6 +29,7 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 
+import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 import exceptions.ParseRuntimeException;
 import thmp.ParseState.VariableDefinition;
 import thmp.ParseToWLTree.WLCommandWrapper;
@@ -64,7 +64,7 @@ public class ThmP1 {
 	private static final ListMultimap<String, String> posMMap;
 	// fluff words, e.g. "the", "a"
 	private static final Map<String, String> fluffMap;
-
+	
 	//private static final Map<String, String> mathObjMap;
 	// map for composite adjectives, eg positive semidefinite
 	// value is regex string to be matched
@@ -113,6 +113,8 @@ public class ThmP1 {
 	private static List<String> parseStructMapList = new ArrayList<String>();
 	//the non-stringified version of parseStructMapList
 	private static List<Multimap<ParseStructType, ParsedPair>> parseStructMaps = new ArrayList<Multimap<ParseStructType, ParsedPair>>();
+	
+	private static final MaxentTagger posTagger;
 	
 	//list of context vectors of the highest-scoring parse tree for each input.
 	//will be cleared every time this list is retrieved, which should be once per 
@@ -188,6 +190,9 @@ public class ThmP1 {
 		for(String ent : NO_FUSE_ENT){
 			noFuseEntSet.add(ent);
 		}
+		
+		String pathToTagger = "lib/stanford-postagger-2015-12-09/models/english-bidirectional-distsim.tagger";
+		posTagger = new MaxentTagger(pathToTagger);
 	}
 	
 	/**
@@ -430,7 +435,7 @@ public class ThmP1 {
 	}
 	
 	/**
-	 * Attemps to compute part of speech of n-grams.
+	 * Attemps to guess part of speech of n-grams.
 	 * @return
 	 */
 	private static String computeNGramPos(String nGram, TokenType tokenType){
@@ -1160,9 +1165,16 @@ public class ThmP1 {
 					tempCurType = posList.get(k);
 
 					// FIRST/LAST indicate positions
-					tempPrevType = index > 0 ? prevType + "_" + tempCurType : "FIRST";
-					tempNextType = index < pairsLen - 1 ? tempCurType + "_" + nextType : "LAST";
+					tempPrevType = index > 0 ? prevType + "_" + tempCurType : tempCurType + "_FIRST";
+					tempNextType = index < pairsLen - 1 ? tempCurType + "_" + nextType : tempCurType + "_LAST";
 
+					if(0 == index && !probMap.containsKey(tempPrevType)){
+						tempPrevType = "FIRST";
+					}
+					if(pairsLen - 1 == index && !probMap.containsKey(tempNextType)){
+						tempNextType = "LAST";
+					}
+					
 					if (probMap.get(tempPrevType) != null && probMap.get(tempNextType) != null) {
 						double score = probMap.get(tempPrevType) * probMap.get(tempNextType);
 						if (score > bestCurProb) {
@@ -1180,6 +1192,7 @@ public class ThmP1 {
 					}
 				}
 				curpair.set_pos(bestCurType);
+				//if(true) throw new IllegalStateException(bestCurType);
 				/*if(bestCurType.equals("ent")){ 
 					System.out.println("#### ent word: " + pairs.get(index).word());
 					
@@ -1192,9 +1205,27 @@ public class ThmP1 {
 			if(curpair.pos().equals("")){
 				if(POSSIBLE_ADJ_PATTERN.matcher(curWord).find()){
 					curpair.set_pos("adj");
-				}
-				
+				}				
 			}
+			//if yet still no pos found, use the Stanford NLP tagger, calls to which 
+			//does incur overhead.
+			if(curpair.pos().equals("")){
+				//tag the whole sentence to find the most accurate tag, since the tagger
+				//uses contextual tags to maximize entropy.
+				String taggedSentence = posTagger.tagString(sentence);
+				//must find word in tagged sentence, which looks like e.g. 
+				//"a_DT field_NN is_VBZ a_DT ring_NN".
+				//better way to fish the pos out?
+				String wordToTag = " " + curWord + "_";
+				int wordStartIndex = taggedSentence.indexOf(wordToTag);
+				int posIndex = wordStartIndex + wordToTag.length();
+				//pos is 2 characters long.
+				String wordPos = taggedSentence.substring(posIndex, posIndex+2);
+				
+				String pos = WordForms.getPosFromTagger(wordPos);
+				curpair.set_pos(pos);
+			}
+			
 		}
 		
 		// map of math entities, has mathObj + ppt's
@@ -3065,8 +3096,10 @@ public class ThmP1 {
 				
 				StructA<?, ?> hypStruct = (StructA<?, ?>)struct2.prev1();
 				if(hypStruct.type().equals("hyp") ){
-					childRelation = extractHypChildRelation(hypStruct);					
+					childRelation = extractHypChildRelation(hypStruct);
+					//throw new IllegalStateException();
 				}
+				
 				//sometimes hypStruct does not have type "hyp" despite struct2 having
 				//type "hypo"
 				if(null == childRelation){

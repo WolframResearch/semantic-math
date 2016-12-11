@@ -111,7 +111,7 @@ public class TriggerMathThm2 {
 		keyWordIndexTreeMap.putAll(docWordsFreqMapNoAnno);
 		
 		keywordIndexDict = ImmutableMap.copyOf(keyWordIndexTreeMap);
-		System.out.println("!_-------keywordIndexDict: " + keywordIndexDict);
+		//System.out.println("!_-------keywordIndexDict: " + keywordIndexDict);
 		//keywordIndexDict = ImmutableMap.copyOf(keywordIndexMap);
 		
 		//mathObjMx = new int[keywordList.size()][mathObjMMap.keySet().size()];	

@@ -142,8 +142,7 @@ public class WLCommandsList {
 				new PBuilder("symb|ent|noun|prep|phrase", null, true, false, false)));		
 		wLCommandMapBuilder.put("verbAlone", addCommand(new PBuilder("symb|ent|pro|noun", null, true), 
 				new PBuilder("pro", "we", WLCommand.PosTermType.NEGATIVE),
-				new PBuilder("Connective["),  new PBuilder("verbAlone", null, true, true, false), new PBuilder("]"),
-				new PBuilder("symb|ent|noun|prep|adverb", null, true, false, false)));		
+				new PBuilder("~HasProperty~["),  new PBuilder("verbAlone", null, true, true, false), new PBuilder("]")));		
 		
 		/*****More specific commands******/
 		//WLCommandMapBuilder.put("element", addCommand(

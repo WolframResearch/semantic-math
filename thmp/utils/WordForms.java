@@ -24,7 +24,7 @@ public class WordForms {
 	//*don't* put "of" here, will interfere with 3 gram collection
 	private static final String FLUFF_WORDS_SMALL = "a|the|tex|of|and|on|let|lemma|for|to|that|with|is|be|are|there|by"
 			+ "|any|as|if|we|suppose|then|which|in|from|this|assume|this|have|just|may|an|every|it|between|given|itself|has"
-			+ "|more";
+			+ "|more|where";
 	private static ImmutableSet<String> freqWordsSet; 
 	//brackets pattern
 	private static final Pattern BRACKETS_PATTERN = Pattern.compile("\\[([^\\]]*)\\]");	
@@ -232,5 +232,59 @@ public class WordForms {
 	 */
 	public static Pattern getWhitespacePattern() {
 		return WHITESPACE_PATTERN;
+	}
+	
+	/**
+	 * Get the part of speech corresponding to the pos tag/symbol.
+	 * E.g. i -> "pre". Placed here instead of in subclass, so it can
+	 * be used by WordFrequency.java as well.
+	 * @param word
+	 * @param wordPos
+	 * @return
+	 */
+	public static String getPosFromTagger(String wordPos){
+		String pos;
+		switch (wordPos) {
+		case "IN":
+			//adverbs and adj are sometimes interchanged by the 
+			//Stanford pos tagger, in my opinion.
+			pos = "pre";
+			break;
+		case "PRP":
+			pos = "pro";
+			break;
+		case "VBP":
+			pos = "verb";
+			break;
+		case "VBZ":
+			pos = "vbs";
+			break;
+		case "NN":
+			pos = "ent";
+			break;
+		case "NNS":
+			pos = "ent";
+			break;
+		case "JJ":
+			pos = "adj";
+			break;
+		case "RB":
+			pos = "adverb";
+			break;
+		case "DT":
+			// determiner, e.g. "every", put adj for now.
+			//for better grammar integration.
+			pos = "adj";
+			//pos = "det";
+			break;
+		case "CD":
+			pos = "num";
+			break;
+		default:
+			pos = "";
+			//System.out.println("default pos: "+ word + " "+ lineAr[2]);
+			// defaultList.add(lineAr[2]);
+		}
+		return pos;
 	}
 }

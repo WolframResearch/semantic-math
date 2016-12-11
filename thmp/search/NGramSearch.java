@@ -7,11 +7,15 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Maps;
 
 import thmp.ProcessInput;
 import thmp.utils.FileUtils;
@@ -70,6 +74,9 @@ public class NGramSearch {
 		//list of 2 grams that show up with above-average frequency, with their frequencies
 		private static final Map<String, Integer> twoGramsMap;
 		
+		//undesirable part of speech combos for two grams, e.g. ent_verb.
+		private static final Set<String> UNDESIRABLE_POS_COMBO_SET;
+		
 		private static final String[] ADDITIONAL_TWO_GRAMS = new String[]{"local field", "direct sum",
 				"finitely many", "open mapping", "finite type", "finite presentation", "principal ideal",
 				"noetherian ring"};
@@ -88,6 +95,11 @@ public class NGramSearch {
 		//set that contains the first word of each n-grams.
 		private static final Set<String> nGramFirstWordsSet;
 		static{
+			
+			UNDESIRABLE_POS_COMBO_SET = new HashSet<String>();
+			String[] undesirablePosAr = new String[]{"ent_verb", "ent_vbs", "ent_verbAlone"};
+			UNDESIRABLE_POS_COMBO_SET.addAll(Arrays.asList(undesirablePosAr));
+			
 			//System.out.println("Gathering 2-grams...");
 			nGramMap = new HashMap<String, Map<String, Integer>>();
 			//total word counts of all 2 grams
@@ -127,21 +139,40 @@ public class NGramSearch {
 	private static Map<String, Integer> compile2grams(Map<String, Map<String, Integer>> nGramMap, Map<String, Integer> averageWordCounts,
 			Set<String> nGramFirstWordsSet, Set<String> initialTwoGramsSet){
 		
+		ListMultimap<String, String> posMMap = thmp.Maps.posMMap();
+		
 		Map<String, Integer> twoGramMap = new HashMap<String, Integer>();		
 		int totalFreqCount = 0;	
 		int totalTwoGrams = 0;
 		for(Map.Entry<String, Map<String, Integer>> wordMapEntry : nGramMap.entrySet()){
 			String word = wordMapEntry.getKey();
 			int averageWordCount = averageWordCounts.get(word);
+			List<String> wordPosList = posMMap.get(word);
+			String firstWordPos = null;
+			if(!wordPosList.isEmpty()){
+				//get the top one only
+				firstWordPos = wordPosList.get(0);
+			}
+			
 			Map<String, Integer> nextWordsMap = wordMapEntry.getValue();
+			
 			for(Map.Entry<String, Integer> nextWordsMapEntry : nextWordsMap.entrySet()){
 				int nextWordCount = nextWordsMapEntry.getValue();
 				String nextWord = nextWordsMapEntry.getKey();
 				String twoGram = word + " " + nextWord;
-				//this constant 3/2 needs to be tuned! <--then make into private constant rather than 
-				//leaving it here
+				//this constant 3/2 needs to be tuned! <--then make into private final int rather than 
+				//leaving it here after experimentation.
 				double freqThreshold = 3/2;
-				if(nextWordCount > averageWordCount*freqThreshold || initialTwoGramsSet.contains(twoGram)){									
+				//first check if undesired part of speech combination, for instance ent_verb. This is used
+				//to eliminate faulty two-grams such as "field split"				
+				List<String> nextWordPosList = posMMap.get(nextWord);
+				if(null != firstWordPos && !nextWordPosList.isEmpty()){
+					if(UNDESIRABLE_POS_COMBO_SET.contains(firstWordPos + "_" + nextWordPosList.get(0))){
+						continue;
+					}
+				}
+				
+				if(nextWordCount > averageWordCount*freqThreshold || initialTwoGramsSet.contains(twoGram)){							
 					twoGramMap.put(twoGram, nextWordCount);
 					initialTwoGramsSet.remove(twoGram);
 					nGramFirstWordsSet.add(word);
@@ -151,7 +182,7 @@ public class NGramSearch {
 				}
 			}
 		}
-		//totalTwoGrams should not be null, unless really tiny source set.
+		//totalTwoGrams should not be 0, unless really tiny source text set.
 		if(totalTwoGrams != 0){ 
 			averageTwoGramFreqCount = totalFreqCount/totalTwoGrams;
 		}else{
@@ -298,7 +329,7 @@ public class NGramSearch {
 		return averageWordCounts;
 	}
 	
-		/**
+	/**
 	 * Get 2-grams and their frequencies.
 	 * @return
 	 */

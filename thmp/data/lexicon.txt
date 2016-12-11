@@ -21,6 +21,7 @@ conjugation ent
 categories ent_comp
 lemma noun
 take verb
+split verbAlone
 analogue noun
 hold verb
 situation noun
