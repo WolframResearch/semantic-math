@@ -108,7 +108,13 @@ public class RelationVec implements Serializable{
 				RelationType posTermRelationType = posTerm.relationType();
 				if(RelationType.NONE != posTermRelationType){
 					
-					String contentStr = posTerm.posTermStruct().contentStr();
+					Struct posTermStruct = posTerm.posTermStruct();
+					
+					if(null == posTermStruct && posTerm.isOptionalTerm()){
+						continue;
+					}
+					
+					String contentStr = posTermStruct.contentStr();
 					//modulus and residue (like remainder) as in abstract algebra.
 					int modulus = posTermRelationType.vectorOffset();
 					//add new indices to bitPosList

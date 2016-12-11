@@ -1381,8 +1381,7 @@ public class WLCommand implements Serializable{
 			while(i < posTermListSz && posTermList.get(i).positionInMap < 0) i++;		
 		}
 		
-		if(i == posTermListSz || i < 0){
-			
+		if(i == posTermListSz || i < 0){			
 			boolean hasOptionalTermsLeft = (curCommand.optionalTermsCount > 0);
 			return new CommandSat(curCommand.componentCounter < 1, hasOptionalTermsLeft, componentAdded);
 		}
@@ -1398,25 +1397,29 @@ public class WLCommand implements Serializable{
 		Pattern commandComponentPosPattern = commandComponent.getPosPattern();
 		Pattern commandComponentNamePattern = commandComponent.getNamePattern();
 		
-		while(( (!commandComponentPosPattern.matcher(structType).find() || !commandComponentNamePattern.matcher(structName).find())
+		
+		while( /* or auxilliary term*/
+				posTermPositionInMap < 0
+				|| (!commandComponentPosPattern.matcher(structType).find() || !commandComponentNamePattern.matcher(structName).find())
 				//!structType.matches(commandComponentPosTerm) || !structName.matches(commandComponentName)) 
 				&& (isOptionalTerm || curPosTerm.isNegativeTerm())
-				/* or auxilliary term*/
-				|| posTermPositionInMap < 0)
+				
 				/* ensure index within bounds*/
 				//&& i < posTermListSz - 1 
 				){
 			
-			if(before){
-				if(i < 0){
-					break;
-				}
+			if(before){				
 				i--;
-			}else{
-				if(i > posTermListSz - 1){
-					break;
+				if(i < 0){
+					boolean hasOptionalTermsLeft = (curCommand.optionalTermsCount > 0);
+					return new CommandSat(curCommand.componentCounter < 1, hasOptionalTermsLeft, componentAdded);
 				}
+			}else{
 				i++;
+				if(i > posTermListSz - 1){
+					boolean hasOptionalTermsLeft = (curCommand.optionalTermsCount > 0);					
+					return new CommandSat(curCommand.componentCounter < 1, hasOptionalTermsLeft, componentAdded);
+				}				
 			}
 			
 			curPosTerm = posTermList.get(i);
@@ -1430,6 +1433,11 @@ public class WLCommand implements Serializable{
 			//commandComponentPosTerm = commandComponent.posStr;
 			//commandComponentName = commandComponent.nameStr;
 		
+			System.out.println("commandComponentNamePattern: "+commandComponentPosPattern  + " curPosTerm " + curPosTerm );
+			//System.out.println("commandComponentPosPattern.matcher(structType)" + commandComponentPosPattern.matcher(structType));
+					//|| !commandComponentNamePattern.matcher(structName).find()));
+			//System.out.println("commandComponentNamePattern: "+commandComponentNamePattern+ " structType: " + 
+					//commandComponentPosPattern.matcher(structType) + (isOptionalTerm || curPosTerm.isNegativeTerm()) + posTermPositionInMap);
 		}
 		
 		//System.out.println("GOT HERE****** newStruct " + newStruct);
@@ -1444,7 +1452,7 @@ public class WLCommand implements Serializable{
 			return new CommandSat(disqualified);
 		}
 		
-		int commandComponentCount = commandsCountMap.get(commandComponent);
+		
 		
 		if(commandComponentPosPattern.matcher(structType).find()
 				//structType.matches(commandComponentPosTerm) 	
@@ -1465,6 +1473,7 @@ public class WLCommand implements Serializable{
 			//sets the posTermStruct for the posTerm. No effect?!?***
 			posTermList.get(i).set_posTermStruct(newStruct);
 			//here newComponent must have been in the original required set
+			int commandComponentCount = commandsCountMap.get(commandComponent);
 			commandsCountMap.put(commandComponent, commandComponentCount - 1);
 			
 			if(!newStruct.isStructA()){
@@ -1911,6 +1920,11 @@ public class WLCommand implements Serializable{
 				//end of word. To prevent "verbphrase" from matching "verb"
 				this.posPattern = Pattern.compile("^(?:" + posTerm + ")$");
 				this.namePattern = Pattern.compile(name);
+			}else{
+				//if auxiliary component, compile trivial patterns instead of 
+				//leaving them as null, to avoid any potential NPE.
+				this.posPattern = Pattern.compile("");
+				this.namePattern = Pattern.compile("");
 			}
 		}		
 		

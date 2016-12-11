@@ -253,6 +253,9 @@ public class WordForms {
 		case "PRP":
 			pos = "pro";
 			break;
+		case "VB":
+			pos = "verb";
+			break;
 		case "VBP":
 			pos = "verb";
 			break;
@@ -260,6 +263,10 @@ public class WordForms {
 			pos = "vbs";
 			break;
 		case "NN":
+			pos = "ent";
+			break;
+		case "NNP":
+			//"Radon" in "Radon measure"
 			pos = "ent";
 			break;
 		case "NNS":
@@ -278,7 +285,8 @@ public class WordForms {
 			//pos = "det";
 			break;
 		case "CD":
-			pos = "num";
+			//symbol or num both categorized to "CD"
+			pos = "symb";
 			break;
 		default:
 			pos = "";

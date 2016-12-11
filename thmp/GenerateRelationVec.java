@@ -27,7 +27,8 @@ import thmp.search.CollectThm;
  */
 public class GenerateRelationVec {
 
-	private static final String serializeFileName = "src/thmp/data/fieldsThmsRelationVecs.dat";
+	//private static final String serializeFileName = "src/thmp/data/fieldsThmsRelationVecs.dat";
+	private static final String serializeFileName = "src/thmp/data/AllThmsRelationVecs.dat";
 	private static final List<BigInteger> relationVecList;
 	
 	static{
@@ -82,19 +83,19 @@ public class GenerateRelationVec {
 	private static void parseAndSerializeThms() {
 		ParseStateBuilder parseStateBuilder = new ParseStateBuilder();
 		
-		List<BigInteger> bitSetList = new ArrayList<BigInteger>(); 
+		List<BigInteger> bigIntList = new ArrayList<BigInteger>(); 
 		
 		List<String> bareThmList = CollectThm.ThmList.get_bareThmList();
 		//System.out.println("bareThmList" + bareThmList);
 		for(String thm : bareThmList){
 			ParseState parseState = parseStateBuilder.build();
 			BigInteger bitVec = generateRelationVec(thm, parseState);	
-			bitSetList.add(bitVec);
+			bigIntList.add(bitVec);
 		}
 		
 		//serialize the bitSetList. Should run this during static initializer
 		//in PRD.
-		serializeRelationVecList(bitSetList);
+		serializeRelationVecList(bigIntList);
 	}	
 	
 	/**

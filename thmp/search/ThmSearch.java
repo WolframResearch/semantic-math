@@ -116,6 +116,9 @@ public class ThmSearch {
 				ml.waitForAnswer();
 				Expr expr = ml.getExpr();
 				System.out.println("corMx " + expr);
+				//get correlation matrix, to put together correlated terms
+				//in similar indices. 
+				
 			}else{
 				ml.discardAnswer();
 			}

@@ -47,8 +47,8 @@ public class CollectThm {
 	//read in from list of files streams instead of just one
 	private static final List<String> rawFileStrList = Arrays.asList(new String[]{
 			//"src/thmp/data/testContextVector.txt", 
-			
-			"src/thmp/data/fieldsRawTex.txt",
+			"src/thmp/data/collectThmTestSample.txt"
+			//"src/thmp/data/fieldsRawTex.txt",
 			//"src/thmp/data/CommAlg5.txt", 
 			//"src/thmp/data/multilinearAlgebra.txt",
 			//"src/thmp/data/functionalAnalysis.txt",

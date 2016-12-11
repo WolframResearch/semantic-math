@@ -1209,6 +1209,7 @@ public class ThmP1 {
 			}
 			//if yet still no pos found, use the Stanford NLP tagger, calls to which 
 			//does incur overhead.
+			if(false){
 			if(curpair.pos().equals("")){
 				//tag the whole sentence to find the most accurate tag, since the tagger
 				//uses contextual tags to maximize entropy.
@@ -1224,8 +1225,9 @@ public class ThmP1 {
 				
 				String pos = WordForms.getPosFromTagger(wordPos);
 				curpair.set_pos(pos);
+				System.out.println("Using posTagger to tag word: " +  curWord + " with pos: " + pos);
 			}
-			
+			}
 		}
 		
 		// map of math entities, has mathObj + ppt's

@@ -64,7 +64,7 @@ public class DetectHypothesis {
 	 */
 	public static class DefinitionListWithThm implements Serializable {
 		
-		private static final long serialVersionUID = 1L;
+		private static final long serialVersionUID = 7178202892278343033L;
 
 		private String thmStr;
 		
@@ -82,7 +82,8 @@ public class DetectHypothesis {
 		
 		@Override
 		public String toString(){
-			StringBuilder sb = new StringBuilder(70);
+			//initial capacity is average number of characters.
+			StringBuilder sb = new StringBuilder(250);
 			sb.append("- definitionList: ").append(definitionList)
 				.append("thmWithDefStr: -").append(thmWithDefStr);
 			return sb.toString();

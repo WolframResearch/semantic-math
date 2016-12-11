@@ -491,10 +491,8 @@ public class StructH<H> extends Struct{
 		int childrenSize = children.size();
 		if(childrenSize > 0){
 			
-			sb.append(", \"Qualifiers\" -> ");
-			
 			StringBuilder childSb = new StringBuilder();
-			for(int i = 0; i < childrenSize; i++){		
+			for(int i = 0; i < childrenSize; i++){	
 				Struct child = children.get(i);
 				String childRelationStr = childRelationList.get(i).childRelation;
 				/*if(child.WLCommandWrapperList() != null){
@@ -532,7 +530,12 @@ public class StructH<H> extends Struct{
 					}
 				}
 			}
-			sb.append(childSb);
+
+			if(0 < childSb.length()){
+				sb.append(", \"Qualifiers\" -> ");
+				sb.append(childSb);
+			}
+			
 		}
 		if(includeType){ 
 			//str += "\"]";

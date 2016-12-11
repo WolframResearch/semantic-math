@@ -112,7 +112,7 @@ public class ParseTreeToVec {
 		List<Struct> children = struct.children();
 		
 		for(Struct child : children){
-			tree2vec(child, structIndex, contextVec);			
+			tree2vec(child, structIndex, contextVec);
 		}
 		
 		//should also set indices of ppt's of StructH, e.g. "maximal ideal", maximal is ppt of ideal 
