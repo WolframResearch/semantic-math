@@ -49,7 +49,7 @@ public class ParseAgain {
 			
 			int curRow = structCoordinates.get(i)[0];
 			int curCol = structCoordinates.get(i)[1];
-			//if prev col index is one less than current row,
+			//Isolated Struct: i.e. if prev col index is one less than current row,
 			//and next row index is one greater than current col.
 			if(structCoordinates.get(i-1)[1] == curRow-1 
 					&& structCoordinates.get(i+1)[0] == curCol+1){

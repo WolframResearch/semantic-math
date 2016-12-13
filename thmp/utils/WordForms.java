@@ -128,6 +128,13 @@ public class WordForms {
 		return BRACKETS_PATTERN;
 	}
 	
+	/**
+	 * Pattern than begins and ends with dollar signs: \\$([^$]+)\\$.
+	 * @return
+	 */
+	public static Pattern LATEX_PATTERN(){
+		return LATEX_PATTERN;
+	}
 	
 	public static enum TokenType{
 		SINGLETON(1), TWOGRAM(2), THREEGRAM(3);

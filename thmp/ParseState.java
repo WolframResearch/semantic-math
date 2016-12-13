@@ -584,7 +584,7 @@ public class ParseState {
 	 * @return the tokenList
 	 */
 	public List<Struct> getTokenList() {
-		return tokenList;
+		return this.tokenList;
 	}
 	
 	/**

@@ -809,8 +809,9 @@ public class Maps {
 			// need to gather/compute prob from labeled data
 			// used in round 1 parsing
 			// "FIRST"/"LAST" indicate positions in sentence.
-			probMap.put("FIRST", 1.);
-			probMap.put("LAST", 1.);
+			//This prob should be averg of the probabilities.
+			probMap.put("FIRST", .7);
+			probMap.put("LAST", .7);
 			// ent_
 			probMap.put("ent_anchor", .85);
 			probMap.put("ent_verb", .8);
@@ -824,7 +825,7 @@ public class Maps {
 			// pre_
 			probMap.put("pre_ent", .8);
 			probMap.put("pre_adj", .6);
-			probMap.put("pre_ent", .6);
+			probMap.put("pre_ent", .65);
 
 			// verb_
 			probMap.put("verb_ent", .6);

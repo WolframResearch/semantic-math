@@ -1134,12 +1134,12 @@ public class ThmP1 {
 				}
 			}
 		}
-
+				
 		// If phrase isn't in dictionary, ie has type "", then use probMap to
 		// postulate type probabilistically.
-		Pair curpair;
 		int pairsLen = pairs.size();
-
+		Pair curpair;
+		
 		double bestCurProb = 0;
 		String prevType = "", nextType = "", tempCurType = "", tempPrevType = "", tempNextType = "", bestCurType = "";
 
@@ -1191,15 +1191,17 @@ public class ThmP1 {
 						}
 					}
 				}
-				curpair.set_pos(bestCurType);
+				if(bestCurProb > 0.5){
+					curpair.set_pos(bestCurType);
+					if (bestCurType.equals("ent")){
+						mathIndexList.add(index);
+					}
+				}
 				//if(true) throw new IllegalStateException(bestCurType);
 				/*if(bestCurType.equals("ent")){ 
 					System.out.println("#### ent word: " + pairs.get(index).word());
 					
-				}*/
-				if (bestCurType.equals("ent")){
-					mathIndexList.add(index);
-				}
+				}*/				
 			}
 			//if still no pos, try to guess part of speech based on endings 
 			if(curpair.pos().equals("")){
@@ -1209,7 +1211,7 @@ public class ThmP1 {
 			}
 			//if yet still no pos found, use the Stanford NLP tagger, calls to which 
 			//does incur overhead.
-			if(false){
+			//if(true){
 			if(curpair.pos().equals("")){
 				//tag the whole sentence to find the most accurate tag, since the tagger
 				//uses contextual tags to maximize entropy.
@@ -1225,9 +1227,28 @@ public class ThmP1 {
 				
 				String pos = WordForms.getPosFromTagger(wordPos);
 				curpair.set_pos(pos);
+				if (pos.equals("ent")){
+					mathIndexList.add(index);
+				}
 				System.out.println("Using posTagger to tag word: " +  curWord + " with pos: " + pos);
 			}
+			//}
+		}
+		
+		//turn "symb" pos into "ent" if followed by "pre",
+		//e.g. "given $x$ in a compact space"
+		//pairsLen = pairs.size();
+		for (int index = 0; index < pairsLen; index++) {
+			//int pairsLen = pairs.size();
+			curpair = pairs.get(index);
+			String curPos = curpair.pos();
+			
+			if(curPos.equals("symb") && index < pairsLen-1
+					&& pairs.get(index+1).pos().equals("pre") ){
+				curpair.set_pos("ent");
+				mathIndexList.add(index);
 			}
+			
 		}
 		
 		// map of math entities, has mathObj + ppt's
@@ -1237,12 +1258,18 @@ public class ThmP1 {
 		for (int j = 0; j < mathIndexList.size(); j++) {
 			
 			int index = mathIndexList.get(j);
-			String mathObjName = pairs.get(index).word();
+			Pair mathPair = pairs.get(index);
+			String mathObjName = mathPair.word();
 			String entPosStr = String.valueOf(j);
-			pairs.get(index).set_pos(entPosStr);
+			mathPair.set_pos(entPosStr);
 			
 			StructH<HashMap<String, String>> tempStructH = new StructH<HashMap<String, String>>("ent");
-			List<String> posList = posMMap.get(mathObjName); //HERE
+			
+			if(WordForms.LATEX_PATTERN().matcher(mathObjName).matches()){
+				tempStructH.setLatexStructToTrue();
+			}
+			
+			List<String> posList = posMMap.get(mathObjName);
 			
 			boolean entAdded = false;
 			if(!posList.isEmpty()){
@@ -1265,7 +1292,7 @@ public class ThmP1 {
 					fuseSymbEnt = false;
 					//break;
 				}
-				tempStructH.addExtraPos(pos);//HERE
+				tempStructH.addExtraPos(pos);
 			}
 			
 			HashMap<String, String> tempMap = new HashMap<String, String>();
@@ -2267,13 +2294,13 @@ public class ThmP1 {
 								}
 							}
 
-							// potentially change assert to latex expr
-							if (type2.equals("assert") && struct2.prev1NodeType().equals(NodeType.STR)
+							// potentially change assert to latex expr. <--Why?
+							/*if (type2.equals("assert") && struct2.prev1NodeType().equals(NodeType.STR)
 									&& ((String) struct2.prev1()).charAt(0) == '$'
 									&& !structMap.containsKey(combined)) {
 								struct2.set_type("expr");
 								combined = type1 + "_" + "expr";
-							}
+							}*/
 							// update namesMap
 							if (type1.equals("ent") && !struct1.isStructA()) {
 								String called = struct1.struct().get("called");
@@ -2326,6 +2353,7 @@ public class ThmP1 {
 			logger.info(msg);
 		}
 		
+		Map<String, WLCommandWrapper> triggerWordsMap;
 		//logger.info("headStructListSz " + headStructListSz);
 		//the default entry value in context vec should be the average of all entries in matrix.
 		//list of context vectors.
@@ -2438,19 +2466,19 @@ public class ThmP1 {
 		//generated a spanning parse and satisfied certain WLCommands.
 		//and current structlist is not too long
 		else if(!isReparse && null != parseState.getHeadParseStruct()
-				&& parseState.getTokenList().size() < REPARSE_UPPER_SIZE_LIMIT){
-			
-			//the headStruct is still from the parse of the previous parse segment,
-			//since there was no parse, and partial parses haven's happened yet.
-			Map<String, WLCommandWrapper> triggerWordsMap 
-				= parseState.getHeadParseStruct().getTriggerWordsMap();
+				&& parseState.getTokenList().size() < REPARSE_UPPER_SIZE_LIMIT
+				//the headStruct is still from the parse of the previous parse segment,
+				//since there was no parse, and partial parses haven's happened yet.
+				&& ((triggerWordsMap = parseState.getHeadParseStruct().getTriggerWordsMap())
+						.containsKey("define") 
+						|| triggerWordsMap
+						.containsKey("let"))
+				){
 			
 			//See if desired trigger words are present.
 			//Since trigger words determine which conditional parse to use
 			//(should have an enum for conditionalParseType once more conditional parse
 			//methods are introduced). List to be extended.
-			
-			if( triggerWordsMap.containsKey("define") || triggerWordsMap.containsKey("let")){
 			
 			isReparse = true;
 			//negative side effects to parseState that should be discarded? <--side effects yet, 
@@ -2459,13 +2487,12 @@ public class ThmP1 {
 					parseState.getTokenList()));
 			parseState = parse(parseState, isReparse);
 			//throw new IllegalStateException(parseState.getTokenList().toString());
-			}
-			//throw new IllegalStateException(triggerWordsMap.toString());
+			
 		}
 		// if again no full parse. Also add to parsedExpr List.
 		else if(!isReparse || totalNumUnitsInStructList(inputStructList) > 2){
 			
-			List<StructList> parsedStructList = new ArrayList<StructList>();
+			List<StructList> structListList = new ArrayList<StructList>();
 			//list of integral 2-tuples with row and column coordinates.
 			//The coordinates at index i are those of the struct at index i
 			//in parsedStructList.
@@ -2486,7 +2513,7 @@ public class ThmP1 {
 
 				if (tempStructList.size() > 0) {					
 					//but adding at 0 is slow! Add at end and reverse!
-					parsedStructList.add(0, tempStructList);
+					structListList.add(0, tempStructList);
 					structCoordinates.add(0, new int[]{i, j});
 				}
 				// a singleton on the diagonal <--not necessarily true any more
@@ -2502,11 +2529,66 @@ public class ThmP1 {
 			//ones that did not form into any grammar rules in previous round.
 			//recursively call this, discard bigger and bigger components, that are
 			//the smallest in each round.			
-			
 			if(!isReparse){
 			
-			// print out the components
-			int parsedStructListSize = parsedStructList.size();
+				int parsedStructListSize = structListList.size();
+				
+				//if only one ent,
+				//e.g. "then $ $", misrepresented StructH as ent, 
+				//if should have been an "assert"
+				if(structListList.size() < 3){
+					
+					//go through structList see 
+					//boolean couldConvertToAssert = false;
+					List<Struct> entSubstitutedStructList = new ArrayList<Struct>(inputStructList);
+					Struct toBeConvertedStruct = null;
+					
+					for(StructList sList : structListList){
+						Struct struct = sList.get(0);
+						//entToAssertStructList.add(struct);
+						if(struct.isLatexStruct()){
+							//if(true) throw new IllegalStateException(structListList.toString());
+							assert !struct.isStructA() 
+								: "Struct must be StructA to be latexStruct.";						
+							//couldConvertToAssert = true;
+							toBeConvertedStruct = struct;
+							break;
+						}						
+					}
+					
+					if(null != toBeConvertedStruct){
+						
+						//need to convert toBeConvertedStruct to a StructA 
+						//with type "assert".						
+						String toBeConvertedStructName = toBeConvertedStruct.nameStr();
+						
+						for(int k = 0; k < entSubstitutedStructList.size(); k++){
+							
+							Struct s = entSubstitutedStructList.get(k);
+							if(s.nameStr().equals(toBeConvertedStructName)){
+								//if s already has child, then means probably should not turn into assertion,
+								//since most children are appended during mx-building
+								if(s.has_child()){
+									break;
+								}
+								
+								//StructH should not have any properties .  Look through properties of toBeConvertedStruct?
+								StructA<String, String> convertedStructA = new StructA<String, String>(toBeConvertedStructName, 
+										NodeType.STR, "", NodeType.STR, "assert");
+								
+								entSubstitutedStructList.set(k, convertedStructA);
+								//if(true) throw new IllegalStateException(inputStructList.toString());
+								//isReparse = true;
+								parseState.setTokenList(entSubstitutedStructList);
+								//don't set isReparse, so to allow defluffing in the recursion call.
+								System.out.println("~~REPARSING with assert");
+								parse(parseState);						
+								System.out.println("~~REPARSING with assert DONE");
+							}
+						}						
+					}
+				}						
+			if(!parseState.isRecentParseSpanning()){
 			//String totalParsedString = "";
 			double totalScore = 1; //product of component scores
 			//list of multimaps, each Multimap corresponds to the commands picked up
@@ -2522,7 +2604,7 @@ public class ThmP1 {
 				StringBuilder parsedSB = new StringBuilder();
 				// int highestScoreIndex = ArrayDFS(parsedStructList.get(k));
 				int highestScoreIndex = 0;
-				Struct kHeadStruct = parsedStructList.get(k).structList().get(highestScoreIndex);
+				Struct kHeadStruct = structListList.get(k).structList().get(highestScoreIndex);
 				//measures span of longForm (how many leaf nodes reached), use in place of 
 				//commandNumUnits if no full WLCommand parse.
 				int span = 0;
@@ -2586,14 +2668,17 @@ public class ThmP1 {
 				//form new structList
 				List<Struct> newStructList = new ArrayList<Struct>();
 				
-				for(int k = 0; k < parsedStructList.size(); k++){
-					StructList structList_i = parsedStructList.get(k);					
+				for(int k = 0; k < structListList.size(); k++){
+					StructList structList_i = structListList.get(k);					
 					//get something other than 0th??
 					newStructList.add(structList_i.get(0));					
 				}
 				parseState.setTokenList(newStructList);
 				
+				//parseAgain defluffs based on ones that are not connected to neighbors.
 				ParseAgain.parseAgain(newStructList, structCoordinates, parseState);
+				
+				System.out.println("\n=__+++++_======structList after Defluffing round 1: " + parseState.getTokenList());
 				
 				//if still no spanning parse found in above defluffing approach, now
 				//try another approach: exchanging elements 
@@ -2618,9 +2703,6 @@ public class ThmP1 {
 				}
 				parseState.setTokenList(structList);
 				
-				System.out.println("\n=___+++++++++_=========Defluffing structList: " + structList
-						+ "\n" + "newStructList: " +newStructList);
-				
 				boolean isReparseAgain = true;
 				parseState = parse(parseState, isReparseAgain);
 				
@@ -2631,6 +2713,7 @@ public class ThmP1 {
 			//from "ent" to "assert" helps.			
 			
 			System.out.println("%%%%%\n");
+		}
 		}
 		}
 		// print out scores

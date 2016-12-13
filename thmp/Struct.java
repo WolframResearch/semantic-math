@@ -305,7 +305,15 @@ public abstract class Struct implements Serializable{
 	//not abstract, because not applicable to StructH
 	public void set_prev2(Object obj){		
 	}
-		
+	
+	/**
+	 * Whether this structH arises from a latex expression, e.g. $x > 0$.
+	 * Used to convert ent into assert if necessary. 
+	 */
+	public boolean isLatexStruct() {
+		return false;
+	}
+
 	public abstract Object prev1();
 	
 	public abstract Object prev2();

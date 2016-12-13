@@ -139,11 +139,22 @@ public class WLCommandsList {
 		wLCommandMapBuilder.put("verb", addCommand(new PBuilder("symb|ent|pro|noun", null, true), 
 				new PBuilder("pro", "we", WLCommand.PosTermType.NEGATIVE),
 				new PBuilder("Connective["),  new PBuilder("verb", null, true, true, false), new PBuilder("]"),
-				new PBuilder("symb|ent|noun|prep|phrase", null, true, false, false)));		
+				new PBuilder("symb|ent|noun|prep|phrase", null, true, false, false),
+				new PBuilder(", {Qualifier->", "OPT"), 
+				//the relation should incorporate several types. 
+				new PBuilder("prep", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}", "OPT")
+				));		
+		
 		wLCommandMapBuilder.put("verbAlone", addCommand(new PBuilder("symb|ent|pro|noun", null, true), 
 				new PBuilder("pro", "we", WLCommand.PosTermType.NEGATIVE),
 				new PBuilder("~HasProperty~["),  new PBuilder("verbAlone", null, true, true, false), new PBuilder("]")));		
 		
+		//assert_hypo: 
+		//WLCommandMapBuilder.put("hyp", addCommand(new String[] { "assert, , true", "hyp, , trigger", "ent|symb, , true"
+		  //}));
+		wLCommandMapBuilder.put("hyp", addCommand(new PBuilder("assert", null, true), new PBuilder("hyp", null, false, true, false), 
+				new PBuilder("ent|symb", null, true) ));
+
 		/*****More specific commands******/
 		//WLCommandMapBuilder.put("element", addCommand(
 			//	new String[] { "symb|ent, , true", "\\[Element]", ", element, trigger", "pre, of, false", "symb|ent, , true" }));			
@@ -257,12 +268,6 @@ public class WLCommandsList {
 				new PBuilder("=="), new PBuilder("equal to", null, false, true, false), 
 				new PBuilder("symb|ent|phrase", null, true, false, true, RelationType._IS) ));
 		
-		//assert_hypo: 
-				//WLCommandMapBuilder.put("hyp", addCommand(new String[] { "assert, , true", "hyp, , trigger", "ent|symb, , true"
-				  //}));
-		wLCommandMapBuilder.put("hyp", addCommand(new PBuilder("assert", null, true), new PBuilder("hyp", null, false, true, false), 
-				new PBuilder("ent|symb", null, true) ));
-		
 		//WLCommandMapBuilder.put("auxpass", addCommand(new String[] { "ent, , true",
 			//	"auxpass, , trigger_true", "ent|csubj, , true" }));
 		wLCommandMapBuilder.put("auxpass", addCommand(new PBuilder("ent", null, true), new PBuilder("auxpass", null, true, true, false), 
@@ -300,7 +305,8 @@ public class WLCommandsList {
 		//for every $x$
 		//WLCommandMapBuilder.put("for every", addCommand(new String[] { ", for every|for any, trigger", "\\[ForAll][",
 		//	 "ent|symb, , true", "]" }));
-		wLCommandMapBuilder.put("for every", addCommand(new PBuilder(null, "for every|for any", false, true, false), 
+		wLCommandMapBuilder.put("for every", addCommand(new PBuilder("assert", null, true, false, "OPT"),
+				new PBuilder(null, "for every|for any|for all", false, true, false), 
 				new PBuilder("\\[ForAll]["), new PBuilder("ent|symb", null, true), new PBuilder("]") ));
 		
 		//WLCommandMapBuilder.put("suppose", addCommand(new String[] { "hyp, , trigger",

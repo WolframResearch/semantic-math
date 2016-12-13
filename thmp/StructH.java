@@ -12,6 +12,12 @@ import java.util.Set;
 import thmp.ParseToWLTree.WLCommandWrapper;
 import thmp.Struct.NodeType;
 
+/**
+ * 
+ * *Need* to modify copy() when any field is added to StructH class.
+ * @author yihed
+ * @param <H>
+ */
 public class StructH<H> extends Struct{
 
 	private Map<String, String> struct; //hashmap
@@ -62,6 +68,10 @@ public class StructH<H> extends Struct{
 	private final Set<String> propertySet = new HashSet<String>();
 	//use this variable to avoid race conditions, since propertySet can be added to by multiple methods.
 	private volatile boolean isPropertySetEmpty = true;
+	
+	//whether this structH arises from a latex expression, e.g. $x > 0$.
+	//Used to convert ent into assert if necessary. 
+	private boolean isLatexStruct;
 	
 	//parent
 	//private Struct parent;
@@ -159,6 +169,21 @@ public class StructH<H> extends Struct{
 	}
 	*/
 	
+	/**
+	 * @return the isLatexStruct
+	 */
+	@Override
+	public boolean isLatexStruct() {
+		return isLatexStruct;
+	}
+
+	/**
+	 * @param isLatexStruct the isLatexStruct to set
+	 */
+	public void setLatexStructToTrue() {
+		this.isLatexStruct = true;
+	}
+
 	public void set_struct(HashMap<String, String> struct){
 		this.struct = struct;
 	}
@@ -227,8 +252,9 @@ public class StructH<H> extends Struct{
 	}
 	
 	/**
-	 * make deep copy, struct and children children are copied.
-	 * Parent of newly copied structs is previous Struct's parent
+	 * Make deep copy, struct and children children are copied.
+	 * Parent of newly copied structs is previous Struct's parent.
+	 * *Need* to modify this when any field is added to StructH class.
 	 * @return
 	 */
 	@Override
@@ -253,6 +279,9 @@ public class StructH<H> extends Struct{
 			newStructH.set_parentStruct(parentStruct);
 		//}
 		
+		if(this.isLatexStruct){
+			newStructH.setLatexStructToTrue();
+		}
 		return newStructH;
 	}
 	
@@ -353,8 +382,7 @@ public class StructH<H> extends Struct{
 	}
 	
 	public void set_structToAppendCommandStr(Struct structToAppendCommandStr){
-		this.structToAppendCommandStr = structToAppendCommandStr;
-		
+		this.structToAppendCommandStr = structToAppendCommandStr;		
 	}
 	
 	/**

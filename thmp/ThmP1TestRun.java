@@ -505,6 +505,14 @@ public class ThmP1TestRun {
 			st = "For any ring map $R \to R'$ the ring map $R' \\to R' \\otimes_R S$ is surjective with locally nilpotent kernel.";
 			st = "Let $\\varphi : R \to S$ be a surjective map with locally nilpotent kernel. Then $\\varphi$ induces a homeomorphism of spectra and isomorphisms "
 					+ "on residue fields.";
+			st = "Let $M$ be an $R$-module.  Then $M$ is flat if and only if it is the colimit of a directed system of free finite $R$-modules.";
+			st = "Let $k \\subset k'$ be an algebraic purely inseparable field extension. Then for any $k$-algebra $R$ the ring map $R \\to k' \\otimes_k R$ induces a homeomorphism of spectra.";
+			st = "$f$ induces a homeomorphism of spectra";
+			st = "If $u : X \\to \\mathbb{R}$ is an integrable function and $\\epsilon > 0$";
+			st = "then $x>0$ for all $x\\in X$"; //<--assert not picked up
+			st = "then $x> 0$";
+			
+			//st = "$f$ induces a map of fields";
 			//st = "field is finitely presented";
 			//st = "$R $ that is a field and that is a ring is a field";			
 			//st = "then $\\mu(E_j)=0$"; //converting to assert!			
@@ -592,7 +600,7 @@ public class ThmP1TestRun {
 			
 			//System.out.println("****" + ThmP1.getParsedExpr() + "******");
 			/*******whether to process file or not********/
-			boolean processFile = true;
+			boolean processFile = false;
 			
 			if(processFile){
 				
