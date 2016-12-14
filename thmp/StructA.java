@@ -64,6 +64,8 @@ public class StructA<A, B> extends Struct{
 	//don't need mxPathNodeList. The path down from this Struct should 
 	//be unique. It's the parents' paths to here that can differ
 	//private List<MatrixPathNode> mxPathNodeList;
+	private WLCommand commandBuilt;
+	//private boolean commandVisitedTwice;
 	
 	//is this ever needed?
 	public StructA(A prev1, NodeType prev1Type, B prev2, NodeType prev2Type, String type, StructList structList){		
@@ -249,6 +251,7 @@ public class StructA<A, B> extends Struct{
 	public String simpleToString(boolean includeType, WLCommand curCommand){
 		//if(this.posteriorBuiltStruct != null) return "";		
 
+		//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
 		if(this.WLCommandWrapperList != null){
 			int wrapperListSz = WLCommandWrapperList.size();
 			//wrapperListSz should be > 0, since list is created when first wrapper is added
@@ -261,9 +264,16 @@ public class StructA<A, B> extends Struct{
 				}				
 			}
 			//been built into one command already
-			this.WLCommandStrVisitedCount++;
+			if(null == this.commandBuilt){
+				this.commandBuilt = curCommand;
+				this.WLCommandStrVisitedCount++;
+			}else if(!curCommand.equals(this.commandBuilt)){
+				this.WLCommandStrVisitedCount++;
+				
+			}
+			
 			System.out.println("WLCommandStrVisitedCount" + this.WLCommandStrVisitedCount);
-			System.out.println("++++++===curWrapper " +curWrapper.WLCommandStr() + " " + this );
+			//System.out.println("++++++===curWrapper " +curWrapper.WLCommandStr() + " " + this );
 			return curWrapper.WLCommandStr();			
 		}		
 		
@@ -273,7 +283,13 @@ public class StructA<A, B> extends Struct{
 				fullName = "[" + fullName + ", " + (String)this.prev2 + "]";
 			}
 			//been built into one command already
-			this.WLCommandStrVisitedCount++;
+			//this.WLCommandStrVisitedCount++;
+			if(null == this.commandBuilt){
+				this.commandBuilt = curCommand;
+				this.WLCommandStrVisitedCount++;
+			}else if(!curCommand.equals(this.commandBuilt)){
+				this.WLCommandStrVisitedCount++;
+			}
 			return fullName;
 		}else{
 			
@@ -293,8 +309,13 @@ public class StructA<A, B> extends Struct{
 		}
 		
 		//been built into one command already
-		this.WLCommandStrVisitedCount++;
-		
+		//this.WLCommandStrVisitedCount++;
+		if(null == this.commandBuilt){
+			this.commandBuilt = curCommand;
+			this.WLCommandStrVisitedCount++;
+		}else if(!curCommand.equals(this.commandBuilt)){
+			this.WLCommandStrVisitedCount++;
+		}
 		//don't include prepositions for spanning purposes, since prepositions are almost 
 		//always counted if its subsequent entity is, but counting it gives false high span
 		//scores, especially compared to the case when they are absorbed into a StructH, in
@@ -395,6 +416,11 @@ public class StructA<A, B> extends Struct{
 		//str += tempStr;
 		str += tempSB;
 		return str;
+	}
+	
+	@Override
+	public void clear_commandBuilt(){
+		this.commandBuilt = null;
 	}
 	
 	@Override

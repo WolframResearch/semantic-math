@@ -152,6 +152,10 @@ public abstract class Struct implements Serializable{
 	public abstract int WLCommandStrVisitedCount();
 	
 	public abstract void clear_WLCommandStrVisitedCount();
+	
+	//public abstract boolean commandVisited();
+	public abstract void clear_commandBuilt();
+	
 	/**
 	 * Set list of structs in mx that this struct is attached to.
 	 * @param structList

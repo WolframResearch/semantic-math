@@ -858,7 +858,8 @@ public class WLCommand implements Serializable{
 	 */
 	
 	/**
-	 * Find struct with least depth amongst Structs that build this WLCommand
+	 * Find struct with least depth (closest to root) amongst Structs that build this WLCommand,
+	 * including the closest/deepest ancestor that connects any two structs used.
 	 */
 	private static Struct findCommandHead(ListMultimap<WLCommandComponent, Struct> commandsMap){
 		Struct structToAppendCommandStr;
@@ -868,6 +869,7 @@ public class WLCommand implements Serializable{
 		int leastDepth = MAXDFSDEPTH;
 		Struct highestStruct = null;
 		
+		//System.out.println("+++++++++++++++++++++commandsMap " + commandsMap);
 		for(Struct nextStruct : commandsMap.values()){
 			//System.out.println("~~~nextStruct inside commandsMap " + nextStruct + " " + nextStruct.dfsDepth());
 			
@@ -884,7 +886,7 @@ public class WLCommand implements Serializable{
 					
 					if(structIntMap.containsKey(nextStructParent)){
 						int existingChild = structIntMap.get(nextStructParent);
-						if(nextStructParent instanceof StructA && existingChild != NEITHERCHILD
+						if(nextStructParent.isStructA() && existingChild != NEITHERCHILD
 								&& whichChild != existingChild){
 							//check if has left child, right child, or both.
 							
@@ -1030,6 +1032,7 @@ public class WLCommand implements Serializable{
 		//Struct headStruct = curCommand.headStruct;
 		//determine which head to attach this command to
 		Struct structToAppendCommandStr = findCommandHead(commandsMap);
+		
 		EnumMap<PosTermConnotation, Struct> connotationMap = null;
 		
 		for(PosTerm term : posTermList){
@@ -1073,7 +1076,7 @@ public class WLCommand implements Serializable{
 			//boolean isOptionalTerm = term.isOptionalTerm();
 			
 			String nextWord = "";			
-			//-1 if WL command or auxilliary String
+			//neither WL command or auxilliary String
 			if(positionInMap != WLCommandsList.AUXINDEX && positionInMap != WLCommandsList.WLCOMMANDINDEX){
 				
 				List<Struct> curCommandComponentList = commandsMap.get(commandComponent);
@@ -1288,7 +1291,8 @@ public class WLCommand implements Serializable{
 	
 	/**
 	 * Check if only trivial terms left in posTermList before curIndex.
-	 * Auxiliary to addComponent.
+	 * Auxiliary to addComponent. Optional terms count as nontrivial, 
+	 * because could have optional terms 
 	 * @param posTermList
 	 * @param curIndex
 	 * @return
@@ -1296,8 +1300,8 @@ public class WLCommand implements Serializable{
 	private static boolean onlyTrivialTermsBefore(List<PosTerm> posTermList, int curIndex){
 		for(int i = curIndex; i > -1; i--){
 			PosTerm posTerm = posTermList.get(i);
-			
-			if(!posTerm.isNegativeTerm() && !posTerm.isOptionalTerm() && posTerm.positionInMap() > -1){
+			//return false if any nontrivial term is encountered, optional terms count as nontrivial.
+			if(!posTerm.isNegativeTerm() && posTerm.positionInMap() > -1){
 				return false;
 			}
 		}
@@ -1356,11 +1360,10 @@ public class WLCommand implements Serializable{
 		//String commandComponentPosTerm;
 		//String commandComponentName;
 		int posTermListSz =  posTermList.size();
-		
+		//System.out.println("GOT HERE****** posTermList " + posTermList + " i-1: " + (lastAddedComponentIndex-1));
 		int i = lastAddedComponentIndex;
 		//short-circuit if trigger is the first nontrivial term.
-		if(before && onlyTrivialTermsBefore(posTermList, i-1)){
-			
+		if(before && onlyTrivialTermsBefore(posTermList, i-1)){	
 			return new CommandSat(false, curCommand.optionalTermsCount > 0, false, true);
 		}
 		
@@ -1370,7 +1373,7 @@ public class WLCommand implements Serializable{
 		}
 		
 		//if(lastAddedComponentIndex != curCommand.triggerWordIndex){
-		
+		//checked here!
 		//determine what the next-to-be-added commandComponent is.
 		if(before){			
 			i--;
@@ -1384,8 +1387,7 @@ public class WLCommand implements Serializable{
 		if(i == posTermListSz || i < 0){			
 			boolean hasOptionalTermsLeft = (curCommand.optionalTermsCount > 0);
 			return new CommandSat(curCommand.componentCounter < 1, hasOptionalTermsLeft, componentAdded);
-		}
-		
+		}	
 		
 		PosTerm curPosTerm = posTermList.get(i);
 		commandComponent = curPosTerm.commandComponent;
@@ -1395,10 +1397,9 @@ public class WLCommand implements Serializable{
 		//commandComponentPosTerm = commandComponent.posStr;
 		//commandComponentName = commandComponent.nameStr;
 		Pattern commandComponentPosPattern = commandComponent.getPosPattern();
-		Pattern commandComponentNamePattern = commandComponent.getNamePattern();
-		
-		
-		while( /* or auxilliary term*/
+		Pattern commandComponentNamePattern = commandComponent.getNamePattern();		
+		//checked here
+		while( /* if auxilliary term*/
 				posTermPositionInMap < 0
 				|| (!commandComponentPosPattern.matcher(structType).find() || !commandComponentNamePattern.matcher(structName).find())
 				//!structType.matches(commandComponentPosTerm) || !structName.matches(commandComponentName)) 
@@ -1433,7 +1434,7 @@ public class WLCommand implements Serializable{
 			//commandComponentPosTerm = commandComponent.posStr;
 			//commandComponentName = commandComponent.nameStr;
 		
-			System.out.println("commandComponentNamePattern: "+commandComponentPosPattern  + " curPosTerm " + curPosTerm );
+			//System.out.println("commandComponentNamePattern: "+commandComponentPosPattern  + " curPosTerm " + curPosTerm );
 			//System.out.println("commandComponentPosPattern.matcher(structType)" + commandComponentPosPattern.matcher(structType));
 					//|| !commandComponentNamePattern.matcher(structName).find()));
 			//System.out.println("commandComponentNamePattern: "+commandComponentNamePattern+ " structType: " + 
@@ -1452,8 +1453,6 @@ public class WLCommand implements Serializable{
 			return new CommandSat(disqualified);
 		}
 		
-		
-		
 		if(commandComponentPosPattern.matcher(structType).find()
 				//structType.matches(commandComponentPosTerm) 	
 				&& commandComponentNamePattern.matcher(structName).find()
@@ -1462,7 +1461,7 @@ public class WLCommand implements Serializable{
 				&& commandsCountMap.get(commandComponent) > 0
 				//&& addedComponentsColSz < commandComponentCount
 				){
-			//System.out.println("#####inside addComponent, newStruct: " + newStruct);
+			//System.out.println("#####inside addComponent, ADDING newStruct: " + newStruct);
 			
 			//check for parent, see if has same type & name etc, if going backwards.
 			if(before){
@@ -1731,7 +1730,7 @@ public class WLCommand implements Serializable{
 	 * @param curCommand current command under consideration
 	 * @param newStruct new Struct to be added
  	 */
-	public static void addTriggerComponent(WLCommand curCommand, Struct newStruct){
+	public static CommandSat addTriggerComponent(WLCommand curCommand, Struct newStruct){
 		//System.out.println("Adding trigger component " + newStruct + " " + curCommand);
 		
 		WLCommandComponent commandComponent = curCommand.posTermList.get(curCommand.triggerWordIndex).commandComponent;
@@ -1743,6 +1742,10 @@ public class WLCommand implements Serializable{
 		//use counter to track whether map is satisfied
 		curCommand.componentCounter--;
 		increment_commandNumUnits(curCommand, newStruct);
+		
+		boolean hasOptionalTermsLeft = (curCommand.optionalTermsCount > 0);
+		boolean componentAdded = true;
+		return new CommandSat(curCommand.componentCounter < 1, hasOptionalTermsLeft, componentAdded);
 	}
 	
 	/**
@@ -1888,7 +1891,7 @@ public class WLCommand implements Serializable{
 	 */
 	public static class WLCommandComponent implements Serializable{
 		
-		private static final long serialVersionUID = 1L;
+		private static final long serialVersionUID = -2853392387847693092L;
 
 		//types should be consistent with types in Map
 		//eg ent, symb, pre, etc
@@ -2002,6 +2005,46 @@ public class WLCommand implements Serializable{
 		//stop the command (untrigger) once encountered.
 		NEGATIVE;
 		
+	}
+
+	/**
+	 * 
+	 */
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + defaultOptionalTermsCount;
+		result = prime * result + totalComponentCount;
+		result = prime * result + ((triggerWord == null) ? 0 : triggerWord.hashCode());
+		result = prime * result + triggerWordIndex;
+		return result;
+	}
+
+	/**
+	 * Shallow equals.
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (!(obj instanceof WLCommand))
+			return false;
+		WLCommand other = (WLCommand) obj;
+		if (defaultOptionalTermsCount != other.defaultOptionalTermsCount)
+			return false;
+		if (totalComponentCount != other.totalComponentCount)
+			return false;
+		if (triggerWord == null) {
+			if (other.triggerWord != null)
+				return false;
+		} else if (!triggerWord.equals(other.triggerWord))
+			return false;
+		if (triggerWordIndex != other.triggerWordIndex)
+			return false;
+		return true;
 	}
 	
 }

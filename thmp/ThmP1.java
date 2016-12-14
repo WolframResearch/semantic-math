@@ -83,6 +83,10 @@ public class ThmP1 {
 	private static final Pattern POSSIBLE_ADJ_PATTERN = Pattern.compile("(?:.*tive|.*wise|.*ary|.*able|.*ous)$");
 	private static final Pattern ESSENTIAL_POS_PATTERN = Pattern.compile("ent|conj_ent|verb|vbs|if|symb|pro");
 	
+	//pattern for Latex expressions being possible assert's, i.e. starting/ending with $ and 
+	//containing operators such as ">, ="
+	private static final Pattern LATEX_ASSERT_PATTERN = Pattern.compile("\\$(?:[^$]+[=><][^$]+)\\$");
+	
 	// list of parts of speech, ent, verb etc <--should make immutable
 	private static final List<String> posList;
 	
@@ -191,8 +195,13 @@ public class ThmP1 {
 			noFuseEntSet.add(ent);
 		}
 		
-		String pathToTagger = "lib/stanford-postagger-2015-12-09/models/english-bidirectional-distsim.tagger";
-		posTagger = new MaxentTagger(pathToTagger);
+		String localPathToTagger = "lib/stanford-postagger-2015-12-09/models/english-bidirectional-distsim.tagger";
+		String serverPathToTagger = Maps.getServerPosTaggerPathStr();
+		if(null != serverPathToTagger){
+			posTagger = new MaxentTagger(serverPathToTagger);
+		}else{
+			posTagger = new MaxentTagger(localPathToTagger);
+		}
 	}
 	
 	/**
@@ -1265,7 +1274,7 @@ public class ThmP1 {
 			
 			StructH<HashMap<String, String>> tempStructH = new StructH<HashMap<String, String>>("ent");
 			
-			if(WordForms.LATEX_PATTERN().matcher(mathObjName).matches()){
+			if(LATEX_ASSERT_PATTERN.matcher(mathObjName).matches()){
 				tempStructH.setLatexStructToTrue();
 			}
 			
@@ -2564,17 +2573,20 @@ public class ThmP1 {
 						
 						for(int k = 0; k < entSubstitutedStructList.size(); k++){
 							
-							Struct s = entSubstitutedStructList.get(k);
-							if(s.nameStr().equals(toBeConvertedStructName)){
+							Struct structToSubstitute = entSubstitutedStructList.get(k);
+							if(structToSubstitute.nameStr().equals(toBeConvertedStructName)){
 								//if s already has child, then means probably should not turn into assertion,
 								//since most children are appended during mx-building
-								if(s.has_child()){
+								if(structToSubstitute.has_child()){
 									break;
 								}
 								
 								//StructH should not have any properties .  Look through properties of toBeConvertedStruct?
 								StructA<String, String> convertedStructA = new StructA<String, String>(toBeConvertedStructName, 
-										NodeType.STR, "", NodeType.STR, "assert");
+										NodeType.STR, "", NodeType.STR, "texAssert");
+								
+								convertedStructA.set_parentStruct(structToSubstitute.parentStruct());
+								//convertedStructA.set_maxDownPathScore(structToSubstitute.maxDownPathScore());
 								
 								entSubstitutedStructList.set(k, convertedStructA);
 								//if(true) throw new IllegalStateException(inputStructList.toString());
@@ -3009,7 +3021,8 @@ public class ThmP1 {
 		
 		//whether to print the commands in tiers with the spaces in subsequent lines.
 		boolean printTiers = false;
-		//builds the parse tree by matching triggered commands. 
+		//builds the parse tree by matching triggered commands. In particular, build WLCommand
+		//parse tree by building triggered WLCommand's.
 		ParseToWLTree.buildCommandsDfs(uHeadStruct, parseStructSB, 0, printTiers, parseState);
 		System.out.println("\n DONE ParseStruct DFS  + parseStructSB:" + parseStructSB + "  \n");
 		StringBuilder wlSB = new StringBuilder();

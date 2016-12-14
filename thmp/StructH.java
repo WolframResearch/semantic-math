@@ -73,6 +73,8 @@ public class StructH<H> extends Struct{
 	//Used to convert ent into assert if necessary. 
 	private boolean isLatexStruct;
 	
+	private WLCommand commandBuilt;
+	
 	//parent
 	//private Struct parent;
 	
@@ -259,8 +261,7 @@ public class StructH<H> extends Struct{
 	 */
 	@Override
 	public StructH<H> copy(){
-		//if(struct.get("name").equals("ring"))
-			//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
+		
 		Map<String, String> structCopy = new HashMap<String, String>(this.struct);
 		StructH<H> newStructH = new StructH<H>(structCopy, this.type, this.structList,
 				this.maxDownPathScore);
@@ -272,12 +273,7 @@ public class StructH<H> extends Struct{
 			child.set_parentStruct(newStructH);
 		}
 		
-		//newStructH.set_childRelationType(this.childRelationType());
-		//if(null != parentStruct //&& !parentStruct.isStructA()
-			//	){
-			
-			newStructH.set_parentStruct(parentStruct);
-		//}
+		newStructH.set_parentStruct(parentStruct);
 		
 		if(this.isLatexStruct){
 			newStructH.setLatexStructToTrue();
@@ -475,7 +471,13 @@ public class StructH<H> extends Struct{
 			WLCommand.increment_commandNumUnits(curCommand, this);
 		}
 		//been built into one command already
-		this.WLCommandStrVisitedCount++;
+		//this.WLCommandStrVisitedCount++;
+		if(null == this.commandBuilt){
+			this.commandBuilt = curCommand;
+			this.WLCommandStrVisitedCount++;
+		}else if(!curCommand.equals(this.commandBuilt)){
+			this.WLCommandStrVisitedCount++;
+		}
 		
 		//String str = "";
 		StringBuilder sb = new StringBuilder();
@@ -574,6 +576,16 @@ public class StructH<H> extends Struct{
 		return sb.toString();
 	}
 	
+	/*@Override
+	public boolean commandVisited(){
+		return true;
+	}*/
+	
+	@Override
+	public void clear_commandBuilt(){
+		this.commandBuilt = null;
+	}
+	
 	/**
 	 * 
 	 * @return set of properties of this StructH.
@@ -665,8 +677,7 @@ public class StructH<H> extends Struct{
 		name = tex.length() > 0 ? name + ", ": name;
 		tex = called.length() > 0 ? tex + ", ": tex;
 		called = !(ppt.length() == 0) ? called + ", " : called;
-		ppt = ppt.length() > 2 ? ppt.substring(0, ppt.length() - 2) : ppt;	
-		
+		ppt = ppt.length() > 2 ? ppt.substring(0, ppt.length() - 2) : ppt;			
 
 		for(String str : ){
 			sb.append(str);

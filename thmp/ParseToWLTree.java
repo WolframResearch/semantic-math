@@ -74,7 +74,7 @@ public class ParseToWLTree{
 		structDeque = new ArrayList<Struct>();
 		WLCommandList = new ArrayList<WLCommand>();
 		
-		dfs(struct, parsedSB, numSpaces, structDeque, WLCommandList, printTiers, parseState);
+		buildWLCommandTreeDfs(struct, parsedSB, numSpaces, structDeque, WLCommandList, printTiers, parseState);
 	}
 	
 	/**
@@ -267,7 +267,7 @@ public class ParseToWLTree{
 	 * @param numSpaces is the number of spaces to print. Increment space if number is 
 	 * @param structList List of Struct's collected so far, in dfs traversal order.
 	 */
-	private static void dfs(Struct struct, StringBuilder parsedSB, //ParseStruct headParseStruct, 
+	private static void buildWLCommandTreeDfs(Struct struct, StringBuilder parsedSB, //ParseStruct headParseStruct, 
 			int numSpaces, List<Struct> structList, List<WLCommand> WLCommandList, boolean printTiers,
 			ParseState parseState) {
 		//index used to keep track of where in Deque this stuct is
@@ -362,10 +362,7 @@ public class ParseToWLTree{
 				//added if !curCommandSat.
 				//List<Struct> waitingStructList = new ArrayList<Struct>();
 				//array of booleans to keep track of which deque Struct's have been used
-				//boolean[] usedStructsBool = new boolean[structList.size()];
-
-				//first set the headStruct to struct
-				//WLCommand.set_headStruct(curCommand, struct);
+				
 				//match the slots in posTermList before the trigger term with Structs in structList.
 				//Need to SKIP/rewire this (inefficient), just find and add at the same time!
 				//beforeTriggerSat = findStructs(structList, curCommand, usedStructsBool, 
@@ -377,11 +374,16 @@ public class ParseToWLTree{
 					//boolean hasOptionalTermsLeft = false;
 					boolean isComponentAdded = false;
 					boolean beforeTriggerSat = false;
-					//add Struct corresponding to trigger word
-					WLCommand.addTriggerComponent(curCommand, struct);
-					
 					CommandSat commandSat = null;
-
+					
+					//add Struct corresponding to trigger word
+					commandSat = WLCommand.addTriggerComponent(curCommand, struct);
+					
+					if(commandSat.isCommandSat()){
+						satisfiedCommandsList.add(curCommand);
+						continue;
+					}
+					
 					for(int i = structList.size()-1; i > -1; i--){
 						
 						Struct curStruct = structList.get(i);
@@ -391,17 +393,21 @@ public class ParseToWLTree{
 						//System.out.println("curCommandSatWhole*********"  +" "  + curStruct);
 						//System.out.println("ADDING COMMAND (before) for STRUCT " + curStruct + " for Command + " + curCommand);
 						commandSat = WLCommand.addComponent(curCommand, curStruct, beforeTrigger);
-						
+
 						curCommandSatWhole = commandSat.isCommandSat();		
 						//System.out.println("curCommandSatWhole " + curCommandSatWhole);
 						//hasOptionalTermsLeft = commandSat.hasOptionalTermsLeft();
 						isComponentAdded |= commandSat.isComponentAdded();
 						
 						beforeTriggerSat = commandSat.beforeTriggerSat();
-						if(beforeTriggerSat){
+						//System.out.println("ADDING COMMAND (before) for STRUCT " + curStruct);
+						
+						if(beforeTriggerSat && (0 == curCommand.getOptionalTermsCount() 
+								|| !commandSat.hasOptionalTermsLeft())){
 							break;
 						}
-					}					
+					}	
+					//System.out.println("commandsMap: " + curCommand.commandsCountMap());
 					//System.out.println("*********COMMAND before trigger satisfied "+ beforeTriggerSat+ " " + curCommand);
 					//if(commandSat != null){						
 					if(beforeTriggerSat){
@@ -464,7 +470,7 @@ public class ParseToWLTree{
 				//set parent for this DFS path. The parent can change on each path!
 				((Struct) struct.prev1()).set_parentStruct(struct);				
 				//pass along headStruct, unless created new one here				
-				dfs((Struct) struct.prev1(), parsedSB, numSpaces, structList, WLCommandList, printTiers,
+				buildWLCommandTreeDfs((Struct) struct.prev1(), parsedSB, numSpaces, structList, WLCommandList, printTiers,
 						parseState);
 				
 				if(printTiers && checkParseStructType){
@@ -503,7 +509,7 @@ public class ParseToWLTree{
 				
 				((Struct) struct.prev2()).set_parentStruct(struct);	
 
-				dfs((Struct) struct.prev2(), parsedSB, numSpaces, structList, 
+				buildWLCommandTreeDfs((Struct) struct.prev2(), parsedSB, numSpaces, structList, 
 						WLCommandList, printTiers, parseState);
 				if(printTiers && checkParseStructType){
 					//setting to "" is necessary to not append duplicate messages, 
@@ -605,7 +611,7 @@ public class ParseToWLTree{
 				}
 				
 				ithChild.set_parentStruct(struct);
-				dfs(ithChild, parsedSB, numSpaces, structList, WLCommandList, printTiers, parseState);
+				buildWLCommandTreeDfs(ithChild, parsedSB, numSpaces, structList, WLCommandList, printTiers, parseState);
 			}
 			if(printTiers) System.out.print("]");
 			parsedSB.append("]");
@@ -800,8 +806,14 @@ public class ParseToWLTree{
 			System.out.println("^^^^^^" + struct + " " + struct.WLCommandStrVisitedCount());
 		}*/
 		
-		if(struct.WLCommandWrapperList() != null && struct.WLCommandStrVisitedCount() < 1){	
-		//if(struct.WLCommandWrapperList() != null){	
+		//System.out.println("^^^^struct.WLCommandStrVisitedCount() " +struct.WLCommandStrVisitedCount()
+			//+" for struct: " + struct +" ^^^WLCommandWrapperList: "+ struct.WLCommandWrapperList());
+		//command should not have been built into some other command
+		if(null != struct.WLCommandWrapperList() 
+				//this should not be checking WLCommandStrVisitedCount, since count should be 1 
+				// after the command has been built. 12/13/2016.
+				&& struct.WLCommandStrVisitedCount() < 1){	
+			//if(struct.WLCommandWrapperList() != null){
 			/*if(WLCommand.structsWithOtherHeadCount(struct.WLCommand()) 
 				> WLCommand.totalComponentCount(struct.WLCommand()) -2){
 				//if(struct.WLCommandStr() != null ){
@@ -895,6 +907,7 @@ public class ParseToWLTree{
 		struct.set_previousBuiltStruct(null);
 		struct.set_structToAppendCommandStr(null);
 		struct.set_usedInOtherCommandComponent(false);
+		struct.clear_commandBuilt();
 		
 		if (struct.isStructA()) {
 			

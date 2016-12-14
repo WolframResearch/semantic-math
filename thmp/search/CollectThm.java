@@ -105,7 +105,7 @@ public class CollectThm {
 	 */
 	public static void setResources(BufferedReader srcFileReader) {
 		rawFileReader = srcFileReader;
-		System.out.print("first passed in: " +srcFileReader);		
+		//System.out.print("first passed in: " +srcFileReader);		
 	}
 	
 	/**
@@ -127,7 +127,7 @@ public class CollectThm {
 	public static void setResources(List<BufferedReader> srcFileReaderList, BufferedReader macrosReader) {
 		rawFileReaderList = srcFileReaderList;
 		macrosDefReader = macrosReader;
-		System.out.print("buffered readers first passed in: " + srcFileReaderList);		
+		//System.out.print("buffered readers first passed in: " + srcFileReaderList);		
 	}
 	
 	public static void setWordFrequencyBR(BufferedReader freqWordsBR) {

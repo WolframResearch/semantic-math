@@ -46,8 +46,6 @@ public class Maps {
 	// structMap for the second run, grammars that shouldn't be
 	// used in first run, like ent_verb: there exists
 	protected static Map<String, String> structMap2;
-	//make these private!
-	
 	
 	// map for composite adjectives, eg positive semidefinite
 	// value is regex string to be matched
@@ -60,6 +58,7 @@ public class Maps {
 	private static BufferedReader fixedPhraseBuffer;
 	private static BufferedReader lexiconBuffer;
 	private static Pattern LEXICON_LINE_PATTERN = Pattern.compile("\"(.*)\" ([^\\s]+) \"(.*)\"");
+	private static String POS_TAGGER_PATH_STR;
 	
 	// replace string with a break, usully a comma
 	//protected static List<String> breakList;
@@ -76,6 +75,15 @@ public class Maps {
 	public static void setBufferedReaders(BufferedReader fixedPhraseBuf, BufferedReader lexiconBuf){
 		fixedPhraseBuffer = fixedPhraseBuf;
 		lexiconBuffer = lexiconBuf;
+	}
+	
+	//should have commoin init class
+	public static void setServerPosTaggerPathStr(String path){
+		POS_TAGGER_PATH_STR = path;
+	}
+	
+	public static String getServerPosTaggerPathStr(){
+		return POS_TAGGER_PATH_STR;
 	}
 	
 	/**
@@ -572,6 +580,7 @@ public class Maps {
 			structMap.put("if_hypo", new Rule("If", 1));
 			structMap.put("iff_hypo", new Rule("Iff", 1));
 			structMap.put("then_assert", new Rule("Then", 1));
+			structMap.put("then_texAssert", new Rule("Then", 1));
 
 			// expression, e.g. a map from A to B
 			// structMap.put("ent", new Rule("expr", 1));
@@ -584,6 +593,7 @@ public class Maps {
 			structMap.put("or_symb", new Rule("orsymb", 1));
 			structMap.put("symb_orsymb", new Rule("or", 1));
 			structMap.put("or_assert", new Rule("orass", 1));
+			structMap.put("or_texAssert", new Rule("orass", 1));
 			structMap.put("ent_orass", new Rule("or", 1));
 			structMap.put("or_is", new Rule("assert", 1));
 			structMap.put("assert_orass", new Rule("or", 1));
@@ -619,6 +629,7 @@ public class Maps {
 			structMap.put("pre_noun", new Rule("prep", 1));
 			structMap.put("gerund_verbphrase", new Rule("assert", 1));
 			structMap.put("parti_assert", new Rule("hypo", .8));
+			structMap.put("parti_texAssert", new Rule("hypo", .8));
 			// participle: called, need to take care of "said" etc
 			structMap.put("parti_ent", new Rule("partient", 1));
 			structMap.put("ent_partient", new Rule("newchild", 1));
@@ -727,6 +738,7 @@ public class Maps {
 			structMap.put("pro_auxpass", new Rule("assert", .8));
 
 			structMap.put("hypo_assert", new Rule("assert", 1));
+			structMap.put("hypo_texAssert", new Rule("assert", 1));
 			structMap.put("verbphrase_prep", new Rule("verbphrase", 1));
 			structMap.put("vbs_partiby", new Rule("verb", 1));
 			structMap.put("partiby_ent", new Rule("phrase", 1));
@@ -748,26 +760,37 @@ public class Maps {
 			structMap.put("be_ent", new Rule("be", 1));
 			structMap.put("be_symb", new Rule("be", .7));
 			structMap.put("let_assert", new Rule("letbe", 1));
+			structMap.put("let_texAssert", new Rule("letbe", 1));
 			structMap.put("let_be", new Rule("letbe", 1));
 			structMap.put("let_ent", new Rule("let", 1));
 			structMap.put("if_assert", new Rule("If", 1));
 			structMap.put("iff_assert", new Rule("Iff", 1));
 			structMap.put("hyp_assert", new Rule("If", 1));
+			structMap.put("if_texAssert", new Rule("If", 1));
+			structMap.put("iff_texAssert", new Rule("Iff", 1));
+			structMap.put("hyp_texAssert", new Rule("If", 1));
 			
 			structMap.put("assert_If", new Rule("assert", .5));
 			structMap.put("assert_Iff", new Rule("assert", .5));
 			structMap.put("assert_hypo", new Rule("assert", .5));
 			structMap.put("assert_prep", new Rule("assert", .5));
 			structMap.put("assert_iff", new Rule("assert", .5));
+			structMap.put("texAssert_If", new Rule("assert", .5));
+			structMap.put("texAssert_Iff", new Rule("assert", .5));
+			structMap.put("texAssert_hypo", new Rule("assert", .5));
+			structMap.put("texAssert_prep", new Rule("assert", .5));
+			structMap.put("texAssert_iff", new Rule("assert", .5));
 			structMap.put("hyp_hyp", new Rule("hyp", 1));
 			structMap.put("hyp_assert", new Rule("hypo", 1));
+			structMap.put("hyp_texAssert", new Rule("hypo", 1));
 			structMap.put("hyp_ent", new Rule("hypo", 1));
 			structMap.put("def_ent", new Rule("Def", 1));
 			structMap.put("def_symb", new Rule("Def", 1));
 			//e.g. "denote by $F$ a field";
 			structMap.put("Def_ent", new Rule("hypo", .9));
 			structMap.put("cond_ent", new Rule("Cond", .9));
-			structMap.put("cond_assert", new Rule("Cond", .9));			
+			structMap.put("cond_assert", new Rule("Cond", .9));		
+			structMap.put("cond_texAssert", new Rule("Cond", .9));		
 			structMap.put("hyp_phrase", new Rule("hypo", 1));
 			structMap.put("hyp_adj", new Rule("hypo", 1));
 			structMap.put("hyp_symb", new Rule("hypo", 1));

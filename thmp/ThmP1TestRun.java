@@ -507,11 +507,11 @@ public class ThmP1TestRun {
 					+ "on residue fields.";
 			st = "Let $M$ be an $R$-module.  Then $M$ is flat if and only if it is the colimit of a directed system of free finite $R$-modules.";
 			st = "Let $k \\subset k'$ be an algebraic purely inseparable field extension. Then for any $k$-algebra $R$ the ring map $R \\to k' \\otimes_k R$ induces a homeomorphism of spectra.";
-			st = "$f$ induces a homeomorphism of spectra";
+			//st = "$f$ induces a homeomorphism of spectra";
 			st = "If $u : X \\to \\mathbb{R}$ is an integrable function and $\\epsilon > 0$";
-			st = "then $x>0$ for all $x\\in X$"; //<--assert not picked up
-			st = "then $x> 0$";
-			
+			st = "then $x>0$ for all $x\\in X$"; //<--assert not picked up, make latex assert separate!
+			//st = "then $x> 0$";
+			//st = "if $F$ is a field";
 			//st = "$f$ induces a map of fields";
 			//st = "field is finitely presented";
 			//st = "$R $ that is a field and that is a ring is a field";			

@@ -149,6 +149,8 @@ public class WLCommandsList {
 				new PBuilder("pro", "we", WLCommand.PosTermType.NEGATIVE),
 				new PBuilder("~HasProperty~["),  new PBuilder("verbAlone", null, true, true, false), new PBuilder("]")));		
 		
+		wLCommandMapBuilder.put("texAssert", addCommand(new PBuilder("texAssert", null, true, true, false)));
+		
 		//assert_hypo: 
 		//WLCommandMapBuilder.put("hyp", addCommand(new String[] { "assert, , true", "hyp, , trigger", "ent|symb, , true"
 		  //}));
@@ -305,7 +307,7 @@ public class WLCommandsList {
 		//for every $x$
 		//WLCommandMapBuilder.put("for every", addCommand(new String[] { ", for every|for any, trigger", "\\[ForAll][",
 		//	 "ent|symb, , true", "]" }));
-		wLCommandMapBuilder.put("for every", addCommand(new PBuilder("assert", null, true, false, "OPT"),
+		wLCommandMapBuilder.put("for every", addCommand(//new PBuilder("assert", null, true, false, "OPT"),
 				new PBuilder(null, "for every|for any|for all", false, true, false), 
 				new PBuilder("\\[ForAll]["), new PBuilder("ent|symb", null, true), new PBuilder("]") ));
 		
