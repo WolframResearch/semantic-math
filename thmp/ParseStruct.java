@@ -21,9 +21,8 @@ import thmp.ParseToWLTree.WLCommandWrapper;
  * @author yihed
  */
 public class ParseStruct implements Serializable{
-	
-	private static final long serialVersionUID = 1L;
 
+	private static final long serialVersionUID = 880445087525293544L;
 	//enum for type, e.g. "HYP", "STM", etc.
 	//private ParseStructType componentType;
 	//map of structures such as qualifying object, quantifying variables. 

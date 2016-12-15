@@ -15,6 +15,9 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -29,6 +32,7 @@ import thmp.Struct.NodeType;
 import thmp.WLCommand.PosTerm;
 import thmp.WLCommand.WLCommandComponent;
 import thmp.WLCommand.PosTerm.PosTermConnotation;
+import thmp.utils.Buggy;
 
 /**
  * WL command, containing the components that need to be hashed. 
@@ -134,6 +138,7 @@ public class WLCommand implements Serializable{
 	private static final String[] DISQUALIFY_STR_ARRAY = new String[]{"if", "If"};
 	
 	private static final boolean DEBUG = true;
+	private static final Logger logger = LogManager.getLogger(WLCommand.class);
 	
 	/**
 	 * Index in list of WLCommand in Struct that 
@@ -1081,10 +1086,12 @@ public class WLCommand implements Serializable{
 				
 				List<Struct> curCommandComponentList = commandsMap.get(commandComponent);
 				if(positionInMap >= curCommandComponentList.size()){
-					if(DEBUG){
-						System.out.println("positionInMap: " + positionInMap +" list size: "+curCommandComponentList.size() +" Should not happen!");
-						System.out.println("COMPONENT" + commandComponent);
-						System.out.println("COMMAND" + commandsCountMap);
+					if(DEBUG && !term.isOptionalTerm()){
+						String warningMsg = "positionInMap: " + positionInMap +" list size: "
+								+curCommandComponentList.size() +" Should not happen! For component: "
+								+ commandComponent + " in command " + commandsCountMap;
+						System.out.println(warningMsg);
+						logger.info(warningMsg);
 					}
 					continue;
 				}

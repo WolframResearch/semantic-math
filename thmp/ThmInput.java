@@ -176,6 +176,10 @@ public class ThmInput {
 			
 		StringBuilder newThmSB = new StringBuilder();
 		boolean inThm = false;
+		Matcher matcher = thmStartPattern.matcher(line);
+		if (matcher.find()) {
+			inThm = true;
+		}
 		while ((line = srcFileReader.readLine()) != null) {
 			// while(sc.hasNextLine()){
 			if (WordForms.getWhitespacePattern().matcher(line).find()){
@@ -183,7 +187,7 @@ public class ThmInput {
 			}
 			
 			// if(line.matches("(?:\\\\begin\\{def[^}]*\\}|\\\\begin\\{lem[^}]*\\}|\\\\begin\\{th[^}]*\\}|\\\\begin\\{prop[^}]*\\})(?:.)*")){
-			Matcher matcher = thmStartPattern.matcher(line);
+			matcher = thmStartPattern.matcher(line);
 			if (matcher.find()) {
 				// if(line.matches("\\\\begin\\{definition\\}|\\\\begin\\{lemma\\}")){
 				// if(line.matches("\\\\begin\\{definition\\}|\\\\begin\\{lemma\\}|\\\\begin\\{thm\\}|\\\\begin\\{theorem\\}")){

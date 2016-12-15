@@ -310,7 +310,7 @@ public class ParseToWLTree{
 					}
 				}else if(commandSat.isDisqualified()){
 					WLCommandListIter.remove();
-					System.out.println("\n***COMMAND REMOVED. struct "+ struct );
+					//System.out.println("\n***COMMAND REMOVED. struct "+ struct );
 				}
 				
 			}

@@ -144,6 +144,7 @@ public class ThmP1 {
 	private static final Pattern DASH_ENT_PATTERN = Pattern.compile("\\$[^$]+\\$[^-\\s]*-[^\\s]*");
 	private static final int REPARSE_UPPER_SIZE_LIMIT = 6;
 	private static final Pattern CONJ_DISJ_VP_PATTERN = Pattern.compile("(?:conj|disj)_verbphrase");
+	private static final boolean DEBUG = InitParseWithResources.isDEBUG();
 	
 	//private static int[] parseContextVector;
 	//private static int parseContextVectorSz;
@@ -194,9 +195,11 @@ public class ThmP1 {
 		for(String ent : NO_FUSE_ENT){
 			noFuseEntSet.add(ent);
 		}
-		
+		//String OS_name = System.getProperty("os.name");
+		//if(OS_name.equals("Mac OS X"))
 		String localPathToTagger = "lib/stanford-postagger-2015-12-09/models/english-bidirectional-distsim.tagger";
 		String serverPathToTagger = Maps.getServerPosTaggerPathStr();
+		
 		if(null != serverPathToTagger){
 			posTagger = new MaxentTagger(serverPathToTagger);
 		}else{
@@ -2907,7 +2910,7 @@ public class ThmP1 {
 			}
 		}
 		
-		System.out.println("##commandNumUnitsList " + commandNumUnitsList );
+		if(DEBUG) System.out.println("##commandNumUnitsList " + commandNumUnitsList );
 		//only add nontrivial results, but add trivial results (>=3) if no nontrivial ones exist.
 		//This works as the results are sorted, and nontrivial ones come first in sorted list.
 		boolean parsedExprAdded = false;
@@ -2936,8 +2939,10 @@ public class ThmP1 {
 			
 			//Also add the long form to parsedExpr	
 			parsedExpr.add(longFormParsedPairList.get(finalOrderingList.get(i)));
-			System.out.println("longForm, commandUnits: " + commandNumUnitsList.get(i) +". numUnits: " +numUnitsList.get(i) 
-				+ " "+ longFormParsedPairList.get(finalOrderingList.get(i)));
+			if(DEBUG){
+				System.out.println("longForm, commandUnits: " + commandNumUnitsList.get(i) +". numUnits: " +numUnitsList.get(i) 
+					+ ". "+ longFormParsedPairList.get(finalOrderingList.get(i)));
+			}
 		}	
 		//assign the global context vec as the vec of the highest-ranked parse
 		int bestIndex = finalOrderingList.get(0);
@@ -4157,7 +4162,6 @@ public class ThmP1 {
 			}
 
 			if (!inTex && curWord.matches("\\$.*") && !curWord.matches("^\\$[^$]+\\$.*$")) {
-				System.out.println("inTex: " + curWord);
 				inTex = true;
 			} else if (inTex && curWord.contains("$")) {
 				// }else if(curWord.matches("[^$]*\\$|\\$[^$]+\\$.*") ){
@@ -4266,7 +4270,7 @@ public class ThmP1 {
 					}
 					//add the punctuation to use later
 					sentenceBuilder.append(" ").append(curWord);
-					System.out.println("curWord: " +curWord+"sentence to append " + sentenceBuilder.toString());
+					System.out.println("curWord: " +curWord+". sentence to append " + sentenceBuilder.toString());
 					
 					sentenceList.add(sentenceBuilder.toString());
 					sentenceBuilder.setLength(0);

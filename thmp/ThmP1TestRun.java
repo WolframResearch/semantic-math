@@ -509,7 +509,8 @@ public class ThmP1TestRun {
 			st = "Let $k \\subset k'$ be an algebraic purely inseparable field extension. Then for any $k$-algebra $R$ the ring map $R \\to k' \\otimes_k R$ induces a homeomorphism of spectra.";
 			//st = "$f$ induces a homeomorphism of spectra";
 			st = "If $u : X \\to \\mathbb{R}$ is an integrable function and $\\epsilon > 0$";
-			st = "then $x>0$ for all $x\\in X$"; //<--assert not picked up, make latex assert separate!
+			st = "then $x>0$ for all $x\\in X$"; //<--assert not picked up.
+			st = "suppose that $ f_i$ has iamge zero on $H$";
 			//st = "then $x> 0$";
 			//st = "if $F$ is a field";
 			//st = "$f$ induces a map of fields";

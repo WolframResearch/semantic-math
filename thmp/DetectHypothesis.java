@@ -54,7 +54,7 @@ public class DetectHypothesis {
 	private static final List<String> DefinitionListWithThmStrList = new ArrayList<String>();
 	private static final List<String> DefinitionList = new ArrayList<String>();
 	
-	private static final String parsedExpressionSerOutputFileStr = "src/thmp/data/parsedExpressionList.ser";
+	private static final String parsedExpressionSerOutputFileStr = "src/thmp/data/parsedExpressionList.dat";
 	private static final String parsedExpressionStrOutputFileStr = "src/thmp/data/parsedExpressionList.txt";
 	private static final String definitionStrOutputFileStr = "src/thmp/data/parsedExpressionDefinitions.txt";
 	
@@ -119,7 +119,7 @@ public class DetectHypothesis {
 	 * @return
 	 */
 	public static boolean isHypothesis(String inputStr){
-		if(HYP_PATTERN.matcher(inputStr.toLowerCase()).find()){
+		if(HYP_PATTERN.matcher(inputStr.toLowerCase()).matches()){
 			return true;
 		}
 		return false;
@@ -142,6 +142,7 @@ public class DetectHypothesis {
 		
 		BufferedReader inputBF = null;
 		try{
+			//inputBF = new BufferedReader(new FileReader("src/thmp/data/CommAlg5.txt"));
 			inputBF = new BufferedReader(new FileReader("src/thmp/data/samplePaper1.txt"));
 		}catch(FileNotFoundException e){
 			e.printStackTrace();
@@ -152,8 +153,7 @@ public class DetectHypothesis {
 			List<DefinitionListWithThm> defThmList = readThm(inputBF, parseState);
 			System.out.println("DefinitionListWithThm list: " + defThmList);
 			DefinitionListWithThmStrList.add(defThmList.toString()+ "\n");
-			for(DefinitionListWithThm def : defThmList){
-				
+			for(DefinitionListWithThm def : defThmList){				
 				DefinitionList.add(def.getDefinitionList().toString());
 			}
 		}catch(IOException e){
@@ -185,8 +185,7 @@ public class DetectHypothesis {
 		}
 		
 		try{
-			objectOutputStream.writeObject(parsedExpressionList);
-			
+			objectOutputStream.writeObject(parsedExpressionList);			
 			System.out.println("parsedExpressionList: " + parsedExpressionList);
 			objectOutputStream.close();
 			fileOuputStream.close();
@@ -284,11 +283,11 @@ public class DetectHypothesis {
 			
 			Matcher newThmMatcher = ThmInput.NEW_THM_PATTERN.matcher(line);	
 			
-			if(ThmInput.BEGIN_PATTERN.matcher(line).find()){
+			if(ThmInput.BEGIN_PATTERN.matcher(line).matches()){
 				break;
-			}else if(newThmMatcher.find()){
+			}else if(newThmMatcher.matches()){
 				//should be a proposition, hypothesis, etc. E.g. don't look through proofs.
-				if(ThmInput.THM_TERMS_PATTERN.matcher(newThmMatcher.group(2)).find()){
+				if(ThmInput.THM_TERMS_PATTERN.matcher(newThmMatcher.group(2)).matches()){
 					macrosList.add(newThmMatcher.group(2));	
 				}
 			}			
@@ -310,23 +309,27 @@ public class DetectHypothesis {
 		StringBuilder newThmSB = new StringBuilder();
 		boolean inThm = false;
 		
+		Matcher matcher = thmStartPattern.matcher(line);
+		if (matcher.matches()) {			
+			inThm = true;
+		}
+		
 		while ((line = srcFileReader.readLine()) != null) {
-			if (WordForms.getWhitespacePattern().matcher(line).find()){
+			if (WordForms.getWhitespacePattern().matcher(line).matches()){
 				continue;
 			}
 			//System.out.println("line " + line + " " + parseState.getVariableNamesMMap());
-			Matcher matcher = thmStartPattern.matcher(line);
-			if (matcher.find()) {
-				
-				inThm = true;
-				
+			matcher = thmStartPattern.matcher(line);
+			if (matcher.matches()) {
+				if(true) throw new IllegalStateException(contextSB+"");
+				inThm = true;				
 				//scan contextSB for assumptions and definitions
 				//and parse the definitions
 				detectAndParseHypothesis(contextSB.toString(), parseState);
 				
 				contextSB.setLength(0);
 			}
-			else if (thmEndPattern.matcher(line).find()) {
+			else if (thmEndPattern.matcher(line).matches()) {
 				
 				inThm = false;
 				
@@ -453,7 +456,7 @@ public class DetectHypothesis {
 		//should return parsedExpression object, and serialize it. 
 		System.out.println("~~~~~~parsing~~~~~~~~~~");
 		parseInputVerbose(thmStr, parseState);
-		System.out.println("~~~~~~Done parsing~~~~~~~~~~");
+		System.out.println("~~~~~~Done parsing~~~~~~~");
 		
 		thmWithDefSB.append(thmStr);
 		DefinitionListWithThm defListWithThm = 
@@ -498,7 +501,7 @@ public class DetectHypothesis {
 			VariableName possibleVariableName = ParseState.getVariableName(possibleVar);
 			List<VariableDefinition> possibleVarDefList = variableNamesMMap.get(possibleVariableName);
 			
-			System.out.println("^^^ variableNamesMMap: "+ variableNamesMMap);
+			//System.out.println("^^^ variableNamesMMap: "+ variableNamesMMap);
 			//System.out.println("^^^^^^^PossibleVar: " + possibleVar);
 			//get the latest definition
 			int possibleVarDefListLen = possibleVarDefList.size();
