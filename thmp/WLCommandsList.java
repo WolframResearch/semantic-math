@@ -145,7 +145,7 @@ public class WLCommandsList {
 				new PBuilder("prep", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}", "OPT")
 				));		
 		
-		wLCommandMapBuilder.put("verbAlone", addCommand(new PBuilder("symb|ent|pro|noun", null, true), 
+		wLCommandMapBuilder.put("verbAlone", addCommand(new PBuilder("symb|ent|pro|noun", null, true).addRelationType(RelationType._IS), 
 				new PBuilder("pro", "we", WLCommand.PosTermType.NEGATIVE),
 				new PBuilder("~HasProperty~["),  new PBuilder("verbAlone", null, true, true, false), new PBuilder("]")));		
 		
@@ -160,8 +160,10 @@ public class WLCommandsList {
 		/*****More specific commands******/
 		//WLCommandMapBuilder.put("element", addCommand(
 			//	new String[] { "symb|ent, , true", "\\[Element]", ", element, trigger", "pre, of, false", "symb|ent, , true" }));			
-		wLCommandMapBuilder.put("element", addCommand(new PBuilder("symb|ent", null, true), new PBuilder("\\[Element]"),
-				new PBuilder(null, "element", false, true, false), new PBuilder("pre", "of", false), new PBuilder("symb|ent", null, true) ));		
+		wLCommandMapBuilder.put("element", addCommand(new PBuilder("symb|ent", null, true).addRelationType(RelationType._IS), 
+				new PBuilder("\\[Element]"),
+				new PBuilder(null, "element", false, true, false), new PBuilder("pre", "of", false), 
+				new PBuilder("symb|ent", null, true).addRelationType(RelationType.IS_) ));		
 		
 		//e.g. "is given by an element of the ring"
 		/*WLCommandMapBuilder.put("element", addCommand(
@@ -210,10 +212,11 @@ public class WLCommandsList {
 		
 		//WLCommandMapBuilder.put("subset",
 			//	addCommand(new String[] { ", subset, trigger", "Subset[", "pre, of, false", "symb|ent, , true", "]" }));
+		// e.g. "$Z$ is a closed subset of $X$."
 		wLCommandMapBuilder.put("subset", addCommand(
 				new PBuilder(null, "subset", false, true, false), 
 				new PBuilder("Subset["), new PBuilder("pre", "of", false), 
-				new PBuilder("symb|ent", null, true), new PBuilder("]") ));
+				new PBuilder("symb|ent", null, true).addRelationType(RelationType._IS_), new PBuilder("]") ));
 		
 		// trigger TriggerMathObj
 		//***action*** commands
@@ -280,21 +283,23 @@ public class WLCommandsList {
 		//in the posTermList. So the connotation is the connotation of the term in that slot in the final WLCommand order, 
 		//*not* the connotation of the term picked up in the sentence in that slot.
 		wLCommandMapBuilder.put("denote by", addCommand(new PBuilder("def", null, false, true, false), 
-				new PBuilder("ent|symb", null, true, false, false, 1, PosTermConnotation.DEFINING).addRelationType(RelationType.IS_), 
+				new PBuilder("ent|symb", null, true, false, false, 1, PosTermConnotation.DEFINING).addRelationType(RelationType._IS), 
 				new PBuilder("~Named~"), new PBuilder("ent|symb", null, true, false, false, 0, PosTermConnotation.DEFINED)
-				.addRelationType(RelationType._IS) ));
+				.addRelationType(RelationType.IS_) ));
 		
 		//definitions: e.g. "$F$ denotes a field"
 		wLCommandMapBuilder.put("denote", addCommand( 
-				new PBuilder("ent|symb", null, true, false, false, 1, PosTermConnotation.DEFINING), 
+				new PBuilder("ent|symb", null, true, false, false, 1, PosTermConnotation.DEFINING).addRelationType(RelationType._IS), 
 				new PBuilder("verb", null, false, true, false),
-				new PBuilder("~Named~"), new PBuilder("ent|symb", null, true, false, false, 0, PosTermConnotation.DEFINED) ));
+				new PBuilder("~Named~"), new PBuilder("ent|symb", null, true, false, false, 0, PosTermConnotation.DEFINED)
+				.addRelationType(RelationType.IS_) ));
 		
 		//"define $F$ to be a field";
 		putToWLCommandMapBuilder(wLCommandMapBuilder, "define", new PBuilder("verb", null, false, true, false),
 				new PBuilder("ent|symb", null, true, false, false, PosTermConnotation.DEFINED), 
 				new PBuilder(null, "as|to be|by", false), new PBuilder("~DefinedBy~"), 
-				new PBuilder("ent|symb", null, true, false, false, PosTermConnotation.DEFINING));
+				new PBuilder("ent|symb", null, true, false, false, PosTermConnotation.DEFINING)
+				.addRelationType(RelationType.IS_));
 		
 		//auxpass, eg "is called"
 		//WLCommandMapBuilder.put("is called", addCommand(new String[] { "symb|ent|pro, , true", "auxpass, is called, trigger",

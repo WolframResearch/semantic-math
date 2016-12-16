@@ -50,17 +50,19 @@ public class RelationVec implements Serializable{
 	 */
 	public static enum RelationType{
 		
-		//_IS: "A is", IS_: "is A".  
-		_IS(0), IS_(1), IF(2), EXIST(3), NONE(-1);
+		//_IS: "A is", IS_: "is A".
+		//_IS_ means both _IS and IS_.
+		_IS(new int[]{0}), IS_(new int[]{1}), _IS_(new int[]{0,1}), 
+		IF(new int[]{2}), EXIST(new int[]{3}), NONE(new int[]{-1});
 		//must correspond to total number of relations above with offset > -1.
 		private static final int totalRelationsCount = 4;
 		
 		//offset for how many times the total number of terms
 		//in term-document matrix the segment for this type starts.
-		private int vectorOffset;
+		private int[] vectorOffsetArray;
 		
-		private RelationType(int offset){
-			this.vectorOffset = offset;
+		private RelationType(int[] offsetAr){
+			this.vectorOffsetArray = offsetAr;
 		}
 		
 		public static int totalRelationsCount(){
@@ -71,8 +73,8 @@ public class RelationVec implements Serializable{
 		 * @return offset for how many times the total number of terms
 		 * in term-document matrix the segment for this type starts.
 		 */
-		public int vectorOffset(){
-			return this.vectorOffset;
+		public int[] vectorOffsetArray(){
+			return this.vectorOffsetArray;
 		}
 		
 	}
@@ -116,11 +118,14 @@ public class RelationVec implements Serializable{
 					
 					String contentStr = posTermStruct.contentStr();
 					//modulus and residue (like remainder) as in abstract algebra.
-					int modulus = posTermRelationType.vectorOffset();
+					int[] multiplicityAr = posTermRelationType.vectorOffsetArray();
+					
 					//add new indices to bitPosList
-					int curBitPos = setBitPosList(contentStr, bitPosList, modulus, posTermRelationType, isParseStructTypeHyp);
-					if(curBitPos > maxBitPos){
-						maxBitPos = curBitPos;
+					for(int multiplicity : multiplicityAr){
+						int curBitPos = setBitPosList(contentStr, bitPosList, multiplicity, posTermRelationType, isParseStructTypeHyp);
+						if(curBitPos > maxBitPos){
+							maxBitPos = curBitPos;
+						}
 					}
 				}
 			}			
@@ -158,39 +163,6 @@ public class RelationVec implements Serializable{
 		}		
 	}
 	
-	/**
-	 * Auxilliary method for buildRelationVec() to set bits in BitSet.
-	 * @param termStr The input string. 
-	 * @param modulus Which segment of the index the current RelationType corresponds to.
-	 */
-	private static void setBitVector(String termStr, BitSet indexBitSet, int modulus, 
-			RelationType posTermRelationType, boolean isParseStructTypeHyp){
-		
-		String[] termStrAr = termStr.split(" ");		
-		int termStrArLen = termStrAr.length;
-		
-		if(termStrArLen > 1){
-			//set indices for all terms in compound words, 
-			//e.g. "... is regular local", sets "is regular, *and* "is local"
-			for(int i = 0; i < termStrArLen; i++){
-				
-				String word = termStrAr[i];
-				Integer residue = keywordDict.get(word);
-				if(null == residue){
-					continue;
-				}
-				indexBitSet.set(parseContextVectorSz*modulus + residue);
-
-				//if parseStructType is HYP, also add to the "IF" segment.
-				//e.g. "if $f$ is a surjection", should add to "if" segment
-				//besides "IS_" and "_IS" segments.
-				if(RelationType.IF != posTermRelationType && isParseStructTypeHyp){
-					indexBitSet.set(RelationType.IF.vectorOffset()*modulus + residue);
-				}
-			}
-		}
-		
-	}
 		/**
 		 * Auxilliary method for buildRelationVec() to set bits in BitSet.
 		 * @param termStr The input string. 
@@ -222,8 +194,11 @@ public class RelationVec implements Serializable{
 					//e.g. "if $f$ is a surjection", should add to "if" segment
 					//besides "IS_" and "_IS" segments.
 					if(RelationType.IF != posTermRelationType && isParseStructTypeHyp){
-						bitPos = RelationType.IF.vectorOffset()*modulus + residue;
-						maxBitPos = addToPosList(bitPosList, maxBitPos, bitPos);
+						int[] multiplicityAr = RelationType.IF.vectorOffsetArray();
+						for(int multiplicity : multiplicityAr){
+							bitPos = multiplicity*parseContextVectorSz + residue;
+							maxBitPos = addToPosList(bitPosList, maxBitPos, bitPos);
+						}
 					}
 				}
 			}
@@ -238,8 +213,11 @@ public class RelationVec implements Serializable{
 			//e.g. "if $f$ is a surjection", should add to "if" segment
 			//besides "IS_" and "_IS" segments.
 			if(RelationType.IF != posTermRelationType && isParseStructTypeHyp){
-				bitPos = RelationType.IF.vectorOffset()*modulus + residue;
-				maxBitPos = addToPosList(bitPosList, maxBitPos, bitPos);
+				int[] multiplicityAr = RelationType.IF.vectorOffsetArray();
+				for(int multiplicity : multiplicityAr){
+					bitPos = multiplicity*parseContextVectorSz + residue;
+					maxBitPos = addToPosList(bitPosList, maxBitPos, bitPos);
+				}
 			}
 		}
 		return maxBitPos;

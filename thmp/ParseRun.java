@@ -58,11 +58,13 @@ public class ParseRun {
 		
 		if(isVerbose) {
 			System.out.println("PARTS: " + parsedOutput);			
-			System.out.println("****ParsedExpr ");
-			for(ParsedPair pair : ThmP1.getAndClearParsedExpr()){
-				System.out.println(pair);
-			}
+			System.out.println("****ParsedExpr ");			
 		}
+		//clear parsedExpression during preprocess?
+		for(ParsedPair pair : ThmP1.getAndClearParsedExpr()){
+			System.out.println(pair);
+		}
+		//parseState.parseRunCleanUp();
 	}
 
 }

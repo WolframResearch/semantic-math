@@ -38,9 +38,10 @@ public class DetectHypothesis {
 	//pattern matching is faster than calling str.contains() repeatedly 
 	//which is O(mn) time.
 	private static final Pattern HYP_PATTERN = Pattern.compile(".*assume.*|.*denote.*|.*define.*|.*let.*|.*is said.*|.*suppose.*"
+			+ "|.*where.*"
 			+ "|.*is called.*") ;
 	//positive look behind to split on any punctuation before a space.
-	private static final Pattern PUNCTUATION_PATTERN = Pattern.compile("( ?<=[\\.|;|,|!|:])");
+	private static final Pattern PUNCTUATION_PATTERN = Pattern.compile("(?<=[\\.|;|,|!|:]) ");
 	
 	//also incorporate the separator pattern from WordForms!
 	//deliberately excluding "\\\\", "\\$"
@@ -57,6 +58,8 @@ public class DetectHypothesis {
 	private static final String parsedExpressionSerOutputFileStr = "src/thmp/data/parsedExpressionList.dat";
 	private static final String parsedExpressionStrOutputFileStr = "src/thmp/data/parsedExpressionList.txt";
 	private static final String definitionStrOutputFileStr = "src/thmp/data/parsedExpressionDefinitions.txt";
+
+	private static final boolean PARSE_INPUT_VERBOSE = true;
 	
 	/**
 	 * Combination of theorem String and the list of
@@ -312,6 +315,7 @@ public class DetectHypothesis {
 		Matcher matcher = thmStartPattern.matcher(line);
 		if (matcher.matches()) {			
 			inThm = true;
+			parseState.setInThmFlag(true);
 		}
 		
 		while ((line = srcFileReader.readLine()) != null) {
@@ -321,12 +325,12 @@ public class DetectHypothesis {
 			//System.out.println("line " + line + " " + parseState.getVariableNamesMMap());
 			matcher = thmStartPattern.matcher(line);
 			if (matcher.matches()) {
-				if(true) throw new IllegalStateException(contextSB+"");
+				
 				inThm = true;				
 				//scan contextSB for assumptions and definitions
 				//and parse the definitions
-				detectAndParseHypothesis(contextSB.toString(), parseState);
-				
+				detectAndParseHypothesis(contextSB.toString(), parseState);	
+				//System.out.println("getGlobalVariableNamesMMap: "+parseState.getGlobalVariableNamesMMap());
 				contextSB.setLength(0);
 			}
 			else if (thmEndPattern.matcher(line).matches()) {
@@ -350,6 +354,9 @@ public class DetectHypothesis {
 				parseState.setCurParseStruct(null);
 				parseState.setHeadParseStruct(null);
 				
+				//first gather hypotheses in the theorem. 
+				detectAndParseHypothesis(thm, parseState);
+				
 				//append to newThmSB additional hypotheses that are applicable to the theorem.				
 				DefinitionListWithThm thmDef = appendHypothesesAndParseThm(thm, parseState);
 				
@@ -361,7 +368,7 @@ public class DetectHypothesis {
 				/*if (!WordForms.getWhitespacePattern().matcher(thm).find()) {
 					thms.add(thm);
 				}*/
-				
+				parseState.parseRunCleanUp();
 				newThmSB.setLength(0);
 				continue;
 			}
@@ -395,10 +402,10 @@ public class DetectHypothesis {
 			String sentence = contextStrAr[i];
 			if(isHypothesis(sentence)){	
 				System.out.println("isHypothesis! " + sentence);
-				
+				//if(true) throw new IllegalStateException(sentence);				
 				parseState.setCurParseStruct(null);
-				parseState.setHeadParseStruct(null);
-				parseInputVerbose(sentence, parseState);
+				parseState.setHeadParseStruct(null);				
+				ParseRun.parseInput(sentence, parseState, PARSE_INPUT_VERBOSE);
 			}
 		}
 	}
@@ -412,7 +419,7 @@ public class DetectHypothesis {
 	 */
 	private static DefinitionListWithThm appendHypothesesAndParseThm(String thmStr, ParseState parseState){
 		
-		ListMultimap<VariableName, VariableDefinition> variableNamesMMap = parseState.getVariableNamesMMap();
+		//ListMultimap<VariableName, VariableDefinition> variableNamesMMap = parseState.getGlobalVariableNamesMMap();
 		//String thmStr = thmSB.toString();
 		StringBuilder thmWithDefSB = new StringBuilder();		
 		StringBuilder latexExpr = new StringBuilder();
@@ -440,23 +447,27 @@ public class DetectHypothesis {
 					mathMode = false;
 					//process the latexExpr, first pick out the variables,
 					//and try to find definitions for them. Appends original
-					//definition strings to thmWithDefSB
-					List<VariableDefinition> varDefList = pickOutVariables(latexExpr.toString(), variableNamesMMap,
-							varDefSet, thmWithDefSB);
+					//definition strings to thmWithDefSB. Should only append
+					//variables that are not defined within the same thm.				
+					List<VariableDefinition> varDefList = pickOutVariables(latexExpr.toString(), //variableNamesMMap,
+							parseState, varDefSet, thmWithDefSB);
 					
 					variableDefinitionList.addAll(varDefList);
 					latexExpr.setLength(0);
 				}			
 			}else if(mathMode){
 				latexExpr.append(curChar);
-			}
-			
+			}			
 		}
-		//now can parse the thm, with the variableNamesMMap already updated to include contexual definitions.
-		//should return parsedExpression object, and serialize it. 
-		System.out.println("~~~~~~parsing~~~~~~~~~~");
-		parseInputVerbose(thmStr, parseState);
-		System.out.println("~~~~~~Done parsing~~~~~~~");
+
+		//Parse the thm first, with the variableNamesMMap already updated to include contexual definitions.
+		//should return parsedExpression object, and serialize it. But only pick up definitions that are 
+		//not defined locally within this theorem.
+		System.out.println("~~~~~~parsing~~~~~~~~~~");		
+		ParseRun.parseInput(thmStr, parseState, PARSE_INPUT_VERBOSE);
+		System.out.println("~~~~~~Done parsing~~~~~~~");		
+				
+		System.out.println("Adding " + thmWithDefSB + " to theorem " + thmStr);
 		
 		thmWithDefSB.append(thmStr);
 		DefinitionListWithThm defListWithThm = 
@@ -475,16 +486,16 @@ public class DetectHypothesis {
 	
 	/**
 	 * Picks out variables to be defined, and try to match them with prior definitions.
-	 * @param latexExpr
-	 * @param variableNamesMMap
+	 * Picks up variable definitions.
+	 * @param latexExpr 
 	 * @param thmWithDefSB StringBuilder that's the original input string appended
 	 * to the definition strings.
 	 * @param varDefSet set to keep track of which VariableDefinition's have been added, so not to 
 	 * add duplicate ones.
 	 */
 	private static List<VariableDefinition> pickOutVariables(String latexExpr, 
-			ListMultimap<VariableName, VariableDefinition> variableNamesMMap,
-			Set<VariableDefinition> varDefSet,
+			//ListMultimap<VariableName, VariableDefinition> variableNamesMMap,
+			ParseState parseState, Set<VariableDefinition> varDefSet,
 			StringBuilder thmWithDefSB){
 		
 		//list of definitions needed in this latexExpr
@@ -498,83 +509,35 @@ public class DetectHypothesis {
 			String possibleVar = latexExprAr[i];
 			//System.out.println("^^^$^%%% &^^^ possibleVar: "+ possibleVar);
 			
+			//Get a variableName and check if a variable has been defined.
 			VariableName possibleVariableName = ParseState.getVariableName(possibleVar);
-			List<VariableDefinition> possibleVarDefList = variableNamesMMap.get(possibleVariableName);
+			VariableDefinition possibleVarDef = parseState.getVariableDefinitionFromName(possibleVariableName);
 			
 			//System.out.println("^^^ variableNamesMMap: "+ variableNamesMMap);
 			//System.out.println("^^^^^^^PossibleVar: " + possibleVar);
 			//get the latest definition
-			int possibleVarDefListLen = possibleVarDefList.size();
+			//int possibleVarDefListLen = possibleVarDefList.size();
 			//if empty, check to see if bracket pattern, if so, check just the name without the brackets.
 			//e.g. x in x(yz)
-			if(0 == possibleVarDefListLen){
+			if(null == possibleVarDef){
 				Matcher bracketSeparatorMatcher = BRACKET_SEPARATOR_PATTERN.matcher(possibleVar);
 				if(bracketSeparatorMatcher.find()){
 					possibleVariableName = ParseState.getVariableName(bracketSeparatorMatcher.group(1));
-					possibleVarDefList = variableNamesMMap.get(possibleVariableName);
-					possibleVarDefListLen = possibleVarDefList.size();					
+					possibleVarDef = parseState.getVariableDefinitionFromName(possibleVariableName);				
 				}
 			}
-			
-			if(possibleVarDefListLen > 0){
-				VariableDefinition latestVarDef = possibleVarDefList.get(possibleVarDefListLen-1);
-			
-				if(!varDefSet.contains(latestVarDef)){
-					varDefSet.add(latestVarDef);
-					varDefList.add(latestVarDef);
+			//if some variable found.
+			if(null != possibleVarDef){			
+				if(!varDefSet.contains(possibleVarDef)){
+					varDefSet.add(possibleVarDef);
+					varDefList.add(possibleVarDef);
 					//System.out.println("latestVarDef.getOriginalDefinitionStr() " + latestVarDef.getOriginalDefinitionStr());
-					thmWithDefSB.append(latestVarDef.getOriginalDefinitionStr()).append(" ");
+					thmWithDefSB.append(possibleVarDef.getOriginalDefinitionStr()).append(" ");
 				}
 			}			
 		}
+		//if(true) throw new IllegalStateException("latexExpr containing var: " + latexExpr + " varDefList " + varDefList);
 		return varDefList;
-	}
-	
-	/**
-	 * Verbose way of parsing the input. With more print statements
-	 * @param inputStr
-	 */
-	private static void parseInputVerbose(String st, ParseState parseState){
-		
-		List<int[]> parseContextVecList = new ArrayList<int[]>();			
-		//System.out.println("inside parseInputVerbose, strAr " + st);
-		String[] strAr = ThmP1.preprocess(st);			
-		
-		for(int i = 0; i < strAr.length; i++){
-			//alternate commented out line to enable tex converter
-			//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim()) ));
-			parseState = ThmP1.tokenize(strAr[i].trim(), parseState);
-			parseState = ThmP1.parse(parseState);
-			int[] curContextVec = ThmP1.getParseContextVector();
-			parseContextVecList.add(curContextVec);
-			//get context vector
-			System.out.println("cur vec: " + Arrays.toString(curContextVec));
-		}
-		
-		/*List<ParseStruct> headParseStructList = parseState.getHeadParseStructList();
-		for(ParseStruct headParseStruct : headParseStructList){
-			System.out.println("@@@" + headParseStruct);
-		}*/
-		
-		System.out.println("@@@" + parseState.getHeadParseStruct());
-		
-		parseState.logState();
-		
-		//combine these vectors together, only add subsequent vector entry
-		//if that entry is 0 in all previous vectors int[].
-		int[] combinedVec = GenerateContextVector.combineContextVectors(parseContextVecList);
-		System.out.println("combinedVec: " + Arrays.toString(combinedVec));
-		
-		String parsedOutput = ThmP1.getAndClearParseStructMapList().toString();
-		//String parsedOutput = Arrays.toString(ThmP1.getParseStructMapList().toArray());			
-		//String processedOutput = parsedOutput.replaceAll("MathObj", "MathObject").replaceAll("\\$([^$]+)\\$", "LaTEXMath[\"$1\"]")
-				//.replaceAll("MathObject\\{([^}]+)\\}", "MathObject\\[$1\\]");					
-		
-		System.out.println("PARTS: " + parsedOutput);			
-		System.out.println("****ParsedExpr ");
-		for(ParsedPair pair : ThmP1.getAndClearParsedExpr()){
-			System.out.println(pair);
-		}
 	}
 	
 }

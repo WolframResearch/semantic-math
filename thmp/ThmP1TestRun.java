@@ -511,6 +511,9 @@ public class ThmP1TestRun {
 			st = "If $u : X \\to \\mathbb{R}$ is an integrable function and $\\epsilon > 0$";
 			st = "then $x>0$ for all $x\\in X$"; //<--assert not picked up.
 			st = "suppose that $ f_i$ has iamge zero on $H$";
+			st = "let $R$ be a symbol denoting a ring";
+			st = " Let $R$ be a ring, and let $M$ be a finite $R$-module. There exists a filtration by $R$-submodules";
+			
 			//st = "then $x> 0$";
 			//st = "if $F$ is a field";
 			//st = "$f$ induces a map of fields";
@@ -712,5 +715,6 @@ public class ThmP1TestRun {
 			for(ParsedPair pair : ThmP1.getAndClearParsedExpr()){
 				System.out.println(pair);
 			}
+			parseState.parseRunCleanUp();
 		}
 }

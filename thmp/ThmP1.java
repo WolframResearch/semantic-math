@@ -226,11 +226,13 @@ public class ThmP1 {
 		//the commandNumUnits associated to the WLCommand that gives this parsedStr.
 		private int commandNumUnits;
 		//the WLCommand associated to this ParsedPair.
-		private WLCommand wlCommand;
+		//don't serialize wlCommand, will introduce infinite recursion
+		//when trying to serialize this.
+		private transient WLCommand wlCommand;
 		//the ParseStructType of this parsedStr, eg "STM", "HYP", etc.
 		private ParseStructType parseStructType;
 		//parse struct corresponding to the parseStructType
-		private ParseStruct parseStruct;
+		//private ParseStruct parseStruct;
 		
 		private String stringForm;
 		
@@ -256,16 +258,16 @@ public class ThmP1 {
 		 * @param commandNumUnits
 		 * @param wlCommand @Nullable null if no WLCommand was picked up.
 		 */
-		public ParsedPair(String parsedStr, ParseStruct parseStruct, double score, int numUnits, 
+		public ParsedPair(String parsedStr, double score, int numUnits, 
 				int commandNumUnits, WLCommand wlCommand){
 			this(parsedStr, score, "", false);
 			this.wlCommand = wlCommand;
 			this.numUnits = numUnits;
 			this.commandNumUnits = commandNumUnits;
 			this.stringForm = this.toString();
-			if(null != parseStruct){
-				this.parseStruct = parseStruct;
-			}
+			//if(null != parseStruct){
+				//this.parseStruct = parseStruct;
+			//}
 		}
 		
 		/**
@@ -282,22 +284,24 @@ public class ThmP1 {
 		 * @param commandNumUnits
 		 */
 		public ParsedPair(double score, int numUnits, int commandNumUnits, WLCommand wlCommand){
-			this("", null, score, numUnits, commandNumUnits, wlCommand);
+			this("", score, numUnits, commandNumUnits, wlCommand);
 		}
 		
 		public ParsedPair(String parsedStr, double score, int numUnits, int commandNumUnits, WLCommand wlCommand, 
 				ParseStructType type){
-			this(parsedStr, null, score, numUnits, commandNumUnits, wlCommand);
+			this(parsedStr, score, numUnits, commandNumUnits, wlCommand);
 			this.parseStructType = type;
 			this.stringForm = this.toString();
 		}
 		
-		public ParsedPair(String parsedStr, double score, int numUnits, int commandNumUnits, 
-				WLCommand wlCommand, ParseStruct parseStruct, ParseStructType type){
-			this(parsedStr, parseStruct, score, numUnits, commandNumUnits, wlCommand);
+		/*public ParsedPair(String parsedStr, double score, int numUnits, int commandNumUnits, 
+				WLCommand wlCommand, //ParseStruct parseStruct, 
+				ParseStructType type){
+			//this(parsedStr, parseStruct, score, numUnits, commandNumUnits, wlCommand);
+			this(parsedStr, score, numUnits, commandNumUnits, wlCommand);
 			this.parseStructType = type;
 			this.stringForm = this.toString();
-		}
+		}*/
 		
 		public String parsedStr(){
 			return this.parsedStr;
@@ -3050,7 +3054,8 @@ public class ThmP1 {
 		//**parseStructMapList.add(parseStructMap.toString() + "\n");
 		//if parseStructMap empty, ie no WLCommand was found, but long parse form might still be good
 		if(parseStructMap.isEmpty()){
-			ParsedPair pair = new ParsedPair(wlSB.toString(), parseState.getCurParseStruct(), uHeadStruct.maxDownPathScore(), 
+			ParsedPair pair = new ParsedPair(wlSB.toString(), //parseState.getCurParseStruct(), 
+					uHeadStruct.maxDownPathScore(), 
 					uHeadStruct.numUnits(), span, null);
 			//partsMap.put(type, curWrapper.WLCommandStr);	
 			parseStructMap.put(ParseStructType.NONE, pair);
@@ -3935,6 +3940,13 @@ public class ThmP1 {
 	}
 	
 	/**
+	 * Clear parsedExpr.
+	 */
+	private static void clearParsedExpr(){				
+		parsedExpr = new ArrayList<ParsedPair>();		
+	}
+	
+	/**
 	 * Should be called once per parse segment to capture value,
 	 * for each String in return array of ThmP1.preprocess(input).
 	 * @return the context vector of highest-ranking parse.
@@ -4123,7 +4135,10 @@ public class ThmP1 {
 			logger.info("Input: " + inputStr);
 		}
 		
+		clearParsedExpr();
+		
 		ArrayList<String> sentenceList = new ArrayList<String>();
+		
 		//separate out punctuations, separate out words away from punctuations.
 		//compile this!
 		

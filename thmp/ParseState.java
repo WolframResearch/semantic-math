@@ -91,15 +91,23 @@ public class ParseState {
 	 * Keys are variable Strings, and values   that contain
 	 * Structs, and the input sentence that defines it.
 	 * When storing a definition such as "$f: X\to Y$", also store variable
-	 * name before the colon, i.e. "f"
-	 * 
+	 * name before the colon, i.e. "f". 
 	 */
-	private ListMultimap<VariableName, VariableDefinition> variableNamesMMap;
+	private ListMultimap<VariableName, VariableDefinition> globalVariableNamesMMap;
 	
-	//parsedExpr to record parsed pairs during parsing. 
-	private static List<ParsedPair> parsedExpr = new ArrayList<ParsedPair>();
+	/* Map to use when in thms/lemmas/etc, local variable definition map is used 
+	 * first to match with variables when in thm, since this contains the local 
+	 * definitions.
+	 */
+	private ListMultimap<VariableName, VariableDefinition> localVariableNamesMMap;
+	
+	//parsedExpr to record parsed pairs during parsing. Eliminate copy in ThmP1!
+	private List<ParsedPair> parsedExpr = new ArrayList<ParsedPair>();
 	
 	private static final Logger logger = LogManager.getLogger(ParseState.class);
+	
+	//flag to denote whether currently in theorem/lemma/etc or not.
+	private boolean inThmFlag;
 	
 	/**
 	 * Wrapper class around variable string name (Head), also records
@@ -296,7 +304,8 @@ public class ParseState {
 	//layer, until the entire tree is read.
 	//private Multimap<ParseStructType, WLCommandWrapper> waitingWrapperMMap;	
 	private ParseState(ParseStateBuilder builder){
-		this.variableNamesMMap = ArrayListMultimap.create();
+		this.globalVariableNamesMMap = ArrayListMultimap.create();
+		this.localVariableNamesMMap = ArrayListMultimap.create();
 		this.writeUnknownWordsToFile = builder.writeUnknownWordsToFile;		
 		//this.headParseStructList = new ArrayList<ParseStruct>();
 	}
@@ -365,10 +374,10 @@ public class ParseState {
 	 * Clears the map.
 	 * @return
 	 */
-	public ImmutableListMultimap<VariableName, VariableDefinition> getAndClearVariableNamesMMap(){
+	public ImmutableListMultimap<VariableName, VariableDefinition> getAndClearGlobalVariableNamesMMap(){
 		//ListMultimap<String, VariableDefinition> tempMap = ArrayListMultimap.create(this.variableNamesMMap);
-		ImmutableListMultimap<VariableName, VariableDefinition> tempMap = ImmutableListMultimap.copyOf(this.variableNamesMMap);
-		this.variableNamesMMap = ArrayListMultimap.create();
+		ImmutableListMultimap<VariableName, VariableDefinition> tempMap = ImmutableListMultimap.copyOf(this.globalVariableNamesMMap);
+		this.globalVariableNamesMMap = ArrayListMultimap.create();
 		return tempMap;
 	}
 	
@@ -379,24 +388,65 @@ public class ParseState {
 	 * can only be modified through the exposed modification method.
 	 * @return
 	 */
-	public ImmutableListMultimap<VariableName, VariableDefinition> getVariableNamesMMap(){
+	public ImmutableListMultimap<VariableName, VariableDefinition> getGlobalVariableNamesMMap(){
 		//defensively copy.
 		//ListMultimap<String, VariableDefinition> tempMap = ArrayListMultimap.create(this.variableNamesMMap);
-		ImmutableListMultimap<VariableName, VariableDefinition> tempMap = ImmutableListMultimap.copyOf(this.variableNamesMMap);
+		ImmutableListMultimap<VariableName, VariableDefinition> tempMap = ImmutableListMultimap.copyOf(this.globalVariableNamesMMap);
 		return tempMap;
 	}
 	
 	/**
-	 * 
+	 * First try local variable map, then global variable map, to find definition for variableName.
+	 * @return
+	 */
+	public List<VariableDefinition> getVariableDefinitionListFromName(VariableName varName){
+		
+		//defensively copy.
+		//ListMultimap<String, VariableDefinition> tempMap = ArrayListMultimap.create(this.variableNamesMMap);
+		//ImmutableListMultimap<VariableName, VariableDefinition> tempMap = ImmutableListMultimap.copyOf(this.globalVariableNamesMMap);
+		List<VariableDefinition> varDefList = new ArrayList<VariableDefinition>();		
+		//localVariableNamesMMap can be empty, but should not be null. When outside theorem, inThmFlag is
+		//false, so should not be getting theorem-local variables outside of theorems.
+		if(inThmFlag){
+			varDefList = this.localVariableNamesMMap.get(varName);
+		}
+		if(varDefList.isEmpty()){
+			varDefList = this.globalVariableNamesMMap.get(varName);
+		}
+		//System.out.println("inThmFlag: "+inThmFlag);
+		return varDefList;
+	}
+	
+	/**
+	 * Get the latest context-appropriate definition given a VariableName.
+	 * First try local variable map, then global variable map, to find definition for variableName.
+	 * @return
+	 */
+	public VariableDefinition getVariableDefinitionFromName(VariableName varName){
+		
+		List<VariableDefinition> defList = getVariableDefinitionListFromName(varName);
+		int defListSize = defList.size();
+		
+		if(0 != defListSize){
+			return defList.get(defListSize-1);
+		}else{
+			return null;
+		}
+		
+	}
+	
+	/**
+	 * Adds to either local or global var map depending on the inThm flag.
 	 * @param name Name of entStruct.
 	 * @param entStruct Entity to be added with name entStruct.
 	 */
 	public void addLocalVariableStructPair(String name, Struct entStruct){
 		
-		
 		Matcher latexContentMatcher = LATEX_DOLLARS_PATTERN.matcher(name);
 		Matcher textLatexMatcher;
 		//System.out.println("adding name: " +name +Arrays.toString(Thread.currentThread().getStackTrace()));
+		ListMultimap<VariableName, VariableDefinition> variableMMapToAddTo = inThmFlag 
+				? localVariableNamesMMap : globalVariableNamesMMap;
 		
 		if(latexContentMatcher.find()){
 			name = latexContentMatcher.group(1);
@@ -411,16 +461,16 @@ public class ParseState {
 				VariableName latexVariableName = getVariableName(latexName);
 				VariableDefinition latexDef = new VariableDefinition(latexVariableName, entStruct, this.currentInputStr);
 				
-				if(!variableNamesMMap.containsKey(latexVariableName) || !variableNamesMMap.containsEntry(latexVariableName, latexDef)){				
+				if(!variableMMapToAddTo.containsKey(latexVariableName) || !variableMMapToAddTo.containsEntry(latexVariableName, latexDef)){				
 					System.out.println("....********latexVariableName: " + latexVariableName);
-					this.variableNamesMMap.put(latexVariableName, latexDef);
+					variableMMapToAddTo.put(latexVariableName, latexDef);
 					
 					//if variableNameType is paren/brace/bracket, also include name without 
 					//the paren/brace/bracket in the map, e.g. $f(x) = x$, $f$ is smooth.
 					//nest inside so not to check for containment again.
 					if(latexVariableName.variableType().isParenBracketBrace()){
 						latexVariableName = new VariableName(latexVariableName.head, VariableName.VariableNameType.NONE);
-						this.variableNamesMMap.put(latexVariableName, latexDef);
+						variableMMapToAddTo.put(latexVariableName, latexDef);
 					}
 				}
 				
@@ -432,19 +482,18 @@ public class ParseState {
 			String latexName = textLatexMatcher.group(1);
 			VariableName latexVariableName = getVariableName(latexName);
 			
-			if(!variableNamesMMap.containsKey(latexVariableName)){
+			if(!variableMMapToAddTo.containsKey(latexVariableName)){
 				VariableDefinition latexDef = new VariableDefinition(latexVariableName, entStruct, this.currentInputStr);
-				this.variableNamesMMap.put(latexVariableName, latexDef);
+				variableMMapToAddTo.put(latexVariableName, latexDef);
 			}
 		}
 		
 		VariableName variableName = getVariableName(name);
 
-		if(!variableNamesMMap.containsKey(variableName)){
-			//System.out.println(variableName + "-++-" + variableNamesMMap + " ===== "  +Arrays.toString(Thread.currentThread().getStackTrace()));
-			
+		if(!variableMMapToAddTo.containsKey(variableName)){
+			//System.out.println(variableName + "-++-" + variableNamesMMap + " ===== "  +Arrays.toString(Thread.currentThread().getStackTrace()));			
 			VariableDefinition def = new VariableDefinition(variableName, entStruct, this.currentInputStr);	
-			this.variableNamesMMap.put(variableName, def);	
+			variableMMapToAddTo.put(variableName, def);	
 		}
 		
 	}
@@ -462,14 +511,15 @@ public class ParseState {
 		Matcher parenMatcher = VARIABLE_NAME_PATTERN.matcher(name);
 		Matcher dashMatcher;
 		
-		if(parenMatcher.find()){
-			
+		if(parenMatcher.matches())
+		{			
 			name = parenMatcher.group(1);
 			variableNameType = VariableName.VariableNameType
 					.getVariableNameTypeFromString(parenMatcher.group(2));
 			//throw new IllegalStateException(variableNameType + " " + name);
-		}else if((dashMatcher = VARIABLE_NAME_DASH_PATTERN.matcher(name)).find()){
-			
+		}
+		else if((dashMatcher = VARIABLE_NAME_DASH_PATTERN.matcher(name)).matches())
+		{	
 			name = dashMatcher.group(1);
 			variableNameType = VariableName.VariableNameType
 					.getVariableNameTypeFromString("-");
@@ -486,7 +536,7 @@ public class ParseState {
 	public Struct getVariableDefinition(String name){	
 		
 		VariableName variableName = getVariableName(name);
-		List<VariableDefinition> r = this.variableNamesMMap.get(variableName);
+		List<VariableDefinition> r = this.globalVariableNamesMMap.get(variableName);
 		int listSz = r.size();
 		
 		if(r.isEmpty()){
@@ -504,7 +554,7 @@ public class ParseState {
 	public List<VariableDefinition> getNamedStructList(String name){		
 		
 		VariableName variableName = getVariableName(name);
-		return this.variableNamesMMap.get(variableName);			
+		return this.globalVariableNamesMMap.get(variableName);			
 	}
 	
 	/**
@@ -512,8 +562,8 @@ public class ParseState {
 	 */
 	public void logState(){
 		//remove this on PRD
-		System.out.println("variableNamesMMap: " + this.variableNamesMMap);
-		logger.info(this.variableNamesMMap);
+		System.out.println("variableNamesMMap: " + this.globalVariableNamesMMap);
+		logger.info(this.globalVariableNamesMMap);
 	}
 	
 	/**
@@ -663,6 +713,23 @@ public class ParseState {
 	 */
 	public void setRecentAssert(Struct recentAssert) {
 		this.recentAssert = recentAssert;
+	}
+	
+	/**
+	 * Sets the inThm flag to the given boolean.
+	 */
+	public void setInThmFlag(boolean inThm){
+		this.inThmFlag = inThm;
+	}
+	
+	/**
+	 * Clear variables, reset state, etc, to not contaminate
+	 * variable space for next parse. One parse run is defined
+	 * to be the unit    given to the preprocessor.
+	 */
+	public void parseRunCleanUp(){
+		this.localVariableNamesMMap = ArrayListMultimap.create();
+		this.inThmFlag = false;
 	}
 	
 }
