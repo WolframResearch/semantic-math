@@ -314,7 +314,8 @@ public class WLCommandsList {
 		//	 "ent|symb, , true", "]" }));
 		wLCommandMapBuilder.put("for every", addCommand(//new PBuilder("assert", null, true, false, "OPT"),
 				new PBuilder(null, "for every|for any|for all", false, true, false), 
-				new PBuilder("\\[ForAll]["), new PBuilder("ent|symb", null, true), new PBuilder("]") ));
+				new PBuilder("\\[ForAll]["), new PBuilder("ent|symb", null, true, RelationType._IS).addRelationType(RelationType.IF), 
+				new PBuilder("]") ));
 		
 		//WLCommandMapBuilder.put("suppose", addCommand(new String[] { "hyp, , trigger",
 			//"assert, , true" })); 

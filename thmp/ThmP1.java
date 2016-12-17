@@ -98,6 +98,7 @@ public class ThmP1 {
 
 	// private static final File unknownWordsFile;
 	private static final Path unknownWordsFile = Paths.get("src/thmp/data/unknownWords1.txt");
+	
 	private static final Path parsedExprFile = Paths.get("src/thmp/data/parsedExpr.txt");
 
 	private static final List<String> unknownWords = new ArrayList<String>();
@@ -145,6 +146,8 @@ public class ThmP1 {
 	private static final int REPARSE_UPPER_SIZE_LIMIT = 6;
 	private static final Pattern CONJ_DISJ_VP_PATTERN = Pattern.compile("(?:conj|disj)_verbphrase");
 	private static final boolean DEBUG = InitParseWithResources.isDEBUG();
+	//contains backslash
+	private static final Pattern BACKSLASH_CONTAINMENT_PATTERN = Pattern.compile(".*\\\\.*");
 	
 	//private static int[] parseContextVector;
 	//private static int parseContextVectorSz;
@@ -1111,7 +1114,7 @@ public class ThmP1 {
 				System.out.println("word not in dictionary: " + curWord);
 				pairs.add(new Pair(curWord, ""));
 
-				if(parseState.writeUnknownWordsToFile()){
+				if(parseState.writeUnknownWordsToFileBool()){
 				// collect & write unknown words to file
 					unknownWords.add(curWord);
 				}
@@ -1221,14 +1224,15 @@ public class ThmP1 {
 			}
 			//if still no pos, try to guess part of speech based on endings 
 			if(curpair.pos().equals("")){
-				if(POSSIBLE_ADJ_PATTERN.matcher(curWord).find()){
+				if(POSSIBLE_ADJ_PATTERN.matcher(curWord).matches()){
 					curpair.set_pos("adj");
 				}				
 			}
 			//if yet still no pos found, use the Stanford NLP tagger, calls to which 
 			//does incur overhead.
 			//if(true){
-			if(curpair.pos().equals("")){
+			//does not contain "\"
+			if(curpair.pos().equals("") && !BACKSLASH_CONTAINMENT_PATTERN.matcher(curWord).matches()){
 				//tag the whole sentence to find the most accurate tag, since the tagger
 				//uses contextual tags to maximize entropy.
 				String taggedSentence = posTagger.tagString(sentence);

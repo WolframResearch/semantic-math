@@ -327,7 +327,7 @@ public class WLCommand implements Serializable{
 	 */
 	public static class PosTerm implements Serializable{		
 
-		private static final long serialVersionUID = 1L;
+		private static final long serialVersionUID = 5279307889713339412L;
 
 		/**
 		 * Enums used to indicate special connotations of PosTerm, 
@@ -374,7 +374,7 @@ public class WLCommand implements Serializable{
 		private boolean isTrigger;
 		
 		//relationType for building relation vectors. 
-		private RelationType relationType;
+		private List<RelationType> relationType;
 		
 		/**
 		 * Builder class for PosTerm.
@@ -405,7 +405,7 @@ public class WLCommand implements Serializable{
 			//0 by default
 			private int optionalGroupNum;
 			//relationType for building relation vectors. 
-			RelationType relationType = RelationType.NONE;
+			List<RelationType> relationTypeList = new ArrayList<RelationType>();
 			
 			private PosTermConnotation posTermConnotation = PosTermConnotation.NONE;
 			
@@ -460,7 +460,7 @@ public class WLCommand implements Serializable{
 			public PBuilder(String posStr, String nameStr, boolean includeInBuiltString,
 					RelationType relationType){
 				this(posStr, nameStr, includeInBuiltString);
-				this.relationType = relationType;
+				this.relationTypeList.add(relationType);
 			}
 			
 			/**
@@ -481,7 +481,7 @@ public class WLCommand implements Serializable{
 			public PBuilder(String posStr, String nameStr, boolean includeInBuiltString, boolean isTrigger,
 					boolean isTriggerMathObj, RelationType relationType){
 				this(posStr, nameStr, includeInBuiltString, isTrigger, isTriggerMathObj);
-				this.relationType = relationType;
+				this.relationTypeList.add(relationType);
 			}
 			
 			/**
@@ -505,7 +505,7 @@ public class WLCommand implements Serializable{
 				this.isTrigger = isTrigger;
 				this.isTriggerMathObj = isTriggerMathObj;
 				this.posTermConnotation = posTermConnotation;
-				this.relationType = relationType;
+				this.relationTypeList.add(relationType);
 			}
 			
 			/**
@@ -543,7 +543,7 @@ public class WLCommand implements Serializable{
 			public PBuilder(String posStr, String nameStr, boolean includeInBuiltString,
 					boolean isTriggerMathObj, String optionGroup, RelationType relationType){
 				this(posStr, nameStr, includeInBuiltString, isTriggerMathObj, optionGroup);
-				this.relationType = relationType;
+				this.relationTypeList.add(relationType);
 			}
 			
 			/**
@@ -630,7 +630,12 @@ public class WLCommand implements Serializable{
 			 * @return
 			 */
 			public PBuilder addRelationType(RelationType relationType){
-				this.relationType = relationType;
+				this.relationTypeList.add(relationType);
+				return this;
+			}
+			
+			public PBuilder addRelationType(RelationType[] relationTypeAr){
+				this.relationTypeList.addAll(Arrays.asList(relationTypeAr));
 				return this;
 			}
 			
@@ -657,12 +662,12 @@ public class WLCommand implements Serializable{
 				
 				if(this.isOptionalTerm){
 					return new OptionalPosTerm(commandComponent, positionInMap, includeInBuiltString,
-							isTriggerMathObj, optionalGroupNum, relationType);
+							isTriggerMathObj, optionalGroupNum, relationTypeList);
 				}else if(this.isNegativeTerm){
 					return new NegativePosTerm(commandComponent, positionInMap);
 				}else{
 					return new PosTerm(commandComponent, positionInMap, includeInBuiltString,
-							isTrigger, isTriggerMathObj, posTermConnotation, relationType);
+							isTrigger, isTriggerMathObj, posTermConnotation, relationTypeList);
 				}
 			}		
 			
@@ -670,14 +675,14 @@ public class WLCommand implements Serializable{
 		
 		private PosTerm(WLCommandComponent commandComponent, int position, boolean includeInBuiltString,
 				boolean isTrigger, boolean isTriggerMathObj, PosTermConnotation posTermConnotation,
-				RelationType relationType){
+				List<RelationType> relationTypeList){
 			this.commandComponent = commandComponent;
 			this.positionInMap = position;
 			this.includeInBuiltString = includeInBuiltString;
 			this.triggerMathObj = isTriggerMathObj;
 			this.isTrigger = isTrigger;
 			this.posTermConnotation = posTermConnotation;
-			this.relationType = relationType;
+			this.relationType = relationTypeList;
 		}
 		
 		/**
@@ -698,7 +703,7 @@ public class WLCommand implements Serializable{
 			return false;
 		}
 		
-		public RelationType relationType(){
+		public List<RelationType> relationType(){
 			return this.relationType;
 		}
 		
@@ -754,9 +759,11 @@ public class WLCommand implements Serializable{
 	
 	public static class NegativePosTerm extends PosTerm{
 		
+		private static final long serialVersionUID = -5938361941318473351L;
+
 		public NegativePosTerm(WLCommandComponent commandComponent, int position){
 			super(commandComponent, position, false, false, false, PosTermConnotation.NONE,
-					RelationType.NONE);			
+					new ArrayList<RelationType>());			
 		}
 		
 		@Override
@@ -767,13 +774,15 @@ public class WLCommand implements Serializable{
 	
 	public static class OptionalPosTerm extends PosTerm{
 
+		private static final long serialVersionUID = 3334001130849221307L;
+
 		/**
 		 * The group number for this optional term.
 		 */
 		private int optionalGroupNum;
 		
 		public OptionalPosTerm(WLCommandComponent commandComponent, int position, boolean includeInBuiltString,
-				boolean triggerMathObj, int optionalGroupNum, RelationType relationType) {
+				boolean triggerMathObj, int optionalGroupNum, List<RelationType> relationType) {
 			//cannot be trigger if optional term
 			super(commandComponent, position, includeInBuiltString, false, triggerMathObj,
 					PosTermConnotation.NONE, relationType);

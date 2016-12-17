@@ -166,12 +166,18 @@ public class SearchCombined {
 		return bestCommonVecList;
 	}
 	
+	public static List<String> searchCombined(String input, Set<String> searchWordsSet, boolean searchContextBool){
+		return searchCombined(input, searchWordsSet, searchContextBool, false);
+	}
+	
 	/**
 	 * Search interface to be called externally, eg from servlet.
 	 * Resources should have been set prior to this if called externally.
 	 * @param inputStr search input
 	 */
-	public static List<String> searchCombined(String input, Set<String> searchWordsSet, boolean searchContextBool){
+	public static List<String> searchCombined(String input, Set<String> searchWordsSet, boolean searchContextBool,
+			boolean searchRelationalBool){
+		
 		if(input.matches("\\s*")) return null;
 		
 		input = input.toLowerCase();
@@ -182,7 +188,7 @@ public class SearchCombined {
 			return null;
 		}
 		
-		SearchState searchState = SearchIntersection.getHighestThm(input, searchWordsSet, searchContextBool, NUM_NEAREST);
+		SearchState searchState = SearchIntersection.getHighestThms(input, searchWordsSet, searchContextBool, NUM_NEAREST);
 		//List<Integer> intersectionVecList;
 		int numCommonVecs = NUM_COMMON_VECS;
 		
@@ -200,7 +206,16 @@ public class SearchCombined {
 		//find best intersection of these two lists. nearestVecList is 1-based, but intersectionVecList is 0-based! 
 		List<Integer> bestCommonVecs = findListsIntersection(nearestVecList, searchState, 
 				numCommonVecs, input, searchContextBool);
+		//combine with ranking from relational search, reorganize within each tuple
+		//of fixed size.
+		if(searchRelationalBool){
+			int tupleSz = 3;
+			Searcher searcher = new RelationalSearch();
+			bestCommonVecs = searchVecWithTuple(input, bestCommonVecs, tupleSz, searcher);			
+		}
+		
 		List<String> bestCommonThms = new ArrayList<String>();
+		
 		for(int d : bestCommonVecs){
 			//String thm = TriggerMathThm2.getThm(d);
 			String thm = TriggerMathThm2.getWebDisplayThm(d);
@@ -224,6 +239,36 @@ public class SearchCombined {
 	}*/
 	
 	/**
+	 * Searches using relational search, in chunks of size tupleSz from 0
+	 * through the entire list. 
+	 * @param bestCommonVecs
+	 * @param tupleSz
+	 */
+	private static List<Integer> searchVecWithTuple(String queryStr, List<Integer> bestCommonVecs, int tupleSz,
+			Searcher searcher) {
+		
+		int commonVecsLen = bestCommonVecs.size();
+		int numTupleSzInCommonVecsLen = commonVecsLen/tupleSz;
+		List<Integer> reorderedList = new ArrayList<Integer>();
+		
+		//call relational search for one tuple at a time.
+		for(int i = 0; i <= numTupleSzInCommonVecsLen; i++){
+			
+			int startingIndex = numTupleSzInCommonVecsLen*tupleSz;
+			int startingIndexPlusTupleSz = startingIndex + tupleSz ; 
+			int endingIndex = startingIndexPlusTupleSz > commonVecsLen 
+					? commonVecsLen : startingIndexPlusTupleSz;
+			//using .subList() avoids creating numTupleSzInCommonVecsLen 
+			//number of new short lists as iterating through the list would.
+			List<Integer> sublist = bestCommonVecs.subList(startingIndex, endingIndex);
+			List<Integer> reorderedSublist = searcher.search(queryStr, sublist);
+			reorderedList.addAll(reorderedSublist);
+		}
+		
+		return reorderedList;
+	}
+
+	/**
 	 * Search that invokes different layers
 	 * @param args
 	 */
@@ -235,8 +280,22 @@ public class SearchCombined {
 		
 		while(sc.hasNextLine()){
 			String thm = sc.nextLine();
-			if(thm.matches("\\s*")) continue;
 			
+			String[] thmAr = thm.split("\\s+");
+			boolean searchContextBool = false;
+			if(thmAr.length > 1 && thmAr[0].equals("context")){				
+				searchContextBool = true;
+			}
+			
+			boolean searchRelationalBool = false;
+			if(thmAr.length > 1 && thmAr[0].equals("relation")){				
+				searchRelationalBool = true;
+			}
+			
+			//this gives the web-displayed versions. 
+			List<String> bestCommonVecs = searchCombined(thm, null, searchContextBool, searchRelationalBool);
+			
+			/*if(thm.matches("\\s*")) continue;
 			thm = thm.toLowerCase();
 			
 			List<Integer> nearestVecList = ThmSearch.readThmInput(thm, NUM_NEAREST);
@@ -245,19 +304,12 @@ public class SearchCombined {
 				continue;
 			}
 			//filter nearestVecList through context search, to re-arrange list output based on context
-			/*String[] thmAr = thm.split("\\s+");
-			if(thmAr.length > 1 && thmAr[0].equals("context")){
-				nearestVecList = ContextSearch.contextSearch(thm, nearestVecList);
-			}*/
+			
 			//need to run GenerateContext.java to generate the context vectors during build, but ensure 
 			//context vectors are up to date!
-			String[] thmAr = thm.split("\\s+");
-			boolean searchContextBool = false;
-			if(thmAr.length > 1 && thmAr[0].equals("context")){				
-				searchContextBool = true;
-			}
+			
 			//searchWordsSet is null.
-			SearchState searchState = SearchIntersection.getHighestThm(thm, null, searchContextBool, NUM_NEAREST);
+			SearchState searchState = SearchIntersection.getHighestThms(thm, null, searchContextBool, NUM_NEAREST);
 			int numCommonVecs = NUM_COMMON_VECS;
 			
 			String firstWord = thm.split("\\s+")[0];
@@ -269,9 +321,9 @@ public class SearchCombined {
 			//now both are 0-based.
 			List<Integer> bestCommonVecs = findListsIntersection(nearestVecList, searchState, numCommonVecs,
 					thm, searchContextBool);
-			
-			for(int d : bestCommonVecs){
-				System.out.println(TriggerMathThm2.getThm(d));
+			*/
+			for(String thmStr : bestCommonVecs){
+				System.out.println(thmStr);
 			}
 		}
 		

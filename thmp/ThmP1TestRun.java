@@ -513,7 +513,8 @@ public class ThmP1TestRun {
 			st = "suppose that $ f_i$ has iamge zero on $H$";
 			st = "let $R$ be a symbol denoting a ring";
 			st = " Let $R$ be a ring, and let $M$ be a finite $R$-module. There exists a filtration by $R$-submodules";
-			
+			st = "There exists an integer $a$ such that $(x + y)^{p^a}, p^a(x + y) \\in \\mathbf{Z}[x^{p^n}, p^nx, y^{p^m}, p^my]$";
+			st = "the small subfield of $F$ is $Q$";
 			//st = "then $x> 0$";
 			//st = "if $F$ is a field";
 			//st = "$f$ induces a map of fields";

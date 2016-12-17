@@ -106,7 +106,7 @@ public class SearchIntersection {
 		}
 	}	
 	
-	private static class ThmScorePair implements Comparable<ThmScorePair>{
+	/*private static class ThmScorePair implements Comparable<ThmScorePair>{
 		private int thmIndex;
 		private int score;
 		
@@ -120,7 +120,7 @@ public class SearchIntersection {
 			//reverse because treemap naturally has ascending order
 			return this.score > other.score ? -1 : (this.score < other.score ? 1 : 0);
 		}
-	}
+	}*/
 	
 	/**
 	 * 
@@ -131,7 +131,7 @@ public class SearchIntersection {
 	 */
 	public static List<Integer> getHighestThmList(String input, Set<String> searchWordsSet, 
 			boolean contextSearchBool, int ... num){
-		return getHighestThm(input, searchWordsSet, contextSearchBool, num).intersectionVecList();
+		return getHighestThms(input, searchWordsSet, contextSearchBool, num).intersectionVecList();
 	}
 
 	//computes singleton scores for words in list
@@ -164,7 +164,7 @@ public class SearchIntersection {
 	 * @return SearchState containing list of indices of highest-scored thms. Sorted in ascending
 	 * order, best first. List is 0-based.
 	 */
-	public static SearchState getHighestThm(String input, Set<String> searchWordsSet, 
+	public static SearchState getHighestThms(String input, Set<String> searchWordsSet, 
 			boolean contextSearchBool, int ... num){
 		if(input.matches("\\s*")) return null;
 		//map containing the indices of theorems added so far, where values are sets (hashset)
@@ -646,7 +646,8 @@ public class SearchIntersection {
 	 * Public facing, don't call within this class, call getHighestThm directly
 	 * instead (so not to duplicate work).
 	 * @param inputStr Query string.
-	 * @param searchWordsSet set of terms (singletons) used during search.
+	 * @param searchWordsSet set of terms (singletons) used during search. Used
+	 * later for web display.
 	 * @return
 	 */
 	public static List<String> search(String inputStr, Set<String> searchWordsSet){

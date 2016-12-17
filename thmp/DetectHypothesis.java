@@ -145,8 +145,8 @@ public class DetectHypothesis {
 		
 		BufferedReader inputBF = null;
 		try{
-			//inputBF = new BufferedReader(new FileReader("src/thmp/data/CommAlg5.txt"));
-			inputBF = new BufferedReader(new FileReader("src/thmp/data/samplePaper1.txt"));
+			inputBF = new BufferedReader(new FileReader("src/thmp/data/CommAlg5.txt"));
+			//inputBF = new BufferedReader(new FileReader("src/thmp/data/samplePaper1.txt"));
 		}catch(FileNotFoundException e){
 			e.printStackTrace();
 			throw new IllegalStateException("Source file not found!");
@@ -326,11 +326,14 @@ public class DetectHypothesis {
 			matcher = thmStartPattern.matcher(line);
 			if (matcher.matches()) {
 				
-				inThm = true;				
 				//scan contextSB for assumptions and definitions
 				//and parse the definitions
 				detectAndParseHypothesis(contextSB.toString(), parseState);	
 				//System.out.println("getGlobalVariableNamesMMap: "+parseState.getGlobalVariableNamesMMap());
+				inThm = true;		
+				//this should be set *after* calling detectAndParseHypothesis(), since detectAndParseHypothesis
+				//depends on the state.
+				parseState.setInThmFlag(true);
 				contextSB.setLength(0);
 			}
 			else if (thmEndPattern.matcher(line).matches()) {
@@ -356,6 +359,8 @@ public class DetectHypothesis {
 				
 				//first gather hypotheses in the theorem. 
 				detectAndParseHypothesis(thm, parseState);
+				//if(true) throw new IllegalStateException(parseState.toString());
+				//if contained in local map, should be careful about when to append map.
 				
 				//append to newThmSB additional hypotheses that are applicable to the theorem.				
 				DefinitionListWithThm thmDef = appendHypothesesAndParseThm(thm, parseState);
@@ -404,7 +409,7 @@ public class DetectHypothesis {
 				System.out.println("isHypothesis! " + sentence);
 				//if(true) throw new IllegalStateException(sentence);				
 				parseState.setCurParseStruct(null);
-				parseState.setHeadParseStruct(null);				
+				parseState.setHeadParseStruct(null);
 				ParseRun.parseInput(sentence, parseState, PARSE_INPUT_VERBOSE);
 			}
 		}

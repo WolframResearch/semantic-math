@@ -25,7 +25,7 @@ import thmp.utils.WordForms;
  * @see RelationVec.java. 
  * @author yihed
  */
-public class RelationalSearch {
+public class RelationalSearch implements Searcher{
 
 	private static final List<BigInteger> relationVecList;
 	
@@ -70,6 +70,13 @@ public class RelationalSearch {
 		}
 		
 		sc.close();
+	}
+	
+	/**
+	 * Needed to implement Searcher.
+	 */
+	public List<Integer> search(String queryStr, List<Integer> nearestThmIndexList){
+		return relationalSearch(queryStr, nearestThmIndexList);
 	}
 	
 	/**

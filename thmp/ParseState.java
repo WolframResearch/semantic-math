@@ -8,6 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ListMultimap;
 
@@ -62,7 +63,7 @@ public class ParseState {
 	//the relations between different Structs.
 	private BigInteger relationalContextVec;
 	
-	private boolean writeUnknownWordsToFile;
+	private boolean writeUnknownWordsToFileBool;
 	
 	//punctuation at end of current parse segment, segments are separated
 	//by punctuations.
@@ -103,6 +104,9 @@ public class ParseState {
 	
 	//parsedExpr to record parsed pairs during parsing. Eliminate copy in ThmP1!
 	private List<ParsedPair> parsedExpr = new ArrayList<ParsedPair>();
+	
+	//record pos postulated during parse.
+	private static HashMultimap<String, String> extrapolatedPosMMap = HashMultimap.create(); 
 	
 	private static final Logger logger = LogManager.getLogger(ParseState.class);
 	
@@ -306,7 +310,7 @@ public class ParseState {
 	private ParseState(ParseStateBuilder builder){
 		this.globalVariableNamesMMap = ArrayListMultimap.create();
 		this.localVariableNamesMMap = ArrayListMultimap.create();
-		this.writeUnknownWordsToFile = builder.writeUnknownWordsToFile;		
+		this.writeUnknownWordsToFileBool = builder.writeUnknownWordsToFile;		
 		//this.headParseStructList = new ArrayList<ParseStruct>();
 	}
 	
@@ -315,8 +319,22 @@ public class ParseState {
 	 * if need to collect unknown words or not.
 	 * @return
 	 */
-	public boolean writeUnknownWordsToFile(){
-		return this.writeUnknownWordsToFile;
+	public boolean writeUnknownWordsToFileBool(){
+		return this.writeUnknownWordsToFileBool;
+	}
+	
+	public void writeUnknownWordsToFile(){
+		try(FileWriter fw = new FileWriter("outfilename", true);
+			    BufferedWriter bw = new BufferedWriter(fw);
+			    PrintWriter out = new PrintWriter(bw))
+			{
+			    out.println("the text");
+			    //more code
+			    out.println("more text");
+			    //more code
+			} catch (IOException e) {
+			    //exception handling left as an exercise for the reader
+			}
 	}
 	
 	/**
@@ -460,8 +478,8 @@ public class ParseState {
 				//define a VariableName of the right type. 
 				VariableName latexVariableName = getVariableName(latexName);
 				VariableDefinition latexDef = new VariableDefinition(latexVariableName, entStruct, this.currentInputStr);
-				
-				if(!variableMMapToAddTo.containsKey(latexVariableName) || !variableMMapToAddTo.containsEntry(latexVariableName, latexDef)){				
+				//!variableMMapToAddTo.containsKey(latexVariableName) || 
+				if(!variableMMapToAddTo.containsEntry(latexVariableName, latexDef)){				
 					System.out.println("....********latexVariableName: " + latexVariableName);
 					variableMMapToAddTo.put(latexVariableName, latexDef);
 					
@@ -471,29 +489,34 @@ public class ParseState {
 					if(latexVariableName.variableType().isParenBracketBrace()){
 						latexVariableName = new VariableName(latexVariableName.head, VariableName.VariableNameType.NONE);
 						variableMMapToAddTo.put(latexVariableName, latexDef);
+						
 					}
 				}
 				
 			}
+			
 		}//if name contains text and latex, e.g. "winding number $W_{ii'} (y)$"
 		//create a separate entry with just the latex part.
 		else if( (textLatexMatcher = TEXT_LATEX_PATTERN.matcher(name)).find() ){
 			
 			String latexName = textLatexMatcher.group(1);
 			VariableName latexVariableName = getVariableName(latexName);
+			VariableDefinition latexDef = new VariableDefinition(latexVariableName, entStruct, this.currentInputStr);
 			
-			if(!variableMMapToAddTo.containsKey(latexVariableName)){
-				VariableDefinition latexDef = new VariableDefinition(latexVariableName, entStruct, this.currentInputStr);
+			if(!variableMMapToAddTo.containsEntry(latexVariableName, latexDef)){
+				//VariableDefinition latexDef = new VariableDefinition(latexVariableName, entStruct, this.currentInputStr);
 				variableMMapToAddTo.put(latexVariableName, latexDef);
 			}
 		}
 		
 		VariableName variableName = getVariableName(name);
-
-		if(!variableMMapToAddTo.containsKey(variableName)){
-			//System.out.println(variableName + "-++-" + variableNamesMMap + " ===== "  +Arrays.toString(Thread.currentThread().getStackTrace()));			
-			VariableDefinition def = new VariableDefinition(variableName, entStruct, this.currentInputStr);	
+		//should check if contains entry.
+		VariableDefinition def = new VariableDefinition(variableName, entStruct, this.currentInputStr);	
+		//!variableMMapToAddTo.containsKey(variableName)
+		if(!variableMMapToAddTo.containsEntry(variableName, def)){
+			//System.out.println(variableName + "-++-" + variableNamesMMap + " ===== "  +Arrays.toString(Thread.currentThread().getStackTrace()));						
 			variableMMapToAddTo.put(variableName, def);	
+			System.out.println("!++++++++++++entStruct: " + entStruct);
 		}
 		
 	}
@@ -730,6 +753,15 @@ public class ParseState {
 	public void parseRunCleanUp(){
 		this.localVariableNamesMMap = ArrayListMultimap.create();
 		this.inThmFlag = false;
+	}
+	
+	@Override
+	public String toString(){
+		StringBuilder sb = new StringBuilder(300);
+		sb.append("globalVariableNamesMMap: " + globalVariableNamesMMap);
+		sb.append("localVariableNamesMMap: " + localVariableNamesMMap);
+		sb.append("inThmFlag: " + inThmFlag);
+		return sb.toString();
 	}
 	
 }

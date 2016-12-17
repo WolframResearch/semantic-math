@@ -839,7 +839,7 @@ public class Maps {
 			probMap.put("ent_anchor", .85);
 			probMap.put("ent_verb", .8);
 			probMap.put("ent_verbAlone", .81);
-			probMap.put("ent_pre", .8);
+			probMap.put("ent_pre", .85);
 
 			// symb_
 			probMap.put("symb_verb", .8);
@@ -863,8 +863,8 @@ public class Maps {
 						
 			// adj_
 			probMap.put("adj_ent", .9);
-			probMap.put("adj_pre", .85);
-			probMap.put("adj_adj", .6);
+			probMap.put("adj_pre", .7);
+			probMap.put("adj_adj", .45);
 			//could be used in new definitions
 			//e.g. "A is blah if..."
 			probMap.put("adj_if", .7);

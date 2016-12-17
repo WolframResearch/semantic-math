@@ -46,7 +46,7 @@ public class RelationVec implements Serializable{
 	/**
 	 * Enum for the different types of
 	 * relations, such as "is A", "A is",
-	 * along with their offset f.
+	 * along with their offset. Example: _IS.
 	 */
 	public static enum RelationType{
 		
@@ -107,24 +107,26 @@ public class RelationVec implements Serializable{
 					|| parseStructType == ParseStructType.HYP_iff);
 			
 			for(PosTerm posTerm : posList){
-				RelationType posTermRelationType = posTerm.relationType();
-				if(RelationType.NONE != posTermRelationType){
+				List<RelationType> posTermRelationTypeList = posTerm.relationType();
+				if(!posTermRelationTypeList.isEmpty()){
 					
-					Struct posTermStruct = posTerm.posTermStruct();
-					
-					if(null == posTermStruct && posTerm.isOptionalTerm()){
-						continue;
-					}
-					
-					String contentStr = posTermStruct.contentStr();
-					//modulus and residue (like remainder) as in abstract algebra.
-					int[] multiplicityAr = posTermRelationType.vectorOffsetArray();
-					
-					//add new indices to bitPosList
-					for(int multiplicity : multiplicityAr){
-						int curBitPos = setBitPosList(contentStr, bitPosList, multiplicity, posTermRelationType, isParseStructTypeHyp);
-						if(curBitPos > maxBitPos){
-							maxBitPos = curBitPos;
+					for(RelationType posTermRelationType : posTermRelationTypeList){
+						Struct posTermStruct = posTerm.posTermStruct();
+						
+						if(null == posTermStruct && posTerm.isOptionalTerm()){
+							continue;
+						}
+						
+						String contentStr = posTermStruct.contentStr();
+						//modulus and residue (like remainder) as in abstract algebra.
+						int[] multiplicityAr = posTermRelationType.vectorOffsetArray();
+						
+						//add new indices to bitPosList
+						for(int multiplicity : multiplicityAr){
+							int curBitPos = setBitPosList(contentStr, bitPosList, multiplicity, posTermRelationType, isParseStructTypeHyp);
+							if(curBitPos > maxBitPos){
+								maxBitPos = curBitPos;
+							}
 						}
 					}
 				}
