@@ -1,6 +1,7 @@
 package thmp;
 
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -15,6 +16,10 @@ import com.google.common.collect.ListMultimap;
 import thmp.ThmP1.ParsedPair;
 import thmp.utils.Buggy;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -109,6 +114,8 @@ public class ParseState {
 	private static HashMultimap<String, String> extrapolatedPosMMap = HashMultimap.create(); 
 	
 	private static final Logger logger = LogManager.getLogger(ParseState.class);
+	
+	private static final String UNKNOWN_WORDS_FILE_NAME_STR = "src/thmp/data/unknownWords2.txt";
 	
 	//flag to denote whether currently in theorem/lemma/etc or not.
 	private boolean inThmFlag;
@@ -323,18 +330,36 @@ public class ParseState {
 		return this.writeUnknownWordsToFileBool;
 	}
 	
+	/**
+	 * Write previously unknown words and their postulated pos to file.
+	 */
 	public void writeUnknownWordsToFile(){
-		try(FileWriter fw = new FileWriter("outfilename", true);
+		
+		//first format the output so it can just be pasted into lexicon.
+		StringBuilder sb = new StringBuilder(1000);
+		for(Map.Entry<String, String> entry : extrapolatedPosMMap.entries()){
+			sb.append("\n" + entry.getKey() + " " + entry.getValue());
+		}
+		
+		try(FileWriter fw = new FileWriter(UNKNOWN_WORDS_FILE_NAME_STR, true);
 			    BufferedWriter bw = new BufferedWriter(fw);
 			    PrintWriter out = new PrintWriter(bw))
 			{
-			    out.println("the text");
-			    //more code
-			    out.println("more text");
-			    //more code
+				out.println(sb);
+			   
 			} catch (IOException e) {
-			    //exception handling left as an exercise for the reader
+			   logger.error("IOException while writing to unknown words file!");			   
 			}
+	}
+	
+	/**
+	 * Add a postulated pos from posTagger to map, to be written to file later.
+	 * @param word
+	 * @param pos
+	 */
+	public void addUnknownWordPosToMap(String word, String pos){
+		//extrapolatedPosMMap
+		extrapolatedPosMMap.put(word, pos);		
 	}
 	
 	/**
@@ -445,6 +470,7 @@ public class ParseState {
 		List<VariableDefinition> defList = getVariableDefinitionListFromName(varName);
 		int defListSize = defList.size();
 		
+		//get last-added one.
 		if(0 != defListSize){
 			return defList.get(defListSize-1);
 		}else{
@@ -476,7 +502,7 @@ public class ParseState {
 			if(colonMatcher.find()){
 				String latexName = colonMatcher.group(1);
 				//define a VariableName of the right type. 
-				VariableName latexVariableName = getVariableName(latexName);
+				VariableName latexVariableName = createVariableName(latexName);
 				VariableDefinition latexDef = new VariableDefinition(latexVariableName, entStruct, this.currentInputStr);
 				//!variableMMapToAddTo.containsKey(latexVariableName) || 
 				if(!variableMMapToAddTo.containsEntry(latexVariableName, latexDef)){				
@@ -500,7 +526,7 @@ public class ParseState {
 		else if( (textLatexMatcher = TEXT_LATEX_PATTERN.matcher(name)).find() ){
 			
 			String latexName = textLatexMatcher.group(1);
-			VariableName latexVariableName = getVariableName(latexName);
+			VariableName latexVariableName = createVariableName(latexName);
 			VariableDefinition latexDef = new VariableDefinition(latexVariableName, entStruct, this.currentInputStr);
 			
 			if(!variableMMapToAddTo.containsEntry(latexVariableName, latexDef)){
@@ -509,7 +535,7 @@ public class ParseState {
 			}
 		}
 		
-		VariableName variableName = getVariableName(name);
+		VariableName variableName = createVariableName(name);
 		//should check if contains entry.
 		VariableDefinition def = new VariableDefinition(variableName, entStruct, this.currentInputStr);	
 		//!variableMMapToAddTo.containsKey(variableName)
@@ -527,7 +553,7 @@ public class ParseState {
 	 * @param name Should not contain $ $ around it.
 	 * @return
 	 */
-	public static VariableName getVariableName(String name){
+	public static VariableName createVariableName(String name){
 		
 		VariableName.VariableNameType variableNameType = VariableName.VariableNameType.NONE;
 		//figure out the VariableNameType
@@ -553,19 +579,19 @@ public class ParseState {
 	
 	/**
 	 * @param name Name of entStruct.
-	 * @param entStruct Entity to be added with name entStruct.
 	 * @return Return most recently-added Struct with this name.
 	 */
 	public Struct getVariableDefinition(String name){	
 		
-		VariableName variableName = getVariableName(name);
-		List<VariableDefinition> r = this.globalVariableNamesMMap.get(variableName);
-		int listSz = r.size();
+		VariableName variableName = createVariableName(name);
 		
-		if(r.isEmpty()){
-			return null;
+		VariableDefinition variableDef = getVariableDefinitionFromName(variableName);
+		
+		if(null != variableDef){
+			return variableDef.definingStruct;
 		}
-		return r.get(listSz-1).getDefiningStruct();		
+		
+		return null;		
 	}
 	
 
@@ -576,7 +602,7 @@ public class ParseState {
 	 */
 	public List<VariableDefinition> getNamedStructList(String name){		
 		
-		VariableName variableName = getVariableName(name);
+		VariableName variableName = createVariableName(name);
 		return this.globalVariableNamesMMap.get(variableName);			
 	}
 	

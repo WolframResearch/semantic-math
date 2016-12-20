@@ -30,22 +30,22 @@ public class SearchCombined {
 	//should update at the very beginning!
 	//private static final int LIST_INDEX_SHIFT = 1;
 	
-	public static void initializeSearchWithResource(BufferedReader freqWordsFileBuffer, BufferedReader texSourceFileBuffer){		
+	/*public static void initializeSearchWithResource(BufferedReader freqWordsFileBuffer, BufferedReader texSourceFileBuffer){		
 		CollectThm.setWordFrequencyBR(freqWordsFileBuffer);
 		CollectThm.setResources(texSourceFileBuffer);		
-	}
+	}*/
 	
 	/**
 	 * Set resources for list of resource files.
 	 * @param freqWordsFileBuffer
-	 * @param texSourceFileBuffer
+	 * @param texSourceFileBufferList
 	 * @param macrosReader
 	 */
-	public static void initializeSearchWithResource(BufferedReader freqWordsFileBuffer, List<BufferedReader> texSourceFileBuffer,
+	public static void initializeSearchWithResource(BufferedReader freqWordsFileBuffer, List<BufferedReader> texSourceFileBufferList,
 			BufferedReader macrosReader){
 		//CollectFreqWords.setResources(freqWordsFileBuffer);
 		CollectThm.setWordFrequencyBR(freqWordsFileBuffer);
-		CollectThm.setResources(texSourceFileBuffer, macrosReader);	
+		CollectThm.setResources(texSourceFileBufferList, macrosReader);	
 		ProcessInput.setResources(macrosReader);
 	}
 	

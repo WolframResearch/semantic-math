@@ -39,13 +39,14 @@ public class ParseRun {
 			int[] curContextVec = ThmP1.getParseContextVector();
 			parseContextVecList.add(curContextVec);
 			//get context vector
-			if(isVerbose) System.out.println("cur vec: " + Arrays.toString(curContextVec));
+			//if(isVerbose) System.out.println("cur vec: " + Arrays.toString(curContextVec));
+			
 		}
 		
 		if(isVerbose) {
 			System.out.println("@@@" + parseState.getHeadParseStruct());
 			BigInteger relationVec = parseState.getRelationalContextVec();
-			System.out.println("Relational Vector num of bits set: " + (relationVec == null ? "" : relationVec.bitCount()));
+			System.out.println("Relational Vector num of bits set: " + (relationVec == null ? "vec null." : relationVec.bitCount()));
 		}
 		parseState.logState();
 		
@@ -65,6 +66,7 @@ public class ParseRun {
 			System.out.println(pair);
 		}
 		//parseState.parseRunCleanUp();
+		
 	}
 
 }

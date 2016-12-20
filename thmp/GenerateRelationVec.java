@@ -133,6 +133,7 @@ public class GenerateRelationVec {
 	/**
 	 * Deserializes the relationVecList.
 	 */
+	@SuppressWarnings("unchecked")
 	private static List<BigInteger> deserializeRelationVecList(){
 		
 		List<BigInteger> relationVecList = null;
@@ -157,6 +158,7 @@ public class GenerateRelationVec {
 		
 		try{
 			Object o = objectInputStream.readObject();
+			//@SuppressWarnings("unchecked")
 			relationVecList = (List<BigInteger>)o;
 			
 			/*for(BitSet relationVec : relationVecList){
@@ -185,11 +187,12 @@ public class GenerateRelationVec {
 	}
 	
 	/**
+	 * Commented out Dec 2016.
 	 * @deprecated
 	 * @param parseState
 	 * @param bitSetList
 	 */
-	private static void readThmFromFile(ParseState parseState, List<BigInteger> bitSetList){
+	/*private static void readThmFromFile(ParseState parseState, List<BigInteger> bitSetList){
 		FileReader fileReader = null;
 		BufferedReader br = null;
 		
@@ -214,6 +217,6 @@ public class GenerateRelationVec {
 		}finally{
 			silentClose(br);
 		}
-	}
+	}*/
 	
 }

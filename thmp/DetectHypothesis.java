@@ -153,7 +153,7 @@ public class DetectHypothesis {
 		}
 		
 		try{
-			List<DefinitionListWithThm> defThmList = readThm(inputBF, parseState);
+			List<DefinitionListWithThm> defThmList = readAndParseThm(inputBF, parseState);
 			System.out.println("DefinitionListWithThm list: " + defThmList);
 			DefinitionListWithThmStrList.add(defThmList.toString()+ "\n");
 			for(DefinitionListWithThm def : defThmList){				
@@ -163,16 +163,6 @@ public class DetectHypothesis {
 			e.printStackTrace();
 		}
 		
-		/*
-		while(sc.hasNextLine()){			
-			String nextLine = sc.nextLine();			
-			if(nextLine.matches("^\\s*$")) continue;
-			System.out.println("*~~~*");
-			System.out.println(nextLine + "\n");
-			parseInputVerbose(nextLine, parseState);
-		}*/
-		
-		//sc.close();	
 		//serialize parsedExpressionList to persistent storage
 		FileOutputStream fileOuputStream = null;
 		ObjectOutputStream objectOutputStream = null;
@@ -262,7 +252,7 @@ public class DetectHypothesis {
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
-	private static List<DefinitionListWithThm> readThm(BufferedReader srcFileReader, 
+	private static List<DefinitionListWithThm> readAndParseThm(BufferedReader srcFileReader, 
 			//List<String> thmWebDisplayList,
 			//List<String> bareThmList, 
 			ParseState parseState) throws IOException{
@@ -387,6 +377,8 @@ public class DetectHypothesis {
 			}
 		}
 
+		parseState.writeUnknownWordsToFile();
+		
 		// srcFileReader.close();
 		// System.out.println("Inside ThmInput, thmsList " + thms);
 		// System.out.println("thmWebDisplayList " + thmWebDisplayList);
@@ -515,7 +507,7 @@ public class DetectHypothesis {
 			//System.out.println("^^^$^%%% &^^^ possibleVar: "+ possibleVar);
 			
 			//Get a variableName and check if a variable has been defined.
-			VariableName possibleVariableName = ParseState.getVariableName(possibleVar);
+			VariableName possibleVariableName = ParseState.createVariableName(possibleVar);
 			VariableDefinition possibleVarDef = parseState.getVariableDefinitionFromName(possibleVariableName);
 			
 			//System.out.println("^^^ variableNamesMMap: "+ variableNamesMMap);
@@ -527,7 +519,7 @@ public class DetectHypothesis {
 			if(null == possibleVarDef){
 				Matcher bracketSeparatorMatcher = BRACKET_SEPARATOR_PATTERN.matcher(possibleVar);
 				if(bracketSeparatorMatcher.find()){
-					possibleVariableName = ParseState.getVariableName(bracketSeparatorMatcher.group(1));
+					possibleVariableName = ParseState.createVariableName(bracketSeparatorMatcher.group(1));
 					possibleVarDef = parseState.getVariableDefinitionFromName(possibleVariableName);				
 				}
 			}

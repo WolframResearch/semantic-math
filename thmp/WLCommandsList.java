@@ -136,15 +136,16 @@ public class WLCommandsList {
 		/*****General-scope commands******/
 		//triggered by types. Add such judiciously.
 		//the commands with types as keys are triggered only if no specific-scope commands have been triggered
+		//e.g. $f$ maps $X$ to $Y$.
 		wLCommandMapBuilder.put("verb", addCommand(new PBuilder("symb|ent|pro|noun", null, true), 
 				new PBuilder("pro", "we", WLCommand.PosTermType.NEGATIVE),
 				new PBuilder("Connective["),  new PBuilder("verb", null, true, true, false), new PBuilder("]"),
-				new PBuilder("symb|ent|noun|prep|phrase", null, true, false, false),
+				new PBuilder("symb|ent|noun|prep|phrase", null, true, false, false).addRelationType(RelationType._IS),
 				new PBuilder(", {Qualifier->", "OPT"), 
 				//the relation should incorporate several types. 
 				new PBuilder("prep", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}", "OPT")
 				));		
-		
+		//e.g. "The field extension $F/Q$ splits."
 		wLCommandMapBuilder.put("verbAlone", addCommand(new PBuilder("symb|ent|pro|noun", null, true).addRelationType(RelationType._IS), 
 				new PBuilder("pro", "we", WLCommand.PosTermType.NEGATIVE),
 				new PBuilder("~HasProperty~["),  new PBuilder("verbAlone", null, true, true, false), new PBuilder("]")));		
@@ -337,9 +338,9 @@ public class WLCommandsList {
 				new PBuilder("assert|ent", null, true) ));
 		// "A has property B", eg "chains of ideals have same length"
 		//WLCommandMapBuilder.put("have", addCommand(new String[] { "ent|symb|pro, , true", "verb, have|has, trigger", "\\HasProperty[", ", , true", "]"}));
-		wLCommandMapBuilder.put("have", addCommand(new PBuilder("ent|symb|pro|noun", null, true),
+		wLCommandMapBuilder.put("have", addCommand(new PBuilder("ent|symb|pro|noun", null, true).addRelationType(RelationType._IS),
 				new PBuilder("verb", "have|has", false, true, false), 
-				new PBuilder("~HasProperty~"), new PBuilder(null, null, true) ));
+				new PBuilder("~HasProperty~"), new PBuilder(null, null, true).addRelationType(RelationType.IS_) ));
 				
 		/*
 		WLCommandMapBuilder.put("is contained", addCommand(new String[] { "symb|ent|pro, , true", "auxpass, , trigger",

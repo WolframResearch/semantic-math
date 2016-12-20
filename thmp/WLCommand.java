@@ -63,8 +63,8 @@ import thmp.utils.Buggy;
 
 public class WLCommand implements Serializable{
 	
-	private static final long serialVersionUID = 1L;
-
+	private static final long serialVersionUID = -1217116893288860792L;
+	
 	//word that would trigger this WLCommand
 	private String triggerWord;
 	
@@ -73,6 +73,11 @@ public class WLCommand implements Serializable{
 	
 	/* commandsCountMap deliberately immutable, should not be modified during runtime */
 	private Map<WLCommandComponent, Integer> commandsCountMap;
+	
+	//List of commands that have been composited (absorbed) into the current one.
+	//E.g. "If assert", and the assert picks up a command by itself.
+	private List<WLCommand> composedWLCommandsList;
+	
 	//private String triggerWord; 
 	//which WL expression to turn into using map components and how.
 	//need to keep references to Structs in commandsMap
@@ -201,6 +206,14 @@ public class WLCommand implements Serializable{
 		return this.commandsMap;
 	}
 	
+	public void addComposedWLCommands(WLCommand composedCommand){
+		this.composedWLCommandsList.add(composedCommand);
+	}
+	
+	public List<WLCommand> composedWLCommandsList(){
+		return this.composedWLCommandsList;
+	}
+	
 	/**
 	 * @return the commandWrapper
 	 */
@@ -242,8 +255,7 @@ public class WLCommand implements Serializable{
 	 */
 	public static class ImmutableWLCommand extends WLCommand{
 		
-		//public ImmutableWLCommand(){
-		//}
+		private static final long serialVersionUID = 7387553707370757534L;
 		
 		/**
 		 * Static factory pattern.
@@ -313,12 +325,9 @@ public class WLCommand implements Serializable{
 				return new ImmutableWLCommand(triggerWord, commandsCountMap, 
 						posTermList, totalComponentCount, triggerWordIndex, 
 						optionalTermsCount, optionalTermsGroupCountMap);				
-			}
-			
-		}
-		
-	}
-	
+			}			
+		}		
+	}	
 	
 	/**
 	 * PosTerm stores a part of speech term, and the position in commandsMap
@@ -836,6 +845,7 @@ public class WLCommand implements Serializable{
 		//commandsCountMap deliberately immutable, should not be modified during runtime
 		newCommand.commandsCountMap = new HashMap<WLCommandComponent, Integer>(((WLCommand)curCommand).commandsCountMap) ;
 		//newCommand.commandsCountMap = ((WLCommand)curCommand).commandsCountMap;
+		newCommand.composedWLCommandsList = new ArrayList<WLCommand>();
 		
 		//ImmutableMap.copyOf(curCommand.commandsCountMap);
 		newCommand.posTermList = new ArrayList<PosTerm>(((WLCommand)curCommand).posTermList);

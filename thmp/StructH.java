@@ -446,14 +446,17 @@ public class StructH<H> extends Struct{
 			int wrapperListSz = WLCommandWrapperList.size();
 			//wrapperListSz should be > 0, since list is created when first wrapper is added
 			WLCommandWrapper curWrapper = WLCommandWrapperList.get(wrapperListSz - 1);
+			WLCommand composedCommand = curWrapper.WLCommand();
+			
 			if(curCommand != null){
-				int commandNumUnits = WLCommand.commandNumUnits(curWrapper.WLCommand());
+				int commandNumUnits = WLCommand.commandNumUnits(composedCommand);
 			 	WLCommand.increment_commandNumUnits(curCommand, commandNumUnits);
 			}
 			System.out.println("^^^curWrapper: " + curWrapper);
 			
 			//been built into one command already
 			this.WLCommandStrVisitedCount++;
+			curCommand.addComposedWLCommands(composedCommand);
 			return curWrapper.WLCommandStr();			
 		}		
 		//String name = this.struct.get("name");

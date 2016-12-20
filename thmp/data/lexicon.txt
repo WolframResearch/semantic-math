@@ -16,6 +16,7 @@ discrete adj
 additive adj
 direct sum ent
 set ent
+subfield ent
 point ent
 conjugation ent
 categories ent_comp

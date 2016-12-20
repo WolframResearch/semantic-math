@@ -61,7 +61,7 @@ public class CollectThm {
 	//private static final List<String> rawFileStrList = Arrays.asList(new String[]{"src/thmp/data/functional_analysis_operator_algebras/distributions.txt"});
 
 	//There are intentionally *not* final.
-	private static volatile BufferedReader rawFileReader;
+	//private static volatile BufferedReader rawFileReader;
 	//BufferedReader for context vectors.
 	private static volatile BufferedReader contextVecBR;
 	//corresponding list of file readers
@@ -70,10 +70,13 @@ public class CollectThm {
 	private static volatile BufferedReader macrosDefReader;
 	//wordFrequency.txt containing word frequencies and their part of speech (pos)
 	private static BufferedReader wordFrequencyBR;
-	//words that should be included as math words, but occur too frequently in math texts
-	//to be detected as non-fluff words.
+	/*words that should be included as math words, but occur too frequently in math texts
+	* to be detected as non-fluff words. Put words here to be intentionally included in words map.
+	* Only singletons here. N-grams should be placed in N-gram files.
+	*/
 	private static final String[] SCORE1MATH_WORDS = new String[]{"ring", "field", "ideal", "finite", "series",
-			"complex", "combination", "regular", "domain", "local", "smooth", "map", "definition", "standard", "prime", "every"};
+			"complex", "combination", "regular", "domain", "local", "smooth", "map", "definition", "standard", "prime", "every",
+			"injective", "surjective"};
 	//additional fluff words to add, that weren't listed in 
 	private static final String[] ADDITIONAL_FLUFF_WORDS = new String[]{"tex", "is", "are", "an"};
 	//file to be changed
@@ -100,13 +103,13 @@ public class CollectThm {
 	 * Initialize class with reader, same as in static initializer. This needs
 	 * to be called before initializing GetFreqWords subclass, if the maps are
 	 * to be built from a particular bufferedReader.
-	 * 
+	 * Commented out Dec 2016. To be removed Jan 2017.
 	 * @param wordsFileReader
 	 */
-	public static void setResources(BufferedReader srcFileReader) {
+	/*public static void setResources(BufferedReader srcFileReader) {
 		rawFileReader = srcFileReader;
 		//System.out.print("first passed in: " +srcFileReader);		
-	}
+	}*/
 	
 	/**
 	 * Set context vector BufferedReader.

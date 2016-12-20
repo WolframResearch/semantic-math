@@ -27,7 +27,7 @@ public class StructA<A, B> extends Struct{
 	private double score;
 	private String type; //or, and, adj, pro etc, cannot ent
 	//private String type1; //type of prev1, , al, string etc. Is this used??
-	private String type2; //type of prev2. Also not used!
+	//private String type2; //type of prev2. Also not used! Commented out Dec 2016.
 	private NodeType PREV1_TYPE;
 	private NodeType PREV2_TYPE;
 	
@@ -73,15 +73,26 @@ public class StructA<A, B> extends Struct{
 		this.structList = structList;
 	}
 	
+	//should use different constructors to take in either Struct or String, rather than A, B !!!
+	//so don't need the suppressWarnings
+	@SuppressWarnings("unchecked")
 	public StructA(A prev1, NodeType prev1Type, B prev2, NodeType prev2Type, String type){	
 		this.PREV1_TYPE = prev1Type;
 		this.PREV2_TYPE = prev2Type;
+		if(prev1Type == NodeType.STR){
+			this.prev1 = (A)((String)prev1).trim();
+		}else{
+			this.prev1 = prev1;	
+		}		
+		if(prev2Type == NodeType.STR){
+			this.prev2 = (B)((String)prev2).trim();
+		}else{
+			this.prev2 = prev2;	
+		}
 		this.prev1 = prev1;		
 		this.prev2 = prev2;
 		this.type = type; 
-		//if(!type.equals("pre")){
 		this.numUnits = 1;
-		//}
 		this.score = 1;
 	}
 	
@@ -249,7 +260,6 @@ public class StructA<A, B> extends Struct{
 	 */
 	@Override
 	public String simpleToString(boolean includeType, WLCommand curCommand){
-		//if(this.posteriorBuiltStruct != null) return "";		
 
 		//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
 		if(this.WLCommandWrapperList != null){
@@ -257,8 +267,10 @@ public class StructA<A, B> extends Struct{
 			//wrapperListSz should be > 0, since list is created when first wrapper is added
 			
 			WLCommandWrapper curWrapper = WLCommandWrapperList.get(wrapperListSz - 1);
+			WLCommand composedCommand = curWrapper.WLCommand();
+			
 			if(curWrapper != null){
-				int commandNumUnits = WLCommand.commandNumUnits(curWrapper.WLCommand());
+				int commandNumUnits = WLCommand.commandNumUnits(composedCommand);
 				if(!this.type.equals("pre")){
 					WLCommand.increment_commandNumUnits(curCommand, commandNumUnits);
 				}				
@@ -268,12 +280,12 @@ public class StructA<A, B> extends Struct{
 				this.commandBuilt = curCommand;
 				this.WLCommandStrVisitedCount++;
 			}else if(!curCommand.equals(this.commandBuilt)){
-				this.WLCommandStrVisitedCount++;
-				
+				this.WLCommandStrVisitedCount++;				
 			}
 			
 			System.out.println("WLCommandStrVisitedCount" + this.WLCommandStrVisitedCount);
 			//System.out.println("++++++===curWrapper " +curWrapper.WLCommandStr() + " " + this );
+			curCommand.addComposedWLCommands(composedCommand);
 			return curWrapper.WLCommandStr();			
 		}		
 		
@@ -381,7 +393,7 @@ public class StructA<A, B> extends Struct{
 		}
 		
 		if(prev2 != null){
-			String prev2String = "";
+			//String prev2String = "";
 			StringBuilder prev2SB = new StringBuilder(20);
 			
 			if((PREV2_TYPE.isTypeStruct())){
@@ -401,7 +413,7 @@ public class StructA<A, B> extends Struct{
 					 prev2SB.append(prev2WrapperList.get(0).WLCommandStr());
 				 }
 			}else if(PREV2_TYPE.equals(NodeType.STR) && !((String)prev2).matches("\\s*")){			
-				prev2String += ", " + prev2;	
+				//prev2String += ", " + prev2;	
 				prev2SB.append(", " + prev2);
 			}
 			//tempStr += inConj ? "{" + prev2String + "}" : prev2String;
@@ -426,11 +438,16 @@ public class StructA<A, B> extends Struct{
 	@Override
 	public String contentStr(){		
 		String contentStr = "";
-		if(PREV1_TYPE != null && PREV1_TYPE.equals(NodeType.STR)){
+		if(PREV1_TYPE != null && PREV1_TYPE.equals(NodeType.STR))
+		{
 			contentStr = (String) prev1;			
 		}
-		if(PREV2_TYPE != null && PREV2_TYPE.equals(NodeType.STR)){
-			contentStr += " " + (String) prev2;
+
+		if(PREV2_TYPE != null && PREV2_TYPE.equals(NodeType.STR))
+		{			
+			String prev2Str = contentStr.equals("") 
+					? (String) prev2 : " " + (String) prev2;
+			contentStr += prev2Str;
 		}
 		return contentStr;
 	}

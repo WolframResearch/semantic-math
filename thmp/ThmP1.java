@@ -229,8 +229,9 @@ public class ThmP1 {
 		//the commandNumUnits associated to the WLCommand that gives this parsedStr.
 		private int commandNumUnits;
 		//the WLCommand associated to this ParsedPair.
-		//don't serialize wlCommand, will introduce infinite recursion
-		//when trying to serialize this.
+		//Don't serialize wlCommand, will introduce infinite recursion
+		//when trying to serialize this, because of circular referencing 
+		//between WLCommand and WLCommandWrap.
 		private transient WLCommand wlCommand;
 		//the ParseStructType of this parsedStr, eg "STM", "HYP", etc.
 		private ParseStructType parseStructType;
@@ -1110,7 +1111,7 @@ public class ThmP1 {
 				
 			}
 			else if (!curWord.matches("\\s+")) { // try to minimize this case.
-
+				
 				System.out.println("word not in dictionary: " + curWord);
 				pairs.add(new Pair(curWord, ""));
 
@@ -1118,8 +1119,8 @@ public class ThmP1 {
 				// collect & write unknown words to file
 					unknownWords.add(curWord);
 				}
-			} else { // curWord doesn't count
-				
+			} else { 
+				// must be blank space at this point, so curWord doesn't count
 				continue;
 			}
 
@@ -1170,9 +1171,11 @@ public class ThmP1 {
 			String curWord = curpair.word();
 			int curWordLen = curWord.length();
 			
+			//don't already have this pos in dictionary
+			boolean unknownWordPos = false;
 			//System.out.println("curpair " + curpair);
 			if (curpair.pos().equals("")) {
-
+				unknownWordPos = true;
 				prevType = index > 0 ? pairs.get(index - 1).pos() : "";
 				nextType = index < pairsLen - 1 ? pairs.get(index + 1).pos() : "";
 
@@ -1253,6 +1256,10 @@ public class ThmP1 {
 				System.out.println("Using posTagger to tag word: " +  curWord + " with pos: " + pos);
 			}
 			//}
+			String pos = curpair.pos();
+			if(unknownWordPos && !pos.equals("")){
+				parseState.addUnknownWordPosToMap(curWord, pos);
+			}
 		}
 		
 		//turn "symb" pos into "ent" if followed by "pre",
@@ -1418,7 +1425,7 @@ public class ThmP1 {
 				//System.out.println("^^^^^^^^^^put word " + curWord);
 				tempMap.put(curWord, "ppt");
 				// mark the pos field in those absorbed pairs as index in
-					// mathEntList
+				// mathEntList
 				curPair.set_pos(entPosStr);
 				k++;
 			}
@@ -1987,7 +1994,7 @@ public class ThmP1 {
 									struct1.set_prev2(name);
 								}
 							}
-
+							
 							if (!struct2.isStructA() && !type1.matches("verb|pre")) {
 								if (!foundFirstEnt) {
 									firstEnt = struct1;
@@ -2011,10 +2018,9 @@ public class ThmP1 {
 							if (!struct1.isStructA() && type2.matches("pre") && struct2.prev1() != null
 									&& struct2.prev1().toString().matches("of") && j + 1 < len
 									&& inputStructList.get(j + 1).type().equals("symb")) {
-								// create new child
-								///
+								
 								List<Struct> childrenList = struct1.children();
-								//*****
+							
 								//System.out.println("STRUCT1 " + struct1 + " CHILDREN " + struct1.children());
 								
 								boolean childAdded = false;
@@ -2030,14 +2036,12 @@ public class ThmP1 {
 									}
 								}
 								if(!childAdded){
-									//((StructH<?>) newStruct).add_child(struct2, childRelation);
 									struct1.add_child(inputStructList.get(j + 1), new ChildRelation("of"));
 									inputStructList.get(j + 1).set_parentStruct(struct1);
 								}
 								
-								// mx.get(i).set(j + 1, struct1);
 								mx.get(i).get(j + 1).add(struct1);
-								//skipCol = true;
+								
 								nextColStartRow = i;
 							} else if (combined.equals("pro_verb")) {
 								if (struct1.prev1().equals("we") && struct2.prev1().equals("say")) {
@@ -2121,35 +2125,26 @@ public class ThmP1 {
 									l++;
 								}
 
-								// ******* be careful using first ent
-								// record the symbol/given name associated to an
-								// ent, in case referring to it later.
+								// Record the symbol/given name associated to an
+								// ent, needed if referring to it later.
 								if (firstEnt != null) {
 									StructA<Struct, String> parentStruct = 
 											new StructA<Struct, String>(firstEnt, NodeType.STRUCTH, 
 													called, NodeType.STR, "def", mx.get(0).get(len - 1));
 									firstEnt.set_parentStruct(parentStruct);
 									
-									// mx.get(0).set(len - 1, parentStruct);
 									mx.get(0).get(len - 1).add(parentStruct);
 
-									// add to mathObj map, <--should not modify during runtime! Should add to 
-									//custom map
-									int q = 0;
+									/*int q = 0;
 									String[] calledArray = called.split(" ");
 									String curWord = "";
 
 									while (q < calledArray.length - 1) {
-										curWord += calledArray[q];
-										// if(q != calledArray.length - 1)
-										curWord += " ";
-
-										//mathObjMap.put(curWord, "COMP");
+										curWord += calledArray[q] + " ";
 										q++;
 									}
-									curWord += calledArray[calledArray.length - 1];
-									//mathObjMap.put(curWord, "ent");
-
+									curWord += calledArray[calledArray.length - 1];*/
+									
 									// recentEnt is defined to be "called"
 									parseState.addLocalVariableStructPair(called, recentEnt);
 									
@@ -2167,33 +2162,11 @@ public class ThmP1 {
 							// and if the next word is a verb, it is not
 							// singular
 							// ie F and G is isomorphic
-
-							//////// %%%%%%%%%%% NPE for "subset F of G and
-							//////// subset G of H"
-							// because G gets null'ed out after "of". Need
-							//////// better strategy!
 							
 							// iterate through the List at position (i-t, i-1), for conj/disj
 							if (i > 0 && i + 1 < len) {
 
 								/*
-								 * List<Struct> iMinusOneStructList = mx.get(i -
-								 * 1).get(i - 1).structList();
-								 * 
-								 * if (type1.matches("or|and") &&
-								 * iMinusOneStructList.size() > 0) {
-								 * 
-								 * // Iterator<Struct> iMinusOnestructIter = //
-								 * mx.get(i-1).get(i-1).iterator();
-								 * 
-								 * for (Struct iMinusOneStruct :
-								 * iMinusOneStructList) {
-								 * 
-								 * if(type1.matches("and"))
-								 * System.out.print("debug"); if
-								 * (type2.equals(iMinusOneStruct.type())) {
-								 *							
-								 * 
 								 * // set parent struct in row // above //
 								 * mx.get(i - 1).set(j, // parentStruct);
 								 * mx.get(i - 1).get(j).add(parentStruct); //
@@ -2208,8 +2181,6 @@ public class ThmP1 {
 								if (type1.matches("or|and")) {
 									
 									int t = 1;
-									//boolean stopLoop = false;
-
 									searchConjLoop: while (i - t > -1) {
 										//i-1 because looking at the column before i.
 										List<Struct> structArrayList = mx.get(i - t).get(i - 1).structList();
@@ -2961,7 +2932,7 @@ public class ThmP1 {
 		}else{
 			parseContextVector = contextVecList.get(finalOrderingList.get(0));
 			
-			System.out.println("Best context vector added: " +  Arrays.toString(parseContextVector));
+			//System.out.println("Best context vector added: " +  Arrays.toString(parseContextVector));
 		}
 
 		ParseStruct bestParseStruct = headParseStructList.get(bestIndex);
@@ -3585,8 +3556,9 @@ public class ThmP1 {
 								// assumes that symb is a leaf struct! Need to
 								// make more robust. check to ensure symb is in fact a leaf.
 								//variableNamesMap.put(tempSymStruct.prev1().toString(), tempEntStruct);
-								parseState.addLocalVariableStructPair(tempSymStruct.prev1().toString(), tempEntStruct);
-								tempEntStruct.struct().put("called", tempSymStruct.prev1().toString());
+								String name = tempSymStruct.prev1().toString();
+								parseState.addLocalVariableStructPair(name, tempEntStruct);
+								tempEntStruct.struct().put("called", name);
 								break ploop;
 							}
 						}
@@ -4289,7 +4261,7 @@ public class ThmP1 {
 					}
 					//add the punctuation to use later
 					sentenceBuilder.append(" ").append(curWord);
-					System.out.println("curWord: " +curWord+". sentence to append " + sentenceBuilder.toString());
+					//System.out.println("curWord: " +curWord+". sentence to append " + sentenceBuilder.toString());
 					
 					sentenceList.add(sentenceBuilder.toString());
 					sentenceBuilder.setLength(0);

@@ -515,6 +515,9 @@ public class ThmP1TestRun {
 			st = " Let $R$ be a ring, and let $M$ be a finite $R$-module. There exists a filtration by $R$-submodules";
 			st = "There exists an integer $a$ such that $(x + y)^{p^a}, p^a(x + y) \\in \\mathbf{Z}[x^{p^n}, p^nx, y^{p^m}, p^my]$";
 			st = "the small subfield of $F$ is $Q$";
+			st = "if $F$ is a field, $F$ is a ring, and if $F$ is a group"; //<--to parse, the "and"!
+			st = "Let $F$ be a field. $F$ is a ring";
+			//st = "the field $F$ is a ring";
 			//st = "then $x> 0$";
 			//st = "if $F$ is a field";
 			//st = "$f$ induces a map of fields";
@@ -586,9 +589,9 @@ public class ThmP1TestRun {
 			
 			/*******whether or not to process text from above********/			
 			boolean processText = true;
+			ParseState parseState = parseStateBuilder.build();
 			
 			if(processText){
-				ParseState parseState = parseStateBuilder.build();
 				parseInputVerbose(st, parseState);
 			}
 			
@@ -598,12 +601,11 @@ public class ThmP1TestRun {
 				String inputStr;
 				while(sc.hasNextLine()){
 					inputStr = sc.nextLine();
-					parseInput(inputStr);
+					parseInputVerbose(inputStr, parseState);
 				}
 				sc.close();
 			}
 			
-			//System.out.println("****" + ThmP1.getParsedExpr() + "******");
 			/*******whether to process file or not********/
 			boolean processFile = false;
 			
@@ -611,7 +613,7 @@ public class ThmP1TestRun {
 				
 				//Scanner sc = new Scanner(new File("src/thmp/data/samplePaper2.txt"));
 				Scanner sc = new Scanner(new File("src/thmp/data/collectThmTestSample.txt"));
-				ParseState parseState = parseStateBuilder.build();
+				parseState = parseStateBuilder.build();
 				
 				while(sc.hasNextLine()){					
 					
@@ -630,7 +632,7 @@ public class ThmP1TestRun {
 				sc.close();
 			}
 			//p1.parse(p1.tokenize(p1.preprocess("characteristic of Fp is p".split(" "))));
-			
+			parseState.writeUnknownWordsToFile();
 		}
 	
 	/**
@@ -681,7 +683,7 @@ public class ThmP1TestRun {
 		}
 	}
 	
-		private static void parseInput(String inputStr){
+		/*private static void parseInput(String inputStr){
 			String[] strAr = ThmP1.preprocess(inputStr);
 			
 			List<int[]> parseContextVecList = new ArrayList<int[]>();
@@ -717,5 +719,5 @@ public class ThmP1TestRun {
 				System.out.println(pair);
 			}
 			parseState.parseRunCleanUp();
-		}
+		}*/
 }

@@ -87,8 +87,7 @@ public class RelationVec implements Serializable{
 	public static BigInteger buildRelationVec(Multimap<ParseStructType, ParsedPair> parsedPairMMap){
 		
 		//bit vector whose set bits at particular words indicate the relations 
-		//these words play in context. 
-		
+		//these words play in context. bitPosList lists the bits to be set.
 		int maxBitPos = 0;
 		List<Integer> bitPosList = new ArrayList<Integer>();
 		
@@ -101,36 +100,18 @@ public class RelationVec implements Serializable{
 			if(null == wlCommand){ 
 				continue;			
 			}
-			List<PosTerm> posList = WLCommand.posTermList(wlCommand);
-			
+			/////
 			boolean isParseStructTypeHyp = (parseStructType == ParseStructType.HYP
 					|| parseStructType == ParseStructType.HYP_iff);
+
+			maxBitPos = fillByteArrayFromCommand(wlCommand, isParseStructTypeHyp,
+					maxBitPos, bitPosList);			
 			
-			for(PosTerm posTerm : posList){
-				List<RelationType> posTermRelationTypeList = posTerm.relationType();
-				if(!posTermRelationTypeList.isEmpty()){
-					
-					for(RelationType posTermRelationType : posTermRelationTypeList){
-						Struct posTermStruct = posTerm.posTermStruct();
-						
-						if(null == posTermStruct && posTerm.isOptionalTerm()){
-							continue;
-						}
-						
-						String contentStr = posTermStruct.contentStr();
-						//modulus and residue (like remainder) as in abstract algebra.
-						int[] multiplicityAr = posTermRelationType.vectorOffsetArray();
-						
-						//add new indices to bitPosList
-						for(int multiplicity : multiplicityAr){
-							int curBitPos = setBitPosList(contentStr, bitPosList, multiplicity, posTermRelationType, isParseStructTypeHyp);
-							if(curBitPos > maxBitPos){
-								maxBitPos = curBitPos;
-							}
-						}
-					}
-				}
-			}			
+			//go through the composited commands, as they contain relational data as well.
+			for(WLCommand compositedWLCommand : wlCommand.composedWLCommandsList()){
+				maxBitPos = fillByteArrayFromCommand(compositedWLCommand, isParseStructTypeHyp,
+						maxBitPos, bitPosList);			
+			}
 		}
 		
 		int byteArrayLength = maxBitPos/NUM_BITS_PER_BYTE;
@@ -139,11 +120,59 @@ public class RelationVec implements Serializable{
 		//left after division by 8.
 		byte[] byteArray = new byte[byteArrayLength + 1];
 		
+		System.out.println("*&&&&&&& In RelationVec.java, positions of bits to be set: " + bitPosList);
 		//fill in byteArray given the list of positions of bits to set
 		fillByteArray(byteArray, bitPosList);
 		BigInteger indexBitBigInt = new BigInteger(1, byteArray);
 		//if(true) throw new IllegalStateException(indexBitSet.toString());
 		return indexBitBigInt;		
+	}
+	
+	/**
+	 * Auxiliary method to find bit positions from WLCommand.
+	 * @param wlCommand
+	 * @param isParseStructTypeHyp
+	 * @param maxBitPos
+	 * @param bitPosList
+	 * @return
+	 */
+	private static int fillByteArrayFromCommand(WLCommand wlCommand, boolean isParseStructTypeHyp,
+			int maxBitPos, List<Integer> bitPosList){
+
+		List<PosTerm> posList = WLCommand.posTermList(wlCommand);
+		
+		for(PosTerm posTerm : posList)
+		{
+			Struct posTermStruct = posTerm.posTermStruct();
+			
+			if(null == posTermStruct //&& posTerm.isOptionalTerm()
+					){
+				continue;
+			}
+			
+			String contentStr = posTermStruct.contentStr();
+			System.out.println("c&&&&&&&&&&&&&&&ontentStr: " + contentStr + " posTerm " + posTerm);
+			
+			List<RelationType> posTermRelationTypeList = posTerm.relationType();
+			
+			if(!posTermRelationTypeList.isEmpty())
+			{					
+				for(RelationType posTermRelationType : posTermRelationTypeList)
+				{	
+					//offset and residue (like remainder): num = offset * modulus + residue.
+					int[] multiplicityAr = posTermRelationType.vectorOffsetArray();
+					
+					//add new indices to bitPosList
+					for(int multiplicity : multiplicityAr){
+						int curBitPos = setBitPosList(contentStr, bitPosList, multiplicity, posTermRelationType, isParseStructTypeHyp);
+						if(curBitPos > maxBitPos){
+							maxBitPos = curBitPos;
+						}
+					}
+				}
+			}
+		}
+		return maxBitPos;
 	}
 	
 	/**
@@ -207,6 +236,7 @@ public class RelationVec implements Serializable{
 		
 		//repeat for the whole of termStr:
 		Integer residue = keywordDict.get(termStr);
+		//if(termStr.equals("injective")) throw new IllegalStateException(residue+"");
 		
 		if(null != residue){
 			int bitPos = parseContextVectorSz*modulus + residue;
