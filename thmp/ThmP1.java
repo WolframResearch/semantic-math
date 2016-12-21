@@ -37,7 +37,6 @@ import thmp.Struct.Article;
 import thmp.Struct.ChildRelation;
 import thmp.Struct.ChildRelationType;
 import thmp.Struct.NodeType;
-import thmp.ThmP1.ParsedPair;
 import thmp.ThmP1AuxiliaryClass.ConjDisjVerbphrase;
 import thmp.ThmP1AuxiliaryClass.ConjDisjVerbphrase.ConjDisjType;
 import thmp.search.NGramSearch;
@@ -46,10 +45,6 @@ import thmp.search.TriggerMathThm2;
 import thmp.utils.Buggy;
 import thmp.utils.WordForms;
 import thmp.utils.WordForms.TokenType;
-
-/* 
- * contains hashtable of entities (keys) and properties (values)
- */
 
 public class ThmP1 {
 
@@ -136,7 +131,7 @@ public class ThmP1 {
 	private static final String[] NO_FUSE_ENT = new String[]{"map"};
 	private static final Set<String> noFuseEntSet;
 	private static final Pattern PUNCTUATION_PATTERN = Pattern.compile("(\\.|;|,|!|:)$");
-	private static final boolean COLLECT_UNKNOWN_WORDS = false;
+	
 	//used in dfs, to determine whether to iterate over.
 	private static final double LONG_FORM_SCORE_THRESHOLD = .7;
 	//least num of iterations, even if scores are below LONG_FORM_SCORE_THRESHOLD.
@@ -147,36 +142,13 @@ public class ThmP1 {
 	private static final Pattern CONJ_DISJ_VP_PATTERN = Pattern.compile("(?:conj|disj)_verbphrase");
 	private static final boolean DEBUG = InitParseWithResources.isDEBUG();
 	//contains backslash
-	private static final Pattern BACKSLASH_CONTAINMENT_PATTERN = Pattern.compile(".*\\\\.*");
+	private static final Pattern BACKSLASH_CONTAINMENT_PATTERN = Pattern.compile(".*[\\\\|$|=|\\{|\\}].*");
+	private static final Pattern DIGITS_PATTERN = Pattern.compile("\\d+");
 	
-	//private static int[] parseContextVector;
-	//private static int parseContextVectorSz;
-	//list of context vectors, need list instead of single vec, for non-spanning parses
-	//private static List<int[]> parseContextVectorList = new ArrayList<int[]>();
-	//private static final boolean PROCESS_NGRAM = false;
-	
-	//private static List<String> contextVectorList = new ArrayList<String>();	
-	
-	// part of speech, last resort after looking up entity property maps
-	// private static HashMap<String, String> pos;
+	private static final Pattern HYP_PATTERN = WordForms.get_HYP_PATTERN();
 	
 	static{
-		//should not rely on this check! fix Maps.java initialization
-		/*if(Maps.fixedPhraseMap() == null){
-			try {
-				Maps.readLexicon();
-				Maps.readFixedPhrases();
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-			}
-		}*/
-		/*Maps.buildMap();
-		try {
-			Maps.readLexicon();
-			Maps.readFixedPhrases();
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}*/		
+		
 		fluffMap = Maps.BuildMaps.fluffMap;
 		//mathObjMap = Maps.BuildMaps.mathObjMap;
 		fixedPhraseMap = Maps.fixedPhraseMap();
@@ -186,11 +158,7 @@ public class ThmP1 {
 		//adjMap = Maps.adjMap;
 		probMap = Maps.probMap();
 		posList = Maps.posList;
-		// list of given names, like F in "field F", for bookkeeping later
-		// hashmap contains <name, entity> pairs
-		// need to incorporate multi-letter names, like sigma
-		//variableNamesMap = ArrayListMultimap.create();
-
+	
 		parseContextVectorSz = TriggerMathThm2.keywordDictSize();
 		parseContextVector = new int[parseContextVectorSz];
 		
@@ -1124,11 +1092,6 @@ public class ThmP1 {
 				continue;
 			}
 
-			// if (addIndex) {
-			// pairIndex++;
-			// }
-			//addIndex = true;
-
 			int pairsSize = pairs.size();
 			//case only meaningful if pairsSize>2
 			if (pairsSize > 2) {
@@ -1173,7 +1136,7 @@ public class ThmP1 {
 			
 			//don't already have this pos in dictionary
 			boolean unknownWordPos = false;
-			//System.out.println("curpair " + curpair);
+			
 			if (curpair.pos().equals("")) {
 				unknownWordPos = true;
 				prevType = index > 0 ? pairs.get(index - 1).pos() : "";
@@ -1219,11 +1182,7 @@ public class ThmP1 {
 						mathIndexList.add(index);
 					}
 				}
-				//if(true) throw new IllegalStateException(bestCurType);
-				/*if(bestCurType.equals("ent")){ 
-					System.out.println("#### ent word: " + pairs.get(index).word());
-					
-				}*/				
+							
 			}
 			//if still no pos, try to guess part of speech based on endings 
 			if(curpair.pos().equals("")){
@@ -1232,15 +1191,14 @@ public class ThmP1 {
 				}				
 			}
 			//if yet still no pos found, use the Stanford NLP tagger, calls to which 
-			//does incur overhead.
-			//if(true){
-			//does not contain "\"
+			//does incur overhead.			
+			//Only try to find pos for words that don't contain "\"
 			if(curpair.pos().equals("") && !BACKSLASH_CONTAINMENT_PATTERN.matcher(curWord).matches()){
 				//tag the whole sentence to find the most accurate tag, since the tagger
 				//uses contextual tags to maximize entropy.
 				String taggedSentence = posTagger.tagString(sentence);
-				//must find word in tagged sentence, which looks like e.g. 
-				//"a_DT field_NN is_VBZ a_DT ring_NN".
+				//must find word in tagged sentence, which looks like 
+				//e.g. "a_DT field_NN is_VBZ a_DT ring_NN".
 				//better way to fish the pos out?
 				String wordToTag = " " + curWord + "_";
 				int wordStartIndex = taggedSentence.indexOf(wordToTag);
@@ -1255,7 +1213,7 @@ public class ThmP1 {
 				}
 				System.out.println("Using posTagger to tag word: " +  curWord + " with pos: " + pos);
 			}
-			//}
+			
 			String pos = curpair.pos();
 			if(unknownWordPos && !pos.equals("")){
 				parseState.addUnknownWordPosToMap(curWord, pos);
@@ -1266,16 +1224,15 @@ public class ThmP1 {
 		//e.g. "given $x$ in a compact space"
 		//pairsLen = pairs.size();
 		for (int index = 0; index < pairsLen; index++) {
-			//int pairsLen = pairs.size();
+			
 			curpair = pairs.get(index);
 			String curPos = curpair.pos();
-			
-			if(curPos.equals("symb") && index < pairsLen-1
+				
+			if(curPos.equals("symb") &&index < pairsLen-1 
 					&& pairs.get(index+1).pos().equals("pre") ){
 				curpair.set_pos("ent");
 				mathIndexList.add(index);
 			}
-			
 		}
 		
 		// map of math entities, has mathObj + ppt's
@@ -1305,7 +1262,7 @@ public class ThmP1 {
 			
 			//pos will be added later
 			boolean fuseSymbEnt = true;
-			//System.out.println("posMap for word " + mathObjName + ": " + posList);
+			
 			//start from 1, as extraPosList only contains *additional* pos
 			for(int l = 1; l < posList.size(); l++){
 				String pos = posList.get(l);
@@ -1317,7 +1274,6 @@ public class ThmP1 {
 				}
 				else if(pos.equals("verb")){
 					fuseSymbEnt = false;
-					//break;
 				}
 				tempStructH.addExtraPos(pos);
 			}
@@ -1356,8 +1312,7 @@ public class ThmP1 {
 					String givenName = pairs.get(index + 1).word();
 					tempMap.put("called", givenName);
 					// do not overwrite previously named symbol
-					// if(!namesMap.containsKey(givenName))
-					// namesMap.put(givenName, tempStructH);
+					
 				}
 			} /*
 				 * else if ((index + 2 < pairsSize && pairs.get(index +
@@ -1462,6 +1417,7 @@ public class ThmP1 {
 			tempStructH.set_struct(tempMap);
 			mathEntList.add(tempStructH);
 		}
+		
 		System.out.println("PAIRS! " + pairs);
 		// combine anchors into entities. Such as "of," "has"
 		for (int j = anchorList.size() - 1; j > -1; j--) {
@@ -1518,22 +1474,17 @@ public class ThmP1 {
 
 					} // special case: "of form"
 
-					// if verb_of: "consists of" -> verb
-					/*else if (prevPair.pos().matches("verb|vbs")) {
-						String prevWord = prevPair.word();
-						prevPair.set_word(prevWord + " of");
-						pairs.remove(index);
-					}*/ 
 					else { 
 						// set anchor to its normal part of speech word, like
 						// "of" to pre
 						pairs.get(index).set_pos(posMMap.get(anchor).get(0));
 					}
 
-				} // if the previous token is not an ent
+				} 
 				else {
-					// set anchor to its normal part of speech word, like "of"
-					// to pre
+					// if the previous token is not an ent.
+					// Set anchor to its normal part of speech word, like "of"
+					// to "pre"
 					pairs.get(index).set_pos(posMMap.get(anchor).get(0));
 				}				
 				break;
@@ -1547,26 +1498,25 @@ public class ThmP1 {
 		// use anchors ("of") to gather terms together into entities
 		int pairsSz = pairs.size();
 		
+		//turn the List pairs into a List of Struct's.
 		for (int i = 0; i < pairsSz; i++) {
 			Pair curPair = pairs.get(i);
+			String curPos = curPair.pos();
+			String curWord = curPair.word();
 			
 			//can pos ever be null? <--could be set to null prior
-			if (curPair.pos() == null)
+			if (curPos == null)
 				continue;
-			//if has type "ent"
-			if (curPair.pos().matches("\\d+")) {
+			//if has pos "ent"
+			if (DIGITS_PATTERN.matcher(curPos).matches()) {
 
-				if (curPair.pos().equals(prevPos)) {
+				if (curPos.equals(prevPos)) {
 					continue;
 				}
-				StructH<HashMap<String, String>> curStruct = mathEntList.get(Integer.valueOf(curPair.pos()));
+				StructH<HashMap<String, String>> curStruct = mathEntList.get(Integer.valueOf(curPos));
 				
 				Set<String> posList = curPair.extraPosSet();
-				/*if(posList != null){
-					for(int l = 0; l < posList.size(); l++){
-						curStruct.addExtraPos(posList.get(l));
-					}
-				}*/
+				
 				if(posList != null){
 					//start from 1, as extraPosList only contains *additional* pos
 					//besides the most probable pos.
@@ -1582,24 +1532,32 @@ public class ThmP1 {
 					structList.add(curStruct);
 				}
 
-				prevPos = curPair.pos();
+				prevPos = curPos;
 				
-			} else {				
+			} else {
+				String prev2 = "";
 				//check if article
-				if(curPair.pos().equals("art")){
+				if(curPos.equals("art")){
 					
 					if(i < pairsSz-1){
 						//combine into subsequent ent
 						Pair nextPair = pairs.get(i+1);
-						if(nextPair.pos().matches("\\d+")){
-							
+						if(DIGITS_PATTERN.matcher(nextPair.pos()).matches()){
 							StructH<HashMap<String, String>> nextStruct = mathEntList.get(Integer.valueOf(nextPair.pos()));						
 							if (nextStruct != null) {
-								nextStruct.setArticle(Article.getArticle(curPair.word()));
+								nextStruct.setArticle(Article.getArticle(curWord));
 							}
 						}
 					}
 					continue;
+				}else if(curPos.equals("symb")){
+					//if has pos "symb", then try to look for definitions that stand for this symbol.
+					Struct definingStruct = parseState.getVariableDefinition(curWord);
+					System.out.println("getGlobalVariableNamesMMap: " + parseState.getGlobalVariableNamesMMap().toString());
+					if(null != definingStruct){
+						prev2 = definingStruct.nameStr();
+						
+					}
 				}
 				
 				// current word hasn't classified into an ent, make structA
@@ -1609,7 +1567,7 @@ public class ThmP1 {
 				//but only if subsequent word is not of type "parti", 
 				//e.g. "$K$ is separably generated over $k$"
 				/*if (curPair.pos().equals("adverb")) {
-			//bad because this adverb could be modifying subsequent words, e.g. "converges uniformly"
+				//bad because this adverb could be modifying subsequent words, e.g. "converges uniformly"
 					if (structListSize > 1 && structList.get(structListSize - 1).type().matches("verb|vbs")) {
 						//only if the subsequent word is not an adjective, or no subsequent word
 						String nextPairPos;
@@ -1626,11 +1584,11 @@ public class ThmP1 {
 					}
 				}*/
 
-				String curWord = curPair.word();
+				//String curWord = curPair.word();
 
 				// leaf of prev2 is empty string ""
 				StructA<String, String> newStruct = 
-						new StructA<String, String>(curWord, NodeType.STR, "", NodeType.STR, curPair.pos());
+						new StructA<String, String>(curWord, NodeType.STR, prev2, NodeType.STR, curPair.pos());
 				//add extra pos from curPair's extraPosList. In the other case when extraPos is not added, 
 				//that's when the primary pos fits well already.
 				Set<String> posSet = curPair.extraPosSet();
@@ -1952,14 +1910,12 @@ public class ThmP1 {
 							//*not* use "ent" type to determine whether StructH or not!
 							
 							if (split1.length > 1 && CONJ_DISJ_PATTERN1.matcher(split1[0]).find()) {
-
 								type1 = split1[1];
 							}
 
 							String[] split2 = type2.split("_");
 
 							if (split2.length > 1 && CONJ_DISJ_PATTERN1.matcher(split2[0]).find()) {
-
 								type2 = split2[1];
 							}
 
@@ -1978,7 +1934,7 @@ public class ThmP1 {
 							// if pronoun, now refers to most recent ent
 							// should refer to ent that's the object of previous
 							// assertion,
-							// sentence, or "complete" phrase
+							// sentence, or "complete" phrase.
 							// Note that different pronouns might need diferent
 							// rules
 							if (type1.equals("pro") && struct1.prev1NodeType().equals(NodeType.STR)
@@ -1986,10 +1942,7 @@ public class ThmP1 {
 									&& struct1.prev2().equals("")) {
 								if (recentEnt != null && recentEntIndex < j) {
 									String tempName = recentEnt.struct().get("name");
-									// if(recentEnt.struct().get("called") !=
-									// null )
-									// tempName =
-									// recentEnt.struct().get("called");
+									
 									String name = tempName != null ? tempName : "";
 									struct1.set_prev2(name);
 								}
@@ -4116,8 +4069,7 @@ public class ThmP1 {
 		ArrayList<String> sentenceList = new ArrayList<String>();
 		
 		//separate out punctuations, separate out words away from punctuations.
-		//compile this!
-		
+		//compile this!		
 		String[] wordsArray = inputStr.replaceAll("([^\\.,!:;]*)([\\.,:!;]{1})", "$1 $2").split("\\s+");
 		
 		//System.out.println("wordsArray " + Arrays.toString(wordsArray));
@@ -4133,9 +4085,11 @@ public class ThmP1 {
 		// whether in parenthetical remark
 		boolean inParen = false; 
 		
+		String prevSentence = "";
+		
 		String lastWordAdded = "";
 		
-		for (int i = 0; i < wordsArrayLen; i++) {
+		wordsArrayLoop: for (int i = 0; i < wordsArrayLen; i++) {
 
 			curWord = wordsArray[i];
 			
@@ -4235,9 +4189,8 @@ public class ThmP1 {
 				}
 			}
 			madeReplacement = false;
-			//compile!
+			
 			if (PUNCTUATION_PATTERN.matcher(curWord).find()) {
-				//if not in middle of tex
 				
 				if (!inTex) {
 					//if the token before and after the comma 
@@ -4247,10 +4200,39 @@ public class ThmP1 {
 						String nextWord = wordsArray[i+1].toLowerCase();
 						List<String> nextWordPosList = posMMap.get(nextWord);
 						//e.g. $F$ is a ring, with no nontrivial elements. 
-						if(!nextWordPosList.isEmpty() && nextWordPosList.get(0).equals("pre")
-								|| AND_OR_PATTERN.matcher(nextWord).find()){
+						if(!nextWordPosList.isEmpty() && nextWordPosList.get(0).equals("pre")){
 							//don't add curWord in this case, let the sentence continue.
-							continue;
+							continue wordsArrayLoop;
+						}
+						if(AND_OR_PATTERN.matcher(nextWord).find()){
+							//if next word is "and"/"or", and has the same sentence type, i.e.
+							//either both stm or hyp, so either both contain hypothetical words,
+							//or neither do. e.g. "$G$ is a group, and if $R$ is its group algebra".
+							//Try to detect hyp pattern.
+							//Read until the end of the sentence that starts from nextWord
+							//for (int i = 0; i < wordsArrayLen; i++)
+							int j = i+2;
+							StringBuilder nextSentenceSB = new StringBuilder(nextWord);
+							while(j < wordsArrayLen){
+								String word = wordsArray[j++];
+								if(PUNCTUATION_PATTERN.matcher(word).matches()){
+									break;
+								}
+								nextSentenceSB.append(" ").append(word);
+							}
+							
+							boolean prevSentenceHyp = HYP_PATTERN.matcher(sentenceBuilder.toString()).matches();
+							boolean nextSentenceHyp = HYP_PATTERN.matcher(nextSentenceSB.toString()).matches();
+							
+							//System.out.println("!!prevSentence: " + sentenceBuilder + " nextSentenceSB: " + nextSentenceSB);
+							//System.out.println(!(prevSentenceHyp ^ nextSentenceHyp));
+							//take xor, so only skip comma if structures are the same.
+							if(!(prevSentenceHyp ^ nextSentenceHyp)){
+								continue wordsArrayLoop;
+							}else{
+								//if different type, skip the conjunction/disjunction token.
+								i++;
+							}
 						}
 						//else, because we don't want 
 						else if(WordForms.areWordsSimilar(lastWordAdded, nextWord)){
@@ -4263,7 +4245,9 @@ public class ThmP1 {
 					sentenceBuilder.append(" ").append(curWord);
 					//System.out.println("curWord: " +curWord+". sentence to append " + sentenceBuilder.toString());
 					
-					sentenceList.add(sentenceBuilder.toString());
+					prevSentence = sentenceBuilder.toString();
+					sentenceList.add(prevSentence);
+					
 					sentenceBuilder.setLength(0);
 					
 				} else { //in Latex
@@ -4271,7 +4255,7 @@ public class ThmP1 {
 					sentenceBuilder.append(" ").append(curWord);
 				}
 				//throw new IllegalStateException("punctuation: " + curWord);
-			} else if(i == wordsArrayLen - 1){ //
+			} else if(i == wordsArrayLen - 1){ 
 				sentenceList.add(sentenceBuilder.toString());
 				sentenceBuilder.setLength(0);				
 			}

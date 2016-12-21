@@ -1226,20 +1226,20 @@ public class WLCommand implements Serializable{
 			System.out.println("~~~structToAppendCommandStr to append wrapper: " + structToAppendCommandStr);
 			System.out.println("curCommand just appended: " + curCommand);
 		}
-		//structToAppendCommandStr.set_WLCommand(curCommand);
 		
-		//add to parseState.variableNamesMMap
+		//add local variable to parseState.
 		if(null != connotationMap && connotationMap.containsKey(PosTermConnotation.DEFINED)
 				&& connotationMap.containsKey(PosTermConnotation.DEFINING)){
 			Struct definingStruct = connotationMap.get(PosTermConnotation.DEFINING);
 			String variableName = connotationMap.get(PosTermConnotation.DEFINED).nameStr();
 			if(!variableName.equals("")){
 				parseState.addLocalVariableStructPair(variableName, definingStruct);
+				//System.out.println("variableName: " + variableName);
 			}
 		}
 		
 		curCommandWrapper.set_highestStruct(structToAppendCommandStr);
-		//why append and not just set??
+		
 		curCommandWrapper.set_WLCommandStr(commandSB);
 		return commandSB.toString();
 	}

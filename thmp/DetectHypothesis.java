@@ -37,9 +37,7 @@ public class DetectHypothesis {
 	
 	//pattern matching is faster than calling str.contains() repeatedly 
 	//which is O(mn) time.
-	private static final Pattern HYP_PATTERN = Pattern.compile(".*assume.*|.*denote.*|.*define.*|.*let.*|.*is said.*|.*suppose.*"
-			+ "|.*where.*"
-			+ "|.*is called.*") ;
+	private static final Pattern HYP_PATTERN = WordForms.get_HYP_PATTERN();
 	//positive look behind to split on any punctuation before a space.
 	private static final Pattern PUNCTUATION_PATTERN = Pattern.compile("(?<=[\\.|;|,|!|:]) ");
 	
@@ -145,8 +143,8 @@ public class DetectHypothesis {
 		
 		BufferedReader inputBF = null;
 		try{
-			inputBF = new BufferedReader(new FileReader("src/thmp/data/CommAlg5.txt"));
-			//inputBF = new BufferedReader(new FileReader("src/thmp/data/samplePaper1.txt"));
+			//inputBF = new BufferedReader(new FileReader("src/thmp/data/CommAlg5.txt"));
+			inputBF = new BufferedReader(new FileReader("src/thmp/data/samplePaper1.txt"));
 		}catch(FileNotFoundException e){
 			e.printStackTrace();
 			throw new IllegalStateException("Source file not found!");
@@ -316,9 +314,17 @@ public class DetectHypothesis {
 			matcher = thmStartPattern.matcher(line);
 			if (matcher.matches()) {
 				
+				// process here, return two versions, one for bag of words, one
+				// for display
+				// strip \df, \empf. Index followed by % strip, not percent
+				// don't strip.
+				// replace enumerate and \item with *
+				//thmWebDisplayList, and bareThmList should both be null
+				String contextStr = ThmInput.processTex(contextSB, null, null);
+				
 				//scan contextSB for assumptions and definitions
 				//and parse the definitions
-				detectAndParseHypothesis(contextSB.toString(), parseState);	
+				detectAndParseHypothesis(contextStr, parseState);	
 				//System.out.println("getGlobalVariableNamesMMap: "+parseState.getGlobalVariableNamesMMap());
 				inThm = true;		
 				//this should be set *after* calling detectAndParseHypothesis(), since detectAndParseHypothesis
@@ -343,7 +349,7 @@ public class DetectHypothesis {
 				String thm = ThmInput.processTex(newThmSB, null, null);
 				
 				//clear headParseStruct and curParseStruct of parseState, so newThm
-				//has its own stand-alone parse tree
+				//has its own stand-alone parse tree.
 				parseState.setCurParseStruct(null);
 				parseState.setHeadParseStruct(null);
 				
@@ -508,7 +514,11 @@ public class DetectHypothesis {
 			
 			//Get a variableName and check if a variable has been defined.
 			VariableName possibleVariableName = ParseState.createVariableName(possibleVar);
-			VariableDefinition possibleVarDef = parseState.getVariableDefinitionFromName(possibleVariableName);
+			VariableDefinition possibleVarDef = new VariableDefinition(possibleVariableName, null, null);
+			
+			boolean isLocalVar = parseState.getVariableDefinitionFromName(possibleVarDef);
+			//whether the variable definition was defined locally in the theorem, used to determine whether
+			//to include originalDefiningSentence.
 			
 			//System.out.println("^^^ variableNamesMMap: "+ variableNamesMMap);
 			//System.out.println("^^^^^^^PossibleVar: " + possibleVar);
@@ -516,20 +526,21 @@ public class DetectHypothesis {
 			//int possibleVarDefListLen = possibleVarDefList.size();
 			//if empty, check to see if bracket pattern, if so, check just the name without the brackets.
 			//e.g. x in x(yz)
-			if(null == possibleVarDef){
+			if(null == possibleVarDef.getDefiningStruct()){
 				Matcher bracketSeparatorMatcher = BRACKET_SEPARATOR_PATTERN.matcher(possibleVar);
 				if(bracketSeparatorMatcher.find()){
 					possibleVariableName = ParseState.createVariableName(bracketSeparatorMatcher.group(1));
-					possibleVarDef = parseState.getVariableDefinitionFromName(possibleVariableName);				
+					possibleVarDef.setVariableName(possibleVariableName);
+					isLocalVar = parseState.getVariableDefinitionFromName(possibleVarDef);				
 				}
 			}
 			//if some variable found.
-			if(null != possibleVarDef){			
+			if(!isLocalVar && null != possibleVarDef.getDefiningStruct()){			
 				if(!varDefSet.contains(possibleVarDef)){
 					varDefSet.add(possibleVarDef);
 					varDefList.add(possibleVarDef);
 					//System.out.println("latestVarDef.getOriginalDefinitionStr() " + latestVarDef.getOriginalDefinitionStr());
-					thmWithDefSB.append(possibleVarDef.getOriginalDefinitionStr()).append(" ");
+			 		thmWithDefSB.append(possibleVarDef.getOriginalDefinitionStr()).append(" ");
 				}
 			}			
 		}

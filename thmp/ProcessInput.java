@@ -68,7 +68,6 @@ public class ProcessInput {
 		texCommandWordsPreMMap.putAll(texCommand, Arrays.asList(words));
 	}
 	
-	//**where is this used??
 	public static List<String> processInput(File inputFile, boolean replaceTex, boolean replaceMacros) throws FileNotFoundException{
 		BufferedReader macrosReader = getMacrosBReader();
 		return processInput(inputFile, macrosReader, replaceTex, false, replaceMacros);

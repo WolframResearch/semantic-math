@@ -8,12 +8,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import com.google.common.collect.Multimap;
 
 import thmp.ThmP1.ParsedPair;
 import thmp.WLCommand.PosTerm;
 import thmp.search.TriggerMathThm2;
+import thmp.utils.WordForms;
 
 /**
  * Relational vectors used for search. Similar
@@ -40,6 +42,7 @@ public class RelationVec implements Serializable{
 	private static final Map<String, Integer> keywordDict = TriggerMathThm2.keywordDict();
 
 	private static final int NUM_BITS_PER_BYTE = 8;
+	private static final Pattern SPLIT_DELIM_PATTERN = Pattern.compile(WordForms.splitDelim());
 	
 	//should be wrapper around bitsets and make the bitsets immutable!!
 	
@@ -204,7 +207,7 @@ public class RelationVec implements Serializable{
 				RelationType posTermRelationType, boolean isParseStructTypeHyp){
 			
 			int maxBitPos = 0;
-			String[] termStrAr = termStr.split(" ");		
+			String[] termStrAr = SPLIT_DELIM_PATTERN.split(termStr);
 			int termStrArLen = termStrAr.length;
 			
 			if(termStrArLen > 1){

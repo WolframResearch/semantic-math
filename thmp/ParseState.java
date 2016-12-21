@@ -14,7 +14,6 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ListMultimap;
 
 import thmp.ThmP1.ParsedPair;
-import thmp.utils.Buggy;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -24,8 +23,6 @@ import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.BitSet;
-
 
 /**
  * Captures state of the parse, such as recent entities used (recentEnt).
@@ -228,8 +225,8 @@ public class ParseState {
 	 * variableNamesMMap.
 	 */
 	public static class VariableDefinition implements Serializable {
-		
-		private static final long serialVersionUID = 1L;
+
+		private static final long serialVersionUID = 8599803973034802106L;
 
 		//the Struct defining the variable.
 		//E.g. in "$F$ is a field", the Struct for "field"
@@ -238,6 +235,34 @@ public class ParseState {
 		
 		private VariableName variableName;
 		
+		/**
+		 * @return the originalDefinitionSentence
+		 */
+		public String getOriginalDefinitionSentence() {
+			return originalDefinitionSentence;
+		}
+
+		/**
+		 * @param originalDefinitionSentence the originalDefinitionSentence to set
+		 */
+		public void setOriginalDefinitionSentence(String originalDefinitionSentence) {
+			this.originalDefinitionSentence = originalDefinitionSentence;
+		}
+
+		/**
+		 * @param definingStruct the definingStruct to set
+		 */
+		public void setDefiningStruct(Struct definingStruct) {
+			this.definingStruct = definingStruct;
+		}
+
+		/**
+		 * @param variableName the variableName to set
+		 */
+		public void setVariableName(VariableName variableName) {
+			this.variableName = variableName;
+		}
+
 		private String originalDefinitionSentence;
 
 		public VariableDefinition(VariableName variableName, Struct definingStruct, String originalDefinitionStr){
@@ -251,11 +276,6 @@ public class ParseState {
 			return definingStruct.toString();
 		}
 		
-		
-		
-		/* (non-Javadoc)
-		 * @see java.lang.Object#hashCode()
-		 */
 		@Override
 		public int hashCode() {
 			final int prime = 31;
@@ -440,43 +460,55 @@ public class ParseState {
 	
 	/**
 	 * First try local variable map, then global variable map, to find definition for variableName.
-	 * @return
+	 * varName should not include $$ for faster speed.
+	 * @param variableDefList List of variable definitions to be filled. Should be empty when coming in.
+	 * @return Whether definition was extracted locally from the same theorem, as opposed to
+	 * 	from the context.
 	 */
-	public List<VariableDefinition> getVariableDefinitionListFromName(VariableName varName){
+	public boolean getVariableDefinitionListFromName(VariableName varName, 
+			List<VariableDefinition> variableDefList){
 		
-		//defensively copy.
-		//ListMultimap<String, VariableDefinition> tempMap = ArrayListMultimap.create(this.variableNamesMMap);
-		//ImmutableListMultimap<VariableName, VariableDefinition> tempMap = ImmutableListMultimap.copyOf(this.globalVariableNamesMMap);
-		List<VariableDefinition> varDefList = new ArrayList<VariableDefinition>();		
+		boolean isLocalVar = false;
+		//List<VariableDefinition> varDefList = new ArrayList<VariableDefinition>();		
 		//localVariableNamesMMap can be empty, but should not be null. When outside theorem, inThmFlag is
 		//false, so should not be getting theorem-local variables outside of theorems.
 		if(inThmFlag){
-			varDefList = this.localVariableNamesMMap.get(varName);
+			variableDefList.addAll(this.localVariableNamesMMap.get(varName));			
 		}
-		if(varDefList.isEmpty()){
-			varDefList = this.globalVariableNamesMMap.get(varName);
+		
+		if(variableDefList.isEmpty()){
+			variableDefList.addAll(this.globalVariableNamesMMap.get(varName));
+		}else if(inThmFlag){
+			isLocalVar = true;
 		}
-		//System.out.println("inThmFlag: "+inThmFlag);
-		return varDefList;
+		
+		return isLocalVar;
 	}
 	
 	/**
 	 * Get the latest context-appropriate definition given a VariableName.
 	 * First try local variable map, then global variable map, to find definition for variableName.
+	 * @param variableDefinition a VariableDefinition instance with the desired varName,
+	 * the definingStruct and defining sentence of which will be filled in.
 	 * @return
 	 */
-	public VariableDefinition getVariableDefinitionFromName(VariableName varName){
+	public boolean getVariableDefinitionFromName(VariableDefinition variableDefinition){
 		
-		List<VariableDefinition> defList = getVariableDefinitionListFromName(varName);
-		int defListSize = defList.size();
+		VariableName varName = variableDefinition.getVariableName();
+		
+		List<VariableDefinition> variableDefList = new ArrayList<VariableDefinition>();
+		boolean isLocalVar = getVariableDefinitionListFromName(varName, variableDefList);
+		
+		int defListSize = variableDefList.size();
 		
 		//get last-added one.
 		if(0 != defListSize){
-			return defList.get(defListSize-1);
-		}else{
-			return null;
+			VariableDefinition retrievedVarDef = variableDefList.get(defListSize-1);
+			variableDefinition.setDefiningStruct(retrievedVarDef.getDefiningStruct());
+			variableDefinition.setOriginalDefinitionSentence(retrievedVarDef.getOriginalDefinitionSentence());
 		}
 		
+		return isLocalVar;	
 	}
 	
 	/**
@@ -514,11 +546,9 @@ public class ParseState {
 					//nest inside so not to check for containment again.
 					if(latexVariableName.variableType().isParenBracketBrace()){
 						latexVariableName = new VariableName(latexVariableName.head, VariableName.VariableNameType.NONE);
-						variableMMapToAddTo.put(latexVariableName, latexDef);
-						
+						variableMMapToAddTo.put(latexVariableName, latexDef);						
 					}
-				}
-				
+				}				
 			}
 			
 		}//if name contains text and latex, e.g. "winding number $W_{ii'} (y)$"
@@ -530,7 +560,7 @@ public class ParseState {
 			VariableDefinition latexDef = new VariableDefinition(latexVariableName, entStruct, this.currentInputStr);
 			
 			if(!variableMMapToAddTo.containsEntry(latexVariableName, latexDef)){
-				//VariableDefinition latexDef = new VariableDefinition(latexVariableName, entStruct, this.currentInputStr);
+				
 				variableMMapToAddTo.put(latexVariableName, latexDef);
 			}
 		}
@@ -543,8 +573,7 @@ public class ParseState {
 			//System.out.println(variableName + "-++-" + variableNamesMMap + " ===== "  +Arrays.toString(Thread.currentThread().getStackTrace()));						
 			variableMMapToAddTo.put(variableName, def);	
 			System.out.println("!++++++++++++entStruct: " + entStruct);
-		}
-		
+		}		
 	}
 	
 	/**
@@ -583,11 +612,17 @@ public class ParseState {
 	 */
 	public Struct getVariableDefinition(String name){	
 		
+		Matcher matcher;
+		if((matcher = LATEX_DOLLARS_PATTERN.matcher(name)).matches()){
+			name = matcher.group(1);
+		}
+		
 		VariableName variableName = createVariableName(name);
 		
-		VariableDefinition variableDef = getVariableDefinitionFromName(variableName);
+		VariableDefinition variableDef = new VariableDefinition(variableName, null, null);
+		getVariableDefinitionFromName(variableDef);
 		
-		if(null != variableDef){
+		if(null != variableDef.getDefiningStruct()){
 			return variableDef.definingStruct;
 		}
 		

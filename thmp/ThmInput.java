@@ -55,7 +55,7 @@ public class ThmInput {
 	private static final Pattern LABEL_PATTERN = Pattern.compile("(?:^.*)\\\\label\\{([^}]*)\\}\\s*(.*)");
 	private static final Pattern DIGIT_PATTERN = Pattern.compile(".*\\d+.*");
 
-	// boldface typesetting. \cat{} refers to category. *Update* DF_EMPH_PATTERN_REPLACEMENT when updating this!
+	// boldface typesetting. \cat{} refers to category. MUST *Update* DF_EMPH_PATTERN_REPLACEMENT when updating this!
 	private static final Pattern DF_EMPH_PATTERN = Pattern
 			.compile("\\\\df\\{([^\\}]*)\\}|\\\\emph\\{([^\\}]*)\\}|\\\\em\\{([^\\}]*)\\}|\\\\cat\\{([^}]*)\\}|\\{\\\\it\\s*([^}]*)\\}"
 					+ "|\\\\ref\\{([^}]*)\\}");
@@ -260,22 +260,12 @@ public class ThmInput {
 		Matcher matcher = DF_EMPH_PATTERN.matcher(noLabelThmStr);
 		noLabelThmStr = matcher.replaceAll(DF_EMPH_PATTERN_REPLACEMENT);
 
-		/*
-		 * for (Pattern pattern : GROUP1_PATTERN_ARRAY) { matcher =
-		 * pattern.matcher(noLabelThmStr);
-		 * 
-		 * if (matcher.find()) { // System.out.println(matcher.group(1));
-		 * noLabelThmStr = matcher.replaceAll("$1"); } }
-		 */
-
-		// matcher = SENTENCE_START_PATTERN.matcher(noLabelThmStr);
-		// noLabelThmStr = matcher.replaceAll("");
-
 		// eliminate symbols such as \fml
 		matcher = ELIMINATE_PATTERN.matcher(noLabelThmStr);
 		noLabelThmStr = matcher.replaceAll("");
-
+		
 		matcher = ITEM_PATTERN.matcher(noLabelThmStr);
+		//replace \item with bullet points (*)
 		noLabelThmStr = matcher.replaceAll(" (*)");
 
 		// containing the words inside \label and \index etc, but not the words

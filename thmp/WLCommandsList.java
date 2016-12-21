@@ -221,8 +221,6 @@ public class WLCommandsList {
 		
 		// trigger TriggerMathObj
 		//***action*** commands
-		//WLCommandMapBuilder.put("is", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is|are|be, trigger",
-			//	"\\[Element]", "symb|ent|phrase, , true, TriggerMathObj" }));
 		wLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro|noun", null, true, false, false, PosTermConnotation.DEFINED,
 				RelationType._IS), 
 				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), new PBuilder("\\[Element]"),
@@ -230,8 +228,6 @@ public class WLCommandsList {
 				new PBuilder("adj", null, WLCommand.PosTermType.NEGATIVE),			
 				new PBuilder("symb|ent|phrase", null, true, false, true, PosTermConnotation.DEFINING, RelationType.IS_) ));
 		//e.g. "$X$ is connected"
-		//WLCommandMapBuilder.put("is", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is|are|be, trigger",
-			//"\\[HasProperty]", "adj, , true, TriggerMathObj" }));
 		wLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro|noun", null, true, RelationType._IS), 
 				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), 
 				new PBuilder("~HasProperty~"), new PBuilder("adj|phrase|noun", null, true, false, true, RelationType.IS_),

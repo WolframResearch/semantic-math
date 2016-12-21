@@ -514,10 +514,13 @@ public class ThmP1TestRun {
 			st = "let $R$ be a symbol denoting a ring";
 			st = " Let $R$ be a ring, and let $M$ be a finite $R$-module. There exists a filtration by $R$-submodules";
 			st = "There exists an integer $a$ such that $(x + y)^{p^a}, p^a(x + y) \\in \\mathbf{Z}[x^{p^n}, p^nx, y^{p^m}, p^my]$";
-			st = "the small subfield of $F$ is $Q$";
-			st = "if $F$ is a field, $F$ is a ring, and if $F$ is a group"; //<--to parse, the "and"!
-			st = "Let $F$ be a field. $F$ is a ring";
-			//st = "the field $F$ is a ring";
+			
+			st = "if $F$ is a field, $F$ is a ring, and if $F$ is a group"; 
+			st = "$F$ is a group, and if $F$ is a ring";
+			st = "Let $R \to S$ be a ring map of finite type. For any presentations $\\alpha : R[x_1, \\ldots, x_n] \to S$, and $\beta : R[y_1, \\ldots, y_m] \\to S$";
+			
+			//st = "Let $F$ be a field. $F$ is a ring";
+			
 			//st = "then $x> 0$";
 			//st = "if $F$ is a field";
 			//st = "$f$ induces a map of fields";

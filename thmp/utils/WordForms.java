@@ -30,6 +30,11 @@ public class WordForms {
 	private static final Pattern BRACKETS_PATTERN = Pattern.compile("\\[([^\\]]*)\\]");	
 	private static final Pattern LATEX_PATTERN = Pattern.compile("\\$([^$]+)\\$");
 	
+	//pattern matching is faster than calling str.contains() repeatedly 
+		//which is O(mn) time.
+	private static final Pattern HYP_PATTERN = Pattern.compile(".*assume.*|.*denote.*|.*define.*|.*let.*|.*is said.*|.*suppose.*"
+			+ "|.*where.*|.*is called.*|.*if.*|.*If.*") ;
+	
 	private static Set<String> getFreqWordsSet(){
 		if(freqWordsSet == null){
 			synchronized(WordForms.class){
@@ -208,7 +213,7 @@ public class WordForms {
 		//strip $ $ signs.
 		if(tex1Matcher.find() && tex2Matcher.find()){
 			tex1 = tex1Matcher.group(1);
-			tex2 = tex1Matcher.group(1);
+			tex2 = tex2Matcher.group(1);
 		}else{
 			return false;
 		}
@@ -233,6 +238,14 @@ public class WordForms {
 		return false;
 	}
 	
+	/**
+	 * E.g. ".*assume.*|.*denote.*|.*define.*"
+	 * 
+	 * @return
+	 */
+	public static Pattern get_HYP_PATTERN(){
+		return HYP_PATTERN;
+	}
 
 	/**
 	 * @return the whitespacePattern
