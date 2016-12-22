@@ -8,7 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
-import com.wolfram.alpha.parser.preparser.TexConverter;
+//import com.wolfram.alpha.parser.preparser.TexConverter;
 
 import thmp.ParseState.ParseStateBuilder;
 import thmp.ThmP1.ParsedPair;
@@ -518,9 +518,12 @@ public class ThmP1TestRun {
 			st = "if $F$ is a field, $F$ is a ring, and if $F$ is a group"; 
 			st = "$F$ is a group, and if $F$ is a ring";
 			st = "Let $R \to S$ be a ring map of finite type. For any presentations $\\alpha : R[x_1, \\ldots, x_n] \to S$, and $\beta : R[y_1, \\ldots, y_m] \\to S$";
+			st = "The image of a constructible subset of $\\Spec(S)$ in $\\Spec(R)$ is constructible."; //<--to parse!!
 			
-			//st = "Let $F$ be a field. $F$ is a ring";
+			st = "The image of a constructible subset in $\\Spec(R)$ is constructible."; //<--to parse!!
+			st = "given The image of a constructible subset";
 			
+			//st = "Let $F$ be a field. $F$ is a ring";			
 			//st = "then $x> 0$";
 			//st = "if $F$ is a field";
 			//st = "$f$ induces a map of fields";
