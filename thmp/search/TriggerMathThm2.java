@@ -13,8 +13,10 @@ import java.util.TreeMap;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 
+import thmp.Maps;
 import thmp.ThmP1;
 import thmp.search.SearchWordPreprocess.WordWrapper;
 import thmp.utils.WordForms;
@@ -103,10 +105,14 @@ public class TriggerMathThm2 {
 		//adds thms from CollectThm.thmWordsList. The thm name is its index in thmWordsList.
 		addThmsFromList(keywordList, keywordIndexMap, mathObjMMap);
 		
+		Map<String, Integer> docWordsFreqMapNoAnno = CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno();
+		
+		
+		
 		//re-order the list so the most frequent words appear first, as optimization
 		//so that search words can match the most frequently-occurring words.
-		Map<String, Integer> docWordsFreqMapNoAnno = CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno();
-		C comp = new C(docWordsFreqMapNoAnno);
+		WordFreqComparator comp = new WordFreqComparator(docWordsFreqMapNoAnno);
+		//words and their frequencies in wordDoc matrix.
 		Map<String, Integer> keyWordIndexTreeMap = new TreeMap<String, Integer>(comp);
 		keyWordIndexTreeMap.putAll(docWordsFreqMapNoAnno);
 		
@@ -129,18 +135,17 @@ public class TriggerMathThm2 {
 		
 		webDisplayThmList = ImmutableList.copyOf(CollectThm.ThmList.get_webDisplayThmList());
 		
-		//System.out.println("===");
-		
 		/*for(int i = 0; i < thmWordsList.size(); i++){
 			System.out.println(mathObjList.get(i));
 			System.out.println(thmWordsList.get(i));
 		}*/
 	}
 	
-	private static class C implements Comparator<String>{
+	
+	private static class WordFreqComparator implements Comparator<String>{
 		
 		Map<String, Integer> wordFreqMap;
-		public C(Map<String, Integer> map){
+		public WordFreqComparator(Map<String, Integer> map){
 			this.wordFreqMap = map;
 		}
 		

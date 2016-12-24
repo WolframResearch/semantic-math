@@ -336,7 +336,6 @@ public class Maps {
 			for (int i = 0; i < pList.size(); i++) {
 				posPreMMap.put(pList.get(i)[0], pList.get(i)[1]);
 			}
-
 			
 			posPreMMap.put("disjoint", "adj");
 			posPreMMap.put("perfect", "adj");

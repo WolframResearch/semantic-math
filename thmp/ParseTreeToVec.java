@@ -21,7 +21,7 @@ import thmp.utils.WordForms;
  */
 public class ParseTreeToVec {
 
-	private static final Map<String, Integer> keywordDict = TriggerMathThm2.keywordDict();
+	private static final Map<String, Integer> contextKeywordDict = TriggerMathThm2.keywordDict();
 	private static final ListMultimap<String, String> posMMap = Maps.posMMap();
 	
 	/**
@@ -199,7 +199,7 @@ public class ParseTreeToVec {
 		
 		if(termStrArLen > 1){
 			String lastWord = termStrAr[termStrArLen-1];
-			lastWordRowIndex = keywordDict.get(lastWord);
+			lastWordRowIndex = contextKeywordDict.get(lastWord);
 			int parentIndex = structParentIndex;
 			if(null != lastWordRowIndex){
 				parentIndex = lastWordRowIndex;
@@ -210,7 +210,7 @@ public class ParseTreeToVec {
 			//is adverb-adj, point adverb to adj.
 			for(int i = 0; i < termStrArLen - 1; i++){
 				String word = termStrAr[i];
-				Integer wordIndex = keywordDict.get(word);
+				Integer wordIndex = contextKeywordDict.get(word);
 				if(i > 0 && wordIndex != null){
 					List<String> posList = posMMap.get(word);
 					boolean isAdj = false;
@@ -247,12 +247,12 @@ public class ParseTreeToVec {
 	 * @return @Nullable likely index for termStr, could be null.
 	 */
 	public static Integer getTermStrIndex(String termStr){
-		Integer rowIndex = keywordDict.get(termStr);
+		Integer rowIndex = contextKeywordDict.get(termStr);
 		if(null == rowIndex){
 			String[] termStrAr = termStr.split(" ");
 			int len = termStrAr.length;
 			if(len > 1){
-				rowIndex = keywordDict.get(termStrAr[len-1]);
+				rowIndex = contextKeywordDict.get(termStrAr[len-1]);
 			}
 		}
 		return rowIndex;
@@ -275,10 +275,10 @@ public class ParseTreeToVec {
 	 */
 	private static int addTermStrToVec(Struct struct, String termStr, int structParentIndex, int[] contextVec, 
 			boolean forceAdjust) {
-		Integer termRowIndex = keywordDict.get(termStr);
+		Integer termRowIndex = contextKeywordDict.get(termStr);
 		if(termRowIndex == null){
 			//de-singularize, and remove "-ed" and "ing"! But parsed Strings should already been singularized!
-			termRowIndex = keywordDict.get(WordForms.getSingularForm(termStr));
+			termRowIndex = contextKeywordDict.get(WordForms.getSingularForm(termStr));
 		}
 		//System.out.println("##### Setting context vec, termStr " + termStr + " termRowIndex " + termRowIndex);
 		if(termRowIndex != null){	

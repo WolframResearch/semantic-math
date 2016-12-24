@@ -521,8 +521,9 @@ public class ThmP1TestRun {
 			st = "The image of a constructible subset of $\\Spec(S)$ in $\\Spec(R)$ is constructible."; //<--to parse!!
 			
 			st = "The image of a constructible subset in $\\Spec(R)$ is constructible.";
-			//st = "given The image of a constructible subset";			
 			
+			
+			//st = "given The image of a constructible subset";				
 			//st = "Let $F$ be a field. $F$ is a ring";			
 			//st = "then $x> 0$";
 			//st = "if $F$ is a field";

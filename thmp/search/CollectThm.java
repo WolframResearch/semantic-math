@@ -19,6 +19,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ListMultimap;
 
 import thmp.Maps;
 import thmp.ProcessInput;
@@ -43,7 +44,7 @@ public class CollectThm {
 	
 	//raw original file
 	//private static final File rawFile = new File("src/thmp/data/commAlg5.txt");
-	private static final String rawFileStr = "src/thmp/data/CommAlg5.txt";
+	//private static final String rawFileStr = "src/thmp/data/CommAlg5.txt";
 	//read in from list of files streams instead of just one
 	private static final List<String> rawFileStrList = Arrays.asList(new String[]{
 			//"src/thmp/data/testContextVector.txt", 
@@ -230,6 +231,11 @@ public class CollectThm {
 			wordThmsIndexMMap = wordThmsMMapBuilder.build();
 			//non-annotated version
 			thmWordsFreqListNoAnno = thmWordsListBuilderNoAnno.build();	
+			
+			//add lexicon words to docWordsFreqMapNoAnno, which only contains collected words from thm corpus,
+			//collected based on frequnency, right now. These words do not have corresponding thm indices.
+			addLexiconWordsToContextKeywordDict(docWordsFreqPreMapNoAnno);
+			
 			docWordsFreqMapNoAnno = ImmutableMap.copyOf(docWordsFreqPreMapNoAnno); 
 			//System.out.println(docWordsFreqMapNoAnno);
 			
@@ -245,6 +251,24 @@ public class CollectThm {
 			buildScoreMapNoAnno(wordsScorePreMap);
 			wordsScoreMapNoAnno = ImmutableMap.copyOf(wordsScorePreMap);
 		}		
+		
+		/**
+		 * add lexicon words to docWordsFreqMapNoAnno, which only contains collected words from thm corpus,
+			collected based on frequnency, right now.
+		 * 
+		 */
+		private static void addLexiconWordsToContextKeywordDict(Map<String, Integer> docWordsFreqMapNoAnno){
+			ListMultimap<String, String> posMMap = Maps.posMMap();
+			//int avgWordFreq = CollectThm.ThmWordsMaps.g;
+			int avgWordFreq = 3;
+			//add avg frequency based on int
+			for(Map.Entry<String, String> entry : posMMap.entries()){
+				if(entry.getValue().equals("ent")){
+					docWordsFreqMapNoAnno.put(entry.getKey(), avgWordFreq);
+				}
+			}
+			
+		}
 		
 		/**
 		 * the frequency of bare words, without annocation such as H or C attached, is 

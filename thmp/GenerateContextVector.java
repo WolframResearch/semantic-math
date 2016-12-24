@@ -37,7 +37,7 @@ public class GenerateContextVector {
 	//private static String CONTEXT_VEC_FILE_STR = "src/thmp/data/contextVecAll.txt";
 	
 	private static Path contextVecFilePath;	
-	private static URL outputStreamURL;
+	//private static URL outputStreamURL;
 	
 	private static final boolean WRITE_UNKNOWNWORDS = false;
 	//brackets pattern
@@ -48,9 +48,9 @@ public class GenerateContextVector {
 		contextVecFilePath = path;
 	}
 	
-	public static void set_contextVecOutputURL(URL url){
+	/*public static void set_contextVecOutputURL(URL url){
 		outputStreamURL = url;
-	}
+	}*/
 	
 	/**
 	 * Encapsulate subclass, so can set resources such as contextVecFileStr.
