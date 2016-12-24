@@ -111,8 +111,11 @@ public class ThmP1 {
 	 * Not final, since it needs to be cleared and reassigned. 
 	 */
 	private static List<String> parseStructMapList = new ArrayList<String>();
-	//the non-stringified version of parseStructMapList
-	private static List<Multimap<ParseStructType, ParsedPair>> parseStructMaps = new ArrayList<Multimap<ParseStructType, ParsedPair>>();
+	//the non-stringified version of parseStructMapList. Only used for unit testing.
+	private static List<Multimap<ParseStructType, ParsedPair>> parseStructMaps 
+		= new ArrayList<Multimap<ParseStructType, ParsedPair>>();
+	//whether current run is part of unit testing.
+	private static boolean unitTesting;
 	
 	private static MaxentTagger posTagger;
 	
@@ -182,6 +185,14 @@ public class ThmP1 {
 		}
 	}
 	
+	/**
+	 * Set parameter that determines whether current run is 
+	 * part of a junit test run.
+	 */
+	public static void setUnitTestingToTrue(){
+		unitTesting = true;
+	}
+
 	/**
 	 * Class consisting of a parsed String and its score
 	 */
@@ -2886,7 +2897,7 @@ public class ThmP1 {
 			Multimap<ParseStructType, ParsedPair> map = sortedParsedPairMMapList.get(i);
 			
 			parseStructMapList.add(map.toString() + "\n");
-			parseStructMaps.add(map);
+			if(unitTesting) parseStructMaps.add(map);
 			
 			//add to parsedExpr  parsedExpr.add(new ParsedPair(totalParsedString, totalScore, "wl"));
 			//note that Multimap does not necessarily preserve insertion order!
@@ -3932,17 +3943,18 @@ public class ThmP1 {
 	 * to avoid iterating here.
 	 * @return The ParseStruct ParsedPairs of each parse since last retrieval.
 	 */
-	public static List<Multimap<ParseStructType, String>> getParseStructMaps(){		
+	public static List<Multimap<ParseStructType, String>> getAndClearParseStructMapsForTesting(){		
 		
 		List<Multimap<ParseStructType, String>> parseStructStringList = new ArrayList<Multimap<ParseStructType, String>>();
 		//get parsedStr in each parsedPair
 		for(Multimap<ParseStructType, ParsedPair> map : parseStructMaps){
 			Multimap<ParseStructType, String> newMap = ArrayListMultimap.create();
 			for(Map.Entry<ParseStructType, ParsedPair> entry : map.entries()){
-				newMap.put(entry.getKey(), entry.getValue().parsedStr);
+				newMap.put(entry.getKey(), entry.getValue().parsedStr.trim());
 			}
 			parseStructStringList.add(newMap);
-		}		
+		}
+		parseStructMaps = new ArrayList<Multimap<ParseStructType, ParsedPair>>();
 		return parseStructStringList;
 	}
 	

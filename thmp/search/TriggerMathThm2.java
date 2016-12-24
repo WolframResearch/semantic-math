@@ -141,7 +141,10 @@ public class TriggerMathThm2 {
 		}*/
 	}
 	
-	
+	/**
+	 * Comparator for words based on their frequencies in text corpus.
+	 * 
+	 */
 	private static class WordFreqComparator implements Comparator<String>{
 		
 		Map<String, Integer> wordFreqMap;

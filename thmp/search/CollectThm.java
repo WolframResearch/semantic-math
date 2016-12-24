@@ -169,6 +169,7 @@ public class CollectThm {
 		//set that contains the first word of the two and three grams of twoGramsMap and threeGramsMap		
 		//so the n-grams have a chance of being called.
 		private static final Set<String> nGramFirstWordsSet = new HashSet<String>();
+		private static final int averageSingletonWordFrequency;
 		
 		/**
 		 * Map of (annotated with "hyp" etc) keywords and their scores in document, the higher freq in doc, the lower 
@@ -221,7 +222,7 @@ public class CollectThm {
 				buildMapsNoAnno(thmWordsListBuilderNoAnno, docWordsFreqPreMapNoAnno, wordThmsMMapBuilderNoAnno, processedThmList);				
 			} catch (IOException e) {
 				e.printStackTrace();
-				throw new RuntimeException("Calls to readThm and building maps failed!\n", e);
+				throw new IllegalStateException("Calls to readThm and building maps failed!\n", e);
 			}
 			
 			thmWordsFreqList = thmWordsListBuilder.build();	
@@ -231,10 +232,12 @@ public class CollectThm {
 			wordThmsIndexMMap = wordThmsMMapBuilder.build();
 			//non-annotated version
 			thmWordsFreqListNoAnno = thmWordsListBuilderNoAnno.build();	
+			//first compute the average word frequencies for singleton words
+			averageSingletonWordFrequency = computeSingletonWordsFrequency(docWordsFreqPreMapNoAnno);
 			
 			//add lexicon words to docWordsFreqMapNoAnno, which only contains collected words from thm corpus,
 			//collected based on frequnency, right now. These words do not have corresponding thm indices.
-			addLexiconWordsToContextKeywordDict(docWordsFreqPreMapNoAnno);
+			addLexiconWordsToContextKeywordDict(docWordsFreqPreMapNoAnno, averageSingletonWordFrequency);
 			
 			docWordsFreqMapNoAnno = ImmutableMap.copyOf(docWordsFreqPreMapNoAnno); 
 			//System.out.println(docWordsFreqMapNoAnno);
@@ -253,21 +256,44 @@ public class CollectThm {
 		}		
 		
 		/**
-		 * add lexicon words to docWordsFreqMapNoAnno, which only contains collected words from thm corpus,
-			collected based on frequnency, right now.
+		 * Add lexicon words to docWordsFreqMapNoAnno, which only contains collected words from thm corpus,
+		 * collected based on frequnency, right now.
 		 * 
 		 */
-		private static void addLexiconWordsToContextKeywordDict(Map<String, Integer> docWordsFreqMapNoAnno){
+		private static void addLexiconWordsToContextKeywordDict(Map<String, Integer> docWordsFreqMapNoAnno,
+				int averageSingletonWordFrequency){
+			
 			ListMultimap<String, String> posMMap = Maps.posMMap();
-			//int avgWordFreq = CollectThm.ThmWordsMaps.g;
-			int avgWordFreq = 3;
+			int avgWordFreq = averageSingletonWordFrequency;
 			//add avg frequency based on int
 			for(Map.Entry<String, String> entry : posMMap.entries()){
 				if(entry.getValue().equals("ent")){
 					docWordsFreqMapNoAnno.put(entry.getKey(), avgWordFreq);
 				}
+			}			
+		}
+		
+		/**
+		 * Computes the averageSingletonWordFrequency.
+		 * @param docWordsFreqPreMapNoAnno
+		 * @return
+		 */
+		private static int computeSingletonWordsFrequency(Map<String, Integer> docWordsFreqPreMapNoAnno) {
+			int freqSum = 0;
+			int count = 0;
+			for(int freq : docWordsFreqPreMapNoAnno.values()){
+				freqSum += freq;
+				count++;
 			}
-			
+			return freqSum/count;
+		}
+
+		/**
+		 * Returns average word frequency for singleton words.
+		 * @return
+		 */
+		public static int singletonWordsFrequency(){
+			return averageSingletonWordFrequency;
 		}
 		
 		/**
@@ -423,10 +449,11 @@ public class CollectThm {
 					String word = thmAr[j];	
 					//only keep words with lengths > 2
 					//System.out.println(word);
-					if(word.length() < 3) continue;
-					
+					if(word.length() < 3){ 
+						continue;
+					}
 					//get singular forms if plural, put singular form in map
-					//Should be more careful on some words that shouldn't be converted!
+					//Should be more careful on some words that shouldn't be singular-ized!
 					word = WordForms.getSingularForm(word);	
 				
 					if(FreqWordsSet.freqWordsSet.contains(word) && !nGramFirstWordsSet.contains(word)) continue;					
