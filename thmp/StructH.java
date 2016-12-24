@@ -288,8 +288,44 @@ public class StructH<H> extends Struct{
 		childRelationList.add(new ChildRelation(""));
 	}
 
+	/**
+	 * Compare, if the struct is nonempty, the names, and returns 
+	 * true if and only if the names are the same. 
+	 * @param other
+	 * @return
+	 */
+	private boolean contentEquals(Struct other){
+		
+		if(null == other || other.isStructA()){
+			return false;
+		}
+		
+		if(this == other){
+			return true;
+		}
+		
+		if(null != other.struct() && null != this.struct){
+			String otherNameStr = other.struct().get("name");
+			String thisNameStr = this.struct.get("name");
+			
+			if(null == otherNameStr || null == otherNameStr){
+				return false;
+			}
+			
+			if(otherNameStr.equals(thisNameStr)){
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	@Override
 	public void add_child(Struct child, ChildRelation relation){
+		assert(!this.equals(child));
+		
+		if(this.contentEquals(child)){			
+			return;
+		}
 		hasChild = true;
 		children.add(child);
 		childRelationList.add(relation);

@@ -423,8 +423,9 @@ public class ParseTreeToVec {
 			}
 			
 			Struct curStruct = posTerm.posTermStruct();
-			//not a better way around this.
-			curStruct = WLCommand.getStructList(command, posTerm.commandComponent()).get(positionInCommandMap);
+			//System.out.println("curStruct in p.t.t.v" + curStruct);
+			//not a better way around this. <--this way below leads to infinite recursion.
+			//curStruct = WLCommand.getStructList(command, posTerm.commandComponent()).get(positionInCommandMap);
 			
 			//System.out.println("***TPYE " + curStruct);
 			if(curStruct != null && curStruct.type().matches("ent|symb|pro")){

@@ -114,7 +114,7 @@ public class ThmP1 {
 	//the non-stringified version of parseStructMapList
 	private static List<Multimap<ParseStructType, ParsedPair>> parseStructMaps = new ArrayList<Multimap<ParseStructType, ParsedPair>>();
 	
-	private static final MaxentTagger posTagger;
+	private static MaxentTagger posTagger;
 	
 	//list of context vectors of the highest-scoring parse tree for each input.
 	//will be cleared every time this list is retrieved, which should be once per 
@@ -168,6 +168,10 @@ public class ThmP1 {
 		}
 		//String OS_name = System.getProperty("os.name");
 		//if(OS_name.equals("Mac OS X"))
+		
+	}
+	
+	private static void setUpPosTagger(){
 		String localPathToTagger = "lib/stanford-postagger-2015-12-09/models/english-bidirectional-distsim.tagger";
 		String serverPathToTagger = Maps.getServerPosTaggerPathStr();
 		
@@ -1196,6 +1200,10 @@ public class ThmP1 {
 			if(curpair.pos().equals("") && !BACKSLASH_CONTAINMENT_PATTERN.matcher(curWord).matches()){
 				//tag the whole sentence to find the most accurate tag, since the tagger
 				//uses contextual tags to maximize entropy.
+				if(null == posTagger){
+					setUpPosTagger();
+				}
+				
 				String taggedSentence = posTagger.tagString(sentence);
 				//must find word in tagged sentence, which looks like 
 				//e.g. "a_DT field_NN is_VBZ a_DT ring_NN".
@@ -1432,27 +1440,48 @@ public class ThmP1 {
 
 					Pair nextPair = pairs.get(index + 1);
 					Pair prevPair = pairs.get(index - 1);
+					String nextPos = nextPair.pos();
+					String prevPos = prevPair.pos();
 					// should handle later with grammar rules in mx! commented out 11/14/16.	
 					//<--commented back in on 11/24, makes a difference in e.g.
 					//"I is a formal integer combination of curves". And this gives more customization,
 					//also helps mitigate parse explosions, by associating the token after "of" with 
 					//the token immediately before "of", rather than allowing combinations with any prior token.
-					if (prevPair.pos().matches("\\d+") ) { //begin comment
+					if (prevPos.matches("\\d+") ) { 
 						// ent of ent
 						int mathObjIndex = Integer.valueOf(prevPair.pos());
 						StructH<HashMap<String, String>> tempStruct = mathEntList.get(mathObjIndex);
 						Struct childStruct = null;
-						if(nextPair.pos().matches("\\d+")){							
+						
+						//check whether next token is an ent, or an article followed by an ent.
+						//in which case fuse.
+						boolean nextPairEnt = false;
+						String entPos = "";
+						if(nextPos.matches("\\d+")){
+							nextPairEnt = true;
+							childStruct = mathEntList.get(Integer.valueOf(nextPos));
+							entPos = nextPos;
+						}else if(index + 2 < pairs.size() && nextPos.equals("art")){
+							String nextNextPos = pairs.get(index+2).pos();
+							if(nextNextPos.matches("\\d+")){
+								nextPairEnt = true;
+								entPos = nextNextPos;
+								childStruct = mathEntList.get(Integer.valueOf(nextNextPos));
+							}							
+							
+						}
+						if(nextPairEnt){							
 	
-							pairs.get(index).set_pos(nextPair.pos());
-							childStruct = mathEntList.get(Integer.valueOf(nextPair.pos()));						
+							pairs.get(index).set_pos(entPos);
+													
 							// set to null instead of removing, to keep indices
 							// right.
-							if (nextPair.pos() != prevPair.pos()){
-								mathEntList.set(Integer.valueOf(nextPair.pos()), null);
+							if (entPos != prevPair.pos()){
+								mathEntList.set(Integer.valueOf(entPos), null);
 							}							
 							tempStruct.add_child(childStruct, new ChildRelation("of"));
-						}else if(nextPair.pos().equals("symb")){
+							//if(true) throw new IllegalStateException("of");
+						}else if(nextPos.equals("symb")){
 							
 							pairs.get(index).set_pos(prevPair.pos());
 							childStruct = new StructA<String, String>(nextPair.word(), NodeType.STR, "", NodeType.STR, "symb");
@@ -1460,17 +1489,17 @@ public class ThmP1 {
 							nextPair.set_pos(prevPair.pos());							
 						}
 					} // "noun of ent".
-					else //end comment
-					if (prevPair.pos().equals("noun") && nextPair.pos().matches("\\d+")) {
-						int mathObjIndex = Integer.valueOf(nextPair.pos());
+					else 
+					if (prevPair.pos().equals("noun") && nextPos.matches("\\d+")) {
+						int mathObjIndex = Integer.valueOf(nextPos);
 						// Combine the something into the ent
 						StructH<HashMap<String, String>> tempStruct = mathEntList.get(mathObjIndex);
 
 						String entName = tempStruct.struct().get("name");
 						tempStruct.struct().put("name", prevPair.word() + " of " + entName);
 
-						pairs.get(index).set_pos(nextPair.pos());
-						prevPair.set_pos(nextPair.pos());
+						pairs.get(index).set_pos(nextPos);
+						prevPair.set_pos(nextPos);
 
 					} // special case: "of form"
 

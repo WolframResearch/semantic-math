@@ -520,8 +520,8 @@ public class ThmP1TestRun {
 			st = "Let $R \to S$ be a ring map of finite type. For any presentations $\\alpha : R[x_1, \\ldots, x_n] \to S$, and $\beta : R[y_1, \\ldots, y_m] \\to S$";
 			st = "The image of a constructible subset of $\\Spec(S)$ in $\\Spec(R)$ is constructible."; //<--to parse!!
 			
-			st = "The image of a constructible subset in $\\Spec(R)$ is constructible."; //<--to parse!!
-			st = "given The image of a constructible subset";
+			st = "The image of a constructible subset in $\\Spec(R)$ is constructible.";
+			//st = "given The image of a constructible subset";			
 			
 			//st = "Let $F$ be a field. $F$ is a ring";			
 			//st = "then $x> 0$";

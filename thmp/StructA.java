@@ -688,7 +688,7 @@ public class StructA<A, B> extends Struct{
 		}
 		
 		if(prev2 != null && !prev2.equals("")){
-			if(PREV2_TYPE.equals(NodeType.STR)){
+			if(PREV2_TYPE.isTypeStruct()){
 				tempStr = ((Struct) prev2).present(str + ", ");
 			}else{
 				tempStr += ", " + prev2;

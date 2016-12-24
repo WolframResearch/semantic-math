@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Maps;
 
 import thmp.ProcessInput;
 import thmp.utils.FileUtils;
