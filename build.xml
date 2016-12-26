@@ -4,6 +4,7 @@
 <project name="thmParse" basedir=".">
 	
 	<property name="builddir" value="${basedir}/bin/"/>
+	<property name="serverdir" value="${basedir}/../../workspaceEE/thmpServlet/"/>
 	<property name="srcdir" value="${basedir}/src/thmp/"/>
 	<property name="exceptionsSrcdir" value="${basedir}/src/exceptions/"/>
 
@@ -81,6 +82,17 @@
 			</fileset>
 		</classpath>
 		</javac>
+	</target>
+
+	<target name="copyResources" description="copies relevant resource files to servlet directory">
+	  <copy todir="">
+	    <fileset dir="${srcdir}/data">
+	      <include name="lexicon.txt"/>
+	      <include name="fixedPhrases.txt"/>
+	      <include name="NGramData.txt.txt"/>
+
+	    </fileset>
+	  </copy>
 	</target>
 	
 	<target name="buildjar" description="build jar file">
