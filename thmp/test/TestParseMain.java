@@ -47,40 +47,29 @@ public class TestParseMain {
 		//the parsed results must be added in the same order as their inputs
 		stList.add("let f be g");
 		Multimap<ParseStructType, String> desiredMap1 = ArrayListMultimap.create();
-		desiredMap1.put(ParseStructType.HYP, "f \\[Element] MathObj{g}");
+		desiredMap1.put(ParseStructType.HYP, "f \\[Element] Math[g]");
 		parsedMMapList.add(desiredMap1);
 		//keeping these comments for comparing scores
 		//parsedList.add("{HYP=[ f \\[Element] MathObj{g}  0.7  4  3]}\n");
 		
-		stList.add("given an element f of a set $S$");
-		Multimap<ParseStructType, String> desiredMap2 = ArrayListMultimap.create();
-		desiredMap2.put(ParseStructType.HYP, "MathObj{element, f, of MathObj{set, $S$}}");
-		parsedMMapList.add(desiredMap2);		
-		//parsedList.add("{HYP=[ MathObj{element, f, of MathObj{set, $S$}}  1.0  2  4]}\n");
+		
 		
 		stList.add("take derivative of log of f");
 		Multimap<ParseStructType, String> desiredMap3 = ArrayListMultimap.create();
-		desiredMap3.put(ParseStructType.OBJ, "Derivative[  Log[ f ]  ]");
+		desiredMap3.put(ParseStructType.OBJ, "Derivative[ Log[ f ]  ]");
 		parsedMMapList.add(desiredMap3);		
 		//parsedList.add("{OBJ=[ Derivative[  Log[ f ]  ]  1.0  1  6]}\n");
 		
 		stList.add("f is a function with radius of convergence r");
 		Multimap<ParseStructType, String> desiredMap4 = ArrayListMultimap.create();
-		desiredMap4.put(ParseStructType.STM, "f \\[Element] function[{function, with radius of convergence, r}]");
+		desiredMap4.put(ParseStructType.STM, "f \\[Element] function[\"Type\"->\"function\", \"r\", \"Qualifiers\" -> {\"with\", \"Type\"->\"radius of convergence\"}]");
+		
 		parsedMMapList.add(desiredMap4);
 		//parsedList.add("{STM=[ f \\[Element] function[{function, with radius of convergence, r}]  1.0  3  5]}\n");
 		
-		stList.add("f is a function with radius of convergence r and finitely many roots");
-		Multimap<ParseStructType, String> desiredMap5 = ArrayListMultimap.create();
-		desiredMap5.put(ParseStructType.STM, "f \\[Element] function[{function, {with, Conj[{radius of convergence, r}, {roots, finitely many}]}}]");
-		parsedMMapList.add(desiredMap5);
+		
 		//parsedList.add("{STM=[ f \\[Element] function[{function, {with, Conj[{radius of convergence, r}, {roots, finitely many}]}}]  1.0  3  7]}\n");
 		
-		stList.add("$f$ is holomorphic on $D(0, r)$, the derivative of $f$ is $\\sum_j j $");
-		Multimap<ParseStructType, String> desiredMap6 = ArrayListMultimap.create();
-		desiredMap6.put(ParseStructType.STM, "Derivative[ $f$ ]  \\[Element] MathObj{{$\\sum_j j $}}");
-		parsedMMapList.add(desiredMap6);
-		//parsedList.add("{STM=[  Derivative[ $f$ ]  \\[Element] MathObj{{$\\sum_j j $}}  1.0  3  7]}\n");
 		
 		stList.add("$R/\\mathfrak p$ is catenary for every minimal prime $\\mathfrak p$");
 		Multimap<ParseStructType, String> desiredMap7 = ArrayListMultimap.create();
@@ -144,6 +133,59 @@ public class TestParseMain {
 		
 	}
 	
+	@Test
+	public void testStm3(){
+		//"$R/\\mathfrak p$ is catenary for every minimal prime $\\mathfrak p$"
+		String thm = " ";
+		
+		Multimap<ParseStructType, String> desiredMap = ArrayListMultimap.create();
+		desiredMap.put(ParseStructType.STM, "f \\[Element] function[\"Type\"->\"function\", \"r\", \"Qualifiers\" -> {\"with\", \"Type\"->\"radius of convergence\"}]");
+		//Math["Type"->"element", "$S$"]
+		parseThm(thm, desiredMap);
+	}
+	
+	@Test
+	public void testStm2(){
+		//"$R/\\mathfrak p$ is catenary for every minimal prime $\\mathfrak p$"
+		String thm = "$f$ is holomorphic on $D(0, r)$, the derivative of $f$ is $\\sum_j j $";
+		
+		Multimap<ParseStructType, String> desiredMap = ArrayListMultimap.create();
+		desiredMap.put(ParseStructType.STM, "$f$ ~HasProperty~ PowerSeries[holomorphic] , {Qualifier-> [on, Math[\"Type\"->\"$D(0 , r)$\"]] }");
+		desiredMap.put(ParseStructType.STM, "Derivative[ $f$ ]  \\[Element] Math[\"Type\"->\"$\\sum_j j $\"]");
+		//Derivative[ $f$ ]  \[Element] Math["Type"->"$\sum_j j $"]
+		//Math["Type"->"element", "$S$"]
+		parseThm(thm, desiredMap);
+	}
+	//stList.add("$f$ is holomorphic on $D(0, r)$, the derivative of $f$ is $\\sum_j j $");
+	//Multimap<ParseStructType, String> desiredMap6 = ArrayListMultimap.create();
+	//desiredMap6.put(ParseStructType.STM, "Derivative[ $f$ ]  \\[Element] MathObj{{$\\sum_j j $}}");
+	//parsedMMapList.add(desiredMap6);
+	
+	@Test
+	public void testStm1(){
+		//"$R/\\mathfrak p$ is catenary for every minimal prime $\\mathfrak p$"
+		String thm = "f is a function with radius of convergence r and finitely many roots";
+		
+		Multimap<ParseStructType, String> desiredMap = ArrayListMultimap.create();
+		desiredMap.put(ParseStructType.STM, "f \\[Element] function[\"Type\"->\"function\", \"r\", \"Qualifiers\" -> {\"with\", \"Type\"->\"radius of convergence\"}]");
+		//Math["Type"->"element", "$S$"]
+		parseThm(thm, desiredMap);
+	}
+	
+	//stList.add("f is a function with radius of convergence r and finitely many roots");
+	//desiredMap5.put(ParseStructType.STM, "f \\[Element] function[{function, {with, Conj[{radius of convergence, r}, {roots, finitely many}]}}]");
+	
+	@Test
+	public void testHyp1(){
+		//"$R/\\mathfrak p$ is catenary for every minimal prime $\\mathfrak p$"
+		String thm = "given an element f of a set $S$";
+		
+		Multimap<ParseStructType, String> desiredMap = ArrayListMultimap.create();
+		desiredMap.put(ParseStructType.HYP, "Math[\"Type\"->\"element\", \"$S$\"]");
+		//Math["Type"->"element", "$S$"]
+		parseThm(thm, desiredMap);
+	}
+
 	/**
 	 * Test $R_\\mathfrak m$ is universally catenary for all maximal ideals $\\mathfrak m$
 	 */
@@ -155,8 +197,9 @@ public class TestParseMain {
 		//String parsed = "{HYP=[ \\[ForAll][ MathObj{maximal ideal, $\\mathfrak m$} ]  1.0  2  3], STM=[ MathObj{$R_\\mathfrak m$} \\[Element] MathObj{universally catenary}  0.9  3  4]}\n";
 		
 		Multimap<ParseStructType, String> desiredMap = ArrayListMultimap.create();
-		desiredMap.put(ParseStructType.HYP, "\\[ForAll][ MathObj{maximal ideal, $\\mathfrak m$} ]");
-		desiredMap.put(ParseStructType.STM, "MathObj{$R_\\mathfrak m$} \\[Element] MathObj{universally catenary}");
+		desiredMap.put(ParseStructType.HYP, "\\[ForAll][ Math[\"Type\"->\"maximal ideal\", \"$\\mathfrak m$\"] ]");
+		//\[ForAll][ Math["Type"->"maximal ideal", "$\mathfrak m$"] ]
+		desiredMap.put(ParseStructType.STM, "Math[\"Type\"->\"$R_\\mathfrak m$\"] ~HasProperty~ Math[universally catenary]");
 		parseThm(thm, desiredMap);
 	}
 	
