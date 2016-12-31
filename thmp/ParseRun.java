@@ -28,7 +28,7 @@ public class ParseRun {
 		String[] strAr = ThmP1.preprocess(st);			
 		
 		for(int i = 0; i < strAr.length; i++){
-			if(WordForms.getWhitespacePattern().matcher(strAr[i]).find()){
+			if(WordForms.getWhiteEmptySpacePattern().matcher(strAr[i]).find()){
 				continue;
 			}
 			//alternate commented out line to enable tex converter

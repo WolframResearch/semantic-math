@@ -355,6 +355,8 @@ public class ParseState {
 	 */
 	public void writeUnknownWordsToFile(){
 		
+		if(extrapolatedPosMMap.isEmpty()) return;
+		
 		//first format the output so it can just be pasted into lexicon.
 		StringBuilder sb = new StringBuilder(1000);
 		for(Map.Entry<String, String> entry : extrapolatedPosMMap.entries()){
@@ -363,13 +365,14 @@ public class ParseState {
 		
 		try(FileWriter fw = new FileWriter(UNKNOWN_WORDS_FILE_NAME_STR, true);
 			    BufferedWriter bw = new BufferedWriter(fw);
-			    PrintWriter out = new PrintWriter(bw))
+			    PrintWriter outPrintWriter = new PrintWriter(bw))
 			{
-				out.println(sb);
-			   
+				outPrintWriter.println(sb);
+				
 			} catch (IOException e) {
 			   logger.error("IOException while writing to unknown words file!");			   
 			}
+		
 	}
 	
 	/**
@@ -807,14 +810,16 @@ public class ParseState {
 	}
 	
 	/**
-	 * Clear variables, reset state, etc, to not contaminate
+	 * Clear variables, reset state, headParseStruct etc, to not contaminate
 	 * variable space for next parse. One parse run is defined
 	 * to be the unit    given to the preprocessor.
 	 */
 	public void parseRunCleanUp(){
+		this.setCurParseStruct(null);
+		this.setHeadParseStruct(null);
 		this.localVariableNamesMMap = ArrayListMultimap.create();
 		this.inThmFlag = false;
-	}
+	}	
 	
 	@Override
 	public String toString(){

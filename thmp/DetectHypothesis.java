@@ -58,6 +58,8 @@ public class DetectHypothesis {
 	private static final String definitionStrOutputFileStr = "src/thmp/data/parsedExpressionDefinitions.txt";
 
 	private static final boolean PARSE_INPUT_VERBOSE = true;
+	private static final Pattern SKIP_PATTERN = Pattern.compile("\\\\begin\\{proof\\}");
+	private static final Pattern END_SKIP_PATTERN = Pattern.compile("\\\\end\\{proof\\}");
 	
 	/**
 	 * Combination of theorem String and the list of
@@ -177,7 +179,7 @@ public class DetectHypothesis {
 		
 		try{
 			objectOutputStream.writeObject(parsedExpressionList);			
-			System.out.println("parsedExpressionList: " + parsedExpressionList);
+			//System.out.println("parsedExpressionList: " + parsedExpressionList);
 			objectOutputStream.close();
 			fileOuputStream.close();
 		}catch(IOException e){
@@ -251,12 +253,10 @@ public class DetectHypothesis {
 	 * @throws IOException
 	 */
 	private static List<DefinitionListWithThm> readAndParseThm(BufferedReader srcFileReader, 
-			//List<String> thmWebDisplayList,
-			//List<String> bareThmList, 
 			ParseState parseState) throws IOException{
 		
 		// \\\\end\\{def(?:.*)
-		//compiler will inline these, so don't count as extra calls.
+		//compiler will inline these, so don't add function calls to stack.
 		Pattern thmStartPattern = ThmInput.THM_START_PATTERN;
 		Pattern thmEndPattern = ThmInput.THM_END_PATTERN;
 		List<String> macrosList = new ArrayList<String>();
@@ -307,10 +307,22 @@ public class DetectHypothesis {
 		}
 		
 		while ((line = srcFileReader.readLine()) != null) {
-			if (WordForms.getWhitespacePattern().matcher(line).matches()){
+			if (WordForms.getWhiteEmptySpacePattern().matcher(line).matches()){
 				continue;
 			}
-			//System.out.println("line " + line + " " + parseState.getVariableNamesMMap());
+		
+			//should skip certain sections, e.g. \begin{proof}
+			Matcher skipMatcher = SKIP_PATTERN.matcher(line);
+			if(skipMatcher.matches()){
+				while ((line = srcFileReader.readLine()) != null){
+					if(END_SKIP_PATTERN.matcher(line).matches()){
+						
+						break;
+					}
+				}
+				continue;
+			}
+			
 			matcher = thmStartPattern.matcher(line);
 			if (matcher.matches()) {
 				
@@ -320,12 +332,12 @@ public class DetectHypothesis {
 				// don't strip.
 				// replace enumerate and \item with *
 				//thmWebDisplayList, and bareThmList should both be null
-				String contextStr = ThmInput.processTex(contextSB, null, null);
+				String contextStr = ThmInput.removeTexMarkup(contextSB.toString(), null, null);
 				
 				//scan contextSB for assumptions and definitions
 				//and parse the definitions
 				detectAndParseHypothesis(contextStr, parseState);	
-				//System.out.println("getGlobalVariableNamesMMap: "+parseState.getGlobalVariableNamesMMap());
+				
 				inThm = true;		
 				//this should be set *after* calling detectAndParseHypothesis(), since detectAndParseHypothesis
 				//depends on the state.
@@ -346,7 +358,7 @@ public class DetectHypothesis {
 				// don't strip.
 				// replace enumerate and \item with *
 				//thmWebDisplayList, and bareThmList should both be null
-				String thm = ThmInput.processTex(newThmSB, null, null);
+				String thm = ThmInput.removeTexMarkup(newThmSB.toString(), null, null);
 				
 				//clear headParseStruct and curParseStruct of parseState, so newThm
 				//has its own stand-alone parse tree.

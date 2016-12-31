@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import com.google.common.collect.TreeMultimap;
 
@@ -50,6 +51,7 @@ public class ThreeGramSearch {
 	// name of two gram data file containing additional 2-grams that should be included. These don't have
 	//frequencies associated with them.
 	private static final String THREE_GRAM_DATA_FILESTR = "src/thmp/data/threeGramData.txt";	
+	private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
 	
 	//map of maps containing first words of 2 grams as keys, and maps of 2nd words and their counts as values
 	private static final Map<String, Map<String, Integer>> twoGramFreqMap = NGramSearch.get_nGramMap();
@@ -74,16 +76,18 @@ public class ThreeGramSearch {
 		//build the threeGramCountsMap
 		get3GramCounts(thmList, threeGramCountsMap);		
 		
-		//create Comparator instances	
-		//create Multimap with custom value comparator
+		//create Comparator instances used to compare frequencies.
+		//create Multimap with custom value comparator.
 		ThreeGramComparator threeGramComparator = new ThreeGramComparator();
 		StringComparator stringComparator = new StringComparator();
 		threeGramMap = TreeMultimap.create(stringComparator, threeGramComparator);
+		
 		buildThreeGramMap(threeGramMap);
+		
 		Set<String> initialThreeGramsSet = new HashSet<String>();
 		//fill in initial default set of scraped three grams
 		BufferedReader threeGramBR = NGramSearch.THREE_GRAM_DATA_BR();
-		if(threeGramBR == null){
+		if(null == threeGramBR){
 			try{
 				BufferedReader threeGramBF = new BufferedReader(new FileReader(THREE_GRAM_DATA_FILESTR));
 				readAdditionalThreeGrams(threeGramBF, initialThreeGramsSet);
@@ -121,14 +125,15 @@ public class ThreeGramSearch {
 				
 				word0 = thmAr[i];
 				//shouldn't happen because the way thm is split
-				if(word0.matches("\\s*|tex") || word0.contains("\\")){
+				//was word0.matches("\\s*"), instead of \\s+
+				if(WHITESPACE_PATTERN.matcher(word0).matches() || word0.contains("\\") || word0.contains("$")){
 					//if(word0.matches("(?:\\s+)|(?:(?:[^\\]*)(?:\\\\)(?:[.]*))")){
 					continue;
 				}
 				word1 = thmAr[i+1];
 				//int j = i;
 				
-				while((word1.matches("\\s+|tex") || word1.contains("\\")) && i < thmAr.length-2){
+				while((WHITESPACE_PATTERN.matcher(word1).matches() || word1.contains("\\")) && i < thmAr.length-2){
 					word1 = thmAr[i+1];
 					i++;
 				}
@@ -139,7 +144,7 @@ public class ThreeGramSearch {
 				
 				word2 = thmAr[i+2];
 				
-				while((word2.matches("\\s+|tex") || word2.contains("\\")) && i < thmAr.length-2){
+				while((WHITESPACE_PATTERN.matcher(word2).matches() || word2.contains("\\") || word2.contains("$")) && i < thmAr.length-2){
 					word1 = thmAr[i+2];
 					i++;
 				}

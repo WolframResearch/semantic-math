@@ -285,6 +285,7 @@ public class CollectThm {
 				freqSum += freq;
 				count++;
 			}
+			if (0 == count) return 1;
 			return freqSum/count;
 		}
 

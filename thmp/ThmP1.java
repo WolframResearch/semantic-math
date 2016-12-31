@@ -130,7 +130,6 @@ public class ThmP1 {
 	* these often act as verbs. Did it programmatically initially, but too 
 	* many ent's that should be fused (e.g. ring) were not, leading to parse
 	* explosions. */
-	//move to initializer!
 	private static final String[] NO_FUSE_ENT = new String[]{"map"};
 	private static final Set<String> noFuseEntSet;
 	private static final Pattern PUNCTUATION_PATTERN = Pattern.compile("(\\.|;|,|!|:)$");
@@ -143,12 +142,16 @@ public class ThmP1 {
 	private static final Pattern DASH_ENT_PATTERN = Pattern.compile("\\$[^$]+\\$[^-\\s]*-[^\\s]*");
 	private static final int REPARSE_UPPER_SIZE_LIMIT = 6;
 	private static final Pattern CONJ_DISJ_VP_PATTERN = Pattern.compile("(?:conj|disj)_verbphrase");
+	//directives used to begin latex math mode.
+	private static final Pattern BEGIN_ALIGN_PATTERN = Pattern.compile("(?:.*(\\\\begin\\{align[*]*\\}.*))|(?:.*(\\\\begin\\{equation\\}.*))");
+	private static final Pattern END_ALIGN_PATTERN = Pattern.compile("(?:(.*\\\\end\\{align[*]*\\}).*)|(?:(.*\\\\end\\{equation\\}).*)");
 	private static final boolean DEBUG = InitParseWithResources.isDEBUG();
 	//contains backslash
 	private static final Pattern BACKSLASH_CONTAINMENT_PATTERN = Pattern.compile(".*[\\\\|$|=|\\{|\\}].*");
 	private static final Pattern DIGITS_PATTERN = Pattern.compile("\\d+");
 	
 	private static final Pattern HYP_PATTERN = WordForms.get_HYP_PATTERN();
+	private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
 	
 	static{
 		
@@ -252,9 +255,7 @@ public class ThmP1 {
 			this.numUnits = numUnits;
 			this.commandNumUnits = commandNumUnits;
 			this.stringForm = this.toString();
-			//if(null != parseStruct){
-				//this.parseStruct = parseStruct;
-			//}
+			
 		}
 		
 		/**
@@ -389,8 +390,7 @@ public class ThmP1 {
 				}
 			}	
 		}
-		//String twoGram = potentialTrigger;
-		//Integer twoGram = twoGramMap.get(potentialTrigger);
+		
 		if(newIndex == i && i < str.length - 1){
 			TokenType tokenType = TokenType.TWOGRAM;
 			if(twoGramMap.containsKey(twoGram)){			
@@ -420,7 +420,8 @@ public class ThmP1 {
 		if(posMMap.containsKey(lastWord) && posMMap.get(lastWord).get(0).equals("pre")){
 			return false;
 		}
-		
+		//System.out.println("NGRAM: " + nGram);
+		//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
 		String pos;
 		List<String> posList = posMMap.get(lastWord);		
 		if(!posList.isEmpty()){
@@ -516,7 +517,7 @@ public class ThmP1 {
 	 */
 	public static ParseState tokenize(String sentence, ParseState parseState){
 		
-		if(WordForms.getWhitespacePattern().matcher(sentence).find()){
+		if(WordForms.getWhiteEmptySpacePattern().matcher(sentence).find()){
 			return parseState;
 		}
 		parseState.setCurrentInputStr(sentence);
@@ -534,20 +535,15 @@ public class ThmP1 {
 			}*/
 		}
 		
-		// .....change to arraylist of Pairs, create Pair class
-		// LinkedHashMap<String, String> linkedMap = new LinkedHashMap<String,
-		// String>();
-
-		// list of indices of "proper" math objects, e.g. "field", but not e.g.
-		// "pair"
+		// list of indices of "proper" math objects, e.g. "field", but not e.g. "pair"
 		List<Integer> mathIndexList = new ArrayList<Integer>();
 		// list of indices of anchor words, e.g. "of"
 		List<Integer> anchorList = new ArrayList<Integer>();
 
 		// list of each word with their initial type, adj, noun,
 		List<Pair> pairs = new ArrayList<Pair>();
-		//boolean addIndex = true; // whether to add to pairIndex
-		String[] strAr = sentence.split("\\s+");
+		//Only split on white space.
+		String[] strAr = WHITESPACE_PATTERN.split(sentence);
 		
 		//\begin{enumerate} should be the first word in the sentence, based on how they are built
 		//in the preprocessor.
@@ -560,30 +556,58 @@ public class ThmP1 {
 		strloop: for (int i = 0; i < strAr.length; i++) {
 
 			String curWord = strAr[i];
+			//System.out.println("at beginning: curWord: " + curWord);
 			
 			//sometimes some blank space falls through, in which case just skip.
-			if(WordForms.getWhitespacePattern().matcher(curWord).find()){
+			if(WordForms.getWhiteEmptySpacePattern().matcher(curWord).find()){
 				continue;
-			}
-			/*if (curWord.matches("\\s*,*")){
-				continue;
-			}*/
+			}			
 			Matcher negativeAdjMatcher;
-			// strip away special chars '(', ')', etc ///should not
-			// remove......
-			// curWord = curWord.replaceAll("\\(|\\)", "");
+			// need to deal with special chars '(', ')', etc ///should not
+			// simply remove..
 			// remove this and ensure curWord is used subsequently
 			// instead of str[i]
-			strAr[i] = curWord;
-			//change to enum!
-			String type = "ent"; //mathObj
-			int wordlen = strAr[i].length();
+			//strAr[i] = curWord;
 			
-			// detect latex expressions, set their pos as "ent" for now
+			//change to enum!
+			String type = "ent"; 
+			int wordlen = strAr[i].length();
+			//this needs to be evaluated at each iteration.
+			int strArLength = strAr.length;
+			
+			/** detect latex expressions, set their pos as "ent" for now **/
+			
+			//latex expressions that start with \begin{align} or \being{equation}
+			Matcher mathModeMatcher;
+			Matcher mathModeEndMatcher;
+			if((mathModeMatcher = BEGIN_ALIGN_PATTERN.matcher(curWord)).matches()){
+				
+				StringBuilder latexExprSB = new StringBuilder(mathModeMatcher.replaceAll("$1$2") + " ");
+				
+				while(i++ < strArLength-1){
+					curWord = strAr[i];
+					
+					//not checking for nested \begin{align} and \begin{equation}
+					if((mathModeEndMatcher = END_ALIGN_PATTERN.matcher(curWord)).matches()){
+						latexExprSB.append(" " + mathModeEndMatcher.replaceAll("$1$2"));
+						break;
+					}else{
+						latexExprSB.append(" " + curWord);
+					}					
+				}
+				
+				Pair pair = new Pair(latexExprSB.toString(), type);
+				pairs.add(pair);
+				mathIndexList.add(pairs.size() - 1);
+				//if(true) throw new IllegalStateException("pair "+pair.word());
+				continue;
+			}
+			
+			// latex expressions that start with '$'
 			if (curWord.charAt(0) == '$') {
 				
 				String latexExpr = curWord;
-				int strArLength = strAr.length;
+				
 				//not a single-word latex expression, i.e. $R$-module
 				if (i < strArLength - 1 && !curWord.matches("\\$[^$]+\\$[^\\s]*")
 						&& (curWord.charAt(wordlen - 1) != '$' || wordlen == 2 || wordlen == 1)) {
@@ -1236,6 +1260,7 @@ public class ThmP1 {
 			String pos = curpair.pos();
 			if(unknownWordPos && !pos.equals("")){
 				parseState.addUnknownWordPosToMap(curWord, pos);
+				System.out.println("added " + curWord + " to posmap!");
 			}
 		}
 		
@@ -1320,8 +1345,7 @@ public class ThmP1 {
 			int pairsSize = pairs.size();
 			if (index + 1 < pairsSize && pairs.get(index + 1).pos().equals("symb")
 					//don't fuse if e.g. mathObjName is "map"
-					&& !noFuseEntSet.contains(mathObjName)
-					) {
+					&& !noFuseEntSet.contains(mathObjName)) {
 				//the word following symbol is "and"
 				if (index + 2 == pairsSize 
 						|| AND_OR_PATTERN.matcher(pairs.get(index+2).pos()).find()){
@@ -2409,7 +2433,7 @@ public class ThmP1 {
 				//ParseStruct headParseStruct = new ParseStruct();
 				//now get the WL form build from WLCommand's
 				//should pass in the wlSB, instead of creating one anew each time. <--It's ok.
-				StringBuilder wlSB = treeTraversal(uHeadStruct, headParseStructList, parsedPairMMapList, curStructContextvec, span,
+				treeTraversal(uHeadStruct, headParseStructList, parsedPairMMapList, curStructContextvec, span,
 						parseState);
 				//headParseStructList.add(headParseStruct);
 				contextVecList.add(curStructContextvec);
@@ -2457,7 +2481,9 @@ public class ThmP1 {
 						.containsKey("define") 
 						|| triggerWordsMap
 						.containsKey("let"))
-				){
+				)
+		{
+			System.out.println("No full parse!");
 			
 			//See if desired trigger words are present.
 			//Since trigger words determine which conditional parse to use
@@ -3873,6 +3899,9 @@ public class ThmP1 {
 	 * @throws IOException
 	 */
 	public static void writeUnknownWordsToFile() {
+		
+		if(unknownWords.isEmpty()) return;
+		
 		try{
 			Files.write(unknownWordsFile, unknownWords, Charset.forName("UTF-8"));
 		}catch(IOException e){
@@ -4210,15 +4239,14 @@ public class ThmP1 {
 						madeReplacement = true;
 						i = j;
 					}
-					// curWord += wordsArray[++i];
+					
 				}
 			}
 
 			// composite fluff words taken care of, with e.g. fixed phrases
-			if (!madeReplacement && !PUNCTUATION_PATTERN.matcher(curWord).find() 
+			if (!madeReplacement && !PUNCTUATION_PATTERN.matcher(curWord).matches() 
 					&& !fluffMap.containsKey(curWord.toLowerCase())) {
-				// if (!curWord.matches("\\.|,|!") &&
-				// !fluffMap.containsKey(curWord)){
+				
 				if (inTex || !toLowerCase) {
 					sentenceBuilder.append(" ").append(curWord);
 					lastWordAdded = curWord;
@@ -4231,7 +4259,7 @@ public class ThmP1 {
 			}
 			madeReplacement = false;
 			
-			if (PUNCTUATION_PATTERN.matcher(curWord).find()) {
+			if (PUNCTUATION_PATTERN.matcher(curWord).matches()) {
 				
 				if (!inTex) {
 					//if the token before and after the comma 
@@ -4245,7 +4273,7 @@ public class ThmP1 {
 							//don't add curWord in this case, let the sentence continue.
 							continue wordsArrayLoop;
 						}
-						if(AND_OR_PATTERN.matcher(nextWord).find()){
+						if(AND_OR_PATTERN.matcher(nextWord).matches()){
 							//if next word is "and"/"or", and has the same sentence type, i.e.
 							//either both stm or hyp, so either both contain hypothetical words,
 							//or neither do. e.g. "$G$ is a group, and if $R$ is its group algebra".

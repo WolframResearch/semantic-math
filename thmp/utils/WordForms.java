@@ -17,7 +17,7 @@ public class WordForms {
 	//delimiters to split on when making words out of input
 	private static final String SPLIT_DELIM = "\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:|-|_|~|!";
 	private static final Pattern BACKSLASH_PATTERN = Pattern.compile("(?<!\\\\)\\\\(?!\\\\)");
-	private static final Pattern WHITESPACE_PATTERN = Pattern.compile("^\\s*$");
+	private static final Pattern WHITE_EMPTY_SPACE_PATTERN = Pattern.compile("^\\s*$");
 	
 	private static final Pattern BRACES_PATTERN = Pattern.compile("(\\{|\\}|\\[|\\])");
 	//small lists of fluff words, used in, e.g., n gram extraction.
@@ -248,10 +248,11 @@ public class WordForms {
 	}
 
 	/**
-	 * @return the whitespacePattern
+	 * @return the whitespacePattern. Including the case of 
+	 * empty pattern.
 	 */
-	public static Pattern getWhitespacePattern() {
-		return WHITESPACE_PATTERN;
+	public static Pattern getWhiteEmptySpacePattern() {
+		return WHITE_EMPTY_SPACE_PATTERN;
 	}
 	
 	/**

@@ -52,8 +52,9 @@ public class ThmInput {
 	static final Pattern NEW_THM_PATTERN = Pattern.compile("\\\\newtheorem\\{([^}])\\}(?:[^{]*)\\{([^}]).*");
 		
 	static final Pattern THM_TERMS_PATTERN = Pattern.compile("Theorem|Proposition|Lemma|Corollary");
-	private static final Pattern LABEL_PATTERN = Pattern.compile("(?:^.*)\\\\label\\{([^}]*)\\}\\s*(.*)");
-	private static final Pattern DIGIT_PATTERN = Pattern.compile(".*\\d+.*");
+	
+	private static final Pattern LABEL_PATTERN = Pattern.compile("(.*?)\\\\label\\{(?:[^}]*)\\}\\s*(.*?)");
+	//private static final Pattern DIGIT_PATTERN = Pattern.compile(".*\\d+.*");
 
 	// boldface typesetting. \cat{} refers to category. MUST *Update* DF_EMPH_PATTERN_REPLACEMENT when updating this!
 	private static final Pattern DF_EMPH_PATTERN = Pattern
@@ -68,12 +69,13 @@ public class ThmInput {
 			Pattern.compile("\\{\\\\it\\s*([^}]*)\\}") // \\{\\\\it([^}]*)\\}
 	};*/
 	private static final Pattern INDEX_PATTERN = Pattern.compile("\\\\index\\{([^\\}]*)\\}%*");
-	// pattern for eliminating the command completely for web display. E.g. \fml
+	// pattern for eliminating the command completely for web display. E.g. \fml. How about \begin or \end everything?
 	private static Pattern ELIMINATE_PATTERN = Pattern
 			.compile("\\\\fml|\\\\ofml|\\\\begin\\{enumerate\\}|\\\\end\\{enumerate\\}"
 					+ "|\\\\begin\\{def(?:[^}]*)\\}\\s*|\\\\begin\\{lem(?:[^}]*)\\}\\s*|\\\\begin\\{th(?:[^}]*)\\}\\s*"
-					+ "|\\\\begin\\{prop(?:[^}]*)\\}\\s*|\\\\begin\\{proclaim(?:[^}]*)\\}\\s*|\\\\begin\\{cor(?:[^}]*)\\}\\s*"
-					+ "|\\\\begin\\{slogan\\}|\\\\end\\{slogan\\}|\\\\sbsb|\\\\cat|\\\\bs");
+					+ "|\\\\begin\\{pr(?:[^}]*)\\}\\s*|\\\\begin\\{proclaim(?:[^}]*)\\}\\s*|\\\\begin\\{cor(?:[^}]*)\\}\\s*"
+					+ "|\\\\begin\\{slogan\\}|\\\\end\\{slogan\\}|\\\\sbsb|\\\\cat|\\\\bs|\\\\end\\{pr(?:[^}]*)\\}\\s*"
+					+ "|\\\\section\\{(?:[^}]*)\\}\\s*|\\\\noindent");
 	
 	private static final Pattern ITEM_PATTERN = Pattern.compile("\\\\item");
 
@@ -182,7 +184,7 @@ public class ThmInput {
 		}
 		while ((line = srcFileReader.readLine()) != null) {
 			// while(sc.hasNextLine()){
-			if (WordForms.getWhitespacePattern().matcher(line).find()){
+			if (WordForms.getWhiteEmptySpacePattern().matcher(line).find()){
 				continue;
 			}
 			
@@ -209,7 +211,7 @@ public class ThmInput {
 				// strip \df, \empf. Index followed by % strip, not percent
 				// don't strip.
 				// replace enumerate and \item with *
-				String thm = processTex(newThmSB, thmWebDisplayList, bareThmList) + "\n";
+				String thm = removeTexMarkup(newThmSB.toString(), thmWebDisplayList, bareThmList) + "\n";
 
 				// newThmSB.append("\n");
 				/*
@@ -219,7 +221,7 @@ public class ThmInput {
 				 * meat[1]; //System.out.println(thm); }
 				 */
 				// String thm = newThmSB.toString();
-				if (!WordForms.getWhitespacePattern().matcher(thm).find()) {
+				if (!WordForms.getWhiteEmptySpacePattern().matcher(thm).find()) {
 					thms.add(thm);
 				}
 				// newThm = "";
@@ -244,40 +246,38 @@ public class ThmInput {
 	 * useful for parsing, such as \textit{ }.
 	 * But enumerate should not always be turned off.
 	 * @param newThmSB 
-	 * @param thmWebDisplayList Can be null.
-	 * @param bareThmList Can be null.
+	 * @param thmWebDisplayList Can be null. 
+	 * @param bareThmList Can be null. 
 	 * @return Thm without the "\begin{lemma}", "\label{}", etc parts.
-	 */
-	public static String processTex(StringBuilder newThmSB, List<String> thmWebDisplayList,
+	 */	
+	public static String removeTexMarkup(String thmStr, List<String> thmWebDisplayList,
 			List<String> bareThmList) {
 
 		boolean getWebDisplayList = thmWebDisplayList == null ? false : true;
 		boolean getBareThmList = bareThmList == null ? false : true;		
-
-		String noLabelThmStr = newThmSB.toString();
-
+		
 		// replace \df{} and \emph{} with their content
-		Matcher matcher = DF_EMPH_PATTERN.matcher(noLabelThmStr);
-		noLabelThmStr = matcher.replaceAll(DF_EMPH_PATTERN_REPLACEMENT);
+		Matcher matcher = DF_EMPH_PATTERN.matcher(thmStr);
+		thmStr = matcher.replaceAll(DF_EMPH_PATTERN_REPLACEMENT);
 
 		// eliminate symbols such as \fml
-		matcher = ELIMINATE_PATTERN.matcher(noLabelThmStr);
-		noLabelThmStr = matcher.replaceAll("");
+		matcher = ELIMINATE_PATTERN.matcher(thmStr);
+		thmStr = matcher.replaceAll("");
 		
-		matcher = ITEM_PATTERN.matcher(noLabelThmStr);
+		matcher = ITEM_PATTERN.matcher(thmStr);
 		//replace \item with bullet points (*)
-		noLabelThmStr = matcher.replaceAll(" (*)");
-
+		thmStr = matcher.replaceAll(" (*)");
+		
 		// containing the words inside \label and \index etc, but not the words
 		// "\label", "\index",
 		// for bag-of-words searching.
-		String wordsThmStr = noLabelThmStr;
-
+		String wordsThmStr = thmStr;
+		
 		// replace \index{...} with its content for wordsThmStr and nothing for
 		// web display version
 		matcher = INDEX_PATTERN.matcher(wordsThmStr);
 
-		if (matcher.find()) {
+		if (matcher.matches()) {
 			// String insideIndexStr = new String(matcher.group(1));
 			// insideIndexStr = insideIndexStr.replaceAll("!", " ");
 			// System.out.println(insideIndexStr);
@@ -287,37 +287,48 @@ public class ThmInput {
 		}
 
 		if(getWebDisplayList || getBareThmList){
-			matcher = INDEX_PATTERN.matcher(noLabelThmStr);
-			noLabelThmStr = matcher.replaceAll("");
+			matcher = INDEX_PATTERN.matcher(thmStr);
+			thmStr = matcher.replaceAll("");
 		}
 		
 		//bare thm string with no label content at the beginning.
-		String bareThmStr = noLabelThmStr;
-		// remove label
-		matcher = LABEL_PATTERN.matcher(noLabelThmStr);
-		if (matcher.find()) {
-			String labelContent = matcher.group(1);
+		String bareThmStr = thmStr;
+		// remove label. Need to be careful, since label can occur in middle of sentence,
+		// shouldn't strip away everything before label.
+		matcher = LABEL_PATTERN.matcher(thmStr);
+		if (matcher.matches()) {
+			/*
+			String labelContent = matcher.group(2);
+			
 			Matcher matcher2 = DIGIT_PATTERN.matcher(labelContent);
 			String withLabelContent = null;
-			if (!matcher2.find()) {
-				withLabelContent = matcher.group(1) + ":: " + matcher.group(2);
-				wordsThmStr = withLabelContent;
-				// get thm content
-				noLabelThmStr = withLabelContent;
+			//the labels with the digits usually don't contain any useful math content,
+			//so discard in that case.
+			if (!matcher2.matches()) {
+				
+				withLabelContent = matcher.group(1) + labelContent + ":: " + matcher.group(3);
+				wordsThmStr = withLabelContent;				
+				// keep label content
+				thmStr = withLabelContent;
 			} else {
-				wordsThmStr = matcher.group(2);
+				wordsThmStr = matcher.group(1) + " " + matcher.group(3);
+				System.out.println("AFTER label: " + wordsThmStr);
 			}
+			*/
+			wordsThmStr = matcher.replaceAll("$1$2");			
+			thmStr = wordsThmStr;
+			
 			//this is only executed when getting theorems for context parsing.
 			if(getBareThmList){			
-				StringBuilder sb = new StringBuilder();
+				/*StringBuilder sb = new StringBuilder();
 				if(withLabelContent != null){					
 					//label often contains dashes "-"
 					String[] labelAr = (labelContent + ".").split(" |-");
 					for(String word : labelAr){
 						sb.append(word + " ");
 					}					
-				}
-				bareThmStr = sb + matcher.group(2);
+				}*/
+				bareThmStr = wordsThmStr;
 			}
 		}
 
@@ -325,7 +336,7 @@ public class ThmInput {
 			bareThmList.add(bareThmStr);
 		}
 		if(getWebDisplayList){
-			thmWebDisplayList.add(noLabelThmStr);
+			thmWebDisplayList.add(thmStr);
 		}
 		return wordsThmStr;
 	}

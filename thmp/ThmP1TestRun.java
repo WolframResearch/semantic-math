@@ -3,6 +3,7 @@ package thmp;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -18,19 +19,8 @@ import thmp.ThmP1.ParsedPair;
  */
 public class ThmP1TestRun {
 	
-	private static final boolean WRITE_UNKNOWN_WORDS_TO_FILE = false;
+	private static final boolean WRITE_UNKNOWN_WORDS_TO_FILE = true;
 
-	static{
-		/*Maps.buildMap();
-		try {
-			Maps.readLexicon();
-			Maps.readFixedPhrases();
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}*/
-	}
-
-	//the char of F_p is p
 	public static void main(String[] args) throws IOException{
 			//System.out.print("Got to main!");
 			//ThmP1.buildMap();
@@ -521,8 +511,11 @@ public class ThmP1TestRun {
 			st = "The image of a constructible subset of $\\Spec(S)$ in $\\Spec(R)$ is constructible."; //<--to parse!!
 			
 			st = "The image of a constructible subset in $\\Spec(R)$ is constructible.";
-			
-			
+			st = " let \\begin{align*} F \\end{align*} be a field";
+			st = "There are exact sequences $$ M_2 \\otimes_R $$";
+			st = "There are exact sequences $$ F $$";
+			st = "let \\begin{align*} F \\end{align*} be a field and \\begin{align*} R \\end{align*} be a ring ";
+			st = "";
 			//st = "given The image of a constructible subset";				
 			//st = "Let $F$ be a field. $F$ is a ring";			
 			//st = "then $x> 0$";
@@ -614,7 +607,7 @@ public class ThmP1TestRun {
 			}
 			
 			/*******whether to process file or not********/
-			boolean processFile = false;
+			boolean processFile = true;
 			
 			if(processFile){
 				
@@ -622,24 +615,24 @@ public class ThmP1TestRun {
 				Scanner sc = new Scanner(new File("src/thmp/data/collectThmTestSample.txt"));
 				parseState = parseStateBuilder.build();
 				
-				while(sc.hasNextLine()){					
+				while(sc.hasNextLine()){				
 					
 					String nextLine = sc.nextLine();
 					st = nextLine;
 					if(st.matches("^\\s*$")) continue;
-					System.out.println("*~~~*");
+					System.out.println("*~~~*");					
+					nextLine = ThmInput.removeTexMarkup(nextLine, null, null);
 					System.out.println(nextLine + "\n");
 					parseInputVerbose(nextLine, parseState);
-				}				
+					parseState.parseRunCleanUp();
+				}		
 				
-				if(WRITE_UNKNOWN_WORDS_TO_FILE){
-					ThmP1.writeUnknownWordsToFile();
-				}
-				//ThmP1.writeParsedExprToFile();
 				sc.close();
 			}
-			//p1.parse(p1.tokenize(p1.preprocess("characteristic of Fp is p".split(" "))));
-			parseState.writeUnknownWordsToFile();
+			
+			if(WRITE_UNKNOWN_WORDS_TO_FILE){
+				parseState.writeUnknownWordsToFile();
+			}
 		}
 	
 	/**
@@ -669,8 +662,10 @@ public class ThmP1TestRun {
 		}*/
 		
 		System.out.println("@@@" + parseState.getHeadParseStruct());
-		System.out.println("Relational Vector num of bits set: " + parseState.getRelationalContextVec().bitCount());
-		
+		BigInteger relationalVec = parseState.getRelationalContextVec();
+		if(null != relationalVec){
+			System.out.println("Relational Vector num of bits set: " + relationalVec.bitCount());
+		}
 		parseState.logState();
 		
 		//combine these vectors together, only add subsequent vector entry

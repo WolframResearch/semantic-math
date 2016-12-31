@@ -71,11 +71,7 @@ public class TestParseMain {
 		//parsedList.add("{STM=[ f \\[Element] function[{function, {with, Conj[{radius of convergence, r}, {roots, finitely many}]}}]  1.0  3  7]}\n");
 		
 		
-		stList.add("$R/\\mathfrak p$ is catenary for every minimal prime $\\mathfrak p$");
-		Multimap<ParseStructType, String> desiredMap7 = ArrayListMultimap.create();
-		desiredMap7.put(ParseStructType.HYP, "\\[ForAll][ MathObj{minimal prime, $\\mathfrak p$} ]");
-		desiredMap7.put(ParseStructType.STM, "MathObj{$R/\\mathfrak p$} \\[Element] MathObj{catenary}");
-		parsedMMapList.add(desiredMap7);
+		
 		//parsedList.add("{HYP=[ \\[ForAll][ MathObj{minimal prime, $\\mathfrak p$} ]  1.0  2  3], STM=[ MathObj{$R/\\mathfrak p$} \\[Element] MathObj{catenary}  0.9  3  4]}\n");
 		              //{HYP=[ \\[ForAll][ MathObj{minimal prime, $\\mathfrak p$} ]  1.0  2  3], STM=[ MathObj{$R/\mathfrak p$} \[Element] MathObj{catenary}  0.9  3  4]}
 		
@@ -132,21 +128,25 @@ public class TestParseMain {
 		assertTrue("Testing " + st, parsePresent);
 		
 	}
-	
+	///
+	stList.add("$R/\\mathfrak p$ is catenary for every minimal prime $\\mathfrak p$");
+	Multimap<ParseStructType, String> desiredMap7 = ArrayListMultimap.create();
+	desiredMap7.put(ParseStructType.HYP, "\\[ForAll][ MathObj{minimal prime, $\\mathfrak p$} ]");
+	desiredMap7.put(ParseStructType.STM, "MathObj{$R/\\mathfrak p$} \\[Element] MathObj{catenary}");
+	parsedMMapList.add(desiredMap7);
+	///
 	@Test
 	public void testStm3(){
-		//"$R/\\mathfrak p$ is catenary for every minimal prime $\\mathfrak p$"
-		String thm = " ";
+		String thm = "$R/\\mathfrak p$ is catenary for every minimal prime $\\mathfrak p$";
 		
 		Multimap<ParseStructType, String> desiredMap = ArrayListMultimap.create();
-		desiredMap.put(ParseStructType.STM, "f \\[Element] function[\"Type\"->\"function\", \"r\", \"Qualifiers\" -> {\"with\", \"Type\"->\"radius of convergence\"}]");
+		desiredMap.put(ParseStructType.STM, " ");
 		//Math["Type"->"element", "$S$"]
 		parseThm(thm, desiredMap);
 	}
 	
 	@Test
 	public void testStm2(){
-		//"$R/\\mathfrak p$ is catenary for every minimal prime $\\mathfrak p$"
 		String thm = "$f$ is holomorphic on $D(0, r)$, the derivative of $f$ is $\\sum_j j $";
 		
 		Multimap<ParseStructType, String> desiredMap = ArrayListMultimap.create();

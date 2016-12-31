@@ -27,7 +27,7 @@ import thmp.utils.ExtractMacros;
 
 /**
  * Processes theorems/lemmas/defs read in from file.
- * To be done after ThmInput.java.
+ * To be used *after* ThmInput.java.
  * 
  * @author yihed
  *
@@ -262,7 +262,7 @@ public class ProcessInput {
 			//thm = thm.replaceAll(TEX_CONTENT, "tex");
 		}
 		
-		//Compile this pattern!!		
+		//Compile this pattern!	
 		
 		//replaceAll("(?:\\$[^$]+\\$)|(?:\\$\\$[^$]+\\$\\$)", "tex").
 		//use capturing groups to capture text inside {\it ... } etc.
