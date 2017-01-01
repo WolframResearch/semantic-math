@@ -965,6 +965,7 @@ public class ParseToWLTree{
 		//depth of highestStruct
 		private int leastDepth;
 		//highest struct in tree amongst Structs that build this WLCommand, ie closest to root.
+		//This is called structToAppendCommandStr when used in WLCommand.java.
 		private Struct highestStruct;
 		
 		public WLCommandWrapper(WLCommand curCommand, int listIndex){			
@@ -984,6 +985,10 @@ public class ParseToWLTree{
 			this.highestStruct = struct;
 		}
 		
+		/**
+		 * This is called structToAppendCommandStr when used in WLCommand.java.
+		 * @return
+		 */
 		public Struct highestStruct(){
 			return this.highestStruct;
 		}

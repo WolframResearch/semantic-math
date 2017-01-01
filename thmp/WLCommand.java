@@ -746,6 +746,9 @@ public class WLCommand implements Serializable{
 		 * @param posTermStruct
 		 */
 		public void set_posTermStruct(Struct posTermStruct){
+			//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
+			//System.out.println("posTerm: " + this + " ||posTermStruct " + posTermStruct);
+			
 			this.posTermStruct = posTermStruct;
 		}
 		
@@ -844,10 +847,10 @@ public class WLCommand implements Serializable{
 		
 		//commandsCountMap deliberately immutable, should not be modified during runtime
 		newCommand.commandsCountMap = new HashMap<WLCommandComponent, Integer>(((WLCommand)curCommand).commandsCountMap) ;
-		//newCommand.commandsCountMap = ((WLCommand)curCommand).commandsCountMap;
+		
 		newCommand.composedWLCommandsList = new ArrayList<WLCommand>();
 		
-		//ImmutableMap.copyOf(curCommand.commandsCountMap);
+		
 		newCommand.posTermList = new ArrayList<PosTerm>(((WLCommand)curCommand).posTermList);
 		
 		newCommand.totalComponentCount = ((WLCommand)curCommand).totalComponentCount;
@@ -927,16 +930,9 @@ public class WLCommand implements Serializable{
 						structIntMap.put(nextStructParent, whichChild);
 						curStruct = nextStructParent;
 						nextStructParent = nextStructParent.parentStruct(); 
-						//break;
 					}					
 				}
 				
-				/*Integer structCount = structIntMap.get(nextStruct);
-				if(structCount != null){					
-					structIntMap.put(nextStruct, structCount + 1);			
-				}else{
-					structIntMap.put(nextStruct, 1);
-				}*/
 			}			
 		}
 
@@ -944,7 +940,7 @@ public class WLCommand implements Serializable{
 			Integer whichChild = entry.getValue();
 			Struct nextStruct = entry.getKey();
 			//System.out.println("@@@Added Parent: " + nextStruct + " " + whichChild);
-			//if(whichChild == BOTHCHILDREN || whichChild == RIGHTCHILD){
+			
 			if(whichChild == BOTHCHILDREN){
 				int nextStructDepth = nextStruct.dfsDepth();
 				if(nextStructDepth < leastDepth){
@@ -964,28 +960,10 @@ public class WLCommand implements Serializable{
 				}
 			}
 		}		
-		
-		//System.out.println("````LeastDepth " + leastDepth);
 
 		//if head is ent (firstPosTermStruct.type().equals("ent") && ) and 
-		//everything in this command belongs to or is a child of the head ent struct
-		//if(highestStruct == firstPosTermStruct){
+		//everything in this command belongs to or is a child of the head ent struct		
 		structToAppendCommandStr = highestStruct;
-			//System.out.println("~~~~~~~~~highestStruct"+highestStruct);
-		/*}else{
-			
-			structToAppendCommandStr = firstPosTermStruct;
-			Struct parentStruct = firstPosTermStruct.parentStruct();
-		
-		//go one level higher if parent exists
-		Struct grandparentStruct = null;
-		if(parentStruct != null) grandparentStruct = parentStruct.parentStruct();
-		
-		//set grandparent to parent if grandparent is a StructH
-		structToAppendCommandStr = (grandparentStruct == null ? 
-				(parentStruct == null ? structToAppendCommandStr : parentStruct) : 
-					(grandparentStruct instanceof StructH ? parentStruct : grandparentStruct));
-		}*/
 		
 		//System.out.println("structToAppendCommandStr" + structToAppendCommandStr);
 		return structToAppendCommandStr;
@@ -999,7 +977,6 @@ public class WLCommand implements Serializable{
 	 */
 	private static boolean updateWrapper(Struct nextStruct, Struct structToAppendCommandStr){
 		
-		//List<WLCommandWrapper> nextStructWrapperList = nextStruct.WLCommandWrapperList();
 		Struct prevHeadStruct = nextStruct.structToAppendCommandStr();
 		boolean prevStructHeaded = false; 
 		
@@ -1110,13 +1087,14 @@ public class WLCommand implements Serializable{
 								+curCommandComponentList.size() +" Should not happen! For component: "
 								+ commandComponent + " in command " + commandsCountMap;
 						System.out.println(warningMsg);
-						logger.info(warningMsg);
+						logger.error(warningMsg);
 					}
 					continue;
 				}
 				
 				Struct nextStruct = curCommandComponentList.get(positionInMap);
-				term.set_posTermStruct(nextStruct);
+				//don't set struct here! Can lead to wrong struct for parent-child pairs!
+				//term.set_posTermStruct(nextStruct);
 				
 				//prevStruct = nextStruct;				
 				if(nextStruct.previousBuiltStruct() != null){ 
@@ -1217,14 +1195,14 @@ public class WLCommand implements Serializable{
 			System.out.print("BUILT COMMAND: " + commandSB);
 			System.out.println("HEAD STRUCT: " + structToAppendCommandStr);
 		}
-		
-		//make WLCommand refer to list of WLCommands rather than just one.
-		//Wrapper used here during build().
+		//System.out.println("*******%######structToAppendCommandStr " +structToAppendCommandStr);
+		logger.info("****%###structToAppendCommandStr " +structToAppendCommandStr + " curCommand: " + curCommand);
 		WLCommandWrapper curCommandWrapper = structToAppendCommandStr.add_WLCommandWrapper(curCommand);
 		
 		if(DEBUG){
 			System.out.println("~~~structToAppendCommandStr to append wrapper: " + structToAppendCommandStr);
 			System.out.println("curCommand just appended: " + curCommand);
+			//System.out.println(curCommand.posTermList.get(0).posTermStruct);
 		}
 		
 		//add local variable to parseState.
@@ -1495,7 +1473,7 @@ public class WLCommand implements Serializable{
 			}
 			
 			commandsMap.put(commandComponent, newStruct);
-			//sets the posTermStruct for the posTerm. No effect?!?***
+			
 			posTermList.get(i).set_posTermStruct(newStruct);
 			//here newComponent must have been in the original required set
 			int commandComponentCount = commandsCountMap.get(commandComponent);
@@ -1673,7 +1651,7 @@ public class WLCommand implements Serializable{
 		}
 		/*if(print){
 			System.out.println("**************************** after: " + structToAdd);
-		}*/
+		} */
 		return structToAdd;
 	}
 	
@@ -2052,10 +2030,13 @@ public class WLCommand implements Serializable{
 	 */
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		
+		if (this == obj){
 			return true;
-		if (obj == null)
+		}
+		if (obj == null){
 			return false;
+		}
 		if (!(obj instanceof WLCommand))
 			return false;
 		WLCommand other = (WLCommand) obj;

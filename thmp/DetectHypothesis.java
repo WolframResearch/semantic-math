@@ -58,8 +58,8 @@ public class DetectHypothesis {
 	private static final String definitionStrOutputFileStr = "src/thmp/data/parsedExpressionDefinitions.txt";
 
 	private static final boolean PARSE_INPUT_VERBOSE = true;
-	private static final Pattern SKIP_PATTERN = Pattern.compile("\\\\begin\\{proof\\}");
-	private static final Pattern END_SKIP_PATTERN = Pattern.compile("\\\\end\\{proof\\}");
+	private static final Pattern SKIP_PATTERN = Pattern.compile("\\\\begin\\{proof\\}.*");
+	private static final Pattern END_SKIP_PATTERN = Pattern.compile("\\\\end\\{proof\\}.*");
 	
 	/**
 	 * Combination of theorem String and the list of
@@ -145,8 +145,8 @@ public class DetectHypothesis {
 		
 		BufferedReader inputBF = null;
 		try{
-			//inputBF = new BufferedReader(new FileReader("src/thmp/data/CommAlg5.txt"));
-			inputBF = new BufferedReader(new FileReader("src/thmp/data/samplePaper1.txt"));
+			inputBF = new BufferedReader(new FileReader("src/thmp/data/CommAlg5.txt"));
+			//inputBF = new BufferedReader(new FileReader("src/thmp/data/samplePaper1.txt"));
 		}catch(FileNotFoundException e){
 			e.printStackTrace();
 			throw new IllegalStateException("Source file not found!");
@@ -503,7 +503,7 @@ public class DetectHypothesis {
 	 * Picks out variables to be defined, and try to match them with prior definitions.
 	 * Picks up variable definitions.
 	 * @param latexExpr 
-	 * @param thmWithDefSB StringBuilder that's the original input string appended
+	 * @param thmDefSB StringBuilder that's the original input string appended
 	 * to the definition strings.
 	 * @param varDefSet set to keep track of which VariableDefinition's have been added, so not to 
 	 * add duplicate ones.
@@ -511,7 +511,7 @@ public class DetectHypothesis {
 	private static List<VariableDefinition> pickOutVariables(String latexExpr, 
 			//ListMultimap<VariableName, VariableDefinition> variableNamesMMap,
 			ParseState parseState, Set<VariableDefinition> varDefSet,
-			StringBuilder thmWithDefSB){
+			StringBuilder thmDefSB){
 		
 		//list of definitions needed in this latexExpr
 		List<VariableDefinition> varDefList = new ArrayList<VariableDefinition>();
@@ -552,7 +552,7 @@ public class DetectHypothesis {
 					varDefSet.add(possibleVarDef);
 					varDefList.add(possibleVarDef);
 					//System.out.println("latestVarDef.getOriginalDefinitionStr() " + latestVarDef.getOriginalDefinitionStr());
-			 		thmWithDefSB.append(possibleVarDef.getOriginalDefinitionStr()).append(" ");
+			 		thmDefSB.append(possibleVarDef.getOriginalDefinitionStr()).append(" ");
 				}
 			}			
 		}

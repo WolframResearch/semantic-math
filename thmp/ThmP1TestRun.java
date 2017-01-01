@@ -515,7 +515,10 @@ public class ThmP1TestRun {
 			st = "There are exact sequences $$ M_2 \\otimes_R $$";
 			st = "There are exact sequences $$ F $$";
 			st = "let \\begin{align*} F \\end{align*} be a field and \\begin{align*} R \\end{align*} be a ring ";
-			st = "";
+			st = "a field is a ring where the group is a monoid";
+			st = "Multiplication is defined by the rule that on pure tensors we have $$ (x_1 \\otimes x_2 \\otimes \\ldots \\otimes x_n) \\cdot (y_1 \\otimes y_2 \\otimes \\ldots \\otimes y_m) = x_1 \\otimes x_2 \\otimes \\ldots \\otimes x_n \\otimes y_1 \\otimes y_2 \\otimes \\ldots \\otimes y_m $$ and we extend this by linearity.";
+			
+			//st = "field has ring";
 			//st = "given The image of a constructible subset";				
 			//st = "Let $F$ be a field. $F$ is a ring";			
 			//st = "then $x> 0$";
@@ -592,7 +595,11 @@ public class ThmP1TestRun {
 			ParseState parseState = parseStateBuilder.build();
 			
 			if(processText){
+				try{
 				parseInputVerbose(st, parseState);
+				}catch(StackOverflowError e){
+					System.out.println("ERRRRRRRRROOOOOORRRRRRRRR");
+				}
 			}
 			
 			boolean streamInput = false;
@@ -607,7 +614,7 @@ public class ThmP1TestRun {
 			}
 			
 			/*******whether to process file or not********/
-			boolean processFile = true;
+			boolean processFile = false;
 			
 			if(processFile){
 				

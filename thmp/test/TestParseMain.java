@@ -129,11 +129,11 @@ public class TestParseMain {
 		
 	}
 	///
-	stList.add("$R/\\mathfrak p$ is catenary for every minimal prime $\\mathfrak p$");
+	/*stList.add("$R/\\mathfrak p$ is catenary for every minimal prime $\\mathfrak p$");
 	Multimap<ParseStructType, String> desiredMap7 = ArrayListMultimap.create();
 	desiredMap7.put(ParseStructType.HYP, "\\[ForAll][ MathObj{minimal prime, $\\mathfrak p$} ]");
 	desiredMap7.put(ParseStructType.STM, "MathObj{$R/\\mathfrak p$} \\[Element] MathObj{catenary}");
-	parsedMMapList.add(desiredMap7);
+	parsedMMapList.add(desiredMap7);*/
 	///
 	@Test
 	public void testStm3(){

@@ -262,3 +262,4 @@ correspond verb
 annihilator ent
 annihilated adj
 ordinal ent
+monoid ent

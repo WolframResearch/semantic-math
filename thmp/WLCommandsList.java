@@ -86,10 +86,9 @@ public class WLCommandsList {
 		triggerWordLookupMapBuilder.put("belong", "is");
 		triggerWordLookupMapBuilder.put("lie", "is");
 		triggerWordLookupMapBuilder.put("where", "if");
-		triggerWordLookupMapBuilder.put("let", "if");
 		triggerWordLookupMapBuilder.put("for any", "for every");
 		triggerWordLookupMapBuilder.put("for all", "for every");
-		triggerWordLookupMapBuilder.put("if and only if", "suppose");
+		//triggerWordLookupMapBuilder.put("if and only if", "let");
 		triggerWordLookupMapBuilder.put("assume", "if");
 		triggerWordLookupMapBuilder.put("is included", "is contained");
 		triggerWordLookupMapBuilder.put("are included", "is contained");
@@ -221,12 +220,13 @@ public class WLCommandsList {
 		
 		// trigger TriggerMathObj
 		//***action*** commands
-		wLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro|noun", null, true, false, false, PosTermConnotation.DEFINED,
+		wLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro|noun", null, true, false, false, //PosTermConnotation.DEFINED,
 				RelationType._IS), 
 				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), new PBuilder("\\[Element]"),
 				//negative term, to stop command if encountered
-				new PBuilder("adj", null, WLCommand.PosTermType.NEGATIVE),			
-				new PBuilder("symb|ent|phrase", null, true, false, true, PosTermConnotation.DEFINING, RelationType.IS_) ));
+				new PBuilder("adj", null, WLCommand.PosTermType.NEGATIVE),
+				new PBuilder("symb|ent|phrase", null, true, false, true, RelationType.IS_) )); // PosTermConnotation.DEFINING,
+		
 		//e.g. "$X$ is connected"
 		wLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro|noun", null, true, RelationType._IS), 
 				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), 
@@ -259,10 +259,19 @@ public class WLCommandsList {
 				new PBuilder("symb|ent|pro", null, true, false, true), new PBuilder(","), new PBuilder(null, "to", false), 
 				new PBuilder("symb|ent|pro", null, true, false, true), new PBuilder("]") ));
 		
-		//if_assert. As well as "let", etc
+		//if_assert. As well as " if  ", etc
 		//WLCommandMapBuilder.put("if", addCommand(new String[] { "if|If|let, , trigger", "assert, , true" }));
-		wLCommandMapBuilder.put("if", addCommand(new PBuilder("if|If|let", null, false, true, false), 
+		wLCommandMapBuilder.put("if", addCommand(new PBuilder("if|If", null, false, true, false), 
 				new PBuilder("assert", null, true) ));
+		
+		//"let A be B"; "suppose A is B"
+		wLCommandMapBuilder.put("let", addCommand(new PBuilder("let|suppose", null, false, true, false), 
+				new PBuilder("symb|ent|pro|noun", null, true, false, false, PosTermConnotation.DEFINED,
+						RelationType._IS), 
+				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), new PBuilder("\\[Element]"),
+				new PBuilder("symb|ent|phrase", null, true, false, true, PosTermConnotation.DEFINING, RelationType.IS_)) );
+		
+		//PosTermConnotation.DEFINING,
 		
 		//WLCommandMapBuilder.put("equal to", addCommand(new String[] { "symb|ent, , true",
 		//"==", "equal to, , trigger", "symb|ent|phrase, , true, TriggerMathObj" }));
@@ -301,9 +310,11 @@ public class WLCommandsList {
 		//auxpass, eg "is called"
 		//WLCommandMapBuilder.put("is called", addCommand(new String[] { "symb|ent|pro, , true", "auxpass, is called, trigger",
 				//"\\[Element]", "symb|ent|adj|phrase, , true, TriggerMathObj" }));
-		wLCommandMapBuilder.put("is called", addCommand(new PBuilder("symb|ent|pro", null, true), 
+		wLCommandMapBuilder.put("is called", addCommand(new PBuilder("symb|ent|pro", null, true, false, false,
+				PosTermConnotation.DEFINING), 
 				new PBuilder("auxpass", "is called", false, true, false), new PBuilder("\\[Element]"),
-				new PBuilder("symb|ent|adj|phrase", null, true, false, true, RelationType._IS) ));
+				new PBuilder("symb|ent|adj|phrase", null, true, false, false, PosTermConnotation.DEFINED,
+						RelationType._IS) ));
 		
 		// ***Hypothesis commands***
 		//for every $x$
@@ -317,7 +328,7 @@ public class WLCommandsList {
 		//WLCommandMapBuilder.put("suppose", addCommand(new String[] { "hyp, , trigger",
 			//"assert, , true" })); 
 		//note that "hyp" also includes "which is...", which can occur in statements, and not just hypotheses!
-		wLCommandMapBuilder.put("suppose", addCommand(new PBuilder("hyp", null, false, true, false), 
+		wLCommandMapBuilder.put("if and only if", addCommand(new PBuilder("hyp", null, false, true, false), 
 				new PBuilder("assert", null, true) ));
 		
 		//WLCommandMapBuilder.put("consider", addCommand(new String[] { "verb, , trigger", "ent|phrase, , true" }));

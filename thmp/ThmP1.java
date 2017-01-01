@@ -152,6 +152,7 @@ public class ThmP1 {
 	
 	private static final Pattern HYP_PATTERN = WordForms.get_HYP_PATTERN();
 	private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
+	private static final String LATEX_PLACEHOLDER_STR = " text ";
 	
 	static{
 		
@@ -545,6 +546,11 @@ public class ThmP1 {
 		//Only split on white space.
 		String[] strAr = WHITESPACE_PATTERN.split(sentence);
 		
+		//String with latex substituted with the word "text". For use
+		//by the posTagger. Since "text" is likely provide the right 
+		//tag for words that surround it.
+		StringBuilder noTexSB = new StringBuilder(50);
+		
 		//\begin{enumerate} should be the first word in the sentence, based on how they are built
 		//in the preprocessor.
 		if(strAr[0].equals("\\begin{enumerate}")){
@@ -599,6 +605,7 @@ public class ThmP1 {
 				Pair pair = new Pair(latexExprSB.toString(), type);
 				pairs.add(pair);
 				mathIndexList.add(pairs.size() - 1);
+				noTexSB.append(LATEX_PLACEHOLDER_STR);
 				//if(true) throw new IllegalStateException("pair "+pair.word());
 				continue;
 			}
@@ -670,11 +677,14 @@ public class ThmP1 {
 					mathIndexList.add(pairs.size() - 1);
 				}
 				//if(true) throw new IllegalStateException("pair "+pair.word());
-				continue;
+				noTexSB.append(LATEX_PLACEHOLDER_STR);
+				continue strloop;
 			}
+			
+			noTexSB.append(" " + curWord + " ");
 			// check for trigger words of fixed phrases, e.g. "with this said",
 			// "all but finitely many", as well as 2- or 3-grams.
-			else if (i < strAr.length - 1) {
+			if (i < strAr.length - 1) {
 				
 				String potentialTrigger = curWord + " " + strAr[i + 1];
 				if (fixedPhraseMap.containsKey(potentialTrigger)) {
@@ -1239,12 +1249,23 @@ public class ThmP1 {
 					setUpPosTagger();
 				}
 				
-				String taggedSentence = posTagger.tagString(sentence);
+				//use sentence with latex substituted.
+				String sentenceToTag = noTexSB.toString();
+				
+				String taggedSentence = posTagger.tagString(sentenceToTag);
 				//must find word in tagged sentence, which looks like 
 				//e.g. "a_DT field_NN is_VBZ a_DT ring_NN".
 				//better way to fish the pos out?
 				String wordToTag = " " + curWord + "_";
 				int wordStartIndex = taggedSentence.indexOf(wordToTag);
+				
+				//necessary check in case noTexSB dropped the word.
+				assert(-1 != wordStartIndex);
+				//right now in development throw Exception
+				if(-1 == wordStartIndex){
+					throw new IllegalStateException("wordToTag not found in taggedSentence!");
+				}
+				
 				int posIndex = wordStartIndex + wordToTag.length();
 				//pos is 2 characters long.
 				String wordPos = taggedSentence.substring(posIndex, posIndex+2);

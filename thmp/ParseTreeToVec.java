@@ -112,6 +112,8 @@ public class ParseTreeToVec {
 		List<Struct> children = struct.children();
 		
 		for(Struct child : children){
+			System.out.println("child! " + child + " ||| parent! " + 
+		struct);
 			tree2vec(child, structIndex, contextVec);
 		}
 		
@@ -143,11 +145,11 @@ public class ParseTreeToVec {
 		//add struct itself, then its prev1 and prev2
 		int structIndex = setContextVecEntry(struct, termStr, structParentIndex, contextVec);
 		//do prev1 and prev2
-		if(struct.prev1NodeType().equals(NodeType.STRUCTA) || struct.prev1NodeType().equals(NodeType.STRUCTH)){
+		if(struct.prev1NodeType().isTypeStruct()){
 			tree2vec((Struct)(struct.prev1()), structIndex, contextVec);
 		}
 		
-		if(struct.prev2NodeType().equals(NodeType.STRUCTA) || struct.prev2NodeType().equals(NodeType.STRUCTH)){
+		if(struct.prev2NodeType().isTypeStruct()){
 			tree2vec((Struct)(struct.prev2()), structIndex, contextVec);
 		}		
 		
@@ -163,6 +165,7 @@ public class ParseTreeToVec {
 		List<WLCommandWrapper> wrapperList = struct.WLCommandWrapperList();		
 		if(wrapperList != null){
 			WLCommandWrapper wrapper = wrapperList.get(0);
+			System.out.println("struct! " + struct + " |||wrapper! " + wrapper);
 			ParseRelation parseRelation = ParseRelation.getParseRelation(struct, contextVec, wrapper.WLCommandStr());
 				//headVecEntry = parseRelation.relationNum;
 				//System.out.println("HERE (in ParseTreeToVec)" + commandWrapper == null ? "" : commandWrapper.WLCommandStr());
@@ -382,6 +385,9 @@ public class ParseTreeToVec {
 			WLCommand command = commandWrapper.WLCommand();
 			List<PosTerm> posTermList = WLCommand.posTermList(command);
 			int triggerTermIndex = WLCommand.triggerWordIndex(command);
+			//WLCommand tempCo  = struct.parentStruct().parentStruct().parentStruct().WLCommandWrapperList().get(0).WLCommand();
+			System.out.println("!!posTermList.get(0).posTermStruct() " + posTermList.get(0).posTermStruct() + posTermList.get(0).posTermStruct());
+			//WLCommand.posTermList(tempCo).get(0).posTermStruct()
 			System.out.println("posTermList " + posTermList + " triggerTermIndex " + triggerTermIndex);
 			switch(relation){
 			case ELEMENT:
@@ -466,6 +472,7 @@ public class ParseTreeToVec {
 				
 				//String curStructTermStr = curStruct.contentStr();
 				//addTermStrToVec(curStruct, curStructTermStr, parentTermRowIndex, contextVec);
+				System.out.println("!curStruct " + curStruct);
 				curStruct.setContextVecEntry(parentTermRowIndex, contextVec);
 			}
 		}

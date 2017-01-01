@@ -283,7 +283,7 @@ public class StructA<A, B> extends Struct{
 				this.WLCommandStrVisitedCount++;				
 			}
 			
-			System.out.println("WLCommandStrVisitedCount" + this.WLCommandStrVisitedCount);
+			//System.out.println("WLCommandStrVisitedCount" + this.WLCommandStrVisitedCount);
 			//System.out.println("++++++===curWrapper " +curWrapper.WLCommandStr() + " " + this );
 			curCommand.addComposedWLCommands(composedCommand);
 			return curWrapper.WLCommandStr();			
