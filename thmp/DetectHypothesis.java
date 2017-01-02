@@ -39,7 +39,7 @@ public class DetectHypothesis {
 	//which is O(mn) time.
 	private static final Pattern HYP_PATTERN = WordForms.get_HYP_PATTERN();
 	//positive look behind to split on any punctuation before a space.
-	private static final Pattern PUNCTUATION_PATTERN = Pattern.compile("(?<=[\\.|;|,|!|:]) ");
+	//private static final Pattern PUNCTUATION_PATTERN = Pattern.compile("(?<=[\\.|;|,|!|:]) ");
 	
 	//also incorporate the separator pattern from WordForms!
 	//deliberately excluding "\\\\", "\\$"
@@ -145,8 +145,8 @@ public class DetectHypothesis {
 		
 		BufferedReader inputBF = null;
 		try{
-			inputBF = new BufferedReader(new FileReader("src/thmp/data/CommAlg5.txt"));
-			//inputBF = new BufferedReader(new FileReader("src/thmp/data/samplePaper1.txt"));
+			//inputBF = new BufferedReader(new FileReader("src/thmp/data/CommAlg5.txt"));
+			inputBF = new BufferedReader(new FileReader("src/thmp/data/samplePaper1.txt"));
 		}catch(FileNotFoundException e){
 			e.printStackTrace();
 			throw new IllegalStateException("Source file not found!");
@@ -365,7 +365,8 @@ public class DetectHypothesis {
 				parseState.setCurParseStruct(null);
 				parseState.setHeadParseStruct(null);
 				
-				//first gather hypotheses in the theorem. 
+				//first gather hypotheses in the theorem. <--Note that this will cause the hypothetical
+				//sentences to be parsed twice, unless these sentences are marked so they don't get parsed again.
 				detectAndParseHypothesis(thm, parseState);
 				//if(true) throw new IllegalStateException(parseState.toString());
 				//if contained in local map, should be careful about when to append map.
@@ -411,8 +412,8 @@ public class DetectHypothesis {
 	private static void detectAndParseHypothesis(String contextStr, ParseState parseState){
 		
 		//split on punctuations precede a space, but keep the punctuation.
-		String[] contextStrAr = PUNCTUATION_PATTERN.split(contextStr);
-		
+		//String[] contextStrAr = PUNCTUATION_PATTERN.split(contextStr);
+		String[] contextStrAr = ThmP1.preprocess(contextStr);
 		for(int i = 0; i < contextStrAr.length; i++){
 			String sentence = contextStrAr[i];
 			if(isHypothesis(sentence)){	

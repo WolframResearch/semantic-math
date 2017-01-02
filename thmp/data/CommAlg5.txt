@@ -2160,12 +2160,10 @@ Omitted.
 \label{lemma-present-sym-wedge}
 Let $R$ be a ring.
 Let $M$ be an $R$-module.
-Let $x_i$, $i \in I$ be a given system of generators of
-$M$ as an $R$-module. Let $n \geq 2$.
-There exists a canonical exact sequence
+Let $x_i$, $i \in I$ be a given system of generators of $M$ as an $R$-module. 
+Let $n \geq 2$.
+There exists a canonical exact sequence $$ \bigoplus_{1 \leq j_1 < j_2 \leq n}\bigoplus_{i_1, i_2 \in I} $$
 $$
-\bigoplus_{1 \leq j_1 < j_2 \leq n}
-\bigoplus_{i_1, i_2 \in I}
 \text{T}^{n - 2}(M)
 \oplus
 \bigoplus_{1 \leq j_1 < j_2 \leq n}

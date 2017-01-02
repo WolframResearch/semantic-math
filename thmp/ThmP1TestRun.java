@@ -517,7 +517,8 @@ public class ThmP1TestRun {
 			st = "let \\begin{align*} F \\end{align*} be a field and \\begin{align*} R \\end{align*} be a ring ";
 			st = "a field is a ring where the group is a monoid";
 			st = "Multiplication is defined by the rule that on pure tensors we have $$ (x_1 \\otimes x_2 \\otimes \\ldots \\otimes x_n) \\cdot (y_1 \\otimes y_2 \\otimes \\ldots \\otimes y_m) = x_1 \\otimes x_2 \\otimes \\ldots \\otimes x_n \\otimes y_1 \\otimes y_2 \\otimes \\ldots \\otimes y_m $$ and we extend this by linearity.";
-			
+			st = "Let $x_i$, $i \\in I$ be a given system of generators of $M$ as an $R$-module";
+			st = "we use the notation ``$\\mathfrak p kjg $``";
 			//st = "field has ring";
 			//st = "given The image of a constructible subset";				
 			//st = "Let $F$ be a field. $F$ is a ring";			
@@ -594,12 +595,8 @@ public class ThmP1TestRun {
 			boolean processText = true;
 			ParseState parseState = parseStateBuilder.build();
 			
-			if(processText){
-				try{
-				parseInputVerbose(st, parseState);
-				}catch(StackOverflowError e){
-					System.out.println("ERRRRRRRRROOOOOORRRRRRRRR");
-				}
+			if(processText){				
+				parseInputVerbose(st, parseState);				
 			}
 			
 			boolean streamInput = false;

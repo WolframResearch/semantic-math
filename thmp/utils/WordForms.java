@@ -206,8 +206,8 @@ public class WordForms {
 	 * @param tex1 
 	 * @param tex2 
 	 */
-	public static boolean areWordsSimilar(String tex1, String tex2){
-		
+	public static boolean areTexExprSimilar(String tex1, String tex2){
+		//if(true) throw new IllegalStateException("tex1: " + tex1 + " tex2 " + tex2);
 		Matcher tex1Matcher = LATEX_PATTERN.matcher(tex1);
 		Matcher tex2Matcher = LATEX_PATTERN.matcher(tex2);
 		//strip $ $ signs.
@@ -218,8 +218,11 @@ public class WordForms {
 			return false;
 		}
 		
+		int tex1Len = tex1.length();
+		int tex2Len = tex2.length();
+		
 		//if tex1 and tex2 have the same "form". E.g. S, T.
-		if(tex1.length() < 3 && tex1.length() == tex2.length()){
+		if(tex1Len < 6 && (tex1Len - tex2Len < 4 || tex2Len - tex1Len < 4) ){
 			return true;
 		}
 		
@@ -229,7 +232,7 @@ public class WordForms {
 		//tex1 = BACKSLASH_PATTERN.matcher(tex1).replaceAll("\\\\");
 		tex1 = BRACES_PATTERN.matcher(tex1).replaceAll("\\$1");
 		tex1 = Matcher.quoteReplacement(tex1);
-		String tex1Regex = "\\\\tilde\\{" + tex1 + "\\}|" + tex1 + "'";
+		String tex1Regex = "\\\\hat\\{" + tex1 + "\\}|" + tex1 + "'";
 		Pattern tex1Pattern = Pattern.compile(tex1Regex);
 		if(tex1Pattern.matcher(tex2).find()){
 			return true;

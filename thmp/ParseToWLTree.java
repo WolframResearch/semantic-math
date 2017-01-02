@@ -576,7 +576,7 @@ public class ParseToWLTree{
 				parsedSB.append(childRelation.get(i) + " ");
 				Struct ithChild = children.get(i);
 				
-				Struct childRelationStruct = new StructA<String, String>(childRelation.get(i).childRelation(), 
+				Struct childRelationStruct = new StructA<String, String>(childRelation.get(i).childRelationStr(), 
 						NodeType.STR, "", NodeType.STR, "pre");
 				childRelationStruct.set_parentStruct(struct);
 				childRelationStruct.set_dfsDepth(struct.dfsDepth() + 1);

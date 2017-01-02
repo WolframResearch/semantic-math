@@ -563,7 +563,7 @@ public class StructH<H> extends Struct{
 			StringBuilder childSb = new StringBuilder();
 			for(int i = 0; i < childrenSize; i++){	
 				Struct child = children.get(i);
-				String childRelationStr = childRelationList.get(i).childRelation;
+				String childRelationStr = childRelationList.get(i).childRelationStr;
 				/*if(child.WLCommandWrapperList() != null){
 					continue;
 				}*/

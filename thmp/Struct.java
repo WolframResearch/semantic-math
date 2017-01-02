@@ -380,18 +380,18 @@ public abstract class Struct implements Serializable{
 		
 		private static final long serialVersionUID = 1L;
 
-		String childRelation;
+		String childRelationStr;
 		
 		public ChildRelation(String relation){
-			this.childRelation = relation;
+			this.childRelationStr = relation;
 		}
 		
 		public boolean isHyp(){
 			return false;
 		}
 		
-		public String childRelation(){
-			return this.childRelation;
+		public String childRelationStr(){
+			return this.childRelationStr;
 		}
 		
 		/**
@@ -406,7 +406,7 @@ public abstract class Struct implements Serializable{
 		
 		@Override
 		public String toString(){
-			return this.childRelation;
+			return this.childRelationStr;
 		}
 		
 		/**

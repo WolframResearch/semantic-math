@@ -73,10 +73,12 @@ public class ThmP1 {
 	private static final Pattern IS_ARE_BE_PATTERN = Pattern.compile("is|are|be");
 	private static final Pattern CALLED_PATTERN = Pattern.compile("called|defined|said|denoted");
 	private static final Pattern CONJ_DISJ_PATTERN1 = Pattern.compile("conj|disj");
-	//end part of latex expressions, e.g. " B)$-module"
+	//end part of latex expression word, e.g. " B)$-module"
 	private static final Pattern LATEX_END_PATTER = Pattern.compile("[^$]*\\$.*");
+	private static final Pattern LATEX_BEGIN_PATTERN = Pattern.compile("[^$]*\\${1,2}[^$]*");
 	private static final Pattern POSSIBLE_ADJ_PATTERN = Pattern.compile("(?:.*tive|.*wise|.*ary|.*able|.*ous)$");
 	private static final Pattern ESSENTIAL_POS_PATTERN = Pattern.compile("ent|conj_ent|verb|vbs|if|symb|pro");
+	private static final Pattern SINGLE_WORD_TEX_PATTERN = Pattern.compile("\\$[^$]+\\$[^\\s]*"); 
 	
 	//pattern for Latex expressions being possible assert's, i.e. starting/ending with $ and 
 	//containing operators such as ">, ="
@@ -147,12 +149,18 @@ public class ThmP1 {
 	private static final Pattern END_ALIGN_PATTERN = Pattern.compile("(?:(.*\\\\end\\{align[*]*\\}).*)|(?:(.*\\\\end\\{equation\\}).*)");
 	private static final boolean DEBUG = InitParseWithResources.isDEBUG();
 	//contains backslash
-	private static final Pattern BACKSLASH_CONTAINMENT_PATTERN = Pattern.compile(".*[\\\\|$|=|\\{|\\}].*");
+	private static final Pattern BACKSLASH_CONTAINMENT_PATTERN = Pattern.compile(".*[\\\\|$|=|\\{|\\}|\\[|\\]|^|_|+|-|%].*");
 	private static final Pattern DIGITS_PATTERN = Pattern.compile("\\d+");
 	
 	private static final Pattern HYP_PATTERN = WordForms.get_HYP_PATTERN();
 	private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
 	private static final String LATEX_PLACEHOLDER_STR = " text ";
+	private static final Pattern PAREN_END_PATTERN = Pattern.compile("[^)]*\\)");
+	private static final Pattern PAREN_START_PATTERN = Pattern.compile("\\([^)]*");
+	private static final Pattern BRACKET_END_PATTERN = Pattern.compile("[^]]*\\]");
+	private static final Pattern BRACKET_START_PATTERN = Pattern.compile("\\[[^]]*");	
+	private static final Pattern BRACKETS_PATTERN = Pattern.compile("\\[[^]]+\\]");
+	private static final Pattern PAREN_PATTERN = Pattern.compile("\\([^)]+\\)");
 	
 	static{
 		
@@ -256,7 +264,6 @@ public class ThmP1 {
 			this.numUnits = numUnits;
 			this.commandNumUnits = commandNumUnits;
 			this.stringForm = this.toString();
-			
 		}
 		
 		/**
@@ -265,6 +272,7 @@ public class ThmP1 {
 		public WLCommand getWlCommand() {
 			return wlCommand;
 		}
+		
 		/**
 		 * Used in case of no WLCommand parse string, then use alternate measure
 		 * of span, deduced from longForm dfs.
@@ -282,16 +290,7 @@ public class ThmP1 {
 			this.parseStructType = type;
 			this.stringForm = this.toString();
 		}
-		
-		/*public ParsedPair(String parsedStr, double score, int numUnits, int commandNumUnits, 
-				WLCommand wlCommand, //ParseStruct parseStruct, 
-				ParseStructType type){
-			//this(parsedStr, parseStruct, score, numUnits, commandNumUnits, wlCommand);
-			this(parsedStr, score, numUnits, commandNumUnits, wlCommand);
-			this.parseStructType = type;
-			this.stringForm = this.toString();
-		}*/
-		
+	
 		public String parsedStr(){
 			return this.parsedStr;
 		}
@@ -336,6 +335,7 @@ public class ThmP1 {
 		
 		@Override
 		public String toString(){
+			//As reference, lower numUnits are better, and higher commandNumUnits are better.
 			String numUnitsString = numUnits == 0 ? "" : "  " + String.valueOf(this.numUnits);
 			numUnitsString += commandNumUnits == 0 ? "" : "  " + String.valueOf(this.commandNumUnits);
 			if(parseStructType != null){
@@ -569,11 +569,6 @@ public class ThmP1 {
 				continue;
 			}			
 			Matcher negativeAdjMatcher;
-			// need to deal with special chars '(', ')', etc ///should not
-			// simply remove..
-			// remove this and ensure curWord is used subsequently
-			// instead of str[i]
-			//strAr[i] = curWord;
 			
 			//change to enum!
 			String type = "ent"; 
@@ -611,12 +606,12 @@ public class ThmP1 {
 			}
 			
 			// latex expressions that start with '$'
-			if (curWord.charAt(0) == '$') {
+			if (LATEX_BEGIN_PATTERN.matcher(curWord).matches()) {
 				
 				String latexExpr = curWord;
 				
 				//not a single-word latex expression, i.e. $R$-module
-				if (i < strArLength - 1 && !curWord.matches("\\$[^$]+\\$[^\\s]*")
+				if (i < strArLength - 1 && !SINGLE_WORD_TEX_PATTERN.matcher(curWord).matches( )
 						&& (curWord.charAt(wordlen - 1) != '$' || wordlen == 2 || wordlen == 1)) {
 					
 					i++;
@@ -982,7 +977,7 @@ public class ThmP1 {
 				String curPos = "parti";
 				int pairsSize = pairs.size();
 				// if next word is "by"
-				if (strAr.length > i + 1) {
+				if (strAr.length > i + 1 && pairsSize > 1) {
 					String nextWord = strAr[i + 1];
 					if(nextWord.equals("by")){
 						curPos = "partiby";
@@ -1242,7 +1237,7 @@ public class ThmP1 {
 			//if yet still no pos found, use the Stanford NLP tagger, calls to which 
 			//does incur overhead.			
 			//Only try to find pos for words that don't contain "\"
-			if(curpair.pos().equals("") && !BACKSLASH_CONTAINMENT_PATTERN.matcher(curWord).matches()){
+			if(curpair.pos().equals("") && !BACKSLASH_CONTAINMENT_PATTERN.matcher(curWord).find()){
 				//tag the whole sentence to find the most accurate tag, since the tagger
 				//uses contextual tags to maximize entropy.
 				if(null == posTagger){
@@ -1258,30 +1253,38 @@ public class ThmP1 {
 				//better way to fish the pos out?
 				String wordToTag = " " + curWord + "_";
 				int wordStartIndex = taggedSentence.indexOf(wordToTag);
+				//in case it's the first word.
+				if(-1 == wordStartIndex){
+					wordToTag = curWord + "_";
+					wordStartIndex = taggedSentence.indexOf(wordToTag);
+				}
 				
 				//necessary check in case noTexSB dropped the word.
-				assert(-1 != wordStartIndex);
-				//right now in development throw Exception
-				if(-1 == wordStartIndex){
-					throw new IllegalStateException("wordToTag not found in taggedSentence!");
+				//assert(-1 != wordStartIndex);
+				//Sometimes the logger strips away parts of words, such as "[prime" -> "prime".
+				if(-1 == wordStartIndex && logger.getLevel().equals(Level.INFO)){
+					String msg = "wordToTag: " + wordToTag + ", not found in taggedSentence: "
+							+ taggedSentence;
+					//throw new IllegalStateException();
+					logger.info(msg);					
+				}else{				
+					int posIndex = wordStartIndex + wordToTag.length();
+					//pos is 2 characters long.
+					String wordPos = taggedSentence.substring(posIndex, posIndex+2);
+					
+					String pos = WordForms.getPosFromTagger(wordPos);
+					curpair.set_pos(pos);
+					if (pos.equals("ent")){
+						mathIndexList.add(index);
+					}
+					System.out.println("Using posTagger to tag word: " +  curWord + " with pos: " + pos);
 				}
-				
-				int posIndex = wordStartIndex + wordToTag.length();
-				//pos is 2 characters long.
-				String wordPos = taggedSentence.substring(posIndex, posIndex+2);
-				
-				String pos = WordForms.getPosFromTagger(wordPos);
-				curpair.set_pos(pos);
-				if (pos.equals("ent")){
-					mathIndexList.add(index);
-				}
-				System.out.println("Using posTagger to tag word: " +  curWord + " with pos: " + pos);
 			}
 			
 			String pos = curpair.pos();
 			if(unknownWordPos && !pos.equals("")){
 				parseState.addUnknownWordPosToMap(curWord, pos);
-				System.out.println("added " + curWord + " to posmap!");
+				System.out.println("Added " + curWord + " to posmap.");
 			}
 		}
 		
@@ -2787,6 +2790,7 @@ public class ThmP1 {
 	
 	/**
 	 * Order parsedPairMMapList and add to parseStructMapList and parsedExpr (both static members).
+	 * Uses insertion sort, as since number of maps in parsedPairMMapList is usually very small, ~1-5.
 	 * @param parsedPairMMapList
 	 * @param longFormParsedPairList List of long forms.
 	 * @param contextVecList is list of context vectors, pick out the highest one and use as global context vec.
@@ -2797,15 +2801,19 @@ public class ThmP1 {
 			List<ParseStruct> headParseStructList, ParseState parseState,
 			List<ParsedPair> longFormParsedPairList, List<int[]> contextVecList){
 		
-		//use insertion sort, since list of maps is usually very small, ~1-5
-		//for maps with multiple entries (e.g. one sentence with both a HYP and a STM), add the numUnits and 
-		//commandNumUnits across entries.
+		/*use insertion sort, since number of maps in parsedPairMMapList is usually very small, ~1-5.
+		 * For maps with multiple entries (e.g. one sentence with both a HYP and a STM), add the numUnits and 
+		 * commandNumUnits across entries. Keep track of this multiplicity of entries, favor map with smaller 
+		 * number of entries if span the same.
+		 */
 		List<Multimap<ParseStructType, ParsedPair>> sortedParsedPairMMapList = new ArrayList<Multimap<ParseStructType, ParsedPair>>();
 		//evolving list of numUnits scores for elements in sortedParsedPairMMapList
 		List<Integer> numUnitsList = new ArrayList<Integer>();
 		List<Integer> commandNumUnitsList = new ArrayList<Integer>();
 		//use scores to tie-break once scores become more comprehensive
 		List<Double> scoresList = new ArrayList<Double>();
+		//number of entries in a Multimap in parsedPairMMapList.
+		List<Integer> mMapSizeList = new ArrayList<Integer>();
 		//whether there exists nontrivial (non-None) ParseStructType's
 		boolean nonTrivialTypeExists = false;
 		
@@ -2821,6 +2829,7 @@ public class ThmP1 {
 		int firstNumUnits = 0;
 		int firstCommandNumUnits = 0;
 		double firstScore = 1;
+		int firstMMapSize = 0;
 		
 		if(firstMMap.containsKey(ParseStructType.HYP) 
 						|| firstMMap.containsKey(ParseStructType.STM)
@@ -2828,8 +2837,13 @@ public class ThmP1 {
 			nonTrivialTypeExists = true;
 		}
 		
-		for(ParsedPair parsedPair : firstMMap.values()){
+		for(Map.Entry<ParseStructType, ParsedPair> entry : firstMMap.entries()){
 			
+			ParseStructType parseStructType = entry.getKey();
+			if(ParseStructType.NONE != parseStructType){
+				firstMMapSize++;
+			}
+			ParsedPair parsedPair = entry.getValue();			
 			firstNumUnits += parsedPair.numUnits();
 			firstCommandNumUnits += parsedPair.commandNumUnits();
 			firstScore *= parsedPair.score();
@@ -2839,13 +2853,14 @@ public class ThmP1 {
 		numUnitsList.add(firstNumUnits);
 		commandNumUnitsList.add(firstCommandNumUnits);
 		scoresList.add(firstScore);
-		//finalOrderingList.add(0, 0);
+		mMapSizeList.add(firstMMapSize);
 		
 		for(int i = 1; i < parsedPairMMapList.size(); i++){
 			int numUnits = 0;
 			int commandNumUnits = 0;
 			double score = 1;
 			Multimap<ParseStructType, ParsedPair> mmap = parsedPairMMapList.get(i);
+			int mMapSize = 0;
 			
 			if(!nonTrivialTypeExists 
 					&& (mmap.containsKey(ParseStructType.HYP) 
@@ -2853,14 +2868,19 @@ public class ThmP1 {
 							|| mmap.containsKey(ParseStructType.HYP_iff))){
 				nonTrivialTypeExists = true;
 			}
-			
-			for(ParsedPair parsedPair : mmap.values()){
+			//should only count entries where the key is not NONE 
+			for(Map.Entry<ParseStructType, ParsedPair> entry : mmap.entries()){				
+				ParseStructType parseStructType = entry.getKey();
+				if(ParseStructType.NONE != parseStructType){
+					mMapSize++;
+				}
+				ParsedPair parsedPair = entry.getValue();
 				numUnits += parsedPair.numUnits();
 				commandNumUnits += parsedPair.commandNumUnits();
 				//multiplying score has the added benefit that
 				//extraneous parses (extra commands triggered
 				//but not eliminated) will lower the score.
-				score *= parsedPair.score();
+				score *= parsedPair.score();				
 			}
 			
 			int listSz = sortedParsedPairMMapList.size();
@@ -2874,16 +2894,22 @@ public class ThmP1 {
 				int sortedNumUnits = numUnitsList.get(j);
 				int sortedCommandNumUnits = commandNumUnitsList.get(j);
 				double sortedScore = scoresList.get(j);
+				int sortedMMapSize = mMapSizeList.get(j);
 				
-				//current ParsedPair will rank higher if the following:			
+				//current ParsedPair will rank higher if the following:
+				//Make magic number into constant after experimenting.
 				if(sortedCommandNumUnits < commandNumUnits 						
-						|| (sortedNumUnits - numUnits) > ((double)sortedCommandNumUnits - commandNumUnits)*3/2){
+						|| (sortedNumUnits - numUnits) > ((double)sortedCommandNumUnits - commandNumUnits)*3/2
+								//or there is MMapSize difference.
+						|| (sortedMMapSize > 0 && mMapSize > 0 && sortedMMapSize > mMapSize
+						   && (sortedNumUnits - numUnits) > ((double)sortedCommandNumUnits - commandNumUnits)/2)){
 					//insert with right order
 					sortedParsedPairMMapList.add(j, mmap);
 					numUnitsList.add(j, numUnits);
 					commandNumUnitsList.add(j, commandNumUnits);
 					scoresList.add(j, score);
 					finalOrderingList.add(j, i);
+					mMapSizeList.add(j, mMapSize);
 					break;
 				}
 				//numUnits can be a little worse, but not more worse by more than 1 unit.
@@ -2897,19 +2923,22 @@ public class ThmP1 {
 					commandNumUnitsList.add(j, commandNumUnits);
 					scoresList.add(j, score);
 					finalOrderingList.add(j, i);
+					mMapSizeList.add(j, mMapSize);
 					break;
-				}
+				}				
 			}
+			//add at the end if doesn't beat any mmap prior.
 			if(listSz == sortedParsedPairMMapList.size()){
 				sortedParsedPairMMapList.add(listSz, mmap);
 				numUnitsList.add(listSz, numUnits);
 				commandNumUnitsList.add(listSz, commandNumUnits);
 				scoresList.add(listSz, score);
 				finalOrderingList.add(listSz, i);
+				mMapSizeList.add(listSz, mMapSize);
 			}			
 		}
 		//if top-ranked element has ParseStructType None and there exist lower-ranked
-		//ones that have nontrivial ParseStructType's
+		//ones that have nontrivial ParseStructType's. <--Shouldn't be a problem now, Jan 2017.
 		if(nonTrivialTypeExists){
 			
 			Multimap<ParseStructType, ParsedPair> firstMap = sortedParsedPairMMapList.get(0);
@@ -3230,7 +3259,7 @@ public class ThmP1 {
 				}
 				//which should be attached to immediately prior word
 				//System.out.println("children: " + hypStruct+ " &&&"+ struct1 + " *** " + struct2);
-				if(childRelation.childRelation().contains("which") && struct1.children().size() > 0){
+				if(childRelation.childRelationStr().contains("which") && struct1.children().size() > 0){
 					return new EntityBundle(firstEnt, recentEnt, recentEntIndex);
 				}
 				childToAdd = (Struct)struct2.prev2();
@@ -4041,9 +4070,9 @@ public class ThmP1 {
 				struct.setContainsHyp(true);
 			}else if(CONJ_DISJ_VP_PATTERN.matcher(structType).matches()){
 				conjDisjVerbphrase.setHasConjDisjVerbphrase(true);
-				Struct parentStruct = struct.parentStruct();
+				Struct parentStruct = struct.parentStruct();				
 				
-				if(parentStruct.type().equals("assert")){
+				if(null != parentStruct && parentStruct.type().equals("assert")){
 					conjDisjVerbphrase.setAssertParentFound(true);
 					conjDisjVerbphrase.setAssertStruct(parentStruct);
 				}
@@ -4175,26 +4204,34 @@ public class ThmP1 {
 		boolean toLowerCase = true;
 		// whether in parenthetical remark
 		boolean inParen = false; 
+		boolean inBrackets = false;
 		
-		String prevSentence = "";
-		
+		String prevSentence = "";		
 		String lastWordAdded = "";
 		
 		wordsArrayLoop: for (int i = 0; i < wordsArrayLen; i++) {
 
 			curWord = wordsArray[i];
 			
+			//Skips parenthesized and bracketed items.
 			//compile these!
 			if (!inTex) {
-				if (inParen && curWord.matches("[^)]*\\)")) {
+				if (inParen && PAREN_END_PATTERN.matcher(curWord).matches()) {
 					inParen = false;
 					continue;
-				}else if (inParen || curWord.matches("\\([^)]*\\)")) {
+				} else if (inBrackets && BRACKET_END_PATTERN.matcher(curWord).matches()) {
+					inBrackets = false;
 					continue;
-				} else if (curWord.matches("\\([^)]*")) {
+				} else if (inParen || inBrackets || PAREN_PATTERN.matcher(curWord).matches() 
+						|| BRACKETS_PATTERN.matcher(curWord).matches()) { 
+					continue;
+				} else if (PAREN_START_PATTERN.matcher(curWord).matches()) {
 					inParen = true;
 					continue;
-				} 
+				} else if(BRACKET_START_PATTERN.matcher(curWord).matches()){
+					inBrackets = true;
+					continue;
+				}
 			}
 
 			if (!inTex && curWord.matches("\\$.*") && !curWord.matches("^\\$[^$]+\\$.*$")) {
@@ -4203,10 +4240,17 @@ public class ThmP1 {
 				// }else if(curWord.matches("[^$]*\\$|\\$[^$]+\\$.*") ){
 				inTex = false;
 				toLowerCase = false;
-			} else if (curWord.matches("\\$[^$]+\\$.*")) {
+			} else if (SINGLE_WORD_TEX_PATTERN.matcher(curWord).matches()) {
 				toLowerCase = false;
 			}
 
+			if(!inTex && BEGIN_ALIGN_PATTERN.matcher(curWord).matches()){
+				inTex = true;				
+			}else if(inTex && END_ALIGN_PATTERN.matcher(curWord).matches()){
+				inTex = false;
+				toLowerCase = false;
+			}
+			
 			//take entire \begin{enumerate} block as one sentence
 			if(curWord.equals("\\begin{enumerate}")){
 				if(sentenceBuilder.length() > 0){
@@ -4288,12 +4332,25 @@ public class ThmP1 {
 					if(curWord.equals(",") && i < wordsArrayLen - 1){
 						//get next word
 						String nextWord = wordsArray[i+1].toLowerCase();
+						//get complete latex 
+						if(nextWord.charAt(0) == '$'){
+							String texExpr = getEntireLatexExpr(wordsArray, i+1);
+							// if tex expressions are similar, e.g. "let $G$, $H$ be groups" 
+							if(WordForms.areTexExprSimilar(lastWordAdded, texExpr)){
+								//substitute the comma with "and"
+								sentenceBuilder.append(" and ");
+								//if(true) throw new IllegalStateException();
+								continue;
+							}
+						}
+						
 						List<String> nextWordPosList = posMMap.get(nextWord);
 						//e.g. $F$ is a ring, with no nontrivial elements. 
 						if(!nextWordPosList.isEmpty() && nextWordPosList.get(0).equals("pre")){
 							//don't add curWord in this case, let the sentence continue.
 							continue wordsArrayLoop;
 						}
+						
 						if(AND_OR_PATTERN.matcher(nextWord).matches()){
 							//if next word is "and"/"or", and has the same sentence type, i.e.
 							//either both stm or hyp, so either both contain hypothetical words,
@@ -4324,12 +4381,7 @@ public class ThmP1 {
 								i++;
 							}
 						}
-						//else, because we don't want 
-						else if(WordForms.areWordsSimilar(lastWordAdded, nextWord)){
-							//substitute the comma with "and"
-							sentenceBuilder.append(" and ");
-							continue;
-						}						
+												
 					}
 					//add the punctuation to use later
 					sentenceBuilder.append(" ").append(curWord);
@@ -4347,7 +4399,7 @@ public class ThmP1 {
 				//throw new IllegalStateException("punctuation: " + curWord);
 			} else if(i == wordsArrayLen - 1){ 
 				sentenceList.add(sentenceBuilder.toString());
-				sentenceBuilder.setLength(0);				
+				sentenceBuilder.setLength(0);
 			}
 		}
 		if(sentenceList.isEmpty()){
@@ -4356,6 +4408,31 @@ public class ThmP1 {
 		
 		System.out.println("sentenceList " + sentenceList);
 		return sentenceList.toArray(new String[0]);
+	}
+	
+	/**
+	 * Gets the entire tex expression starting from index i.
+	 * @param wordsArray
+	 * @param i
+	 * @return
+	 */
+	private static String getEntireLatexExpr(String[] wordsArray, int i) {
+		
+		String curWord = wordsArray[i];
+		if(SINGLE_WORD_TEX_PATTERN.matcher(curWord).matches()){
+			return curWord;
+		}
+		i++;
+		StringBuilder sb = new StringBuilder(curWord);
+		while(i < wordsArray.length){
+			curWord = wordsArray[i];
+			sb.append(" " + curWord);
+			if(curWord.contains("$")){
+				return sb.toString();
+			}
+			i++;
+		}
+		return sb.toString();
 	}
 
 }
