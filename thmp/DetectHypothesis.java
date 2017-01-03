@@ -146,6 +146,7 @@ public class DetectHypothesis {
 		BufferedReader inputBF = null;
 		try{
 			//inputBF = new BufferedReader(new FileReader("src/thmp/data/CommAlg5.txt"));
+			//inputBF = new BufferedReader(new FileReader("src/thmp/data/fieldsRawTex.txt"));
 			inputBF = new BufferedReader(new FileReader("src/thmp/data/samplePaper1.txt"));
 		}catch(FileNotFoundException e){
 			e.printStackTrace();

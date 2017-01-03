@@ -137,7 +137,8 @@ public class StructA<A, B> extends Struct{
 	}
 	
 	/**
-	 * Shallow copy. 
+	 * Shallow copy. In particular, does not copy children objects, children
+	 * point to the same children of this StructA. 
 	 */
 	public StructA<A, B> copy(){
 		//shallow copy of structlist

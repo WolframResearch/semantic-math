@@ -519,6 +519,9 @@ public class ThmP1TestRun {
 			st = "Multiplication is defined by the rule that on pure tensors we have $$ (x_1 \\otimes x_2 \\otimes \\ldots \\otimes x_n) \\cdot (y_1 \\otimes y_2 \\otimes \\ldots \\otimes y_m) = x_1 \\otimes x_2 \\otimes \\ldots \\otimes x_n \\otimes y_1 \\otimes y_2 \\otimes \\ldots \\otimes y_m $$ and we extend this by linearity.";
 			st = "Let $x_i$, $i \\in I$ be a given system of generators of $M$ as an $R$-module";
 			st = "we use the notation ``$\\mathfrak p kjg $``";
+			st = "there exists a finite $R$-module $M'$ and a map $M' \\to M$ which induces an isomorphism $S^{-1}M' \to S^{-1}M$."; 
+			//st = "there exists a field and a ring which is a group algebra ";
+			
 			//st = "field has ring";
 			//st = "given The image of a constructible subset";				
 			//st = "Let $F$ be a field. $F$ is a ring";			

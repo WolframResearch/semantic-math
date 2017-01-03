@@ -72,10 +72,10 @@ public class ThmP1 {
 	private static final Pattern AND_OR_PATTERN = Pattern.compile("and|or");
 	private static final Pattern IS_ARE_BE_PATTERN = Pattern.compile("is|are|be");
 	private static final Pattern CALLED_PATTERN = Pattern.compile("called|defined|said|denoted");
-	private static final Pattern CONJ_DISJ_PATTERN1 = Pattern.compile("conj|disj");
+	private static final Pattern CONJ_DISJ_PATTERN1 = Pattern.compile("(?:conj|disj).*");
 	//end part of latex expression word, e.g. " B)$-module"
 	private static final Pattern LATEX_END_PATTER = Pattern.compile("[^$]*\\$.*");
-	private static final Pattern LATEX_BEGIN_PATTERN = Pattern.compile("[^$]*\\${1,2}[^$]*");
+	private static final Pattern LATEX_BEGIN_PATTERN = Pattern.compile("[^$]*\\${1,2}.*");
 	private static final Pattern POSSIBLE_ADJ_PATTERN = Pattern.compile("(?:.*tive|.*wise|.*ary|.*able|.*ous)$");
 	private static final Pattern ESSENTIAL_POS_PATTERN = Pattern.compile("ent|conj_ent|verb|vbs|if|symb|pro");
 	private static final Pattern SINGLE_WORD_TEX_PATTERN = Pattern.compile("\\$[^$]+\\$[^\\s]*"); 
@@ -144,12 +144,17 @@ public class ThmP1 {
 	private static final Pattern DASH_ENT_PATTERN = Pattern.compile("\\$[^$]+\\$[^-\\s]*-[^\\s]*");
 	private static final int REPARSE_UPPER_SIZE_LIMIT = 6;
 	private static final Pattern CONJ_DISJ_VP_PATTERN = Pattern.compile("(?:conj|disj)_verbphrase");
-	//directives used to begin latex math mode.
-	private static final Pattern BEGIN_ALIGN_PATTERN = Pattern.compile("(?:.*(\\\\begin\\{align[*]*\\}.*))|(?:.*(\\\\begin\\{equation\\}.*))");
-	private static final Pattern END_ALIGN_PATTERN = Pattern.compile("(?:(.*\\\\end\\{align[*]*\\}).*)|(?:(.*\\\\end\\{equation\\}).*)");
+	//directives used to begin latex math mode. *Must* update ALIGN_PATTERN_REPLACEMENT_STR if this is updated.
+	private static final Pattern BEGIN_ALIGN_PATTERN = Pattern.compile("(?:.*(\\\\begin\\{align[*]*\\}.*))|(?:.*(\\\\begin\\{equation\\}.*))"
+			+ "|(?:.*(\\\\begin\\{eqnarray[*]*\\}.*))");
+	private static final Pattern END_ALIGN_PATTERN = Pattern.compile("(?:(.*\\\\end\\{align[*]*\\}).*)|(?:(.*\\\\end\\{equation\\}).*)"
+			+ "|(?:.*(\\\\end\\{eqnarray[*]*\\}.*))");
+	//This *must* be updated if {BEGIN/END}_ALIGN_PATTERN is updated!
+	private static final String ALIGN_PATTERN_REPLACEMENT_STR = "$1$2$3";
+	
 	private static final boolean DEBUG = InitParseWithResources.isDEBUG();
 	//contains backslash
-	private static final Pattern BACKSLASH_CONTAINMENT_PATTERN = Pattern.compile(".*[\\\\|$|=|\\{|\\}|\\[|\\]|^|_|+|-|%].*");
+	private static final Pattern BACKSLASH_CONTAINMENT_PATTERN = Pattern.compile(".*[\\\\|$|=|\\{|\\}|\\[|\\]|(|)|^|_|+|-|%|.|/].*");
 	private static final Pattern DIGITS_PATTERN = Pattern.compile("\\d+");
 	
 	private static final Pattern HYP_PATTERN = WordForms.get_HYP_PATTERN();
@@ -583,7 +588,7 @@ public class ThmP1 {
 			Matcher mathModeEndMatcher;
 			if((mathModeMatcher = BEGIN_ALIGN_PATTERN.matcher(curWord)).matches()){
 				
-				StringBuilder latexExprSB = new StringBuilder(mathModeMatcher.replaceAll("$1$2") + " ");
+				StringBuilder latexExprSB = new StringBuilder(mathModeMatcher.replaceAll(ALIGN_PATTERN_REPLACEMENT_STR) + " ");
 				
 				while(i++ < strArLength-1){
 					curWord = strAr[i];
@@ -3223,18 +3228,27 @@ public class ThmP1 {
 		
 		// newChild means to fuse second entity into first one
 		if (newType.equals("newchild")) {
-			// struct1 should be of type StructH to receive a
-			// child
-			// assert ensures rule correctness
-			assert !struct1.isStructA() : "struct1 does not have type StructH in reduce() for \"newchild\" relation!";
-			
 			// get a (semi)deep copy of this StructH, since
 			// later-added children may not
 			// get used eventually, ie hard to remove children
-			// added during mx building
-			// that are not picked up by the eventual parse
+			// added during matrix building that do not belong
+			// to the eventual parse. 
 			Struct newStruct = struct1.copy();
-
+			
+			//could be struct1, or prev2 of struct1
+			Struct structToAppendChild = newStruct;
+			// struct1 should be of type StructH to receive a
+			// child. If of type "conj_ent" or "disj_ent", then use 
+			// the latter element in the conjunction/disjunction.			
+			if(CONJ_DISJ_PATTERN1.matcher(struct1.type()).matches()
+					&& struct1.prev2NodeType().equals(NodeType.STRUCTH)){
+				structToAppendChild = ((Struct)struct1.prev2()).copy();
+				newStruct.set_prev2(structToAppendChild);
+			}
+			
+			// assert ensures rule correctness
+			assert !structToAppendChild.isStructA() : "struct1 does not have type StructH in reduce() for \"newchild\" relation!";
+			
 			ChildRelation childRelation = null;
 			Struct childToAdd = struct2;
 			
@@ -3259,7 +3273,9 @@ public class ThmP1 {
 				}
 				//which should be attached to immediately prior word
 				//System.out.println("children: " + hypStruct+ " &&&"+ struct1 + " *** " + struct2);
-				if(childRelation.childRelationStr().contains("which") && struct1.children().size() > 0){
+				if(childRelation.childRelationStr().contains("which") ){
+					System.out.println("struct1 : " + struct1);
+					if(structToAppendChild.children().size() > 0)
 					return new EntityBundle(firstEnt, recentEnt, recentEntIndex);
 				}
 				childToAdd = (Struct)struct2.prev2();
@@ -3306,6 +3322,7 @@ public class ThmP1 {
 			//e.g. "field F in C over Q"
 			ChildRelationType childRelationType = childRelation.childRelationType();
 			if(childRelationType.equals(ChildRelationType.PREP) && 
+					//use struct1 and not structToAppendChild.
 					struct1.childRelationType().equals(ChildRelationType.PREP)){
 				return new EntityBundle(firstEnt, recentEnt, recentEntIndex);
 			}
@@ -3342,15 +3359,6 @@ public class ThmP1 {
 					//System.out.println("&^^^^setting (Struct)(prev2Struct.prev2()) " + (Struct)(struct2Prev2.prev2()) + 
 						//	" for parent " + newStruct);					
 				}
-				
-				/*if(((Struct)struct2.prev2()).type().equals("prep")){
-					if(((Struct)struct2.prev2()).prev2() instanceof StructH){						
-						//((Struct)prev2Child.prev2()).set_parentStruct(newStruct);
-						//logger.info("should be field, should have children " +prev2Child.prev2());
-						//throw new IllegalStateException("should be field " + prev2Child.prev2());
-					}
-				}*/
-				
 			}
 			
 			// update firstEnt so firstEnt has the right children
@@ -3358,10 +3366,8 @@ public class ThmP1 {
 				firstEnt = newStruct;
 			}
 
-			// String childRelation = mx.get(k + 1).get(k +
-			// 1).prev1().toString();
 			//should not even call add child if struct1 is a StructA
-			if (!struct1.isStructA()) {
+			if (!structToAppendChild.isStructA()) {
 				// why does this cast not trigger unchecked warning <-- Because wildcard.
 				//if already has child that's pre_ent, attach to that child,
 				//e.g. A with B over C. <--This led to bug with too many children added!
@@ -3392,19 +3398,17 @@ public class ThmP1 {
 				//e.g. "over" vs "such as".
 				childToAdd.set_childRelationType(childRelation.childRelationType());
 				
-				((StructH<?>) newStruct).add_child(childToAdd, childRelation); 
+				((StructH<?>) structToAppendChild).add_child(childToAdd, childRelation); 
 				
-				
-				struct2.set_parentStruct(newStruct); //redundant
-				childToAdd.set_parentStruct(newStruct); //redundant
+				struct2.set_parentStruct(structToAppendChild); //redundant
+				childToAdd.set_parentStruct(structToAppendChild); //redundant
 				
 				recentEnt = newStruct;
-				recentEntIndex = j;
+				recentEntIndex = j;				
 			}
 
 			newStruct.set_maxDownPathScore(newDownPathScore);
 
-			// mx.get(i).set(j, newStruct);
 			mx.get(i).get(j).add(newStruct);
 
 		} 
