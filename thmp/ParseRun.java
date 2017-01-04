@@ -31,20 +31,22 @@ public class ParseRun {
 			if(WordForms.getWhiteEmptySpacePattern().matcher(strAr[i]).find()){
 				continue;
 			}
-			//alternate commented out line to enable tex converter
+			//alternate commenting out line to enable tex converter
 			//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim()) ));
+
 			parseState = ThmP1.tokenize(strAr[i].trim(), parseState);
 			
 			parseState = ThmP1.parse(parseState);
-			int[] curContextVec = ThmP1.getParseContextVector();
+			//int[] curContextVec = ThmP1.getParseContextVector();
+			int[] curContextVec = parseState.getContextVec();
 			parseContextVecList.add(curContextVec);
 			//get context vector
-			//if(isVerbose) System.out.println("cur vec: " + Arrays.toString(curContextVec));
-			
+			//if(isVerbose) System.out.println("cur vec: " + Arrays.toString(curContextVec));			
 		}
 		
 		if(isVerbose) {
 			System.out.println("@@@" + parseState.getHeadParseStruct());
+			System.out.println("For str: " + st);
 			BigInteger relationVec = parseState.getRelationalContextVec();
 			System.out.println("Relational Vector num of bits set: " + (relationVec == null ? "vec null." : relationVec.bitCount()));
 		}

@@ -31,16 +31,9 @@ public class TriggerMathThm2 {
 	 * of convergence and root likely in column for function. And ideals for
 	 * column for ring.
 	 * 
-	 * 
 	 * @author yihed
 	 *
 	 */
-
-	/**
-	 * List of keywords, eg radius, convergence, root. Don't actually need this
-	 * after building
-	 */
-	// private static final List<String> keywordList;
 
 	/**
 	 * List of mathObj's, in order they are inserted into mathObjMx
@@ -79,6 +72,7 @@ public class TriggerMathThm2 {
 	
 	static {
 		thmWordsList = CollectThm.ThmWordsMaps.get_thmWordsFreqListNoAnno();
+		
 		// ImmutableList.Builder<String> keywordList = ImmutableList.builder();
 		List<String> keywordList = new ArrayList<String>();
 		
@@ -93,21 +87,10 @@ public class TriggerMathThm2 {
 		// math object pre map. keys are theorems, values are keywords in that thm.
 		Multimap<String, String> mathObjMMap = ArrayListMultimap.create();
 
-		// first String should be theorem, the rest are key words of this theorem 
-		// belongs to
-		//addKeywordToMathObj(new String[] { "fundamental theorem of algebra", "polynomial", "degree", "root", "complex"}, keywordList, keywordMap, mathObjMMap);
-		//addKeywordToMathObj(new String[] { "Pythagorean theorem", "triangle", "right", "length", "square"}, keywordList, keywordMap, mathObjMMap);
-		//addKeywordToMathObj(new String[] { "quadratic extension", "degree", "field", "square", "root"}, keywordList, keywordMap, mathObjMMap);
-		
-		// should be "thm", "term1", "term2", etc
-		//addKeywordToMathObj(new String[] { "Godel's incompleteness theorem", "arithmetic", "incomplete"}, keywordList, keywordMap, mathObjMMap);
-		
 		//adds thms from CollectThm.thmWordsList. The thm name is its index in thmWordsList.
 		addThmsFromList(keywordList, keywordIndexMap, mathObjMMap);
 		
 		Map<String, Integer> docWordsFreqMapNoAnno = CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno();
-		
-		
 		
 		//re-order the list so the most frequent words appear first, as optimization
 		//so that search words can match the most frequently-occurring words.
@@ -511,9 +494,11 @@ public class TriggerMathThm2 {
 	
 	/**
 	 * Map of words to their corresponding row index in term-document matrix.
+	 * This has been ordered, such that more frequently used words fall to the 
+	 * beginning when iterating through the map.
 	 * @return
 	 */
-	public static Map<String, Integer> keywordDict(){
+	public static Map<String, Integer> allThmsKeywordIndexDict(){
 		return keywordIndexDict;
 	}
 

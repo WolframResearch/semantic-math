@@ -263,15 +263,13 @@ public class WLCommandsList {
 		//WLCommandMapBuilder.put("if", addCommand(new String[] { "if|If|let, , trigger", "assert, , true" }));
 		wLCommandMapBuilder.put("if", addCommand(new PBuilder("if|If", null, false, true, false), 
 				new PBuilder("assert", null, true) ));
-		
+	
 		//"let A be B"; "suppose A is B"
 		wLCommandMapBuilder.put("let", addCommand(new PBuilder("let|suppose", null, false, true, false), 
 				new PBuilder("symb|ent|pro|noun", null, true, false, false, PosTermConnotation.DEFINED,
 						RelationType._IS), 
 				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), new PBuilder("\\[Element]"),
 				new PBuilder("symb|ent|phrase", null, true, false, true, PosTermConnotation.DEFINING, RelationType.IS_)) );
-		
-		//PosTermConnotation.DEFINING,
 		
 		//WLCommandMapBuilder.put("equal to", addCommand(new String[] { "symb|ent, , true",
 		//"==", "equal to, , trigger", "symb|ent|phrase, , true, TriggerMathObj" }));
@@ -328,8 +326,10 @@ public class WLCommandsList {
 		//WLCommandMapBuilder.put("suppose", addCommand(new String[] { "hyp, , trigger",
 			//"assert, , true" })); 
 		//note that "hyp" also includes "which is...", which can occur in statements, and not just hypotheses!
-		wLCommandMapBuilder.put("if and only if", addCommand(new PBuilder("hyp", null, false, true, false), 
-				new PBuilder("assert", null, true) ));
+		putToWLCommandMapBuilder(wLCommandMapBuilder, "if and only if", new PBuilder("hyp|iff|Iff", null, false, true, false), 
+				new PBuilder("assert", null, true) );
+		//wLCommandMapBuilder.put("if and only if", addCommand(new PBuilder("hyp|iff|Iff", null, false, true, false), 
+			//	new PBuilder("assert", null, true) ));
 		
 		//WLCommandMapBuilder.put("consider", addCommand(new String[] { "verb, , trigger", "ent|phrase, , true" }));
 		wLCommandMapBuilder.put("consider", addCommand(new PBuilder("verb", null, false, true, false), 

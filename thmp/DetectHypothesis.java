@@ -26,10 +26,17 @@ import thmp.ParseState.ParseStateBuilder;
 import thmp.ParseState.VariableDefinition;
 import thmp.ParseState.VariableName;
 import thmp.ThmP1.ParsedPair;
+import thmp.search.CollectThm;
+import thmp.search.TriggerMathThm2;
+import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 
 /**
  * Used to detect hypotheses in a sentence.
+ * 
+ * Serializes ALL_THM_WORDS_LIST to file, to be used as seed words for next time
+ * search is initialized.
+ * 
  * @author yihed
  *
  */
@@ -50,13 +57,22 @@ public class DetectHypothesis {
 	
 	//contains ParsedExpressions, to be serialized to persistent storage
 	private static final List<ParsedExpression> parsedExpressionList = new ArrayList<ParsedExpression>();
+	private static final List<String> parsedExpressionStrList = new ArrayList<String>();
 	private static final List<String> DefinitionListWithThmStrList = new ArrayList<String>();
 	private static final List<String> DefinitionList = new ArrayList<String>();
 	
-	private static final String parsedExpressionSerOutputFileStr = "src/thmp/data/parsedExpressionList.dat";
-	private static final String parsedExpressionStrOutputFileStr = "src/thmp/data/parsedExpressionList.txt";
-	private static final String definitionStrOutputFileStr = "src/thmp/data/parsedExpressionDefinitions.txt";
-
+	private static final String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
+	private static final String parsedExpressionStringFileStr = "src/thmp/data/parsedExpressionList.txt";
+	private static final String definitionStrFileStr = "src/thmp/data/parsedExpressionDefinitions.txt";
+	//files to serialize theorem words to.
+	private static final String allThmWordsSerialFileStr = "src/thmp/data/allThmWordsList.dat";
+	private static final String allThmWordsStringFileStr = "src/thmp/data/allThmWordsList.txt";
+	
+	//serialize the words as well, to bootstrap up after iterations of processing. The math words are going to 
+	//stabilize. 
+	//This is ordered version of CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno().
+	private static final List<String> ALL_THM_WORDS_LIST = new ArrayList<String>(TriggerMathThm2.allThmsKeywordIndexDict().keySet());
+	
 	private static final boolean PARSE_INPUT_VERBOSE = true;
 	private static final Pattern SKIP_PATTERN = Pattern.compile("\\\\begin\\{proof\\}.*");
 	private static final Pattern END_SKIP_PATTERN = Pattern.compile("\\\\end\\{proof\\}.*");
@@ -164,50 +180,41 @@ public class DetectHypothesis {
 			e.printStackTrace();
 		}
 		
-		//serialize parsedExpressionList to persistent storage
-		FileOutputStream fileOuputStream = null;
-		ObjectOutputStream objectOutputStream = null;
-		try{
-			fileOuputStream = new FileOutputStream(parsedExpressionSerOutputFileStr);
-			objectOutputStream = new ObjectOutputStream(fileOuputStream);
-		}catch(FileNotFoundException e){
-			e.printStackTrace();
-			throw new IllegalStateException("ParsedExpressionList output file not found!");
-		}catch(IOException e){
-			e.printStackTrace();
-			throw new IllegalStateException("IOException while opening ObjectOutputStream");
-		}
+		List<Object> listToSerialize = new ArrayList<Object>();
+		listToSerialize.add(parsedExpressionList);
+		FileUtils.serializeObjToFile(listToSerialize, parsedExpressionSerialFileStr);
 		
-		try{
-			objectOutputStream.writeObject(parsedExpressionList);			
-			//System.out.println("parsedExpressionList: " + parsedExpressionList);
-			objectOutputStream.close();
-			fileOuputStream.close();
-		}catch(IOException e){
-			e.printStackTrace();
-			throw new IllegalStateException("IOException while writing to file or closing resources");
-		}
+		//serialize words used for context vecs
+		List<List<String>> wordListToSerializeList = new ArrayList<List<String>>();
+		wordListToSerializeList.add(ALL_THM_WORDS_LIST);
+		FileUtils.serializeObjToFile(wordListToSerializeList, allThmWordsSerialFileStr);
 		
 		//write parsedExpressionList to file
-		thmp.utils.FileUtils.writeToFile(DefinitionListWithThmStrList, parsedExpressionStrOutputFileStr);
-		thmp.utils.FileUtils.writeToFile(DefinitionList, definitionStrOutputFileStr);
+		FileUtils.writeToFile(parsedExpressionStrList, parsedExpressionStringFileStr);
+		FileUtils.writeToFile(DefinitionList, definitionStrFileStr);
+		
+		FileUtils.writeToFile(ALL_THM_WORDS_LIST, allThmWordsStringFileStr);
 		
 		//deserialize objects
 		boolean deserialize = false;
 		if(deserialize){
-			deserialize();
+			deserializeParsedExpressionsList();
 		}
 	}
 	
 	/**
-	 * Deserialize objects in parsedExpressionOutputFileStr.
+	 * Deserialize objects in parsedExpressionOutputFileStr, so we don't 
+	 * need to read and parse through all papers on every server initialization.
+	 * Can just read from serialized data.
 	 */
-	private static void deserialize(){
+	@SuppressWarnings("unchecked")
+	private static List<ParsedExpression> deserializeParsedExpressionsList(){
 	
+		List<ParsedExpression> parsedExpressionsList = null;
 		FileInputStream fileInputStream = null;
 		ObjectInputStream objectInputStream = null;
 		try{
-			fileInputStream = new FileInputStream(parsedExpressionSerOutputFileStr);
+			fileInputStream = new FileInputStream(parsedExpressionSerialFileStr);
 			objectInputStream = new ObjectInputStream(fileInputStream);
 		}catch(FileNotFoundException e){
 			e.printStackTrace();
@@ -219,7 +226,8 @@ public class DetectHypothesis {
 		
 		try{
 			Object o = objectInputStream.readObject();
-			System.out.println("object read: " + ((ParsedExpression)((List<?>)o).get(0)).getOriginalThmStr());			
+			parsedExpressionsList = (List<ParsedExpression>)o;
+			//System.out.println("object read: " + ((ParsedExpression)((List<?>)o).get(0)).getOriginalThmStr());			
 		}catch(IOException e){
 			e.printStackTrace();
 			throw new IllegalStateException("IOException while reading deserialized data!");
@@ -235,6 +243,7 @@ public class DetectHypothesis {
 				throw new IllegalStateException("IOException while closing resources");
 			}
 		}
+		return parsedExpressionsList;
 	}
 	
 	/**
@@ -256,7 +265,6 @@ public class DetectHypothesis {
 	private static List<DefinitionListWithThm> readAndParseThm(BufferedReader srcFileReader, 
 			ParseState parseState) throws IOException{
 		
-		// \\\\end\\{def(?:.*)
 		//compiler will inline these, so don't add function calls to stack.
 		Pattern thmStartPattern = ThmInput.THM_START_PATTERN;
 		Pattern thmEndPattern = ThmInput.THM_END_PATTERN;
@@ -493,10 +501,10 @@ public class DetectHypothesis {
 		//create parsedExpression to serialize to persistent storage to be used later
 		//for search, etc
 		ParsedExpression parsedExpression = new ParsedExpression(thmStr, parseState.getHeadParseStruct(),
-						defListWithThm);
+						defListWithThm, parseState.getContextVec(), parseState.getRelationalContextVec());
 		
 		parsedExpressionList.add(parsedExpression);
-		
+		parsedExpressionStrList.add(parsedExpression.toString());
 		//return this to supply to search later
 		return defListWithThm;
 	}

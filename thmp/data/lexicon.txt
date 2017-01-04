@@ -493,8 +493,8 @@ deformation ent
 assertion ent
 bundle ent
 harmonic adj
-span ent
 span verb
+span ent
 scaling ent
 subspace ent
 gauss ent

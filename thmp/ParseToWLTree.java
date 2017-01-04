@@ -85,7 +85,7 @@ public class ParseToWLTree{
 		
 		Collection<ImmutableWLCommand> triggeredSet;
 		//copy into mutable collection. 
-		//Note: using HashSet will introduce non-determinacy.		
+		//Note: using HashSet will introduce non-determinacy, as ordering is not insertion order.		
 		triggeredSet = new ArrayList<ImmutableWLCommand>(WLCommandMap.get(triggerKeyWord));
 		
 		//if(triggeredCol.isEmpty()){
@@ -100,7 +100,7 @@ public class ParseToWLTree{
 				triggeredSet.addAll(WLCommandMap.get(s));
 			}			
 		}
-			//look up using type
+		//look up using type
 		if(triggeredSet.isEmpty() && WLCommandMap.containsKey(triggerType)){
 			triggeredSet.addAll(WLCommandMap.get(triggerType));
 		}
@@ -333,7 +333,7 @@ public class ParseToWLTree{
 		//if trigger a WLCommand, 
 		boolean isTrigger = false;
 		Collection<ImmutableWLCommand> triggeredCol = get_triggerCol(triggerKeyWord, structType);
-
+		//System.out.println("keyWord: "+ triggerKeyWord +"****************triggerCol: " + triggeredCol);
 		//use getSingular
 		if(triggeredCol.isEmpty() && triggerKeyWord.length() > 2 
 				&& triggerKeyWord.charAt(triggerKeyWord.length() - 1) == 's'){
@@ -342,9 +342,7 @@ public class ParseToWLTree{
 			triggeredCol = get_triggerCol(triggerWordSingular, structType);				
 		}
 		
-		if(!triggeredCol.isEmpty()){
-
-			//is trigger, add all commands in list 
+		//is trigger, add all commands in list 
 			//WLCommand curCommand;
 			for(ImmutableWLCommand curCommandInCol : triggeredCol){
 				//create mutable copy of the immutable command
@@ -362,11 +360,6 @@ public class ParseToWLTree{
 				//added if !curCommandSat.
 				//List<Struct> waitingStructList = new ArrayList<Struct>();
 				//array of booleans to keep track of which deque Struct's have been used
-				
-				//match the slots in posTermList before the trigger term with Structs in structList.
-				//Need to SKIP/rewire this (inefficient), just find and add at the same time!
-				//beforeTriggerSat = findStructs(structList, curCommand, usedStructsBool, 
-					//	waitingStructList);
 				
 				//curCommand's terms before trigger word are satisfied. Add them to triggered WLCommand.
 				
@@ -391,7 +384,7 @@ public class ParseToWLTree{
 						//namely the trigger word is last word
 						boolean beforeTrigger = true;
 						//System.out.println("curCommandSatWhole*********"  +" "  + curStruct);
-						//System.out.println("ADDING COMMAND (before) for STRUCT " + curStruct + " for Command + " + curCommand);
+						//System.out.print("\nADDING to COMMAND (before) for STRUCT " + curStruct + " for Command + " + curCommand.getTriggerWord());
 						commandSat = WLCommand.addComponent(curCommand, curStruct, beforeTrigger);
 
 						curCommandSatWhole = commandSat.isCommandSat();		
@@ -400,7 +393,6 @@ public class ParseToWLTree{
 						isComponentAdded |= commandSat.isComponentAdded();
 						
 						beforeTriggerSat = commandSat.beforeTriggerSat();
-						//System.out.println("ADDING COMMAND (before) for STRUCT " + curStruct);
 						
 						if(beforeTriggerSat && (0 == curCommand.getOptionalTermsCount() 
 								|| !commandSat.hasOptionalTermsLeft())){
@@ -408,7 +400,8 @@ public class ParseToWLTree{
 						}
 					}	
 					//System.out.println("commandsMap: " + curCommand.commandsCountMap());
-					//System.out.println("*********COMMAND before trigger satisfied "+ beforeTriggerSat+ " " + curCommand);
+					//System.out.print("\n*********COMMAND parts before trigger satisfied "+ beforeTriggerSat+ " " + curCommand);
+					//System.out.println();
 					//if(commandSat != null){						
 					if(beforeTriggerSat){
 						//System.out.println("***-----------*got BEFORE as TRUE");
@@ -419,25 +412,14 @@ public class ParseToWLTree{
 							WLCommandList.add(curCommand);
 						}
 					}
-					/*}//trigger term was first term
-					else{		
-						
-						WLCommandList.add(curCommand);						
-					}*/
-				
+					
 			}			
 			isTrigger = true;			
-		}
+		
 	
 		structList.add(struct);
-	
-		// use visitor pattern!		
+		
 		if (struct.isStructA()) {
-			//create ParseStruct's
-			//the type T will depend on children. The type depends on struct's type
-			//figure out types now, fill in later to ParseStruct later. 
-			
-			//ParseStruct curHeadParseStruct = headParseStruct;
 			
 			if(printTiers){
 				System.out.print(struct.type());			
@@ -449,7 +431,6 @@ public class ParseToWLTree{
 			
 			if (struct.prev1NodeType().isTypeStruct()) {
 				
-				//ParseStruct curHeadParseStruct = headParseStruct;
 				//check if need to create new ParseStruct
 				Struct prev1 = (Struct)struct.prev1();
 				String prev1Type = prev1.type();
@@ -461,7 +442,7 @@ public class ParseToWLTree{
 					numSpaces++;
 					String space = "";
 					for(int i = 0; i < numSpaces; i++) space += " ";
-					//System.out.println(space);
+					
 					if(printTiers){ 
 						System.out.print("\n " + space + prev1Type + ":>");					
 					}
@@ -548,15 +529,9 @@ public class ParseToWLTree{
 			//create new parseStruct to put in tree
 			//if Struct (leaf) and not ParseStruct (overall head), done with subtree and return			
 			
-		}//if StructH 
+		}
+		//if StructH 
 		else {
-			/*
-			//set the head for each possibly-satisfied WLCommand in WLCommandList
-			for(WLCommand command : WLCommandList){
-				if(WLCommand.headStruct(command).dfsDepth() > struct.dfsDepth()){
-					WLCommand.set_headStruct(command, struct);
-				}
-			}*/
 			
 			if(printTiers) System.out.print(struct.toString());
 			parsedSB.append(struct.toString());
@@ -564,8 +539,6 @@ public class ParseToWLTree{
 			List<Struct> children = struct.children();
 			List<ChildRelation> childRelation = struct.childRelationList();
 
-			//if (children == null || children.size() == 0)
-				//return;
 			if (children != null && children.size() != 0){
 				
 				if(printTiers) System.out.print("[");
@@ -594,7 +567,6 @@ public class ParseToWLTree{
 					boolean isCommandSat = commandSat.isCommandSat();
 					boolean hasOptionalTermsLeft = commandSat.hasOptionalTermsLeft();
 					boolean isComponentAdded = commandSat.isComponentAdded();
-					////add struct to posTerm to posTermList! ////////////
 					
 					if(isCommandSat && isComponentAdded){
 						satisfiedCommandsList.add(curCommand);	

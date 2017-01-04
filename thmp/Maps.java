@@ -41,8 +41,6 @@ import java.util.Map.Entry;
 
 public class Maps {
 
-	// make all maps private!
-
 	// structMap for the second run, grammars that shouldn't be
 	// used in first run, like ent_verb: there exists
 	protected static Map<String, String> structMap2;

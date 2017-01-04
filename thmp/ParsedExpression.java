@@ -1,6 +1,7 @@
 package thmp;
 
 import java.io.Serializable;
+import java.math.BigInteger;
 import java.util.List;
 
 import thmp.DetectHypothesis.DefinitionListWithThm;
@@ -31,16 +32,39 @@ public class ParsedExpression implements Serializable{
 	//WLCommands fulfilled into one tree.
 	private ParseStruct headParseStruct;
 	
+	//relational vector, @see RelationVec.java.
+	private BigInteger relationVec;
+	
+	//context vector, @see ContextVec.java
+	private int[] contextVec;
+	
 	public ParsedExpression(String thmStr, List<Struct> parseRootList){
 		this.originalThmStr = thmStr;
 		this.parseRootList = parseRootList;
 	}
 	
 	public ParsedExpression(String thmStr, ParseStruct headParseStruct,
-			DefinitionListWithThm defListWithThm){
+			DefinitionListWithThm defListWithThm, int[] contextVec, 
+			BigInteger relationVec){
 		this.originalThmStr = thmStr;
 		this.headParseStruct = headParseStruct;
 		this.defListWithThm = defListWithThm;
+		this.relationVec = relationVec;
+		this.contextVec = contextVec;
+	}
+	
+	/**
+	 * @return the relationVec
+	 */
+	public BigInteger getRelationVec() {
+		return relationVec;
+	}
+
+	/**
+	 * @return the contextVec
+	 */
+	public int[] getContextVec() {
+		return contextVec;
 	}
 
 	/**
@@ -66,5 +90,13 @@ public class ParsedExpression implements Serializable{
 	
 	public DefinitionListWithThm getDefListWithThm(){
 		return this.defListWithThm;
+	}
+	
+	@Override
+	public String toString(){
+		StringBuilder sb = new StringBuilder(100);
+		sb.append("\ndefListWithThm: ").append(defListWithThm);
+		sb.append("\n\nheadParseStruct: ").append(headParseStruct);
+		return sb.toString();
 	}
 }

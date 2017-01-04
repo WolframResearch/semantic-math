@@ -1,5 +1,6 @@
 package thmp;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -9,6 +10,7 @@ import com.google.common.collect.ListMultimap;
 import thmp.ParseToWLTree.WLCommandWrapper;
 import thmp.Struct.NodeType;
 import thmp.WLCommand.PosTerm;
+import thmp.search.CollectThm;
 import thmp.search.TriggerMathThm2;
 import thmp.utils.WordForms;
 
@@ -21,7 +23,9 @@ import thmp.utils.WordForms;
  */
 public class ParseTreeToVec {
 
-	private static final Map<String, Integer> contextKeywordDict = TriggerMathThm2.keywordDict();
+	//private static final Map<String, Integer> contextKeywordDict = TriggerMathThm2.allThmsKeywordIndexDict();
+	//should ideally order the words according to relative distances apart, i.e. entries in the correlation matrix.
+	private static final Map<String, Integer> contextKeywordDict = CollectThm.ThmWordsMaps.getCONTEXT_VEC_WORDS_MAP();
 	private static final ListMultimap<String, String> posMMap = Maps.posMMap();
 	
 	/**
@@ -139,10 +143,10 @@ public class ParseTreeToVec {
 		String termStr = struct.contentStr();
 		//be more specific, "algebraic closure", want "algebraic" to point to "closure", so "closure" is parent
 		//of "algebraic". Consistent with "closure is algebraic" => A \[Elememt] B, B describes A, so points to A.
-		
-		
+
 		//add struct itself, then its prev1 and prev2
 		int structIndex = setContextVecEntry(struct, termStr, structParentIndex, contextVec);
+		
 		//do prev1 and prev2
 		if(struct.prev1NodeType().isTypeStruct()){
 			tree2vec((Struct)(struct.prev1()), structIndex, contextVec);

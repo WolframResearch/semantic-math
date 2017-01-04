@@ -40,6 +40,9 @@ public class ContextSearch {
 	private static final boolean DEBUG = false;
 	
 	static{
+		//get the deserialized vectors from CollectThm instead of from thm vec file!
+		
+		
 		//need to set this when deployed to VM
 		//String contextVecFileStr = "src/thmp/data/contextVecAll.txt";
 		String contextVecFileStr = "src/thmp/data/contextVectorsFields.txt";
@@ -51,7 +54,8 @@ public class ContextSearch {
 		//BufferedReader contextVecFileBReader;
 		
 		BufferedReader contextVecFileBReader = CollectThm.contextVecBR();
-		if(contextVecFileBReader == null){
+		//if not set remotely by the server.
+		if(null == contextVecFileBReader){
 			try{
 				FileReader contextVecFileReader = new FileReader(contextVecFileStr);
 				contextVecFileBReader = new BufferedReader(contextVecFileReader);
@@ -225,7 +229,7 @@ public class ContextSearch {
 		}catch(MathLinkException | ExprFormatException e){
 			e.printStackTrace();
 			throw new RuntimeException("thmVecDim: " + thmVecDim + " queryVecDim: " + queryVecDim + " keywordDict: " + 
-			TriggerMathThm2.keywordDict(), e);
+			TriggerMathThm2.allThmsKeywordIndexDict(), e);
 		}
 		//System.out.println("keywordDict: " + TriggerMathThm2.keywordDict());
 		return nearestVecList;

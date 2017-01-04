@@ -63,7 +63,9 @@ public class ParseState {
 	
 	//context vector that takes into account structure of parse tree, i.e.
 	//the relations between different Structs.
-	private BigInteger relationalContextVec;
+	private BigInteger relationalVec;
+	//context vector
+	private int[] contextVec;
 	
 	private boolean writeUnknownWordsToFileBool;
 	
@@ -403,16 +405,29 @@ public class ParseState {
 	 * @return the relationalContextVec
 	 */
 	public BigInteger getRelationalContextVec() {
-		return relationalContextVec;
+		return relationalVec;
 	}
 
 	/**
-	 * @param relationalContextVec the relationalContextVec to set
+	 * @param relationalContextVec the relationalContextVec to set.
+	 * Don't like this getting/setting vectors, bug-prone, should just have 
+	 * an atomic structure that can't leak across parses.
 	 */
 	public void setRelationalContextVec(BigInteger relationalContextVec) {
-		this.relationalContextVec = relationalContextVec;
+		this.relationalVec = relationalContextVec;
 	}
 
+	/**
+	 * @return the relationalContextVec
+	 */
+	public int[] getContextVec() {
+		return contextVec;
+	}
+	
+	public void setContextVec(int[] contextVec) {
+		this.contextVec = contextVec;
+	}
+	
 	/**
 	 * Build ParseState using builder, to avoid occurrences of half-baked states,
 	 * and to avoid .

@@ -139,8 +139,8 @@ public class WLCommand implements Serializable{
 	private Map<Integer, Integer> optionalTermsGroupCountMap = new HashMap<Integer, Integer>();
 	private static final String DEFAULT_AUX_NAME_STR = "AUX";
 	private static final Pattern CONJ_DISJ_PATTERN = Pattern.compile("conj_.*|disj_.*");
-	private static final Pattern DISQUALIFY_PATTERN = Pattern.compile("(if|If)");
-	private static final String[] DISQUALIFY_STR_ARRAY = new String[]{"if", "If"};
+	private static final Pattern DISQUALIFY_PATTERN = Pattern.compile("(if|If|iff|Iff)");
+	private static final String[] DISQUALIFY_STR_ARRAY = new String[]{"if", "If", "if", "Iff"};
 	
 	private static final boolean DEBUG = true;
 	private static final Logger logger = LogManager.getLogger(WLCommand.class);
@@ -273,7 +273,6 @@ public class WLCommand implements Serializable{
 				List<PosTerm> posList, int componentCount, int triggerWordIndex,
 				int optionalTermsCount, Map<Integer, Integer> optionalTermsMap){
 			
-			//use setters instead!?
 			super.triggerWord = triggerWord;
 			super.commandsMap = ArrayListMultimap.create();	
 			super.commandsCountMap = commandsCountMap;		
@@ -849,8 +848,6 @@ public class WLCommand implements Serializable{
 		newCommand.commandsCountMap = new HashMap<WLCommandComponent, Integer>(((WLCommand)curCommand).commandsCountMap) ;
 		
 		newCommand.composedWLCommandsList = new ArrayList<WLCommand>();
-		
-		
 		newCommand.posTermList = new ArrayList<PosTerm>(((WLCommand)curCommand).posTermList);
 		
 		newCommand.totalComponentCount = ((WLCommand)curCommand).totalComponentCount;
@@ -1334,6 +1331,7 @@ public class WLCommand implements Serializable{
 		if(disqualifyCommand(structType, commandsCountMap)){
 			boolean disqualified = true;
 			//if(true)throw new IllegalStateException(structType + " " + commandsCountMap);
+			System.out.println("###curCommand.triggerWord " + curCommand.commandsCountMap);
 			return new CommandSat(disqualified);
 		}
 
@@ -1342,7 +1340,8 @@ public class WLCommand implements Serializable{
 		String structName = !newStruct.isStructA() ? newStruct.struct().get("name") : 
 			newStruct.prev1NodeType().equals(NodeType.STR) ? (String)newStruct.prev1() : "";
 		//System.out.println("inside addComponent, newStruct: " + newStruct);
-		//System.out.println("###COMPONENT commandsCountMap " + curCommand.commandsMap);
+		//System.out.println("###curCommand.triggerWord " + curCommand.triggerWord);
+		//System.out.println("###COMPONENTCOUNTMAP commandsCountMap " + curCommand.commandsMap);
 		//whether component has been added. Useful to avoid rebuilding commands 
 		
 		boolean componentAdded = false;
@@ -1397,9 +1396,7 @@ public class WLCommand implements Serializable{
 		commandComponent = curPosTerm.commandComponent;
 		boolean isOptionalTerm = curPosTerm.isOptionalTerm();
 		int posTermPositionInMap = curPosTerm.positionInMap;
-		//use pattern!
-		//commandComponentPosTerm = commandComponent.posStr;
-		//commandComponentName = commandComponent.nameStr;
+		
 		Pattern commandComponentPosPattern = commandComponent.getPosPattern();
 		Pattern commandComponentNamePattern = commandComponent.getNamePattern();		
 		//checked here
@@ -1668,7 +1665,7 @@ public class WLCommand implements Serializable{
 	public static boolean disqualifyCommand(String structPosStr,
 			Map<WLCommandComponent, Integer> commandsCountMap) {
 		
-		//if structPosStr is of a type that likely interrupts a command, e.g. "if"
+		//if structPosStr is of a type that likely disqualifies a command, e.g. "if".
 		//Need to be smarter about "and". But only if these commands don't 
 		//appear as commandComponents down the road.
 		//the disqualify word triggered
@@ -1682,7 +1679,7 @@ public class WLCommand implements Serializable{
 		}
 		
 		Matcher disqualifyMatcher = DISQUALIFY_PATTERN.matcher(structPosStr);
-		if(disqualifyMatcher.find()){			
+		if(disqualifyMatcher.matches()){			
 			disqualifyPos = disqualifyMatcher.group(1);
 		}
 		
@@ -1710,7 +1707,7 @@ public class WLCommand implements Serializable{
 		}
 		
 		//disqualified 
-		if(disqualifyPos != null){
+		if(null != disqualifyPos){
 			return true;
 		}
 		

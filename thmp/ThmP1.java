@@ -39,6 +39,7 @@ import thmp.Struct.ChildRelationType;
 import thmp.Struct.NodeType;
 import thmp.ThmP1AuxiliaryClass.ConjDisjVerbphrase;
 import thmp.ThmP1AuxiliaryClass.ConjDisjVerbphrase.ConjDisjType;
+import thmp.search.CollectThm;
 import thmp.search.NGramSearch;
 import thmp.search.ThreeGramSearch;
 import thmp.search.TriggerMathThm2;
@@ -104,8 +105,8 @@ public class ThmP1 {
 	
 	private static final ImmutableListMultimap<String, FixedPhrase> fixedPhraseMap;	
 	
-	//private static final Map<String, Integer> twoGramMap = NGramSearch.get2GramsMap();
-	//private static final Map<String, Integer> threeGramMap = ThreeGramSearch.get3GramsMap();
+	private static final Map<String, Integer> twoGramMap = NGramSearch.get2GramsMap();
+	private static final Map<String, Integer> threeGramMap = ThreeGramSearch.get3GramsMap();
 	
 	/**
 	 * List of Stringified Map of parts used to build up a theorem/def etc.  
@@ -179,7 +180,7 @@ public class ThmP1 {
 		probMap = Maps.probMap();
 		posList = Maps.posList;
 	
-		parseContextVectorSz = TriggerMathThm2.keywordDictSize();
+		parseContextVectorSz = CollectThm.ThmWordsMaps.getCONTEXT_VEC_WORDS_MAP_size();
 		parseContextVector = new int[parseContextVectorSz];
 		
 		noFuseEntSet = new HashSet<String>();
@@ -370,8 +371,8 @@ public class ThmP1 {
 		String twoGramSingular = curWord + " " + nextWordSingular;
 		int newIndex = i;
 		
-		Map<String, Integer> twoGramMap = NGramSearch.get2GramsMap();
-		Map<String, Integer> threeGramMap = ThreeGramSearch.get3GramsMap();
+		//Map<String, Integer> twoGramMap = NGramSearch.get2GramsMap();
+		//Map<String, Integer> threeGramMap = ThreeGramSearch.get3GramsMap();
 		
 		if(i < str.length - 2){
 			String thirdWord = str[i + 2];	
@@ -2640,7 +2641,7 @@ public class ThmP1 {
 			//list of long forms, with flattened tree structure.
 			List<ParsedPair> longFormParsedPairList = new ArrayList<ParsedPair>();
 			
-			int[] curStructContextvec = new int[TriggerMathThm2.keywordDictSize()];	
+			int[] curStructContextvec = new int[parseContextVectorSz];	
 			
 			for (int k = 0; k < parsedStructListSize; k++) {
 				StringBuilder parsedSB = new StringBuilder();
@@ -3004,11 +3005,11 @@ public class ThmP1 {
 			//since same vector was passed around to be filled.
 			parseContextVector = contextVecList.get(0);
 		}else{
-			parseContextVector = contextVecList.get(finalOrderingList.get(0));
-			
+			parseContextVector = contextVecList.get(finalOrderingList.get(0));			
 			//System.out.println("Best context vector added: " +  Arrays.toString(parseContextVector));
 		}
-
+		parseState.setContextVec(parseContextVector);
+		
 		ParseStruct bestParseStruct = headParseStructList.get(bestIndex);
 		bestParseStruct.set_parentParseStruct(parseState.getCurParseStruct());
 		

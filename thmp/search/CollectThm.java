@@ -10,9 +10,11 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -22,6 +24,7 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ListMultimap;
 
 import thmp.Maps;
+import thmp.ParsedExpression;
 import thmp.ProcessInput;
 import thmp.ThmInput;
 import thmp.search.SearchWordPreprocess.WordWrapper;
@@ -38,14 +41,9 @@ import thmp.utils.WordForms;
  * mathObjMx.
  * 
  * @author yihed
- *
  */
 public class CollectThm {
 	
-	//raw original file
-	//private static final File rawFile = new File("src/thmp/data/commAlg5.txt");
-	//private static final String rawFileStr = "src/thmp/data/CommAlg5.txt";
-	//read in from list of files streams instead of just one
 	private static final List<String> rawFileStrList = Arrays.asList(new String[]{
 			//"src/thmp/data/testContextVector.txt", 
 			//"src/thmp/data/collectThmTestSample.txt"
@@ -63,7 +61,7 @@ public class CollectThm {
 
 	//There are intentionally *not* final.
 	//private static volatile BufferedReader rawFileReader;
-	//BufferedReader for context vectors.
+	//BufferedReader for context vectors.  <--should preferably not be global variables!
 	private static volatile BufferedReader contextVecBR;
 	//corresponding list of file readers
 	private static volatile List<BufferedReader> rawFileReaderList;
@@ -78,12 +76,8 @@ public class CollectThm {
 	private static final String[] SCORE1MATH_WORDS = new String[]{"ring", "field", "ideal", "finite", "series",
 			"complex", "combination", "regular", "domain", "local", "smooth", "map", "definition", "standard", "prime", "every",
 			"injective", "surjective"};
-	//additional fluff words to add, that weren't listed in 
+	//additional fluff words to add, that weren't listed previously
 	private static final String[] ADDITIONAL_FLUFF_WORDS = new String[]{"tex", "is", "are", "an"};
-	//file to be changed
-	//private static File e = null;
-	
-	//private static final ImmutableMap<String, Integer> twoGramsMap;
 	
 	public static class FreqWordsSet{
 
@@ -99,18 +93,6 @@ public class CollectThm {
 			return freqWordsSet;
 		}
 	}
-	
-	/**
-	 * Initialize class with reader, same as in static initializer. This needs
-	 * to be called before initializing GetFreqWords subclass, if the maps are
-	 * to be built from a particular bufferedReader.
-	 * Commented out Dec 2016. To be removed Jan 2017.
-	 * @param wordsFileReader
-	 */
-	/*public static void setResources(BufferedReader srcFileReader) {
-		rawFileReader = srcFileReader;
-		//System.out.print("first passed in: " +srcFileReader);		
-	}*/
 	
 	/**
 	 * Set context vector BufferedReader.
@@ -171,6 +153,14 @@ public class CollectThm {
 		private static final Set<String> nGramFirstWordsSet = new HashSet<String>();
 		private static final int averageSingletonWordFrequency;
 		
+		/* Deserialize the words used to form context and relation vectors. Note that this is a 
+		 * separate* list from the words used in term document matrix.
+		 * Absolute frequencies don't matter for forming context or relational vectors.
+		 * List is ordered with respect to relative frequency, more frequent words come first,
+		 * to optimize relation vector formation with BigIntegers.
+		 */
+		private static final Map<String, Integer> CONTEXT_VEC_WORDS_MAP;
+		
 		/**
 		 * Map of (annotated with "hyp" etc) keywords and their scores in document, the higher freq in doc, the lower 
 		 * score, say 1/(log freq + 1) since log 1 = 0. 
@@ -185,9 +175,8 @@ public class CollectThm {
 		private static final double THREE_GRAM_FREQ_REDUCTION_FACTOR = 4.0/5;
 		private static final double TWO_GRAM_FREQ_REDUCTION_FACTOR = 5.0/6;
 		
+		
 		static{
-			
-			//freqWordsMap = CollectFreqWords.getTopFreqWords(NUM_FREQ_WORDS);
 			//pass builder into a reader function. For each thm, builds immutable list of keywords, 
 			//put that list into the thm list. The integer indicates the word frequencies.
 			ImmutableList.Builder<ImmutableMap<String, Integer>> thmWordsListBuilder = ImmutableList.builder();
@@ -215,6 +204,17 @@ public class CollectThm {
 			//last boolean is whether to replace macros, 
 			//List<String> processedThmList = ProcessInput.processInput(extractedThms, true, true, true);
 			List<String> processedThmList = ThmList.get_processedThmList();
+			
+			//instead of getting thmList from ThmList, need to get it from serialized data.
+
+			String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
+			List<> f = deserializeParsedExpressionsList(parsedExpressionSerialFileStr);
+			
+			ThmList ;
+			List<BigInteger> vecList  ;
+			
+			getlist();
+			
 			//System.out.println("After processing: "+thmList);
 			try {
 				readThm(thmWordsListBuilder, docWordsFreqPreMap, wordThmsMMapBuilder, processedThmList);
@@ -238,6 +238,9 @@ public class CollectThm {
 			//add lexicon words to docWordsFreqMapNoAnno, which only contains collected words from thm corpus,
 			//collected based on frequnency, right now. These words do not have corresponding thm indices.
 			addLexiconWordsToContextKeywordDict(docWordsFreqPreMapNoAnno, averageSingletonWordFrequency);
+			//add the 2 and 3 grams to docWordsFreqPreMapNoAnno
+			docWordsFreqPreMapNoAnno.putAll(twoGramsMap);
+			docWordsFreqPreMapNoAnno.putAll(threeGramsMap);
 			
 			docWordsFreqMapNoAnno = ImmutableMap.copyOf(docWordsFreqPreMapNoAnno); 
 			//System.out.println(docWordsFreqMapNoAnno);
@@ -253,12 +256,142 @@ public class CollectThm {
 			Map<String, Integer> wordsScorePreMap = new HashMap<String, Integer>();
 			buildScoreMapNoAnno(wordsScorePreMap);
 			wordsScoreMapNoAnno = ImmutableMap.copyOf(wordsScorePreMap);
+			//System.out.println("*********wordsScoreMapNoAnno " + wordsScoreMapNoAnno );
+			
+			//deserialize words list used to form context and relation vectors, which were
+			//formed while parsing through the papers in e.g. DetectHypothesis.java. This is
+			//so we don't parse everything again at every server initialization.
+			String allThmWordsSerialFileStr = "src/thmp/data/allThmWordsList.dat";
+			List<String> wordsList = deserializeContextVecWordsList(allThmWordsSerialFileStr);
+			
+			CONTEXT_VEC_WORDS_MAP = g(wordsList);
+			
+			
 		}		
+		
+		private static Map<String, Integer> g(List<String> wordsList){
+			Map<String, Integer> contextKeywordDict = new HashMap<String, Integer>();
+			//these are ordered based on frequency, more frequent words occur earlier.
+			//List<String> wordsList = CollectThm.ThmWordsMaps.getCONTEXT_VEC_WORDS_LIST();		
+			for(int i = 0; i < wordsList.size(); i++){
+				String word = wordsList.get(i);
+				contextKeywordDict.put(word, i);
+			}
+			return contextKeywordDict;
+		}
+		
+		/**
+		 * Deserialize objects in parsedExpressionOutputFileStr, so we don't 
+		 * need to read and parse through all papers on every server initialization.
+		 * Can just read from serialized data.
+		 */
+		@SuppressWarnings("unchecked")
+		private static List<String> deserializeContextVecWordsList(String allThmWordsSerialFileStr){
+		
+			List<String> wordsList;
+			FileInputStream fileInputStream = null;
+			ObjectInputStream objectInputStream = null;
+			try{
+				fileInputStream = new FileInputStream(allThmWordsSerialFileStr);
+				objectInputStream = new ObjectInputStream(fileInputStream);
+			}catch(FileNotFoundException e){
+				e.printStackTrace();
+				throw new IllegalStateException("ParsedExpressionList output file not found!");
+			}catch(IOException e){
+				e.printStackTrace();
+				throw new IllegalStateException("IOException while opening ObjectOutputStream");
+			}
+			
+			try{
+				Object o = objectInputStream.readObject();
+				wordsList = (List<String>)o;
+				//System.out.println("object read: " + ((ParsedExpression)((List<?>)o).get(0)).getOriginalThmStr());			
+			}catch(IOException e){
+				e.printStackTrace();
+				throw new IllegalStateException("IOException while reading deserialized data!");
+			}catch(ClassNotFoundException e){
+				e.printStackTrace();
+				throw new IllegalStateException("ClassNotFoundException while writing to file or closing resources");
+			}finally{
+				try{
+					objectInputStream.close();
+					fileInputStream.close();
+				}catch(IOException e){
+					e.printStackTrace();
+					throw new IllegalStateException("IOException while closing resources");
+				}
+			}
+			return wordsList;
+		}
+		
+		//fill up thmList, contextvectors, and relational vectors from parsed expressions list
+		private static void getList(){
+			r
+		}
+		
+		/**
+		 * Deserialize objects in parsedExpressionOutputFileStr, so we don't 
+		 * need to read and parse through all papers on every server initialization.
+		 * Can just read from serialized data.
+		 */
+		@SuppressWarnings("unchecked")
+		private static List<ParsedExpression> deserializeParsedExpressionsList(String parsedExpressionSerialFileStr){
+		
+			List<ParsedExpression> parsedExpressionsList = null;
+			FileInputStream fileInputStream = null;
+			ObjectInputStream objectInputStream = null;
+			try{
+				fileInputStream = new FileInputStream(parsedExpressionSerialFileStr);
+				objectInputStream = new ObjectInputStream(fileInputStream);
+			}catch(FileNotFoundException e){
+				e.printStackTrace();
+				throw new IllegalStateException("ParsedExpressionList output file not found!");
+			}catch(IOException e){
+				e.printStackTrace();
+				throw new IllegalStateException("IOException while opening ObjectOutputStream");
+			}
+			
+			try{
+				Object o = objectInputStream.readObject();
+				parsedExpressionsList = (List<ParsedExpression>)o;
+				//System.out.println("object read: " + ((ParsedExpression)((List<?>)o).get(0)).getOriginalThmStr());			
+			}catch(IOException e){
+				e.printStackTrace();
+				throw new IllegalStateException("IOException while reading deserialized data!");
+			}catch(ClassNotFoundException e){
+				e.printStackTrace();
+				throw new IllegalStateException("ClassNotFoundException while writing to file or closing resources");
+			}finally{
+				try{
+					objectInputStream.close();
+					fileInputStream.close();
+				}catch(IOException e){
+					e.printStackTrace();
+					throw new IllegalStateException("IOException while closing resources");
+				}
+			}
+			return parsedExpressionsList;
+		}
+		
+		/**
+		 * Map of words in  and their indices.
+		 * Words used to form context and relation vectors. Note that this is a 
+		 * separate* list from the words used in term document matrix.
+		 * Absolute frequencies don't matter for forming context or relational vectors.
+		 * List is ordered with respect to relative frequency, more frequent words come first,
+		 * to optimize relation vector formation with BigIntegers.
+		 */
+		public static Map<String, Integer> getCONTEXT_VEC_WORDS_MAP(){
+			return CONTEXT_VEC_WORDS_MAP;
+		}
+		
+		public static int getCONTEXT_VEC_WORDS_MAP_size(){
+			return CONTEXT_VEC_WORDS_MAP.size();
+		}
 		
 		/**
 		 * Add lexicon words to docWordsFreqMapNoAnno, which only contains collected words from thm corpus,
 		 * collected based on frequnency, right now.
-		 * 
 		 */
 		private static void addLexiconWordsToContextKeywordDict(Map<String, Integer> docWordsFreqMapNoAnno,
 				int averageSingletonWordFrequency){
@@ -267,7 +400,8 @@ public class CollectThm {
 			int avgWordFreq = averageSingletonWordFrequency;
 			//add avg frequency based on int
 			for(Map.Entry<String, String> entry : posMMap.entries()){
-				if(entry.getValue().equals("ent")){
+				String pos = entry.getValue();
+				if(pos.equals("ent") || pos.equals("adj")){
 					docWordsFreqMapNoAnno.put(entry.getKey(), avgWordFreq);
 				}
 			}			
@@ -497,7 +631,7 @@ public class CollectThm {
 		 * @param curThmIndex
 		 * @param thmWordsMap ThmWordsMap for current thm
 		 * @param thmWordsListBuilder
-		 * @param docWordsFreqPreMap
+		 * @param docWordsFreqPreMap global document word frequency
 		 * @param wordThmsMMapBuilder
 		 * @param wordTotalFreq is total frequency of word in corpus. This 
 		 * was found when collecting 2 and 3 grams
@@ -563,6 +697,7 @@ public class CollectThm {
 		}
 		
 		/**
+		 * How are scores for 2 and 3 grams determined!?
 		 * Fills up wordsScoreMapBuilder
 		 * @param wordsScoreMapBuilder
 		 */
@@ -685,10 +820,15 @@ public class CollectThm {
 	 */
 	public static class NGramsMap{
 		//private static final Map<String, Integer> twoGramsMap = ImmutableMap.copyOf(NGramSearch.get2GramsMap());
+		//map of two grams and their frequencies.
 		private static final Map<String, Integer> twoGramsMap = NGramSearch.get2GramsMap();
 		
 		private static final Map<String, Integer> threeGramsMap = ThreeGramSearch.get3GramsMap();
 		
+		/**
+		 * Map of two grams and their frequencies.
+		 * @return
+		 */
 		public static Map<String, Integer> get_twoGramsMap(){
 			return twoGramsMap;
 		}

@@ -31,9 +31,9 @@ public class GenerateContextVector {
 
 	//private static String CONTEXT_VEC_FILE_STR = "src/thmp/data/contextVecCommm5.txt";
 	//private static String CONTEXT_VEC_FILE_STR = "src/thmp/data/contextVectorsMultilinearAlgebra.txt";
-	//private static String CONTEXT_VEC_FILE_STR = "src/thmp/data/contextVectorsFields.txt";
+	private static String CONTEXT_VEC_FILE_STR = "src/thmp/data/contextVectorsFields.txt";
 	//private static String CONTEXT_VEC_FILE_STR = "src/thmp/data/contextVecFunctionalAnalysis.txt";
-	private static String CONTEXT_VEC_FILE_STR = "src/thmp/data/contextVecTopology.txt";
+	//private static String CONTEXT_VEC_FILE_STR = "src/thmp/data/contextVecTopology.txt";
 	//private static String CONTEXT_VEC_FILE_STR = "src/thmp/data/contextVecAll.txt";
 	
 	private static Path contextVecFilePath;	
@@ -67,16 +67,8 @@ public class GenerateContextVector {
 		//private static final KernelLink ml = thmp.utils.FileUtils.getKernelLink();
 		
 	static{
-		/*Maps.buildMap();
-		try {
-			Maps.readLexicon();
-			Maps.readFixedPhrases();
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}*/
-		bareThmList = CollectThm.ThmList.get_bareThmList();
 		
-		//if(outputStreamURL == null){
+		bareThmList = CollectThm.ThmList.get_bareThmList();
 		
 		generateContextVec(bareThmList, contextVecList, contextVecStringList);
 		
@@ -197,7 +189,7 @@ public class GenerateContextVector {
 			//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim()) ));
 			parseState = ThmP1.tokenize(strAr[i].trim(), parseState);
 			parseState = ThmP1.parse(parseState);
-			parseContextVecList.add(ThmP1.getParseContextVector());	
+			parseContextVecList.add(parseState.getContextVec());	
 		}
 		
 		int[] contextVec = combineContextVectors(parseContextVecList);

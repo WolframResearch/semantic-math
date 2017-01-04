@@ -520,8 +520,12 @@ public class ThmP1TestRun {
 			st = "Let $x_i$, $i \\in I$ be a given system of generators of $M$ as an $R$-module";
 			st = "we use the notation ``$\\mathfrak p kjg $``";
 			st = "there exists a finite $R$-module $M'$ and a map $M' \\to M$ which induces an isomorphism $S^{-1}M' \to S^{-1}M$."; 
-			//st = "there exists a field and a ring which is a group algebra ";
+			st = "subspace $\\kh^{1,1}(\\omega)\\subset \\ka^{1,1}(X)$ is independent of $\\omega$ if and only if $\tilde\\kk_X$ spans an $\\IR$-linear subspace of dimension $h^{1,1}(X)$";
+			st = "subspace $\\kh^{1,1}(\\omega)\\subset \\ka^{1,1}(X)$ is independent of $\\omega$";
+			st = "if and only if $\tilde\\kk_X$ spans an $\\IR$-linear subspace of dimension $h^{1,1}(X)$";
+			st = "principal ideal ring is compact";
 			
+			//st = "there exists a field and a ring which is a group algebra ";			
 			//st = "field has ring";
 			//st = "given The image of a constructible subset";				
 			//st = "Let $F$ be a field. $F$ is a ring";			
@@ -598,8 +602,9 @@ public class ThmP1TestRun {
 			boolean processText = true;
 			ParseState parseState = parseStateBuilder.build();
 			
-			if(processText){				
-				parseInputVerbose(st, parseState);				
+			if(processText){	
+				boolean isVerbose = true;
+				ParseRun.parseInput(st, parseState, isVerbose);
 			}
 			
 			boolean streamInput = false;
@@ -608,7 +613,8 @@ public class ThmP1TestRun {
 				String inputStr;
 				while(sc.hasNextLine()){
 					inputStr = sc.nextLine();
-					parseInputVerbose(inputStr, parseState);
+					boolean isVerbose = true;
+					ParseRun.parseInput(inputStr, parseState, isVerbose);
 				}
 				sc.close();
 			}
@@ -630,7 +636,8 @@ public class ThmP1TestRun {
 					System.out.println("*~~~*");					
 					nextLine = ThmInput.removeTexMarkup(nextLine, null, null);
 					System.out.println(nextLine + "\n");
-					parseInputVerbose(nextLine, parseState);
+					boolean isVerbose = true;
+					ParseRun.parseInput(nextLine, parseState, isVerbose);
 					parseState.parseRunCleanUp();
 				}		
 				
@@ -642,91 +649,4 @@ public class ThmP1TestRun {
 			}
 		}
 	
-	/**
-	 * Verbose way of parsing the input. With more print statements
-	 * @param inputStr
-	 */
-	private static void parseInputVerbose(String st, ParseState parseState){
-		
-		List<int[]> parseContextVecList = new ArrayList<int[]>();			
-		
-		String[] strAr = ThmP1.preprocess(st);			
-		
-		for(int i = 0; i < strAr.length; i++){
-			//alternate commented out line to enable tex converter
-			//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim()) ));
-			parseState = ThmP1.tokenize(strAr[i].trim(), parseState);
-			parseState = ThmP1.parse(parseState);
-			int[] curContextVec = ThmP1.getParseContextVector();
-			parseContextVecList.add(curContextVec);
-			//get context vector
-			System.out.println("cur vec: " + Arrays.toString(curContextVec));
-		}
-		
-		/*List<ParseStruct> headParseStructList = parseState.getHeadParseStructList();
-		for(ParseStruct headParseStruct : headParseStructList){
-			System.out.println("@@@" + headParseStruct);
-		}*/
-		
-		System.out.println("@@@" + parseState.getHeadParseStruct());
-		BigInteger relationalVec = parseState.getRelationalContextVec();
-		if(null != relationalVec){
-			System.out.println("Relational Vector num of bits set: " + relationalVec.bitCount());
-		}
-		parseState.logState();
-		
-		//combine these vectors together, only add subsequent vector entry
-		//if that entry is 0 in all previous vectors int[].
-		int[] combinedVec = GenerateContextVector.combineContextVectors(parseContextVecList);
-		System.out.println("combinedVec: " + Arrays.toString(combinedVec));
-		
-		String parsedOutput = ThmP1.getAndClearParseStructMapList().toString();
-		//String parsedOutput = Arrays.toString(ThmP1.getParseStructMapList().toArray());			
-		//String processedOutput = parsedOutput.replaceAll("MathObj", "MathObject").replaceAll("\\$([^$]+)\\$", "LaTEXMath[\"$1\"]")
-				//.replaceAll("MathObject\\{([^}]+)\\}", "MathObject\\[$1\\]");					
-		
-		System.out.println("PARTS: " + parsedOutput);			
-		System.out.println("****ParsedExpr ");
-		for(ParsedPair pair : ThmP1.getAndClearParsedExpr()){
-			System.out.println(pair);
-		}
-	}
-	
-		/*private static void parseInput(String inputStr){
-			String[] strAr = ThmP1.preprocess(inputStr);
-			
-			List<int[]> parseContextVecList = new ArrayList<int[]>();
-			
-			ParseStateBuilder parseStateBuilder = new ParseStateBuilder();
-			parseStateBuilder.setWriteUnknownWordsToFile(WRITE_UNKNOWN_WORDS_TO_FILE);
-			ParseState parseState = parseStateBuilder.build();
-			
-			for(int i = 0; i < strAr.length; i++){
-				//alternate commented out line to enable tex converter
-				//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim()) ));
-				parseState = ThmP1.tokenize(strAr[i].trim(), parseState);
-				parseState = ThmP1.parse(parseState);
-				int[] curContextVec = ThmP1.getParseContextVector();
-				parseContextVecList.add(curContextVec);
-				//get context vector
-				System.out.println("cur vec: " + Arrays.toString(curContextVec));
-			}
-			
-			//combine these vectors together, only add subsequent vector entry
-			//if that entry is 0 in all previous vectors int[].
-			int[] combinedVec = GenerateContextVector.combineContextVectors(parseContextVecList);
-			System.out.println("combinedVec: " + Arrays.toString(combinedVec));
-			
-			String parsedOutput = ThmP1.getAndClearParseStructMapList().toString();
-			//String parsedOutput = Arrays.toString(ThmP1.getParseStructMapList().toArray());			
-			//String processedOutput = parsedOutput.replaceAll("MathObj", "MathObject").replaceAll("\\$([^$]+)\\$", "LaTEXMath[\"$1\"]")
-					//.replaceAll("MathObject\\{([^}]+)\\}", "MathObject\\[$1\\]");					
-			
-			System.out.println("PARTS: " + parsedOutput);			
-			System.out.println("****ParsedExpr ");
-			for(ParsedPair pair : ThmP1.getAndClearParsedExpr()){
-				System.out.println(pair);
-			}
-			parseState.parseRunCleanUp();
-		}*/
 }

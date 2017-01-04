@@ -14,6 +14,7 @@ import com.google.common.collect.Multimap;
 
 import thmp.ThmP1.ParsedPair;
 import thmp.WLCommand.PosTerm;
+import thmp.search.CollectThm;
 import thmp.search.TriggerMathThm2;
 import thmp.utils.WordForms;
 
@@ -38,13 +39,11 @@ public class RelationVec implements Serializable{
 
 	private static final long serialVersionUID = 7990758362732085287L;
 	
-	private static final int parseContextVectorSz = TriggerMathThm2.keywordDictSize();
-	private static final Map<String, Integer> keywordDict = TriggerMathThm2.keywordDict();
-
+	private static final Map<String, Integer> keywordDict = CollectThm.ThmWordsMaps.getCONTEXT_VEC_WORDS_MAP();
+	private static final int parseContextVectorSz = keywordDict.size();
+	
 	private static final int NUM_BITS_PER_BYTE = 8;
 	private static final Pattern SPLIT_DELIM_PATTERN = Pattern.compile(WordForms.splitDelim());
-	
-	//should be wrapper around bitsets and make the bitsets immutable!!
 	
 	/**
 	 * Enum for the different types of
@@ -154,7 +153,7 @@ public class RelationVec implements Serializable{
 			}
 			
 			String contentStr = posTermStruct.contentStr();
-			System.out.println("c&&&&&&&&&&&&&&&ontentStr: " + contentStr + " posTerm " + posTerm);
+			//System.out.println("c&&&&&&&&&&&&&&&ontentStr: " + contentStr + " posTerm " + posTerm);
 			
 			List<RelationType> posTermRelationTypeList = posTerm.relationType();
 			
@@ -239,7 +238,6 @@ public class RelationVec implements Serializable{
 		
 		//repeat for the whole of termStr:
 		Integer residue = keywordDict.get(termStr);
-		//if(termStr.equals("injective")) throw new IllegalStateException(residue+"");
 		
 		if(null != residue){
 			int bitPos = parseContextVectorSz*modulus + residue;

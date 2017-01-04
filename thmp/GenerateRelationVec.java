@@ -158,12 +158,9 @@ public class GenerateRelationVec {
 		
 		try{
 			Object o = objectInputStream.readObject();
-			//@SuppressWarnings("unchecked")
+			
 			relationVecList = (List<BigInteger>)o;
 			
-			/*for(BitSet relationVec : relationVecList){
-				System.out.println(relationVec);
-			}*/
 		}catch(IOException e){
 			e.printStackTrace();
 			throw new IllegalStateException("IOException while reading object. " + e);	
