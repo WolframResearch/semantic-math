@@ -30,12 +30,9 @@ public class RelationalSearch implements Searcher{
 	private static final List<BigInteger> relationVecList;
 	
 	static{
-		
-		//get the deserialized vectors from CollectThm instead of from thm vec file!
-
-		relationVecList = GenerateRelationVec.getRelationVecList();
+		//relationVecList = GenerateRelationVec.getRelationVecList();
 		//should get vectors from deserialized ParsedExpression's List
-		
+		relationVecList = CollectThm.ThmList.allThmsRelationVecList();
 		
 	}
 	

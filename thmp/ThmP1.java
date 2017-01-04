@@ -3008,7 +3008,7 @@ public class ThmP1 {
 			parseContextVector = contextVecList.get(finalOrderingList.get(0));			
 			//System.out.println("Best context vector added: " +  Arrays.toString(parseContextVector));
 		}
-		parseState.setContextVec(parseContextVector);
+		parseState.addContextVecToCurThmParse(parseContextVector);
 		
 		ParseStruct bestParseStruct = headParseStructList.get(bestIndex);
 		bestParseStruct.set_parentParseStruct(parseState.getCurParseStruct());

@@ -106,18 +106,17 @@ public class ParseState {
 	 */
 	private ListMultimap<VariableName, VariableDefinition> localVariableNamesMMap;
 	
-	//parsedExpr to record parsed pairs during parsing. Eliminate copy in ThmP1!
-	private List<ParsedPair> parsedExpr = new ArrayList<ParsedPair>();
-	
-	//record pos postulated during parse.
-	private static HashMultimap<String, String> extrapolatedPosMMap = HashMultimap.create(); 
-	
-	private static final Logger logger = LogManager.getLogger(ParseState.class);
-	
-	private static final String UNKNOWN_WORDS_FILE_NAME_STR = "src/thmp/data/unknownWords2.txt";
-	
+	//parsedExpr to record parsed pairs during parsing. Eliminate copy in ThmP1.java!
+	private List<ParsedPair> parsedExpr = new ArrayList<ParsedPair>();	
+	//list of context vectors, each element corresponds to a part of a thm.
+	List<int[]> thmContextVecList = new ArrayList<int[]>();
 	//flag to denote whether currently in theorem/lemma/etc or not.
 	private boolean inThmFlag;
+	
+	//record pos postulated during parse.
+	private static HashMultimap<String, String> extrapolatedPosMMap = HashMultimap.create(); 		
+	private static final Logger logger = LogManager.getLogger(ParseState.class);	
+	private static final String UNKNOWN_WORDS_FILE_NAME_STR = "src/thmp/data/unknownWords2.txt";
 	
 	/**
 	 * Wrapper class around variable string name (Head), also records
@@ -418,14 +417,26 @@ public class ParseState {
 	}
 
 	/**
+	 * Combines the context vec for each component into a single thm context vec.
+	 * Computes the combined vector each time. Caller should only call once and store
+	 * result.
 	 * @return the relationalContextVec
 	 */
-	public int[] getContextVec() {
-		return contextVec;
+	public int[] getCurThmCombinedContextVec() {		
+		return GenerateContextVector.combineContextVectors(thmContextVecList);
 	}
 	
-	public void setContextVec(int[] contextVec) {
-		this.contextVec = contextVec;
+	//public void setContextVec(int[] contextVec) {
+		//this.contextVec = contextVec;
+	//}
+	
+	/**
+	 * Adds a context vec to the parse of current thm, since each thm likely consists
+	 * of several parts.
+	 * @param contextVec
+	 */
+	public void addContextVecToCurThmParse(int[] contextVec) {
+		this.thmContextVecList.add(contextVec);
 	}
 	
 	/**
@@ -832,6 +843,8 @@ public class ParseState {
 	public void parseRunCleanUp(){
 		this.setCurParseStruct(null);
 		this.setHeadParseStruct(null);
+		//reset list of context vectors
+		this.thmContextVecList = new ArrayList<int[]>();
 		this.localVariableNamesMMap = ArrayListMultimap.create();
 		this.inThmFlag = false;
 	}	

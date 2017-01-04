@@ -501,7 +501,7 @@ public class DetectHypothesis {
 		//create parsedExpression to serialize to persistent storage to be used later
 		//for search, etc
 		ParsedExpression parsedExpression = new ParsedExpression(thmStr, parseState.getHeadParseStruct(),
-						defListWithThm, parseState.getContextVec(), parseState.getRelationalContextVec());
+						defListWithThm, parseState.getCurThmCombinedContextVec(), parseState.getRelationalContextVec());
 		
 		parsedExpressionList.add(parsedExpression);
 		parsedExpressionStrList.add(parsedExpression.toString());

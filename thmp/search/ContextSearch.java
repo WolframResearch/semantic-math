@@ -34,15 +34,20 @@ public class ContextSearch {
 	//private static final List<String> bareThmList = CollectThm.ThmList.get_bareThmList();
 	private static final KernelLink ml = FileUtils.getKernelLinkInstance();
 	//list of strings "{1, 0, ...}" corresponding to contexts of thms, same indexing as in thmList.
-	private static final List<String> contextVecStringList = new ArrayList<String>();
+	private static final List<String> allThmsContextVecStrList;
+	//private static final List<String> allThmsContextVecStrList;
+	
 	//private static final int LIST_INDEX_SHIFT = 1;
 	private static final Pattern BRACKETS_PATTERN = WordForms.BRACKETS_PATTERN();
 	private static final boolean DEBUG = false;
 	
 	static{
 		//get the deserialized vectors from CollectThm instead of from thm vec file!
+		//need string form!
+		allThmsContextVecStrList = CollectThm.ThmList.allThmsContextVecList();
 		
-		
+		boolean b = false;
+		if(b){
 		//need to set this when deployed to VM
 		//String contextVecFileStr = "src/thmp/data/contextVecAll.txt";
 		String contextVecFileStr = "src/thmp/data/contextVectorsFields.txt";
@@ -70,7 +75,7 @@ public class ContextSearch {
 			String line;
 			while((line = contextVecFileBReader.readLine()) != null){
 				//a line is a String of the form "{1, 0, ...}"
-				contextVecStringList.add(line);
+				allThmsContextVecStrList.add(line);
 			}			
 			contextVecFileBReader.close();
 		}catch(FileNotFoundException e){
@@ -84,7 +89,7 @@ public class ContextSearch {
 				closeBuffer(contextVecFileBReader);
 			}
 		}
-		
+		}
 	}
 	
 	/**
@@ -126,9 +131,9 @@ public class ContextSearch {
 			int thmIndex = nearestThmIndexList.get(i);
 			if(i < nearestThmIndexListSz-1){
 				//except at the end!
-				nearestThmsContextVecSB.append(contextVecStringList.get(thmIndex) + ",");
+				nearestThmsContextVecSB.append(allThmsContextVecStrList.get(thmIndex) + ",");
 			}else{
-				nearestThmsContextVecSB.append(contextVecStringList.get(thmIndex) + "}");
+				nearestThmsContextVecSB.append(allThmsContextVecStrList.get(thmIndex) + "}");
 			}
 			
 		}

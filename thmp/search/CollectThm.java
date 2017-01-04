@@ -15,6 +15,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.math.BigInteger;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -175,7 +176,6 @@ public class CollectThm {
 		private static final double THREE_GRAM_FREQ_REDUCTION_FACTOR = 4.0/5;
 		private static final double TWO_GRAM_FREQ_REDUCTION_FACTOR = 5.0/6;
 		
-		
 		static{
 			//pass builder into a reader function. For each thm, builds immutable list of keywords, 
 			//put that list into the thm list. The integer indicates the word frequencies.
@@ -202,22 +202,13 @@ public class CollectThm {
 			//List<String> extractedThms = ThmList.get_thmList();
 			//the third true means to extract words from latex symbols, eg oplus->direct sum.
 			//last boolean is whether to replace macros, 
-			//List<String> processedThmList = ProcessInput.processInput(extractedThms, true, true, true);
-			List<String> processedThmList = ThmList.get_processedThmList();
-			
-			//instead of getting thmList from ThmList, need to get it from serialized data.
-
-			String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
-			List<> f = deserializeParsedExpressionsList(parsedExpressionSerialFileStr);
-			
-			ThmList ;
-			List<BigInteger> vecList  ;
-			
-			getlist();
+			//List<String> processedThmList = ThmList.get_processedThmList();			
+			List<String> processedThmList = ThmList.allThmsWithHypList;
 			
 			//System.out.println("After processing: "+thmList);
 			try {
-				readThm(thmWordsListBuilder, docWordsFreqPreMap, wordThmsMMapBuilder, processedThmList);
+				//this is commented out in Jan 2017, since the annotated version is no longer used.
+				//readThm(thmWordsListBuilder, docWordsFreqPreMap, wordThmsMMapBuilder, processedThmList);
 				//same as readThm, just buid maps without annocation
 				buildMapsNoAnno(thmWordsListBuilderNoAnno, docWordsFreqPreMapNoAnno, wordThmsMMapBuilderNoAnno, processedThmList);				
 			} catch (IOException e) {
@@ -265,8 +256,6 @@ public class CollectThm {
 			List<String> wordsList = deserializeContextVecWordsList(allThmWordsSerialFileStr);
 			
 			CONTEXT_VEC_WORDS_MAP = g(wordsList);
-			
-			
 		}		
 		
 		private static Map<String, Integer> g(List<String> wordsList){
@@ -324,54 +313,6 @@ public class CollectThm {
 			return wordsList;
 		}
 		
-		//fill up thmList, contextvectors, and relational vectors from parsed expressions list
-		private static void getList(){
-			r
-		}
-		
-		/**
-		 * Deserialize objects in parsedExpressionOutputFileStr, so we don't 
-		 * need to read and parse through all papers on every server initialization.
-		 * Can just read from serialized data.
-		 */
-		@SuppressWarnings("unchecked")
-		private static List<ParsedExpression> deserializeParsedExpressionsList(String parsedExpressionSerialFileStr){
-		
-			List<ParsedExpression> parsedExpressionsList = null;
-			FileInputStream fileInputStream = null;
-			ObjectInputStream objectInputStream = null;
-			try{
-				fileInputStream = new FileInputStream(parsedExpressionSerialFileStr);
-				objectInputStream = new ObjectInputStream(fileInputStream);
-			}catch(FileNotFoundException e){
-				e.printStackTrace();
-				throw new IllegalStateException("ParsedExpressionList output file not found!");
-			}catch(IOException e){
-				e.printStackTrace();
-				throw new IllegalStateException("IOException while opening ObjectOutputStream");
-			}
-			
-			try{
-				Object o = objectInputStream.readObject();
-				parsedExpressionsList = (List<ParsedExpression>)o;
-				//System.out.println("object read: " + ((ParsedExpression)((List<?>)o).get(0)).getOriginalThmStr());			
-			}catch(IOException e){
-				e.printStackTrace();
-				throw new IllegalStateException("IOException while reading deserialized data!");
-			}catch(ClassNotFoundException e){
-				e.printStackTrace();
-				throw new IllegalStateException("ClassNotFoundException while writing to file or closing resources");
-			}finally{
-				try{
-					objectInputStream.close();
-					fileInputStream.close();
-				}catch(IOException e){
-					e.printStackTrace();
-					throw new IllegalStateException("IOException while closing resources");
-				}
-			}
-			return parsedExpressionsList;
-		}
 		
 		/**
 		 * Map of words in  and their indices.
@@ -843,6 +784,11 @@ public class CollectThm {
 	 * dependency), but also gives benefit of final (cause singleton), immutable (make it so).
 	 */
 	public static class ThmList{
+		//
+		private static final ImmutableList<String> allThmsWithHypList;
+		private static final ImmutableList<BigInteger> allThmsRelationVecList;
+		private static final ImmutableList<String> allThmsContextVecList;
+		
 		private static final ImmutableList<String> thmList;
 		//processed with options to replace tex with latex, and expand macros with their definitions
 		private static final ImmutableList<String> processedThmList;
@@ -860,6 +806,21 @@ public class CollectThm {
 		private static final boolean REPLACE_MACROS = true;
 		
 		static{
+			
+			//instead of getting thmList from ThmList, need to get it from serialized data.
+			String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
+			List<ParsedExpression> parsedExpressionsList = deserializeParsedExpressionsList(parsedExpressionSerialFileStr);
+			
+			List<String> allThmsWithHypPreList = new ArrayList<String>();			
+			List<BigInteger> relationVecPreList = new ArrayList<BigInteger>();
+			List<String> contextVecPreList = new ArrayList<String>();
+			
+			fillListsFromParsedExpressions(parsedExpressionsList, allThmsWithHypPreList, contextVecPreList, relationVecPreList);			
+			
+			allThmsWithHypList = ImmutableList.copyOf(allThmsWithHypPreList);
+			allThmsContextVecList = ImmutableList.copyOf(contextVecPreList);
+			allThmsRelationVecList = ImmutableList.copyOf(relationVecPreList);
+			
 			ImmutableList.Builder<String> thmListBuilder = ImmutableList.builder();
 			List<String> extractedThmsList = new ArrayList<String>();
 			List<String> processedThmsList = new ArrayList<String>();
@@ -913,6 +874,94 @@ public class CollectThm {
 			bareThmList = ImmutableList.copyOf(bareThmsList);
 			processedThmList = ImmutableList.copyOf(processedThmsList);
 			macroReplacedThmList = ImmutableList.copyOf(macroReplacedThmsList);
+		}
+		
+		/**
+		 * Fill up thmList, contextvectors, and relational vectors from parsed expressions list.
+		 * @param parsedExpressionsList
+		 * @param allThmsWithHypList
+		 * @param contextVecList
+		 * @param relationVecList
+		 */
+		private static void fillListsFromParsedExpressions(List<ParsedExpression> parsedExpressionsList, 
+				List<String> allThmsWithHypList, List<String> contextVecList, List<BigInteger> relationVecList){
+			
+			for(ParsedExpression parsedExpr : parsedExpressionsList){
+				allThmsWithHypList.add(parsedExpr.getDefListWithThm().getThmWithDefStr());
+				contextVecList.add(parsedExpr.contextVecStr());
+				relationVecList.add(parsedExpr.getRelationVec());
+			}
+		}
+		
+		/**
+		 * Deserialize objects in parsedExpressionOutputFileStr, so we don't 
+		 * need to read and parse through all papers on every server initialization.
+		 * Can just read from serialized data.
+		 */
+		@SuppressWarnings("unchecked")
+		private static List<ParsedExpression> deserializeParsedExpressionsList(String parsedExpressionSerialFileStr){
+		
+			List<ParsedExpression> parsedExpressionsList = null;
+			FileInputStream fileInputStream = null;
+			ObjectInputStream objectInputStream = null;
+			try{
+				fileInputStream = new FileInputStream(parsedExpressionSerialFileStr);
+				objectInputStream = new ObjectInputStream(fileInputStream);
+			}catch(FileNotFoundException e){
+				e.printStackTrace();
+				throw new IllegalStateException("ParsedExpressionList output file not found!");
+			}catch(IOException e){
+				e.printStackTrace();
+				throw new IllegalStateException("IOException while opening ObjectOutputStream");
+			}
+			
+			try{
+				Object o = objectInputStream.readObject();
+				parsedExpressionsList = (List<ParsedExpression>)o;
+				//System.out.println("object read: " + ((ParsedExpression)((List<?>)o).get(0)).getOriginalThmStr());			
+			}catch(IOException e){
+				e.printStackTrace();
+				throw new IllegalStateException("IOException while reading deserialized data!");
+			}catch(ClassNotFoundException e){
+				e.printStackTrace();
+				throw new IllegalStateException("ClassNotFoundException while writing to file or closing resources");
+			}finally{
+				try{
+					objectInputStream.close();
+					fileInputStream.close();
+				}catch(IOException e){
+					e.printStackTrace();
+					throw new IllegalStateException("IOException while closing resources");
+				}
+			}
+			return parsedExpressionsList;
+		}
+		
+		/**
+		 * List of relation vectors for all thms, as extracted from deserialized 
+		 * ParsedExpressions.
+		 * @return
+		 */
+		public static ImmutableList<BigInteger> allThmsRelationVecList(){
+			return allThmsRelationVecList;
+		}
+
+		/**
+		 * List of context vectors for all thms, as extracted from deserialized 
+		 * ParsedExpressions.
+		 * @return
+		 */
+		public static ImmutableList<String> allThmsContextVecList(){
+			return allThmsContextVecList;
+		}
+
+		/**
+		 * Get list of theorems with their hypotheses and assumptions attached,
+		 * as collected by DetectHypothesis.java. 
+		 * @return an immutable list
+		 */
+		public static ImmutableList<String> allThmsWithHypList(){
+			return allThmsWithHypList;
 		}
 		
 		/**

@@ -158,7 +158,7 @@ public class GenerateContextVector {
 	
 	/**
 	 * Creates context vector given input string.
-	 * @param input
+	 * @param input User's input string.
 	 * @return
 	 */
 	public static String createContextVector(String input) {
@@ -167,7 +167,8 @@ public class GenerateContextVector {
 	}
 	
 	/**
-	 * @param contextVecList List of context vecs.
+	 * @param contextVecList List of context vecs to be added to.
+	 * Don't create new list if null.
 	 * @param thm User's input string.
 	 * @return
 	 */
@@ -178,7 +179,7 @@ public class GenerateContextVector {
 		String[] strAr = ThmP1.preprocess(thm);
 		//System.out.println("****length " + strAr.length + " " + thm);
 		//strAr = ThmP1.preprocess(thm);
-		List<int[]> parseContextVecList = new ArrayList<int[]>();
+		//List<int[]> parseContextVecList = new ArrayList<int[]>();
 
 		ParseStateBuilder parseStateBuilder = new ParseStateBuilder();
 		parseStateBuilder.setWriteUnknownWordsToFile(WRITE_UNKNOWNWORDS);
@@ -189,19 +190,28 @@ public class GenerateContextVector {
 			//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim()) ));
 			parseState = ThmP1.tokenize(strAr[i].trim(), parseState);
 			parseState = ThmP1.parse(parseState);
-			parseContextVecList.add(parseState.getContextVec());	
+			//parseContextVecList.add(parseState.getContextVec());	
 		}
 		
-		int[] contextVec = combineContextVectors(parseContextVecList);
+		int[] contextVec = parseState.getCurThmCombinedContextVec();
+		
 		//get context vector and add to contextVecMx
-		if(contextVecList != null){
+		if(null != contextVecList){
 			contextVecList.add(contextVec);
 		}		
-		//System.out.println("Context vec: " + Arrays.toString(ThmP1.getParseContextVector()));
+		//System.out.println("Context vec: " + Arrays.toString(ThmP1.getParseContextVector()));		
+		return contextVecIntArrayToString(contextVec);
+	}
+	
+	/**
+	 * Creates String representation of context vector from integer array.
+	 * @param contextVec
+	 * @return
+	 */
+	public static String contextVecIntArrayToString(int[] contextVec){
 		String contextVecStr = Arrays.toString(contextVec);
 		Matcher matcher = BRACKETS_PATTERN.matcher(contextVecStr);
-		contextVecStr = matcher.replaceAll("{$1}");
-		return contextVecStr;
+		return matcher.replaceAll("{$1}");		
 	}
 	
 	/**

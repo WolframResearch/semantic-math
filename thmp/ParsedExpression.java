@@ -18,8 +18,8 @@ import thmp.DetectHypothesis.DefinitionListWithThm;
  */
 public class ParsedExpression implements Serializable{
 
-	private static final long serialVersionUID = 1L;
-	
+	private static final long serialVersionUID = -6334467107326376015L;
+
 	private String originalThmStr;
 	
 	private List<Struct> parseRootList;
@@ -36,7 +36,9 @@ public class ParsedExpression implements Serializable{
 	private BigInteger relationVec;
 	
 	//context vector, @see ContextVec.java
-	private int[] contextVec;
+	private transient int[] contextVec;
+	//need the String form for serialization
+	private transient String contextVecStr;
 	
 	public ParsedExpression(String thmStr, List<Struct> parseRootList){
 		this.originalThmStr = thmStr;
@@ -51,6 +53,7 @@ public class ParsedExpression implements Serializable{
 		this.defListWithThm = defListWithThm;
 		this.relationVec = relationVec;
 		this.contextVec = contextVec;
+		this.contextVecStr = GenerateContextVector.contextVecIntArrayToString(contextVec);
 	}
 	
 	/**
@@ -67,6 +70,13 @@ public class ParsedExpression implements Serializable{
 		return contextVec;
 	}
 
+	/**
+	 * @return the String representation of contextVec 
+	 */
+	public String contextVecStr() {
+		return contextVecStr;
+	}
+	
 	/**
 	 * @return the originalThmStr
 	 */
