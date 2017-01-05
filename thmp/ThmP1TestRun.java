@@ -524,6 +524,7 @@ public class ThmP1TestRun {
 			st = "subspace $\\kh^{1,1}(\\omega)\\subset \\ka^{1,1}(X)$ is independent of $\\omega$";
 			st = "if and only if $\tilde\\kk_X$ spans an $\\IR$-linear subspace of dimension $h^{1,1}(X)$";
 			st = "principal ideal ring is compact";
+			st = "there exist roots of complex polynomial in field";
 			
 			//st = "there exists a field and a ring which is a group algebra ";			
 			//st = "field has ring";

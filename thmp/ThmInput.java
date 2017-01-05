@@ -19,7 +19,8 @@ import thmp.utils.WordForms;
 
 /**
  * Reads in text from file and extracts definitions, lemmas prepositions, and
- * theorems
+ * theorems.
+ * Use this to extract just theorems/propositions/etc to file. 
  * 
  * @author yihed
  *
@@ -27,8 +28,9 @@ import thmp.utils.WordForms;
 public class ThmInput {
 
 	//Intentionally *not* final, as must append custom author-defined macros and compile the pattern
-	static String THM_START_STR = "\\\\begin\\{def(?:.*)|\\\\begin\\{lem(?:.*)|\\\\begin\\{thm(?:.*)|\\\\begin\\{theo(?:.*)|\\\\begin\\{prop(?:.*)"
-			+ "|\\\\begin\\{proclaim(?:.*)|\\\\begin\\{cor(?:.*)";
+	static String THM_START_STR = "[^\\\\]*\\\\begin\\{def(?:.*)|[^\\\\]*\\\\begin\\{lem(?:.*)|[^\\\\]*\\\\begin\\{thm(?:.*)"
+			+ "|[^\\\\]*\\\\begin\\{theo(?:.*)|[^\\\\]*\\\\begin\\{prop(?:.*)"
+			+ "|[^\\\\]*\\\\begin\\{proclaim(?:.*)|[^\\\\]*\\\\begin\\{cor(?:.*)";
 	
 	static final Pattern THM_START_PATTERN = Pattern.compile(THM_START_STR);
 	
@@ -71,11 +73,15 @@ public class ThmInput {
 	private static final Pattern INDEX_PATTERN = Pattern.compile("\\\\index\\{([^\\}]*)\\}%*");
 	// pattern for eliminating the command completely for web display. E.g. \fml. How about \begin or \end everything?
 	private static Pattern ELIMINATE_PATTERN = Pattern
-			.compile("\\\\fml|\\\\ofml|\\\\begin\\{enumerate\\}|\\\\end\\{enumerate\\}"
-					+ "|\\\\begin\\{def(?:[^}]*)\\}\\s*|\\\\begin\\{lem(?:[^}]*)\\}\\s*|\\\\begin\\{th(?:[^}]*)\\}\\s*"
-					+ "|\\\\begin\\{pr(?:[^}]*)\\}\\s*|\\\\begin\\{proclaim(?:[^}]*)\\}\\s*|\\\\begin\\{cor(?:[^}]*)\\}\\s*"
-					+ "|\\\\begin\\{slogan\\}|\\\\end\\{slogan\\}|\\\\sbsb|\\\\cat|\\\\bs|\\\\end\\{pr(?:[^}]*)\\}\\s*"
+			.compile("\\\\fml|\\\\ofml|\\\\begin\\{enumerate\\}|\\\\end\\{enumerate\\}"					
+					+ "|\\\\begin\\{slogan\\}|\\\\end\\{slogan\\}|\\\\sbsb|\\\\cat|\\\\bs"
 					+ "|\\\\section\\{(?:[^}]*)\\}\\s*|\\\\noindent");
+	private static Pattern ELIMINATE_BEGIN_END_THM_PATTERN = Pattern
+			.compile("|\\\\begin\\{def(?:[^}]*)\\}\\s*|\\\\begin\\{lem(?:[^}]*)\\}\\s*|\\\\begin\\{th(?:[^}]*)\\}\\s*"
+					+ "|\\\\begin\\{pr(?:[^}]*)\\}\\s*|\\\\begin\\{proclaim(?:[^}]*)\\}\\s*|\\\\begin\\{cor(?:[^}]*)\\}\\s*"
+					+"|\\\\end\\{def(?:[^}]*)\\}\\s*|\\\\end\\{lem(?:[^}]*)\\}\\s*|\\\\end\\{th(?:[^}]*)\\}\\s*"
+					+ "|\\\\end\\{pr(?:[^}]*)\\}\\s*|\\\\end\\{proclaim(?:[^}]*)\\}\\s*|\\\\end\\{cor(?:[^}]*)\\}\\s*"
+					+"|\\\\end\\{pr(?:[^}]*)\\}\\s*");
 	
 	private static final Pattern ITEM_PATTERN = Pattern.compile("\\\\item");
 
@@ -85,8 +91,8 @@ public class ThmInput {
 		// File file = new File("src/thmp/data/commAlg5.txt");
 		// String srcFileStr = "src/thmp/data/commAlg5.txt";
 		// String srcFileStr = "src/thmp/data/multilinearAlgebra.txt";
-		String srcFileStr = "src/thmp/data/functionalAnalysis.txt";
-		// String srcFileStr = "src/thmp/data/fieldsRawTex.txt";
+		//String srcFileStr = "src/thmp/data/functionalAnalysis.txt";
+		 String srcFileStr = "src/thmp/data/fieldsRawTex.txt";
 		// String srcFileStr = "src/thmp/data/test1.txt";
 		FileReader srcFileReader = new FileReader(srcFileStr);
 		BufferedReader srcFileBReader = new BufferedReader(srcFileReader);
@@ -98,11 +104,11 @@ public class ThmInput {
 			// Path fileTo = Paths.get("src/thmp/data/thmFile5.txt");
 			// Path fileTo =
 			// Paths.get("src/thmp/data/multilinearAlgebraThms2.txt");
-			Path fileTo = Paths.get("src/thmp/data/functionalAnalysisThms2.txt");
+			//Path fileTo = Paths.get("src/thmp/data/functionalAnalysisThms2.txt");
 			// Path fileTo = Paths.get("src/thmp/data/test1Thms.txt");
-			// Path fileTo = Paths.get("src/thmp/data/fieldsThms2.txt");
+			 Path fileTo = Paths.get("src/thmp/data/fieldsThms2.txt");
 
-			System.out.println(thmWebDisplayList);
+			//System.out.println(thmWebDisplayList);
 
 			// write list of theorems to file
 			Files.write(fileTo, thmList, Charset.forName("UTF-8"));
@@ -183,7 +189,7 @@ public class ThmInput {
 			inThm = true;
 		}
 		while ((line = srcFileReader.readLine()) != null) {
-			// while(sc.hasNextLine()){
+			
 			if (WordForms.getWhiteEmptySpacePattern().matcher(line).find()){
 				continue;
 			}
@@ -193,24 +199,21 @@ public class ThmInput {
 			if (matcher.find()) {
 				// if(line.matches("\\\\begin\\{definition\\}|\\\\begin\\{lemma\\}")){
 				// if(line.matches("\\\\begin\\{definition\\}|\\\\begin\\{lemma\\}|\\\\begin\\{thm\\}|\\\\begin\\{theorem\\}")){
-				// newThm = line;
-				// newThmSB.append(line);
-				// line = srcFileReader.readLine();
+				
 				inThm = true;
-			}
-			// else
-			// if(line.matches("\\\\end\\{definition\\}|\\\\end\\{lemma\\}")){
+			}			
 			else if (thmEndPattern.matcher(line).find()) {
 				// else
 				// if(line.matches("\\\\end\\{definition\\}|\\\\end\\{lemma\\}|\\\\end\\{thm\\}|\\\\end\\{theorem\\}")){
 				inThm = false;
-				// newThm += "\n";
-
+				//append the e.g. "\end{theorem}"
+				newThmSB.append("\n").append(line);
 				// process here, return two versions, one for bag of words, one
 				// for display
 				// strip \df, \empf. Index followed by % strip, not percent
 				// don't strip.
 				// replace enumerate and \item with *
+				//System.out.println("newThmSB! " + newThmSB);
 				String thm = removeTexMarkup(newThmSB.toString(), thmWebDisplayList, bareThmList) + "\n";
 
 				// newThmSB.append("\n");
@@ -224,14 +227,13 @@ public class ThmInput {
 				if (!WordForms.getWhiteEmptySpacePattern().matcher(thm).find()) {
 					thms.add(thm);
 				}
-				// newThm = "";
+				
 				newThmSB.setLength(0);
 				continue;
 			}
 
 			if (inThm) {
-				// newThm = newThm + " " + line;
-				newThmSB.append(" " + line);
+				newThmSB.append(" ").append(line);				
 			}
 		}
 
@@ -244,6 +246,7 @@ public class ThmInput {
 	/**
 	 * Processes Latex input, e.g. by removing syntax used purely for display and not
 	 * useful for parsing, such as \textit{ }.
+	 * But Don't remove markups such as "\begin{theorem}"
 	 * But enumerate should not always be turned off.
 	 * @param newThmSB 
 	 * @param thmWebDisplayList Can be null. 
@@ -263,6 +266,9 @@ public class ThmInput {
 		// eliminate symbols such as \fml
 		matcher = ELIMINATE_PATTERN.matcher(thmStr);
 		thmStr = matcher.replaceAll("");
+		
+		//comment out this line if want to retain "\begin{theorem}", etc
+		thmStr = ELIMINATE_BEGIN_END_THM_PATTERN.matcher(thmStr).replaceAll("");
 		
 		matcher = ITEM_PATTERN.matcher(thmStr);
 		//replace \item with bullet points (*)

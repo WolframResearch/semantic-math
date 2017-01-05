@@ -163,7 +163,8 @@ public class DetectHypothesis {
 		try{
 			//inputBF = new BufferedReader(new FileReader("src/thmp/data/CommAlg5.txt"));
 			//inputBF = new BufferedReader(new FileReader("src/thmp/data/fieldsRawTex.txt"));
-			inputBF = new BufferedReader(new FileReader("src/thmp/data/samplePaper1.txt"));
+			//inputBF = new BufferedReader(new FileReader("src/thmp/data/samplePaper1.txt"));
+			inputBF = new BufferedReader(new FileReader("src/thmp/data/fieldsThms2.txt"));
 		}catch(FileNotFoundException e){
 			e.printStackTrace();
 			throw new IllegalStateException("Source file not found!");
@@ -307,14 +308,17 @@ public class DetectHypothesis {
 		}
 		
 		StringBuilder newThmSB = new StringBuilder();
+		Matcher matcher;
 		boolean inThm = false;
-		
-		Matcher matcher = thmStartPattern.matcher(line);
-		if (matcher.matches()) {			
-			inThm = true;
-			parseState.setInThmFlag(true);
+		//System.out.println("line " + line);
+		if(null != line){
+			matcher = thmStartPattern.matcher(line);
+			//use find(), not matches(), to find matching substring
+			if (matcher.find()) {			
+				inThm = true;
+				parseState.setInThmFlag(true);
+			}
 		}
-		
 		while ((line = srcFileReader.readLine()) != null) {
 			if (WordForms.getWhiteEmptySpacePattern().matcher(line).matches()){
 				continue;

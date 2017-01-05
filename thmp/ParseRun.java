@@ -55,9 +55,8 @@ public class ParseRun {
 		
 		//combine these vectors together, only add subsequent vector entry
 		//if that entry is 0 in all previous vectors int[].
-		int[] combinedVec = parseState.getCurThmCombinedContextVec();		
-		
-		if(isVerbose) System.out.println("combinedVec: " + Arrays.toString(combinedVec));
+		//int[] combinedVec = parseState.getCurThmCombinedContextVec();			
+		//if(isVerbose) System.out.println("combinedVec: " + Arrays.toString(combinedVec));
 		
 		String parsedOutput = ThmP1.getAndClearParseStructMapList().toString();
 		

@@ -229,9 +229,9 @@ public class CollectThm {
 			//add lexicon words to docWordsFreqMapNoAnno, which only contains collected words from thm corpus,
 			//collected based on frequnency, right now. These words do not have corresponding thm indices.
 			addLexiconWordsToContextKeywordDict(docWordsFreqPreMapNoAnno, averageSingletonWordFrequency);
-			//add the 2 and 3 grams to docWordsFreqPreMapNoAnno
-			docWordsFreqPreMapNoAnno.putAll(twoGramsMap);
-			docWordsFreqPreMapNoAnno.putAll(threeGramsMap);
+			//Must add the 2 and 3 grams to docWordsFreqPreMapNoAnno
+			//docWordsFreqPreMapNoAnno.putAll(twoGramsMap);
+			//docWordsFreqPreMapNoAnno.putAll(threeGramsMap);
 			
 			docWordsFreqMapNoAnno = ImmutableMap.copyOf(docWordsFreqPreMapNoAnno); 
 			//System.out.println(docWordsFreqMapNoAnno);
@@ -256,7 +256,7 @@ public class CollectThm {
 			List<String> wordsList = deserializeContextVecWordsList(allThmWordsSerialFileStr);
 			
 			CONTEXT_VEC_WORDS_MAP = g(wordsList);
-		}		
+		}	
 		
 		private static Map<String, Integer> g(List<String> wordsList){
 			Map<String, Integer> contextKeywordDict = new HashMap<String, Integer>();
@@ -611,7 +611,6 @@ public class CollectThm {
 				Map<String, Integer> docWordsFreqPreMap,
 				ImmutableSetMultimap.Builder<String, Integer> wordThmsMMapBuilder){			
 			
-			//if(word.matches("(^.)linear")) System.out.println("************"  + "Got linear " + word );
 			int wordFreq = thmWordsFreqMap.containsKey(word) ? thmWordsFreqMap.get(word) : 0;
 			//int wordLongFreq = thmWordsMap.containsKey(wordLong) ? thmWordsMap.get(wordLong) : 0;
 			thmWordsFreqMap.put(word, wordFreq + 1);
@@ -810,7 +809,8 @@ public class CollectThm {
 			//instead of getting thmList from ThmList, need to get it from serialized data.
 			String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
 			List<ParsedExpression> parsedExpressionsList = deserializeParsedExpressionsList(parsedExpressionSerialFileStr);
-			
+			//List<ParsedExpression> parsedExpressionsList = new ArrayList<ParsedExpression>();
+			//HERE
 			List<String> allThmsWithHypPreList = new ArrayList<String>();			
 			List<BigInteger> relationVecPreList = new ArrayList<BigInteger>();
 			List<String> contextVecPreList = new ArrayList<String>();
@@ -1000,14 +1000,6 @@ public class CollectThm {
 		public static ImmutableList<String> get_macroReplacedThmList(){
 			return macroReplacedThmList;
 		}		
-	}
-	
-	/**
-	 * Retrieves list of thms.
-	 * @return
-	 */
-	public static ImmutableList<String> get_thmList(){
-		return ThmList.get_thmList();
 	}
 	
 	/**

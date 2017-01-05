@@ -32,12 +32,18 @@ public class RelationalSearch implements Searcher{
 	static{
 		//relationVecList = GenerateRelationVec.getRelationVecList();
 		//should get vectors from deserialized ParsedExpression's List
-		relationVecList = CollectThm.ThmList.allThmsRelationVecList();
-		
+		relationVecList = CollectThm.ThmList.allThmsRelationVecList();		
 	}
 	
 	public static void main(String[] args){
 		Scanner sc = new Scanner(System.in);
+		
+		//get all thms for now, to test 
+		int allThmsListSz = CollectThm.ThmList.allThmsWithHypList().size();
+		List<Integer> nearestVecList = new ArrayList<Integer>();
+		for(int i = 0; i < allThmsListSz; i++){
+			nearestVecList.add(i);
+		}
 		
 		while(sc.hasNextLine()){
 			String thm = sc.nextLine();
@@ -46,11 +52,6 @@ public class RelationalSearch implements Searcher{
 			thm = thm.toLowerCase();
 			int NUM_NEAREST = 6;
 			//List<Integer> nearestVecList = ThmSearch.readThmInput(thm, NUM_NEAREST);
-			//get all thms for now, to test 
-			List<Integer> nearestVecList = new ArrayList<Integer>();
-			for(int i = 0; i < CollectThm.get_thmList().size(); i++){
-				nearestVecList.add(i);
-			}
 			
 			if(nearestVecList.isEmpty()){
 				System.out.println("I've got nothing for you yet. Try again.");
@@ -113,6 +114,7 @@ public class RelationalSearch implements Searcher{
 			int thmIndex = nearestThmIndexList.get(i);
 			BigInteger relationVec_i = relationVecList.get(thmIndex);
 			//relationVecList.add(relationVec_i);
+			//if(true) throw new IllegalStateException();
 			int hammingDistance_i = RelationVec.hammingDistance2(queryRelationVec, relationVec_i);
 			nearestThmTreeMMap.put(hammingDistance_i, thmIndex);
 		}

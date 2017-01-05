@@ -38,12 +38,12 @@ public class ParsedExpression implements Serializable{
 	//context vector, @see ContextVec.java
 	private transient int[] contextVec;
 	//need the String form for serialization
-	private transient String contextVecStr;
+	private String contextVecStr;
 	
-	public ParsedExpression(String thmStr, List<Struct> parseRootList){
+	/*public ParsedExpression(String thmStr, List<Struct> parseRootList){
 		this.originalThmStr = thmStr;
 		this.parseRootList = parseRootList;
-	}
+	}*/
 	
 	public ParsedExpression(String thmStr, ParseStruct headParseStruct,
 			DefinitionListWithThm defListWithThm, int[] contextVec, 
@@ -54,6 +54,7 @@ public class ParsedExpression implements Serializable{
 		this.relationVec = relationVec;
 		this.contextVec = contextVec;
 		this.contextVecStr = GenerateContextVector.contextVecIntArrayToString(contextVec);
+		//System.out.println("contextVecStr during ParsedExpression construction! " + contextVecStr);
 	}
 	
 	/**

@@ -224,14 +224,7 @@ public class ProcessInput {
 	 */
 	private static String inputReplace(String thm, Map<String, String> macrosMap, boolean replaceTex, boolean texToWords, 
 			boolean replaceMacros, List<String> macroReplacedThmPreList){
-		//sorry vegetarians.
-		/*String[] meat = thm.split("\\\\label\\{([a-zA-Z]|-)*\\} ");
-		String noTexString = "";
-		//get the second part, meat[1], if separated by "\label{...}"
-		if(meat.length > 1){
-			thm = meat[1];
-			//System.out.println(thm);
-		}*/
+		
 		String noTexString = replaceThm(thm, macrosMap, replaceTex, texToWords, replaceMacros, macroReplacedThmPreList);			
 		
 		return noTexString;

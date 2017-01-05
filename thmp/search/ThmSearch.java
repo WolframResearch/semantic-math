@@ -357,6 +357,7 @@ public class ThmSearch {
 			ml.discardAnswer();
 			//ml.evaluate(queryStr+"/.{0.0->30}");
 			//System.out.println("QUERY " + ml.getExpr().part(1));
+			System.out.println("Looking for nearest vecs in ThmSearch.java!");
 			
 			//ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"];");
 			//ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"/.{0.0->mxMeanValue}];");
@@ -397,7 +398,7 @@ public class ThmSearch {
 			Expr nearestVec = ml.getExpr();
 			//System.out.println(nearestVec.length() + "  " + Arrays.toString((int[])nearestVec.part(1).asArray(Expr.INTEGER, 1)));
 			//turn into list.
-			System.out.println(nearestVec);
+			System.out.println("nearestVec list returned by SVD: " + nearestVec);
 			//use this when using Nearest
 			//int[] nearestVecArray = (int[])nearestVec.part(1).asArray(Expr.INTEGER, 1);
 			nearestVecArray = (int[])nearestVec.asArray(Expr.INTEGER, 1);
@@ -445,14 +446,14 @@ public class ThmSearch {
 	 * @param numVecs number of cloests vecs to take
 	 * @return list of indices of nearest thms. 
 	 */
-	public static List<Integer> readThmInput(String thm, int numVec){
+	public static List<Integer> findNearestThmsInTermDocMx(String thm, int numVec){
 		List<Integer> nearestVecList = null;
-			
+		
 		String query = TriggerMathThm2.createQueryNoAnno(thm);
 		if(query.equals("")){
 			return Collections.emptyList();
 		}
-			//processes query
+		//processes query
 		nearestVecList = findNearestVecs(ml, query, numVec);
 		
 		//System.out.print("Within ThmSearch, nearestVecList: " + nearestVecList);

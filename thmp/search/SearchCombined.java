@@ -182,7 +182,7 @@ public class SearchCombined {
 		
 		input = input.toLowerCase();
 		
-		List<Integer> nearestVecList = ThmSearch.readThmInput(input, NUM_NEAREST);
+		List<Integer> nearestVecList = ThmSearch.findNearestThmsInTermDocMx(input, NUM_NEAREST);
 		if(nearestVecList.isEmpty()){
 			System.out.println("I've got nothing for you yet. Try again.");
 			return null;

@@ -385,7 +385,10 @@ public class SearchIntersection {
 		
 		//re-order top entries based on context search, if enabled
 		if(contextSearchBool){
-			highestThmList = ContextSearch.contextSearch(input, highestThmList);
+			List<Integer> list = ContextSearch.contextSearch(input, highestThmList);
+			if(null != list){
+				highestThmList = list;
+			}
 		}
 		
 		searchState.set_intersectionVecList(highestThmList);

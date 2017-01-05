@@ -106,7 +106,7 @@ public class TriggerMathThm2 {
 		//mathObjMx = new int[keywordList.size()][mathObjMMap.keySet().size()];	
 		//mathObjMx = new int[keywordList.size()][thmWordsList.size()];
 		mathObjMx = new double[keywordList.size()][thmWordsList.size()];
-		ImmutableList<String> thmList = CollectThm.get_thmList();
+		ImmutableList<String> thmList = CollectThm.ThmList.allThmsWithHypList();
 		
 		//System.out.println("BEFORE mathObjMMap" +mathObjMMap);
 		//pass in thmList to ensure the right order (insertion order) of thms 
@@ -208,7 +208,7 @@ public class TriggerMathThm2 {
 		//thmWordsList has annotations, such as hyp or stm
 		//ImmutableList<ImmutableMap<String, Integer>> thmWordsList = CollectThm.get_thmWordsListNoAnno();
 		//System.out.println("---thmWordsList " + thmWordsList);
-		ImmutableList<String> thmList = CollectThm.get_thmList();
+		ImmutableList<String> thmList = CollectThm.ThmList.allThmsWithHypList();
 		//System.out.println("---thmList " + thmList);
 		
 		//index of thm in thmWordsList, to be used as part of name
@@ -341,7 +341,8 @@ public class TriggerMathThm2 {
 
 	/**Same as creareQuery, no annotation.
 	 * Create query row vector, weighed using word scores,
-	 * and according to norm.
+	 * and according to norm. To be compared to columns 
+	 * of term document matrix.
 	 * @param thm
 	 * @return
 	 */
@@ -349,8 +350,9 @@ public class TriggerMathThm2 {
 		
 		//String[] thmAr = thm.split("\\s+|,|;|\\.");
 		String[] thmAr = thm.split(WordForms.splitDelim());
-		//map of non-annotated words and their scores
-		Map<String, Integer> wordsScoreMap = CollectThm.ThmWordsMaps.get_wordsScoreMapNoAnno();		
+		//map of non-annotated words and their scores. Use get_wordsScoreMapNoAnno 
+		//and not CONTEXT_VEC_WORDS_MAP.
+		Map<String, Integer> wordsScoreMap = CollectThm.ThmWordsMaps.get_wordsScoreMapNoAnno();	
 		//System.out.println("wordsScoreMap inside TriggerMathThm: " + wordsScoreMap);
 		//should eliminate unnecessary words first, then send to get wrapped.
 		//<--can only do that if leave the hyp words in, eg if.
@@ -496,6 +498,7 @@ public class TriggerMathThm2 {
 	 * Map of words to their corresponding row index in term-document matrix.
 	 * This has been ordered, such that more frequently used words fall to the 
 	 * beginning when iterating through the map.
+	 * This is ordered version of CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno().
 	 * @return
 	 */
 	public static Map<String, Integer> allThmsKeywordIndexDict(){
