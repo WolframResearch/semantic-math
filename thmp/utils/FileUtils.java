@@ -1,8 +1,10 @@
 package thmp.utils;
 
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -14,6 +16,8 @@ import java.util.List;
 import com.wolfram.jlink.KernelLink;
 import com.wolfram.jlink.MathLinkException;
 import com.wolfram.jlink.MathLinkFactory;
+
+import thmp.ParsedExpression;
 
 /**
  * Utility functions pertaining to files.
@@ -84,6 +88,50 @@ public class FileUtils {
 					e.printStackTrace();
 					throw new IllegalStateException("IOException while writing to file or closing resources");
 				}
+	}
+	
+	/**
+	 * Deserialize objects from file supplied by serialFileStr.
+	 * @param serialFileStr
+	 * @return List of objects
+	 */	
+	//@SuppressWarnings("unchecked")
+	public static Object deserializeListFromFile(String serialFileStr){
+	
+		Object deserializedList = null;
+		FileInputStream fileInputStream = null;
+		ObjectInputStream objectInputStream = null;
+		try{
+			fileInputStream = new FileInputStream(serialFileStr);
+			objectInputStream = new ObjectInputStream(fileInputStream);
+		}catch(FileNotFoundException e){
+			e.printStackTrace();
+			throw new IllegalStateException("Serialization data file not found!");
+		}catch(IOException e){
+			e.printStackTrace();
+			throw new IllegalStateException("IOException while opening ObjectOutputStream.");
+		}
+		
+		try{
+			deserializedList = objectInputStream.readObject();
+			//deserializedList = (List<? extends Object>)o;
+			//System.out.println("object read: " + ((ParsedExpression)((List<?>)o).get(0)).getOriginalThmStr());			
+		}catch(IOException e){
+			e.printStackTrace();
+			throw new IllegalStateException("IOException while reading deserialized data!");
+		}catch(ClassNotFoundException e){
+			e.printStackTrace();
+			throw new IllegalStateException("ClassNotFoundException while writing to file or closing resources.");
+		}finally{
+			try{
+				objectInputStream.close();
+				fileInputStream.close();
+			}catch(IOException e){
+				e.printStackTrace();
+				throw new IllegalStateException("IOException while closing resources");
+			}
+		}
+		return deserializedList;
 	}
 	
 	/**

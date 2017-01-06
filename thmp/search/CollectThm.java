@@ -31,6 +31,7 @@ import thmp.ProcessInput;
 import thmp.ThmInput;
 import thmp.search.SearchWordPreprocess.WordWrapper;
 import thmp.utils.WordForms.WordFreqComparator;
+import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 
 /**
@@ -274,7 +275,8 @@ public class CollectThm {
 			//formed while parsing through the papers in e.g. DetectHypothesis.java. This is
 			//so we don't parse everything again at every server initialization.
 			String allThmWordsSerialFileStr = "src/thmp/data/allThmWordsList.dat";
-			List<String> wordsList = deserializeContextVecWordsList(allThmWordsSerialFileStr);
+			@SuppressWarnings("unchecked")
+			List<String> wordsList = (List<String>)FileUtils.deserializeListFromFile(allThmWordsSerialFileStr);
 			
 			CONTEXT_VEC_WORDS_MAP = g(wordsList);
 			//System.out.println("------++++++++-------CONTEXT_VEC_WORDS_MAP.size " + CONTEXT_VEC_WORDS_MAP.size());
@@ -289,50 +291,6 @@ public class CollectThm {
 				contextKeywordDict.put(word, i);
 			}
 			return contextKeywordDict;
-		}
-		
-		/**
-		 * Deserialize objects in parsedExpressionOutputFileStr, so we don't 
-		 * need to read and parse through all papers on every server initialization.
-		 * Can just read from serialized data.
-		 */
-		@SuppressWarnings("unchecked")
-		private static List<String> deserializeContextVecWordsList(String allThmWordsSerialFileStr){
-		
-			List<String> wordsList;
-			FileInputStream fileInputStream = null;
-			ObjectInputStream objectInputStream = null;
-			try{
-				fileInputStream = new FileInputStream(allThmWordsSerialFileStr);
-				objectInputStream = new ObjectInputStream(fileInputStream);
-			}catch(FileNotFoundException e){
-				e.printStackTrace();
-				throw new IllegalStateException("ParsedExpressionList output file not found!");
-			}catch(IOException e){
-				e.printStackTrace();
-				throw new IllegalStateException("IOException while opening ObjectOutputStream");
-			}
-			
-			try{
-				Object o = objectInputStream.readObject();
-				wordsList = (List<String>)o;
-				//System.out.println("object read: " + ((ParsedExpression)((List<?>)o).get(0)).getOriginalThmStr());			
-			}catch(IOException e){
-				e.printStackTrace();
-				throw new IllegalStateException("IOException while reading deserialized data!");
-			}catch(ClassNotFoundException e){
-				e.printStackTrace();
-				throw new IllegalStateException("ClassNotFoundException while writing to file or closing resources");
-			}finally{
-				try{
-					objectInputStream.close();
-					fileInputStream.close();
-				}catch(IOException e){
-					e.printStackTrace();
-					throw new IllegalStateException("IOException while closing resources");
-				}
-			}
-			return wordsList;
 		}
 		
 		/**
@@ -814,7 +772,7 @@ public class CollectThm {
 	 * dependency), but also gives benefit of final (cause singleton), immutable (make it so).
 	 */
 	public static class ThmList{
-		//
+		
 		private static final ImmutableList<String> allThmsWithHypList;
 		private static final ImmutableList<BigInteger> allThmsRelationVecList;
 		private static final ImmutableList<String> allThmsContextVecList;
@@ -839,9 +797,15 @@ public class CollectThm {
 			
 			//instead of getting thmList from ThmList, need to get it from serialized data.
 			String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
-			List<ParsedExpression> parsedExpressionsList = deserializeParsedExpressionsList(parsedExpressionSerialFileStr);
+			
+			/*Deserialize objects in parsedExpressionOutputFileStr, so we don't 
+			 * need to read and parse through all papers on every server initialization.
+			 * Can just read from serialized data. */
+			@SuppressWarnings("unchecked")
+			List<ParsedExpression> parsedExpressionsList = (List<ParsedExpression>)thmp.utils.FileUtils
+					.deserializeListFromFile(parsedExpressionSerialFileStr);
 			//List<ParsedExpression> parsedExpressionsList = new ArrayList<ParsedExpression>();
-			//HERE
+			
 			List<String> allThmsWithHypPreList = new ArrayList<String>();			
 			List<BigInteger> relationVecPreList = new ArrayList<BigInteger>();
 			List<String> contextVecPreList = new ArrayList<String>();
@@ -924,49 +888,6 @@ public class CollectThm {
 			}
 		}
 		
-		/**
-		 * Deserialize objects in parsedExpressionOutputFileStr, so we don't 
-		 * need to read and parse through all papers on every server initialization.
-		 * Can just read from serialized data.
-		 */
-		@SuppressWarnings("unchecked")
-		private static List<ParsedExpression> deserializeParsedExpressionsList(String parsedExpressionSerialFileStr){
-		
-			List<ParsedExpression> parsedExpressionsList = null;
-			FileInputStream fileInputStream = null;
-			ObjectInputStream objectInputStream = null;
-			try{
-				fileInputStream = new FileInputStream(parsedExpressionSerialFileStr);
-				objectInputStream = new ObjectInputStream(fileInputStream);
-			}catch(FileNotFoundException e){
-				e.printStackTrace();
-				throw new IllegalStateException("ParsedExpressionList output file not found!");
-			}catch(IOException e){
-				e.printStackTrace();
-				throw new IllegalStateException("IOException while opening ObjectOutputStream");
-			}
-			
-			try{
-				Object o = objectInputStream.readObject();
-				parsedExpressionsList = (List<ParsedExpression>)o;
-				//System.out.println("object read: " + ((ParsedExpression)((List<?>)o).get(0)).getOriginalThmStr());			
-			}catch(IOException e){
-				e.printStackTrace();
-				throw new IllegalStateException("IOException while reading deserialized data!");
-			}catch(ClassNotFoundException e){
-				e.printStackTrace();
-				throw new IllegalStateException("ClassNotFoundException while writing to file or closing resources");
-			}finally{
-				try{
-					objectInputStream.close();
-					fileInputStream.close();
-				}catch(IOException e){
-					e.printStackTrace();
-					throw new IllegalStateException("IOException while closing resources");
-				}
-			}
-			return parsedExpressionsList;
-		}
 		
 		/**
 		 * List of relation vectors for all thms, as extracted from deserialized 

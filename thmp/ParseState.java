@@ -64,8 +64,6 @@ public class ParseState {
 	//context vector that takes into account structure of parse tree, i.e.
 	//the relations between different Structs.
 	private BigInteger relationalVec;
-	//context vector
-	private int[] contextVec;
 	
 	private boolean writeUnknownWordsToFileBool;
 	
@@ -81,7 +79,7 @@ public class ParseState {
 	
 	//contains both text and latex e.g. "winding number $W_{ii'} (y)$"
 	//private static final Pattern COLON_PATTERN = Pattern.compile("([^:=\\s]+)\\s*[:=].*|(?([.]+)(\\subset)).*");
-		private static final Pattern COLON_PATTERN = Pattern.compile("([^:=\\s]+)\\s*[:=].*");
+	private static final Pattern COLON_PATTERN = Pattern.compile("([^:=\\s]+)\\s*[:=].*");
 	
 	//private static final Pattern COLON_PATTERN = Pattern.compile("([.]+)\\s*[:=].*");	
 	//first group captures name, second the parenthesis/bracket/brace. E.g. "f[x]"
@@ -107,6 +105,7 @@ public class ParseState {
 	private ListMultimap<VariableName, VariableDefinition> localVariableNamesMMap;
 	
 	//parsedExpr to record parsed pairs during parsing. Eliminate copy in ThmP1.java!
+	//<--This should be superceded by ParseStruct's, Jan 2017.
 	private List<ParsedPair> parsedExpr = new ArrayList<ParsedPair>();	
 	//list of context vectors, each element corresponds to a part of a thm.
 	List<int[]> thmContextVecList = new ArrayList<int[]>();
@@ -372,8 +371,7 @@ public class ParseState {
 				
 			} catch (IOException e) {
 			   logger.error("IOException while writing to unknown words file!");			   
-			}
-		
+			}		
 	}
 	
 	/**
@@ -425,10 +423,6 @@ public class ParseState {
 	public int[] getCurThmCombinedContextVec() {		
 		return GenerateContextVector.combineContextVectors(thmContextVecList);
 	}
-	
-	//public void setContextVec(int[] contextVec) {
-		//this.contextVec = contextVec;
-	//}
 	
 	/**
 	 * Adds a context vec to the parse of current thm, since each thm likely consists
@@ -840,7 +834,7 @@ public class ParseState {
 	 * variable space for next parse. One parse run is defined
 	 * to be the unit    given to the preprocessor.
 	 */
-	public void parseRunCleanUp(){
+	public void parseRunLocalCleanUp(){
 		this.setCurParseStruct(null);
 		this.setHeadParseStruct(null);
 		//reset list of context vectors
@@ -848,6 +842,16 @@ public class ParseState {
 		this.localVariableNamesMMap = ArrayListMultimap.create();
 		this.inThmFlag = false;
 	}	
+	
+	/**
+	 * Global clean up, e.g. after \end{document}.
+	 * In addition to everything parseRunLocalCleanUp() does, 
+	 * also cleans up localVariableNamesMMap.
+	 */
+	public void parseRunGlobalCleanUp(){
+		parseRunLocalCleanUp();
+		this.globalVariableNamesMMap = ArrayListMultimap.create();
+	}
 	
 	@Override
 	public String toString(){

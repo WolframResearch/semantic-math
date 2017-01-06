@@ -92,6 +92,7 @@ public class UnzipFile2 {
 				}
 				//System.out.print("Current file being unzipped: " + fileName + "\t");
 				String src = srcBasePath + fileName;
+				//name the output file to be the same, but with .txt extension.
 				String dest = destBasePath + fileName.replaceAll("([^\\.]*).gz$", "$1.txt");
 				extractedFileNames.add(dest);
 
@@ -154,34 +155,37 @@ public class UnzipFile2 {
 		// list of files we just extracted. These should be .txt files.
 		List<String> extractedFiles = unzipGz(srcBasePath, destBasePath, fileNames);
 		
-		List<String> totalTextList = new ArrayList<String>();
-		/*FileWriter fw = new FileWriter("outfilename", true);
-	    BufferedWriter bw = new BufferedWriter(fw);
-	    PrintWriter out = new PrintWriter(bw));
-	    out.println("thm");*/
-
-		// reads in those files and extract theorems
-		for (String file : extractedFiles) {
-			// File fileFrom = new File(file);
-			// InputStream fileStream = new FileInputStream(file);
-			FileReader fileReader = new FileReader(file);
-			BufferedReader fileBufferedReader = new BufferedReader(fileReader);
-
-			Path fileTo = Paths.get(TXT_PATTERN.matcher(file).replaceAll("$1_thms$2"));
-			//Path fileTo = Paths.get(file.replaceAll("([^.]*)(\\.txt)", "$1_thms$2"));
+		boolean f = false;
+		if(f){
+			List<String> totalTextList = new ArrayList<String>();
+			/*FileWriter fw = new FileWriter("outfilename", true);
+		    BufferedWriter bw = new BufferedWriter(fw);
+		    PrintWriter out = new PrintWriter(bw));
+		    out.println("thm");*/
+	
+			// reads in those files and extract theorems
+			for (String file : extractedFiles) {
+				// File fileFrom = new File(file);
+				// InputStream fileStream = new FileInputStream(file);
+				FileReader fileReader = new FileReader(file);
+				BufferedReader fileBufferedReader = new BufferedReader(fileReader);
+	
+				Path fileTo = Paths.get(TXT_PATTERN.matcher(file).replaceAll("$1_thms$2"));
+				//Path fileTo = Paths.get(file.replaceAll("([^.]*)(\\.txt)", "$1_thms$2"));
+				
+				List<String> thmList = ThmInput.readThm(fileBufferedReader, null, null);
+				totalTextList.addAll(thmList);
+				
+				// write list of theorems to file
+				Files.write(fileTo, thmList, Charset.forName("UTF-8"));
+				
+				fileReader.close();
+				fileBufferedReader.close();
+			}
 			
-			List<String> thmList = ThmInput.readThm(fileBufferedReader, null, null);
-			totalTextList.addAll(thmList);
-			
-			// write list of theorems to file
-			Files.write(fileTo, thmList, Charset.forName("UTF-8"));
-			
-			fileReader.close();
-			fileBufferedReader.close();
+			Path totalTxtPath = Paths.get(destBasePath + "total.txt");
+			//less efficient than PrintWriter's!
+			Files.write(totalTxtPath, totalTextList, Charset.forName("UTF-8"));
 		}
-		
-		Path totalTxtPath = Paths.get(destBasePath + "total.txt");
-		//less efficient than PrintWriter's!
-		Files.write(totalTxtPath, totalTextList, Charset.forName("UTF-8"));
 	}
 }

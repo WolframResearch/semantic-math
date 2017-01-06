@@ -10,8 +10,6 @@ import java.util.regex.Pattern;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 
-import thmp.ThmP1;
-import thmp.search.CollectFreqWords;
 import thmp.search.WordFrequency;
 
 public class WordForms {

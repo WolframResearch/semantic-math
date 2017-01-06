@@ -639,7 +639,7 @@ public class ThmP1TestRun {
 					System.out.println(nextLine + "\n");
 					boolean isVerbose = true;
 					ParseRun.parseInput(nextLine, parseState, isVerbose);
-					parseState.parseRunCleanUp();
+					parseState.parseRunLocalCleanUp();
 				}		
 				
 				sc.close();

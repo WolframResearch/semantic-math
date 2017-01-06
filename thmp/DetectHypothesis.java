@@ -1,14 +1,11 @@
 package thmp;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,16 +15,10 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Multimap;
-
-import thmp.DetectHypothesis.DefinitionListWithThm;
 import thmp.ParseState.ParseStateBuilder;
 import thmp.ParseState.VariableDefinition;
 import thmp.ParseState.VariableName;
-import thmp.ThmP1.ParsedPair;
 import thmp.search.CollectThm;
-import thmp.search.TriggerMathThm2;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 
@@ -74,8 +65,11 @@ public class DetectHypothesis {
 	private static final List<String> ALL_THM_WORDS_LIST = new ArrayList<String>(CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno().keySet());
 	
 	private static final boolean PARSE_INPUT_VERBOSE = true;
+	//pattern for lines to skip any kind of parsing, even hypothesis-detection.
 	private static final Pattern SKIP_PATTERN = Pattern.compile("\\\\begin\\{proof\\}.*");
 	private static final Pattern END_SKIP_PATTERN = Pattern.compile("\\\\end\\{proof\\}.*");
+	private static final Pattern END_DOCUMENT_PATTERN = Pattern.compile("\\\\end\\{document\\}.*");
+	private static final Pattern NEW_DOCUMENT_PATTERN = Pattern.compile(".*\\\\documentclass\\[.*");
 	
 	/**
 	 * Combination of theorem String and the list of
@@ -164,7 +158,8 @@ public class DetectHypothesis {
 			//inputBF = new BufferedReader(new FileReader("src/thmp/data/CommAlg5.txt"));
 			//inputBF = new BufferedReader(new FileReader("src/thmp/data/fieldsRawTex.txt"));
 			//inputBF = new BufferedReader(new FileReader("src/thmp/data/samplePaper1.txt"));
-			inputBF = new BufferedReader(new FileReader("src/thmp/data/fieldsThms2.txt"));
+			inputBF = new BufferedReader(new FileReader("src/thmp/data/Total.txt"));
+			//inputBF = new BufferedReader(new FileReader("src/thmp/data/fieldsThms2.txt"));
 		}catch(FileNotFoundException e){
 			e.printStackTrace();
 			throw new IllegalStateException("Source file not found!");
@@ -188,7 +183,7 @@ public class DetectHypothesis {
 		//serialize words used for context vecs
 		List<List<String>> wordListToSerializeList = new ArrayList<List<String>>();
 		wordListToSerializeList.add(ALL_THM_WORDS_LIST);
-		System.out.println("------++++++++-------puttig in : ALL_THM_WORDS_LIST.size " + ALL_THM_WORDS_LIST.size());
+		//System.out.println("------++++++++-------putting in : ALL_THM_WORDS_LIST.size " + ALL_THM_WORDS_LIST.size());
 		FileUtils.serializeObjToFile(wordListToSerializeList, allThmWordsSerialFileStr);
 		
 		//write parsedExpressionList to file
@@ -267,9 +262,8 @@ public class DetectHypothesis {
 	private static List<DefinitionListWithThm> readAndParseThm(BufferedReader srcFileReader, 
 			ParseState parseState) throws IOException{
 		
-		//compiler will inline these, so don't add function calls to stack.
-		Pattern thmStartPattern = ThmInput.THM_START_PATTERN;
-		Pattern thmEndPattern = ThmInput.THM_END_PATTERN;
+		//Pattern thmStartPattern = ThmInput.THM_START_PATTERN;
+		//Pattern thmEndPattern = ThmInput.THM_END_PATTERN;
 		List<String> macrosList = new ArrayList<String>();
 		//contextual sentences outside of theorems, to be scanned for
 		//definitions, and parse those definitions. Reset between theorems.
@@ -277,44 +271,21 @@ public class DetectHypothesis {
 		
 		List<DefinitionListWithThm> definitionListWithThmList = new ArrayList<DefinitionListWithThm>();
 		
-		String line;
-		
-		//read in custom macros, break as soon as \begin{...} encountered, 
-		//in particular \begin{document}. There are no \begin{...} in the preamble
-		while ((line = srcFileReader.readLine()) != null) {
-			
-			Matcher newThmMatcher = ThmInput.NEW_THM_PATTERN.matcher(line);	
-			
-			if(ThmInput.BEGIN_PATTERN.matcher(line).matches()){
-				break;
-			}else if(newThmMatcher.matches()){
-				//should be a proposition, hypothesis, etc. E.g. don't look through proofs.
-				if(ThmInput.THM_TERMS_PATTERN.matcher(newThmMatcher.group(2)).matches()){
-					macrosList.add(newThmMatcher.group(2));	
-				}
-			}			
-		}
+		String line = extractMacros(srcFileReader, macrosList);
 		
 		//append list of macros to THM_START_STR and THM_END_STR
-		if(!macrosList.isEmpty()){
-			StringBuilder startBuilder = new StringBuilder();
-			StringBuilder endBuilder = new StringBuilder();
-			for(String macro : macrosList){
-				//create start and end macros
-				startBuilder.append("\\\\begin\\{").append(macro).append(".*");				
-				endBuilder.append("\\\\end\\{").append(macro).append(".*");
-			}
-			thmStartPattern = Pattern.compile(ThmInput.THM_START_STR + startBuilder);
-			thmEndPattern = Pattern.compile(ThmInput.THM_END_STR + endBuilder);	
-		}
+		Pattern[] customPatternAr = addMacrosToThmBeginEndPatterns(macrosList);
+		
+		Pattern thmStartPattern = customPatternAr[0];
+		Pattern thmEndPattern = customPatternAr[1];	
 		
 		StringBuilder newThmSB = new StringBuilder();
 		Matcher matcher;
 		boolean inThm = false;
-		//System.out.println("line " + line);
+		
 		if(null != line){
 			matcher = thmStartPattern.matcher(line);
-			//use find(), not matches(), to find matching substring
+			//use find(), not matches(), to look for any matching substring
 			if (matcher.find()) {			
 				inThm = true;
 				parseState.setInThmFlag(true);
@@ -324,13 +295,12 @@ public class DetectHypothesis {
 			if (WordForms.getWhiteEmptySpacePattern().matcher(line).matches()){
 				continue;
 			}
-		
+			
 			//should skip certain sections, e.g. \begin{proof}
 			Matcher skipMatcher = SKIP_PATTERN.matcher(line);
 			if(skipMatcher.matches()){
 				while ((line = srcFileReader.readLine()) != null){
-					if(END_SKIP_PATTERN.matcher(line).matches()){
-						
+					if(END_SKIP_PATTERN.matcher(line).matches()){						
 						break;
 					}
 				}
@@ -374,7 +344,7 @@ public class DetectHypothesis {
 				//thmWebDisplayList, and bareThmList should both be null
 				String thm = ThmInput.removeTexMarkup(newThmSB.toString(), null, null);
 				
-				//clear headParseStruct and curParseStruct of parseState, so newThm
+				//Must clear headParseStruct and curParseStruct of parseState, so newThm
 				//has its own stand-alone parse tree.
 				parseState.setCurParseStruct(null);
 				parseState.setHeadParseStruct(null);
@@ -396,8 +366,27 @@ public class DetectHypothesis {
 				/*if (!WordForms.getWhitespacePattern().matcher(thm).find()) {
 					thms.add(thm);
 				}*/
-				parseState.parseRunCleanUp();
+				parseState.parseRunLocalCleanUp();
 				newThmSB.setLength(0);
+				continue;
+			}else if(END_DOCUMENT_PATTERN.matcher(line).matches()){
+				parseState.parseRunGlobalCleanUp();
+				//read until a new document, marked by \documentclass..., is encountered.
+				//sometimes the \documentclass follows immediately after \end{document},
+				//without starting a new line.
+				if(!NEW_DOCUMENT_PATTERN.matcher(line).matches()){
+					while(null != (line = srcFileReader.readLine())){					
+						if(NEW_DOCUMENT_PATTERN.matcher(line).matches()){
+							break;
+						}					
+					}
+				}
+				//should start with new macro-reading code.
+				line = extractMacros(srcFileReader, macrosList);
+				
+				//append list of macros to THM_START_STR and THM_END_STR
+				customPatternAr = addMacrosToThmBeginEndPatterns(macrosList);
+				
 				continue;
 			}
 
@@ -416,6 +405,54 @@ public class DetectHypothesis {
 		// System.out.println("Inside ThmInput, thmsList " + thms);
 		// System.out.println("thmWebDisplayList " + thmWebDisplayList);
 		return definitionListWithThmList;
+	}
+
+	/**
+	 * Create custom start and end patterns by appending to THM_START_STR and THM_END_STR.
+	 * @param macrosList
+	 * @return
+	 */
+	private static Pattern[] addMacrosToThmBeginEndPatterns(List<String> macrosList) {
+		//compiler will inline these, so don't add function calls to stack.
+		Pattern[] customPatternAr = new Pattern[]{ThmInput.THM_START_PATTERN, ThmInput.THM_END_PATTERN};
+		if(!macrosList.isEmpty()){
+			StringBuilder startBuilder = new StringBuilder();
+			StringBuilder endBuilder = new StringBuilder();
+			for(String macro : macrosList){
+				//create start and end macros
+				startBuilder.append("\\\\begin\\{").append(macro).append(".*");				
+				endBuilder.append("\\\\end\\{").append(macro).append(".*");
+			}
+			customPatternAr[0] = Pattern.compile(ThmInput.THM_START_STR + startBuilder);
+			customPatternAr[1] = Pattern.compile(ThmInput.THM_END_STR + endBuilder);	
+		}
+		return customPatternAr;
+	}
+
+	/**
+	 * Read in custom macros, break as soon as \begin{...} encountered, 
+	 * in particular \begin{document}. There are no \begin{...} in the preamble
+	 * @param srcFileReader
+	 * @param macrosList
+	 * @throws IOException
+	 */
+	private static String extractMacros(BufferedReader srcFileReader, List<String> macrosList) throws IOException {
+		
+		String line;		
+		while ((line = srcFileReader.readLine()) != null) {
+			//should also extract those defined with \def{} patterns.
+			Matcher newThmMatcher = ThmInput.NEW_THM_PATTERN.matcher(line);	
+			
+			if(ThmInput.BEGIN_PATTERN.matcher(line).matches()){
+				break;
+			}else if(newThmMatcher.matches()){
+				//should be a proposition, hypothesis, etc. E.g. don't look through proofs.
+				if(ThmInput.THM_TERMS_PATTERN.matcher(newThmMatcher.group(2)).matches()){
+					macrosList.add(newThmMatcher.group(2));	
+				}
+			}			
+		}
+		return line;
 	}
 	
 	/**

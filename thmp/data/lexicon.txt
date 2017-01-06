@@ -12,6 +12,7 @@ category ent_comp
 satisfy verb
 assumption noun
 sum ent
+curve ent
 polynomial ent
 valuation ent
 discrete adj

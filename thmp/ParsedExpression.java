@@ -22,7 +22,7 @@ public class ParsedExpression implements Serializable{
 
 	private String originalThmStr;
 	
-	private List<Struct> parseRootList;
+	private transient List<Struct> parseRootList;
 	
 	//contains definitions needed for this thm, list of variable assignments
 	//made outside the theorem, and modified thm string with definitions prepended.
@@ -30,7 +30,9 @@ public class ParsedExpression implements Serializable{
 	
 	//the highest-ranked ParseStruct, combining the different
 	//WLCommands fulfilled into one tree.
-	private ParseStruct headParseStruct;
+	//@transient so not to bloat up memory for serialization.
+	//Or come up with better writeObject for tree structure.
+	private transient ParseStruct headParseStruct;
 	
 	//relational vector, @see RelationVec.java.
 	private BigInteger relationVec;

@@ -188,8 +188,6 @@ public class ThmP1 {
 		for(String ent : NO_FUSE_ENT){
 			noFuseEntSet.add(ent);
 		}
-		//String OS_name = System.getProperty("os.name");
-		//if(OS_name.equals("Mac OS X"))
 		
 	}
 	
@@ -2030,8 +2028,7 @@ public class ThmP1 {
 							// should refer to ent that's the object of previous
 							// assertion,
 							// sentence, or "complete" phrase.
-							// Note that different pronouns might need diferent
-							// rules
+							// Note that different pronouns might need diferent rules.
 							if (type1.equals("pro") && struct1.prev1NodeType().equals(NodeType.STR)
 									&& ((String) struct1.prev1()).matches("it|they") && struct1.prev2() != null
 									&& struct1.prev2().equals("")) {
@@ -3365,7 +3362,7 @@ public class ThmP1 {
 			
 			// update firstEnt so firstEnt has the right children
 			if (firstEnt == struct1) {
-				firstEnt = newStruct;
+				firstEnt = structToAppendChild;
 			}
 
 			//should not even call add child if struct1 is a StructA
@@ -3405,7 +3402,7 @@ public class ThmP1 {
 				struct2.set_parentStruct(structToAppendChild); //redundant
 				childToAdd.set_parentStruct(structToAppendChild); //redundant
 				
-				recentEnt = newStruct;
+				recentEnt = structToAppendChild;
 				recentEntIndex = j;				
 			}
 
