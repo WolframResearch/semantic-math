@@ -70,8 +70,8 @@ public class DetectHypothesis {
 	
 	//serialize the words as well, to bootstrap up after iterations of processing. The math words are going to 
 	//stabilize. 
-	//This is ordered version of CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno().
-	private static final List<String> ALL_THM_WORDS_LIST = new ArrayList<String>(TriggerMathThm2.allThmsKeywordIndexDict().keySet());
+	//This is ordered based on word frequencies.
+	private static final List<String> ALL_THM_WORDS_LIST = new ArrayList<String>(CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno().keySet());
 	
 	private static final boolean PARSE_INPUT_VERBOSE = true;
 	private static final Pattern SKIP_PATTERN = Pattern.compile("\\\\begin\\{proof\\}.*");
@@ -188,6 +188,7 @@ public class DetectHypothesis {
 		//serialize words used for context vecs
 		List<List<String>> wordListToSerializeList = new ArrayList<List<String>>();
 		wordListToSerializeList.add(ALL_THM_WORDS_LIST);
+		System.out.println("------++++++++-------puttig in : ALL_THM_WORDS_LIST.size " + ALL_THM_WORDS_LIST.size());
 		FileUtils.serializeObjToFile(wordListToSerializeList, allThmWordsSerialFileStr);
 		
 		//write parsedExpressionList to file

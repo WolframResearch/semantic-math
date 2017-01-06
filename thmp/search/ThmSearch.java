@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Scanner;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.wolfram.jlink.*;
 
@@ -24,6 +26,7 @@ public class ThmSearch {
 	 * Rows are terms.
 	 */
 	private static double[][] docMx;
+	private static final Logger logger = LogManager.getLogger(ThmSearch.class);
 	
 	//public static final String[] ARGV = new String[]{"-linkmode", "launch", "-linkname", 
 	//"\"/Applications/Mathematica2.app/Contents/MacOS/MathKernel\" -mathlink"};
@@ -324,13 +327,18 @@ public class ThmSearch {
 
 			System.out.println("~~~");
 			//reads input theorem, generates query string, process query
-			readThmInput();
+			readInputAndSearch();
 			
-		}catch(MathLinkException|IndexOutOfBoundsException e){
-			System.out.println("error during eval!" + e.getMessage());
-			e.printStackTrace();
-			throw new RuntimeException("error during eval!", e);
-		}finally{
+		}catch(MathLinkException e){
+			logger.error("MathLinkException during evaluation:" + e.getMessage());
+			//e.printStackTrace();
+			throw new RuntimeException("MathLinkException during evaluation!", e);
+		}catch(IndexOutOfBoundsException e){			
+			logger.error("IndexOutOfBoundsException during evaluation using MathLink.");
+			//e.printStackTrace();
+			throw new IllegalStateException("IndexOutOfBoundsException during evaluation!", e);
+		}
+		finally{
 			ml.close();
 		}		
 	}
@@ -357,7 +365,7 @@ public class ThmSearch {
 			ml.discardAnswer();
 			//ml.evaluate(queryStr+"/.{0.0->30}");
 			//System.out.println("QUERY " + ml.getExpr().part(1));
-			System.out.println("Looking for nearest vecs in ThmSearch.java!");
+			System.out.println("Looking for nearest vecs in ThmSearch.java.");
 			
 			//ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"];");
 			//ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"/.{0.0->mxMeanValue}];");
@@ -419,7 +427,7 @@ public class ThmSearch {
 		return nearestVecList;
 	}
 	
-	public static String readThmInput(){
+	public static String readInputAndSearch(){
 		
 		String query = "";
 		Scanner sc = new Scanner(System.in);
@@ -431,12 +439,10 @@ public class ThmSearch {
 				System.out.println("I've got nothing for you yet. Try again.");
 				continue;
 			}
-				//processes query				
+			//processes query				
 			findNearestVecs(ml, query);
-		}			
-	
-		sc.close();
-	
+		}	
+		sc.close();	
 		return query;
 	}
 	
@@ -447,12 +453,13 @@ public class ThmSearch {
 	 * @return list of indices of nearest thms. 
 	 */
 	public static List<Integer> findNearestThmsInTermDocMx(String thm, int numVec){
-		List<Integer> nearestVecList = null;
 		
+		List<Integer> nearestVecList = null;		
 		String query = TriggerMathThm2.createQueryNoAnno(thm);
 		if(query.equals("")){
 			return Collections.emptyList();
 		}
+		System.out.println("ThmSearch.java: about to findNearestVecs()!");
 		//processes query
 		nearestVecList = findNearestVecs(ml, query, numVec);
 		
@@ -460,7 +467,7 @@ public class ThmSearch {
 		return nearestVecList;
 	}
 	
-	//little function that tests various inputs
+	//helper function that tests various inputs
 	private static void present(Expr expr) throws ExprFormatException{
 		System.out.print(expr.length());
 		System.out.println("matrixQ" + expr.matrixQ());

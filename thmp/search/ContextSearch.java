@@ -118,7 +118,7 @@ public class ContextSearch {
 		int nearestThmIndexListSz = nearestThmIndexList.size();
 		//could be 0 if, for instance, the words searched are all unknown to the word maps. 
 		if(0 == nearestThmIndexListSz){ 
-			System.out.println("contextSearch parameter nearestThmIndexList  is empty!");
+			System.out.println("contextSearch parameter nearestThmIndexList is empty!");
 			return null;		
 		}
 		String queryContextVec = thmp.GenerateContextVector.createContextVector(query);
@@ -285,7 +285,6 @@ public class ContextSearch {
 			int NUM_NEAREST = 6;
 			//List<Integer> 
 			nearestVecList = ThmSearch.findNearestThmsInTermDocMx(thm, NUM_NEAREST);			
-			
 			
 			if(nearestVecList.isEmpty()){
 				System.out.println("I've got nothing for you yet. Try again.");

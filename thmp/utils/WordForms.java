@@ -1,6 +1,8 @@
 package thmp.utils;
 
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -31,7 +33,7 @@ public class WordForms {
 	private static final Pattern LATEX_PATTERN = Pattern.compile("\\$([^$]+)\\$");
 	
 	//pattern matching is faster than calling str.contains() repeatedly 
-		//which is O(mn) time.
+	//which is O(mn) time.
 	private static final Pattern HYP_PATTERN = Pattern.compile(".*assume.*|.*denote.*|.*define.*|.*let.*|.*is said.*|.*suppose.*"
 			+ "|.*where.*|.*is called.*|.*if.*|.*If.*") ;
 	
@@ -319,4 +321,36 @@ public class WordForms {
 		}
 		return pos;
 	}
+	
+	/**
+	 * Comparator for words based on their frequencies in text corpus.
+	 * 
+	 */
+	public static class WordFreqComparator implements Comparator<String>{
+		
+		Map<String, Integer> wordFreqMap;
+		public WordFreqComparator(Map<String, Integer> map){
+			this.wordFreqMap = map;
+		}
+		
+		/**
+		 * Higher freq ranked lower, so prioritized in sorting later.
+		 */
+		@Override
+		public int compare(String s1, String s2){
+			Integer freq1 = wordFreqMap.get(s1);
+			Integer freq2 = wordFreqMap.get(s2);
+			
+			if(null != freq1){
+				if(null != freq2){
+					return freq1 > freq2 ? -1 : 1;
+				}else{
+					return -1;
+				}
+			}else{
+				return 1;
+			}
+		}
+	}
+	
 }

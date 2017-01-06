@@ -39,7 +39,7 @@ public class RelationVec implements Serializable{
 
 	private static final long serialVersionUID = 7990758362732085287L;
 	
-	private static final Map<String, Integer> keywordDict = CollectThm.ThmWordsMaps.getCONTEXT_VEC_WORDS_MAP();
+	private static final Map<String, Integer> keywordDict = CollectThm.ThmWordsMaps.get_CONTEXT_VEC_WORDS_MAP();
 	private static final int parseContextVectorSz = keywordDict.size();
 	
 	private static final int NUM_BITS_PER_BYTE = 8;
@@ -57,10 +57,11 @@ public class RelationVec implements Serializable{
 		_IS(new int[]{0}), IS_(new int[]{1}), _IS_(new int[]{0,1}), 
 		IF(new int[]{2}), EXIST(new int[]{3}), NONE(new int[]{-1});
 		//must correspond to total number of relations above with offset > -1.
-		private static final int totalRelationsCount = 4;
+		private static final int totalRelationsCount = 5;
 		
 		//offset for how many times the total number of terms
-		//in term-document matrix the segment for this type starts.
+		//in term-document matrix (list of words used in relation vec) 
+		//the segment for this type starts.
 		private int[] vectorOffsetArray;
 		
 		private RelationType(int[] offsetAr){
@@ -102,7 +103,7 @@ public class RelationVec implements Serializable{
 			if(null == wlCommand){ 
 				continue;			
 			}
-			/////
+			
 			boolean isParseStructTypeHyp = (parseStructType == ParseStructType.HYP
 					|| parseStructType == ParseStructType.HYP_iff);
 
@@ -152,21 +153,26 @@ public class RelationVec implements Serializable{
 				continue;
 			}
 			
-			String contentStr = posTermStruct.contentStr();
+			List<String> contentStrList = posTermStruct.contentStrList();
 			//System.out.println("c&&&&&&&&&&&&&&&ontentStr: " + contentStr + " posTerm " + posTerm);
 			
 			List<RelationType> posTermRelationTypeList = posTerm.relationType();
-			
+			System.out.println("****************contentStrList: "  + contentStrList);
 			if(!posTermRelationTypeList.isEmpty())
 			{					
 				for(RelationType posTermRelationType : posTermRelationTypeList)
 				{	
-					//offset and residue (like remainder): num = offset * modulus + residue.
+					//offset/multiplicity and residue (like remainder): num = multiplicity * modulus + residue.
+					//modulus is the base, e.g. the prime 5 in the finite field Z/5Z.
+					//MultiplicityAr gives the locations a term goes into all the slots 
+					//used in the relation vector. 
+					//e.g. "A" in "If A is B" has the offset for both "_IS" and "IF"
 					int[] multiplicityAr = posTermRelationType.vectorOffsetArray();
 					
 					//add new indices to bitPosList
 					for(int multiplicity : multiplicityAr){
-						int curBitPos = setBitPosList(contentStr, bitPosList, multiplicity, posTermRelationType, isParseStructTypeHyp);
+						int curBitPos = setBitPosList(contentStrList, bitPosList, multiplicity, 
+								posTermRelationType, isParseStructTypeHyp);						
 						if(curBitPos > maxBitPos){
 							maxBitPos = curBitPos;
 						}
@@ -196,6 +202,28 @@ public class RelationVec implements Serializable{
 		}		
 	}
 	
+	/**
+	 * Auxilliary method for buildRelationVec() to set bits in BitSet. Takes in list of Strings rather
+	 * than a single String.
+	 * @param modulus Which segment of the index the current RelationType corresponds to.
+	 * @param termStrList List of Strings to be added to context vector, in which each String
+	 * will be decomposed into pieces as well.
+	 * @param bitPosList
+	 * @param posTermRelationType
+	 * @param isParseStructTypeHyp
+	 * @return  max position this run in the new bit positions added.
+	 */
+	private static int setBitPosList(List<String> termStrList, List<Integer> bitPosList, int modulus, 
+			RelationType posTermRelationType, boolean isParseStructTypeHyp){
+		
+		int maxBitPos = 0;
+		for(String termStr : termStrList){
+			int curMax = setBitPosList(termStr, bitPosList, modulus, posTermRelationType, isParseStructTypeHyp);
+			if(curMax > maxBitPos) maxBitPos = curMax;
+		}
+		return maxBitPos;
+	}
+	
 		/**
 		 * Auxilliary method for buildRelationVec() to set bits in BitSet.
 		 * @param termStr The input string. 
@@ -205,6 +233,8 @@ public class RelationVec implements Serializable{
 		private static int setBitPosList(String termStr, List<Integer> bitPosList, int modulus, 
 				RelationType posTermRelationType, boolean isParseStructTypeHyp){
 			
+			if("".equals(termStr)) return 0;
+			
 			int maxBitPos = 0;
 			String[] termStrAr = SPLIT_DELIM_PATTERN.split(termStr);
 			int termStrArLen = termStrAr.length;
@@ -212,14 +242,14 @@ public class RelationVec implements Serializable{
 			if(termStrArLen > 1){
 				//set indices for all terms in compound words, 
 				//e.g. "... is regular local", sets "is regular, *and* "is local"
-				for(int i = 0; i < termStrArLen; i++){
-					
+				for(int i = 0; i < termStrArLen; i++){					
 					String word = termStrAr[i];
+					
 					Integer residue = keywordDict.get(word);
 					if(null == residue){
 						continue;
 					}
-					
+					System.out.println("RelationVec.java: adding word " + word);
 					int bitPos = parseContextVectorSz*modulus + residue;					
 					maxBitPos = addToPosList(bitPosList, maxBitPos, bitPos);
 					
@@ -238,8 +268,8 @@ public class RelationVec implements Serializable{
 		
 		//repeat for the whole of termStr:
 		Integer residue = keywordDict.get(termStr);
-		
 		if(null != residue){
+			System.out.println("RelationVec.java: adding word " + termStr);
 			int bitPos = parseContextVectorSz*modulus + residue;
 			maxBitPos = addToPosList(bitPosList, maxBitPos, bitPos);
 			//if parseStructType is HYP, also add to the "IF" segment.

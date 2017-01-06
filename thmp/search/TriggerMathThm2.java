@@ -20,6 +20,7 @@ import thmp.Maps;
 import thmp.ThmP1;
 import thmp.search.SearchWordPreprocess.WordWrapper;
 import thmp.utils.WordForms;
+import thmp.utils.WordForms.WordFreqComparator;
 
 public class TriggerMathThm2 {
 
@@ -35,9 +36,7 @@ public class TriggerMathThm2 {
 	 *
 	 */
 
-	/**
-	 * List of mathObj's, in order they are inserted into mathObjMx
-	 */
+	/* List of mathObj's, in order they are inserted into mathObjMx */
 	private static final List<String> mathObjList;
 	
 	private static final List<String> webDisplayThmList;
@@ -55,14 +54,11 @@ public class TriggerMathThm2 {
 	 */
 	// private static final Multimap<String, String> mathObjMultimap;
 	
-	/**
-	 * Matrix of keywords.
-	 * 
-	 */
+	/* Matrix of keywords. */
 	//private static final int[][] mathObjMx;
 	private static final double[][] mathObjMx;
 	//list of thms, same order as in thmList, and the frequencies of their words in words maps.
-	private static final List<ImmutableMap<String, Integer>> thmWordsList;
+	private static final List<ImmutableMap<String, Integer>> thmWordsMapList;
 	private static final ImmutableMap<String, Integer> docWordsFreqMapNoAnno = CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno();
 	
 	/**
@@ -71,13 +67,15 @@ public class TriggerMathThm2 {
 	private static final boolean DEBUG = false;
 	
 	static {
-		thmWordsList = CollectThm.ThmWordsMaps.get_thmWordsFreqListNoAnno();
+		//List of theorems, each of which
+		//contains map of keywords and their frequencies in this theorem.
+		thmWordsMapList = CollectThm.ThmWordsMaps.get_thmWordsFreqListNoAnno();
 		
 		// ImmutableList.Builder<String> keywordList = ImmutableList.builder();
 		List<String> keywordList = new ArrayList<String>();
 		
 		// which keyword corresponds to which index	in the keywords list
-		//ImmutableMap.Builder<String, Integer> keyDictBuilder = ImmutableMap.builder();
+		// ImmutableMap.Builder<String, Integer> keyDictBuilder = ImmutableMap.builder();
 		//map of String (keyword), and integer (index in keywordList) of keyword.
 		Map<String, Integer> keywordIndexMap = new HashMap<String, Integer>();
 		//ImmutableList.Builder<String> mathObjListBuilder = ImmutableList.builder();
@@ -89,7 +87,7 @@ public class TriggerMathThm2 {
 
 		//adds thms from CollectThm.thmWordsList. The thm name is its index in thmWordsList.
 		addThmsFromList(keywordList, keywordIndexMap, mathObjMMap);
-		
+		//should already been ordered in CollectThm
 		Map<String, Integer> docWordsFreqMapNoAnno = CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno();
 		
 		//re-order the list so the most frequent words appear first, as optimization
@@ -97,15 +95,16 @@ public class TriggerMathThm2 {
 		WordFreqComparator comp = new WordFreqComparator(docWordsFreqMapNoAnno);
 		//words and their frequencies in wordDoc matrix.
 		Map<String, Integer> keyWordIndexTreeMap = new TreeMap<String, Integer>(comp);
-		keyWordIndexTreeMap.putAll(docWordsFreqMapNoAnno);
+		keyWordIndexTreeMap.putAll(keywordIndexMap);
 		
 		keywordIndexDict = ImmutableMap.copyOf(keyWordIndexTreeMap);
-		//System.out.println("!_-------keywordIndexDict: " + keywordIndexDict);
+		//System.out.println("!_-------keywordFreqDict: " + keywordFreqDict);
 		//keywordIndexDict = ImmutableMap.copyOf(keywordIndexMap);
 		
 		//mathObjMx = new int[keywordList.size()][mathObjMMap.keySet().size()];	
 		//mathObjMx = new int[keywordList.size()][thmWordsList.size()];
-		mathObjMx = new double[keywordList.size()][thmWordsList.size()];
+		mathObjMx = new double[keywordList.size()][thmWordsMapList.size()];
+		//System.out.println("mathObjMx dims: " + keywordList.size() + " " + thmWordsMapList.size());
 		ImmutableList<String> thmList = CollectThm.ThmList.allThmsWithHypList();
 		
 		//System.out.println("BEFORE mathObjMMap" +mathObjMMap);
@@ -124,36 +123,6 @@ public class TriggerMathThm2 {
 		}*/
 	}
 	
-	/**
-	 * Comparator for words based on their frequencies in text corpus.
-	 * 
-	 */
-	private static class WordFreqComparator implements Comparator<String>{
-		
-		Map<String, Integer> wordFreqMap;
-		public WordFreqComparator(Map<String, Integer> map){
-			this.wordFreqMap = map;
-		}
-		
-		/**
-		 * Higher freq ranked lower, so prioritized in sorting later.
-		 */
-		@Override
-		public int compare(String s1, String s2){
-			Integer freq1 = wordFreqMap.get(s1);
-			Integer freq2 = wordFreqMap.get(s2);
-			
-			if(null != freq1){
-				if(null != freq2){
-					return freq1 > freq2 ? -1 : 1;
-				}else{
-					return -1;
-				}
-			}else{
-				return 1;
-			}
-		}
-	}
 	
 	/**
 	 * Add keyword/term to mathObjList, in the process of building keywordList, mathObjMMap, etc.
@@ -168,7 +137,7 @@ public class TriggerMathThm2 {
 		if (keywords.length == 0){
 			return;		
 		}
-		//String keyword = keywords[0];
+		
 		//theorem
 		String thm = keywords[0];
 		//System.out.println("THM " + thm);
@@ -214,7 +183,8 @@ public class TriggerMathThm2 {
 		//index of thm in thmWordsList, to be used as part of name
 		//thm words and their frequencies.
 		int thmIndex = 0;
-		for(ImmutableMap<String, Integer> wordsMap : thmWordsList){
+		//key is thm, values are indices of words that show up in thm.
+		for(ImmutableMap<String, Integer> wordsMap : thmWordsMapList){
 			
 			//make whole thm text as name <--should make the index the key!			
 			String thmName = thmList.get(thmIndex++);
@@ -227,7 +197,6 @@ public class TriggerMathThm2 {
 			//need to preserve insertion order!
 			addKeywordToMathObj(keyWordsList.toArray(new String[keyWordsList.size()]), keywordList, keywordIndexMap, mathObjMMap);
 		}
-		//System.out.println("!!mathObjMMap " + mathObjMMap);
 	}
 	
 	/**
@@ -361,7 +330,7 @@ public class TriggerMathThm2 {
 		//keywordDict is annotated with "hyp"/"stm"
 		int dictSz = keywordIndexDict.keySet().size();
 		//int[] triggerTermsVec = new int[dictSz];
-		double[] triggerTermsVec = new double[dictSz];
+		double[] queryVec = new double[dictSz];
 		double norm = 0;
 		//highest weight amongst the single words
 		double highestWeight = 0;
@@ -372,18 +341,18 @@ public class TriggerMathThm2 {
 		for (int i = 0; i < thmAr.length; i++) {
 			String term = thmAr[i];
 			double newNorm;
-			newNorm = addToNorm(thmAr, wordsScoreMap, triggerTermsVec, norm, i, term);
+			newNorm = addToNorm(thmAr, wordsScoreMap, queryVec, norm, i, term);
 			if(newNorm - norm > highestWeight){
 				highestWeight = newNorm - norm;
 			}
 			if(i < thmAr.length-1){
 				String nextTermCombined = term + " " + thmAr[i+1];
-				newNorm = addToNorm(thmAr, wordsScoreMap, triggerTermsVec, newNorm, i, nextTermCombined);	
+				newNorm = addToNorm(thmAr, wordsScoreMap, queryVec, newNorm, i, nextTermCombined);	
 				//System.out.println("combined word: " + nextTermCombined + ". norm: " + newNorm);
 				
 				if(i < thmAr.length-2){
 					String threeTermsCombined = nextTermCombined + " " + thmAr[i+2];
-					newNorm = addToNorm(thmAr, wordsScoreMap, triggerTermsVec, newNorm, i, threeTermsCombined);
+					newNorm = addToNorm(thmAr, wordsScoreMap, queryVec, newNorm, i, threeTermsCombined);
 				}
 			}
 			if(term.matches(priorityWords)){
@@ -399,9 +368,9 @@ public class TriggerMathThm2 {
 		for(int index : priorityWordsIndexList){
 			Integer rowIndex = keywordIndexDict.get(thmAr[index]);
 			if(rowIndex != null){
-				double prevWeight = triggerTermsVec[rowIndex];
+				double prevWeight = queryVec[rowIndex];
 				double weightDiff = highestWeight - prevWeight;
-				triggerTermsVec[rowIndex] = highestWeight;
+				queryVec[rowIndex] = highestWeight;
 				norm += weightDiff;
 			}
 		}		
@@ -411,33 +380,22 @@ public class TriggerMathThm2 {
 		norm = Math.sqrt(norm);
 		norm = norm == 0 ? 1 : norm;
 		//divide entries of triggerTermsVec by norm
-		for(int i = 0; i < triggerTermsVec.length; i++){
-			double prevScore = triggerTermsVec[i]; 
-			triggerTermsVec[i] = triggerTermsVec[i]/norm;
+		for(int i = 0; i < queryVec.length; i++){
+			double prevScore = queryVec[i]; 
+			queryVec[i] = queryVec[i]/norm;
 			
 			//avoid completely obliterating a word 
-			if(prevScore != 0 && triggerTermsVec[i] == 0){
+			if(prevScore != 0 && queryVec[i] == 0){
 				//triggerTermsVec[i] = 1;
-				triggerTermsVec[i] = .1;
+				queryVec[i] = .1;
 			}
 		}
-		/*for (String term : thmAr) {			
-			//need to singularize!
-			Integer rowIndex = keywordDict.get(term);
-			
-			if (rowIndex != null) {
-				int termScore = wordsScoreMap.get(term);
-				//triggerTermsVec[rowIndex] = termScore;
-				//keywordDict starts indexing from 0!
-				triggerTermsVec[rowIndex] = termScore/norm;
-			}
-		}*/
+		
 		//transform into query list String 
 		StringBuilder sb = new StringBuilder();
 		sb.append("{{");
-		//String s = "{{";
 		for(int j = 0; j < dictSz; j++){
-			String t = j == dictSz-1 ? triggerTermsVec[j] + "" : triggerTermsVec[j] + ", ";
+			String t = j == dictSz-1 ? queryVec[j] + "" : queryVec[j] + ", ";
 			sb.append(t);
 		}
 		sb.append("}}");
@@ -463,11 +421,10 @@ public class TriggerMathThm2 {
 			term = WordForms.getSingularForm(term);
 			termScore = wordsScoreMap.get(term);
 		}
-		System.out.println("term: " + term + ". termScore: " + termScore );
+		//System.out.println("term: " + term + ". termScore: " + termScore );
 		
 		//triggerTermsVec[rowIndex] = termScore;
 		//keywordDict starts indexing from 0!
-		//should not be necessary!
 		Integer rowIndex = keywordIndexDict.get(term);
 		
 		if(termScore != null && rowIndex != null){
@@ -480,7 +437,7 @@ public class TriggerMathThm2 {
 			//triggerTermsVec[rowIndex] = termScore;
 			//keywordDict starts indexing from 0!
 			triggerTermsVec[rowIndex] = termScore;
-			System.out.println("term just added: " + term + ". " + rowIndex + " " + termScore);
+			System.out.println("TriggerMathThm2.java: term just added: " + term + ". " + rowIndex + ". termScore: " + termScore);
 			//System.out.println(Arrays.toString(triggerTermsVec));
 		}
 		return norm;
@@ -501,9 +458,9 @@ public class TriggerMathThm2 {
 	 * This is ordered version of CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno().
 	 * @return
 	 */
-	public static Map<String, Integer> allThmsKeywordIndexDict(){
+	/*public static Map<String, Integer> allThmsKeywordIndexDict(){
 		return keywordIndexDict;
-	}
+	}*/
 
 	public static int keywordDictSize(){
 		return keywordIndexDict.size();
@@ -522,7 +479,7 @@ public class TriggerMathThm2 {
 		
 		if(DEBUG){
 			Map<String, Integer> wordsScoreMap = CollectThm.ThmWordsMaps.get_wordsScoreMapNoAnno();		
-			for(String word : thmWordsList.get(index-1).keySet()){
+			for(String word : thmWordsMapList.get(index-1).keySet()){
 				System.out.print(word + " " + wordsScoreMap.get(word) + " " + docWordsFreqMapNoAnno.get(word));
 			}
 		}

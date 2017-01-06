@@ -15,6 +15,7 @@ public class StructA<A, B> extends Struct{
 	//corresponds to one unique Struct.
 	//I.e. one-to-many map between Struct's and MatrixPathNode's
 	
+	private static final long serialVersionUID = 8934779328383033339L;
 	private A prev1; 
 	private B prev2; 
 	//parentStruct is *not* unique! Depends on which DFS path we take.
@@ -437,20 +438,21 @@ public class StructA<A, B> extends Struct{
 	}
 	
 	@Override
-	public String contentStr(){		
-		String contentStr = "";
+	public List<String> contentStrList(){		
+		//String contentStr = "";
+		List<String> contentStrList = new ArrayList<String>();
 		if(PREV1_TYPE != null && PREV1_TYPE.equals(NodeType.STR))
 		{
-			contentStr = (String) prev1;			
+			contentStrList.add((String) prev1);			
 		}
 
 		if(PREV2_TYPE != null && PREV2_TYPE.equals(NodeType.STR))
 		{			
-			String prev2Str = contentStr.equals("") 
+			String prev2Str = contentStrList.isEmpty() 
 					? (String) prev2 : " " + (String) prev2;
-			contentStr += prev2Str;
+					contentStrList.add(prev2Str);
 		}
-		return contentStr;
+		return contentStrList;
 	}
 	
 	@Override

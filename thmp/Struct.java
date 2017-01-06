@@ -264,7 +264,7 @@ public abstract class Struct implements Serializable{
 	 * Return value cannot be null.
 	 * @return
 	 */
-	public abstract String contentStr();
+	public abstract List<String> contentStrList();
 	
 	/**
 	 * What most qualifies as the Struct's name, for

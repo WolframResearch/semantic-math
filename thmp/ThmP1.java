@@ -180,7 +180,8 @@ public class ThmP1 {
 		probMap = Maps.probMap();
 		posList = Maps.posList;
 	
-		parseContextVectorSz = CollectThm.ThmWordsMaps.getCONTEXT_VEC_WORDS_MAP_size();
+		parseContextVectorSz = CollectThm.ThmWordsMaps.get_CONTEXT_VEC_WORDS_MAP_size();
+		System.out.println("*****+++++parseContextVectorSz: " + parseContextVectorSz);
 		parseContextVector = new int[parseContextVectorSz];
 		
 		noFuseEntSet = new HashSet<String>();

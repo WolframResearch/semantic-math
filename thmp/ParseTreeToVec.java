@@ -25,7 +25,7 @@ public class ParseTreeToVec {
 
 	//private static final Map<String, Integer> contextKeywordDict = TriggerMathThm2.allThmsKeywordIndexDict();
 	//should ideally order the words according to relative distances apart, i.e. entries in the correlation matrix.
-	private static final Map<String, Integer> contextKeywordDict = CollectThm.ThmWordsMaps.getCONTEXT_VEC_WORDS_MAP();
+	private static final Map<String, Integer> contextKeywordDict = CollectThm.ThmWordsMaps.get_CONTEXT_VEC_WORDS_MAP();
 	private static final ListMultimap<String, String> posMMap = Maps.posMMap();
 	
 	/**
@@ -103,7 +103,7 @@ public class ParseTreeToVec {
 	 */
 	public static void setStructHContextVecEntry(StructH<?> struct, int structParentIndex, int[] contextVec){
 		//termsStr only contains name of struct, properties are considered below 
-		String termStr = struct.contentStr();
+		String termStr = struct.nameStr();
 		int structIndex = 0;
 		//add struct itself, then its children
 		//don't count parent is parent just all latex expressions
@@ -140,13 +140,19 @@ public class ParseTreeToVec {
 	 */
 	public static void setStructAContextVecEntry(StructA<?, ?> struct, int structParentIndex, int[] contextVec){
 		
-		String termStr = struct.contentStr();
+		List<String> termStrList = struct.contentStrList();
 		//be more specific, "algebraic closure", want "algebraic" to point to "closure", so "closure" is parent
 		//of "algebraic". Consistent with "closure is algebraic" => A \[Elememt] B, B describes A, so points to A.
 
-		//add struct itself, then its prev1 and prev2
-		int structIndex = setContextVecEntry(struct, termStr, structParentIndex, contextVec);
-		
+		//add the Strings fro struct itself, then its prev1 and prev2
+		int structIndex = structParentIndex;
+		int termStrListLen = termStrList.size();
+		if(termStrListLen > 0){
+			structIndex = setContextVecEntry(struct, termStrList.get(0), structParentIndex, contextVec);
+		}
+		for(int i = 1; i < termStrListLen; i++){
+			setContextVecEntry(struct, termStrList.get(i), structParentIndex, contextVec);
+		}
 		//do prev1 and prev2
 		if(struct.prev1NodeType().isTypeStruct()){
 			tree2vec((Struct)(struct.prev1()), structIndex, contextVec);
@@ -242,7 +248,7 @@ public class ParseTreeToVec {
 		//if termStr was not added, use lastWordRowIndex. Relies on fact that addTermStrToVec()
 		//returns structParentIndex back if termStr not added.
 		termRowIndex = (termRowIndex == structParentIndex && null != lastWordRowIndex) ? lastWordRowIndex : termRowIndex;
-			
+		
 		return termRowIndex;
 	}
 
@@ -406,8 +412,8 @@ public class ParseTreeToVec {
 		}
 		
 		/**
-		 * Adjusts context vec entry for parent, to take into account e.g. A \[Element] B, 
-		 * so B points to A.
+		 * Adjusts context vec entry for parent, to take into account triggered WLCommands 
+		 * e.g. A \[Element] B, so that B points to A.
 		 * @param posTermList
 		 * @param command
 		 * @param triggerTermIndex
@@ -459,8 +465,8 @@ public class ParseTreeToVec {
 			return;
 		}
 		
-		//get termStr for parentStruct
-		String parentTermStr = parentStruct.contentStr();
+		//get content string for parentStruct
+		String parentTermStr = parentStruct.nameStr();
 		
 		//get an index for contentStr, should already been singularized				
 		Integer parentTermRowIndex = getTermStrIndex(parentTermStr);

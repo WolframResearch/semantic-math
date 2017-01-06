@@ -20,6 +20,7 @@ import thmp.Struct.NodeType;
  */
 public class StructH<H> extends Struct{
 
+	private static final long serialVersionUID = 576033501556939586L;
 	private Map<String, String> struct; //hashmap
 	//ent (entity) is only structure that uses hashmap
 	//Primary part of speech, ent, adj, etc. 
@@ -766,16 +767,32 @@ public class StructH<H> extends Struct{
 		return null;
 	}
 	
+	/**
+	 * Extracts the list of content Strings of this Struct. 
+	 * Content includes name, properties, and children.
+	 * List is re-constructed each time this is called.
+	 */
 	@Override
-	public String contentStr(){
-		String str = struct.get("name");
-		String contentStr = str == null ? "" : str; 
-		return contentStr;		
+	public List<String> contentStrList(){
+		//this list includes the name and ppt strings of this Struct.
+		List<String> contentList = new ArrayList<String>(this.getPropertySet());
+		String nameStr = struct.get("name");
+		if(null != nameStr){
+			contentList.add(nameStr);
+		}
+		//get Strings for children
+		for(Struct child : children){
+			contentList.addAll(child.contentStrList());
+		}
+		
+		return contentList;
 	}
 	
 	@Override
 	public String nameStr(){		
-		return contentStr();
+		String name = struct.get("name");
+		String nameStr = name == null ? "" : name; 
+		return nameStr;
 	}
 	
 	/**

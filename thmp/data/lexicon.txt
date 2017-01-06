@@ -1,6 +1,7 @@
 filter verb
 morphism ent
-complex ent_comp
+complex ent
+complex adj
 CW complex ent
 homology ent
 log ent
@@ -11,6 +12,7 @@ category ent_comp
 satisfy verb
 assumption noun
 sum ent
+polynomial ent
 valuation ent
 discrete adj
 additive adj
