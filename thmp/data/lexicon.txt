@@ -1,3 +1,7 @@
+pointwise adj
+isotypic adj
+sublinear adj
+homothetic adj
 filter verb
 morphism ent
 complex ent
@@ -514,7 +518,20 @@ pairing ent
 hyperk\"ahler adj
 hyperkahler adj
 behaviour ent
+behavior ent
 geometry ent
 harmless adj
 higher adj
-
+vertices ent
+vertex ent
+permute verb
+monodromy ent
+singularity ent
+splice verb
+puiseux ent
+annuli ent
+annulus ent
+adjacent adj
+admissible adj
+milnor adj
+interchange verb

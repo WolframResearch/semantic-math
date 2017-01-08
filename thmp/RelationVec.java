@@ -157,7 +157,7 @@ public class RelationVec implements Serializable{
 			//System.out.println("c&&&&&&&&&&&&&&&ontentStr: " + contentStr + " posTerm " + posTerm);
 			
 			List<RelationType> posTermRelationTypeList = posTerm.relationType();
-			System.out.println("****************contentStrList: "  + contentStrList);
+			//System.out.println("****************contentStrList: "  + contentStrList);
 			if(!posTermRelationTypeList.isEmpty())
 			{					
 				for(RelationType posTermRelationType : posTermRelationTypeList)

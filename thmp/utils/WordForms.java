@@ -7,6 +7,9 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 
@@ -14,12 +17,15 @@ import thmp.search.WordFrequency;
 
 public class WordForms {
 
+	private static final Logger logger = LogManager.getLogger(WordForms.class);
 	//delimiters to split on when making words out of input
 	private static final String SPLIT_DELIM = "\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:|-|_|~|!";
 	private static final Pattern BACKSLASH_PATTERN = Pattern.compile("(?<!\\\\)\\\\(?!\\\\)");
 	private static final Pattern WHITE_EMPTY_SPACE_PATTERN = Pattern.compile("^\\s*$");
 	
 	private static final Pattern BRACES_PATTERN = Pattern.compile("(\\{|\\}|\\[|\\])");
+	private static final Pattern SPECIAL_CHARS_PATTERN = Pattern.compile(".*([+|-]).*");
+	
 	//small lists of fluff words, used in, e.g., n gram extraction.
 	//*don't* put "of" here, will interfere with 3 gram collection
 	private static final String FLUFF_WORDS_SMALL = "a|the|tex|of|and|on|let|lemma|for|to|that|with|is|be|are|there|by"
@@ -222,7 +228,7 @@ public class WordForms {
 		int tex2Len = tex2.length();
 		
 		//if tex1 and tex2 have the same "form". E.g. S, T.
-		if(tex1Len < 6 && (tex1Len - tex2Len < 4 || tex2Len - tex1Len < 4) ){
+		if(tex1Len < 15 && (tex1Len - tex2Len < 4 || tex2Len - tex1Len < 4) ){
 			return true;
 		}
 		
@@ -230,14 +236,25 @@ public class WordForms {
 		//create regex from one to match the other. Expand this!
 		//turn '\' into "\\\\" to create legal regex
 		//tex1 = BACKSLASH_PATTERN.matcher(tex1).replaceAll("\\\\");
-		tex1 = BRACES_PATTERN.matcher(tex1).replaceAll("\\$1");
+		/*
+		tex1 = BRACES_PATTERN.matcher(tex1).replaceAll("\\$1");		
 		tex1 = Matcher.quoteReplacement(tex1);
-		String tex1Regex = "\\\\hat\\{" + tex1 + "\\}|" + tex1 + "'";
-		Pattern tex1Pattern = Pattern.compile(tex1Regex);
+		//escape special characters such as 
+		//tex1 = SPECIAL_CHARS_PATTERN.matcher("tex1").replaceAll("\\$1");
+		//if tex1 is a hat or tilde of another. But this is mostly superceded by previous comparison.
+		String tex1Regex = "\\\\hat\\{" + tex1 + "\\}|" + tex1 + "'";		
+		Pattern tex1Pattern = null;
+		try{
+			tex1Pattern = Pattern.compile(tex1Regex);
+		}catch(java.util.regex.PatternSyntaxException e){
+			//if some special character that hadn't been escaped shows up.
+			logger.error(e.getStackTrace());
+			return false;
+		}		
 		if(tex1Pattern.matcher(tex2).find()){
 			return true;
 		}
-		
+		*/
 		return false;
 	}
 	

@@ -606,14 +606,17 @@ public class StructA<A, B> extends Struct{
 		if(PREV1_TYPE.isTypeStruct()){
 			this.PREV1_TYPE = ((Struct) prev1).isStructA() ? NodeType.STRUCTA : NodeType.STRUCTH;			
 		}
-
 	}
 	
 	//***this is terrible! Cannot just cast String
 	@SuppressWarnings("unchecked")
-	public void set_prev1(String prev1){	
-		if(!(PREV1_TYPE.equals(NodeType.STR))) 
-			System.out.println("Cannot cast String to " + this.prev1.getClass() + "!");
+	public void set_prev1(String prev1){		
+		if(!(PREV1_TYPE.equals(NodeType.STR))) {
+			String msg = "PREV1_TYPE should be String rather than " + PREV1_TYPE + "!";		
+			System.out.println(msg);
+			this.PREV1_TYPE = NodeType.STR;
+			//assert false : msg;
+		}
 		this.prev1 = (A)prev1;
 	}
 	
@@ -629,6 +632,12 @@ public class StructA<A, B> extends Struct{
 	@SuppressWarnings("unchecked")
 	public void set_prev2(String prev2){
 		this.prev2 = (B)prev2;	
+		if(!(PREV2_TYPE.equals(NodeType.STR))) {
+			//String msg = "PREV1_TYPE should be String rather than " + PREV1_TYPE + "!";		
+			//System.out.println(msg);
+			this.PREV2_TYPE = NodeType.STR;
+			//assert false : msg;
+		}
 	}
 	
 	@Override

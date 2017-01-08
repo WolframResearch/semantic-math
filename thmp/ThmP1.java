@@ -154,8 +154,9 @@ public class ThmP1 {
 	private static final String ALIGN_PATTERN_REPLACEMENT_STR = "$1$2$3";
 	
 	private static final boolean DEBUG = InitParseWithResources.isDEBUG();
-	//contains backslash
-	private static final Pattern BACKSLASH_CONTAINMENT_PATTERN = Pattern.compile(".*[\\\\|$|=|\\{|\\}|\\[|\\]|(|)|^|_|+|-|%|.|/].*");
+	//Pattern used to check if word is valid.
+	//Don't put \', could be in valid word
+	private static final Pattern BACKSLASH_CONTAINMENT_PATTERN = Pattern.compile(".*[\\\\|$|=|\\{|\\}|\\[|\\]|(|)|^|_|+|%|&|\\.|/|,|\"|\\d|\\/|@|>|<].*");
 	private static final Pattern DIGITS_PATTERN = Pattern.compile("\\d+");
 	
 	private static final Pattern HYP_PATTERN = WordForms.get_HYP_PATTERN();
@@ -167,6 +168,8 @@ public class ThmP1 {
 	private static final Pattern BRACKET_START_PATTERN = Pattern.compile("\\[[^]]*");	
 	private static final Pattern BRACKETS_PATTERN = Pattern.compile("\\[[^]]+\\]");
 	private static final Pattern PAREN_PATTERN = Pattern.compile("\\([^)]+\\)");
+	private static final double MAX_ALLOWED_ENT_PERCENTAGE = 0.8;
+	private static final int MIN_PAIRS_SIZE_THRESHOLD_FOR_FLUFF = 7;
 	
 	static{
 		
@@ -564,6 +567,9 @@ public class ThmP1 {
 			return parseState;
 		}
 		
+		//if contains nothing other than symbols and ents, probably spurious latex expression,
+		//don't parse in that case.
+		boolean containsOnlySymbEnt = true;
 		strloop: for (int i = 0; i < strAr.length; i++) {
 
 			String curWord = strAr[i];
@@ -905,15 +911,15 @@ public class ThmP1 {
 				addExtraPosToPair(pair, posList);
 			}
 			// classify words with dashes; eg sesqui-linear
-			// <-- these should be split during pre-processing!
 			else if (curWord.split("-").length > 1) {
 				String[] splitWords = curWord.split("-");
-				System.out.println("splitWords: " + Arrays.toString(splitWords));
 				
 				String lastTerm = splitWords[splitWords.length - 1];
-				String lastTermS1 = singular == null ? "" : singular.split("-")[splitWords.length - 1];
-				String lastTermS2 = singular2 == null ? "" : singular2.split("-")[splitWords.length - 1];
-				String lastTermS3 = singular3 == null ? "" : singular3.split("-")[splitWords.length - 1];
+				System.out.println("singular" + singular + " curWord: " + curWord + " splitWords: " + Arrays.deepToString(splitWords));
+				String[] splitAr;
+				String lastTermS1 = singular == null ? "" : (splitAr = singular.split("-"))[splitAr.length - 1];
+				String lastTermS2 = singular2 == null ? "" : (splitAr = singular2.split("-"))[splitAr.length - 1];
+				String lastTermS3 = singular3 == null ? "" : (splitAr = singular3.split("-"))[splitAr.length - 1];
 
 				String searchKey = "";
 				String s = "";
@@ -1131,8 +1137,8 @@ public class ThmP1 {
 				
 				System.out.println("word not in dictionary: " + curWord);
 				pairs.add(new Pair(curWord, ""));
-
-				if(parseState.writeUnknownWordsToFileBool()){
+				
+				if(parseState.writeUnknownWordsToFileBool() && isValidWord(curWord)){
 				// collect & write unknown words to file
 					unknownWords.add(curWord);
 				}
@@ -1166,7 +1172,29 @@ public class ThmP1 {
 				}
 			}
 		}
-				
+		
+		int symbEntCount = 0;
+		for (Pair pair : pairs) {
+			String pos = pair.pos();
+			if(pair.pos().equals("ent") || pos.equals("symb")
+					|| pos.equals("")){
+				symbEntCount++;				
+			}else{
+				containsOnlySymbEnt = false;
+			}
+		}
+		double pairs_sz = pairs.size();
+		//return if no meaningful parse could be extracted. This happens for 
+		//if all expressions are latex. Heuristic for detecting sentences that are just
+		//conglomerates of latex expressions, but that are not enclosed in "$" or "\begin{equation}", etc
+		if(containsOnlySymbEnt 
+				|| (symbEntCount/pairs_sz > MAX_ALLOWED_ENT_PERCENTAGE && pairs_sz > MIN_PAIRS_SIZE_THRESHOLD_FOR_FLUFF)
+				|| symbEntCount > 12){
+			//set trivial structlist, so that previous structlist doesn't get parsed again.
+			parseState.setTokenList(new ArrayList<Struct>());
+			return parseState;
+		}
+		
 		// If phrase isn't in dictionary, ie has type "", then use probMap to
 		// postulate type probabilistically.
 		int pairsLen = pairs.size();
@@ -1181,12 +1209,19 @@ public class ThmP1 {
 			//int pairsLen = pairs.size();
 			curpair = pairs.get(index);
 			String curWord = curpair.word();
+			
+			//first check it's not spurious tex expression.
+			if(!isValidWord(curWord)){
+				continue;
+			}
+			
+			String curPos = curpair.pos();
 			int curWordLen = curWord.length();
 			
 			//don't already have this pos in dictionary
-			boolean unknownWordPos = false;
-			
-			if (curpair.pos().equals("")) {
+			boolean unknownWordPos = false;			
+
+			if (curPos.equals("")) {
 				unknownWordPos = true;
 				prevType = index > 0 ? pairs.get(index - 1).pos() : "";
 				nextType = index < pairsLen - 1 ? pairs.get(index + 1).pos() : "";
@@ -1231,7 +1266,7 @@ public class ThmP1 {
 						mathIndexList.add(index);
 					}
 				}
-							
+				
 			}
 			//if still no pos, try to guess part of speech based on endings 
 			if(curpair.pos().equals("")){
@@ -1242,7 +1277,7 @@ public class ThmP1 {
 			//if yet still no pos found, use the Stanford NLP tagger, calls to which 
 			//does incur overhead.			
 			//Only try to find pos for words that don't contain "\"
-			if(curpair.pos().equals("") && !BACKSLASH_CONTAINMENT_PATTERN.matcher(curWord).find()){
+			if(curpair.pos().equals("")){
 				//tag the whole sentence to find the most accurate tag, since the tagger
 				//uses contextual tags to maximize entropy.
 				if(null == posTagger){
@@ -1265,8 +1300,7 @@ public class ThmP1 {
 				}
 				
 				//necessary check in case noTexSB dropped the word.
-				//assert(-1 != wordStartIndex);
-				//Sometimes the logger strips away parts of words, such as "[prime" -> "prime".
+				//Sometimes the tagger strips away parts of words, such as "[prime" -> "prime".
 				if(-1 == wordStartIndex && logger.getLevel().equals(Level.INFO)){
 					String msg = "wordToTag: " + wordToTag + ", not found in taggedSentence: "
 							+ taggedSentence;
@@ -1282,6 +1316,7 @@ public class ThmP1 {
 					if (pos.equals("ent")){
 						mathIndexList.add(index);
 					}
+					//System.out.println("!!pairs " + pairs);
 					System.out.println("Using posTagger to tag word: " +  curWord + " with pos: " + pos);
 				}
 			}
@@ -1289,7 +1324,7 @@ public class ThmP1 {
 			String pos = curpair.pos();
 			if(unknownWordPos && !pos.equals("")){
 				parseState.addUnknownWordPosToMap(curWord, pos);
-				System.out.println("Added " + curWord + " to posmap.");
+				System.out.println("Added " + curWord + " to posmap with pos: " + pos);
 			}
 		}
 		
@@ -1732,6 +1767,15 @@ public class ThmP1 {
 	}
 	
 	/**
+	 * Check if curWord is valid English word, and not spurious latex expression.
+	 * @param curWord
+	 * @return
+	 */
+	private static boolean isValidWord(String curWord) {
+		return !BACKSLASH_CONTAINMENT_PATTERN.matcher(curWord).find();
+	}
+
+	/**
 	 * 
 	 * @param potentialTrigger
 	 * @param i Starting index of this fixed phrase.
@@ -1860,12 +1904,24 @@ public class ThmP1 {
 		
 		List<Struct> inputStructList = parseState.getTokenList();
 		
-		if(null == inputStructList){
+		if(null == inputStructList || 0 == inputStructList.size()){
 			return parseState;
 		}
 		
-		Struct recentEnt = parseState.getRecentEnt();
+		//If contains nothing other than symbols and ents, probably spurious latex expression,
+		//skip in that case.
+		boolean containsOnlySymbEnt = true;
+		for(Struct struct : inputStructList){
+			if(!struct.type().equals("ent") && !struct.type().equals("symb")){
+				containsOnlySymbEnt = false;
+				break;
+			}
+		}
+		if(containsOnlySymbEnt){ 
+			return parseState;
+		}
 		
+		Struct recentEnt = parseState.getRecentEnt();		
 		int len = inputStructList.size();
 		// shouldn't be 0 to start with?!
 		if (len == 0)
@@ -1902,7 +1958,7 @@ public class ThmP1 {
 			 * mx.get(l).get(i) .add(null); }
 			 */
 		}
-
+		
 		// which row to start at for the next column
 		int nextColStartRow = -1;
 		outerloop: for (int j = 0; j < len; j++) {
@@ -2337,7 +2393,7 @@ public class ThmP1 {
 								struct2.set_type("expr");
 								combined = type1 + "_" + "expr";
 							}*/
-							// update namesMap
+							// update localVariablesMap
 							if (type1.equals("ent") && !struct1.isStructA()) {
 								String called = struct1.struct().get("called");
 								if (called != null){
@@ -2346,7 +2402,7 @@ public class ThmP1 {
 								}
 							}
 
-							// reduce if structMap contains combined
+							// reduce if structMap has a rule for reducing combined
 							if (structMap.containsKey(combined)) {
 								Collection<Rule> ruleCol = structMap.get(combined);
 
@@ -2367,13 +2423,14 @@ public class ThmP1 {
 
 						} // loop listIter1 ends here
 					} // loop listIter2 ends here
-
+					//System.out.println("loop for (int k = j - 1; k >= i; k--)");
 					// loop for (int k = j - 1; k >= i; k--) { ends here
 				}
-
+				//System.out.println("loop for (; i > 0; i--)");
+				// loop for (; i > 0; i--) ends here
 			}
-			// if (skipCol)
-			// j++;
+			//System.out.println("loop for ( j = 0; j < len; j++)");
+			// loop for ( j = 0; j < len; j++) ends here
 		}
 
 		// string together the parsed pieces
@@ -2722,32 +2779,37 @@ public class ThmP1 {
 				System.out.println("\n=__+++++_======structList after Defluffing round 1: " + parseState.getTokenList());
 				
 				//if still no spanning parse found in above defluffing approach, now
-				//try another approach: exchanging elements 
+				//try another approach: dropping elements, 
 				if(!parseState.isRecentParseSpanning()){
 				
-				//form new structList
-				List<Struct> structList = new ArrayList<Struct>();
-				
-				for(int k = 0; k < newStructList.size(); k++){
-					Struct struct_k = newStructList.get(k);
-					//System.out.print(structList_i.get(0)+"\t");
-					//if diagonal element, so row index == column index.
-					if(structCoordinates.get(k)[0] == structCoordinates.get(k)[1]
-							//or is essential, e.g. ent, verb, symb <--too ad hoc
-							&& !ESSENTIAL_POS_PATTERN.matcher(struct_k.type()).matches() //|pro|symb|if|hyp 
-							){ 
-						continue;					
+					//form new structList
+					List<Struct> structList = new ArrayList<Struct>();
+					
+					for(int k = 0; k < newStructList.size(); k++){
+						Struct struct_k = newStructList.get(k);
+						//System.out.print(structList_i.get(0)+"\t");
+						//check if diagonal element, i.e. whether row index == column index.
+						if(structCoordinates.get(k)[0] == structCoordinates.get(k)[1]
+								//or is essential, e.g. ent, verb, symb <--too ad hoc
+								&& !ESSENTIAL_POS_PATTERN.matcher(struct_k.type()).matches() //|pro|symb|if|hyp 
+								){ 
+							continue;	
+						}						
+						structList.add(struct_k);						
+					}
+					//if structList has same size as before, e.g. containing all ents, then don't re-parse,
+					//will lead to infinite recursion!
+					//In this case it's probably not a valid sentence (i.e. just sequence
+					//of Tex expressions that showed up).
+					if(structList.size() < parseState.getTokenList().size()){
+						parseState.setTokenList(structList);
+						
+						boolean isReparseAgain = true;
+						parseState = parse(parseState, isReparseAgain);
+						
 					}
 					
-					structList.add(struct_k);
-					
 				}
-				parseState.setTokenList(structList);
-				
-				boolean isReparseAgain = true;
-				parseState = parse(parseState, isReparseAgain);
-				
-			}
 			}
 			
 			//if still no full parse try to see if converting latex expressions $...$ 
@@ -3273,7 +3335,7 @@ public class ThmP1 {
 				//which should be attached to immediately prior word
 				//System.out.println("children: " + hypStruct+ " &&&"+ struct1 + " *** " + struct2);
 				if(childRelation.childRelationStr().contains("which") ){
-					System.out.println("struct1 : " + struct1);
+					//System.out.println("struct1 : " + struct1);
 					if(structToAppendChild.children().size() > 0)
 					return new EntityBundle(firstEnt, recentEnt, recentEntIndex);
 				}
@@ -3436,10 +3498,13 @@ public class ThmP1 {
 		}else if(newType.equals("fuse")){	
 			//fuse ent's, e.g. "integer linear combination"
 			if(!struct1.isStructA() && !struct2.isStructA()){
+				//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
+				//System.out.println("struct1 " + struct1);
 				//first struct cannot have collected children for this
 				//rule to be meaningful
-				System.out.println("struct1 " + struct1);
+				//struct1 can't be independent word if it has picked up children.
 				if(!struct1.children().isEmpty()){
+					
 					return null;
 				}
 				Struct newStruct = struct2.copy();
@@ -3528,12 +3593,13 @@ public class ThmP1 {
 		else if (newType.equals("noun")) {
 			if (type1.equals("adj") && type2.equals("noun")) {
 				// combine adj and noun
-				System.out.println("struct1 " + struct1);
 				String adj = struct1.prev1().toString();
 				struct2.set_prev1(adj + " " + struct2.prev1());
+				
 				struct2.set_maxDownPathScore(struct2.maxDownPathScore() * newScore);
 				// mx.get(i).set(j, struct2);
 				mx.get(i).get(j).add(struct2);
+				//throw new IllegalStateException("struct2:" + struct2);
 			}
 		}else if(type1.equals("rpro") && type2.equals("assert")){
 			//e.g. "we say that $p$ is prime."
@@ -3603,12 +3669,13 @@ public class ThmP1 {
 				struct2.set_type("hypo");
 			}
 			// add to namesMap if letbe defines a name for an ent
-			else if (newType.equals("letbe") && mx.get(i + 1).get(k).size() > 0 && mx.get(k + 2).get(j).size() > 0) {
+			else if (newType.equals("letbe") && i+1 < mx.size() && k+2 < mx.size()
+					&& mx.get(i + 1).get(k).size() > 0 && mx.get(k + 2).get(j).size() > 0) {
 				// temporary patch Rewrite StructA to avoid cast
 				// assert(struct1 instanceof StructA);
 				// assert(struct2 instanceof StructA);
 				// get previous nodes
-
+				
 				// now need to iterate through structList's for these two
 				// Structs
 				List<Struct> tempSymStructList = mx.get(i + 1).get(k).structList();
@@ -4090,6 +4157,7 @@ public class ThmP1 {
 			parsedSB.append("[");
 			
 			if (struct.prev1NodeType().isTypeStruct()) {
+				
 				Struct prev1Struct = (Struct) struct.prev1();
 				prev1Struct.set_dfsDepth(structDepth + 1);
 				span = buildLongFormParseDFS(prev1Struct, parsedSB, span,

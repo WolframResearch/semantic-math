@@ -15,10 +15,13 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.logging.log4j.Logger;
+
 import thmp.ParseState.ParseStateBuilder;
 import thmp.ParseState.VariableDefinition;
 import thmp.ParseState.VariableName;
 import thmp.search.CollectThm;
+import thmp.utils.Buggy;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 
@@ -33,6 +36,7 @@ import thmp.utils.WordForms;
  */
 public class DetectHypothesis {
 	
+	private static final Logger logger = Buggy.getLogger();
 	//pattern matching is faster than calling str.contains() repeatedly 
 	//which is O(mn) time.
 	private static final Pattern HYP_PATTERN = WordForms.get_HYP_PATTERN();
@@ -142,14 +146,7 @@ public class DetectHypothesis {
 		//only parse if sentence is hypothesis, when parsing outside theorems.
 		//to build up variableNamesMMap. Should also collect the sentence that 
 		//defines a variable, to include inside the theorem for search.
-		//Scanner sc = null;
-		/*try{
-			sc = new Scanner(new File("src/thmp/data/samplePaper2.txt"));
-		}catch(FileNotFoundException e){
-			e.printStackTrace();
-			throw new IllegalStateException("Source file not found!");
-		}*/
-		
+
 		ParseStateBuilder parseStateBuilder = new ParseStateBuilder();		
 		ParseState parseState = parseStateBuilder.build();
 		
@@ -174,8 +171,24 @@ public class DetectHypothesis {
 			}
 		}catch(IOException e){
 			e.printStackTrace();
+		}catch(Throwable e){
+			logger.error(e.getStackTrace());			
+			throw e;
+		}finally{		
+			serializeDataToFile();
 		}
 		
+		//deserialize objects
+		boolean deserialize = false;
+		if(deserialize){
+			deserializeParsedExpressionsList();
+		}
+	}
+
+	/**
+	 * Serialize collected data to persistent storage
+	 */
+	private static void serializeDataToFile() {
 		List<Object> listToSerialize = new ArrayList<Object>();
 		listToSerialize.add(parsedExpressionList);
 		FileUtils.serializeObjToFile(listToSerialize, parsedExpressionSerialFileStr);
@@ -191,12 +204,6 @@ public class DetectHypothesis {
 		FileUtils.writeToFile(DefinitionList, definitionStrFileStr);
 		
 		FileUtils.writeToFile(ALL_THM_WORDS_LIST, allThmWordsStringFileStr);
-		
-		//deserialize objects
-		boolean deserialize = false;
-		if(deserialize){
-			deserializeParsedExpressionsList();
-		}
 	}
 	
 	/**

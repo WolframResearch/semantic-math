@@ -28,8 +28,8 @@ import thmp.utils.WordForms;
 public class ThmInput {
 
 	//Intentionally *not* final, as must append custom author-defined macros and compile the pattern
-	static String THM_START_STR = "[^\\\\]*\\\\begin\\{def(?:.*)|[^\\\\]*\\\\begin\\{lem(?:.*)|[^\\\\]*\\\\begin\\{thm(?:.*)"
-			+ "|[^\\\\]*\\\\begin\\{theo(?:.*)|[^\\\\]*\\\\begin\\{prop(?:.*)"
+	static String THM_START_STR = "[^\\\\]*\\\\begin\\{def(?:.*)|[^\\\\]*\\\\begin\\{lem(?:.*)"
+			+ "|[^\\\\]*\\\\begin\\{th(?:.*)|[^\\\\]*\\\\begin\\{prop(?:.*)"
 			+ "|[^\\\\]*\\\\begin\\{proclaim(?:.*)|[^\\\\]*\\\\begin\\{cor(?:.*)";
 	
 	static final Pattern THM_START_PATTERN = Pattern.compile(THM_START_STR);
@@ -43,7 +43,7 @@ public class ThmInput {
 	 * );
 	 */
 	
-	static String THM_END_STR = "\\\\end\\{def(?:.*)|\\\\end\\{lem(?:.*)|\\\\end\\{thm(?:.*)|\\\\end\\{theo(?:.*)|\\\\end\\{prop(?:.*)|\\\\endproclaim(?:.*)"
+	static String THM_END_STR = "\\\\end\\{def(?:.*)|\\\\end\\{lem(?:.*)|\\\\end\\{th(?:.*)|\\\\end\\{prop(?:.*)|\\\\endproclaim(?:.*)"
 			+ "|\\\\end\\{cor(?:.*)";
 	static final Pattern THM_END_PATTERN = Pattern.compile(THM_END_STR);
 	
@@ -72,12 +72,12 @@ public class ThmInput {
 	};*/
 	private static final Pattern INDEX_PATTERN = Pattern.compile("\\\\index\\{([^\\}]*)\\}%*");
 	// pattern for eliminating the command completely for web display. E.g. \fml. How about \begin or \end everything?
-	private static Pattern ELIMINATE_PATTERN = Pattern
+	private static final Pattern ELIMINATE_PATTERN = Pattern
 			.compile("\\\\fml|\\\\ofml|\\\\begin\\{enumerate\\}|\\\\end\\{enumerate\\}"					
 					+ "|\\\\begin\\{slogan\\}|\\\\end\\{slogan\\}|\\\\sbsb|\\\\cat|\\\\bs"
 					+ "|\\\\section\\{(?:[^}]*)\\}\\s*|\\\\noindent");
-	private static Pattern ELIMINATE_BEGIN_END_THM_PATTERN = Pattern
-			.compile("|\\\\begin\\{def(?:[^}]*)\\}\\s*|\\\\begin\\{lem(?:[^}]*)\\}\\s*|\\\\begin\\{th(?:[^}]*)\\}\\s*"
+	private static final Pattern ELIMINATE_BEGIN_END_THM_PATTERN = Pattern
+			.compile("\\\\begin\\{def(?:[^}]*)\\}\\s*|\\\\begin\\{lem(?:[^}]*)\\}\\s*|\\\\begin\\{th(?:[^}]*)\\}\\s*"
 					+ "|\\\\begin\\{pr(?:[^}]*)\\}\\s*|\\\\begin\\{proclaim(?:[^}]*)\\}\\s*|\\\\begin\\{cor(?:[^}]*)\\}\\s*"
 					+"|\\\\end\\{def(?:[^}]*)\\}\\s*|\\\\end\\{lem(?:[^}]*)\\}\\s*|\\\\end\\{th(?:[^}]*)\\}\\s*"
 					+ "|\\\\end\\{pr(?:[^}]*)\\}\\s*|\\\\end\\{proclaim(?:[^}]*)\\}\\s*|\\\\end\\{cor(?:[^}]*)\\}\\s*"

@@ -54,8 +54,7 @@ public class CollectThm {
 			"src/thmp/data/fieldsRawTex.txt",
 			//"src/thmp/data/CommAlg5.txt", 
 			//"src/thmp/data/multilinearAlgebra.txt",
-			//"src/thmp/data/functionalAnalysis.txt",
-			
+			//"src/thmp/data/functionalAnalysis.txt",			
 			//"src/thmp/data/topology.txt"
 			});
 	
@@ -248,7 +247,7 @@ public class CollectThm {
 			System.out.println("*********wordsScoreMapNoAnno.size(): " + wordsScoreMapNoAnno.size());
 			
 			/***This is where the set of words used for SVD search and search based on context and relational vectors
-			 * differ. The latter contains additional words added below.***/
+			 * start to differ. The latter contains additional words added below.***/
 			
 			//first compute the average word frequencies for singleton words
 			averageSingletonWordFrequency = computeSingletonWordsFrequency(docWordsFreqPreMapNoAnno);			
