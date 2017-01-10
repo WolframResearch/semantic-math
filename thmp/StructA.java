@@ -667,7 +667,7 @@ public class StructA<A, B> extends Struct{
 	public String toString(){
 		//if(this.type.equals("symb")) System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
 		String str = "[Type: " + this.type 				
-				+ ", prev1:" + this.prev1 + "]";
+				+ ", prev1:" + this.prev1 +"]";
 		
 		return str;
 	}

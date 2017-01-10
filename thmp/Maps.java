@@ -275,7 +275,7 @@ public class Maps {
 
 			String[] pres = { "together with" };
 
-			String[] nouns = { "family", "notion", "permanence", "property", "inclusion", "relation", "row", "notion",
+			String[] nouns = { "notion", "permanence", "inclusion", "relation", "notion",
 					"inclusion", "case" };
 
 			// list of all the String arrays above
@@ -389,7 +389,6 @@ public class Maps {
 			posPreMMap.put("not", "adverb");
 
 			// nouns that are not mathObj, only put not-so-relevant terms here
-			posPreMMap.put("property", "noun");
 			posPreMMap.put("form", "noun_COMP");
 
 			// determiners qualify nouns or noun phrases

@@ -76,9 +76,6 @@ public class StructH<H> extends Struct{
 	
 	private WLCommand commandBuilt;
 	
-	//parent
-	//private Struct parent;
-	
 	public StructH(Map<String, String> struct, String type){
 	
 		this.struct = struct;

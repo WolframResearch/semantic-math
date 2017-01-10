@@ -717,7 +717,13 @@ public class WLCommand implements Serializable{
 		
 		@Override
 		public String toString(){
-			return "{" + this.commandComponent + ", " + this.positionInMap + "}";
+			StringBuilder sb = new StringBuilder(30);
+			sb.append("{").append(this.commandComponent).append(", ").append(this.positionInMap);
+			if(null != this.posTermStruct){
+				sb.append(", ").append(this.posTermStruct);
+			}
+			sb.append("}");
+			return sb.toString();
 		}
 		
 		public WLCommandComponent commandComponent(){
@@ -1232,6 +1238,7 @@ public class WLCommand implements Serializable{
 		private boolean disqualified;
 		//satisfied before trigger
 		private boolean beforeTriggerSat;
+		private boolean onlyOptionalTermAdded;
 		
 		/**
 		 * @return the disqualified
@@ -1250,6 +1257,14 @@ public class WLCommand implements Serializable{
 				boolean beforeTriggerSat){
 			this(isCommandSat, hasOptionalTermsLeft, componentAdded);
 			this.beforeTriggerSat = beforeTriggerSat;
+		}
+		
+		public void setOptionalTermsAdded(){
+			this.onlyOptionalTermAdded = true;
+		}
+		
+		public boolean onlyOptionalTermAdded(){
+			return onlyOptionalTermAdded;
 		}
 		
 		public boolean beforeTriggerSat(){
@@ -1301,7 +1316,7 @@ public class WLCommand implements Serializable{
 	private static boolean onlyTrivialTermsBefore(List<PosTerm> posTermList, int curIndex){
 		for(int i = curIndex; i > -1; i--){
 			PosTerm posTerm = posTermList.get(i);
-			//return false if any nontrivial term is encountered, optional terms count as nontrivial.
+			//return false if any nontrivial term is encountered, optional terms count as *nontrivial*.
 			if(!posTerm.isNegativeTerm() && posTerm.positionInMap() > -1){
 				return false;
 			}
@@ -1341,7 +1356,7 @@ public class WLCommand implements Serializable{
 			newStruct.prev1NodeType().equals(NodeType.STR) ? (String)newStruct.prev1() : "";
 		//System.out.println("inside addComponent, newStruct: " + newStruct);
 		//System.out.println("###curCommand.triggerWord " + curCommand.triggerWord);
-		//System.out.println("###COMPONENTCOUNTMAP commandsCountMap " + curCommand.commandsMap);
+		//System.out.println("###commandsMap commandsMap " + curCommand.commandsMap);
 		//whether component has been added. Useful to avoid rebuilding commands 
 		
 		boolean componentAdded = false;
@@ -1367,6 +1382,7 @@ public class WLCommand implements Serializable{
 		int i = lastAddedComponentIndex;
 		//short-circuit if trigger is the first nontrivial term.
 		if(before && onlyTrivialTermsBefore(posTermList, i-1)){	
+			
 			return new CommandSat(false, curCommand.optionalTermsCount > 0, false, true);
 		}
 		
@@ -1470,8 +1486,8 @@ public class WLCommand implements Serializable{
 			}
 			
 			commandsMap.put(commandComponent, newStruct);
-			
-			posTermList.get(i).set_posTermStruct(newStruct);
+			//posTermList.get(i).set...
+			curPosTerm.set_posTermStruct(newStruct);
 			//here newComponent must have been in the original required set
 			int commandComponentCount = commandsCountMap.get(commandComponent);
 			commandsCountMap.put(commandComponent, commandComponentCount - 1);
@@ -1501,7 +1517,7 @@ public class WLCommand implements Serializable{
 			boolean hasOptionalTermsLeft = (curCommand.optionalTermsCount > 0);
 			
 			CommandSat commandSat = 
-					new CommandSat(curCommand.componentCounter < 1, hasOptionalTermsLeft, componentAdded);
+					new CommandSat(curCommand.componentCounter < 1, hasOptionalTermsLeft, componentAdded, isOptionalTerm); //<-update this
 			
 			if(before && onlyTrivialTermsBefore(posTermList, i-1)){
 				commandSat.setBeforeTriggerSatToTrue();
@@ -1734,7 +1750,10 @@ public class WLCommand implements Serializable{
 	public static CommandSat addTriggerComponent(WLCommand curCommand, Struct newStruct){
 		//System.out.println("Adding trigger component " + newStruct + " " + curCommand);
 		
-		WLCommandComponent commandComponent = curCommand.posTermList.get(curCommand.triggerWordIndex).commandComponent;
+		PosTerm triggerPosTerm = curCommand.posTermList.get(curCommand.triggerWordIndex);		
+		WLCommandComponent commandComponent = triggerPosTerm.commandComponent;	
+		triggerPosTerm.set_posTermStruct(newStruct);
+		
 		int commandComponentCount = curCommand.commandsCountMap.get(commandComponent);
 		
 		curCommand.commandsMap.put(commandComponent, newStruct);

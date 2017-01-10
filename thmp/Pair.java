@@ -22,7 +22,7 @@ public class Pair {
 		this.word = word;
 		this.pos = pos;
 	}
-		
+	
 	public String word(){
 		return word;
 	}
@@ -63,7 +63,15 @@ public class Pair {
 	
 	@Override
 	public String toString(){
-		return "[" + this.word + ", " + this.pos + "]";
+		StringBuilder sb = new StringBuilder(30);
+		sb.append("[").append(this.word).append(", ").append(this.pos);
+		
+		if(null != extraPosSet){
+			sb.append(extraPosSet);
+		}
+		sb.append("]");
+		return sb.toString();
+		
 	}
 	
 	public void set_word(String newWord){

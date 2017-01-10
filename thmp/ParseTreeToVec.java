@@ -474,11 +474,11 @@ public class ParseTreeToVec {
 			return;
 		}
 		//parentTermRowIndex = parentTermRowIndex == null ? ELEMENT.relationNum : parentTermRowIndex;
-		System.out.println("***** *got to adjust" );
+		System.out.println("***** *got to adjust.");
 		for(int i = triggerTermIndex+1; i < posTermList.size(); i++){
 			Struct curStruct = posTermList.get(i).posTermStruct();
 			if(null != curStruct){
-				
+				System.out.println("!another term with index: " + i);
 				//String curStructTermStr = curStruct.contentStr();
 				//addTermStrToVec(curStruct, curStructTermStr, parentTermRowIndex, contextVec);
 				System.out.println("!curStruct " + curStruct);

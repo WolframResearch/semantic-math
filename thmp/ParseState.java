@@ -254,6 +254,8 @@ public class ParseState {
 		 */
 		public void setDefiningStruct(Struct definingStruct) {
 			this.definingStruct = definingStruct;
+			//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
+			//System.out.println("SETTING definingStruct: " + definingStruct);
 		}
 
 		/**
@@ -266,6 +268,8 @@ public class ParseState {
 		private String originalDefinitionSentence;
 
 		public VariableDefinition(VariableName variableName, Struct definingStruct, String originalDefinitionStr){
+			//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
+			//System.out.println("definingStruct: " + definingStruct);
 			this.variableName = variableName;
 			this.definingStruct = definingStruct;
 			this.originalDefinitionSentence = originalDefinitionStr;
@@ -315,6 +319,11 @@ public class ParseState {
 		}
 		
 		/**
+		 * This is the Struct defining the variable.
+		 * E.g. in "$F$ is a field", the Struct for "field"
+		 * is the defining Struct. Defining Struct does not need to 
+		 * of type StructH, e.g. could be a symb.
+		 * Note that definingStruct could be null at construction.
 		 * @return the definingStruct
 		 */
 		public Struct getDefiningStruct() {
@@ -322,6 +331,7 @@ public class ParseState {
 		}
 
 		/**
+		 * originalDefinitionSentence could be null at construction.
 		 * @return the originalDefinitionStr
 		 */
 		public String getOriginalDefinitionStr() {

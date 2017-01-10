@@ -792,8 +792,7 @@ public class CollectThm {
 		//whether to expand macros to their definitions
 		private static final boolean REPLACE_MACROS = true;
 		
-		static{
-			
+		static{	
 			//instead of getting thmList from ThmList, need to get it from serialized data.
 			String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
 			

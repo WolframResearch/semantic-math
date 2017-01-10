@@ -132,6 +132,11 @@ public class WLCommandsList {
 		// term. An optional group is only included if all optional terms in this group
 		// are satisfied.
 		//String posStr, String nameStr, boolean includeInBuiltString, boolean isTrigger, boolean isTriggerMathObj, int positionInMap
+		
+		/**
+		 * Optional terms before the trigger word should be accompanied by Negative terms, to avoid inadvertently 
+		 * adding structs before the trigger to to PosTerms after the trigger term. <--need to make this more robust! Jan 2017.
+		 */
 		/*****General-scope commands******/
 		//triggered by types. Add such judiciously.
 		//the commands with types as keys are triggered only if no specific-scope commands have been triggered
@@ -446,8 +451,10 @@ public class WLCommandsList {
 			
 			
 			if(curPosTerm.isOptionalTerm()){
-				
-				optionalTermsCount++;
+				//should only count nontrivial (non-AUX) optional terms!
+				if(AUXINDEX != curPosTerm.positionInMap()){
+					optionalTermsCount++;
+				}
 				int optionalGroupNum = curPosTerm.optionalGroupNum();
 				
 				if(null == optionalTermsGroupCountPreMap){

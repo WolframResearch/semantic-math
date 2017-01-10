@@ -738,13 +738,13 @@ public class ThmP1 {
 			}
 			
 			//convert "noun" to "ent" if it's the most probable pos,
-			//most often does no damage, but could prevent spanning parse
+			//most often noun does no damage, but could prevent spanning parse
 			//or commands from being picked up.
 			if(wordPos != null && wordPos.equals("noun")){
 				wordPos = "ent";
-			}			
+			}
 
-			if (wordPos != null && wordPos.equals("ent")) { 
+			if (null != wordPos && wordPos.equals("ent")) { 
 				
 				curWord = posList.isEmpty() ? singular : curWord;
 				String tempWord = curWord;
@@ -887,28 +887,17 @@ public class ThmP1 {
 					pairs.add(emptyPair);
 					if(emptyPair.pos().equals("ent")) mathIndexList.add(pairs.size() - 1);
 					System.out.println("emptyPair added! pairs: " + pairs);
-				}
-				
+				}				
 			}
 			// if plural form
 			else if (posMMap.containsKey(singular)){
-				posList = posMMap.get(singular);
-				//split in case type is of form "blah_comp" <--should be superceded by n-grams
-				Pair pair = new Pair(singular, posList.get(0).split("_")[0]);
-				pairs.add(pair);
-				addExtraPosToPair(pair, posList);
+				addSingularWordToPairsList(mathIndexList, pairs, singular);
 			}
 			else if (posMMap.containsKey(singular2)){
-				posList = posMMap.get(singular2);
-				Pair pair = new Pair(singular2, posList.get(0).split("_")[0]);
-				pairs.add(pair);				
-				addExtraPosToPair(pair, posList);
+				addSingularWordToPairsList(mathIndexList, pairs, singular2);
 			}
 			else if (posMMap.containsKey(singular3)){
-				posList = posMMap.get(singular3);
-				Pair pair = new Pair(singular3, posList.get(0).split("_")[0]);
-				pairs.add(pair);	
-				addExtraPosToPair(pair, posList);
+				addSingularWordToPairsList(mathIndexList, pairs, singular3);
 			}
 			// classify words with dashes; eg sesqui-linear
 			else if (curWord.split("-").length > 1) {
@@ -1204,7 +1193,7 @@ public class ThmP1 {
 		String prevType = "", nextType = "", tempCurType = "", tempPrevType = "", tempNextType = "", bestCurType = "";
 
 		int posListSz = posList.size();
-		
+		//System.out.println("FIRST pairs: " + pairs);
 		for (int index = 0; index < pairsLen; index++) {
 			//int pairsLen = pairs.size();
 			curpair = pairs.get(index);
@@ -1681,7 +1670,7 @@ public class ThmP1 {
 				}else if(curPos.equals("symb")){
 					//if has pos "symb", then try to look for definitions that stand for this symbol.
 					Struct definingStruct = parseState.getVariableDefinition(curWord);
-					System.out.println("getGlobalVariableNamesMMap: " + parseState.getGlobalVariableNamesMMap().toString());
+					//System.out.println("getGlobalVariableNamesMMap: " + parseState.getGlobalVariableNamesMMap().toString());
 					if(null != definingStruct){
 						prev2 = definingStruct.nameStr();
 						
@@ -1764,6 +1753,25 @@ public class ThmP1 {
 		
 		parseState.setTokenList(structList);
 		return parseState;
+	}
+
+	/**
+	 * @param mathIndexList
+	 * @param pairs
+	 * @param singular3
+	 * @return
+	 */
+	private static void addSingularWordToPairsList(List<Integer> mathIndexList, List<Pair> pairs,
+			String singular3) {
+		List<String> posList;
+		posList = posMMap.get(singular3);				
+		String pos = posList.get(0).split("_")[0];
+		Pair pair = new Pair(singular3, pos);				
+		pairs.add(pair);	
+		addExtraPosToPair(pair, posList);
+		if("ent".equals(pos)){
+			mathIndexList.add(pairs.size() - 1);
+		}
 	}
 	
 	/**
@@ -2758,7 +2766,7 @@ public class ThmP1 {
 				}
 			}
 			orderPairsAndPutToLists(parsedPairMMapList, headParseStructList, parseState, longFormParsedPairList, contextVecList);
-
+			
 			//if commandNumUnitsWithHeadNoneSum sufficiently low: so sufficiently few parses
 			//with NONE, don't parse again. Half is a good threshold
 			if(commandNumUnitsWithHeadNoneSum > inputStructList.size()/2){
@@ -2858,6 +2866,7 @@ public class ThmP1 {
 	 * Order parsedPairMMapList and add to parseStructMapList and parsedExpr (both static members).
 	 * Uses insertion sort, as since number of maps in parsedPairMMapList is usually very small, ~1-5.
 	 * @param parsedPairMMapList
+	 * @param headParseStructList 
 	 * @param longFormParsedPairList List of long forms.
 	 * @param contextVecList is list of context vectors, pick out the highest one and use as global context vec.
 	 * contextVecList does not need to have same size as parsedPairMMapList or longFormParsedPairList, which have
@@ -3077,9 +3086,10 @@ public class ThmP1 {
 		Multimap<ParseStructType, ParsedPair> topParsedPairMMap = sortedParsedPairMMapList.get(0);
 		BigInteger relationVec = RelationVec.buildRelationVec(topParsedPairMMap);
 		parseState.setRelationalContextVec(relationVec);
-		
+		//System.out.println("-+++++++++++best head!!! " + headParseStructList);
 		//set head for this run of current part that triggered the command.
-		if(null == parseState.getHeadParseStruct()){ //curParseStruct must be null too.
+		if(null == parseState.getHeadParseStruct()){ 
+			//curParseStruct is also null in this case.
 			parseState.setHeadParseStruct(bestParseStruct);
 			parseState.setCurParseStruct(bestParseStruct);
 		}
@@ -3335,9 +3345,10 @@ public class ThmP1 {
 				//which should be attached to immediately prior word
 				//System.out.println("children: " + hypStruct+ " &&&"+ struct1 + " *** " + struct2);
 				if(childRelation.childRelationStr().contains("which") ){
-					//System.out.println("struct1 : " + struct1);
-					if(structToAppendChild.children().size() > 0)
-					return new EntityBundle(firstEnt, recentEnt, recentEntIndex);
+					//System.out.println("structToAppendChild : " + (structToAppendChild instanceof StructH) + " ! structToAppendChild.children(): " + structToAppendChild.children() );
+					if(structToAppendChild.children().size() > 0){
+						return new EntityBundle(firstEnt, recentEnt, recentEntIndex);
+					}
 				}
 				childToAdd = (Struct)struct2.prev2();
 			}else if(struct2.type().equals("Cond")){
@@ -3647,20 +3658,21 @@ public class ThmP1 {
 			}
 			
 			if(structToSet != null){
-				//if (structToSet.type().equals("symb") && structToSet.prev1NodeType().equals(NodeType.STR)) {
-					
 					String entKey = structToSet.prev1().toString();
 					
 					List<VariableDefinition> namesList = parseState.getNamedStructList(entKey);
 					if (!namesList.isEmpty()) {
 						int namesListLen = namesList.size();
 						Struct curEnt = namesList.get(namesListLen-1).getDefiningStruct();
-						String structName = curEnt.struct().get("name");
-						//don't combine for structs with names such as "map"
-						if(!noFuseEntSet.contains(structName)){
-							structToSet.set_prev2(curEnt.struct().get("name"));
-							//System.out.println("\n=======SETTING NAME curEnt: " + curEnt);
-						}					
+						//System.out.println("curEnt: " + curEnt + " !curEnt.struct(): " + curEnt.struct());
+						if(null != curEnt && null != curEnt.struct()){
+							String structName = curEnt.struct().get("name");
+							//don't combine for structs with names such as "map"
+							if(null != structName && !noFuseEntSet.contains(structName)){
+								structToSet.set_prev2(curEnt.struct().get("name"));
+								//System.out.println("\n=======SETTING NAME curEnt: " + curEnt);
+							}					
+						}
 					}
 				//}
 			}

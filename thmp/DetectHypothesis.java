@@ -70,10 +70,11 @@ public class DetectHypothesis {
 	
 	private static final boolean PARSE_INPUT_VERBOSE = true;
 	//pattern for lines to skip any kind of parsing, even hypothesis-detection.
-	private static final Pattern SKIP_PATTERN = Pattern.compile("\\\\begin\\{proof\\}.*");
-	private static final Pattern END_SKIP_PATTERN = Pattern.compile("\\\\end\\{proof\\}.*");
+	//skip examples and bibliographies
+	private static final Pattern SKIP_PATTERN = Pattern.compile("\\\\begin\\{proof\\}.*|\\\\begin\\{exam.*|\\\\begin\\{thebib.*");
+	private static final Pattern END_SKIP_PATTERN = Pattern.compile("\\\\end\\{proof\\}.*|\\\\end\\{exam.*|\\\\end\\{thebib.*");
 	private static final Pattern END_DOCUMENT_PATTERN = Pattern.compile("\\\\end\\{document\\}.*");
-	private static final Pattern NEW_DOCUMENT_PATTERN = Pattern.compile(".*\\\\documentclass\\[.*");
+	private static final Pattern NEW_DOCUMENT_PATTERN = Pattern.compile(".*\\\\documentclass.*");
 	
 	/**
 	 * Combination of theorem String and the list of
@@ -154,8 +155,8 @@ public class DetectHypothesis {
 		try{
 			//inputBF = new BufferedReader(new FileReader("src/thmp/data/CommAlg5.txt"));
 			//inputBF = new BufferedReader(new FileReader("src/thmp/data/fieldsRawTex.txt"));
-			//inputBF = new BufferedReader(new FileReader("src/thmp/data/samplePaper1.txt"));
-			inputBF = new BufferedReader(new FileReader("src/thmp/data/Total.txt"));
+			inputBF = new BufferedReader(new FileReader("src/thmp/data/samplePaper1.txt"));
+			//inputBF = new BufferedReader(new FileReader("src/thmp/data/Total.txt"));
 			//inputBF = new BufferedReader(new FileReader("src/thmp/data/fieldsThms2.txt"));
 		}catch(FileNotFoundException e){
 			e.printStackTrace();

@@ -34,6 +34,8 @@ import thmp.utils.Buggy;
  */
 public class ParseToWLTree{
 	
+	private static final Pattern CONJ_DISJ_PATTERN2 = Pattern.compile("(?:conj_|disj_)(.*)");
+
 	/**
 	 * ArrayList used as Stack to store the Struct's that's being processed. 
 	 * Pop off after all required terms in a WL command are met.
@@ -275,24 +277,35 @@ public class ParseToWLTree{
 		//int structDequeIndex = structDeque.size();
 		
 		//list of commands satisfied at this level
-		List<WLCommand> satisfiedCommandsList = new ArrayList<WLCommand>();;
+		List<WLCommand> satisfiedCommandsList = new ArrayList<WLCommand>();
+		//System.out.println("ADDING STRUCT in buildWLCommandTreeDfs " + struct);
 		//add struct to all WLCommands in WLCommandList (triggered commands so far.)
 		//check if satisfied. "is" is not added?!
 		//Skip if immediate parents are conj or disj, i.e. already been added <--re-examine!!
 		if (struct.parentStruct() == null 
-				|| (struct.parentStruct() != null && !struct.parentStruct().type().matches("conj.*|disj.*"))) {
+				//struct.parentStruct() can't be null now. 
+				|| !struct.parentStruct().type().matches("conj.*|disj.*")) {
 
-			//if(struct.nameStr().equals("field")) throw new IllegalStateException("*********"+ WLCommandList);
-			Iterator<WLCommand> WLCommandListIter = WLCommandList.iterator();
 			int WLCommandListSz = WLCommandList.size();
-			for (int i = WLCommandListSz-1; i > -1; i--) {
+			List<WLCommand> reverseWLCommandList = new ArrayList<WLCommand>(WLCommandListSz);
+			
+			for(int i = 0; i < WLCommandListSz; i++){
+				reverseWLCommandList.add(WLCommandList.get(WLCommandListSz-i-1));				
+			}
+			//if(struct.nameStr().equals("field")) throw new IllegalStateException("*********"+ WLCommandList);
+			Iterator<WLCommand> reverseWLCommandListIter = reverseWLCommandList.iterator();
+			//int WLCommandListSz = WLCommandList.size();
+			
+			while (reverseWLCommandListIter.hasNext()) {
 				
-				WLCommand curCommand = WLCommandListIter.next();
-				curCommand = WLCommandList.get(i);
+				WLCommand curCommand = reverseWLCommandListIter.next();
+				//curCommand = WLCommandList.get(i);
 				boolean beforeTriggerIndex = false;
 				//System.out.println("ADDING STRUCT " + struct + " for command " + curCommand);
 
 				CommandSat commandSat = WLCommand.addComponent(curCommand, struct, beforeTriggerIndex);
+				
+				//System.out.println("++++========commandSat.isCommandSat(): " +commandSat.isCommandSat());
 				
 				// if commandSat, remove all the waiting, triggered commands for
 				// now, except current struct,
@@ -300,16 +313,22 @@ public class ParseToWLTree{
 				// WLCommandList.
 				// But what if a longer WLCommand later fits better? Like
 				// "derivative of f wrt x"
-				//is no component added, means command already satisfied & built previously.
-				if (commandSat.isCommandSat() && commandSat.isComponentAdded()) {	
-					
-					satisfiedCommandsList.add(curCommand);
+				//If no component added, means command already satisfied & built previously.
+				//checking commandSat.isComponentAdded() to avoid double-adding to satisfiedCommandsList.
+				//Should have special boolean where main   command is satisfied    but optional terms are not.
+				if (commandSat.isCommandSat() 
+						) {
+					//check to see if only optional terms left
+					//need to update this further
+					if(commandSat.isComponentAdded() && !commandSat.onlyOptionalTermAdded()){
+						satisfiedCommandsList.add(curCommand);
+					}
 					if(curCommand.getDefaultOptionalTermsCount() == 0
 							|| !commandSat.hasOptionalTermsLeft() ){
-						WLCommandListIter.remove();
+						reverseWLCommandListIter.remove();
 					}
 				}else if(commandSat.isDisqualified()){
-					WLCommandListIter.remove();
+					reverseWLCommandListIter.remove();
 					//System.out.println("\n***COMMAND REMOVED. struct "+ struct );
 				}
 				
@@ -325,7 +344,7 @@ public class ParseToWLTree{
 		
 		String structType = struct.type();
 		
-		Matcher m = Pattern.compile("(?:conj_|disj_)(.*)").matcher(struct.type());
+		Matcher m = CONJ_DISJ_PATTERN2.matcher(struct.type());
 		if(m.find()){
 			structType = m.group(1);
 		}
@@ -377,6 +396,7 @@ public class ParseToWLTree{
 						continue;
 					}
 					
+					System.out.println(" For triggered Command + " + curCommand);
 					for(int i = structList.size()-1; i > -1; i--){
 						
 						Struct curStruct = structList.get(i);
@@ -384,7 +404,7 @@ public class ParseToWLTree{
 						//namely the trigger word is last word
 						boolean beforeTrigger = true;
 						//System.out.println("curCommandSatWhole*********"  +" "  + curStruct);
-						//System.out.print("\nADDING to COMMAND (before) for STRUCT " + curStruct + " for Command + " + curCommand.getTriggerWord());
+						System.out.print("\nADDING to COMMAND (before) for STRUCT " + curStruct);
 						commandSat = WLCommand.addComponent(curCommand, curStruct, beforeTrigger);
 
 						curCommandSatWhole = commandSat.isCommandSat();		
@@ -394,8 +414,10 @@ public class ParseToWLTree{
 						
 						beforeTriggerSat = commandSat.beforeTriggerSat();
 						
-						if(beforeTriggerSat && (0 == curCommand.getOptionalTermsCount() 
-								|| !commandSat.hasOptionalTermsLeft())){
+						if(beforeTriggerSat 
+								//&& (0 == curCommand.getOptionalTermsCount() || !commandSat.hasOptionalTermsLeft())
+								){
+							//System.out.println("Before command satisfied!");
 							break;
 						}
 					}	
@@ -568,8 +590,12 @@ public class ParseToWLTree{
 					boolean hasOptionalTermsLeft = commandSat.hasOptionalTermsLeft();
 					boolean isComponentAdded = commandSat.isComponentAdded();
 					
-					if(isCommandSat && isComponentAdded){
-						satisfiedCommandsList.add(curCommand);	
+					if(isCommandSat 
+							){
+						if(isComponentAdded && !commandSat.onlyOptionalTermAdded()){
+							satisfiedCommandsList.add(curCommand);
+						}
+						//satisfiedCommandsList.add(curCommand);	
 						
 						if(curCommand.getDefaultOptionalTermsCount() == 0 || !hasOptionalTermsLeft){
 							//need to remove from WLCommandList
