@@ -34,8 +34,6 @@ import thmp.utils.Buggy;
  */
 public class ParseToWLTree{
 	
-	private static final Pattern CONJ_DISJ_PATTERN2 = Pattern.compile("(?:conj_|disj_)(.*)");
-
 	/**
 	 * ArrayList used as Stack to store the Struct's that's being processed. 
 	 * Pop off after all required terms in a WL command are met.
@@ -63,6 +61,7 @@ public class ParseToWLTree{
 	
 	private static final Pattern PLURAL_PATTERN = Pattern.compile("(.+)s");
 	private static final Pattern CONJ_DISJ_PATTERN = Pattern.compile("conj_.+|disj_.+");
+	private static final Pattern CONJ_DISJ_PATTERN2 = Pattern.compile("(?:conj|disj)(.*)");
 	
 	/**
 	 * Entry point for depth first search.
@@ -284,8 +283,8 @@ public class ParseToWLTree{
 		//Skip if immediate parents are conj or disj, i.e. already been added <--re-examine!!
 		if (struct.parentStruct() == null 
 				//struct.parentStruct() can't be null now. 
-				|| !struct.parentStruct().type().matches("conj.*|disj.*")) {
-			System.out.println("!!!!!WLCommandList: " + WLCommandList);
+				|| !CONJ_DISJ_PATTERN.matcher(struct.parentStruct().type()).matches()) {
+			//System.out.println("!!!!!WLCommandList: " + WLCommandList);
 			int WLCommandListSz = WLCommandList.size();
 			List<WLCommand> reverseWLCommandList = new ArrayList<WLCommand>(WLCommandListSz);
 			
@@ -333,17 +332,19 @@ public class ParseToWLTree{
 					//check to see if only optional terms left
 					if(commandSat.isComponentAdded() && !commandSat.onlyOptionalTermAdded()){
 						satisfiedCommandsList.add(curCommand);
-						System.out.println("COMMAND ADDED to satisfiedCommandsList");
+						//System.out.println("COMMAND ADDED to satisfiedCommandsList");
+					}else if(commandSat.onlyOptionalTermAdded() 
+							&& !commandSat.hasOptionalTermsLeft()
+							&& curCommand.getDefaultOptionalTermsCount() > 0){
+						//add and build again, now that optional terms have been satisfied.
+						satisfiedCommandsList.add(curCommand);
 					}
+					
 					if(curCommand.getDefaultOptionalTermsCount() == 0
 							|| !commandSat.hasOptionalTermsLeft() ){
 						reverseWLCommandListIter.remove();
 						commandRemoved = true;
-						System.out.println("COMMAND REMOVED !" + curCommand);
-					}else if(curCommand.getDefaultOptionalTermsCount() > 0
-							&& !commandSat.hasOptionalTermsLeft() ){
-						//add and build again
-						satisfiedCommandsList.add(curCommand);
+						//System.out.println("COMMAND REMOVED !" + curCommand);
 					}
 					
 				}else if(commandSat.isDisqualified()){
@@ -624,16 +625,17 @@ public class ParseToWLTree{
 					if(isCommandSat){
 						if(isComponentAdded && !commandSat.onlyOptionalTermAdded()){
 							satisfiedCommandsList.add(curCommand);
+						}else if(commandSat.onlyOptionalTermAdded() 
+								&& !hasOptionalTermsLeft
+								&& curCommand.getDefaultOptionalTermsCount() > 0){
+							//add and build again, now that optional terms have been satisfied.
+							satisfiedCommandsList.add(curCommand);
 						}
 						
 						if(curCommand.getDefaultOptionalTermsCount() == 0 || !hasOptionalTermsLeft){
 							//need to remove from WLCommandList
 							ChildWLCommandListIter.remove();
 							//System.out.println("\n***COMMAND REMOVED from child: " + struct);
-						}else if(curCommand.getDefaultOptionalTermsCount() > 0
-								&& !hasOptionalTermsLeft ){
-							//add and build again, now that optional terms have been satisfied.
-							satisfiedCommandsList.add(curCommand);
 						}
 					}else if(commandSat.isDisqualified()){
 						ChildWLCommandListIter.remove();

@@ -475,6 +475,8 @@ public class ParseTreeToVec {
 		}
 		//parentTermRowIndex = parentTermRowIndex == null ? ELEMENT.relationNum : parentTermRowIndex;
 		System.out.println("***** *got to adjust.");
+		//This has sometimes resulted in infinite loops, when the Struct in an earlier PosTerm is a child  
+		//of the Struct of a later PosTerm, due to erroneous non-linear Struct-adding to posTermList of the command. 
 		for(int i = triggerTermIndex+1; i < posTermList.size(); i++){
 			Struct curStruct = posTermList.get(i).posTermStruct();
 			if(null != curStruct){

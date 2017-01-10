@@ -738,8 +738,6 @@ public class CollectThm {
 		public static ImmutableMultimap<String, Integer> get_wordThmsMMapNoAnno(){
 			return wordThmsIndexMMapNoAnno;
 		}
-		
-		
 	}
 	/////////////////////////End of prev class
 	/**
@@ -749,8 +747,7 @@ public class CollectThm {
 	public static class NGramsMap{
 		//private static final Map<String, Integer> twoGramsMap = ImmutableMap.copyOf(NGramSearch.get2GramsMap());
 		//map of two grams and their frequencies.
-		private static final Map<String, Integer> twoGramsMap = NGramSearch.get2GramsMap();
-		
+		private static final Map<String, Integer> twoGramsMap = NGramSearch.get2GramsMap();		
 		private static final Map<String, Integer> threeGramsMap = ThreeGramSearch.get3GramsMap();
 		
 		/**
@@ -794,7 +791,8 @@ public class CollectThm {
 		
 		static{	
 			//instead of getting thmList from ThmList, need to get it from serialized data.
-			String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
+			//String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat"; //parsedExpressionListServer1.dat
+			String parsedExpressionSerialFileStr = "parsedExpressionListServer1.dat";
 			
 			/*Deserialize objects in parsedExpressionOutputFileStr, so we don't 
 			 * need to read and parse through all papers on every server initialization.
@@ -907,7 +905,8 @@ public class CollectThm {
 
 		/**
 		 * Get list of theorems with their hypotheses and assumptions attached,
-		 * as collected by DetectHypothesis.java. 
+		 * as collected by DetectHypothesis.java. As extracted from deserialized 
+		 * ParsedExpressions.
 		 * @return an immutable list
 		 */
 		public static ImmutableList<String> allThmsWithHypList(){

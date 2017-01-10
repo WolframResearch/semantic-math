@@ -46,7 +46,7 @@ public class SearchIntersection {
 	 * List of theorems.
 	 */
 	private static final ImmutableList<String> thmList;
-	private static final ImmutableList<String> webDisplayThmList;
+	//private static final ImmutableList<String> webDisplayThmList;
 	
 	/**
 	 * Multimap of words, and the theorems (their indices) in thmList, the word shows up in.
@@ -73,8 +73,9 @@ public class SearchIntersection {
 		wordThmMMap = CollectThm.ThmWordsMaps.get_wordThmsMMap();
 		wordThmMMapNoAnno = CollectThm.ThmWordsMaps.get_wordThmsMMapNoAnno();
 		//System.out.println(wordsScoreMap);
-		thmList = CollectThm.ThmList.get_macroReplacedThmList();
-		webDisplayThmList = CollectThm.ThmList.get_webDisplayThmList();
+		//thmList = CollectThm.ThmList.get_macroReplacedThmList();
+		thmList = CollectThm.ThmList.allThmsWithHypList();
+		//webDisplayThmList = CollectThm.ThmList.get_webDisplayThmList();
 	}
 	
 	/**

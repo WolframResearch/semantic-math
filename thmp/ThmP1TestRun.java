@@ -532,8 +532,8 @@ public class ThmP1TestRun {
 			//st = "this elliptic curve is isogenous to the infinite subgroup where $\\lambda$ is an eigenvalue";
 			st = "curve is isogenous to subgroup where $\\lambda$ are an eigenvalue";
 			st = "f is a function with radius of convergence r and finitely many roots";
-			st = "$f$ is holomorphic on $D(0, r)$, the derivative of $f$ is $\\sum_j j $";	
-			st = "$f$ is holomorphic on $D(0, r)$";
+			st = "$f$ is holomorphic on $D(0, r)$, the derivative of $f$ is $\\sum_j j $";
+			//Every minimal subsystem $\Sigma$ of the system $(\Omega^k,S_\infty)$ is a factor of the minimal system $(\Omega^2_{lo},S_\infty)$.
 			
 			//st = "take derivative of log of f";
 			//st = "given infinite subgroup where $\\lambda$ is an eigenvalue";
