@@ -285,26 +285,38 @@ public class ParseToWLTree{
 		if (struct.parentStruct() == null 
 				//struct.parentStruct() can't be null now. 
 				|| !struct.parentStruct().type().matches("conj.*|disj.*")) {
-
+			System.out.println("!!!!!WLCommandList: " + WLCommandList);
 			int WLCommandListSz = WLCommandList.size();
 			List<WLCommand> reverseWLCommandList = new ArrayList<WLCommand>(WLCommandListSz);
 			
 			for(int i = 0; i < WLCommandListSz; i++){
 				reverseWLCommandList.add(WLCommandList.get(WLCommandListSz-i-1));				
 			}
-			//if(struct.nameStr().equals("field")) throw new IllegalStateException("*********"+ WLCommandList);
-			Iterator<WLCommand> reverseWLCommandListIter = reverseWLCommandList.iterator();
-			//int WLCommandListSz = WLCommandList.size();
 			
+			boolean commandRemoved = false;
+			Iterator<WLCommand> reverseWLCommandListIter = reverseWLCommandList.iterator();			
 			while (reverseWLCommandListIter.hasNext()) {
 				
 				WLCommand curCommand = reverseWLCommandListIter.next();
-				//curCommand = WLCommandList.get(i);
+				
 				boolean beforeTriggerIndex = false;
-				//System.out.println("ADDING STRUCT " + struct + " for command " + curCommand);
-
+				if(struct.type().equals("prep")){			
+					System.out.println("\nADDING STRUCT " + struct + " for command " + curCommand);
+					System.out.println("curCommand.getOptionalTermsCount(): " + curCommand.getOptionalTermsCount());					
+				}
+				
 				CommandSat commandSat = WLCommand.addComponent(curCommand, struct, beforeTriggerIndex);
 				
+				/*boolean sat = commandSat.isCommandSat();
+				boolean posListSat = true;
+				for(PosTerm term : WLCommand.posTermList(curCommand)){
+					if(null == term.posTermStruct() && !term.isNegativeTerm() && !term.isOptionalTerm() && term.positionInMap() > -1){
+						//System.out.println(curCommand);
+						posListSat = false;
+					}
+				}*/
+				//if(posListSat && !sat) throw new IllegalStateException(curCommand.toString());
+				//if(struct.type().equals("adj"))	System.out.println("added! " + commandSat.isComponentAdded()); //<--adj (eval) is added!
 				//System.out.println("++++========commandSat.isCommandSat(): " +commandSat.isCommandSat());
 				
 				// if commandSat, remove all the waiting, triggered commands for
@@ -316,22 +328,38 @@ public class ParseToWLTree{
 				//If no component added, means command already satisfied & built previously.
 				//checking commandSat.isComponentAdded() to avoid double-adding to satisfiedCommandsList.
 				//Should have special boolean where main   command is satisfied    but optional terms are not.
-				if (commandSat.isCommandSat() 
-						) {
+				if (commandSat.isCommandSat()) {
+					//System.out.println("curCommand.commandsCountMap(): " + curCommand.commandsCountMap());
 					//check to see if only optional terms left
-					//need to update this further
 					if(commandSat.isComponentAdded() && !commandSat.onlyOptionalTermAdded()){
 						satisfiedCommandsList.add(curCommand);
+						System.out.println("COMMAND ADDED to satisfiedCommandsList");
 					}
 					if(curCommand.getDefaultOptionalTermsCount() == 0
 							|| !commandSat.hasOptionalTermsLeft() ){
 						reverseWLCommandListIter.remove();
+						commandRemoved = true;
+						System.out.println("COMMAND REMOVED !" + curCommand);
+					}else if(curCommand.getDefaultOptionalTermsCount() > 0
+							&& !commandSat.hasOptionalTermsLeft() ){
+						//add and build again
+						satisfiedCommandsList.add(curCommand);
 					}
+					
 				}else if(commandSat.isDisqualified()){
 					reverseWLCommandListIter.remove();
+					commandRemoved = true;
 					//System.out.println("\n***COMMAND REMOVED. struct "+ struct );
+				}				
+			}
+			
+			//reverse the reverseWLCommandList back
+			if(commandRemoved){
+				int reverseWLCommandListSz = reverseWLCommandList.size();
+				WLCommandList.clear();
+				for(int i = 0; i < reverseWLCommandListSz; i++){
+					WLCommandList.add(reverseWLCommandList.get(reverseWLCommandListSz-i-1));				
 				}
-				
 			}
 		}		
 		
@@ -396,7 +424,7 @@ public class ParseToWLTree{
 						continue;
 					}
 					
-					System.out.println(" For triggered Command + " + curCommand);
+					//System.out.println(" For triggered Command + " + curCommand);
 					for(int i = structList.size()-1; i > -1; i--){
 						
 						Struct curStruct = structList.get(i);
@@ -404,9 +432,10 @@ public class ParseToWLTree{
 						//namely the trigger word is last word
 						boolean beforeTrigger = true;
 						//System.out.println("curCommandSatWhole*********"  +" "  + curStruct);
-						System.out.print("\nADDING to COMMAND (before) for STRUCT " + curStruct);
+						//if(curStruct.type().equals("prep")) 
+							//System.out.print("\nADDING to COMMAND (before) for STRUCT " + curStruct +" for command " +curCommand);
 						commandSat = WLCommand.addComponent(curCommand, curStruct, beforeTrigger);
-
+						
 						curCommandSatWhole = commandSat.isCommandSat();		
 						//System.out.println("curCommandSatWhole " + curCommandSatWhole);
 						//hasOptionalTermsLeft = commandSat.hasOptionalTermsLeft();
@@ -426,20 +455,19 @@ public class ParseToWLTree{
 					//System.out.println();
 					//if(commandSat != null){						
 					if(beforeTriggerSat){
-						//System.out.println("***-----------*got BEFORE as TRUE");
+						//System.out.println("***-----------*got BEFORE as TRUE for command " + curCommand);
 						if(curCommandSatWhole && isComponentAdded){							
 							satisfiedCommandsList.add(curCommand);
-						}else{							
+						}else{		
 							//if(!curCommandSatWhole || hasOptionalTermsLeft){
 							WLCommandList.add(curCommand);
 						}
 					}
-					
 			}			
-			isTrigger = true;			
-		
+			
+			isTrigger = true;		
 	
-		structList.add(struct);
+			structList.add(struct);
 		
 		if (struct.isStructA()) {
 			
@@ -584,28 +612,33 @@ public class ParseToWLTree{
 				
 				while(ChildWLCommandListIter.hasNext()){
 					WLCommand curCommand = ChildWLCommandListIter.next();
+					//if(struct.type().equals("prep"))					
+						//System.out.println("\nADDING STRUCT " + childRelationStruct + " for command " + curCommand);
+
 					//System.out.println("ADDING COMMAND for STRUCT " + childRelationStruct +  " -curCommand " + curCommand);
 					CommandSat commandSat = WLCommand.addComponent(curCommand, childRelationStruct, false);
 					boolean isCommandSat = commandSat.isCommandSat();
 					boolean hasOptionalTermsLeft = commandSat.hasOptionalTermsLeft();
 					boolean isComponentAdded = commandSat.isComponentAdded();
 					
-					if(isCommandSat 
-							){
+					if(isCommandSat){
 						if(isComponentAdded && !commandSat.onlyOptionalTermAdded()){
 							satisfiedCommandsList.add(curCommand);
 						}
-						//satisfiedCommandsList.add(curCommand);	
 						
 						if(curCommand.getDefaultOptionalTermsCount() == 0 || !hasOptionalTermsLeft){
 							//need to remove from WLCommandList
 							ChildWLCommandListIter.remove();
+							//System.out.println("\n***COMMAND REMOVED from child: " + struct);
+						}else if(curCommand.getDefaultOptionalTermsCount() > 0
+								&& !hasOptionalTermsLeft ){
+							//add and build again, now that optional terms have been satisfied.
+							satisfiedCommandsList.add(curCommand);
 						}
 					}else if(commandSat.isDisqualified()){
 						ChildWLCommandListIter.remove();
-						//System.out.println("\n***COMMAND REMOVED " + struct);
-					}
-					
+						//System.out.println("\n***COMMAND REMOVED from child: " + struct);						
+					}				
 				}
 				
 				ithChild.set_parentStruct(struct);

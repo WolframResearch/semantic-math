@@ -694,6 +694,15 @@ public class WLCommand implements Serializable{
 		}
 		
 		/**
+		 * Creates deep copy of this PosTerm.
+		 * @return
+		 */
+		public PosTerm termDeepCopy(){				
+			return new PosTerm(commandComponent, positionInMap, includeInBuiltString,
+					isTrigger, triggerMathObj, posTermConnotation, relationType);			
+		}	
+		
+		/**
 		 * @return the isOptionalTerm
 		 */
 		public boolean isTrigger() {
@@ -783,10 +792,20 @@ public class WLCommand implements Serializable{
 					new ArrayList<RelationType>());			
 		}
 		
+		/**
+		 * Creates deep copy of this NegativePosTerm.
+		 * @return
+		 */
+		@Override
+		public PosTerm termDeepCopy(){			
+			return new NegativePosTerm(super.commandComponent, super.positionInMap);			
+		}
+		
 		@Override
 		public boolean isNegativeTerm(){
 			return true;
 		}
+		
 	}
 	
 	public static class OptionalPosTerm extends PosTerm{
@@ -806,6 +825,16 @@ public class WLCommand implements Serializable{
 			this.optionalGroupNum = optionalGroupNum;
 			
 		}
+		
+		/**
+		 * Copies PosTerm.
+		 * @return
+		 */
+		@Override
+		public PosTerm termDeepCopy(){			
+			return new OptionalPosTerm(super.commandComponent, super.positionInMap, super.includeInBuiltString,
+					super.triggerMathObj, optionalGroupNum, super.relationType);			
+		}	
 		
 		/**
 		 * @return the isOptionalTerm
@@ -854,7 +883,11 @@ public class WLCommand implements Serializable{
 		newCommand.commandsCountMap = new HashMap<WLCommandComponent, Integer>(((WLCommand)curCommand).commandsCountMap) ;
 		
 		newCommand.composedWLCommandsList = new ArrayList<WLCommand>();
-		newCommand.posTermList = new ArrayList<PosTerm>(((WLCommand)curCommand).posTermList);
+		
+		newCommand.posTermList = new ArrayList<PosTerm>();		
+		for(PosTerm term : ((WLCommand)curCommand).posTermList){
+			newCommand.posTermList.add(term.termDeepCopy());
+		}
 		
 		newCommand.totalComponentCount = ((WLCommand)curCommand).totalComponentCount;
 		newCommand.componentCounter = ((WLCommand)curCommand).totalComponentCount;
@@ -1194,7 +1227,7 @@ public class WLCommand implements Serializable{
 		
 		//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
 		if(DEBUG){
-			System.out.println("\n CUR COMMAND: trigger " +curCommand.getTriggerWord() + ". " + curCommand + " ");
+			System.out.println("\n CUR COMMAND: triggerWord " +curCommand.getTriggerWord() + ". " + curCommand + " ");
 			System.out.print("BUILT COMMAND: " + commandSB);
 			System.out.println("HEAD STRUCT: " + structToAppendCommandStr);
 		}
@@ -1346,7 +1379,7 @@ public class WLCommand implements Serializable{
 		if(disqualifyCommand(structType, commandsCountMap)){
 			boolean disqualified = true;
 			//if(true)throw new IllegalStateException(structType + " " + commandsCountMap);
-			System.out.println("###curCommand.triggerWord " + curCommand.commandsCountMap);
+			System.out.println("disqualifying command. ###curCommand.commandsCountMap " + curCommand.commandsCountMap);
 			return new CommandSat(disqualified);
 		}
 
@@ -1470,11 +1503,11 @@ public class WLCommand implements Serializable{
 			return new CommandSat(disqualified);
 		}
 		
-		if(commandComponentPosPattern.matcher(structType).find()
+		if(commandComponentPosPattern.matcher(structType).matches()
 				//structType.matches(commandComponentPosTerm) 	
-				&& commandComponentNamePattern.matcher(structName).find()
+				&& commandComponentNamePattern.matcher(structName).matches()
 				//&& structName.matches(commandComponentName)
-				//this component is actually needed
+				/* this component is actually needed */
 				&& commandsCountMap.get(commandComponent) > 0
 				//&& addedComponentsColSz < commandComponentCount
 				){
@@ -1499,8 +1532,9 @@ public class WLCommand implements Serializable{
 			if(!isOptionalTerm){
 				curCommand.componentCounter--;
 			}else{
+				//System.out.println("*******************curCommand.optionalTermsCount " + curCommand.optionalTermsCount);
 				curCommand.optionalTermsCount--;
-				
+				//System.out.println("*******************curCommand.optionalTermsCount " + curCommand.optionalTermsCount);
 				int optionalGroupNum = curPosTerm.optionalGroupNum();
 				//decrement optional terms
 				//optionalTermsGroupCountMap cannot be null if grammar rules are valid.
@@ -1517,8 +1551,10 @@ public class WLCommand implements Serializable{
 			boolean hasOptionalTermsLeft = (curCommand.optionalTermsCount > 0);
 			
 			CommandSat commandSat = 
-					new CommandSat(curCommand.componentCounter < 1, hasOptionalTermsLeft, componentAdded, isOptionalTerm); //<-update this
-			
+					new CommandSat(curCommand.componentCounter < 1, hasOptionalTermsLeft, componentAdded);
+			if(isOptionalTerm){
+				commandSat.setOptionalTermsAdded();
+			}
 			if(before && onlyTrivialTermsBefore(posTermList, i-1)){
 				commandSat.setBeforeTriggerSatToTrue();
 			}
