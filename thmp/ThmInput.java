@@ -28,12 +28,13 @@ import thmp.utils.WordForms;
 public class ThmInput {
 
 	//Intentionally *not* final, as must append custom author-defined macros and compile the pattern
-	static String THM_START_STR = "[^\\\\]*\\\\begin\\{def(?:.*)|[^\\\\]*\\\\begin\\{lem(?:.*)"
-			+ "|[^\\\\]*\\\\begin\\{th(?:.*)|[^\\\\]*\\\\begin\\{prop(?:.*)"
-			+ "|[^\\\\]*\\\\begin\\{proclaim(?:.*)|[^\\\\]*\\\\begin\\{cor(?:.*)";
+	//factor out the \begin! shouldn't need the [^\\\\]* if using matcher.find()
+	static String THM_START_STR = "[^\\\\]*\\\\begin\\s*\\{def(?:.*)|[^\\\\]*\\\\begin\\s*\\{lem(?:.*)"
+			//<--{prop.. instead of {pro.., since need to skip parsing proofs.
+			+ "|[^\\\\]*\\\\begin\\s*\\{th(?:.*)|[^\\\\]*\\\\begin\\s*\\{prop(?:.*)" 
+			+ "|[^\\\\]*\\{proclaim(?:.*)|[^\\\\]*\\\\begin\\s*\\{cor(?:.*)";
 	
-	static final Pattern THM_START_PATTERN = Pattern.compile(THM_START_STR);
-	
+	static final Pattern THM_START_PATTERN = Pattern.compile(THM_START_STR);	
 	// start of theorem, to remove words such as \begin[prop]
 	 /*
 	 * private static Pattern SENTENCE_START_PATTERN = Pattern. compile(
@@ -41,14 +42,16 @@ public class ThmInput {
 	 * +
 	 * "|^\\\\begin\\{prop(?:[^}]*)\\}\\s*|^\\\\begin\\{proclaim(?:[^}]*)\\}\\s*"
 	 * );
-	 */
-	
-	static String THM_END_STR = "\\\\end\\{def(?:.*)|\\\\end\\{lem(?:.*)|\\\\end\\{th(?:.*)|\\\\end\\{prop(?:.*)|\\\\endproclaim(?:.*)"
-			+ "|\\\\end\\{cor(?:.*)";
+	 */	
+	static String THM_END_STR = "[^\\\\]*\\\\end\\s*\\{def(?:.*)|[^\\\\]*\\\\end\\s*\\{lem(?:.*)"
+			+ "|[^\\\\]*\\\\end\\s*\\{th(?:.*)|[^\\\\]*\\\\end\\s*\\{prop(?:.*)" 
+			+ "|[^\\\\]*\\\\endproclaim(?:.*)|[^\\\\]*\\\\end\\s*\\{cor(?:.*)";
+	//static String THM_END_STR = "\\\\end\\{def(?:.*)|\\\\end\\{lem(?:.*)|\\\\end\\{th(?:.*)|\\\\end\\{pro(?:.*)|\\\\endproclaim(?:.*)"
+			//+ "|\\\\end\\{cor(?:.*)";
 	static final Pattern THM_END_PATTERN = Pattern.compile(THM_END_STR);
 	
 	//begin of latex expression
-	static final Pattern BEGIN_PATTERN = Pattern.compile("\\\\begin.*");
+	static final Pattern BEGIN_PATTERN = Pattern.compile("[^\\\\]*\\\\begin.*");
 	
 	//new theorem pattern
 	static final Pattern NEW_THM_PATTERN = Pattern.compile("\\\\newtheorem\\{([^}])\\}(?:[^{]*)\\{([^}]).*");
@@ -156,6 +159,7 @@ public class ThmInput {
 		
 		//read in custom macros, break as soon as \begin{document} encountered
 		while ((line = srcFileReader.readLine()) != null) {
+			
 			Matcher newThmMatcher = NEW_THM_PATTERN.matcher(line);
 			
 			if(BEGIN_PATTERN.matcher(line).find()){
@@ -246,7 +250,7 @@ public class ThmInput {
 	/**
 	 * Processes Latex input, e.g. by removing syntax used purely for display and not
 	 * useful for parsing, such as \textit{ }.
-	 * But Don't remove markups such as "\begin{theorem}"
+	 * Also remove markups such as "\begin{theorem}"
 	 * But enumerate should not always be turned off.
 	 * @param newThmSB 
 	 * @param thmWebDisplayList Can be null. 
@@ -342,8 +346,10 @@ public class ThmInput {
 			bareThmList.add(bareThmStr);
 		}
 		if(getWebDisplayList){
+			//thmStr same as wordsThmStr because of the thmStr = wordsThmStr; assignment
 			thmWebDisplayList.add(thmStr);
 		}
+		//wordsThmStr is good for web display
 		return wordsThmStr;
 	}
 

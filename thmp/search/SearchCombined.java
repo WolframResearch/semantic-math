@@ -1,6 +1,7 @@
 package thmp.search;
 
 import java.io.BufferedReader;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -15,6 +16,7 @@ import com.wolfram.jlink.Expr;
 import com.wolfram.jlink.MathLinkException;
 
 import thmp.ProcessInput;
+import thmp.utils.WordForms;
 
 /**
  * Search that combines svd/nearest and intersection.
@@ -27,6 +29,7 @@ public class SearchCombined {
 	//combined number of vectors to take from search results of
 	//svd/nearest and intersection
 	private static final int NUM_COMMON_VECS = 4;
+	
 	//should update at the very beginning!
 	//private static final int LIST_INDEX_SHIFT = 1;
 	
@@ -40,12 +43,14 @@ public class SearchCombined {
 	 * @param freqWordsFileBuffer
 	 * @param texSourceFileBufferList
 	 * @param macrosReader
+	 * @param parsedExpressionListInputStream InputStream containing serialized ParsedExpressions.
+	 * @param allThmWordsSerialBReader BufferedReader to file containing words from previous run's theorem data.
 	 */
 	public static void initializeSearchWithResource(BufferedReader freqWordsFileBuffer, List<BufferedReader> texSourceFileBufferList,
-			BufferedReader macrosReader){
+			BufferedReader macrosReader, InputStream parsedExpressionListInputStream, InputStream allThmWordsSerialInputStream){
 		//CollectFreqWords.setResources(freqWordsFileBuffer);
 		CollectThm.setWordFrequencyBR(freqWordsFileBuffer);
-		CollectThm.setResources(texSourceFileBufferList, macrosReader);	
+		CollectThm.setResources(texSourceFileBufferList, macrosReader, parsedExpressionListInputStream, allThmWordsSerialInputStream);	
 		ProcessInput.setResources(macrosReader);
 	}
 	
@@ -178,7 +183,7 @@ public class SearchCombined {
 	public static List<String> searchCombined(String input, Set<String> searchWordsSet, boolean searchContextBool,
 			boolean searchRelationalBool){
 		
-		if(input.matches("\\s*")) return null;
+		if(WordForms.getWhiteEmptySpacePattern().matcher(input).matches()) return null;
 		
 		input = input.toLowerCase();
 		
@@ -192,7 +197,7 @@ public class SearchCombined {
 		//List<Integer> intersectionVecList;
 		int numCommonVecs = NUM_COMMON_VECS;
 		
-		String[] inputAr = input.split("\\s+");
+		String[] inputAr = WordForms.getWhiteNonEmptySpacePattern().split(input);
 		String firstWord = inputAr[0];
 		if(firstWord.matches("\\d+")){
 			numCommonVecs = Integer.parseInt(firstWord);			
@@ -224,19 +229,6 @@ public class SearchCombined {
 		}
 		return bestCommonThms;
 	}
-	
-	/**
-	 * Nested class for Gson processing.
-	 * Contains thm, and keywords for highlighting.
-	 */
-	/*public static class SoughtPair{
-		private String thm;
-		private List<String> keywords;
-		
-		public SoughtPair(){
-			
-		}
-	}*/
 	
 	/**
 	 * Searches using relational search, in chunks of size tupleSz from 0

@@ -69,16 +69,17 @@ public class ThmSearch {
 			ml = FileUtils.getKernelLinkInstance();
 			
 			//set up the matrix corresponding to docMx, to be SVD'd. 
-			//adjust mx entries based on correlation first			
-			String mx = toNestedList(docMx);
+			//adjust mx entries based on correlation first	
+			StringBuilder mxSB = new StringBuilder("m =");
+			mxSB.append(toNestedList(docMx)).append("//N;");
 			int rowDimension = docMx.length;
 			int mxColDim = docMx[0].length;
-			
+			System.out.println("mxSB.length(): " + mxSB.length());
 			//System.out.println("nested mx " + Arrays.deepToString(docMx));
 			boolean getMx = false;
 			
 			//ml.evaluate("m=IntegerPart[" + mx +"]//N");
-			ml.evaluate("m =" + mx+ "//N;");
+			ml.evaluate(mxSB.toString());
 			if(getMx){
 				ml.waitForAnswer();			
 				Expr expr = ml.getExpr();

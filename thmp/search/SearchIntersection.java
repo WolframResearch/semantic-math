@@ -678,7 +678,9 @@ public class SearchIntersection {
 		for(Integer thmIndex : highestThms){
 			if(counter == 0) break;
 			//foundThmList.add(thmList.get(thmIndex));
-			foundThmList.add(webDisplayThmList.get(thmIndex));	
+			//the list thmList as good for web display as the original webDisplayThmList,
+			//because removeTexMarkup() has been applied.
+			foundThmList.add(thmList.get(thmIndex));	
 			counter--;
 		}
 		

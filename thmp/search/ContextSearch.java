@@ -47,6 +47,7 @@ public class ContextSearch {
 		allThmsContextVecStrList = CollectThm.ThmList.allThmsContextVecList();
 		
 		boolean b = false;
+		//skipping this to get thms from serialized data instead
 		if(b){
 		//need to set this when deployed to VM
 		//String contextVecFileStr = "src/thmp/data/contextVecAll.txt";

@@ -4,6 +4,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.charset.Charset;
@@ -12,6 +13,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.List;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.wolfram.jlink.KernelLink;
 import com.wolfram.jlink.MathLinkException;
@@ -29,7 +33,7 @@ public class FileUtils {
 
 	//singleton, only one instance should exist
 	private static volatile KernelLink ml;
-	
+	private static final Logger logger = LogManager.getLogger();
 	/**
 	 * Write content to file at absolute path.
 	 * 
@@ -89,25 +93,38 @@ public class FileUtils {
 					throw new IllegalStateException("IOException while writing to file or closing resources");
 				}
 	}
-	
+
 	/**
 	 * Deserialize objects from file supplied by serialFileStr.
 	 * @param serialFileStr
 	 * @return List of objects
 	 */	
-	//@SuppressWarnings("unchecked")
 	public static Object deserializeListFromFile(String serialFileStr){
 	
-		Object deserializedList = null;
 		FileInputStream fileInputStream = null;
-		ObjectInputStream objectInputStream = null;
 		try{
 			fileInputStream = new FileInputStream(serialFileStr);
-			objectInputStream = new ObjectInputStream(fileInputStream);
 		}catch(FileNotFoundException e){
 			e.printStackTrace();
 			throw new IllegalStateException("Serialization data file not found!");
+		}
+		
+		return deserializeListFromInputStream(fileInputStream);
+	}
+
+	/**
+	 * @param deserializedList
+	 * @param fileInputStream
+	 * @return
+	 */
+	public static Object deserializeListFromInputStream(InputStream inputStream) {
+		
+		Object deserializedList = null;	
+		ObjectInputStream objectInputStream = null;		
+		try{
+			objectInputStream = new ObjectInputStream(inputStream);
 		}catch(IOException e){
+			silentClose(inputStream);
 			e.printStackTrace();
 			throw new IllegalStateException("IOException while opening ObjectOutputStream.");
 		}
@@ -125,13 +142,21 @@ public class FileUtils {
 		}finally{
 			try{
 				objectInputStream.close();
-				fileInputStream.close();
+				inputStream.close();
 			}catch(IOException e){
 				e.printStackTrace();
 				throw new IllegalStateException("IOException while closing resources");
 			}
 		}
 		return deserializedList;
+	}
+	
+	private static void silentClose(InputStream fileInputStream){
+		try{
+			fileInputStream.close();
+		}catch(IOException e){
+			logger.error("IOException while closing InputStream: " + fileInputStream);
+		}
 	}
 	
 	/**

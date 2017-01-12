@@ -22,6 +22,7 @@ public class WordForms {
 	private static final String SPLIT_DELIM = "\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:|-|_|~|!";
 	private static final Pattern BACKSLASH_PATTERN = Pattern.compile("(?<!\\\\)\\\\(?!\\\\)");
 	private static final Pattern WHITE_EMPTY_SPACE_PATTERN = Pattern.compile("^\\s*$");
+	private static final Pattern WHITE_NONEMPTY_SPACE_PATTERN = Pattern.compile("^\\s+$");
 	
 	private static final Pattern BRACES_PATTERN = Pattern.compile("(\\{|\\}|\\[|\\])");
 	private static final Pattern SPECIAL_CHARS_PATTERN = Pattern.compile(".*([+|-]).*");
@@ -273,6 +274,14 @@ public class WordForms {
 	 */
 	public static Pattern getWhiteEmptySpacePattern() {
 		return WHITE_EMPTY_SPACE_PATTERN;
+	}
+	
+	/**
+	 * @return the whitespacePattern. Excluding the case of 
+	 * empty pattern.
+	 */
+	public static Pattern getWhiteNonEmptySpacePattern() {
+		return WHITE_NONEMPTY_SPACE_PATTERN;
 	}
 	
 	/**

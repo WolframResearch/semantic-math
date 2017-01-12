@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.regex.Pattern;
 import java.util.Set;
 import java.util.TreeMap;
 import java.io.BufferedReader;
@@ -15,6 +16,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.math.BigInteger;
 
@@ -70,6 +72,11 @@ public class CollectThm {
 	private static volatile List<BufferedReader> rawFileReaderList;
 	//macros file
 	private static volatile BufferedReader macrosDefReader;
+	//InputStream for serialized parsed expressions list
+	private static volatile InputStream parsedExpressionListInputStream;
+	//containing all serialized words from previous run.
+	private static volatile InputStream allThmWordsSerialInputStream;
+	
 	//wordFrequency.txt containing word frequencies and their part of speech (pos)
 	private static BufferedReader wordFrequencyBR;
 	/*words that should be included as math words, but occur too frequently in math texts
@@ -110,12 +117,16 @@ public class CollectThm {
 	}
 	
 	/**
-	 * Set list of bufferedReaders, rawFileReaderList
+	 * Set list of bufferedReaders, rawFileReaderList.
+	 * Should just set servlet context instead of BufferedReaders!
 	 * @param srcFileReader
 	 */
-	public static void setResources(List<BufferedReader> srcFileReaderList, BufferedReader macrosReader) {
+	public static void setResources(List<BufferedReader> srcFileReaderList, BufferedReader macrosReader,
+			InputStream parsedExpressionListStream, InputStream allThmWordsSerialIStream) {
 		rawFileReaderList = srcFileReaderList;
 		macrosDefReader = macrosReader;
+		parsedExpressionListInputStream = parsedExpressionListStream;
+		allThmWordsSerialInputStream = allThmWordsSerialIStream;
 		//System.out.print("buffered readers first passed in: " + srcFileReaderList);		
 	}
 	
@@ -186,6 +197,9 @@ public class CollectThm {
 		//them more
 		private static final double THREE_GRAM_FREQ_REDUCTION_FACTOR = 4.0/5;
 		private static final double TWO_GRAM_FREQ_REDUCTION_FACTOR = 5.0/6;
+
+		private static final Pattern SPECIAL_CHARACTER_PATTERN = 
+				Pattern.compile(".*[\\\\$=\\{\\}\\[\\]()^_+%&\\./,\"\\d\\/@><*|].*");
 		
 		static{
 			//pass builder into a reader function. For each thm, builds immutable list of keywords, 
@@ -270,26 +284,42 @@ public class CollectThm {
 			
 			wordThmsIndexMMapNoAnno = wordThmsMMapBuilderNoAnno.build();
 			
-			//deserialize words list used to form context and relation vectors, which were
+			List<String> wordsList = extractWordsList();
+			
+			CONTEXT_VEC_WORDS_MAP = createContextKeywordIndexDict(wordsList);
+			//System.out.println("------++++++++-------CONTEXT_VEC_WORDS_MAP.size " + CONTEXT_VEC_WORDS_MAP.size());
+		}
+
+		/**
+		 * //deserialize words list used to form context and relation vectors, which were
 			//formed while parsing through the papers in e.g. DetectHypothesis.java. This is
 			//so we don't parse everything again at every server initialization.
-			String allThmWordsSerialFileStr = "src/thmp/data/allThmWordsList.dat";
-			@SuppressWarnings("unchecked")
-			List<String> wordsList = (List<String>)FileUtils.deserializeListFromFile(allThmWordsSerialFileStr);
-			
-			CONTEXT_VEC_WORDS_MAP = g(wordsList);
-			//System.out.println("------++++++++-------CONTEXT_VEC_WORDS_MAP.size " + CONTEXT_VEC_WORDS_MAP.size());
+		 * @return
+		 */
+		@SuppressWarnings("unchecked")		
+		private static List<String> extractWordsList() {			
+			if(null != allThmWordsSerialInputStream){
+				return (List<String>)FileUtils.deserializeListFromInputStream(allThmWordsSerialInputStream);
+			}else{
+				String allThmWordsSerialFileStr = "src/thmp/data/allThmWordsList.dat";				
+				return (List<String>)FileUtils.deserializeListFromFile(allThmWordsSerialFileStr);
+			}
 		}	
 		
-		private static Map<String, Integer> g(List<String> wordsList){
-			Map<String, Integer> contextKeywordDict = new HashMap<String, Integer>();
+		/**
+		 * Creates a map, ordered by frequency.
+		 * @param wordsList
+		 * @return Map of words and their indices in wordsList.
+		 */
+		private static Map<String, Integer> createContextKeywordIndexDict(List<String> wordsList){
+			Map<String, Integer> contextKeywordIndexDict = new HashMap<String, Integer>();
 			//these are ordered based on frequency, more frequent words occur earlier.
 			//List<String> wordsList = CollectThm.ThmWordsMaps.getCONTEXT_VEC_WORDS_LIST();		
 			for(int i = 0; i < wordsList.size(); i++){
 				String word = wordsList.get(i);
-				contextKeywordDict.put(word, i);
+				contextKeywordIndexDict.put(word, i);
 			}
-			return contextKeywordDict;
+			return contextKeywordIndexDict;
 		}
 		
 		/**
@@ -574,6 +604,9 @@ public class CollectThm {
 				ImmutableSetMultimap.Builder<String, Integer> wordThmsMMapBuilder,
 				int wordTotalFreq){			
 			
+			if(SPECIAL_CHARACTER_PATTERN.matcher(word).find()){
+				return;
+			}
 			int wordFreq = thmWordsMap.containsKey(word) ? thmWordsMap.get(word) : 0;
 			//int wordLongFreq = thmWordsMap.containsKey(wordLong) ? thmWordsMap.get(wordLong) : 0;
 			thmWordsMap.put(word, wordFreq + 1);
@@ -600,6 +633,11 @@ public class CollectThm {
 		private static void addWordToMaps(String word, int curThmIndex, Map<String, Integer> thmWordsFreqMap,
 				Map<String, Integer> docWordsFreqPreMap,
 				ImmutableSetMultimap.Builder<String, Integer> wordThmsMMapBuilder){			
+			
+			//screen the word for special characters, e.g. "/", don't put these words into map.
+			if(SPECIAL_CHARACTER_PATTERN.matcher(word).find()){
+				return;
+			}
 			
 			int wordFreq = thmWordsFreqMap.containsKey(word) ? thmWordsFreqMap.get(word) : 0;
 			thmWordsFreqMap.put(word, wordFreq + 1);
@@ -791,16 +829,11 @@ public class CollectThm {
 		
 		static{	
 			//instead of getting thmList from ThmList, need to get it from serialized data.
-			//String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat"; //parsedExpressionListServer1.dat
-			String parsedExpressionSerialFileStr = "parsedExpressionListServer1.dat";
-			
+			List<ParsedExpression> parsedExpressionsList;
 			/*Deserialize objects in parsedExpressionOutputFileStr, so we don't 
 			 * need to read and parse through all papers on every server initialization.
-			 * Can just read from serialized data. */
-			@SuppressWarnings("unchecked")
-			List<ParsedExpression> parsedExpressionsList = (List<ParsedExpression>)thmp.utils.FileUtils
-					.deserializeListFromFile(parsedExpressionSerialFileStr);
-			//List<ParsedExpression> parsedExpressionsList = new ArrayList<ParsedExpression>();
+			 * Can just read from serialized data. */			
+			parsedExpressionsList = extractParsedExpressionList();
 			
 			List<String> allThmsWithHypPreList = new ArrayList<String>();			
 			List<BigInteger> relationVecPreList = new ArrayList<BigInteger>();
@@ -822,6 +855,7 @@ public class CollectThm {
 			//extractedThms = ThmList.get_thmList();
 			try {
 				if(rawFileReaderList == null){
+					//this is the case when resources have not been set by servlet, so not on server.
 					for(String fileStr : rawFileStrList){
 						//FileReader rawFileReader = new FileReader(rawFileStr);
 						FileReader rawFileReader = new FileReader(fileStr);
@@ -849,7 +883,8 @@ public class CollectThm {
 					for(BufferedReader fileReader : rawFileReaderList){
 						extractedThmsList.addAll(ThmInput.readThm(fileReader, webDisplayThmsList, bareThmsList));
 					}
-					//to be used for parsing
+					//to be used for parsing. Booleans specify options such as whether to
+					//convert tex symbols to words, replace macros, etc.
 					bareThmsList = ProcessInput.processInput(bareThmsList, true, false, false);
 					processedThmsList = ProcessInput.processInput(extractedThmsList, macrosDefReader, REPLACE_TEX, TEX_TO_WORDS, REPLACE_MACROS);
 					//the BufferedStream containing macros is set when rawFileReaderList is set.
@@ -866,9 +901,29 @@ public class CollectThm {
 			processedThmList = ImmutableList.copyOf(processedThmsList);
 			macroReplacedThmList = ImmutableList.copyOf(macroReplacedThmsList);
 		}
+
+		/**
+		 * Extracts parsedExressionList from serialized data.
+		 * @return
+		 */
+		@SuppressWarnings("unchecked")
+		private static List<ParsedExpression> extractParsedExpressionList() {
+			//List<ParsedExpression> parsedExpressionsList;
+			if(null != parsedExpressionListInputStream){				
+				return (List<ParsedExpression>)thmp.utils.FileUtils
+						.deserializeListFromInputStream(parsedExpressionListInputStream);	
+			}else{
+				//String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
+				String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionListServer1.dat";
+				//@SuppressWarnings("unchecked")
+				return (List<ParsedExpression>)thmp.utils.FileUtils
+						.deserializeListFromFile(parsedExpressionSerialFileStr);	
+			}
+		}
 		
 		/**
-		 * Fill up thmList, contextvectors, and relational vectors from parsed expressions list.
+		 * Fill up thmList, contextvectors, and relational vectors from parsed expressions list
+		 * extracted from serialized data.
 		 * @param parsedExpressionsList
 		 * @param allThmsWithHypList
 		 * @param contextVecList
@@ -882,8 +937,7 @@ public class CollectThm {
 				contextVecList.add(parsedExpr.contextVecStr());
 				relationVecList.add(parsedExpr.getRelationVec());
 			}
-		}
-		
+		}		
 		
 		/**
 		 * List of relation vectors for all thms, as extracted from deserialized 

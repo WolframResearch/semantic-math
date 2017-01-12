@@ -156,7 +156,8 @@ public class ThmP1 {
 	private static final boolean DEBUG = InitParseWithResources.isDEBUG();
 	//Pattern used to check if word is valid.
 	//Don't put \', could be in valid word
-	private static final Pattern BACKSLASH_CONTAINMENT_PATTERN = Pattern.compile(".*[\\\\|$|=|\\{|\\}|\\[|\\]|(|)|^|_|+|%|&|\\.|/|,|\"|\\d|\\/|@|>|<].*");
+	private static final Pattern BACKSLASH_CONTAINMENT_PATTERN = 
+			Pattern.compile(".*[\\\\$=\\{\\}\\[\\]()^_+%&\\./,\"\\d\\/|@><].*");
 	private static final Pattern DIGITS_PATTERN = Pattern.compile("\\d+");
 	
 	private static final Pattern HYP_PATTERN = WordForms.get_HYP_PATTERN();

@@ -126,8 +126,7 @@ public class DetectHypothesis {
 		 */
 		public List<VariableDefinition> getDefinitionList() {
 			return definitionList;
-		}
-		
+		}		
 	}
 	
 	/**

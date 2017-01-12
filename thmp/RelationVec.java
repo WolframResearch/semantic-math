@@ -44,6 +44,7 @@ public class RelationVec implements Serializable{
 	
 	private static final int NUM_BITS_PER_BYTE = 8;
 	private static final Pattern SPLIT_DELIM_PATTERN = Pattern.compile(WordForms.splitDelim());
+	private static final boolean DEBUG = true;
 	
 	/**
 	 * Enum for the different types of
@@ -52,8 +53,8 @@ public class RelationVec implements Serializable{
 	 */
 	public static enum RelationType{
 		
-		//_IS: "A is", IS_: "is A".
-		//_IS_ means both _IS and IS_.
+		/*_IS: "A is", IS_: "is A".
+		 * _IS_ means both _IS and IS_.*/
 		_IS(new int[]{0}), IS_(new int[]{1}), _IS_(new int[]{0,1}), 
 		IF(new int[]{2}), EXIST(new int[]{3}), NONE(new int[]{-1});
 		//must correspond to total number of relations above with offset > -1.
@@ -269,7 +270,9 @@ public class RelationVec implements Serializable{
 		//repeat for the whole of termStr:
 		Integer residue = keywordDict.get(termStr);
 		if(null != residue){
-			System.out.println("RelationVec.java: adding word " + termStr);
+			if(DEBUG){
+				System.out.println("RelationVec.java: adding word " + termStr);
+			}
 			int bitPos = parseContextVectorSz*modulus + residue;
 			maxBitPos = addToPosList(bitPosList, maxBitPos, bitPos);
 			//if parseStructType is HYP, also add to the "IF" segment.
