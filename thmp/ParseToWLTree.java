@@ -11,6 +11,7 @@ import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.Multimap;
@@ -57,8 +58,7 @@ public class ParseToWLTree{
 	 */
 	private static final Multimap<String, ImmutableWLCommand> WLCommandMap = WLCommandsList.WLCommandMap();
 	
-	private static final Logger logger = Buggy.getLogger();
-	
+	private static final Logger logger = LogManager.getLogger(ParseToWLTree.class);
 	private static final Pattern PLURAL_PATTERN = Pattern.compile("(.+)s");
 	private static final Pattern CONJ_DISJ_PATTERN = Pattern.compile("conj_.+|disj_.+");
 	private static final Pattern CONJ_DISJ_PATTERN2 = Pattern.compile("(?:conj|disj)(.*)");

@@ -22,6 +22,7 @@ import java.util.regex.Pattern;
 
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
@@ -92,7 +93,7 @@ public class ThmP1 {
 	private static final String FLUFF = "Fluff";
 	private static final Pattern ARTICLE_PATTERN = Pattern.compile("a|the|an");
 
-	private static final Logger logger = Buggy.getLogger();
+	private static final Logger logger = LogManager.getLogger(ThmP1.class);
 
 	// private static final File unknownWordsFile;
 	private static final Path unknownWordsFile = Paths.get("src/thmp/data/unknownWords1.txt");

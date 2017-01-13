@@ -12,6 +12,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.wolfram.jlink.Expr;
 import com.wolfram.jlink.ExprFormatException;
@@ -40,6 +42,7 @@ public class ContextSearch {
 	//private static final int LIST_INDEX_SHIFT = 1;
 	private static final Pattern BRACKETS_PATTERN = WordForms.BRACKETS_PATTERN();
 	private static final boolean DEBUG = false;
+	private static final Logger logger = LogManager.getLogger(SearchIntersection.class);
 	
 	static{
 		//get the deserialized vectors from CollectThm instead of from thm vec file!
@@ -116,6 +119,7 @@ public class ContextSearch {
 	public static List<Integer> contextSearch(String query, List<Integer> nearestThmIndexList){
 		//short-circuit if query contains only 1 word		
 		
+		logger.info("Starting context search...");
 		int nearestThmIndexListSz = nearestThmIndexList.size();
 		//could be 0 if, for instance, the words searched are all unknown to the word maps. 
 		if(0 == nearestThmIndexListSz){ 
@@ -263,6 +267,7 @@ public class ContextSearch {
 			throw new IllegalStateException("thmVecDim: " + thmVecDim + " queryVecDim: " + queryVecDim, e);
 		}
 		//System.out.println("keywordDict: " + TriggerMathThm2.keywordDict());
+		logger.info("Context search done!");
 		return nearestVecList;
 	}
 	

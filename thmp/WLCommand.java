@@ -1232,7 +1232,8 @@ public class WLCommand implements Serializable{
 			System.out.println("HEAD STRUCT: " + structToAppendCommandStr);
 		}
 		//System.out.println("*******%######structToAppendCommandStr " +structToAppendCommandStr);
-		logger.info("****%###structToAppendCommandStr " +structToAppendCommandStr + " curCommand: " + curCommand);
+		//"****%###structToAppendCommandStr " +structToAppendCommandStr
+		logger.info("curCommand: " + curCommand);
 		WLCommandWrapper curCommandWrapper = structToAppendCommandStr.add_WLCommandWrapper(curCommand);
 		
 		if(DEBUG){

@@ -533,6 +533,7 @@ public class ThmP1TestRun {
 			st = "curve is isogenous to subgroup where $\\lambda$ are an eigenvalue";
 			st = "f is a function with radius of convergence r and finitely many roots";
 			st = "$f$ is holomorphic on $D(0, r)$, the derivative of $f$ is $\\sum_j j $";
+			st = "let $Mx$ be orthogonal to the ground state";
 			//Every minimal subsystem $\Sigma$ of the system $(\Omega^k,S_\infty)$ is a factor of the minimal system $(\Omega^2_{lo},S_\infty)$.
 			
 			//st = "take derivative of log of f";

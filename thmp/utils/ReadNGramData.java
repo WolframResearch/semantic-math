@@ -22,7 +22,7 @@ public class ReadNGramData {
 	private static final String TWO_GRAM_DATA_FILESTR = "src/thmp/data/twoGramData.txt";
 	private static final String THREE_GRAM_DATA_FILESTR = "src/thmp/data/threeGramData.txt";
 	//name of file containing additional n-grams and words scraped from the web.
-	private static final String NGRAM_DATA_FILESTR = "src/thmp/data/NGramData2.txt";
+	private static final String NGRAM_DATA_FILESTR = "src/thmp/data/NGramData.txt";
 	private static final Pattern SEPARATOR_PATTERN = Pattern.compile("\\s+|-|–");
 	private static final Pattern COMMA_PATTERN = Pattern.compile("(.+), (.+)");
 	private static final Pattern END_SLASH_PATTERN = Pattern.compile("(.+)\\s+([^-\\s]+)-$");
@@ -48,6 +48,8 @@ public class ReadNGramData {
 				
 				Matcher matcher = SEPARATOR_PATTERN.matcher(word);
 				word = matcher.replaceAll(" ").toLowerCase();
+				//desingularize
+				word = WordForms.getSingularForm(word);				
 				//determine if 2 or 3 gram
 				int wordLen = word.split(" ").length;
 				if(wordLen == 2){

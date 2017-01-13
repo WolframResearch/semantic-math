@@ -17,9 +17,11 @@ satisfy verb
 assumption noun
 sum ent
 curve ent
+state ent
 polynomial ent
 valuation ent
 discrete adj
+orthogonal adj
 additive adj
 direct sum ent
 set ent

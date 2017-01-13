@@ -11,19 +11,15 @@ import java.util.regex.Pattern;
 import java.util.Set;
 import java.util.TreeMap;
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectInputStream;
 import java.math.BigInteger;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ListMultimap;
 
@@ -143,7 +139,7 @@ public class CollectThm {
 	 * are different than the ones used by context and relational vector search, whose
 	 * terms also include the 2/3 grams and lexicon words (not just the ones that show up
 	 * in the current set of thms), in addition to the terms used in the *previous* round
-	 * of search (since data are serialized).
+	 * of search (since these data were serialized).
 	 */
 	public static class ThmWordsMaps{
 		//initialized in static block. List of theorems, each of which
@@ -199,7 +195,7 @@ public class CollectThm {
 		private static final double TWO_GRAM_FREQ_REDUCTION_FACTOR = 5.0/6;
 
 		private static final Pattern SPECIAL_CHARACTER_PATTERN = 
-				Pattern.compile(".*[\\\\$=\\{\\}\\[\\]()^_+%&\\./,\"\\d\\/@><*|].*");
+				Pattern.compile(".*[\\\\=$\\{\\}\\[\\]()^_+%&\\./,\"\\d\\/@><*|].*");
 		
 		static{
 			//pass builder into a reader function. For each thm, builds immutable list of keywords, 
@@ -254,20 +250,20 @@ public class CollectThm {
 			buildScoreMap(wordsScoreMapBuilder);
 			wordsScoreMap = wordsScoreMapBuilder.build();		
 			
-			//ImmutableMap.Builder<String, Integer> wordsScoreMapBuilderNoAnno = ImmutableMap.builder();
+			//first compute the average word frequencies for singleton words
+			averageSingletonWordFrequency = computeSingletonWordsFrequency(docWordsFreqPreMapNoAnno);			
+			//add lexicon words to docWordsFreqMapNoAnno, which only contains collected words from thm corpus,
+			//collected based on frequnency, right now. These words do not have corresponding thm indices.
+			addLexiconWordsToContextKeywordDict(docWordsFreqPreMapNoAnno, averageSingletonWordFrequency);
+			
 			Map<String, Integer> wordsScorePreMap = new HashMap<String, Integer>();
 			buildScoreMapNoAnno(wordsScorePreMap, docWordsFreqPreMapNoAnno);
 			wordsScoreMapNoAnno = ImmutableMap.copyOf(wordsScorePreMap);
 			System.out.println("*********wordsScoreMapNoAnno.size(): " + wordsScoreMapNoAnno.size());
 			
 			/***This is where the set of words used for SVD search and search based on context and relational vectors
-			 * start to differ. The latter contains additional words added below.***/
+			 * start to differ. The latter contains additional words (N-grams) added below.***/
 			
-			//first compute the average word frequencies for singleton words
-			averageSingletonWordFrequency = computeSingletonWordsFrequency(docWordsFreqPreMapNoAnno);			
-			//add lexicon words to docWordsFreqMapNoAnno, which only contains collected words from thm corpus,
-			//collected based on frequnency, right now. These words do not have corresponding thm indices.
-			addLexiconWordsToContextKeywordDict(docWordsFreqPreMapNoAnno, averageSingletonWordFrequency);
 			//Must add the 2 and 3 grams to docWordsFreqPreMapNoAnno
 			docWordsFreqPreMapNoAnno.putAll(twoGramsMap);
 			docWordsFreqPreMapNoAnno.putAll(threeGramsMap);
@@ -587,7 +583,7 @@ public class CollectThm {
 		}
 		
 		/**
-		 * Auxiliary method for building word frequency maps. Just like addWordToMaps, 
+		 * Auxiliary method for building word frequency maps. Analogous to addWordToMaps(), 
 		 * but add 2 and 3 Grams. 
 		 * @param word Can be singleton or n-gram.
 		 * @param curThmIndex
@@ -896,7 +892,8 @@ public class CollectThm {
 			}
 			thmListBuilder.addAll(extractedThmsList);
 			thmList = thmListBuilder.build();
-			webDisplayThmList = ImmutableList.copyOf(webDisplayThmsList);
+			//webDisplayThmList = ImmutableList.copyOf(webDisplayThmsList);
+			webDisplayThmList = allThmsWithHypList;
 			bareThmList = ImmutableList.copyOf(bareThmsList);
 			processedThmList = ImmutableList.copyOf(processedThmsList);
 			macroReplacedThmList = ImmutableList.copyOf(macroReplacedThmsList);
@@ -914,7 +911,7 @@ public class CollectThm {
 						.deserializeListFromInputStream(parsedExpressionListInputStream);	
 			}else{
 				//String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
-				String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionListServer1.dat";
+				String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
 				//@SuppressWarnings("unchecked")
 				return (List<ParsedExpression>)thmp.utils.FileUtils
 						.deserializeListFromFile(parsedExpressionSerialFileStr);	

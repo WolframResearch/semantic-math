@@ -778,7 +778,6 @@ public class ParseState {
 	 * @return 
 	 */
 	public ParseStruct getHeadParseStruct() {
-		logger.info("@@@headParseStruct" + headParseStruct);
 		return headParseStruct;
 	}
 	
@@ -851,6 +850,7 @@ public class ParseState {
 		this.thmContextVecList = new ArrayList<int[]>();
 		this.localVariableNamesMMap = ArrayListMultimap.create();
 		this.inThmFlag = false;
+		logger.info("(cleanup)@@@headParseStruct" + headParseStruct);
 	}	
 	
 	/**

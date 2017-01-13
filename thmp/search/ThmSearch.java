@@ -13,6 +13,7 @@ import org.apache.logging.log4j.Logger;
 import com.wolfram.jlink.*;
 
 import thmp.utils.FileUtils;
+import thmp.utils.WordForms;
 
 /**
  * Theorem search. Does the computation in WL using JLink. 
@@ -58,7 +59,6 @@ public class ThmSearch {
 			ARGV = new String[]{"-linkmode", "launch", "-linkname", "math -mathlink"};
 		}*/
 		
-		//docMx = new int[][]{{0, 1, 0}, {1, 1, 0}, {0, 0, 1}, {1, 0, 0}};
 		docMx = TriggerMathThm2.mathThmMx();
 		corMxList = new ArrayList<List<Integer>>();
 		try{			
@@ -67,19 +67,23 @@ public class ThmSearch {
 			//discard initial pakets the kernel sends over.
 			ml.discardAnswer();*/
 			ml = FileUtils.getKernelLinkInstance();
-			
+			String msg = "Kernel instance acquired...";
+			logger.info(msg);
 			//set up the matrix corresponding to docMx, to be SVD'd. 
 			//adjust mx entries based on correlation first	
 			StringBuilder mxSB = new StringBuilder("m =");
 			mxSB.append(toNestedList(docMx)).append("//N;");
 			int rowDimension = docMx.length;
 			int mxColDim = docMx[0].length;
-			System.out.println("mxSB.length(): " + mxSB.length());
+			msg = "mxSB.length(): " + mxSB.length();
+			System.out.println(msg);
+			logger.info(msg);
 			//System.out.println("nested mx " + Arrays.deepToString(docMx));
 			boolean getMx = false;
 			
-			//ml.evaluate("m=IntegerPart[" + mx +"]//N");
 			ml.evaluate(mxSB.toString());
+			msg = "Kernel has the matrix!";
+			logger.info(msg);
 			if(getMx){
 				ml.waitForAnswer();			
 				Expr expr = ml.getExpr();
@@ -115,7 +119,9 @@ public class ThmSearch {
 			//subtract IdentityMatrix to avoid self-compounding
 			ml.evaluate("corMx = Clip[Correlation[Transpose[m]]-IdentityMatrix[" + rowDimension 
 					+ "], {.6, Infinity}, {0, 0}]/.Indeterminate->0;");
-		
+			msg = "Corr. mx clipped!";
+			logger.info(msg);
+			
 			if(getCorMx){
 				ml.waitForAnswer();
 				Expr expr = ml.getExpr();
@@ -160,8 +166,9 @@ public class ThmSearch {
 			//write matrix to file, so no need to form it each time
 			
 			//System.out.println(nearestVec.length() + "  " + Arrays.toString((int[])nearestVec.part(1).asArray(Expr.INTEGER, 1)));
-			
-			System.out.print("Dimensions of docMx: " + docMx.length + " " +mxColDim);
+			String dimMsg = "Dimensions of docMx: " + docMx.length + " " +mxColDim + ". Starting SVD...";
+			System.out.print(dimMsg);
+			logger.info(dimMsg);
 			//System.out.println(mx);
 			
 			//ml.evaluate("mx=" + mx +"//N;");
@@ -193,12 +200,12 @@ public class ThmSearch {
 			//number of singular values to keep. Determined (roughly) based on the number of
 			//theorems (col dimension of mx)
 			//int k = NUM_SINGULAR_VAL_TO_KEEP;
-			int k = mxColDim < 400 ? 35 : (mxColDim < 1000 ? 45 : (mxColDim < 3000 ? 55 : 65)) ;
+			int k = mxColDim < 400 ? 35 : (mxColDim < 1000 ? 40 : (mxColDim < 3000 ? 50 : 60)) ;
 			ml.evaluate("{u, d, v} = SingularValueDecomposition[mx//N, " + k +"];");
 			//ml.waitForAnswer();
 			ml.discardAnswer();
 			System.out.println("Finished SVD");
-			
+			logger.info("Finished SVD!");
 			//randomly select column vectors to approximate mean
 			//adjust these!
 			int numRandomVecs = mxColDim < 500 ? 60 : (mxColDim < 5000 ? 100 : 150);
@@ -331,11 +338,11 @@ public class ThmSearch {
 			readInputAndSearch();
 			
 		}catch(MathLinkException e){
-			logger.error("MathLinkException during evaluation:" + e.getMessage());
+			logger.error("MathLinkException during evaluation:" + e.getStackTrace());
 			//e.printStackTrace();
 			throw new RuntimeException("MathLinkException during evaluation!", e);
 		}catch(IndexOutOfBoundsException e){			
-			logger.error("IndexOutOfBoundsException during evaluation using MathLink.");
+			logger.error("IndexOutOfBoundsException during evaluation using MathLink." + e.getStackTrace());
 			//e.printStackTrace();
 			throw new IllegalStateException("IndexOutOfBoundsException during evaluation!", e);
 		}
@@ -361,15 +368,19 @@ public class ThmSearch {
 		//ml.discardAnswer();
 		
 		try{
+			String msg = "Transposing and applying corMx...";
+			logger.info(msg);
 			//process query first with corMx		
 			ml.evaluate("q = Transpose[" + queryStr + "] + 0.1*corMx.Transpose["+ queryStr +"]//N;");
 			ml.discardAnswer();
 			//ml.evaluate(queryStr+"/.{0.0->30}");
 			//System.out.println("QUERY " + ml.getExpr().part(1));
-			System.out.println("Looking for nearest vecs in ThmSearch.java.");
-			
+			msg = "Applied correlation matrix, about to Inverse[d].Transpose[u].(q/.{0.0->mxMeanValue}) ";
+			System.out.println(msg);
+			logger.info(msg);
 			//ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"];");
 			//ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"/.{0.0->mxMeanValue}];");
+			//this step is costly!
 			ml.evaluate("q = Inverse[d].Transpose[u].(q/.{0.0->mxMeanValue});");
 			//ml.evaluate("q = Inverse[d].Transpose[u].Transpose[q];");
 			ml.discardAnswer();
@@ -398,6 +409,9 @@ public class ThmSearch {
 		
 		int[] nearestVecArray;
 		try{
+			String msg = "Applying Nearest[]...";
+			System.out.println(msg);
+			logger.info(msg);
 			ml.evaluate("Nearest[v->Range[Dimensions[v][[1]]], First@Transpose[q],"+numNearest+"] - " + LIST_INDEX_SHIFT);
 			
 			//take largest inner product
@@ -407,11 +421,17 @@ public class ThmSearch {
 			Expr nearestVec = ml.getExpr();
 			//System.out.println(nearestVec.length() + "  " + Arrays.toString((int[])nearestVec.part(1).asArray(Expr.INTEGER, 1)));
 			//turn into list.
-			System.out.println("nearestVec list returned by SVD: " + nearestVec);
+			msg = "SVD returned nearestVec!";
+			System.out.println(msg);
+			logger.info(msg);
 			//use this when using Nearest
 			//int[] nearestVecArray = (int[])nearestVec.part(1).asArray(Expr.INTEGER, 1);
 			nearestVecArray = (int[])nearestVec.asArray(Expr.INTEGER, 1);
-		}catch(MathLinkException | ExprFormatException e){
+		}catch(MathLinkException e){
+			logger.error("MathLinkException! " + e.getStackTrace());
+			throw new RuntimeException(e);
+		}catch(ExprFormatException e){
+			logger.error("ExprFormatException! " + e.getStackTrace());
 			throw new RuntimeException(e);
 		}
 		Integer[] nearestVecArrayBoxed = ArrayUtils.toObject(nearestVecArray);
@@ -436,7 +456,7 @@ public class ThmSearch {
 		while(sc.hasNextLine()){
 			String thm = sc.nextLine();
 			query = TriggerMathThm2.createQueryNoAnno(thm);
-			if(query.equals("")){
+			if(WordForms.getWhiteEmptySpacePattern().matcher(query).matches()){
 				System.out.println("I've got nothing for you yet. Try again.");
 				continue;
 			}

@@ -45,6 +45,7 @@ public class FileUtils {
 			Files.write(fileToPath, contentList, Charset.forName("UTF-8"));
 		} catch (IOException e) {
 			e.printStackTrace();
+			logger.error(e.getStackTrace());
 		}
 	}
 

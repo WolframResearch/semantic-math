@@ -15,13 +15,13 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import thmp.ParseState.ParseStateBuilder;
 import thmp.ParseState.VariableDefinition;
 import thmp.ParseState.VariableName;
 import thmp.search.CollectThm;
-import thmp.utils.Buggy;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 
@@ -36,7 +36,7 @@ import thmp.utils.WordForms;
  */
 public class DetectHypothesis {
 	
-	private static final Logger logger = Buggy.getLogger();
+	private static final Logger logger = LogManager.getLogger(DetectHypothesis.class);
 	//pattern matching is faster than calling str.contains() repeatedly 
 	//which is O(mn) time.
 	private static final Pattern HYP_PATTERN = WordForms.get_HYP_PATTERN();
@@ -69,12 +69,23 @@ public class DetectHypothesis {
 	private static final List<String> ALL_THM_WORDS_LIST = new ArrayList<String>(CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno().keySet());
 	
 	private static final boolean PARSE_INPUT_VERBOSE = true;
+	//whether to gather a list of statistics, such as percentage of thms with full parses, or non-null head ParseStruct's.
+	private static final boolean GATHER_STATS = true;
+	
 	//pattern for lines to skip any kind of parsing, even hypothesis-detection.
 	//skip examples and bibliographies
 	private static final Pattern SKIP_PATTERN = Pattern.compile("\\\\begin\\{proof\\}.*|\\\\begin\\{exam.*|\\\\begin\\{thebib.*");
 	private static final Pattern END_SKIP_PATTERN = Pattern.compile("\\\\end\\{proof\\}.*|\\\\end\\{exam.*|\\\\end\\{thebib.*");
 	private static final Pattern END_DOCUMENT_PATTERN = Pattern.compile("\\\\end\\{document\\}.*");
 	private static final Pattern NEW_DOCUMENT_PATTERN = Pattern.compile(".*\\\\documentclass.*");
+	
+	/**
+	 * Statistics class to record statistics such as the percentage of thms 
+	 * that have spanning parses and/or non-null headParseStruct's.
+	 */
+	private static class Stats{
+		
+	}
 	
 	/**
 	 * Combination of theorem String and the list of
@@ -154,8 +165,8 @@ public class DetectHypothesis {
 		try{
 			//inputBF = new BufferedReader(new FileReader("src/thmp/data/CommAlg5.txt"));
 			//inputBF = new BufferedReader(new FileReader("src/thmp/data/fieldsRawTex.txt"));
-			inputBF = new BufferedReader(new FileReader("src/thmp/data/samplePaper1.txt"));
-			//inputBF = new BufferedReader(new FileReader("src/thmp/data/Total.txt"));
+			//inputBF = new BufferedReader(new FileReader("src/thmp/data/samplePaper1.txt"));
+			inputBF = new BufferedReader(new FileReader("src/thmp/data/Total.txt"));
 			//inputBF = new BufferedReader(new FileReader("src/thmp/data/fieldsThms2.txt"));
 		}catch(FileNotFoundException e){
 			e.printStackTrace();
@@ -166,11 +177,12 @@ public class DetectHypothesis {
 			List<DefinitionListWithThm> defThmList = readAndParseThm(inputBF, parseState);
 			System.out.println("DefinitionListWithThm list: " + defThmList);
 			DefinitionListWithThmStrList.add(defThmList.toString()+ "\n");
-			for(DefinitionListWithThm def : defThmList){				
+			for(DefinitionListWithThm def : defThmList){
 				DefinitionList.add(def.getDefinitionList().toString());
 			}
 		}catch(IOException e){
 			e.printStackTrace();
+			logger.error(e.getStackTrace());
 		}catch(Throwable e){
 			logger.error(e.getStackTrace());			
 			throw e;
@@ -373,6 +385,7 @@ public class DetectHypothesis {
 				/*if (!WordForms.getWhitespacePattern().matcher(thm).find()) {
 					thms.add(thm);
 				}*/
+				//local clean up, after done with a theorem, but still within same document.
 				parseState.parseRunLocalCleanUp();
 				newThmSB.setLength(0);
 				continue;

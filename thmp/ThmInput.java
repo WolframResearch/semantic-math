@@ -29,10 +29,10 @@ public class ThmInput {
 
 	//Intentionally *not* final, as must append custom author-defined macros and compile the pattern
 	//factor out the \begin! shouldn't need the [^\\\\]* if using matcher.find()
-	static String THM_START_STR = "[^\\\\]*\\\\begin\\s*\\{def(?:.*)|[^\\\\]*\\\\begin\\s*\\{lem(?:.*)"
+	static String THM_START_STR = ".*\\\\begin\\s*\\{def(?:.*)|.*\\\\begin\\s*\\{lem(?:.*)"
 			//<--{prop.. instead of {pro.., since need to skip parsing proofs.
-			+ "|[^\\\\]*\\\\begin\\s*\\{th(?:.*)|[^\\\\]*\\\\begin\\s*\\{prop(?:.*)" 
-			+ "|[^\\\\]*\\{proclaim(?:.*)|[^\\\\]*\\\\begin\\s*\\{cor(?:.*)";
+			+ "|.*\\\\begin\\s*\\{th(?:.*)|.*\\\\begin\\s*\\{prop(?:.*)" 
+			+ "|.*\\{proclaim(?:.*)|.*\\\\begin\\s*\\{cor(?:.*)";
 	
 	static final Pattern THM_START_PATTERN = Pattern.compile(THM_START_STR);	
 	// start of theorem, to remove words such as \begin[prop]
@@ -43,9 +43,9 @@ public class ThmInput {
 	 * "|^\\\\begin\\{prop(?:[^}]*)\\}\\s*|^\\\\begin\\{proclaim(?:[^}]*)\\}\\s*"
 	 * );
 	 */	
-	static String THM_END_STR = "[^\\\\]*\\\\end\\s*\\{def(?:.*)|[^\\\\]*\\\\end\\s*\\{lem(?:.*)"
-			+ "|[^\\\\]*\\\\end\\s*\\{th(?:.*)|[^\\\\]*\\\\end\\s*\\{prop(?:.*)" 
-			+ "|[^\\\\]*\\\\endproclaim(?:.*)|[^\\\\]*\\\\end\\s*\\{cor(?:.*)";
+	static String THM_END_STR = ".*\\\\end\\s*\\{def(?:.*)|.*\\\\end\\s*\\{lem(?:.*)"
+			+ "|.*\\\\end\\s*\\{th(?:.*)|.*\\\\end\\s*\\{prop(?:.*)" 
+			+ "|.*\\\\endproclaim(?:.*)|.*\\\\end\\s*\\{cor(?:.*)";
 	//static String THM_END_STR = "\\\\end\\{def(?:.*)|\\\\end\\{lem(?:.*)|\\\\end\\{th(?:.*)|\\\\end\\{pro(?:.*)|\\\\endproclaim(?:.*)"
 			//+ "|\\\\end\\{cor(?:.*)";
 	static final Pattern THM_END_PATTERN = Pattern.compile(THM_END_STR);

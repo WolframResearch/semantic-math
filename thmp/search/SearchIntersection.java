@@ -7,6 +7,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.util.NavigableMap;
 import java.util.Scanner;
 import java.util.Set;
@@ -33,9 +37,11 @@ public class SearchIntersection {
 	
 	//bonus points for matching context better, eg hyp or stm
 	//disable bonus now, since not using annotated words
-	private static final int CONTEXT_WORD_BONUS = 0;
-	
+	private static final int CONTEXT_WORD_BONUS = 0;	
 	private static final int NUM_NEAREST_VECS = 4;
+	
+	private static final Logger logger = LogManager.getLogger(SearchIntersection.class);
+
 	/**
 	 * Map of keywords and their scores in document, the higher freq in doc, the lower 
 	 * score, say 1/(log freq + 1) since log 1 = 0. 
@@ -172,7 +178,8 @@ public class SearchIntersection {
 		//of indices of words that have been added. This is to reward theorems that cover
 		//the more number of words. Actually just use SetMultimap.
 		//if 2/3-grams added, add indices of all words in 2/3-gram to set for that thm.
-		
+
+		logger.info("Starting intersection search...");
 		SetMultimap<Integer, Integer> thmWordSpanMMap = HashMultimap.create();
 		
 		//make input list of words
@@ -392,6 +399,7 @@ public class SearchIntersection {
 			}
 		}
 		
+		logger.info("Highest thm list obtained, intersection search done!");
 		searchState.set_intersectionVecList(highestThmList);
 		return searchState;
 	}
