@@ -20,7 +20,7 @@ public class ParsedExpression implements Serializable{
 
 	private static final long serialVersionUID = -6334467107326376015L;
 
-	private String originalThmStr;
+	private transient String originalThmStr;
 	
 	private transient List<Struct> parseRootList;
 	

@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -16,6 +18,8 @@ import java.util.Map;
 import java.util.NavigableSet;
 import java.util.Set;
 import java.util.regex.Pattern;
+
+import javax.servlet.ServletContext;
 
 import com.google.common.collect.TreeMultimap;
 
@@ -86,16 +90,23 @@ public class ThreeGramSearch {
 		
 		Set<String> initialThreeGramsSet = new HashSet<String>();
 		//fill in initial default set of scraped three grams
-		BufferedReader threeGramBR = NGramSearch.THREE_GRAM_DATA_BR();
-		if(null == threeGramBR){
+		BufferedReader threeGramBR = null;
+		ServletContext servletContext = NGramSearch.getServletContext();
+		if(null == servletContext){
 			try{
-				BufferedReader threeGramBF = new BufferedReader(new FileReader(THREE_GRAM_DATA_FILESTR));
-				readAdditionalThreeGrams(threeGramBF, initialThreeGramsSet);
+				threeGramBR = new BufferedReader(new FileReader(THREE_GRAM_DATA_FILESTR));
+				readAdditionalThreeGrams(threeGramBR, initialThreeGramsSet);				
 			}catch(FileNotFoundException e){
 				e.printStackTrace();
+			}finally{
+				FileUtils.silentClose(threeGramBR);
 			}
 		}else{
+			InputStream twoGramInputStream = servletContext.getResourceAsStream(THREE_GRAM_DATA_FILESTR);
+			threeGramBR = new BufferedReader(new InputStreamReader(twoGramInputStream));		
 			readAdditionalThreeGrams(threeGramBR, initialThreeGramsSet);
+			FileUtils.silentClose(twoGramInputStream);
+			FileUtils.silentClose(threeGramBR);
 		}
 		threeGramFreqMap = new HashMap<String, Integer>();
 		//obtain the most frequent three grams from the previous threeGramMap, definitely

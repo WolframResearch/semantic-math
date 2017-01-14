@@ -271,17 +271,17 @@ public class ContextSearch {
 		return nearestVecList;
 	}
 	
-	//testing
+	//Run stand-alone
 	public static void main(String[] args){
 	
 		Scanner sc = new Scanner(System.in);
 		
 		//get all thms for now, to test 
-				int allThmsListSz = CollectThm.ThmList.allThmsWithHypList().size();
+				/*int allThmsListSz = CollectThm.ThmList.allThmsWithHypList().size();
 				List<Integer> nearestVecList = new ArrayList<Integer>();
 				for(int i = 0; i < 5; i++){
 					nearestVecList.add(i);
-				}
+				}*/
 				
 		while(sc.hasNextLine()){
 			String thm = sc.nextLine();
@@ -289,8 +289,8 @@ public class ContextSearch {
 			
 			thm = thm.toLowerCase();
 			int NUM_NEAREST = 6;
-			//List<Integer> 
-			nearestVecList = ThmSearch.findNearestThmsInTermDocMx(thm, NUM_NEAREST);			
+			
+			List<Integer> nearestVecList = ThmSearch.findNearestThmsInTermDocMx(thm, NUM_NEAREST);			
 			
 			if(nearestVecList.isEmpty()){
 				System.out.println("I've got nothing for you yet. Try again.");

@@ -10,6 +10,8 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 
+import javax.servlet.ServletContext;
+
 import com.google.common.collect.Multimap;
 import com.google.common.collect.TreeMultimap;
 import com.wolfram.jlink.Expr;
@@ -29,7 +31,7 @@ public class SearchCombined {
 	//combined number of vectors to take from search results of
 	//svd/nearest and intersection
 	private static final int NUM_COMMON_VECS = 4;
-	
+	//private static ServletContext servletContext;
 	//should update at the very beginning!
 	//private static final int LIST_INDEX_SHIFT = 1;
 	
@@ -47,11 +49,17 @@ public class SearchCombined {
 	 * @param allThmWordsSerialBReader BufferedReader to file containing words from previous run's theorem data.
 	 */
 	public static void initializeSearchWithResource(BufferedReader freqWordsFileBuffer, List<BufferedReader> texSourceFileBufferList,
-			BufferedReader macrosReader, InputStream parsedExpressionListInputStream, InputStream allThmWordsSerialInputStream){
+			BufferedReader macrosReader, InputStream parsedExpressionListInputStream, InputStream allThmWordsSerialInputStream,
+			ServletContext servletContext_){
 		//CollectFreqWords.setResources(freqWordsFileBuffer);
+		CollectThm.setServletContext(servletContext_);
+		
 		CollectThm.setWordFrequencyBR(freqWordsFileBuffer);
 		CollectThm.setResources(texSourceFileBufferList, macrosReader, parsedExpressionListInputStream, allThmWordsSerialInputStream);	
-		ProcessInput.setResources(macrosReader);
+		
+		ProcessInput.setServletContext(servletContext_);
+		ProcessInput.setResources(macrosReader);		
+		//servletContext = servletContext_;
 	}
 	
 	/**
@@ -206,6 +214,7 @@ public class SearchCombined {
 		//context search doesn't do anything if only one token.
 		if(inputAr.length == 1){
 			searchContextBool = false;
+			searchRelationalBool = false;
 		}
 		
 		//find best intersection of these two lists. nearestVecList is 1-based, but intersectionVecList is 0-based! 

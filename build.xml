@@ -5,8 +5,10 @@
 	
 	<property name="builddir" value="${basedir}/bin/"/>
 	<property name="srcdir" value="${basedir}/src/thmp/"/>
+	<property name="datadir" value="${basedir}/src/thmp/data"/>
+	<property name="server_datadir" value="/Users/yihed/Documents/workspaceEE/ThmpServlet/WebContent/src/thmp/data"/>
 	<property name="exceptionsSrcdir" value="${basedir}/src/exceptions/"/>
-
+	
 	<!-- main lib containing jar such as JLink, Guava etc -->
 	<property name="libdir" value="${basedir}/lib/"/>
 	<!-- lib containing jars such as thmSearch, thmUtils etc-->
@@ -18,13 +20,26 @@
 		<delete failonerror="false" file="${basedir}/${jarname}"/>
 	</target>
 	
+	<!-- Copy data such as lexicon.txt into server directory, i.e. WEB-INF -->
+		<target name="copydata">
+			<copy todir="${server_datadir}">
+				<fileset dir="${datadir}">
+					<include name="lexicon.txt"/>
+					<include name="parsedExpressionList.dat"/>
+					<include name="threeGramData.txt"/>
+					<include name="twoGramData.txt"/>
+					<include name="allThmWordsList.dat"/>
+					<include name="NGramData.txt"/>
+				</fileset>
+			</copy>
+		</target>
+	
 	<target name="compileExceptions" description="compile exceptions package">
 	  <mkdir dir="${builddir}"/>
 	  <javac		
 			srcdir="${exceptionsSrcdir}"
 			destdir="${builddir}"
-			debug="true"
-			
+			debug="true"			
 		>
 		<classpath>			
 			<fileset dir="${thmplibdir}">
@@ -43,8 +58,7 @@
 	  <javac		
 			srcdir="${srcdir}"
 			destdir="${builddir}"
-			debug="true"
-			
+			debug="true"			
 		>
 		<exclude name="/TestMathParser.java"/>
 		<exclude name="/ThmP1Test.java"/>

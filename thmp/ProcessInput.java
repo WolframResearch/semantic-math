@@ -5,6 +5,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,6 +20,8 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.servlet.ServletContext;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMultimap;
@@ -50,7 +54,9 @@ public class ProcessInput {
 	private static final Pattern TEX_CONTENT_PATTERN;
 	//set this reader when called from servlet with FileInputStream info
 	private static BufferedReader macrosBReader;
-	
+	//servlet context if run from server
+	private static ServletContext servletContext;
+		
 	static{
 		
 		ListMultimap<String, String> texCommandWordsPreMMap = ArrayListMultimap.create();
@@ -96,6 +102,14 @@ public class ProcessInput {
 	}
 	
 	/**
+	 * Set servlet context, if run from server.
+	 * @param srcFileReader
+	 */
+	public static void setServletContext(ServletContext servletContext_) {
+		servletContext = servletContext_;
+	}
+	
+	/**
 	 * Reads in from file, potentially replaces latex, puts thms into a list, 
 	 * @param inputFile
 	 * @param replaceTex replaces the tex inside $ $ with "tex"
@@ -133,6 +147,7 @@ public class ProcessInput {
 			texSrcFileReader = new FileReader(MACROS_SRC);
 		}catch(FileNotFoundException e){
 			e.printStackTrace();
+			throw new IllegalStateException(e);
 		}
 		return new BufferedReader(texSrcFileReader);
 	}
@@ -144,12 +159,18 @@ public class ProcessInput {
 	 * @return
 	 */
 	public static List<String> processInput(List<String> thmInputList, boolean replaceTex){			
-		BufferedReader texSrcFileBReader = macrosBReader;
-		if(texSrcFileBReader == null){
-			//set to the default local value if not set externally
-			texSrcFileBReader = getMacrosBReader();		
+		BufferedReader macrosBufferedReader = macrosBReader;
+		if(null != servletContext){
+			InputStream macrosFileStream = servletContext
+					.getResourceAsStream(MACROS_SRC);
+			macrosBufferedReader = new BufferedReader(
+					new InputStreamReader(macrosFileStream));			
+		}else{
+			//set to the default local value if not running on server
+			macrosBufferedReader = getMacrosBReader();
 		}
-		return processInput(thmInputList, texSrcFileBReader, replaceTex, false, false);
+		
+		return processInput(thmInputList, macrosBufferedReader, replaceTex, false, false);
 	}
 	
 	/**

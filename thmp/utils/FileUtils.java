@@ -1,18 +1,23 @@
 package thmp.utils;
 
+import java.io.BufferedWriter;
+import java.io.Closeable;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -58,6 +63,23 @@ public class FileUtils {
 	public static void writeToFile(List<? extends CharSequence> contentList, String fileToStr) {
 		Path toPath = Paths.get(fileToStr);
 		writeToFile(contentList, toPath);
+	}
+	
+	/**
+	 * Append to file, rather than overwrite.
+	 */
+	public static void appendObjToFile(Object obj, String pathToFile){
+		
+		boolean appendBool = true;
+		try(FileWriter fw = new FileWriter(pathToFile, appendBool);
+			    BufferedWriter bw = new BufferedWriter(fw);
+			    PrintWriter outPrintWriter = new PrintWriter(bw))
+			{
+				outPrintWriter.println(obj);
+				
+			} catch (IOException e) {
+			   logger.error("IOException while writing to unknown words file!");			   
+			}		
 	}
 	
 	/**
@@ -152,11 +174,18 @@ public class FileUtils {
 		return deserializedList;
 	}
 	
-	private static void silentClose(InputStream fileInputStream){
+	/**
+	 * Closing resource, loggin possible IOException, without clobbering
+	 * existing Exceptions if any has been thrown.
+	 * @param fileInputStream
+	 */
+	public static void silentClose(Closeable resource){
+		if(null == resource) return;
 		try{
-			fileInputStream.close();
+			resource.close();
 		}catch(IOException e){
-			logger.error("IOException while closing InputStream: " + fileInputStream);
+			e.printStackTrace();
+			logger.error("IOException while closing resource: " + resource);
 		}
 	}
 	

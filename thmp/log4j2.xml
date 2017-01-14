@@ -6,10 +6,10 @@
   </Properties>
   <Appenders>
     <Console name="Console" target="SYSTEM_OUT">
-      <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+      <PatternLayout pattern="%d{MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n"/>
     </Console>
     <File name="logFile" fileName="${filename}">
-         <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>   	
+         <PatternLayout pattern="%d{MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n"/>   	
     </File>    
   </Appenders>
   <Loggers>

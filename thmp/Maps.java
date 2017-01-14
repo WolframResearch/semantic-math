@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -11,6 +13,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.servlet.ServletContext;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableListMultimap;
@@ -21,6 +28,7 @@ import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 
 import thmp.search.WordFrequency;
+import thmp.utils.FileUtils;
 
 import java.util.Map.Entry;
 
@@ -45,6 +53,7 @@ public class Maps {
 	// used in first run, like ent_verb: there exists
 	protected static Map<String, String> structMap2;
 	
+	private static final Logger logger = LogManager.getLogger(Maps.class);
 	// map for composite adjectives, eg positive semidefinite
 	// value is regex string to be matched
 	//protected static Map<String, String> adjMap;
@@ -53,8 +62,8 @@ public class Maps {
 	//private static final ImmutableListMultimap<String, FixedPhrase> fixedPhraseMMap;
 	private static ImmutableListMultimap<String, FixedPhrase> fixedPhraseMMap;
 	
-	private static BufferedReader fixedPhraseBuffer;
-	private static BufferedReader lexiconBuffer;
+	private static ServletContext servletContext;
+	
 	private static Pattern LEXICON_LINE_PATTERN = Pattern.compile("\"(.*)\" ([^\\s]+) \"(.*)\"");
 	private static String POS_TAGGER_PATH_STR;
 	
@@ -70,9 +79,16 @@ public class Maps {
 	 * @param fixedPhraseBuf
 	 * @param lexiconBuf
 	 */
-	public static void setBufferedReaders(BufferedReader fixedPhraseBuf, BufferedReader lexiconBuf){
+	/*public static void setBufferedReaders(BufferedReader fixedPhraseBuf, BufferedReader lexiconBuf){
 		fixedPhraseBuffer = fixedPhraseBuf;
 		lexiconBuffer = lexiconBuf;
+	}*/
+	
+	/**
+	 * Sets servletContext.
+	 */
+	public static void setServletContext(ServletContext servletContext_){
+		servletContext = servletContext_;
 	}
 	
 	//should have commoin init class
@@ -151,21 +167,44 @@ public class Maps {
 			// probabilities for pair constructs.
 			probMap = new HashMap<String, Double>();
 			
-			if(fixedPhraseBuffer != null && lexiconBuffer != null){
-				readFixedPhrases(fixedPhraseBuffer);
-		    	readLexicon(lexiconBuffer, posPreMMap);
+			BufferedReader fixedPhraseBuffer = null;
+			BufferedReader lexiconBuffer = null;
+			
+			if(null != servletContext){
+				
+				InputStream fixedPhraseStream = servletContext.getResourceAsStream(fixedPhraseFileStr);
+				InputStream lexiconFileStrStream = servletContext.getResourceAsStream(lexiconFileStr);
+				
+				fixedPhraseBuffer = new BufferedReader(new InputStreamReader(fixedPhraseStream));
+				lexiconBuffer = new BufferedReader(new InputStreamReader(lexiconFileStrStream));
+				
+				FileUtils.silentClose(fixedPhraseStream);
+				FileUtils.silentClose(lexiconFileStrStream);
 			}else{
 				try{
 					fixedPhraseBuffer = new BufferedReader(new FileReader(fixedPhraseFileStr));
 					lexiconBuffer = new BufferedReader(new FileReader(lexiconFileStr));
-					readFixedPhrases(fixedPhraseBuffer);
-					readLexicon(lexiconBuffer, posPreMMap);
 				}catch(FileNotFoundException e){
-					e.printStackTrace();
-					throw new RuntimeException(e);
+					String msg = "FileNotFoundException when opening buffered readers: " + e.getStackTrace();
+					logger.error(msg);
+					FileUtils.silentClose(fixedPhraseBuffer);
+					FileUtils.silentClose(lexiconBuffer);
+					throw new IllegalStateException(e);
 				}
-		    	
 			}
+			readFixedPhrases(fixedPhraseBuffer);
+	    	readLexicon(lexiconBuffer, posPreMMap);
+	    	
+	    	try{
+	    		fixedPhraseBuffer.close();
+	    		lexiconBuffer.close();
+	    	}catch(IOException e){
+	    		String msg = "FileNotFoundException when opening buffered readers: " + e.getStackTrace();
+				logger.error(msg);
+				FileUtils.silentClose(fixedPhraseBuffer);
+				FileUtils.silentClose(lexiconBuffer);
+	    	}
+	    	
 			posPreMMap = buildMap(posPreMMap);
 			posMMap = ArrayListMultimap.create(posPreMMap);
 		}
@@ -990,6 +1029,7 @@ public class Maps {
 	 * @throws IOException
 	 */
 	private static void readFixedPhrases(BufferedReader fixedPhraseReader) {
+		
 		ImmutableListMultimap.Builder<String, FixedPhrase> fixedPhraseMMapBuilder = ImmutableListMultimap
 				.<String, FixedPhrase> builder();
 		// should read in from file

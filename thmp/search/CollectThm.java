@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
+
+import javax.servlet.ServletContext;
+
 import java.util.Set;
 import java.util.TreeMap;
 import java.io.BufferedReader;
@@ -15,6 +18,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.math.BigInteger;
 
 import com.google.common.collect.ImmutableList;
@@ -75,10 +79,13 @@ public class CollectThm {
 	
 	//wordFrequency.txt containing word frequencies and their part of speech (pos)
 	private static BufferedReader wordFrequencyBR;
-	/*words that should be included as math words, but occur too frequently in math texts
-	* to be detected as non-fluff words. Put words here to be intentionally included in words map.
-	* Only singletons here. N-grams should be placed in N-gram files.
-	*/
+	//servlet context if run from server
+	private static ServletContext servletContext;
+	
+	/* Words that should be included as math words, but occur too frequently in math texts
+	 * to be detected as non-fluff words. Put words here to be intentionally included in words map.
+	 * Only singletons here. N-grams should be placed in N-gram files.
+	 */
 	private static final String[] SCORE1MATH_WORDS = new String[]{"ring", "field", "ideal", "finite", "series",
 			"complex", "combination", "regular", "domain", "local", "smooth", "map", "definition", "standard", "prime", "every",
 			"injective", "surjective"};
@@ -113,6 +120,18 @@ public class CollectThm {
 	}
 	
 	/**
+	 * Set servlet context, if run from server.
+	 * @param srcFileReader
+	 */
+	public static void setServletContext(ServletContext servletContext_) {
+		servletContext = servletContext_;
+	}
+	
+	public static ServletContext getServletContext() {
+		return servletContext;
+	}
+	
+	/**
 	 * Set list of bufferedReaders, rawFileReaderList.
 	 * Should just set servlet context instead of BufferedReaders!
 	 * @param srcFileReader
@@ -130,9 +149,9 @@ public class CollectThm {
 		wordFrequencyBR = freqWordsBR;
 	}
 	
-	public static BufferedReader get_wordFrequencyBR() {
+	/*public static BufferedReader get_wordFrequencyBR() {
 		return wordFrequencyBR;
-	}
+	}*/
 	
 	/**
 	 * The terms used by the SVD search, which are collected dynamically from the thms,
@@ -293,11 +312,13 @@ public class CollectThm {
 		 * @return
 		 */
 		@SuppressWarnings("unchecked")		
-		private static List<String> extractWordsList() {			
-			if(null != allThmWordsSerialInputStream){
+		private static List<String> extractWordsList() {	
+			String allThmWordsSerialFileStr = "src/thmp/data/allThmWordsList.dat";
+			if(null != servletContext){
+				//need to close this!
+				allThmWordsSerialInputStream = servletContext.getResourceAsStream(allThmWordsSerialFileStr);
 				return (List<String>)FileUtils.deserializeListFromInputStream(allThmWordsSerialInputStream);
-			}else{
-				String allThmWordsSerialFileStr = "src/thmp/data/allThmWordsList.dat";				
+			}else{				
 				return (List<String>)FileUtils.deserializeListFromFile(allThmWordsSerialFileStr);
 			}
 		}	
@@ -850,7 +871,7 @@ public class CollectThm {
 			//System.out.print("rawFileReader: " + rawFileReader);
 			//extractedThms = ThmList.get_thmList();
 			try {
-				if(rawFileReaderList == null){
+				if(null == servletContext){
 					//this is the case when resources have not been set by servlet, so not on server.
 					for(String fileStr : rawFileStrList){
 						//FileReader rawFileReader = new FileReader(rawFileStr);
@@ -867,6 +888,7 @@ public class CollectThm {
 					bareThmsList = ProcessInput.processInput(bareThmsList, false, false, false);
 					processedThmsList = ProcessInput.processInput(extractedThmsList, macrosBReader, REPLACE_TEX, TEX_TO_WORDS, REPLACE_MACROS);					
 					macroReplacedThmsList = ProcessInput.get_macroReplacedThmList();
+					macrosBReader.close();
 				}else{
 					//System.out.println("read from rawFileReader");
 					//System.out.print("ready for processing: " +rawFileReader);
@@ -876,9 +898,21 @@ public class CollectThm {
 					while((line=rawFileReader.readLine()) != null){
 						System.out.println(line);
 					}*/ 
-					for(BufferedReader fileReader : rawFileReaderList){
-						extractedThmsList.addAll(ThmInput.readThm(fileReader, webDisplayThmsList, bareThmsList));
+					for(String fileStr : rawFileStrList){
+						InputStream inputStream = servletContext.getResourceAsStream(fileStr);
+						BufferedReader rawFileBReader = new BufferedReader(new InputStreamReader(inputStream));
+						
+						/*FileReader rawFileReader = new FileReader(fileStr);
+						BufferedReader rawFileBReader = new BufferedReader(rawFileReader);*/
+						
+						extractedThmsList.addAll(ThmInput.readThm(rawFileBReader, webDisplayThmsList, bareThmsList));							
+						inputStream.close();
+						rawFileBReader.close();						
 					}
+					
+					/*for(BufferedReader fileReader : rawFileReaderList){
+						extractedThmsList.addAll(ThmInput.readThm(fileReader, webDisplayThmsList, bareThmsList));
+					}*/
 					//to be used for parsing. Booleans specify options such as whether to
 					//convert tex symbols to words, replace macros, etc.
 					bareThmsList = ProcessInput.processInput(bareThmsList, true, false, false);
@@ -906,13 +940,13 @@ public class CollectThm {
 		@SuppressWarnings("unchecked")
 		private static List<ParsedExpression> extractParsedExpressionList() {
 			//List<ParsedExpression> parsedExpressionsList;
-			if(null != parsedExpressionListInputStream){				
+			//String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
+			String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
+			if(null != servletContext){
+				parsedExpressionListInputStream = servletContext.getResourceAsStream(parsedExpressionSerialFileStr);
 				return (List<ParsedExpression>)thmp.utils.FileUtils
 						.deserializeListFromInputStream(parsedExpressionListInputStream);	
 			}else{
-				//String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
-				String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
-				//@SuppressWarnings("unchecked")
 				return (List<ParsedExpression>)thmp.utils.FileUtils
 						.deserializeListFromFile(parsedExpressionSerialFileStr);	
 			}

@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -12,6 +14,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.servlet.ServletContext;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMap;
@@ -36,6 +43,7 @@ public class WordFrequency {
 
 	// map of every word in thmList and their frequencies
 	private static final Map<String, Integer> corpusWordFreqMap = new HashMap<String, Integer>();
+	private static final Logger logger = LogManager.getLogger(WordFrequency.class);
 	
 	private static final int TOTAL_CORPUS_WORD_COUNT;
 	private static final Path trueFluffWordsPath = Paths.get("src/thmp/data/trueFluffWords.txt");
@@ -86,7 +94,7 @@ public class WordFrequency {
 	public static class ComputeFrequencyData{
 		
 		private static final String WORDS_FILE_STR = "src/thmp/data/wordFrequency.txt";
-		private static BufferedReader wordFrequencyBR;
+		//private static BufferedReader wordFrequencyBR;
 		private static final ImmutableMap<String, String> wordPosMap;
 		// map of common words and freq as read in from wordFrequency.txt
 		private static final Map<String, Integer> stockFreqMap = new HashMap<String, Integer>();
@@ -102,20 +110,29 @@ public class WordFrequency {
 		
 		static{
 			Map<String, String> wordPosPreMap = new HashMap<String, String>();
-			wordFrequencyBR = CollectThm.get_wordFrequencyBR();
-			if(wordFrequencyBR == null){
+			ServletContext servletContext = CollectThm.getServletContext();
+			//wordFrequencyBR = CollectThm.get_wordFrequencyBR();
+			BufferedReader wordsFileBufferedReader = null;
+			if(null == servletContext){
 				try {
 					FileReader wordsFileReader = new FileReader(WORDS_FILE_STR);
-					BufferedReader wordsFileBufferedReader = new BufferedReader(wordsFileReader);
-					//fills in trueFluffWordsSet, based on freq in stockFreqMap
-					getStockFreq(wordsFileBufferedReader, wordPosPreMap);
-					
+					wordsFileBufferedReader = new BufferedReader(wordsFileReader);					
 				} catch (FileNotFoundException e) {
 					e.printStackTrace();
 					throw new RuntimeException(e);
 				}
 			}else{
-				getStockFreq(wordFrequencyBR, wordPosPreMap);
+				InputStream wordsInputStream = servletContext.getResourceAsStream(WORDS_FILE_STR);
+				wordsFileBufferedReader = new BufferedReader(new InputStreamReader(wordsInputStream));				
+			}
+			
+			//fills in trueFluffWordsSet, based on freq in stockFreqMap
+			getStockFreq(wordsFileBufferedReader, wordPosPreMap);
+			try{
+				wordsFileBufferedReader.close();
+			}catch(IOException e){
+				e.printStackTrace();
+				logger.error("IOException while closing buffered reader! " + e.getStackTrace());
 			}
 			
 			wordPosMap = ImmutableMap.copyOf(wordPosPreMap);

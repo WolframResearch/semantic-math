@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -63,8 +64,10 @@ public class DetectHypothesis {
 	private static final String allThmWordsSerialFileStr = "src/thmp/data/allThmWordsList.dat";
 	private static final String allThmWordsStringFileStr = "src/thmp/data/allThmWordsList.txt";
 	
+	private static final String statsFileStr = "src/thmp/data/parseStats.txt";
+	
 	//serialize the words as well, to bootstrap up after iterations of processing. The math words are going to 
-	//stabilize. 
+	//stabilize.
 	//This is ordered based on word frequencies.
 	private static final List<String> ALL_THM_WORDS_LIST = new ArrayList<String>(CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno().keySet());
 	
@@ -83,8 +86,63 @@ public class DetectHypothesis {
 	 * Statistics class to record statistics such as the percentage of thms 
 	 * that have spanning parses and/or non-null headParseStruct's.
 	 */
-	private static class Stats{
+	public static class Stats{
+		//number of thms for which headParseStruct == null
+		private int headParseStructNullNum = 0;
+		//total number of theorems
+		private int totalThmsNum = 0;
 		
+		public Stats(){
+			this.headParseStructNullNum = 0;
+			this.totalThmsNum = 0;
+		}
+		
+		public Stats(int numHeadParseStructNull, int numTotalThms){
+			this.headParseStructNullNum = numHeadParseStructNull;
+			this.totalThmsNum = numTotalThms;
+		}
+		
+		/**
+		 * @param headParseStructNullNum the headParseStructNullNum to set
+		 */
+		public void incrementHeadParseStructNullNum() {
+			this.headParseStructNullNum++;
+		}
+
+		/**
+		 * @param totalThmsNum the totalThmsNum to set
+		 */
+		public void incrementTotalThmsNum() {
+			this.totalThmsNum++;
+		}
+
+		/**
+		 * @return the headParseStructNullNum
+		 */
+		public int getHeadParseStructNullNum() {
+			return headParseStructNullNum;
+		}
+
+		/**
+		 * @return the totalThmsNum
+		 */
+		public int getTotalThmsNum() {
+			return totalThmsNum;
+		}
+		
+		/**
+		 * @return the totalThmsNum
+		 */
+		public double getNonNullPercentage() {
+			return ((double)headParseStructNullNum)/totalThmsNum;
+		}
+		
+		@Override
+		public String toString(){
+			StringBuilder sb = new StringBuilder("totalThmsNum: ").append(totalThmsNum);
+			sb.append(" Percetage not null: ").append(getNonNullPercentage());
+			return sb.toString();
+		}
 	}
 	
 	/**
@@ -173,9 +231,12 @@ public class DetectHypothesis {
 			throw new IllegalStateException("Source file not found!");
 		}
 		
+		List<DefinitionListWithThm> defThmList = new ArrayList<DefinitionListWithThm>();
+		Stats stats = null;
 		try{
-			List<DefinitionListWithThm> defThmList = readAndParseThm(inputBF, parseState);
-			System.out.println("DefinitionListWithThm list: " + defThmList);
+			stats = readAndParseThm(inputBF, parseState, defThmList);
+			//System.out.println("DefinitionListWithThm list: " + defThmList);
+			System.out.println("STATS -- percentage on non-null ParseStruct heads: " + stats.getNonNullPercentage());
 			DefinitionListWithThmStrList.add(defThmList.toString()+ "\n");
 			for(DefinitionListWithThm def : defThmList){
 				DefinitionList.add(def.getDefinitionList().toString());
@@ -187,7 +248,7 @@ public class DetectHypothesis {
 			logger.error(e.getStackTrace());			
 			throw e;
 		}finally{		
-			serializeDataToFile();
+			serializeDataToFile(stats);
 		}
 		
 		//deserialize objects
@@ -200,7 +261,7 @@ public class DetectHypothesis {
 	/**
 	 * Serialize collected data to persistent storage
 	 */
-	private static void serializeDataToFile() {
+	private static void serializeDataToFile(Stats stats) {
 		List<Object> listToSerialize = new ArrayList<Object>();
 		listToSerialize.add(parsedExpressionList);
 		FileUtils.serializeObjToFile(listToSerialize, parsedExpressionSerialFileStr);
@@ -214,7 +275,8 @@ public class DetectHypothesis {
 		//write parsedExpressionList to file
 		FileUtils.writeToFile(parsedExpressionStrList, parsedExpressionStringFileStr);
 		FileUtils.writeToFile(DefinitionList, definitionStrFileStr);
-		
+		//append to stats file!
+		FileUtils.appendObjToFile(stats, statsFileStr);
 		FileUtils.writeToFile(ALL_THM_WORDS_LIST, allThmWordsStringFileStr);
 	}
 	
@@ -278,8 +340,8 @@ public class DetectHypothesis {
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
-	private static List<DefinitionListWithThm> readAndParseThm(BufferedReader srcFileReader, 
-			ParseState parseState) throws IOException{
+	private static Stats readAndParseThm(BufferedReader srcFileReader, 
+			ParseState parseState, List<DefinitionListWithThm> definitionListWithThmList) throws IOException{
 		
 		//Pattern thmStartPattern = ThmInput.THM_START_PATTERN;
 		//Pattern thmEndPattern = ThmInput.THM_END_PATTERN;
@@ -288,7 +350,8 @@ public class DetectHypothesis {
 		//definitions, and parse those definitions. Reset between theorems.
 		StringBuilder contextSB = new StringBuilder();
 		
-		List<DefinitionListWithThm> definitionListWithThmList = new ArrayList<DefinitionListWithThm>();
+		Stats stats = new Stats();
+		//List<DefinitionListWithThm> definitionListWithThmList = new ArrayList<DefinitionListWithThm>();
 		
 		String line = extractMacros(srcFileReader, macrosList);
 		
@@ -339,7 +402,7 @@ public class DetectHypothesis {
 				
 				//scan contextSB for assumptions and definitions
 				//and parse the definitions
-				detectAndParseHypothesis(contextStr, parseState);	
+				detectAndParseHypothesis(contextStr, parseState, stats);	
 				
 				inThm = true;		
 				//this should be set *after* calling detectAndParseHypothesis(), since detectAndParseHypothesis
@@ -370,12 +433,12 @@ public class DetectHypothesis {
 				
 				//first gather hypotheses in the theorem. <--Note that this will cause the hypothetical
 				//sentences to be parsed twice, unless these sentences are marked so they don't get parsed again.
-				detectAndParseHypothesis(thm, parseState);
+				detectAndParseHypothesis(thm, parseState, stats);
 				//if(true) throw new IllegalStateException(parseState.toString());
 				//if contained in local map, should be careful about when to append map.
 				
 				//append to newThmSB additional hypotheses that are applicable to the theorem.				
-				DefinitionListWithThm thmDef = appendHypothesesAndParseThm(thm, parseState);
+				DefinitionListWithThm thmDef = appendHypothesesAndParseThm(thm, parseState, stats);
 				
 				definitionListWithThmList.add(thmDef);
 				//System.out.println("___-------++++++++++++++" + thmDef);
@@ -421,10 +484,11 @@ public class DetectHypothesis {
 
 		parseState.writeUnknownWordsToFile();
 		
+		//Stats stats = new Stats(headParseStructNullNum, totalThmsNum);
 		// srcFileReader.close();
 		// System.out.println("Inside ThmInput, thmsList " + thms);
 		// System.out.println("thmWebDisplayList " + thmWebDisplayList);
-		return definitionListWithThmList;
+		return stats;
 	}
 
 	/**
@@ -480,7 +544,7 @@ public class DetectHypothesis {
 	 * @param contextSB
 	 * @param parseState
 	 */
-	private static void detectAndParseHypothesis(String contextStr, ParseState parseState){
+	private static void detectAndParseHypothesis(String contextStr, ParseState parseState, Stats stats){
 		
 		//split on punctuations precede a space, but keep the punctuation.
 		//String[] contextStrAr = PUNCTUATION_PATTERN.split(contextStr);
@@ -492,7 +556,7 @@ public class DetectHypothesis {
 				//if(true) throw new IllegalStateException(sentence);				
 				parseState.setCurParseStruct(null);
 				parseState.setHeadParseStruct(null);
-				ParseRun.parseInput(sentence, parseState, PARSE_INPUT_VERBOSE);
+				ParseRun.parseInput(sentence, parseState, PARSE_INPUT_VERBOSE, stats);
 			}
 		}
 	}
@@ -504,7 +568,7 @@ public class DetectHypothesis {
 	 * @param thmSB
 	 * @param parseState
 	 */
-	private static DefinitionListWithThm appendHypothesesAndParseThm(String thmStr, ParseState parseState){
+	private static DefinitionListWithThm appendHypothesesAndParseThm(String thmStr, ParseState parseState, Stats stats){
 		
 		//ListMultimap<VariableName, VariableDefinition> variableNamesMMap = parseState.getGlobalVariableNamesMMap();
 		//String thmStr = thmSB.toString();
@@ -551,7 +615,7 @@ public class DetectHypothesis {
 		//should return parsedExpression object, and serialize it. But only pick up definitions that are 
 		//not defined locally within this theorem.
 		System.out.println("~~~~~~parsing~~~~~~~~~~");		
-		ParseRun.parseInput(thmStr, parseState, PARSE_INPUT_VERBOSE);
+		ParseRun.parseInput(thmStr, parseState, PARSE_INPUT_VERBOSE, stats);
 		System.out.println("~~~~~~Done parsing~~~~~~~");		
 				
 		System.out.println("Adding " + thmWithDefSB + " to theorem " + thmStr);
@@ -560,10 +624,16 @@ public class DetectHypothesis {
 		DefinitionListWithThm defListWithThm = 
 				new DefinitionListWithThm(thmStr, variableDefinitionList, thmWithDefSB.toString());
 		
+		BigInteger relationalContextVec = parseState.getRelationalContextVec();
+		if(null == relationalContextVec){
+			//write placeholder so the relationalVec in ParsedExpression is not null, which will 
+			//cause trouble as null cannot be put into ImmutableList.
+			relationalContextVec = new BigInteger(1, new byte[1]);
+		}
 		//create parsedExpression to serialize to persistent storage to be used later
 		//for search, etc
 		ParsedExpression parsedExpression = new ParsedExpression(thmStr, parseState.getHeadParseStruct(),
-						defListWithThm, parseState.getCurThmCombinedContextVec(), parseState.getRelationalContextVec());
+						defListWithThm, parseState.getCurThmCombinedContextVec(), relationalContextVec);
 		
 		parsedExpressionList.add(parsedExpression);
 		parsedExpressionStrList.add(parsedExpression.toString());

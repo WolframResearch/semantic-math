@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import thmp.DetectHypothesis.Stats;
 import thmp.ThmP1.ParsedPair;
 import thmp.utils.WordForms;
 
@@ -23,6 +24,17 @@ public class ParseRun {
 	 * @param isVerbose whether to be verbose and print results to stdout.
 	 */
 	public static void parseInput(String st, ParseState parseState, boolean isVerbose){
+		parseInput(st, parseState, isVerbose, null);
+	}
+	
+	/**
+	 * Parse input String. 
+	 * Does *not* clean up parseState, as the caller needs stateful parseState info.
+	 * @param st
+	 * @param parseState
+	 * @param isVerbose whether to be verbose and print results to stdout.
+	 */
+	public static void parseInput(String st, ParseState parseState, boolean isVerbose, Stats stats){
 		
 		//List<int[]> parseContextVecList = new ArrayList<int[]>();			
 		
@@ -53,6 +65,12 @@ public class ParseRun {
 		}
 		parseState.logState();
 		
+		if(null != stats){
+			if(null != parseState.getHeadParseStruct()){
+				stats.incrementHeadParseStructNullNum();
+			}
+			stats.incrementTotalThmsNum();
+		}
 		//combine these vectors together, only add subsequent vector entry
 		//if that entry is 0 in all previous vectors int[].
 		//int[] combinedVec = parseState.getCurThmCombinedContextVec();			

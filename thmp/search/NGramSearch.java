@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -13,6 +15,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.servlet.ServletContext;
 
 import com.google.common.collect.ListMultimap;
 
@@ -39,6 +43,7 @@ public class NGramSearch {
 	
 	private static volatile BufferedReader TWO_GRAM_DATA_BR;
 	private static volatile BufferedReader THREE_GRAM_DATA_BR;
+	private static volatile ServletContext servletContext;
 	
 	// default two-gram averageFreqCount when total number of two grams is 0
 	private static final int ADDITIONAL_TWO_GRAM_DEFAULT_COUNT = 5;
@@ -54,6 +59,22 @@ public class NGramSearch {
 	 */
 	public static void setTwoGramBR(BufferedReader br){
 		TWO_GRAM_DATA_BR = br;
+	}
+	
+	/**
+	 * Set the BufferedReader for scraped two grams.
+	 * @param bf
+	 */
+	public static void setServletContext(ServletContext servletContext_){
+		servletContext = servletContext_;
+	}
+	
+	/**
+	 * Set the BufferedReader for scraped two grams.
+	 * @param bf
+	 */
+	public static ServletContext getServletContext(){
+		return servletContext;
 	}
 	
 	/**
@@ -112,7 +133,7 @@ public class NGramSearch {
 			//set of scraped two grams read in from two grams file.
 			Set<String> initialTwoGramsSet = new HashSet<String>();
 			//fills in initialTwoGramsSet with scraped two gram starter set
-			if(TWO_GRAM_DATA_BR == null){
+			if(null == servletContext){
 				try{
 					BufferedReader twoGramBF = new BufferedReader(new FileReader(TWO_GRAM_DATA_FILESTR));
 					readAdditionalTwoGrams(twoGramBF, initialTwoGramsSet);
@@ -121,7 +142,10 @@ public class NGramSearch {
 					throw new RuntimeException(e);
 				}
 			}else{
-				readAdditionalTwoGrams(TWO_GRAM_DATA_BR, initialTwoGramsSet);
+				InputStream twoGramInputStream = servletContext.getResourceAsStream(TWO_GRAM_DATA_FILESTR);
+				BufferedReader twoGramBF = new BufferedReader(new InputStreamReader(twoGramInputStream));				
+				//BufferedReader twoGramBF = new BufferedReader(new FileReader(TWO_GRAM_DATA_FILESTR));				
+				readAdditionalTwoGrams(twoGramBF, initialTwoGramsSet);
 			}
 			nGramFirstWordsSet = new HashSet<String>();
 			//get list of 2 grams that show up frequently

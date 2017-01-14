@@ -362,6 +362,7 @@ public class ParseState {
 	
 	/**
 	 * Write previously unknown words and their postulated pos to file.
+	 * Append to file, rather than overwrite.
 	 */
 	public void writeUnknownWordsToFile(){
 		
@@ -370,10 +371,11 @@ public class ParseState {
 		//first format the output so it can just be pasted into lexicon.
 		StringBuilder sb = new StringBuilder(1000);
 		for(Map.Entry<String, String> entry : extrapolatedPosMMap.entries()){
-			sb.append("\n" + entry.getKey() + " " + entry.getValue());
+			sb.append("\n").append(entry.getKey()).append(" ").append(entry.getValue());
 		}
 		
-		try(FileWriter fw = new FileWriter(UNKNOWN_WORDS_FILE_NAME_STR, true);
+		boolean appendBool = true;
+		try(FileWriter fw = new FileWriter(UNKNOWN_WORDS_FILE_NAME_STR, appendBool);
 			    BufferedWriter bw = new BufferedWriter(fw);
 			    PrintWriter outPrintWriter = new PrintWriter(bw))
 			{
