@@ -534,6 +534,8 @@ public class ThmP1TestRun {
 			st = "f is a function with radius of convergence r and finitely many roots";
 			st = "$f$ is holomorphic on $D(0, r)$, the derivative of $f$ is $\\sum_j j $";
 			st = "let $Mx$ be orthogonal to the ground state";
+			st = "The equality $G_3=G_{3_b}$ holds.";
+			st = "Wallman-Frink proximity $\\delta_b$ associated with normal base $\\mathcal{B}$ is given by: ";
 			//Every minimal subsystem $\Sigma$ of the system $(\Omega^k,S_\infty)$ is a factor of the minimal system $(\Omega^2_{lo},S_\infty)$.
 			
 			//st = "take derivative of log of f";

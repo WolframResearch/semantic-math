@@ -18,6 +18,7 @@ import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,6 +27,7 @@ import com.wolfram.jlink.KernelLink;
 import com.wolfram.jlink.MathLinkException;
 import com.wolfram.jlink.MathLinkFactory;
 
+import exceptions.ParseRuntimeException;
 import thmp.ParsedExpression;
 
 /**
@@ -39,6 +41,17 @@ public class FileUtils {
 	//singleton, only one instance should exist
 	private static volatile KernelLink ml;
 	private static final Logger logger = LogManager.getLogger();
+	
+	/*random number used to keep track of version of serialized data, new random number 
+	//is generated each time this class is loaded,
+	//so oeffectively once per JVM session.
+	//0.0001 chance that a different batch ends up with the same number. Can't be DESERIAL_VERSION_NUM_DEFAULT */
+	private static final int SERIAL_VERSION_NUM = (int)Math.random()*10000+1;
+	private static final int DESERIAL_VERSION_NUM_DEFAULT = 0;
+	//intentionally not final, as needs to be set. Atomic, so to compare and update
+	//atomically when multi-threaded.
+	private static AtomicInteger DESERIAL_VERSION_NUM = new AtomicInteger(DESERIAL_VERSION_NUM_DEFAULT);
+	
 	/**
 	 * Write content to file at absolute path.
 	 * 
@@ -87,7 +100,7 @@ public class FileUtils {
 	 * @param iterable
 	 * @param outputFileStr
 	 */
-	public static void serializeObjToFile(Iterable<? extends Object> iterable, String outputFileStr){
+	public static void serializeObjToFile(List<? extends Object> iterable, String outputFileStr){
 		//serialize parsedExpressionList to persistent storage
 				FileOutputStream fileOuputStream = null;
 				ObjectOutputStream objectOutputStream = null;
@@ -102,12 +115,14 @@ public class FileUtils {
 					throw new IllegalStateException("IOException while opening ObjectOutputStream");
 				}
 				
-				Iterator<? extends Object> iter = iterable.iterator();				
+				//Iterator<? extends Object> iter = iterable.iterator();				
 				try{
-					while(iter.hasNext()){
+					/*while(iter.hasNext()){
 						Object obj = iter.next();
-						objectOutputStream.writeObject(obj);		
-					}
+						objectOutputStream.writeObject(obj);
+					}*/
+					objectOutputStream.writeObject(iterable);
+					objectOutputStream.writeObject(SERIAL_VERSION_NUM);
 					//System.out.println("parsedExpressionList: " + parsedExpressionList);
 					objectOutputStream.close();
 					fileOuputStream.close();
@@ -119,6 +134,9 @@ public class FileUtils {
 
 	/**
 	 * Deserialize objects from file supplied by serialFileStr.
+	 * Note that this requires the DESERIAL_VERSION_NUM to equal that of previous 
+	 * files deserialized in this JVM session. Don't call this if don't want to check
+	 * for DESERIAL_VERSION_NUM.
 	 * @param serialFileStr
 	 * @return List of objects
 	 */	
@@ -132,15 +150,19 @@ public class FileUtils {
 			throw new IllegalStateException("Serialization data file not found!");
 		}
 		
-		return deserializeListFromInputStream(fileInputStream);
+		return deserializeListFromInputStream(fileInputStream, false);
 	}
 
+	public static Object deserializeListFromInputStream(InputStream inputStream) {
+		return deserializeListFromInputStream(inputStream, false);
+	}
 	/**
 	 * @param deserializedList
 	 * @param fileInputStream
+	 * @param checkVersion whether to check for DESERIAL_VERSION_NUM 
 	 * @return
 	 */
-	public static Object deserializeListFromInputStream(InputStream inputStream) {
+	public static Object deserializeListFromInputStream(InputStream inputStream, boolean checkVersion) {
 		
 		Object deserializedList = null;	
 		ObjectInputStream objectInputStream = null;		
@@ -154,6 +176,21 @@ public class FileUtils {
 		
 		try{
 			deserializedList = objectInputStream.readObject();
+			if(checkVersion){
+				int serialVersionInt = (int)objectInputStream.readObject();
+				if(!DESERIAL_VERSION_NUM.compareAndSet(DESERIAL_VERSION_NUM_DEFAULT, serialVersionInt)){
+					//DESERIAL_VERSION_NUM not 0, so already been set, thread-safe here,
+					//since DESERIAL_VERSION_NUM can't be set unless 
+					if(serialVersionInt != DESERIAL_VERSION_NUM.get()){
+						String msg = "DESERIAL_VERSION_NUM inconsistent when deserializing! E.g. this will cause"
+								+ "inconsistencies for data used for forming query and theorem pool context vectors.";
+						logger.error(msg);
+						throw new IllegalStateException(msg);
+					}
+					
+				}/** else this must be first time deserializing in this JVM session, and so must
+					have been set atomically just now. */				
+			}
 			//deserializedList = (List<? extends Object>)o;
 			//System.out.println("object read: " + ((ParsedExpression)((List<?>)o).get(0)).getOriginalThmStr());			
 		}catch(IOException e){

@@ -198,7 +198,7 @@ public class GenerateContextVector {
 		//get context vector and add to contextVecMx
 		if(null != contextVecList){
 			contextVecList.add(contextVec);
-		}		
+		}
 		//System.out.println("Context vec: " + Arrays.toString(ThmP1.getParseContextVector()));		
 		return contextVecIntArrayToString(contextVec);
 	}

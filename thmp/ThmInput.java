@@ -78,7 +78,7 @@ public class ThmInput {
 	private static final Pattern ELIMINATE_PATTERN = Pattern
 			.compile("\\\\fml|\\\\ofml|\\\\begin\\{enumerate\\}|\\\\end\\{enumerate\\}"					
 					+ "|\\\\begin\\{slogan\\}|\\\\end\\{slogan\\}|\\\\sbsb|\\\\cat|\\\\bs"
-					+ "|\\\\section\\{(?:[^}]*)\\}\\s*|\\\\noindent");
+					+ "|\\\\section\\{(?:[^}]*)\\}\\s*|\\\\noindent|\\\\begin\\{abstract\\}|\\\\cite\\{[^}]+\\}");
 	private static final Pattern ELIMINATE_BEGIN_END_THM_PATTERN = Pattern
 			.compile("\\\\begin\\{def(?:[^}]*)\\}\\s*|\\\\begin\\{lem(?:[^}]*)\\}\\s*|\\\\begin\\{th(?:[^}]*)\\}\\s*"
 					+ "|\\\\begin\\{pr(?:[^}]*)\\}\\s*|\\\\begin\\{proclaim(?:[^}]*)\\}\\s*|\\\\begin\\{cor(?:[^}]*)\\}\\s*"

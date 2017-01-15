@@ -76,7 +76,7 @@ public class DetectHypothesis {
 	private static final boolean GATHER_STATS = true;
 	
 	//pattern for lines to skip any kind of parsing, even hypothesis-detection.
-	//skip examples and bibliographies
+	//skip examples and bibliographies  
 	private static final Pattern SKIP_PATTERN = Pattern.compile("\\\\begin\\{proof\\}.*|\\\\begin\\{exam.*|\\\\begin\\{thebib.*");
 	private static final Pattern END_SKIP_PATTERN = Pattern.compile("\\\\end\\{proof\\}.*|\\\\end\\{exam.*|\\\\end\\{thebib.*");
 	private static final Pattern END_DOCUMENT_PATTERN = Pattern.compile("\\\\end\\{document\\}.*");
@@ -380,9 +380,9 @@ public class DetectHypothesis {
 			
 			//should skip certain sections, e.g. \begin{proof}
 			Matcher skipMatcher = SKIP_PATTERN.matcher(line);
-			if(skipMatcher.matches()){
+			if(skipMatcher.find()){
 				while ((line = srcFileReader.readLine()) != null){
-					if(END_SKIP_PATTERN.matcher(line).matches()){						
+					if(END_SKIP_PATTERN.matcher(line).find()){						
 						break;
 					}
 				}

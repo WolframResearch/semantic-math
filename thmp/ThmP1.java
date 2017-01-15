@@ -186,7 +186,7 @@ public class ThmP1 {
 		posList = Maps.posList;
 	
 		parseContextVectorSz = CollectThm.ThmWordsMaps.get_CONTEXT_VEC_WORDS_MAP_size();
-		System.out.println("*****+++++parseContextVectorSz: " + parseContextVectorSz);
+		System.out.println("*****+++++ThmP1--parseContextVectorSz: " + parseContextVectorSz);
 		parseContextVector = new int[parseContextVectorSz];
 		
 		noFuseEntSet = new HashSet<String>();
@@ -1912,9 +1912,10 @@ public class ThmP1 {
 		//to initializer after debugging!
 		//parseContextVector = new int[parseContextVectorSz];
 		
-		List<Struct> inputStructList = parseState.getTokenList();
+		List<Struct> inputStructList = parseState.getTokenList();		
+		int inputStructListSize = inputStructList.size();
 		
-		if(null == inputStructList || 0 == inputStructList.size()){
+		if(null == inputStructList || 0 == inputStructListSize){
 			return parseState;
 		}
 		
@@ -1931,10 +1932,9 @@ public class ThmP1 {
 			return parseState;
 		}
 		
-		Struct recentEnt = parseState.getRecentEnt();		
-		int len = inputStructList.size();
+		Struct recentEnt = parseState.getRecentEnt();	
 		// shouldn't be 0 to start with?!
-		if (len == 0)
+		if (inputStructListSize == 0)
 			return parseState;
 
 		// first Struct
@@ -1948,12 +1948,12 @@ public class ThmP1 {
 
 		// A matrix of List's. Dimenions of first two Lists are same: square
 		// matrix
-		List<List<StructList>> mx = new ArrayList<List<StructList>>(len);
+		List<List<StructList>> mx = new ArrayList<List<StructList>>(inputStructListSize);
 
-		for (int l = 0; l < len; l++) {
+		for (int l = 0; l < inputStructListSize; l++) {
 			List<StructList> tempList = new ArrayList<StructList>();
 
-			for (int i = 0; i < len; i++) {
+			for (int i = 0; i < inputStructListSize; i++) {
 				// initialize Lists now so no need to repeatedly check if null
 				// later
 				// but does use more space! Need to revisist.
@@ -1971,7 +1971,7 @@ public class ThmP1 {
 		
 		// which row to start at for the next column
 		int nextColStartRow = -1;
-		outerloop: for (int j = 0; j < len; j++) {
+		outerloop: for (int j = 0; j < inputStructListSize; j++) {
 
 			// fill in diagonal elements
 			// ArrayList<Struct> diagonalStruct = new ArrayList<Struct>();
@@ -2127,7 +2127,7 @@ public class ThmP1 {
 							//should *not* use "ent" type to determine whether StructH or not!
 							//since conj_ent is counted as ent. Also these checks are terrible.
 							if (!struct1.isStructA() && type2.matches("pre") && struct2.prev1() != null
-									&& struct2.prev1().toString().matches("of") && j + 1 < len
+									&& struct2.prev1().toString().matches("of") && j + 1 < inputStructListSize
 									&& inputStructList.get(j + 1).type().equals("symb")) {
 								
 								List<Struct> childrenList = struct1.children();
@@ -2209,7 +2209,7 @@ public class ThmP1 {
 								// whether definition has started, ie "is called
 								// subgroup of G"
 								boolean defStarted = false;
-								while (l < len) {
+								while (l < inputStructListSize) {
 
 									Struct nextStruct = inputStructList.get(l);
 									if (!nextStruct.type().matches("pre|prep|be|verb")) {
@@ -2221,7 +2221,7 @@ public class ThmP1 {
 											called += nextStruct.struct().get("name");
 										}
 
-										if (l != len - 1)
+										if (l != inputStructListSize - 1)
 											called += " ";
 
 									}
@@ -2241,10 +2241,10 @@ public class ThmP1 {
 								if (firstEnt != null) {
 									StructA<Struct, String> parentStruct = 
 											new StructA<Struct, String>(firstEnt, NodeType.STRUCTH, 
-													called, NodeType.STR, "def", mx.get(0).get(len - 1));
+													called, NodeType.STR, "def", mx.get(0).get(inputStructListSize - 1));
 									firstEnt.set_parentStruct(parentStruct);
 									
-									mx.get(0).get(len - 1).add(parentStruct);
+									mx.get(0).get(inputStructListSize - 1).add(parentStruct);
 
 									/*int q = 0;
 									String[] calledArray = called.split(" ");
@@ -2275,7 +2275,7 @@ public class ThmP1 {
 							// ie F and G is isomorphic
 							
 							// iterate through the List at position (i-t, i-1), for conj/disj
-							if (i > 0 && i + 1 < len) {
+							if (i > 0 && i + 1 < inputStructListSize) {
 
 								/*
 								 * // set parent struct in row // above //
@@ -2343,7 +2343,7 @@ public class ThmP1 {
 												// case){ // }then{do_something}
 												// // over if(not
 												// this // case){do_something}
-												Struct nextStruct = j + 1 < len ? inputStructList.get(j + 1) : null;
+												Struct nextStruct = j + 1 < inputStructListSize ? inputStructList.get(j + 1) : null;
 												
 												if (nextStruct != null && type1.equals("and")
 														&& nextStruct.prev1NodeType().equals(NodeType.STR)
@@ -2446,7 +2446,7 @@ public class ThmP1 {
 		// string together the parsed pieces
 		// ArrayList (better at get/set) or LinkedList (better at add/remove)?
 		// iterating over all headStruct
-		StructList headStructList = mx.get(0).get(len - 1);
+		StructList headStructList = mx.get(0).get(inputStructListSize - 1);
 		int headStructListSz = headStructList.size();
 		
 		//System.out.println("headStructListSz " + headStructListSz);
@@ -2591,10 +2591,13 @@ public class ThmP1 {
 			parseState.setTokenList(ConditionalParse.superimposeStructList(parseState.getPrevTokenList(), 
 					parseState.getTokenList()));
 			parseState = parse(parseState, isReparse);
-			//throw new IllegalStateException(parseState.getTokenList().toString());
 			
-		}
-		// if again no full parse. Also add to parsedExpr List.
+		}// if no full parse, and last token is verb, i.e. "$xyz$ holds'
+		else if(!isReparse && inputStructList.get(inputStructListSize-1).type().equals("verb") ){
+			inputStructList.get(inputStructListSize-1).set_type("verbAlone");
+			parseState.setTokenList(inputStructList);
+			parseState = parse(parseState, true);
+		} 
 		else if(!isReparse || totalNumUnitsInStructList(inputStructList) > 2){
 			
 			List<StructList> structListList = new ArrayList<StructList>();
@@ -2603,7 +2606,7 @@ public class ThmP1 {
 			//in parsedStructList.
 			List<int[]> structCoordinates = new ArrayList<int[]>();
 			
-			int i = 0, j = len - 1;
+			int i = 0, j = inputStructListSize - 1;
 			while (j > -1) {
 				i = 0;
 				while (mx.get(i).get(j).size() == 0) {

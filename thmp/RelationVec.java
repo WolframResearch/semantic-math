@@ -54,10 +54,11 @@ public class RelationVec implements Serializable{
 	public static enum RelationType{
 		
 		/*_IS: "A is", IS_: "is A".
-		 * _IS_ means both _IS and IS_.*/
+		 * _IS_ means both _IS and IS_.*/ 
 		_IS(new int[]{0}), IS_(new int[]{1}), _IS_(new int[]{0,1}), 
 		IF(new int[]{2}), EXIST(new int[]{3}), NONE(new int[]{-1});
 		//must correspond to total number of relations above with offset > -1.
+		//but there are 4 not 5! <--change this next time all parsedExpressionList gets generated.
 		private static final int totalRelationsCount = 5;
 		
 		//offset for how many times the total number of terms

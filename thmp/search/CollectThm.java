@@ -214,7 +214,7 @@ public class CollectThm {
 		private static final double TWO_GRAM_FREQ_REDUCTION_FACTOR = 5.0/6;
 
 		private static final Pattern SPECIAL_CHARACTER_PATTERN = 
-				Pattern.compile(".*[\\\\=$\\{\\}\\[\\]()^_+%&\\./,\"\\d\\/@><*|].*");
+				Pattern.compile(".*[\\\\=$\\{\\}\\[\\]()^_+%&\\./,\"\\d\\/@><*|`].*");
 		
 		static{
 			//pass builder into a reader function. For each thm, builds immutable list of keywords, 
@@ -298,17 +298,18 @@ public class CollectThm {
 			//System.out.println(docWordsFreqMapNoAnno);
 			
 			wordThmsIndexMMapNoAnno = wordThmsMMapBuilderNoAnno.build();
-			
+			//deserialize words from allThmWordsList.dat, which were serialized from previous run.
 			List<String> wordsList = extractWordsList();
-			
+			//the values are just the words' indices in wordsList. Map also filters out repetitive words.
 			CONTEXT_VEC_WORDS_MAP = createContextKeywordIndexDict(wordsList);
+			/**Note that   **/
 			//System.out.println("------++++++++-------CONTEXT_VEC_WORDS_MAP.size " + CONTEXT_VEC_WORDS_MAP.size());
 		}
 
 		/**
-		 * //deserialize words list used to form context and relation vectors, which were
-			//formed while parsing through the papers in e.g. DetectHypothesis.java. This is
-			//so we don't parse everything again at every server initialization.
+		 * deserialize words list used to form context and relation vectors, which were
+		 * formed while parsing through the papers in e.g. DetectHypothesis.java. This is
+		 * so we don't parse everything again at every server initialization.
 		 * @return
 		 */
 		@SuppressWarnings("unchecked")		

@@ -30,8 +30,7 @@ public class ThmSearch {
 	private static final Logger logger = LogManager.getLogger(ThmSearch.class);
 	
 	//public static final String[] ARGV = new String[]{"-linkmode", "launch", "-linkname", 
-	//"\"/Applications/Mathematica2.app/Contents/MacOS/MathKernel\" -mathlink"};
-	
+	//"\"/Applications/Mathematica2.app/Contents/MacOS/MathKernel\" -mathlink"};	
 	//path for on Linux VM 
 	//private static final String[] ARGV;
 	

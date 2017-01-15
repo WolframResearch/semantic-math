@@ -127,6 +127,12 @@ public class ContextSearch {
 			return null;		
 		}
 		String queryContextVec = thmp.GenerateContextVector.createContextVector(query);
+		//if context vec was not generated in ThmP1.java because the input was unable to get parsed.
+		if(queryContextVec.length() == 0){			
+			logger.warn("No context vector was formed for query: " + query);
+			return null;
+		}
+		
 		//short-circuit if context vec not meaninful (insignificant entries created)
 		
 		//create range vector for Nearest
@@ -181,14 +187,12 @@ public class ContextSearch {
 				System.out.println("query vector in ContextSearch.java: " + ml.getExpr());
 			}else{
 				ml.discardAnswer();
-			}
-	
-			ml.evaluate("Length[query]");
-			if(printInfoMsg){			
+			}	
+			
+			if(printInfoMsg){	
+				ml.evaluate("Length[query]");
 				ml.waitForAnswer();
 				queryVecDim = ml.getExpr().toString();
-			}else{
-				ml.discardAnswer();
 			}
 			/*ml.evaluate("numberNonZeroEntrySize = Length[thmNonZeroPositions]");
 			ml.waitForAnswer();
