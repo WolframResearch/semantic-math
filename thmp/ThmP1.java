@@ -147,12 +147,12 @@ public class ThmP1 {
 	private static final int REPARSE_UPPER_SIZE_LIMIT = 6;
 	private static final Pattern CONJ_DISJ_VP_PATTERN = Pattern.compile("(?:conj|disj)_verbphrase");
 	//directives used to begin latex math mode. *Must* update ALIGN_PATTERN_REPLACEMENT_STR if this is updated.
-	private static final Pattern BEGIN_ALIGN_PATTERN = Pattern.compile("(?:.*(\\\\begin\\{align[*]*\\}.*))|(?:.*(\\\\begin\\{equation\\}.*))"
+	private static final Pattern BEGIN_ALIGN_PATTERN = Pattern.compile("(?:.*(\\\\begin\\{align[*]*\\}.*))|(?:.*(\\\\begin\\{equation).*)"
 			+ "|(?:.*(\\\\begin\\{eqnarray[*]*\\}.*))");
-	private static final Pattern END_ALIGN_PATTERN = Pattern.compile("(?:(.*\\\\end\\{align[*]*\\}).*)|(?:(.*\\\\end\\{equation\\}).*)"
+	private static final Pattern END_ALIGN_PATTERN = Pattern.compile("(?:(.*\\\\end\\{align[*]*\\}).*)|(?:(.*\\\\end\\{equation).*)"
 			+ "|(?:.*(\\\\end\\{eqnarray[*]*\\}.*))");
 	//This *must* be updated if {BEGIN/END}_ALIGN_PATTERN is updated!
-	private static final String ALIGN_PATTERN_REPLACEMENT_STR = "$1$2$3";
+	private static final String ALIGN_PATTERN_REPLACEMENT_STR = "";//"$1$2$3";
 	
 	private static final boolean DEBUG = InitParseWithResources.isDEBUG();
 	//Pattern used to check if word is valid.
@@ -595,15 +595,16 @@ public class ThmP1 {
 			Matcher mathModeMatcher;
 			Matcher mathModeEndMatcher;
 			if((mathModeMatcher = BEGIN_ALIGN_PATTERN.matcher(curWord)).matches()){
-				
-				StringBuilder latexExprSB = new StringBuilder(mathModeMatcher.replaceAll(ALIGN_PATTERN_REPLACEMENT_STR) + " ");
+				//currently replace it with empty string
+				StringBuilder latexExprSB = new StringBuilder(mathModeMatcher.replaceAll(ALIGN_PATTERN_REPLACEMENT_STR));
 				
 				while(i++ < strArLength-1){
 					curWord = strAr[i];
 					
 					//not checking for nested \begin{align} and \begin{equation}
 					if((mathModeEndMatcher = END_ALIGN_PATTERN.matcher(curWord)).matches()){
-						latexExprSB.append(" " + mathModeEndMatcher.replaceAll("$1$2"));
+						//latexExprSB.append(" " + mathModeEndMatcher.replaceAll("$1$2"));
+						latexExprSB.append(mathModeEndMatcher.replaceAll(""));
 						break;
 					}else{
 						latexExprSB.append(" " + curWord);

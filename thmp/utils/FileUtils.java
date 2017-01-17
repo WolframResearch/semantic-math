@@ -51,6 +51,8 @@ public class FileUtils {
 	//intentionally not final, as needs to be set. Atomic, so to compare and update
 	//atomically when multi-threaded.
 	private static AtomicInteger DESERIAL_VERSION_NUM = new AtomicInteger(DESERIAL_VERSION_NUM_DEFAULT);
+	/*Should be set to true if currently generating data, */
+	private static boolean dataGenerationModeBool;
 	
 	/**
 	 * Write content to file at absolute path.
@@ -67,6 +69,15 @@ public class FileUtils {
 		}
 	}
 
+	/**
+	 * Sets to dataGenerationMode. In this mode, don't need to wory about whether serialized data were
+	 * generated from the same source, since only need to ensure consistency of output.
+	 * e.g. when running DetectHypothesis.java.
+	 */
+	public static void set_dataGenerationMode(){
+		dataGenerationModeBool = true;
+	}
+	
 	/**
 	 * Write content to file at absolute path.
 	 * 
@@ -97,10 +108,10 @@ public class FileUtils {
 	
 	/**
 	 * Writes objects in iterable to the file specified by outputFileStr.
-	 * @param iterable
+	 * @param list
 	 * @param outputFileStr
 	 */
-	public static void serializeObjToFile(List<? extends Object> iterable, String outputFileStr){
+	public static void serializeObjToFile(List<? extends Object> list, String outputFileStr){
 		//serialize parsedExpressionList to persistent storage
 				FileOutputStream fileOuputStream = null;
 				ObjectOutputStream objectOutputStream = null;
@@ -121,7 +132,7 @@ public class FileUtils {
 						Object obj = iter.next();
 						objectOutputStream.writeObject(obj);
 					}*/
-					objectOutputStream.writeObject(iterable);
+					objectOutputStream.writeObject(list);
 					objectOutputStream.writeObject(SERIAL_VERSION_NUM);
 					//System.out.println("parsedExpressionList: " + parsedExpressionList);
 					objectOutputStream.close();
@@ -178,7 +189,7 @@ public class FileUtils {
 			deserializedList = objectInputStream.readObject();
 			if(checkVersion){
 				int serialVersionInt = (int)objectInputStream.readObject();
-				if(!DESERIAL_VERSION_NUM.compareAndSet(DESERIAL_VERSION_NUM_DEFAULT, serialVersionInt)){
+				if(!dataGenerationModeBool && !DESERIAL_VERSION_NUM.compareAndSet(DESERIAL_VERSION_NUM_DEFAULT, serialVersionInt)){
 					//DESERIAL_VERSION_NUM not 0, so already been set, thread-safe here,
 					//since DESERIAL_VERSION_NUM can't be set unless 
 					if(serialVersionInt != DESERIAL_VERSION_NUM.get()){

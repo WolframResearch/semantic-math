@@ -458,6 +458,7 @@ public class Maps {
 			posPreMMap.put("is", "vbs_comp");
 			posPreMMap.put("at", "pre_COMP");
 			posPreMMap.put("when", "if");
+			posPreMMap.put("whenever", "if");
 			posPreMMap.put("if", "if_COMP");
 			posPreMMap.put("if and", "if_COMP");
 			posPreMMap.put("if and only", "if_COMP");
@@ -809,7 +810,7 @@ public class Maps {
 			structMap.put("assert_Iff", new Rule("assert", .5));
 			structMap.put("assert_hypo", new Rule("assert", .5));
 			structMap.put("assert_prep", new Rule("assert", .5));
-			structMap.put("assert_iff", new Rule("assert", .5));
+			structMap.put("assert_iff", new Rule("assert", .4));
 			structMap.put("texAssert_If", new Rule("assert", .5));
 			structMap.put("texAssert_Iff", new Rule("assert", .5));
 			structMap.put("texAssert_hypo", new Rule("assert", .5));

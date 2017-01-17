@@ -532,20 +532,37 @@ public class StructH<H> extends Struct{
 			sb.append("\"");
 		}*/
 		
-		Iterator<String> pptStrListIter = get_name_pptStr_List().iterator();
+		//Iterator<String> pptStrListIter = get_name_pptStr_List().iterator();
+		//append name
+		String name = struct.get("name");
+		if(null != name){
+			sb.append("\"Name\"->").append(name);
+		}
 		
+		Iterator<String> pptStrListIter = getPropertySet().iterator();		
 		if(pptStrListIter.hasNext()){			
-			sb.append("\"Type\"->");
+			sb.append("\"Property\"->");
 		}
 		
 		while(pptStrListIter.hasNext()){
 			String nextStr = pptStrListIter.next();
 			if(pptStrListIter.hasNext()){
-				sb.append("\"" + nextStr + "\", ");
+				sb.append("\"").append(nextStr).append("\", ");
 			}else{
-				sb.append("\"" + nextStr + "\"");
+				sb.append("\"").append(nextStr).append("\"");
 			}
 		}
+		
+		//append "called"
+		String called = struct.get("called");
+		if(null != called){
+			sb.append(" \"Called\"->" + called);
+		}
+		//append name
+				String tex = struct.get("tex");
+				if(null != tex){
+					sb.append(" \"Tex\"->").append(tex);
+				}
 		
 		//sb.append(append_name_pptStr());
 		
@@ -624,7 +641,6 @@ public class StructH<H> extends Struct{
 	}
 	
 	/**
-	 * 
 	 * @return set of properties of this StructH.
 	 */
 	public Set<String> getPropertySet(){

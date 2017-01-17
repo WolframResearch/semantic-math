@@ -536,8 +536,10 @@ public class ThmP1TestRun {
 			st = "let $Mx$ be orthogonal to the ground state";
 			st = "The equality $G_3=G_{3_b}$ holds.";
 			st = "Wallman-Frink proximity $\\delta_b$ associated with normal base $\\mathcal{B}$ is given by: ";
-			//Every minimal subsystem $\Sigma$ of the system $(\Omega^k,S_\infty)$ is a factor of the minimal system $(\Omega^2_{lo},S_\infty)$.
-			
+			st = "the real parts of $d_{ab}^k$ are given by \\begin{equation} \\Re d_{ab}^k =(2-\\delta_a^ - 2(2-\\delta_k^b) \\gamma_{kb}^a , \\end{equation}";
+			st = "A topological group $G$ is extremely amenable if and only if whenever $S\\sbs G$ is big on the left, ";
+			st = "Then $b(G)$ is determined if and only if $W(G)$ is compact and determined; in this case $W(G)=b(G)$";
+			//Every minimal subsystem $\Sigma$ of the system $(\Omega^k,S_\infty)$ is a factor of the minimal system $(\Omega^2_{lo},S_\infty)$.		
 			//st = "take derivative of log of f";
 			//st = "given infinite subgroup where $\\lambda$ is an eigenvalue";
 			//st = "there exists a field and a ring which is a group algebra ";			

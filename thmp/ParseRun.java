@@ -66,7 +66,8 @@ public class ParseRun {
 		parseState.logState();
 		
 		if(null != stats){
-			if(null != parseState.getHeadParseStruct()){
+			ParseStruct head = parseState.getHeadParseStruct();
+			if(null != head && !head.getWLCommandWrapperMMap().isEmpty()){
 				stats.incrementHeadParseStructNullNum();
 			}
 			stats.incrementTotalThmsNum();

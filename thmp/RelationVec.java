@@ -38,8 +38,17 @@ import thmp.utils.WordForms;
 public class RelationVec implements Serializable{
 
 	private static final long serialVersionUID = 7990758362732085287L;
+
+	//contextVecWordsNextTimeMMap
+	private static final Map<String, Integer> contextKeywordThmsDataDict = CollectThm.ThmWordsMaps.get_contextVecWordsNextTimeMap();
 	
-	private static final Map<String, Integer> keywordDict = CollectThm.ThmWordsMaps.get_CONTEXT_VEC_WORDS_MAP();
+	//used for forming query vecs, as these are words used when the thm source vecs were formed.
+	private static final Map<String, Integer> contextKeywordQueryDict = CollectThm.ThmWordsMaps.get_CONTEXT_VEC_WORDS_MAP();
+	
+	//the current map to use, this *must* be set to contextKeywordThmsDataDict when producing vecs from thm data source. 
+	//e.g. in DetectHypothesis.java. 
+	private static Map<String, Integer> keywordDict = contextKeywordQueryDict;
+	
 	private static final int parseContextVectorSz = keywordDict.size();
 	
 	private static final int NUM_BITS_PER_BYTE = 8;
@@ -82,6 +91,14 @@ public class RelationVec implements Serializable{
 			return this.vectorOffsetArray;
 		}
 		
+	}
+	
+	/**
+	 * Sets the dictionary to the mode for producing context vecs from data source to be searched.
+	 * e.g. in DetectHypothesis.java.
+	 */
+	public static void set_keywordDictToDataMode(){
+		keywordDict = contextKeywordThmsDataDict;
 	}
 	
 	/**

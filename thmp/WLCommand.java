@@ -1380,7 +1380,7 @@ public class WLCommand implements Serializable{
 		if(disqualifyCommand(structType, commandsCountMap)){
 			boolean disqualified = true;
 			//if(true)throw new IllegalStateException(structType + " " + commandsCountMap);
-			System.out.println("disqualifying command. ###curCommand.commandsCountMap " + curCommand.commandsCountMap);
+			//System.out.println("disqualifying command. ###curCommand.commandsCountMap " + curCommand.commandsCountMap);
 			return new CommandSat(disqualified);
 		}
 

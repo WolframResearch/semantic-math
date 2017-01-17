@@ -32,7 +32,7 @@ public class ThmInput {
 	static String THM_START_STR = ".*\\\\begin\\s*\\{def(?:.*)|.*\\\\begin\\s*\\{lem(?:.*)"
 			//<--{prop.. instead of {pro.., since need to skip parsing proofs.
 			+ "|.*\\\\begin\\s*\\{th(?:.*)|.*\\\\begin\\s*\\{prop(?:.*)" 
-			+ "|.*\\{proclaim(?:.*)|.*\\\\begin\\s*\\{cor(?:.*)";
+			+ "|.*\\{proclaim(?:.*)|.*\\\\begin\\s*\\{cor(?:.*)|.*\\\\begin\\s*\\{conj(?:.*)";
 	
 	static final Pattern THM_START_PATTERN = Pattern.compile(THM_START_STR);	
 	// start of theorem, to remove words such as \begin[prop]
@@ -44,8 +44,8 @@ public class ThmInput {
 	 * );
 	 */	
 	static String THM_END_STR = ".*\\\\end\\s*\\{def(?:.*)|.*\\\\end\\s*\\{lem(?:.*)"
-			+ "|.*\\\\end\\s*\\{th(?:.*)|.*\\\\end\\s*\\{prop(?:.*)" 
-			+ "|.*\\\\endproclaim(?:.*)|.*\\\\end\\s*\\{cor(?:.*)";
+			+ "|.*\\\\end\\s*\\{th(?:.*)|.*\\\\end\\s*\\{prop.*" 
+			+ "|.*\\\\endproclaim(?:.*)|.*\\\\end\\s*\\{cor(?:.*)|.*\\\\end\\s*\\{conj(?:.*)";
 	//static String THM_END_STR = "\\\\end\\{def(?:.*)|\\\\end\\{lem(?:.*)|\\\\end\\{th(?:.*)|\\\\end\\{pro(?:.*)|\\\\endproclaim(?:.*)"
 			//+ "|\\\\end\\{cor(?:.*)";
 	static final Pattern THM_END_PATTERN = Pattern.compile(THM_END_STR);
@@ -53,17 +53,18 @@ public class ThmInput {
 	//begin of latex expression
 	static final Pattern BEGIN_PATTERN = Pattern.compile("[^\\\\]*\\\\begin.*");
 	
-	//new theorem pattern
-	static final Pattern NEW_THM_PATTERN = Pattern.compile("\\\\newtheorem\\{([^}])\\}(?:[^{]*)\\{([^}]).*");
+	//new theorem pattern. E.g. \newtheorem{corollary}[theorem]{Corollary}
+	static final Pattern NEW_THM_PATTERN = Pattern.compile("\\\\newtheorem\\{([^}]+)\\}(?:[^{]*)\\{([^}]+).*");
 		
-	static final Pattern THM_TERMS_PATTERN = Pattern.compile("Theorem|Proposition|Lemma|Corollary");
+	static final Pattern THM_TERMS_PATTERN = Pattern.compile("Theorem|Proposition|Lemma|Corollary|Conjecture|Definition");
 	
 	private static final Pattern LABEL_PATTERN = Pattern.compile("(.*?)\\\\label\\{(?:[^}]*)\\}\\s*(.*?)");
 	//private static final Pattern DIGIT_PATTERN = Pattern.compile(".*\\d+.*");
 
 	// boldface typesetting. \cat{} refers to category. MUST *Update* DF_EMPH_PATTERN_REPLACEMENT when updating this!
+	//e.g. {\em lll\/}
 	private static final Pattern DF_EMPH_PATTERN = Pattern
-			.compile("\\\\df\\{([^\\}]*)\\}|\\\\emph\\{([^\\}]*)\\}|\\\\em\\{([^\\}]*)\\}|\\\\cat\\{([^}]*)\\}|\\{\\\\it\\s*([^}]*)\\}"
+			.compile("\\\\df\\{([^\\}]*)\\}|\\\\emph\\{([^\\}]*)\\}|\\{\\\\em\\s+([^\\}]+)[\\\\/]*\\}|\\\\cat\\{([^}]*)\\}|\\{\\\\it\\s*([^}]*)\\}"
 					+ "|\\\\ref\\{([^}]*)\\}");
 	// replacement for DF_EMPH_PATTERN, should have same number of groups as
 	// number of patterns in DF_EMPH_PATTERN.
@@ -78,7 +79,7 @@ public class ThmInput {
 	private static final Pattern ELIMINATE_PATTERN = Pattern
 			.compile("\\\\fml|\\\\ofml|\\\\begin\\{enumerate\\}|\\\\end\\{enumerate\\}"					
 					+ "|\\\\begin\\{slogan\\}|\\\\end\\{slogan\\}|\\\\sbsb|\\\\cat|\\\\bs"
-					+ "|\\\\section\\{(?:[^}]*)\\}\\s*|\\\\noindent|\\\\begin\\{abstract\\}|\\\\cite\\{[^}]+\\}");
+					+ "|\\\\section\\{(?:[^}]*)\\}\\s*|\\\\noindent|\\\\begin\\{abstract\\}|\\\\cite\\{[^}]+\\}|\\\\cite\\[[^\\]]+\\]");
 	private static final Pattern ELIMINATE_BEGIN_END_THM_PATTERN = Pattern
 			.compile("\\\\begin\\{def(?:[^}]*)\\}\\s*|\\\\begin\\{lem(?:[^}]*)\\}\\s*|\\\\begin\\{th(?:[^}]*)\\}\\s*"
 					+ "|\\\\begin\\{pr(?:[^}]*)\\}\\s*|\\\\begin\\{proclaim(?:[^}]*)\\}\\s*|\\\\begin\\{cor(?:[^}]*)\\}\\s*"
@@ -160,11 +161,11 @@ public class ThmInput {
 		//read in custom macros, break as soon as \begin{document} encountered
 		while ((line = srcFileReader.readLine()) != null) {
 			
-			Matcher newThmMatcher = NEW_THM_PATTERN.matcher(line);
+			Matcher newThmMatcher;
 			
 			if(BEGIN_PATTERN.matcher(line).find()){
 				break;
-			}else if(newThmMatcher.find()){
+			}else if((newThmMatcher = NEW_THM_PATTERN.matcher(line)).find()){
 				//should be a proposition, hypothesis, etc
 				if(THM_TERMS_PATTERN.matcher(newThmMatcher.group(2)).find()){
 					macrosList.add(newThmMatcher.group(2));		

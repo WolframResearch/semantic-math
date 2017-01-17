@@ -69,7 +69,7 @@ public class DetectHypothesis {
 	//serialize the words as well, to bootstrap up after iterations of processing. The math words are going to 
 	//stabilize.
 	//This is ordered based on word frequencies.
-	private static final List<String> ALL_THM_WORDS_LIST = new ArrayList<String>(CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno().keySet());
+	private static final List<String> ALL_THM_WORDS_LIST = new ArrayList<String>(CollectThm.ThmWordsMaps.get_contextVecWordsNextTimeMap().keySet());
 	
 	private static final boolean PARSE_INPUT_VERBOSE = true;
 	//whether to gather a list of statistics, such as percentage of thms with full parses, or non-null head ParseStruct's.
@@ -79,8 +79,18 @@ public class DetectHypothesis {
 	//skip examples and bibliographies  
 	private static final Pattern SKIP_PATTERN = Pattern.compile("\\\\begin\\{proof\\}.*|\\\\begin\\{exam.*|\\\\begin\\{thebib.*");
 	private static final Pattern END_SKIP_PATTERN = Pattern.compile("\\\\end\\{proof\\}.*|\\\\end\\{exam.*|\\\\end\\{thebib.*");
+	
+	//single lines to skip. Such as comments
+	private static final Pattern SINGLE_LINE_SKIP_PATTERN = Pattern.compile("^%.*|\\\\begin\\{bib.*");
+	
 	private static final Pattern END_DOCUMENT_PATTERN = Pattern.compile("\\\\end\\{document\\}.*");
 	private static final Pattern NEW_DOCUMENT_PATTERN = Pattern.compile(".*\\\\documentclass.*");
+	
+	static{
+		ParseTreeToVec.set_contextKeywordDictToDataMode();
+		RelationVec.set_keywordDictToDataMode();
+		FileUtils.set_dataGenerationMode();
+	}
 	
 	/**
 	 * Statistics class to record statistics such as the percentage of thms 
@@ -236,7 +246,7 @@ public class DetectHypothesis {
 		try{
 			stats = readAndParseThm(inputBF, parseState, defThmList);
 			//System.out.println("DefinitionListWithThm list: " + defThmList);
-			System.out.println("STATS -- percentage on non-null ParseStruct heads: " + stats.getNonNullPercentage());
+			System.out.println("STATS -- percentage on non-trivial ParseStruct heads: " + stats.getNonNullPercentage());
 			DefinitionListWithThmStrList.add(defThmList.toString()+ "\n");
 			for(DefinitionListWithThm def : defThmList){
 				DefinitionList.add(def.getDefinitionList().toString());
@@ -259,18 +269,21 @@ public class DetectHypothesis {
 	}
 
 	/**
-	 * Serialize collected data to persistent storage
+	 * Serialize collected data to persistent storage.
+	 * The serializations done in this method should remain atomic, i.e. do *not* perform 
+	 * a subset of steps only, since we rely on the different serialized data to come from
+	 * the same source with the same settings.
 	 */
 	private static void serializeDataToFile(Stats stats) {
-		List<Object> listToSerialize = new ArrayList<Object>();
-		listToSerialize.add(parsedExpressionList);
-		FileUtils.serializeObjToFile(listToSerialize, parsedExpressionSerialFileStr);
+		//List<Object> listToSerialize = new ArrayList<Object>();
+		//listToSerialize.add(parsedExpressionList);
+		FileUtils.serializeObjToFile(parsedExpressionList, parsedExpressionSerialFileStr);
 		
 		//serialize words used for context vecs
-		List<List<String>> wordListToSerializeList = new ArrayList<List<String>>();
-		wordListToSerializeList.add(ALL_THM_WORDS_LIST);
+		//List<List<String>> wordListToSerializeList = new ArrayList<List<String>>();
+		//wordListToSerializeList.add(ALL_THM_WORDS_LIST);
 		//System.out.println("------++++++++-------putting in : ALL_THM_WORDS_LIST.size " + ALL_THM_WORDS_LIST.size());
-		FileUtils.serializeObjToFile(wordListToSerializeList, allThmWordsSerialFileStr);
+		FileUtils.serializeObjToFile(ALL_THM_WORDS_LIST, allThmWordsSerialFileStr);
 		
 		//write parsedExpressionList to file
 		FileUtils.writeToFile(parsedExpressionStrList, parsedExpressionStringFileStr);
@@ -378,6 +391,9 @@ public class DetectHypothesis {
 				continue;
 			}
 			
+			if(SINGLE_LINE_SKIP_PATTERN.matcher(line).matches()){
+				continue;
+			}
 			//should skip certain sections, e.g. \begin{proof}
 			Matcher skipMatcher = SKIP_PATTERN.matcher(line);
 			if(skipMatcher.find()){
@@ -389,6 +405,7 @@ public class DetectHypothesis {
 				continue;
 			}
 			
+			boolean appendedToThm = false;
 			matcher = thmStartPattern.matcher(line);
 			if (matcher.matches()) {
 				
@@ -404,53 +421,25 @@ public class DetectHypothesis {
 				//and parse the definitions
 				detectAndParseHypothesis(contextStr, parseState, stats);	
 				
-				inThm = true;		
+				inThm = true;
+				newThmSB.append(line);
+				appendedToThm = true;
 				//this should be set *after* calling detectAndParseHypothesis(), since detectAndParseHypothesis
 				//depends on the state.
 				parseState.setInThmFlag(true);
 				contextSB.setLength(0);
 			}
-			else if (thmEndPattern.matcher(line).matches()) {
-				
+			//not else if, since \begin{} and \end{} could be on same line.
+			if (thmEndPattern.matcher(line).matches()) {
+				//if(true) throw new IllegalStateException(newThmSB.toString());
 				inThm = false;
 				
 				if(0 == newThmSB.length()){
 					continue;
 				}
-				
-				// process here, return two versions, one for bag of words, one
-				// for display
-				// strip \df, \empf. Index followed by % strip, not percent
-				// don't strip.
-				// replace enumerate and \item with *
-				//thmWebDisplayList, and bareThmList should both be null
-				String thm = ThmInput.removeTexMarkup(newThmSB.toString(), null, null);
-				
-				//Must clear headParseStruct and curParseStruct of parseState, so newThm
-				//has its own stand-alone parse tree.
-				parseState.setCurParseStruct(null);
-				parseState.setHeadParseStruct(null);
-				
-				//first gather hypotheses in the theorem. <--Note that this will cause the hypothetical
-				//sentences to be parsed twice, unless these sentences are marked so they don't get parsed again.
-				detectAndParseHypothesis(thm, parseState, stats);
-				//if(true) throw new IllegalStateException(parseState.toString());
-				//if contained in local map, should be careful about when to append map.
-				
-				//append to newThmSB additional hypotheses that are applicable to the theorem.				
-				DefinitionListWithThm thmDef = appendHypothesesAndParseThm(thm, parseState, stats);
-				
-				definitionListWithThmList.add(thmDef);
-				//System.out.println("___-------++++++++++++++" + thmDef);
-				//should parse the theorem.
-				//serialize the full parse, i.e. parsedExpression object, along with original input.				
-				
-				/*if (!WordForms.getWhitespacePattern().matcher(thm).find()) {
-					thms.add(thm);
-				}*/
-				//local clean up, after done with a theorem, but still within same document.
-				parseState.parseRunLocalCleanUp();
-				newThmSB.setLength(0);
+				//System.out.println("newThmSB: " + newThmSB);
+				//System.out.println("!---------! line: " + line+" thmEndPattern: " + thmEndPattern);
+				processParseHypThm(newThmSB, parseState, stats, definitionListWithThmList);
 				continue;
 			}else if(END_DOCUMENT_PATTERN.matcher(line).matches()){
 				parseState.parseRunGlobalCleanUp();
@@ -465,17 +454,15 @@ public class DetectHypothesis {
 					}
 				}
 				//should start with new macro-reading code.
-				line = extractMacros(srcFileReader, macrosList);
-				
+				line = extractMacros(srcFileReader, macrosList);				
 				//append list of macros to THM_START_STR and THM_END_STR
-				customPatternAr = addMacrosToThmBeginEndPatterns(macrosList);
-				
+				customPatternAr = addMacrosToThmBeginEndPatterns(macrosList);				
 				continue;
 			}
 
-			if (inThm) {
+			if(inThm && !appendedToThm){
 				newThmSB.append(" ").append(line);
-			}else{
+			}else if (!inThm) {
 				//need to parse to gather definitions
 				//add to contextSB
 				contextSB.append(" ").append(line);
@@ -491,6 +478,45 @@ public class DetectHypothesis {
 		return stats;
 	}
 
+	private static void processParseHypThm(StringBuilder newThmSB, ParseState parseState, Stats stats, 
+			List<DefinitionListWithThm> definitionListWithThmList){
+		//if(true) throw new IllegalStateException(newThmSB.toString());
+		
+		// process here, return two versions, one for bag of words, one
+		// for display
+		// strip \df, \empf. Index followed by % strip, not percent
+		// don't strip.
+		// replace enumerate and \item with *
+		//thmWebDisplayList, and bareThmList should both be null
+		String thm = ThmInput.removeTexMarkup(newThmSB.toString(), null, null);
+		
+		//Must clear headParseStruct and curParseStruct of parseState, so newThm
+		//has its own stand-alone parse tree.
+		parseState.setCurParseStruct(null);
+		parseState.setHeadParseStruct(null);
+		
+		//first gather hypotheses in the theorem. <--Note that this will cause the hypothetical
+		//sentences to be parsed twice, unless these sentences are marked so they don't get parsed again.
+		detectAndParseHypothesis(thm, parseState, stats);
+		//if(true) throw new IllegalStateException(parseState.toString());
+		//if contained in local map, should be careful about when to append map.
+		
+		//append to newThmSB additional hypotheses that are applicable to the theorem.				
+		DefinitionListWithThm thmDef = appendHypothesesAndParseThm(thm, parseState, stats);
+		
+		definitionListWithThmList.add(thmDef);
+		//System.out.println("___-------++++++++++++++" + thmDef);
+		//should parse the theorem.
+		//serialize the full parse, i.e. parsedExpression object, along with original input.				
+		
+		/*if (!WordForms.getWhitespacePattern().matcher(thm).find()) {
+			thms.add(thm);
+		}*/
+		//local clean up, after done with a theorem, but still within same document.
+		parseState.parseRunLocalCleanUp();
+		newThmSB.setLength(0);
+	}
+	
 	/**
 	 * Create custom start and end patterns by appending to THM_START_STR and THM_END_STR.
 	 * @param macrosList
@@ -504,12 +530,19 @@ public class DetectHypothesis {
 			StringBuilder endBuilder = new StringBuilder();
 			for(String macro : macrosList){
 				//create start and end macros
-				startBuilder.append("\\\\begin\\{").append(macro).append(".*");				
-				endBuilder.append("\\\\end\\{").append(macro).append(".*");
+				//but only if isn't already included in THM_START_PATTERN
+				if(ThmInput.THM_START_PATTERN.matcher("\\begin{" + macro).matches()){
+					continue;
+				}
+				startBuilder.append("|.*\\\\begin\\s*\\{").append(macro).append(".*");				
+				endBuilder.append("|.*\\\\end\\s*\\{").append(macro).append(".*");
 			}
-			customPatternAr[0] = Pattern.compile(ThmInput.THM_START_STR + startBuilder);
-			customPatternAr[1] = Pattern.compile(ThmInput.THM_END_STR + endBuilder);	
+			if(startBuilder.length() > 0){
+				customPatternAr[0] = Pattern.compile(ThmInput.THM_START_STR + startBuilder);
+				customPatternAr[1] = Pattern.compile(ThmInput.THM_END_STR + endBuilder);	
+			}
 		}
+		//if(true) throw new IllegalStateException("updated macros list: " + Arrays.deepToString(customPatternAr));
 		return customPatternAr;
 	}
 
@@ -522,20 +555,21 @@ public class DetectHypothesis {
 	 */
 	private static String extractMacros(BufferedReader srcFileReader, List<String> macrosList) throws IOException {
 		
-		String line;		
+		String line = null;		
 		while ((line = srcFileReader.readLine()) != null) {
 			//should also extract those defined with \def{} patterns.
-			Matcher newThmMatcher = ThmInput.NEW_THM_PATTERN.matcher(line);	
+			Matcher newThmMatcher;	
 			
 			if(ThmInput.BEGIN_PATTERN.matcher(line).matches()){
 				break;
-			}else if(newThmMatcher.matches()){
+			}else if((newThmMatcher = ThmInput.NEW_THM_PATTERN.matcher(line)).matches()){
 				//should be a proposition, hypothesis, etc. E.g. don't look through proofs.
 				if(ThmInput.THM_TERMS_PATTERN.matcher(newThmMatcher.group(2)).matches()){
-					macrosList.add(newThmMatcher.group(2));	
+					macrosList.add(newThmMatcher.group(1));	
 				}
 			}			
 		}
+		//if(true)throw new IllegalStateException("macros: "+macrosList);
 		return line;
 	}
 	

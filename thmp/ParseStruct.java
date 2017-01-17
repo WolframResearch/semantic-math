@@ -159,8 +159,7 @@ public class ParseStruct implements Serializable{
 			}
 			i--;
 			//throw new IllegalStateException(entry.getValue().toString());
-		}
-		
+		}		
 		return sb.toString();
 	}
 	

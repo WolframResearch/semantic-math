@@ -9,6 +9,7 @@ complex adj
 CW complex ent
 homology ent
 log ent
+unitary adj
 space ent
 following ent
 subextension ent

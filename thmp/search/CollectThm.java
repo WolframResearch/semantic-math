@@ -183,6 +183,8 @@ public class CollectThm {
 		//words and their document-wide frequencies.
 		private static final ImmutableMap<String, Integer> docWordsFreqMapNoAnno;
 		private static final ImmutableMultimap<String, Integer> wordThmsIndexMMapNoAnno;
+		//map serialized for use during search, contains N-grams.
+		private static final ImmutableMap<String, Integer> contextVecWordsNextTimeMap;
 		
 		private static final Map<String, Integer> twoGramsMap = NGramsMap.get_twoGramsMap();
 		private static final Map<String, Integer> threeGramsMap = NGramsMap.get_threeGramsMap();	
@@ -199,10 +201,8 @@ public class CollectThm {
 		 */
 		private static final Map<String, Integer> CONTEXT_VEC_WORDS_MAP;
 		
-		/**
-		 * Map of (annotated with "hyp" etc) keywords and their scores in document, the higher freq in doc, the lower 
-		 * score, say 1/(log freq + 1) since log 1 = 0. 
-		 */
+		/** Map of (annotated with "hyp" etc) keywords and their scores in document, the higher freq in doc, the lower 
+		 * score, say 1/(log freq + 1) since log 1 = 0.  */
 		//wordsScoreMap should get deprecated! Should use scores of words without annotations.
 		private static final ImmutableMap<String, Integer> wordsScoreMap;	
 		private static final ImmutableMap<String, Integer> wordsScoreMapNoAnno;	
@@ -280,12 +280,7 @@ public class CollectThm {
 			wordsScoreMapNoAnno = ImmutableMap.copyOf(wordsScorePreMap);
 			System.out.println("*********wordsScoreMapNoAnno.size(): " + wordsScoreMapNoAnno.size());
 			
-			/***This is where the set of words used for SVD search and search based on context and relational vectors
-			 * start to differ. The latter contains additional words (N-grams) added below.***/
-			
-			//Must add the 2 and 3 grams to docWordsFreqPreMapNoAnno
-			docWordsFreqPreMapNoAnno.putAll(twoGramsMap);
-			docWordsFreqPreMapNoAnno.putAll(threeGramsMap);
+			wordThmsIndexMMapNoAnno = wordThmsMMapBuilderNoAnno.build();
 			
 			//re-order the list so the most frequent words appear first, as optimization
 			//so that search words can match the most frequently-occurring words.
@@ -294,15 +289,24 @@ public class CollectThm {
 			Map<String, Integer> keyWordFreqTreeMap = new TreeMap<String, Integer>(comp);
 			keyWordFreqTreeMap.putAll(docWordsFreqPreMapNoAnno);
 			
-			docWordsFreqMapNoAnno = ImmutableMap.copyOf(keyWordFreqTreeMap); 
+			docWordsFreqMapNoAnno = ImmutableMap.copyOf(keyWordFreqTreeMap);
 			//System.out.println(docWordsFreqMapNoAnno);
 			
-			wordThmsIndexMMapNoAnno = wordThmsMMapBuilderNoAnno.build();
+			/***This is where the set of words used for SVD search and search based on context and relational vectors
+			 * diverge. The latter contains additional words (N-grams) added below. Note these words
+			 * are used for NGram formation NEXT run (generating ParsedExpressionList)***/
+			/////////////////<--
+			//Must add the 2 and 3 grams to docWordsFreqPreMapNoAnno. The N-grams that actually occur in 
+			//this corpus of theorems have already been added to docWordsFreqPreMapNoAnno during buildMaps.
+			docWordsFreqPreMapNoAnno.putAll(twoGramsMap);
+			docWordsFreqPreMapNoAnno.putAll(threeGramsMap);
+			//map to be serialized, and used for forming context vectors in next run.
+			contextVecWordsNextTimeMap = ImmutableMap.copyOf(docWordsFreqPreMapNoAnno);
 			//deserialize words from allThmWordsList.dat, which were serialized from previous run.
 			List<String> wordsList = extractWordsList();
 			//the values are just the words' indices in wordsList. Map also filters out repetitive words.
 			CONTEXT_VEC_WORDS_MAP = createContextKeywordIndexDict(wordsList);
-			/**Note that   **/
+			
 			//System.out.println("------++++++++-------CONTEXT_VEC_WORDS_MAP.size " + CONTEXT_VEC_WORDS_MAP.size());
 		}
 
@@ -559,11 +563,11 @@ public class CollectThm {
 					//Should be more careful on some words that shouldn't be singular-ized!
 					word = WordForms.getSingularForm(word);	
 				
+					if(WordForms.makeFluffSet().contains(word)) continue;
+					
 					//also don't skip if word is contained in lexicon
-					List<String> wordPosList = posMMap.get(word);
-					
-					boolean skipWordBasedOnPos = true;
-					
+					List<String> wordPosList = posMMap.get(word);					
+					boolean skipWordBasedOnPos = true;					
 					if(!wordPosList.isEmpty()){
 						String wordPos = wordPosList.get(0);
 						skipWordBasedOnPos = !wordPos.equals("ent") && !wordPos.equals("adj"); 
@@ -779,9 +783,17 @@ public class CollectThm {
 		 * @return
 		 */
 		public static ImmutableMap<String, Integer> get_docWordsFreqMapNoAnno(){
-			return docWordsFreqMapNoAnno;
+			return docWordsFreqMapNoAnno; 
 		}
 
+		/**
+		 * Retrieves map of words with their document-wide frequencies.
+		 * @return
+		 */
+		public static ImmutableMap<String, Integer> get_contextVecWordsNextTimeMap(){
+			return contextVecWordsNextTimeMap; 
+		}
+		
 		/**
 		 * Retrieves ImmutableListMultimap of words and the theorems's indices in thmList
 		 *  they appear in. Indices of thms are 0-based.
@@ -963,7 +975,7 @@ public class CollectThm {
 		 */
 		private static void fillListsFromParsedExpressions(List<ParsedExpression> parsedExpressionsList, 
 				List<String> allThmsWithHypList, List<String> contextVecList, List<BigInteger> relationVecList){
-			
+			//System.out.println("Should be list: " + parsedExpressionsList);
 			for(ParsedExpression parsedExpr : parsedExpressionsList){
 				allThmsWithHypList.add(parsedExpr.getDefListWithThm().getThmWithDefStr());
 				contextVecList.add(parsedExpr.contextVecStr());

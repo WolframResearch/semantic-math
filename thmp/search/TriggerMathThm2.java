@@ -92,12 +92,12 @@ public class TriggerMathThm2 {
 		
 		//re-order the list so the most frequent words appear first, as optimization
 		//so that search words can match the most frequently-occurring words.
-		WordFreqComparator comp = new WordFreqComparator(docWordsFreqMapNoAnno);
+		/*WordFreqComparator comp = new WordFreqComparator(docWordsFreqMapNoAnno);
 		//words and their frequencies in wordDoc matrix.
 		Map<String, Integer> keyWordIndexTreeMap = new TreeMap<String, Integer>(comp);
-		keyWordIndexTreeMap.putAll(keywordIndexMap);
+		keyWordIndexTreeMap.putAll(keywordIndexMap);*/
 		
-		keywordIndexDict = ImmutableMap.copyOf(keyWordIndexTreeMap);
+		keywordIndexDict = ImmutableMap.copyOf(docWordsFreqMapNoAnno);
 		//System.out.println("!_-------keywordFreqDict: " + keywordFreqDict);
 		//keywordIndexDict = ImmutableMap.copyOf(keywordIndexMap);
 		
@@ -308,7 +308,8 @@ public class TriggerMathThm2 {
 		return sb.toString();
 	}
 
-	/**Same as creareQuery, no annotation.
+	/**
+	 * Same as creareQuery, no annotation.
 	 * Create query row vector, weighed using word scores,
 	 * and according to norm. To be compared to columns 
 	 * of term document matrix.

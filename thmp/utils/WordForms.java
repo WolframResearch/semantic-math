@@ -32,6 +32,8 @@ public class WordForms {
 	private static final String FLUFF_WORDS_SMALL = "a|the|tex|of|and|on|let|lemma|for|to|that|with|is|be|are|there|by"
 			+ "|any|as|if|we|suppose|then|which|in|from|this|assume|this|have|just|may|an|every|it|between|given|itself|has"
 			+ "|more|where";
+	private static final Set<String> FLUFF_WORDS_SMALL_SET;
+	
 	private static ImmutableSet<String> freqWordsSet; 
 	//brackets pattern
 	private static final Pattern BRACKETS_PATTERN = Pattern.compile("\\[([^\\]]*)\\]");	
@@ -41,6 +43,15 @@ public class WordForms {
 	//which is O(mn) time.
 	private static final Pattern HYP_PATTERN = Pattern.compile(".*assume.*|.*denote.*|.*define.*|.*let.*|.*is said.*|.*suppose.*"
 			+ "|.*where.*|.*is called.*|.*if.*|.*If.*") ;
+	
+	static{
+		
+		FLUFF_WORDS_SMALL_SET = new HashSet<String>();
+		String[] fluffAr = FLUFF_WORDS_SMALL.split("\\|");
+		for(String word : fluffAr){
+			FLUFF_WORDS_SMALL_SET.add(word);
+		}
+	}
 	
 	private static Set<String> getFreqWordsSet(){
 		if(freqWordsSet == null){
@@ -112,15 +123,10 @@ public class WordForms {
 	}
 	
 	/**
-	 * Make the fluff map from the fluff String.
+	 * Returns words that should be excluded from search.
 	 */
 	public static Set<String> makeFluffSet(){
-		Set<String> fluffSet = new HashSet<String>();
-		String[] fluffAr = FLUFF_WORDS_SMALL.split("\\|");
-		for(String word : fluffAr){
-			fluffSet.add(word);
-		}
-		return fluffSet;
+		return FLUFF_WORDS_SMALL_SET;
 	}
 	
 	/**

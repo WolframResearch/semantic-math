@@ -25,8 +25,23 @@ public class ParseTreeToVec {
 
 	//private static final Map<String, Integer> contextKeywordDict = TriggerMathThm2.allThmsKeywordIndexDict();
 	//should ideally order the words according to relative distances apart, i.e. entries in the correlation matrix.
-	private static final Map<String, Integer> contextKeywordDict = CollectThm.ThmWordsMaps.get_CONTEXT_VEC_WORDS_MAP();
+	//used for forming query vecs, as these are words used when the thm source vecs were formed.
+	private static final Map<String, Integer> contextKeywordQueryDict = CollectThm.ThmWordsMaps.get_CONTEXT_VEC_WORDS_MAP();
+	//contextVecWordsNextTimeMMap
+	private static final Map<String, Integer> contextKeywordThmsDataDict = CollectThm.ThmWordsMaps.get_contextVecWordsNextTimeMap();
+	//the current map to use, this *must* be set to contextKeywordThmsDataDict when producing vecs from thm data source. 
+	//e.g. in DetectHypothesis.java. 
+	private static Map<String, Integer> contextKeywordDict = contextKeywordQueryDict;
+	//private static final Map<String, Integer> contextKeywordDict = ;
 	private static final ListMultimap<String, String> posMMap = Maps.posMMap();
+	
+	/**
+	 * Sets the dictionary to the mode for producing context vecs from data source to be searched.
+	 * e.g. in DetectHypothesis.java.
+	 */
+	public static void set_contextKeywordDictToDataMode(){
+		contextKeywordDict = contextKeywordThmsDataDict;
+	}
 	
 	/**
 	 * Entry method from ParseToWLTree, sets the term corresponding to head using WLCommandStr. 
