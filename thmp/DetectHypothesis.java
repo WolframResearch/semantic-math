@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -23,6 +24,8 @@ import thmp.ParseState.ParseStateBuilder;
 import thmp.ParseState.VariableDefinition;
 import thmp.ParseState.VariableName;
 import thmp.search.CollectThm;
+import thmp.search.Searcher;
+import thmp.search.ThmSearch;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 
@@ -61,6 +64,8 @@ public class DetectHypothesis {
 	private static final String parsedExpressionStringFileStr = "src/thmp/data/parsedExpressionList.txt";
 	private static final String definitionStrFileStr = "src/thmp/data/parsedExpressionDefinitions.txt";
 	//files to serialize theorem words to.
+	private static final String allThmWordsMapSerialFileStr = "src/thmp/data/allThmWordsMap.dat";
+	private static final String allThmWordsMapStringFileStr = "src/thmp/data/allThmWordsMap.txt";
 	private static final String allThmWordsSerialFileStr = "src/thmp/data/allThmWordsList.dat";
 	private static final String allThmWordsStringFileStr = "src/thmp/data/allThmWordsList.txt";
 	
@@ -70,6 +75,7 @@ public class DetectHypothesis {
 	//stabilize.
 	//This is ordered based on word frequencies.
 	private static final List<String> ALL_THM_WORDS_LIST = new ArrayList<String>(CollectThm.ThmWordsMaps.get_contextVecWordsNextTimeMap().keySet());
+	private static final Map<String, Integer> ALL_THM_WORDS_FREQ_MAP = CollectThm.ThmWordsMaps.get_contextVecWordsNextTimeMap();
 	
 	private static final boolean PARSE_INPUT_VERBOSE = true;
 	//whether to gather a list of statistics, such as percentage of thms with full parses, or non-null head ParseStruct's.
@@ -87,9 +93,9 @@ public class DetectHypothesis {
 	private static final Pattern NEW_DOCUMENT_PATTERN = Pattern.compile(".*\\\\documentclass.*");
 	
 	static{
-		ParseTreeToVec.set_contextKeywordDictToDataMode();
-		RelationVec.set_keywordDictToDataMode();
+		Searcher.SearchMetaData.set_gatheringDataBoolToTrue();
 		FileUtils.set_dataGenerationMode();
+		ThmSearch.TermDocumentMatrix.createTermDocumentMatrixSVD();
 	}
 	
 	/**
@@ -233,8 +239,8 @@ public class DetectHypothesis {
 		try{
 			//inputBF = new BufferedReader(new FileReader("src/thmp/data/CommAlg5.txt"));
 			//inputBF = new BufferedReader(new FileReader("src/thmp/data/fieldsRawTex.txt"));
-			//inputBF = new BufferedReader(new FileReader("src/thmp/data/samplePaper1.txt"));
-			inputBF = new BufferedReader(new FileReader("src/thmp/data/Total.txt"));
+			inputBF = new BufferedReader(new FileReader("src/thmp/data/samplePaper1.txt"));
+			//inputBF = new BufferedReader(new FileReader("src/thmp/data/Total.txt"));
 			//inputBF = new BufferedReader(new FileReader("src/thmp/data/fieldsThms2.txt"));
 		}catch(FileNotFoundException e){
 			e.printStackTrace();
@@ -284,6 +290,14 @@ public class DetectHypothesis {
 		//wordListToSerializeList.add(ALL_THM_WORDS_LIST);
 		//System.out.println("------++++++++-------putting in : ALL_THM_WORDS_LIST.size " + ALL_THM_WORDS_LIST.size());
 		FileUtils.serializeObjToFile(ALL_THM_WORDS_LIST, allThmWordsSerialFileStr);
+		
+		List<Map<String, Integer>> wordMapToSerializeList = new ArrayList<Map<String, Integer>>();
+		wordMapToSerializeList.add(ALL_THM_WORDS_FREQ_MAP);
+		FileUtils.serializeObjToFile(wordMapToSerializeList, allThmWordsMapSerialFileStr);
+		//this list is for human checking the result.
+		List<String> wordMapStringList = new ArrayList<String>();
+		wordMapStringList.add(ALL_THM_WORDS_FREQ_MAP.toString());
+		FileUtils.writeToFile(wordMapStringList, allThmWordsMapStringFileStr);
 		
 		//write parsedExpressionList to file
 		FileUtils.writeToFile(parsedExpressionStrList, parsedExpressionStringFileStr);

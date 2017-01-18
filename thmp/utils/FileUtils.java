@@ -15,9 +15,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.logging.log4j.LogManager;
@@ -280,7 +278,9 @@ public class FileUtils {
 		}
 		try {
 			ml = MathLinkFactory.createKernelLink(ARGV);
-			System.out.println("MathLink created! " + ml);
+			String msg = "MathLink created! " + ml;
+			System.out.println(msg);
+			logger.info(msg);
 			// discard initial pakets the kernel sends over.
 			ml.discardAnswer();
 		} catch (MathLinkException e) {

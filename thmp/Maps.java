@@ -108,6 +108,10 @@ public class Maps {
 		return BuildMaps.posMMap;
 	}
 	
+	public static ListMultimap<String, String> essentialPosMMap(){
+		return BuildMaps.essentialPosMMap;
+	}
+	
 	/**
 	 * Map of anchoring words, e.g. "of"
 	 * @return
@@ -138,6 +142,8 @@ public class Maps {
 		// parts of speech map, e.g. "open", "adj"
 		//specify it's a ListMultimap, to make known that insertion order is preserved
 		protected static final ListMultimap<String, String> posMMap;
+		//essential pos map used for searching
+		protected static final ListMultimap<String, String> essentialPosMMap;
 		// map of structures, for all, disj, etc
 		// protected static HashMap<String, Rule> structMap;
 		protected static final Multimap<String, Rule> structMap;
@@ -205,7 +211,9 @@ public class Maps {
 				FileUtils.silentClose(lexiconBuffer);
 	    	}
 	    	
-			posPreMMap = buildMap(posPreMMap);
+	    	SetMultimap<String, String> essentialPosPreMMap = LinkedHashMultimap.create();
+			posPreMMap = buildMap(posPreMMap, essentialPosPreMMap);
+			essentialPosMMap = ArrayListMultimap.create(essentialPosPreMMap);
 			posMMap = ArrayListMultimap.create(posPreMMap);
 		}
 		
@@ -269,10 +277,13 @@ public class Maps {
 		}
 		
 		/**
-		 * This should not be public!
-		 * Build the various maps
+		 * Build the various maps, e.g. parts of speech map
+		 * @param posPreMMap
+		 * @param essentialPosPreMMap The essential math words that were included by hand.
+		 * @return
 		 */
-		private static SetMultimap<String, String> buildMap(SetMultimap<String, String> posPreMMap) {
+		private static SetMultimap<String, String> buildMap(SetMultimap<String, String> posPreMMap, 
+				SetMultimap<String, String> essentialPosPreMMap) {
 			// entityMap = new HashMap<String, ArrayList<String>>();
 			// ArrayList<String> ppt = new ArrayList<String>();
 			// ppt.add("characteristic");
@@ -928,11 +939,13 @@ public class Maps {
 			 * 
 			 * }
 			 */
+			
+			essentialPosPreMMap.putAll(posPreMMap);
 			//adds all words from the stock frequent words. Add these last,
 			//to give conflicting pos the least priority. E.g. "open" should
 			//have pos "adj" and "ent" before "verb"
 			posPreMMap.putAll(Multimaps.forMap(WordFrequency.ComputeFrequencyData.freqWordsPosMap()));
-					
+			
 			return posPreMMap;
 		}
 	}

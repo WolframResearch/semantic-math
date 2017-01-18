@@ -11,6 +11,7 @@ import thmp.ParseToWLTree.WLCommandWrapper;
 import thmp.Struct.NodeType;
 import thmp.WLCommand.PosTerm;
 import thmp.search.CollectThm;
+import thmp.search.Searcher;
 import thmp.search.TriggerMathThm2;
 import thmp.utils.WordForms;
 
@@ -31,17 +32,26 @@ public class ParseTreeToVec {
 	private static final Map<String, Integer> contextKeywordThmsDataDict = CollectThm.ThmWordsMaps.get_contextVecWordsNextTimeMap();
 	//the current map to use, this *must* be set to contextKeywordThmsDataDict when producing vecs from thm data source. 
 	//e.g. in DetectHypothesis.java. 
-	private static Map<String, Integer> contextKeywordDict = contextKeywordQueryDict;
+	private static final Map<String, Integer> contextKeywordDict;
 	//private static final Map<String, Integer> contextKeywordDict = ;
 	private static final ListMultimap<String, String> posMMap = Maps.posMMap();
 	
+	static{
+		if(Searcher.SearchMetaData.gatheringDataBool()){
+			//Sets the dictionary to the mode for producing context vecs from data source to be searched.
+			// e.g. in DetectHypothesis.java.
+			contextKeywordDict = contextKeywordThmsDataDict;
+		}else{
+			contextKeywordDict = contextKeywordQueryDict;
+		}
+	}
 	/**
 	 * Sets the dictionary to the mode for producing context vecs from data source to be searched.
 	 * e.g. in DetectHypothesis.java.
 	 */
-	public static void set_contextKeywordDictToDataMode(){
+	/*public static void set_contextKeywordDictToDataMode(){
 		contextKeywordDict = contextKeywordThmsDataDict;
-	}
+	}*/
 	
 	/**
 	 * Entry method from ParseToWLTree, sets the term corresponding to head using WLCommandStr. 

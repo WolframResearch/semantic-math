@@ -78,6 +78,7 @@ public class SearchIntersection {
 		//System.out.println(CollectThm.get_wordsScoreMap());
 		wordThmMMap = CollectThm.ThmWordsMaps.get_wordThmsMMap();
 		wordThmMMapNoAnno = CollectThm.ThmWordsMaps.get_wordThmsMMapNoAnno();
+		
 		//System.out.println(wordsScoreMap);
 		//thmList = CollectThm.ThmList.get_macroReplacedThmList();
 		thmList = CollectThm.ThmList.allThmsWithHypList();

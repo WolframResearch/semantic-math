@@ -15,6 +15,7 @@ import com.google.common.collect.Multimap;
 import thmp.ThmP1.ParsedPair;
 import thmp.WLCommand.PosTerm;
 import thmp.search.CollectThm;
+import thmp.search.Searcher;
 import thmp.search.TriggerMathThm2;
 import thmp.utils.WordForms;
 
@@ -39,22 +40,31 @@ public class RelationVec implements Serializable{
 
 	private static final long serialVersionUID = 7990758362732085287L;
 
-	//contextVecWordsNextTimeMMap
 	private static final Map<String, Integer> contextKeywordThmsDataDict = CollectThm.ThmWordsMaps.get_contextVecWordsNextTimeMap();
 	
-	//used for forming query vecs, as these are words used when the thm source vecs were formed.
+	//used for forming query vecs, as these are words used when the thm source vecs were formed, words and their indices
+	//Ordered according to frequency.
 	private static final Map<String, Integer> contextKeywordQueryDict = CollectThm.ThmWordsMaps.get_CONTEXT_VEC_WORDS_MAP();
-	
 	//the current map to use, this *must* be set to contextKeywordThmsDataDict when producing vecs from thm data source. 
 	//e.g. in DetectHypothesis.java. 
-	private static Map<String, Integer> keywordDict = contextKeywordQueryDict;
+	private static final Map<String, Integer> keywordDict;
 	
-	private static final int parseContextVectorSz = keywordDict.size();
+	private static final int parseContextVectorSz;
 	
 	private static final int NUM_BITS_PER_BYTE = 8;
 	private static final Pattern SPLIT_DELIM_PATTERN = Pattern.compile(WordForms.splitDelim());
 	private static final boolean DEBUG = true;
+	static{
 	
+		if(Searcher.SearchMetaData.gatheringDataBool()){
+			//Sets the dictionary to the mode for producing context vecs from data source to be searched.
+			// e.g. in DetectHypothesis.java.
+			keywordDict = contextKeywordThmsDataDict;
+		}else{
+			keywordDict = contextKeywordQueryDict;
+		}
+		parseContextVectorSz = keywordDict.size();
+	}
 	/**
 	 * Enum for the different types of
 	 * relations, such as "is A", "A is",
@@ -97,9 +107,9 @@ public class RelationVec implements Serializable{
 	 * Sets the dictionary to the mode for producing context vecs from data source to be searched.
 	 * e.g. in DetectHypothesis.java.
 	 */
-	public static void set_keywordDictToDataMode(){
+	/*public static void set_keywordDictToDataMode(){
 		keywordDict = contextKeywordThmsDataDict;
-	}
+	}*/
 	
 	/**
 	 * Builds relation vec from ParsedPair's in parsedPairMMap, 

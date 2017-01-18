@@ -178,10 +178,11 @@ public class CollectThm {
 		private static final ImmutableMultimap<String, Integer> wordThmsIndexMMap;
 		/**Versions without annotations***/
 		//List of theorems, each of which
-		//contains map of keywords and their frequencies in this theorem.
+		//contains map of keywords and their frequencies in a particular theorem.
 		private static final ImmutableList<ImmutableMap<String, Integer>> thmWordsFreqMapListNoAnno;
 		//words and their document-wide frequencies.
 		private static final ImmutableMap<String, Integer> docWordsFreqMapNoAnno;
+		//entries are word and the indices of thms that contain that word.
 		private static final ImmutableMultimap<String, Integer> wordThmsIndexMMapNoAnno;
 		//map serialized for use during search, contains N-grams.
 		private static final ImmutableMap<String, Integer> contextVecWordsNextTimeMap;
@@ -193,13 +194,15 @@ public class CollectThm {
 		private static final Set<String> nGramFirstWordsSet = new HashSet<String>();
 		private static final int averageSingletonWordFrequency;
 		
-		/* Deserialize the words used to form context and relation vectors. Note that this is a 
+		/* Words and their indices.
+		 * Deserialize the words used to form context and relation vectors. Note that this is a 
 		 * separate* list from the words used in term document matrix.
 		 * Absolute frequencies don't matter for forming context or relational vectors.
 		 * List is ordered with respect to relative frequency, more frequent words come first,
 		 * to optimize relation vector formation with BigIntegers.
 		 */
 		private static final Map<String, Integer> CONTEXT_VEC_WORDS_MAP;
+		private static final ImmutableMap<String, Integer> CONTEXT_VEC_WORDS_FREQ_MAP;
 		
 		/** Map of (annotated with "hyp" etc) keywords and their scores in document, the higher freq in doc, the lower 
 		 * score, say 1/(log freq + 1) since log 1 = 0.  */
@@ -250,6 +253,7 @@ public class CollectThm {
 				//this is commented out in Jan 2017, since the annotated version is no longer used.
 				//readThm(thmWordsListBuilder, docWordsFreqPreMap, wordThmsMMapBuilder, processedThmList);
 				//same as readThm, just buid maps without annotation
+				//These all contain the *same* set of words.
 				buildMapsNoAnno(thmWordsListBuilderNoAnno, docWordsFreqPreMapNoAnno, wordThmsMMapBuilderNoAnno, processedThmList);				
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -276,38 +280,46 @@ public class CollectThm {
 			addLexiconWordsToContextKeywordDict(docWordsFreqPreMapNoAnno, averageSingletonWordFrequency);
 			
 			Map<String, Integer> wordsScorePreMap = new HashMap<String, Integer>();
-			buildScoreMapNoAnno(wordsScorePreMap, docWordsFreqPreMapNoAnno);
+			
+			//deserialize the word frequency map from file, as gathered from last time the data were generated.
+			//Map<String, Integer> wordFreqMapFromFile = extractWordFreqMap();
+			CONTEXT_VEC_WORDS_FREQ_MAP = extractWordFreqMap();
+			//Map<String, Integer> temp = new HashMap<String, Integer>();
+			//temp.put("field", 3);
+			//CONTEXT_VEC_WORDS_FREQ_MAP = ImmutableMap.copyOf(temp);
+			//the values are just the words' indices in wordsList.
+			//this orders the list as well. INDEX map. 
+			CONTEXT_VEC_WORDS_MAP = createContextKeywordIndexDict(CONTEXT_VEC_WORDS_FREQ_MAP);
+			//System.out.println("------++++++++-------CONTEXT_VEC_WORDS_MAP.size " + CONTEXT_VEC_WORDS_MAP.size());
+			
+			if(Searcher.SearchMetaData.gatheringDataBool()){
+				
+				buildScoreMapNoAnno(wordsScorePreMap, docWordsFreqPreMapNoAnno);				
+				Map<String, Integer> keyWordFreqTreeMap = reorderDocWordsFreqMap(docWordsFreqPreMapNoAnno);					
+				docWordsFreqMapNoAnno = ImmutableMap.copyOf(keyWordFreqTreeMap);
+			}else{				
+				buildScoreMapNoAnno(wordsScorePreMap, CONTEXT_VEC_WORDS_FREQ_MAP);				
+				docWordsFreqMapNoAnno = CONTEXT_VEC_WORDS_FREQ_MAP;
+			}
+			//this is ok, since from previous set of serialized data.
 			wordsScoreMapNoAnno = ImmutableMap.copyOf(wordsScorePreMap);
 			System.out.println("*********wordsScoreMapNoAnno.size(): " + wordsScoreMapNoAnno.size());
 			
 			wordThmsIndexMMapNoAnno = wordThmsMMapBuilderNoAnno.build();
 			
-			//re-order the list so the most frequent words appear first, as optimization
-			//so that search words can match the most frequently-occurring words.
-			WordFreqComparator comp = new WordFreqComparator(docWordsFreqPreMapNoAnno);
-			//words and their frequencies in wordDoc matrix.
-			Map<String, Integer> keyWordFreqTreeMap = new TreeMap<String, Integer>(comp);
-			keyWordFreqTreeMap.putAll(docWordsFreqPreMapNoAnno);
-			
-			docWordsFreqMapNoAnno = ImmutableMap.copyOf(keyWordFreqTreeMap);
-			//System.out.println(docWordsFreqMapNoAnno);
-			
 			/***This is where the set of words used for SVD search and search based on context and relational vectors
 			 * diverge. The latter contains additional words (N-grams) added below. Note these words
-			 * are used for NGram formation NEXT run (generating ParsedExpressionList)***/
+			 * are used for NGram formation NEXT run (generating ParsedExpressionList)***/ //<--actually now they are the same
 			/////////////////<--
 			//Must add the 2 and 3 grams to docWordsFreqPreMapNoAnno. The N-grams that actually occur in 
 			//this corpus of theorems have already been added to docWordsFreqPreMapNoAnno during buildMaps.
-			docWordsFreqPreMapNoAnno.putAll(twoGramsMap);
-			docWordsFreqPreMapNoAnno.putAll(threeGramsMap);
+			//docWordsFreqPreMapNoAnno.putAll(twoGramsMap);
+			//docWordsFreqPreMapNoAnno.putAll(threeGramsMap);
 			//map to be serialized, and used for forming context vectors in next run.
 			contextVecWordsNextTimeMap = ImmutableMap.copyOf(docWordsFreqPreMapNoAnno);
 			//deserialize words from allThmWordsList.dat, which were serialized from previous run.
-			List<String> wordsList = extractWordsList();
-			//the values are just the words' indices in wordsList. Map also filters out repetitive words.
-			CONTEXT_VEC_WORDS_MAP = createContextKeywordIndexDict(wordsList);
+			//List<String> wordsList = extractWordsList();
 			
-			//System.out.println("------++++++++-------CONTEXT_VEC_WORDS_MAP.size " + CONTEXT_VEC_WORDS_MAP.size());
 		}
 
 		/**
@@ -329,6 +341,28 @@ public class CollectThm {
 		}	
 		
 		/**
+		 * deserialize words list used to form context and relation vectors, which were
+		 * formed while parsing through the papers in e.g. DetectHypothesis.java. This is
+		 * so we don't parse everything again at every server initialization.
+		 * @return
+		 */
+		@SuppressWarnings("unchecked")		
+		private static ImmutableMap<String, Integer> extractWordFreqMap() {	
+			String allThmWordsSerialFileStr = "src/thmp/data/allThmWordsMap.dat";
+			if(null != servletContext){
+				//need to close this!
+				allThmWordsSerialInputStream = servletContext.getResourceAsStream(allThmWordsSerialFileStr);
+				Map<String, Integer> map 
+					= ((List<Map<String, Integer>>)FileUtils.deserializeListFromInputStream(allThmWordsSerialInputStream)).get(0);
+				return ImmutableMap.copyOf(map);
+			}else{				
+				Map<String, Integer> map 
+					= ((List<Map<String, Integer>>)FileUtils.deserializeListFromFile(allThmWordsSerialFileStr)).get(0);
+				return ImmutableMap.copyOf(map);
+			}
+		}	
+		
+		/**
 		 * Creates a map, ordered by frequency.
 		 * @param wordsList
 		 * @return Map of words and their indices in wordsList.
@@ -342,6 +376,38 @@ public class CollectThm {
 				contextKeywordIndexDict.put(word, i);
 			}
 			return contextKeywordIndexDict;
+		}
+		
+		/**
+		 * Creates a map, ordered by frequency, with keys words and words their indices in map.
+		 * @param wordsList
+		 * @return Map of words and their indices in wordsList.
+		 */
+		public static Map<String, Integer> createContextKeywordIndexDict(Map<String, Integer> docWordsFreqPreMapNoAnno){
+			Map<String, Integer> contextKeywordIndexDict = new HashMap<String, Integer>();
+			//these are ordered based on frequency, more frequent words occur earlier.
+			//List<String> wordsList = CollectThm.ThmWordsMaps.getCONTEXT_VEC_WORDS_LIST();	
+			//Should already been ordered from previous run! 
+			//Map<String, Integer> keyWordFreqTreeMap = reorderDocWordsFreqMap(docWordsFreqPreMapNoAnno);			
+			int counter = 0;
+			for(Map.Entry<String, Integer> entry : docWordsFreqPreMapNoAnno.entrySet()){				
+				contextKeywordIndexDict.put(entry.getKey(), counter++);
+			}
+			return contextKeywordIndexDict;
+		}
+
+		/**
+		 * @param docWordsFreqPreMapNoAnno
+		 * @return
+		 */
+		public static Map<String, Integer> reorderDocWordsFreqMap(Map<String, Integer> docWordsFreqPreMapNoAnno) {
+			//re-order the list so the most frequent words appear first, as optimization
+			//so that search words can match the most frequently-occurring words.
+			WordFreqComparator comp = new WordFreqComparator(docWordsFreqPreMapNoAnno);
+			//words and their frequencies in wordDoc matrix.
+			Map<String, Integer> keyWordFreqTreeMap = new TreeMap<String, Integer>(comp);
+			keyWordFreqTreeMap.putAll(docWordsFreqPreMapNoAnno);
+			return keyWordFreqTreeMap;
 		}
 		
 		/**
@@ -360,6 +426,10 @@ public class CollectThm {
 			return CONTEXT_VEC_WORDS_MAP.size();
 		}
 		
+		public static ImmutableMap<String, Integer> get_CONTEXT_VEC_WORDS_FREQ_MAP_fromData(){
+			return CONTEXT_VEC_WORDS_FREQ_MAP;
+		}
+		
 		/**
 		 * Add lexicon words to docWordsFreqMapNoAnno, which only contains collected words from thm corpus,
 		 * collected based on frequnency, right now.
@@ -367,7 +437,7 @@ public class CollectThm {
 		private static void addLexiconWordsToContextKeywordDict(Map<String, Integer> docWordsFreqMapNoAnno,
 				int averageSingletonWordFrequency){
 			
-			ListMultimap<String, String> posMMap = Maps.posMMap();
+			ListMultimap<String, String> posMMap = Maps.essentialPosMMap();
 			int avgWordFreq = averageSingletonWordFrequency;
 			//add avg frequency based on int
 			for(Map.Entry<String, String> entry : posMMap.entries()){
@@ -515,8 +585,9 @@ public class CollectThm {
 		
 		/**
 		 * Same as readThm, except without hyp/concl wrappers.
+		 * Maps contain the same set of words.
 		 * @param thmWordsFreqListBuilder 
-		 * 		List of maps, each of which is a map of word Strings and their frequencies.
+		 * 		List of maps, each of which is a map of word Strings and their frequencies. Used for SVD search.
 		 * @param thmListBuilder
 		 * @param docWordsFreqPreMap
 		 * @param wordThmsMMapBuilder
@@ -678,6 +749,10 @@ public class CollectThm {
 			return thmWordsFreqList;
 		}
 		
+		/**
+		 * //contains map of keywords and their frequencies in a particular theorem.
+		 * @return
+		 */
 		public static ImmutableList<ImmutableMap<String, Integer>> get_thmWordsFreqListNoAnno(){
 			return thmWordsFreqMapListNoAnno;
 		}

@@ -56,10 +56,12 @@ public class TriggerMathThm2 {
 	
 	/* Matrix of keywords. */
 	//private static final int[][] mathObjMx;
-	private static final double[][] mathObjMx;
+	private static double[][] mathObjMx;
 	//list of thms, same order as in thmList, and the frequencies of their words in words maps.
-	private static final List<ImmutableMap<String, Integer>> thmWordsMapList;
-	private static final ImmutableMap<String, Integer> docWordsFreqMapNoAnno = CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno();
+	private static List<ImmutableMap<String, Integer>> thmWordsMapList;
+	
+	//private static final ImmutableMap<String, Integer> docWordsFreqMapNoAnno = CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno();
+	private static final ImmutableMap<String, Integer> docWordsFreqMapNoAnno;
 	
 	/**
 	 * Debug variables
@@ -67,6 +69,30 @@ public class TriggerMathThm2 {
 	private static final boolean DEBUG = false;
 	
 	static {
+		ImmutableList<String> thmList = CollectThm.ThmList.allThmsWithHypList();
+		//docWordsFreqMapNoAnno should already been ordered based on frequency, more frequently-
+		//occuring words come earlier.
+		docWordsFreqMapNoAnno = CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno();
+		keywordIndexDict = ImmutableMap.copyOf(CollectThm.ThmWordsMaps.createContextKeywordIndexDict(docWordsFreqMapNoAnno));
+		
+		//don't need to build mathObjMx if not generating data.		
+		if(!Searcher.SearchMetaData.gatheringDataBool()){
+		//re-order the list so the most frequent words appear first, as optimization
+				//so that search words can match the most frequently-occurring words.
+				/*WordFreqComparator comp = new WordFreqComparator(docWordsFreqMapNoAnno);
+				//words and their frequencies in wordDoc matrix.
+				Map<String, Integer> keyWordIndexTreeMap = new TreeMap<String, Integer>(comp);
+				keyWordIndexTreeMap.putAll(keywordIndexMap);*/
+				/*This has already taken into account whether we are generating data or performing search */
+				
+				/*if(Searcher.SearchMetaData.gatheringDataBool()){
+					docWordsFreqMapNoAnno = CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno();
+				}else{
+					docWordsFreqMapNoAnno = CollectThm.ThmWordsMaps.get_CONTEXT_VEC_WORDS_FREQ_MAP_fromData();
+				}*/
+			//get from serialized data
+			//keywordIndexDict = ;
+		}else{
 		//List of theorems, each of which
 		//contains map of keywords and their frequencies in this theorem.
 		thmWordsMapList = CollectThm.ThmWordsMaps.get_thmWordsFreqListNoAnno();
@@ -82,37 +108,34 @@ public class TriggerMathThm2 {
 		//to be list that contains the theorems, in the order they are inserted
 		//ImmutableList.Builder<String> mathObjListBuilder = ImmutableList.builder();
 		
-		// math object pre map. keys are theorems, values are keywords in that thm.
-		Multimap<String, String> mathObjMMap = ArrayListMultimap.create();
-
-		//adds thms from CollectThm.thmWordsList. The thm name is its index in thmWordsList.
-		addThmsFromList(keywordList, keywordIndexMap, mathObjMMap);
+		
+		//System.out.println("keywordList: "+ keywordList + " keywordIndexMap: "+ keywordIndexMap);
 		//should already been ordered in CollectThm
-		Map<String, Integer> docWordsFreqMapNoAnno = CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno();
+		//Map<String, Integer> docWordsFreqMapNoAnno = CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno();
 		
-		//re-order the list so the most frequent words appear first, as optimization
-		//so that search words can match the most frequently-occurring words.
-		/*WordFreqComparator comp = new WordFreqComparator(docWordsFreqMapNoAnno);
-		//words and their frequencies in wordDoc matrix.
-		Map<String, Integer> keyWordIndexTreeMap = new TreeMap<String, Integer>(comp);
-		keyWordIndexTreeMap.putAll(keywordIndexMap);*/
+		// math object pre map. keys are theorems, values are keywords in that thm.
+				Multimap<String, String> mathObjMMap = ArrayListMultimap.create();
+
+				//adds thms from CollectThm.thmWordsList. The thm name is its index in thmWordsList.
+				addThmsFromList(keywordList, keywordIndexMap, mathObjMMap);
+				//follows order in keywordIndexDict
+				keywordList = new ArrayList<String>(keywordIndexDict.keySet());
+		//keyword index map not needed
 		
-		keywordIndexDict = ImmutableMap.copyOf(docWordsFreqMapNoAnno);
 		//System.out.println("!_-------keywordFreqDict: " + keywordFreqDict);
 		//keywordIndexDict = ImmutableMap.copyOf(keywordIndexMap);
 		
 		//mathObjMx = new int[keywordList.size()][mathObjMMap.keySet().size()];	
 		//mathObjMx = new int[keywordList.size()][thmWordsList.size()];
 		mathObjMx = new double[keywordList.size()][thmWordsMapList.size()];
-		//System.out.println("mathObjMx dims: " + keywordList.size() + " " + thmWordsMapList.size());
-		ImmutableList<String> thmList = CollectThm.ThmList.allThmsWithHypList();
+		System.out.println("mathObjMx dims: " + keywordList.size() + " " + thmWordsMapList.size());
 		
 		//System.out.println("BEFORE mathObjMMap" +mathObjMMap);
 		//pass in thmList to ensure the right order (insertion order) of thms 
 		//is preserved or MathObjList and mathObjMMap. Multimaps don't preserve insertion order
 		buildMathObjMx(//keywordList, 
 				mathObjMMap, thmList);
-
+	}
 		mathObjList = ImmutableList.copyOf(thmList);
 		
 		webDisplayThmList = ImmutableList.copyOf(CollectThm.ThmList.get_webDisplayThmList());
@@ -121,8 +144,7 @@ public class TriggerMathThm2 {
 			System.out.println(mathObjList.get(i));
 			System.out.println(thmWordsList.get(i));
 		}*/
-	}
-	
+	}	
 	
 	/**
 	 * Add keyword/term to mathObjList, in the process of building keywordList, mathObjMMap, etc.
@@ -131,7 +153,7 @@ public class TriggerMathThm2 {
 	 * @param keywordIndexMap
 	 * @param mathObjMMap
 	 */
-	public static void addKeywordToMathObj(String[] keywords, List<String> keywordList,
+	private static void addKeywordToMathObj(String[] keywords, List<String> keywordList,
 			Map<String, Integer> keywordIndexMap, Multimap<String, String> mathObjMMap) {
 		
 		if (keywords.length == 0){
@@ -169,7 +191,7 @@ public class TriggerMathThm2 {
 	 * Weighed by frequencies.
 	 * @param keywords
 	 * @param keywordList
-	 * @param keywordIndexMap
+	 * @param keywordIndexMap Words and their indices in keywordList.
 	 * @param mathObjMMap
 	 */
 	private static void addThmsFromList(List<String> keywordList,
@@ -236,6 +258,7 @@ public class TriggerMathThm2 {
 			//norm = norm < 3 ? 1 : (int)Math.sqrt(norm);
 			norm = Math.sqrt(norm);
 			//divide by log of norm
+			//System.out.println("keywordIndexDict: "+keywordIndexDict);
 			for (String keyword : curMathObjCol) {
 				Integer keyWordIndex = keywordIndexDict.get(keyword);
 				Integer wordScore = wordsScoreMap.get(keyword);
@@ -246,6 +269,7 @@ public class TriggerMathThm2 {
 				if(newScore == 0 && wordScore != 0){
 					mathObjMx[keyWordIndex][mathObjCounter] = .1;
 				}else{
+					//System.out.println("keyWordIndex: "+ keyWordIndex + " mathObjCounter " + mathObjCounter);
 					mathObjMx[keyWordIndex][mathObjCounter] = newScore;
 				}
 			}
@@ -445,7 +469,8 @@ public class TriggerMathThm2 {
 	}
 
 	/**
-	 * Obtains mathThmMx
+	 * Obtains mathThmMx.
+	 * @nullable
 	 * @return
 	 */
 	public static double[][] mathThmMx(){
@@ -465,6 +490,16 @@ public class TriggerMathThm2 {
 
 	public static int keywordDictSize(){
 		return keywordIndexDict.size();
+	}
+	
+	
+	/**
+	 * words and their indices in term document matrix (mathObjMx). Same set of words 
+	 * as those in docWordsMx   noanno
+	 * @return
+	 */
+	public static Map<String, Integer> keywordIndexDict(){
+		return keywordIndexDict;
 	}
 	
 	/**

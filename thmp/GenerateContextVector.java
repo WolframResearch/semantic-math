@@ -68,7 +68,7 @@ public class GenerateContextVector {
 		
 	static{
 		
-		bareThmList = CollectThm.ThmList.get_bareThmList();
+		bareThmList = CollectThm.ThmList.allThmsWithHypList();
 		
 		generateContextVec(bareThmList, contextVecList, contextVecStringList);
 		

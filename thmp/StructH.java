@@ -710,6 +710,7 @@ public class StructH<H> extends Struct{
 		
 		List<String> namePptStrList = get_name_pptStr_List();
 		int namePptStrListLen = namePptStrList.size();
+		if(0 == namePptStrListLen) return "";
 		StringBuilder sb = new StringBuilder();
 				
 		for(int i = 0; i < namePptStrListLen-1; i++){
@@ -721,8 +722,7 @@ public class StructH<H> extends Struct{
 			}else{
 				sb.append(namePptStr);
 			}			
-		}
-		
+		}		
 		String pptStr = namePptStrList.get(namePptStrListLen-1);
 		
 		sb.append(pptStr.length() > 2 ? pptStr.substring(0, pptStr.length() - 2) : pptStr);
