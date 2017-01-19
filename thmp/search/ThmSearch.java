@@ -43,8 +43,11 @@ public class ThmSearch {
 	private static final int COR_THRESHOLD = 3;
 	private static final int LIST_INDEX_SHIFT = 1;
 	
-	private static KernelLink ml;
-	
+	/**
+	 * Class for finding nearest giving query.
+	 */
+	public static class ThmSearchQuery{
+	private static KernelLink ml;	
 	static{		
 		//use OS system variable to tell whether on VM or local machine, and set InstallDirectory 
 		//path accordingly.
@@ -63,30 +66,208 @@ public class ThmSearch {
 		ml = FileUtils.getKernelLinkInstance();
 		String msg = "Kernel instance acquired...";
 		logger.info(msg);
+		
 		try{
 			ServletContext servletContext = CollectThm.getServletContext();
-			String pathToMx = "src/thmp/data/termDocumentMatrixSVD.mx";
+			//String pathToMx = "src/thmp/data/termDocumentMatrixSVD.mx";
+			String pathToMx = "termDocumentMatrixSVD.mx";
 			if(null != servletContext){				
 				pathToMx = servletContext.getRealPath(pathToMx);
 			}
-			ml.evaluate("<<" + pathToMx);
+			//ml.evaluate("2");
+			//ml.discardAnswer();
+			ml.evaluate("<<" + pathToMx+";");
 			ml.discardAnswer();
+			
+			//ml.evaluate("TermDocumentMatrix`mxMeanValue ");
+			//System.out.println("mxMeanValue: " + ml.getExpr());
+			
+			ml.evaluate("mxMeanValue =" + TermDocumentMatrix.MX_CONTEXT_NAME + "mxMeanValue;"
+					+ "corMx =" + TermDocumentMatrix.MX_CONTEXT_NAME + "corMx;"
+					+ "d =" + TermDocumentMatrix.MX_CONTEXT_NAME + "d;"
+					+ "u =" + TermDocumentMatrix.MX_CONTEXT_NAME + "u;"
+					+ "v =" + TermDocumentMatrix.MX_CONTEXT_NAME + "v;");
+			ml.discardAnswer();
+			ml.evaluate("Length[corMx[[1]]]");
+			System.out.println("corMx row dimension (num of words): " + ml.getExpr());
 		}catch(MathLinkException e){
-			msg = "MathLinkException when loading mx file! " + e;
-			logger.error(msg);
-			throw new IllegalStateException(msg);
+			msg = "MathLinkException when loading mx file! ";
+			logger.error(msg + e);
+			throw new IllegalStateException(msg, e);
 		}
 		
 	}
-
+	
+	/**
+	 * Constructs the String query to be evaluated.
+	 * Submits it to kernel for evaluation.
+	 * @return List of indices of nearest thms. Indices in, eg MathObjList 
+	 * (Indices in all such lists should coincide).
+	 * @throws MathLinkException 
+	 * @throws ExprFormatException 
+	 */
+	private static List<Integer> findNearestVecs(KernelLink ml, String queryStr, int ... num){
+		//System.out.println("queryStr: " + queryStr);
+		//String s = "";
+		//transform query vector to low dimensional space 
+		//String query = "{{1,1,0,0}}";
+		//ml.evaluate("q = " + queryStr + ".mx.Transpose[mx];");
+		//ml.discardAnswer();
+		
+		//need to reassign vars and append mx context, TermDocumentMatrix`!!
+		try{
+			String msg = "Transposing and applying corMx...";
+			logger.info(msg);
+			//process query first with corMx		
+			ml.evaluate("q = Transpose[" + queryStr + "] + 0.1*corMx.Transpose["+ queryStr +"]//N");
+			//ml.discardAnswer();
+			//ml.waitForAnswer();
+			Expr qVec = ml.getExpr();
+			System.out.println("ThmSearch - qVec: " + qVec);
+			//System.out.println("QUERY " + ml.getExpr().part(1));
+			msg = "Applied correlation matrix to querty vec, about to Inverse[d].Transpose[u].(q/.{0.0->mxMeanValue}) ";
+			System.out.println(msg);
+			logger.info(msg);
+			//ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"];");
+			//ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"/.{0.0->mxMeanValue}];");
+			//this step is costly!
+			ml.evaluate("q = Inverse[d].Transpose[u].(q/.{0.0->mxMeanValue})");
+			//ml.evaluate("q = Inverse[d].Transpose[u].Transpose[q];");
+			//ml.discardAnswer();
+			ml.waitForAnswer();
+			System.out.println("ThmSearch - q after inverse of transpose: " + ml.getExpr());
+			/*ml.evaluate("q = q + vMeanValue;");
+			ml.discardAnswer();*/
+			//System.out.println("q + vMeanValue: " + ml.getExpr());
+		}catch(MathLinkException e){
+			throw new IllegalStateException(e);
+		}
+		//vMeanValue
+		//use Nearest to get numNearest number of nearest vectors, 
+		int numNearest;
+		if(num.length == 0){
+			numNearest = NUM_NEAREST;
+		}else{
+			numNearest = num[0];
+		}
+		//ml.evaluate("v[[1]]");
+		//ml.getExpr();
+		//System.out.println("DIMENSIONS " +ml.getExpr());
+		
+		/*ml.evaluate("q");
+		ml.waitForAnswer();
+		System.out.println("q " +ml.getExpr()); */		
+		
+		int[] nearestVecArray;
+		try{
+			String msg = "Applying Nearest[]...";
+			System.out.println(msg);
+			logger.info(msg);
+			ml.evaluate("Nearest[v->Range[Dimensions[v][[1]]], First@Transpose[q],"+numNearest+"] - " + LIST_INDEX_SHIFT);
+			
+			//take largest inner product
+			//ml.evaluate("Keys[TakeLargest[AssociationThread[Range[Dimensions[v][[1]]] -> v.First[Transpose[q]]], "+numNearest+"]]");
+			//ml.evaluate("Ordering[v.First[Transpose[q]], -"+numNearest+"]");
+			ml.waitForAnswer();
+			Expr nearestVec = ml.getExpr();
+			//System.out.println(nearestVec.length() + "  " + Arrays.toString((int[])nearestVec.part(1).asArray(Expr.INTEGER, 1)));
+			//turn into list.
+			msg = "SVD returned nearestVec! " + nearestVec;
+			System.out.println(msg);
+			logger.info(msg);
+			//use this when using Nearest
+			//int[] nearestVecArray = (int[])nearestVec.part(1).asArray(Expr.INTEGER, 1);
+			nearestVecArray = (int[])nearestVec.asArray(Expr.INTEGER, 1);
+		}catch(MathLinkException e){
+			logger.error("MathLinkException! " + e.getStackTrace());
+			throw new RuntimeException(e);
+		}catch(ExprFormatException e){
+			logger.error("ExprFormatException! " + e.getStackTrace());
+			throw new RuntimeException(e);
+		}
+		Integer[] nearestVecArrayBoxed = ArrayUtils.toObject(nearestVecArray);
+		List<Integer> nearestVecList = Arrays.asList(nearestVecArrayBoxed);
+		
+		//for(int i = nearestVecList.size()-1; i > -1; i--){
+		for(int i = 0; i < nearestVecList.size(); i++){
+			int thmIndex = nearestVecList.get(i);
+			System.out.println(TriggerMathThm2.getThm(thmIndex));
+			//System.out.println("thm vec: " + TriggerMathThm2.createQuery(TriggerMathThm2.getThm(d)));
+		}
+		System.out.println("~~~~~");
+		//System.out.println("nearestVecList from within ThmSearch.java: " + nearestVecList);
+		return nearestVecList;
+	}
+	
+private static String readInputAndSearch(){
+		
+		String query = "";
+		Scanner sc = new Scanner(System.in);
+		
+		while(sc.hasNextLine()){
+			String thm = sc.nextLine();
+			query = TriggerMathThm2.createQueryNoAnno(thm);
+			if(WordForms.getWhiteEmptySpacePattern().matcher(query).matches()){
+				System.out.println("I've got nothing for you yet. Try again.");
+				continue;
+			}
+			//processes query				
+			findNearestVecs(ml, query);
+		}	
+		sc.close();	
+		return query;
+	}
+	
+	/**
+	 * Reads thm one at a time.
+	 * @param thm is a thm input String
+	 * @param numVecs number of cloests vecs to take
+	 * @return list of indices of nearest thms. 
+	 */
+	public static List<Integer> findNearestThmsInTermDocMx(String thm, int numVec){
+		
+		List<Integer> nearestVecList = null;		
+		String query = TriggerMathThm2.createQueryNoAnno(thm);
+		if(query.equals("")){
+			return Collections.emptyList();
+		}
+		System.out.println("ThmSearch.java: about to findNearestVecs()!");
+		//processes query
+		nearestVecList = findNearestVecs(ml, query, numVec);
+		
+		//System.out.print("Within ThmSearch, nearestVecList: " + nearestVecList);
+		return nearestVecList;
+	}
+	
+	//helper function that tests various inputs
+	private static void present(Expr expr) throws ExprFormatException{
+		System.out.print(expr.length());
+		System.out.println("matrixQ" + expr.matrixQ());
+		System.out.println("asArray" + expr.asArray(Expr.REAL, 2));
+		double[][] ar = (double[][])expr.asArray(Expr.INTEGER, 2);
+		for(double[] i : ar){
+			for(double j : i){
+			System.out.print(j +  " ");
+		}
+			System.out.println();
+		}
+		
+		System.out.println("Dimensions" + expr.dimensions()[0] +" " + expr.dimensions()[1]);
+		System.out.println(expr.dimensions().length);
+	}	
+	
+	}//end of class
 	public static class TermDocumentMatrix{
 		
 		private static final String PATH_TO_MX = "FileNameJoin[{Directory[], \"termDocumentMatrixSVD.mx\"}]";
+		private static final String MX_CONTEXT_NAME = "TermDocumentMatrix`";
+		private static KernelLink ml;
 		/**
 		 * 
 		 */
 		public static void createTermDocumentMatrixSVD() {
-			docMx = TriggerMathThm2.mathThmMx();
+			
+			docMx = TriggerMathThm2.mathThmMx();			
 			//mx to keep track of correlations between terms, mx.mx^T
 			List<List<Integer>> corMxList = new ArrayList<List<Integer>>();
 			try{			
@@ -98,38 +279,43 @@ public class ThmSearch {
 				String msg = "Kernel instance acquired...";
 				logger.info(msg);
 				
-				ml.evaluate("Begin[\"TermDocumentMatrix`\"]");
-				
+				ml.evaluate("Begin[\""+ MX_CONTEXT_NAME +"\"]");
+				ml.discardAnswer();
 				//set up the matrix corresponding to docMx, to be SVD'd. 
 				//adjust mx entries based on correlation first	
 				StringBuilder mxSB = new StringBuilder("m =");
 				mxSB.append(toNestedList(docMx)).append("//N;");
+				
 				int rowDimension = docMx.length;
 				int mxColDim = docMx[0].length;
 				msg = "mxSB.length(): " + mxSB.length();
 				System.out.println(msg);
 				logger.info(msg);
+				
 				//System.out.println("nested mx " + Arrays.deepToString(docMx));
 				boolean getMx = false;
 				
 				ml.evaluate(mxSB.toString());
+				//ml.evaluate("m={{1,2}}");
 				msg = "Kernel has the matrix!";
 				logger.info(msg);
 				if(getMx){
 					ml.waitForAnswer();			
 					Expr expr = ml.getExpr();
 					System.out.println("m " + expr);
-				}else{
+				}else{	
 					ml.discardAnswer();	
 				}
-				
+				//ml.evaluate("m");
+				//ml.waitForAnswer();
+				//System.out.println("FIRST m : " + ml.getExpr());
 				//corMx should be computed using correlation mx
 				//or add a fraction of M.M^T.M
 				//this has the effect that if ith term and jth terms
 				//are correlated, and (i,k) is non zero in M, then make (j,k)
 				//nonzero (of smaller magnitude than (i,K) in M.
 				//clip the matrix 			
-				boolean getMean = false;			
+				boolean getMean = false;
 				if(getMean){
 					ml.evaluate("matrix = m.Transpose[m].m;");
 					ml.discardAnswer();
@@ -164,7 +350,7 @@ public class ThmSearch {
 					ml.discardAnswer();
 				}
 				//the entries in corMx.m can range from 0 to ~6
-				ml.evaluate("mx = m + .15*corMx.m");
+				ml.evaluate("mx = m + .15*corMx.m;");
 				if(getCorMx){
 					ml.waitForAnswer();
 					Expr expr = ml.getExpr();
@@ -231,10 +417,16 @@ public class ThmSearch {
 				//number of singular values to keep. Determined (roughly) based on the number of
 				//theorems (col dimension of mx)
 				//int k = NUM_SINGULAR_VAL_TO_KEEP;
-				int k = mxColDim < 400 ? 35 : (mxColDim < 1000 ? 40 : (mxColDim < 3000 ? 50 : 60)) ;
+				int k = mxColDim < 35 ? mxColDim : (mxColDim < 400 ? 35 : (mxColDim < 1000 ? 40 : (mxColDim < 3000 ? 50 : 60)));
 				ml.evaluate("{u, d, v} = SingularValueDecomposition[mx//N, " + k +"];");
 				//ml.waitForAnswer();
 				ml.discardAnswer();
+				ml.evaluate("m");
+				ml.waitForAnswer();
+				System.out.println("!!!!-----m: " + ml.getExpr() + " k: " + k + " mxColDim: " + mxColDim);
+				
+				//ml.evaluate("u = u; dd = d; v = v;");
+				//ml.discardAnswer();
 				System.out.println("Finished SVD");
 				logger.info("Finished SVD!");
 				//randomly select column vectors to approximate mean
@@ -270,7 +462,7 @@ public class ThmSearch {
 				ml.evaluate("End[];");
 				ml.discardAnswer();
 				
-				ml.evaluate("DumpSave[" + PATH_TO_MX + ", \"TermDocumentMatrix`\"]");
+				ml.evaluate("DumpSave[" + PATH_TO_MX + ", \"TermDocumentMatrix`\"];");
 				ml.discardAnswer();
 			}catch(MathLinkException e){
 				System.out.println("error at launch!");
@@ -318,7 +510,7 @@ public class ThmSearch {
 	 * Convert docMx from array form to a String
 	 * that's a nested List for WL.
 	 */
-	public static String toNestedList(double[][] docMx){
+	private static String toNestedList(double[][] docMx){
 		StringBuilder sb = new StringBuilder();
 		//hString s = "";
 		//s += "{";
@@ -346,6 +538,7 @@ public class ThmSearch {
 	
 	public static void main(String[] args) {		
 		
+		KernelLink ml = FileUtils.getKernelLinkInstance();
 		try{			
 			//String result = ml.evaluateToOutputForm("Transpose@" + toNestedList(docMx), 0);
 			//String result = ml.evaluateToOutputForm("4+4", 0);
@@ -370,7 +563,7 @@ public class ThmSearch {
 
 			System.out.println("~~~");
 			//reads input theorem, generates query string, process query
-			readInputAndSearch();
+			ThmSearchQuery.readInputAndSearch();
 			
 		}catch(MathLinkException e){
 			logger.error("MathLinkException during evaluation:" + e.getStackTrace());
@@ -386,159 +579,7 @@ public class ThmSearch {
 		}		
 	}
 	
-	/**
-	 * Constructs the String query to be evaluated.
-	 * Submits it to kernel for evaluation.
-	 * @return List of indices of nearest thms. Indices in, eg MathObjList 
-	 * (Indices in all such lists should coincide).
-	 * @throws MathLinkException 
-	 * @throws ExprFormatException 
-	 */
-	private static List<Integer> findNearestVecs(KernelLink ml, String queryStr, int ... num){
-		//System.out.println("queryStr: " + queryStr);
-		//String s = "";
-		//transform query vector to low dimensional space 
-		//String query = "{{1,1,0,0}}";
-		//ml.evaluate("q = " + queryStr + ".mx.Transpose[mx];");
-		//ml.discardAnswer();
-		
-		try{
-			String msg = "Transposing and applying corMx...";
-			logger.info(msg);
-			//process query first with corMx		
-			ml.evaluate("q = Transpose[" + queryStr + "] + 0.1*corMx.Transpose["+ queryStr +"]//N;");
-			ml.discardAnswer();
-			//ml.evaluate(queryStr+"/.{0.0->30}");
-			//System.out.println("QUERY " + ml.getExpr().part(1));
-			msg = "Applied correlation matrix, about to Inverse[d].Transpose[u].(q/.{0.0->mxMeanValue}) ";
-			System.out.println(msg);
-			logger.info(msg);
-			//ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"];");
-			//ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"/.{0.0->mxMeanValue}];");
-			//this step is costly!
-			ml.evaluate("q = Inverse[d].Transpose[u].(q/.{0.0->mxMeanValue});");
-			//ml.evaluate("q = Inverse[d].Transpose[u].Transpose[q];");
-			ml.discardAnswer();
-			//System.out.println("@@q " + ml.getExpr());
-			/*ml.evaluate("q = q + vMeanValue;");
-			ml.discardAnswer();*/
-			//System.out.println("q + vMeanValue: " + ml.getExpr());
-		}catch(MathLinkException e){
-			throw new IllegalStateException(e);
-		}
-		//vMeanValue
-		//use Nearest to get numNearest number of nearest vectors, 
-		int numNearest;
-		if(num.length == 0){
-			numNearest = NUM_NEAREST;
-		}else{
-			numNearest = num[0];
-		}
-		//ml.evaluate("v[[1]]");
-		//ml.getExpr();
-		//System.out.println("DIMENSIONS " +ml.getExpr());
-		
-		/*ml.evaluate("q");
-		ml.waitForAnswer();
-		System.out.println("q " +ml.getExpr()); */		
-		
-		int[] nearestVecArray;
-		try{
-			String msg = "Applying Nearest[]...";
-			System.out.println(msg);
-			logger.info(msg);
-			ml.evaluate("Nearest[v->Range[Dimensions[v][[1]]], First@Transpose[q],"+numNearest+"] - " + LIST_INDEX_SHIFT);
-			
-			//take largest inner product
-			//ml.evaluate("Keys[TakeLargest[AssociationThread[Range[Dimensions[v][[1]]] -> v.First[Transpose[q]]], "+numNearest+"]]");
-			//ml.evaluate("Ordering[v.First[Transpose[q]], -"+numNearest+"]");
-			ml.waitForAnswer();
-			Expr nearestVec = ml.getExpr();
-			//System.out.println(nearestVec.length() + "  " + Arrays.toString((int[])nearestVec.part(1).asArray(Expr.INTEGER, 1)));
-			//turn into list.
-			msg = "SVD returned nearestVec!";
-			System.out.println(msg);
-			logger.info(msg);
-			//use this when using Nearest
-			//int[] nearestVecArray = (int[])nearestVec.part(1).asArray(Expr.INTEGER, 1);
-			nearestVecArray = (int[])nearestVec.asArray(Expr.INTEGER, 1);
-		}catch(MathLinkException e){
-			logger.error("MathLinkException! " + e.getStackTrace());
-			throw new RuntimeException(e);
-		}catch(ExprFormatException e){
-			logger.error("ExprFormatException! " + e.getStackTrace());
-			throw new RuntimeException(e);
-		}
-		Integer[] nearestVecArrayBoxed = ArrayUtils.toObject(nearestVecArray);
-		List<Integer> nearestVecList = Arrays.asList(nearestVecArrayBoxed);
-		
-		//for(int i = nearestVecList.size()-1; i > -1; i--){
-		for(int i = 0; i < nearestVecList.size(); i++){
-			int thmIndex = nearestVecList.get(i);
-			System.out.println(TriggerMathThm2.getThm(thmIndex));
-			//System.out.println("thm vec: " + TriggerMathThm2.createQuery(TriggerMathThm2.getThm(d)));
-		}
-		System.out.println("~~~~~");
-		//System.out.println("nearestVecList from within ThmSearch.java: " + nearestVecList);
-		return nearestVecList;
-	}
 	
-	public static String readInputAndSearch(){
-		
-		String query = "";
-		Scanner sc = new Scanner(System.in);
-		
-		while(sc.hasNextLine()){
-			String thm = sc.nextLine();
-			query = TriggerMathThm2.createQueryNoAnno(thm);
-			if(WordForms.getWhiteEmptySpacePattern().matcher(query).matches()){
-				System.out.println("I've got nothing for you yet. Try again.");
-				continue;
-			}
-			//processes query				
-			findNearestVecs(ml, query);
-		}	
-		sc.close();	
-		return query;
-	}
-	
-	/**
-	 * Reads thm one at a time.
-	 * @param thm is a thm input String
-	 * @param numVecs number of cloests vecs to take
-	 * @return list of indices of nearest thms. 
-	 */
-	public static List<Integer> findNearestThmsInTermDocMx(String thm, int numVec){
-		
-		List<Integer> nearestVecList = null;		
-		String query = TriggerMathThm2.createQueryNoAnno(thm);
-		if(query.equals("")){
-			return Collections.emptyList();
-		}
-		System.out.println("ThmSearch.java: about to findNearestVecs()!");
-		//processes query
-		nearestVecList = findNearestVecs(ml, query, numVec);
-		
-		//System.out.print("Within ThmSearch, nearestVecList: " + nearestVecList);
-		return nearestVecList;
-	}
-	
-	//helper function that tests various inputs
-	private static void present(Expr expr) throws ExprFormatException{
-		System.out.print(expr.length());
-		System.out.println("matrixQ" + expr.matrixQ());
-		System.out.println("asArray" + expr.asArray(Expr.REAL, 2));
-		double[][] ar = (double[][])expr.asArray(Expr.INTEGER, 2);
-		for(double[] i : ar){
-			for(double j : i){
-			System.out.print(j +  " ");
-		}
-			System.out.println();
-		}
-		
-		System.out.println("Dimensions" + expr.dimensions()[0] +" " + expr.dimensions()[1]);
-		System.out.println(expr.dimensions().length);
-	}	
 	
 	//used for initializing this class
 	public static void initialize(){		

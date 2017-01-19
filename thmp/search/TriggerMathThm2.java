@@ -58,7 +58,7 @@ public class TriggerMathThm2 {
 	//private static final int[][] mathObjMx;
 	private static double[][] mathObjMx;
 	//list of thms, same order as in thmList, and the frequencies of their words in words maps.
-	private static List<ImmutableMap<String, Integer>> thmWordsMapList;
+	private static final List<ImmutableMap<String, Integer>> thmWordsMapList;
 	
 	//private static final ImmutableMap<String, Integer> docWordsFreqMapNoAnno = CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno();
 	private static final ImmutableMap<String, Integer> docWordsFreqMapNoAnno;
@@ -74,6 +74,7 @@ public class TriggerMathThm2 {
 		//occuring words come earlier.
 		docWordsFreqMapNoAnno = CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno();
 		keywordIndexDict = ImmutableMap.copyOf(CollectThm.ThmWordsMaps.createContextKeywordIndexDict(docWordsFreqMapNoAnno));
+		thmWordsMapList = CollectThm.ThmWordsMaps.get_thmWordsFreqListNoAnno();
 		
 		//don't need to build mathObjMx if not generating data.		
 		if(!Searcher.SearchMetaData.gatheringDataBool()){
@@ -91,11 +92,12 @@ public class TriggerMathThm2 {
 					docWordsFreqMapNoAnno = CollectThm.ThmWordsMaps.get_CONTEXT_VEC_WORDS_FREQ_MAP_fromData();
 				}*/
 			//get from serialized data
-			//keywordIndexDict = ;
+			//keywordIndexDict = ;	
+			//mathObjMx = new double[keywordIndexDict.size()][thmWordsMapList.size()];
 		}else{
 		//List of theorems, each of which
 		//contains map of keywords and their frequencies in this theorem.
-		thmWordsMapList = CollectThm.ThmWordsMaps.get_thmWordsFreqListNoAnno();
+		//thmWordsMapList = CollectThm.ThmWordsMaps.get_thmWordsFreqListNoAnno();
 		
 		// ImmutableList.Builder<String> keywordList = ImmutableList.builder();
 		List<String> keywordList = new ArrayList<String>();
@@ -236,18 +238,26 @@ public class TriggerMathThm2 {
 		Iterator<String> thmListIter = thmList.iterator();
 		
 		int mathObjCounter = 0;
-		
+		int keywordIndexNullCounter = 0;
 		while (thmListIter.hasNext()) {
 			String thm = thmListIter.next();
 			//String curMathObj = mathObjMMapkeysIter.next();
 			//System.out.println("BUILDING mathObjList " +curMathObj);
 			//mathObjListBuilder.add(thm);
 			Collection<String> curMathObjCol = mathObjMMap.get(thm);
-			//Iterator<String> curMathObjColIter = curMathObjCol.iterator();
+			//Iterator<String> curMathObjColIter = curMathObjCol.iterator();			
 			double norm = 0;
 			for (String keyword : curMathObjCol) {
+				if(!keywordIndexDict.containsKey(keyword)){
+					continue;
+				}
 				//Integer keyWordIndex = keywordDict.get(keyword);
 				Integer wordScore = wordsScoreMap.get(keyword);
+				if(null == wordScore){
+					//wordsScoreMap is now from previous parse run, so might not have this word.
+					//if the dataset has not stabilized across runs.
+					wordScore = 1;
+				}
 				norm += Math.pow(wordScore, 2);
 				//should not be null, as wordsScoreMap was created using same list of thms.
 				//if(wordScore == null) continue;
@@ -261,7 +271,16 @@ public class TriggerMathThm2 {
 			//System.out.println("keywordIndexDict: "+keywordIndexDict);
 			for (String keyword : curMathObjCol) {
 				Integer keyWordIndex = keywordIndexDict.get(keyword);
+				if(null == keyWordIndex){
+					keywordIndexNullCounter++;
+					continue;
+				}
 				Integer wordScore = wordsScoreMap.get(keyword);
+				if(null == wordScore){
+					//wordsScoreMap is now from previous parse run, so might not have this word.
+					//if the dataset has not stabilized across runs.
+					wordScore = 1;
+				}
 				//divide by log of norm
 				//could be very small! ie 0 after rounding.
 				double newScore = (double)wordScore/norm;
@@ -273,8 +292,12 @@ public class TriggerMathThm2 {
 					mathObjMx[keyWordIndex][mathObjCounter] = newScore;
 				}
 			}
+			
 			mathObjCounter++;
 		}
+		System.out.println("TriggerMathThm - keywordIndexDict: "+ keywordIndexDict);
+		System.out.println("TriggerMathThm - wordsScoreMap: "+ wordsScoreMap);
+		System.out.println("TriggerMathThm - keywordIndexNullCounter: "+ keywordIndexNullCounter);
 		//System.out.println("~~keywordDict "+keywordDict);
 	}
 

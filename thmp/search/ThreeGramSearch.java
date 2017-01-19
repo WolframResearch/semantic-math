@@ -112,8 +112,8 @@ public class ThreeGramSearch {
 		//obtain the most frequent three grams from the previous threeGramMap, definitely
 		//keep the ones from initialThreeGramsSet
 		threeGramList = filterThreeGrams(threeGramMap, threeGramFreqMap, initialThreeGramsSet);
-		System.out.println(threeGramFreqMap);
-		System.out.println("Done with 3-grams.");
+		//System.out.println(threeGramFreqMap);
+		System.out.println("ThreeGramSearch - Done with gathering 3-grams!");
 	}		
 	
 	/**

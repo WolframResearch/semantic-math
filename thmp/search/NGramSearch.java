@@ -151,8 +151,8 @@ public class NGramSearch {
 			//get list of 2 grams that show up frequently
 			twoGramsMap = compile2grams(nGramMap, averageWordCounts, nGramFirstWordsSet, initialTwoGramsSet);
 			//System.out.println("twoGramsMapSz" + twoGramsMap.size());
-			System.out.println(twoGramsMap);
-			System.out.println("Done with 2-grams.");
+			//System.out.println(twoGramsMap);
+			System.out.println("NGramSearch - Done with gathering 2-grams!");
 		}
 	
 	/**

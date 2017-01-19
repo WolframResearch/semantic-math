@@ -184,8 +184,10 @@ public class CollectThm {
 		private static final ImmutableMap<String, Integer> docWordsFreqMapNoAnno;
 		//entries are word and the indices of thms that contain that word.
 		private static final ImmutableMultimap<String, Integer> wordThmsIndexMMapNoAnno;
-		//map serialized for use during search, contains N-grams.
+		//map serialized for use during search, contains N-grams. Words and their frequencies.
 		private static final ImmutableMap<String, Integer> contextVecWordsNextTimeMap;
+		//to be used next time, words and their indices.
+		private static final ImmutableMap<String, Integer> contextVecWordsIndexNextTimeMap;
 		
 		private static final Map<String, Integer> twoGramsMap = NGramsMap.get_twoGramsMap();
 		private static final Map<String, Integer> threeGramsMap = NGramsMap.get_threeGramsMap();	
@@ -215,7 +217,8 @@ public class CollectThm {
 		//them more
 		private static final double THREE_GRAM_FREQ_REDUCTION_FACTOR = 4.0/5;
 		private static final double TWO_GRAM_FREQ_REDUCTION_FACTOR = 5.0/6;
-
+		//protected static final Map<String, Integer> freqMap = ;
+		
 		private static final Pattern SPECIAL_CHARACTER_PATTERN = 
 				Pattern.compile(".*[\\\\=$\\{\\}\\[\\]()^_+%&\\./,\"\\d\\/@><*|`].*");
 		
@@ -297,9 +300,11 @@ public class CollectThm {
 				buildScoreMapNoAnno(wordsScorePreMap, docWordsFreqPreMapNoAnno);				
 				Map<String, Integer> keyWordFreqTreeMap = reorderDocWordsFreqMap(docWordsFreqPreMapNoAnno);					
 				docWordsFreqMapNoAnno = ImmutableMap.copyOf(keyWordFreqTreeMap);
+				
 			}else{				
 				buildScoreMapNoAnno(wordsScorePreMap, CONTEXT_VEC_WORDS_FREQ_MAP);				
 				docWordsFreqMapNoAnno = CONTEXT_VEC_WORDS_FREQ_MAP;
+				
 			}
 			//this is ok, since from previous set of serialized data.
 			wordsScoreMapNoAnno = ImmutableMap.copyOf(wordsScorePreMap);
@@ -316,7 +321,8 @@ public class CollectThm {
 			//docWordsFreqPreMapNoAnno.putAll(twoGramsMap);
 			//docWordsFreqPreMapNoAnno.putAll(threeGramsMap);
 			//map to be serialized, and used for forming context vectors in next run.
-			contextVecWordsNextTimeMap = ImmutableMap.copyOf(docWordsFreqPreMapNoAnno);
+			contextVecWordsNextTimeMap = docWordsFreqMapNoAnno;
+			contextVecWordsIndexNextTimeMap = ImmutableMap.copyOf(createContextKeywordIndexDict(contextVecWordsNextTimeMap));
 			//deserialize words from allThmWordsList.dat, which were serialized from previous run.
 			//List<String> wordsList = extractWordsList();
 			
@@ -867,6 +873,14 @@ public class CollectThm {
 		 */
 		public static ImmutableMap<String, Integer> get_contextVecWordsNextTimeMap(){
 			return contextVecWordsNextTimeMap; 
+		}
+		
+		/**
+		 * Retrieves map of words with their indices in contextVecWordsNextTimeMap.
+		 * @return
+		 */
+		public static ImmutableMap<String, Integer> get_contextVecWordsIndexNextTimeMap(){
+			return contextVecWordsIndexNextTimeMap; 
 		}
 		
 		/**

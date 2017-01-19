@@ -40,7 +40,8 @@ public class RelationVec implements Serializable{
 
 	private static final long serialVersionUID = 7990758362732085287L;
 
-	private static final Map<String, Integer> contextKeywordThmsDataDict = CollectThm.ThmWordsMaps.get_contextVecWordsNextTimeMap();
+	//map of words and their indices.
+	private static final Map<String, Integer> contextKeywordThmsDataDict = CollectThm.ThmWordsMaps.get_contextVecWordsIndexNextTimeMap();
 	
 	//used for forming query vecs, as these are words used when the thm source vecs were formed, words and their indices
 	//Ordered according to frequency.
@@ -55,7 +56,6 @@ public class RelationVec implements Serializable{
 	private static final Pattern SPLIT_DELIM_PATTERN = Pattern.compile(WordForms.splitDelim());
 	private static final boolean DEBUG = true;
 	static{
-	
 		if(Searcher.SearchMetaData.gatheringDataBool()){
 			//Sets the dictionary to the mode for producing context vecs from data source to be searched.
 			// e.g. in DetectHypothesis.java.
@@ -78,7 +78,7 @@ public class RelationVec implements Serializable{
 		IF(new int[]{2}), EXIST(new int[]{3}), NONE(new int[]{-1});
 		//must correspond to total number of relations above with offset > -1.
 		//but there are 4 not 5! <--change this next time all parsedExpressionList gets generated.
-		private static final int totalRelationsCount = 5;
+		//private static final int totalRelationsCount = 4;
 		
 		//offset for how many times the total number of terms
 		//in term-document matrix (list of words used in relation vec) 
@@ -89,9 +89,9 @@ public class RelationVec implements Serializable{
 			this.vectorOffsetArray = offsetAr;
 		}
 		
-		public static int totalRelationsCount(){
+		/*public static int totalRelationsCount(){
 			return totalRelationsCount;
-		}
+		}*/
 		
 		/**
 		 * @return offset for how many times the total number of terms
@@ -152,7 +152,7 @@ public class RelationVec implements Serializable{
 		//left after division by 8.
 		byte[] byteArray = new byte[byteArrayLength + 1];
 		
-		System.out.println("*&&&&&&& In RelationVec.java, positions of bits to be set: " + bitPosList);
+		System.out.println("*&&&&&&& RelationVec.java - positions of bits to be set: " + bitPosList);
 		//fill in byteArray given the list of positions of bits to set
 		fillByteArray(byteArray, bitPosList);
 		BigInteger indexBitBigInt = new BigInteger(1, byteArray);
@@ -195,7 +195,8 @@ public class RelationVec implements Serializable{
 					//modulus is the base, e.g. the prime 5 in the finite field Z/5Z.
 					//MultiplicityAr gives the locations a term goes into all the slots 
 					//used in the relation vector. 
-					//e.g. "A" in "If A is B" has the offset for both "_IS" and "IF"
+					//e.g. "A" in "If A is B" has the offset for both "_IS" and "IF", 
+					//so the array is e.g. [0, 2]
 					int[] multiplicityAr = posTermRelationType.vectorOffsetArray();
 					
 					//add new indices to bitPosList

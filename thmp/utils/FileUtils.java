@@ -48,13 +48,12 @@ public class FileUtils {
 	private static final int DESERIAL_VERSION_NUM_DEFAULT = 0;
 	//intentionally not final, as needs to be set. Atomic, so to compare and update
 	//atomically when multi-threaded.
-	private static AtomicInteger DESERIAL_VERSION_NUM = new AtomicInteger(DESERIAL_VERSION_NUM_DEFAULT);
+	private static final AtomicInteger DESERIAL_VERSION_NUM = new AtomicInteger(DESERIAL_VERSION_NUM_DEFAULT);
 	/*Should be set to true if currently generating data, */
 	private static boolean dataGenerationModeBool;
 	
 	/**
 	 * Write content to file at absolute path.
-	 * 
 	 * @param contentList
 	 * @param fileTo
 	 */

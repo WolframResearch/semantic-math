@@ -128,7 +128,8 @@ public class ContextSearch {
 		}
 		String queryContextVec = thmp.GenerateContextVector.createContextVector(query);
 		//if context vec was not generated in ThmP1.java because the input was unable to get parsed.
-		if(queryContextVec.length() == 0){			
+		if(null == queryContextVec //|| "null".contentEquals(queryContextVec) //<--really!?
+				|| queryContextVec.length() == 0){			
 			logger.warn("No context vector was formed for query: " + query);
 			return null;
 		}
@@ -294,7 +295,7 @@ public class ContextSearch {
 			thm = thm.toLowerCase();
 			int NUM_NEAREST = 6;
 			
-			List<Integer> nearestVecList = ThmSearch.findNearestThmsInTermDocMx(thm, NUM_NEAREST);			
+			List<Integer> nearestVecList = ThmSearch.ThmSearchQuery.findNearestThmsInTermDocMx(thm, NUM_NEAREST);			
 			
 			if(nearestVecList.isEmpty()){
 				System.out.println("I've got nothing for you yet. Try again.");
