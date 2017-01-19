@@ -47,7 +47,7 @@ public class ThmSearch {
 	 * Class for finding nearest giving query.
 	 */
 	public static class ThmSearchQuery{
-	private static KernelLink ml;	
+	private static final KernelLink ml;	
 	static{		
 		//use OS system variable to tell whether on VM or local machine, and set InstallDirectory 
 		//path accordingly.
@@ -70,24 +70,28 @@ public class ThmSearch {
 		try{
 			ServletContext servletContext = CollectThm.getServletContext();
 			//String pathToMx = "src/thmp/data/termDocumentMatrixSVD.mx";
-			String pathToMx = "termDocumentMatrixSVD.mx";
+			//mx file also depends on the system!
+			String pathToMx = getSystemMxFilePath();
+			
 			if(null != servletContext){				
 				pathToMx = servletContext.getRealPath(pathToMx);
 			}
-			//ml.evaluate("2");
-			//ml.discardAnswer();
+			
 			ml.evaluate("<<" + pathToMx+";");
 			ml.discardAnswer();
 			
 			//ml.evaluate("TermDocumentMatrix`mxMeanValue ");
 			//System.out.println("mxMeanValue: " + ml.getExpr());
+			ml.evaluate("AppendTo[$ContextPath, \""+ TermDocumentMatrix.MX_CONTEXT_NAME +"\"];");
+			ml.discardAnswer();
 			
-			ml.evaluate("mxMeanValue =" + TermDocumentMatrix.MX_CONTEXT_NAME + "mxMeanValue;"
+			//should uncompress using this code here.
+			/*ml.evaluate("mxMeanValue =" + TermDocumentMatrix.MX_CONTEXT_NAME + "mxMeanValue;"
 					+ "corMx =" + TermDocumentMatrix.MX_CONTEXT_NAME + "corMx;"
 					+ "d =" + TermDocumentMatrix.MX_CONTEXT_NAME + "d;"
 					+ "u =" + TermDocumentMatrix.MX_CONTEXT_NAME + "u;"
 					+ "v =" + TermDocumentMatrix.MX_CONTEXT_NAME + "v;");
-			ml.discardAnswer();
+			ml.discardAnswer();*/
 			ml.evaluate("Length[corMx[[1]]]");
 			System.out.println("corMx row dimension (num of words): " + ml.getExpr());
 		}catch(MathLinkException e){
@@ -101,12 +105,13 @@ public class ThmSearch {
 	/**
 	 * Constructs the String query to be evaluated.
 	 * Submits it to kernel for evaluation.
+	 * @param queryVecStr should be in vec form!
 	 * @return List of indices of nearest thms. Indices in, eg MathObjList 
 	 * (Indices in all such lists should coincide).
 	 * @throws MathLinkException 
 	 * @throws ExprFormatException 
 	 */
-	private static List<Integer> findNearestVecs(KernelLink ml, String queryStr, int ... num){
+	public static List<Integer> findNearestVecs(String queryVecStr, int ... num){
 		//System.out.println("queryStr: " + queryStr);
 		//String s = "";
 		//transform query vector to low dimensional space 
@@ -114,28 +119,32 @@ public class ThmSearch {
 		//ml.evaluate("q = " + queryStr + ".mx.Transpose[mx];");
 		//ml.discardAnswer();
 		
-		//need to reassign vars and append mx context, TermDocumentMatrix`!!
 		try{
 			String msg = "Transposing and applying corMx...";
 			logger.info(msg);
 			//process query first with corMx		
-			ml.evaluate("q = Transpose[" + queryStr + "] + 0.1*corMx.Transpose["+ queryStr +"]//N");
-			//ml.discardAnswer();
+			ml.evaluate("q = Transpose[" + queryVecStr + "] + 0.1*corMx.Transpose["+ queryVecStr +"]//N");
+			ml.discardAnswer();
 			//ml.waitForAnswer();
-			Expr qVec = ml.getExpr();
-			System.out.println("ThmSearch - qVec: " + qVec);
+			//Expr qVec = ml.getExpr();
+			//System.out.println("ThmSearch - qVec: " + qVec);
 			//System.out.println("QUERY " + ml.getExpr().part(1));
 			msg = "Applied correlation matrix to querty vec, about to Inverse[d].Transpose[u].(q/.{0.0->mxMeanValue}) ";
 			System.out.println(msg);
 			logger.info(msg);
+			
+			//ml.evaluate("Length[q]");
+			//Expr qVecDim = ml.getExpr();
+			System.out.println("ThmSearch - queryStr: " + queryVecStr);
+			
 			//ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"];");
 			//ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"/.{0.0->mxMeanValue}];");
 			//this step is costly!
-			ml.evaluate("q = Inverse[d].Transpose[u].(q/.{0.0->mxMeanValue})");
+			ml.evaluate("q = Inverse[d].Transpose[u].(q/.{0.0->mxMeanValue});");
 			//ml.evaluate("q = Inverse[d].Transpose[u].Transpose[q];");
-			//ml.discardAnswer();
-			ml.waitForAnswer();
-			System.out.println("ThmSearch - q after inverse of transpose: " + ml.getExpr());
+			ml.discardAnswer();
+			//ml.waitForAnswer();
+			//System.out.println("ThmSearch - q after inverse of transpose: " + ml.getExpr());
 			/*ml.evaluate("q = q + vMeanValue;");
 			ml.discardAnswer();*/
 			//System.out.println("q + vMeanValue: " + ml.getExpr());
@@ -172,7 +181,7 @@ public class ThmSearch {
 			Expr nearestVec = ml.getExpr();
 			//System.out.println(nearestVec.length() + "  " + Arrays.toString((int[])nearestVec.part(1).asArray(Expr.INTEGER, 1)));
 			//turn into list.
-			msg = "SVD returned nearestVec! " + nearestVec;
+			msg = "SVD returned nearestVec! ";// + nearestVec;
 			System.out.println(msg);
 			logger.info(msg);
 			//use this when using Nearest
@@ -212,7 +221,7 @@ private static String readInputAndSearch(){
 				continue;
 			}
 			//processes query				
-			findNearestVecs(ml, query);
+			findNearestVecs(query);
 		}	
 		sc.close();	
 		return query;
@@ -233,7 +242,7 @@ private static String readInputAndSearch(){
 		}
 		System.out.println("ThmSearch.java: about to findNearestVecs()!");
 		//processes query
-		nearestVecList = findNearestVecs(ml, query, numVec);
+		nearestVecList = findNearestVecs(query, numVec);
 		
 		//System.out.print("Within ThmSearch, nearestVecList: " + nearestVecList);
 		return nearestVecList;
@@ -259,7 +268,8 @@ private static String readInputAndSearch(){
 	}//end of class
 	public static class TermDocumentMatrix{
 		
-		private static final String PATH_TO_MX = "FileNameJoin[{Directory[], \"termDocumentMatrixSVD.mx\"}]";
+		//private static final String PATH_TO_MX = "FileNameJoin[{Directory[], \"termDocumentMatrixSVD.mx\"}]";		
+		private static final String PATH_TO_MX = getSystemMxFilePath();
 		private static final String MX_CONTEXT_NAME = "TermDocumentMatrix`";
 		private static KernelLink ml;
 		/**
@@ -470,8 +480,7 @@ private static String readInputAndSearch(){
 				throw new RuntimeException(e);
 			}
 		}
-	}
-	//add terms to mx based on correlation matrix using sow and reap.	
+	}/* end of TermDocumentMatrix class */
 	
 	/**
 	 * Adjusts docMx based on corMxList: increase docMx[j][k] if corMxList.get(i).get(j)
@@ -579,9 +588,22 @@ private static String readInputAndSearch(){
 		}		
 	}
 	
-	
+	/**
+	 * Retrieves path to mx file containing SVD matrix data, 
+	 * Supports Linux and OS X. 
+	 * @return
+	 */
+	private static String getSystemMxFilePath(){
+		String pathToMx = "src/thmp/data/termDocumentMatrixSVD.mx";
+		//mx file also depends on the system!		
+		String OS_name = System.getProperty("os.name");
+		if(OS_name.equals("Mac OS X")){
+			pathToMx = "src/thmp/data/termDocumentMatrixSVDmac.mx";
+		}
+		return pathToMx;
+	}
 	
 	//used for initializing this class
-	public static void initialize(){		
-	}
+	//public static void initialize(){		
+	//}
 }

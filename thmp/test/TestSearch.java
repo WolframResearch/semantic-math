@@ -31,8 +31,8 @@ public class TestSearch {
 	@Before
 	public void setUp() throws Exception {
 		//Maps.buildMap();
-		ThmSearch.initialize();
-		System.out.println("Done initializing!");
+		//ThmSearch.initialize();
+		//System.out.println("Done initializing!");
 	}
 	
 	public void testSearch(String str){

@@ -29,19 +29,19 @@ public class GenerateRelationVec {
 
 	//private static final String serializeFileName = "src/thmp/data/fieldsThmsRelationVecs.dat";
 	private static final String serializeFileName = "src/thmp/data/AllThmsRelationVecs.dat";
-	private static final List<BigInteger> relationVecList;
+	//private static final List<BigInteger> relationVecList;
 	
 	static{
 		//if timestamp on serializeFileName is outdated, parse and generate vectors
 		//again, else skip.
-		int maxNumHoursLag = 10;
+		/*int maxNumHoursLag = 10;
 		int numMiliSecondsInHour = 3600000;
 		File serializationFile = new File(serializeFileName);
 		
 		if((System.currentTimeMillis() - serializationFile.lastModified()) > numMiliSecondsInHour*maxNumHoursLag){
 			parseAndSerializeThms();
 		}
-		relationVecList = deserializeRelationVecList();
+		relationVecList = deserializeRelationVecList();*/
 	}
 	
 	/**
@@ -179,9 +179,10 @@ public class GenerateRelationVec {
 		return deserializeRelationVecList();
 	}*/
 	
-	public static List<BigInteger> getRelationVecList(){
+	/*Should be gotten from CollectThm.ThmList.allThmsRelationVecList()
+	 * public static List<BigInteger> getRelationVecList(){
 		return relationVecList;
-	}
+	}*/
 	
 	/**
 	 * Commented out Dec 2016.

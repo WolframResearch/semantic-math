@@ -89,18 +89,13 @@ public class RelationVec implements Serializable{
 			this.vectorOffsetArray = offsetAr;
 		}
 		
-		/*public static int totalRelationsCount(){
-			return totalRelationsCount;
-		}*/
-		
 		/**
 		 * @return offset for how many times the total number of terms
 		 * in term-document matrix the segment for this type starts.
 		 */
 		public int[] vectorOffsetArray(){
 			return this.vectorOffsetArray;
-		}
-		
+		}		
 	}
 	
 	/**
@@ -152,11 +147,11 @@ public class RelationVec implements Serializable{
 		//left after division by 8.
 		byte[] byteArray = new byte[byteArrayLength + 1];
 		
-		System.out.println("*&&&&&&& RelationVec.java - positions of bits to be set: " + bitPosList);
+		//System.out.println("*&&&&&&& RelationVec.java - positions of bits to be set: " + bitPosList);
 		//fill in byteArray given the list of positions of bits to set
 		fillByteArray(byteArray, bitPosList);
 		BigInteger indexBitBigInt = new BigInteger(1, byteArray);
-		//if(true) throw new IllegalStateException(indexBitSet.toString());
+		//System.out.println("*&&&&&&& RelationVec.java - indexBitBigInt: " + indexBitBigInt);
 		return indexBitBigInt;		
 	}
 	
@@ -183,10 +178,10 @@ public class RelationVec implements Serializable{
 			}
 			
 			List<String> contentStrList = posTermStruct.contentStrList();
-			//System.out.println("c&&&&&&&&&&&&&&&ontentStr: " + contentStr + " posTerm " + posTerm);
+			System.out.println("****************RelationVec - contentStrList: " + contentStrList + " posTerm: " + posTerm);
 			
 			List<RelationType> posTermRelationTypeList = posTerm.relationType();
-			//System.out.println("****************contentStrList: "  + contentStrList);
+			//System.out.println("****************RelationVec - posTermRelationTypeList: "  + posTermRelationTypeList);
 			if(!posTermRelationTypeList.isEmpty())
 			{					
 				for(RelationType posTermRelationType : posTermRelationTypeList)
@@ -274,12 +269,12 @@ public class RelationVec implements Serializable{
 				//e.g. "... is regular local", sets "is regular, *and* "is local"
 				for(int i = 0; i < termStrArLen; i++){					
 					String word = termStrAr[i];
-					
+					//System.out.println("RelationVec.java - trying to add word " + word);
 					Integer residue = keywordDict.get(word);
 					if(null == residue){
 						continue;
 					}
-					System.out.println("RelationVec.java: adding word " + word);
+					System.out.println("RelationVec - adding word " + word);
 					int bitPos = parseContextVectorSz*modulus + residue;					
 					maxBitPos = addToPosList(bitPosList, maxBitPos, bitPos);
 					
@@ -300,7 +295,7 @@ public class RelationVec implements Serializable{
 		Integer residue = keywordDict.get(termStr);
 		if(null != residue){
 			if(DEBUG){
-				System.out.println("RelationVec.java: adding word " + termStr);
+				System.out.println("RelationVec - adding word " + termStr);
 			}
 			int bitPos = parseContextVectorSz*modulus + residue;
 			maxBitPos = addToPosList(bitPosList, maxBitPos, bitPos);

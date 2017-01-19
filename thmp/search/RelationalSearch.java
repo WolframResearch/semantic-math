@@ -14,6 +14,7 @@ import thmp.GenerateRelationVec;
 import thmp.ParseState;
 import thmp.ParseState.ParseStateBuilder;
 import thmp.RelationVec;
+import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 
 /**
@@ -32,36 +33,37 @@ public class RelationalSearch implements Searcher{
 	static{
 		//relationVecList = GenerateRelationVec.getRelationVecList();
 		//should get vectors from deserialized ParsedExpression's List
-		relationVecList = CollectThm.ThmList.allThmsRelationVecList();		
+		relationVecList = CollectThm.ThmList.allThmsRelationVecList();
+		
 	}
 	
 	public static void main(String[] args){
 		Scanner sc = new Scanner(System.in);
 		
 		//get all thms for now, to test 
-		int allThmsListSz = CollectThm.ThmList.allThmsWithHypList().size();
+		/*int allThmsListSz = CollectThm.ThmList.allThmsWithHypList().size();
 		List<Integer> nearestVecList = new ArrayList<Integer>();
 		for(int i = 0; i < allThmsListSz; i++){
 			nearestVecList.add(i);
-		}
+		}*/
 		
 		while(sc.hasNextLine()){
 			String thm = sc.nextLine();
-			if(thm.matches("\\s*")) continue;
+			if(WordForms.getWhiteEmptySpacePattern().matcher(thm).matches()) continue;
 			
 			thm = thm.toLowerCase();
 			int NUM_NEAREST = 6;
-			//List<Integer> nearestVecList = ThmSearch.readThmInput(thm, NUM_NEAREST);
+			String queryVecStr = TriggerMathThm2.createQueryNoAnno(thm);
+			List<Integer> nearestVecList = ThmSearch.ThmSearchQuery.findNearestVecs(queryVecStr, NUM_NEAREST);
 			
 			if(nearestVecList.isEmpty()){
 				System.out.println("I've got nothing for you yet. Try again.");
 				continue;
-			}
-			
-			List<Integer> bestCommonVecs = relationalSearch(thm, nearestVecList);
+			}			
+			List<Integer> bestCommonVecs = relationalSearch(thm, nearestVecList);			
 			
 			if(null == bestCommonVecs){
-				System.out.println("No nontrivial relation found");
+				System.out.println("No nontrivial relation found. Results from SVD displayed above.");
 				continue;
 			}
 			
@@ -74,6 +76,7 @@ public class RelationalSearch implements Searcher{
 		}
 		
 		sc.close();
+		FileUtils.cleanupJVMSession();
 	}
 	
 	/**
@@ -101,7 +104,7 @@ public class RelationalSearch implements Searcher{
 		System.out.println("--++++++queryRelationVec " + queryRelationVec);
 		
 		//skip relation search if no nontrivial relation found, i.e. no bit set.
-		if(queryRelationVec.bitCount() == 0){
+		if(null == queryRelationVec || queryRelationVec.bitCount() == 0){
 			return null;
 		}
 		

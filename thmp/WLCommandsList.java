@@ -160,7 +160,7 @@ public class WLCommandsList {
 		//WLCommandMapBuilder.put("hyp", addCommand(new String[] { "assert, , true", "hyp, , trigger", "ent|symb, , true"
 		  //}));
 		wLCommandMapBuilder.put("hyp", addCommand(new PBuilder("assert", null, true), new PBuilder("hyp", null, false, true, false), 
-				new PBuilder("ent|symb", null, true) ));
+				new PBuilder("ent|symb", null, true, RelationType.IF) ));
 
 		/*****More specific commands******/
 		//WLCommandMapBuilder.put("element", addCommand(
@@ -174,12 +174,12 @@ public class WLCommandsList {
 		/*WLCommandMapBuilder.put("element", addCommand(
 				new String[] { "parti, , false", ", element, trigger", "x", "\\[Element]", "pre, of, false", "symb|ent, , true" }));*/
 		wLCommandMapBuilder.put("element", addCommand(new PBuilder("parti", null, false), new PBuilder(null, "element", false, true, false),
-				new PBuilder("\\[Element]"), new PBuilder("pre", "of", false), new PBuilder("symb|ent|noun", null, true) ));		
+				new PBuilder("\\[Element]"), new PBuilder("pre", "of", false), new PBuilder("symb|ent|noun", null, true, RelationType._IS_) ));		
 		
 		/*WLCommandMapBuilder.put("given", addCommand(
 				new String[] { "parti, given, trigger", "symb|ent, , true" }));*/
 		wLCommandMapBuilder.put("given", addCommand(new PBuilder("parti", "given", false, true, false), 
-				new PBuilder("symb|ent", null, true) ));
+				new PBuilder("symb|ent", null, true).addRelationType(RelationType.IF).addRelationType(RelationType._IS_) ));
 		
 		/*WLCommandMapBuilder.put("exist", addCommand(
 				new String[] { ", there, false", "Exists[", ", exists*, trigger",  "ent|symb|phrase|noun, , true", "]"}));*/
@@ -338,7 +338,7 @@ public class WLCommandsList {
 		
 		//WLCommandMapBuilder.put("consider", addCommand(new String[] { "verb, , trigger", "ent|phrase, , true" }));
 		wLCommandMapBuilder.put("consider", addCommand(new PBuilder("verb", null, false, true, false), 
-				new PBuilder("ent|phrase", null, true) ));
+				new PBuilder("ent|phrase", null, true, RelationType.IF).addRelationType(RelationType._IS_) ));
 		
 		//e.g. "we have ..."
 		//WLCommandMapBuilder.put("have", addCommand(new String[] { "pro, we, false", "verb, have, trigger", ", , true"}));

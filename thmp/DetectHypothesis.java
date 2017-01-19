@@ -156,7 +156,7 @@ public class DetectHypothesis {
 		@Override
 		public String toString(){
 			StringBuilder sb = new StringBuilder("totalThmsNum: ").append(totalThmsNum);
-			sb.append(" Percetage not null: ").append(getNonNullPercentage());
+			sb.append(" Percetage nontrivial parseStructHeads: ").append(getNonNullPercentage());
 			return sb.toString();
 		}
 	}
@@ -239,8 +239,8 @@ public class DetectHypothesis {
 		try{
 			//inputBF = new BufferedReader(new FileReader("src/thmp/data/CommAlg5.txt"));
 			//inputBF = new BufferedReader(new FileReader("src/thmp/data/fieldsRawTex.txt"));
-			inputBF = new BufferedReader(new FileReader("src/thmp/data/samplePaper1.txt"));
-			//inputBF = new BufferedReader(new FileReader("src/thmp/data/Total.txt"));
+			//inputBF = new BufferedReader(new FileReader("src/thmp/data/samplePaper1.txt"));
+			inputBF = new BufferedReader(new FileReader("src/thmp/data/Total.txt"));
 			//inputBF = new BufferedReader(new FileReader("src/thmp/data/fieldsThms2.txt"));
 		}catch(FileNotFoundException e){
 			e.printStackTrace();
@@ -252,7 +252,8 @@ public class DetectHypothesis {
 		try{
 			stats = readAndParseThm(inputBF, parseState, defThmList);
 			//System.out.println("DefinitionListWithThm list: " + defThmList);
-			System.out.println("STATS -- percentage on non-trivial ParseStruct heads: " + stats.getNonNullPercentage());
+			System.out.println("STATS -- percentage of non-trivial ParseStruct heads: " + stats.getNonNullPercentage() 
+				+ " out of total " + stats.getTotalThmsNum() + "thms");
 			DefinitionListWithThmStrList.add(defThmList.toString()+ "\n");
 			for(DefinitionListWithThm def : defThmList){
 				DefinitionList.add(def.getDefinitionList().toString());
@@ -672,16 +673,21 @@ public class DetectHypothesis {
 		DefinitionListWithThm defListWithThm = 
 				new DefinitionListWithThm(thmStr, variableDefinitionList, thmWithDefSB.toString());
 		
+		//relational and context vecs can't be null, since ImmutableList cannot contain null elements
 		BigInteger relationalContextVec = parseState.getRelationalContextVec();
 		if(null == relationalContextVec){
-			//write placeholder so the relationalVec in ParsedExpression is not null, which will 
-			//cause trouble as null cannot be put into ImmutableList.
+			//write placeholder
 			relationalContextVec = new BigInteger(1, new byte[1]);
 		}
+		int[] combinedContextVec = parseState.getCurThmCombinedContextVec();
+		if(null == combinedContextVec){
+			combinedContextVec = ParseState.PLACEHOLDER_CONTEXT_VEC();
+		}
+		
 		//create parsedExpression to serialize to persistent storage to be used later
 		//for search, etc
 		ParsedExpression parsedExpression = new ParsedExpression(thmStr, parseState.getHeadParseStruct(),
-						defListWithThm, parseState.getCurThmCombinedContextVec(), relationalContextVec);
+						defListWithThm, combinedContextVec, relationalContextVec);
 		
 		parsedExpressionList.add(parsedExpression);
 		parsedExpressionStrList.add(parsedExpression.toString());

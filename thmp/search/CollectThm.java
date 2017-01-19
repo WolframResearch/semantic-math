@@ -188,6 +188,8 @@ public class CollectThm {
 		private static final ImmutableMap<String, Integer> contextVecWordsNextTimeMap;
 		//to be used next time, words and their indices.
 		private static final ImmutableMap<String, Integer> contextVecWordsIndexNextTimeMap;
+		//this size depends on whether currently gathering data or performing search.
+		private static final int CONTEXT_VEC_SIZE;
 		
 		private static final Map<String, Integer> twoGramsMap = NGramsMap.get_twoGramsMap();
 		private static final Map<String, Integer> threeGramsMap = NGramsMap.get_threeGramsMap();	
@@ -311,7 +313,7 @@ public class CollectThm {
 			System.out.println("*********wordsScoreMapNoAnno.size(): " + wordsScoreMapNoAnno.size());
 			
 			wordThmsIndexMMapNoAnno = wordThmsMMapBuilderNoAnno.build();
-			
+			CONTEXT_VEC_SIZE = docWordsFreqMapNoAnno.size();
 			/***This is where the set of words used for SVD search and search based on context and relational vectors
 			 * diverge. The latter contains additional words (N-grams) added below. Note these words
 			 * are used for NGram formation NEXT run (generating ParsedExpressionList)***/ //<--actually now they are the same
@@ -428,8 +430,8 @@ public class CollectThm {
 			return CONTEXT_VEC_WORDS_MAP;
 		}
 		
-		public static int get_CONTEXT_VEC_WORDS_MAP_size(){
-			return CONTEXT_VEC_WORDS_MAP.size();
+		public static int get_CONTEXT_VEC_SIZE(){
+			return CONTEXT_VEC_SIZE;
 		}
 		
 		public static ImmutableMap<String, Integer> get_CONTEXT_VEC_WORDS_FREQ_MAP_fromData(){

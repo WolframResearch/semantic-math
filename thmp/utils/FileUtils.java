@@ -235,6 +235,29 @@ public class FileUtils {
 	}
 	
 	/**
+	 * Cleans up current JVM run session, such as closing any
+	 * mathlink that got opened.
+	 */
+	public static void cleanupJVMSession(){
+		closeKernelLinkInstance();
+	}
+	
+	/**
+	 * Closes the one running kernel link instance during this session.
+	 * Must be run as part of cleaning up any session that uses a link.
+	 */
+	public static void closeKernelLinkInstance() {
+		if(null != ml){
+			synchronized(FileUtils.class){
+				if(null != ml){
+					ml.close();
+					ml = null;
+				}
+			}
+		}
+	}
+	
+	/**
 	 * Get KernelLink instance, 
 	 * create one is none exists already.
 	 * @return KernelLink instance.

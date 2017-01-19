@@ -447,7 +447,7 @@ public class TriggerMathThm2 {
 			sb.append(t);
 		}
 		sb.append("}}");
-		System.out.println("query vector " + sb);
+		//System.out.println("query vector " + sb);
 		return sb.toString();
 	}
 

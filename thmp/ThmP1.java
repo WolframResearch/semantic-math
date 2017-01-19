@@ -184,8 +184,8 @@ public class ThmP1 {
 		//adjMap = Maps.adjMap;
 		probMap = Maps.probMap();
 		posList = Maps.posList;
-	
-		parseContextVectorSz = CollectThm.ThmWordsMaps.get_CONTEXT_VEC_WORDS_MAP_size();
+		
+		parseContextVectorSz = CollectThm.ThmWordsMaps.get_CONTEXT_VEC_SIZE();
 		System.out.println("*****+++++ThmP1--parseContextVectorSz: " + parseContextVectorSz);
 		parseContextVector = new int[parseContextVectorSz];
 		

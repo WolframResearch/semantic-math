@@ -14,6 +14,7 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ListMultimap;
 
 import thmp.ThmP1.ParsedPair;
+import thmp.search.CollectThm;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -31,6 +32,9 @@ import java.util.Arrays;
  * @author yihed
  */
 public class ParseState {
+	
+	//placeholder context vector
+	private static int[] PLACEHOLDER_CONTEXT_VEC = new int[CollectThm.ThmWordsMaps.get_CONTEXT_VEC_SIZE()];
 	
 	//current String being parsed. I.e. the unit
 	//of the input that's being tokenized, so 
@@ -218,6 +222,10 @@ public class ParseState {
 			return true;
 		}
 		
+	}
+	
+	public static int[] PLACEHOLDER_CONTEXT_VEC(){
+		return PLACEHOLDER_CONTEXT_VEC;
 	}
 	
 	/**
@@ -426,6 +434,22 @@ public class ParseState {
 		this.relationalVec = relationalContextVec;
 	}
 
+	/**
+	 * Combines list of relational vecs by logical "or" and sets the result as 
+	 * current relationalVec. This is used when ThmP1.preprocess() produces several
+	 * components for one theorem, but we only want one relational vec for the theorem. 
+	 * @param relationalContextVecList the relationalContextVec to combine and set.
+	 */
+	public void setRelationalContextVec(List<BigInteger> relationalContextVecList) {
+		//combine the relational vecs
+		BigInteger completeRelationalVec = new BigInteger(1, new byte[1]);
+		for(BigInteger bi : relationalContextVecList){
+			if(null == bi) continue;
+			completeRelationalVec = completeRelationalVec.or(bi);
+		}
+		this.relationalVec = completeRelationalVec;
+	}
+	
 	/**
 	 * Combines the context vec for each component into a single thm context vec.
 	 * Computes the combined vector each time. Caller should only call once and store

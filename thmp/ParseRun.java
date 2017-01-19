@@ -36,7 +36,7 @@ public class ParseRun {
 	 */
 	public static void parseInput(String st, ParseState parseState, boolean isVerbose, Stats stats){
 		
-		//List<int[]> parseContextVecList = new ArrayList<int[]>();			
+		List<BigInteger> relationalContextVecList = new ArrayList<BigInteger>();			
 		
 		String[] strAr = ThmP1.preprocess(st);			
 		
@@ -50,16 +50,19 @@ public class ParseRun {
 			parseState = ThmP1.tokenize(strAr[i].trim(), parseState);
 			
 			parseState = ThmP1.parse(parseState);
-			//int[] curContextVec = ThmP1.getParseContextVector();
-			//int[] curContextVec = parseState.getContextVec();
-			//parseContextVecList.add(curContextVec);
+			
+			BigInteger curContextVec = parseState.getRelationalContextVec();
+			relationalContextVecList.add(curContextVec);
 			//get context vector
 			//if(isVerbose) System.out.println("cur vec: " + Arrays.toString(curContextVec));			
 		}
 		
+		//combine the relational vecs
+		parseState.setRelationalContextVec(relationalContextVecList);
+		
 		if(isVerbose) {
 			System.out.println("@@@" + parseState.getHeadParseStruct());
-			System.out.println("For str: " + st);
+			System.out.println("ParseRun - For str: " + st);
 			BigInteger relationVec = parseState.getRelationalContextVec();
 			System.out.println("Relational Vector num of bits set: " + (relationVec == null ? "vec null." : relationVec.bitCount()));
 		}
