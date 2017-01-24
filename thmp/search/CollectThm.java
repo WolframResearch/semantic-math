@@ -305,8 +305,7 @@ public class CollectThm {
 				
 			}else{				
 				buildScoreMapNoAnno(wordsScorePreMap, CONTEXT_VEC_WORDS_FREQ_MAP);				
-				docWordsFreqMapNoAnno = CONTEXT_VEC_WORDS_FREQ_MAP;
-				
+				docWordsFreqMapNoAnno = CONTEXT_VEC_WORDS_FREQ_MAP;				
 			}
 			//this is ok, since from previous set of serialized data.
 			wordsScoreMapNoAnno = ImmutableMap.copyOf(wordsScorePreMap);
@@ -326,8 +325,7 @@ public class CollectThm {
 			contextVecWordsNextTimeMap = docWordsFreqMapNoAnno;
 			contextVecWordsIndexNextTimeMap = ImmutableMap.copyOf(createContextKeywordIndexDict(contextVecWordsNextTimeMap));
 			//deserialize words from allThmWordsList.dat, which were serialized from previous run.
-			//List<String> wordsList = extractWordsList();
-			
+			//List<String> wordsList = extractWordsList();			
 		}
 
 		/**

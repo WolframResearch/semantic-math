@@ -58,10 +58,13 @@ public class DetectHypothesis {
 	private static final List<ParsedExpression> parsedExpressionList = new ArrayList<ParsedExpression>();
 	private static final List<String> parsedExpressionStrList = new ArrayList<String>();
 	private static final List<String> DefinitionListWithThmStrList = new ArrayList<String>();
+	private static final List<String> allThmsStrList = new ArrayList<String>();
 	private static final List<String> DefinitionList = new ArrayList<String>();
 	
 	private static final String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
 	private static final String parsedExpressionStringFileStr = "src/thmp/data/parsedExpressionList.txt";
+	private static final String allThmsStringFileStr = "src/thmp/data/allThmsList.txt";
+	
 	private static final String definitionStrFileStr = "src/thmp/data/parsedExpressionDefinitions.txt";
 	//files to serialize theorem words to.
 	private static final String allThmWordsMapSerialFileStr = "src/thmp/data/allThmWordsMap.dat";
@@ -74,8 +77,8 @@ public class DetectHypothesis {
 	//serialize the words as well, to bootstrap up after iterations of processing. The math words are going to 
 	//stabilize.
 	//This is ordered based on word frequencies.
-	private static final List<String> ALL_THM_WORDS_LIST = new ArrayList<String>(CollectThm.ThmWordsMaps.get_contextVecWordsNextTimeMap().keySet());
-	private static final Map<String, Integer> ALL_THM_WORDS_FREQ_MAP = CollectThm.ThmWordsMaps.get_contextVecWordsNextTimeMap();
+	private static final List<String> ALL_THM_WORDS_LIST;
+	private static final Map<String, Integer> ALL_THM_WORDS_FREQ_MAP;
 	
 	private static final boolean PARSE_INPUT_VERBOSE = true;
 	//whether to gather a list of statistics, such as percentage of thms with full parses, or non-null head ParseStruct's.
@@ -95,6 +98,9 @@ public class DetectHypothesis {
 	static{
 		Searcher.SearchMetaData.set_gatheringDataBoolToTrue();
 		FileUtils.set_dataGenerationMode();
+		
+		ALL_THM_WORDS_LIST = new ArrayList<String>(CollectThm.ThmWordsMaps.get_contextVecWordsNextTimeMap().keySet());
+		ALL_THM_WORDS_FREQ_MAP = CollectThm.ThmWordsMaps.get_contextVecWordsNextTimeMap();
 		ThmSearch.TermDocumentMatrix.createTermDocumentMatrixSVD();
 	}
 	
@@ -266,6 +272,9 @@ public class DetectHypothesis {
 			throw e;
 		}finally{		
 			serializeDataToFile(stats);
+			
+			//write just the thms
+			FileUtils.writeToFile(allThmsStrList, allThmsStringFileStr);
 		}
 		
 		//deserialize objects
@@ -303,6 +312,8 @@ public class DetectHypothesis {
 		//write parsedExpressionList to file
 		FileUtils.writeToFile(parsedExpressionStrList, parsedExpressionStringFileStr);
 		FileUtils.writeToFile(DefinitionList, definitionStrFileStr);
+		
+		
 		//append to stats file!
 		FileUtils.appendObjToFile(stats, statsFileStr);
 		FileUtils.writeToFile(ALL_THM_WORDS_LIST, allThmWordsStringFileStr);
@@ -444,9 +455,9 @@ public class DetectHypothesis {
 				parseState.setInThmFlag(true);
 				contextSB.setLength(0);
 			}
-			//not else if, since \begin{} and \end{} could be on same line.
+			//if and not else if, since \begin{} and \end{} could be on same line.
 			if (thmEndPattern.matcher(line).matches()) {
-				//if(true) throw new IllegalStateException(newThmSB.toString());
+				
 				inThm = false;
 				
 				if(0 == newThmSB.length()){
@@ -454,6 +465,9 @@ public class DetectHypothesis {
 				}
 				//System.out.println("newThmSB: " + newThmSB);
 				//System.out.println("!---------! line: " + line+" thmEndPattern: " + thmEndPattern);
+				
+				allThmsStrList.add(newThmSB.toString() + "\n\n");
+				//newThmSB.setLength(0);
 				processParseHypThm(newThmSB, parseState, stats, definitionListWithThmList);
 				continue;
 			}else if(END_DOCUMENT_PATTERN.matcher(line).matches()){
@@ -493,6 +507,13 @@ public class DetectHypothesis {
 		return stats;
 	}
 
+	/**
+	 * Processes (e.g. remove tex markup) and parses a theorem after it has been read in.
+	 * @param newThmSB StringBuilder containing the theorem.
+	 * @param parseState
+	 * @param stats
+	 * @param definitionListWithThmList
+	 */
 	private static void processParseHypThm(StringBuilder newThmSB, ParseState parseState, Stats stats, 
 			List<DefinitionListWithThm> definitionListWithThmList){
 		//if(true) throw new IllegalStateException(newThmSB.toString());

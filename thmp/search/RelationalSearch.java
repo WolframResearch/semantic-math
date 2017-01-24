@@ -87,6 +87,16 @@ public class RelationalSearch implements Searcher{
 	}
 	
 	/**
+	 * Return list of string's as opposed to indices.
+	 * @param queryStr
+	 * @param nearestThmIndexList
+	 * @return
+	 */
+	public static List<String> getHighestThmStringList(String queryStr, List<Integer> nearestThmIndexList){
+		return SearchCombined.thmListIndexToString(relationalSearch(queryStr, nearestThmIndexList));
+	}
+	
+	/**
 	 * Search based on relational vectors.
 	 * @param queryStr
 	 * @param nearestThmIndexList

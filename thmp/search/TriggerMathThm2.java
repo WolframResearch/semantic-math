@@ -110,7 +110,6 @@ public class TriggerMathThm2 {
 		//to be list that contains the theorems, in the order they are inserted
 		//ImmutableList.Builder<String> mathObjListBuilder = ImmutableList.builder();
 		
-		
 		//System.out.println("keywordList: "+ keywordList + " keywordIndexMap: "+ keywordIndexMap);
 		//should already been ordered in CollectThm
 		//Map<String, Integer> docWordsFreqMapNoAnno = CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno();
@@ -295,9 +294,9 @@ public class TriggerMathThm2 {
 			
 			mathObjCounter++;
 		}
-		System.out.println("TriggerMathThm - keywordIndexDict: "+ keywordIndexDict);
-		System.out.println("TriggerMathThm - wordsScoreMap: "+ wordsScoreMap);
-		System.out.println("TriggerMathThm - keywordIndexNullCounter: "+ keywordIndexNullCounter);
+		//System.out.println("TriggerMathThm2 - keywordIndexDict: "+ keywordIndexDict);
+		//System.out.println("TriggerMathThm2 - wordsScoreMap: "+ wordsScoreMap);
+		System.out.println("TriggerMathThm2 - keywordIndexNullCounter: "+ keywordIndexNullCounter);
 		//System.out.println("~~keywordDict "+keywordDict);
 	}
 

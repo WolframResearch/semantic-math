@@ -545,7 +545,10 @@ public class ThmP1TestRun {
 			st = "f is a function with radius of convergence r and finitely many roots";
 			st = "A topological group $G$ is extremely amenable if and only if whenever $S\\sbs G$ is big on the left, ";
 			st = "Then $b(G)$ is determined if and only if $W(G)$ is compact and determined; in this case $W(G)=b(G)$";
-			
+			st = "given separated and locally finitely-presented algebraic space";
+			st = "given separated algebraic space";
+			st = "given finitely generated algebra";
+			st = "baire space is metrizable";
 			//st = "given a tower of algebraic field extensions";
 			//Every minimal subsystem $\Sigma$ of the system $(\Omega^k,S_\infty)$ is a factor of the minimal system $(\Omega^2_{lo},S_\infty)$.		
 			//st = "take derivative of log of f";

@@ -135,7 +135,7 @@ public class ThmSearch {
 			
 			//ml.evaluate("Length[q]");
 			//Expr qVecDim = ml.getExpr();
-			System.out.println("ThmSearch - queryStr: " + queryVecStr);
+			//System.out.println("ThmSearch - queryStr: " + queryVecStr);
 			
 			//ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"];");
 			//ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"/.{0.0->mxMeanValue}];");
@@ -279,7 +279,7 @@ private static String readInputAndSearch(){
 			
 			docMx = TriggerMathThm2.mathThmMx();			
 			//mx to keep track of correlations between terms, mx.mx^T
-			List<List<Integer>> corMxList = new ArrayList<List<Integer>>();
+			//List<List<Integer>> corMxList = new ArrayList<List<Integer>>();
 			try{			
 				/*ml = MathLinkFactory.createKernelLink(ARGV);
 				System.out.println("MathLink created! "+ ml);
@@ -472,7 +472,7 @@ private static String readInputAndSearch(){
 				ml.evaluate("End[];");
 				ml.discardAnswer();
 				
-				ml.evaluate("DumpSave[" + PATH_TO_MX + ", \"TermDocumentMatrix`\"];");
+				ml.evaluate("DumpSave[\"" + PATH_TO_MX + "\", \"TermDocumentMatrix`\"];");
 				ml.discardAnswer();
 			}catch(MathLinkException e){
 				System.out.println("error at launch!");

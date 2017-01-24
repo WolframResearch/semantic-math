@@ -980,8 +980,9 @@ public class ThmP1 {
 				String curPos = "parti";
 				int pairsSize = pairs.size();
 				// if next word is "by"
-				if (strAr.length > i + 1 && pairsSize > 1) {
+				if (strAr.length > i + 1 && pairsSize > 0) {
 					String nextWord = strAr[i + 1];
+					
 					if(nextWord.equals("by")){
 						curPos = "partiby";
 						curWord = curWord + " by";
@@ -999,7 +1000,9 @@ public class ThmP1 {
 						List<String> curPosList = posMMap.get(strAr[i+1]);
 						if(curPosList.size() > 0){
 							String nextPos = curPosList.get(0);
-							if(nextPos.equals("pre")){
+							
+							if(nextPos.equals("pre") || nextPos.equals("ent") || nextPos.equals("adj") 
+									|| nextPos.equals("and") || nextPos.equals("or")){
 								curPos = "adj";
 							}
 						}
@@ -1450,12 +1453,16 @@ public class ThmP1 {
 			// combine multiple adjectives into entities
 			// ...get more than adj ... multi-word descriptions
 			// set the pos as the current index in mathEntList
-			// adjectives or determiners	
-			
-			while (index - k > -1 && pairs.get(index - k).pos().matches("adj|det|num")) {
+			// adjectives or determiners
+			String curPos;
+			while (index - k > -1 && (curPos = pairs.get(index - k).pos()).matches("adj|det|num|and|or")) {
 				Pair curPair = pairs.get(index - k);
 				String curWord = curPair.word();
-				String curPos = curPair.pos();
+				
+				if("and".equals(curPos) || "or".equals(curPos)){
+					k++;
+					continue;
+				}
 				
 				//combine adverb-adj pair (not redundant with prior calls to fuseAdjAdverbPair())
 				if(curPos.equals("adj") && index-k-1 > -1){
@@ -1463,6 +1470,7 @@ public class ThmP1 {
 					if(prevPair.pos().equals("adverb")){
 						curWord = prevPair.word() + " " + curWord;
 						prevPair.set_pos(entPosStr);
+						k++;
 					}
 				}
 					

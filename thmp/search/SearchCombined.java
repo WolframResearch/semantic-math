@@ -9,9 +9,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.ServletContext;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.TreeMultimap;
 import com.wolfram.jlink.Expr;
@@ -27,18 +30,37 @@ import thmp.utils.WordForms;
  */
 public class SearchCombined {
 
-	private static final int NUM_NEAREST = 10;
+	private static final int NUM_NEAREST = 15;
 	//combined number of vectors to take from search results of
 	//svd/nearest and intersection
-	private static final int NUM_COMMON_VECS = 4;
+	protected static final int NUM_COMMON_VECS = 4;
 	//private static ServletContext servletContext;
 	//should update at the very beginning!
 	//private static final int LIST_INDEX_SHIFT = 1;
+	private static final ImmutableList<String> thmList = CollectThm.ThmList.allThmsWithHypList();
+	
+	private static final Pattern INPUT_PATTERN = Pattern.compile("(\\d+)\\s+(.*)");
+	private static final Pattern CONTEXT_INPUT_PATTERN = Pattern.compile("(context|relational)\\s+(.*)");
 	
 	/*public static void initializeSearchWithResource(BufferedReader freqWordsFileBuffer, BufferedReader texSourceFileBuffer){		
 		CollectThm.setWordFrequencyBR(freqWordsFileBuffer);
 		CollectThm.setResources(texSourceFileBuffer);		
 	}*/
+	
+	/**
+	 * Turn list of indices of thms into list of String's.
+	 * @param highestThms
+	 * @return
+	 */
+	public static List<String> thmListIndexToString(List<Integer> highestThms){
+		List<String> foundThmList = new ArrayList<String>();
+		for(Integer thmIndex : highestThms){
+					//the list thmList as good for web display as the original webDisplayThmList,
+					//because removeTexMarkup() has been applied.
+			foundThmList.add(thmList.get(thmIndex));	
+		}
+		return foundThmList;
+	}
 	
 	/**
 	 * Set resources for list of resource files.
@@ -193,7 +215,27 @@ public class SearchCombined {
 		
 		if(WordForms.getWhiteEmptySpacePattern().matcher(input).matches()) return null;
 		
+		String[] thmAr = WordForms.getWhiteNonEmptySpacePattern().split(input);
+		Matcher matcher;
+		if(!searchContextBool || !searchRelationalBool){
+			if(thmAr.length > 1 && (matcher = CONTEXT_INPUT_PATTERN.matcher(input)).matches()){
+				String prefix = matcher.group(1);
+				if(prefix.equals("context")){
+					searchContextBool = true;
+					//removes first word
+					input = matcher.group(2);					
+				}else if(prefix.equals("relation")){
+					searchRelationalBool = true;
+					input = matcher.group(2);
+				}
+			}
+		}
+		
 		input = input.toLowerCase();
+		
+		StringBuilder inputSB = new StringBuilder();
+		int numCommonVecs = getNumCommonVecs(inputSB, input);
+		input = inputSB.toString();
 		
 		List<Integer> nearestVecList = ThmSearch.ThmSearchQuery.findNearestThmsInTermDocMx(input, NUM_NEAREST);
 		if(nearestVecList.isEmpty()){
@@ -202,17 +244,10 @@ public class SearchCombined {
 		}
 		
 		SearchState searchState = SearchIntersection.getHighestThms(input, searchWordsSet, searchContextBool, NUM_NEAREST);
-		//List<Integer> intersectionVecList;
-		int numCommonVecs = NUM_COMMON_VECS;
-		
-		String[] inputAr = WordForms.getWhiteNonEmptySpacePattern().split(input);
-		String firstWord = inputAr[0];
-		if(firstWord.matches("\\d+")){
-			numCommonVecs = Integer.parseInt(firstWord);			
-		}		
-		
+
+		String[] inputAr = WordForms.getWhiteNonEmptySpacePattern().split(input);		
 		//context search doesn't do anything if only one token.
-		if(inputAr.length == 1){
+		if(inputAr.length < 3){
 			searchContextBool = false;
 			searchRelationalBool = false;
 		}
@@ -223,7 +258,7 @@ public class SearchCombined {
 		//combine with ranking from relational search, reorganize within each tuple
 		//of fixed size.
 		if(searchRelationalBool){
-			int tupleSz = 3;
+			int tupleSz = 5;
 			Searcher searcher = new RelationalSearch();
 			bestCommonVecs = searchVecWithTuple(input, bestCommonVecs, tupleSz, searcher);			
 		}
@@ -240,8 +275,29 @@ public class SearchCombined {
 	}
 	
 	/**
-	 * Searches using relational search, in chunks of size tupleSz from 0
+	 * Finds the number of output vectors as specified by user.
+	 * @param inputSB empty StringBuilder to be filled with theorem content.
+	 * @param input
+	 * @return number of common vecs
+	 */
+	public static int getNumCommonVecs(StringBuilder inputSB, String input) {
+		
+		int numCommonVecs = NUM_COMMON_VECS;
+		Matcher matcher = INPUT_PATTERN.matcher(input);
+		inputSB.setLength(0);
+		if(matcher.matches()){
+			numCommonVecs = Integer.parseInt(matcher.group(1));			
+			inputSB.append(matcher.group(2));
+		}else{
+			inputSB.append(input);
+		}
+		return numCommonVecs;
+	}
+
+	/**
+	 * Searches using relational search, in chunks of size tupleSz from index 0
 	 * through the entire list. 
+	 * @param queryStr The English sentence to be searched.
 	 * @param bestCommonVecs
 	 * @param tupleSz
 	 */
@@ -256,7 +312,7 @@ public class SearchCombined {
 		for(int i = 0; i <= numTupleSzInCommonVecsLen; i++){
 			
 			int startingIndex = numTupleSzInCommonVecsLen*tupleSz;
-			int startingIndexPlusTupleSz = startingIndex + tupleSz ; 
+			int startingIndexPlusTupleSz = startingIndex + tupleSz; 
 			int endingIndex = startingIndexPlusTupleSz > commonVecsLen 
 					? commonVecsLen : startingIndexPlusTupleSz;
 			//using .subList() avoids creating numTupleSzInCommonVecsLen 
@@ -282,16 +338,9 @@ public class SearchCombined {
 		while(sc.hasNextLine()){
 			String thm = sc.nextLine();
 			
-			String[] thmAr = thm.split("\\s+");
+			//String[] thmAr = WordForms.getWhiteNonEmptySpacePattern().split(thm);
 			boolean searchContextBool = false;
-			if(thmAr.length > 1 && thmAr[0].equals("context")){				
-				searchContextBool = true;
-			}
-			
 			boolean searchRelationalBool = false;
-			if(thmAr.length > 1 && thmAr[0].equals("relation")){				
-				searchRelationalBool = true;
-			}
 			
 			//this gives the web-displayed versions. 
 			List<String> bestCommonVecs = searchCombined(thm, null, searchContextBool, searchRelationalBool);

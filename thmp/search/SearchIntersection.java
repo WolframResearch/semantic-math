@@ -38,7 +38,7 @@ public class SearchIntersection {
 	//bonus points for matching context better, eg hyp or stm
 	//disable bonus now, since not using annotated words
 	private static final int CONTEXT_WORD_BONUS = 0;	
-	private static final int NUM_NEAREST_VECS = 4;
+	private static final int NUM_NEAREST_VECS = SearchCombined.NUM_COMMON_VECS;
 	
 	private static final Logger logger = LogManager.getLogger(SearchIntersection.class);
 
@@ -131,7 +131,17 @@ public class SearchIntersection {
 	}*/
 	
 	/**
-	 * 
+	 * @param input
+	 * @param contextSearch Whether to use context search.
+	 * @param num
+	 * @return List of thm Strings.
+	 */
+	public static List<String> getHighestThmStringList(String input, Set<String> searchWordsSet, 
+			boolean contextSearchBool){
+		return SearchCombined.thmListIndexToString(getHighestThms(input, searchWordsSet, contextSearchBool).intersectionVecList());
+	}
+	
+	/**
 	 * @param input
 	 * @param contextSearch Whether to use context search.
 	 * @param num
@@ -174,12 +184,13 @@ public class SearchIntersection {
 	 */
 	public static SearchState getHighestThms(String input, Set<String> searchWordsSet, 
 			boolean contextSearchBool, int ... num){
-		if(input.matches("\\s*")) return null;
+		
+		if(WordForms.getWhiteEmptySpacePattern().matcher(input).matches()) return null;
 		//map containing the indices of theorems added so far, where values are sets (hashset)
 		//of indices of words that have been added. This is to reward theorems that cover
 		//the more number of words. Actually just use SetMultimap.
 		//if 2/3-grams added, add indices of all words in 2/3-gram to set for that thm.
-
+		
 		logger.info("Starting intersection search...");
 		SetMultimap<Integer, Integer> thmWordSpanMMap = HashMultimap.create();
 		
@@ -195,14 +206,13 @@ public class SearchIntersection {
 		int numHighest = NUM_NEAREST_VECS;
 		//whether to skip first token
 		int firstIndex = 0;
-		if(num.length != 0){
+		if(num.length > 0){
 			numHighest = num[0];
-		}
-		//user's input overrides default num
-		String firstWord = wordWrapperList.get(0).word();
-		if(firstWord.matches("\\d+")){
-			numHighest = Integer.parseInt(firstWord);
-			firstIndex = 1;
+		}else{
+			//user's input overrides default num
+			StringBuilder inputSB = new StringBuilder();
+			numHighest = SearchCombined.getNumCommonVecs(inputSB, input);
+			input = inputSB.toString();
 		}
 		
 		/*
@@ -665,35 +675,23 @@ public class SearchIntersection {
 	 */
 	public static List<String> search(String inputStr, Set<String> searchWordsSet){
 		
-		List<String> foundThmList = new ArrayList<String>();
-
-		int numVecs = NUM_NEAREST_VECS;
-		String firstWord = inputStr.split("\\s+")[0];
+		//int numVecs = NUM_NEAREST_VECS;
+		//String firstWord = inputStr.split("\\s+")[0];
 		
-		if(firstWord.matches("\\d+")){
+		/*if(firstWord.matches("\\d+")){
 			numVecs = Integer.parseInt(firstWord);
-		}	
-		boolean contextSearchBool = false;
+		}*/
 		
-		List<Integer> highestThms = getHighestThmList(inputStr, searchWordsSet, contextSearchBool, numVecs);
+		boolean contextSearchBool = false;		
+		List<Integer> highestThms = getHighestThmList(inputStr, searchWordsSet, contextSearchBool);
 		
 		if(highestThms == null){
-			foundThmList.add("Close, but no cigar. I don't have a theorem on that yet.");
+			//foundThmList.add("Close, but no cigar. I don't have a theorem on that yet.");
 			//return thmList;
 			return null;
 		}
 		
-		int counter = numVecs;
-		for(Integer thmIndex : highestThms){
-			if(counter == 0) break;
-			//foundThmList.add(thmList.get(thmIndex));
-			//the list thmList as good for web display as the original webDisplayThmList,
-			//because removeTexMarkup() has been applied.
-			foundThmList.add(thmList.get(thmIndex));	
-			counter--;
-		}
-		
-		return foundThmList;
+		return SearchCombined.thmListIndexToString(highestThms);
 	}
 	
 	/**
