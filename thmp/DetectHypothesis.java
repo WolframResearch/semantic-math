@@ -273,8 +273,6 @@ public class DetectHypothesis {
 		}finally{		
 			serializeDataToFile(stats);
 			
-			//write just the thms
-			FileUtils.writeToFile(allThmsStrList, allThmsStringFileStr);
 		}
 		
 		//deserialize objects
@@ -282,6 +280,8 @@ public class DetectHypothesis {
 		if(deserialize){
 			deserializeParsedExpressionsList();
 		}
+		
+		FileUtils.cleanupJVMSession();
 	}
 
 	/**
@@ -313,7 +313,8 @@ public class DetectHypothesis {
 		FileUtils.writeToFile(parsedExpressionStrList, parsedExpressionStringFileStr);
 		FileUtils.writeToFile(DefinitionList, definitionStrFileStr);
 		
-		
+		//write just the thms
+		FileUtils.writeToFile(allThmsStrList, allThmsStringFileStr);
 		//append to stats file!
 		FileUtils.appendObjToFile(stats, statsFileStr);
 		FileUtils.writeToFile(ALL_THM_WORDS_LIST, allThmWordsStringFileStr);

@@ -1,17 +1,29 @@
 package thmp.utils;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.servlet.ServletContext;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.SetMultimap;
 
 import thmp.search.WordFrequency;
 
@@ -26,6 +38,9 @@ public class WordForms {
 	
 	private static final Pattern BRACES_PATTERN = Pattern.compile("(\\{|\\}|\\[|\\])");
 	private static final Pattern SPECIAL_CHARS_PATTERN = Pattern.compile(".*([+|-]).*");
+	
+	private static final String synonymsFileStr = "src/thmp/data/synonyms.txt";
+	private static final ImmutableMap<String, String> synonymRepMap;
 	
 	//small lists of fluff words, used in, e.g., n gram extraction.
 	//*don't* put "of" here, will interfere with 3 gram collection
@@ -44,17 +59,36 @@ public class WordForms {
 	private static final Pattern HYP_PATTERN = Pattern.compile(".*assume.*|.*denote.*|.*define.*|.*let.*|.*is said.*|.*suppose.*"
 			+ "|.*where.*|.*is called.*|.*if.*|.*If.*") ;
 	
-	static{
-		
+	static{		
 		FLUFF_WORDS_SMALL_SET = new HashSet<String>();
 		String[] fluffAr = FLUFF_WORDS_SMALL.split("\\|");
 		for(String word : fluffAr){
 			FLUFF_WORDS_SMALL_SET.add(word);
 		}
+		Map<String, String> synonymsPreMap = new HashMap<String, String>();
+		BufferedReader synonymsBF = null;
+		//create synonym map from file
+		
+		ServletContext servletContext = FileUtils.getServletContext();
+		if(null != servletContext){
+			synonymsBF = new BufferedReader(new InputStreamReader(servletContext.getResourceAsStream(synonymsFileStr)));
+		}else{
+			try{
+				synonymsBF = new BufferedReader(new FileReader(new File(synonymsFileStr)));
+			}catch(FileNotFoundException e){
+				logger.error("WordForms.java initializer - FileNotFoundException when creating FileReader for "
+						+ "synonymsFileStr");
+			}
+		}
+			//gather synonyms together from file
+		readSynonymMapFromFile(synonymsPreMap, synonymsBF);
+		synonymRepMap = ImmutableMap.copyOf(synonymsPreMap);
+			//close reader
+		FileUtils.silentClose(synonymsBF);
 	}
 	
 	private static Set<String> getFreqWordsSet(){
-		if(freqWordsSet == null){
+		if(null == freqWordsSet){
 			synchronized(WordForms.class){
 				if(freqWordsSet == null){
 					freqWordsSet = WordFrequency.ComputeFrequencyData.get_FreqWords();
@@ -64,6 +98,36 @@ public class WordForms {
 		return freqWordsSet;
 	}
 	
+	/**
+	 * Populate synonymsMMap_ with synonyms read in from synonymsBF.
+	 * @param synonymsmmap2
+	 * @param synonymsBF
+	 */
+	private static void readSynonymMapFromFile(Map<String, String> synonymsMap_, BufferedReader synonymsBF) {
+		String line;
+		try{
+			while(null != (line = synonymsBF.readLine())){
+				String[] synonymsAr = WordForms.getWhiteNonEmptySpacePattern().split(line);
+				//take first word in array as representative of this synonyms set
+				String wordRep = synonymsAr[0];
+				for(int i = 1; i < synonymsAr.length; i++){
+					synonymsMap_.put(synonymsAr[i], wordRep);
+				}
+				/*Set<String> synonymsSet = new HashSet<String>();
+				for(String word : synonymsAr){
+					synonymsSet.add(word);
+				}			
+				for(String word : synonymsAr){
+					synonymsSet.remove(word);
+					synonymsMMap_.putAll(word, synonymsSet);
+					synonymsSet.add(word);
+				}*/				
+			}	
+		}catch(IOException e){
+			logger.error("WordForms.readSynonymMapFromFile : IOException when reading BufferedReader!");;
+		}
+	}
+
 	/**
 	 * Returns the most likely singular form of the word, or
 	 * original word if it doesn't end in s, es, or ies
@@ -92,6 +156,76 @@ public class WordForms {
 			word = word+"e";
 		}
 		return word;
+	}
+	
+	/**
+	 * Remove word endings such as "ly"
+	 * @param word
+	 * @return
+	 */
+	public static String removeWordEnding(String word){
+		if(getFreqWordsSet().contains(word)) return word;
+		int wordlen = word.length();
+		Set<String> freqWordsSet  = getFreqWordsSet();
+		String tempWord;
+		if("ly".equals(word.substring(wordlen-2)) && freqWordsSet.contains((tempWord = word.substring(0, wordlen-2)))){
+			word = tempWord;
+		}
+		return word;
+	}
+	
+	public static boolean isGerundForm(String word){		
+		String s = getGerundForm(word);
+		return null == s ? false : true;
+	}
+	
+	/**
+	 * Returns the most likely normal form of the word that end in
+	 * e.g. "-ing". 
+	 * @param word
+	 * @return 
+	 */
+	public static String getGerundForm(String curWord){
+		
+		String word;
+		int wordlen = curWord.length();
+		if(wordlen < 4) return null;
+		
+		if(curWord.substring(wordlen - 3).equals("ing")){
+			if(getFreqWordsSet().contains((word = curWord.substring(0, wordlen - 3)))
+							//&& posMMap.get(curWord.substring(0, wordlen - 3)).get(0).matches("verb|vbs")
+							){
+				return word;
+			}else if(getFreqWordsSet().contains((word = curWord.substring(0, wordlen - 3) + 'e'))
+							//&& posMMap.get(curWord.substring(0, wordlen - 3) + 'e').get(0).matches("verb|vbs")
+							){
+				return word;
+			}
+		}
+		return null;
+	}
+	
+	/**
+	 * Need to build up a map of words and their single representative in the 
+	 * term-document matrix, using a Multimap that contains words and all their
+	 * synonyms, created in WordForms.
+	 * The representative is the first word in the synonym set that was encountered.
+	 * Synonyms apply to singleton words (not n grams) only.
+	 * Common method so synonyms only occupy one entry in the term-document matrix.
+	 * This is used in both gathering word frequency data, forming the term document matrix,
+	 * and searching.
+	 * @param word
+	 * @return the representative of the synonym words. null if no synonym rep found.
+	 */
+	public static String findSynonymRepInWordsDict(String word){
+		return synonymRepMap.get(word);
+	}
+	
+	/**
+	 * Retrieves synonyms map.
+	 */
+	public static ImmutableMap<String, String> getSynonymsMap(){
+		return synonymRepMap;
 	}
 	
 	/**

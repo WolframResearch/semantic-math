@@ -115,7 +115,7 @@ public class RelationalSearch implements Searcher{
 		
 		//skip relation search if no nontrivial relation found, i.e. no bit set.
 		if(null == queryRelationVec || queryRelationVec.bitCount() == 0){
-			return null;
+			return nearestThmIndexList;
 		}
 		
 		//keys are distances to query relationVector, values are indices in nearestThmIndexList.

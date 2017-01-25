@@ -272,6 +272,9 @@ public class RelationVec implements Serializable{
 					//System.out.println("RelationVec.java - trying to add word " + word);
 					Integer residue = keywordDict.get(word);
 					if(null == residue){
+						residue = keywordDict.get(CollectThm.ThmWordsMaps.normalizeWordForm(word));
+					}
+					if(null == residue){						
 						continue;
 					}
 					System.out.println("RelationVec - adding word " + word);
@@ -293,6 +296,9 @@ public class RelationVec implements Serializable{
 		
 		//repeat for the whole of termStr:
 		Integer residue = keywordDict.get(termStr);
+		if(null == residue){
+			residue = keywordDict.get(CollectThm.ThmWordsMaps.normalizeWordForm(termStr));
+		}
 		if(null != residue){
 			if(DEBUG){
 				System.out.println("RelationVec - adding word " + termStr);

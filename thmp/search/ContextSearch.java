@@ -30,7 +30,7 @@ import thmp.utils.WordForms;
  * @author yihed
  *
  */
-public class ContextSearch {
+public class ContextSearch implements Searcher{
 
 	//bare thm list, without latex \label's or \index's, or refs, etc
 	//private static final List<String> bareThmList = CollectThm.ThmList.get_bareThmList();
@@ -108,6 +108,11 @@ public class ContextSearch {
 		}
 	}
 	
+	@Override
+	public List<Integer> search(String query, List<Integer> nearestThmIndexList){
+		return contextSearch(query, nearestThmIndexList);
+	}
+	
 	/**
 	 * @param query input query, in English 
 	 * @param nearestThmIndexList List of thm indices, resulting from other 
@@ -124,14 +129,14 @@ public class ContextSearch {
 		//could be 0 if, for instance, the words searched are all unknown to the word maps. 
 		if(0 == nearestThmIndexListSz){ 
 			System.out.println("contextSearch parameter nearestThmIndexList is empty!");
-			return null;		
+			return nearestThmIndexList;		
 		}
 		String queryContextVec = thmp.GenerateContextVector.createContextVector(query);
 		//if context vec was not generated in ThmP1.java because the input was unable to get parsed.
 		if(null == queryContextVec //|| "null".contentEquals(queryContextVec) //<--really!?
 				|| queryContextVec.length() == 0){			
 			logger.warn("No context vector was formed for query: " + query);
-			return null;
+			return nearestThmIndexList;
 		}
 		
 		//short-circuit if context vec not meaninful (insignificant entries created)
@@ -273,7 +278,12 @@ public class ContextSearch {
 		}
 		//System.out.println("keywordDict: " + TriggerMathThm2.keywordDict());
 		logger.info("Context search done!");
-		return nearestVecList;
+		
+		if(null != nearestVecList){
+			return nearestVecList;
+		}else{
+			return nearestThmIndexList;
+		}
 	}
 	
 	//Run stand-alone

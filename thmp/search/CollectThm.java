@@ -170,6 +170,11 @@ public class CollectThm {
 		//document-wide word frequency. Keys are words, values are counts in whole doc.
 		private static final ImmutableMap<String, Integer> docWordsFreqMap;
 		
+		/* Word and its synonymous representative in the term document matrix, if such 
+		 * a synonym has been added to the map already. If not, add the rep. This is for
+		 * words that are interchangeable, not similar not non-interchangeable words.
+		 * Create only one entry in term-document matrix for each synonym group. */
+		private static final ImmutableMap<String, String> synonymRepMap;
 		//file to read from. Thms already extracted, ready to be processed.
 		//private static final File thmFile = new File("src/thmp/data/thmFile5.txt");
 		//list of theorems, in order their keywords are added to thmWordsList
@@ -219,12 +224,12 @@ public class CollectThm {
 		//them more
 		private static final double THREE_GRAM_FREQ_REDUCTION_FACTOR = 4.0/5;
 		private static final double TWO_GRAM_FREQ_REDUCTION_FACTOR = 5.0/6;
-		//protected static final Map<String, Integer> freqMap = ;
 		
 		private static final Pattern SPECIAL_CHARACTER_PATTERN = 
 				Pattern.compile(".*[\\\\=$\\{\\}\\[\\]()^_+%&\\./,\"\\d\\/@><*|`].*");
 		
-		static{
+		static{	
+			synonymRepMap = WordForms.getSynonymsMap();			
 			//pass builder into a reader function. For each thm, builds immutable list of keywords, 
 			//put that list into the thm list. The integer indicates the word frequencies.
 			ImmutableList.Builder<ImmutableMap<String, Integer>> thmWordsListBuilder = ImmutableList.builder();
@@ -297,8 +302,7 @@ public class CollectThm {
 			CONTEXT_VEC_WORDS_MAP = createContextKeywordIndexDict(CONTEXT_VEC_WORDS_FREQ_MAP);
 			//System.out.println("------++++++++-------CONTEXT_VEC_WORDS_MAP.size " + CONTEXT_VEC_WORDS_MAP.size());
 			
-			if(Searcher.SearchMetaData.gatheringDataBool()){
-				
+			if(Searcher.SearchMetaData.gatheringDataBool()){				
 				buildScoreMapNoAnno(wordsScorePreMap, docWordsFreqPreMapNoAnno);				
 				Map<String, Integer> keyWordFreqTreeMap = reorderDocWordsFreqMap(docWordsFreqPreMapNoAnno);					
 				docWordsFreqMapNoAnno = ImmutableMap.copyOf(keyWordFreqTreeMap);
@@ -325,7 +329,7 @@ public class CollectThm {
 			contextVecWordsNextTimeMap = docWordsFreqMapNoAnno;
 			contextVecWordsIndexNextTimeMap = ImmutableMap.copyOf(createContextKeywordIndexDict(contextVecWordsNextTimeMap));
 			//deserialize words from allThmWordsList.dat, which were serialized from previous run.
-			//List<String> wordsList = extractWordsList();			
+			//List<String> wordsList = extractWordsList();	 <--superceded by wordsMap
 		}
 
 		/**
@@ -636,11 +640,15 @@ public class CollectThm {
 					if(word.length() < 3){ 
 						continue;
 					}
+
 					//get singular forms if plural, put singular form in map
 					//Should be more careful on some words that shouldn't be singular-ized!
 					word = WordForms.getSingularForm(word);	
-				
+
 					if(WordForms.makeFluffSet().contains(word)) continue;
+
+					//removes endings such as -ing, and uses synonym rep.
+					word = normalizeWordForm(word);
 					
 					//also don't skip if word is contained in lexicon
 					List<String> wordPosList = posMMap.get(word);					
@@ -684,6 +692,25 @@ public class CollectThm {
 				//System.out.println("++THM: " + thmWordsMap);
 			}
 		}
+		
+		public static String normalizeWordForm(String word){
+			//remove ending such as "ly".  <--remove this or not??
+			word = WordForms.removeWordEnding(word);
+			
+			//also remove -ing, 
+			String gerundForm = WordForms.getGerundForm(word);
+			if(null != gerundForm){
+				word = gerundForm;
+			}
+			
+			//if has synonym rep, use synonym rep instead 
+			String rep = synonymRepMap.get(word);
+			if(null != rep){
+				word = rep;
+			}
+			return word;
+		}
+		
 		
 		/**
 		 * Auxiliary method for building word frequency maps. Analogous to addWordToMaps(), 

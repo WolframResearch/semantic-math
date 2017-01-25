@@ -208,7 +208,7 @@ public class ThmSearch {
 		return nearestVecList;
 	}
 	
-private static String readInputAndSearch(){
+	private static String readInputAndSearch(){
 		
 		String query = "";
 		Scanner sc = new Scanner(System.in);

@@ -1060,12 +1060,7 @@ public class ThmP1 {
 				Pair pair = new Pair(curWord, curPos);
 				pairs.add(pair);
 			}//this seems too fine grained! 
-			else if (wordlen > 3 && curWord.substring(wordlen - 3, wordlen).equals("ing")
-					&& (posMMap.containsKey(curWord.substring(0, wordlen - 3))
-							&& posMMap.get(curWord.substring(0, wordlen - 3)).get(0).matches("verb|vbs")
-							// verbs ending in "e"
-							|| (posMMap.containsKey(curWord.substring(0, wordlen - 3) + 'e')
-									&& posMMap.get(curWord.substring(0, wordlen - 3) + 'e').get(0).matches("verb|vbs")))) {
+			else if (WordForms.isGerundForm(curWord)) {
 				
 				String curType = "gerund";
 				if (i < strAr.length - 1 && posMMap.containsKey(strAr[i + 1]) && posMMap.get(strAr[i + 1]).contains("pre")) {

@@ -318,7 +318,11 @@ public class ParseTreeToVec {
 			termRowIndex = contextKeywordDict.get(WordForms.getSingularForm(termStr));
 		}
 		//System.out.println("##### Setting context vec, termStr " + termStr + " termRowIndex " + termRowIndex);
-		if(termRowIndex != null){	
+		if(termRowIndex == null){
+		//removes endings such as -ing, and uses synonym rep.
+			termRowIndex = contextKeywordDict.get(CollectThm.ThmWordsMaps.normalizeWordForm(termStr));
+		}
+		if(termRowIndex != null){
 			//if hasn't been assigned to a valid index before, or only relational index
 			if(contextVec[termRowIndex] <= 0 || forceAdjust){
 				contextVec[termRowIndex] = structParentIndex;

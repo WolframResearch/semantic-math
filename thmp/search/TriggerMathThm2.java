@@ -248,6 +248,9 @@ public class TriggerMathThm2 {
 			double norm = 0;
 			for (String keyword : curMathObjCol) {
 				if(!keywordIndexDict.containsKey(keyword)){
+					keyword = CollectThm.ThmWordsMaps.normalizeWordForm(keyword);
+				}
+				if(!keywordIndexDict.containsKey(keyword)){
 					continue;
 				}
 				//Integer keyWordIndex = keywordDict.get(keyword);
@@ -468,6 +471,10 @@ public class TriggerMathThm2 {
 			term = WordForms.getSingularForm(term);
 			termScore = wordsScoreMap.get(term);
 		}
+		if(null == termScore){				
+			termScore = wordsScoreMap.get(CollectThm.ThmWordsMaps.normalizeWordForm(term));			
+		}
+		
 		//System.out.println("term: " + term + ". termScore: " + termScore );
 		
 		//triggerTermsVec[rowIndex] = termScore;

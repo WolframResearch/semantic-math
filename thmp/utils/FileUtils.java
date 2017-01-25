@@ -18,6 +18,8 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.servlet.ServletContext;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -50,7 +52,9 @@ public class FileUtils {
 	//atomically when multi-threaded.
 	private static final AtomicInteger DESERIAL_VERSION_NUM = new AtomicInteger(DESERIAL_VERSION_NUM_DEFAULT);
 	/*Should be set to true if currently generating data, */
-	private static boolean dataGenerationModeBool;
+	private static boolean dataGenerationModeBool;	
+	//servletContext used when running from Tomcat
+	private static ServletContext servletContext;
 	
 	/**
 	 * Write content to file at absolute path.
@@ -66,6 +70,14 @@ public class FileUtils {
 		}
 	}
 
+	public static void setServletContext(ServletContext servletContext_){
+		servletContext = servletContext_;
+	}
+	
+	public static ServletContext getServletContext(){
+		return servletContext;
+	}
+	
 	/**
 	 * Sets to dataGenerationMode. In this mode, don't need to wory about whether serialized data were
 	 * generated from the same source, since only need to ensure consistency of output.
@@ -149,7 +161,7 @@ public class FileUtils {
 	 * @return List of objects
 	 */	
 	public static Object deserializeListFromFile(String serialFileStr){
-	
+		
 		FileInputStream fileInputStream = null;
 		try{
 			fileInputStream = new FileInputStream(serialFileStr);

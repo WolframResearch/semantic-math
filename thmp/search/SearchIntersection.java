@@ -235,29 +235,6 @@ public class SearchIntersection {
 		int totalWordsScore = 0;
 		int numWordsAdded = 0;
 		
-		//pre-compute approximate total score
-	/*	for(int i = firstIndex; i < wordWrapperList.size(); i++){
-			WordWrapper curWrapper = wordWrapperList.get(i);
-			String word = curWrapper.word();
-			approxTotalWordsScore += wordsScoreMap.get(word);
-			
-			if(i < wordWrapperList.size()-1){				
-				String nextWord = wordWrapperList.get(i+1).word();
-				word = word + " " + nextWord;
-				if(twoGramsMap.containsKey(word)){
-					approxTotalWordsScore += wordsScoreMap.get(word);					
-				}
-				//check for 3 grams. Again only first word is annotated.
-				if(i < wordWrapperList.size()-2){
-					String thirdWord = wordWrapperList.get(i+2).word();
-					word = word + " " + thirdWord;
-					if(threeGramsMap.containsKey(word)){
-						approxTotalWordsScore += wordsScoreMap.get(word);
-					}
-				}
-			}
-		} */
-		
 		//multimap of words, and the list of thm indices that have been added
 		ListMultimap<String, Integer> wordThmIndexMMap = ArrayListMultimap.create();
 		
@@ -404,10 +381,12 @@ public class SearchIntersection {
 		
 		//re-order top entries based on context search, if enabled
 		if(contextSearchBool){
-			List<Integer> list = ContextSearch.contextSearch(input, highestThmList);
-			if(null != list){
-				highestThmList = list;
-			}
+			//List<Integer> list = ContextSearch.contextSearch(input, highestThmList);
+			//if(null != list){
+				Searcher searcher = new ContextSearch(); 
+				int tupleSz = 3;
+				highestThmList = SearchCombined.searchVecWithTuple(input, highestThmList, tupleSz, searcher);				
+			//}
 		}
 		
 		logger.info("Highest thm list obtained, intersection search done!");
@@ -627,6 +606,11 @@ public class SearchIntersection {
 				curScoreToAdd = wordScore;		
 			}			*/	
 		}
+		
+		//go through common path of processign!		
+		//removes endings such as -ing, and uses synonym rep.
+		word = CollectThm.ThmWordsMaps.normalizeWordForm(word);
+		
 		//adjust curScoreToAdd, boost 2/3-gram scores when applicable
 		curScoreToAdd = tokenType.adjustNGramScore(curScoreToAdd, singletonScoresAr, wordIndex);
 		
