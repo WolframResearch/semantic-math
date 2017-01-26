@@ -164,12 +164,16 @@ public class WordForms {
 	 * @return
 	 */
 	public static String removeWordEnding(String word){
-		if(getFreqWordsSet().contains(word)) return word;
+		Set<String> freqWordsSet = getFreqWordsSet();
+		
+		if(freqWordsSet.contains(word)) return word;
 		int wordlen = word.length();
-		Set<String> freqWordsSet  = getFreqWordsSet();
+		if(wordlen < 4) return word; //<--move this below if more endings are checked in future
+		
 		String tempWord;
 		if("ly".equals(word.substring(wordlen-2)) && freqWordsSet.contains((tempWord = word.substring(0, wordlen-2)))){
 			word = tempWord;
+			//System.out.println("**********************ly removed from " + word);
 		}
 		return word;
 	}

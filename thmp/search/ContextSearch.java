@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -21,6 +22,7 @@ import com.wolfram.jlink.KernelLink;
 import com.wolfram.jlink.MathLinkException;
 
 import thmp.ThmP1;
+import thmp.search.Searcher.SearcherState;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 
@@ -30,7 +32,7 @@ import thmp.utils.WordForms;
  * @author yihed
  *
  */
-public class ContextSearch implements Searcher{
+public class ContextSearch implements Searcher<String>{
 
 	//bare thm list, without latex \label's or \index's, or refs, etc
 	//private static final List<String> bareThmList = CollectThm.ThmList.get_bareThmList();
@@ -43,6 +45,8 @@ public class ContextSearch implements Searcher{
 	private static final Pattern BRACKETS_PATTERN = WordForms.BRACKETS_PATTERN();
 	private static final boolean DEBUG = false;
 	private static final Logger logger = LogManager.getLogger(SearchIntersection.class);
+	
+	private SearcherState<String> searcherState;
 	
 	static{
 		//get the deserialized vectors from CollectThm instead of from thm vec file!
@@ -89,28 +93,24 @@ public class ContextSearch implements Searcher{
 			e.printStackTrace();
 			throw new RuntimeException(e);
 		}finally{
-			if(contextVecFileBReader != null){
-				closeBuffer(contextVecFileBReader);
-			}
+			FileUtils.silentClose(contextVecFileBReader);
 		}
 		}
 	}
-	
-	/**
-	 * Close the bufferedReader.
-	 * @param bf
-	 */
-	private static void closeBuffer(BufferedReader bf){
-		try{
-			bf.close();
-		}catch(IOException e){
-			e.printStackTrace();
-		}
+
+	@Override
+	public void setSearcherState(SearcherState<String> searcherState_){
+		searcherState = searcherState_;
 	}
 	
 	@Override
-	public List<Integer> search(String query, List<Integer> nearestThmIndexList){
-		return contextSearch(query, nearestThmIndexList);
+	public SearcherState<String> getSearcherState(){
+		return this.searcherState;
+	}
+	
+	@Override
+	public List<Integer> search(String query, List<Integer> nearestThmIndexList){		
+		return contextSearch(query, nearestThmIndexList, this);		
 	}
 	
 	/**
@@ -121,7 +121,8 @@ public class ContextSearch implements Searcher{
 	 * pick out the nearest structual vectors using Nearest[].
 	 * @return Gives an ordered list of vectors based on context.
 	 */
-	public static List<Integer> contextSearch(String query, List<Integer> nearestThmIndexList){
+	public static List<Integer> contextSearch(String query, List<Integer> nearestThmIndexList, 
+			Searcher<String> searcher){
 		//short-circuit if query contains only 1 word		
 		
 		logger.info("Starting context search...");
@@ -131,7 +132,26 @@ public class ContextSearch implements Searcher{
 			System.out.println("contextSearch parameter nearestThmIndexList is empty!");
 			return nearestThmIndexList;		
 		}
-		String queryContextVec = thmp.GenerateContextVector.createContextVector(query);
+		
+		String queryContextVec;		
+		if(null == searcher){
+			queryContextVec = thmp.GenerateContextVector.createContextVector(query);
+		}else{
+			//optimization to store vec in searcherState, 
+			//to avoid repeatedly parsing the same query string.
+			SearcherState<String> searcherState;
+			
+			if(null == (searcherState = searcher.getSearcherState())){
+				queryContextVec = thmp.GenerateContextVector.createContextVector(query);
+				searcher.setSearcherState(new SearcherState<String>(queryContextVec));
+			}else{
+				queryContextVec = searcherState.getQueryVec();
+				if(null == queryContextVec){
+					//query string parsed already, but non nontrivial query vec produced.
+					return nearestThmIndexList;
+				}
+			}
+		}
 		//if context vec was not generated in ThmP1.java because the input was unable to get parsed.
 		if(null == queryContextVec //|| "null".contentEquals(queryContextVec) //<--really!?
 				|| queryContextVec.length() == 0){			
@@ -158,8 +178,7 @@ public class ContextSearch implements Searcher{
 				nearestThmsContextVecSB.append(allThmsContextVecStrList.get(thmIndex) + ",");
 			}else{
 				nearestThmsContextVecSB.append(allThmsContextVecStrList.get(thmIndex) + "}");
-			}
-			
+			}			
 		}
 		if(true){
 			System.out.println("nearestThmsContextVecSB " + nearestThmsContextVecSB);
@@ -315,7 +334,7 @@ public class ContextSearch implements Searcher{
 			//find best intersection of these two lists. nearestVecList is 1-based, but intersectionVecList is 0-based! 
 			//now both are 0-based.
 			
-			List<Integer> bestCommonVecs = contextSearch(thm, nearestVecList);
+			List<Integer> bestCommonVecs = contextSearch(thm, nearestVecList, null);
 			
 			/*for(int d : bestCommonVecs){
 				System.out.println(TriggerMathThm2.getThm(d));

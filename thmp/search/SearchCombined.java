@@ -2,6 +2,7 @@ package thmp.search;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -225,8 +226,6 @@ public class SearchCombined {
 			boolean searchRelationalBool){
 		
 		if(WordForms.getWhiteEmptySpacePattern().matcher(input).matches()) return null;
-		
-
 		input = input.toLowerCase();
 		
 		//String[] thmAr = WordForms.getWhiteNonEmptySpacePattern().split(input);
@@ -271,7 +270,7 @@ public class SearchCombined {
 		//of fixed size.
 		if(searchRelationalBool){
 			int tupleSz = 5;
-			Searcher searcher = new RelationalSearch();
+			Searcher<BigInteger> searcher = new RelationalSearch();
 			bestCommonVecs = searchVecWithTuple(input, bestCommonVecs, tupleSz, searcher);			
 		}
 		
@@ -310,26 +309,28 @@ public class SearchCombined {
 	 * Searches using search as specified by searcher, e.g. relational search, in chunks of size tupleSz from index 0
 	 * through the entire list. 
 	 * @param queryStr The English sentence to be searched.
-	 * @param bestCommonVecs
+	 * @param thmCandidateList List produced by previous methods, to be processed through by searcher.
 	 * @param tupleSz
+	 * @param searcher new search object to be used for searching.
 	 */
-	public static List<Integer> searchVecWithTuple(String queryStr, List<Integer> bestCommonVecs, int tupleSz,
-			Searcher searcher) {
+	public static <T> List<Integer> searchVecWithTuple(String queryStr, List<Integer> thmCandidateList, int tupleSz,
+			Searcher<T> searcher) {
 		
-		int commonVecsLen = bestCommonVecs.size();
+		int commonVecsLen = thmCandidateList.size();
 		int numTupleSzInCommonVecsLen = commonVecsLen/tupleSz;
 		List<Integer> reorderedList = new ArrayList<Integer>();
 		
 		//call relational search for one tuple at a time.
 		for(int i = 0; i <= numTupleSzInCommonVecsLen; i++){
 			
-			int startingIndex = numTupleSzInCommonVecsLen*tupleSz;
+			int startingIndex = i*tupleSz;
+			if(commonVecsLen == startingIndex) break;
 			int startingIndexPlusTupleSz = startingIndex + tupleSz; 
 			int endingIndex = startingIndexPlusTupleSz > commonVecsLen 
 					? commonVecsLen : startingIndexPlusTupleSz;
 			//using .subList() avoids creating numTupleSzInCommonVecsLen 
 			//number of new short lists as iterating through the list would.
-			List<Integer> sublist = bestCommonVecs.subList(startingIndex, endingIndex);
+			List<Integer> sublist = thmCandidateList.subList(startingIndex, endingIndex);
 			List<Integer> reorderedSublist = searcher.search(queryStr, sublist);
 			reorderedList.addAll(reorderedSublist);
 		}

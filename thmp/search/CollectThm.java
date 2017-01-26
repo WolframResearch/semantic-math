@@ -222,8 +222,8 @@ public class CollectThm {
 		private static final int NUM_FREQ_WORDS = 500;
 		//multiplication factors to deflate the frequencies of 2-grams and 3-grams to weigh
 		//them more
-		private static final double THREE_GRAM_FREQ_REDUCTION_FACTOR = 4.0/5;
-		private static final double TWO_GRAM_FREQ_REDUCTION_FACTOR = 5.0/6;
+		private static final double THREE_GRAM_FREQ_REDUCTION_FACTOR = 3.0/5;
+		private static final double TWO_GRAM_FREQ_REDUCTION_FACTOR = 2.0/3;
 		
 		private static final Pattern SPECIAL_CHARACTER_PATTERN = 
 				Pattern.compile(".*[\\\\=$\\{\\}\\[\\]()^_+%&\\./,\"\\d\\/@><*|`].*");
@@ -305,8 +305,7 @@ public class CollectThm {
 			if(Searcher.SearchMetaData.gatheringDataBool()){				
 				buildScoreMapNoAnno(wordsScorePreMap, docWordsFreqPreMapNoAnno);				
 				Map<String, Integer> keyWordFreqTreeMap = reorderDocWordsFreqMap(docWordsFreqPreMapNoAnno);					
-				docWordsFreqMapNoAnno = ImmutableMap.copyOf(keyWordFreqTreeMap);
-				
+				docWordsFreqMapNoAnno = ImmutableMap.copyOf(keyWordFreqTreeMap);		
 			}else{				
 				buildScoreMapNoAnno(wordsScorePreMap, CONTEXT_VEC_WORDS_FREQ_MAP);				
 				docWordsFreqMapNoAnno = CONTEXT_VEC_WORDS_FREQ_MAP;				
@@ -709,8 +708,7 @@ public class CollectThm {
 				word = rep;
 			}
 			return word;
-		}
-		
+		}		
 		
 		/**
 		 * Auxiliary method for building word frequency maps. Analogous to addWordToMaps(), 
@@ -794,6 +792,7 @@ public class CollectThm {
 		 * How are scores for 2 and 3 grams determined!?
 		 * Fills up wordsScoreMapBuilder
 		 * @param wordsScoreMapBuilder
+		 * @deprecated
 		 */
 		private static void buildScoreMap(ImmutableMap.Builder<String, Integer> wordsScoreMapBuilder){
 			

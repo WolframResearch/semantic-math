@@ -2,15 +2,38 @@ package thmp.search;
 
 import java.util.List;
 
+import thmp.search.Searcher.SearcherState;
+
 /**
  * Search interface to be implemented by various search methods.
  * Interface useful for dynamic dispatch.
  * 
  * @author yihed
  */
-public interface Searcher {
+public interface Searcher<S> {
 
 	List<Integer> search(String thm, List<Integer> list);
+	
+	void setSearcherState(SearcherState<S> searcherState_);
+	SearcherState<S> getSearcherState();
+	
+	/**
+	 * Searcher state for storing any already-computed vectors,
+	 * to avoid computing search vecs multiple times. 
+	 * T is the type of the vector, e.g. BigInteger for relational vecs,
+	 * and int[] for context vec.
+	 */
+	public static class SearcherState<T>{
+		T queryVector;
+		
+		public SearcherState(T vec){
+			queryVector = vec;
+		}
+		
+		public T getQueryVec(){
+			return queryVector;
+		}
+	}
 	
 	public static class SearchMetaData{
 		

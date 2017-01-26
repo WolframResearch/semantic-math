@@ -2,11 +2,13 @@ package thmp.search;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.regex.Matcher;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -138,7 +140,11 @@ public class SearchIntersection {
 	 */
 	public static List<String> getHighestThmStringList(String input, Set<String> searchWordsSet, 
 			boolean contextSearchBool){
-		return SearchCombined.thmListIndexToString(getHighestThms(input, searchWordsSet, contextSearchBool).intersectionVecList());
+		SearchState searchState = getHighestThms(input, searchWordsSet, contextSearchBool);
+		if(null == searchState) return Collections.emptyList();
+		List<Integer> highestThmsList = searchState.intersectionVecList();
+		if(null == highestThmsList) return Collections.emptyList();
+		return SearchCombined.thmListIndexToString(highestThmsList);
 	}
 	
 	/**
@@ -149,7 +155,9 @@ public class SearchIntersection {
 	 */
 	public static List<Integer> getHighestThmList(String input, Set<String> searchWordsSet, 
 			boolean contextSearchBool, int ... num){
-		return getHighestThms(input, searchWordsSet, contextSearchBool, num).intersectionVecList();
+		SearchState searchState = getHighestThms(input, searchWordsSet, contextSearchBool, num);
+		if(null == searchState) return Collections.emptyList();
+		return searchState.intersectionVecList();
 	}
 
 	//computes singleton scores for words in list
@@ -374,7 +382,7 @@ public class SearchIntersection {
 				counter--;			
 				if(DEBUG) {
 					System.out.println("thm Score " + entry.getKey() + " thmIndex "+ thmIndex + " thm " 
-				+ thmList.get(thmIndex));					
+							+ thmList.get(thmIndex));					
 				}
 			}
 		}
@@ -383,8 +391,8 @@ public class SearchIntersection {
 		if(contextSearchBool){
 			//List<Integer> list = ContextSearch.contextSearch(input, highestThmList);
 			//if(null != list){
-				Searcher searcher = new ContextSearch(); 
-				int tupleSz = 3;
+				Searcher<String> searcher = new ContextSearch(); 
+				int tupleSz = 8;
 				highestThmList = SearchCombined.searchVecWithTuple(input, highestThmList, tupleSz, searcher);				
 			//}
 		}
@@ -493,7 +501,7 @@ public class SearchIntersection {
 	 * @param thmSpanMap map of theorem indices and their spans
 	 */
 	private static void addWordSpanBonus(Map<Integer, Integer> thmScoreMap, TreeMultimap<Integer, Integer> scoreThmMMap,
-			SetMultimap<Integer, Integer> thmWordSpanMMap, Map<Integer, Integer> thmSpanMap, int N, double avgWordScore){
+			SetMultimap<Integer, Integer> thmWordSpanMMap, Map<Integer, Integer> thmSpanMap, int numHighest, double avgWordScore){
 		//add  according to score
 		//gather the sizes of the value maps for thmWordSpanMMap, and keep track of order based on scores using a TreeMultimap		
 		TreeMultimap<Integer, Integer> spanScoreThmMMap = TreeMultimap.create();
@@ -507,29 +515,30 @@ public class SearchIntersection {
 		//add bonus proportional to the avg word score (not span score)
 		NavigableMap<Integer, Collection<Integer>> r = spanScoreThmMMap.asMap().descendingMap();
 		
-		int counter = N;
+		int counter = numHighest;
 		//counts which span level is being iterated over currently
 		int spanCounter = 1;		
 		for(Entry<Integer, Collection<Integer>> entry : r.entrySet()){	
 			
-			for(int thmIndex : entry.getValue()){				
+			for(int thmIndex : entry.getValue()){		
 				if(counter == 0) break;
 				int prevScore = thmScoreMap.get(thmIndex);
-				//refine this! using the highest or average score (not span score) *******	
-				int newThmScore = (int)(prevScore + avgWordScore/(double)spanCounter);
+				//use average score; be more clever!
+				int bonusScore = (int)(avgWordScore/((double)spanCounter*2));
+				int newThmScore = prevScore + bonusScore;
 				scoreThmMMap.put(newThmScore, thmIndex);
 				thmScoreMap.put(thmIndex, newThmScore);
 				if(DEBUG){ 
 					String thm = thmList.get(thmIndex);
-					System.out.println("theorem whose score is upped. size "+ entry.getKey() 
-					+ " newThmScore: " + newThmScore+ " thm: " + thm);
+					System.out.println("Adding bonus " + bonusScore 
+							+". num words hit: "+ entry.getKey() 
+					+ ". newThmScore: " + newThmScore+ ". thm: " + thm);
 					//System.out.println("PREV SCORE " + prevScore + " NEW SCORE " + newThmScore + thm);
 				}
 				counter--;
 			}
 			spanCounter++;
-		}
-		
+		}		
 	}
 	
 	/**
@@ -691,8 +700,9 @@ public class SearchIntersection {
 			
 			boolean contextSearchBool = false;
 			String[] thmAr = thm.split("\\s+");
-			if(thmAr.length > 1 && thmAr[0].equals("context")){
+			if(thmAr.length > 2 && thmAr[0].equals("context")){
 				contextSearchBool = true;
+				thm = thm.substring(8);
 				//highestThms = ContextSearch.contextSearch(thm, highestThms);
 			}
 			

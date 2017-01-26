@@ -1059,7 +1059,7 @@ public class ThmP1 {
 
 				Pair pair = new Pair(curWord, curPos);
 				pairs.add(pair);
-			}//this seems too fine grained! 
+			}
 			else if (WordForms.isGerundForm(curWord)) {
 				
 				String curType = "gerund";
