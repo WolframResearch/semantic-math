@@ -198,6 +198,7 @@ public class CollectThm {
 		
 		private static final Map<String, Integer> twoGramsMap = NGramsMap.get_twoGramsMap();
 		private static final Map<String, Integer> threeGramsMap = NGramsMap.get_threeGramsMap();	
+		private static final List<String> skipGramWordsList;
 		//set that contains the first word of the two and three grams of twoGramsMap and threeGramsMap		
 		//so the n-grams have a chance of being called.
 		private static final Set<String> nGramFirstWordsSet = new HashSet<String>();
@@ -227,6 +228,8 @@ public class CollectThm {
 		
 		private static final Pattern SPECIAL_CHARACTER_PATTERN = 
 				Pattern.compile(".*[\\\\=$\\{\\}\\[\\]()^_+%&\\./,\"\\d\\/@><*|`].*");
+
+		private static final boolean GATHER_SKIP_GRAM_WORDS = false;
 		
 		static{	
 			synonymRepMap = WordForms.getSynonymsMap();			
@@ -251,7 +254,7 @@ public class CollectThm {
 			
 			nGramFirstWordsSet.addAll(NGramSearch.get_2GramFirstWordsSet());
 			nGramFirstWordsSet.addAll(ThreeGramSearch.get_3GramFirstWordsSet());
-			
+			skipGramWordsList = new ArrayList<String>();
 			//List<String> extractedThms = ThmList.get_thmList();
 			//the third true means to extract words from latex symbols, eg oplus->direct sum.
 			//last boolean is whether to replace macros, 
@@ -264,7 +267,9 @@ public class CollectThm {
 				//readThm(thmWordsListBuilder, docWordsFreqPreMap, wordThmsMMapBuilder, processedThmList);
 				//same as readThm, just buid maps without annotation
 				//These all contain the *same* set of words.
-				buildMapsNoAnno(thmWordsListBuilderNoAnno, docWordsFreqPreMapNoAnno, wordThmsMMapBuilderNoAnno, processedThmList);				
+				buildMapsNoAnno(thmWordsListBuilderNoAnno, docWordsFreqPreMapNoAnno, wordThmsMMapBuilderNoAnno, 
+						processedThmList, skipGramWordsList);
+				System.out.println("CollectThm - processedThmList: " + processedThmList);
 			} catch (IOException e) {
 				e.printStackTrace();
 				throw new IllegalStateException("Calls to readThm and building maps failed!\n", e);
@@ -329,6 +334,11 @@ public class CollectThm {
 			contextVecWordsIndexNextTimeMap = ImmutableMap.copyOf(createContextKeywordIndexDict(contextVecWordsNextTimeMap));
 			//deserialize words from allThmWordsList.dat, which were serialized from previous run.
 			//List<String> wordsList = extractWordsList();	 <--superceded by wordsMap
+			//write skipGramWordsList to file
+			if(GATHER_SKIP_GRAM_WORDS){
+				String skipGramWordsListFileStr = "src/thmp/data/skipGramWordsList.txt";
+				FileUtils.writeToFile(skipGramWordsList, skipGramWordsListFileStr);
+			}
 		}
 
 		/**
@@ -605,7 +615,8 @@ public class CollectThm {
 		 */
 		private static void buildMapsNoAnno(ImmutableList.Builder<ImmutableMap<String, Integer>> thmWordsFreqListBuilder,
 				Map<String, Integer> docWordsFreqPreMap,
-				ImmutableSetMultimap.Builder<String, Integer> wordThmsMMapBuilder, List<String> thmList)
+				ImmutableSetMultimap.Builder<String, Integer> wordThmsMMapBuilder, List<String> thmList,
+				List<String> skipGramWordList_)
 				throws IOException, FileNotFoundException{
 			
 			Map<String, Integer> twoGramsMap = NGramsMap.get_twoGramsMap();
@@ -625,7 +636,8 @@ public class CollectThm {
 			//processes the theorems, select the words
 			for(int i = 0; i < thmList.size(); i++){
 				String thm = thmList.get(i);
-				
+				//number of words to skip if an n gram has been added..
+				int numFutureWordsToSkip = 0;
 				//String[] thmAr = thm.toLowerCase().split("\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:");
 				String[] thmAr = thm.toLowerCase().split(WordForms.splitDelim());
 				//words and their frequencies.
@@ -633,13 +645,16 @@ public class CollectThm {
 				
 				for(int j = 0; j < thmAr.length; j++){
 					
+					String singletonWordAdded = null;
+					String twoGramAdded = null;
+					String threeGramAdded = null;					
 					String word = thmAr[j];	
 					//only keep words with lengths > 2
 					//System.out.println(word);
 					if(word.length() < 3){ 
 						continue;
 					}
-
+					
 					//get singular forms if plural, put singular form in map
 					//Should be more careful on some words that shouldn't be singular-ized!
 					word = WordForms.getSingularForm(word);	
@@ -661,7 +676,7 @@ public class CollectThm {
 					if(FreqWordsSet.freqWordsSet.contains(word) && !nGramFirstWordsSet.contains(word)
 							&& skipWordBasedOnPos) continue;					
 					
-					addWordToMaps(word, i, thmWordsFreqMap, //thmWordsFreqListBuilder, 
+					singletonWordAdded = addWordToMaps(word, i, thmWordsFreqMap, //thmWordsFreqListBuilder, 
 							docWordsFreqPreMap, wordThmsMMapBuilder);
 					//check the following word
 					if(j < thmAr.length-1){
@@ -670,7 +685,7 @@ public class CollectThm {
 						if(twoGramFreq != null){
 							int freq = (int)(twoGramFreq*TWO_GRAM_FREQ_REDUCTION_FACTOR);
 							twoGramFreq = freq == 0 ? 1 : freq;
-							addNGramToMaps(nextWordCombined, i, thmWordsFreqMap, //thmWordsFreqListBuilder, 
+							twoGramAdded = addNGramToMaps(nextWordCombined, i, thmWordsFreqMap, //thmWordsFreqListBuilder, 
 									docWordsFreqPreMap, wordThmsMMapBuilder, twoGramFreq);
 						}
 						//try to see if these three words form a valid 3-gram
@@ -681,12 +696,25 @@ public class CollectThm {
 								//reduce frequency so 3-grams weigh more 
 								int freq = (int)(threeGramFreq*THREE_GRAM_FREQ_REDUCTION_FACTOR);
 								threeGramFreq = freq == 0 ? 1 : freq;
-								addNGramToMaps(threeWordsCombined, i, thmWordsFreqMap, //thmWordsFreqListBuilder, 
+								threeGramAdded = addNGramToMaps(threeWordsCombined, i, thmWordsFreqMap, //thmWordsFreqListBuilder, 
 										docWordsFreqPreMap,	wordThmsMMapBuilder, threeGramFreq);
 							}
 						}
 					}
-				}
+					//gather list of relevant words used in this thm
+					if(numFutureWordsToSkip > 0){
+						numFutureWordsToSkip--;
+					}else if(null != threeGramAdded){
+						skipGramWordList_.add(threeGramAdded);
+						numFutureWordsToSkip = 2;
+					}else if(null != twoGramAdded){
+						skipGramWordList_.add(twoGramAdded);
+						numFutureWordsToSkip = 1;
+					}else if(null != singletonWordAdded){
+						skipGramWordList_.add(singletonWordAdded);
+					}
+					
+				}//done iterating through this thm				 
 				thmWordsFreqListBuilder.add(ImmutableMap.copyOf(thmWordsFreqMap));
 				//System.out.println("++THM: " + thmWordsMap);
 			}
@@ -721,15 +749,16 @@ public class CollectThm {
 		 * @param wordThmsMMapBuilder
 		 * @param wordTotalFreq is total frequency of word in corpus. This 
 		 * was found when collecting 2 and 3 grams
+		 * @return whether the n gram was added.
 		 */
-		private static void addNGramToMaps(String word, int curThmIndex, Map<String, Integer> thmWordsMap,
+		private static String addNGramToMaps(String word, int curThmIndex, Map<String, Integer> thmWordsMap,
 				//ImmutableList.Builder<ImmutableMap<String, Integer>> thmWordsListBuilder,
 				Map<String, Integer> docWordsFreqPreMap,
 				ImmutableSetMultimap.Builder<String, Integer> wordThmsMMapBuilder,
 				int wordTotalFreq){			
 			
 			if(SPECIAL_CHARACTER_PATTERN.matcher(word).find()){
-				return;
+				return null;
 			}
 			int wordFreq = thmWordsMap.containsKey(word) ? thmWordsMap.get(word) : 0;
 			//int wordLongFreq = thmWordsMap.containsKey(wordLong) ? thmWordsMap.get(wordLong) : 0;
@@ -743,6 +772,7 @@ public class CollectThm {
 			
 			wordThmsMMapBuilder.put(word, curThmIndex);
 			//wordThmsMMapBuilder.put(wordLong, i);
+			return word;
 		}
 		
 		/**
@@ -753,14 +783,15 @@ public class CollectThm {
 		 * @param thmWordsListBuilder
 		 * @param docWordsFreqPreMap
 		 * @param wordThmsMMapBuilder  Multimap of words and the indices of theorems they occur in.
+		 * @return whether word was added
 		 */
-		private static void addWordToMaps(String word, int curThmIndex, Map<String, Integer> thmWordsFreqMap,
+		private static String addWordToMaps(String word, int curThmIndex, Map<String, Integer> thmWordsFreqMap,
 				Map<String, Integer> docWordsFreqPreMap,
 				ImmutableSetMultimap.Builder<String, Integer> wordThmsMMapBuilder){			
 			
 			//screen the word for special characters, e.g. "/", don't put these words into map.
 			if(SPECIAL_CHARACTER_PATTERN.matcher(word).find()){
-				return;
+				return null;
 			}
 			
 			int wordFreq = thmWordsFreqMap.containsKey(word) ? thmWordsFreqMap.get(word) : 0;
@@ -773,7 +804,7 @@ public class CollectThm {
 			
 			//put both original and long form.
 			wordThmsMMapBuilder.put(word, curThmIndex);
-			
+			return word;
 		}
 		
 		public static ImmutableList<ImmutableMap<String, Integer>> get_thmWordsFreqList(){
@@ -1069,7 +1100,9 @@ public class CollectThm {
 		private static List<ParsedExpression> extractParsedExpressionList() {
 			//List<ParsedExpression> parsedExpressionsList;
 			//String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
-			String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
+			//String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
+			String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionListTemplate.dat";
+			
 			if(null != servletContext){
 				parsedExpressionListInputStream = servletContext.getResourceAsStream(parsedExpressionSerialFileStr);
 				return (List<ParsedExpression>)thmp.utils.FileUtils
@@ -1183,4 +1216,7 @@ public class CollectThm {
 		return ADDITIONAL_FLUFF_WORDS;
 	}
 	
+	public static void main(String[] args){
+		int a = ThmWordsMaps.CONTEXT_VEC_SIZE;
+	}
 }

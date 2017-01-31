@@ -69,6 +69,7 @@ public class TriggerMathThm2 {
 	private static final boolean DEBUG = false;
 	
 	static {
+		
 		ImmutableList<String> thmList = CollectThm.ThmList.allThmsWithHypList();
 		//docWordsFreqMapNoAnno should already been ordered based on frequency, more frequently-
 		//occuring words come earlier.

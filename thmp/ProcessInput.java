@@ -173,18 +173,6 @@ public class ProcessInput {
 		return processInput(thmInputList, macrosBufferedReader, replaceTex, false, false);
 	}
 	
-	/**
-	 * Processes list of inputs, for instance, strip tex etc.
-	 * @param thmInputList
-	 * @param replaceTex Whether to replace latex between $ $ as simply tex
-	 * @param texToWords Whether to convert tex symbols to words, eg \oplus->direct sum.
-	 * Places these words at beginning of the tex command, so to stay at same part with regard
-	 * to "hyp/stm"
-	 * @return
-	 */
-	/*public static List<String> processInput(List<String> thmInputList, boolean replaceTex, boolean texToWords){
-		return processInput(thmInputList, replaceTex, texToWords, false);
-	}*/
 	
 	/**
 	 * Processes list of inputs, for instance, strip tex etc.
@@ -547,24 +535,31 @@ public class ProcessInput {
 	
 	public static void main(String[] args) throws IOException{
 		
-		boolean writeToFile = false;
+		boolean writeToFile = true;
 		
 		if(writeToFile){
-			File inputFile = new File("src/thmp/data/thmFile5.txt");
-			Path noTex = Paths.get("src/thmp/data/noTex5.txt");
-	
-			List<String> noTexStringList = processInput(inputFile, false, false);
+			//File inputFile = new File("src/thmp/data/thmFile5.txt");
+			File inputFile = new File("src/thmp/data/fieldsThms.txt");
+			//Path noTex = Paths.get("src/thmp/data/noTex5.txt");
+			Path noTex = Paths.get("src/thmp/data/fieldsNoTex.txt");
+			
+			boolean replaceTex = true;
+			List<String> noTexStringList = processInput(inputFile, replaceTex, false);
 			
 			Files.write(noTex, noTexStringList, Charset.forName("UTF-8"));
 		}
 		//System.out.println(turnTexToWords("this is $\\oplus r$ ", true, false));
 		//System.out.println(turnTexToWords(" \\[\\oplus r\\] ", true, false));
-		BufferedReader macrosBReader = getMacrosBReader();
-		Map<String, String> macrosMap = ExtractMacros.extractDefs(macrosBReader);
-		List<String> list = new ArrayList<String>();
-		System.out.println(turnTexToWords(" \\[\\oplus r\\] $\\Spec R$", macrosMap, true, true, list));
-		System.out.println(turnTexToWords("$$ G = \\lim_{\\lambda \\in \\Lambda} G_\\lambda $$", macrosMap, true, true, list));
-		System.out.println(list);
+		
+		boolean debug = false;
+		if(debug){
+			BufferedReader macrosBReader = getMacrosBReader();
+			Map<String, String> macrosMap = ExtractMacros.extractDefs(macrosBReader);
+			List<String> list = new ArrayList<String>();
+			System.out.println(turnTexToWords(" \\[\\oplus r\\] $\\Spec R$", macrosMap, true, true, list));
+			System.out.println(turnTexToWords("$$ G = \\lim_{\\lambda \\in \\Lambda} G_\\lambda $$", macrosMap, true, true, list));
+			System.out.println(list);
+		}
 	}
 
 }
