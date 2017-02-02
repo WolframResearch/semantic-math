@@ -293,7 +293,7 @@ public class ThmSearch {
 				ml.discardAnswer();
 				//set up the matrix corresponding to docMx, to be SVD'd. 
 				//adjust mx entries based on correlation first	
-				StringBuilder mxSB = new StringBuilder("m =");
+				StringBuilder mxSB = new StringBuilder("m = Developer`ToPackedArray@");
 				mxSB.append(toNestedList(docMx)).append("//N;");
 				
 				int rowDimension = docMx.length;

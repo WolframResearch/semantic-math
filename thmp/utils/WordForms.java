@@ -42,6 +42,14 @@ public class WordForms {
 	private static final String synonymsFileStr = "src/thmp/data/synonyms.txt";
 	private static final ImmutableMap<String, String> synonymRepMap;
 	
+	//pattern for lines to skip any kind of parsing, even hypothesis-detection.
+		//skip examples and bibliographies  
+	private static final Pattern SKIP_PATTERN = Pattern.compile("\\\\begin\\{proof\\}.*|\\\\begin\\{exam.*|\\\\begin\\{thebib.*");
+	private static final Pattern END_SKIP_PATTERN = Pattern.compile("\\\\end\\{proof\\}.*|\\\\end\\{exam.*|\\\\end\\{thebib.*");
+		
+		//single lines to skip. Such as comments
+	private static final Pattern SINGLE_LINE_SKIP_PATTERN = Pattern.compile("^%.*|\\\\begin\\{bib.*");
+	
 	//small lists of fluff words, used in, e.g., n gram extraction.
 	//*don't* put "of" here, will interfere with 3 gram collection
 	private static final String FLUFF_WORDS_SMALL = "a|the|tex|of|and|on|let|lemma|for|to|that|with|is|be|are|there|by"
@@ -263,7 +271,7 @@ public class WordForms {
 	/**
 	 * Returns words that should be excluded from search.
 	 */
-	public static Set<String> makeFluffSet(){
+	public static Set<String> getFluffSet(){
 		return FLUFF_WORDS_SMALL_SET;
 	}
 	
@@ -426,6 +434,19 @@ public class WordForms {
 	 */
 	public static Pattern getWhiteNonEmptySpacePattern() {
 		return WHITE_NONEMPTY_SPACE_PATTERN;
+	}
+	
+
+	public static Pattern getSINGLE_LINE_SKIP_PATTERN(){
+		return SINGLE_LINE_SKIP_PATTERN;
+	}
+	
+	public static Pattern getSKIP_PATTERN(){
+		return SKIP_PATTERN;
+	}
+	
+	public static Pattern getEND_SKIP_PATTERN(){
+		return END_SKIP_PATTERN;
 	}
 	
 	/**

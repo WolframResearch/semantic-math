@@ -130,7 +130,7 @@ public class TriggerMathThm2 {
 		//mathObjMx = new int[keywordList.size()][mathObjMMap.keySet().size()];	
 		//mathObjMx = new int[keywordList.size()][thmWordsList.size()];
 		mathObjMx = new double[keywordList.size()][thmWordsMapList.size()];
-		System.out.println("mathObjMx dims: " + keywordList.size() + " " + thmWordsMapList.size());
+		System.out.println("TriggerMathThm2 - mathObjMx dims: " + keywordList.size() + " " + thmWordsMapList.size());
 		
 		//System.out.println("BEFORE mathObjMMap" +mathObjMMap);
 		//pass in thmList to ensure the right order (insertion order) of thms 

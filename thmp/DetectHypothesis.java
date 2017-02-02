@@ -86,11 +86,14 @@ public class DetectHypothesis {
 	
 	//pattern for lines to skip any kind of parsing, even hypothesis-detection.
 	//skip examples and bibliographies  
-	private static final Pattern SKIP_PATTERN = Pattern.compile("\\\\begin\\{proof\\}.*|\\\\begin\\{exam.*|\\\\begin\\{thebib.*");
-	private static final Pattern END_SKIP_PATTERN = Pattern.compile("\\\\end\\{proof\\}.*|\\\\end\\{exam.*|\\\\end\\{thebib.*");
+	//Pattern.compile("\\\\begin\\{proof\\}.*|\\\\begin\\{exam.*|\\\\begin\\{thebib.*");
+	private static final Pattern SKIP_PATTERN = WordForms.getSKIP_PATTERN();	
+	////Pattern.compile("\\\\end\\{proof\\}.*|\\\\end\\{exam.*|\\\\end\\{thebib.*")
+	private static final Pattern END_SKIP_PATTERN = WordForms.getEND_SKIP_PATTERN();			
 	
 	//single lines to skip. Such as comments
-	private static final Pattern SINGLE_LINE_SKIP_PATTERN = Pattern.compile("^%.*|\\\\begin\\{bib.*");
+	//Pattern.compile("^%.*|\\\\begin\\{bib.*")
+	private static final Pattern SINGLE_LINE_SKIP_PATTERN = WordForms.getSINGLE_LINE_SKIP_PATTERN();
 	
 	private static final Pattern END_DOCUMENT_PATTERN = Pattern.compile("\\\\end\\{document\\}.*");
 	private static final Pattern NEW_DOCUMENT_PATTERN = Pattern.compile(".*\\\\documentclass.*");

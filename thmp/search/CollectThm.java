@@ -11,6 +11,9 @@ import java.util.regex.Pattern;
 
 import javax.servlet.ServletContext;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.util.Set;
 import java.util.TreeMap;
 import java.io.BufferedReader;
@@ -60,6 +63,7 @@ public class CollectThm {
 			//"src/thmp/data/topology.txt"
 			});
 	
+	private static final Logger logger = LogManager.getLogger();
 	//latex macros source file name src/thmp/data/CommAlg5.txt
 	private static final String MACROS_SRC = "src/thmp/data/texMacros.txt";
 	//private static final List<String> rawFileStrList = Arrays.asList(new String[]{"src/thmp/data/functional_analysis_operator_algebras/distributions.txt"});
@@ -229,7 +233,7 @@ public class CollectThm {
 		private static final Pattern SPECIAL_CHARACTER_PATTERN = 
 				Pattern.compile(".*[\\\\=$\\{\\}\\[\\]()^_+%&\\./,\"\\d\\/@><*|`].*");
 
-		private static final boolean GATHER_SKIP_GRAM_WORDS = false;
+		private static final boolean GATHER_SKIP_GRAM_WORDS = true;
 		
 		static{	
 			synonymRepMap = WordForms.getSynonymsMap();			
@@ -269,7 +273,7 @@ public class CollectThm {
 				//These all contain the *same* set of words.
 				buildMapsNoAnno(thmWordsListBuilderNoAnno, docWordsFreqPreMapNoAnno, wordThmsMMapBuilderNoAnno, 
 						processedThmList, skipGramWordsList);
-				System.out.println("CollectThm - processedThmList: " + processedThmList);
+				//System.out.println("CollectThm - processedThmList: " + processedThmList);
 			} catch (IOException e) {
 				e.printStackTrace();
 				throw new IllegalStateException("Calls to readThm and building maps failed!\n", e);
@@ -603,6 +607,30 @@ public class CollectThm {
 		}
 		
 		/**
+		 * Used for building skip gram word list.
+		 * @param thmList
+		 * @param skipGramWordList_
+		 * @throws IOException
+		 * @throws FileNotFoundException
+		 */
+		public static void createSkipGramWordList(List<String> thmList,
+				List<String> skipGramWordList_){
+		
+			ImmutableList.Builder<ImmutableMap<String, Integer>> thmWordsFreqListBuilder 
+				= new ImmutableList.Builder<ImmutableMap<String, Integer>>();
+			Map<String, Integer> docWordsFreqPreMap = new HashMap<String, Integer>();
+			ImmutableSetMultimap.Builder<String, Integer> wordThmsMMapBuilder 
+				= new ImmutableSetMultimap.Builder<String, Integer>();
+			try{
+				buildMapsNoAnno(thmWordsFreqListBuilder, docWordsFreqPreMap, wordThmsMMapBuilder, thmList, skipGramWordList_);			
+			}catch(FileNotFoundException e){
+				logger.error(e.getStackTrace());
+			}catch(IOException e){
+				logger.error(e.getStackTrace());
+			}
+		}
+		
+		/**
 		 * Same as readThm, except without hyp/concl wrappers.
 		 * Maps contain the same set of words.
 		 * @param thmWordsFreqListBuilder 
@@ -659,7 +687,7 @@ public class CollectThm {
 					//Should be more careful on some words that shouldn't be singular-ized!
 					word = WordForms.getSingularForm(word);	
 
-					if(WordForms.makeFluffSet().contains(word)) continue;
+					if(WordForms.getFluffSet().contains(word)) continue;
 
 					//removes endings such as -ing, and uses synonym rep.
 					word = normalizeWordForm(word);
@@ -670,6 +698,10 @@ public class CollectThm {
 					if(!wordPosList.isEmpty()){
 						String wordPos = wordPosList.get(0);
 						skipWordBasedOnPos = !wordPos.equals("ent") && !wordPos.equals("adj"); 
+						if(GATHER_SKIP_GRAM_WORDS){
+							//skipWordBasedOnPos = skipWordBasedOnPos && !wordPos.equals("verb") && !wordPos.equals("vbs");
+							skipWordBasedOnPos = false;
+						}
 						//wordPos.equals("verb") <--should have custom verb list
 						//so don't keep irrelevant verbs such as "are", "take"
 					}
@@ -1101,7 +1133,7 @@ public class CollectThm {
 			//List<ParsedExpression> parsedExpressionsList;
 			//String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
 			//String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
-			String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionListTemplate.dat";
+			String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
 			
 			if(null != servletContext){
 				parsedExpressionListInputStream = servletContext.getResourceAsStream(parsedExpressionSerialFileStr);

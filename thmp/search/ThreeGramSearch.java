@@ -75,7 +75,7 @@ public class ThreeGramSearch {
 		//get thmList from CollectThm
 		List<String> thmList = ProcessInput.processInput(CollectThm.ThmList.get_thmList(), true);
 		
-		fluffWordsSet = WordForms.makeFluffSet();
+		fluffWordsSet = WordForms.getFluffSet();
 		threeGramCountsMap = new HashMap<String, Integer>();		
 		//build the threeGramCountsMap
 		get3GramCounts(thmList, threeGramCountsMap);		

@@ -51,7 +51,7 @@ public class NGramSearch {
 	private static final String[] NOT_TWO_GRAMS = new String[]{"field is", "more generally"};
 	
 	//should use this to detect fluff in first word.
-	private static final Set<String> fluffWordsSet = WordForms.makeFluffSet();
+	private static final Set<String> fluffWordsSet = WordForms.getFluffSet();
 	
 	/**
 	 * Set the BufferedReader for scraped two grams.
