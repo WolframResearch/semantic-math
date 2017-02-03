@@ -1,0 +1,3 @@
+#!/bin/bash
+
+scp /Users/yihed/Documents/workspaceEE/ThmpServlet/WebContent/WEB-INF/lib/thmUtils.jar yihed@byblis.wolfram.com:~/thm

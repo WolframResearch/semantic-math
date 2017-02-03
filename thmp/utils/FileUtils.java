@@ -63,7 +63,7 @@ public class FileUtils {
 	 */
 	public static void writeToFile(List<? extends CharSequence> contentList, Path fileToPath) {
 		try {
-			Files.write(fileToPath, contentList, Charset.forName("UTF-8"));
+			Files.write(fileToPath, contentList, Charset.forName("UTF-16"));
 		} catch (IOException e) {
 			e.printStackTrace();
 			logger.error(e.getStackTrace());

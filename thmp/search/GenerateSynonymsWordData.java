@@ -2,9 +2,12 @@ package thmp.search;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +31,11 @@ import thmp.utils.WordForms;
  */
 public class GenerateSynonymsWordData {
 
-	private static final Pattern SINGLE_LINE_SKIP_PATTERN = Pattern.compile("^\\\\.*|^%.*|.*FFFFFFFF.*");
+	static{
+		CollectThm.ThmList.set_gather_skip_gram_words_toTrue();
+	}
+	private static final Pattern SINGLE_LINE_SKIP_PATTERN = Pattern.compile("^\\\\.*|^%.*|.*FFFFFF.*|.*fffff.*");
+	
 	public static void main(String[] args) {
 		/*
 		 * private static void
@@ -45,12 +52,19 @@ public class GenerateSynonymsWordData {
 		BufferedReader srcFileReader = null;
 		
 		try {
-			srcFileReader = new BufferedReader(new FileReader(new File(sourceFileStr)));
+			//new BufferedReader(
+			  //         new InputStreamReader(new FileInputStream(fileDir), "UTF-8"));
+			//srcFileReader = new BufferedReader(new InputStreamReader(new FileInputStream(sourceFileStr), "UTF-16"));
+			srcFileReader = new BufferedReader(new InputStreamReader(new FileInputStream(sourceFileStr)));
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 			FileUtils.silentClose(srcFileReader);
 			return;
-		}
+		}/*catch(UnsupportedEncodingException e){
+			e.printStackTrace();
+			FileUtils.silentClose(srcFileReader);
+			return;
+		}*/
 		try {
 			String line;
 			while ((line = srcFileReader.readLine()) != null) {
@@ -61,6 +75,9 @@ public class GenerateSynonymsWordData {
 				if (SINGLE_LINE_SKIP_PATTERN.matcher(line).matches()) {
 					continue;
 				}
+				//byte lineAr[] = line.getBytes("UTF-8"); 
+				//line = new String(lineAr, "UTF-8"); 
+				
 				// should skip certain sections, e.g. \begin{proof}
 				Matcher skipMatcher = WordForms.getSKIP_PATTERN().matcher(line);
 				if (skipMatcher.find()) {
@@ -72,7 +89,7 @@ public class GenerateSynonymsWordData {
 					continue;
 				}
 				
-				line = ThmInput.removeTexMarkup(line, null, null);				
+				line = ThmInput.removeTexMarkup(line, null, null);	
 				sentenceList.add(line);
 			}
 		} catch (IOException e) {
@@ -84,8 +101,9 @@ public class GenerateSynonymsWordData {
 		
 		List<String> skipGramWordList = new ArrayList<String>();
 		CollectThm.ThmWordsMaps.createSkipGramWordList(sentenceList, skipGramWordList);
-		//FileUtils.writeToFile(skipGramWordList, skipGramWordsListStr);
-		FileUtils.appendObjToFile(skipGramWordList, skipGramWordsListStr);
+		System.out.println("Writing skipGramWordList to file!");
+		FileUtils.writeToFile(skipGramWordList, skipGramWordsListStr);
+		//FileUtils.appendObjToFile(skipGramWordList, skipGramWordsListStr);
 	}
 
 }

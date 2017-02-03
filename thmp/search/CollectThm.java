@@ -231,9 +231,10 @@ public class CollectThm {
 		private static final double TWO_GRAM_FREQ_REDUCTION_FACTOR = 2.0/3;
 		
 		private static final Pattern SPECIAL_CHARACTER_PATTERN = 
-				Pattern.compile(".*[\\\\=$\\{\\}\\[\\]()^_+%&\\./,\"\\d\\/@><*|`].*");
-
-		private static final boolean GATHER_SKIP_GRAM_WORDS = true;
+				Pattern.compile(".*[\\\\=$\\{\\}\\[\\]()^_+%&\\./,\"\\d\\/@><*|`�].*");
+				
+		private static final boolean GATHER_SKIP_GRAM_WORDS = ThmList.gather_skip_gram_words();
+		//private static final boolean GATHER_SKIP_GRAM_WORDS = true;
 		
 		static{	
 			synonymRepMap = WordForms.getSynonymsMap();			
@@ -615,7 +616,7 @@ public class CollectThm {
 		 */
 		public static void createSkipGramWordList(List<String> thmList,
 				List<String> skipGramWordList_){
-		
+			System.out.print("Inside createSkipGramWordList!");
 			ImmutableList.Builder<ImmutableMap<String, Integer>> thmWordsFreqListBuilder 
 				= new ImmutableList.Builder<ImmutableMap<String, Integer>>();
 			Map<String, Integer> docWordsFreqPreMap = new HashMap<String, Integer>();
@@ -660,9 +661,11 @@ public class CollectThm {
 			
 			//System.out.println("nGramFirstWordsSet contains between? " + nGramFirstWordsSet.contains("between"));
 			//System.out.println("FreqWordsSet contains between? " + FreqWordsSet.freqWordsSet.contains("between"));
-			
+			int counter=0;
+			System.out.println("collectThm - thmList.size " + thmList.size());
 			//processes the theorems, select the words
 			for(int i = 0; i < thmList.size(); i++){
+				System.out.println(counter++);
 				String thm = thmList.get(i);
 				//number of words to skip if an n gram has been added..
 				int numFutureWordsToSkip = 0;
@@ -679,7 +682,8 @@ public class CollectThm {
 					String word = thmAr[j];	
 					//only keep words with lengths > 2
 					//System.out.println(word);
-					if(word.length() < 3){ 
+					int lengthCap = GATHER_SKIP_GRAM_WORDS ? 2 : 3;
+					if(word.length() < lengthCap){
 						continue;
 					}
 					
@@ -687,23 +691,24 @@ public class CollectThm {
 					//Should be more careful on some words that shouldn't be singular-ized!
 					word = WordForms.getSingularForm(word);	
 
-					if(WordForms.getFluffSet().contains(word)) continue;
+					//also don't skip if word is contained in lexicon										
+					boolean skipWordBasedOnPos = true;
+					if(GATHER_SKIP_GRAM_WORDS){
+						skipWordBasedOnPos = false;
+					}else{ 
+						if(WordForms.getFluffSet().contains(word)) continue;
 
-					//removes endings such as -ing, and uses synonym rep.
-					word = normalizeWordForm(word);
-					
-					//also don't skip if word is contained in lexicon
-					List<String> wordPosList = posMMap.get(word);					
-					boolean skipWordBasedOnPos = true;					
-					if(!wordPosList.isEmpty()){
-						String wordPos = wordPosList.get(0);
-						skipWordBasedOnPos = !wordPos.equals("ent") && !wordPos.equals("adj"); 
-						if(GATHER_SKIP_GRAM_WORDS){
-							//skipWordBasedOnPos = skipWordBasedOnPos && !wordPos.equals("verb") && !wordPos.equals("vbs");
-							skipWordBasedOnPos = false;
+						//removes endings such as -ing, and uses synonym rep.
+						word = normalizeWordForm(word);
+						
+						List<String> wordPosList = posMMap.get(word);
+						if(!wordPosList.isEmpty()){
+							String wordPos = wordPosList.get(0);
+							skipWordBasedOnPos = !wordPos.equals("ent") && !wordPos.equals("adj"); 
+							
+							//wordPos.equals("verb") <--should have custom verb list
+							//so don't keep irrelevant verbs such as "are", "take"
 						}
-						//wordPos.equals("verb") <--should have custom verb list
-						//so don't keep irrelevant verbs such as "are", "take"
 					}
 					if(FreqWordsSet.freqWordsSet.contains(word) && !nGramFirstWordsSet.contains(word)
 							&& skipWordBasedOnPos) continue;					
@@ -1012,6 +1017,7 @@ public class CollectThm {
 	/**
 	 * Static nested classes that accomodates lazy initialization (so to avoid circular 
 	 * dependency), but also gives benefit of final (cause singleton), immutable (make it so).
+	 * This class is initialized BEFORE the static subclass ThmWordsMaps
 	 */
 	public static class ThmList{
 		
@@ -1034,6 +1040,8 @@ public class CollectThm {
 		private static final boolean TEX_TO_WORDS = true;
 		//whether to expand macros to their definitions
 		private static final boolean REPLACE_MACROS = true;
+		//variable used by CollectThm.ThmWordsMaps
+		private static boolean gather_skip_gram_words;
 		
 		static{	
 			//instead of getting thmList from ThmList, need to get it from serialized data.
@@ -1124,6 +1132,14 @@ public class CollectThm {
 			macroReplacedThmList = ImmutableList.copyOf(macroReplacedThmsList);
 		}
 
+		public static void set_gather_skip_gram_words_toTrue(){
+			gather_skip_gram_words = true;
+		}
+		
+		public static boolean gather_skip_gram_words(){
+			return gather_skip_gram_words;
+		}
+		
 		/**
 		 * Extracts parsedExressionList from serialized data.
 		 * @return
@@ -1133,7 +1149,7 @@ public class CollectThm {
 			//List<ParsedExpression> parsedExpressionsList;
 			//String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
 			//String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
-			String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
+			String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionListTemplate.dat";
 			
 			if(null != servletContext){
 				parsedExpressionListInputStream = servletContext.getResourceAsStream(parsedExpressionSerialFileStr);
