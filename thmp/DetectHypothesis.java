@@ -243,17 +243,33 @@ public class DetectHypothesis {
 
 		ParseStateBuilder parseStateBuilder = new ParseStateBuilder();		
 		ParseState parseState = parseStateBuilder.build();
-		
-		BufferedReader inputBF = null;
-		try{
-			//inputBF = new BufferedReader(new FileReader("src/thmp/data/CommAlg5.txt"));
-			//inputBF = new BufferedReader(new FileReader("src/thmp/data/fieldsRawTex.txt"));
-			//inputBF = new BufferedReader(new FileReader("src/thmp/data/samplePaper1.txt"));
-			inputBF = new BufferedReader(new FileReader("src/thmp/data/Total.txt"));
-			//inputBF = new BufferedReader(new FileReader("src/thmp/data/fieldsThms2.txt"));
-		}catch(FileNotFoundException e){
-			e.printStackTrace();
-			throw new IllegalStateException("Source file not found!");
+
+		BufferedReader inputBF = null;		
+		//try to read file path from command line argument first
+		//path should be absolute
+		int argsLen = args.length;
+		boolean inputBFCreatedBool = false;
+		//String srcStr = null;
+		if(argsLen > 0){
+			String srcStr = args[0];
+			try{
+				inputBF = new BufferedReader(new FileReader(srcStr));
+				inputBFCreatedBool = true;
+			}catch(FileNotFoundException e){
+				inputBFCreatedBool = false;
+			}
+		}
+		if(!inputBFCreatedBool){
+			try{
+				//inputBF = new BufferedReader(new FileReader("src/thmp/data/CommAlg5.txt"));
+				//inputBF = new BufferedReader(new FileReader("src/thmp/data/fieldsRawTex.txt"));
+				//inputBF = new BufferedReader(new FileReader("src/thmp/data/samplePaper1.txt"));
+				inputBF = new BufferedReader(new FileReader("src/thmp/data/Total.txt"));
+				//inputBF = new BufferedReader(new FileReader("src/thmp/data/fieldsThms2.txt"));
+			}catch(FileNotFoundException e){
+				e.printStackTrace();
+				throw new IllegalStateException("Source file not found!");
+			}
 		}
 		
 		List<DefinitionListWithThm> defThmList = new ArrayList<DefinitionListWithThm>();

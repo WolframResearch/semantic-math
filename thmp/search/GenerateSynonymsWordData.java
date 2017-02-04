@@ -34,7 +34,7 @@ public class GenerateSynonymsWordData {
 	static{
 		CollectThm.ThmList.set_gather_skip_gram_words_toTrue();
 	}
-	private static final Pattern SINGLE_LINE_SKIP_PATTERN = Pattern.compile("^\\\\.*|^%.*|.*FFFFFF.*|.*fffff.*");
+	private static final Pattern SINGLE_LINE_SKIP_PATTERN = Pattern.compile("^\\\\.*|^%.*|.*FFFFFF.*|.*fffff.*|\\/.*");
 	
 	public static void main(String[] args) {
 		/*
@@ -45,10 +45,11 @@ public class GenerateSynonymsWordData {
 		 * List<String> thmList, List<String> skipGramWordList_)
 		 */
 		// create list of strings, or just one string
-		String skipGramWordsListStr = "src/thmp/data/skipGramWordsList.txt";
+		String skipGramWordsListStr = "src/thmp/data/skipGramWordsList2.txt";
 		List<String> sentenceList = new ArrayList<String>();
 		
-		String sourceFileStr = "src/thmp/data/Total.txt";
+		//String sourceFileStr = "src/thmp/data/Total.txt";
+		String sourceFileStr = "/Users/yihed/Documents/arxivSource/Total.txt";
 		BufferedReader srcFileReader = null;
 		
 		try {

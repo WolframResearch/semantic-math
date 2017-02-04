@@ -48,7 +48,7 @@ public class WordForms {
 	private static final Pattern END_SKIP_PATTERN = Pattern.compile("\\\\end\\{proof\\}.*|\\\\end\\{exam.*|\\\\end\\{thebib.*");
 		
 		//single lines to skip. Such as comments
-	private static final Pattern SINGLE_LINE_SKIP_PATTERN = Pattern.compile("^%.*|\\\\begin\\{bib.*");
+	private static final Pattern SINGLE_LINE_SKIP_PATTERN = Pattern.compile("^%.*|\\\\begin\\{bib.*|.*FFFFFF.*|.*fffff.*|\\/.*");
 	
 	//small lists of fluff words, used in, e.g., n gram extraction.
 	//*don't* put "of" here, will interfere with 3 gram collection
@@ -66,6 +66,7 @@ public class WordForms {
 	//which is O(mn) time.
 	private static final Pattern HYP_PATTERN = Pattern.compile(".*assume.*|.*denote.*|.*define.*|.*let.*|.*is said.*|.*suppose.*"
 			+ "|.*where.*|.*is called.*|.*if.*|.*If.*") ;
+	private static final Pattern SPLIT_DELIM_PATTERN = Pattern.compile(SPLIT_DELIM);
 	
 	static{		
 		FLUFF_WORDS_SMALL_SET = new HashSet<String>();
@@ -138,13 +139,14 @@ public class WordForms {
 
 	/**
 	 * Returns the most likely singular form of the word, or
-	 * original word if it doesn't end in s, es, or ies
+	 * original word if it doesn't end in s, es, or ies.
+	 * Minimal length of word is 3 chars.
 	 * @param word
 	 * @return
 	 */
 	public static String getSingularForm(String word){
 		//if word in dictionary, should not be processed. Eg "continuous"
-		if(getFreqWordsSet().contains(word)) return word;
+		if(getFreqWordsSet().contains(word) || word.length() < 4) return word;
 		
 		String[] singFormsAr = getSingularForms(word);
 		//singFormsAr successively replaces words ending in "s", "es", "ies"
@@ -281,6 +283,14 @@ public class WordForms {
 	 */
 	public static String splitDelim(){
 		return SPLIT_DELIM;
+	}
+	
+	/**
+	 * Returns split delimiters.
+	 * @return
+	 */
+	public static Pattern splitDelimPattern(){
+		return SPLIT_DELIM_PATTERN;
 	}
 	
 	/**

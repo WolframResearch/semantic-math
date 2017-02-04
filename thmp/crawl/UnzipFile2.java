@@ -86,6 +86,7 @@ public class UnzipFile2 {
 			
 			for (String fileName : fileNames) {
 				// if not .gz file or a math file
+				//should include statistics as well, <--which names?
 				if (!fileName.matches("math[^.]*\\.gz$")) {
 					//System.out.println("Not a .gz or math file!");
 					continue;
@@ -94,6 +95,7 @@ public class UnzipFile2 {
 				String src = srcBasePath + fileName;
 				//name the output file to be the same, but with .txt extension.
 				String dest = destBasePath + fileName.replaceAll("([^\\.]*).gz$", "$1.txt");
+				//only read from .tex files
 				extractedFileNames.add(dest);
 
 				gzipInputStream = new GZIPInputStream(new FileInputStream(src));
@@ -155,8 +157,9 @@ public class UnzipFile2 {
 		// list of files we just extracted. These should be .txt files.
 		List<String> extractedFiles = unzipGz(srcBasePath, destBasePath, fileNames);
 		
-		boolean f = false;
-		if(f){
+		//commenting out for now, to not extract thms
+		boolean extractThmsBool = false;
+		if(extractThmsBool){
 			List<String> totalTextList = new ArrayList<String>();
 			/*FileWriter fw = new FileWriter("outfilename", true);
 		    BufferedWriter bw = new BufferedWriter(fw);
@@ -183,7 +186,7 @@ public class UnzipFile2 {
 				fileBufferedReader.close();
 			}
 			
-			Path totalTxtPath = Paths.get(destBasePath + "total.txt");
+			Path totalTxtPath = Paths.get(destBasePath + "Total.txt");
 			//less efficient than PrintWriter's!
 			Files.write(totalTxtPath, totalTextList, Charset.forName("UTF-8"));
 		}

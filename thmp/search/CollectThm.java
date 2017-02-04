@@ -661,16 +661,16 @@ public class CollectThm {
 			
 			//System.out.println("nGramFirstWordsSet contains between? " + nGramFirstWordsSet.contains("between"));
 			//System.out.println("FreqWordsSet contains between? " + FreqWordsSet.freqWordsSet.contains("between"));
-			int counter=0;
-			System.out.println("collectThm - thmList.size " + thmList.size());
+			//int counter=0;
+			//System.out.println("collectThm - thmList.size " + thmList.size());
 			//processes the theorems, select the words
 			for(int i = 0; i < thmList.size(); i++){
-				System.out.println(counter++);
+				//System.out.println(counter++);
 				String thm = thmList.get(i);
 				//number of words to skip if an n gram has been added..
 				int numFutureWordsToSkip = 0;
 				//String[] thmAr = thm.toLowerCase().split("\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:");
-				String[] thmAr = thm.toLowerCase().split(WordForms.splitDelim());
+				String[] thmAr = WordForms.splitDelimPattern().split(thm.toLowerCase());
 				//words and their frequencies.
 				Map<String, Integer> thmWordsFreqMap = new HashMap<String, Integer>();				
 				
@@ -682,15 +682,16 @@ public class CollectThm {
 					String word = thmAr[j];	
 					//only keep words with lengths > 2
 					//System.out.println(word);
-					int lengthCap = GATHER_SKIP_GRAM_WORDS ? 2 : 3;
+					int lengthCap = GATHER_SKIP_GRAM_WORDS ? 3 : 3;
+					//word length could change, so no assignment to variable.
 					if(word.length() < lengthCap){
 						continue;
 					}
 					
 					//get singular forms if plural, put singular form in map
-					//Should be more careful on some words that shouldn't be singular-ized!
+					//Should be more careful on some words that shouldn't be singular-ized!					
 					word = WordForms.getSingularForm(word);	
-
+					
 					//also don't skip if word is contained in lexicon										
 					boolean skipWordBasedOnPos = true;
 					if(GATHER_SKIP_GRAM_WORDS){
