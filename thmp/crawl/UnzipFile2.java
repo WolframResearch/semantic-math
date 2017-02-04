@@ -14,7 +14,9 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
@@ -32,6 +34,10 @@ import thmp.ThmInput;
 public class UnzipFile2 {
 
 	private static final Pattern TXT_PATTERN = Pattern.compile("([^.]*)(\\.txt)");
+	//name of file containing .gz file data.
+	//lines such as "math-463636754.gz: gzip compressed data, was '....tar'"
+	private static final String gzFileInfoFileNameStr = "fileStats.txt";
+	private static final Pattern TEX_PATTERN = Pattern.compile(".*(?:tex|TeX).*");
 	
 	/**
 	 * Retrieves list of filenames in this directory. In this case .gz files to
@@ -42,7 +48,7 @@ public class UnzipFile2 {
 	 *            directory whose files are to be checked.
 	 */
 	private static List<String> getFileNames(String srcDir) {
-		//
+		
 		List<String> fileNames = new ArrayList<String>();
 		File dir = new File(srcDir);
 		if (!dir.isDirectory()) {
@@ -61,7 +67,150 @@ public class UnzipFile2 {
 		}
 		return fileNames;
 	}
+	
+	/**
+	 * Source directory contains only math .gz files at this point.
+	 * gunzip's the .gz files, and get only the names of .tex files.
+	 * Retrieves list of tex math filenames in this directory. 
+	 * 
+	 * @return list of names to TeX files, some *don't* contain .tex exension. 
+	 * file names only, not absolute paths.
+	 * @param source
+	 *            directory whose files are to be checked.
+	 */
+	private static List<String> getTexMathFileNames(String srcDirAbsolutePath) {
+		
+		List<String> fileNames = new ArrayList<String>();
+		File dir = new File(srcDirAbsolutePath);
+		if (!dir.isDirectory()) {
+			String msg = "Source directory" + srcDirAbsolutePath + " is not a directory!";
+			System.out.println(msg);
+			throw new IllegalStateException(msg);
+		}
+		//create Map of file names and their file stats from fileStats.txt.
+		//created by 'file some_file' in bash script
+		Map<String, String> texFileInfoMap = createTexFileInfoMap();
+		System.out.println("UnzipFile2.getTexMathFileNames - texFileInfoMap: " + texFileInfoMap);
+		
+		File[] files = dir.listFiles();		
+		for(File file : files){
+			//file name is just the name, not path
+			String fileName = file.getName();
+			System.out.println("UnzipFile2.getTexMathFileNames - src fileName: " + fileName);
+			if(texFileInfoMap.containsKey(fileName)){
+				fileNames.add(fileName);
+			}			
+		}
+		return fileNames;
+	}
+	
+	/**
+	 * 
+	 * @return
+	 */
+	private static Map<String, String> createTexFileInfoMap() {
+		
+		Map<String, String> fileInfoMap = new HashMap<String, String>();
+		BufferedReader fileInfoBF = null;
+		try{
+			fileInfoBF = new BufferedReader(new FileReader(gzFileInfoFileNameStr));
+		}catch(FileNotFoundException e){
+			throw new IllegalStateException(gzFileInfoFileNameStr + " file not found!");
+		}
+		String line;
+		try{
+			while((line = fileInfoBF.readLine()) != null){
+				//line could be ... LaTeX, or .tex etc
+				if(!TEX_PATTERN.matcher(line).matches()){
+					//no String "tex" detected.
+					continue;
+				}
+				//'file some_file' outputs e.g. "math ....gz: gzip compressed data..."
+				String[] lineAr = line.split(":");
+				if(lineAr.length < 2){
+					continue;
+				}				
+				String fileName = lineAr[0];
+				String fileInfo = lineAr[1];
+				fileInfoMap.put(fileName, fileInfo);
+			}
+		}catch(IOException e){
+			throw new IllegalStateException(e);
+		}finally{
+			if(null != fileInfoBF){
+				try{
+					fileInfoBF.close();
+				}catch(IOException e){
+					//silently close, without potentially clobbering prior exceptions
+					System.out.println("IOException while closing!");
+				}
+			}
+		}
+		return fileInfoMap;
+	}
 
+	/**
+	 * Extracts content out of tex files, based on file format info provided by
+	 * shell script.
+	 * @param srcBasePath Contains trailing slash '/'
+	 * @param destBasePath
+	 * @param fileNames List of names of all files to be examined, filenames are full path.
+	 * @return list of fileNames of extracted files.
+	 */
+	private static List<String> extractTexContent(String srcBasePath, String destBasePath, List<String> fileNames) {
+		if (fileNames.isEmpty()){
+			System.out.println("List of files is empty!");
+			return null;
+		}
+		List<String> extractedFileNames = new ArrayList<String>();
+		
+		// length of buffer read in, optimal size?
+		byte[] buf = new byte[1024];
+		try {
+			// fileNames is non-empty list.
+			GZIPInputStream gzipInputStream = null;
+			FileOutputStream gzipOutputStream = null;
+			//output stream for the output in all the .gz files.
+			//String totalOutputStr = destBasePath + "total.txt";
+			//FileOutputStream totalOutputStream = new FileOutputStream(totalOutputStr);
+			
+			for (String fileName : fileNames) {
+				// if not .gz file or a math file
+				//should include statistics as well, <--which names?
+				//if (!fileName.matches("math[^.]*\\.gz$")) {
+					//System.out.println("Not a .gz or math file!");
+					//continue;
+				//}
+				//System.out.print("Current file being unzipped: " + fileName + "\t");
+				String src = srcBasePath + fileName;
+				//name the output file to be the same, but with .txt extension.
+				String dest = destBasePath + fileName.replaceAll("([^\\.]*)\\..*$", "$1.txt");
+				
+				extractedFileNames.add(dest);
+
+				gzipInputStream = new GZIPInputStream(new FileInputStream(src));
+				gzipOutputStream = new FileOutputStream(dest);
+				
+				int l;
+				while ((l = gzipInputStream.read(buf)) > 0) {
+					// 0 is the offset, l is the length to read/write.
+					gzipOutputStream.write(buf, 0, l);
+					//totalOutputStream.write(buf, 0, l);
+				}
+				
+				gzipInputStream.close();
+				gzipOutputStream.close();
+			}
+			
+			//totalOutputStream.close();
+
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new IllegalStateException(Arrays.toString(e.getStackTrace()));
+		}
+		return extractedFileNames;
+	}
+	
 	/**
 	 * Unzips gz file. List of .gz fileNames, to be appended to the base path.
 	 * @return list of fileNames of extracted files.
@@ -71,6 +220,7 @@ public class UnzipFile2 {
 			System.out.println("List of files is empty!");
 			return null;
 		}
+		
 		//System.out.println("filenames inside unzipGz()" + fileNames); 
 		List<String> extractedFileNames = new ArrayList<String>();
 
@@ -122,8 +272,9 @@ public class UnzipFile2 {
 	}
 
 	/**
-	 * Reads in a directory, e.g. 0002, should be un-tar'ed directory containing many
-	 * .gzip (.gz) files. 
+	 * Reads in a directory, e.g. 0002, should be un-tar'ed directory containing
+	 * .gzip (.gz) files. args[0] is *relative* path to directory containing *only* 
+	 * math .gz files. Other files should have been deleted by PreprocessZipFileDir.java.
 	 * 
 	 * @param args Directory path
 	 * @throws FileNotFoundException
@@ -136,7 +287,7 @@ public class UnzipFile2 {
 			System.out.println("Supply a directory of gzip files!");
 			return;
 		}
-		
+		//create srcBasePath contains all the .gz files, but shell script already uncompressed those.
 		String srcBasePath = System.getProperty("user.dir") + "/" + args[0];
 		String destBasePath = srcBasePath + "Content/";
 		System.out.println("destBasePath: " + destBasePath);
@@ -150,12 +301,13 @@ public class UnzipFile2 {
 		 * Files.createDirectories(path);
 		 */
 		
-		// get all file names in the directory, eg directory "/0002/"
-		//or "1006_005/1006"
-		List<String> fileNames = getFileNames(srcBasePath);
+		// get all file names in the source directory		
+		//List<String> fileNames = getFileNames(srcBasePath);
+		List<String> texFileNames = getTexMathFileNames(srcBasePath);
 		//System.out.println(fileNames);
 		// list of files we just extracted. These should be .txt files.
-		List<String> extractedFiles = unzipGz(srcBasePath, destBasePath, fileNames);
+		//List<String> extractedFiles = unzipGz(srcBasePath, destBasePath, texFileNames);
+		List<String> extractedFiles = extractTexContent(srcBasePath, destBasePath, texFileNames);
 		
 		//commenting out for now, to not extract thms
 		boolean extractThmsBool = false;
