@@ -49,7 +49,7 @@ public class GenerateSynonymsWordData {
 		List<String> sentenceList = new ArrayList<String>();
 		
 		//String sourceFileStr = "src/thmp/data/Total.txt";
-		String sourceFileStr = "/Users/yihed/Documents/arxivSource/Total.txt";
+		String sourceFileStr = "/Users/yihed/Documents/arxivTexSrc/020Total.txt";
 		BufferedReader srcFileReader = null;
 		
 		try {

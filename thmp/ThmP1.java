@@ -903,16 +903,21 @@ public class ThmP1 {
 				addSingularWordToPairsList(mathIndexList, pairs, singular3);
 			}
 			// classify words with dashes; eg sesqui-linear
-			else if (curWord.split("-").length > 1) {
-				String[] splitWords = curWord.split("-");
-				
+			else if (curWord.split("-").length > 1 || !curWord.matches("(?:-.+|.+-)")) {
+				String[] splitWords = curWord.split("-");				
 				String lastTerm = splitWords[splitWords.length - 1];
-				System.out.println("singular" + singular + " curWord: " + curWord + " splitWords: " + Arrays.deepToString(splitWords));
+				//System.out.println("singular" + singular + " curWord: " + curWord + " splitWords: " + Arrays.deepToString(splitWords));
+				
 				String[] splitAr;
-				String lastTermS1 = singular == null ? "" : (splitAr = singular.split("-"))[splitAr.length - 1];
-				String lastTermS2 = singular2 == null ? "" : (splitAr = singular2.split("-"))[splitAr.length - 1];
-				String lastTermS3 = singular3 == null ? "" : (splitAr = singular3.split("-"))[splitAr.length - 1];
+				String lastTermS1 = singular == null ? "" : (splitAr = singular.split("-"))
+						[splitAr.length > 0 ? splitAr.length - 1 : 0];
 
+				//String lastTermS1 = singular == null ? "" : (splitAr = singular.split("-"))[splitAr.length - 1];
+				String lastTermS2 = singular2 == null ? "" : (splitAr = singular2.split("-"))
+						[splitAr.length > 0 ? splitAr.length - 1 : 0];
+				String lastTermS3 = singular3 == null ? "" : (splitAr = singular3.split("-"))
+						[splitAr.length > 0 ? splitAr.length - 1 : 0];
+				
 				String searchKey = "";
 				String s = "";
 				if (posMMap.containsKey(lastTerm)){
@@ -930,15 +935,9 @@ public class ThmP1 {
 				}
 				
 				if (!searchKey.equals("")) {
-
 					Pair pair = new Pair(curWord, posMMap.get(searchKey).get(0).split("_")[0]);
 					pairs.add(pair);
 				} // if lastTerm is entity, eg A-module
-				
-				/*String entName = isTokenEnt(lastTerm) ? lastTerm
-					: (isTokenEnt(lastTermS1) ? lastTermS1 
-					: (isTokenEnt(lastTermS2) ? lastTermS2
-					: (isTokenEnt(lastTermS3) ? lastTermS3 : null)));*/
 				
 				if (isTokenEnt(lastTerm) || isTokenEnt(lastTermS1)
 						|| isTokenEnt(lastTermS2) || isTokenEnt(lastTermS3)) {

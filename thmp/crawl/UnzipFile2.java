@@ -37,7 +37,9 @@ public class UnzipFile2 {
 	//name of file containing .gz file data.
 	//lines such as "math-463636754.gz: gzip compressed data, was '....tar'"
 	private static final String gzFileInfoFileNameStr = "fileStats.txt";
-	private static final Pattern TEX_PATTERN = Pattern.compile(".*(?:tex|TeX).*");
+	private static final Pattern TEX_PATTERN = Pattern.compile(".*(?:tex|TeX) .*");
+	//extensions I don't want, but still get classified as TeX (auxiliary) file by 'file' command
+	private static final Pattern NONTEX_EXTENSION_PATTERN = Pattern.compile(".+(?:\\.sty|\\.pstex_t|auxiliary).*");
 	
 	/**
 	 * Retrieves list of filenames in this directory. In this case .gz files to
@@ -96,8 +98,8 @@ public class UnzipFile2 {
 		for(File file : files){
 			//file name is just the name, not path
 			String fileName = file.getName();
-			System.out.println("UnzipFile2.getTexMathFileNames - src fileName: " + fileName);
 			if(texFileInfoMap.containsKey(fileName)){
+				//System.out.println("UnzipFile2.getTexMathFileNames - src TeX fileName: " + fileName);
 				fileNames.add(fileName);
 			}			
 		}
@@ -115,13 +117,16 @@ public class UnzipFile2 {
 		try{
 			fileInfoBF = new BufferedReader(new FileReader(gzFileInfoFileNameStr));
 		}catch(FileNotFoundException e){
-			throw new IllegalStateException(gzFileInfoFileNameStr + " file not found!");
+			String msg = gzFileInfoFileNameStr + " file not found!";
+			System.out.println(msg);
+			throw new IllegalStateException(msg);
 		}
 		String line;
 		try{
 			while((line = fileInfoBF.readLine()) != null){
 				//line could be ... LaTeX, or .tex etc
-				if(!TEX_PATTERN.matcher(line).matches()){
+				//combine these two into one!
+				if(!TEX_PATTERN.matcher(line).matches() || NONTEX_EXTENSION_PATTERN.matcher(line).matches()){
 					//no String "tex" detected.
 					continue;
 				}
@@ -130,7 +135,11 @@ public class UnzipFile2 {
 				if(lineAr.length < 2){
 					continue;
 				}				
+				//only take file name rather than relative path containing directory info
 				String fileName = lineAr[0];
+				String[] fileNameAr = fileName.split("\\/");
+				fileName = fileNameAr[fileNameAr.length - 1];
+				
 				String fileInfo = lineAr[1];
 				fileInfoMap.put(fileName, fileInfo);
 			}
@@ -169,7 +178,8 @@ public class UnzipFile2 {
 		try {
 			// fileNames is non-empty list.
 			GZIPInputStream gzipInputStream = null;
-			FileOutputStream gzipOutputStream = null;
+			FileInputStream fileInputStream = null;
+			FileOutputStream fileOutputStream = null;
 			//output stream for the output in all the .gz files.
 			//String totalOutputStr = destBasePath + "total.txt";
 			//FileOutputStream totalOutputStream = new FileOutputStream(totalOutputStr);
@@ -187,19 +197,20 @@ public class UnzipFile2 {
 				String dest = destBasePath + fileName.replaceAll("([^\\.]*)\\..*$", "$1.txt");
 				
 				extractedFileNames.add(dest);
-
-				gzipInputStream = new GZIPInputStream(new FileInputStream(src));
-				gzipOutputStream = new FileOutputStream(dest);
+				
+				//gzipInputStream = new GZIPInputStream(new FileInputStream(src));
+				fileInputStream = new FileInputStream(src);				
+				fileOutputStream = new FileOutputStream(dest);
 				
 				int l;
-				while ((l = gzipInputStream.read(buf)) > 0) {
+				while ((l = fileInputStream.read(buf)) > 0) {
 					// 0 is the offset, l is the length to read/write.
-					gzipOutputStream.write(buf, 0, l);
+					fileOutputStream.write(buf, 0, l);
 					//totalOutputStream.write(buf, 0, l);
 				}
 				
-				gzipInputStream.close();
-				gzipOutputStream.close();
+				fileInputStream.close();
+				fileOutputStream.close();
 			}
 			
 			//totalOutputStream.close();

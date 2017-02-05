@@ -61,6 +61,7 @@ public class WordForms {
 	//brackets pattern
 	private static final Pattern BRACKETS_PATTERN = Pattern.compile("\\[([^\\]]*)\\]");	
 	private static final Pattern LATEX_PATTERN = Pattern.compile("\\$([^$]+)\\$");
+	private static final Pattern NONSINGULAR_ENDING_PATTERN = Pattern.compile(".*us$?|.*is$?|has");
 	
 	//pattern matching is faster than calling str.contains() repeatedly 
 	//which is O(mn) time.
@@ -246,16 +247,19 @@ public class WordForms {
 	 * Get the singular forms of current word
 	 * @param curWord
 	 * @param wordlen
-	 * @return Array of singular forms
+	 * @return Array of singular forms, of size 3.
 	 */
 	public static String[] getSingularForms(String curWord) {
 		// primitive way to handle plural forms: if ends in "s"
+		if(curWord.length() < 4) return new String[]{curWord, curWord, curWord};
+		
 		String[] singularForms = new String[3];
 		int wordlen = curWord.length();
 		
 		if (wordlen > 0 && curWord.charAt(wordlen - 1) == 's') {
 			//don't strip 's' if belongs to common endings with 's', e.g. "homogeneous", "basis"
-			if(!curWord.matches(".*ous$?|.*is$?|has")){ 
+			//e.g. ".*us$?|.*is$?|has".
+			if(!NONSINGULAR_ENDING_PATTERN.matcher(curWord).matches()){
 				singularForms[0] = curWord.substring(0, wordlen - 1);								
 			}
 		}

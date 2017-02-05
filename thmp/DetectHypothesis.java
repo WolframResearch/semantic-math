@@ -257,6 +257,9 @@ public class DetectHypothesis {
 				inputBFCreatedBool = true;
 			}catch(FileNotFoundException e){
 				inputBFCreatedBool = false;
+				System.out.println("Cannot find file specified via command line!");
+				//for now:
+				throw new IllegalStateException("Cannot find file specified via command line!");
 			}
 		}
 		if(!inputBFCreatedBool){
