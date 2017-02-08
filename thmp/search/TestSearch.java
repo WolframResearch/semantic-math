@@ -14,8 +14,7 @@ public class TestSearch {
 		/*FileReader freqWordsFileReader = new FileReader("src/thmp/data/wordFrequency.txt");
 		FileReader texSourceFileReader = new FileReader("src/thmp/data/CommAlg5.txt");
 		FileReader macrosBufferedReader = new FileReader("src/thmp/data/texMacros.txt");
-		List<FileReader> bufferList = new ArrayList<FileReader>();
-		
+		List<FileReader> bufferList = new ArrayList<FileReader>();		
 		
 		BufferedReader freqWordsFileBuffer = new BufferedReader(freqWordsFileReader);
 		BufferedReader texSourceFileBuffer = new BufferedReader(texSourceFileReader);

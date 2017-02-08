@@ -61,7 +61,7 @@ public class WordForms {
 	//brackets pattern
 	private static final Pattern BRACKETS_PATTERN = Pattern.compile("\\[([^\\]]*)\\]");	
 	private static final Pattern LATEX_PATTERN = Pattern.compile("\\$([^$]+)\\$");
-	private static final Pattern NONSINGULAR_ENDING_PATTERN = Pattern.compile(".*us$?|.*is$?|has");
+	private static final Pattern NONSINGULAR_ENDING_PATTERN = Pattern.compile(".*(?:us$?|is$?|ness|has)");
 	
 	//pattern matching is faster than calling str.contains() repeatedly 
 	//which is O(mn) time.

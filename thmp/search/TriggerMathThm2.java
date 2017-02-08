@@ -53,10 +53,11 @@ public class TriggerMathThm2 {
 	 * need this either
 	 */
 	// private static final Multimap<String, String> mathObjMultimap;
-	
+	//private static final Pattern BRACES_PATTERN
 	/* Matrix of keywords. */
 	//private static final int[][] mathObjMx;
 	private static double[][] mathObjMx;
+	private static StringBuilder sparseArrayInputSB;
 	//list of thms, same order as in thmList, and the frequencies of their words in words maps.
 	private static final List<ImmutableMap<String, Integer>> thmWordsMapList;
 	
@@ -77,7 +78,7 @@ public class TriggerMathThm2 {
 		keywordIndexDict = ImmutableMap.copyOf(CollectThm.ThmWordsMaps.createContextKeywordIndexDict(docWordsFreqMapNoAnno));
 		thmWordsMapList = CollectThm.ThmWordsMaps.get_thmWordsFreqListNoAnno();
 		
-		//don't need to build mathObjMx if not generating data.		
+		/*don't need to build the giant mathObjMx if not generating data.	*/	
 		if(!Searcher.SearchMetaData.gatheringDataBool()){
 		//re-order the list so the most frequent words appear first, as optimization
 				//so that search words can match the most frequently-occurring words.
@@ -133,11 +134,16 @@ public class TriggerMathThm2 {
 		System.out.println("TriggerMathThm2 - mathObjMx dims: " + keywordList.size() + " " + thmWordsMapList.size());
 		
 		//System.out.println("BEFORE mathObjMMap" +mathObjMMap);
+		List<int[]> coordinatesList = new ArrayList<int[]>();
+		List<Double> weightsList = new ArrayList<Double>();
 		//pass in thmList to ensure the right order (insertion order) of thms 
 		//is preserved or MathObjList and mathObjMMap. Multimaps don't preserve insertion order
 		buildMathObjMx(//keywordList, 
-				mathObjMMap, thmList);
-	}
+				mathObjMMap, thmList, coordinatesList, weightsList);
+		//mathObjMx now presented as sparse array
+		sparseArrayInputSB = constructSparseArrayInputString(coordinatesList, weightsList);
+		}
+		
 		mathObjList = ImmutableList.copyOf(thmList);
 		
 		webDisplayThmList = ImmutableList.copyOf(CollectThm.ThmList.get_webDisplayThmList());
@@ -224,18 +230,61 @@ public class TriggerMathThm2 {
 	}
 	
 	/**
+	 * e.g. {{1, 2}, {2, 3}} -> {4, 1}
+	 * @param coordinatesList
+	 * @param weightsList
+	 * @return without trailing ';'
+	 */
+	private static StringBuilder constructSparseArrayInputString(List<int[]> coordinatesList, List<Double> weightsList){
+		//should pack these!
+		StringBuilder sparseArraySB = new StringBuilder(10000);
+		sparseArraySB.append('{');
+		//append coordinates
+		for(int[] coordinatePair : coordinatesList){
+			assert coordinatePair.length == 2 : "Length of coordinate pair array must be 2!";
+			sparseArraySB.append('{');
+			sparseArraySB.append(coordinatePair[0]).append(',').append(coordinatePair[1]);
+			sparseArraySB.append("},");
+		}
+		sparseArraySB = sparseArraySB.deleteCharAt(sparseArraySB.length()-1);
+		sparseArraySB.append('}');
+		
+		//append weights
+		//change the first and last char's, which are brackets.
+		//weightsList.toString();
+		sparseArraySB.append("->{");
+		//turn the weightsList to a string
+		for(double d : weightsList){
+			sparseArraySB.append(d).append(",");
+		}
+		sparseArraySB = sparseArraySB.deleteCharAt(sparseArraySB.length()-1);
+		sparseArraySB.append('}');
+		return sparseArraySB;
+	}
+	
+	/**
 	 * Builds the MathObjMx. Weigh inversely based on word frequencies extracted from 
 	 * CollectThm.java.
+	 * @param mathObjMMap
+	 * @param thmList
+	 * @param coordinatesList
+	 * @param weightsList
 	 */
 	private static void buildMathObjMx(//List<String> keywordList, 
-			Multimap<String, String> mathObjMMap,
-			ImmutableList<String> thmList) {
+			Multimap<String, String> mathObjMMap, ImmutableList<String> thmList,
+			List<int[]> coordinatesList, List<Double> weightsList) {
 		
 		//map of annotated words and their scores
 		Map<String, Integer> wordsScoreMap = CollectThm.ThmWordsMaps.get_wordsScoreMapNoAnno();
 		
 		//Iterator<String> mathObjMMapkeysIter = mathObjMMapkeys.iterator();
 		Iterator<String> thmListIter = thmList.iterator();
+		
+		//list of coordinate pairs containing non zero, used to construct sparse array.
+		//each array has size 2.
+		//List<int[]> coordinatesList = new ArrayList<int[]>(); //<--put in argument!
+		//List<Double> weightsList = new ArrayList<Double>();
+		//int[][] d = new int[mathObjMx.length][2];
 		
 		int mathObjCounter = 0;
 		int keywordIndexNullCounter = 0;
@@ -289,13 +338,12 @@ public class TriggerMathThm2 {
 				double newScore = (double)wordScore/norm;
 				//int newScore = wordScore;
 				if(newScore == 0 && wordScore != 0){
-					mathObjMx[keyWordIndex][mathObjCounter] = .1;
-				}else{
-					//System.out.println("keyWordIndex: "+ keyWordIndex + " mathObjCounter " + mathObjCounter);
-					mathObjMx[keyWordIndex][mathObjCounter] = newScore;
+					newScore = .1;
 				}
-			}
-			
+				mathObjMx[keyWordIndex][mathObjCounter] = newScore;
+				coordinatesList.add(new int[]{keyWordIndex, mathObjCounter}) ;
+				weightsList.add(newScore);
+			}			
 			mathObjCounter++;
 		}
 		//System.out.println("TriggerMathThm2 - keywordIndexDict: "+ keywordIndexDict);
@@ -505,6 +553,22 @@ public class TriggerMathThm2 {
 	 */
 	public static double[][] mathThmMx(){
 		return mathObjMx;
+	}
+	
+	public static int mathThmMxRowDim(){
+		return keywordIndexDict.size();
+	}
+	
+	public static int mathThmMxColDim(){
+		return thmWordsMapList.size();
+	}
+	
+	/**
+	 * String representation of term-document matrix, .
+	 * @return
+	 */
+	public static StringBuilder sparseArrayInputSB(){
+		return sparseArrayInputSB;
 	}
 	
 	/**

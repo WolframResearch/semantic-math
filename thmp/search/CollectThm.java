@@ -1149,8 +1149,8 @@ public class CollectThm {
 		private static List<ParsedExpression> extractParsedExpressionList() {
 			//List<ParsedExpression> parsedExpressionsList;
 			//String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
-			//String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
-			String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionListTemplate.dat";
+			String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
+			//String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionListTemplate.dat";
 			
 			if(null != servletContext){
 				parsedExpressionListInputStream = servletContext.getResourceAsStream(parsedExpressionSerialFileStr);

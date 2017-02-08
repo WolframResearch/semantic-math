@@ -550,6 +550,7 @@ public class ThmP1TestRun {
 			st = "given finitely generated algebra";
 			st = "baire space is metrizable";
 			st = "given residue field which is perfect";
+			st = "Ben Burton and David Letscher have written a program to implement this algorithm";
 			//st = "given a tower of algebraic field extensions";
 			//Every minimal subsystem $\Sigma$ of the system $(\Omega^k,S_\infty)$ is a factor of the minimal system $(\Omega^2_{lo},S_\infty)$.		
 			//st = "take derivative of log of f";

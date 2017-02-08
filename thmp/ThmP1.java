@@ -903,7 +903,7 @@ public class ThmP1 {
 				addSingularWordToPairsList(mathIndexList, pairs, singular3);
 			}
 			// classify words with dashes; eg sesqui-linear
-			else if (curWord.split("-").length > 1 || !curWord.matches("(?:-.+|.+-)")) {
+			else if (curWord.split("-").length > 1 && !curWord.matches("(?:-.+|.+-)")) {
 				String[] splitWords = curWord.split("-");				
 				String lastTerm = splitWords[splitWords.length - 1];
 				//System.out.println("singular" + singular + " curWord: " + curWord + " splitWords: " + Arrays.deepToString(splitWords));

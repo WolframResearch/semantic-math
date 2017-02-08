@@ -138,7 +138,7 @@ public class WLCommand implements Serializable{
 	 */
 	private Map<Integer, Integer> optionalTermsGroupCountMap = new HashMap<Integer, Integer>();
 	private static final String DEFAULT_AUX_NAME_STR = "AUX";
-	private static final Pattern CONJ_DISJ_PATTERN = Pattern.compile("conj_.*|disj_.*");
+	private static final Pattern CONJ_DISJ_PATTERN = Pattern.compile("conj_.+|disj_.+");
 	private static final Pattern DISQUALIFY_PATTERN = Pattern.compile("(if|If|iff|Iff)");
 	private static final String[] DISQUALIFY_STR_ARRAY = new String[]{"if", "If", "if", "Iff"};
 	
@@ -1375,7 +1375,7 @@ public class WLCommand implements Serializable{
 		String structPreType = newStruct.type();
 		String structType = CONJ_DISJ_PATTERN.matcher(structPreType).find() ?
 				structPreType.split("_")[1] : structPreType;			
-				
+			
 		Map<WLCommandComponent, Integer> commandsCountMap = curCommand.commandsCountMap;
 		if(disqualifyCommand(structType, commandsCountMap)){
 			boolean disqualified = true;

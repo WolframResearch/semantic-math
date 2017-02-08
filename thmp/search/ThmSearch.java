@@ -62,7 +62,6 @@ public class ThmSearch {
 			ARGV = new String[]{"-linkmode", "launch", "-linkname", "math -mathlink"};
 		}*/
 		
-		//createTermDocumentMatrixSVD();
 		ml = FileUtils.getKernelLinkInstance();
 		String msg = "Kernel instance acquired...";
 		logger.info(msg);
@@ -95,11 +94,10 @@ public class ThmSearch {
 			ml.evaluate("Length[corMx[[1]]]");
 			System.out.println("corMx row dimension (num of words): " + ml.getExpr());
 		}catch(MathLinkException e){
-			msg = "MathLinkException when loading mx file! ";
+			msg = "MathLinkException when loading mx file!";
 			logger.error(msg + e);
 			throw new IllegalStateException(msg, e);
-		}
-		
+		}		
 	}
 	
 	/**
@@ -272,12 +270,10 @@ public class ThmSearch {
 		private static final String PATH_TO_MX = getSystemMxFilePath();
 		private static final String MX_CONTEXT_NAME = "TermDocumentMatrix`";
 		private static KernelLink ml;
-		/**
-		 * 
-		 */
+		
 		public static void createTermDocumentMatrixSVD() {
 			
-			docMx = TriggerMathThm2.mathThmMx();			
+			//docMx = TriggerMathThm2.mathThmMx();			
 			//mx to keep track of correlations between terms, mx.mx^T
 			//List<List<Integer>> corMxList = new ArrayList<List<Integer>>();
 			try{			
@@ -289,15 +285,17 @@ public class ThmSearch {
 				String msg = "Kernel instance acquired...";
 				logger.info(msg);
 				
-				ml.evaluate("Begin[\""+ MX_CONTEXT_NAME +"\"]");
-				ml.discardAnswer();
 				//set up the matrix corresponding to docMx, to be SVD'd. 
 				//adjust mx entries based on correlation first	
-				StringBuilder mxSB = new StringBuilder("m = Developer`ToPackedArray@");
-				mxSB.append(toNestedList(docMx)).append("//N;");
+				//StringBuilder mxSB = new StringBuilder("m = Developer`ToPackedArray@");
+				//mxSB.append(toNestedList(docMx)).append("//N;");
+				StringBuilder mxSB = TriggerMathThm2.sparseArrayInputSB()
+						.insert(0, "m=SparseArray[").append("];");
 				
-				int rowDimension = docMx.length;
-				int mxColDim = docMx[0].length;
+				//int rowDimension = docMx.length;
+				int rowDimension = TriggerMathThm2.mathThmMxRowDim();
+				//int mxColDim = docMx[0].length;
+				int mxColDim = TriggerMathThm2.mathThmMxColDim();
 				msg = "mxSB.length(): " + mxSB.length();
 				System.out.println(msg);
 				logger.info(msg);
@@ -316,6 +314,9 @@ public class ThmSearch {
 				}else{	
 					ml.discardAnswer();	
 				}
+				ml.evaluate("Begin[\""+ MX_CONTEXT_NAME +"\"]");
+				ml.discardAnswer();
+				
 				//ml.evaluate("m");
 				//ml.waitForAnswer();
 				//System.out.println("FIRST m : " + ml.getExpr());
@@ -431,9 +432,9 @@ public class ThmSearch {
 				ml.evaluate("{u, d, v} = SingularValueDecomposition[mx//N, " + k +"];");
 				//ml.waitForAnswer();
 				ml.discardAnswer();
-				ml.evaluate("m");
+				/*ml.evaluate("m");
 				ml.waitForAnswer();
-				System.out.println("!!!!-----m: " + ml.getExpr() + " k: " + k + " mxColDim: " + mxColDim);
+				System.out.println("!!!!-----m: " + ml.getExpr() + " k: " + k + " mxColDim: " + mxColDim);*/
 				
 				//ml.evaluate("u = u; dd = d; v = v;");
 				//ml.discardAnswer();
