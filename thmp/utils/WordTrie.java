@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
 
 public class WordTrie {
 
-	private static final Pattern SPECIAL_CHARS_PATTERN = Pattern.compile(".*[-|\\\\|$].*");
+	private static final Pattern SPECIAL_CHARS_PATTERN = Pattern.compile(".*[-|\\\\|$|\\s].*");
 	private static final Pattern WORD_EXTRACTION_PATTERN = Pattern.compile("(.*)\\s*");
 	
 	private static class TrieNode {
@@ -102,42 +102,88 @@ public class WordTrie {
 	 * a lot of word insertions, so N * avg length * log 26
 	 * number of comparisons.
 	 * Cache result?! Should know to re-compute after trie changes!
+	 * @param totalInsertedWords total number of words inserted
 	 * @return
 	 */
-	public List<String> getStemWords(){
+	public List<String> getStemWords(int totalInsertedWords, Map<String, String> longShortFormsMap){
 		List<String> stemWordsList = new ArrayList<String>();
-		getStemWords(stemWordsList, headNode);
+		getStemWords(stemWordsList, headNode, longShortFormsMap);
 		return stemWordsList;
 	}
 	
-	private void getStemWords(List<String> stemWordsList, TrieNode node){
+	/**
+	 * 
+	 * @param stemWordsList
+	 * @param node
+	 * @param longShortFormsMap map where keys are long forms, values are short forms, 
+	 */
+	private void getStemWords(List<String> stemWordsList, TrieNode node, Map<String, String> longShortFormsMap){
 		//System.out.println("node.getCharCountsMap(): " + node.getCharCountsMap());
-		if(node.word.equals("bound")){
-			System.out.println(" for bound: " + node.totalChildrenWordsCount);
-			System.out.println("nodeMap for bound: " + node.nodeMap);
-		}
+		/*if(node.word.equals("functorial")){
+			System.out.println("node word count: " + node.wordCount +"totalChildrenWordsCount for functorial: " + node.totalChildrenWordsCount);
+			System.out.println("nodeMap for functorial: " + node.nodeMap);
+		}*/
 		List<Integer> countsList = new ArrayList<Integer>(node.getCharCountsMap().values());
 		int countsListSz = countsList.size();
+		String nodeWord = node.word;
 		//System.out.println("countsListSz: " + countsListSz);
-		if(countsListSz > 2){
-			Collections.sort(countsList);
+		//if word has sufficient length
+		if(countsListSz > 2 && nodeWord.length() > 4){			
 			int totalChildrenWordCount = node.totalChildrenWordsCount;
+			int nodeWordCount = node.wordCount;
 			//System.out.println("node word: " + node.word);
 			//heuristic for sufficient dispersion amongst the 26 letter nodes.
-			if(countsList.get(countsListSz-1) < totalChildrenWordCount*2/3
-					&& countsList.get(countsListSz-1) > totalChildrenWordCount/4
-					&& countsList.get(countsListSz-2) < totalChildrenWordCount*6/12
-					//|| or some words end here 					
+			//count the case where the word ends here as a child.
+			if( (nodeWordCount - totalChildrenWordCount) < nodeWordCount*3/4
+					
+					//&& countsList.get(countsListSz-2) > nodeWordCount/5.5
+					//sufficiently frequent words
+					//&& 					
 					){
-				stemWordsList.add(node.word);
-			}		
-		}
-		
+				//Collections.sort(countsList);
+				//get max from this list of integers
+				int maxChildWordCount = DataUtility.findMax(countsList);
+					//above certain percentage, so there is no clear winner that's so much above all others.
+					if(maxChildWordCount > nodeWordCount/5){
+						stemWordsList.add(nodeWord);
+						//get the most frequent descendants, any child above 1/4 frequency count
+						List<String> descendantList = new ArrayList<String>();
+						getFrequentDescendants(node, descendantList);
+						for(String longForm : descendantList){
+							longShortFormsMap.put(longForm, nodeWord);
+						}
+					}
+			}
+		}		
 		for(TrieNode childNode : node.nodeMap.values()){			
- 			getStemWords(stemWordsList, childNode);
+ 			getStemWords(stemWordsList, childNode, longShortFormsMap);
 		}
 	}
 	
+	/**
+	 * Get the most frequent descendants, any child above 1/4 total children count.
+	 * Get the complete words, e.g. "bounded" and not "bounde"
+	 * @param node
+	 * @param total number of siblings
+	 * @return
+	 */
+	private void getFrequentDescendants(TrieNode node, List<String> descendantList) {
+
+		int nodeTotalChildrenWordsCount = node.totalChildrenWordsCount;
+		int nodeWordCount = node.wordCount;
+		//System.out.println(node.word +" node.wordCount*10/12 " + node.wordCount*10/12 + " nodeTotalChildrenWordsCount " + nodeTotalChildrenWordsCount);
+		//this check along is not sufficient, as stem words often are not complete words, e.g. "associat" without the 'e'
+		if(nodeWordCount*10/12 > nodeTotalChildrenWordsCount){
+			descendantList.add(node.word);
+		}
+		
+		for(TrieNode childNode : node.nodeMap.values()){
+			if(childNode.wordCount > nodeTotalChildrenWordsCount/6){
+				getFrequentDescendants(childNode, descendantList);
+			}
+		}
+	}
+
 	/**
 	 * Reverse the natural integer ordering 
 	 */
@@ -165,7 +211,8 @@ public class WordTrie {
 		for(int i = 0; i < newWord.length(); i++){
 			curNode.incrementTotalChildrenWordsCount();
 			char curChar = newWord.charAt(i);
-			if (' ' == curChar) continue;
+			//allow white space to get N grams.
+			//if (' ' == curChar) continue;
 			wordThusFarSB.append(curChar);
 			/*if(wordThusFarSB.toString().equals("bound")){
 				System.out.println("inserting bound: ");
@@ -193,7 +240,7 @@ public class WordTrie {
 		//String fileStr = "src/thmp/data/";
 		FileReader fileReader = null;
 		try{
-			fileReader = new FileReader("src/thmp/data/skipGramWordsList0.txt");
+			fileReader = new FileReader("src/thmp/data/skipGramWordsList2.txt");
 		}catch(FileNotFoundException e){
 			throw new IllegalStateException(e);
 		}
@@ -206,7 +253,7 @@ public class WordTrie {
 		}*/
 		//File fileDir = new File("src/thmp/data/skipGramWordsList2.txt");
 		File fileDir = new File("src/thmp/data/allThmWordsList.txt");
-		
+		fileDir = new File("src/thmp/data/skipGramWordsList2.txt");
 		InputStreamReader re = null ;
 		try{
 			re = new InputStreamReader(new FileInputStream(fileDir), "UTF-16");
@@ -214,6 +261,7 @@ public class WordTrie {
 		}catch(IOException e){
 			
 		}
+		int totalInsertedWords = 0;
 		try{
 			while(null != (line = br.readLine())){
 				//if("bound\n".equals(line)){
@@ -224,21 +272,23 @@ public class WordTrie {
 					System.out.print((int)line.charAt(i) + "\t ");
 				}*/
 				Matcher m = WORD_EXTRACTION_PATTERN.matcher(line);
-				if(m.matches()){
-					
-				String word = m.group(1);
-				
-				wordTrie.insertWord(word);
+				if(m.matches()){				
+					String word = m.group(1);					
+					wordTrie.insertWord(word);
 				}else{
-					wordTrie.insertWord(line);
-					
+					wordTrie.insertWord(line);					
 				}
+				totalInsertedWords++;
 			}
 		}catch(IOException e){
 			throw new IllegalStateException(e);
 		}finally{
 			FileUtils.silentClose(br);
 		}
-		System.out.println(wordTrie.getStemWords());
+		Map<String, String> longShortFormsMap = new HashMap<String, String>();
+		wordTrie.getStemWords(totalInsertedWords, longShortFormsMap);
+		//System.out.println();
+		//System.out.println("WordTrie - " + longShortFormsMap);
+		System.out.println("Total number of words abbreviated: " + longShortFormsMap.size());
 	}
 }
