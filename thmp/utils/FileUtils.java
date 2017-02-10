@@ -122,21 +122,20 @@ public class FileUtils {
 	 */
 	public static void serializeObjToFile(List<? extends Object> list, String outputFileStr){
 		//serialize parsedExpressionList to persistent storage
-				FileOutputStream fileOuputStream = null;
-				ObjectOutputStream objectOutputStream = null;
-				try{
-					fileOuputStream = new FileOutputStream(outputFileStr);
-					objectOutputStream = new ObjectOutputStream(fileOuputStream);
-				}catch(FileNotFoundException e){
-					e.printStackTrace();
-					throw new IllegalStateException("The output file " + outputFileStr + " cannot be found!");
-				}catch(IOException e){
-					e.printStackTrace();
-					throw new IllegalStateException("IOException while opening ObjectOutputStream");
-				}
-				
+		FileOutputStream fileOuputStream = null;
+		ObjectOutputStream objectOutputStream = null;
+		try{
+			fileOuputStream = new FileOutputStream(outputFileStr);
+			objectOutputStream = new ObjectOutputStream(fileOuputStream);
+		}catch(FileNotFoundException e){
+			e.printStackTrace();
+			throw new IllegalStateException("The output file " + outputFileStr + " cannot be found!");
+		}catch(IOException e){
+			e.printStackTrace();
+			throw new IllegalStateException("IOException while opening ObjectOutputStream");
+		}				
 				//Iterator<? extends Object> iter = iterable.iterator();				
-				try{
+		try{
 					/*while(iter.hasNext()){
 						Object obj = iter.next();
 						objectOutputStream.writeObject(obj);
@@ -184,7 +183,7 @@ public class FileUtils {
 	 */
 	public static Object deserializeListFromInputStream(InputStream inputStream, boolean checkVersion) {
 		
-		Object deserializedList = null;	
+		Object deserializedObj = null;	
 		ObjectInputStream objectInputStream = null;		
 		try{
 			objectInputStream = new ObjectInputStream(inputStream);
@@ -195,7 +194,7 @@ public class FileUtils {
 		}
 		
 		try{
-			deserializedList = objectInputStream.readObject();
+			deserializedObj = objectInputStream.readObject();
 			if(checkVersion){
 				int serialVersionInt = (int)objectInputStream.readObject();
 				if(!dataGenerationModeBool && !DESERIAL_VERSION_NUM.compareAndSet(DESERIAL_VERSION_NUM_DEFAULT, serialVersionInt)){
@@ -228,7 +227,7 @@ public class FileUtils {
 				throw new IllegalStateException("IOException while closing resources");
 			}
 		}
-		return deserializedList;
+		return deserializedObj;
 	}
 	
 	/**

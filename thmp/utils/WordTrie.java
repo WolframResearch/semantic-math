@@ -16,10 +16,14 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class WordTrie {
 
 	private static final Pattern SPECIAL_CHARS_PATTERN = Pattern.compile(".*[-|\\\\|$|\\s].*");
 	private static final Pattern WORD_EXTRACTION_PATTERN = Pattern.compile("(.*)\\s*");
+	private static final Logger logger = LogManager.getLogger();
 	
 	private static class TrieNode {
 
@@ -236,31 +240,31 @@ public class WordTrie {
 		//char newLine = '\n';		
 	}
 
-	public static void main(String[] args){
-		//String fileStr = "src/thmp/data/";
-		FileReader fileReader = null;
-		try{
-			fileReader = new FileReader("src/thmp/data/skipGramWordsList2.txt");
-		}catch(FileNotFoundException e){
-			throw new IllegalStateException(e);
-		}
+	/**
+	 * Generate a map with long forms of words as keys, and their abbreviations
+	 * as values. Serializes map.
+	 */
+	public static void serializeStemWordsMap(String serializationFileStr){
+
 		WordTrie wordTrie = new WordTrie();
-		BufferedReader br = new BufferedReader(fileReader);
+		BufferedReader br = null;
 		String line;
 		/*String bound = "bound";
 		for(int i = 0; i < bound.length(); i++){
 			System.out.print((int)bound.charAt(i) + "\t ");
 		}*/
 		//File fileDir = new File("src/thmp/data/skipGramWordsList2.txt");
-		File fileDir = new File("src/thmp/data/allThmWordsList.txt");
-		fileDir = new File("src/thmp/data/skipGramWordsList2.txt");
-		InputStreamReader re = null ;
+		//File fileDir = new File("src/thmp/data/allThmWordsList.txt");
+		File wordsFile = new File("src/thmp/data/skipGramWordsList2.txt");
+		InputStreamReader wordsFileReader = null ;
 		try{
-			re = new InputStreamReader(new FileInputStream(fileDir), "UTF-16");
-			br= new BufferedReader(re);
+			wordsFileReader = new InputStreamReader(new FileInputStream(wordsFile), "UTF-16");			
 		}catch(IOException e){
-			
+			String msg = "IOException while opening input stream! " + e.getMessage();
+			logger.info(msg);
+			throw new IllegalStateException(msg);
 		}
+		br= new BufferedReader(wordsFileReader);
 		int totalInsertedWords = 0;
 		try{
 			while(null != (line = br.readLine())){
@@ -287,8 +291,20 @@ public class WordTrie {
 		}
 		Map<String, String> longShortFormsMap = new HashMap<String, String>();
 		wordTrie.getStemWords(totalInsertedWords, longShortFormsMap);
-		//System.out.println();
-		//System.out.println("WordTrie - " + longShortFormsMap);
+		List<Map<String, String>> stemWordsMapList = new ArrayList<Map<String, String>>();
+		stemWordsMapList.add(longShortFormsMap);		
+		FileUtils.serializeObjToFile(stemWordsMapList, serializationFileStr);
 		System.out.println("Total number of words abbreviated: " + longShortFormsMap.size());
+	}	
+	
+	public static void main(String[] args){
+		
+		boolean serializeBool = true;
+		if(serializeBool){
+			String serializationFileStr = "src/thmp/data/stemWordsMap.dat";
+			serializeStemWordsMap(serializationFileStr);
+		}
+		//System.out.println();
+		//System.out.println("WordTrie - " + longShortFormsMap);		
 	}
 }

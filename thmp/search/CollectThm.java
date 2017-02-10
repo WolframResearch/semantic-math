@@ -73,13 +73,13 @@ public class CollectThm {
 	//BufferedReader for context vectors.  <--should preferably not be global variables!
 	private static volatile BufferedReader contextVecBR;
 	//corresponding list of file readers
-	private static volatile List<BufferedReader> rawFileReaderList;
+	//private static volatile List<BufferedReader> rawFileReaderList;
 	//macros file
 	private static volatile BufferedReader macrosDefReader;
 	//InputStream for serialized parsed expressions list
-	private static volatile InputStream parsedExpressionListInputStream;
+	//private static volatile InputStream parsedExpressionListInputStream;
 	//containing all serialized words from previous run.
-	private static volatile InputStream allThmWordsSerialInputStream;
+	//private static volatile InputStream allThmWordsSerialInputStream;
 	
 	//wordFrequency.txt containing word frequencies and their part of speech (pos)
 	private static BufferedReader wordFrequencyBR;
@@ -137,15 +137,15 @@ public class CollectThm {
 	
 	/**
 	 * Set list of bufferedReaders, rawFileReaderList.
-	 * Should just set servlet context instead of BufferedReaders!
+	 * Should just set servlet context instead of BufferedReaders!!
 	 * @param srcFileReader
 	 */
 	public static void setResources(List<BufferedReader> srcFileReaderList, BufferedReader macrosReader,
 			InputStream parsedExpressionListStream, InputStream allThmWordsSerialIStream) {
-		rawFileReaderList = srcFileReaderList;
+		//rawFileReaderList = srcFileReaderList;
 		macrosDefReader = macrosReader;
-		parsedExpressionListInputStream = parsedExpressionListStream;
-		allThmWordsSerialInputStream = allThmWordsSerialIStream;
+		//parsedExpressionListInputStream = parsedExpressionListStream;
+		//allThmWordsSerialInputStream = allThmWordsSerialIStream;
 		//System.out.print("buffered readers first passed in: " + srcFileReaderList);		
 	}
 	
@@ -237,6 +237,7 @@ public class CollectThm {
 		//private static final boolean GATHER_SKIP_GRAM_WORDS = true;
 		
 		static{	
+			//map of words and their representatives, e.g. "annihilate", "annihilator", etc all map to "annihilat"
 			synonymRepMap = WordForms.getSynonymsMap();			
 			//pass builder into a reader function. For each thm, builds immutable list of keywords, 
 			//put that list into the thm list. The integer indicates the word frequencies.
@@ -357,7 +358,7 @@ public class CollectThm {
 			String allThmWordsSerialFileStr = "src/thmp/data/allThmWordsList.dat";
 			if(null != servletContext){
 				//need to close this!
-				allThmWordsSerialInputStream = servletContext.getResourceAsStream(allThmWordsSerialFileStr);
+				InputStream allThmWordsSerialInputStream = servletContext.getResourceAsStream(allThmWordsSerialFileStr);
 				return (List<String>)FileUtils.deserializeListFromInputStream(allThmWordsSerialInputStream);
 			}else{				
 				return (List<String>)FileUtils.deserializeListFromFile(allThmWordsSerialFileStr);
@@ -375,7 +376,7 @@ public class CollectThm {
 			String allThmWordsSerialFileStr = "src/thmp/data/allThmWordsMap.dat";
 			if(null != servletContext){
 				//need to close this!
-				allThmWordsSerialInputStream = servletContext.getResourceAsStream(allThmWordsSerialFileStr);
+				InputStream allThmWordsSerialInputStream = servletContext.getResourceAsStream(allThmWordsSerialFileStr);
 				Map<String, Integer> map 
 					= ((List<Map<String, Integer>>)FileUtils.deserializeListFromInputStream(allThmWordsSerialInputStream)).get(0);
 				return ImmutableMap.copyOf(map);
@@ -700,6 +701,7 @@ public class CollectThm {
 						if(WordForms.getFluffSet().contains(word)) continue;
 
 						//removes endings such as -ing, and uses synonym rep.
+						//e.g. "annihilate", "annihilator", etc all map to "annihilat"
 						word = normalizeWordForm(word);
 						
 						List<String> wordPosList = posMMap.get(word);
@@ -1100,8 +1102,7 @@ public class CollectThm {
 					}*/ 
 					for(String fileStr : rawFileStrList){
 						InputStream inputStream = servletContext.getResourceAsStream(fileStr);
-						BufferedReader rawFileBReader = new BufferedReader(new InputStreamReader(inputStream));
-						
+						BufferedReader rawFileBReader = new BufferedReader(new InputStreamReader(inputStream));						
 						/*FileReader rawFileReader = new FileReader(fileStr);
 						BufferedReader rawFileBReader = new BufferedReader(rawFileReader);*/
 						
@@ -1153,7 +1154,7 @@ public class CollectThm {
 			//String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionListTemplate.dat";
 			
 			if(null != servletContext){
-				parsedExpressionListInputStream = servletContext.getResourceAsStream(parsedExpressionSerialFileStr);
+				InputStream parsedExpressionListInputStream = servletContext.getResourceAsStream(parsedExpressionSerialFileStr);
 				return (List<ParsedExpression>)thmp.utils.FileUtils
 						.deserializeListFromInputStream(parsedExpressionListInputStream);	
 			}else{

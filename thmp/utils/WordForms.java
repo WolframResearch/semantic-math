@@ -5,10 +5,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -25,6 +27,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.SetMultimap;
 
+import thmp.ParsedExpression;
 import thmp.search.WordFrequency;
 
 public class WordForms {
@@ -77,23 +80,26 @@ public class WordForms {
 		}
 		Map<String, String> synonymsPreMap = new HashMap<String, String>();
 		BufferedReader synonymsBF = null;
-		//create synonym map from file
-		
+		//create synonym map from file	
 		ServletContext servletContext = FileUtils.getServletContext();
 		if(null != servletContext){
-			synonymsBF = new BufferedReader(new InputStreamReader(servletContext.getResourceAsStream(synonymsFileStr)));
+			synonymsBF = new BufferedReader(new InputStreamReader(servletContext.getResourceAsStream(synonymsFileStr)));			
 		}else{
 			try{
 				synonymsBF = new BufferedReader(new FileReader(new File(synonymsFileStr)));
 			}catch(FileNotFoundException e){
 				logger.error("WordForms.java initializer - FileNotFoundException when creating FileReader for "
 						+ "synonymsFileStr");
-			}
+			}			
 		}
-			//gather synonyms together from file
+		//gather synonyms together from file
 		readSynonymMapFromFile(synonymsPreMap, synonymsBF);
+		
+		//contains word representatives, e.g. "annihilate", "annihilator", etc all map to "annihilat"
+		Map<String, String> stemWordsMap = deserializeStemWordsMap(servletContext);	
+		synonymsPreMap.putAll(stemWordsMap);
 		synonymRepMap = ImmutableMap.copyOf(synonymsPreMap);
-			//close reader
+		
 		FileUtils.silentClose(synonymsBF);
 	}
 	
@@ -108,6 +114,21 @@ public class WordForms {
 		return freqWordsSet;
 	}
 	
+	@SuppressWarnings("unchecked")
+	private static Map<String, String> deserializeStemWordsMap(ServletContext servletContext) {
+
+		String stemWordsMapFileStr = "src/thmp/data/stemWordsMap.txt";
+		Map<String, String> stemWordsMap;
+		if(null != servletContext){
+			InputStream stemWordsMapInputStream = servletContext.getResourceAsStream(stemWordsMapFileStr);			
+			stemWordsMap = ((List<Map<String, String>>)FileUtils
+					.deserializeListFromInputStream(stemWordsMapInputStream)).get(0);
+		}else{
+			stemWordsMap = ((List<Map<String, String>>)FileUtils.deserializeListFromFile(stemWordsMapFileStr)).get(0);
+		}
+		return stemWordsMap;
+	}
+
 	/**
 	 * Populate synonymsMMap_ with synonyms read in from synonymsBF.
 	 * @param synonymsmmap2
