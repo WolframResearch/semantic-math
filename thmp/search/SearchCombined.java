@@ -88,7 +88,7 @@ public class SearchCombined {
 		//CollectFreqWords.setResources(freqWordsFileBuffer);
 		CollectThm.setServletContext(servletContext_);
 		
-		CollectThm.setWordFrequencyBR(freqWordsFileBuffer);
+		//CollectThm.setWordFrequencyBR(freqWordsFileBuffer);
 		CollectThm.setResources(texSourceFileBufferList, macrosReader, parsedExpressionListInputStream, allThmWordsSerialInputStream);	
 		
 		ProcessInput.setServletContext(servletContext_);

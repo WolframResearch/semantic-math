@@ -428,12 +428,10 @@ public class TriggerMathThm2 {
 		String priorityWords = ConstantsInSearch.get_priorityWords();
 		//keywordDict is annotated with "hyp"/"stm"
 		int dictSz = keywordIndexDict.keySet().size();
-		//int[] triggerTermsVec = new int[dictSz];
 		double[] queryVec = new double[dictSz];
 		double norm = 0;
 		//highest weight amongst the single words
 		double highestWeight = 0;
-		//int numWords = 0;
 		List<Integer> priorityWordsIndexList = new ArrayList<Integer>();
 		
 		//get norm first, form unnormalized vector, then divide terms by log of norm
@@ -444,6 +442,7 @@ public class TriggerMathThm2 {
 			if(newNorm - norm > highestWeight){
 				highestWeight = newNorm - norm;
 			}
+			//search 2 & 3-grams
 			if(i < thmAr.length-1){
 				String nextTermCombined = term + " " + thmAr[i+1];
 				newNorm = addToNorm(thmAr, wordsScoreMap, queryVec, newNorm, i, nextTermCombined);	
@@ -463,6 +462,7 @@ public class TriggerMathThm2 {
 		//rather than return a list of results that are close to the 0-vector
 		//but doesn't make sense.
 		if(norm == 0) return "";
+		
 		//fill in the priority words with highestWeight
 		for(int index : priorityWordsIndexList){
 			Integer rowIndex = keywordIndexDict.get(thmAr[index]);
@@ -481,12 +481,13 @@ public class TriggerMathThm2 {
 		//divide entries of triggerTermsVec by norm
 		for(int i = 0; i < queryVec.length; i++){
 			double prevScore = queryVec[i]; 
-			queryVec[i] = queryVec[i]/norm;
-			
-			//avoid completely obliterating a word 
-			if(prevScore != 0 && queryVec[i] == 0){
-				//triggerTermsVec[i] = 1;
-				queryVec[i] = .1;
+			if(0 != prevScore){			
+				queryVec[i] = prevScore/norm;				
+				//avoid completely obliterating a word 
+				if(queryVec[i] == 0){
+					//triggerTermsVec[i] = 1;
+					queryVec[i] = .1;
+				}
 			}
 		}
 		
@@ -520,8 +521,21 @@ public class TriggerMathThm2 {
 			term = WordForms.getSingularForm(term);
 			termScore = wordsScoreMap.get(term);
 		}
-		if(null == termScore){				
-			termScore = wordsScoreMap.get(CollectThm.ThmWordsMaps.normalizeWordForm(term));			
+		
+		//check for related words! Increase the scores for related words & antonyms,
+		//not as high, maybe half the score.
+		boolean relatedWordsFound = false;
+		if(null != termScore){
+			
+		}
+		else{		
+			term = CollectThm.ThmWordsMaps.normalizeWordForm(term);
+			termScore = wordsScoreMap.get(term);			
+		}
+		
+		//if no entry in relatedWordsMap found above, check again
+		if(null != termScore && !relatedWordsFound){
+			
 		}
 		
 		//System.out.println("term: " + term + ". termScore: " + termScore );

@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -20,18 +21,22 @@ public class GatherRelatedWords {
 	// private static final Pattern wordGroupPattern = Pattern.compile("\\],
 	// \\[");
 	private static final Pattern wordsPattern = Pattern.compile("\\', \\'");
-	private static final Pattern EMPTY_WORD_PATTERN = Pattern.compile("\\[\\]|\\[|\\]");
-
+	//private static final Pattern EMPTY_WORD_PATTERN = Pattern.compile("[\\s\\[']*([A-Za-z]*)['\\]\\s]*");
+	private static final Pattern EMPTY_WORD_PATTERN = Pattern.compile("[\\[\\(]*([A-Za-z]*)[\\]\\)]*");
+	
 	// private static final Pattern VALID_WORD_PATTERN =
 	// Pattern.compile("(?:(?<![A-z]*))([A-z]+)(?:(?![A-z]*))");
 	private static final Pattern VALID_WORD_PATTERN = Pattern.compile("(?:.*?)([A-Za-z\\s-]+)(?:.*?)");
-
+	
 	public static void main(String[] args) {
 		String fileStr = "src/thmp/data/scrapedRelatedWords.txt";
 		Map<String, RelatedWords> relatedWordsMap = createRelatedWordsMapFromFile(fileStr);
+		System.out.println("GatherRelatedWords - relatedWordsMap " + relatedWordsMap);
 		boolean serializeBool = true;
 		String serializationFileStr = "src/thmp/data/relatedWordsMap.dat";
-		if(serializeBool){
+		String serializationStrFileStr = "src/thmp/data/relatedWordsMap.txt";
+		if(serializeBool){			
+			FileUtils.writeToFile(relatedWordsMap, serializationStrFileStr);
 			List<Map<String, RelatedWords>> relatedWordsMapList = new ArrayList<Map<String, RelatedWords>>();
 			relatedWordsMapList.add(relatedWordsMap);
 			FileUtils.serializeObjToFile(relatedWordsMapList, serializationFileStr);
@@ -74,18 +79,22 @@ public class GatherRelatedWords {
 
 			// first group is the word
 			String word = wordGroupSameMeaningAr[0];
-			System.out.println("wordGroupSameMeaningAr " + Arrays.toString(wordGroupSameMeaningAr));
+			Matcher matcher;
+			if((matcher=VALID_WORD_PATTERN.matcher(word)).matches()){
+				word = matcher.group(1);
+			}
+			//System.out.println("wordGroupSameMeaningAr " + Arrays.toString(wordGroupSameMeaningAr));
 			String[] synonymsAr = wordsPattern.split(wordGroupSameMeaningAr[1]);
 			stripWordsFromArray(synonymsAr);
 			String[] antonymsAr = wordsPattern.split(wordGroupSameMeaningAr[2]);
 			stripWordsFromArray(antonymsAr);
 			String[] relatedWordsAr = wordsPattern.split(wordGroupSameMeaningAr[3]);
 			stripWordsFromArray(relatedWordsAr);
-			System.out.println("word: " + word + " synonymsAr: " + Arrays.toString(synonymsAr) + " antonymsAr: "
-					+ Arrays.toString(antonymsAr) + " relatedWordsAr: " + Arrays.toString(relatedWordsAr));
+			//System.out.println("word: " + word + " synonymsAr: " + Arrays.toString(synonymsAr) + " antonymsAr: "
+				//	+ Arrays.toString(antonymsAr) + " relatedWordsAr: " + Arrays.toString(relatedWordsAr));
 
 			relatedWordsMap.put(word,
-					new RelatedWords(Arrays.asList(synonymsAr), Arrays.asList(synonymsAr), Arrays.asList(synonymsAr)));
+					new RelatedWords(Arrays.asList(synonymsAr), Arrays.asList(antonymsAr), Arrays.asList(relatedWordsAr)));
 
 			/*
 			 * for(String wordGroup : wordGroupSameMeaningAr){ String[]
@@ -110,14 +119,18 @@ public class GatherRelatedWords {
 				// System.out.println("VALID_WORD_PATTERN matches!");
 				// System.out.println("WORD: " + word);
 				wordsAr[i] = matcher.group(1);
-			} else if (EMPTY_WORD_PATTERN.matcher(word).matches()) {
-				wordsAr[i] = "";
+			} //should combine these two patterns into one.
+			else if ((matcher=EMPTY_WORD_PATTERN.matcher(word)).matches()) {
+				//System.out.print("matched! " + word);
+				wordsAr[i] = matcher.group(1);
+				//System.out.println("   after: " + word);
 			}
-
 		}
 	}
 
-	private static class RelatedWords {
+	public static class RelatedWords implements Serializable{
+		
+		private static final long serialVersionUID = 3402480860959374766L;
 		// private String word;
 		private List<String> synonymsList;
 		private List<String> antonymsList;
@@ -142,6 +155,15 @@ public class GatherRelatedWords {
 			}
 		}
 
+		@Override
+		public String toString(){
+			StringBuilder sb = new StringBuilder(100);
+			sb.append("Synonyms: ").append(this.synonymsList)
+			  .append(" Antonyms: ").append(this.antonymsList)
+			  .append(" Related words: ").append(this.relatedWordsList);
+			return sb.toString();
+		}
+		
 		/**
 		 * @return the synonymsList
 		 */

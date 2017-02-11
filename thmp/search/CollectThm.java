@@ -82,7 +82,7 @@ public class CollectThm {
 	//private static volatile InputStream allThmWordsSerialInputStream;
 	
 	//wordFrequency.txt containing word frequencies and their part of speech (pos)
-	private static BufferedReader wordFrequencyBR;
+	//private static BufferedReader wordFrequencyBR;
 	//servlet context if run from server
 	private static ServletContext servletContext;
 	
@@ -149,12 +149,8 @@ public class CollectThm {
 		//System.out.print("buffered readers first passed in: " + srcFileReaderList);		
 	}
 	
-	public static void setWordFrequencyBR(BufferedReader freqWordsBR) {
+	/*public static void setWordFrequencyBR(BufferedReader freqWordsBR) {
 		wordFrequencyBR = freqWordsBR;
-	}
-	
-	/*public static BufferedReader get_wordFrequencyBR() {
-		return wordFrequencyBR;
 	}*/
 	
 	/**
@@ -330,7 +326,7 @@ public class CollectThm {
 			/***This is where the set of words used for SVD search and search based on context and relational vectors
 			 * diverge. The latter contains additional words (N-grams) added below. Note these words
 			 * are used for NGram formation NEXT run (generating ParsedExpressionList)***/ //<--actually now they are the same
-			/////////////////<--
+			
 			//Must add the 2 and 3 grams to docWordsFreqPreMapNoAnno. The N-grams that actually occur in 
 			//this corpus of theorems have already been added to docWordsFreqPreMapNoAnno during buildMaps.
 			//docWordsFreqPreMapNoAnno.putAll(twoGramsMap);
@@ -375,32 +371,16 @@ public class CollectThm {
 		private static ImmutableMap<String, Integer> extractWordFreqMap() {	
 			String allThmWordsSerialFileStr = "src/thmp/data/allThmWordsMap.dat";
 			if(null != servletContext){
-				//need to close this!
 				InputStream allThmWordsSerialInputStream = servletContext.getResourceAsStream(allThmWordsSerialFileStr);
 				Map<String, Integer> map 
 					= ((List<Map<String, Integer>>)FileUtils.deserializeListFromInputStream(allThmWordsSerialInputStream)).get(0);
+				FileUtils.silentClose(allThmWordsSerialInputStream);
 				return ImmutableMap.copyOf(map);
 			}else{				
 				Map<String, Integer> map 
 					= ((List<Map<String, Integer>>)FileUtils.deserializeListFromFile(allThmWordsSerialFileStr)).get(0);
 				return ImmutableMap.copyOf(map);
 			}
-		}	
-		
-		/**
-		 * Creates a map, ordered by frequency.
-		 * @param wordsList
-		 * @return Map of words and their indices in wordsList.
-		 */
-		private static Map<String, Integer> createContextKeywordIndexDict(List<String> wordsList){
-			Map<String, Integer> contextKeywordIndexDict = new HashMap<String, Integer>();
-			//these are ordered based on frequency, more frequent words occur earlier.
-			//List<String> wordsList = CollectThm.ThmWordsMaps.getCONTEXT_VEC_WORDS_LIST();		
-			for(int i = 0; i < wordsList.size(); i++){
-				String word = wordsList.get(i);
-				contextKeywordIndexDict.put(word, i);
-			}
-			return contextKeywordIndexDict;
 		}
 		
 		/**
