@@ -15,6 +15,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -85,6 +86,19 @@ public class FileUtils {
 	 */
 	public static void set_dataGenerationMode(){
 		dataGenerationModeBool = true;
+	}
+		
+	/**
+	 * Write content to file at absolute path.
+	 * 
+	 * @param contentList
+	 * @param fileTo
+	 */
+	public static void writeToFile(Object obj, String fileToStr) {
+		List<String> contentList = new ArrayList<String>();
+		contentList.add(obj.toString());
+		Path toPath = Paths.get(fileToStr);
+		writeToFile(contentList, toPath);
 	}
 	
 	/**

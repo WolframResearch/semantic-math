@@ -11,8 +11,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -109,9 +111,10 @@ public class WordTrie {
 	 * @param totalInsertedWords total number of words inserted
 	 * @return
 	 */
-	public List<String> getStemWords(int totalInsertedWords, Map<String, String> longShortFormsMap){
+	public List<String> getStemWords(int totalInsertedWords,
+			Map<String, String> longShortFormsMap){
 		List<String> stemWordsList = new ArrayList<String>();
-		getStemWords(stemWordsList, headNode, longShortFormsMap);
+		getStemWords(totalInsertedWords, stemWordsList, this.headNode, longShortFormsMap);
 		return stemWordsList;
 	}
 	
@@ -121,7 +124,8 @@ public class WordTrie {
 	 * @param node
 	 * @param longShortFormsMap map where keys are long forms, values are short forms, 
 	 */
-	private void getStemWords(List<String> stemWordsList, TrieNode node, Map<String, String> longShortFormsMap){
+	private void getStemWords(int avgInsertedWordsCount, 
+			List<String> stemWordsList, TrieNode node, Map<String, String> longShortFormsMap){
 		//System.out.println("node.getCharCountsMap(): " + node.getCharCountsMap());
 		/*if(node.word.equals("functorial")){
 			System.out.println("node word count: " + node.wordCount +"totalChildrenWordsCount for functorial: " + node.totalChildrenWordsCount);
@@ -138,8 +142,7 @@ public class WordTrie {
 			//System.out.println("node word: " + node.word);
 			//heuristic for sufficient dispersion amongst the 26 letter nodes.
 			//count the case where the word ends here as a child.
-			if( (nodeWordCount - totalChildrenWordCount) < nodeWordCount*3/4
-					
+			if( (nodeWordCount - totalChildrenWordCount) < nodeWordCount*3/4					
 					//&& countsList.get(countsListSz-2) > nodeWordCount/5.5
 					//sufficiently frequent words
 					//&& 					
@@ -150,17 +153,20 @@ public class WordTrie {
 					//above certain percentage, so there is no clear winner that's so much above all others.
 					if(maxChildWordCount > nodeWordCount/5){
 						stemWordsList.add(nodeWord);
+						int ancestorNodeWordLen = node.word.length();
 						//get the most frequent descendants, any child above 1/4 frequency count
 						List<String> descendantList = new ArrayList<String>();
-						getFrequentDescendants(node, descendantList);
-						for(String longForm : descendantList){
-							longShortFormsMap.put(longForm, nodeWord);
+						getFrequentDescendants(avgInsertedWordsCount, node, ancestorNodeWordLen, descendantList);
+						if(descendantList.size() > 1){
+							for(String longForm : descendantList){
+								longShortFormsMap.put(longForm, nodeWord);
+							}
 						}
 					}
 			}
 		}		
 		for(TrieNode childNode : node.nodeMap.values()){			
- 			getStemWords(stemWordsList, childNode, longShortFormsMap);
+ 			getStemWords(avgInsertedWordsCount, stemWordsList, childNode, longShortFormsMap);
 		}
 	}
 	
@@ -168,22 +174,27 @@ public class WordTrie {
 	 * Get the most frequent descendants, any child above 1/4 total children count.
 	 * Get the complete words, e.g. "bounded" and not "bounde"
 	 * @param node
+	 * @param ancestorNodeWordLen Length of ancestor word, only add if descendant & 
+	 * ancestor word lengths do not vary too much. e.g. equid should not be the shortcut for
+	 * both equidimensional and equidistant
 	 * @param total number of siblings
 	 * @return
 	 */
-	private void getFrequentDescendants(TrieNode node, List<String> descendantList) {
+	private void getFrequentDescendants(int avgInsertedWordsCount, 
+			TrieNode node, int ancestorNodeWordLen, List<String> descendantList) {
 
 		int nodeTotalChildrenWordsCount = node.totalChildrenWordsCount;
 		int nodeWordCount = node.wordCount;
 		//System.out.println(node.word +" node.wordCount*10/12 " + node.wordCount*10/12 + " nodeTotalChildrenWordsCount " + nodeTotalChildrenWordsCount);
 		//this check along is not sufficient, as stem words often are not complete words, e.g. "associat" without the 'e'
-		if(nodeWordCount*10/12 > nodeTotalChildrenWordsCount){
+		if(nodeWordCount*10/12 > nodeTotalChildrenWordsCount && nodeWordCount > avgInsertedWordsCount/15
+				&& node.word.length() < ancestorNodeWordLen+6){
 			descendantList.add(node.word);
 		}
 		
 		for(TrieNode childNode : node.nodeMap.values()){
 			if(childNode.wordCount > nodeTotalChildrenWordsCount/6){
-				getFrequentDescendants(childNode, descendantList);
+				getFrequentDescendants(avgInsertedWordsCount, childNode, ancestorNodeWordLen, descendantList);
 			}
 		}
 	}
@@ -244,9 +255,10 @@ public class WordTrie {
 	 * Generate a map with long forms of words as keys, and their abbreviations
 	 * as values. Serializes map.
 	 */
-	public static void serializeStemWordsMap(String serializationFileStr){
+	public static void serializeStemWordsMap(String serializationFileStr, String serializationStrFileStr){
 
 		WordTrie wordTrie = new WordTrie();
+		Set<String> wordSet = new HashSet<String>();
 		BufferedReader br = null;
 		String line;
 		/*String bound = "bound";
@@ -279,8 +291,10 @@ public class WordTrie {
 				if(m.matches()){				
 					String word = m.group(1);					
 					wordTrie.insertWord(word);
+					wordSet.add(word);
 				}else{
-					wordTrie.insertWord(line);					
+					wordTrie.insertWord(line);				
+					wordSet.add(line);
 				}
 				totalInsertedWords++;
 			}
@@ -290,9 +304,13 @@ public class WordTrie {
 			FileUtils.silentClose(br);
 		}
 		Map<String, String> longShortFormsMap = new HashMap<String, String>();
-		wordTrie.getStemWords(totalInsertedWords, longShortFormsMap);
-		List<Map<String, String>> stemWordsMapList = new ArrayList<Map<String, String>>();
-		stemWordsMapList.add(longShortFormsMap);		
+		int avgInsertedWordsCount = (int)(totalInsertedWords/wordSet.size());
+		System.out.println("avgInsertedWordsCount: " + avgInsertedWordsCount);
+		wordTrie.getStemWords(avgInsertedWordsCount, longShortFormsMap);
+		
+		FileUtils.writeToFile(longShortFormsMap, serializationStrFileStr);
+		List<Map<String, String>> stemWordsMapList = new ArrayList<Map<String, String>>();		
+		stemWordsMapList.add(longShortFormsMap);	
 		FileUtils.serializeObjToFile(stemWordsMapList, serializationFileStr);
 		System.out.println("Total number of words abbreviated: " + longShortFormsMap.size());
 	}	
@@ -302,8 +320,10 @@ public class WordTrie {
 		boolean serializeBool = true;
 		if(serializeBool){
 			String serializationFileStr = "src/thmp/data/stemWordsMap.dat";
-			serializeStemWordsMap(serializationFileStr);
+			String serializationStrFileStr = "src/thmp/data/stemWordsMap.txt";
+			serializeStemWordsMap(serializationFileStr, serializationStrFileStr);
 		}
+		
 		//System.out.println();
 		//System.out.println("WordTrie - " + longShortFormsMap);		
 	}
