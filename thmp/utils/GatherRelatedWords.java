@@ -11,8 +11,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import thmp.search.CollectThm;
 
 public class GatherRelatedWords {
 
@@ -33,7 +36,8 @@ public class GatherRelatedWords {
 		Map<String, RelatedWords> relatedWordsMap = createRelatedWordsMapFromFile(fileStr);
 		System.out.println("GatherRelatedWords - relatedWordsMap " + relatedWordsMap);
 		boolean serializeBool = true;
-		String serializationFileStr = "src/thmp/data/relatedWordsMap.dat";
+		 //= "src/thmp/data/relatedWordsMap.dat";
+		String serializationFileStr = FileUtils.getRELATED_WORDS_MAP_SERIAL_FILE_STR();
 		String serializationStrFileStr = "src/thmp/data/relatedWordsMap.txt";
 		if(serializeBool){			
 			FileUtils.writeToFile(relatedWordsMap, serializationStrFileStr);
@@ -135,26 +139,49 @@ public class GatherRelatedWords {
 		private List<String> synonymsList;
 		private List<String> antonymsList;
 		private List<String> relatedWordsList;
+		private transient List<String> combinedList;
 
 		public RelatedWords(List<String> synonymsList_, List<String> antonymsList_, List<String> relatedWordsList_) {
 			// this.word = word_;
+			this.combinedList = new ArrayList<String>();
 			if (null == synonymsList_) {
 				this.synonymsList = Collections.<String> emptyList();
 			} else {
 				this.synonymsList = synonymsList_;
+				combinedList.addAll(synonymsList_);
 			}
 			if (null == antonymsList_) {
 				this.antonymsList = Collections.<String> emptyList();
 			} else {
 				this.antonymsList = antonymsList_;
+				combinedList.addAll(antonymsList_);
 			}
 			if (null == relatedWordsList_) {
 				this.relatedWordsList = Collections.<String> emptyList();
 			} else {
 				this.relatedWordsList = relatedWordsList_;
+				combinedList.addAll(relatedWordsList_);
 			}
 		}
 
+		
+		public RelatedWords normalizeFromValidWordSet(Set<String> validWordSet){
+			normalizeFromValidWordSet(synonymsList, validWordSet);
+			normalizeFromValidWordSet(antonymsList, validWordSet);
+			normalizeFromValidWordSet(relatedWordsList, validWordSet);
+			return this;
+		}
+		
+		private void normalizeFromValidWordSet(List<String> list, Set<String> validWordSet){
+			for(int i = 0; i < list.size(); i++){
+				String word = list.get(i);
+				if(!validWordSet.contains(word)){
+					word = CollectThm.ThmWordsMaps.normalizeWordForm(word);
+					list.set(i, word);
+				}
+			}
+		}
+		
 		@Override
 		public String toString(){
 			StringBuilder sb = new StringBuilder(100);
@@ -185,5 +212,12 @@ public class GatherRelatedWords {
 			return relatedWordsList;
 		}
 
+		/**
+		 * Get all three lists combined.
+		 * @return
+		 */
+		public List<String> getCombinedList() {
+			return combinedList;
+		}
 	}
 }

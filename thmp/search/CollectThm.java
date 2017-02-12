@@ -37,7 +37,9 @@ import thmp.ThmInput;
 import thmp.search.SearchWordPreprocess.WordWrapper;
 import thmp.utils.WordForms.WordFreqComparator;
 import thmp.utils.FileUtils;
+import thmp.utils.GatherRelatedWords;
 import thmp.utils.WordForms;
+import thmp.utils.GatherRelatedWords.RelatedWords;
 
 /**
  * Collects thms by reading in thms from Latex files. Gather
@@ -185,7 +187,8 @@ public class CollectThm {
 		//List of theorems, each of which
 		//contains map of keywords and their frequencies in a particular theorem.
 		private static final ImmutableList<ImmutableMap<String, Integer>> thmWordsFreqMapListNoAnno;
-		//words and their document-wide frequencies.
+		/*words and their document-wide frequencies. These words are normalized, 
+		e.g. "annihilator", "annihiate" all have the single entry "annihilat" */
 		private static final ImmutableMap<String, Integer> docWordsFreqMapNoAnno;
 		//entries are word and the indices of thms that contain that word.
 		private static final ImmutableMultimap<String, Integer> wordThmsIndexMMapNoAnno;
@@ -210,6 +213,7 @@ public class CollectThm {
 		 * Absolute frequencies don't matter for forming context or relational vectors.
 		 * List is ordered with respect to relative frequency, more frequent words come first,
 		 * to optimize relation vector formation with BigIntegers.
+		 * These words *alone* are used throughout all search algorithms by all maps, to guarantee consistency. 
 		 */
 		private static final Map<String, Integer> CONTEXT_VEC_WORDS_MAP;
 		private static final ImmutableMap<String, Integer> CONTEXT_VEC_WORDS_FREQ_MAP;
@@ -231,10 +235,16 @@ public class CollectThm {
 				
 		private static final boolean GATHER_SKIP_GRAM_WORDS = ThmList.gather_skip_gram_words();
 		//private static final boolean GATHER_SKIP_GRAM_WORDS = true;
+		/*related words scraped from wiktionary, etc. 
+		 * Related words are *only* used
+		 * to process queries, not the corpus; applied to all search algorithms. Therefore
+		 * *final* intentionally.
+		 */
+		private static Map<String, GatherRelatedWords.RelatedWords> relatedWordsMap;
 		
 		static{	
 			//map of words and their representatives, e.g. "annihilate", "annihilator", etc all map to "annihilat"
-			synonymRepMap = WordForms.getSynonymsMap();			
+			synonymRepMap = WordForms.getSynonymsMap();
 			//pass builder into a reader function. For each thm, builds immutable list of keywords, 
 			//put that list into the thm list. The integer indicates the word frequencies.
 			ImmutableList.Builder<ImmutableMap<String, Integer>> thmWordsListBuilder = ImmutableList.builder();
@@ -315,7 +325,8 @@ public class CollectThm {
 				docWordsFreqMapNoAnno = ImmutableMap.copyOf(keyWordFreqTreeMap);		
 			}else{				
 				buildScoreMapNoAnno(wordsScorePreMap, CONTEXT_VEC_WORDS_FREQ_MAP);				
-				docWordsFreqMapNoAnno = CONTEXT_VEC_WORDS_FREQ_MAP;				
+				docWordsFreqMapNoAnno = CONTEXT_VEC_WORDS_FREQ_MAP;	
+				relatedWordsMap = deserializeAndProcessRelatedWordsMapFromFile(docWordsFreqMapNoAnno);
 			}
 			//this is ok, since from previous set of serialized data.
 			wordsScoreMapNoAnno = ImmutableMap.copyOf(wordsScorePreMap);
@@ -344,6 +355,50 @@ public class CollectThm {
 		}
 
 		/**
+		 * Deserializes and processes, normalize the words. Related words are only used
+		 * to process queries, not the corpus; applied to all search algorithms.
+		 * Process here rather than at map formation, since synonymsMap need to pertain 
+		 * to current corpus.
+		 * @param docWordsFreqMapNoAnno 
+		 * @return
+		 */
+		@SuppressWarnings("unchecked")
+		private static Map<String, RelatedWords> deserializeAndProcessRelatedWordsMapFromFile(Map<String, Integer> docWordsFreqMapNoAnno) {
+			String relatedWordsMapFileStr = FileUtils.getRELATED_WORDS_MAP_SERIAL_FILE_STR();
+			Map<String, RelatedWords> relatedWordsMap;
+			if(null != servletContext){
+				InputStream relatedWordsMapInputStream = servletContext.getResourceAsStream(relatedWordsMapFileStr);				
+				List<Map<String, RelatedWords>> list 
+					= (List<Map<String, RelatedWords>>)FileUtils.deserializeListFromInputStream(relatedWordsMapInputStream);
+				FileUtils.silentClose(relatedWordsMapInputStream);
+				relatedWordsMap = list.get(0);
+			}else{		
+				List<Map<String, RelatedWords>> list 
+					= (List<Map<String, RelatedWords>>)FileUtils.deserializeListFromFile(relatedWordsMapFileStr);
+				relatedWordsMap = list.get(0);
+			}
+			//
+			int relatedWordsUsedCounter = 0;
+			for(Map.Entry<String, RelatedWords> relatedWordsEntry : relatedWordsMap.entrySet()){
+				String word = relatedWordsEntry.getKey();
+				if(!docWordsFreqMapNoAnno.containsKey(word)){
+					word = normalizeWordForm(word);
+				}
+				if(!docWordsFreqMapNoAnno.containsKey(word)){
+					continue;
+				}
+				
+				RelatedWords normalizedRelatedWords 
+					= relatedWordsEntry.getValue().normalizeFromValidWordSet(docWordsFreqMapNoAnno.keySet());
+				
+				relatedWordsMap.put(word, normalizedRelatedWords);
+				relatedWordsUsedCounter++;
+			}
+			System.out.println("CollectThm.ThmWordsMap - Total number of related words entries adapted: " + relatedWordsUsedCounter);
+			return relatedWordsMap;
+		}
+		
+		/**
 		 * deserialize words list used to form context and relation vectors, which were
 		 * formed while parsing through the papers in e.g. DetectHypothesis.java. This is
 		 * so we don't parse everything again at every server initialization.
@@ -353,7 +408,6 @@ public class CollectThm {
 		private static List<String> extractWordsList() {	
 			String allThmWordsSerialFileStr = "src/thmp/data/allThmWordsList.dat";
 			if(null != servletContext){
-				//need to close this!
 				InputStream allThmWordsSerialInputStream = servletContext.getResourceAsStream(allThmWordsSerialFileStr);
 				return (List<String>)FileUtils.deserializeListFromInputStream(allThmWordsSerialInputStream);
 			}else{				
@@ -433,6 +487,10 @@ public class CollectThm {
 		
 		public static ImmutableMap<String, Integer> get_CONTEXT_VEC_WORDS_FREQ_MAP_fromData(){
 			return CONTEXT_VEC_WORDS_FREQ_MAP;
+		}
+		
+		public static Map<String, RelatedWords> getRelatedWordsMap(){
+			return relatedWordsMap;
 		}
 		
 		/**

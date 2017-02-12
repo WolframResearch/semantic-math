@@ -56,6 +56,7 @@ public class FileUtils {
 	private static boolean dataGenerationModeBool;	
 	//servletContext used when running from Tomcat
 	private static ServletContext servletContext;
+	private static final String RELATED_WORDS_MAP_SERIAL_FILE_STR = "src/thmp/data/relatedWordsMap.dat";
 	
 	/**
 	 * Write content to file at absolute path.
@@ -154,15 +155,15 @@ public class FileUtils {
 						Object obj = iter.next();
 						objectOutputStream.writeObject(obj);
 					}*/
-					objectOutputStream.writeObject(list);
-					objectOutputStream.writeObject(SERIAL_VERSION_NUM);
+			objectOutputStream.writeObject(list);
+			objectOutputStream.writeObject(SERIAL_VERSION_NUM);
 					//System.out.println("parsedExpressionList: " + parsedExpressionList);
-					objectOutputStream.close();
-					fileOuputStream.close();
-				}catch(IOException e){
-					e.printStackTrace();
-					throw new IllegalStateException("IOException while writing to file or closing resources");
-				}
+			objectOutputStream.close();
+			fileOuputStream.close();
+		}catch(IOException e){
+			e.printStackTrace();
+			throw new IllegalStateException("IOException while writing to file or closing resources");
+		}
 	}
 
 	/**
@@ -336,4 +337,7 @@ public class FileUtils {
 		return ml;
 	}
 
+	public static String getRELATED_WORDS_MAP_SERIAL_FILE_STR(){
+		return RELATED_WORDS_MAP_SERIAL_FILE_STR;
+	}
 }

@@ -367,7 +367,7 @@ public class WordForms {
 		}
 		
 		/**
-		 * Whether current word at wordIndex has been added to thm already under a previous 2/3-gram.
+		 * Whether current word at wordIndex has been added to thm already under a previous 2,3-gram.
 		 * @param thmWordSpanMMap
 		 * @param thmIndex
 		 * @param wordIndex

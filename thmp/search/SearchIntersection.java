@@ -28,6 +28,7 @@ import com.google.common.collect.SetMultimap;
 import com.google.common.collect.TreeMultimap;
 
 import thmp.search.SearchWordPreprocess.WordWrapper;
+import thmp.utils.GatherRelatedWords.RelatedWords;
 import thmp.utils.WordForms;
 
 /**
@@ -61,6 +62,8 @@ public class SearchIntersection {
 	 */
 	private static final ImmutableMultimap<String, Integer> wordThmMMap;
 	private static final ImmutableMultimap<String, Integer> wordThmMMapNoAnno;
+	private static final Map<String, RelatedWords> relatedWordsMap;
+	
 	//these maps are not immutable, they are not modified during runtime.
 	private static final Map<String, Integer> twoGramsMap = NGramSearch.get2GramsMap();
 	private static final Map<String, Integer> threeGramsMap = ThreeGramSearch.get3GramsMap();
@@ -80,7 +83,7 @@ public class SearchIntersection {
 		//System.out.println(CollectThm.get_wordsScoreMap());
 		wordThmMMap = CollectThm.ThmWordsMaps.get_wordThmsMMap();
 		wordThmMMapNoAnno = CollectThm.ThmWordsMaps.get_wordThmsMMapNoAnno();
-		
+		relatedWordsMap = CollectThm.ThmWordsMaps.getRelatedWordsMap();
 		//System.out.println(wordsScoreMap);
 		//thmList = CollectThm.ThmList.get_macroReplacedThmList();
 		thmList = CollectThm.ThmList.allThmsWithHypList();
@@ -197,13 +200,12 @@ public class SearchIntersection {
 		//map containing the indices of theorems added so far, where values are sets (hashset)
 		//of indices of words that have been added. This is to reward theorems that cover
 		//the more number of words. Actually just use SetMultimap.
-		//if 2/3-grams added, add indices of all words in 2/3-gram to set for that thm.
-		
+		//if 2/3-grams added, add indices of all words in 2/3-gram to set for that thm.		
 		logger.info("Starting intersection search...");
 		SetMultimap<Integer, Integer> thmWordSpanMMap = HashMultimap.create();
 		
 		//make input list of words
-		//String[] inputAr = input.toLowerCase().split(SPLIT_DELIM);
+		//this pre-processing should be deprecated! <--Feb 2017.
 		List<WordWrapper> wordWrapperList = SearchWordPreprocess.sortWordsType(input);
 		
 		//create searchState to record the intersectionVecList, and map of tokens and their span scores.
@@ -300,15 +302,13 @@ public class SearchIntersection {
 							numWordsAdded++;
 							indexStartingWordsMMap.put(i, threeGram);
 						}
-					}
-					
+					}					
 				}
 				
 				if(twoGramsMap.containsKey(twoGram)){
 					
 					scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, wordThmIndexMMap, curWrapper, twoGram, 
-							nextWordCombined, i, WordForms.TokenType.TWOGRAM, singletonScoresAr, searchWordsSet);	
-					
+							nextWordCombined, i, WordForms.TokenType.TWOGRAM, singletonScoresAr, searchWordsSet);					
 					if(scoreAdded > 0){
 						wordCountArray[i] = wordCountArray[i] + 1;
 						wordCountArray[i+1] = wordCountArray[i+1] + 1;
@@ -316,8 +316,7 @@ public class SearchIntersection {
 						searchState.addTokenScore(twoGram, scoreAdded);
 						numWordsAdded++;
 						indexStartingWordsMMap.put(i, twoGram);
-					}
-					
+					}					
 				}			
 			}
 			//if the words in a three gram collectively (3 gram + 2 gram + individual words) weigh a lot, 
@@ -326,7 +325,7 @@ public class SearchIntersection {
 			//score of all words added.
 			scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, wordThmIndexMMap, curWrapper, 
 					word, wordLong, i, WordForms.TokenType.SINGLETON, singletonScoresAr, searchWordsSet);
-			if(scoreAdded > 0){ //HERE
+			if(scoreAdded > 0){
 				wordCountArray[i] = wordCountArray[i] + 1;
 				totalWordsScore += scoreAdded;
 				searchState.addTokenScore(word, scoreAdded);
@@ -452,14 +451,10 @@ public class SearchIntersection {
 								|| wordsScoreMap.get(wordAr[2]) > avgWordScore*3.0/2 && wordCountArray[i+2] > 1){
 							adjustWordClusterScore(thmScoreMap, scoreThmMMap, wordThmIndexMMap, avgWordScore, indexWord);
 						}
-					}
-					
-				}
-				
-			}
-			
-		}
-		
+					}					
+				}				
+			}			
+		}		
 	}
 
 	/**
@@ -553,7 +548,7 @@ public class SearchIntersection {
 	 * @param wordIndices array of indices of words in query
 	 * @param singletonScoresAr Array of scores for singleton words
 	 * @param set of words, separated into singletons, used during search
-	 * @return List of theorem indices that have been added, 
+	 * @return scoreAdded
 	 */
 	private static int addWordThms(Map<Integer, Integer> thmScoreMap, TreeMultimap<Integer, Integer> scoreThmMMap,
 			Multimap<Integer, Integer> thmWordSpanMMap, ListMultimap<String, Integer> wordThmIndexMMap, //Map<String, Integer> dominantWordsMap,
@@ -562,6 +557,9 @@ public class SearchIntersection {
 		//update scores map
 		int curScoreToAdd = 0;
 		int scoreAdded = 0;
+		List<String> relatedWordsList = null;
+		Collection<Integer> relatedWordThmIndices = new ArrayList<Integer>();
+		//boolean relatedWordsFound = false;
 		//for every word, get list of thms containing this word	
 		Collection<Integer> wordThms;
 		if(anno){
@@ -569,19 +567,19 @@ public class SearchIntersection {
 		}else{
 			wordThms = wordThmMMapNoAnno.get(word);
 		}
-		Integer wordScore = 0;
-		//System.out.println("word " + word);
-		
-		if(!wordThms.isEmpty()){	
+		//only going through the no annotation path 
+		RelatedWords relatedWords = relatedWordsMap.get(word);
+		if(null != relatedWords){
+			relatedWordsList = relatedWords.getCombinedList();
+			//relatedWordsFound = true;
+		}		
+		Integer wordScore = 0;		
+		if(!wordThms.isEmpty()){
 			//wordScore = wordsScoreMap.get(wordLong);
 			wordScore = wordsScoreMap.get(word);	
 			wordScore = wordScore == null ? 0 : wordScore;
 			curScoreToAdd = wordScore + CONTEXT_WORD_BONUS 
-					+ curWrapper.matchExtraPoints();
-			
-			/*if(debug){
-				System.out.println("first time Word added: " + word + ". Score: " + curScoreToAdd);
-			}*/
+					+ curWrapper.matchExtraPoints();			
 		}else{
 			//String wordOtherForm = curWrapper.otherHashForm();
 			//String singWordOtherForm = curWrapper.otherHashForm();
@@ -601,9 +599,13 @@ public class SearchIntersection {
 				curScoreToAdd = wordScore + CONTEXT_WORD_BONUS 
 						+ curWrapper.matchExtraPoints();
 				word = singForm;
-				/*if(debug){
-					System.out.println("Word added: " + word + ". Score: " + curScoreToAdd);
-				}*/
+				if(null == relatedWordsList){
+					relatedWords = relatedWordsMap.get(word);
+					if(null != relatedWords){
+						relatedWordsList = relatedWords.getCombinedList();
+						//relatedWordsFound = true;
+					}
+				}
 			}//other form of word
 			/*else if(wordThmMMap.containsKey(wordOtherForm)){
 				wordThms = wordThmMMap.get(wordOtherForm);
@@ -613,14 +615,36 @@ public class SearchIntersection {
 				wordThms = wordThmMMap.get(singWordOtherForm);
 				wordScore = wordsScoreMap.get(singWordOtherForm);
 				curScoreToAdd = wordScore;		
-			}			*/	
+			}			*/				
 		}
 		
-		//go through common path of processign!		
+		if(wordThms.isEmpty()){
+			String normalizedWord = CollectThm.ThmWordsMaps.normalizeWordForm(word);
+			Integer tempWordScore = wordsScoreMap.get(normalizedWord);
+			if(null != tempWordScore){					
+				wordThms = wordThmMMapNoAnno.get(normalizedWord);				
+				//wordScore = wordsScoreMap.get(singFormLong);
+				//wordScore = wordsScoreMap.get(word);
+				//wordScore = wordScore == null ? 0 : wordScore;
+				wordScore = tempWordScore;
+				curScoreToAdd = wordScore + CONTEXT_WORD_BONUS 
+						+ curWrapper.matchExtraPoints();
+				word = normalizedWord;
+				//try to get related words, 
+				if(null == relatedWordsList){
+					relatedWords = relatedWordsMap.get(word);
+					if(null != relatedWords){
+						relatedWordsList = relatedWords.getCombinedList();
+					}
+				}
+			}			
+		}
+			
+		//go through common path of processing!		
 		//removes endings such as -ing, and uses synonym rep.
-		word = CollectThm.ThmWordsMaps.normalizeWordForm(word);
 		
-		//adjust curScoreToAdd, boost 2/3-gram scores when applicable
+		
+		//adjust curScoreToAdd, boost 2, 3-gram scores when applicable
 		curScoreToAdd = tokenType.adjustNGramScore(curScoreToAdd, singletonScoresAr, wordIndex);
 		
 		if(wordThms != null && curScoreToAdd != 0){
@@ -641,8 +665,11 @@ public class SearchIntersection {
 				//System.out.println("*** " + thmScoreMap);
 				scoreThmMMap.put(newScore, thmIndex);
 				//put in thmIndex, and the index of word in the query, to thmWordSpanMMap.				
-				tokenType.addToMap(thmWordSpanMMap, thmIndex, wordIndex);
-								
+				tokenType.addToMap(thmWordSpanMMap, thmIndex, wordIndex);								
+			}
+			if(curScoreToAdd > 0){
+			//add thm index from related words  , with 3/4 of the score.
+			
 			}
 			scoreAdded = curScoreToAdd;
 			//add singletons to searchWordsSet, so 
@@ -654,6 +681,32 @@ public class SearchIntersection {
 				}				
 			}
 		}
+
+		//find thms for related words
+		if(null != relatedWordsList){
+			//wordScore = wordsScoreMap.get(word);
+			int relatedWordScore = scoreAdded * 4/5.0 > 0 ? scoreAdded * 4/5.0 ? ;
+			
+			for(String relatedWord : relatedWordsList){
+				//Multimap, so return empty collection rather than null, if no hit.
+				relatedWordThmIndices.addAll();	
+				List<Integer> relatedWordThms = wordThmMMapNoAnno.get(relatedWord);
+				
+				for(Integer thmIndex : relatedWordThms){
+					
+				}
+				/*Integer relatedWordScore = wordsScoreMap.get(relatedWord); 
+				if(null != relatedWordScore){		
+					//wordScore = wordsScoreMap.get(singFormLong);
+					//wordScore = wordsScoreMap.get(word);
+					//wordScore = wordScore == null ? 0 : wordScore;				
+					//curScoreToAdd = wordScore + CONTEXT_WORD_BONUS 
+						//	+ curWrapper.matchExtraPoints();					
+				}*/
+			}	
+			
+		}
+			
 		return scoreAdded;
 	}	
 	

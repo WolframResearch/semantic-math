@@ -19,6 +19,9 @@ import com.google.common.collect.Multimap;
 import thmp.Maps;
 import thmp.ThmP1;
 import thmp.search.SearchWordPreprocess.WordWrapper;
+import thmp.utils.FileUtils;
+import thmp.utils.GatherRelatedWords;
+import thmp.utils.GatherRelatedWords.RelatedWords;
 import thmp.utils.WordForms;
 import thmp.utils.WordForms.WordFreqComparator;
 
@@ -63,15 +66,20 @@ public class TriggerMathThm2 {
 	
 	//private static final ImmutableMap<String, Integer> docWordsFreqMapNoAnno = CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno();
 	private static final ImmutableMap<String, Integer> docWordsFreqMapNoAnno;
+	private static final Map<String, GatherRelatedWords.RelatedWords> relatedWordsMap;
 	
 	/**
 	 * Debug variables
 	 */
 	private static final boolean DEBUG = false;
+
+	private static final double RELATED_WORD_MULTIPLICATION_FACTOR = 4/5.0;
 	
 	static {
 		
 		ImmutableList<String> thmList = CollectThm.ThmList.allThmsWithHypList();
+		relatedWordsMap = CollectThm.ThmWordsMaps.getRelatedWordsMap();
+		//relatedWordsMap = FileUtils.deserializeListFromFile("");
 		//docWordsFreqMapNoAnno should already been ordered based on frequency, more frequently-
 		//occuring words come earlier.
 		docWordsFreqMapNoAnno = CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno();
@@ -193,6 +201,8 @@ public class TriggerMathThm2 {
 			//mathObjMMap.put(thm, keywords[i]);
 		}*/
 	}
+
+	
 
 	/**
 	 * Adds thms by calling addKeywordToMathObj on CollectThm.thmWordsList.
@@ -506,10 +516,10 @@ public class TriggerMathThm2 {
 	/**
 	 * Auxiliary method to createQueryNoAnno. Adds word weight
 	 * to norm, when applicable.
-	 * @param thmAr
+	 * @param thmAr array of words in thm.
 	 * @param wordsScoreMap
 	 * @param norm
-	 * @param i
+	 * @param i index in thmAr
 	 * @param term
 	 * @return
 	 */
@@ -521,12 +531,17 @@ public class TriggerMathThm2 {
 			term = WordForms.getSingularForm(term);
 			termScore = wordsScoreMap.get(term);
 		}
-		
+		//expand this to differentiate between synoynms and antonyms?! to have different scores
+		List<String> termRelatedWordsList = null;
 		//check for related words! Increase the scores for related words & antonyms,
 		//not as high, maybe half the score.
 		boolean relatedWordsFound = false;
-		if(null != termScore){
-			
+		if(null != termScore){	
+			RelatedWords relatedWords = relatedWordsMap.get(term);
+			if(null != relatedWords){
+				termRelatedWordsList = relatedWords.getCombinedList();
+				relatedWordsFound = true;
+			}			
 		}
 		else{		
 			term = CollectThm.ThmWordsMaps.normalizeWordForm(term);
@@ -535,15 +550,15 @@ public class TriggerMathThm2 {
 		
 		//if no entry in relatedWordsMap found above, check again
 		if(null != termScore && !relatedWordsFound){
-			
+			RelatedWords relatedWords = relatedWordsMap.get(term);
+			if(null != relatedWords){
+				termRelatedWordsList = relatedWords.getCombinedList();
+			}	
 		}
 		
-		//System.out.println("term: " + term + ". termScore: " + termScore );
-		
 		//triggerTermsVec[rowIndex] = termScore;
-		//keywordDict starts indexing from 0!
-		Integer rowIndex = keywordIndexDict.get(term);
-		
+		/*keywordDict starts indexing from 0!*/
+		Integer rowIndex = keywordIndexDict.get(term);		
 		if(termScore != null && rowIndex != null){
 			//just adding the termscore, without squaring, works better
 			//norm += Math.pow(termScore, 2);
@@ -555,8 +570,32 @@ public class TriggerMathThm2 {
 			//keywordDict starts indexing from 0!
 			triggerTermsVec[rowIndex] = termScore;
 			System.out.println("TriggerMathThm2.java: term just added: " + term + ". " + rowIndex + ". termScore: " + termScore);
+			
 			//System.out.println(Arrays.toString(triggerTermsVec));
 		}
+		//add vector entries for related words
+		if(null != termRelatedWordsList){
+			//this multiplication factor is in experimentation
+			Double relatedWordScore = termScore == null ? 0 : termScore*RELATED_WORD_MULTIPLICATION_FACTOR;				
+			for(String relatedWord : termRelatedWordsList){
+				//relatedWordScore = relatedWordScore == 0 ? wordsScoreMap.get(relatedWord) : relatedWordScore;
+				if(0 == relatedWordScore){
+					if(wordsScoreMap.containsKey(relatedWord)){
+						relatedWordScore = wordsScoreMap.get(relatedWord)*RELATED_WORD_MULTIPLICATION_FACTOR;
+					}else{
+						continue;
+					}
+				}
+				//the key & related words should have *already* been normalized,
+				//when getting deserialized, to use consistent set of words as keywordIndexDict.
+				Integer relatedWordRowIndex = keywordIndexDict.get(relatedWord);
+				if(null != relatedWordRowIndex){
+					triggerTermsVec[relatedWordRowIndex] = relatedWordScore;
+					norm += Math.pow(relatedWordScore, 2);
+				}					
+			}
+		}
+		
 		return norm;
 	}
 
