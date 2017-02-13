@@ -13,6 +13,7 @@ import thmp.WLCommand.PosTerm;
 import thmp.search.CollectThm;
 import thmp.search.Searcher;
 import thmp.search.TriggerMathThm2;
+import thmp.utils.GatherRelatedWords.RelatedWords;
 import thmp.utils.WordForms;
 
 /**
@@ -33,6 +34,8 @@ public class ParseTreeToVec {
 	//the current map to use, this *must* be set to contextKeywordThmsDataDict when producing vecs from thm data source. 
 	//e.g. in DetectHypothesis.java. 
 	private static final Map<String, Integer> contextKeywordDict;
+	/*Deliberately not final, since not needed, in fact not created, when gathering data instead of searching.*/
+	private static Map<String, RelatedWords> relatedWordsMap;
 	//private static final Map<String, Integer> contextKeywordDict = ;
 	private static final ListMultimap<String, String> posMMap = Maps.posMMap();
 	
@@ -43,6 +46,7 @@ public class ParseTreeToVec {
 			contextKeywordDict = contextKeywordThmsDataDict;
 		}else{
 			contextKeywordDict = contextKeywordQueryDict;
+			relatedWordsMap = CollectThm.ThmWordsMaps.getRelatedWordsMap();
 		}
 	}
 	/**
@@ -313,15 +317,45 @@ public class ParseTreeToVec {
 	private static int addTermStrToVec(Struct struct, String termStr, int structParentIndex, int[] contextVec, 
 			boolean forceAdjust) {
 		Integer termRowIndex = contextKeywordDict.get(termStr);
+		//to be used if no appropriate termRowIndex found
+		Integer someRelatedWordIndex = null;
 		if(termRowIndex == null){
 			//de-singularize, and remove "-ed" and "ing"! But parsed Strings should already been singularized!
 			termRowIndex = contextKeywordDict.get(WordForms.getSingularForm(termStr));
 		}
+		List<String> relatedWordsList = null;
+		//add the indices of related words as well. 
+		RelatedWords relatedWords = relatedWordsMap.get(termStr);
+		if(null != relatedWords){
+			relatedWordsList = relatedWords.getCombinedList();
+		}
 		//System.out.println("##### Setting context vec, termStr " + termStr + " termRowIndex " + termRowIndex);
 		if(termRowIndex == null){
 		//removes endings such as -ing, and uses synonym rep.
-			termStr = CollectThm.ThmWordsMaps.normalizeWordForm(termStr);
+			termStr = WordForms.normalizeWordForm(termStr);
+			//check related words again
+			if(null == relatedWordsList){
+				relatedWords = relatedWordsMap.get(termStr);
+				if(null != relatedWords){
+					relatedWordsList = relatedWords.getCombinedList();
+				}
+			}
 			termRowIndex = contextKeywordDict.get(termStr);
+		}
+		
+		if(null != relatedWordsList){
+			for(String relatedWord : relatedWordsList){
+				//Related words themselves have already been normalized w.r.t. the dictionary.
+				Integer relatedWordRowIndex = contextKeywordDict.get(relatedWord);
+				if(null != relatedWordRowIndex){
+					if(null == someRelatedWordIndex){ 
+						someRelatedWordIndex = relatedWordRowIndex;
+					}
+					if(contextVec[relatedWordRowIndex] <= 0 || forceAdjust){
+						contextVec[relatedWordRowIndex] = structParentIndex;
+					}
+				}
+			}
 		}
 		if(termRowIndex != null){
 			//if hasn't been assigned to a valid index before, or only relational index
@@ -332,7 +366,11 @@ public class ParseTreeToVec {
 		}else{
 			//pass parentIndex down to children, in case of intermediate StructA that doesn't have a content string.
 			//eg assert[A, B], the assert does not have content string.
-			termRowIndex = structParentIndex;
+			if(null != someRelatedWordIndex){
+				termRowIndex = someRelatedWordIndex;
+			}else{
+				termRowIndex = structParentIndex;
+			}			
 		}
 		return termRowIndex;
 	}		

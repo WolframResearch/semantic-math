@@ -117,7 +117,7 @@ public class WordForms {
 	@SuppressWarnings("unchecked")
 	private static Map<String, String> deserializeStemWordsMap(ServletContext servletContext) {
 
-		String stemWordsMapFileStr = "src/thmp/data/stemWordsMap.txt";
+		String stemWordsMapFileStr = "src/thmp/data/stemWordsMap.dat";
 		Map<String, String> stemWordsMap;
 		if(null != servletContext){
 			InputStream stemWordsMapInputStream = servletContext.getResourceAsStream(stemWordsMapFileStr);			
@@ -293,6 +293,30 @@ public class WordForms {
 			singularForms[2] = curWord.substring(0, wordlen - 3) + 'y';
 		}
 		return singularForms;
+	}
+	/**
+	 * Canonicalize word. Used by all algorithms to pre-process words.
+	 * Deliberately not combined with singularization, as sometimes need
+	 * to be used separately.
+	 * @param word
+	 * @return
+	 */
+	public static String normalizeWordForm(String word){
+		//remove ending such as "ly".  <--remove this or not??
+		word = WordForms.removeWordEnding(word);
+		
+		//also remove -ing, 
+		String gerundForm = WordForms.getGerundForm(word);
+		if(null != gerundForm){
+			word = gerundForm;
+		}
+		
+		//if has synonym rep, use synonym rep instead 
+		String rep = synonymRepMap.get(word);
+		if(null != rep){
+			word = rep;
+		}
+		return word;
 	}
 	
 	/**

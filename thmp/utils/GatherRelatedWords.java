@@ -176,7 +176,7 @@ public class GatherRelatedWords {
 			for(int i = 0; i < list.size(); i++){
 				String word = list.get(i);
 				if(!validWordSet.contains(word)){
-					word = CollectThm.ThmWordsMaps.normalizeWordForm(word);
+					word = WordForms.normalizeWordForm(word);
 					list.set(i, word);
 				}
 			}

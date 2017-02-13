@@ -17,6 +17,7 @@ import thmp.WLCommand.PosTerm;
 import thmp.search.CollectThm;
 import thmp.search.Searcher;
 import thmp.search.TriggerMathThm2;
+import thmp.utils.GatherRelatedWords.RelatedWords;
 import thmp.utils.WordForms;
 
 /**
@@ -46,15 +47,17 @@ public class RelationVec implements Serializable{
 	//used for forming query vecs, as these are words used when the thm source vecs were formed, words and their indices
 	//Ordered according to frequency.
 	private static final Map<String, Integer> contextKeywordQueryDict = CollectThm.ThmWordsMaps.get_CONTEXT_VEC_WORDS_MAP();
-	//the current map to use, this *must* be set to contextKeywordThmsDataDict when producing vecs from thm data source. 
-	//e.g. in DetectHypothesis.java. 
+	/*Deliberately not final, since not needed, in fact not created, when gathering data instead of searching.*/
+	private static Map<String, RelatedWords> relatedWordsMap;
+	/*The current word-index dictionary to use, this *must* be set to contextKeywordThmsDataDict 
+	 * when producing vecs from thm data source. e.g. in DetectHypothesis.java. */
 	private static final Map<String, Integer> keywordDict;
 	
-	private static final int parseContextVectorSz;
-	
+	private static final int parseContextVectorSz;	
 	private static final int NUM_BITS_PER_BYTE = 8;
 	private static final Pattern SPLIT_DELIM_PATTERN = Pattern.compile(WordForms.splitDelim());
 	private static final boolean DEBUG = true;
+	
 	static{
 		if(Searcher.SearchMetaData.gatheringDataBool()){
 			//Sets the dictionary to the mode for producing context vecs from data source to be searched.
@@ -62,6 +65,7 @@ public class RelationVec implements Serializable{
 			keywordDict = contextKeywordThmsDataDict;
 		}else{
 			keywordDict = contextKeywordQueryDict;
+			relatedWordsMap = CollectThm.ThmWordsMaps.getRelatedWordsMap();
 		}
 		parseContextVectorSz = keywordDict.size();
 	}
@@ -252,7 +256,7 @@ public class RelationVec implements Serializable{
 		/**
 		 * Auxilliary method for buildRelationVec() to set bits in BitSet.
 		 * @param termStr The input string. 
-		 * @param modulus Which segment of the index the current RelationType corresponds to.
+		 * @param modulus Which segment of the index the current RelationType corresponds to, e.g. _IS.
 		 * @return max position this run in the new bit positions added.
 		 */
 		private static int setBitPosList(String termStr, List<Integer> bitPosList, int modulus, 
@@ -267,58 +271,123 @@ public class RelationVec implements Serializable{
 			if(termStrArLen > 1){
 				//set indices for all terms in compound words, 
 				//e.g. "... is regular local", sets "is regular, *and* "is local"
-				for(int i = 0; i < termStrArLen; i++){					
+				for(int i = 0; i < termStrArLen; i++){				
 					String word = termStrAr[i];
+					List<String> relatedWordsList = null;
+					//add related words
+					RelatedWords relatedWords = relatedWordsMap.get(word);
+					if(null != relatedWords){
+						relatedWordsList = relatedWords.getCombinedList();
+					}
 					//System.out.println("RelationVec.java - trying to add word " + word);
 					Integer residue = keywordDict.get(word);
 					if(null == residue){
-						residue = keywordDict.get(CollectThm.ThmWordsMaps.normalizeWordForm(word));
+						String normalizedWord = WordForms.normalizeWordForm(word);
+						residue = keywordDict.get(normalizedWord);
+						if(null == relatedWordsList){
+							relatedWords = relatedWordsMap.get(word);
+							relatedWordsList = relatedWords.getCombinedList();
+						}
 					}
+					//add the residues for related words first
+					maxBitPos = addRelatedWordsResidue(bitPosList, modulus, posTermRelationType, isParseStructTypeHyp,
+							maxBitPos, relatedWordsList);
 					if(null == residue){						
 						continue;
 					}
 					System.out.println("RelationVec - adding word " + word);
 					int bitPos = parseContextVectorSz*modulus + residue;					
-					maxBitPos = addToPosList(bitPosList, maxBitPos, bitPos);
-					
+					maxBitPos = addToPosList(bitPosList, maxBitPos, bitPos);					
 					//if parseStructType is HYP, also add to the "IF" segment.
 					//e.g. "if $f$ is a surjection", should add to "if" segment
 					//besides "IS_" and "_IS" segments.
-					if(RelationType.IF != posTermRelationType && isParseStructTypeHyp){
-						int[] multiplicityAr = RelationType.IF.vectorOffsetArray();
-						for(int multiplicity : multiplicityAr){
-							bitPos = multiplicity*parseContextVectorSz + residue;
-							maxBitPos = addToPosList(bitPosList, maxBitPos, bitPos);
-						}
-					}
+					maxBitPos = addHypRelationType(residue, bitPosList, maxBitPos,
+							posTermRelationType, isParseStructTypeHyp);
 				}
 			}
 		
-		//repeat for the whole of termStr:
-		Integer residue = keywordDict.get(termStr);
-		if(null == residue){
-			residue = keywordDict.get(CollectThm.ThmWordsMaps.normalizeWordForm(termStr));
-		}
-		if(null != residue){
-			if(DEBUG){
-				System.out.println("RelationVec - adding word " + termStr);
+			//repeat for the whole of termStr:
+			Integer residue = keywordDict.get(termStr);
+			RelatedWords relatedWords = relatedWordsMap.get(termStr);
+			List<String> relatedWordsList = null;
+			if(null != relatedWords){
+				relatedWordsList = relatedWords.getCombinedList();
 			}
-			int bitPos = parseContextVectorSz*modulus + residue;
-			maxBitPos = addToPosList(bitPosList, maxBitPos, bitPos);
-			//if parseStructType is HYP, also add to the "IF" segment.
-			//e.g. "if $f$ is a surjection", should add to "if" segment
-			//besides "IS_" and "_IS" segments.
+			if(null == residue){
+				String normalizedTermStr = WordForms.normalizeWordForm(termStr);
+				residue = keywordDict.get(normalizedTermStr);
+				if(null == relatedWordsList){
+					relatedWords = relatedWordsMap.get(normalizedTermStr);
+					if(null != relatedWords){
+						relatedWordsList = relatedWords.getCombinedList();
+					}
+				}
+			}			
+			maxBitPos = addRelatedWordsResidue(bitPosList, modulus, posTermRelationType, isParseStructTypeHyp,
+					maxBitPos, relatedWordsList);
+			if(null != residue){
+				if(DEBUG){
+					System.out.println("RelationVec - adding word " + termStr);
+				}
+				int bitPos = parseContextVectorSz*modulus + residue;
+				maxBitPos = addToPosList(bitPosList, maxBitPos, bitPos);
+				//if parseStructType is HYP, also add to the "IF" segment.
+				//e.g. "if $f$ is a surjection", should add to "if" segment
+				//besides "IS_" and "_IS" segments.
+				maxBitPos = addHypRelationType(residue, bitPosList, maxBitPos,
+						posTermRelationType, isParseStructTypeHyp);
+			}
+			return maxBitPos;
+		}
+
+		/**
+		 * @param bitPosList
+		 * @param modulus
+		 * @param posTermRelationType
+		 * @param isParseStructTypeHyp
+		 * @param maxBitPos
+		 * @param relatedWordsList
+		 * @return
+		 */
+		public static int addRelatedWordsResidue(List<Integer> bitPosList, int modulus,
+				RelationType posTermRelationType, boolean isParseStructTypeHyp, int maxBitPos,
+				List<String> relatedWordsList) {
+			if(null != relatedWordsList){
+				for(String relatedWord : relatedWordsList){
+					Integer relatedWordResidue = keywordDict.get(relatedWord);
+					if(null != relatedWordResidue){
+						int bitPos = parseContextVectorSz*modulus + relatedWordResidue;					
+						maxBitPos = addToPosList(bitPosList, maxBitPos, bitPos);
+						maxBitPos = addHypRelationType(relatedWordResidue, bitPosList, maxBitPos,
+								posTermRelationType, isParseStructTypeHyp);
+					}
+				}						
+			}
+			return maxBitPos;
+		}
+		
+		/**
+		 * Adds residues at corresponding places for "if" RelationType's, besides e.g. _IS.
+		 * @param residue
+		 * @param bitPosList
+		 * @param maxBitPos
+		 * @param posTermRelationType
+		 * @param isParseStructTypeHyp
+		 * @return
+		 */
+		private static int addHypRelationType(int residue, List<Integer> bitPosList, int maxBitPos,
+				RelationType posTermRelationType, boolean isParseStructTypeHyp){
 			if(RelationType.IF != posTermRelationType && isParseStructTypeHyp){
 				int[] multiplicityAr = RelationType.IF.vectorOffsetArray();
 				for(int multiplicity : multiplicityAr){
-					bitPos = multiplicity*parseContextVectorSz + residue;
+					int bitPos = multiplicity*parseContextVectorSz + residue;
 					maxBitPos = addToPosList(bitPosList, maxBitPos, bitPos);
 				}
 			}
+			return maxBitPos;
 		}
-		return maxBitPos;
-	}
 
+		
 		/**
 		 * @param bitPosList
 		 * @param maxBitPos

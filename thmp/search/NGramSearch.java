@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import javax.servlet.ServletContext;
 
@@ -47,6 +48,9 @@ public class NGramSearch {
 	
 	// default two-gram averageFreqCount when total number of two grams is 0
 	private static final int ADDITIONAL_TWO_GRAM_DEFAULT_COUNT = 5;
+
+	private static final Pattern WHITESPACE_PATTERN = WordForms.getWhiteEmptySpacePattern();
+	private static final Pattern INVALID_WORD_PATTERN = Pattern.compile("\\s*|.*[\\\\|$].*"); 
 	//words to be taken off of two-gram map
 	private static final String[] NOT_TWO_GRAMS = new String[]{"field is", "more generally"};
 	
@@ -125,7 +129,7 @@ public class NGramSearch {
 			//total word counts of all 2 grams
 			Map<String, Integer> totalWordCounts = new HashMap<String, Integer>();
 			//build nGram map, 
-			recordCounts(nGramMap, totalWordCounts);
+			buildNGramMap(nGramMap, totalWordCounts);
 	
 			//computes the average frequencies of words that follow the first word in all 2-grams
 			Map<String, Integer> averageWordCounts = computeAverageFreq(nGramMap, totalWordCounts);
@@ -144,7 +148,6 @@ public class NGramSearch {
 			}else{
 				InputStream twoGramInputStream = servletContext.getResourceAsStream(TWO_GRAM_DATA_FILESTR);
 				BufferedReader twoGramBF = new BufferedReader(new InputStreamReader(twoGramInputStream));				
-				//BufferedReader twoGramBF = new BufferedReader(new FileReader(TWO_GRAM_DATA_FILESTR));				
 				readAdditionalTwoGrams(twoGramBF, initialTwoGramsSet);
 			}
 			nGramFirstWordsSet = new HashSet<String>();
@@ -156,8 +159,13 @@ public class NGramSearch {
 		}
 	
 	/**
-	 * compile list of 2 grams. Retain ones that show up higher than 3/2 of avg frequency.
+	 * compile list of 2 grams from nGramMap. Retain ones that show up higher than 3/2 of avg frequency.
 	 * @return 2 grams, and their raw frequencies in doc.
+	 * @param nGramMap Contains frequency data on words in corpus.
+	 * @param averageWordCounts
+	 * @param nGramFirstWordsSet
+	 * @param initialTwoGramsSet
+	 * @return
 	 */
 	private static Map<String, Integer> compile2grams(Map<String, Map<String, Integer>> nGramMap, Map<String, Integer> averageWordCounts,
 			Set<String> nGramFirstWordsSet, Set<String> initialTwoGramsSet){
@@ -268,11 +276,10 @@ public class NGramSearch {
 	 * @param totalWordCounts Total counts of words that follow this word, equivalent to size of map in
 	 * nGramMap corresponding to this key word.
 	 * @param nGramMap Map of maps. Keys are words in text, and entries are maps whose keys are 2nd terms
-	 * in 2 grams, and entries are frequency counts.
+	 * in 2 grams, and entries are frequency counts. I.e. map of words that show up, and the words that 
+	 * immediately follow and their counts.
 	 */
-	private static void recordCounts(Map<String, Map<String, Integer>> nGramMap, Map<String, Integer> totalWordCounts){
-		//map of words that show up, and the words that immediately follow and their counts.
-		//nGramMap = new HashMap<String, Map<String, Integer>>();
+	private static void buildNGramMap(Map<String, Map<String, Integer>> nGramMap, Map<String, Integer> totalWordCounts){		
 		//get thmList from CollectThm
 		List<String> thmList = ProcessInput.processInput(CollectThm.ThmList.get_thmList(), true);
 		//System.out.println(thmList);
@@ -289,21 +296,20 @@ public class NGramSearch {
 				
 				//take singular forms
 				curWord = WordForms.getSingularForm(curWord);
-				nextWord = WordForms.getSingularForm(nextWord);					
+				nextWord = WordForms.getSingularForm(nextWord);	
 				
-				//this is a rather large set, should not include so many words.
+				//this is a rather large set, should not include so many cases.
 				//words such as "purely inseparable" might be filtered out.
 				//maybe first word could be the small fluff words list from ThreeGramSearch?
 				if(fluffWordsSet.contains(curWord) || curWord.length() < 2 
-						|| curWord.matches("\\s*") || curWord.contains("\\") || curWord.contains("$")){	
+						|| INVALID_WORD_PATTERN.matcher(curWord).matches()){	
 					//if(nonMathFluffWordsSet.contains(curWord) || curWord.length() < 2 
 						//	|| curWord.matches("\\s*") || curWord.contains("\\")){	
 					continue;
 				}
 				//screen off 2nd word more discriminantly.
 				if(fluffWordsSet.contains(nextWord) || nonMathFluffWordsSet.contains(nextWord) 
-						|| nextWord.length() < 2 || nextWord.matches("\\s*") || nextWord.contains("\\")
-						|| nextWord.contains("$")){					
+						|| nextWord.length() < 2 || INVALID_WORD_PATTERN.matcher(curWord).matches()){					
 					i++;
 					continue;
 				}

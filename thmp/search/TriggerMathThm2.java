@@ -308,7 +308,7 @@ public class TriggerMathThm2 {
 			double norm = 0;
 			for (String keyword : curMathObjCol) {
 				if(!keywordIndexDict.containsKey(keyword)){
-					keyword = CollectThm.ThmWordsMaps.normalizeWordForm(keyword);
+					keyword = WordForms.normalizeWordForm(keyword);
 				}
 				if(!keywordIndexDict.containsKey(keyword)){
 					continue;
@@ -448,6 +448,7 @@ public class TriggerMathThm2 {
 		for (int i = 0; i < thmAr.length; i++) {
 			String term = thmAr[i];
 			double newNorm;
+			//this also normalizes the word
 			newNorm = addToNorm(thmAr, wordsScoreMap, queryVec, norm, i, term);
 			if(newNorm - norm > highestWeight){
 				highestWeight = newNorm - norm;
@@ -544,7 +545,7 @@ public class TriggerMathThm2 {
 			}			
 		}
 		else{		
-			term = CollectThm.ThmWordsMaps.normalizeWordForm(term);
+			term = WordForms.normalizeWordForm(term);
 			termScore = wordsScoreMap.get(term);			
 		}
 		

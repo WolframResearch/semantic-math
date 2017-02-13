@@ -235,15 +235,16 @@ public class CollectThm {
 				
 		private static final boolean GATHER_SKIP_GRAM_WORDS = ThmList.gather_skip_gram_words();
 		//private static final boolean GATHER_SKIP_GRAM_WORDS = true;
-		/*related words scraped from wiktionary, etc. 
+		/* Related words scraped from wiktionary, etc. 
 		 * Related words are *only* used
 		 * to process queries, not the corpus; applied to all search algorithms. Therefore
-		 * *final* intentionally.
+		 * intentionally *not* final .
 		 */
 		private static Map<String, GatherRelatedWords.RelatedWords> relatedWordsMap;
 		
 		static{	
-			//map of words and their representatives, e.g. "annihilate", "annihilator", etc all map to "annihilat"
+			/*map of words and their representatives, e.g. "annihilate", "annihilator", etc all map to "annihilat"
+			i.e. word of maps to their stems. */
 			synonymRepMap = WordForms.getSynonymsMap();
 			//pass builder into a reader function. For each thm, builds immutable list of keywords, 
 			//put that list into the thm list. The integer indicates the word frequencies.
@@ -382,7 +383,7 @@ public class CollectThm {
 			for(Map.Entry<String, RelatedWords> relatedWordsEntry : relatedWordsMap.entrySet()){
 				String word = relatedWordsEntry.getKey();
 				if(!docWordsFreqMapNoAnno.containsKey(word)){
-					word = normalizeWordForm(word);
+					word = WordForms.normalizeWordForm(word);
 				}
 				if(!docWordsFreqMapNoAnno.containsKey(word)){
 					continue;
@@ -495,7 +496,8 @@ public class CollectThm {
 		
 		/**
 		 * Add lexicon words to docWordsFreqMapNoAnno, which only contains collected words from thm corpus,
-		 * collected based on frequnency, right now.
+		 * collected based on frequnency, right now. This is curated list of words, so don't need much normalization.
+		 * e..g. already singular.
 		 */
 		private static void addLexiconWordsToContextKeywordDict(Map<String, Integer> docWordsFreqMapNoAnno,
 				int averageSingletonWordFrequency){
@@ -506,7 +508,11 @@ public class CollectThm {
 			for(Map.Entry<String, String> entry : posMMap.entries()){
 				String pos = entry.getValue();
 				if(pos.equals("ent") || pos.equals("adj")){
-					docWordsFreqMapNoAnno.put(entry.getKey(), avgWordFreq);
+					String word = entry.getKey();
+					word = WordForms.normalizeWordForm(word);
+					if(!docWordsFreqMapNoAnno.containsKey(word)){
+						docWordsFreqMapNoAnno.put(word, avgWordFreq);
+					}
 				}
 			}			
 		}
@@ -706,9 +712,9 @@ public class CollectThm {
 			for(int i = 0; i < thmList.size(); i++){
 				//System.out.println(counter++);
 				String thm = thmList.get(i);
-				//number of words to skip if an n gram has been added..
+				//number of words to skip if an n gram has been added.
 				int numFutureWordsToSkip = 0;
-				//String[] thmAr = thm.toLowerCase().split("\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:");
+				//split along e.g. "\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:"
 				String[] thmAr = WordForms.splitDelimPattern().split(thm.toLowerCase());
 				//words and their frequencies.
 				Map<String, Integer> thmWordsFreqMap = new HashMap<String, Integer>();				
@@ -737,11 +743,6 @@ public class CollectThm {
 						skipWordBasedOnPos = false;
 					}else{ 
 						if(WordForms.getFluffSet().contains(word)) continue;
-
-						//removes endings such as -ing, and uses synonym rep.
-						//e.g. "annihilate", "annihilator", etc all map to "annihilat"
-						word = normalizeWordForm(word);
-						
 						List<String> wordPosList = posMMap.get(word);
 						if(!wordPosList.isEmpty()){
 							String wordPos = wordPosList.get(0);
@@ -754,8 +755,6 @@ public class CollectThm {
 					if(FreqWordsSet.freqWordsSet.contains(word) && !nGramFirstWordsSet.contains(word)
 							&& skipWordBasedOnPos) continue;					
 					
-					singletonWordAdded = addWordToMaps(word, i, thmWordsFreqMap, //thmWordsFreqListBuilder, 
-							docWordsFreqPreMap, wordThmsMMapBuilder);
 					//check the following word
 					if(j < thmAr.length-1){
 						String nextWordCombined = word + " " + thmAr[j+1];
@@ -779,42 +778,33 @@ public class CollectThm {
 							}
 						}
 					}
-					//gather list of relevant words used in this thm
-					if(numFutureWordsToSkip > 0){
-						numFutureWordsToSkip--;
-					}else if(null != threeGramAdded){
-						skipGramWordList_.add(threeGramAdded);
-						numFutureWordsToSkip = 2;
-					}else if(null != twoGramAdded){
-						skipGramWordList_.add(twoGramAdded);
-						numFutureWordsToSkip = 1;
-					}else if(null != singletonWordAdded){
-						skipGramWordList_.add(singletonWordAdded);
-					}
 					
+					if(!GATHER_SKIP_GRAM_WORDS){
+						//removes endings such as -ing, and uses synonym rep.
+						//e.g. "annihilate", "annihilator", etc all map to "annihilat"
+						word = WordForms.normalizeWordForm(word);
+					}
+					singletonWordAdded = addWordToMaps(word, i, thmWordsFreqMap, //thmWordsFreqListBuilder, 
+							docWordsFreqPreMap, wordThmsMMapBuilder);
+					if(GATHER_SKIP_GRAM_WORDS){
+						//gather list of relevant words used in this thm
+						if(numFutureWordsToSkip > 0){
+							numFutureWordsToSkip--;
+						}else if(null != threeGramAdded){
+							skipGramWordList_.add(threeGramAdded);
+							numFutureWordsToSkip = 2;
+						}else if(null != twoGramAdded){
+							skipGramWordList_.add(twoGramAdded);
+							numFutureWordsToSkip = 1;
+						}else if(null != singletonWordAdded){
+							skipGramWordList_.add(singletonWordAdded);
+						}
+					}
 				}//done iterating through this thm				 
 				thmWordsFreqListBuilder.add(ImmutableMap.copyOf(thmWordsFreqMap));
 				//System.out.println("++THM: " + thmWordsMap);
 			}
 		}
-		
-		public static String normalizeWordForm(String word){
-			//remove ending such as "ly".  <--remove this or not??
-			word = WordForms.removeWordEnding(word);
-			
-			//also remove -ing, 
-			String gerundForm = WordForms.getGerundForm(word);
-			if(null != gerundForm){
-				word = gerundForm;
-			}
-			
-			//if has synonym rep, use synonym rep instead 
-			String rep = synonymRepMap.get(word);
-			if(null != rep){
-				word = rep;
-			}
-			return word;
-		}		
 		
 		/**
 		 * Auxiliary method for building word frequency maps. Analogous to addWordToMaps(), 
