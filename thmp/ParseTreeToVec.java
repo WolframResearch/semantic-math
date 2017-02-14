@@ -38,15 +38,17 @@ public class ParseTreeToVec {
 	private static Map<String, RelatedWords> relatedWordsMap;
 	//private static final Map<String, Integer> contextKeywordDict = ;
 	private static final ListMultimap<String, String> posMMap = Maps.posMMap();
-	
+	private static final boolean GATHERING_DATA_BOOL;
 	static{
 		if(Searcher.SearchMetaData.gatheringDataBool()){
 			//Sets the dictionary to the mode for producing context vecs from data source to be searched.
 			// e.g. in DetectHypothesis.java.
 			contextKeywordDict = contextKeywordThmsDataDict;
+			GATHERING_DATA_BOOL = true;
 		}else{
 			contextKeywordDict = contextKeywordQueryDict;
 			relatedWordsMap = CollectThm.ThmWordsMaps.getRelatedWordsMap();
+			GATHERING_DATA_BOOL = false;
 		}
 	}
 	/**
@@ -324,35 +326,41 @@ public class ParseTreeToVec {
 			termRowIndex = contextKeywordDict.get(WordForms.getSingularForm(termStr));
 		}
 		List<String> relatedWordsList = null;
-		//add the indices of related words as well. 
-		RelatedWords relatedWords = relatedWordsMap.get(termStr);
-		if(null != relatedWords){
-			relatedWordsList = relatedWords.getCombinedList();
+		//add the indices of related words as well.
+		RelatedWords relatedWords;
+		if(!GATHERING_DATA_BOOL){
+			relatedWords = relatedWordsMap.get(termStr);
+			if(null != relatedWords){
+				relatedWordsList = relatedWords.getCombinedList();
+			}
 		}
 		//System.out.println("##### Setting context vec, termStr " + termStr + " termRowIndex " + termRowIndex);
 		if(termRowIndex == null){
 		//removes endings such as -ing, and uses synonym rep.
 			termStr = WordForms.normalizeWordForm(termStr);
+			if(!GATHERING_DATA_BOOL){
 			//check related words again
-			if(null == relatedWordsList){
-				relatedWords = relatedWordsMap.get(termStr);
-				if(null != relatedWords){
-					relatedWordsList = relatedWords.getCombinedList();
+				if(null == relatedWordsList){
+					relatedWords = relatedWordsMap.get(termStr);
+					if(null != relatedWords){
+						relatedWordsList = relatedWords.getCombinedList();
+					}
 				}
 			}
 			termRowIndex = contextKeywordDict.get(termStr);
 		}
-		
-		if(null != relatedWordsList){
-			for(String relatedWord : relatedWordsList){
-				//Related words themselves have already been normalized w.r.t. the dictionary.
-				Integer relatedWordRowIndex = contextKeywordDict.get(relatedWord);
-				if(null != relatedWordRowIndex){
-					if(null == someRelatedWordIndex){ 
-						someRelatedWordIndex = relatedWordRowIndex;
-					}
-					if(contextVec[relatedWordRowIndex] <= 0 || forceAdjust){
-						contextVec[relatedWordRowIndex] = structParentIndex;
+		if(!GATHERING_DATA_BOOL){
+			if(null != relatedWordsList){
+				for(String relatedWord : relatedWordsList){
+					//Related words themselves have already been normalized w.r.t. the dictionary.
+					Integer relatedWordRowIndex = contextKeywordDict.get(relatedWord);
+					if(null != relatedWordRowIndex){
+						if(null == someRelatedWordIndex){ 
+							someRelatedWordIndex = relatedWordRowIndex;
+						}
+						if(contextVec[relatedWordRowIndex] <= 0 || forceAdjust){
+							contextVec[relatedWordRowIndex] = structParentIndex;
+						}
 					}
 				}
 			}

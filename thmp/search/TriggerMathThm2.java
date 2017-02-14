@@ -609,10 +609,18 @@ public class TriggerMathThm2 {
 		return mathObjMx;
 	}
 	
+	/**
+	 * Number of words used in term-doc mx.
+	 * @return
+	 */
 	public static int mathThmMxRowDim(){
 		return keywordIndexDict.size();
 	}
 	
+	/**
+	 * Number of thms used in term-doc mx.
+	 * @return
+	 */
 	public static int mathThmMxColDim(){
 		return thmWordsMapList.size();
 	}

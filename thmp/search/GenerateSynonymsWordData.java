@@ -88,8 +88,7 @@ public class GenerateSynonymsWordData {
 						}
 					}
 					continue;
-				}
-				
+				}				
 				line = ThmInput.removeTexMarkup(line, null, null);	
 				sentenceList.add(line);
 			}

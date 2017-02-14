@@ -284,19 +284,21 @@ public class ThmSearch {
 				ml = FileUtils.getKernelLinkInstance();
 				String msg = "Kernel instance acquired...";
 				logger.info(msg);
+				//int rowDimension = docMx.length;
+				int rowDimension = TriggerMathThm2.mathThmMxRowDim();
+				//int mxColDim = docMx[0].length;
+				int mxColDim = TriggerMathThm2.mathThmMxColDim();
 				
 				//set up the matrix corresponding to docMx, to be SVD'd. 
 				//adjust mx entries based on correlation first	
 				//StringBuilder mxSB = new StringBuilder("m = Developer`ToPackedArray@");
 				//mxSB.append(toNestedList(docMx)).append("//N;");
+				/* *Need* to specify dimension! Since the Automatic dimension might be less than 
+				 * or equal to the size of the keywordList, if some words are not hit by the current thm corpus. */
 				StringBuilder mxSB = TriggerMathThm2.sparseArrayInputSB()
-						.insert(0, "m=SparseArray[").append("];");
-				
-				//int rowDimension = docMx.length;
-				int rowDimension = TriggerMathThm2.mathThmMxRowDim();
-				//int mxColDim = docMx[0].length;
-				int mxColDim = TriggerMathThm2.mathThmMxColDim();
-				msg = "mxSB.length(): " + mxSB.length();
+						.insert(0, "m=SparseArray[1+").append(",{"+rowDimension).append(",").append(mxColDim+"}];");
+				//System.out.println("ThmSearch. - mxSB " + mxSB);
+				msg = "ThmSearch.TermDocumentMatrix - mxSB.length(): " + mxSB.length();
 				System.out.println(msg);
 				logger.info(msg);
 				
@@ -307,6 +309,8 @@ public class ThmSearch {
 				//ml.evaluate("m={{1,2}}");
 				msg = "Kernel has the matrix!";
 				logger.info(msg);
+				System.out.println(msg);
+				
 				if(getMx){
 					ml.waitForAnswer();			
 					Expr expr = ml.getExpr();
@@ -317,9 +321,6 @@ public class ThmSearch {
 				ml.evaluate("Begin[\""+ MX_CONTEXT_NAME +"\"]");
 				ml.discardAnswer();
 				
-				//ml.evaluate("m");
-				//ml.waitForAnswer();
-				//System.out.println("FIRST m : " + ml.getExpr());
 				//corMx should be computed using correlation mx
 				//or add a fraction of M.M^T.M
 				//this has the effect that if ith term and jth terms
@@ -349,14 +350,16 @@ public class ThmSearch {
 						+ "], {.6, Infinity}, {0, 0}]/.Indeterminate->0;");
 				msg = "Corr. mx clipped!";
 				logger.info(msg);
+				System.out.println(msg);
+				//ml.waitForAnswer();
+				//System.out.println("clipped corr mx: " + ml.getExpr());
 				
 				if(getCorMx){
 					ml.waitForAnswer();
 					Expr expr = ml.getExpr();
-					System.out.println("corMx " + expr);
 					//get correlation matrix, to put together correlated terms
 					//in similar indices. 
-					
+					System.out.println("corMx " + expr);					
 				}else{
 					ml.discardAnswer();
 				}
@@ -394,7 +397,7 @@ public class ThmSearch {
 				//write matrix to file, so no need to form it each time
 				
 				//System.out.println(nearestVec.length() + "  " + Arrays.toString((int[])nearestVec.part(1).asArray(Expr.INTEGER, 1)));
-				String dimMsg = "Dimensions of docMx: " + docMx.length + " " +mxColDim + ". Starting SVD...";
+				String dimMsg = "Dimensions of docMx: " + rowDimension + " " +mxColDim + ". Starting SVD...";
 				System.out.print(dimMsg);
 				logger.info(dimMsg);
 				//System.out.println(mx);

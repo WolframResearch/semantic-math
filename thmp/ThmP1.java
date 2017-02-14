@@ -4497,7 +4497,7 @@ public class ThmP1 {
 			sentenceList.add(sentenceBuilder.toString());
 		}
 		
-		System.out.println("sentenceList " + sentenceList);
+		//System.out.println("sentenceList " + sentenceList);
 		return sentenceList.toArray(new String[0]);
 	}
 	

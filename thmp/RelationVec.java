@@ -47,8 +47,10 @@ public class RelationVec implements Serializable{
 	//used for forming query vecs, as these are words used when the thm source vecs were formed, words and their indices
 	//Ordered according to frequency.
 	private static final Map<String, Integer> contextKeywordQueryDict = CollectThm.ThmWordsMaps.get_CONTEXT_VEC_WORDS_MAP();
-	/*Deliberately not final, since not needed, in fact not created, when gathering data instead of searching.*/
+	/*Deliberately not final, since not needed, in fact not created, when gathering data instead of searching.
+	 * We want the *precise* wording for the thms, not using related words. */
 	private static Map<String, RelatedWords> relatedWordsMap;
+	private static final boolean GATHERING_DATA_BOOL;
 	/*The current word-index dictionary to use, this *must* be set to contextKeywordThmsDataDict 
 	 * when producing vecs from thm data source. e.g. in DetectHypothesis.java. */
 	private static final Map<String, Integer> keywordDict;
@@ -63,9 +65,11 @@ public class RelationVec implements Serializable{
 			//Sets the dictionary to the mode for producing context vecs from data source to be searched.
 			// e.g. in DetectHypothesis.java.
 			keywordDict = contextKeywordThmsDataDict;
+			GATHERING_DATA_BOOL = true;
 		}else{
 			keywordDict = contextKeywordQueryDict;
 			relatedWordsMap = CollectThm.ThmWordsMaps.getRelatedWordsMap();
+			GATHERING_DATA_BOOL = false;
 		}
 		parseContextVectorSz = keywordDict.size();
 	}
@@ -274,24 +278,29 @@ public class RelationVec implements Serializable{
 				for(int i = 0; i < termStrArLen; i++){				
 					String word = termStrAr[i];
 					List<String> relatedWordsList = null;
-					//add related words
-					RelatedWords relatedWords = relatedWordsMap.get(word);
-					if(null != relatedWords){
-						relatedWordsList = relatedWords.getCombinedList();
+					RelatedWords relatedWords;
+					if(!GATHERING_DATA_BOOL){
+						//add related words
+						relatedWords = relatedWordsMap.get(word);
+						if(null != relatedWords){
+							relatedWordsList = relatedWords.getCombinedList();
+						}
 					}
 					//System.out.println("RelationVec.java - trying to add word " + word);
 					Integer residue = keywordDict.get(word);
 					if(null == residue){
 						String normalizedWord = WordForms.normalizeWordForm(word);
 						residue = keywordDict.get(normalizedWord);
-						if(null == relatedWordsList){
+						if(!GATHERING_DATA_BOOL && null == relatedWordsList){
 							relatedWords = relatedWordsMap.get(word);
 							relatedWordsList = relatedWords.getCombinedList();
 						}
 					}
+					if(!GATHERING_DATA_BOOL){
 					//add the residues for related words first
-					maxBitPos = addRelatedWordsResidue(bitPosList, modulus, posTermRelationType, isParseStructTypeHyp,
-							maxBitPos, relatedWordsList);
+						maxBitPos = addRelatedWordsResidue(bitPosList, modulus, posTermRelationType, isParseStructTypeHyp,
+								maxBitPos, relatedWordsList);
+					}
 					if(null == residue){						
 						continue;
 					}
@@ -308,23 +317,31 @@ public class RelationVec implements Serializable{
 		
 			//repeat for the whole of termStr:
 			Integer residue = keywordDict.get(termStr);
-			RelatedWords relatedWords = relatedWordsMap.get(termStr);
 			List<String> relatedWordsList = null;
-			if(null != relatedWords){
-				relatedWordsList = relatedWords.getCombinedList();
+			RelatedWords relatedWords = null; 
+			
+			if(!GATHERING_DATA_BOOL){
+				relatedWords = relatedWordsMap.get(termStr);				
+				if(null != relatedWords){
+					relatedWordsList = relatedWords.getCombinedList();
+				}
 			}
 			if(null == residue){
 				String normalizedTermStr = WordForms.normalizeWordForm(termStr);
 				residue = keywordDict.get(normalizedTermStr);
-				if(null == relatedWordsList){
-					relatedWords = relatedWordsMap.get(normalizedTermStr);
-					if(null != relatedWords){
-						relatedWordsList = relatedWords.getCombinedList();
+				if(!GATHERING_DATA_BOOL){
+					if(null == relatedWordsList){
+						relatedWords = relatedWordsMap.get(normalizedTermStr);
+						if(null != relatedWords){
+							relatedWordsList = relatedWords.getCombinedList();
+						}
 					}
 				}
 			}			
-			maxBitPos = addRelatedWordsResidue(bitPosList, modulus, posTermRelationType, isParseStructTypeHyp,
-					maxBitPos, relatedWordsList);
+			if(!GATHERING_DATA_BOOL){
+				maxBitPos = addRelatedWordsResidue(bitPosList, modulus, posTermRelationType, isParseStructTypeHyp,
+						maxBitPos, relatedWordsList);
+			}
 			if(null != residue){
 				if(DEBUG){
 					System.out.println("RelationVec - adding word " + termStr);
