@@ -115,8 +115,7 @@ public class ThmSearch {
 		//transform query vector to low dimensional space 
 		//String query = "{{1,1,0,0}}";
 		//ml.evaluate("q = " + queryStr + ".mx.Transpose[mx];");
-		//ml.discardAnswer();
-		
+		//ml.discardAnswer();		
 		try{
 			String msg = "Transposing and applying corMx...";
 			logger.info(msg);
@@ -235,10 +234,14 @@ public class ThmSearch {
 		
 		List<Integer> nearestVecList = null;		
 		String query = TriggerMathThm2.createQueryNoAnno(thm);
-		if(query.equals("")){
+		//String msg = "ThmSearch - query String formed. ";
+		//logger.info(msg);
+		//System.out.println(msg);
+		
+		if(WordForms.getWhiteEmptySpacePattern().matcher(query).matches()){
 			return Collections.emptyList();
 		}
-		System.out.println("ThmSearch.java: about to findNearestVecs()!");
+		System.out.println("ThmSearch.java: about to call findNearestVecs()");
 		//processes query
 		nearestVecList = findNearestVecs(query, numVec);
 		

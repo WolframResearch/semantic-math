@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -251,7 +252,7 @@ public class SearchCombined {
 		List<Integer> nearestVecList = ThmSearch.ThmSearchQuery.findNearestThmsInTermDocMx(input, NUM_NEAREST);
 		if(nearestVecList.isEmpty()){
 			System.out.println("I've got nothing for you yet. Try again.");
-			return null;
+			return Collections.<String>emptyList();
 		}
 		
 		SearchState searchState = SearchIntersection.getHighestThms(input, searchWordsSet, searchContextBool, NUM_NEAREST);

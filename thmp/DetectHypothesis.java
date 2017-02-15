@@ -1,6 +1,7 @@
 package thmp;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -235,67 +236,90 @@ public class DetectHypothesis {
 		return false;
 	}
 	
-	public static void main(String[] args){
+	public static void main(String[] args) throws Throwable{
 		//only parse if sentence is hypothesis, when parsing outside theorems.
 		//to build up variableNamesMMap. Should also collect the sentence that 
 		//defines a variable, to include inside the theorem for search.
-
-		ParseStateBuilder parseStateBuilder = new ParseStateBuilder();		
-		ParseState parseState = parseStateBuilder.build();
-
-		BufferedReader inputBF = null;		
+		
+		/* read in a directory name, parse all the files individually. */ 
+		//BufferedReader inputBF = null;		
 		//try to read file path from command line argument first
 		//path should be absolute
 		int argsLen = args.length;
-		boolean inputBFCreatedBool = false;
-		//String srcStr = null;
+		//boolean inputBFCreatedBool = false;
+		//boolean isDirectory = false;
+		//could be file or dir
+		File inputFile = null;
 		if(argsLen > 0){
-			String srcStr = args[0];
-			try{
-				inputBF = new BufferedReader(new FileReader(srcStr));
-				inputBFCreatedBool = true;
-			}catch(FileNotFoundException e){
+			String argsSrcStr = args[0];
+			//try{
+				//check if is directory
+				inputFile = new File(argsSrcStr);	
+			/*}catch(FileNotFoundException e){
 				inputBFCreatedBool = false;
 				System.out.println("Cannot find file specified via command line!");
 				//for now:
 				throw new IllegalStateException("Cannot find file specified via command line!");
-			}
+			}*/
 		}
-		if(!inputBFCreatedBool){
-			try{
+		//resort to default file if no arg supplied
+		else{
+			//try{
 				//inputBF = new BufferedReader(new FileReader("src/thmp/data/CommAlg5.txt"));
 				//inputBF = new BufferedReader(new FileReader("src/thmp/data/fieldsRawTex.txt"));
 				//inputBF = new BufferedReader(new FileReader("src/thmp/data/samplePaper1.txt"));
-				inputBF = new BufferedReader(new FileReader("src/thmp/data/Total.txt"));
+				inputFile = new File("src/thmp/data/Total.txt");
+				//inputBF = new BufferedReader(new FileReader("src/thmp/data/Total.txt"));
 				//inputBF = new BufferedReader(new FileReader("src/thmp/data/fieldsThms2.txt"));
-			}catch(FileNotFoundException e){
+			/*}catch(FileNotFoundException e){
 				e.printStackTrace();
 				throw new IllegalStateException("Source file not found!");
+			}*/
+		}		
+		List<DefinitionListWithThm> defThmList = new ArrayList<DefinitionListWithThm>();		
+		Stats stats = new Stats();
+		if(inputFile.isDirectory()){
+			//get all filenames from dir		
+			File[] files = inputFile.listFiles();
+			try{
+				for(File file : files){
+					BufferedReader inputBF = null;
+					try{
+						inputBF = new BufferedReader(new FileReader(file));	
+					}catch(FileNotFoundException e){						
+						String msg = "Source file not found!";
+						System.out.println(msg);
+						logger.error(msg);
+					}
+					extractThmsFromFiles(inputBF, defThmList, stats);
+					FileUtils.silentClose(inputBF);
+				}
+			}catch(Throwable e){
+				logger.error(e.getStackTrace());			
+				throw e;
+			}finally{
+				//serialize, so don't discard the items already parsed.
+				serializeDataToFile(stats);			
+			}
+		}else{
+			BufferedReader inputBF = null;
+			try{
+				inputBF = new BufferedReader(new FileReader(inputFile));
+			}catch(FileNotFoundException e){
+				logger.error(e.getStackTrace());
+				throw new IllegalStateException(e);
+			}
+			//inputBFCreatedBool = true;
+			try{
+				extractThmsFromFiles(inputBF, defThmList, stats);				
+			}catch(Throwable e){
+				logger.error(e.getStackTrace());			
+				throw e;
+			}finally{
+				//serialize, so don't discard the items already parsed.
+				serializeDataToFile(stats);			
 			}
 		}
-		
-		List<DefinitionListWithThm> defThmList = new ArrayList<DefinitionListWithThm>();
-		Stats stats = null;
-		try{
-			stats = readAndParseThm(inputBF, parseState, defThmList);
-			//System.out.println("DefinitionListWithThm list: " + defThmList);
-			System.out.println("STATS -- percentage of non-trivial ParseStruct heads: " + stats.getNonNullPercentage() 
-				+ " out of total " + stats.getTotalThmsNum() + "thms");
-			DefinitionListWithThmStrList.add(defThmList.toString()+ "\n");
-			for(DefinitionListWithThm def : defThmList){
-				DefinitionList.add(def.getDefinitionList().toString());
-			}
-		}catch(IOException e){
-			e.printStackTrace();
-			logger.error(e.getStackTrace());
-		}catch(Throwable e){
-			logger.error(e.getStackTrace());			
-			throw e;
-		}finally{		
-			serializeDataToFile(stats);
-			
-		}
-		
 		//deserialize objects
 		boolean deserialize = false;
 		if(deserialize){
@@ -303,6 +327,35 @@ public class DetectHypothesis {
 		}
 		
 		FileUtils.cleanupJVMSession();
+	}
+
+	/**
+	 * @param parseState
+	 * @param inputBF
+	 * @throws Throwable
+	 */
+	private static void extractThmsFromFiles(BufferedReader inputBF, 
+			List<DefinitionListWithThm> defThmList, Stats stats) {
+
+		ParseStateBuilder parseStateBuilder = new ParseStateBuilder();		
+		ParseState parseState = parseStateBuilder.build();
+
+		//Stats stats = null;
+		try{
+			readAndParseThm(inputBF, parseState, defThmList, stats);		
+		}catch(IOException e){
+			e.printStackTrace();
+			logger.error(e.getStackTrace());
+		}
+		//System.out.println("DefinitionListWithThm list: " + defThmList);
+		System.out.println("STATS -- percentage of non-trivial ParseStruct heads: " + stats.getNonNullPercentage() 
+			+ " out of total " + stats.getTotalThmsNum() + "thms");
+		DefinitionListWithThmStrList.add(defThmList.toString()+ "\n");
+		for(DefinitionListWithThm def : defThmList){
+			DefinitionList.add(def.getDefinitionList().toString());
+		}
+		
+		//return stats;
 	}
 
 	/**
@@ -401,8 +454,9 @@ public class DetectHypothesis {
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
-	private static Stats readAndParseThm(BufferedReader srcFileReader, 
-			ParseState parseState, List<DefinitionListWithThm> definitionListWithThmList) throws IOException{
+	private static void readAndParseThm(BufferedReader srcFileReader, 
+			ParseState parseState, List<DefinitionListWithThm> definitionListWithThmList,
+			Stats stats) throws IOException{
 		
 		//Pattern thmStartPattern = ThmInput.THM_START_PATTERN;
 		//Pattern thmEndPattern = ThmInput.THM_END_PATTERN;
@@ -411,7 +465,6 @@ public class DetectHypothesis {
 		//definitions, and parse those definitions. Reset between theorems.
 		StringBuilder contextSB = new StringBuilder();
 		
-		Stats stats = new Stats();
 		//List<DefinitionListWithThm> definitionListWithThmList = new ArrayList<DefinitionListWithThm>();
 		
 		String line = extractMacros(srcFileReader, macrosList);
@@ -526,7 +579,7 @@ public class DetectHypothesis {
 		// srcFileReader.close();
 		// System.out.println("Inside ThmInput, thmsList " + thms);
 		// System.out.println("thmWebDisplayList " + thmWebDisplayList);
-		return stats;
+		//return stats;
 	}
 
 	/**

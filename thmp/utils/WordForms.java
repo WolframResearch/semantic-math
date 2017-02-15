@@ -210,35 +210,39 @@ public class WordForms {
 		return word;
 	}
 	
-	public static boolean isGerundForm(String word){		
+	public static boolean isGerundForm(String word){
+		if(null == word) return false;
 		String s = getGerundForm(word);
-		return null == s ? false : true;
+		return word.equals(s) ? false : true;
 	}
 	
 	/**
 	 * Returns the most likely normal form of the word that end in
 	 * e.g. "-ing". 
 	 * @param word
-	 * @return 
+	 * @return Need to return null
 	 */
-	public static String getGerundForm(String curWord){
+	private static String getGerundForm(String curWord){
 		
-		String word;
 		int wordlen = curWord.length();
-		if(wordlen < 4) return null;
+		if(wordlen < 5) return curWord;
 		
+		Set<String> freqWordsSet = getFreqWordsSet();
+		if(freqWordsSet.contains(curWord)) return curWord;
+		
+		String tempWord;		
 		if(curWord.substring(wordlen - 3).equals("ing")){
-			if(getFreqWordsSet().contains((word = curWord.substring(0, wordlen - 3)))
+			if(freqWordsSet.contains((tempWord = curWord.substring(0, wordlen - 3)))
 							//&& posMMap.get(curWord.substring(0, wordlen - 3)).get(0).matches("verb|vbs")
 							){
-				return word;
-			}else if(getFreqWordsSet().contains((word = curWord.substring(0, wordlen - 3) + 'e'))
+				return tempWord;
+			}else if(freqWordsSet.contains((tempWord = curWord.substring(0, wordlen - 3) + 'e'))
 							//&& posMMap.get(curWord.substring(0, wordlen - 3) + 'e').get(0).matches("verb|vbs")
 							){
-				return word;
+				return tempWord;
 			}
 		}
-		return null;
+		return curWord;
 	}
 	
 	/**
@@ -306,10 +310,7 @@ public class WordForms {
 		word = WordForms.removeWordEnding(word);
 		
 		//also remove -ing, 
-		String gerundForm = WordForms.getGerundForm(word);
-		if(null != gerundForm){
-			word = gerundForm;
-		}
+		word = WordForms.getGerundForm(word);
 		
 		//if has synonym rep, use synonym rep instead 
 		String rep = synonymRepMap.get(word);

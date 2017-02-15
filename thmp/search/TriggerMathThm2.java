@@ -500,8 +500,7 @@ public class TriggerMathThm2 {
 					queryVec[i] = .1;
 				}
 			}
-		}
-		
+		}		
 		//transform into query list String 
 		StringBuilder sb = new StringBuilder();
 		sb.append("{{");

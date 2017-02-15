@@ -393,8 +393,7 @@ public class CollectThm {
 				}
 				if(!docWordsFreqMapNoAnno.containsKey(word)){
 					continue;
-				}
-				
+				}				
 				relatedWordsEntrySetIter.remove();
 				RelatedWords normalizedRelatedWords 
 					= relatedWordsEntry.getValue().normalizeFromValidWordSet(docWordsFreqMapNoAnno.keySet());
