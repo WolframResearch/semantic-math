@@ -100,8 +100,7 @@ public class DetectHypothesis {
 	
 	static{
 		Searcher.SearchMetaData.set_gatheringDataBoolToTrue();
-		FileUtils.set_dataGenerationMode();
-		
+		FileUtils.set_dataGenerationMode();		
 		ALL_THM_WORDS_LIST = new ArrayList<String>(CollectThm.ThmWordsMaps.get_contextVecWordsNextTimeMap().keySet());
 		ALL_THM_WORDS_FREQ_MAP = CollectThm.ThmWordsMaps.get_contextVecWordsNextTimeMap();
 		ThmSearch.TermDocumentMatrix.createTermDocumentMatrixSVD();

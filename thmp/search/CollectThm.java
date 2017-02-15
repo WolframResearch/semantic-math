@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -378,9 +379,14 @@ public class CollectThm {
 					= (List<Map<String, RelatedWords>>)FileUtils.deserializeListFromFile(relatedWordsMapFileStr);
 				relatedWordsMap = list.get(0);
 			}
-			//
+			
 			int relatedWordsUsedCounter = 0;
-			for(Map.Entry<String, RelatedWords> relatedWordsEntry : relatedWordsMap.entrySet()){
+			Set<Entry<String, RelatedWords>> relatedWordsEntrySet = relatedWordsMap.entrySet();
+			Iterator<Entry<String, RelatedWords>> relatedWordsEntrySetIter = relatedWordsEntrySet.iterator();
+			
+			Map<String, RelatedWords> relatedWordsTempMap = new HashMap<String, RelatedWords>();
+			while(relatedWordsEntrySetIter.hasNext()){
+				Entry<String, RelatedWords> relatedWordsEntry = relatedWordsEntrySetIter.next();
 				String word = relatedWordsEntry.getKey();
 				if(!docWordsFreqMapNoAnno.containsKey(word)){
 					word = WordForms.normalizeWordForm(word);
@@ -389,12 +395,15 @@ public class CollectThm {
 					continue;
 				}
 				
+				relatedWordsEntrySetIter.remove();
 				RelatedWords normalizedRelatedWords 
 					= relatedWordsEntry.getValue().normalizeFromValidWordSet(docWordsFreqMapNoAnno.keySet());
 				
-				relatedWordsMap.put(word, normalizedRelatedWords);
+				relatedWordsTempMap.put(word, normalizedRelatedWords);
 				relatedWordsUsedCounter++;
 			}
+			relatedWordsMap.putAll(relatedWordsTempMap);
+			
 			System.out.println("CollectThm.ThmWordsMap - Total number of related words entries adapted: " + relatedWordsUsedCounter);
 			return relatedWordsMap;
 		}
@@ -1178,8 +1187,8 @@ public class CollectThm {
 		private static List<ParsedExpression> extractParsedExpressionList() {
 			//List<ParsedExpression> parsedExpressionsList;
 			//String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
-			//String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
-			String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionListTemplate.dat";
+			String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
+			//String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionListTemplate.dat";
 			
 			if(null != servletContext){
 				InputStream parsedExpressionListInputStream = servletContext.getResourceAsStream(parsedExpressionSerialFileStr);
