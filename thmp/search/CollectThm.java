@@ -1061,6 +1061,11 @@ public class CollectThm {
 	public static class ThmList{
 		
 		private static final ImmutableList<String> allThmsWithHypList;
+		//just thm. same order as in allThmsWithHypList.
+		private static final ImmutableList<String> allThmsNoHypList;
+		//just hyp. same order as in allThmsWithHypList.
+		private static final ImmutableList<String> allHypList;
+		
 		private static final ImmutableList<BigInteger> allThmsRelationVecList;
 		private static final ImmutableList<String> allThmsContextVecList;
 		
@@ -1090,13 +1095,18 @@ public class CollectThm {
 			 * Can just read from serialized data. */			
 			parsedExpressionsList = extractParsedExpressionList();
 			
-			List<String> allThmsWithHypPreList = new ArrayList<String>();			
+			List<String> allThmsWithHypPreList = new ArrayList<String>();
+			List<String> allThmsNoHypPreList = new ArrayList<String>();
+			List<String> allHypPreList = new ArrayList<String>();
 			List<BigInteger> relationVecPreList = new ArrayList<BigInteger>();
 			List<String> contextVecPreList = new ArrayList<String>();
 			
-			fillListsFromParsedExpressions(parsedExpressionsList, allThmsWithHypPreList, contextVecPreList, relationVecPreList);			
+			fillListsFromParsedExpressions(parsedExpressionsList, allThmsWithHypPreList, contextVecPreList, relationVecPreList,
+					allThmsNoHypPreList, allHypPreList);			
 			
 			allThmsWithHypList = ImmutableList.copyOf(allThmsWithHypPreList);
+			allThmsNoHypList ;
+			allHypList ;
 			allThmsContextVecList = ImmutableList.copyOf(contextVecPreList);
 			allThmsRelationVecList = ImmutableList.copyOf(relationVecPreList);
 			
@@ -1211,6 +1221,8 @@ public class CollectThm {
 				List<String> allThmsWithHypList, List<String> contextVecList, List<BigInteger> relationVecList){
 			//System.out.println("Should be list: " + parsedExpressionsList);
 			for(ParsedExpression parsedExpr : parsedExpressionsList){
+				//get original thm and list of definitions separately, for displaying them separately on the web.
+				f
 				allThmsWithHypList.add(parsedExpr.getDefListWithThm().getThmWithDefStr());
 				contextVecList.add(parsedExpr.contextVecStr());
 				relationVecList.add(parsedExpr.getRelationVec());

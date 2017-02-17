@@ -230,7 +230,7 @@ public class WLCommandsList {
 				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), new PBuilder("\\[Element]"),
 				//negative term, to stop command if encountered
 				new PBuilder("adj", null, WLCommand.PosTermType.NEGATIVE),
-				new PBuilder("symb|ent|phrase", null, true, false, true, RelationType.IS_) )); // PosTermConnotation.DEFINING,
+				new PBuilder("symb|ent|phrase", null, true, false, false, RelationType.IS_) )); // PosTermConnotation.DEFINING,
 		
 		//e.g. "$X$ is connected"
 		wLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro|noun", null, true, RelationType._IS), 

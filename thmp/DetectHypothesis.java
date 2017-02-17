@@ -291,7 +291,7 @@ public class DetectHypothesis {
 						System.out.println(msg);
 						logger.error(msg);
 					}
-					extractThmsFromFiles(inputBF, defThmList, stats);
+					extractThmsFromFiles(inputBF, defThmList, stats, file.getName());
 					FileUtils.silentClose(inputBF);
 				}
 			}catch(Throwable e){
@@ -311,7 +311,7 @@ public class DetectHypothesis {
 			}
 			//inputBFCreatedBool = true;
 			try{
-				extractThmsFromFiles(inputBF, defThmList, stats);				
+				extractThmsFromFiles(inputBF, defThmList, stats, inputFile.getName());				
 			}catch(Throwable e){
 				logger.error(e.getStackTrace());			
 				throw e;
@@ -332,17 +332,17 @@ public class DetectHypothesis {
 	/**
 	 * @param parseState
 	 * @param inputBF
+	 * @param fileName name of file, to append to parsed thms.
 	 * @throws Throwable
 	 */
 	private static void extractThmsFromFiles(BufferedReader inputBF, 
-			List<DefinitionListWithThm> defThmList, Stats stats) {
+			List<DefinitionListWithThm> defThmList, Stats stats, String fileName) {
 
 		ParseStateBuilder parseStateBuilder = new ParseStateBuilder();		
 		ParseState parseState = parseStateBuilder.build();
-
-		//Stats stats = null;
+		
 		try{
-			readAndParseThm(inputBF, parseState, defThmList, stats);		
+			readAndParseThm(inputBF, parseState, defThmList, stats, fileName);		
 		}catch(IOException e){
 			e.printStackTrace();
 			logger.error(e.getStackTrace());
@@ -456,7 +456,7 @@ public class DetectHypothesis {
 	 */
 	private static void readAndParseThm(BufferedReader srcFileReader, 
 			ParseState parseState, List<DefinitionListWithThm> definitionListWithThmList,
-			Stats stats) throws IOException{
+			Stats stats, String fileName) throws IOException{
 		
 		//Pattern thmStartPattern = ThmInput.THM_START_PATTERN;
 		//Pattern thmEndPattern = ThmInput.THM_END_PATTERN;
@@ -541,8 +541,9 @@ public class DetectHypothesis {
 				//System.out.println("newThmSB: " + newThmSB);
 				//System.out.println("!---------! line: " + line+" thmEndPattern: " + thmEndPattern);
 				
+				newThmSB.append(" " + fileName);
 				allThmsStrList.add(newThmSB.toString() + "\n\n");
-				//newThmSB.setLength(0);
+				//parse hyp and thm
 				processParseHypThm(newThmSB, parseState, stats, definitionListWithThmList);
 				continue;
 			}else if(END_DOCUMENT_PATTERN.matcher(line).matches()){
@@ -713,7 +714,8 @@ public class DetectHypothesis {
 	 * @param thmSB
 	 * @param parseState
 	 */
-	private static DefinitionListWithThm appendHypothesesAndParseThm(String thmStr, ParseState parseState, Stats stats){
+	private static DefinitionListWithThm appendHypothesesAndParseThm(String thmStr, ParseState parseState, 
+			Stats stats){
 		
 		//ListMultimap<VariableName, VariableDefinition> variableNamesMMap = parseState.getGlobalVariableNamesMMap();
 		//String thmStr = thmSB.toString();

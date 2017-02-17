@@ -293,7 +293,9 @@ public class RelationVec implements Serializable{
 						residue = keywordDict.get(normalizedWord);
 						if(!GATHERING_DATA_BOOL && null == relatedWordsList){
 							relatedWords = relatedWordsMap.get(word);
-							relatedWordsList = relatedWords.getCombinedList();
+							if(null != relatedWords){
+								relatedWordsList = relatedWords.getCombinedList();
+							}
 						}
 					}
 					if(!GATHERING_DATA_BOOL){

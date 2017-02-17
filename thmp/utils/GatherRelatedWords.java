@@ -15,8 +15,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import thmp.search.CollectThm;
-
 public class GatherRelatedWords {
 
 	private static final Pattern betweenWordGroupPattern = Pattern.compile("\\]\\), \\(\\[");
@@ -96,10 +94,8 @@ public class GatherRelatedWords {
 			stripWordsFromArray(relatedWordsAr);
 			//System.out.println("word: " + word + " synonymsAr: " + Arrays.toString(synonymsAr) + " antonymsAr: "
 				//	+ Arrays.toString(antonymsAr) + " relatedWordsAr: " + Arrays.toString(relatedWordsAr));
-
 			relatedWordsMap.put(word,
 					new RelatedWords(Arrays.asList(synonymsAr), Arrays.asList(antonymsAr), Arrays.asList(relatedWordsAr)));
-
 			/*
 			 * for(String wordGroup : wordGroupSameMeaningAr){ String[]
 			 * individualWords = wordsPattern.split(wordGroup); }
