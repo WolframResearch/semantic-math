@@ -34,7 +34,7 @@ public abstract class Struct implements Serializable{
 	private static final long serialVersionUID = 1L;
 
 	/* Set of commands in which this Struct has already been used. */
-	private Set<WLCommand> usedInCommandsSet = new HashSet<WLCommand>();
+	private transient Set<WLCommand> usedInCommandsSet = new HashSet<WLCommand>();
 	//whether this struct has been used in another component
 	//e.g. Action[ MathObj{group, $G$} , MathObj{{subgroup, $H$, by conjugation}} , MathObj{conjugation}
 	//want to exclude "by conjugation" from middle term. Must clear this flag for new dfs walkdowns.
@@ -142,15 +142,22 @@ public abstract class Struct implements Serializable{
 	 */
 	public void add_usedInCommand(WLCommand usedInCommand){
 		this.usedInCommandsSet.add(usedInCommand);
-		//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
+		System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
+		System.out.println("struct used: " + this);		
 	}
 	/**
-	 * Whether this struct has been used in another component.
+	 * Whether this struct has been used in another component (of the same command).
 	 * Currently only used in the case when a child of a StructH has
-	 * been used as another *entire* component in same command.
+	 * been used as another *entire* component in same command. "Entire" meaning
+	 * a whole PosTerm.
 	 * @return
 	 */
-	public boolean usedInOtherCommandComponent(WLCommand curCommand){		
+	public boolean usedInOtherCommandComponent(WLCommand curCommand){	
+		System.out.println("curCommand: " + curCommand );
+		System.out.println("this.usedInCommandsSet: " + this.usedInCommandsSet);
+		for(WLCommand c : usedInCommandsSet){
+			System.out.println(curCommand.equals(c) + " hc:  " +curCommand.hashCode() + " " + c.hashCode());
+		}
 		return this.usedInCommandsSet.contains(curCommand);
 	}
 	

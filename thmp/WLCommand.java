@@ -874,8 +874,8 @@ public class WLCommand implements Serializable{
 		
 		WLCommand newCommand = new WLCommand();
 		
-		//trivial cast so the compiler can see the private fields of the superclass (WLCommand)
-		//this trivial cast does not cost anything.
+		/*Trivial cast so the compiler can see the private fields of the superclass (WLCommand).
+		  This trivial cast does not cost anything.*/
 		newCommand.triggerWord = ((WLCommand)curCommand).triggerWord;
 		newCommand.commandsMap = ArrayListMultimap.create(((WLCommand)curCommand).commandsMap);
 		
@@ -905,7 +905,42 @@ public class WLCommand implements Serializable{
 			
 		}
 		return newCommand;
-	}	
+	}
+	
+	public static WLCommand shallowWLCommandCopy(WLCommand curCommand){	
+		
+		WLCommand newCommand = new WLCommand();
+		
+		newCommand.triggerWord = ((WLCommand)curCommand).triggerWord;
+		newCommand.commandsMap = curCommand.commandsMap; //ArrayListMultimap.create(((WLCommand)curCommand).commandsMap);
+		
+		//commandsCountMap deliberately immutable, should not be modified during runtime
+		newCommand.commandsCountMap = curCommand.commandsCountMap; //new HashMap<WLCommandComponent, Integer>(((WLCommand)curCommand).commandsCountMap) ;
+		
+		newCommand.composedWLCommandsList = curCommand.composedWLCommandsList; //new ArrayList<WLCommand>();
+		
+		newCommand.posTermList = curCommand.posTermList; /*new ArrayList<PosTerm>();		
+		for(PosTerm term : ((WLCommand)curCommand).posTermList){
+			newCommand.posTermList.add(term.termDeepCopy());
+		}*/
+		
+		newCommand.totalComponentCount = ((WLCommand)curCommand).totalComponentCount;
+		newCommand.componentCounter = curCommand.componentCounter; //((WLCommand)curCommand).totalComponentCount;
+
+		newCommand.structsWithOtherHeadCount = curCommand.structsWithOtherHeadCount;
+		newCommand.lastAddedCompIndex = curCommand.lastAddedCompIndex; //((WLCommand) curCommand).triggerWordIndex;
+		newCommand.triggerWordIndex = ((WLCommand) curCommand).triggerWordIndex;
+
+		newCommand.optionalTermsCount = curCommand.optionalTermsCount; //((WLCommand) curCommand).optionalTermsCount;
+		newCommand.defaultOptionalTermsCount = curCommand.defaultOptionalTermsCount; //((WLCommand)curCommand).optionalTermsCount;
+		
+		newCommand.optionalTermsGroupCountMap = curCommand.optionalTermsGroupCountMap;
+		/*if(null != ((WLCommand)curCommand).optionalTermsGroupCountMap){
+			newCommand.optionalTermsGroupCountMap 
+				= new HashMap<Integer, Integer>(((WLCommand)curCommand).optionalTermsGroupCountMap);			
+		}*/
+		return newCommand;
+	}
 	/*
 	 *super.commandsMap = ArrayListMultimap.create();	
 			super.commandsCountMap = commandsCountMap;		
@@ -1006,12 +1041,13 @@ public class WLCommand implements Serializable{
 	}
 	
 	/**
-	 * Update the wrapper list to add current struct.
+	 * Update the wrapper list to update nextStruct's headStruct to structToAppendCommandStr.
+	 * Used for compositing commands, so not to use same struct in multiple commands.
 	 * @param nextStruct
 	 * @param structToAppendCommandStr
 	 * @return Whether nextStruct already has associated head.
 	 */
-	private static boolean updateWrapper(Struct nextStruct, Struct structToAppendCommandStr){
+	private static boolean updateWrapper(Struct nextStruct, Struct structToAppendCommandStr, WLCommand curCommand){
 		
 		Struct prevHeadStruct = nextStruct.structToAppendCommandStr();
 		boolean prevStructHeaded = false; 
@@ -1020,19 +1056,29 @@ public class WLCommand implements Serializable{
 			List<WLCommandWrapper> prevHeadStructWrapperList = prevHeadStruct.WLCommandWrapperList();
 			//no need to update structsWithOtherHeadCount if the heads are already same. Note the two
 			//commands could be different, just with the same head.
-			
-			if(structToAppendCommandStr != prevHeadStruct && prevHeadStructWrapperList != null){
+			System.out.println("nextStruct: " + nextStruct);
+			System.out.println("++++======+++++structToAppendCommandStr != prevHeadStruct "+ structToAppendCommandStr.dfsDepth() +" ++++" + prevHeadStruct.dfsDepth());
+			if(//structToAppendCommandStr != prevHeadStruct 
+					/*Smaller depth is closer to root, so has wider span over the tree. */
+					structToAppendCommandStr.dfsDepth() < prevHeadStruct.dfsDepth() 
+					&& prevHeadStructWrapperList != null){
 				// in this case structToAppendCommandStr should not be
 				// null either				
-				int wrapperListSz = prevHeadStructWrapperList.size();	
+				//int wrapperListSz = prevHeadStructWrapperList.size();	
 				//get the last-added command. <--should iterate and add count to all previous commands
 				//with this wrapper? <--command building goes inside-out
-				WLCommand lastWrapperCommand = prevHeadStructWrapperList.get(wrapperListSz-1).WLCommand();	
-				// increment the headCount of the last wrapper object, should update every command's count.
-				lastWrapperCommand.structsWithOtherHeadCount++;
+								
+				for(WLCommandWrapper wrapper : prevHeadStructWrapperList){
+					System.out.println("-------------prevHeadStructWrapperList wrapper: " + wrapper);
+					WLCommand lastWrapperCommand = wrapper.WLCommand();				
+					System.out.println("curCommand: " + curCommand);
+					// increment the headCount of the last wrapper object, should update every command's count.
+					if(!curCommand.equals(lastWrapperCommand)){
+						lastWrapperCommand.structsWithOtherHeadCount++;
+					}
+				}
 				//System.out.println("Wrapper command struct " + headStruct);
-				//System.out.println("***Wrapper Command to update: " + lastWrapperCommand);
-				
+				//System.out.println("***Wrapper Command to update: " + lastWrapperCommand);				
 			}
 			prevStructHeaded = true;			
 		}
@@ -1083,7 +1129,7 @@ public class WLCommand implements Serializable{
 				//System.out.println("&&&posTermStruct " + nextStruct);
 				//get WLCommandWrapperList
 				if(nextStruct != null){
-					if(updateWrapper(nextStruct, structToAppendCommandStr)){
+					if(updateWrapper(nextStruct, structToAppendCommandStr, curCommand)){
 						//curCommand.structsWithOtherHeadCount++;
 					}
 					
@@ -1163,7 +1209,7 @@ public class WLCommand implements Serializable{
 				structToAppendCommandStr.set_posteriorBuiltStruct(nextStruct);				
 				//check if been assigned to a different head
 				//prevStructHeaded = updateWrapper(nextStruct, structToAppendCommandStr);
-				updateWrapper(nextStruct, structToAppendCommandStr);
+				updateWrapper(nextStruct, structToAppendCommandStr, curCommand);
 				
 				/*if(nextStruct.structToAppendCommandStr() == null){						
 					prevStructHeaded = false;
@@ -1183,7 +1229,7 @@ public class WLCommand implements Serializable{
 				//should have size > 0 always <--nope! if element is not a true WLCommand, like an auxilliary string
 				if(curCommandComponentList.size() > 0){					
 					Struct nextStruct = curCommandComponentList.get(0);
-					updateWrapper(nextStruct, structToAppendCommandStr);
+					updateWrapper(nextStruct, structToAppendCommandStr, curCommand);
 						//curCommand.structsWithOtherHeadCount++;
 										
 					nextStruct.set_previousBuiltStruct(structToAppendCommandStr);
@@ -2020,7 +2066,7 @@ public class WLCommand implements Serializable{
 		}
 		
 		/**
-		 * 
+		 * equals for WLCommandComponent
 		 */
 		@Override
 		public boolean equals(Object obj){
@@ -2067,15 +2113,17 @@ public class WLCommand implements Serializable{
 		result = prime * result + totalComponentCount;
 		result = prime * result + ((triggerWord == null) ? 0 : triggerWord.hashCode());
 		result = prime * result + triggerWordIndex;
+		result = prime * result + posTermList.size();		
 		return result;
 	}
 
 	/**
+	 * For WLCommand.
 	 * Shallow equals.
 	 */
 	@Override
 	public boolean equals(Object obj) {
-		
+		//if (true) return false;
 		if (this == obj){
 			return true;
 		}
@@ -2094,8 +2142,12 @@ public class WLCommand implements Serializable{
 				return false;
 		} else if (!triggerWord.equals(other.triggerWord))
 			return false;
-		if (triggerWordIndex != other.triggerWordIndex)
+		if (triggerWordIndex != other.triggerWordIndex){
 			return false;
+		}
+		if(posTermList.size() != other.posTermList.size()){
+			return false;
+		}
 		return true;
 	}
 	

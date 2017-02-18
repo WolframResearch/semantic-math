@@ -582,17 +582,17 @@ public class StructH<H> extends Struct{
 				//str += ", ";
 				//str += childRelation.get(i) + " ";	
 				//System.out.println("^^^cur child: " + child);
+				System.out.println("Used? "+ child.usedInOtherCommandComponent(curCommand) + " child: " +child);
 				
-				String childStr = child.simpleToString(includeType, curCommand);
-				//str += childStr;	
-				if(!childStr.matches("\\s*")){
-					//System.out.println("Childstr " + childStr);
-					//only append curChidRelation if child is a StructH, to avoid
-					//including the relation twice, eg in case child is of type "prep"
-					//if this child has been used in another component of the same command.
-					//System.out.println("Used? "+ child.usedInOtherCommandComponent(curCommand));
-					if(!child.usedInOtherCommandComponent(curCommand)){
+				//only append curChidRelation if child is a StructH, to avoid
+				//including the relation twice, eg in case child is of type "prep"
+				//if this child has been used in another component of the same command.				
+				if(!child.usedInOtherCommandComponent(curCommand)){
+					String childStr = child.simpleToString(includeType, curCommand);
 						
+					if(!childStr.matches("\\s*")){
+					//System.out.println("Childstr " + childStr);
+					
 						//don't want "symb", e.g. $G$ with $H$ prime. 
 						childRelationStr = (child.isStructA() && !child.type().equals("symb") 
 								//e.g. "field which is perfect", don't want "which"								

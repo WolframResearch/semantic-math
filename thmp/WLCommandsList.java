@@ -240,8 +240,14 @@ public class WLCommandsList {
 				new PBuilder("~HasProperty~"), new PBuilder("adj|phrase|noun|prep", null, true, false, true, RelationType.IS_),
 				new PBuilder(", {Qualifier->", "OPT"), 
 				new PBuilder("prep", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}", "OPT")
-				));
+				)); //here!
 		
+		/*wLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro|noun", null, true, RelationType._IS), 
+				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), 
+				new PBuilder("~HasProperty~"), new PBuilder("adj|phrase|noun|prep", null, true, false, true, RelationType.IS_),
+				new PBuilder(", {Qualifier->"), 
+				new PBuilder("prep", null, true).addRelationType(RelationType.IS_), new PBuilder("}")
+				));*/
 		//e.g. "$X$ is in $Y$"
 		/*wLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro|noun", null, true, RelationType._IS), 
 				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), 

@@ -292,6 +292,7 @@ public class ParseToWLTree{
 				reverseWLCommandList.add(WLCommandList.get(WLCommandListSz-i-1));				
 			}
 			
+			List<WLCommand> wlCommandWithOptionalTermsList = new ArrayList<WLCommand>();			
 			boolean commandRemoved = false;
 			Iterator<WLCommand> reverseWLCommandListIter = reverseWLCommandList.iterator();			
 			while (reverseWLCommandListIter.hasNext()) {
@@ -302,8 +303,7 @@ public class ParseToWLTree{
 				if(struct.type().equals("prep")){			
 					System.out.println("\nADDING STRUCT " + struct + " for command " + curCommand);
 					System.out.println("curCommand.getOptionalTermsCount(): " + curCommand.getOptionalTermsCount());					
-				}
-				
+				}				
 				CommandSat commandSat = WLCommand.addComponent(curCommand, struct, beforeTriggerIndex);
 				
 				/*boolean sat = commandSat.isCommandSat();
@@ -332,36 +332,49 @@ public class ParseToWLTree{
 					//check to see if only optional terms left
 					if(commandSat.isComponentAdded() && !commandSat.onlyOptionalTermAdded()){
 						satisfiedCommandsList.add(curCommand);
+						reverseWLCommandListIter.remove();
+						commandRemoved = true;
 						//System.out.println("COMMAND ADDED to satisfiedCommandsList");
 					}else if(commandSat.onlyOptionalTermAdded() 
 							&& !commandSat.hasOptionalTermsLeft()
 							&& curCommand.getDefaultOptionalTermsCount() > 0){
 						//add and build again, now that optional terms have been satisfied.
 						satisfiedCommandsList.add(curCommand);
+						reverseWLCommandListIter.remove();
+						commandRemoved = true;
 					}
 					
-					if(curCommand.getDefaultOptionalTermsCount() == 0
+					/*If optional commands still left, remove from commandsList, add shallow copy back, so 
+					   incrementing compoenentWithOtherHeadCount does not affect the new copy. Treating the new
+					   copy as if its optional terms were not optional, so it's not done yet */
+					if(commandSat.hasOptionalTermsLeft() ){
+						wlCommandWithOptionalTermsList.add(0, WLCommand.shallowWLCommandCopy(curCommand));
+					}
+					
+					/*if(curCommand.getDefaultOptionalTermsCount() == 0
 							|| !commandSat.hasOptionalTermsLeft() ){
 						reverseWLCommandListIter.remove();
 						commandRemoved = true;
 						//System.out.println("COMMAND REMOVED !" + curCommand);
-					}
+					}*/
 					
 				}else if(commandSat.isDisqualified()){
 					reverseWLCommandListIter.remove();
 					commandRemoved = true;
 					//System.out.println("\n***COMMAND REMOVED. struct "+ struct );
 				}				
-			}
-			
-			//reverse the reverseWLCommandList back
+			}			
+			//only bother reverse the reverseWLCommandList back if it was changed.
 			if(commandRemoved){
 				int reverseWLCommandListSz = reverseWLCommandList.size();
 				WLCommandList.clear();
 				for(int i = 0; i < reverseWLCommandListSz; i++){
 					WLCommandList.add(reverseWLCommandList.get(reverseWLCommandListSz-i-1));				
 				}
-			}
+			}			
+			/*These wlCommandWithOptionalTermsList will get CommandComponents added to first
+			 * in next round, cause reverse iteration.*/
+			WLCommandList.addAll(wlCommandWithOptionalTermsList);
 		}		
 		
 		String triggerKeyWord = "";
@@ -371,9 +384,8 @@ public class ParseToWLTree{
 			triggerKeyWord = struct.struct().get("name");
 		}
 		
-		String structType = struct.type();
-		
-		Matcher m = CONJ_DISJ_PATTERN2.matcher(struct.type());
+		String structType = struct.type();		
+		Matcher m = CONJ_DISJ_PATTERN2.matcher(structType);
 		if(m.find()){
 			structType = m.group(1);
 		}
@@ -415,8 +427,7 @@ public class ParseToWLTree{
 					//boolean hasOptionalTermsLeft = false;
 					boolean isComponentAdded = false;
 					boolean beforeTriggerSat = false;
-					CommandSat commandSat = null;
-					
+					CommandSat commandSat = null;					
 					//add Struct corresponding to trigger word
 					commandSat = WLCommand.addTriggerComponent(curCommand, struct);
 					
@@ -464,10 +475,8 @@ public class ParseToWLTree{
 							WLCommandList.add(curCommand);
 						}
 					}
-			}			
-			
-			isTrigger = true;		
-	
+			}						
+			isTrigger = true;	
 			structList.add(struct);
 		
 		if (struct.isStructA()) {
@@ -578,12 +587,9 @@ public class ParseToWLTree{
 				System.out.println(space);
 			}*/
 			//create new parseStruct to put in tree
-			//if Struct (leaf) and not ParseStruct (overall head), done with subtree and return			
-			
-		}
-		//if StructH 
-		else {
-			
+			//if Struct (leaf) and not ParseStruct (overall head), done with subtree and return				
+		} else {		
+			//if StructH 
 			if(printTiers) System.out.print(struct.toString());
 			parsedSB.append(struct.toString());
 
@@ -693,6 +699,7 @@ public class ParseToWLTree{
 				logger.info(e.getStackTrace());
 				continue;
 			}
+			
 			//now append Str to wrapper inside build()
 			//structToAppendCommandStr.append_WLCommandStr(curCommandString);
 			
