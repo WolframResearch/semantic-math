@@ -522,16 +522,9 @@ public class StructH<H> extends Struct{
 		if(includeType){			
 			sb.append(this.type.equals("ent") ? "Math" : this.type);
 			sb.append("[");
-			//str += this.type.equals("ent") ? "Math" : this.type;
-			//str += "[\"";
 		}
-		//str += "{";
-		//str += append_name_pptStr();
-		/*if(includeType){
-			sb.append("\"");
-		}*/
 		boolean prependCommaBool = false;
-		//Iterator<String> pptStrListIter = get_name_pptStr_List().iterator();
+		
 		//append name
 		String name = struct.get("name");
 		if(null != name){
@@ -556,7 +549,6 @@ public class StructH<H> extends Struct{
 			}
 		}
 		
-		//append "called"
 		String called = struct.get("called");
 		if(null != called){
 			if(prependCommaBool){
@@ -574,12 +566,9 @@ public class StructH<H> extends Struct{
 		}
 		
 		//sb.append(append_name_pptStr());
-		
-		/*if(includeType){ 
-			//str += "\"]";
-			sb.append("\"");
-		}*/
-		
+		System.out.println("curCommand: " + curCommand);
+		System.out.println("this.name " + this.nameStr());
+		System.out.println("(((((((((children: " + children);
 		//iterate through children		
 		int childrenSize = children.size();
 		if(childrenSize > 0){			
@@ -597,10 +586,13 @@ public class StructH<H> extends Struct{
 				String childStr = child.simpleToString(includeType, curCommand);
 				//str += childStr;	
 				if(!childStr.matches("\\s*")){
+					//System.out.println("Childstr " + childStr);
 					//only append curChidRelation if child is a StructH, to avoid
 					//including the relation twice, eg in case child is of type "prep"
 					//if this child has been used in another component of the same command.
-					if(!child.usedInOtherCommandComponent()){
+					//System.out.println("Used? "+ child.usedInOtherCommandComponent(curCommand));
+					if(!child.usedInOtherCommandComponent(curCommand)){
+						
 						//don't want "symb", e.g. $G$ with $H$ prime. 
 						childRelationStr = (child.isStructA() && !child.type().equals("symb") 
 								//e.g. "field which is perfect", don't want "which"								

@@ -4,6 +4,8 @@ import java.util.Map;
 import java.util.Set;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 
 import thmp.ParseToWLTree.WLCommandWrapper;
 
@@ -31,6 +33,8 @@ public abstract class Struct implements Serializable{
 	
 	private static final long serialVersionUID = 1L;
 
+	/* Set of commands in which this Struct has already been used. */
+	private Set<WLCommand> usedInCommandsSet = new HashSet<WLCommand>();
 	//whether this struct has been used in another component
 	//e.g. Action[ MathObj{group, $G$} , MathObj{{subgroup, $H$, by conjugation}} , MathObj{conjugation}
 	//want to exclude "by conjugation" from middle term. Must clear this flag for new dfs walkdowns.
@@ -125,16 +129,29 @@ public abstract class Struct implements Serializable{
 	 */
 	public void set_usedInOtherCommandComponent(boolean usedInOtherCommandComponent){
 		this.usedInOtherCommandComponent = usedInOtherCommandComponent;
+		if(!usedInOtherCommandComponent){
+			this.usedInCommandsSet = new HashSet<WLCommand>();
+		}
+		//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
 	}
 	
+	/**
+	 * Adds to set of WLCommand's in which this struct has already been used. To 
+	 * avoid duplicate usage in same command.
+	 * @param usedInCommand
+	 */
+	public void add_usedInCommand(WLCommand usedInCommand){
+		this.usedInCommandsSet.add(usedInCommand);
+		//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
+	}
 	/**
 	 * Whether this struct has been used in another component.
 	 * Currently only used in the case when a child of a StructH has
 	 * been used as another *entire* component in same command.
 	 * @return
 	 */
-	public boolean usedInOtherCommandComponent(){
-		return this.usedInOtherCommandComponent;
+	public boolean usedInOtherCommandComponent(WLCommand curCommand){		
+		return this.usedInCommandsSet.contains(curCommand);
 	}
 	
 	public abstract Struct previousBuiltStruct();

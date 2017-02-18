@@ -727,7 +727,10 @@ public class ParseToWLTree{
 		//boolean contextVecConstructed = false;		
 		//iterate backwards, so last-added ones (presumably longer span) come first
 		//pick out the one with highest commandNumUnits.
-		
+		if(structWrapperListSz > 1){
+			System.out.println(WLCommand.structsWithOtherHeadCount(structWrapperList.get(1).wlCommand));
+		}		
+		System.out.println("*&&&&&&&&&&&&&&&&&&&&&&&&&&&&structWrapperListSz " + structWrapperListSz);
 		for(int i = structWrapperListSz - 1; i > -1; i--){
 		//for(int i = 0; i < structWrapperListSz; i++){	
 			WLCommandWrapper curWrapper = structWrapperList.get(i);
@@ -824,7 +827,7 @@ public class ParseToWLTree{
 	 * (corresponding to one parse segment, could be multiple commands).
 	 * @param parsedSB
 	 */
-	public static boolean collectCommandsDfs(Multimap<ParseStructType, ParsedPair> partsMap, ParseStruct curParseStruct,
+	public static boolean collectCommandsDfs(Multimap<ParseStructType, ParsedPair> partsMMap, ParseStruct curParseStruct,
 			Struct struct, StringBuilder parsedSB, 
 			int[] curStructContextVec, boolean shouldPrint, boolean contextVecConstructed,
 			ParseState parseState) {
@@ -854,7 +857,7 @@ public class ParseToWLTree{
 				parsedSB.append(struct.WLCommandStr());
 			} */
 			//collects the built WLCommand strings.
-			contextVecConstructed = appendWLCommandStr(struct, curParseStruct, parsedSB, partsMap, curStructContextVec,
+			contextVecConstructed = appendWLCommandStr(struct, curParseStruct, parsedSB, partsMMap, curStructContextVec,
 					contextVecConstructed, parseState);			
 			
 			shouldPrint = false;
@@ -878,7 +881,7 @@ public class ParseToWLTree{
 			if(shouldPrint) parsedSB.append("[");
 			
 			if (struct.prev1NodeType().isTypeStruct()) {
-				contextVecConstructed = collectCommandsDfs(partsMap, curParseStruct,
+				contextVecConstructed = collectCommandsDfs(partsMMap, curParseStruct,
 						(Struct) struct.prev1(), parsedSB, curStructContextVec, shouldPrint,
 						contextVecConstructed, parseState);
 			}
@@ -889,7 +892,7 @@ public class ParseToWLTree{
 				// avoid printing is[is], ie case when parent has same type as
 				// child
 				if(shouldPrint) parsedSB.append(", ");
-				contextVecConstructed = collectCommandsDfs(partsMap, curParseStruct, 
+				contextVecConstructed = collectCommandsDfs(partsMMap, curParseStruct, 
 						(Struct) struct.prev2(), parsedSB, curStructContextVec, shouldPrint,
 						contextVecConstructed, parseState);
 			}
@@ -921,7 +924,7 @@ public class ParseToWLTree{
 			for (int i = 0; i < children.size(); i++) {
 				if(shouldPrint) parsedSB.append(childRelation.get(i) + " ");
 
-				contextVecConstructed = collectCommandsDfs(partsMap, curParseStruct,
+				contextVecConstructed = collectCommandsDfs(partsMMap, curParseStruct,
 						children.get(i), parsedSB, curStructContextVec, shouldPrint,
 						contextVecConstructed, parseState);
 			}
@@ -932,7 +935,7 @@ public class ParseToWLTree{
 	
 	/**
 	 * Cleans up after a dfs run, sets relevant properties attached to Struct nodes
-	 * to null.
+	 * to null. To get ready for another WLCommand.
 	 */
 	public static void dfsCleanUp(Struct struct) {
 		
@@ -945,8 +948,7 @@ public class ParseToWLTree{
 		
 		if (struct.isStructA()) {
 			
-			if (struct.prev1NodeType().equals(NodeType.STRUCTA) 
-					|| struct.prev1NodeType().equals(NodeType.STRUCTH) ) {
+			if (struct.prev1NodeType().isTypeStruct()) {
 				dfsCleanUp((Struct) struct.prev1());
 			}
 
@@ -961,8 +963,7 @@ public class ParseToWLTree{
 			if (children == null || children.size() == 0)
 				return;
 			
-			for (int i = 0; i < children.size(); i++) {
-				
+			for (int i = 0; i < children.size(); i++) {				
 				dfsCleanUp(children.get(i));
 			}
 		}

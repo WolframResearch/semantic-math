@@ -423,7 +423,7 @@ public class ThmP1 {
 	 */
 	private static boolean addNGramToPairs(List<Pair> pairsList, List<Integer> mathIndexList, String lastWord,
 			String nGram, TokenType tokenType) {
-		//don't want 2/3 grams to end with a preposition, which can break parsing down the line
+		//don't want 2,3-grams to end with a preposition, which can break parsing down the line
 		if(posMMap.containsKey(lastWord) && posMMap.get(lastWord).get(0).equals("pre")){
 			return false;
 		}
@@ -434,12 +434,16 @@ public class ThmP1 {
 		if(!posList.isEmpty()){
 			pos = posList.get(0);
 		}else{
-			//try to find part of speech algorithmically
+			/*try to find part of speech algorithmically*/
 			pos = computeNGramPos(nGram, tokenType);
 		}
+		/*Being part of an n-gram indicates that any noun is likely an ent. */
+		if("noun".equals(pos)){
+			pos = "ent";
+		}	
 		Pair phrasePair = new Pair(nGram, pos);								
 		pairsList.add(phrasePair);
-		if(pos.matches("ent")){ 
+		if(pos.equals("ent")){ 
 			mathIndexList.add(pairsList.size() - 1);
 		}
 		return true;
@@ -537,9 +541,6 @@ public class ThmP1 {
 		if(punctuationMatcher.find()){
 			sentence = sentence.substring(0, sentenceLen-1);
 			parseState.setPunctuation(punctuationMatcher.group(1));
-			/*if(parseState != null){
-				setParseStateFromPunctuation(punctuationMatcher.group(1), parseState);
-			}*/
 		}
 		
 		// list of indices of "proper" math objects, e.g. "field", but not e.g. "pair"
@@ -579,14 +580,12 @@ public class ThmP1 {
 			}			
 			Matcher negativeAdjMatcher;
 			
-			//change to enum!
 			String type = "ent"; 
 			int wordlen = strAr[i].length();
 			//this needs to be evaluated at each iteration.
 			int strArLength = strAr.length;
 			
-			/** detect latex expressions, set their pos as "ent" for now **/
-			
+			/** detect latex expressions, set their pos as "ent" **/			
 			//latex expressions that start with \begin{align} or \being{equation}
 			Matcher mathModeMatcher;
 			Matcher mathModeEndMatcher;
@@ -611,7 +610,6 @@ public class ThmP1 {
 				pairs.add(pair);
 				mathIndexList.add(pairs.size() - 1);
 				noTexSB.append(LATEX_PLACEHOLDER_STR);
-				//if(true) throw new IllegalStateException("pair "+pair.word());
 				continue;
 			}
 			
@@ -713,9 +711,7 @@ public class ThmP1 {
 				}				
 			}
 			
-			
-			String[] singularForms = WordForms.getSingularForms(curWord);
-			
+			String[] singularForms = WordForms.getSingularForms(curWord);			
 			String singular = singularForms[0];
 			String singular2 = singularForms[1]; // ending in "es"
 			String singular3 = singularForms[2]; // ending in "ies"
@@ -735,7 +731,7 @@ public class ThmP1 {
 			}else{
 				wordPos = posMMap.get(curWord).get(0);
 			}
-			
+			//System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~WORDPOS: " + wordPos);
 			//convert "noun" to "ent" if it's the most probable pos,
 			//most often noun does no damage, but could prevent spanning parse
 			//or commands from being picked up.
@@ -748,8 +744,7 @@ public class ThmP1 {
 				curWord = posList.isEmpty() ? singular : curWord;
 				String tempWord = curWord;
 				int pairsSize = pairs.size();
-				int k = 1;
-				
+				int k = 1;				
 				//check for previous words, fuse entities if necessary.
 				//should be superceded by using the two-gram map above! <--this way can be more deliberate 
 				//and flexible than using n-grams, e.g. if composite math noun, eg "finite field"
@@ -798,8 +793,7 @@ public class ThmP1 {
 								fuseEnt = true;
 							}
 						}						
-					}					
-					
+					}										
 					if(fuseEnt){
 						pairs.get(pairsSize - 1).set_word(pairs.get(pairsSize - 1).word() + " " + curWord);
 						continue;
@@ -813,9 +807,7 @@ public class ThmP1 {
 			}
 			else if (anchorMap.containsKey(curWord)) {
 				Pair pair = new Pair(curWord, "anchor");
-				// anchorList.add(pairIndex);
 				pairs.add(pair);
-
 				int pairsSize = pairs.size();
 				anchorList.add(pairsSize - 1);
 			}
@@ -835,8 +827,7 @@ public class ThmP1 {
 					if(i < strAr.length-1 && strAr[i+1].equals("a")){
 						strAr[i+1] = "any";
 					}
-				}
-				
+				}				
 				Pair emptyPair = new Pair(null, null);
 				//keep going until all words in an n-gram are gathered
 				while (tempPos.matches("[^_]*_COMP|[^_]*_comp") && i < strAr.length - 1) {					
@@ -848,17 +839,14 @@ public class ThmP1 {
 								emptyPair);
 						if(null != emptyPair.pos()){
 							//-2 because we were looking ahead and fed i+1 to findFixedPhrase().
-							//
 							i += numWordsDown - 2;
 							break;
 						}
-					}
-					
+					}					
 					tempSB = tempSB.append(" ").append(strAr[i+1]);
 					if (!posMMap.containsKey(tempSB.toString())) {
 						break;
-					}
-					
+					}					
 					tempPos = posMMap.get(tempSB.toString()).get(0);
 					i++;
 				}
@@ -886,7 +874,8 @@ public class ThmP1 {
 					pairs.add(emptyPair);
 					if(emptyPair.pos().equals("ent")) mathIndexList.add(pairs.size() - 1);
 					System.out.println("emptyPair added! pairs: " + pairs);
-				}				
+				}	
+				//System.out.println("(((((((pair: " + pair);
 			}
 			// if plural form
 			else if (posMMap.containsKey(singular)){
@@ -956,7 +945,6 @@ public class ThmP1 {
 					&& posMMap.get(strAr[i].substring(0, wordlen - 2)).get(0).equals("verb")) {
 				Pair pair = new Pair(strAr[i], "verb");
 				pairs.add(pair);
-
 			}
 			// adverbs that end with -ly that haven't been screened off before
 			else if (wordlen > 1 && curWord.substring(wordlen - 2, wordlen).equals("ly")) {
@@ -1115,8 +1103,7 @@ public class ThmP1 {
 					pairs.add(pair);
 				}else{
 					pairs.add(new Pair(curWord, ""));
-				}
-				
+				}				
 			}
 			else if (!curWord.matches("\\s+")) { // try to minimize this case.
 				
@@ -1131,7 +1118,7 @@ public class ThmP1 {
 				// must be blank space at this point, so curWord doesn't count
 				continue;
 			}
-
+			
 			int pairsSize = pairs.size();
 			//case only meaningful if pairsSize>2
 			if (pairsSize > 2) {
@@ -1250,8 +1237,7 @@ public class ThmP1 {
 					if (bestCurType.equals("ent")){
 						mathIndexList.add(index);
 					}
-				}
-				
+				}				
 			}
 			//if still no pos, try to guess part of speech based on endings 
 			if(curpair.pos().equals("")){
@@ -1282,8 +1268,7 @@ public class ThmP1 {
 				if(-1 == wordStartIndex){
 					wordToTag = curWord + "_";
 					wordStartIndex = taggedSentence.indexOf(wordToTag);
-				}
-				
+				}				
 				//necessary check in case noTexSB dropped the word.
 				//Sometimes the tagger strips away parts of words, such as "[prime" -> "prime".
 				if(-1 == wordStartIndex && logger.getLevel().equals(Level.INFO)){
@@ -1423,7 +1408,6 @@ public class ThmP1 {
 					// combine the symbol with ent's name together
 					tempMap.put("name", givenName + " " + tempMap.get("name"));
 				}
-
 			}
 			// combine nouns with ent's right after, ie noun_ent
 			else if (index > 0 && pairs.get(index - 1).pos().equals("noun")) {
@@ -1516,12 +1500,11 @@ public class ThmP1 {
 		}
 		
 		System.out.println("PAIRS! " + pairs);
-		// combine anchors into entities. Such as "of," "has"
+		// combine anchors into entities. Such as "of".
 		for (int j = anchorList.size() - 1; j > -1; j--) {
 			int index = anchorList.get(j);
 			String anchor = pairs.get(index).word();
 
-			// combine entities, like in case of "of"
 			switch (anchor) {
 			case "of":
 				// the expression before this anchor is an entity
@@ -1556,30 +1539,26 @@ public class ThmP1 {
 								nextPairEnt = true;
 								entPos = nextNextPos;
 								childStruct = mathEntList.get(Integer.valueOf(nextNextPos));
-							}							
-							
+							}													
 						}
-						if(nextPairEnt){							
-	
-							pairs.get(index).set_pos(entPos);
-													
+						if(nextPairEnt){	
+							pairs.get(index).set_pos(entPos);													
 							// set to null instead of removing, to keep indices
 							// right.
 							if (entPos != prevPair.pos()){
 								mathEntList.set(Integer.valueOf(entPos), null);
 							}							
 							tempStruct.add_child(childStruct, new ChildRelation("of"));
-							//if(true) throw new IllegalStateException("of");
-						}else if(nextPos.equals("symb")){
-							
+						}
+						else if(nextPos.equals("symb") || nextPos.equals("noun")){	
 							pairs.get(index).set_pos(prevPair.pos());
-							childStruct = new StructA<String, String>(nextPair.word(), NodeType.STR, "", NodeType.STR, "symb");
+							childStruct = new StructA<String, String>(nextPair.word(), NodeType.STR, "", NodeType.STR, nextPos);
 							tempStruct.add_child(childStruct, new ChildRelation("of"));
 							nextPair.set_pos(prevPair.pos());							
 						}
-					} // "noun of ent".
-					else 
-					if (prevPair.pos().equals("noun") && nextPos.matches("\\d+")) {
+					} 
+					else if (prevPair.pos().equals("noun") && nextPos.matches("\\d+")) {
+						// "noun of ent".
 						int mathObjIndex = Integer.valueOf(nextPos);
 						// Combine the something into the ent
 						StructH<HashMap<String, String>> tempStruct = mathEntList.get(mathObjIndex);
@@ -1858,7 +1837,8 @@ public class ThmP1 {
 		// And combine adj_adj to adj, eg right exact
 		List<String> posList = posMMap.get(curWord);
 		if (pairs.size() > 0 && !posList.isEmpty() && posList.get(0).equals("adj")) {
-			if (pairs.get(pairsSize - 1).pos().matches("adverb|adj")) {
+			String lastPairPos = pairs.get(pairsSize - 1).pos();
+			if (lastPairPos.equals("adverb") || lastPairPos.equals("adj")) {
 				curWord = pairs.get(pairsSize - 1).word() + " " + curWord;
 				// remove previous Pair
 				pairs.remove(pairsSize - 1);
@@ -2163,8 +2143,6 @@ public class ThmP1 {
 
 							if (combined.equals("adj_ent") && !struct2.isStructA()) {
 								// update struct
-								
-									// should be StructH
 								Struct newStruct = struct2.copy();
 								String newPpt = "";
 								if (struct1.type().equals("conj_adj")) {
@@ -2175,7 +2153,6 @@ public class ThmP1 {
 										newPpt += ((Struct) struct1.prev2()).prev1();
 									}
 								} else {
-									
 									newPpt += struct1.prev1();
 								}
 								newStruct.struct().put(newPpt, "ppt");
@@ -2885,6 +2862,7 @@ public class ThmP1 {
 		 * commandNumUnits across entries. Keep track of this multiplicity of entries, favor map with smaller 
 		 * number of entries if span the same.
 		 */
+		System.out.println("<<<<<<<ThmP1 parsedPairMMapList " + parsedPairMMapList);
 		List<Multimap<ParseStructType, ParsedPair>> sortedParsedPairMMapList = new ArrayList<Multimap<ParseStructType, ParsedPair>>();
 		//evolving list of numUnits scores for elements in sortedParsedPairMMapList
 		List<Integer> numUnitsList = new ArrayList<Integer>();
@@ -3163,29 +3141,30 @@ public class ThmP1 {
 		 * Map of parts used to build up a theorem/def etc. 
 		 * Parts can be any ParseStructType. Should make this a local var.
 		 */
-		Multimap<ParseStructType, ParsedPair> parseStructMap = ArrayListMultimap.create();
+		Multimap<ParseStructType, ParsedPair> parseStructMMap = ArrayListMultimap.create();
 		
 		//fills the parseStructMap and produces String representation, collect commands built above.	
 		boolean contextVecConstructed = false;
-		contextVecConstructed = ParseToWLTree.collectCommandsDfs(parseStructMap, curParseStruct, uHeadStruct, wlSB, 
+		contextVecConstructed = ParseToWLTree.collectCommandsDfs(parseStructMMap, curParseStruct, uHeadStruct, wlSB, 
 				curStructContextVec, true, contextVecConstructed, parseState);
-		
+		//System.out.println(">>>>>>>>>>uHeadStruct.WLCommandWrapperList()" + uHeadStruct.WLCommandWrapperList()); //DEBUG
+	 	
 		if(!contextVecConstructed){
 			ParseTreeToVec.tree2vec(uHeadStruct, curStructContextVec);
 		}
 		
-		System.out.println("Parts: " + parseStructMap);
+		System.out.println("Parts: " + parseStructMMap);
 		//**parseStructMapList.add(parseStructMap.toString() + "\n");
 		//if parseStructMap empty, ie no WLCommand was found, but long parse form might still be good
-		if(parseStructMap.isEmpty()){
+		if(parseStructMMap.isEmpty()){
 			ParsedPair pair = new ParsedPair(wlSB.toString(), //parseState.getCurParseStruct(), 
 					uHeadStruct.maxDownPathScore(), 
 					uHeadStruct.numUnits(), span, null);
 			//partsMap.put(type, curWrapper.WLCommandStr);	
-			parseStructMap.put(ParseStructType.NONE, pair);
+			parseStructMMap.put(ParseStructType.NONE, pair);
 		}
 		
-		parsedPairMMapList.add(parseStructMap);
+		parsedPairMMapList.add(parseStructMMap);
 		
 		//ParseToWLTree.dfs(uHeadStruct, wlSB, true);		
 		//parsedSB.append("\n");
@@ -3607,14 +3586,12 @@ public class ThmP1 {
 		}
 		else if (newType.equals("noun")) {
 			if (type1.equals("adj") && type2.equals("noun")) {
-				// combine adj and noun
+				/* combine adj and noun, should actually change noun to ent in this case. */
 				String adj = struct1.prev1().toString();
 				struct2.set_prev1(adj + " " + struct2.prev1());
-				
 				struct2.set_maxDownPathScore(struct2.maxDownPathScore() * newScore);
 				// mx.get(i).set(j, struct2);
 				mx.get(i).get(j).add(struct2);
-				//throw new IllegalStateException("struct2:" + struct2);
 			}
 		}else if(type1.equals("rpro") && type2.equals("assert")){
 			//e.g. "we say that $p$ is prime."

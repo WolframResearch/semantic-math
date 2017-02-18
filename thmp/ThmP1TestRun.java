@@ -553,6 +553,8 @@ public class ThmP1TestRun {
 			st = "if $F $ is on $c(i)$-th column of $A$";
 			st = "this field is perfect";
 			st = "quadratic field lies above $Q$";
+			st = " let $X$ be a compact manifold and $\\cA$ an Azumaya bundle over $X.$";
+			st = "Then the {twisted $K$--theory} $K^0(X,\\cA)$ is isomorphic to the Grothendieck group of Murray--von Neumann equivalence classes of projections in $C(X, \\K_\\cA)$";
 			//st = "field lies above ring";
 			//st = "given a tower of algebraic field extensions";
 			//Every minimal subsystem $\Sigma$ of the system $(\Omega^k,S_\infty)$ is a factor of the minimal system $(\Omega^2_{lo},S_\infty)$.		

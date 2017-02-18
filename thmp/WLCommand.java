@@ -1028,7 +1028,7 @@ public class WLCommand implements Serializable{
 				//get the last-added command. <--should iterate and add count to all previous commands
 				//with this wrapper? <--command building goes inside-out
 				WLCommand lastWrapperCommand = prevHeadStructWrapperList.get(wrapperListSz-1).WLCommand();	
-				// increment the headCount of the last wrapper object, should update every command's count!
+				// increment the headCount of the last wrapper object, should update every command's count.
 				lastWrapperCommand.structsWithOtherHeadCount++;
 				//System.out.println("Wrapper command struct " + headStruct);
 				//System.out.println("***Wrapper Command to update: " + lastWrapperCommand);
@@ -1516,7 +1516,8 @@ public class WLCommand implements Serializable{
 			commandsCountMap.put(commandComponent, commandComponentCount - 1);
 			
 			if(!newStruct.isStructA()){
-				newStruct.set_usedInOtherCommandComponent(true);
+				newStruct.add_usedInCommand(curCommand);
+				//newStruct.set_usedInOtherCommandComponent(true);
 			}
 			//use counter to track whether map is satisfied
 			if(!isOptionalTerm){
@@ -1857,9 +1858,11 @@ public class WLCommand implements Serializable{
 	}
 	
 	/**
-	 * Counter to keep track of which Structs, with which the current Struct this WLCommand
+	 * Counter to keep track of how many Structs, with which the current Struct this WLCommand
 	 * instance is associated to (has this struct as structToAppendWLCommandStr), are associated with
-	 * another head. If this number is above some threshold (e.g. > totalComponentCount-1), 
+	 * another head. I.e. # of structs that are used in multiple commands. This is used to avoid
+	 * doubly using commands when compositing them.
+	 * If this number is above some threshold (e.g. > totalComponentCount-1), 
 	 * do not use this WLCommand.
 	 * @param curCommand
 	 * @return

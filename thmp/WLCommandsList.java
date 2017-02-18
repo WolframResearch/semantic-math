@@ -234,7 +234,7 @@ public class WLCommandsList {
 				new PBuilder("symb|ent|phrase", null, true, false, false, RelationType.IS_)//, new PBuilder("}", "OPT1")
 				)); // PosTermConnotation.DEFINING,
 		
-		//e.g. "$X$ is connected"
+		//e.g. "$X$ is connected", "$F$ is isomorphic to ..."
 		wLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro|noun", null, true, RelationType._IS), 
 				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), 
 				new PBuilder("~HasProperty~"), new PBuilder("adj|phrase|noun|prep", null, true, false, true, RelationType.IS_),
