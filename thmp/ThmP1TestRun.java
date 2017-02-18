@@ -549,10 +549,11 @@ public class ThmP1TestRun {
 			st = "given separated algebraic space";
 			st = "given finitely generated algebra";
 			st = "baire space is metrizable";
-			st = "given residue field which is perfect";
-			st = "Ben Burton and David Letscher have written a program to implement this algorithm";
-			st = "if field is in $c(i)$-th column of $A$";
-			//st = "if field is in ring-th of group";
+			st = "given residue field which is perfect";			
+			st = "if $F $ is on $c(i)$-th column of $A$";
+			st = "this field is perfect";
+			st = "quadratic field lies above $Q$";
+			//st = "field lies above ring";
 			//st = "given a tower of algebraic field extensions";
 			//Every minimal subsystem $\Sigma$ of the system $(\Omega^k,S_\infty)$ is a factor of the minimal system $(\Omega^2_{lo},S_\infty)$.		
 			//st = "take derivative of log of f";

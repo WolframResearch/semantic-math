@@ -50,6 +50,33 @@ public class SearchCombined {
 	}*/
 	
 	/**
+	 * Thm and hyp pair, used to display on web separately.
+	 */
+	public static class ThmHypPair{
+		private String thmStr;
+		private String hypStr;
+		
+		public ThmHypPair(String thmStr_, String hypStr_){
+			this.thmStr = thmStr_;
+			this.hypStr = hypStr_;
+		}
+		
+		@Override
+		public String toString(){
+			StringBuilder sb = new StringBuilder(thmStr);
+			sb.insert(0, hypStr);
+			return sb.toString();
+		}
+		
+		public String thmStr(){
+			return this.thmStr;
+		}
+		public String hypStr(){
+			return this.hypStr;
+		}
+	}
+	
+	/**
 	 * Turn list of indices of thms into list of String's.
 	 * @param highestThms
 	 * @return
@@ -62,6 +89,22 @@ public class SearchCombined {
 			foundThmList.add(getThmList().get(thmIndex));	
 		}
 		return foundThmList;
+	}
+	
+	/**
+	 * Turn list of indices of thms into list of ThmHypPair's.
+	 * @param highestThms
+	 * @return
+	 */
+	public static List<ThmHypPair> thmListIndexToThmHypPair(List<Integer> highestThms){
+		List<ThmHypPair> bestCommonThmHypPairList = new ArrayList<ThmHypPair>();
+		for(Integer thmIndex : highestThms){
+			String hypOnly = TriggerMathThm2.getWebDisplayThmHypOnly(thmIndex);
+			String thmOnly = TriggerMathThm2.getWebDisplayThmNoHyp(thmIndex);
+			ThmHypPair thmHypPair = new ThmHypPair(thmOnly, hypOnly);
+			bestCommonThmHypPairList.add(thmHypPair);				
+		}
+		return bestCommonThmHypPairList;
 	}
 	
 	private static List<String> getThmList(){
@@ -214,7 +257,7 @@ public class SearchCombined {
 		return bestCommonVecList;
 	}
 	
-	public static List<String> searchCombined(String input, Set<String> searchWordsSet, boolean searchContextBool){
+	public static List<ThmHypPair> searchCombined(String input, Set<String> searchWordsSet, boolean searchContextBool){
 		return searchCombined(input, searchWordsSet, searchContextBool, false);
 	}
 	
@@ -223,7 +266,7 @@ public class SearchCombined {
 	 * Resources should have been set prior to this if called externally.
 	 * @param inputStr search input
 	 */
-	public static List<String> searchCombined(String input, Set<String> searchWordsSet, boolean searchContextBool,
+	public static List<ThmHypPair> searchCombined(String input, Set<String> searchWordsSet, boolean searchContextBool,
 			boolean searchRelationalBool){
 		
 		if(WordForms.getWhiteEmptySpacePattern().matcher(input).matches()) return null;
@@ -252,7 +295,7 @@ public class SearchCombined {
 		List<Integer> nearestVecList = ThmSearch.ThmSearchQuery.findNearestThmsInTermDocMx(input, NUM_NEAREST);
 		if(nearestVecList.isEmpty()){
 			System.out.println("I've got nothing for you yet. Try again.");
-			return Collections.<String>emptyList();
+			return Collections.<ThmHypPair>emptyList();
 		}
 		
 		SearchState searchState = SearchIntersection.getHighestThms(input, searchWordsSet, searchContextBool, NUM_NEAREST);
@@ -274,16 +317,17 @@ public class SearchCombined {
 			Searcher<BigInteger> searcher = new RelationalSearch();
 			bestCommonVecs = searchVecWithTuple(input, bestCommonVecs, tupleSz, searcher);			
 		}
+
+		List<ThmHypPair> bestCommonThmHypPairList = thmListIndexToThmHypPair(bestCommonVecs);
 		
-		List<String> bestCommonThms = new ArrayList<String>();
-		
+		//List<String> bestCommonThms = new ArrayList<String>();		
+		//this exists just for printing, should not use on PRD
 		for(int d : bestCommonVecs){
-			//String thm = TriggerMathThm2.getThm(d);
 			String thm = TriggerMathThm2.getWebDisplayThm(d);
 			System.out.println(thm);
-			bestCommonThms.add(thm);
-		}
-		return bestCommonThms;
+			//bestCommonThms.add(thm);
+		}		
+		return bestCommonThmHypPairList;
 	}
 	
 	/**
@@ -357,7 +401,7 @@ public class SearchCombined {
 			boolean searchRelationalBool = false;
 			
 			//this gives the web-displayed versions. 
-			List<String> bestCommonVecs = searchCombined(thm, null, searchContextBool, searchRelationalBool);
+			List<ThmHypPair> bestCommonThmHypPairList = searchCombined(thm, null, searchContextBool, searchRelationalBool);
 			
 			/*if(thm.matches("\\s*")) continue;
 			thm = thm.toLowerCase();
@@ -386,7 +430,7 @@ public class SearchCombined {
 			List<Integer> bestCommonVecs = findListsIntersection(nearestVecList, searchState, numCommonVecs,
 					thm, searchContextBool);
 			*/
-			for(String thmStr : bestCommonVecs){
+			for(ThmHypPair thmStr : bestCommonThmHypPairList){
 				System.out.println(thmStr);
 			}
 		}

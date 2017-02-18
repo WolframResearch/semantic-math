@@ -292,9 +292,15 @@ public class StructA<A, B> extends Struct{
 		}		
 		
 		if(PREV1_TYPE.equals(NodeType.STR) && PREV2_TYPE.equals(NodeType.STR)){
-			String fullName = (String)this.prev1;
+			
+			StringBuilder fullContentSB = new StringBuilder((String)this.prev1);
+			//System.out.println("*********prev1 type: " + type());
+			if(this.type.equals("pre")){
+				fullContentSB.insert(0, "\"").append("\"");
+			}
 			if(PREV2_TYPE.equals(NodeType.STR) && !prev2.equals("")){
-				fullName = "[" + fullName + ", " + (String)this.prev2 + "]";
+				fullContentSB.insert(0, "[").append(", ").append((String)this.prev2).append("]");
+				//fullName = "[" + fullName + ", " + (String)this.prev2 + "]";
 			}
 			//been built into one command already
 			//this.WLCommandStrVisitedCount++;
@@ -304,9 +310,8 @@ public class StructA<A, B> extends Struct{
 			}else if(!curCommand.equals(this.commandBuilt)){
 				this.WLCommandStrVisitedCount++;
 			}
-			return fullName;
-		}else{
-			
+			return fullContentSB.toString();
+		}else{		
 			//System.out.println("+++" + this.simpleToString2(includeType, curCommand));
 			return this.simpleToString2(includeType, curCommand);
 		}
@@ -320,8 +325,7 @@ public class StructA<A, B> extends Struct{
 		//if(this.WLCommandStr != null) return "";
 		if(this.WLCommandWrapperList != null){ 
 			return "";
-		}
-		
+		}		
 		//been built into one command already
 		//this.WLCommandStrVisitedCount++;
 		if(null == this.commandBuilt){
@@ -358,7 +362,8 @@ public class StructA<A, B> extends Struct{
 			tempSB.append("[");
 		}
 		
-		if(this.type.equals("phrase") || this.type.equals("prep")){
+		if(this.type.equals("phrase") //|| this.type.equals("prep")
+				){
 			wrapBraces = true;		
 			//tempStr += "{";
 			tempSB.append("[");
@@ -375,7 +380,6 @@ public class StructA<A, B> extends Struct{
 				if(prev1WrapperList == null){
 					String prev1Str = ((Struct) prev1).simpleToString(includeType, curCommand);
 					if(!prev1Str.matches("\\s*")){
-						//tempStr += prev1Str;
 						tempSB.append(prev1Str);
 					}
 				}else{
@@ -384,8 +388,13 @@ public class StructA<A, B> extends Struct{
 			}else if(PREV1_TYPE.equals(NodeType.STR) && !prev1.equals("")){
 				//if(!type.matches("pre|partiby")){
 				if(!type.matches("partiby")){
-					//tempStr += prev1;
-					tempSB.append(prev1);
+					//if(prev1.equals("above")){
+						//throw new RuntimeException(prev1.toString());
+						//tempSB.append("\"").append(prev1).append("\"");
+					//}
+					//else{
+						tempSB.append(prev1);
+					//}
 				}
 			}
 			
@@ -441,13 +450,11 @@ public class StructA<A, B> extends Struct{
 	public List<String> contentStrList(){		
 		//String contentStr = "";
 		List<String> contentStrList = new ArrayList<String>();
-		if(PREV1_TYPE != null && PREV1_TYPE.equals(NodeType.STR))
-		{
+		if(PREV1_TYPE != null && PREV1_TYPE.equals(NodeType.STR)){
 			contentStrList.add((String) prev1);			
 		}
 
-		if(PREV2_TYPE != null && PREV2_TYPE.equals(NodeType.STR))
-		{			
+		if(PREV2_TYPE != null && PREV2_TYPE.equals(NodeType.STR)){			
 			String prev2Str = contentStrList.isEmpty() 
 					? (String) prev2 : " " + (String) prev2;
 					contentStrList.add(prev2Str);
@@ -490,8 +497,6 @@ public class StructA<A, B> extends Struct{
 		this.numUnits = 1;
 		//this.mxPathNodeList = new ArrayList<MatrixPathNode>();
 	} */
-
-
 	
 	@Override
 	public int numUnits(){

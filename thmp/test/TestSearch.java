@@ -16,6 +16,7 @@ import thmp.Maps;
 import thmp.ThmP1;
 import thmp.ThmP1.ParsedPair;
 import thmp.search.SearchCombined;
+import thmp.search.SearchCombined.ThmHypPair;
 import thmp.search.SearchIntersection;
 import thmp.search.ThmSearch;
 
@@ -40,12 +41,12 @@ public class TestSearch {
 	}
 	
 	public void testSearch(String inputStr, String desiredOutput){
-		List<String> nearestThmsList = SearchCombined.searchCombined(inputStr, null, CONTEXT_SEARCH_BOOL);
+		List<ThmHypPair> nearestThmsList = SearchCombined.searchCombined(inputStr, null, CONTEXT_SEARCH_BOOL);
 		//List<Integer> nearestThmsList = SearchIntersection.getHighestThm(inputStr);
 		assertTrue(nearestThmsList.size() > 1);
 		String desiredOutputLower = desiredOutput.toLowerCase();
-		assertTrue(nearestThmsList.get(0).toLowerCase().contains(desiredOutputLower) 
-				|| nearestThmsList.get(1).toLowerCase().contains(desiredOutputLower));
+		assertTrue(nearestThmsList.get(0).toString().toLowerCase().contains(desiredOutputLower) 
+				|| nearestThmsList.get(1).toString().toLowerCase().contains(desiredOutputLower));
 	}
 	
 	@Test

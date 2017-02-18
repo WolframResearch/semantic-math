@@ -42,7 +42,10 @@ public class TriggerMathThm2 {
 	/* List of mathObj's, in order they are inserted into mathObjMx */
 	private static final List<String> mathObjList;
 	
+	/* These three maps follow consistent ordering */
 	private static final List<String> webDisplayThmList;
+	private static final ImmutableList<String> webDisplayThmHypOnlyList;
+	private static final ImmutableList<String> webDisplayThmNoHypList;
 	
 	/**
 	 * Dictionary of keywords -> their index/row number in mathObjMx.
@@ -154,8 +157,9 @@ public class TriggerMathThm2 {
 		
 		mathObjList = ImmutableList.copyOf(thmList);
 		
-		webDisplayThmList = ImmutableList.copyOf(CollectThm.ThmList.get_webDisplayThmList());
-		
+		webDisplayThmList = CollectThm.ThmList.allThmsWithHypList();
+		webDisplayThmHypOnlyList = CollectThm.ThmList.allHypList();
+		webDisplayThmNoHypList = CollectThm.ThmList.allThmsNoHypList();
 		/*for(int i = 0; i < thmWordsList.size(); i++){
 			System.out.println(mathObjList.get(i));
 			System.out.println(thmWordsList.get(i));
@@ -694,6 +698,25 @@ public class TriggerMathThm2 {
 		return webDisplayThmList.get(index);
 	}
 	
+	/**
+	 * Get hypotheses only for thm with index index.
+	 * @param index 0-based index
+	 * @return
+	 */
+	public static String getWebDisplayThmHypOnly(int index){
+		//System.out.print("Thm index: " + index + "\t");
+		return webDisplayThmHypOnlyList.get(index);
+	}
+	
+	/**
+	 * Get theorem string only with index index, without hyp.
+	 * @param index 0-based index
+	 * @return
+	 */
+	public static String getWebDisplayThmNoHyp(int index){
+		//System.out.print("Thm index: " + index + "\t");
+		return webDisplayThmNoHypList.get(index);
+	}
 	/*public static void main(String[] args){
 		System.out.print(keywordDict.size());
 	}*/

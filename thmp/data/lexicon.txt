@@ -62,7 +62,7 @@ analytic adj
 converge verbAlone
 along pre
 great adj
-finite adj
+finite adj_comp
 open adj
 open ent
 extension ent
@@ -92,7 +92,6 @@ one adj
 can verb
 take verb
 nullset ent
-"more generally" fluff " "
 inverse ent
 image ent
 three adj
@@ -110,7 +109,7 @@ other adj
 word noun
 induce verb
 commute verb
-moreover
+moreover fluff
 two adj
 done parti
 pair noun
@@ -125,13 +124,8 @@ up pre_comp
 action ent
 compatible adj
 in pre_comp
-"in the sense that" fluff " "
-"in the" comp ""
-"in the sense" comp " "
 to pre_comp
 "to be" verb
-"in other" comp ""
-"in other words" fluff " "
 usually fluff
 other adj
 give verb
@@ -192,7 +186,6 @@ maximal adj
 minimal adj
 well adj
 particular fluff
-"in particular" fluff ""
 domain ent
 ring ent
 graded adj
@@ -225,7 +218,7 @@ something noun
 spectrum ent
 characterize verb
 good adj
-above adj
+above pre
 less adj
 locus ent
 pure adj
@@ -405,11 +398,11 @@ cotangent ent
 integrality ent
 prof ent
 smoothness ent
-purely transcendental adj
+purely adv_comp
+"purely transcendental" adj
 cutting adj
 codimension ent
 domination ent
-yoneda's adj
 differential ent
 pid ent
 homotopy ent
@@ -487,7 +480,7 @@ unwinding verb
 discriminant ent
 intermediate adj
 liouville's adj
-finite galois adj
+"finite galois" adj
 coarsest adj
 embed verb
 monogenic adj
@@ -498,6 +491,7 @@ tori ent
 cone ent
 tangent ent
 tangent adj
+lie verb
 earlier adverb
 prop verb
 submanifold ent

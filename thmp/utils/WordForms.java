@@ -21,8 +21,10 @@ import javax.servlet.ServletContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.SetMultimap;
@@ -36,14 +38,15 @@ public class WordForms {
 	//delimiters to split on when making words out of input
 	private static final String SPLIT_DELIM = "\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:|-|_|~|!";
 	private static final Pattern BACKSLASH_PATTERN = Pattern.compile("(?<!\\\\)\\\\(?!\\\\)");
-	private static final Pattern WHITE_EMPTY_SPACE_PATTERN = Pattern.compile("^\\s*$");
-	private static final Pattern WHITE_NONEMPTY_SPACE_PATTERN = Pattern.compile("^\\s+$");
-	
+	private static final Pattern ALL_WHITE_EMPTY_SPACE_PATTERN = Pattern.compile("^\\s*$");
+	private static final Pattern ALL_WHITE_NONEMPTY_SPACE_PATTERN = Pattern.compile("^\\s+$");
+	private static final Pattern WHITE_NONEMPTY_SPACE_PATTERN = Pattern.compile("\\s+");
 	private static final Pattern BRACES_PATTERN = Pattern.compile("(\\{|\\}|\\[|\\])");
 	private static final Pattern SPECIAL_CHARS_PATTERN = Pattern.compile(".*([+|-]).*");
 	
 	private static final String synonymsFileStr = "src/thmp/data/synonyms.txt";
 	private static final ImmutableMap<String, String> synonymRepMap;
+	private static final ImmutableMultimap<String, String> stemToWordsMMap;
 	
 	//pattern for lines to skip any kind of parsing, even hypothesis-detection.
 		//skip examples and bibliographies  
@@ -99,8 +102,18 @@ public class WordForms {
 		Map<String, String> stemWordsMap = deserializeStemWordsMap(servletContext);	
 		synonymsPreMap.putAll(stemWordsMap);
 		synonymRepMap = ImmutableMap.copyOf(synonymsPreMap);
+		//create "inverse" Multimap for the different forms for each word stem.
+		stemToWordsMMap = ImmutableMultimap.copyOf(createStemToWordsMMap(stemWordsMap));
 		
 		FileUtils.silentClose(synonymsBF);
+	}
+	
+	private static Multimap<String, String> createStemToWordsMMap(Map<String, String> stemWordsMap){
+		Multimap<String, String> stemToWordsMMap = ArrayListMultimap.create();		
+		for(Map.Entry<String, String> entry: stemWordsMap.entrySet()){
+			stemToWordsMMap.put(entry.getValue(), entry.getKey());
+		}
+		return stemToWordsMMap;
 	}
 	
 	private static Set<String> getFreqWordsSet(){
@@ -472,6 +485,14 @@ public class WordForms {
 	}
 	
 	/**
+	 * Word Stems to various word forms with that stem.  
+	 * @return
+	 */
+	public static ImmutableMultimap<String, String> stemToWordsMMap(){
+		return stemToWordsMMap;
+	}
+	
+	/**
 	 * E.g. ".*assume.*|.*denote.*|.*define.*"
 	 * 
 	 * @return
@@ -485,7 +506,7 @@ public class WordForms {
 	 * empty pattern.
 	 */
 	public static Pattern getWhiteEmptySpacePattern() {
-		return WHITE_EMPTY_SPACE_PATTERN;
+		return ALL_WHITE_EMPTY_SPACE_PATTERN;
 	}
 	
 	/**
@@ -493,9 +514,16 @@ public class WordForms {
 	 * empty pattern.
 	 */
 	public static Pattern getWhiteNonEmptySpacePattern() {
-		return WHITE_NONEMPTY_SPACE_PATTERN;
+		return ALL_WHITE_NONEMPTY_SPACE_PATTERN;
 	}
 	
+	/**
+	 * @return the whitespacePattern. Excluding the case of 
+	 * empty pattern. Don't need to be whole sentence.
+	 */
+	public static Pattern getWhiteNonEmptySpaceNotAllPattern() {
+		return WHITE_NONEMPTY_SPACE_PATTERN;
+	}
 
 	public static Pattern getSINGLE_LINE_SKIP_PATTERN(){
 		return SINGLE_LINE_SKIP_PATTERN;

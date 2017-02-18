@@ -239,18 +239,20 @@ public class ParseState {
 		//the Struct defining the variable.
 		//E.g. in "$F$ is a field", the Struct for "field"
 		//is the defining Struct.
-		private Struct definingStruct;
+		private transient Struct definingStruct;
 		
 		private VariableName variableName;
+		private String originalDefinitionSentence;
 		
 		/**
+		 * originalDefinitionSentence could be null at construction.
 		 * @return the originalDefinitionSentence
 		 */
 		public String getOriginalDefinitionSentence() {
 			return originalDefinitionSentence;
 		}
 
-		/**
+		/** 
 		 * @param originalDefinitionSentence the originalDefinitionSentence to set
 		 */
 		public void setOriginalDefinitionSentence(String originalDefinitionSentence) {
@@ -272,8 +274,6 @@ public class ParseState {
 		public void setVariableName(VariableName variableName) {
 			this.variableName = variableName;
 		}
-
-		private String originalDefinitionSentence;
 
 		public VariableDefinition(VariableName variableName, Struct definingStruct, String originalDefinitionStr){
 			//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
@@ -338,14 +338,6 @@ public class ParseState {
 			return definingStruct;
 		}
 
-		/**
-		 * originalDefinitionSentence could be null at construction.
-		 * @return the originalDefinitionStr
-		 */
-		public String getOriginalDefinitionStr() {
-			return originalDefinitionSentence;
-		}
-		
 	}
 	
 	//waiting WLCommandWrapper map on deck, waiting to be added. Necessary 

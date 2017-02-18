@@ -229,16 +229,25 @@ public class WLCommandsList {
 				RelationType._IS), 
 				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), new PBuilder("\\[Element]"),
 				//negative term, to stop command if encountered
-				new PBuilder("adj", null, WLCommand.PosTermType.NEGATIVE),
-				new PBuilder("symb|ent|phrase", null, true, false, false, RelationType.IS_) )); // PosTermConnotation.DEFINING,
+				new PBuilder("adj", null, WLCommand.PosTermType.NEGATIVE), //new PBuilder("{", "OPT1"), 
+				//new PBuilder("pre", null, true, false, "OPT1"),
+				new PBuilder("symb|ent|phrase", null, true, false, false, RelationType.IS_)//, new PBuilder("}", "OPT1")
+				)); // PosTermConnotation.DEFINING,
 		
 		//e.g. "$X$ is connected"
 		wLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro|noun", null, true, RelationType._IS), 
 				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), 
-				new PBuilder("~HasProperty~"), new PBuilder("adj|phrase|noun", null, true, false, true, RelationType.IS_),
+				new PBuilder("~HasProperty~"), new PBuilder("adj|phrase|noun|prep", null, true, false, true, RelationType.IS_),
 				new PBuilder(", {Qualifier->", "OPT"), 
 				new PBuilder("prep", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}", "OPT")
 				));
+		
+		//e.g. "$X$ is in $Y$"
+		/*wLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro|noun", null, true, RelationType._IS), 
+				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), 
+				new PBuilder("~HasProperty~"), new PBuilder("{"), new PBuilder("pre", null, true),
+				new PBuilder("symb|ent|noun|phrase", null, true, false, false, RelationType.IS_), new PBuilder("}")
+				));*/
 		//e.g. "R is of finite type"
 		wLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro|noun", null, true, RelationType._IS), 
 				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), 

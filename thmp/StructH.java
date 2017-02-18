@@ -519,8 +519,7 @@ public class StructH<H> extends Struct{
 		//String str = "";
 		StringBuilder sb = new StringBuilder();
 		
-		if(includeType){
-			
+		if(includeType){			
 			sb.append(this.type.equals("ent") ? "Math" : this.type);
 			sb.append("[");
 			//str += this.type.equals("ent") ? "Math" : this.type;
@@ -531,16 +530,20 @@ public class StructH<H> extends Struct{
 		/*if(includeType){
 			sb.append("\"");
 		}*/
-		
+		boolean prependCommaBool = false;
 		//Iterator<String> pptStrListIter = get_name_pptStr_List().iterator();
 		//append name
 		String name = struct.get("name");
 		if(null != name){
-			sb.append("\"Name\"->").append(name);
+			sb.append("\"Name\"->\"").append(name).append("\"");
+			prependCommaBool = true;
 		}
 		
 		Iterator<String> pptStrListIter = getPropertySet().iterator();		
-		if(pptStrListIter.hasNext()){			
+		if(pptStrListIter.hasNext()){
+			if(prependCommaBool){
+				sb.append(", ");
+			}
 			sb.append("\"Property\"->");
 		}
 		
@@ -556,13 +559,19 @@ public class StructH<H> extends Struct{
 		//append "called"
 		String called = struct.get("called");
 		if(null != called){
-			sb.append(" \"Called\"->" + called);
+			if(prependCommaBool){
+				sb.append(", ");
+			}
+			sb.append(" \"Called\"->" + called);			
 		}
 		//append name
-				String tex = struct.get("tex");
-				if(null != tex){
-					sb.append(" \"Tex\"->").append(tex);
-				}
+		String tex = struct.get("tex");
+		if(null != tex){
+			if(prependCommaBool){
+				sb.append(", ");
+			}
+			sb.append(" \"Tex\"->").append(tex);
+		}
 		
 		//sb.append(append_name_pptStr());
 		
@@ -573,8 +582,7 @@ public class StructH<H> extends Struct{
 		
 		//iterate through children		
 		int childrenSize = children.size();
-		if(childrenSize > 0){
-			
+		if(childrenSize > 0){			
 			StringBuilder childSb = new StringBuilder();
 			for(int i = 0; i < childrenSize; i++){	
 				Struct child = children.get(i);

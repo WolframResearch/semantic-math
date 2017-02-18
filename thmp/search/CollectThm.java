@@ -31,7 +31,9 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ListMultimap;
 
+import thmp.DetectHypothesis.DefinitionListWithThm;
 import thmp.Maps;
+import thmp.ParseState.VariableDefinition;
 import thmp.ParsedExpression;
 import thmp.ProcessInput;
 import thmp.ThmInput;
@@ -178,6 +180,7 @@ public class CollectThm {
 		 * words that are interchangeable, not similar not non-interchangeable words.
 		 * Create only one entry in term-document matrix for each synonym group. */
 		private static final ImmutableMap<String, String> synonymRepMap;
+		private static final ImmutableMultimap<String, String> stemToWordsMMap;
 		//file to read from. Thms already extracted, ready to be processed.
 		//private static final File thmFile = new File("src/thmp/data/thmFile5.txt");
 		//list of theorems, in order their keywords are added to thmWordsList
@@ -247,6 +250,7 @@ public class CollectThm {
 			/*map of words and their representatives, e.g. "annihilate", "annihilator", etc all map to "annihilat"
 			i.e. word of maps to their stems. */
 			synonymRepMap = WordForms.getSynonymsMap();
+			stemToWordsMMap = WordForms.stemToWordsMMap();
 			//pass builder into a reader function. For each thm, builds immutable list of keywords, 
 			//put that list into the thm list. The integer indicates the word frequencies.
 			ImmutableList.Builder<ImmutableMap<String, Integer>> thmWordsListBuilder = ImmutableList.builder();
@@ -288,6 +292,9 @@ public class CollectThm {
 				e.printStackTrace();
 				throw new IllegalStateException("Calls to readThm and building maps failed!\n", e);
 			}
+			/*use stemToWordsMMap to re-adjust frequency of word stems that came from multiple forms, 
+			 as these are much more likely to be math words, so don't want to scale down too much */
+			adjustWordFreqMapWithStemMultiplicity(docWordsFreqPreMapNoAnno, stemToWordsMMap);
 			
 			thmWordsFreqList = thmWordsListBuilder.build();	
 			//thmList = thmListBuilder.build();
@@ -407,6 +414,30 @@ public class CollectThm {
 			return relatedWordsMap;
 		}
 		
+		/**
+		 * Use stemToWordsMMap to re-adjust frequency of word stems that came from multiple forms, 
+			 as these are much more likely to be math words, so don't want to scale down too much.
+		 * @param docWordsFreqPreMapNoAnno
+		 * @param stemtowordsmmap2
+		 */
+		private static void adjustWordFreqMapWithStemMultiplicity(Map<String, Integer> docWordsFreqPreMapNoAnno,
+				ImmutableMultimap<String, String> stemToWordsMMap_) {
+			double freqAdjustmentFactor = 3.0/4;
+			Map<String, Integer> modifiedWordFreqMap = new HashMap<String, Integer>();			
+			for(Map.Entry<String, Integer> entry : docWordsFreqPreMapNoAnno.entrySet()){
+				String wordStem = entry.getKey();
+				if(stemToWordsMMap_.containsKey(wordStem)){
+					int formsCount = (int)(stemToWordsMMap_.get(wordStem).size()*freqAdjustmentFactor);
+					//pre-processing should have eliminated stems with freq 1
+					if(formsCount < 2) continue;
+					int adjustedFreq = entry.getValue()/formsCount;
+					adjustedFreq = adjustedFreq > 0 ? adjustedFreq : 1;
+					modifiedWordFreqMap.put(wordStem, adjustedFreq);
+				}
+			}
+			docWordsFreqPreMapNoAnno.putAll(modifiedWordFreqMap);
+		}
+
 		/**
 		 * deserialize words list used to form context and relation vectors, which were
 		 * formed while parsing through the papers in e.g. DetectHypothesis.java. This is
@@ -785,8 +816,7 @@ public class CollectThm {
 										docWordsFreqPreMap,	wordThmsMMapBuilder, threeGramFreq);
 							}
 						}
-					}
-					
+					}					
 					if(!GATHER_SKIP_GRAM_WORDS){
 						//removes endings such as -ing, and uses synonym rep.
 						//e.g. "annihilate", "annihilator", etc all map to "annihilat"
@@ -1105,8 +1135,8 @@ public class CollectThm {
 					allThmsNoHypPreList, allHypPreList);			
 			
 			allThmsWithHypList = ImmutableList.copyOf(allThmsWithHypPreList);
-			allThmsNoHypList ;
-			allHypList ;
+			allThmsNoHypList = ImmutableList.copyOf(allThmsNoHypPreList);
+			allHypList = ImmutableList.copyOf(allHypPreList);
 			allThmsContextVecList = ImmutableList.copyOf(contextVecPreList);
 			allThmsRelationVecList = ImmutableList.copyOf(relationVecPreList);
 			
@@ -1196,8 +1226,8 @@ public class CollectThm {
 		private static List<ParsedExpression> extractParsedExpressionList() {
 			//List<ParsedExpression> parsedExpressionsList;
 			//String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
-			String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
-			//String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionListTemplate.dat";
+			//String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
+			String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionListTemplate.dat";
 			
 			if(null != servletContext){
 				InputStream parsedExpressionListInputStream = servletContext.getResourceAsStream(parsedExpressionSerialFileStr);
@@ -1218,12 +1248,21 @@ public class CollectThm {
 		 * @param relationVecList
 		 */
 		private static void fillListsFromParsedExpressions(List<ParsedExpression> parsedExpressionsList, 
-				List<String> allThmsWithHypList, List<String> contextVecList, List<BigInteger> relationVecList){
+				List<String> allThmsWithHypList, List<String> contextVecList, List<BigInteger> relationVecList,
+				List<String> allThmsNoHypPreList, List<String> allHypPreList){
 			//System.out.println("Should be list: " + parsedExpressionsList);
 			for(ParsedExpression parsedExpr : parsedExpressionsList){
+				DefinitionListWithThm defListWithThm = parsedExpr.getDefListWithThm();
 				//get original thm and list of definitions separately, for displaying them separately on the web.
-				f
-				allThmsWithHypList.add(parsedExpr.getDefListWithThm().getThmWithDefStr());
+				allThmsNoHypPreList.add(defListWithThm.getThmStr());
+				//build the definition string here, could be earlier in DetectHypothesis.java,
+				//but in future may want to do different things with the list elements, so better to keep list form.
+				StringBuilder defListSB = new StringBuilder(200);
+				for(VariableDefinition def : defListWithThm.getDefinitionList()){
+					defListSB.append(def.getOriginalDefinitionSentence()).append('\n');
+				}
+				allHypPreList.add(defListSB.toString());
+				allThmsWithHypList.add(defListWithThm.getThmWithDefStr());
 				contextVecList.add(parsedExpr.contextVecStr());
 				relationVecList.add(parsedExpr.getRelationVec());
 			}
@@ -1255,6 +1294,26 @@ public class CollectThm {
 		 */
 		public static ImmutableList<String> allThmsWithHypList(){
 			return allThmsWithHypList;
+		}
+		
+		/**
+		 * Get list of hypotheses and assumptions,
+		 * as collected by DetectHypothesis.java. As extracted from deserialized 
+		 * ParsedExpressions.
+		 * @return an immutable list
+		 */
+		public static ImmutableList<String> allThmsNoHypList(){
+			return allThmsNoHypList;
+		}
+		
+		/**
+		 * Get list of hypotheses and assumptions,
+		 * as collected by DetectHypothesis.java. As extracted from deserialized 
+		 * ParsedExpressions.
+		 * @return an immutable list
+		 */
+		public static ImmutableList<String> allHypList(){
+			return allHypList;
 		}
 		
 		/**

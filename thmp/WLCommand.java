@@ -1064,8 +1064,7 @@ public class WLCommand implements Serializable{
 		//use StringBuilder!
 		StringBuilder commandSB = new StringBuilder();
 		//the latest Struct to be touched, for determining if an aux String should be displayed
-		//boolean prevStructHeaded = false;
-	
+		//boolean prevStructHeaded = false;	
 		//Struct headStruct = curCommand.headStruct;
 		//determine which head to attach this command to
 		Struct structToAppendCommandStr = findCommandHead(commandsMap);
@@ -1076,8 +1075,7 @@ public class WLCommand implements Serializable{
 			
 			if(term.isNegativeTerm()){
 				continue;
-			}
-			
+			}			
 			if(!term.includeInBuiltString){		
 				//set its head Struct to structToAppendCommandStr,
 				// ***This should always be null, because haven't set it yet.
@@ -1101,17 +1099,13 @@ public class WLCommand implements Serializable{
 					}
 				} */
 					// if != null, some Wrappers have been added, so already
-					// associated to some commands.					
-					
+					// associated to some commands.									
 				}
 				continue;
 			}
 			WLCommandComponent commandComponent = term.commandComponent;
-			
-			
-			int positionInMap = term.positionInMap;
-			//boolean isOptionalTerm = term.isOptionalTerm();
-			
+						
+			int positionInMap = term.positionInMap;			
 			String nextWord = "";			
 			//neither WL command or auxilliary String
 			if(positionInMap != WLCommandsList.AUXINDEX && positionInMap != WLCommandsList.WLCOMMANDINDEX){
@@ -1126,8 +1120,7 @@ public class WLCommand implements Serializable{
 						logger.error(warningMsg);
 					}
 					continue;
-				}
-				
+				}				
 				Struct nextStruct = curCommandComponentList.get(positionInMap);
 				//don't set struct here! Can lead to wrong struct for parent-child pairs!
 				//term.set_posTermStruct(nextStruct);
@@ -1161,9 +1154,8 @@ public class WLCommand implements Serializable{
 						nextWord = nextStruct.simpleToString(true, null);						
 					}
 				}else{
-					//System.out.println("^^^Triggering command " + curCommand);
 					//takes into account pro, and the ent it should refer to
-					nextWord = nextStruct.simpleToString(true, curCommand);					
+					nextWord = nextStruct.simpleToString(true, curCommand);
 				}
 				//simple way to present the Struct
 				//set to the head struct the currently built command will be appended to
@@ -1179,8 +1171,7 @@ public class WLCommand implements Serializable{
 					//already been assigned to a different head
 					nextStruct.structToAppendCommandStr().WLCommand().structsWithOtherHeadCount--;									
 				}
-				nextStruct.set_structToAppendCommandStr(structToAppendCommandStr); */
-				
+				nextStruct.set_structToAppendCommandStr(structToAppendCommandStr); */				
 			}//index indicating this is a WL command.
 			else if(positionInMap == WLCommandsList.WLCOMMANDINDEX){
 				//should change to use simpletoString from Struct
@@ -1207,10 +1198,8 @@ public class WLCommand implements Serializable{
 					} */
 				}				
 			} else {
-				//auxilliary Strings inside a WLCommand, eg "[", "\[Element]"	
-			
+				//auxilliary Strings inside a WLCommand, eg "[", "\[Element]"				
 				nextWord = term.commandComponent.posStr;
-
 				//System.out.print("nextWord : " + nextWord + "prevStruct: " + prevStructHeaded);
 			}
 			
@@ -1218,10 +1207,10 @@ public class WLCommand implements Serializable{
 				int optionalGroupNum = term.optionalGroupNum();
 				
 				if(0 == optionalTermsGroupCountMap.get(optionalGroupNum)){
-					commandSB.append(nextWord + " ");
+					commandSB.append(nextWord).append(" ");
 				}
 			}else{			
-				commandSB.append(nextWord + " ");
+				commandSB.append(nextWord).append(" ");
 			}
 		}
 		

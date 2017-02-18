@@ -13,6 +13,7 @@ import com.google.common.collect.TreeMultimap;
 import thmp.GenerateRelationVec;
 import thmp.ParseState;
 import thmp.ParseState.ParseStateBuilder;
+import thmp.search.SearchCombined.ThmHypPair;
 import thmp.search.Searcher.SearcherState;
 import thmp.RelationVec;
 import thmp.utils.FileUtils;
@@ -103,8 +104,8 @@ public class RelationalSearch implements Searcher<BigInteger>{
 	 * @param nearestThmIndexList
 	 * @return
 	 */
-	public static List<String> getHighestThmStringList(String queryStr, List<Integer> nearestThmIndexList){
-		return SearchCombined.thmListIndexToString(relationalSearch(queryStr, nearestThmIndexList, null));
+	public static List<ThmHypPair> getHighestThmStringList(String queryStr, List<Integer> nearestThmIndexList){
+		return SearchCombined.thmListIndexToThmHypPair(relationalSearch(queryStr, nearestThmIndexList, null));
 	}
 	
 	/**

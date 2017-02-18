@@ -27,6 +27,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.TreeMultimap;
 
+import thmp.search.SearchCombined.ThmHypPair;
 import thmp.search.SearchWordPreprocess.WordWrapper;
 import thmp.utils.GatherRelatedWords.RelatedWords;
 import thmp.utils.WordForms;
@@ -142,15 +143,16 @@ public class SearchIntersection {
 	 * @param num
 	 * @return List of thm Strings.
 	 */
-	public static List<String> getHighestThmStringList(String input, Set<String> searchWordsSet,
+	public static List<ThmHypPair> getHighestThmStringList(String input, Set<String> searchWordsSet,
 			boolean contextSearchBool) {
 		SearchState searchState = getHighestThms(input, searchWordsSet, contextSearchBool);
 		if (null == searchState)
-			return Collections.emptyList();
+			return Collections.<ThmHypPair>emptyList();
 		List<Integer> highestThmsList = searchState.intersectionVecList();
-		if (null == highestThmsList)
-			return Collections.emptyList();
-		return SearchCombined.thmListIndexToString(highestThmsList);
+		if (null == highestThmsList){
+			return Collections.<ThmHypPair>emptyList();
+		}
+		return SearchCombined.thmListIndexToThmHypPair(highestThmsList);
 	}
 
 	/**
@@ -285,8 +287,7 @@ public class SearchIntersection {
 		searchState.set_totalWordAdded(totalSingletonAdded);
 
 		// array of words to indicate frequencies that this word was included in
-		// either
-		// a singleton or n-gram
+		// either a singleton or n-gram
 		int[] wordCountArray = new int[wordWrapperListSz];
 		// whether current word has been included in a singleton or n-gram
 
@@ -606,14 +607,13 @@ public class SearchIntersection {
 	 * @return scoreAdded
 	 */
 	private static int addWordThms(Map<Integer, Integer> thmScoreMap, TreeMultimap<Integer, Integer> scoreThmMMap,
-			Multimap<Integer, Integer> thmWordSpanMMap, ListMultimap<String, Integer> wordThmIndexMMap, // Map<String,
-																										// Integer>
-																										// dominantWordsMap,
+			Multimap<Integer, Integer> thmWordSpanMMap, ListMultimap<String, Integer> wordThmIndexMMap,
 			WordWrapper curWrapper, String word, String wordLong, int wordIndexInThm, WordForms.TokenType tokenType,
 			int[] singletonScoresAr, Set<String> searchWordsSet) {
 		// update scores map
 		int curScoreToAdd = 0;
 		int scoreAdded = 0;
+		String wordOriginalForm = word;
 		List<String> relatedWordsList = null;
 		// boolean relatedWordsFound = false;
 		// for every word, get list of thms containing this word
@@ -721,10 +721,6 @@ public class SearchIntersection {
 				// thmWordSpanMMap.
 				tokenType.addToMap(thmWordSpanMMap, thmIndex, wordIndexInThm);
 			}
-			if (curScoreToAdd > 0) {
-				// add thm index from related words , with 3/4 of the score.
-
-			}
 			scoreAdded = curScoreToAdd;
 			// add singletons to searchWordsSet, so
 			// searchWordsSet could be null if not interested in searchWordsSet.
@@ -733,9 +729,12 @@ public class SearchIntersection {
 				for (String w : wordAr) {
 					searchWordsSet.add(w);
 				}
+				if(!word.equals(wordOriginalForm)){
+					searchWordsSet.add(wordOriginalForm);
+				}
 			}
 		}
-
+		
 		// add thms for related words found, with some reduction factor;
 		// make global after experimentation.
 		double RELATED_WORD_MULTIPLICATION_FACTOR = 4 / 5.0;
@@ -798,16 +797,8 @@ public class SearchIntersection {
 	 *            web display.
 	 * @return
 	 */
-	public static List<String> search(String inputStr, Set<String> searchWordsSet) {
-
-		// int numVecs = NUM_NEAREST_VECS;
-		// String firstWord = inputStr.split("\\s+")[0];
-
-		/*
-		 * if(firstWord.matches("\\d+")){ numVecs = Integer.parseInt(firstWord);
-		 * }
-		 */
-
+	public static List<ThmHypPair> search(String inputStr, Set<String> searchWordsSet) {
+		
 		boolean contextSearchBool = false;
 		List<Integer> highestThms = getHighestThmList(inputStr, searchWordsSet, contextSearchBool);
 
@@ -815,10 +806,10 @@ public class SearchIntersection {
 			// foundThmList.add("Close, but no cigar. I don't have a theorem on
 			// that yet.");
 			// return thmList;
-			return null;
+			return Collections.<ThmHypPair>emptyList();
 		}
 
-		return SearchCombined.thmListIndexToString(highestThms);
+		return SearchCombined.thmListIndexToThmHypPair(highestThms);
 	}
 
 	/**

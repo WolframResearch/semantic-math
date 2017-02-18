@@ -43,8 +43,6 @@ import thmp.ThmP1AuxiliaryClass.ConjDisjVerbphrase.ConjDisjType;
 import thmp.search.CollectThm;
 import thmp.search.NGramSearch;
 import thmp.search.ThreeGramSearch;
-import thmp.search.TriggerMathThm2;
-import thmp.utils.Buggy;
 import thmp.utils.WordForms;
 import thmp.utils.WordForms.TokenType;
 
@@ -80,6 +78,7 @@ public class ThmP1 {
 	private static final Pattern LATEX_BEGIN_PATTERN = Pattern.compile("[^$]*\\${1,2}.*");
 	private static final Pattern POSSIBLE_ADJ_PATTERN = Pattern.compile("(?:.*tive|.*wise|.*ary|.*able|.*ous)$");
 	private static final Pattern ESSENTIAL_POS_PATTERN = Pattern.compile("ent|conj_ent|verb|vbs|if|symb|pro");
+	private static final Pattern VERB_POS_PATTERN = Pattern.compile("verb|vbs");	
 	private static final Pattern SINGLE_WORD_TEX_PATTERN = Pattern.compile("\\$[^$]+\\$[^\\s]*"); 
 	
 	//pattern for Latex expressions being possible assert's, i.e. starting/ending with $ and 
@@ -174,7 +173,6 @@ public class ThmP1 {
 	private static final int MIN_PAIRS_SIZE_THRESHOLD_FOR_FLUFF = 7;
 	
 	static{
-		
 		fluffMap = Maps.BuildMaps.fluffMap;
 		//mathObjMap = Maps.BuildMaps.mathObjMap;
 		fixedPhraseMap = Maps.fixedPhraseMap();
@@ -234,7 +232,7 @@ public class ThmP1 {
 		//the commandNumUnits associated to the WLCommand that gives this parsedStr.
 		private int commandNumUnits;
 		//the WLCommand associated to this ParsedPair.
-		//Don't serialize wlCommand, will introduce infinite recursion
+		//Don't serialize wlCommand! Will introduce infinite recursion
 		//when trying to serialize this, because of circular referencing 
 		//between WLCommand and WLCommandWrap.
 		private transient WLCommand wlCommand;
@@ -375,9 +373,6 @@ public class ThmP1 {
 		String twoGramSingular = curWord + " " + nextWordSingular;
 		int newIndex = i;
 		
-		//Map<String, Integer> twoGramMap = NGramSearch.get2GramsMap();
-		//Map<String, Integer> threeGramMap = ThreeGramSearch.get3GramsMap();
-		
 		if(i < str.length - 2){
 			String thirdWord = str[i + 2];	
 			String thirdWordSingular = WordForms.getSingularForm(thirdWord);
@@ -404,7 +399,8 @@ public class ThmP1 {
 		
 		if(newIndex == i && i < str.length - 1){
 			TokenType tokenType = TokenType.TWOGRAM;
-			if(twoGramMap.containsKey(twoGram)){			
+			if(twoGramMap.containsKey(twoGram)){
+				//if(true) throw new IllegalStateException("two gram! " + twoGram);
 				if(addNGramToPairs(pairs, mathIndexList, nextWord, twoGram, tokenType)){
 					newIndex = i+1;
 				}	
@@ -528,7 +524,7 @@ public class ThmP1 {
 	 */
 	public static ParseState tokenize(String sentence, ParseState parseState){
 		
-		if(WordForms.getWhiteEmptySpacePattern().matcher(sentence).find()){
+		if(WordForms.getWhiteEmptySpacePattern().matcher(sentence).matches()){
 			return parseState;
 		}
 		parseState.setCurrentInputStr(sentence);
@@ -578,7 +574,7 @@ public class ThmP1 {
 			//System.out.println("at beginning: curWord: " + curWord);
 			
 			//sometimes some blank space falls through, in which case just skip.
-			if(WordForms.getWhiteEmptySpacePattern().matcher(curWord).find()){
+			if(WordForms.getWhiteEmptySpacePattern().matcher(curWord).matches()){
 				continue;
 			}			
 			Matcher negativeAdjMatcher;
@@ -1082,7 +1078,7 @@ public class ThmP1 {
 				//e.g. $f$ is inclusion-preserving
 				if(i > 1 && pairsSz > 1//e.g. inclusion preserving
 						 && pairs.get(pairsSz-1).pos().matches("noun|\\d+|ent")
-						 && pairs.get(pairsSz-2).pos().matches("verb|vbs")
+						 && VERB_POS_PATTERN.matcher(pairs.get(pairsSz-2).pos()).matches()
 						 //&& posMMap.containsKey(strAr[i - 1]) && posMMap.get(strAr[i - 1]).get(0).matches("ent|noun")
 						 ){
 					Pair prevPair = pairs.get(pairsSz-1);
@@ -1142,7 +1138,7 @@ public class ThmP1 {
 				Pair pair = pairs.get(pairsSize - 1);
 
 				// combine "no" and "not" with verbs
-				if (pair.pos().matches("verb|vbs")) {
+				if (VERB_POS_PATTERN.matcher(pair.pos()).matches()) {
 					String word = pairs.get(pairsSize - 2).word();
 					if (pairs.size() > 1 && (word.matches("not|no")
 							|| pairs.get(pairsSize - 2).pos().matches("not"))) {
@@ -1653,11 +1649,11 @@ public class ThmP1 {
 				if (curStruct != null) {
 					structList.add(curStruct);
 				}
-
 				prevPos = curPos;
 				
 			} else {
 				String prev2 = "";
+				//if(true) throw new IllegalStateException();
 				//check if article
 				if(curPos.equals("art")){
 					
@@ -4371,16 +4367,18 @@ public class ThmP1 {
 			String curWordLower = curWord.toLowerCase();
 			if (posMMap.containsKey(curWordLower)) {
 				String pos = posMMap.get(curWordLower).get(0);
+				//compositional parts of speech that could involve multiple words.
 				String[] posAr = pos.split("_");
 				String tempWord = curWord;
 
 				int j = i;
 				// potentially a fluff phrase <--improve defluffing!
 				if (posAr[posAr.length - 1].equals("comp") && j < wordsArrayLen - 1) {
+					//if("in".equals(curWord)) throw new IllegalStateException("comp word: " + posAr);
 					// keep reading in string characters, until there is no
 					// match.
 					tempWord += " " + wordsArray[++j];
-					
+					//if(posMMap.containsKey("in the")) throw new IllegalStateException("posMMap contains in the");
 					while (posMMap.containsKey(tempWord.toLowerCase()) && j < wordsArrayLen - 1) {
 						tempWord += " " + wordsArray[++j];
 					}
@@ -4394,8 +4392,7 @@ public class ThmP1 {
 						lastWordAdded = replacement;
 						madeReplacement = true;
 						i = j;
-					}
-					
+					}					
 				}
 			}
 

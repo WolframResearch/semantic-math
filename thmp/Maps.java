@@ -29,6 +29,7 @@ import com.google.common.collect.SetMultimap;
 
 import thmp.search.WordFrequency;
 import thmp.utils.FileUtils;
+import thmp.utils.WordForms;
 
 import java.util.Map.Entry;
 
@@ -64,7 +65,7 @@ public class Maps {
 	
 	private static ServletContext servletContext;
 	
-	private static Pattern LEXICON_LINE_PATTERN = Pattern.compile("\"(.*)\" ([^\\s]+) \"(.*)\"");
+	private static final Pattern LEXICON_LINE_PATTERN = Pattern.compile("\"([^\"]+)\" ([^\\s]+)");
 	private static String POS_TAGGER_PATH_STR;
 	
 	// replace string with a break, usully a comma
@@ -231,26 +232,24 @@ public class Maps {
 			String[] lineAr;
 			String pos = "", word = "", replacement = "";
 			String nextLine;
+			Pattern whiteSpacePattern = WordForms.getWhiteNonEmptySpaceNotAllPattern();
 			try{
-				while ((nextLine = lexiconReader.readLine()) != null) {
-					lineAr = nextLine.split(" ");
-					if (lineAr.length < 2)
+				while ((nextLine = lexiconReader.readLine()) != null) {					
+					lineAr = whiteSpacePattern.split(nextLine);
+					Matcher matcher;
+					if (lineAr.length < 2){
+						//System.out.println("nextline: " + nextLine);
 						continue;
-					else if (lineAr.length == 2) {
+					}else if (lineAr.length == 2){
 						word = lineAr[0];
 						pos = lineAr[1];
 					}
 					// compound first word, e.g "comm alg"
-					else {					
-						Matcher matcher = LEXICON_LINE_PATTERN.matcher(nextLine);
-						// what about partial finds?
-						if (matcher.find()) {
-							word = matcher.group(1);
-							pos = matcher.group(2);
-							replacement = matcher.group(3);
-						}	
-					}
-		
+					else if((matcher=LEXICON_LINE_PATTERN.matcher(nextLine)).matches()){
+						//if(true) throw new RuntimeException();						
+						word = matcher.group(1);
+						pos = matcher.group(2);						
+					}		
 					// format: "new_word pos"
 					// if fluff word: "new_word fluff replacement", 
 					//eg "to be" fluff, goes to "as"
@@ -284,20 +283,7 @@ public class Maps {
 		 */
 		private static SetMultimap<String, String> buildMap(SetMultimap<String, String> posPreMMap, 
 				SetMultimap<String, String> essentialPosPreMMap) {
-			// entityMap = new HashMap<String, ArrayList<String>>();
-			// ArrayList<String> ppt = new ArrayList<String>();
-			// ppt.add("characteristic");
-			// entityMap.put("Field", ppt);
 
-			
-			// value is regex string to be matched
-			//adjMap.put("semidefinite", "positive|negative");
-			//adjMap.put("independent", "linearly");
-
-			
-			//fluffMap.put("the", "");
-			//fluffMap.put("an", "");
-			//fluffMap.put("a", "");
 			fluffMap.put("moreover", "");
 
 			// list of parts of speech

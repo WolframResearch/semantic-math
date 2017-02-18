@@ -846,7 +846,7 @@ public class DetectHypothesis {
 					varDefSet.add(possibleVarDef);
 					varDefList.add(possibleVarDef);
 					//System.out.println("latestVarDef.getOriginalDefinitionStr() " + latestVarDef.getOriginalDefinitionStr());
-			 		thmDefSB.append(possibleVarDef.getOriginalDefinitionStr()).append(" ");
+			 		thmDefSB.append(possibleVarDef.getOriginalDefinitionSentence()).append(" ");
 				}
 			}			
 		}
