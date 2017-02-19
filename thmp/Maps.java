@@ -461,6 +461,7 @@ public class Maps {
 			posPreMMap.put("if and only", "if_COMP");
 			posPreMMap.put("if and only if", "iff");
 			posPreMMap.put("then", "then");
+			posPreMMap.put("therefore", "then");
 			posPreMMap.put("between", "pre");
 			// between... -> between, and...->and, between_and->between_and
 

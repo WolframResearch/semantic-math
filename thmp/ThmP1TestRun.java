@@ -552,7 +552,15 @@ public class ThmP1TestRun {
 			st = "this field is perfect";
 			st = "quadratic field lies above $Q$";
 			st = " let $X$ be a compact manifold and $\\cA$ an Azumaya bundle over $X.$";
-			st = "Then the {twisted $K$--theory} $K^0(X,\\cA)$ is isomorphic to the Grothendieck group of Murray--von Neumann equivalence classes of projections in $C(X, \\K_\\cA)$";
+			st = "Then the {twisted $K$--theory $K^0(X,\\cA)$ is isomorphic to the Grothendieck group of Murray--von Neumann equivalence classes of projections in $C(X, \\K_\\cA)$";
+			st = "there is a quantization of a given isomorphism $b$ of the lifts of these b undles to $S^*(X/M)$ for which the null spaces";
+			st = "if a knot $J$ is obtained from $7_4$ by a single crossing change";
+			st = "If the linking number of $K_1$ and $S_1$ in $S^3$ is divisible by 15 then $J$ is not slice.";
+			st = "If a crossing change converts $7_4$ into a slice knot $J$,";
+			st = "then the corresponding curve $S_1$ in $M(7_4)$ is null homologous in $H_1(L(15,4),\\zz)$";
+			st = "The difference $u_s(K) - g_s(K)$ can be arbitrarily large.";
+			st = "we say $w$ is { relatively pseudo-Anosov} if the restriction of the map $w$ is pseudo-Anosov in $\\calm(U)$";
+			
 			//st = "take the log of $f$ over the field";
 			//st = "field lies above ring";
 			//st = "given a tower of algebraic field extensions";

@@ -126,7 +126,7 @@ public class WordFrequency {
 				wordsFileBufferedReader = new BufferedReader(new InputStreamReader(wordsInputStream));				
 			}
 			
-			//fills in trueFluffWordsSet, based on freq in stockFreqMap
+			//fills in trueFluffWordsSet, based on freq in stockFreqMap. Updates stockFreqMap.
 			getStockFreq(wordsFileBufferedReader, wordPosPreMap);
 			try{
 				wordsFileBufferedReader.close();
@@ -157,19 +157,14 @@ public class WordFrequency {
 				String line;
 				//read in words and 
 				while ((line = wordsFileBufferedReader.readLine()) != null) {
-					String[] lineAr = line.split("\\s+");
-					
-					if(lineAr.length < 4) continue;
+					String[] lineAr = line.split("\\s+");					
+					if(lineAr.length < 4) continue;		
 					
 					// 2nd is word, 4rd is freq
-					String word = lineAr[1].trim();
-					
-					String wordPos = getPos(word, lineAr[2].trim());
-					
-					wordPosPreMap.put(word, wordPos);
-					
-					int wordFreq = Integer.valueOf(lineAr[3].trim());
-					
+					String word = lineAr[1].trim();					
+					String wordPos = getPos(word, lineAr[2].trim());					
+					wordPosPreMap.put(word, wordPos);					
+					int wordFreq = Integer.valueOf(lineAr[3].trim());					
 					stockFreqMap.put(word, wordFreq);				
 				}
 				

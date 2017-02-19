@@ -82,10 +82,10 @@ public class ThmInput {
 					+ "|\\\\section\\{(?:[^}]*)\\}\\s*|\\\\noindent|\\\\begin\\{abstract\\}|\\\\cite\\{[^}]+\\}|\\\\cite\\[[^\\]]+\\]");
 	private static final Pattern ELIMINATE_BEGIN_END_THM_PATTERN = Pattern
 			.compile("\\\\begin\\{def(?:[^}]*)\\}\\s*|\\\\begin\\{lem(?:[^}]*)\\}\\s*|\\\\begin\\{th(?:[^}]*)\\}\\s*"
-					+ "|\\\\begin\\{pr(?:[^}]*)\\}\\s*|\\\\begin\\{proclaim(?:[^}]*)\\}\\s*|\\\\begin\\{cor(?:[^}]*)\\}\\s*"
-					+"|\\\\end\\{def(?:[^}]*)\\}\\s*|\\\\end\\{lem(?:[^}]*)\\}\\s*|\\\\end\\{th(?:[^}]*)\\}\\s*"
-					+ "|\\\\end\\{pr(?:[^}]*)\\}\\s*|\\\\end\\{proclaim(?:[^}]*)\\}\\s*|\\\\end\\{cor(?:[^}]*)\\}\\s*"
-					+"|\\\\end\\{pr(?:[^}]*)\\}\\s*");
+					+ "|\\\\begin\\{pr(?:[^}]*)\\}\\s*|\\\\begin\\{proclaim(?:[^}]*)\\}\\s*|\\\\begin\\{co(?:[^}]*)\\}\\s*"
+					+ "|\\\\end\\{def(?:[^}]*)\\}\\s*|\\\\end\\{lem(?:[^}]*)\\}\\s*|\\\\end\\{th(?:[^}]*)\\}\\s*"
+					+ "|\\\\end\\{pr(?:[^}]*)\\}\\s*|\\\\end\\{proclaim(?:[^}]*)\\}\\s*|\\\\end\\{co(?:[^}]*)\\}\\s*"
+					+ "|\\\\end\\{pr(?:[^}]*)\\}\\s*");
 	
 	private static final Pattern ITEM_PATTERN = Pattern.compile("\\\\item");
 

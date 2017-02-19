@@ -89,7 +89,10 @@ respect verb
 submodule ent_comp
 indeed fluff
 one adj
-can verb
+can verb_comp
+"can be" verb
+could verb_comp
+"could be" verb
 take verb
 nullset ent
 inverse ent
@@ -149,9 +152,14 @@ automorphism ent
 measure ent
 sequent ent
 integer ent
+divisible adj
+homologous adj
+null adj
 "conjugacy class" ent
 class ent
 subgroup ent
+quantization ent
+knot ent
 group ent
 order ent
 conjugation ent

@@ -2,6 +2,7 @@ all but | all but finitely many | adj
 all but | all but countably many | adj
 all but | all but at most finitely many | adj
 all but | all but at most countably many | adj
+as a | as a result | then
 if and | if and only if | iff
 we say | we say that | fluff
 we say | we say | fluff
@@ -13,4 +14,4 @@ in other | in other words | fluff
 in particular | in particular | fluff
 by passage | by passage to | pre
 is called | is called | auxpass
-more generally | more generally | fluff
+more generally | more generally | fluf

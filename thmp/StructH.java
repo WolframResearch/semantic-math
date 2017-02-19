@@ -554,7 +554,7 @@ public class StructH<H> extends Struct{
 			if(prependCommaBool){
 				sb.append(", ");
 			}
-			sb.append(" \"Called\"->" + called);			
+			sb.append("\"Called\"->" + called);			
 		}
 		//append name
 		String tex = struct.get("tex");
@@ -562,7 +562,7 @@ public class StructH<H> extends Struct{
 			if(prependCommaBool){
 				sb.append(", ");
 			}
-			sb.append(" \"Tex\"->").append(tex);
+			sb.append("\"Tex\"->").append(tex);
 		}
 		
 		//sb.append(append_name_pptStr());

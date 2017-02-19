@@ -144,7 +144,7 @@ public class WLCommandsList {
 		wLCommandMapBuilder.put("verb", addCommand(new PBuilder("symb|ent|pro|noun", null, true), 
 				new PBuilder("pro", "we", WLCommand.PosTermType.NEGATIVE),
 				new PBuilder("Connective["),  new PBuilder("verb", null, true, true, false), new PBuilder("]"),
-				new PBuilder("symb|ent|noun|prep|phrase", null, true, false, false).addRelationType(RelationType._IS),
+				new PBuilder("symb|ent|noun|adj|prep|phrase", null, true, false, false).addRelationType(RelationType._IS),
 				new PBuilder(", {Qualifier->", "OPT"), 
 				//the relation should incorporate several types. 
 				new PBuilder("prep", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}", "OPT")
@@ -241,7 +241,7 @@ public class WLCommandsList {
 				new PBuilder("~HasProperty~"), new PBuilder("adj|phrase|noun|prep", null, true, false, true, RelationType.IS_),
 				new PBuilder(", {Qualifier->", "OPT"), 
 				new PBuilder("prep", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}", "OPT")
-				)); //here!
+				)); 
 		
 		/*wLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro|noun", null, true, RelationType._IS), 
 				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), 
@@ -265,7 +265,7 @@ public class WLCommandsList {
 		//WLCommandMapBuilder.put("is not", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is not|are not|be not, trigger",
 				//"Not[\\[Element]]", "symb|ent|adj|phrase, , true, TriggerMathObj" }));
 		wLCommandMapBuilder.put("is not", addCommand(new PBuilder("symb|ent|pro|noun", null, true, RelationType._IS), 
-				new PBuilder("verb|vbs|be", "is not|are not|be not", false, true, false), 
+				new PBuilder("verb|vbs|be", "not is|is not|are not|not are|be not|not be", false, true, false), 
 				new PBuilder("Not[\\[Element]]"), new PBuilder("symb|ent|adj|phrase", null, true, false, true, RelationType.IS_) ));
 		
 		//WLCommandMapBuilder.put("act", addCommand(new String[] { "Action[", "symb|ent|pro, , true", ", act|acts, trigger",
@@ -284,7 +284,9 @@ public class WLCommandsList {
 		//WLCommandMapBuilder.put("if", addCommand(new String[] { "if|If|let, , trigger", "assert, , true" }));
 		wLCommandMapBuilder.put("if", addCommand(new PBuilder("if|If", null, false, true, false), 
 				new PBuilder("assert", null, true) ));
-	
+		wLCommandMapBuilder.put("then", addCommand(new PBuilder("then|Then", null, false, true, false), 
+				new PBuilder("assert", null, true) ));
+		
 		//"let A be B"; "suppose A is B"
 		wLCommandMapBuilder.put("let", addCommand(new PBuilder("let|suppose", null, false, true, false), 
 				new PBuilder("symb|ent|pro|noun", null, true, false, false, PosTermConnotation.DEFINED,
@@ -300,8 +302,9 @@ public class WLCommandsList {
 		
 		//WLCommandMapBuilder.put("auxpass", addCommand(new String[] { "ent, , true",
 			//	"auxpass, , trigger_true", "ent|csubj, , true" }));
-		wLCommandMapBuilder.put("auxpass", addCommand(new PBuilder("ent", null, true), new PBuilder("auxpass", null, true, true, false), 
-				new PBuilder("ent|csubj", null, true) ));
+		wLCommandMapBuilder.put("auxpass", addCommand(new PBuilder("ent", null, true), new PBuilder("Connective["),
+				new PBuilder("auxpass", null, true, true, false), new PBuilder("]"),
+				new PBuilder("ent|csubj|prep", null, true) ));
 		
 		//definitions: e.g. "denote by $F$ a field", but note that "call this field $F$" should have different order as to which
 		//is the variable and which is being named. The integers indicate their relative order (order in relation to each other)

@@ -80,6 +80,7 @@ public class ThmP1 {
 	private static final Pattern ESSENTIAL_POS_PATTERN = Pattern.compile("ent|conj_ent|verb|vbs|if|symb|pro");
 	private static final Pattern VERB_POS_PATTERN = Pattern.compile("verb|vbs");	
 	private static final Pattern SINGLE_WORD_TEX_PATTERN = Pattern.compile("\\$[^$]+\\$[^\\s]*"); 
+	private static final Pattern ARTICLE_PATTERN = Pattern.compile("a|the|an");
 	
 	//pattern for Latex expressions being possible assert's, i.e. starting/ending with $ and 
 	//containing operators such as ">, ="
@@ -90,8 +91,9 @@ public class ThmP1 {
 	
 	// fluff type, skip when adding to parsed ArrayList
 	private static final String FLUFF = "Fluff";
-	private static final Pattern ARTICLE_PATTERN = Pattern.compile("a|the|an");
-
+	/*Very unlikely pos pairs, skip and leave to algorithmic labeler if one such pair encountered*/
+	private static final Pattern UNLIKELY_POS_PAIRS_PATTERN = Pattern.compile("verb_verb|verb_vbs|vbs_verb");
+	
 	private static final Logger logger = LogManager.getLogger(ThmP1.class);
 
 	// private static final File unknownWordsFile;
@@ -709,8 +711,16 @@ public class ThmP1 {
 					i = newIndex;
 					continue;				
 				}				
+			}			
+			/*Done with tex parsing, so can strip away special chars from word.*/
+			Matcher matcher;
+			if((matcher=WordForms.getSPECIAL_CHARS_AROUND_WORD_PATTERN().matcher(curWord)).matches()){
+				String tempWord = matcher.group(1);
+				if(null != tempWord){
+					curWord = tempWord;
+					wordlen = tempWord.length();
+				}
 			}
-			
 			String[] singularForms = WordForms.getSingularForms(curWord);			
 			String singular = singularForms[0];
 			String singular2 = singularForms[1]; // ending in "es"
@@ -743,31 +753,30 @@ public class ThmP1 {
 				
 				curWord = posList.isEmpty() ? singular : curWord;
 				String tempWord = curWord;
-				int pairsSize = pairs.size();
-				int k = 1;				
+				int pairsSize;
+				int k = 1;
 				//check for previous words, fuse entities if necessary.
 				//should be superceded by using the two-gram map above! <--this way can be more deliberate 
 				//and flexible than using n-grams, e.g. if composite math noun, eg "finite field"
-				while (i - k > -1 && posMMap.containsKey(strAr[i - k] + " " + tempWord)
-						&& posMMap.get(strAr[i - k] + " " + tempWord).get(0).equals("ent")) {
+				while (i - k > -1 && posMMap.containsKey((tempWord=strAr[i - k] + " " + tempWord))
+						&& posMMap.get(tempWord).get(0).equals("ent")) {
 					
-					// remove previous pair from pairs if it has new match
+					// remove previous pair from pairs if it has new match.
 					// pairs.size should be > 0, ie previous word should be
 					// classified already
-					if (pairs.size() > 0 && pairs.get(pairsSize - 1).word().equals(strAr[i - k])) {
+					if ((pairsSize=pairs.size()) > 0 && pairs.get(pairsSize - 1).word().equals(strAr[i - k])) {
 
 						// remove from mathIndexList if already counted
 						List<String> preWordPosList = posMMap.get(pairs.get(pairsSize - 1).word());
-						if (!preWordPosList.isEmpty() && preWordPosList.get(0).equals("ent")) {
-							
+						if (!preWordPosList.isEmpty() && preWordPosList.get(0).equals("ent")) {							
 							mathIndexList.remove(mathIndexList.size() - 1);
 						}
 						pairs.remove(pairsSize - 1);
-					}
-
-					tempWord = strAr[i - k] + " " + tempWord;
-					curWord = strAr[i - k] + " " + curWord;
-					k++;
+					}					
+					curWord = tempWord;
+					//tempWord = strAr[i - k] + " " + tempWord;
+					//curWord = strAr[i - k] + " " + curWord;
+					k++;					
 				}
 
 				// if previous Pair is also an ent, fuse them, but only if current ent
@@ -827,7 +836,7 @@ public class ThmP1 {
 					if(i < strAr.length-1 && strAr[i+1].equals("a")){
 						strAr[i+1] = "any";
 					}
-				}				
+				}	
 				Pair emptyPair = new Pair(null, null);
 				//keep going until all words in an n-gram are gathered
 				while (tempPos.matches("[^_]*_COMP|[^_]*_comp") && i < strAr.length - 1) {					
@@ -865,8 +874,9 @@ public class ThmP1 {
 					pos = posList.get(0).split("_")[0];
 					pair = new Pair(curWord, pos);
 					addExtraPosToPair(pair, posList);
-				}				
-				pair = fuseAdverbAdj(pairs, curWord, pair);				
+				}	
+				pair = fuseAdverbAdj(pairs, curWord, pair);	
+				eliminateUnlikelyPosPairs(pair, pairs);
 				pairs.add(pair);
 				
 				if(null != emptyPair.pos()){
@@ -892,6 +902,7 @@ public class ThmP1 {
 				String[] splitWords = curWord.split("-");				
 				String lastTerm = splitWords[splitWords.length - 1];
 				//System.out.println("singular" + singular + " curWord: " + curWord + " splitWords: " + Arrays.deepToString(splitWords));
+				boolean pairAdded = false;
 				
 				String[] splitAr;
 				String lastTermS1 = singular == null ? "" : (splitAr = singular.split("-"))
@@ -922,6 +933,7 @@ public class ThmP1 {
 				if (!searchKey.equals("")) {
 					Pair pair = new Pair(curWord, posMMap.get(searchKey).get(0).split("_")[0]);
 					pairs.add(pair);
+					pairAdded = true;
 				} // if lastTerm is entity, eg A-module
 				
 				if (isTokenEnt(lastTerm) || isTokenEnt(lastTermS1)
@@ -931,6 +943,10 @@ public class ThmP1 {
 					Pair pair = new Pair(s, "ent");
 					pairs.add(pair);
 					mathIndexList.add(pairs.size() - 1);
+					pairAdded = true;
+				}
+				if(!pairAdded){
+					pairs.add(new Pair(curWord ,""));
 				}
 			}
 			// check for verbs ending in 'es' & 's'
@@ -1050,13 +1066,16 @@ public class ThmP1 {
 					// eg "consisting of" functions as pre
 					curWord = curWord + " " + strAr[++i];
 					curType = "pre";
-				} else if (i < strAr.length - 1 &&
-						posMMap.containsKey(strAr[i + 1]) && posMMap.get(strAr[i + 1]).get(0).matches("ent|noun")){
+				} else if (i < strAr.length - 1 ){
+					String nextWord = strAr[i + 1];
+					List<String> nextPosList = posMMap.get(nextWord);
+					if(!nextPosList.isEmpty() && (nextPosList.get(0).equals("ent") || nextPosList.get(0).equals("noun"))){
 					// eg "vanishing locus" functions as amod: adjectivial
 					// modifier
 					//curWord = curWord + " " + str[++i];
 					//curType = "amod";
-					curType = "adj"; //adj, so can be grouped together with ent's later
+						curType = "adj"; //adj, so can be grouped together with ent's later
+					}
 				}//e.g. "the following are equivalent"
 				else if (i > 0 && ARTICLE_PATTERN.matcher(strAr[i - 1]).find()){
 					curType = "ent";
@@ -1065,7 +1084,7 @@ public class ThmP1 {
 				int pairsSz = pairs.size();
 				//e.g. $f$ is inclusion-preserving
 				if(i > 1 && pairsSz > 1//e.g. inclusion preserving
-						 && pairs.get(pairsSz-1).pos().matches("noun|\\d+|ent")
+						 && pairs.get(pairsSz-1).pos().matches("noun|ent")
 						 && VERB_POS_PATTERN.matcher(pairs.get(pairsSz-2).pos()).matches()
 						 //&& posMMap.containsKey(strAr[i - 1]) && posMMap.get(strAr[i - 1]).get(0).matches("ent|noun")
 						 ){
@@ -1084,7 +1103,8 @@ public class ThmP1 {
 			}
 			// Get numbers. Incorporate written-out numbers, eg "two"
 			else if (curWord.matches("\\d+")) {
-				Pair pair = new Pair(strAr[i], "num");
+				///Use "ent" for now instead of "num", because more rules for ent-combos.
+				Pair pair = new Pair(strAr[i], "ent");
 				pairs.add(pair);
 			}//negative adjective word, not that unusual.
 			else if((negativeAdjMatcher = NEGATIVE_ADJECTIVE_PATTERN.matcher(curWord)).find()){
@@ -1104,17 +1124,20 @@ public class ThmP1 {
 				}else{
 					pairs.add(new Pair(curWord, ""));
 				}				
-			}
-			else if (!curWord.matches("\\s+")) { // try to minimize this case.
-				
+			} 
+			else if(POSSIBLE_ADJ_PATTERN.matcher(curWord).matches()){
+				//Try to guess part of speech based on endings 
+				pairs.add(new Pair(curWord, "adj"));
+			} 
+			else if (!WordForms.getWhiteNonEmptySpaceNotAllPattern().matcher(curWord).matches()) { // try to minimize this case.				
 				System.out.println("word not in dictionary: " + curWord);
-				pairs.add(new Pair(curWord, ""));
-				
+				pairs.add(new Pair(curWord, ""));				
 				if(parseState.writeUnknownWordsToFileBool() && isValidWord(curWord)){
 				// collect & write unknown words to file
 					unknownWords.add(curWord);
 				}
-			} else { 
+			} 
+			else { 
 				// must be blank space at this point, so curWord doesn't count
 				continue;
 			}
@@ -1239,12 +1262,12 @@ public class ThmP1 {
 					}
 				}				
 			}
-			//if still no pos, try to guess part of speech based on endings 
-			if(curpair.pos().equals("")){
+			
+			/*if(curpair.pos().equals("")){
 				if(POSSIBLE_ADJ_PATTERN.matcher(curWord).matches()){
 					curpair.set_pos("adj");
 				}				
-			}
+			}*/
 			//if yet still no pos found, use the Stanford NLP tagger, calls to which 
 			//does incur overhead.			
 			//Only try to find pos for words that don't contain "\"
@@ -1316,7 +1339,7 @@ public class ThmP1 {
 		// map of math entities, has mathObj + ppt's
 		List<StructH<HashMap<String, String>>> mathEntList = new ArrayList<StructH<HashMap<String, String>>>();
 
-		// combine adj with math ent's
+		// combine adj with math ent's; try combine adjacent ent's
 		for (int j = 0; j < mathIndexList.size(); j++) {
 			
 			int index = mathIndexList.get(j);
@@ -1360,17 +1383,20 @@ public class ThmP1 {
 			if(null == mathObjName){
 				throw new IllegalArgumentException( pairs.toString());
 			}
-			tempMap.put("name", mathObjName);
+			tempMap.put("name", mathObjName);			
 			
-			// if next pair is also ent, and is latex expression
+			// if next pair is also ent
 			if (j < mathIndexList.size() - 1 && mathIndexList.get(j + 1) == index + 1) {
 				Pair nextPair = pairs.get(index + 1);
 				String name = nextPair.word();
+				// if next pair is also ent, and is latex expression
 				if (name.contains("$")) {
-					tempMap.put("tex", name);
-					nextPair.set_pos(entPosStr);
-					mathIndexList.remove(j + 1);
+					tempMap.put("tex", name);					
 				}
+				//remove since each entry in mathIndexList indicates
+				//a different ent not connected to current one.
+				mathIndexList.remove(j + 1);
+				nextPair.set_pos(entPosStr);
 			}
 
 			// look right one place in pairs, if symbol found, add it to
@@ -1570,13 +1596,11 @@ public class ThmP1 {
 						prevPair.set_pos(nextPos);
 
 					} // special case: "of form"
-
 					else { 
 						// set anchor to its normal part of speech word, like
-						// "of" to pre
+						// "of" to "pre"
 						pairs.get(index).set_pos(posMMap.get(anchor).get(0));
 					}
-
 				} 
 				else {
 					// if the previous token is not an ent.
@@ -1736,6 +1760,40 @@ public class ThmP1 {
 	}
 
 	/**
+	 * Remove parts of speech pairs that are very unlikely, so to leave the pos to 
+	 * the automatic pos-tagger.
+	 * @param pair
+	 * @param pairsList
+	 */
+	private static void eliminateUnlikelyPosPairs(Pair pair, List<Pair> pairsList) {
+		int pairsListSz = pairsList.size();
+		if(pairsListSz < 1){
+			return;
+		}
+		String lastPairPos = pairsList.get(pairsListSz-1).pos();
+		String validExtraPos = null;
+		String pairPos = pair.pos();
+		//the extra pos
+		Set<String> pairPosList = pair.extraPosSet();
+		
+		if(null != pairPosList){
+			Iterator<String> pairPosListIter = pairPosList.iterator();
+			while(pairPosListIter.hasNext()){
+				String nextPos = pairPosListIter.next();
+				String posPair = lastPairPos + "_" + nextPos;
+				if(UNLIKELY_POS_PAIRS_PATTERN.matcher(posPair).matches()){
+					pairPosListIter.remove();
+				}else if(null != validExtraPos){
+					validExtraPos = nextPos;
+				}
+			}
+		}
+		if(UNLIKELY_POS_PAIRS_PATTERN.matcher(lastPairPos + "_" + pairPos).matches()){			
+			pair.set_pos(null == validExtraPos ? "" : validExtraPos);
+		}
+	}
+
+	/**
 	 * @param mathIndexList
 	 * @param pairs
 	 * @param singular3
@@ -1750,9 +1808,8 @@ public class ThmP1 {
 		pairs.add(pair);	
 		addExtraPosToPair(pair, posList);
 		if("ent".equals(pos)){
-			f
-			mathIndexList.add(pairs.size() - 1);
-			
+			//HERE
+			mathIndexList.add(pairs.size() - 1);			
 		}
 	}
 	

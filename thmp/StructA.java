@@ -295,8 +295,11 @@ public class StructA<A, B> extends Struct{
 			
 			StringBuilder fullContentSB = new StringBuilder((String)this.prev1);
 			//System.out.println("*********prev1 type: " + type());
-			if(this.type.equals("pre")){
+			//if(this.type.equals("pre")){
 				fullContentSB.insert(0, "\"").append("\"");
+			//}
+			if(this.type.equals("adj")){
+				fullContentSB.insert(0, "Property[").append("]");
 			}
 			if(PREV2_TYPE.equals(NodeType.STR) && !prev2.equals("")){
 				fullContentSB.insert(0, "[").append(", ").append((String)this.prev2).append("]");

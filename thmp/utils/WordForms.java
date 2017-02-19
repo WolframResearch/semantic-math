@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.SetMultimap;
 
+import thmp.Maps;
 import thmp.ParsedExpression;
 import thmp.search.WordFrequency;
 
@@ -43,6 +44,9 @@ public class WordForms {
 	private static final Pattern WHITE_NONEMPTY_SPACE_PATTERN = Pattern.compile("\\s+");
 	private static final Pattern BRACES_PATTERN = Pattern.compile("(\\{|\\}|\\[|\\])");
 	private static final Pattern SPECIAL_CHARS_PATTERN = Pattern.compile(".*([+|-]).*");
+	/*Used to remove specical characters from words*/
+	private static final Pattern SPECIAL_CHARS_AROUND_WORD_PATTERN 
+		= Pattern.compile("[\\{\\[\\(]+(.+?)[\\}\\]\\)]*|[\\{\\[\\(]*(.+?)[\\}\\]\\)]+");
 	
 	private static final String synonymsFileStr = "src/thmp/data/synonyms.txt";
 	private static final ImmutableMap<String, String> synonymRepMap;
@@ -63,7 +67,7 @@ public class WordForms {
 			+ "|more|where";
 	private static final Set<String> FLUFF_WORDS_SMALL_SET;
 	
-	private static ImmutableSet<String> freqWordsSet; 
+	private static final Set<String> freqWordsSet; 
 	//brackets pattern
 	private static final Pattern BRACKETS_PATTERN = Pattern.compile("\\[([^\\]]*)\\]");	
 	private static final Pattern LATEX_PATTERN = Pattern.compile("\\$([^$]+)\\$");
@@ -81,6 +85,7 @@ public class WordForms {
 		for(String word : fluffAr){
 			FLUFF_WORDS_SMALL_SET.add(word);
 		}
+		freqWordsSet = new HashSet<String>();
 		Map<String, String> synonymsPreMap = new HashMap<String, String>();
 		BufferedReader synonymsBF = null;
 		//create synonym map from file	
@@ -117,10 +122,11 @@ public class WordForms {
 	}
 	
 	private static Set<String> getFreqWordsSet(){
-		if(null == freqWordsSet){
+		if(freqWordsSet.isEmpty()){
 			synchronized(WordForms.class){
-				if(freqWordsSet == null){
-					freqWordsSet = WordFrequency.ComputeFrequencyData.get_FreqWords();
+				if(freqWordsSet.isEmpty()){
+					freqWordsSet.addAll(WordFrequency.ComputeFrequencyData.get_FreqWords());
+					freqWordsSet.addAll(Maps.posMMap().keySet());
 				}
 			}
 		}
@@ -537,6 +543,9 @@ public class WordForms {
 		return END_SKIP_PATTERN;
 	}
 	
+	public static Pattern getSPECIAL_CHARS_AROUND_WORD_PATTERN(){
+		return SPECIAL_CHARS_AROUND_WORD_PATTERN;
+	}
 	/**
 	 * Get the part of speech corresponding to the pos tag/symbol.
 	 * E.g. i -> "pre". Placed here instead of in subclass, so it can
