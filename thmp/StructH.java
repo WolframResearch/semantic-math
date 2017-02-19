@@ -569,7 +569,7 @@ public class StructH<H> extends Struct{
 		System.out.println("curCommand: " + curCommand);
 		System.out.println("this.name " + this.nameStr());
 		System.out.println("(((((((((children: " + children);
-		//iterate through children		
+		
 		int childrenSize = children.size();
 		if(childrenSize > 0){			
 			StringBuilder childSb = new StringBuilder();
@@ -582,7 +582,7 @@ public class StructH<H> extends Struct{
 				//str += ", ";
 				//str += childRelation.get(i) + " ";	
 				//System.out.println("^^^cur child: " + child);
-				System.out.println("Used? "+ child.usedInOtherCommandComponent(curCommand) + " child: " +child);
+				//System.out.println("Used? "+ child.usedInOtherCommandComponent(curCommand) + " child: " +child);
 				
 				//only append curChidRelation if child is a StructH, to avoid
 				//including the relation twice, eg in case child is of type "prep"
@@ -598,7 +598,7 @@ public class StructH<H> extends Struct{
 								//e.g. "field which is perfect", don't want "which"								
 								)
 								? "" : childRelationStr;
-						//str += ", " + curChildRelation + childStr;
+						
 						//System.out.println("\n **^^^*** childRelation" + childRelationStr);
 						if(childRelationStr.equals("")){
 							childSb.append("{" + childStr + "}");
@@ -622,11 +622,9 @@ public class StructH<H> extends Struct{
 			
 		}
 		if(includeType){ 
-			//str += "\"]";
 			sb.append("]");
 		}
-		//str += "}";
-		
+				
 		return sb.toString();
 	}
 	
@@ -796,8 +794,7 @@ public class StructH<H> extends Struct{
 		//get Strings for children
 		for(Struct child : children){
 			contentList.addAll(child.contentStrList());
-		}
-		
+		}		
 		return contentList;
 	}
 	

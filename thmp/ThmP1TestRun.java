@@ -1,18 +1,12 @@
 package thmp;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Scanner;
 
 //import com.wolfram.alpha.parser.preparser.TexConverter;
 
 import thmp.ParseState.ParseStateBuilder;
-import thmp.ThmP1.ParsedPair;
 import thmp.search.Searcher;
 import thmp.utils.FileUtils;
 
@@ -24,6 +18,10 @@ public class ThmP1TestRun {
 	private static final boolean WRITE_UNKNOWN_WORDS_TO_FILE = true;
 
 	static{
+		/* Setting to data generation (rather than search) mode, so not to try to read
+		 * in a bunch of serialized data used for search in CollectThm. 
+		 * But *don't* do this on server! Since it will affect search, which is running
+		 * in the same JVM session.*/
 		Searcher.SearchMetaData.set_gatheringDataBoolToTrue();
 		FileUtils.set_dataGenerationMode();
 	}
@@ -46,10 +44,10 @@ public class ThmP1TestRun {
 			//String[] strAr = p1.preprocess("a basis of a vector space consists of a set of linearly independent vectors".split(" "));
 			//String[] strAr = p1.preprocess("finitely many vectors are called linearly independent if their sum is zero".split(" "));
 			//String[] strAr = p1.preprocess("elements in symmetric group are conjugate if they have the same cycle type".split(" "));
-			String[] strAr; 
+			/*String[] strAr; 
 			strAr = "for all x x is a number".split(" ");
 			strAr = "suppose f is measurable and finite on E, and E has finite measure".split(" ");
-			strAr = "the number of conjugacy class of the symmetric group is equal to the number of partitions of n".split(" ");
+			strAr = "the number of conjugacy class of the symmetric group is equal to the number of partitions of n".split(" ");*/			
 			String st = "let H be a normal subgroup of the group G. G acts on H as automorphisms of H.";
 			st = "conjugate elements and conjugate subgroups have the same order";
 			st = "A is a group and is a subgroup";
@@ -555,6 +553,7 @@ public class ThmP1TestRun {
 			st = "quadratic field lies above $Q$";
 			st = " let $X$ be a compact manifold and $\\cA$ an Azumaya bundle over $X.$";
 			st = "Then the {twisted $K$--theory} $K^0(X,\\cA)$ is isomorphic to the Grothendieck group of Murray--von Neumann equivalence classes of projections in $C(X, \\K_\\cA)$";
+			//st = "take the log of $f$ over the field";
 			//st = "field lies above ring";
 			//st = "given a tower of algebraic field extensions";
 			//Every minimal subsystem $\Sigma$ of the system $(\Omega^k,S_\infty)$ is a factor of the minimal system $(\Omega^2_{lo},S_\infty)$.		

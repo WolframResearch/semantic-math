@@ -39,7 +39,7 @@ public abstract class Struct implements Serializable{
 	//e.g. Action[ MathObj{group, $G$} , MathObj{{subgroup, $H$, by conjugation}} , MathObj{conjugation}
 	//want to exclude "by conjugation" from middle term. Must clear this flag for new dfs walkdowns.
 	//Should only set if command is satisfied.
-	private boolean usedInOtherCommandComponent;
+	//private boolean usedInOtherCommandComponent;
 	
 	//whether this struct has a hypothesis construct (if..., assume...)
 	//down the tree. Used for constructing ParseStruct tree.
@@ -127,11 +127,11 @@ public abstract class Struct implements Serializable{
 	 * want to exclude "by conjugation" from middle term. Must clear this flag for new dfs walkdowns.
 	 * Should only set if command is satisfied.
 	 */
-	public void set_usedInOtherCommandComponent(boolean usedInOtherCommandComponent){
-		this.usedInOtherCommandComponent = usedInOtherCommandComponent;
-		if(!usedInOtherCommandComponent){
+	public void clearUsedInCommandsSet(){
+		//this.usedInOtherCommandComponent = usedInOtherCommandComponent;
+		//if(!usedInOtherCommandComponent){
 			this.usedInCommandsSet = new HashSet<WLCommand>();
-		}
+		//}
 		//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
 	}
 	
@@ -142,8 +142,8 @@ public abstract class Struct implements Serializable{
 	 */
 	public void add_usedInCommand(WLCommand usedInCommand){
 		this.usedInCommandsSet.add(usedInCommand);
-		System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
-		System.out.println("struct used: " + this);		
+		//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
+		//System.out.println("struct used: " + this);		
 	}
 	/**
 	 * Whether this struct has been used in another component (of the same command).
@@ -153,11 +153,11 @@ public abstract class Struct implements Serializable{
 	 * @return
 	 */
 	public boolean usedInOtherCommandComponent(WLCommand curCommand){	
-		System.out.println("curCommand: " + curCommand );
-		System.out.println("this.usedInCommandsSet: " + this.usedInCommandsSet);
-		for(WLCommand c : usedInCommandsSet){
-			System.out.println(curCommand.equals(c) + " hc:  " +curCommand.hashCode() + " " + c.hashCode());
-		}
+		//System.out.println("curCommand: " + curCommand );
+		//System.out.println("this.usedInCommandsSet: " + this.usedInCommandsSet);
+		//for(WLCommand c : usedInCommandsSet){
+			//System.out.println(curCommand.equals(c) + " hc:  " +curCommand.hashCode() + " " + c.hashCode());
+		//}
 		return this.usedInCommandsSet.contains(curCommand);
 	}
 	

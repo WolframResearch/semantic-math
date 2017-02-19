@@ -149,7 +149,8 @@ automorphism ent
 measure ent
 sequent ent
 integer ent
-conjugacy class ent
+"conjugacy class" ent
+class ent
 subgroup ent
 group ent
 order ent

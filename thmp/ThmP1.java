@@ -1750,7 +1750,9 @@ public class ThmP1 {
 		pairs.add(pair);	
 		addExtraPosToPair(pair, posList);
 		if("ent".equals(pos)){
+			f
 			mathIndexList.add(pairs.size() - 1);
+			
 		}
 	}
 	
@@ -2699,12 +2701,15 @@ public class ThmP1 {
 				
 				ConjDisjVerbphrase conjDisjVerbphrase = new ConjDisjVerbphrase();
 				boolean isRightChild = true;
-				//get the "long" form, not WL form, with this dfs()
+				/*get the "long" form, not WL form, with this dfs(). (A string representation of the parse 
+				 * tree which will be turned into WL form.)
+				 * e.g. verbphrase[verb[take], [ent{name=log}][of [ent{name=$f$}]over [ent{name=field}]]] */
 				span = buildLongFormParseDFS(kHeadStruct, parsedSB, span, conjDisjVerbphrase, isRightChild);
-				//if conj_verbphrase or disj_verbphrase encountered, and these conclude the 
+				
+				/*if conj_verbphrase or disj_verbphrase encountered, and these conclude the 
 				//sentence, e.g. "if $R$ is a field and has a zero.", separate the conj_verbphrase
 				//out to "if $R$ is a field and if $R$ has a zero", this makes command-triggering
-				//much more feasible.
+				//much more feasible.*/
 				if(conjDisjVerbphrase.isHasConjDisjVerbphrase() && conjDisjVerbphrase.assertTypeFound()){
 					kHeadStruct = ConjDisjVerbphrase.reorganizeConjDisjVerbphraseTree(
 							conjDisjVerbphrase);
@@ -3091,14 +3096,15 @@ public class ThmP1 {
 	}
 	
 	/**
-	 * Traverses and produces parse tree by calling various dfs methods,
+	 * Traverses and produces WL-expression parse tree by calling various dfs methods,
 	 * by matching commands. Returns
 	 * string representation of the parse tree. Tree uses WLCommands.
 	 * Not recursive.
 	 * @param uHeadStruct
 	 * @param headParseStruct, head ParseStruct list corresponding to parsedPairMMapList.
+	 * 
 	 * @param parseState current parseState
-	 * @return LongForm parse
+	 * @return LongForm parse (a string representation of the parse tree which will be turned into WL form)
 	 */
 	private static StringBuilder treeTraversal(Struct uHeadStruct, List<ParseStruct> headParseStructList, 
 			List<Multimap<ParseStructType, ParsedPair>> parsedPairMMapList,
@@ -3132,18 +3138,17 @@ public class ThmP1 {
 		
 		//whether to print the commands in tiers with the spaces in subsequent lines.
 		boolean printTiers = false;
-		//builds the parse tree by matching triggered commands. In particular, build WLCommand
-		//parse tree by building triggered WLCommand's.
+		/*builds the parse tree by matching triggered commands. In particular, build WLCommand
+	     * parse tree by building triggered WLCommand's.*/
 		ParseToWLTree.buildCommandsDfs(uHeadStruct, parseStructSB, 0, printTiers, parseState);
 		System.out.println("\n DONE ParseStruct DFS  + parseStructSB:" + parseStructSB + "  \n");
 		StringBuilder wlSB = new StringBuilder();
-		/**
-		 * Map of parts used to build up a theorem/def etc. 
-		 * Parts can be any ParseStructType. Should make this a local var.
-		 */
-		Multimap<ParseStructType, ParsedPair> parseStructMMap = ArrayListMultimap.create();
 		
-		//fills the parseStructMap and produces String representation, collect commands built above.	
+		/* Map of parts used to build up a theorem/def etc, for a single WLCommand/longform. 
+		  * Parts can be any ParseStructType. Should make this a local var. */
+		Multimap<ParseStructType, ParsedPair> parseStructMMap = ArrayListMultimap.create();
+		//List<Multimap<ParseStructType, ParsedPair>> parseStructMMapList = new ArrayList<Multimap<ParseStructType, ParsedPair>>();
+		/* Fills the parseStructMap and produces String representation, collect commands built above.*/
 		boolean contextVecConstructed = false;
 		contextVecConstructed = ParseToWLTree.collectCommandsDfs(parseStructMMap, curParseStruct, uHeadStruct, wlSB, 
 				curStructContextVec, true, contextVecConstructed, parseState);
@@ -3182,7 +3187,7 @@ public class ThmP1 {
 	 * waiting map of wrappers (wrapperMap), waiting because don't know 
 	 * if HYP is amongst them, so don't know if need to jump out one layer.
 	 * @param parseState
-	 * @param waitingParseStruct parseStruct containing wrapperList (for parse segment), that need
+	 * @param waitingParseStruct ParseStruct containing wrapperList (for parse segment), that need
 	 * to be applied to parseState's curParseStruct. No depth! Meaning only one layer, no sublists
 	 * of ParseStructs, can only have non-empty wrapperList. We don't expect more depth within the 
 	 * same parse segment.
@@ -3197,20 +3202,15 @@ public class ThmP1 {
 		//System.out.println("********WRAPPER MAP" + wrapperMap);
 		if(wrapperMap.containsKey(ParseStructType.HYP) || wrapperMap.containsKey(ParseStructType.HYP_iff)){
 			//create new parseStruct
-			ParseStruct childParseStruct = new ParseStruct();
-			
-			childParseStruct.addParseStructWrapper(wrapperMap);
-			
+			ParseStruct childParseStruct = new ParseStruct();			
+			childParseStruct.addParseStructWrapper(wrapperMap);			
 			curParseStruct.addToSubtree(childParseStruct);
-
-			childParseStruct.set_parentParseStruct(curParseStruct);
-			
+			childParseStruct.set_parentParseStruct(curParseStruct);			
 			//set the reference of the current struct to point to the newly created struct
 			parseState.setCurParseStruct(childParseStruct);
 		}else{
 			curParseStruct.addParseStructWrapper(wrapperMap);
-		}
-	
+		}	
 	}
 	
 	/**
@@ -4043,8 +4043,7 @@ public class ThmP1 {
 	 * Resets parsedExpr by re-initializing.
 	 * Defensively copies List and returns copy.
 	 */
-	public static List<ParsedPair> getAndClearParsedExpr(){
-		
+	public static List<ParsedPair> getAndClearParsedExpr(){		
 		ImmutableList<ParsedPair> parsedExprCopy = ImmutableList.copyOf(parsedExpr);		
 		parsedExpr = new ArrayList<ParsedPair>();
 		return parsedExprCopy;
@@ -4113,15 +4112,16 @@ public class ThmP1 {
 	}
 
 	/**
-	 * Depth first search, to build initial parse tree.
+	 * Depth first search, to build initial parse tree. Creating the longForm, which is 
+	 * a string representation of the parse tree which will be turned into WL form.
 	 * @param struct
-	 * @param parsedSB
+	 * @param parsedLongFormSB longForm.
 	 * @param span
 	 * @param  conjDisjVerbphrase
 	 * Don't need isRightChild, will remove in a week if still not needed, Dec 2016.
 	 * @return
 	 */
-	private static int buildLongFormParseDFS(Struct struct, StringBuilder parsedSB, int span,
+	private static int buildLongFormParseDFS(Struct struct, StringBuilder parsedLongFormSB, int span,
 			ConjDisjVerbphrase conjDisjVerbphrase, boolean isRightChild) {
 		
 		int structDepth = struct.dfsDepth();
@@ -4144,16 +4144,16 @@ public class ThmP1 {
 			}
 			
 			System.out.print(struct.type());
-			parsedSB.append(struct.type());
+			parsedLongFormSB.append(struct.type());
 			
 			System.out.print("[");
-			parsedSB.append("[");
+			parsedLongFormSB.append("[");
 			
 			if (struct.prev1NodeType().isTypeStruct()) {
 				
 				Struct prev1Struct = (Struct) struct.prev1();
 				prev1Struct.set_dfsDepth(structDepth + 1);
-				span = buildLongFormParseDFS(prev1Struct, parsedSB, span,
+				span = buildLongFormParseDFS(prev1Struct, parsedLongFormSB, span,
 						conjDisjVerbphrase, false);
 				
 				if(prev1Struct.containsHyp()){
@@ -4163,7 +4163,7 @@ public class ThmP1 {
 
 			if (struct.prev1NodeType().equals(NodeType.STR)) {
 				System.out.print(struct.prev1());
-				parsedSB.append(struct.prev1());
+				parsedLongFormSB.append(struct.prev1());
 				//don't include prepositions for spanning purposes, since prepositions are almost 
 				//always counted if its subsequent entity is, but counting it gives false high span
 				//scores, especially compared to the case when they are absorbed into a StructH, in
@@ -4179,10 +4179,10 @@ public class ThmP1 {
 				// avoid printing is[is], ie case when parent has same type as
 				// child
 				System.out.print(", ");
-				parsedSB.append(", ");
+				parsedLongFormSB.append(", ");
 				Struct prev2Struct = (Struct) struct.prev2();
 				prev2Struct.set_dfsDepth(structDepth + 1);
-				span = buildLongFormParseDFS(prev2Struct, parsedSB, span, conjDisjVerbphrase,
+				span = buildLongFormParseDFS(prev2Struct, parsedLongFormSB, span, conjDisjVerbphrase,
 						isRightChild);
 				
 				if(prev2Struct.containsHyp()){
@@ -4193,44 +4193,56 @@ public class ThmP1 {
 			if (struct.prev2NodeType().equals(NodeType.STR)) {
 				if (!struct.prev2().equals("")){
 					System.out.print(", ");
-					parsedSB.append(", ");	
+					parsedLongFormSB.append(", ");	
 					if(!struct.type().equals("pre")){
 						span++;
 					}
 				}				
 				System.out.print(struct.prev2());
-				parsedSB.append(struct.prev2());
+				parsedLongFormSB.append(struct.prev2());
 			}
 
 			System.out.print("]");
-			parsedSB.append("]");
+			parsedLongFormSB.append("]");
 		} else {
 			
 			System.out.print(struct.toString());
-			parsedSB.append(struct.toString());
+			parsedLongFormSB.append(struct.toString());
 			span++;
 			
 			List<Struct> children = struct.children();
 			List<ChildRelation> childRelation = struct.childRelationList();
 			
-			if (children == null || children.size() == 0)
+			if (children == null || children.size() == 0){
 				return span;
-
+			}
 			System.out.print("[");
-			parsedSB.append("[");
-						
+			parsedLongFormSB.append("[");
+			
+			StringBuilder childrenSB = new StringBuilder(40);
+			
 			for (int i = 0; i < children.size(); i++) {
+				childrenSB.append(childRelation.get(i) + " ");
 				
-				System.out.print(childRelation.get(i) + " ");
-				parsedSB.append(childRelation.get(i) + " ");
+				//System.out.print(childRelation.get(i) + " ");
+				//parsedLongFormSB.append(childRelation.get(i) + " ");
 				
 				Struct child_i = children.get(i);
 				child_i.set_dfsDepth(structDepth + 1);
 				
-				span = buildLongFormParseDFS(child_i, parsedSB, span, conjDisjVerbphrase, isRightChild);
+				span = buildLongFormParseDFS(child_i, childrenSB, span, conjDisjVerbphrase, isRightChild);
+				childrenSB.append(", ");
 			}
+			int childrenSBLen = childrenSB.length();
+			String childrenStr = "";
+			if(childrenSBLen > 0){
+				childrenStr = childrenSB.substring(0, childrenSBLen-2);
+			}
+			System.out.print(childrenStr);
+			parsedLongFormSB.append(childrenStr);
+			
 			System.out.print("]");
-			parsedSB.append("]");
+			parsedLongFormSB.append("]");
 		}
 		return span;
 	}

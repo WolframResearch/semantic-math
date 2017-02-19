@@ -219,7 +219,7 @@ public class CollectThm {
 		 * to optimize relation vector formation with BigIntegers.
 		 * These words *alone* are used throughout all search algorithms by all maps, to guarantee consistency. 
 		 */
-		private static final Map<String, Integer> CONTEXT_VEC_WORDS_MAP;
+		private static final Map<String, Integer> CONTEXT_VEC_WORDS_INDEX_MAP;
 		private static final ImmutableMap<String, Integer> CONTEXT_VEC_WORDS_FREQ_MAP;
 		
 		/** Map of (annotated with "hyp" etc) keywords and their scores in document, the higher freq in doc, the lower 
@@ -324,8 +324,8 @@ public class CollectThm {
 			//temp.put("field", 3);
 			//CONTEXT_VEC_WORDS_FREQ_MAP = ImmutableMap.copyOf(temp);
 			//the values are just the words' indices in wordsList.
-			//this orders the list as well. INDEX map. 
-			CONTEXT_VEC_WORDS_MAP = createContextKeywordIndexDict(CONTEXT_VEC_WORDS_FREQ_MAP);
+			//this orders the list as well. INDEX map. Can rely on order as map is immutable.
+			CONTEXT_VEC_WORDS_INDEX_MAP = createContextKeywordIndexDict(CONTEXT_VEC_WORDS_FREQ_MAP);
 			//System.out.println("------++++++++-------CONTEXT_VEC_WORDS_MAP.size " + CONTEXT_VEC_WORDS_MAP.size());
 			
 			if(Searcher.SearchMetaData.gatheringDataBool()){				
@@ -492,6 +492,7 @@ public class CollectThm {
 			for(Map.Entry<String, Integer> entry : docWordsFreqPreMapNoAnno.entrySet()){				
 				contextKeywordIndexDict.put(entry.getKey(), counter++);
 			}
+			//System.out.println("********CollectThm - contextKeywordIndexDict : " + contextKeywordIndexDict);
 			return contextKeywordIndexDict;
 		}
 
@@ -517,8 +518,8 @@ public class CollectThm {
 		 * List is ordered with respect to relative frequency, more frequent words come first,
 		 * to optimize relation vector formation with BigIntegers.
 		 */
-		public static Map<String, Integer> get_CONTEXT_VEC_WORDS_MAP(){
-			return CONTEXT_VEC_WORDS_MAP;
+		public static Map<String, Integer> get_CONTEXT_VEC_WORDS_INDEX_MAP(){
+			return CONTEXT_VEC_WORDS_INDEX_MAP;
 		}
 		
 		public static int get_CONTEXT_VEC_SIZE(){

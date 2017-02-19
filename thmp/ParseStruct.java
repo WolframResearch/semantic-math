@@ -38,10 +38,6 @@ public class ParseStruct implements Serializable{
 	//in WLCommandWrappers in the wrapperMMap. Created at construction.
 	private Map<String, WLCommandWrapper> triggerWordsMap;
 	
-	//whether this ParseStruct is currently in hypothetical mode, don't create 
-	//sub ParseStruct's once in hyp mode.
-	//private boolean inHyp;
-	
 	/**
 	 * @return the triggerWordsMMap
 	 */

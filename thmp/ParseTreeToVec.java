@@ -28,28 +28,31 @@ public class ParseTreeToVec {
 	//private static final Map<String, Integer> contextKeywordDict = TriggerMathThm2.allThmsKeywordIndexDict();
 	//should ideally order the words according to relative distances apart, i.e. entries in the correlation matrix.
 	//used for forming query vecs, as these are words used when the thm source vecs were formed.
-	private static final Map<String, Integer> contextKeywordQueryDict = CollectThm.ThmWordsMaps.get_CONTEXT_VEC_WORDS_MAP();
+	/* Map of words and their *indices* */
+	private static final Map<String, Integer> contextKeywordIndexQueryDict = CollectThm.ThmWordsMaps.get_CONTEXT_VEC_WORDS_INDEX_MAP();
 	//contextVecWordsNextTimeMMap
-	private static final Map<String, Integer> contextKeywordThmsDataDict = CollectThm.ThmWordsMaps.get_contextVecWordsNextTimeMap();
-	//the current map to use, this *must* be set to contextKeywordThmsDataDict when producing vecs from thm data source. 
-	//e.g. in DetectHypothesis.java. 
-	private static final Map<String, Integer> contextKeywordDict;
+	private static final Map<String, Integer> contextKeywordIndexThmsDataDict = CollectThm.ThmWordsMaps.get_contextVecWordsIndexNextTimeMap();
+	/*The current word-index map to use, this *must* be set to contextKeywordIndexThmsDataDict when producing vecs from thm data source. 
+	* e.g. in DetectHypothesis.java. */
+	private static final Map<String, Integer> contextKeywordIndexDict;
 	/*Deliberately not final, since not needed, in fact not created, when gathering data instead of searching.*/
 	private static Map<String, RelatedWords> relatedWordsMap;
 	//private static final Map<String, Integer> contextKeywordDict = ;
 	private static final ListMultimap<String, String> posMMap = Maps.posMMap();
 	private static final boolean GATHERING_DATA_BOOL;
+	
 	static{
 		if(Searcher.SearchMetaData.gatheringDataBool()){
 			//Sets the dictionary to the mode for producing context vecs from data source to be searched.
 			// e.g. in DetectHypothesis.java.
-			contextKeywordDict = contextKeywordThmsDataDict;
+			contextKeywordIndexDict = contextKeywordIndexThmsDataDict;
 			GATHERING_DATA_BOOL = true;
 		}else{
-			contextKeywordDict = contextKeywordQueryDict;
+			contextKeywordIndexDict = contextKeywordIndexQueryDict;
 			relatedWordsMap = CollectThm.ThmWordsMaps.getRelatedWordsMap();
 			GATHERING_DATA_BOOL = false;
 		}
+		//System.out.println("contextKeywordDict " + contextKeywordIndexThmsDataDict);
 	}
 	/**
 	 * Sets the dictionary to the mode for producing context vecs from data source to be searched.
@@ -87,10 +90,10 @@ public class ParseTreeToVec {
 		if(commandWrapper != null){			
 			parseRelation = ParseRelation.getParseRelation(headStruct, contextVec, commandWrapper.WLCommandStr());
 			headVecEntry = parseRelation.relationNum;
-			System.out.println("HERE (in ParseTreeToVec)" + commandWrapper == null ? "" : commandWrapper.WLCommandStr());
+			//System.out.println("HERE (in ParseTreeToVec)" + commandWrapper == null ? "" : commandWrapper.WLCommandStr());
 		}else{
 			headVecEntry = ParseRelation.DEFAULT_RELATION_NUM();
-			System.out.println("HERE (in ParseTreeToVec)");
+			//System.out.println("HERE (in ParseTreeToVec)");
 		}
 		//System.out.println("parseRelation headVecEntry " + headVecEntry);
 		//System.out.println("headStruct " + headStruct);
@@ -242,7 +245,7 @@ public class ParseTreeToVec {
 		
 		if(termStrArLen > 1){
 			String lastWord = termStrAr[termStrArLen-1];
-			lastWordRowIndex = contextKeywordDict.get(lastWord);
+			lastWordRowIndex = contextKeywordIndexDict.get(lastWord);
 			int parentIndex = structParentIndex;
 			if(null != lastWordRowIndex){
 				parentIndex = lastWordRowIndex;
@@ -253,7 +256,7 @@ public class ParseTreeToVec {
 			//is adverb-adj, point adverb to adj.
 			for(int i = 0; i < termStrArLen - 1; i++){
 				String word = termStrAr[i];
-				Integer wordIndex = contextKeywordDict.get(word);
+				Integer wordIndex = contextKeywordIndexDict.get(word);
 				if(i > 0 && wordIndex != null){
 					List<String> posList = posMMap.get(word);
 					boolean isAdj = false;
@@ -290,12 +293,12 @@ public class ParseTreeToVec {
 	 * @return @Nullable likely index for termStr, could be null.
 	 */
 	public static Integer getTermStrIndex(String termStr){
-		Integer rowIndex = contextKeywordDict.get(termStr);
+		Integer rowIndex = contextKeywordIndexDict.get(termStr);
 		if(null == rowIndex){
 			String[] termStrAr = termStr.split(" ");
 			int len = termStrAr.length;
 			if(len > 1){
-				rowIndex = contextKeywordDict.get(termStrAr[len-1]);
+				rowIndex = contextKeywordIndexDict.get(termStrAr[len-1]);
 			}
 		}
 		return rowIndex;
@@ -318,12 +321,12 @@ public class ParseTreeToVec {
 	 */
 	private static int addTermStrToVec(Struct struct, String termStr, int structParentIndex, int[] contextVec, 
 			boolean forceAdjust) {
-		Integer termRowIndex = contextKeywordDict.get(termStr);
+		Integer termRowIndex = contextKeywordIndexDict.get(termStr);
 		//to be used if no appropriate termRowIndex found
 		Integer someRelatedWordIndex = null;
 		if(termRowIndex == null){
 			//de-singularize, and remove "-ed" and "ing"! But parsed Strings should already been singularized!
-			termRowIndex = contextKeywordDict.get(WordForms.getSingularForm(termStr));
+			termRowIndex = contextKeywordIndexDict.get(WordForms.getSingularForm(termStr));
 		}
 		List<String> relatedWordsList = null;
 		//add the indices of related words as well.
@@ -347,13 +350,13 @@ public class ParseTreeToVec {
 					}
 				}
 			}
-			termRowIndex = contextKeywordDict.get(termStr);
+			termRowIndex = contextKeywordIndexDict.get(termStr);
 		}
 		if(!GATHERING_DATA_BOOL){
 			if(null != relatedWordsList){
 				for(String relatedWord : relatedWordsList){
 					//Related words themselves have already been normalized w.r.t. the dictionary.
-					Integer relatedWordRowIndex = contextKeywordDict.get(relatedWord);
+					Integer relatedWordRowIndex = contextKeywordIndexDict.get(relatedWord);
 					if(null != relatedWordRowIndex){
 						if(null == someRelatedWordIndex){ 
 							someRelatedWordIndex = relatedWordRowIndex;
@@ -370,7 +373,7 @@ public class ParseTreeToVec {
 			if(contextVec[termRowIndex] <= 0 || forceAdjust){
 				contextVec[termRowIndex] = structParentIndex;
 			}
-			System.out.println("struct " + struct + " termStr " + termStr + " ### rowIndex " + termRowIndex + " parent index " + structParentIndex);
+			System.out.println("ParseTreeToVec - struct " + struct + " termStr " + termStr + " ### rowIndex " + termRowIndex + " parent index " + structParentIndex);
 		}else{
 			//pass parentIndex down to children, in case of intermediate StructA that doesn't have a content string.
 			//eg assert[A, B], the assert does not have content string.

@@ -84,7 +84,10 @@ public class WLCommand implements Serializable{
 	// List of PosTerm with its position, {entsymb, 0}, {\[Element], -1}, {entsymb,2}
 	//entsymb, 0, entsymb 1, use these to fulfill grammar rule
 	private List<PosTerm> posTermList;
-
+	/* Copied command with optional terms, 
+	 * only applicable for WLCommands with optional terms. */
+	private transient WLCommand copyWithOptTermsCommand;
+	
 	/**
 	 * Index of trigger word in posTermList.
 	 * (expand to list to include multiple trigger words?)
@@ -94,7 +97,7 @@ public class WLCommand implements Serializable{
 	/**
 	 * Track the number of components left in this WLCommand.
 	 * Used to determine whether this WLCommand has all the commandComponents it needs yet.
-	 * Command is satisfied if componentCounter is 0.
+	 * Command is satisfied if componentCounter is 0. Does *NOT* count optional terms.
 	 */
 	private int componentCounter;
 	
@@ -906,11 +909,17 @@ public class WLCommand implements Serializable{
 		}
 		return newCommand;
 	}
-	
+	/**
+	 * Shallow copy.
+	 * Now should only copy for commands with optional terms!
+	 * @param curCommand
+	 * @return
+	 */
 	public static WLCommand shallowWLCommandCopy(WLCommand curCommand){	
 		
 		WLCommand newCommand = new WLCommand();
 		
+		curCommand.copyWithOptTermsCommand = newCommand;
 		newCommand.triggerWord = ((WLCommand)curCommand).triggerWord;
 		newCommand.commandsMap = curCommand.commandsMap; //ArrayListMultimap.create(((WLCommand)curCommand).commandsMap);
 		
@@ -1887,6 +1896,16 @@ public class WLCommand implements Serializable{
 	}
 	
 	/**
+	 * WLCommand curCommand copied to, 
+	 * only applicable for WLCommands with optional terms.
+	 * @param curCommand
+	 * @return
+	 */
+	public WLCommand getCopyWithOptTermsCommand(){
+		return this.copyWithOptTermsCommand;
+	}
+	
+	/**
 	 * @param curCommand
 	 * @return posTermList of current command
 	 */
@@ -1969,11 +1988,17 @@ public class WLCommand implements Serializable{
 	
 	/**
 	 * @return Is this command (commandsMap) satisfied. 
+	 * Does *NOT* mean optional terms satisfied as well.
 	 * 
 	 */
 	public static boolean isSatisfied(WLCommand curCommand){
 		//shouldn't be < 0!
 		return curCommand.componentCounter < 1;
+	}
+	
+	public boolean isSatisfiedWithOptionalTerms(){
+		//shouldn't be < 0!
+		return this.componentCounter < 1 && this.optionalTermsCount < 1;
 	}
 	
 	@Override

@@ -42,18 +42,18 @@ public class RelationVec implements Serializable{
 	private static final long serialVersionUID = 7990758362732085287L;
 
 	//map of words and their indices.
-	private static final Map<String, Integer> contextKeywordThmsDataDict = CollectThm.ThmWordsMaps.get_contextVecWordsIndexNextTimeMap();
+	private static final Map<String, Integer> contextKeywordIndexThmsDataDict = CollectThm.ThmWordsMaps.get_contextVecWordsIndexNextTimeMap();
 	
 	//used for forming query vecs, as these are words used when the thm source vecs were formed, words and their indices
 	//Ordered according to frequency.
-	private static final Map<String, Integer> contextKeywordQueryDict = CollectThm.ThmWordsMaps.get_CONTEXT_VEC_WORDS_MAP();
+	private static final Map<String, Integer> contextKeywordIndexQueryDict = CollectThm.ThmWordsMaps.get_CONTEXT_VEC_WORDS_INDEX_MAP();
 	/*Deliberately not final, since not needed, in fact not created, when gathering data instead of searching.
 	 * We want the *precise* wording for the thms, not using related words. */
 	private static Map<String, RelatedWords> relatedWordsMap;
 	private static final boolean GATHERING_DATA_BOOL;
 	/*The current word-index dictionary to use, this *must* be set to contextKeywordThmsDataDict 
 	 * when producing vecs from thm data source. e.g. in DetectHypothesis.java. */
-	private static final Map<String, Integer> keywordDict;
+	private static final Map<String, Integer> keywordIndexDict;
 	
 	private static final int parseContextVectorSz;	
 	private static final int NUM_BITS_PER_BYTE = 8;
@@ -64,14 +64,14 @@ public class RelationVec implements Serializable{
 		if(Searcher.SearchMetaData.gatheringDataBool()){
 			//Sets the dictionary to the mode for producing context vecs from data source to be searched.
 			// e.g. in DetectHypothesis.java.
-			keywordDict = contextKeywordThmsDataDict;
+			keywordIndexDict = contextKeywordIndexThmsDataDict;
 			GATHERING_DATA_BOOL = true;
 		}else{
-			keywordDict = contextKeywordQueryDict;
+			keywordIndexDict = contextKeywordIndexQueryDict;
 			relatedWordsMap = CollectThm.ThmWordsMaps.getRelatedWordsMap();
 			GATHERING_DATA_BOOL = false;
 		}
-		parseContextVectorSz = keywordDict.size();
+		parseContextVectorSz = keywordIndexDict.size();
 	}
 	/**
 	 * Enum for the different types of
@@ -178,13 +178,11 @@ public class RelationVec implements Serializable{
 		
 		for(PosTerm posTerm : posList)
 		{
-			Struct posTermStruct = posTerm.posTermStruct();
-			
+			Struct posTermStruct = posTerm.posTermStruct();			
 			if(null == posTermStruct //&& posTerm.isOptionalTerm()
 					){
 				continue;
-			}
-			
+			}			
 			List<String> contentStrList = posTermStruct.contentStrList();
 			System.out.println("****************RelationVec - contentStrList: " + contentStrList + " posTerm: " + posTerm);
 			
@@ -287,10 +285,10 @@ public class RelationVec implements Serializable{
 						}
 					}
 					//System.out.println("RelationVec.java - trying to add word " + word);
-					Integer residue = keywordDict.get(word);
+					Integer residue = keywordIndexDict.get(word);
 					if(null == residue){
 						String normalizedWord = WordForms.normalizeWordForm(word);
-						residue = keywordDict.get(normalizedWord);
+						residue = keywordIndexDict.get(normalizedWord);
 						if(!GATHERING_DATA_BOOL && null == relatedWordsList){
 							relatedWords = relatedWordsMap.get(word);
 							if(null != relatedWords){
@@ -318,7 +316,7 @@ public class RelationVec implements Serializable{
 			}
 		
 			//repeat for the whole of termStr:
-			Integer residue = keywordDict.get(termStr);
+			Integer residue = keywordIndexDict.get(termStr);
 			List<String> relatedWordsList = null;
 			RelatedWords relatedWords = null; 
 			
@@ -330,7 +328,7 @@ public class RelationVec implements Serializable{
 			}
 			if(null == residue){
 				String normalizedTermStr = WordForms.normalizeWordForm(termStr);
-				residue = keywordDict.get(normalizedTermStr);
+				residue = keywordIndexDict.get(normalizedTermStr);
 				if(!GATHERING_DATA_BOOL){
 					if(null == relatedWordsList){
 						relatedWords = relatedWordsMap.get(normalizedTermStr);
@@ -373,7 +371,7 @@ public class RelationVec implements Serializable{
 				List<String> relatedWordsList) {
 			if(null != relatedWordsList){
 				for(String relatedWord : relatedWordsList){
-					Integer relatedWordResidue = keywordDict.get(relatedWord);
+					Integer relatedWordResidue = keywordIndexDict.get(relatedWord);
 					if(null != relatedWordResidue){
 						int bitPos = parseContextVectorSz*modulus + relatedWordResidue;					
 						maxBitPos = addToPosList(bitPosList, maxBitPos, bitPos);

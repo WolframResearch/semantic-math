@@ -196,13 +196,14 @@ public class WLCommandsList {
 		//WLCommandMapBuilder.put("derivative",
 			//	addCommand(new String[] { ", derivative, trigger", "Derivative[", "pre, of, false", "symb|ent, , true", "]" }));
 		wLCommandMapBuilder.put("derivative", addCommand(new PBuilder(null, "derivative", false, true, false), 
-				new PBuilder("Derivative["), new PBuilder("pre", "of", false), 
-				new PBuilder("symb|ent", null, true), new PBuilder("]") ));
+				new PBuilder("Derivative["), new PBuilder("pre", "of", false), new PBuilder("symb|ent", null, true), 
+				new PBuilder(", ", "OPT"), new PBuilder("prep", null, true, false, "OPT"), new PBuilder("]") ));
 		//WLCommandMapBuilder.put("log",
 			//addCommand(new String[] { ", log, trigger", "Log[", "pre, of, false", "symb|ent, , true", "]" }));
 		wLCommandMapBuilder.put("log", addCommand(new PBuilder(null, "log", false, true, false), 
 				new PBuilder("Log["), new PBuilder("pre", "of", false), 
-				new PBuilder("symb|ent", null, true), new PBuilder("]") ));
+				new PBuilder("symb|ent", null, true), new PBuilder(", ", "OPT"),
+				new PBuilder("prep", null, true, false, "OPT"), new PBuilder("]") ));
 		//WLCommandMapBuilder.put("union",
 			//addCommand(new String[] { ", union, trigger", "Union[", "pre, of, false", "symb|ent, , true", "]" }));
 		wLCommandMapBuilder.put("union", addCommand(new PBuilder(null, "union", false, true, false), 

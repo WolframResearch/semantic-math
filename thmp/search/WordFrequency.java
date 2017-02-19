@@ -315,7 +315,7 @@ public class WordFrequency {
 				pos = "verb";
 				break;
 			case "n":
-				pos = "noun";
+				pos = "ent"; //="noun"
 				break;
 			case "x":
 				// not, no etc

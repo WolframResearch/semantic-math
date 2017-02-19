@@ -1,5 +1,6 @@
 package thmp.search;
 
+import java.util.Arrays;
 import java.util.List;
 
 import thmp.search.Searcher.SearcherState;
@@ -42,6 +43,7 @@ public interface Searcher<S> {
 		private static boolean gatheringDataBool;
 		
 		public static void set_gatheringDataBoolToTrue(){
+			//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
 			gatheringDataBool = true;
 		}
 		

@@ -14,6 +14,7 @@ import java.util.regex.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
 import exceptions.IllegalWLCommandStateException;
@@ -347,17 +348,17 @@ public class ParseToWLTree{
 					/*If optional commands still left, remove from commandsList, add shallow copy back, so 
 					   incrementing compoenentWithOtherHeadCount does not affect the new copy. Treating the new
 					   copy as if its optional terms were not optional, so it's not done yet */
-					if(commandSat.hasOptionalTermsLeft() ){
+					if(commandSat.hasOptionalTermsLeft() && commandRemoved){
+						//System.out.println("++++++++++add to wlCommandWithOptionalTermsList " + curCommand);
 						wlCommandWithOptionalTermsList.add(0, WLCommand.shallowWLCommandCopy(curCommand));
-					}
-					
-					/*if(curCommand.getDefaultOptionalTermsCount() == 0
+					}					
+					/* DON'T delete this part yet! Feb/2017
+					 * if(curCommand.getDefaultOptionalTermsCount() == 0
 							|| !commandSat.hasOptionalTermsLeft() ){
 						reverseWLCommandListIter.remove();
 						commandRemoved = true;
 						//System.out.println("COMMAND REMOVED !" + curCommand);
-					}*/
-					
+					}*/					
 				}else if(commandSat.isDisqualified()){
 					reverseWLCommandListIter.remove();
 					commandRemoved = true;
@@ -734,14 +735,53 @@ public class ParseToWLTree{
 		//boolean contextVecConstructed = false;		
 		//iterate backwards, so last-added ones (presumably longer span) come first
 		//pick out the one with highest commandNumUnits.
-		if(structWrapperListSz > 1){
+		/*if(structWrapperListSz > 1){
 			System.out.println(WLCommand.structsWithOtherHeadCount(structWrapperList.get(1).wlCommand));
+		}*/		
+		//System.out.println("*&&&&&&&&&&&&&&&&&&&&&&&&&&&&structWrapperListSz " + structWrapperListSz);
+		
+		/*This threshold means: no component can be part of another command.*/
+		int structWithOtherHeadThreshold = 0;
+		boolean noClashCommandFound = appendWLCommandStr2(struct, curParseStruct, parsedSB, partsMap, contextVec,
+				contextVecConstructed, structWrapperList, structWrapperListSz, structWithOtherHeadThreshold);		
+		contextVecConstructed |= noClashCommandFound;
+		
+		/*relax criteria for how many terms can be part of other commands if no parsePair found */
+		if(!noClashCommandFound && structWrapperListSz > 1){
+			structWithOtherHeadThreshold = 1;
+			noClashCommandFound = appendWLCommandStr2(struct, curParseStruct, parsedSB, partsMap, contextVec,
+					contextVecConstructed, structWrapperList, structWrapperListSz, structWithOtherHeadThreshold);
+			contextVecConstructed |= noClashCommandFound;
 		}		
-		System.out.println("*&&&&&&&&&&&&&&&&&&&&&&&&&&&&structWrapperListSz " + structWrapperListSz);
-		for(int i = structWrapperListSz - 1; i > -1; i--){
-		//for(int i = 0; i < structWrapperListSz; i++){	
+		return contextVecConstructed;
+	}
+
+	/**
+	 * @param struct
+	 * @param curParseStruct
+	 * @param parsedSB
+	 * @param partsMap
+	 * @param contextVec
+	 * @param contextVecConstructed
+	 * @param structWrapperList
+	 * @param structWrapperListSz
+	 * @return noClashCommandFound
+	 */
+	private static boolean appendWLCommandStr2(Struct struct, ParseStruct curParseStruct, StringBuilder parsedSB,
+			Multimap<ParseStructType, ParsedPair> partsMap, int[] contextVec, boolean contextVecConstructed,
+			List<WLCommandWrapper> structWrapperList, int structWrapperListSz, int structWithOtherHeadThreshold) {
+		
+		boolean noClashCommandFound = false;
+		for(int i = structWrapperListSz - 1; i > -1; i--){	
 			WLCommandWrapper curWrapper = structWrapperList.get(i);
 			WLCommand curCommand = curWrapper.wlCommand;
+			
+			/*If the copy containing optional terms are satisfied, don't include this one. */
+			WLCommand copyWithOptTermsCommand = curCommand.getCopyWithOptTermsCommand();
+			if(null != copyWithOptTermsCommand && copyWithOptTermsCommand.isSatisfiedWithOptionalTerms()
+					&& copyWithOptTermsCommand.getDefaultOptionalTermsCount() > 0){
+				//continue; //<--keep working on this! Feb 2017
+			}
 			
 			//parent might have been used already, e.g. if A and B, parent of
 			//A and B is "conj_..."
@@ -753,8 +793,8 @@ public class ParseToWLTree{
 					shouldAppendCommandStr = false;
 				}
 			}
-			//right now that threshold is: all components must be included.
-			if(WLCommand.structsWithOtherHeadCount(curCommand) < 1
+			
+			if(WLCommand.structsWithOtherHeadCount(curCommand) <= structWithOtherHeadThreshold
 					&& shouldAppendCommandStr
 					//&& struct.WLCommandStrVisitedCount() == 0
 					){
@@ -793,7 +833,7 @@ public class ParseToWLTree{
 						struct.numUnits(), WLCommand.commandNumUnits(curCommand), curCommand);
 				//partsMap.put(type, curWrapper.WLCommandStr);	
 				partsMap.put(parseStructType, pair);
-				
+				noClashCommandFound = true;
 				//determine whether to create new child ParseStruct, or add to current
 				//layer
 				/*if(checkParseStructType(parseStructType)){
@@ -806,22 +846,21 @@ public class ParseToWLTree{
 					//this struct already in hyp, don't create additional layers.
 					//set the reference of the current struct to point to the newly created struct
 					parseState.setCurParseStruct(childParseStruct);
-					//System.out.println("curParseStruct " + childParseStruct);
-					//throw new IllegalStateException("Created new struct!");
-					
 				}else{
 					curParseStruct.addParseStructWrapper(parseStructType, curWrapper);					
 				}*/
-				//add to hold current command contained in curWrapper
 				
+				//add to hold current command contained in curWrapper				
 				curParseStruct.addParseStructWrapper(parseStructType, curWrapper);
 				//parseState.addParseStructWrapperPair(parseStructType, curWrapper);
 				
-				//System.out.println("partsMap being put in: " + curWrapper.WLCommandStr);
+				/* Only collect the first valid command that does not clash, since very unlikely to 
+				 * have multiple valid commands that 
+				 * don't clash at all (i.e. share command components) */
 				break;
-			}
+			}			
 		}
-		return contextVecConstructed;
+		return noClashCommandFound;
 	}
 	
 	/**
@@ -849,13 +888,13 @@ public class ParseToWLTree{
 		/*if(struct.type().equals("assert")){
 			System.out.println("^^^^^^" + struct + " " + struct.WLCommandStrVisitedCount());
 		}*/
-		
+		//ArrayListMultimap.create()
 		//System.out.println("^^^^struct.WLCommandStrVisitedCount() " +struct.WLCommandStrVisitedCount()
 			//+" for struct: " + struct +" ^^^WLCommandWrapperList: "+ struct.WLCommandWrapperList());
 		//command should not have been built into some other command
 		if(null != struct.WLCommandWrapperList() 
 				//this should not be checking WLCommandStrVisitedCount, since count should be 1 
-				// after the command has been built. 12/13/2016.
+				// after the command has been built. 12/13/2016.   2/18/2017
 				&& struct.WLCommandStrVisitedCount() < 1){	
 			//if(struct.WLCommandWrapperList() != null){
 			/*if(WLCommand.structsWithOtherHeadCount(struct.WLCommand()) 
@@ -950,7 +989,7 @@ public class ParseToWLTree{
 		struct.clear_WLCommandStrVisitedCount();		
 		struct.set_previousBuiltStruct(null);
 		struct.set_structToAppendCommandStr(null);
-		struct.set_usedInOtherCommandComponent(false);
+		struct.clearUsedInCommandsSet();
 		struct.clear_commandBuilt();
 		
 		if (struct.isStructA()) {

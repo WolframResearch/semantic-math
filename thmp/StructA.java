@@ -450,15 +450,23 @@ public class StructA<A, B> extends Struct{
 	public List<String> contentStrList(){		
 		//String contentStr = "";
 		List<String> contentStrList = new ArrayList<String>();
-		if(PREV1_TYPE != null && PREV1_TYPE.equals(NodeType.STR)){
-			contentStrList.add((String) prev1);			
+		if(PREV1_TYPE != null){
+			if(PREV1_TYPE.equals(NodeType.STR)){
+				contentStrList.add((String) prev1);	
+			}else if(PREV1_TYPE.isTypeStruct()){
+				contentStrList.addAll(((Struct)prev1).contentStrList());
+			}
 		}
-
-		if(PREV2_TYPE != null && PREV2_TYPE.equals(NodeType.STR)){			
+		if(PREV2_TYPE != null){
+			if(PREV2_TYPE.equals(NodeType.STR)){
+			//should not have the space even if list is empty before!
 			String prev2Str = contentStrList.isEmpty() 
 					? (String) prev2 : " " + (String) prev2;
 					contentStrList.add(prev2Str);
-		}
+			}else if(PREV2_TYPE.isTypeStruct()){
+				contentStrList.addAll(((Struct)prev2).contentStrList());
+			}
+		}		
 		return contentStrList;
 	}
 	
