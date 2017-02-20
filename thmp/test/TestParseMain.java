@@ -38,6 +38,11 @@ public class TestParseMain {
 		ThmP1.setUnitTestingToTrue();
 	}
 
+	/**
+	 * ADD TO TESTS:
+	 * ""the twisted $K$--theory $K^0(X,\\cA)$ is isomorphic to the Grothendieck group of Neumann equivalence class of projections in $C(X, \\K_\\cA)$";"
+	 */
+	
 	@Test
 	public void basicTests() throws IOException{
 		List<String> stList = new ArrayList<String>();

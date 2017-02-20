@@ -76,7 +76,7 @@ public class ThmP1 {
 	//end part of latex expression word, e.g. " B)$-module"
 	private static final Pattern LATEX_END_PATTER = Pattern.compile("[^$]*\\$.*");
 	private static final Pattern LATEX_BEGIN_PATTERN = Pattern.compile("[^$]*\\${1,2}.*");
-	private static final Pattern POSSIBLE_ADJ_PATTERN = Pattern.compile("(?:.*tive|.*wise|.*ary|.*able|.*ous)$");
+	private static final Pattern POSSIBLE_ADJ_PATTERN = Pattern.compile("(?:.+tive|.+wise|.+ary|.+ble|.+ous)$");
 	private static final Pattern ESSENTIAL_POS_PATTERN = Pattern.compile("ent|conj_ent|verb|vbs|if|symb|pro");
 	private static final Pattern VERB_POS_PATTERN = Pattern.compile("verb|vbs");	
 	private static final Pattern SINGLE_WORD_TEX_PATTERN = Pattern.compile("\\$[^$]+\\$[^\\s]*"); 
@@ -219,12 +219,14 @@ public class ThmP1 {
 	 * Class consisting of a parsed String and its score
 	 */
 	public static class ParsedPair{
+		
 		private String parsedStr;
 		//score based on probabilities as defined in Maps.posMMap.
 		private double score;
 		//long form or WL-like expr. Useful for "under the hood"
 		//can be "long" or "wl". Switch to an enum!
 		private String form;
+		private static final String DEFAULT_FORM_STR = "WL";
 		//parsedExprSz used to group parse components together 
 		//when full parse is unavailable
 		//private int counter;
@@ -269,7 +271,7 @@ public class ThmP1 {
 		 */
 		public ParsedPair(String parsedStr, double score, int numUnits, 
 				int commandNumUnits, WLCommand wlCommand){
-			this(parsedStr, score, "", false);
+			this(parsedStr, score, DEFAULT_FORM_STR, false);
 			this.wlCommand = wlCommand;
 			this.numUnits = numUnits;
 			this.commandNumUnits = commandNumUnits;
@@ -345,13 +347,28 @@ public class ThmP1 {
 		
 		@Override
 		public String toString(){
-			//As reference, lower numUnits are better, and higher commandNumUnits are better.
-			String numUnitsString = numUnits == 0 ? "" : "  " + String.valueOf(this.numUnits);
-			numUnitsString += commandNumUnits == 0 ? "" : "  " + String.valueOf(this.commandNumUnits);
+			
+			StringBuilder numUnitsSB = new StringBuilder(150);
+			/*As reference, lower numUnits are better, and higher commandNumUnits are better.*/
+			numUnitsSB.append(numUnits == 0 ? "" : "  " + String.valueOf(this.numUnits));
+			numUnitsSB.append(commandNumUnits == 0 ? "" : "  " + String.valueOf(this.commandNumUnits));
+			//String numUnitsString = numUnits == 0 ? "" : "  " + String.valueOf(this.numUnits);
+			//numUnitsString += commandNumUnits == 0 ? "" : "  " + String.valueOf(this.commandNumUnits);
 			if(parseStructType != null){
-				return parseStructType + " :> [" + this.parsedStr + " " + String.valueOf(score) + numUnitsString + "]";
+				/* Display as association! */
+				//case to not display the score and score if on web, for the "ONE TREE" web form. 
+				//Don't hardcode "one tree" here! Use SB!
+				if("ONE TREE".equals(this.form)){					
+					return "<|" + this.form.toUpperCase() + "->" + parseStructType + " :>" + this.parsedStr + "|>";
+					//return parseStructType + " :>" + this.parsedStr + numUnitsSB;
+				}else{
+					return "<|" + this.form.toUpperCase() + "->" + parseStructType + " :>" + this.parsedStr + ", SCORES->{" 
+							+ String.valueOf(score) + numUnitsSB + "}|>";
+					//return parseStructType + " :>" + this.parsedStr + ", " + String.valueOf(score) + numUnitsSB;
+				}				
 			}else{
-				return this.parsedStr + " " + String.valueOf(score) + numUnitsString;
+				return "<|" + this.form.toUpperCase() + "->" + this.parsedStr + ", SCORES->{" + String.valueOf(score) + numUnitsSB
+						+ "}|>";
 			}
 		}
 	}
@@ -2103,15 +2120,14 @@ public class ThmP1 {
 							
 							// for types such as conj_verbphrase
 							String[] split1 = type1.split("_");
-							//this causes conj_ent to be counted as ent, so should
-							//*not* use "ent" type to determine whether StructH or not!
+							/* This causes conj_ent to be counted as ent, so should
+							 * *not* use "ent" type to determine whether StructH or not!*/
 							
 							if (split1.length > 1 && CONJ_DISJ_PATTERN1.matcher(split1[0]).find()) {
 								type1 = split1[1];
 							}
 
 							String[] split2 = type2.split("_");
-
 							if (split2.length > 1 && CONJ_DISJ_PATTERN1.matcher(split2[0]).find()) {
 								type2 = split2[1];
 							}
@@ -2217,8 +2233,7 @@ public class ThmP1 {
 								newStruct.struct().put(newPpt, "ppt");
 								// mx.get(i).set(j, newStruct);								
 								mx.get(i).get(j).add(newStruct);
-								continue innerloop;
-								
+								continue innerloop;								
 							}
 							//posessive pronouns with ent
 							else if(combined.equals("poss_ent")){
@@ -2309,7 +2324,7 @@ public class ThmP1 {
 							// singular
 							// ie F and G is isomorphic
 							
-							// iterate through the List at position (i-t, i-1), for conj/disj
+							// iterate through the List at position (i-t, i-1), to handle conjunction and disjunction
 							if (i > 0 && i + 1 < inputStructListSize) {
 
 								/*
@@ -2324,25 +2339,35 @@ public class ThmP1 {
 								 * can be combined with if // statement //
 								 * above, use single while loop } else
 								 */
-								if (type1.matches("or|and")) {
+								if (AND_OR_PATTERN.matcher(type1).matches()) {
 									
 									int t = 1;
 									searchConjLoop: while (i - t > -1) {
 										//i-1 because looking at the column before i.
 										List<Struct> structArrayList = mx.get(i - t).get(i - 1).structList();
-
 										int structArrayListSz = structArrayList.size();
 										if (structArrayListSz == 0) {
 											t++;
 											continue;
 										}
-										//search for the farthest allowable ent, keep going up along the column.
-										//e.g. "Given ring of finite presentation and field of finite type"	
+										/* Search for the farthest allowable ent, keep going up along the column.
+										 * e.g. "Given ring of finite presentation and field of finite type".
+										 * variable t indicates how far back. */
 										if(type2.equals("ent") && i - t - 2 > -1){
+											List<Struct> structRightBeforeAndOrList = mx.get(i-1).get(i-1).structList();
+											Struct structRightBeforeAndOr = null;
+											if(structRightBeforeAndOrList.size() > 0){
+												structRightBeforeAndOr = structRightBeforeAndOrList.get(0);												
+											}
+											
+											if(null == structRightBeforeAndOr 
+													|| !WordForms.areTexExprSimilar(structRightBeforeAndOr.nameStr(), struct2.nameStr())){
+											
+											/*always along the same column i-1. Recall i is row of combined term.*/
 											List<Struct> structArrayList2 = mx.get(i-t-1).get(i-1).structList();
-											List<Struct> structArrayList3 = mx.get(i-t-2).get(i-1).structList();
-											//not double-looping O(mn) on average because of the conditionals.
-											for(Struct list2Struct : structArrayList2){
+											List<Struct> structArrayList3 = mx.get(i-t-2).get(i-1).structList();											
+											/* Less than double-looping O(mn) on average because of the conditionals.*/
+											for(Struct list2Struct : structArrayList2){			
 												if(list2Struct.type().equals("prep")){
 													for(Struct list3Struct : structArrayList3){
 														if(list3Struct.type().equals("ent")){
@@ -2354,6 +2379,7 @@ public class ThmP1 {
 													break;
 												}
 											}
+										}
 											/*if(structArrayList2.get(0).type().equals("prep")
 													&& structArrayList3.get(0).type().equals("ent")){
 												t++;
@@ -2363,8 +2389,7 @@ public class ThmP1 {
 										// iterate over Structs at (i-l, i-1)
 										for (int p = 0; p < structArrayListSz; p++) {
 											
-											Struct p_struct = structArrayList.get(p);
-											
+											Struct p_struct = structArrayList.get(p);											
 											if (type2.equals(p_struct.type())) {
 												
 												// In case of conj, only proceed
@@ -2415,8 +2440,6 @@ public class ThmP1 {
 													parentStruct.set_maxDownPathScore(maxDownPathScore);
 
 													mx.get(i - t).get(j).add(parentStruct);
-													// mx.get(i - l).set(j,
-													// parentStruct);
 													// mx.get(i+1).set(j, null);
 													//stopLoop = true;
 													break searchConjLoop;

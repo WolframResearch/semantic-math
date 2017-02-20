@@ -153,11 +153,16 @@ public abstract class Struct implements Serializable{
 	 * @return
 	 */
 	public boolean usedInOtherCommandComponent(WLCommand curCommand){	
-		//System.out.println("curCommand: " + curCommand );
+		
 		//System.out.println("this.usedInCommandsSet: " + this.usedInCommandsSet);
+		//System.out.println(usedInCommandsSet.contains(curCommand) + "curCommand " + curCommand);
 		//for(WLCommand c : usedInCommandsSet){
 			//System.out.println(curCommand.equals(c) + " hc:  " +curCommand.hashCode() + " " + c.hashCode());
 		//}
+		WLCommand copyWithOutOptTermsCommand = curCommand.getCopyWithOutOptTermsCommand();
+		if(null != copyWithOutOptTermsCommand){			
+			return this.usedInCommandsSet.contains(curCommand) || this.usedInCommandsSet.contains(copyWithOutOptTermsCommand);
+		}
 		return this.usedInCommandsSet.contains(curCommand);
 	}
 	

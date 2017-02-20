@@ -798,6 +798,9 @@ public class StructH<H> extends Struct{
 		return contentList;
 	}
 	
+	/**
+	 * @return nameStr Empty string is no name specified.
+	 */
 	@Override
 	public String nameStr(){		
 		String name = struct.get("name");

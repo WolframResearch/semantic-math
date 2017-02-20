@@ -87,6 +87,7 @@ public class WLCommand implements Serializable{
 	/* Copied command with optional terms, 
 	 * only applicable for WLCommands with optional terms. */
 	private transient WLCommand copyWithOptTermsCommand;
+	private transient WLCommand copyWithOutOptTermsCommand;
 	
 	/**
 	 * Index of trigger word in posTermList.
@@ -920,6 +921,7 @@ public class WLCommand implements Serializable{
 		WLCommand newCommand = new WLCommand();
 		
 		curCommand.copyWithOptTermsCommand = newCommand;
+		newCommand.copyWithOutOptTermsCommand = curCommand;
 		newCommand.triggerWord = ((WLCommand)curCommand).triggerWord;
 		newCommand.commandsMap = curCommand.commandsMap; //ArrayListMultimap.create(((WLCommand)curCommand).commandsMap);
 		
@@ -934,6 +936,7 @@ public class WLCommand implements Serializable{
 		}*/
 		
 		newCommand.totalComponentCount = ((WLCommand)curCommand).totalComponentCount;
+		/*componentCounter should be 0, if copying to use for optional terms. */
 		newCommand.componentCounter = curCommand.componentCounter; //((WLCommand)curCommand).totalComponentCount;
 
 		newCommand.structsWithOtherHeadCount = curCommand.structsWithOtherHeadCount;
@@ -1405,7 +1408,7 @@ public class WLCommand implements Serializable{
 	/**
 	 * Adds new Struct to commandsMap.
 	 * @param curCommand	WLCommand we are adding PosTerm to
-	 * @param newSrtuct 	Pointer to a Struct
+	 * @param newSrtuct 	Pointer to a Struct to be added to curCommand
 	 * @param before Whether before triggerTerm
 	 * @return 				Whether the command is now satisfied
 	 * 
@@ -1414,6 +1417,14 @@ public class WLCommand implements Serializable{
 	 * If the name could be several optional ones, eg "in" or "of", so use regex .match("in|of")
 	 */
 	public static CommandSat addComponent(WLCommand curCommand, Struct newStruct, boolean before){
+		
+		/*Short circuit if command already satisfied, so newStruct is intended to be added for an optional term,
+		 * but newStruct has already been used in a non-optional term in the same command. */
+		if(curCommand.componentCounter < 1 && newStruct.usedInOtherCommandComponent(curCommand)){
+			//if(true) throw new IllegalStateException();
+			boolean hasOptionalTermsLeft = (curCommand.optionalTermsCount > 0);
+			return new CommandSat(true, hasOptionalTermsLeft, false);
+		}
 		
 		//be careful with type, could be conj_.
 		String structPreType = newStruct.type();
@@ -1570,10 +1581,7 @@ public class WLCommand implements Serializable{
 			int commandComponentCount = commandsCountMap.get(commandComponent);
 			commandsCountMap.put(commandComponent, commandComponentCount - 1);
 			
-			if(!newStruct.isStructA()){
-				newStruct.add_usedInCommand(curCommand);
-				//newStruct.set_usedInOtherCommandComponent(true);
-			}
+			newStruct.add_usedInCommand(curCommand);			
 			//use counter to track whether map is satisfied
 			if(!isOptionalTerm){
 				curCommand.componentCounter--;
@@ -1906,6 +1914,17 @@ public class WLCommand implements Serializable{
 	}
 	
 	/**
+	 * WLCommand copied from, the copy without optional terms. 
+	 * Only applicable for WLCommands with optional terms
+	 * in its posTermList.
+	 * @param curCommand
+	 * @return
+	 */
+	public WLCommand getCopyWithOutOptTermsCommand(){
+		return this.copyWithOutOptTermsCommand;
+	}
+	
+	/**
 	 * @param curCommand
 	 * @return posTermList of current command
 	 */
@@ -2155,8 +2174,9 @@ public class WLCommand implements Serializable{
 		if (obj == null){
 			return false;
 		}
-		if (!(obj instanceof WLCommand))
+		if (!(obj instanceof WLCommand)){
 			return false;
+		}
 		WLCommand other = (WLCommand) obj;
 		if (defaultOptionalTermsCount != other.defaultOptionalTermsCount)
 			return false;
@@ -2165,8 +2185,9 @@ public class WLCommand implements Serializable{
 		if (triggerWord == null) {
 			if (other.triggerWord != null)
 				return false;
-		} else if (!triggerWord.equals(other.triggerWord))
+		} else if (!triggerWord.equals(other.triggerWord)){
 			return false;
+		}
 		if (triggerWordIndex != other.triggerWordIndex){
 			return false;
 		}

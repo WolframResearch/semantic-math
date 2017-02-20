@@ -350,7 +350,9 @@ public class ParseToWLTree{
 					   copy as if its optional terms were not optional, so it's not done yet */
 					if(commandSat.hasOptionalTermsLeft() && commandRemoved){
 						//System.out.println("++++++++++add to wlCommandWithOptionalTermsList " + curCommand);
-						wlCommandWithOptionalTermsList.add(0, WLCommand.shallowWLCommandCopy(curCommand));
+						WLCommand shallowCopy = WLCommand.shallowWLCommandCopy(curCommand);
+						wlCommandWithOptionalTermsList.add(0, shallowCopy);
+						//System.out.println("********SSHHHHHALOOOOOOW COPY " + shallowCopy);
 					}					
 					/* DON'T delete this part yet! Feb/2017
 					 * if(curCommand.getDefaultOptionalTermsCount() == 0
@@ -452,8 +454,7 @@ public class ParseToWLTree{
 						curCommandSatWhole = commandSat.isCommandSat();		
 						//System.out.println("curCommandSatWhole " + curCommandSatWhole);
 						//hasOptionalTermsLeft = commandSat.hasOptionalTermsLeft();
-						isComponentAdded |= commandSat.isComponentAdded();
-						
+						isComponentAdded |= commandSat.isComponentAdded();						
 						beforeTriggerSat = commandSat.beforeTriggerSat();
 						
 						if(beforeTriggerSat 
@@ -989,7 +990,8 @@ public class ParseToWLTree{
 		struct.clear_WLCommandStrVisitedCount();		
 		struct.set_previousBuiltStruct(null);
 		struct.set_structToAppendCommandStr(null);
-		struct.clearUsedInCommandsSet();
+		//enabling this causes Structs to be added multiple times! 2/2017.
+		//struct.clearUsedInCommandsSet();
 		struct.clear_commandBuilt();
 		
 		if (struct.isStructA()) {

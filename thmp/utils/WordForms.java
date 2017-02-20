@@ -448,6 +448,7 @@ public class WordForms {
 		//if(true) throw new IllegalStateException("tex1: " + tex1 + " tex2 " + tex2);
 		Matcher tex1Matcher = LATEX_PATTERN.matcher(tex1);
 		Matcher tex2Matcher = LATEX_PATTERN.matcher(tex2);
+		//if(true) throw new IllegalStateException();
 		//strip $ $ signs.
 		if(tex1Matcher.find() && tex2Matcher.find()){
 			tex1 = tex1Matcher.group(1);

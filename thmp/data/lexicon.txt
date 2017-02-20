@@ -67,6 +67,7 @@ open adj
 open ent
 extension ent
 small adj
+reducible adj
 irreducible adj
 continuous adj
 differentiable adj

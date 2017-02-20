@@ -356,7 +356,7 @@ public class StructA<A, B> extends Struct{
 		//str += this.type.matches("conj_.*|disj_.*") ? this.type.split("_")[0] +  " " : "";		
 		//also wrap braces around prev1 and prev2 or the conj/disj
 		if(this.type.matches("conj_.*|disj_.*")){
-			String toAppend = this.type.matches("conj_.*") ? "Conj" : "Disj";
+			String toAppend = this.type.matches("conj_.*") ? "Conjunction" : "Disjunction";
 			//str += this.type.split("_")[0] + " ";
 			str += toAppend;
 			inConj = true;

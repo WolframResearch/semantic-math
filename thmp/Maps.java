@@ -431,7 +431,7 @@ public class Maps {
 			posPreMMap.put("each", "adj");
 			posPreMMap.put("this", "det");
 			posPreMMap.put("both", "det");
-			posPreMMap.put("no", "det");
+			posPreMMap.put("no", "det"); //<--better than "det"??
 
 			//articles
 			posPreMMap.put("a", "art");
@@ -484,6 +484,8 @@ public class Maps {
 			posPreMMap.put("as", "pre");
 			posPreMMap.put("such", "pre_COMP");
 			posPreMMap.put("such that", "cond");
+			//posPreMMap.put("except", "cond");
+			posPreMMap.put("except", "hyp");
 			posPreMMap.put("where", "hyp");
 			posPreMMap.put("which is", "hyp");
 			posPreMMap.put("which are", "hyp");

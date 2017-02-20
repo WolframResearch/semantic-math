@@ -552,7 +552,6 @@ public class ThmP1TestRun {
 			st = "this field is perfect";
 			st = "quadratic field lies above $Q$";
 			st = " let $X$ be a compact manifold and $\\cA$ an Azumaya bundle over $X.$";
-			st = "Then the {twisted $K$--theory $K^0(X,\\cA)$ is isomorphic to the Grothendieck group of Murray--von Neumann equivalence classes of projections in $C(X, \\K_\\cA)$";
 			st = "there is a quantization of a given isomorphism $b$ of the lifts of these b undles to $S^*(X/M)$ for which the null spaces";
 			st = "if a knot $J$ is obtained from $7_4$ by a single crossing change";
 			st = "If the linking number of $K_1$ and $S_1$ in $S^3$ is divisible by 15 then $J$ is not slice.";
@@ -560,7 +559,13 @@ public class ThmP1TestRun {
 			st = "then the corresponding curve $S_1$ in $M(7_4)$ is null homologous in $H_1(L(15,4),\\zz)$";
 			st = "The difference $u_s(K) - g_s(K)$ can be arbitrarily large.";
 			st = "we say $w$ is { relatively pseudo-Anosov} if the restriction of the map $w$ is pseudo-Anosov in $\\calm(U)$";
-			
+			st = "All words are relatively perfect except precisely words that are cyclically reducible to a non-zero power of $T_bT_a$";//<--parse except here!
+			st = "Let $w$ be a word in $T_a,T_b$ which is not cyclically reducible to a power of $T_a$ or $T_b$";
+			//st = "given a power in $T_a$ or $T_b$";	
+			st = "the twisted $K$--theory $K^0(X,\\cA)$ is isomorphic to the Grothendieck group of Neumann equivalence class of projections in $C(X, \\K_\\cA)$";
+			st = "the word $w$ can be cyclically reduced to $(T_aT_b)^n$ for some $n \\in \\mathbb{Z}$,"; //<--double adding!!
+			st = " The curves $a,b$ have algebraic intersection number $2$,";
+			st = "this is a nontrivial relation between Dehn twists in $\\mcg(S)$.";
 			//st = "take the log of $f$ over the field";
 			//st = "field lies above ring";
 			//st = "given a tower of algebraic field extensions";

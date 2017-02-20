@@ -145,7 +145,7 @@ public class WLCommandsList {
 				new PBuilder("pro", "we", WLCommand.PosTermType.NEGATIVE),
 				new PBuilder("Connective["),  new PBuilder("verb", null, true, true, false), new PBuilder("]"),
 				new PBuilder("symb|ent|noun|adj|prep|phrase", null, true, false, false).addRelationType(RelationType._IS),
-				new PBuilder(", {Qualifier->", "OPT"), 
+				new PBuilder(", {\"Qualifiers\"->", "OPT"), 
 				//the relation should incorporate several types. 
 				new PBuilder("prep", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}", "OPT")
 				));		
@@ -226,7 +226,7 @@ public class WLCommandsList {
 		
 		// trigger TriggerMathObj
 		//***action*** commands
-		wLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro|noun", null, true, false, false, //PosTermConnotation.DEFINED,
+		wLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro|noun|det", null, true, false, false, //PosTermConnotation.DEFINED,
 				RelationType._IS), 
 				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), new PBuilder("\\[Element]"),
 				//negative term, to stop command if encountered
@@ -236,7 +236,7 @@ public class WLCommandsList {
 				)); // PosTermConnotation.DEFINING,
 		
 		//e.g. "$X$ is connected", "$F$ is isomorphic to ..."
-		wLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro|noun", null, true, RelationType._IS), 
+		wLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro|noun|det", null, true, RelationType._IS), 
 				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), 
 				new PBuilder("~HasProperty~"), new PBuilder("adj|phrase|noun|prep", null, true, false, true, RelationType.IS_),
 				new PBuilder(", {Qualifier->", "OPT"), 
@@ -256,7 +256,7 @@ public class WLCommandsList {
 				new PBuilder("symb|ent|noun|phrase", null, true, false, false, RelationType.IS_), new PBuilder("}")
 				));*/
 		//e.g. "R is of finite type"
-		wLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro|noun", null, true, RelationType._IS), 
+		wLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro|noun|det", null, true, RelationType._IS), 
 				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), 
 				new PBuilder("~HasProperty~"), new PBuilder("pre", "of", false),
 				new PBuilder("noun|ent", null, true, false, true, RelationType.IS_) ));
@@ -264,7 +264,7 @@ public class WLCommandsList {
 		//negative of above
 		//WLCommandMapBuilder.put("is not", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is not|are not|be not, trigger",
 				//"Not[\\[Element]]", "symb|ent|adj|phrase, , true, TriggerMathObj" }));
-		wLCommandMapBuilder.put("is not", addCommand(new PBuilder("symb|ent|pro|noun", null, true, RelationType._IS), 
+		wLCommandMapBuilder.put("is not", addCommand(new PBuilder("symb|ent|pro|noun|det", null, true, RelationType._IS), 
 				new PBuilder("verb|vbs|be", "not is|is not|are not|not are|be not|not be", false, true, false), 
 				new PBuilder("Not[\\[Element]]"), new PBuilder("symb|ent|adj|phrase", null, true, false, true, RelationType.IS_) ));
 		
