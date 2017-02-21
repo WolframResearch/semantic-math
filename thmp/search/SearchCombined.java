@@ -55,16 +55,21 @@ public class SearchCombined {
 	public static class ThmHypPair{
 		private String thmStr;
 		private String hypStr;
+		private String srcFileName;
 		
-		public ThmHypPair(String thmStr_, String hypStr_){
+		public ThmHypPair(String thmStr_, String hypStr_, String srcFileName_){
 			this.thmStr = thmStr_;
 			this.hypStr = hypStr_;
+			this.srcFileName = srcFileName_;
 		}
 		
 		@Override
 		public String toString(){
 			StringBuilder sb = new StringBuilder(thmStr);
-			sb.insert(0, hypStr);
+			sb.append(" [").append(srcFileName).append("]");
+			if(!WordForms.getWhiteEmptySpacePattern().matcher(hypStr).matches()){
+				sb.append("\nHYP: ").append(hypStr);
+			}
 			return sb.toString();
 		}
 		
@@ -73,6 +78,9 @@ public class SearchCombined {
 		}
 		public String hypStr(){
 			return this.hypStr;
+		}
+		public String srcFileName(){
+			return this.srcFileName;
 		}
 	}
 	
@@ -99,9 +107,10 @@ public class SearchCombined {
 	public static List<ThmHypPair> thmListIndexToThmHypPair(List<Integer> highestThms){
 		List<ThmHypPair> bestCommonThmHypPairList = new ArrayList<ThmHypPair>();
 		for(Integer thmIndex : highestThms){
-			String hypOnly = TriggerMathThm2.getWebDisplayThmHypOnly(thmIndex);
+			/*String hypOnly = TriggerMathThm2.getWebDisplayThmHypOnly(thmIndex);
 			String thmOnly = TriggerMathThm2.getWebDisplayThmNoHyp(thmIndex);
-			ThmHypPair thmHypPair = new ThmHypPair(thmOnly, hypOnly);
+			ThmHypPair thmHypPair = new ThmHypPair(thmOnly, hypOnly);*/
+			ThmHypPair thmHypPair = TriggerMathThm2.getWedDisplayThmHypPair(thmIndex);
 			bestCommonThmHypPairList.add(thmHypPair);				
 		}
 		return bestCommonThmHypPairList;
@@ -319,14 +328,16 @@ public class SearchCombined {
 		}
 
 		List<ThmHypPair> bestCommonThmHypPairList = thmListIndexToThmHypPair(bestCommonVecs);
-		
-		//List<String> bestCommonThms = new ArrayList<String>();		
-		//this exists just for printing, should not use on PRD
-		for(int d : bestCommonVecs){
+			
+		/*for(int d : bestCommonVecs){
 			String thm = TriggerMathThm2.getWebDisplayThm(d);
-			System.out.println(thm);
-			//bestCommonThms.add(thm);
-		}		
+			System.out.println( thm);
+		}*/	
+		//this exists just for printing, should not use on PRD
+		/*for(ThmHypPair thmHypPair : bestCommonThmHypPairList){
+			System.out.println(thmHypPair);
+		}*/		
+		
 		return bestCommonThmHypPairList;
 	}
 	

@@ -92,7 +92,7 @@ public class ThmSearch {
 					+ "v =" + TermDocumentMatrix.MX_CONTEXT_NAME + "v;");
 			ml.discardAnswer();*/
 			ml.evaluate("Length[corMx[[1]]]");
-			System.out.println("corMx row dimension (num of words): " + ml.getExpr());
+			System.out.println("ThmSearch - corMx row dimension (num of words): " + ml.getExpr());
 		}catch(MathLinkException e){
 			msg = "MathLinkException when loading mx file!";
 			logger.error(msg + e);
@@ -603,10 +603,12 @@ public class ThmSearch {
 	private static String getSystemMxFilePath(){
 		String pathToMx = "src/thmp/data/termDocumentMatrixSVD.mx";
 		//mx file also depends on the system!		
-		String OS_name = System.getProperty("os.name");
+		//but only 32-bit vs 64-bit, not OS. Should check bit instead.
+		
+		/*String OS_name = System.getProperty("os.name");
 		if(OS_name.equals("Mac OS X")){
 			pathToMx = "src/thmp/data/termDocumentMatrixSVDmac.mx";
-		}
+		}*/
 		return pathToMx;
 	}
 	

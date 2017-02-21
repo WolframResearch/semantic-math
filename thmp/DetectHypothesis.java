@@ -70,6 +70,7 @@ public class DetectHypothesis {
 	//files to serialize theorem words to.
 	private static final String allThmWordsMapSerialFileStr = "src/thmp/data/allThmWordsMap.dat";
 	private static final String allThmWordsMapStringFileStr = "src/thmp/data/allThmWordsMap.txt";
+	//not used by next runs, but nice to have the list for inspection.
 	private static final String allThmWordsSerialFileStr = "src/thmp/data/allThmWordsList.dat";
 	private static final String allThmWordsStringFileStr = "src/thmp/data/allThmWordsList.txt";
 	
@@ -182,22 +183,25 @@ public class DetectHypothesis {
 		
 		//thmStr, with definition strings prepended.
 		private String thmWithDefStr;
+		//name of source file from which thm is extracted.
+		private String srcFileName;
 		
 		private List<VariableDefinition> definitionList = new ArrayList<VariableDefinition>();
 		
 		public DefinitionListWithThm(String thmStr, List<VariableDefinition> definitionList,
-				String thmWithDefStr){
+				String thmWithDefStr, String srcFileName_){
 			this.thmStr = thmStr;
 			this.definitionList = definitionList;
 			this.thmWithDefStr = thmWithDefStr;
+			this.srcFileName = srcFileName_;
 		}
 		
 		@Override
 		public String toString(){
-			//initial capacity is average number of characters.
+			//initial capacity should be average number of characters.
 			StringBuilder sb = new StringBuilder(250);
 			sb.append("- definitionList: ").append(definitionList)
-				.append("thmWithDefStr: -").append(thmWithDefStr);
+				.append("thmStr: -").append(thmStr);
 			return sb.toString();
 		}
 
@@ -213,6 +217,13 @@ public class DetectHypothesis {
 		 */
 		public String getThmStr() {
 			return thmStr;
+		}
+		
+		/**
+		 * @return name of source file from which thm is extracted.
+		 */
+		public String getSrcFileName() {
+			return srcFileName;
 		}
 		
 		/**
@@ -541,10 +552,10 @@ public class DetectHypothesis {
 				//System.out.println("newThmSB: " + newThmSB);
 				//System.out.println("!---------! line: " + line+" thmEndPattern: " + thmEndPattern);
 				
-				newThmSB.append(" " + fileName);
+				//newThmSB.append(" " + fileName);
 				allThmsStrList.add(newThmSB.toString() + "\n\n");
 				//parse hyp and thm
-				processParseHypThm(newThmSB, parseState, stats, definitionListWithThmList);
+				processParseHypThm(newThmSB, parseState, stats, definitionListWithThmList, fileName);
 				continue;
 			}else if(END_DOCUMENT_PATTERN.matcher(line).matches()){
 				parseState.parseRunGlobalCleanUp();
@@ -591,7 +602,7 @@ public class DetectHypothesis {
 	 * @param definitionListWithThmList
 	 */
 	private static void processParseHypThm(StringBuilder newThmSB, ParseState parseState, Stats stats, 
-			List<DefinitionListWithThm> definitionListWithThmList){
+			List<DefinitionListWithThm> definitionListWithThmList, String srcFileName){
 		//if(true) throw new IllegalStateException(newThmSB.toString());
 		
 		// process here, return two versions, one for bag of words, one
@@ -614,7 +625,7 @@ public class DetectHypothesis {
 		//if contained in local map, should be careful about when to append map.
 		
 		//append to newThmSB additional hypotheses that are applicable to the theorem.				
-		DefinitionListWithThm thmDef = appendHypothesesAndParseThm(thm, parseState, stats);
+		DefinitionListWithThm thmDef = appendHypothesesAndParseThm(thm, parseState, stats, srcFileName);
 		
 		definitionListWithThmList.add(thmDef);
 		//System.out.println("___-------++++++++++++++" + thmDef);
@@ -715,7 +726,7 @@ public class DetectHypothesis {
 	 * @param parseState
 	 */
 	private static DefinitionListWithThm appendHypothesesAndParseThm(String thmStr, ParseState parseState, 
-			Stats stats){
+			Stats stats, String srcFileName){
 		
 		//ListMultimap<VariableName, VariableDefinition> variableNamesMMap = parseState.getGlobalVariableNamesMMap();
 		//String thmStr = thmSB.toString();
@@ -739,8 +750,7 @@ public class DetectHypothesis {
 			//the case of entering math mode with \[ !
 			if(curChar == '$'){
 				if(!mathMode){
-					mathMode = true;
-					
+					mathMode = true;					
 				}else{
 					mathMode = false;
 					//process the latexExpr, first pick out the variables,
@@ -769,7 +779,7 @@ public class DetectHypothesis {
 		
 		thmWithDefSB.append(thmStr);
 		DefinitionListWithThm defListWithThm = 
-				new DefinitionListWithThm(thmStr, variableDefinitionList, thmWithDefSB.toString());
+				new DefinitionListWithThm(thmStr, variableDefinitionList, thmWithDefSB.toString(), srcFileName);
 		
 		//relational and context vecs can't be null, since ImmutableList cannot contain null elements
 		BigInteger relationalContextVec = parseState.getRelationalContextVec();

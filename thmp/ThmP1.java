@@ -255,7 +255,7 @@ public class ThmP1 {
 			this.parsedStr = parsedStr;
 			this.score = score;
 			this.form = form;
-			//toString has to be within several constructor, because GSON needs the private field.
+			//toString has to be within several constructor, because GSON needs the private field for web.
 			if(toStringForm){
 				this.stringForm = this.toString();
 			}
@@ -367,8 +367,13 @@ public class ThmP1 {
 					//return parseStructType + " :>" + this.parsedStr + ", " + String.valueOf(score) + numUnitsSB;
 				}				
 			}else{
-				return "<|" + this.form.toUpperCase() + "->" + this.parsedStr + ", \"Scores\"->{" + String.valueOf(score) + numUnitsSB
+				if("ONE TREE".equals(this.form)){					
+					return this.parsedStr;
+					//return parseStructType + " :>" + this.parsedStr + numUnitsSB;
+				}else{
+					return "<|" + this.form.toUpperCase() + "->" + this.parsedStr + ", \"Scores\"->{" + String.valueOf(score) + numUnitsSB
 						+ "}|>";
+				}
 			}
 		}
 	}
@@ -3782,8 +3787,6 @@ public class ThmP1 {
 			
 			// create new StructA and put in mx, along with score for
 			// struct1_struct2 combo
-			//double parentDownPathScore = struct1.maxDownPathScore() * struct2.maxDownPathScore() * newScore;
-			//int parentNumUnits = struct1.numUnits() + struct2.numUnits();
 			
 			NodeType struct1Type = struct1.isStructA() ? NodeType.STRUCTA : NodeType.STRUCTH;
 			NodeType struct2Type = struct2.isStructA() ? NodeType.STRUCTA : NodeType.STRUCTH;

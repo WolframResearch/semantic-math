@@ -79,13 +79,14 @@ public class ThmInput {
 	private static final Pattern ELIMINATE_PATTERN = Pattern
 			.compile("\\\\fml|\\\\ofml|\\\\begin\\{enumerate\\}|\\\\end\\{enumerate\\}"					
 					+ "|\\\\begin\\{slogan\\}|\\\\end\\{slogan\\}|\\\\sbsb|\\\\cat|\\\\bs"
-					+ "|\\\\section\\{(?:[^}]*)\\}\\s*|\\\\noindent|\\\\begin\\{abstract\\}|\\\\cite\\{[^}]+\\}|\\\\cite\\[[^\\]]+\\]");
+					+ "|\\\\section\\{(?:[^}]*)\\}\\s*|\\\\noindent|\\\\begin\\{abstract\\}|\\\\cite\\{[^}]+\\}|\\\\cite\\[[^\\]]+\\]",
+					Pattern.CASE_INSENSITIVE);
 	private static final Pattern ELIMINATE_BEGIN_END_THM_PATTERN = Pattern
 			.compile("\\\\begin\\{def(?:[^}]*)\\}\\s*|\\\\begin\\{lem(?:[^}]*)\\}\\s*|\\\\begin\\{th(?:[^}]*)\\}\\s*"
 					+ "|\\\\begin\\{pr(?:[^}]*)\\}\\s*|\\\\begin\\{proclaim(?:[^}]*)\\}\\s*|\\\\begin\\{co(?:[^}]*)\\}\\s*"
 					+ "|\\\\end\\{def(?:[^}]*)\\}\\s*|\\\\end\\{lem(?:[^}]*)\\}\\s*|\\\\end\\{th(?:[^}]*)\\}\\s*"
 					+ "|\\\\end\\{pr(?:[^}]*)\\}\\s*|\\\\end\\{proclaim(?:[^}]*)\\}\\s*|\\\\end\\{co(?:[^}]*)\\}\\s*"
-					+ "|\\\\end\\{pr(?:[^}]*)\\}\\s*");
+					+ "|\\\\end\\{pr(?:[^}]*)\\}\\s*", Pattern.CASE_INSENSITIVE);
 	
 	private static final Pattern ITEM_PATTERN = Pattern.compile("\\\\item");
 

@@ -18,6 +18,7 @@ import com.google.common.collect.Multimap;
 
 import thmp.Maps;
 import thmp.ThmP1;
+import thmp.search.SearchCombined.ThmHypPair;
 import thmp.search.SearchWordPreprocess.WordWrapper;
 import thmp.utils.FileUtils;
 import thmp.utils.GatherRelatedWords;
@@ -46,6 +47,8 @@ public class TriggerMathThm2 {
 	private static final List<String> webDisplayThmList;
 	private static final ImmutableList<String> webDisplayThmHypOnlyList;
 	private static final ImmutableList<String> webDisplayThmNoHypList;
+	private static final ImmutableList<String> webDisplayThmSrcFileList;
+	private static final ImmutableList<ThmHypPair> webDisplayThmHypPairList;
 	
 	/**
 	 * Dictionary of keywords -> their index/row number in mathObjMx.
@@ -159,7 +162,9 @@ public class TriggerMathThm2 {
 		
 		webDisplayThmList = CollectThm.ThmList.allThmsWithHypList();
 		webDisplayThmHypOnlyList = CollectThm.ThmList.allHypList();
+		webDisplayThmSrcFileList = CollectThm.ThmList.allThmSrcFileList();
 		webDisplayThmNoHypList = CollectThm.ThmList.allThmsNoHypList();
+		webDisplayThmHypPairList = CollectThm.ThmList.allThmHypPairList();
 		/*for(int i = 0; i < thmWordsList.size(); i++){
 			System.out.println(mathObjList.get(i));
 			System.out.println(thmWordsList.get(i));
@@ -716,6 +721,16 @@ public class TriggerMathThm2 {
 	public static String getWebDisplayThmNoHyp(int index){
 		//System.out.print("Thm index: " + index + "\t");
 		return webDisplayThmNoHypList.get(index);
+	}
+	
+	public static String getWebDisplayThmSrcFile(int index){
+		//System.out.print("Thm index: " + index + "\t");
+		return webDisplayThmSrcFileList.get(index);
+	}
+	
+	public static ThmHypPair getWedDisplayThmHypPair(int index){
+		//System.out.print("Thm index: " + index + "\t");
+		return webDisplayThmHypPairList.get(index);
 	}
 	/*public static void main(String[] args){
 		System.out.print(keywordDict.size());

@@ -37,6 +37,7 @@ import thmp.ParseState.VariableDefinition;
 import thmp.ParsedExpression;
 import thmp.ProcessInput;
 import thmp.ThmInput;
+import thmp.search.SearchCombined.ThmHypPair;
 import thmp.search.SearchWordPreprocess.WordWrapper;
 import thmp.utils.WordForms.WordFreqComparator;
 import thmp.utils.FileUtils;
@@ -444,6 +445,7 @@ public class CollectThm {
 		 * so we don't parse everything again at every server initialization.
 		 * @return
 		 */
+		@Deprecated
 		@SuppressWarnings("unchecked")		
 		private static List<String> extractWordsList() {	
 			String allThmWordsSerialFileStr = "src/thmp/data/allThmWordsList.dat";
@@ -1096,6 +1098,8 @@ public class CollectThm {
 		private static final ImmutableList<String> allThmsNoHypList;
 		//just hyp. same order as in allThmsWithHypList.
 		private static final ImmutableList<String> allHypList;
+		private static final ImmutableList<String> allThmSrcFileList;
+		private static final ImmutableList<ThmHypPair> allThmHypPairList;
 		
 		private static final ImmutableList<BigInteger> allThmsRelationVecList;
 		private static final ImmutableList<String> allThmsContextVecList;
@@ -1129,15 +1133,19 @@ public class CollectThm {
 			List<String> allThmsWithHypPreList = new ArrayList<String>();
 			List<String> allThmsNoHypPreList = new ArrayList<String>();
 			List<String> allHypPreList = new ArrayList<String>();
+			List<String> allThmSrcFilePreList = new ArrayList<String>();
 			List<BigInteger> relationVecPreList = new ArrayList<BigInteger>();
 			List<String> contextVecPreList = new ArrayList<String>();
 			
 			fillListsFromParsedExpressions(parsedExpressionsList, allThmsWithHypPreList, contextVecPreList, relationVecPreList,
-					allThmsNoHypPreList, allHypPreList);			
+					allThmsNoHypPreList, allHypPreList, allThmSrcFilePreList);			
 			
 			allThmsWithHypList = ImmutableList.copyOf(allThmsWithHypPreList);
 			allThmsNoHypList = ImmutableList.copyOf(allThmsNoHypPreList);
 			allHypList = ImmutableList.copyOf(allHypPreList);
+			allThmSrcFileList = ImmutableList.copyOf(allThmSrcFilePreList);
+			allThmHypPairList = createdThmHypPairListFromLists(allThmsNoHypList, allHypList, allThmSrcFileList);
+			
 			allThmsContextVecList = ImmutableList.copyOf(contextVecPreList);
 			allThmsRelationVecList = ImmutableList.copyOf(relationVecPreList);
 			
@@ -1215,6 +1223,20 @@ public class CollectThm {
 			gather_skip_gram_words = true;
 		}
 		
+		private static ImmutableList<ThmHypPair> createdThmHypPairListFromLists(ImmutableList<String> allThmsNoHypList_,
+				ImmutableList<String> allHypList_, ImmutableList<String> allThmSrcFileList_) {
+			
+			List<ThmHypPair> thmpHypPairList = new ArrayList<ThmHypPair>();
+			int allHypListSz = allHypList_.size();
+			assert allThmsNoHypList_.size() == allHypListSz && allHypListSz == allThmSrcFileList_.size();
+			
+			for(int i = 0; i < allHypListSz; i++){
+				ThmHypPair thmHypPair = new ThmHypPair(allThmsNoHypList_.get(i), allHypList_.get(i), allThmSrcFileList_.get(i));
+				thmpHypPairList.add(thmHypPair);
+			}			
+			return ImmutableList.copyOf(thmpHypPairList);
+		}
+
 		public static boolean gather_skip_gram_words(){
 			return gather_skip_gram_words;
 		}
@@ -1227,8 +1249,8 @@ public class CollectThm {
 		private static List<ParsedExpression> extractParsedExpressionList() {
 			//List<ParsedExpression> parsedExpressionsList;
 			//String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
-			//String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
-			String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionListTemplate.dat";
+			String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
+			//String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionListTemplate.dat";
 			
 			if(null != servletContext){
 				InputStream parsedExpressionListInputStream = servletContext.getResourceAsStream(parsedExpressionSerialFileStr);
@@ -1250,20 +1272,22 @@ public class CollectThm {
 		 */
 		private static void fillListsFromParsedExpressions(List<ParsedExpression> parsedExpressionsList, 
 				List<String> allThmsWithHypList, List<String> contextVecList, List<BigInteger> relationVecList,
-				List<String> allThmsNoHypPreList, List<String> allHypPreList){
+				List<String> allThmsNoHypPreList, List<String> allHypPreList, List<String> allThmSrcFilePreList){
 			//System.out.println("Should be list: " + parsedExpressionsList);
 			for(ParsedExpression parsedExpr : parsedExpressionsList){
 				DefinitionListWithThm defListWithThm = parsedExpr.getDefListWithThm();
 				//get original thm and list of definitions separately, for displaying them separately on the web.
 				allThmsNoHypPreList.add(defListWithThm.getThmStr());
-				//build the definition string here, could be earlier in DetectHypothesis.java,
-				//but in future may want to do different things with the list elements, so better to keep list form.
+				/* Build the definition string here, could be earlier in DetectHypothesis.java,
+				 * but in future may want to do different things with the list elements, so better to keep list form.*/
 				StringBuilder defListSB = new StringBuilder(200);
 				for(VariableDefinition def : defListWithThm.getDefinitionList()){
 					defListSB.append(def.getOriginalDefinitionSentence()).append('\n');
 				}
 				allHypPreList.add(defListSB.toString());
 				allThmsWithHypList.add(defListWithThm.getThmWithDefStr());
+				allThmSrcFilePreList.add(defListWithThm.getSrcFileName());
+				//allThmSrcFilePreList.add("");
 				contextVecList.add(parsedExpr.contextVecStr());
 				relationVecList.add(parsedExpr.getRelationVec());
 			}
@@ -1315,6 +1339,22 @@ public class CollectThm {
 		 */
 		public static ImmutableList<String> allHypList(){
 			return allHypList;
+		}
+		
+		/**
+		 * Get source file names.
+		 * @return an immutable list
+		 */
+		public static ImmutableList<String> allThmSrcFileList(){
+			return allThmSrcFileList;
+		}
+		
+		/**
+		 * Get source file names.
+		 * @return an immutable list
+		 */
+		public static ImmutableList<ThmHypPair> allThmHypPairList(){
+			return allThmHypPairList;
 		}
 		
 		/**
