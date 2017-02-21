@@ -116,6 +116,7 @@ public class StructA<A, B> extends Struct{
 		this.structList = structList;
 		this.score = score;
 		this.maxDownPathScore = downPathScore;
+		//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
 		this.numUnits = numUnits;
 		//this.mxPathNodeList = new ArrayList<MatrixPathNode>();
 	}
@@ -275,7 +276,8 @@ public class StructA<A, B> extends Struct{
 				int commandNumUnits = WLCommand.commandNumUnits(composedCommand);
 				if(!this.type.equals("pre")){
 					WLCommand.increment_commandNumUnits(curCommand, commandNumUnits);
-				}				
+					System.out.println("increment_commandNumUnits : numUnits " + commandNumUnits + " composedCommand: " + composedCommand); 
+				}
 			}
 			//been built into one command already
 			if(null == this.commandBuilt){
@@ -295,16 +297,24 @@ public class StructA<A, B> extends Struct{
 			
 			StringBuilder fullContentSB = new StringBuilder((String)this.prev1);
 			//System.out.println("*********prev1 type: " + type());
-			//if(this.type.equals("pre")){
+			if(this.type.equals("det") || this.type.equals("pro")){				
+				if(!prev2.equals("")){
+					fullContentSB.insert(0, "Reference[\"").append("\", \"").append((String)this.prev2).append("\"]");
+				}else{
+					fullContentSB.insert(0, "Reference[\"").append("\"]");
+				}
+			}else{
+				//quotes around prev1 string
 				fullContentSB.insert(0, "\"").append("\"");
-			//}
-			if(this.type.equals("adj")){
-				fullContentSB.insert(0, "Property[").append("]");
-			}
-			if(PREV2_TYPE.equals(NodeType.STR) && !prev2.equals("")){
-				fullContentSB.insert(0, "[").append(", ").append((String)this.prev2).append("]");
-				//fullName = "[" + fullName + ", " + (String)this.prev2 + "]";
-			}
+				if(this.type.equals("adj")){
+					fullContentSB.insert(0, "MathProperty[").append("]");
+				}else if(prev2.equals("")){
+					fullContentSB.insert(0, "[").append("]");
+				}
+				if(!prev2.equals("")){
+					fullContentSB.insert(0, "[").append(", \"").append((String)this.prev2).append("\"]");
+				}
+			}			
 			//been built into one command already
 			//this.WLCommandStrVisitedCount++;
 			if(null == this.commandBuilt){
@@ -312,6 +322,12 @@ public class StructA<A, B> extends Struct{
 				this.WLCommandStrVisitedCount++;
 			}else if(!curCommand.equals(this.commandBuilt)){
 				this.WLCommandStrVisitedCount++;
+			}
+			
+			boolean added = WLCommand.increment_commandNumUnits(curCommand, this);		
+			if(added){
+				//fullContentSB.append(" ADDED ");
+				//System.out.println(" THIS  " + this + " ADDED for command " + curCommand);
 			}
 			return fullContentSB.toString();
 		}else{		
@@ -337,12 +353,17 @@ public class StructA<A, B> extends Struct{
 		}else if(!curCommand.equals(this.commandBuilt)){
 			this.WLCommandStrVisitedCount++;
 		}
+		StringBuilder tempSB = new StringBuilder();
 		//don't include prepositions for spanning purposes, since prepositions are almost 
 		//always counted if its subsequent entity is, but counting it gives false high span
 		//scores, especially compared to the case when they are absorbed into a StructH, in
 		//which case they are not counted.
 		if(curCommand != null && !this.type.equals("pre")){ 
-			WLCommand.increment_commandNumUnits(curCommand, this);
+			boolean added = WLCommand.increment_commandNumUnits(curCommand, this);
+			if(added){
+				//tempSB.append(" ADDED ");
+				//System.out.println("ADDED for command " + curCommand + " THIS  " + this);
+			}
 		}
 		//whether to wrap braces around the subcontent, to group terms together.
 		//wrap if type is phrase, etc
@@ -350,8 +371,7 @@ public class StructA<A, B> extends Struct{
 		boolean inConj = false;
 		String str = "";
 		//tempStr to add to
-		//String tempStr = "";
-		StringBuilder tempSB = new StringBuilder();
+		//String tempStr = "";		
 		
 		//str += this.type.matches("conj_.*|disj_.*") ? this.type.split("_")[0] +  " " : "";		
 		//also wrap braces around prev1 and prev2 or the conj/disj
@@ -414,7 +434,7 @@ public class StructA<A, B> extends Struct{
 				List<WLCommandWrapper> prev2WrapperList = ((Struct)prev2).WLCommandWrapperList();
 				 if(prev2WrapperList == null){
 					//System.out.println("######prev2: " + prev2);
-					String prev2Str = ((Struct) prev2).simpleToString2(includeType, curCommand);
+					String prev2Str = ((Struct) prev2).simpleToString(includeType, curCommand);
 					if(!prev2Str.matches("\\s*")){
 						if(!tempSB.toString().matches("\\s*")){ //tempStr += ", ";
 							tempSB.append(", ");

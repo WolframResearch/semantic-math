@@ -649,8 +649,7 @@ public class ParseToWLTree{
 						ChildWLCommandListIter.remove();
 						//System.out.println("\n***COMMAND REMOVED from child: " + struct);						
 					}				
-				}
-				
+				}				
 				ithChild.set_parentStruct(struct);
 				buildWLCommandTreeDfs(ithChild, parsedSB, numSpaces, structList, WLCommandList, printTiers, parseState);
 			}
@@ -830,7 +829,7 @@ public class ParseToWLTree{
 					}
 				}*/
 				ParsedPair pair = new ParsedPair(curWrapper.wlCommandStr, //null, 
-						struct.maxDownPathScore(), 
+						struct.maxDownPathScore(),
 						struct.numUnits(), WLCommand.commandNumUnits(curCommand), curCommand);
 				//partsMap.put(type, curWrapper.WLCommandStr);	
 				partsMap.put(parseStructType, pair);
@@ -886,9 +885,7 @@ public class ParseToWLTree{
 		//boolean contextVecConstructed = false;
 		
 		//ParseStruct curParseStruct = headParseStruct;
-		/*if(struct.type().equals("assert")){
-			System.out.println("^^^^^^" + struct + " " + struct.WLCommandStrVisitedCount());
-		}*/
+		
 		//ArrayListMultimap.create()
 		//System.out.println("^^^^struct.WLCommandStrVisitedCount() " +struct.WLCommandStrVisitedCount()
 			//+" for struct: " + struct +" ^^^WLCommandWrapperList: "+ struct.WLCommandWrapperList());
@@ -905,8 +902,7 @@ public class ParseToWLTree{
 			} */
 			//collects the built WLCommand strings.
 			contextVecConstructed = appendWLCommandStr(struct, curParseStruct, parsedSB, partsMMap, curStructContextVec,
-					contextVecConstructed, parseState);			
-			
+					contextVecConstructed, parseState);
 			shouldPrint = false;
 			//reset WLCommandStr back to null, so next 
 			//dfs path can create it from scratch

@@ -43,8 +43,8 @@ public class ParseTreeToVec {
 	
 	static{
 		if(Searcher.SearchMetaData.gatheringDataBool()){
-			//Sets the dictionary to the mode for producing context vecs from data source to be searched.
-			// e.g. in DetectHypothesis.java.
+			/* Sets the dictionary to the mode for producing context vecs from data source to be searched.
+			 * e.g. in DetectHypothesis.java. */
 			contextKeywordIndexDict = contextKeywordIndexThmsDataDict;
 			GATHERING_DATA_BOOL = true;
 		}else{

@@ -571,6 +571,7 @@ public class StructH<H> extends Struct{
 		System.out.println("(((((((((children: " + children);
 		
 		int childrenSize = children.size();
+		int nontrivialChildrenStrCounter = 0;
 		if(childrenSize > 0){			
 			StringBuilder childSb = new StringBuilder();
 			for(int i = 0; i < childrenSize; i++){	
@@ -588,11 +589,11 @@ public class StructH<H> extends Struct{
 				//including the relation twice, eg in case child is of type "prep"
 				//if this child has been used in another component of the same command.				
 				if(!child.usedInOtherCommandComponent(curCommand)){
-					String childStr = child.simpleToString(includeType, curCommand);
-						
+					
+					String childStr = child.simpleToString(includeType, curCommand);						
 					if(!childStr.matches("\\s*")){
 					//System.out.println("Childstr " + childStr);
-					
+						nontrivialChildrenStrCounter++;
 						//don't want "symb", e.g. $G$ with $H$ prime. 
 						childRelationStr = (child.isStructA() && !child.type().equals("symb") 
 								//e.g. "field which is perfect", don't want "which"								
@@ -601,7 +602,7 @@ public class StructH<H> extends Struct{
 						
 						//System.out.println("\n **^^^*** childRelation" + childRelationStr);
 						if(childRelationStr.equals("")){
-							childSb.append("{" + childStr + "}");
+							childSb.append("{").append(childStr).append("}");
 							if(i < childrenSize-1){
 								childSb.append(", ");
 							}
@@ -614,12 +615,14 @@ public class StructH<H> extends Struct{
 					}
 				}
 			}
-
 			if(0 < childSb.length()){
-				sb.append(", \"Qualifiers\" -> ");
-				sb.append(childSb);
-			}
-			
+				if(nontrivialChildrenStrCounter > 1){
+					sb.append(", \"Qualifiers\" -> {").append(childSb).append("}");
+				}else{
+					sb.append(", \"Qualifiers\" -> ").append(childSb);
+				}				
+				//sb.append(childSb);
+			}			
 		}
 		if(includeType){ 
 			sb.append("]");

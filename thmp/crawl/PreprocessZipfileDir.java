@@ -26,6 +26,7 @@ public class PreprocessZipfileDir {
 		//create absolute path from relative path.
 		//srcBasePath contains all the .gz files.
 		String srcBasePath = System.getProperty("user.dir") + "/" + args[0];
+		System.out.println("PreprocessZipFile - file dir: " + System.getProperty("user.dir") + "/" + args[0]);
 		
 		//get file names
 		File dir = new File(srcBasePath);

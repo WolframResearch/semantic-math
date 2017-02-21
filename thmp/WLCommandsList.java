@@ -238,8 +238,8 @@ public class WLCommandsList {
 		//e.g. "$X$ is connected", "$F$ is isomorphic to ..."
 		wLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro|noun|det", null, true, RelationType._IS), 
 				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), 
-				new PBuilder("~HasProperty~"), new PBuilder("adj|phrase|noun|prep", null, true, false, true, RelationType.IS_),
-				new PBuilder(", {Qualifier->", "OPT"), 
+				new PBuilder("~HasProperty~"), new PBuilder("adj|phrase|noun|prep", null, true, false, false, RelationType.IS_),
+				new PBuilder(", {\"Qualifier\"->", "OPT"), 
 				new PBuilder("prep", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}", "OPT")
 				)); 
 		
@@ -259,7 +259,7 @@ public class WLCommandsList {
 		wLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro|noun|det", null, true, RelationType._IS), 
 				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), 
 				new PBuilder("~HasProperty~"), new PBuilder("pre", "of", false),
-				new PBuilder("noun|ent", null, true, false, true, RelationType.IS_) ));
+				new PBuilder("noun|ent", null, true, false, false, RelationType.IS_) ));
 		
 		//negative of above
 		//WLCommandMapBuilder.put("is not", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is not|are not|be not, trigger",

@@ -1599,7 +1599,7 @@ public class WLCommand implements Serializable{
 					optionalTermsGroupCountMap.put(optionalGroupNum, curCount-1);
 				}
 			}
-			increment_commandNumUnits(curCommand, newStruct);
+			
 			curCommand.lastAddedCompIndex = i;
 			componentAdded = true;			
 			boolean hasOptionalTermsLeft = (curCommand.optionalTermsCount > 0);
@@ -1851,7 +1851,6 @@ public class WLCommand implements Serializable{
 		curCommand.commandsCountMap.put(commandComponent, commandComponentCount - 1);
 		//use counter to track whether map is satisfied
 		curCommand.componentCounter--;
-		increment_commandNumUnits(curCommand, newStruct);
 		
 		boolean hasOptionalTermsLeft = (curCommand.optionalTermsCount > 0);
 		boolean componentAdded = true;
@@ -1976,16 +1975,18 @@ public class WLCommand implements Serializable{
 	}
 	
 	/**
-	 * Increment the commandNumUnits by 1, if newStruct is a leaf node.
+	 * Increment the commandNumUnits by 1, only if newStruct is a leaf node, to avoid double counting
+	 * per Struct.
 	 * @param curCommand
 	 */
-	public static void increment_commandNumUnits(WLCommand curCommand, Struct newStruct){
-		//instanceof is slow!
-		if(newStruct.prev1() instanceof String && !(newStruct.prev2() instanceof Struct) 
-				|| newStruct instanceof StructH){
-			curCommand.commandNumUnits++;
-			
+	public static boolean increment_commandNumUnits(WLCommand curCommand, Struct newStruct){
+		if(!newStruct.isStructA() 
+			|| newStruct.prev1NodeType().equals(NodeType.STR) && newStruct.prev2NodeType().equals(NodeType.STR)){
+			curCommand.commandNumUnits++;	
+			//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
+			return true;
 		}
+		return false;
 	}
 	
 	/**
@@ -1994,7 +1995,8 @@ public class WLCommand implements Serializable{
 	 * @param numUnits	Amount to increment numUnits by.
 	 */
 	public static void increment_commandNumUnits(WLCommand curCommand, int numUnits){
-			curCommand.commandNumUnits += numUnits;
+		curCommand.commandNumUnits += numUnits;
+			
 	}
 	
 	/*public static Struct headStruct(WLCommand curCommand){

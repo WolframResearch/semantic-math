@@ -226,14 +226,14 @@ public class ThmP1 {
 		//long form or WL-like expr. Useful for "under the hood"
 		//can be "long" or "wl". Switch to an enum!
 		private String form;
-		private static final String DEFAULT_FORM_STR = "WL";
+		private static final String DEFAULT_FORM_STR = "\"WL\"";
 		//parsedExprSz used to group parse components together 
 		//when full parse is unavailable
 		//private int counter;
 		//number of units in this parse, as in numUnits (leaf nodes) in Class Struct.
-		//same as commandNumUnits when ParseStructType is NONE.
+		//same as commandNumUnits when ParseStructType is NONE. Lower is better.
 		private int numUnits;
-		//the commandNumUnits associated to the WLCommand that gives this parsedStr.
+		/*the commandNumUnits associated to the WLCommand that gives this parsedStr. Higher is better.*/
 		private int commandNumUnits;
 		//the WLCommand associated to this ParsedPair.
 		//Don't serialize wlCommand! Will introduce infinite recursion
@@ -350,8 +350,8 @@ public class ThmP1 {
 			
 			StringBuilder numUnitsSB = new StringBuilder(150);
 			/*As reference, lower numUnits are better, and higher commandNumUnits are better.*/
-			numUnitsSB.append(numUnits == 0 ? "" : "  " + String.valueOf(this.numUnits));
-			numUnitsSB.append(commandNumUnits == 0 ? "" : "  " + String.valueOf(this.commandNumUnits));
+			numUnitsSB.append(numUnits == 0 ? "" : ",  " + String.valueOf(this.numUnits));
+			numUnitsSB.append(commandNumUnits == 0 ? "" : ",  " + String.valueOf(this.commandNumUnits));
 			//String numUnitsString = numUnits == 0 ? "" : "  " + String.valueOf(this.numUnits);
 			//numUnitsString += commandNumUnits == 0 ? "" : "  " + String.valueOf(this.commandNumUnits);
 			if(parseStructType != null){
@@ -359,15 +359,15 @@ public class ThmP1 {
 				//case to not display the score and score if on web, for the "ONE TREE" web form. 
 				//Don't hardcode "one tree" here! Use SB!
 				if("ONE TREE".equals(this.form)){					
-					return "<|" + this.form.toUpperCase() + "->" + parseStructType + " :>" + this.parsedStr + "|>";
+					return parseStructType + " :>" + this.parsedStr;
 					//return parseStructType + " :>" + this.parsedStr + numUnitsSB;
 				}else{
-					return "<|" + this.form.toUpperCase() + "->" + parseStructType + " :>" + this.parsedStr + ", SCORES->{" 
+					return "<|" + this.form.toUpperCase() + "->" + parseStructType + " :>" + this.parsedStr + ", \"Scores\"->{" 
 							+ String.valueOf(score) + numUnitsSB + "}|>";
 					//return parseStructType + " :>" + this.parsedStr + ", " + String.valueOf(score) + numUnitsSB;
 				}				
 			}else{
-				return "<|" + this.form.toUpperCase() + "->" + this.parsedStr + ", SCORES->{" + String.valueOf(score) + numUnitsSB
+				return "<|" + this.form.toUpperCase() + "->" + this.parsedStr + ", \"Scores\"->{" + String.valueOf(score) + numUnitsSB
 						+ "}|>";
 			}
 		}
@@ -2153,8 +2153,7 @@ public class ThmP1 {
 									&& ((String) struct1.prev1()).matches("it|they") && struct1.prev2() != null
 									&& struct1.prev2().equals("")) {
 								if (recentEnt != null && recentEntIndex < j) {
-									String tempName = recentEnt.struct().get("name");
-									
+									String tempName = recentEnt.struct().get("name");									
 									String name = tempName != null ? tempName : "";
 									struct1.set_prev2(name);
 								}
@@ -2549,13 +2548,13 @@ public class ThmP1 {
 			for (int u = 0; u < headStructListSz; u++) {
 				Struct uHeadStruct = structList.get(u);
 				
-				double maxDownPathScore = uHeadStruct.maxDownPathScore();
+				double uHeadStructScore = uHeadStruct.maxDownPathScore();//uHeadStruct.score(); //uHeadStruct.maxDownPathScore();
 				//System.out.println("*&&*#*&%%%##### ");
 				//don't keep iterating if sufficiently many long parses have been built
 				//with scores above a certain threshold. But only if some, however bad,
 				//has been counted.
 				// Reduces parse explosion.
-				if(maxDownPathScore < LONG_FORM_SCORE_THRESHOLD 
+				if(uHeadStructScore < LONG_FORM_SCORE_THRESHOLD 
 						&& actualCommandsIteratedCount > MIN_PARSE_ITERATED_COUNT){					
 					continue;
 				}
@@ -2581,26 +2580,23 @@ public class ThmP1 {
 					//no use, since parsedSB has been built already
 					//headStructList.set(u, uHeadStruct);
 					//throw new IllegalStateException();
-				}
-				
+				}				
 				//ParseStruct headParseStruct = new ParseStruct();
-				//now get the WL form build from WLCommand's
-				//should pass in the wlSB, instead of creating one anew each time. <--It's ok.
+				/* Get the WL form build from WLCommand's. Compute span scores. */
 				treeTraversal(uHeadStruct, headParseStructList, parsedPairMMapList, curStructContextvec, span,
 						parseState);
 				//headParseStructList.add(headParseStruct);
 				contextVecList.add(curStructContextvec);
 				
-				System.out.println("+++Previous long parse: " + parsedSB);
-				
+				System.out.println("+++Previous long parse: " + parsedSB);				
 				//defer these additions to orderPairsAndPutToLists()
 				//parsedExpr.add(new ParsedPair(wlSB.toString(), maxDownPathScore, "short"));		
 				//System.out.println("*******SHORT FORM: " + wlSB);
 				//parsedExpr.add(new ParsedPair(parsedSB.toString(), maxDownPathScore, "long"));				
 				
-				longFormParsedPairList.add(new ParsedPair(parsedSB.toString(), maxDownPathScore, "long"));
+				longFormParsedPairList.add(new ParsedPair(parsedSB.toString(), uHeadStructScore, "long"));
 				
-				System.out.println(maxDownPathScore);
+				System.out.println(uHeadStructScore);
 				System.out.println(uHeadStruct.numUnits());
 
 				String parsedString = ParseToWL.parseToWL(uHeadStruct);
@@ -2808,7 +2804,8 @@ public class ThmP1 {
 				
 				StringBuilder wlSB = treeTraversal(kHeadStruct, headParseStructList, parsedPairMMapList, curStructContextvec, 
 						span, parseState);
-				longFormParsedPairList.add(new ParsedPair(parsedSB.toString(), totalScore, "long"));
+				longFormParsedPairList.add(new ParsedPair(parsedSB.toString(), totalScore, 
+						"long"));
 			}
 			
 			//add only one vector to list since the pieces are part of one single parse, if no full parse
@@ -3123,7 +3120,8 @@ public class ThmP1 {
 				ParsedPair pair = structTypePair.getValue();
 				ParseStructType parseStructType = structTypePair.getKey();
 				WLCommand wlCommand = pair.wlCommand;
-				parsedExpr.add(new ParsedPair(pair.parsedStr, pair.score, pair.numUnits, pair.commandNumUnits, 
+				parsedExpr.add(new ParsedPair(pair.parsedStr, pair.score, 
+						pair.numUnits, pair.commandNumUnits, 
 						wlCommand, parseStructType));				
 			}
 			
@@ -3230,6 +3228,7 @@ public class ThmP1 {
 		//List<Multimap<ParseStructType, ParsedPair>> parseStructMMapList = new ArrayList<Multimap<ParseStructType, ParsedPair>>();
 		/* Fills the parseStructMap and produces String representation, collect commands built above.*/
 		boolean contextVecConstructed = false;
+		
 		contextVecConstructed = ParseToWLTree.collectCommandsDfs(parseStructMMap, curParseStruct, uHeadStruct, wlSB, 
 				curStructContextVec, true, contextVecConstructed, parseState);
 		//System.out.println(">>>>>>>>>>uHeadStruct.WLCommandWrapperList()" + uHeadStruct.WLCommandWrapperList()); //DEBUG
@@ -3243,7 +3242,7 @@ public class ThmP1 {
 		//if parseStructMap empty, ie no WLCommand was found, but long parse form might still be good
 		if(parseStructMMap.isEmpty()){
 			ParsedPair pair = new ParsedPair(wlSB.toString(), //parseState.getCurParseStruct(), 
-					uHeadStruct.maxDownPathScore(), 
+					uHeadStruct.maxDownPathScore(),
 					uHeadStruct.numUnits(), span, null);
 			//partsMap.put(type, curWrapper.WLCommandStr);	
 			parseStructMMap.put(ParseStructType.NONE, pair);
@@ -3358,7 +3357,10 @@ public class ThmP1 {
 		double newScore = newRule.prob();
 		double newDownPathScore = struct1.maxDownPathScore() * struct2.maxDownPathScore() * newScore;
 		double parentDownPathScore = struct1.maxDownPathScore() * struct2.maxDownPathScore() * newScore;
-		int parentNumUnits = struct1.numUnits() + struct2.numUnits();
+		/* preposition always comes with something else in a valid parse, so don't count as extra unit. */
+		int struct1NumUnits = struct1.type().equals("pre") ? 0 : struct1.numUnits();
+		int struct2NumUnits = struct2.type().equals("pre") ? 0 : struct2.numUnits();
+		int parentNumUnits = struct1NumUnits + struct2NumUnits;
 		
 		// newChild means to fuse second entity into first one
 		if (newType.equals("newchild")) {
@@ -3931,7 +3933,6 @@ public class ThmP1 {
 		int highestDownScoreIndex = 0;
 
 		List<Struct> structArList = structList.structList();
-
 		int structListSz = structArList.size();
 
 		for (int i = 0; i < structListSz; i++) {
@@ -4071,17 +4072,13 @@ public class ThmP1 {
 					highestDownScore = tempDownScore;
 					highestDownScoreIndex = i;
 				}
-
 				mxPathNodeStruct.set_maxDownPathScore(tempDownScore);
-
 			} // end for loop through structList
 
-			// set highestDownScoreIndex
 			structList.set_highestDownScoreIndex(highestDownScoreIndex);
 		} else {
 			highestDownScoreIndex = structList.highestDownScoreIndex();
 			highestDownScore = structList.structList().get(highestDownScoreIndex).maxDownPathScore();
-
 		}
 		return highestDownScore;
 	}

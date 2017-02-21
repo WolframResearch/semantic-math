@@ -140,8 +140,7 @@ public class ParseStruct implements Serializable{
 				sb.append(entry.getKey() + " :> " + entry.getValue().WLCommandStr());
 			}
 			i--;
-		}
-		
+		}		
 		//Collection<Map.Entry<ParseStructType, ParseStruct>> parseStructMMapEntries = 
 			//	childrenParseStructList.entries();
 		i = childrenParseStructList.size();
