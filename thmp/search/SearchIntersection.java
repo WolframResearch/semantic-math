@@ -808,7 +808,6 @@ public class SearchIntersection {
 			// return thmList;
 			return Collections.<ThmHypPair>emptyList();
 		}
-
 		return SearchCombined.thmListIndexToThmHypPair(highestThms);
 	}
 
@@ -818,9 +817,9 @@ public class SearchIntersection {
 	 * @param args
 	 */
 	public static void main(String[] args) {
+		System.out.println("searchIntersection- Total number of thms " + CollectThm.ThmList.allThmHypPairList().size());
 		Scanner sc = new Scanner(System.in);
-		// boolean contextSearch = true;
-
+	
 		while (sc.hasNextLine()) {
 			String thm = sc.nextLine();
 

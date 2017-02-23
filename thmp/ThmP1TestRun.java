@@ -566,7 +566,9 @@ public class ThmP1TestRun {
 			st = "the word $w$ can be cyclically reduced to $(T_aT_b)^n$ for some $n \\in \\mathbb{Z}$,"; //<--double adding!!
 			st = " The curves $a,b$ have algebraic intersection number $2$,";
 			st = "this is a nontrivial relation between Dehn twists in $\\mcg(S)$ if they are nontrivial."; //<--rank the scores correctly!
-			st = "this group is commutative";
+			st = "this group is commutative"; //<--this!
+			st = "quantum cohomology is hard";
+			
 			//st = "$A$ is isomorphic to $B$";
 			//st = "take the log of $f$ over the field";
 			//st = "field lies above ring";

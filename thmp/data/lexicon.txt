@@ -62,6 +62,7 @@ analytic adj
 converge verbAlone
 along pre
 great adj
+hard adj
 finite adj_comp
 open adj
 open ent

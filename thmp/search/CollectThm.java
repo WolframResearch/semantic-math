@@ -1136,7 +1136,6 @@ public class CollectThm {
 			List<String> allThmSrcFilePreList = new ArrayList<String>();
 			List<BigInteger> relationVecPreList = new ArrayList<BigInteger>();
 			List<String> contextVecPreList = new ArrayList<String>();
-			
 			fillListsFromParsedExpressions(parsedExpressionsList, allThmsWithHypPreList, contextVecPreList, relationVecPreList,
 					allThmsNoHypPreList, allHypPreList, allThmSrcFilePreList);			
 			
@@ -1272,7 +1271,8 @@ public class CollectThm {
 		 */
 		private static void fillListsFromParsedExpressions(List<ParsedExpression> parsedExpressionsList, 
 				List<String> allThmsWithHypList, List<String> contextVecList, List<BigInteger> relationVecList,
-				List<String> allThmsNoHypPreList, List<String> allHypPreList, List<String> allThmSrcFilePreList){
+				List<String> allThmsNoHypPreList, List<String> allHypPreList, List<String> allThmSrcFilePreList
+				){
 			//System.out.println("Should be list: " + parsedExpressionsList);
 			for(ParsedExpression parsedExpr : parsedExpressionsList){
 				DefinitionListWithThm defListWithThm = parsedExpr.getDefListWithThm();
@@ -1286,7 +1286,13 @@ public class CollectThm {
 				}
 				allHypPreList.add(defListSB.toString());
 				allThmsWithHypList.add(defListWithThm.getThmWithDefStr());
-				allThmSrcFilePreList.add(defListWithThm.getSrcFileName());
+				
+				String fileName = defListWithThm.getSrcFileName();
+				if(null != fileName){
+					allThmSrcFilePreList.add(fileName);
+				}else{
+					allThmSrcFilePreList.add("");
+				}				
 				//allThmSrcFilePreList.add("");
 				contextVecList.add(parsedExpr.contextVecStr());
 				relationVecList.add(parsedExpr.getRelationVec());

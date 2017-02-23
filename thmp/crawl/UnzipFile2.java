@@ -194,7 +194,7 @@ public class UnzipFile2 {
 				//System.out.print("Current file being unzipped: " + fileName + "\t");
 				String src = srcBasePath + fileName;
 				//name the output file to be the same, but with .txt extension.
-				String dest = destBasePath + fileName.replaceAll("([^\\.]*)\\..*$", "$1.txt");
+				String dest = destBasePath + fileName.replaceAll("([^\\.]*)\\..*$", "$1.tex");
 				
 				extractedFileNames.add(dest);
 				

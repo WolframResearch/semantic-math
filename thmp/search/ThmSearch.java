@@ -92,6 +92,7 @@ public class ThmSearch {
 					+ "v =" + TermDocumentMatrix.MX_CONTEXT_NAME + "v;");
 			ml.discardAnswer();*/
 			ml.evaluate("Length[corMx[[1]]]");
+			
 			System.out.println("ThmSearch - corMx row dimension (num of words): " + ml.getExpr());
 		}catch(MathLinkException e){
 			msg = "MathLinkException when loading mx file!";
@@ -119,9 +120,20 @@ public class ThmSearch {
 		try{
 			String msg = "Transposing and applying corMx...";
 			logger.info(msg);
-			//process query first with corMx		
-			ml.evaluate("q = Transpose[" + queryVecStr + "] + 0.1*corMx.Transpose["+ queryVecStr +"]//N");
-			ml.discardAnswer();
+			//process query first with corMx. 
+				
+			ml.evaluate("q0 = Transpose[" + queryVecStr + "] + 0.1*corMx.Transpose["+ queryVecStr +"]//N;");
+			boolean getQ = false;
+			if(getQ){
+				ml.waitForAnswer();
+				Expr qVec = ml.getExpr();
+				logger.info("ThmSearch - transposed queryVecStr: " + qVec);
+				//System.out.println("qVec: " + qVec);
+			}else{				
+				ml.discardAnswer();
+			}
+			//ml.evaluate("corMx");
+			//System.out.println("corMx:" +ml.getExpr());
 			//ml.waitForAnswer();
 			//Expr qVec = ml.getExpr();
 			//System.out.println("ThmSearch - qVec: " + qVec);
@@ -136,10 +148,27 @@ public class ThmSearch {
 			
 			//ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"];");
 			//ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"/.{0.0->mxMeanValue}];");
-			//this step is costly!
-			ml.evaluate("q = Inverse[d].Transpose[u].(q/.{0.0->mxMeanValue});");
-			//ml.evaluate("q = Inverse[d].Transpose[u].Transpose[q];");
-			ml.discardAnswer();
+			//this step is costly! Don't compute inverse each time!
+			//ml.evaluate("q = dInverse.uTranspose.q;");
+			//q no longer has 0.0 entries cause 0.1*corMx has been added. <--could still have 0.0 entries
+			//ml.evaluate("q = dInverse.uTranspose.(q/.{0.0->mxMeanValue});");
+			//ml.evaluate("q = Inverse[d].Transpose[u].(q/.{0.0->mxMeanValue});");
+			
+			//When queries are entered in quick succession,
+			//QueryVecStr has wrong dimension?! Same dim as row/col dim of matrix d!!
+			//ml.evaluate("q = Inverse[d].Transpose[u].(q/.{0.0->mxMeanValue})");
+			ml.evaluate("q = dInverse.uTranspose.(q0/.{0.0->mxMeanValue});");
+			//ml.discardAnswer();
+			
+			getQ = false;
+			if(getQ){
+				ml.waitForAnswer();
+				Expr qVec = ml.getExpr();
+				logger.info("ThmSearch - transposed queryVecStr: " + qVec);
+				//System.out.println("qVec: " + qVec);
+			}else{				
+				ml.discardAnswer();
+			}
 			//ml.waitForAnswer();
 			//System.out.println("ThmSearch - q after inverse of transpose: " + ml.getExpr());
 			/*ml.evaluate("q = q + vMeanValue;");
@@ -176,13 +205,15 @@ public class ThmSearch {
 			//ml.evaluate("Ordering[v.First[Transpose[q]], -"+numNearest+"]");
 			ml.waitForAnswer();
 			Expr nearestVec = ml.getExpr();
+			//ml.discardAnswer();
 			//System.out.println(nearestVec.length() + "  " + Arrays.toString((int[])nearestVec.part(1).asArray(Expr.INTEGER, 1)));
 			//turn into list.
-			msg = "SVD returned nearestVec! ";// + nearestVec;
+			msg = "SVD returned nearestVec! "; //+ nearestVec; //<--should not include nearestVec for long vecs, only debugging here!
 			System.out.println(msg);
 			logger.info(msg);
 			//use this when using Nearest
 			//int[] nearestVecArray = (int[])nearestVec.part(1).asArray(Expr.INTEGER, 1);
+			 //<--this line generates exprFormatException if sucessive entries are quickly entered.
 			nearestVecArray = (int[])nearestVec.asArray(Expr.INTEGER, 1);
 		}catch(MathLinkException e){
 			logger.error("MathLinkException! " + e.getStackTrace());
@@ -306,14 +337,14 @@ public class ThmSearch {
 				logger.info(msg);
 				
 				//System.out.println("nested mx " + Arrays.deepToString(docMx));
-				boolean getMx = false;
 				
-				ml.evaluate(mxSB.toString());
+				ml.evaluate(mxSB.append(";").toString());
 				//ml.evaluate("m={{1,2}}");
 				msg = "Kernel has the matrix!";
 				logger.info(msg);
 				System.out.println(msg);
 				
+				boolean getMx = false;
 				if(getMx){
 					ml.waitForAnswer();			
 					Expr expr = ml.getExpr();
@@ -321,7 +352,7 @@ public class ThmSearch {
 				}else{	
 					ml.discardAnswer();	
 				}
-				ml.evaluate("Begin[\""+ MX_CONTEXT_NAME +"\"]");
+				ml.evaluate("Begin[\""+ MX_CONTEXT_NAME +"\"];");
 				ml.discardAnswer();
 				
 				//corMx should be computed using correlation mx
@@ -449,7 +480,8 @@ public class ThmSearch {
 				//randomly select column vectors to approximate mean
 				//adjust these!
 				int numRandomVecs = mxColDim < 500 ? 60 : (mxColDim < 5000 ? 100 : 150);
-				ml.evaluate("mxMeanValue = Mean[Flatten[mx[[All, #]]& /@ RandomInteger[{1,"+ mxColDim +"}," + numRandomVecs + "]]];");
+				ml.evaluate("mxMeanValue = Mean[Flatten[mx[[All, #]]& /@ RandomInteger[{1,"+ mxColDim +"}," + numRandomVecs + "]]];"
+						+ "dInverse=Inverse[d]; uTranspose=Transpose[u];");				
 				//ml.evaluate("mxMeanValue = Mean[Flatten[v]];");
 				ml.discardAnswer();
 				//System.out.println("mxMeanValue " + ml.getExpr());
@@ -479,7 +511,7 @@ public class ThmSearch {
 				ml.evaluate("End[];");
 				ml.discardAnswer();
 				
-				ml.evaluate("DumpSave[\"" + PATH_TO_MX + "\", \"TermDocumentMatrix`\"];");
+				ml.evaluate("DumpSave[\"" + PATH_TO_MX + "\", \"TermDocumentMatrix`\"]");
 				ml.discardAnswer();
 			}catch(MathLinkException e){
 				System.out.println("error at launch!");
