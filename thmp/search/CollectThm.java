@@ -757,7 +757,8 @@ public class CollectThm {
 				//number of words to skip if an n gram has been added.
 				int numFutureWordsToSkip = 0;
 				//split along e.g. "\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:"
-				String[] thmAr = WordForms.splitDelimPattern().split(thm.toLowerCase());
+				String[] thmAr = WordForms.splitThmIntoSearchWords(thm);
+				
 				//words and their frequencies.
 				Map<String, Integer> thmWordsFreqMap = new HashMap<String, Integer>();				
 				
@@ -1248,8 +1249,8 @@ public class CollectThm {
 		private static List<ParsedExpression> extractParsedExpressionList() {
 			//List<ParsedExpression> parsedExpressionsList;
 			//String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
-			String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
-			//String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionListTemplate.dat";
+			//String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
+			String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionListTemplate.dat";
 			
 			if(null != servletContext){
 				InputStream parsedExpressionListInputStream = servletContext.getResourceAsStream(parsedExpressionSerialFileStr);

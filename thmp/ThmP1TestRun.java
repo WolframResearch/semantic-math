@@ -568,7 +568,8 @@ public class ThmP1TestRun {
 			st = "this is a nontrivial relation between Dehn twists in $\\mcg(S)$ if they are nontrivial."; //<--rank the scores correctly!
 			st = "this group is commutative"; //<--this!
 			st = "quantum cohomology is hard";
-			
+			st = " $M$ admits a typical surface foliation $\\F$."; //Let $M$ be a closed orientable  $3$--manifold. Then
+			st = "let $M$ be a closed orientable  $3$--manifold";
 			//st = "$A$ is isomorphic to $B$";
 			//st = "take the log of $f$ over the field";
 			//st = "field lies above ring";

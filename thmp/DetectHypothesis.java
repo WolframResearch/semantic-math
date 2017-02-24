@@ -59,7 +59,8 @@ public class DetectHypothesis {
 	private static final List<ParsedExpression> parsedExpressionList = new ArrayList<ParsedExpression>();
 	private static final List<String> parsedExpressionStrList = new ArrayList<String>();
 	private static final List<String> DefinitionListWithThmStrList = new ArrayList<String>();
-	private static final List<String> allThmsStrList = new ArrayList<String>();
+	private static final List<String> allThmHypStrList = new ArrayList<String>();
+	private static final List<String> allThmsStrWithSpaceList = new ArrayList<String>();
 	private static final List<String> DefinitionList = new ArrayList<String>();
 	
 	private static final String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
@@ -102,10 +103,13 @@ public class DetectHypothesis {
 	
 	static{
 		Searcher.SearchMetaData.set_gatheringDataBoolToTrue();
-		FileUtils.set_dataGenerationMode();		
+		FileUtils.set_dataGenerationMode();	
+		/*The "next time" form previous time refers to current run in this static initializer.*/
 		ALL_THM_WORDS_LIST = new ArrayList<String>(CollectThm.ThmWordsMaps.get_contextVecWordsNextTimeMap().keySet());
 		ALL_THM_WORDS_FREQ_MAP = CollectThm.ThmWordsMaps.get_contextVecWordsNextTimeMap();
-		ThmSearch.TermDocumentMatrix.createTermDocumentMatrixSVD();
+		//this SHOULD be done at the end! So keep in sync with the others .dat, so don't need to parse everything twice.
+		//Then use current list, but wordsList's from previous runs.
+		//ThmSearch.TermDocumentMatrix.createTermDocumentMatrixSVD();
 	}
 	
 	/**
@@ -178,9 +182,7 @@ public class DetectHypothesis {
 	public static class DefinitionListWithThm implements Serializable {
 		
 		private static final long serialVersionUID = 7178202892278343033L;
-
-		private String thmStr;
-		
+		private String thmStr;		
 		//thmStr, with definition strings prepended.
 		private String thmWithDefStr;
 		//name of source file from which thm is extracted.
@@ -310,7 +312,7 @@ public class DetectHypothesis {
 				throw e;
 			}finally{
 				//serialize, so don't discard the items already parsed.
-				serializeDataToFile(stats);			
+				serializeDataToFile(stats, defThmList);			
 			}
 		}else{
 			BufferedReader inputBF = null;
@@ -328,7 +330,7 @@ public class DetectHypothesis {
 				throw e;
 			}finally{
 				//serialize, so don't discard the items already parsed.
-				serializeDataToFile(stats);			
+				serializeDataToFile(stats, defThmList);			
 			}
 		}
 		//deserialize objects
@@ -362,6 +364,7 @@ public class DetectHypothesis {
 		System.out.println("STATS -- percentage of non-trivial ParseStruct heads: " + stats.getNonNullPercentage() 
 			+ " out of total " + stats.getTotalThmsNum() + "thms");
 		DefinitionListWithThmStrList.add(defThmList.toString()+ "\n");
+		//why do I need this??
 		for(DefinitionListWithThm def : defThmList){
 			DefinitionList.add(def.getDefinitionList().toString());
 		}
@@ -375,7 +378,7 @@ public class DetectHypothesis {
 	 * a subset of steps only, since we rely on the different serialized data to come from
 	 * the same source with the same settings.
 	 */
-	private static void serializeDataToFile(Stats stats) {
+	private static void serializeDataToFile(Stats stats, List<>   defThmList) {
 		//List<Object> listToSerialize = new ArrayList<Object>();
 		//listToSerialize.add(parsedExpressionList);
 		FileUtils.serializeObjToFile(parsedExpressionList, parsedExpressionSerialFileStr);
@@ -389,7 +392,7 @@ public class DetectHypothesis {
 		List<Map<String, Integer>> wordMapToSerializeList = new ArrayList<Map<String, Integer>>();
 		wordMapToSerializeList.add(ALL_THM_WORDS_FREQ_MAP);
 		FileUtils.serializeObjToFile(wordMapToSerializeList, allThmWordsMapSerialFileStr);
-		//this list is for human checking the result.
+		//this list is for human inspecting the result.
 		List<String> wordMapStringList = new ArrayList<String>();
 		wordMapStringList.add(ALL_THM_WORDS_FREQ_MAP.toString());
 		FileUtils.writeToFile(wordMapStringList, allThmWordsMapStringFileStr);
@@ -399,10 +402,13 @@ public class DetectHypothesis {
 		FileUtils.writeToFile(DefinitionList, definitionStrFileStr);
 		
 		//write just the thms
-		FileUtils.writeToFile(allThmsStrList, allThmsStringFileStr);
+		FileUtils.writeToFile(allThmsStrWithSpaceList, allThmsStringFileStr);
 		//append to stats file!
 		FileUtils.appendObjToFile(stats, statsFileStr);
 		FileUtils.writeToFile(ALL_THM_WORDS_LIST, allThmWordsStringFileStr);
+		
+		/*If this step fails, need to re-run to produce matrix!*/
+		ThmSearch.TermDocumentMatrix.createTermDocumentMatrixSVD( defThmList);
 	}
 	
 	/**
@@ -519,8 +525,7 @@ public class DetectHypothesis {
 			
 			boolean appendedToThm = false;
 			matcher = thmStartPattern.matcher(line);
-			if (matcher.matches()) {
-				
+			if (matcher.matches()) {				
 				// process here, return two versions, one for bag of words, one
 				// for display
 				// strip \df, \empf. Index followed by % strip, not percent
@@ -553,9 +558,13 @@ public class DetectHypothesis {
 				//System.out.println("!---------! line: " + line+" thmEndPattern: " + thmEndPattern);
 				
 				//newThmSB.append(" " + fileName);
-				allThmsStrList.add(newThmSB.toString() + "\n\n");
-				//parse hyp and thm
+				
+				allThmsStrWithSpaceList.add(newThmSB.toString() + "\n\n");
+				
+				//parse hyp and thm. BE SURE TO ONLY RE-ORDER WORDS based on word freuqency at last run, before serializing!
 				processParseHypThm(newThmSB, parseState, stats, definitionListWithThmList, fileName);
+				//with hyps
+				//allThmHypStrList.add();
 				continue;
 			}else if(END_DOCUMENT_PATTERN.matcher(line).matches()){
 				parseState.parseRunGlobalCleanUp();

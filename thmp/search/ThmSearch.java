@@ -12,6 +12,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.google.common.collect.ImmutableList;
 import com.wolfram.jlink.*;
 
 import thmp.utils.FileUtils;
@@ -305,8 +306,7 @@ public class ThmSearch {
 		private static final String MX_CONTEXT_NAME = "TermDocumentMatrix`";
 		private static KernelLink ml;
 		
-		public static void createTermDocumentMatrixSVD() {
-			
+		public static void createTermDocumentMatrixSVD() {			
 			//docMx = TriggerMathThm2.mathThmMx();			
 			//mx to keep track of correlations between terms, mx.mx^T
 			//List<List<Integer>> corMxList = new ArrayList<List<Integer>>();
@@ -338,8 +338,8 @@ public class ThmSearch {
 				
 				//System.out.println("nested mx " + Arrays.deepToString(docMx));
 				
-				ml.evaluate(mxSB.append(";").toString());
-				//ml.evaluate("m={{1,2}}");
+				ml.evaluate(mxSB.toString()); //mxSB.append(";") here causes memory bloat?!
+				
 				msg = "Kernel has the matrix!";
 				logger.info(msg);
 				System.out.println(msg);
@@ -381,7 +381,7 @@ public class ThmSearch {
 				//the entries in clipped correlation are between 0.3 and 1.
 				//subtract IdentityMatrix to avoid self-compounding
 				ml.evaluate("corMx = Clip[Correlation[Transpose[m]]-IdentityMatrix[" + rowDimension 
-						+ "], {.6, Infinity}, {0, 0}]/.Indeterminate->0;");
+						+ "], {.6, Infinity}, {0, 0}]/.Indeterminate->0.0;");
 				msg = "Corr. mx clipped!";
 				logger.info(msg);
 				System.out.println(msg);
@@ -466,7 +466,7 @@ public class ThmSearch {
 				//theorems (col dimension of mx)
 				//int k = NUM_SINGULAR_VAL_TO_KEEP;
 				int k = mxColDim < 35 ? mxColDim : (mxColDim < 400 ? 35 : (mxColDim < 1000 ? 40 : (mxColDim < 3000 ? 50 : 60)));
-				ml.evaluate("{u, d, v} = SingularValueDecomposition[mx//N, " + k +"];");
+				ml.evaluate("ClearSystemCache[]; {u, d, v} = SingularValueDecomposition[mx, " + k +"];");
 				//ml.waitForAnswer();
 				ml.discardAnswer();
 				/*ml.evaluate("m");
@@ -481,7 +481,8 @@ public class ThmSearch {
 				//adjust these!
 				int numRandomVecs = mxColDim < 500 ? 60 : (mxColDim < 5000 ? 100 : 150);
 				ml.evaluate("mxMeanValue = Mean[Flatten[mx[[All, #]]& /@ RandomInteger[{1,"+ mxColDim +"}," + numRandomVecs + "]]];"
-						+ "dInverse=Inverse[d]; uTranspose=Transpose[u];");				
+						+ "dInverse=Inverse[d]; uTranspose=Transpose[u];"
+						);				
 				//ml.evaluate("mxMeanValue = Mean[Flatten[v]];");
 				ml.discardAnswer();
 				//System.out.println("mxMeanValue " + ml.getExpr());
@@ -519,6 +520,222 @@ public class ThmSearch {
 				throw new RuntimeException(e);
 			}
 		}
+		
+		public static void createTermDocumentMatrixSVD(ImmutableList<String> thmList) {			
+			//docMx = TriggerMathThm2.mathThmMx();			
+			//mx to keep track of correlations between terms, mx.mx^T
+			//List<List<Integer>> corMxList = new ArrayList<List<Integer>>();
+			try{			
+				/*ml = MathLinkFactory.createKernelLink(ARGV);
+				System.out.println("MathLink created! "+ ml);
+				//discard initial pakets the kernel sends over.
+				ml.discardAnswer();*/
+				ml = FileUtils.getKernelLinkInstance();
+				String msg = "Kernel instance acquired...";
+				logger.info(msg);
+				//int rowDimension = docMx.length;
+				int rowDimension = TriggerMathThm2.mathThmMxRowDim();
+				//int mxColDim = docMx[0].length;
+				int mxColDim = TriggerMathThm2.mathThmMxColDim();
+				
+				//set up the matrix corresponding to docMx, to be SVD'd. 
+				//adjust mx entries based on correlation first	
+				//StringBuilder mxSB = new StringBuilder("m = Developer`ToPackedArray@");
+				//mxSB.append(toNestedList(docMx)).append("//N;");
+				/* *Need* to specify dimension! Since the Automatic dimension might be less than 
+				 * or equal to the size of the keywordList, if some words are not hit by the current thm corpus. */
+				StringBuilder mxSB = TriggerMathThm2.sparseArrayInputSB(thmList)
+						.insert(0, "m=SparseArray[1+").append(",{"+rowDimension).append(",").append(mxColDim+"}];");
+				//System.out.println("ThmSearch. - mxSB " + mxSB);
+				msg = "ThmSearch.TermDocumentMatrix - mxSB.length(): " + mxSB.length();
+				System.out.println(msg);
+				logger.info(msg);
+				
+				//System.out.println("nested mx " + Arrays.deepToString(docMx));
+				
+				ml.evaluate(mxSB.toString()); //mxSB.append(";") here causes memory bloat?!
+				
+				msg = "Kernel has the matrix!";
+				logger.info(msg);
+				System.out.println(msg);
+				
+				boolean getMx = false;
+				if(getMx){
+					ml.waitForAnswer();			
+					Expr expr = ml.getExpr();
+					System.out.println("m " + expr);
+				}else{	
+					ml.discardAnswer();	
+				}
+				ml.evaluate("Begin[\""+ MX_CONTEXT_NAME +"\"];");
+				ml.discardAnswer();
+				
+				//corMx should be computed using correlation mx
+				//or add a fraction of M.M^T.M
+				//this has the effect that if ith term and jth terms
+				//are correlated, and (i,k) is non zero in M, then make (j,k)
+				//nonzero (of smaller magnitude than (i,K) in M.
+				//clip the matrix 			
+				boolean getMean = false;
+				if(getMean){
+					ml.evaluate("matrix = m.Transpose[m].m;");
+					ml.discardAnswer();
+					ml.evaluate("Mean[matrix//N]");
+					ml.waitForAnswer();			
+					Expr expr = ml.getExpr();
+					System.out.println("Mean " + expr);
+				}
+				
+				//ml.evaluate("corMx = Clip[ m.Transpose[m], {4, Infinity}, {0, 0} ].m;");
+				//ml.evaluate("correlatedMx = IntegerPart[m.Transpose[m].m];");
+				//ml.discardAnswer();			
+				
+				//System.out.println("Done clipping!");	
+				boolean getCorMx = false;
+				
+				//the entries in clipped correlation are between 0.3 and 1.
+				//subtract IdentityMatrix to avoid self-compounding
+				ml.evaluate("corMx = Clip[Correlation[Transpose[m]]-IdentityMatrix[" + rowDimension 
+						+ "], {.6, Infinity}, {0, 0}]/.Indeterminate->0.0;");
+				msg = "Corr. mx clipped!";
+				logger.info(msg);
+				System.out.println(msg);
+				//ml.waitForAnswer();
+				//System.out.println("clipped corr mx: " + ml.getExpr());
+				
+				if(getCorMx){
+					ml.waitForAnswer();
+					Expr expr = ml.getExpr();
+					//get correlation matrix, to put together correlated terms
+					//in similar indices. 
+					System.out.println("corMx " + expr);					
+				}else{
+					ml.discardAnswer();
+				}
+				//the entries in corMx.m can range from 0 to ~6
+				ml.evaluate("mx = m + .15*corMx.m;");
+				if(getCorMx){
+					ml.waitForAnswer();
+					Expr expr = ml.getExpr();
+					System.out.println("m + .15*corMx.m " + expr);
+				}else{
+					ml.discardAnswer();
+				}
+				
+				//take IntegerPart, faster processing later on
+				//ml.evaluate("mx = m + IntegerPart[0.2*corMx];");
+				//ml.discardAnswer();
+				
+				//Expr r = ml.getExpr();
+				//add to m
+				
+				//System.out.println("is matrix? " + r.part(1).matrixQ() + r.part(1));
+				//System.out.println(Arrays.toString((int[])r.part(1).part(1).asArray(Expr.INTEGER, 1)));
+				
+				/*int corMxLen1 = r.part(1).length();
+				for(int i = 0; i < corMxLen1; i++){
+					Integer[] thm_iListBoxed = ArrayUtils.toObject((int[])r.part(1).part(i+1).asArray(Expr.INTEGER, 1));
+					List<Integer> thm_iList = Arrays.asList(thm_iListBoxed);
+					corMxList.add(thm_iList);
+				}*/
+				//adjust entries of docMx based on corMxList
+				//do this in WL, not loops here!
+				//int[][] corrAdjustedDocMx = corrAdjustDocMx(docMx, corMxList);
+				//mx = toNestedList(corrAdjustedDocMx);
+				
+				//write matrix to file, so no need to form it each time
+				
+				//System.out.println(nearestVec.length() + "  " + Arrays.toString((int[])nearestVec.part(1).asArray(Expr.INTEGER, 1)));
+				String dimMsg = "Dimensions of docMx: " + rowDimension + " " +mxColDim + ". Starting SVD...";
+				System.out.print(dimMsg);
+				logger.info(dimMsg);
+				//System.out.println(mx);
+				
+				//ml.evaluate("mx=" + mx +"//N;");
+				//ml.discardAnswer();	
+				
+				/*ml.evaluate("Mean[Mean[0.2*Transpose[ Covariance[Transpose[mx]].mx ]]]");
+				//ml.evaluate("mx");
+				ml.waitForAnswer();
+				Expr mean = ml.getExpr();
+				System.out.print("Mean of Mean " + mean);
+				
+				//ml.evaluate("mx = mx + Clip[0.2*Transpose[mx.Correlation[Transpose[mx]]], {2, Infinity}, {0, 0}];");
+				ml.evaluate("mx = mx + Clip[0.2*Transpose[Covariance[Transpose[mx]].mx], {.1, Infinity}, {0, 0}];");
+				ml.discardAnswer(); */
+				
+				//trim down to make mx sparse again, and also don't want small correlations
+				//ml.evaluate("mx = Clip[mx, {.2, Infinity}, {0, 0}];");
+				//ml.discardAnswer();		
+				
+				//System.out.println("Done clipping");
+				
+				//add a small multiple of mx.mx^T.mx, so to make term i more 
+				//prominent when a correlated term is present.
+				//ml.evaluate("mx=mx+0.2*mx.Transpose[mx].mx;");
+				//this was to take correlations into account
+				//ml.evaluate("mx=mx.Transpose[mx].mx;");
+				//ml.discardAnswer();
+				
+				//number of singular values to keep. Determined (roughly) based on the number of
+				//theorems (col dimension of mx)
+				//int k = NUM_SINGULAR_VAL_TO_KEEP;
+				int k = mxColDim < 35 ? mxColDim : (mxColDim < 400 ? 35 : (mxColDim < 1000 ? 40 : (mxColDim < 3000 ? 50 : 60)));
+				ml.evaluate("ClearSystemCache[]; {u, d, v} = SingularValueDecomposition[mx, " + k +"];");
+				//ml.waitForAnswer();
+				ml.discardAnswer();
+				/*ml.evaluate("m");
+				ml.waitForAnswer();
+				System.out.println("!!!!-----m: " + ml.getExpr() + " k: " + k + " mxColDim: " + mxColDim);*/
+				
+				//ml.evaluate("u = u; dd = d; v = v;");
+				//ml.discardAnswer();
+				System.out.println("Finished SVD");
+				logger.info("Finished SVD!");
+				//randomly select column vectors to approximate mean
+				//adjust these!
+				int numRandomVecs = mxColDim < 500 ? 60 : (mxColDim < 5000 ? 100 : 150);
+				ml.evaluate("mxMeanValue = Mean[Flatten[mx[[All, #]]& /@ RandomInteger[{1,"+ mxColDim +"}," + numRandomVecs + "]]];"
+						+ "dInverse=Inverse[d]; uTranspose=Transpose[u];"
+						);				
+				//ml.evaluate("mxMeanValue = Mean[Flatten[v]];");
+				ml.discardAnswer();
+				//System.out.println("mxMeanValue " + ml.getExpr());
+				/*ml.evaluate("mxMeanValue = Mean[Flatten[mx]];");
+				ml.discardAnswer();	*/
+				//System.out.println(" mean of flattened mx " + ml.getExpr().part(1));
+				
+				/*for(int i = 1; i <= docMx[0].length; i++){
+				//should just be columns of V*, so rows of V
+					ml.evaluate("p" + i + "= v[["+i+"]];");
+					ml.discardAnswer();
+				}*/
+				
+				//String queryStr = TriggerMathThm2.createQuery("root");
+				//System.out.println(queryStr);
+				//ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"];");
+				//ml.discardAnswer();
+				/*ml.evaluate("q//N");
+				ml.waitForAnswer();
+				Expr v = ml.getExpr();
+				System.out.println("exprs realQ? " + v); 
+				
+				ml.evaluate("(p1.First@Transpose[q])//N");
+				ml.waitForAnswer();
+				Expr w = ml.getExpr();
+				System.out.println("~W " + w);*/
+				ml.evaluate("End[];");
+				ml.discardAnswer();
+				
+				ml.evaluate("DumpSave[\"" + PATH_TO_MX + "\", \"TermDocumentMatrix`\"]");
+				ml.discardAnswer();
+			}catch(MathLinkException e){
+				System.out.println("error at launch!");
+				e.printStackTrace();
+				throw new RuntimeException(e);
+			}
+		}
+		
 	}/* end of TermDocumentMatrix class */
 	
 	/**
@@ -596,27 +813,20 @@ public class ThmSearch {
 			//ml.evaluate("SingularValueDecomposition@" + toNestedList(docMx) +"//N");
 			
 			//ml.evaluate("Transpose@{{1,2},{3,4}}");
-			ml.evaluate("d1 = 3; ");
-			
-			//Expr expr = ml.getExpr();
+			/*ml.evaluate("d1 = 3;");
 			ml.discardAnswer();			
 			ml.evaluate("d1+2");
 			ml.waitForAnswer();
-			//ml.waitForAnswer();
 			Expr expr = ml.getExpr();			
 			System.out.println(expr);
 			
 			//System.out.println(Arrays.toString(expr.dimensions()));
-			System.out.println(expr.integerQ());
+			System.out.println(expr.integerQ());*/
 
 			System.out.println("~~~");
 			//reads input theorem, generates query string, process query
 			ThmSearchQuery.readInputAndSearch();
 			
-		}catch(MathLinkException e){
-			logger.error("MathLinkException during evaluation:" + e.getStackTrace());
-			//e.printStackTrace();
-			throw new RuntimeException("MathLinkException during evaluation!", e);
 		}catch(IndexOutOfBoundsException e){			
 			logger.error("IndexOutOfBoundsException during evaluation using MathLink." + e.getStackTrace());
 			//e.printStackTrace();

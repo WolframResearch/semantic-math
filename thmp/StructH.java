@@ -532,12 +532,14 @@ public class StructH<H> extends Struct{
 			prependCommaBool = true;
 		}
 		
+		boolean pptAppended = false;
 		Iterator<String> pptStrListIter = getPropertySet().iterator();		
 		if(pptStrListIter.hasNext()){
 			if(prependCommaBool){
 				sb.append(", ");
 			}
-			sb.append("\"Property\"->");
+			sb.append("\"Property\"->{");
+			pptAppended = true;
 		}
 		
 		while(pptStrListIter.hasNext()){
@@ -547,6 +549,9 @@ public class StructH<H> extends Struct{
 			}else{
 				sb.append("\"").append(nextStr).append("\"");
 			}
+		}
+		if(pptAppended){
+			sb.append("}");
 		}
 		
 		String called = struct.get("called");

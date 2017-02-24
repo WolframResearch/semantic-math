@@ -36,7 +36,7 @@ public enum ParseStructType {
 		//should be as specific as possible. E.g. use "for all" rather than "hyp"
 		ImmutableListMultimap.Builder<ParseStructType, String> builder =
 				new ImmutableListMultimap.Builder<ParseStructType, String>();
-		builder.putAll(HYP, Arrays.asList("letbe", "hypo", "partient", "if", "If", "where", "assuming", "Cond"));
+		builder.putAll(HYP, Arrays.asList("letbe", "let", "hypo", "partient", "if", "If", "where", "assuming", "assume", "Cond"));
 		builder.putAll(HYP_iff, Arrays.asList("if and only if", "iff", "Iff"));
 		builder.putAll(OBJ, Arrays.asList("ent", "MathObj"));
 		builder.putAll(STM, Arrays.asList("then"));

@@ -362,6 +362,11 @@ public class WordForms {
 		return SPLIT_DELIM_PATTERN;
 	}
 	
+	public static String[] splitThmIntoSearchWords(String thm){
+		
+		return SPLIT_DELIM_PATTERN.split(thm.toLowerCase());
+	}
+	
 	/**
 	 * Return brackets pattern: "\\[([^\\]]*)\\]".
 	 * E.g. "...[...]..."

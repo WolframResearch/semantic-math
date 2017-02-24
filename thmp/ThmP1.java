@@ -1405,22 +1405,24 @@ public class ThmP1 {
 			if(null == mathObjName){
 				throw new IllegalArgumentException( pairs.toString());
 			}
-			tempMap.put("name", mathObjName);			
-			
-			// if next pair is also ent
+			//tempMap.put("name", mathObjName);			
+			StringBuilder nameSB = new StringBuilder(mathObjName);
+			// if next pair is also ent, combine.
 			if (j < mathIndexList.size() - 1 && mathIndexList.get(j + 1) == index + 1) {
 				Pair nextPair = pairs.get(index + 1);
 				String name = nextPair.word();
 				// if next pair is also ent, and is latex expression
 				if (name.contains("$")) {
-					tempMap.put("tex", name);					
+					tempMap.put("tex", name);			
+				}else{
+					nameSB.append(" ").append(name);
 				}
 				//remove since each entry in mathIndexList indicates
 				//a different ent not connected to current one.
-				mathIndexList.remove(j + 1);
+				mathIndexList.remove(j + 1);				
 				nextPair.set_pos(entPosStr);
 			}
-
+			tempMap.put("name", nameSB.toString());
 			// look right one place in pairs, if symbol found, add it to
 			// namesMap
 			// if it's the given name for an ent.
@@ -1542,7 +1544,7 @@ public class ThmP1 {
 				pairs.get(index + k).set_pos(entPosStr);
 				k++;
 			}
-
+			
 			tempStructH.set_struct(tempMap);
 			mathEntList.add(tempStructH);
 		}
@@ -1680,8 +1682,7 @@ public class ThmP1 {
 				String prev2 = "";
 				//if(true) throw new IllegalStateException();
 				//check if article
-				if(curPos.equals("art")){
-					
+				if(curPos.equals("art")){					
 					if(i < pairsSz-1){
 						//combine into subsequent ent
 						Pair nextPair = pairs.get(i+1);
@@ -1698,8 +1699,7 @@ public class ThmP1 {
 					Struct definingStruct = parseState.getVariableDefinition(curWord);
 					//System.out.println("getGlobalVariableNamesMMap: " + parseState.getGlobalVariableNamesMMap().toString());
 					if(null != definingStruct){
-						prev2 = definingStruct.nameStr();
-						
+						prev2 = definingStruct.nameStr();						
 					}
 				}
 				
@@ -3387,14 +3387,15 @@ public class ThmP1 {
 				newStruct.set_prev2(structToAppendChild);
 			}
 			
-			// assert ensures rule correctness
-			assert !structToAppendChild.isStructA() : "struct1 does not have type StructH in reduce() for \"newchild\" relation!";
-			
+			//assert !structToAppendChild.isStructA() : "struct1 does not have type StructH in reduce() for \"newchild\" relation!";
+			/*"struct1 does not have type StructH in reduce() for \"newchild\" relation!" ensures rule correctness;*/
+			if(structToAppendChild.isStructA()){
+				return null;
+			}
 			ChildRelation childRelation = null;
 			Struct childToAdd = struct2;
 			
-			if(struct2.type().equals("hypo")){
-				
+			if(struct2.type().equals("hypo")){				
 				//prev1 has type Struct
 				//e.g. "Field which is perfect", ...hypo[hyp[which is], perfect]
 				//e.g. "which do not contain" is of type "hyp", but is parsed
@@ -3416,6 +3417,7 @@ public class ThmP1 {
 				//System.out.println("children: " + hypStruct+ " &&&"+ struct1 + " *** " + struct2);
 				if(childRelation.childRelationStr().contains("which") ){
 					//System.out.println("structToAppendChild : " + (structToAppendChild instanceof StructH) + " ! structToAppendChild.children(): " + structToAppendChild.children() );
+					
 					if(structToAppendChild.children().size() > 0){
 						return new EntityBundle(firstEnt, recentEnt, recentEntIndex);
 					}

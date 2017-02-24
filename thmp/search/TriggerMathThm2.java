@@ -67,7 +67,7 @@ public class TriggerMathThm2 {
 	//private static final int[][] mathObjMx;
 	private static double[][] mathObjMx;
 	private static StringBuilder sparseArrayInputSB;
-	//list of thms, same order as in thmList, and the frequencies of their words in words maps.
+	//list of thms, same order as in thmList, and the words with their frequencies.
 	private static final List<ImmutableMap<String, Integer>> thmWordsMapList;
 	
 	//private static final ImmutableMap<String, Integer> docWordsFreqMapNoAnno = CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno();
@@ -87,14 +87,14 @@ public class TriggerMathThm2 {
 		relatedWordsMap = CollectThm.ThmWordsMaps.getRelatedWordsMap();
 		//relatedWordsMap = FileUtils.deserializeListFromFile("");
 		//docWordsFreqMapNoAnno should already been ordered based on frequency, more frequently-
-		//occuring words come earlier.
+		//occuring words come earlier. This based on set of theorems in previous run.
 		docWordsFreqMapNoAnno = CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno();
 		keywordIndexDict = ImmutableMap.copyOf(CollectThm.ThmWordsMaps.createContextKeywordIndexDict(docWordsFreqMapNoAnno));
 		thmWordsMapList = CollectThm.ThmWordsMaps.get_thmWordsFreqListNoAnno();
 		
-		/*don't need to build the giant mathObjMx if not generating data.	*/	
+		/* Don't need to build the giant mathObjMx if not generating data.	*/	
 		if(!Searcher.SearchMetaData.gatheringDataBool()){
-		//re-order the list so the most frequent words appear first, as optimization
+			//re-order the list so the most frequent words appear first, as optimization
 				//so that search words can match the most frequently-occurring words.
 				/*WordFreqComparator comp = new WordFreqComparator(docWordsFreqMapNoAnno);
 				//words and their frequencies in wordDoc matrix.
@@ -115,13 +115,13 @@ public class TriggerMathThm2 {
 		//contains map of keywords and their frequencies in this theorem.
 		//thmWordsMapList = CollectThm.ThmWordsMaps.get_thmWordsFreqListNoAnno();
 		
-		// ImmutableList.Builder<String> keywordList = ImmutableList.builder();
-		List<String> keywordList = new ArrayList<String>();
+			// ImmutableList.Builder<String> keywordList = ImmutableList.builder();
+			List<String> keywordList = new ArrayList<String>();
 		
 		// which keyword corresponds to which index	in the keywords list
 		// ImmutableMap.Builder<String, Integer> keyDictBuilder = ImmutableMap.builder();
 		//map of String (keyword), and integer (index in keywordList) of keyword.
-		Map<String, Integer> keywordIndexMap = new HashMap<String, Integer>();
+			Map<String, Integer> keywordIndexMap = new HashMap<String, Integer>(); ///<--this is not necessary!
 		//ImmutableList.Builder<String> mathObjListBuilder = ImmutableList.builder();
 		//to be list that contains the theorems, in the order they are inserted
 		//ImmutableList.Builder<String> mathObjListBuilder = ImmutableList.builder();
@@ -131,12 +131,11 @@ public class TriggerMathThm2 {
 		//Map<String, Integer> docWordsFreqMapNoAnno = CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno();
 		
 		// math object pre map. keys are theorems, values are keywords in that thm.
-				Multimap<String, String> mathObjMMap = ArrayListMultimap.create();
-
+			Multimap<String, String> mathObjMMap = ArrayListMultimap.create();
 				//adds thms from CollectThm.thmWordsList. The thm name is its index in thmWordsList.
-				addThmsFromList(keywordList, keywordIndexMap, mathObjMMap);
+			addThmsFromList(keywordList, keywordIndexMap, mathObjMMap);
 				//follows order in keywordIndexDict
-				keywordList = new ArrayList<String>(keywordIndexDict.keySet());
+			keywordList = new ArrayList<String>(keywordIndexDict.keySet());
 		//keyword index map not needed
 		
 		//System.out.println("!_-------keywordFreqDict: " + keywordFreqDict);
@@ -144,18 +143,19 @@ public class TriggerMathThm2 {
 		
 		//mathObjMx = new int[keywordList.size()][mathObjMMap.keySet().size()];	
 		//mathObjMx = new int[keywordList.size()][thmWordsList.size()];
-		mathObjMx = new double[keywordList.size()][thmWordsMapList.size()];
-		System.out.println("TriggerMathThm2 - mathObjMx dims: " + keywordList.size() + " " + thmWordsMapList.size());
+			mathObjMx = new double[keywordList.size()][thmWordsMapList.size()];
+			System.out.println("TriggerMathThm2 - mathObjMx dims: " + keywordList.size() + " " + thmWordsMapList.size());
 		
 		//System.out.println("BEFORE mathObjMMap" +mathObjMMap);
-		List<int[]> coordinatesList = new ArrayList<int[]>();
-		List<Double> weightsList = new ArrayList<Double>();
+			List<int[]> coordinatesList = new ArrayList<int[]>();
+			List<Double> weightsList = new ArrayList<Double>();
 		//pass in thmList to ensure the right order (insertion order) of thms 
 		//is preserved or MathObjList and mathObjMMap. Multimaps don't preserve insertion order
-		buildMathObjMx(//keywordList, 
-				mathObjMMap, thmList, coordinatesList, weightsList);
-		//mathObjMx now presented as sparse array
-		sparseArrayInputSB = constructSparseArrayInputString(coordinatesList, weightsList);
+			/*should just pass in mathObjMMap!! */
+			buildMathObjMx(//keywordList, 
+					mathObjMMap, thmList, coordinatesList, weightsList); f
+			/*mathObjMx now presented as sparse array*/
+			sparseArrayInputSB = constructSparseArrayInputString(coordinatesList, weightsList);
 		}
 		
 		mathObjList = ImmutableList.copyOf(thmList);
@@ -173,13 +173,15 @@ public class TriggerMathThm2 {
 	
 	/**
 	 * Add keyword/term to mathObjList, in the process of building keywordList, mathObjMMap, etc.
+	 * MathObj's are theorems.
 	 * @param keywords
 	 * @param keywordList
 	 * @param keywordIndexMap
 	 * @param mathObjMMap
 	 */
 	private static void addKeywordToMathObj(String[] keywords, List<String> keywordList,
-			Map<String, Integer> keywordIndexMap, Multimap<String, String> mathObjMMap) {
+			Map<String, Integer> keywordIndexMap, Multimap<String, String> mathObjMMap
+			) {
 		
 		if (keywords.length == 0){
 			return;		
@@ -218,11 +220,12 @@ public class TriggerMathThm2 {
 	 * Weighed by frequencies.
 	 * @param keywords
 	 * @param keywordList
-	 * @param keywordIndexMap Words and their indices in keywordList.
-	 * @param mathObjMMap
+	 * @param keywordIndexMap Empty map to be filled. Words and their indices in keywordList.
+	 * @param mathObjMMap Multimap of theorems and their words, key should not be thm!!
 	 */
 	private static void addThmsFromList(List<String> keywordList,
-			Map<String, Integer> keywordIndexMap, Multimap<String, String> mathObjMMap){
+			Map<String, Integer> keywordIndexMap//, Multimap<String, String> mathObjMMap
+			){
 		//thmWordsList has annotations, such as hyp or stm
 		//ImmutableList<ImmutableMap<String, Integer>> thmWordsList = CollectThm.get_thmWordsListNoAnno();
 		//System.out.println("---thmWordsList " + thmWordsList);
@@ -232,7 +235,7 @@ public class TriggerMathThm2 {
 		//index of thm in thmWordsList, to be used as part of name
 		//thm words and their frequencies.
 		int thmIndex = 0;
-		//key is thm, values are indices of words that show up in thm.
+		//key is thm, values are indices of words that show up in thm. Use list of list instead!
 		for(ImmutableMap<String, Integer> wordsMap : thmWordsMapList){
 			
 			//make whole thm text as name <--should make the index the key!			
@@ -256,7 +259,7 @@ public class TriggerMathThm2 {
 	 */
 	private static StringBuilder constructSparseArrayInputString(List<int[]> coordinatesList, List<Double> weightsList){
 		//should pack these!
-		StringBuilder sparseArraySB = new StringBuilder(10000);
+		StringBuilder sparseArraySB = new StringBuilder(20000);
 		sparseArraySB.append('{');
 		//append coordinates
 		for(int[] coordinatePair : coordinatesList){
@@ -282,6 +285,92 @@ public class TriggerMathThm2 {
 	}
 	
 	/**
+	 * Gather the TermDocumentMatrix entries to be turned into SparseArray.
+	 * Weigh inversely based on word frequencies extracted from 
+	 * CollectThm.java.
+	 * Use given list of words and given list of thms, in that precise order!
+	 * Be careful about thm ordering used! Since col index in term document mx depends on it!
+	 */
+	private static void gatherTermDocumentMxEntries(//List<String> keywordList, 
+			ImmutableList<String> thmList,
+			List<int[]> coordinatesList, List<Double> weightsList) {
+		
+		//map of annotated words and their scores. Previous run's scores
+		Map<String, Integer> wordsScoreMap = CollectThm.ThmWordsMaps.get_wordsScoreMapNoAnno();
+		
+		Iterator<String> thmListIter = thmList.iterator();
+		
+		//list of coordinate pairs containing non zero, used to construct sparse array.
+		//each array has size 2.
+		//List<int[]> coordinatesList = new ArrayList<int[]>(); //<--put in argument!
+		//List<Double> weightsList = new ArrayList<Double>();
+		//int[][] d = new int[mathObjMx.length][2];
+		
+		int mathObjCounter = 0;
+		int keywordIndexNullCounter = 0;
+		while (thmListIter.hasNext()) {
+			String thm = thmListIter.next();
+			//get collection of words.
+			String[] curMathObjCol = WordForms.splitThmIntoSearchWords(thm);
+			//Collection<String> curMathObjCol = mathObjMMap.get(thm);			
+			double norm = 0;
+			for (String keyword : curMathObjCol) {
+				if(!keywordIndexDict.containsKey(keyword)){
+					keyword = WordForms.normalizeWordForm(keyword);
+				}
+				if(!keywordIndexDict.containsKey(keyword)){
+					continue;
+				}
+				//Integer keyWordIndex = keywordDict.get(keyword);
+				Integer wordScore = wordsScoreMap.get(keyword);
+				if(null == wordScore){
+					//wordsScoreMap is now from previous parse run, so might not have this word.
+					//if the dataset has not stabilized across runs.
+					wordScore = 1;
+				}
+				norm += Math.pow(wordScore, 2);
+				//should not be null, as wordsScoreMap was created using same list of thms.
+				//if(wordScore == null) continue;
+				//weigh each word based on *local* frequency, ie word freq in sentence, not whole doc.
+				//mathObjMx[keyWordIndex][mathObjCounter] = wordScore;
+			}
+			//Sqrt is usually too large, so take log instead of sqrt.
+			//norm = norm < 3 ? 1 : (int)Math.sqrt(norm);
+			norm = Math.sqrt(norm);
+			//divide by log of norm
+			//System.out.println("keywordIndexDict: "+keywordIndexDict);
+			for (String keyword : curMathObjCol) {
+				Integer keyWordIndex = keywordIndexDict.get(keyword);
+				if(null == keyWordIndex){
+					keywordIndexNullCounter++;
+					continue;
+				}
+				Integer wordScore = wordsScoreMap.get(keyword);
+				if(null == wordScore){
+					//wordsScoreMap is now from previous parse run, so might not have this word.
+					//if the dataset has not stabilized across runs.
+					wordScore = 1;
+				}
+				//divide by log of norm
+				//could be very small! ie 0 after rounding.
+				double newScore = (double)wordScore/norm;
+				//int newScore = wordScore;
+				if(newScore == 0 && wordScore != 0){
+					newScore = .1;
+				}
+				//mathObjMx[keyWordIndex][mathObjCounter] = newScore;
+				coordinatesList.add(new int[]{keyWordIndex, mathObjCounter}) ;
+				weightsList.add(newScore);
+			}			
+			mathObjCounter++;
+		}
+		//System.out.println("TriggerMathThm2 - keywordIndexDict: "+ keywordIndexDict);
+		//System.out.println("TriggerMathThm2 - wordsScoreMap: "+ wordsScoreMap);
+		System.out.println("TriggerMathThm2 - keywordIndexNullCounter: "+ keywordIndexNullCounter);
+		//System.out.println("~~keywordDict "+keywordDict);
+	}
+	
+	/**
 	 * Builds the MathObjMx. Weigh inversely based on word frequencies extracted from 
 	 * CollectThm.java.
 	 * @param mathObjMMap
@@ -290,7 +379,8 @@ public class TriggerMathThm2 {
 	 * @param weightsList
 	 */
 	private static void buildMathObjMx(//List<String> keywordList, 
-			Multimap<String, String> mathObjMMap, ImmutableList<String> thmList,
+			Multimap<String, String> mathObjMMap, 
+			ImmutableList<String> thmList,
 			List<int[]> coordinatesList, List<Double> weightsList) {
 		
 		//map of annotated words and their scores
@@ -639,6 +729,16 @@ public class TriggerMathThm2 {
 	 */
 	public static StringBuilder sparseArrayInputSB(){
 		return sparseArrayInputSB;
+	}
+	
+	public static StringBuilder sparseArrayInputSB(ImmutableList<String> thmList){
+		
+		List<int[]> coordinatesList = new ArrayList<int[]>();
+		List<Double> weightsList = new ArrayList<Double>();
+		
+		gatherTermDocumentMxEntries(thmList, coordinatesList, weightsList);
+		/*mathObjMx now presented as sparse array*/		
+		return constructSparseArrayInputString(coordinatesList, weightsList);;
 	}
 	
 	/**
