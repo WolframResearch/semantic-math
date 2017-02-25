@@ -124,7 +124,8 @@ public class ParseTreeToVec {
 		//sets the entry correponding to headStruct
 		//setContextVecEntry(headStruct, contextVec, headStructRowIndex);
 		//call the applicable method in either StructA or StructH, with dynamic dispatch
-		headStruct.setContextVecEntry(headStructParentIndex, contextVec);
+		boolean adjustVecFromCommand = true;
+		headStruct.setContextVecEntry(headStructParentIndex, contextVec, adjustVecFromCommand);
 		return contextVec;
 	}
 
@@ -133,9 +134,11 @@ public class ParseTreeToVec {
 	 * @param struct
 	 * @param contextVec
 	 * @param structParentIndex row index of parent of struct
+	 * @param whether to adjust the vect based on WLCommand, false if this is already adjustment.
 	 * @return
 	 */
-	public static void setStructHContextVecEntry(StructH<?> struct, int structParentIndex, int[] contextVec){
+	public static void setStructHContextVecEntry(StructH<?> struct, int structParentIndex, int[] contextVec, 
+			boolean adjustVecFromCommand){
 		//termsStr only contains name of struct, properties are considered below 
 		String termStr = struct.nameStr();
 		int structIndex = 0;
@@ -161,8 +164,9 @@ public class ParseTreeToVec {
 			setContextVecEntry(struct, propertyStr, structIndex, contextVec);
 			//separate here instead of in setContextVecEntry, make all  point to the ent			
 		}
-		
-		adjustFromWrapper(struct, contextVec);
+		if(adjustVecFromCommand){
+			adjustFromWrapper(struct, contextVec);
+		}
 	}
 	
 	/**
@@ -172,7 +176,8 @@ public class ParseTreeToVec {
 	 * @param structParentIndex row index of parent of struct
 	 * @return
 	 */
-	public static void setStructAContextVecEntry(StructA<?, ?> struct, int structParentIndex, int[] contextVec){
+	public static void setStructAContextVecEntry(StructA<?, ?> struct, int structParentIndex, int[] contextVec, 
+			boolean adjustVecFromCommand){
 		
 		List<String> termStrList = struct.contentStrList();
 		//be more specific, "algebraic closure", want "algebraic" to point to "closure", so "closure" is parent
@@ -195,8 +200,9 @@ public class ParseTreeToVec {
 		if(struct.prev2NodeType().isTypeStruct()){
 			tree2vec((Struct)(struct.prev2()), structIndex, contextVec);
 		}		
-		
-		adjustFromWrapper(struct, contextVec);
+		if(adjustVecFromCommand){
+			adjustFromWrapper(struct, contextVec);
+		}
 	}
 
 	/**
@@ -504,7 +510,7 @@ public class ParseTreeToVec {
 			System.out.println(" STRUCT " + posTermList.get(i).commandComponent());
 			System.out.println(" STRUCTLIST " + WLCommand.getStructList(command, posTermList.get(i).commandComponent()));
 			System.out.println(" CommandsMap " + WLCommand.getStructList(command, posTermList.get(i).commandComponent()).get(posTerm.positionInMap()));
-		}*/
+			}*/
 		//elements are of form A\[Element] B, get A and then B. 
 		Struct parentStruct = null;
 		for(int i = triggerTermIndex - 1; i > -1; i--){
@@ -554,16 +560,17 @@ public class ParseTreeToVec {
 		}
 		//parentTermRowIndex = parentTermRowIndex == null ? ELEMENT.relationNum : parentTermRowIndex;
 		System.out.println("***** *got to adjust.");
-		//This has sometimes resulted in infinite loops, when the Struct in an earlier PosTerm is a child  
-		//of the Struct of a later PosTerm, due to erroneous non-linear Struct-adding to posTermList of the command. 
+		/*This has sometimes resulted in infinite loops! When the Struct in an earlier PosTerm is a child  
+		 of the Struct of a later PosTerm, due to erroneous non-linear Struct-adding to posTermList of the command. */
 		for(int i = triggerTermIndex+1; i < posTermList.size(); i++){
 			Struct curStruct = posTermList.get(i).posTermStruct();
 			if(null != curStruct){
-				System.out.println("!another term with index: " + i);
+				//System.out.println("!another term with index: " + i);
 				//String curStructTermStr = curStruct.contentStr();
 				//addTermStrToVec(curStruct, curStructTermStr, parentTermRowIndex, contextVec);
-				System.out.println("!curStruct " + curStruct);
-				curStruct.setContextVecEntry(parentTermRowIndex, contextVec);
+				//System.out.println("!curStruct " + curStruct);
+				boolean adjustVecFromCommand = false;
+				curStruct.setContextVecEntry(parentTermRowIndex, contextVec, adjustVecFromCommand);
 			}
 		}
 		}

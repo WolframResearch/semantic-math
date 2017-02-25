@@ -385,6 +385,7 @@ public class ParseToWLTree{
 			triggerKeyWord = (String)struct.prev1();			
 		}else if(!struct.isStructA()){
 			triggerKeyWord = struct.struct().get("name");
+			triggerKeyWord = null == triggerKeyWord ? "" : triggerKeyWord;
 		}
 		
 		String structType = struct.type();		

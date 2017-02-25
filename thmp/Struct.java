@@ -250,7 +250,7 @@ public abstract class Struct implements Serializable{
 	
 	//public abstract void append_WLCommandStr(String WLCommandStr);
 
-	public abstract void setContextVecEntry(int structParentIndex, int[] contextVec);
+	public abstract void setContextVecEntry(int structParentIndex, int[] contextVec, boolean adjustVecFromCommand);
 	
 	/**
 	 * Sets WLCommandStr to null.
@@ -407,7 +407,7 @@ public abstract class Struct implements Serializable{
 	 */
 	public static class ChildRelation implements Serializable{
 		
-		private static final long serialVersionUID = 1L;
+		private static final long serialVersionUID = 3635527039195547129L;
 
 		String childRelationStr;
 		

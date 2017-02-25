@@ -571,9 +571,9 @@ public class StructH<H> extends Struct{
 		}
 		
 		//sb.append(append_name_pptStr());
-		System.out.println("curCommand: " + curCommand);
+		//System.out.println("curCommand: " + curCommand);
 		System.out.println("this.name " + this.nameStr());
-		System.out.println("(((((((((children: " + children);
+		System.out.println("(((((((((children: " + children + ". childRelationList: " + childRelationList);
 		
 		int childrenSize = children.size();
 		int nontrivialChildrenStrCounter = 0;
@@ -821,8 +821,8 @@ public class StructH<H> extends Struct{
 	 * To avoid casting, and to distribute the logic.
 	 */
 	@Override
-	public void setContextVecEntry(int structParentIndex, int[] contextVec){
-		ParseTreeToVec.setStructHContextVecEntry(this, structParentIndex, contextVec);
+	public void setContextVecEntry(int structParentIndex, int[] contextVec, boolean adjustVecFromCommand){
+		ParseTreeToVec.setStructHContextVecEntry(this, structParentIndex, contextVec, adjustVecFromCommand);
 	}
 	
 }

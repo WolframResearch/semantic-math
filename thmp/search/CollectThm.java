@@ -334,7 +334,9 @@ public class CollectThm {
 				Map<String, Integer> keyWordFreqTreeMap = reorderDocWordsFreqMap(docWordsFreqPreMapNoAnno);					
 				docWordsFreqMapNoAnno = ImmutableMap.copyOf(keyWordFreqTreeMap);		
 			}else{				
-				buildScoreMapNoAnno(wordsScorePreMap, CONTEXT_VEC_WORDS_FREQ_MAP);				
+				buildScoreMapNoAnno(wordsScorePreMap, CONTEXT_VEC_WORDS_FREQ_MAP);
+				/*Do *not* re-order map based on frequency, since need to be consistent with word row
+				 * indices in term document matrix. Also should already be ordered. */
 				docWordsFreqMapNoAnno = CONTEXT_VEC_WORDS_FREQ_MAP;	
 				relatedWordsMap = deserializeAndProcessRelatedWordsMapFromFile(docWordsFreqMapNoAnno);
 			}
@@ -757,7 +759,7 @@ public class CollectThm {
 				//number of words to skip if an n gram has been added.
 				int numFutureWordsToSkip = 0;
 				//split along e.g. "\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:"
-				String[] thmAr = WordForms.splitThmIntoSearchWords(thm);
+				String[] thmAr = WordForms.splitThmIntoSearchWords(thm.toLowerCase());
 				
 				//words and their frequencies.
 				Map<String, Integer> thmWordsFreqMap = new HashMap<String, Integer>();				
@@ -1249,8 +1251,8 @@ public class CollectThm {
 		private static List<ParsedExpression> extractParsedExpressionList() {
 			//List<ParsedExpression> parsedExpressionsList;
 			//String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
-			//String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
-			String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionListTemplate.dat";
+			String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
+			//String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionListTemplate.dat";
 			
 			if(null != servletContext){
 				InputStream parsedExpressionListInputStream = servletContext.getResourceAsStream(parsedExpressionSerialFileStr);

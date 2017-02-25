@@ -570,6 +570,13 @@ public class ThmP1TestRun {
 			st = "quantum cohomology is hard";
 			st = " $M$ admits a typical surface foliation $\\F$."; //Let $M$ be a closed orientable  $3$--manifold. Then
 			st = "let $M$ be a closed orientable  $3$--manifold";
+			st = "Then there exists a point $c$ in $[a,b]$ such that $f(x) \\leq f(c)$ for all $x \\in [a,b]$";
+			st = "there exists a point $c$ in $[a,b]$ for all $x \\in [a,b]$";
+			st = "let $X$ be a pure measure. $\\mu$ can be written as a countably additive measure";
+			st = "Let $X$ be a nonempty set, let $\\mathfrak{M} \\mathcal{P}(X)$ be an algebra and "
+					+ "let $\\mathfrak{M} \\to [0,\\infty)$ be a finitely additive measure. Then $\\mu$ can be written "
+					+ "as the sum of a countably additive measure and a purely finitely additive measure.";
+			st = "there exists a point $c$ in $[a,b]$";
 			//st = "$A$ is isomorphic to $B$";
 			//st = "take the log of $f$ over the field";
 			//st = "field lies above ring";

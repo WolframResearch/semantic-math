@@ -567,7 +567,7 @@ public class ThmP1 {
 			parseState.setPunctuation(punctuationMatcher.group(1));
 		}
 		
-		// list of indices of "proper" math objects, e.g. "field", but not e.g. "pair"
+		/* list of indices of "proper" math objects, e.g. "field". */
 		List<Integer> mathIndexList = new ArrayList<Integer>();
 		// list of indices of anchor words, e.g. "of"
 		List<Integer> anchorList = new ArrayList<Integer>();
@@ -585,8 +585,8 @@ public class ThmP1 {
 		//\begin{enumerate} should be the first word in the sentence, based on how they are built
 		//in the preprocessor.
 		if(strAr[0].equals("\\begin{enumerate}")){
-			TexParseUtils.parseEnumerate(strAr, parseState);
 			//parseEnumerate takes care of rest of parsing.
+			TexParseUtils.parseEnumerate(strAr, parseState);			
 			return parseState;
 		}
 		
@@ -674,7 +674,8 @@ public class ThmP1 {
 						//int tempWordlen = strAr[i].length();						
 						///if (tempWordlen > 0 && strAr[i].charAt(tempWordlen - 1) == '$')
 							//latexExpr += " " + strAr[i];
-						if(LATEX_END_PATTER.matcher(strAr[i]).find()){
+						String ithWord = strAr[i];
+						if(LATEX_END_PATTER.matcher(ithWord).find()){						
 							latexExpr += " " + strAr[i];
 						}
 					}
@@ -708,7 +709,7 @@ public class ThmP1 {
 				continue strloop;
 			}
 			
-			noTexSB.append(" " + curWord + " ");
+			noTexSB.append(" ").append(curWord).append(" ");
 			// check for trigger words of fixed phrases, e.g. "with this said",
 			// "all but finitely many", as well as 2- or 3-grams.
 			if (i < strAr.length - 1) {
@@ -898,6 +899,7 @@ public class ThmP1 {
 					addExtraPosToPair(pair, posList);
 				}	
 				pair = fuseAdverbAdj(pairs, curWord, pair);	
+				//System.out.println("ThmP1 - after fusing adverb-adj pair: " + pair);
 				eliminateUnlikelyPosPairs(pair, pairs);
 				pairs.add(pair);
 				
@@ -905,7 +907,7 @@ public class ThmP1 {
 					emptyPair = fuseAdverbAdj(pairs, curWord, emptyPair);	
 					pairs.add(emptyPair);
 					if(emptyPair.pos().equals("ent")) mathIndexList.add(pairs.size() - 1);
-					System.out.println("emptyPair added! pairs: " + pairs);
+					//System.out.println("emptyPair added! pairs: " + pairs);
 				}	
 				//System.out.println("(((((((pair: " + pair);
 			}
@@ -1344,15 +1346,13 @@ public class ThmP1 {
 		}
 		
 		//turn "symb" pos into "ent" if followed by "pre",
-		//e.g. "given $x$ in a compact space"
-		//pairsLen = pairs.size();
-		for (int index = 0; index < pairsLen; index++) {
-			
+		//e.g. "given $x$ in a compact space", but not if preceded by an ent.
+		for (int index = 0; index < pairsLen; index++) {			
 			curpair = pairs.get(index);
-			String curPos = curpair.pos();
-				
-			if(curPos.equals("symb") &&index < pairsLen-1 
-					&& pairs.get(index+1).pos().equals("pre") ){
+			String curPos = curpair.pos();				
+			if(curPos.equals("symb") 
+					&& index < pairsLen-1 && pairs.get(index+1).pos().equals("pre") 
+					&& index > 0 && !pairs.get(index-1).pos().equals("ent") ){
 				curpair.set_pos("ent");
 				mathIndexList.add(index);
 			}
@@ -1407,9 +1407,11 @@ public class ThmP1 {
 			}
 			//tempMap.put("name", mathObjName);			
 			StringBuilder nameSB = new StringBuilder(mathObjName);
+			Pair nextPair;
 			// if next pair is also ent, combine.
-			if (j < mathIndexList.size() - 1 && mathIndexList.get(j + 1) == index + 1) {
-				Pair nextPair = pairs.get(index + 1);
+			if (j < mathIndexList.size() - 1 && index < pairs.size()-1 
+					&& (nextPair=pairs.get(index + 1)).pos().matches("\\d+")) {
+				
 				String name = nextPair.word();
 				// if next pair is also ent, and is latex expression
 				if (name.contains("$")) {
@@ -1490,12 +1492,23 @@ public class ThmP1 {
 				
 				//combine adverb-adj pair (not redundant with prior calls to fuseAdjAdverbPair())
 				if(curPos.equals("adj") && index-k-1 > -1){
-					Pair prevPair = pairs.get(index-k-1);
-					if(prevPair.pos().equals("adverb")){
+					Pair adverbPair;
+					StringBuilder adverbWordSB = new StringBuilder(20);
+					int k2 = index-k-1;
+					while(k2 > -1 && (adverbPair = pairs.get(k2)).pos().equals("adverb")){
+						adverbWordSB.insert(0, " ").insert(0, adverbPair.word());
+						adverbPair.set_pos(entPosStr);
+						k2--;
+					}
+					if(adverbWordSB.length() > 0){
+						curWord = adverbWordSB.append(curWord).toString();
+						//System.out.println("adverb curWord: " + curWord);
+					}
+					/*if(prevPair.pos().equals("adverb")){
 						curWord = prevPair.word() + " " + curWord;
 						prevPair.set_pos(entPosStr);
 						k++;
-					}
+					}*/
 				}
 					
 					// look for composite adj (two for now)
@@ -1741,19 +1754,20 @@ public class ThmP1 {
 					}
 				}
 				
-				//combine adverb-adjective together
+				/*combine adverb-adjective together*/
 				if (curPair.pos().equals("adj")) {
-					if (structListSize > 0 && structList.get(structListSize - 1).type().equals("adverb")) {
+					StringBuilder adverbAdjSB = new StringBuilder(curWord);
+					Struct adverbStruct;
+					while (structListSize > 0 && (adverbStruct=structList.get(structListSize - 1)).type().equals("adverb")) {
 						
 						//if(structListSize == 1 || !structList.get(structListSize - 2).type().matches("verb|vbs")){
-						Struct adverbStruct = structList.get(structListSize - 1);
-						String newContent = adverbStruct.prev1().toString() + " " + curWord;
-						newStruct.set_prev1(newContent);
-							//newStruct.set_prev2(adverbStruct);						
-							// remove the adverb Struct
+						//Struct adverbStruct = structList.get(structListSize - 1);
+						adverbAdjSB.insert(0, " ").insert(0, adverbStruct.prev1().toString());//adverbStruct.prev1().toString() + " " + curWord;
+						
 						structList.remove(structListSize - 1);
-						//}
+						structListSize = structList.size();						
 					}
+					newStruct.set_prev1(adverbAdjSB.toString());
 				}
 				// combine det into nouns and verbs, change
 				else if (curPair.pos().equals("noun") && structListSize > 0
@@ -1911,21 +1925,23 @@ public class ThmP1 {
 	 * @return
 	 */
 	private static Pair fuseAdverbAdj(List<Pair> pairs, String curWord, Pair pair) {
-		//boolean addIndex;
-		int pairsSize = pairs.size();
 		
 		// if adverb-adj pair, eg "clearly good"
 		// And combine adj_adj to adj, eg right exact
 		List<String> posList = posMMap.get(curWord);
 		if (pairs.size() > 0 && !posList.isEmpty() && posList.get(0).equals("adj")) {
-			String lastPairPos = pairs.get(pairsSize - 1).pos();
-			if (lastPairPos.equals("adverb") || lastPairPos.equals("adj")) {
-				curWord = pairs.get(pairsSize - 1).word() + " " + curWord;
-				// remove previous Pair
-				pairs.remove(pairsSize - 1);
-				pair = new Pair(curWord, "adj");				
-				//addIndex = false;
-			}			
+			StringBuilder adverbSB = new StringBuilder();			
+			Pair lastPair;
+			int pairsSize = pairs.size();
+			while ( pairsSize > 0 && ((lastPair=pairs.get(pairsSize - 1)).pos().equals("adverb") || lastPair.pos().equals("adj"))) {
+				//curWord = pairs.get(pairsSize - 1).word() + " " + curWord;
+				adverbSB.insert(0, " ").insert(0, lastPair.word());
+				pairs.remove(pairsSize - 1);					
+				pairsSize = pairs.size();
+			}	
+			if(adverbSB.length() > 0){
+				pair = new Pair(adverbSB.append(curWord).toString(), "adj");
+			}
 		}
 		return pair;
 	}
@@ -3825,6 +3841,8 @@ public class ThmP1 {
 		String hypStructPrev1Str = "";
 		String hypStructPrev2Str = "";
 		
+		//System.out.println("!!!hypStruct " + hypStruct + " hypStruct.prev1NodeType(): " + hypStruct.prev1NodeType());
+		
 		if(hypStruct.prev1NodeType().equals(NodeType.STRUCTA) ){
 			hypStructPrev1Str = ((Struct)hypStruct.prev1()).prev1().toString();
 		}else if(hypStruct.prev1NodeType().equals(NodeType.STR)){
@@ -3834,11 +3852,11 @@ public class ThmP1 {
 		if(hypStruct.prev2NodeType().equals(NodeType.STRUCTA) ){
 			hypStructPrev2Str = ((Struct)hypStruct.prev2()).prev1().toString();
 		}else if(hypStruct.prev2NodeType().equals(NodeType.STR)){
-			hypStructPrev1Str = hypStruct.prev2().toString();
+			hypStructPrev2Str = hypStruct.prev2().toString();
 		}
 		
 		String relationStr = hypStructPrev1Str + (hypStructPrev2Str.equals("") ? "" : " " + hypStructPrev2Str);	
-		
+		//System.out.println("relationStr: " + relationStr);
 		//System.out.println("=++++++=========++++ HYPO " + relationStr);
 		childRelation = new ChildRelation.HypChildRelation(relationStr);
 		return childRelation;
@@ -4348,6 +4366,7 @@ public class ThmP1 {
 		
 		//separate out punctuations, separate out words away from punctuations.
 		//compile this!		
+		//Note this also changes the tex, be more careful!
 		String[] wordsArray = inputStr.replaceAll("([^\\.,!:;]*)([\\.,:!;]{1})", "$1 $2").split("\\s+");
 		
 		//System.out.println("wordsArray " + Arrays.toString(wordsArray));
@@ -4369,8 +4388,7 @@ public class ThmP1 {
 		
 		wordsArrayLoop: for (int i = 0; i < wordsArrayLen; i++) {
 
-			curWord = wordsArray[i];
-			
+			curWord = wordsArray[i];			
 			//Skips parenthesized and bracketed items.
 			//compile these!
 			if (!inTex) {
@@ -4472,10 +4490,16 @@ public class ThmP1 {
 					&& !fluffMap.containsKey(curWord.toLowerCase())) {
 				
 				if (inTex || !toLowerCase) {
-					sentenceBuilder.append(" ").append(curWord);
+					char char0 = curWord.charAt(0);			
+					//those are tokens used to earlier to split sentence. 
+					if(char0 == ',' || char0 == '.' || char0 == ':' || char0 == ';'){
+						sentenceBuilder.append(curWord);						
+					}else{
+						sentenceBuilder.append(" ").append(curWord);
+					}
 					lastWordAdded = curWord;
 					toLowerCase = true;
-				} else{
+				}else{					
 					String wordToAdd = curWord.toLowerCase();
 					sentenceBuilder.append(" ").append(wordToAdd);
 					lastWordAdded = wordToAdd;

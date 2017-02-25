@@ -507,8 +507,8 @@ public class StructA<A, B> extends Struct{
 	 * To avoid casting, and to distribute the logic.
 	 */
 	@Override
-	public void setContextVecEntry(int structParentIndex, int[] contextVec){
-		ParseTreeToVec.setStructAContextVecEntry(this, structParentIndex, contextVec);
+	public void setContextVecEntry(int structParentIndex, int[] contextVec, boolean adjustVecFromCommand){
+		ParseTreeToVec.setStructAContextVecEntry(this, structParentIndex, contextVec, adjustVecFromCommand);
 	}
 	
 	/**

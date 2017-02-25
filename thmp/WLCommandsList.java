@@ -145,7 +145,7 @@ public class WLCommandsList {
 		//e.g. $f$ maps $X$ to $Y$.
 		wLCommandMapBuilder.put("verb", addCommand(new PBuilder("symb|ent|pro|noun", null, true), 
 				new PBuilder("pro", "we", WLCommand.PosTermType.NEGATIVE),
-				new PBuilder("~Connective["),  new PBuilder("verb", null, true, true, false), new PBuilder("]~"),
+				new PBuilder(", Connective["),  new PBuilder("verb", null, true, true, false), new PBuilder("], "),
 				new PBuilder("symb|ent|noun|adj|prep|phrase", null, true, false, false).addRelationType(RelationType._IS),
 				new PBuilder(", {\"Qualifiers\"->", "OPT"), 
 				//the relation should incorporate several types. 
@@ -304,8 +304,8 @@ public class WLCommandsList {
 		
 		//WLCommandMapBuilder.put("auxpass", addCommand(new String[] { "ent, , true",
 			//	"auxpass, , trigger_true", "ent|csubj, , true" }));
-		wLCommandMapBuilder.put("auxpass", addCommand(new PBuilder("ent", null, true), new PBuilder("~Connective["),
-				new PBuilder("auxpass", null, true, true, false), new PBuilder("]~"),
+		wLCommandMapBuilder.put("auxpass", addCommand(new PBuilder("ent", null, true), new PBuilder(", Connective["),
+				new PBuilder("auxpass", null, true, true, false), new PBuilder("], "),
 				new PBuilder("ent|csubj|prep", null, true) ));
 		
 		//definitions: e.g. "denote by $F$ a field", but note that "call this field $F$" should have different order as to which

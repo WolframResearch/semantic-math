@@ -21,6 +21,8 @@ import java.util.regex.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.google.common.collect.ImmutableList;
+
 import thmp.ParseState.ParseStateBuilder;
 import thmp.ParseState.VariableDefinition;
 import thmp.ParseState.VariableName;
@@ -378,13 +380,12 @@ public class DetectHypothesis {
 	 * a subset of steps only, since we rely on the different serialized data to come from
 	 * the same source with the same settings.
 	 */
-	private static void serializeDataToFile(Stats stats, List<>   defThmList) {
+	private static void serializeDataToFile(Stats stats, List<DefinitionListWithThm> defThmList) {
 		//List<Object> listToSerialize = new ArrayList<Object>();
 		//listToSerialize.add(parsedExpressionList);
 		FileUtils.serializeObjToFile(parsedExpressionList, parsedExpressionSerialFileStr);
 		
 		//serialize words used for context vecs
-		//List<List<String>> wordListToSerializeList = new ArrayList<List<String>>();
 		//wordListToSerializeList.add(ALL_THM_WORDS_LIST);
 		//System.out.println("------++++++++-------putting in : ALL_THM_WORDS_LIST.size " + ALL_THM_WORDS_LIST.size());
 		FileUtils.serializeObjToFile(ALL_THM_WORDS_LIST, allThmWordsSerialFileStr);
@@ -407,8 +408,9 @@ public class DetectHypothesis {
 		FileUtils.appendObjToFile(stats, statsFileStr);
 		FileUtils.writeToFile(ALL_THM_WORDS_LIST, allThmWordsStringFileStr);
 		
-		/*If this step fails, need to re-run to produce matrix!*/
-		ThmSearch.TermDocumentMatrix.createTermDocumentMatrixSVD( defThmList);
+		/* Creates the term document matrix, and serializes to .mx file.
+		 * If this step fails, need to re-run to produce matrix!*/
+		ThmSearch.TermDocumentMatrix.createTermDocumentMatrixSVD( ImmutableList.copyOf(defThmList));
 	}
 	
 	/**

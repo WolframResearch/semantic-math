@@ -409,7 +409,7 @@ cotangent ent
 integrality ent
 prof ent
 smoothness ent
-purely adv_comp
+purely adverb_comp
 "purely transcendental" adj
 cutting adj
 codimension ent

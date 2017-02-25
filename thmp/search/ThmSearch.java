@@ -15,6 +15,7 @@ import org.apache.logging.log4j.Logger;
 import com.google.common.collect.ImmutableList;
 import com.wolfram.jlink.*;
 
+import thmp.DetectHypothesis.DefinitionListWithThm;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 
@@ -521,7 +522,11 @@ public class ThmSearch {
 			}
 		}
 		
-		public static void createTermDocumentMatrixSVD(ImmutableList<String> thmList) {			
+		/**
+		 * @param defThmList This instead of list of strings, so not to take up additional memory
+		 * storing just Strings.
+		 */
+		public static void createTermDocumentMatrixSVD(ImmutableList<DefinitionListWithThm> defThmList) {			
 			//docMx = TriggerMathThm2.mathThmMx();			
 			//mx to keep track of correlations between terms, mx.mx^T
 			//List<List<Integer>> corMxList = new ArrayList<List<Integer>>();
@@ -544,7 +549,7 @@ public class ThmSearch {
 				//mxSB.append(toNestedList(docMx)).append("//N;");
 				/* *Need* to specify dimension! Since the Automatic dimension might be less than 
 				 * or equal to the size of the keywordList, if some words are not hit by the current thm corpus. */
-				StringBuilder mxSB = TriggerMathThm2.sparseArrayInputSB(thmList)
+				StringBuilder mxSB = TriggerMathThm2.sparseArrayInputSB(defThmList)
 						.insert(0, "m=SparseArray[1+").append(",{"+rowDimension).append(",").append(mxColDim+"}];");
 				//System.out.println("ThmSearch. - mxSB " + mxSB);
 				msg = "ThmSearch.TermDocumentMatrix - mxSB.length(): " + mxSB.length();
@@ -625,9 +630,6 @@ public class ThmSearch {
 				//take IntegerPart, faster processing later on
 				//ml.evaluate("mx = m + IntegerPart[0.2*corMx];");
 				//ml.discardAnswer();
-				
-				//Expr r = ml.getExpr();
-				//add to m
 				
 				//System.out.println("is matrix? " + r.part(1).matrixQ() + r.part(1));
 				//System.out.println(Arrays.toString((int[])r.part(1).part(1).asArray(Expr.INTEGER, 1)));
