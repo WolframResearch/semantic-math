@@ -577,6 +577,8 @@ public class ThmP1TestRun {
 					+ "let $\\mathfrak{M} \\to [0,\\infty)$ be a finitely additive measure. Then $\\mu$ can be written "
 					+ "as the sum of a countably additive measure and a purely finitely additive measure.";
 			st = "there exists a point $c$ in $[a,b]$";
+			st = "$M$ admits a surface";
+			
 			//st = "$A$ is isomorphic to $B$";
 			//st = "take the log of $f$ over the field";
 			//st = "field lies above ring";

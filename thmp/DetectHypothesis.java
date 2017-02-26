@@ -63,7 +63,7 @@ public class DetectHypothesis {
 	private static final List<String> DefinitionListWithThmStrList = new ArrayList<String>();
 	private static final List<String> allThmHypStrList = new ArrayList<String>();
 	private static final List<String> allThmsStrWithSpaceList = new ArrayList<String>();
-	private static final List<String> DefinitionList = new ArrayList<String>();
+	//private static final List<String> DefinitionList = new ArrayList<String>();
 	
 	private static final String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
 	private static final String parsedExpressionStringFileStr = "src/thmp/data/parsedExpressionList.txt";
@@ -284,6 +284,7 @@ public class DetectHypothesis {
 				//inputBF = new BufferedReader(new FileReader("src/thmp/data/fieldsRawTex.txt"));
 				//inputBF = new BufferedReader(new FileReader("src/thmp/data/samplePaper1.txt"));
 				inputFile = new File("src/thmp/data/Total.txt");
+				//inputFile = new File("src/thmp/data/thmsFeb26.txt");
 				//inputBF = new BufferedReader(new FileReader("src/thmp/data/Total.txt"));
 				//inputBF = new BufferedReader(new FileReader("src/thmp/data/fieldsThms2.txt"));
 			/*}catch(FileNotFoundException e){
@@ -328,13 +329,14 @@ public class DetectHypothesis {
 			try{
 				extractThmsFromFiles(inputBF, defThmList, stats, inputFile.getName());				
 			}catch(Throwable e){
-				logger.error(e.getStackTrace());			
+				logger.error(e.getMessage());			
 				throw e;
 			}finally{
 				//serialize, so don't discard the items already parsed.
-				serializeDataToFile(stats, defThmList);			
+				serializeDataToFile(stats, defThmList);					
 			}
 		}
+		//System.out.println("thmList " +allThmsStrWithSpaceList );
 		//deserialize objects
 		boolean deserialize = false;
 		if(deserialize){
@@ -367,9 +369,9 @@ public class DetectHypothesis {
 			+ " out of total " + stats.getTotalThmsNum() + "thms");
 		DefinitionListWithThmStrList.add(defThmList.toString()+ "\n");
 		//why do I need this??
-		for(DefinitionListWithThm def : defThmList){
+		/*for(DefinitionListWithThm def : defThmList){
 			DefinitionList.add(def.getDefinitionList().toString());
-		}
+		}*/
 		
 		//return stats;
 	}
@@ -400,7 +402,7 @@ public class DetectHypothesis {
 		
 		//write parsedExpressionList to file
 		FileUtils.writeToFile(parsedExpressionStrList, parsedExpressionStringFileStr);
-		FileUtils.writeToFile(DefinitionList, definitionStrFileStr);
+		//FileUtils.writeToFile(DefinitionList, definitionStrFileStr);
 		
 		//write just the thms
 		FileUtils.writeToFile(allThmsStrWithSpaceList, allThmsStringFileStr);
@@ -437,8 +439,7 @@ public class DetectHypothesis {
 		
 		try{
 			Object o = objectInputStream.readObject();
-			parsedExpressionsList = (List<ParsedExpression>)o;
-			//System.out.println("object read: " + ((ParsedExpression)((List<?>)o).get(0)).getOriginalThmStr());			
+			parsedExpressionsList = (List<ParsedExpression>)o;		
 		}catch(IOException e){
 			e.printStackTrace();
 			throw new IllegalStateException("IOException while reading deserialized data!");
@@ -559,12 +560,13 @@ public class DetectHypothesis {
 				//System.out.println("newThmSB: " + newThmSB);
 				//System.out.println("!---------! line: " + line+" thmEndPattern: " + thmEndPattern);
 				
-				//newThmSB.append(" " + fileName);
-				
-				allThmsStrWithSpaceList.add(newThmSB.toString() + "\n\n");
+				//Need to read in until \end{cor} etc
+				newThmSB.append(" ").append(line);
 				
 				//parse hyp and thm. BE SURE TO ONLY RE-ORDER WORDS based on word freuqency at last run, before serializing!
-				processParseHypThm(newThmSB, parseState, stats, definitionListWithThmList, fileName);
+				String thm = processParseHypThm(newThmSB, parseState, stats, definitionListWithThmList, fileName);
+				allThmsStrWithSpaceList.add(thm + "\n\n");
+				
 				//with hyps
 				//allThmHypStrList.add();
 				continue;
@@ -612,7 +614,7 @@ public class DetectHypothesis {
 	 * @param stats
 	 * @param definitionListWithThmList
 	 */
-	private static void processParseHypThm(StringBuilder newThmSB, ParseState parseState, Stats stats, 
+	private static String processParseHypThm(StringBuilder newThmSB, ParseState parseState, Stats stats, 
 			List<DefinitionListWithThm> definitionListWithThmList, String srcFileName){
 		//if(true) throw new IllegalStateException(newThmSB.toString());
 		
@@ -649,6 +651,7 @@ public class DetectHypothesis {
 		//local clean up, after done with a theorem, but still within same document.
 		parseState.parseRunLocalCleanUp();
 		newThmSB.setLength(0);
+		return thm;
 	}
 	
 	/**

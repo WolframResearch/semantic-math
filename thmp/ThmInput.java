@@ -97,7 +97,8 @@ public class ThmInput {
 		// String srcFileStr = "src/thmp/data/commAlg5.txt";
 		// String srcFileStr = "src/thmp/data/multilinearAlgebra.txt";
 		//String srcFileStr = "src/thmp/data/functionalAnalysis.txt";
-		 String srcFileStr = "src/thmp/data/fieldsRawTex.txt";
+		//String srcFileStr = "src/thmp/data/fieldsRawTex.txt";
+		String srcFileStr = "src/thmp/data/thmsFeb26.txt";
 		// String srcFileStr = "src/thmp/data/test1.txt";
 		FileReader srcFileReader = new FileReader(srcFileStr);
 		BufferedReader srcFileBReader = new BufferedReader(srcFileReader);
@@ -105,17 +106,14 @@ public class ThmInput {
 		List<String> thmWebDisplayList = new ArrayList<String>();
 		List<String> bareThmList = new ArrayList<String>();
 		List<String> thmList = readThm(srcFileBReader, thmWebDisplayList, bareThmList);
+		System.out.println("ThmInput - thmList: " + thmList);
 		if (writeToFile) {
 			// Path fileTo = Paths.get("src/thmp/data/thmFile5.txt");
 			// Path fileTo =
 			// Paths.get("src/thmp/data/multilinearAlgebraThms2.txt");
 			//Path fileTo = Paths.get("src/thmp/data/functionalAnalysisThms2.txt");
 			// Path fileTo = Paths.get("src/thmp/data/test1Thms.txt");
-			 Path fileTo = Paths.get("src/thmp/data/fieldsThms2.txt");
-
-			//System.out.println(thmWebDisplayList);
-
-			// write list of theorems to file
+			Path fileTo = Paths.get("src/thmp/data/fieldsThms2.txt");
 			Files.write(fileTo, thmList, Charset.forName("UTF-8"));
 		}
 	}
@@ -162,8 +160,7 @@ public class ThmInput {
 		//read in custom macros, break as soon as \begin{document} encountered
 		while ((line = srcFileReader.readLine()) != null) {
 			
-			Matcher newThmMatcher;
-			
+			Matcher newThmMatcher;			
 			if(BEGIN_PATTERN.matcher(line).find()){
 				break;
 			}else if((newThmMatcher = NEW_THM_PATTERN.matcher(line)).find()){
@@ -180,8 +177,7 @@ public class ThmInput {
 			StringBuilder endBuilder = new StringBuilder();
 			for(String macro : macrosList){
 				//create start and end macros
-				startBuilder.append("\\\\begin\\{").append(macro).append(".*");
-				
+				startBuilder.append("\\\\begin\\{").append(macro).append(".*");				
 				endBuilder.append("\\\\end\\{").append(macro).append(".*");
 			}
 			thmStartPattern = Pattern.compile(THM_START_STR + startBuilder);
@@ -204,8 +200,7 @@ public class ThmInput {
 			matcher = thmStartPattern.matcher(line);
 			if (matcher.find()) {
 				// if(line.matches("\\\\begin\\{definition\\}|\\\\begin\\{lemma\\}")){
-				// if(line.matches("\\\\begin\\{definition\\}|\\\\begin\\{lemma\\}|\\\\begin\\{thm\\}|\\\\begin\\{theorem\\}")){
-				
+				// if(line.matches("\\\\begin\\{definition\\}|\\\\begin\\{lemma\\}|\\\\begin\\{thm\\}|\\\\begin\\{theorem\\}")){				
 				inThm = true;
 			}			
 			else if (thmEndPattern.matcher(line).find()) {
@@ -213,7 +208,7 @@ public class ThmInput {
 				// if(line.matches("\\\\end\\{definition\\}|\\\\end\\{lemma\\}|\\\\end\\{thm\\}|\\\\end\\{theorem\\}")){
 				inThm = false;
 				//append the e.g. "\end{theorem}"
-				newThmSB.append("\n").append(line);
+				newThmSB.append(" ").append(line);//HERE
 				// process here, return two versions, one for bag of words, one
 				// for display
 				// strip \df, \empf. Index followed by % strip, not percent
@@ -222,7 +217,6 @@ public class ThmInput {
 				//System.out.println("newThmSB! " + newThmSB);
 				String thm = removeTexMarkup(newThmSB.toString(), thmWebDisplayList, bareThmList) + "\n";
 
-				// newThmSB.append("\n");
 				/*
 				 * String[] meat = thm.split("\\\\label\\{([a-zA-Z]|-)*\\} ");
 				 * String noTexString = ""; //get the second part, meat[1], if
@@ -232,8 +226,7 @@ public class ThmInput {
 				// String thm = newThmSB.toString();
 				if (!WordForms.getWhiteEmptySpacePattern().matcher(thm).find()) {
 					thms.add(thm);
-				}
-				
+				}				
 				newThmSB.setLength(0);
 				continue;
 			}

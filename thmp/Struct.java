@@ -407,7 +407,8 @@ public abstract class Struct implements Serializable{
 	 */
 	public static class ChildRelation implements Serializable{
 		
-		private static final long serialVersionUID = 3635527039195547129L;
+		private static final long serialVersionUID = 1L;
+		//private static final long serialVersionUID = 3635527039195547129L;
 
 		String childRelationStr;
 		

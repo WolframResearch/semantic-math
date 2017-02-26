@@ -1265,10 +1265,10 @@ public class WLCommand implements Serializable{
 				int optionalGroupNum = term.optionalGroupNum();
 				
 				if(0 == optionalTermsGroupCountMap.get(optionalGroupNum)){
-					commandSB.append(nextWord).append(" ");
+					commandSB.append(nextWord);//.append(" ");
 				}
 			}else{			
-				commandSB.append(nextWord).append(" ");
+				commandSB.append(nextWord);//.append(" ");
 			}
 		}
 		
@@ -1279,11 +1279,11 @@ public class WLCommand implements Serializable{
 			System.out.println("HEAD STRUCT: " + structToAppendCommandStr);
 		}
 		//System.out.println("*******%######structToAppendCommandStr " +structToAppendCommandStr);
-		//"****%###structToAppendCommandStr " +structToAppendCommandStr
-		logger.info("curCommand: " + curCommand);
+		//"****%###structToAppendCommandStr " +structToAppendCommandStr		
 		WLCommandWrapper curCommandWrapper = structToAppendCommandStr.add_WLCommandWrapper(curCommand);
 		
 		if(DEBUG){
+			logger.info("curCommand: " + curCommand);
 			System.out.println("~~~structToAppendCommandStr to append wrapper: " + structToAppendCommandStr);
 			System.out.println("curCommand just appended: " + curCommand);
 			//System.out.println(curCommand.posTermList.get(0).posTermStruct);

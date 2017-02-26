@@ -229,6 +229,7 @@ public class FileUtils {
 			//System.out.println("object read: " + ((ParsedExpression)((List<?>)o).get(0)).getOriginalThmStr());			
 		}catch(IOException e){
 			e.printStackTrace();
+			logger.info(e.getMessage());
 			throw new IllegalStateException("IOException while reading deserialized data!");
 		}catch(ClassNotFoundException e){
 			e.printStackTrace();

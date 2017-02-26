@@ -285,8 +285,7 @@ public class StructA<A, B> extends Struct{
 				this.WLCommandStrVisitedCount++;
 			}else if(!curCommand.equals(this.commandBuilt)){
 				this.WLCommandStrVisitedCount++;				
-			}
-			
+			}			
 			//System.out.println("WLCommandStrVisitedCount" + this.WLCommandStrVisitedCount);
 			//System.out.println("++++++===curWrapper " +curWrapper.WLCommandStr() + " " + this );
 			curCommand.addComposedWLCommands(composedCommand);
@@ -309,10 +308,11 @@ public class StructA<A, B> extends Struct{
 				if(this.type.equals("adj")){
 					fullContentSB.insert(0, "MathProperty[").append("]");
 				}else if(prev2.equals("")){
-					fullContentSB.insert(0, "[").append("]");
+					/*use "Math" Head here generally so not to have headless object. But perhaps should be more specific.*/
+					fullContentSB.insert(0, "Math[").append("]");
 				}
 				if(!prev2.equals("")){
-					fullContentSB.insert(0, "[").append(", \"").append((String)this.prev2).append("\"]");
+					fullContentSB.insert(0, "Math[").append(", \"").append((String)this.prev2).append("\"]");
 				}
 			}			
 			//been built into one command already
@@ -324,11 +324,11 @@ public class StructA<A, B> extends Struct{
 				this.WLCommandStrVisitedCount++;
 			}
 			
-			boolean added = WLCommand.increment_commandNumUnits(curCommand, this);		
-			if(added){
+			WLCommand.increment_commandNumUnits(curCommand, this);		
+			//if(added){
 				//fullContentSB.append(" ADDED ");
 				//System.out.println(" THIS  " + this + " ADDED for command " + curCommand);
-			}
+			//}
 			return fullContentSB.toString();
 		}else{		
 			//System.out.println("+++" + this.simpleToString2(includeType, curCommand));
@@ -448,7 +448,7 @@ public class StructA<A, B> extends Struct{
 				 }
 			}else if(PREV2_TYPE.equals(NodeType.STR) && !((String)prev2).matches("\\s*")){			
 				//prev2String += ", " + prev2;	
-				prev2SB.append(", " + prev2);
+				prev2SB.append(", ").append(prev2);
 			}
 			//tempStr += inConj ? "{" + prev2String + "}" : prev2String;
 			tempSB.append(inConj ? "[" + prev2SB + "]" : prev2SB);
