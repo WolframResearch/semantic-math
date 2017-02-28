@@ -134,17 +134,21 @@ public class ThmSearch {
 		//String query = "{{1,1,0,0}}";
 		//ml.evaluate("q = " + queryStr + ".mx.Transpose[mx];");
 		//ml.discardAnswer();		
+		
 		try{
+			//ml.evaluate("corMx");
+			//System.out.println("thmsearch - corMx : " + ml.getExpr());
 			String msg = "Transposing and applying corMx...";
 			logger.info(msg);
 			//process query first with corMx. 
 				
-			ml.evaluate("q0 = Transpose[" + queryVecStr + "] + 0.1*corMx.Transpose["+ queryVecStr +"]//N;");
+			ml.evaluate("q0 = Transpose[" + queryVecStr + "] + 0.08*corMx.Transpose["+ queryVecStr +"];");
 			boolean getQ = false;
 			if(getQ){
 				ml.waitForAnswer();
 				Expr qVec = ml.getExpr();
 				logger.info("ThmSearch - transposed queryVecStr: " + qVec);
+				
 			}else{				
 				ml.discardAnswer();
 			}
@@ -173,14 +177,15 @@ public class ThmSearch {
 			//When queries are entered in quick succession,
 			//QueryVecStr has wrong dimension?! Same dim as row/col dim of matrix d!!
 			//ml.evaluate("q = Inverse[d].Transpose[u].(q/.{0.0->mxMeanValue})");
-			ml.evaluate("q = dInverse.uTranspose.(q0/.{0.0->mxMeanValue});");
+			//ml.evaluate("q = dInverse.uTranspose.(q0/.{0.0->mxMeanValue})");
+			ml.evaluate("q = dInverse.uTranspose.q0;");
 			//ml.discardAnswer();
 			
 			getQ = false;
 			if(getQ){
 				ml.waitForAnswer();
 				Expr qVec = ml.getExpr();
-				logger.info("ThmSearch - transposed queryVecStr: " + qVec);
+				logger.info("ThmSearch - dInverse.uTranspose.(q0/.{0.0->mxMeanValue}): " + qVec);
 				//System.out.println("qVec: " + qVec);
 			}else{				
 				ml.discardAnswer();
@@ -701,7 +706,8 @@ public class ThmSearch {
 				//number of singular values to keep. Determined (roughly) based on the number of
 				//theorems (col dimension of mx)
 				//int k = NUM_SINGULAR_VAL_TO_KEEP;
-				int k = mxColDim < 35 ? mxColDim : (mxColDim < 400 ? 35 : (mxColDim < 1000 ? 40 : (mxColDim < 3000 ? 50 : 60)));
+				int minDim = 40;
+				int k = mxColDim < minDim ? mxColDim : (mxColDim < 400 ? minDim : (mxColDim < 1000 ? 45 : (mxColDim < 3000 ? 50 : 60)));
 				ml.evaluate("ClearSystemCache[]; {u, d, v} = SingularValueDecomposition[mx, " + k +"];");
 				//ml.waitForAnswer();
 				ml.discardAnswer();

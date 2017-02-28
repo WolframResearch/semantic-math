@@ -290,7 +290,7 @@ public class TriggerMathThm2 {
 	 */
 	private static void gatherTermDocumentMxEntries(ImmutableList<TheoremContainer> defThmList,
 			List<int[]> coordinatesList, List<Double> weightsList) {
-		
+		//System.out.println("TriggerMathThm2 = keywordIndexDict : "+keywordIndexDict);
 		//map of annotated words and their scores. Previous run's scores
 		Map<String, Integer> wordsScoreMap = CollectThm.ThmWordsMaps.get_wordsScoreMapNoAnno();
 		
@@ -308,15 +308,23 @@ public class TriggerMathThm2 {
 			String thm = defThmListIter.next().getEntireThmStr();
 			//get collection of words.
 			String[] curMathObjCol = WordForms.splitThmIntoSearchWords(thm.toLowerCase());
+			List<String> gatheredWordsList = new ArrayList<String>();
 			//Collection<String> curMathObjCol = mathObjMMap.get(thm);			
 			double norm = 0;
 			for (String keyword : curMathObjCol) {
+				
 				if(!keywordIndexDict.containsKey(keyword)){
-					keyword = WordForms.normalizeWordForm(keyword);
-				}
-				if(!keywordIndexDict.containsKey(keyword)){
-					continue;
-				}
+					keyword = WordForms.getSingularForm(keyword);	
+
+					if(!keywordIndexDict.containsKey(keyword)){
+						keyword = WordForms.normalizeWordForm(keyword);
+						
+						if(!keywordIndexDict.containsKey(keyword)){
+							continue;
+						}
+					}					
+				}				
+				gatheredWordsList.add(keyword);
 				//Integer keyWordIndex = keywordDict.get(keyword);
 				Integer wordScore = wordsScoreMap.get(keyword);
 				if(null == wordScore){
@@ -335,8 +343,9 @@ public class TriggerMathThm2 {
 			norm = Math.sqrt(norm);
 			//divide by log of norm
 			//System.out.println("keywordIndexDict: "+keywordIndexDict);
-			for (String keyword : curMathObjCol) {
+			for (String keyword : gatheredWordsList) {
 				Integer keyWordIndex = keywordIndexDict.get(keyword);
+				//keywordIndexDict should contain keyword at this point.
 				if(null == keyWordIndex){
 					//keywordIndexNullCounter++;
 					continue;
@@ -520,7 +529,7 @@ public class TriggerMathThm2 {
 	 * @return
 	 */
 	public static String createQueryNoAnno(String thm){
-		
+		//System.out.println("TriggerMathThm - keywordIndexDict map: " + keywordIndexDict);
 		//String[] thmAr = thm.split("\\s+|,|;|\\.");
 		String[] thmAr = thm.split(WordForms.splitDelim());
 		//map of non-annotated words and their scores. Use get_wordsScoreMapNoAnno 
@@ -687,7 +696,7 @@ public class TriggerMathThm2 {
 				//the key & related words should have *already* been normalized,
 				//when getting deserialized, to use consistent set of words as keywordIndexDict.
 				Integer relatedWordRowIndex = keywordIndexDict.get(relatedWord);
-				if(rowIndex >= queryVecLen){
+				if(relatedWordRowIndex >= queryVecLen){
 					continue;
 				}
 				if(null != relatedWordRowIndex){
@@ -780,7 +789,7 @@ public class TriggerMathThm2 {
 		
 		if(DEBUG){
 			Map<String, Integer> wordsScoreMap = CollectThm.ThmWordsMaps.get_wordsScoreMapNoAnno();		
-			for(String word : thmWordsMapList.get(index-1).keySet()){
+			for(String word : thmWordsMapList.get(index).keySet()){
 				System.out.print(word + " " + wordsScoreMap.get(word) + " " + docWordsFreqMapNoAnno.get(word));
 			}
 		}

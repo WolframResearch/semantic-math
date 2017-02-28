@@ -30,21 +30,17 @@ public class GenerateSVDMatrix{
 			return;
 		}
 		
-		Searcher.SearchMetaData.set_gatheringDataBoolToTrue();
-		FileUtils.set_dataGenerationMode();	
-		
 		String fileStr = args[0];
 		
 		@SuppressWarnings("unchecked")
 		List<ParsedExpression> parsedExpressionList = (List<ParsedExpression>)FileUtils.deserializeListFromFile(fileStr);
 		thmp.utils.ResourceDeposit.setParsedExpressionList(parsedExpressionList);
 		
-		Searcher.SearchMetaData.set_gatheringDataBoolToTrue();
-		FileUtils.set_dataGenerationMode();	
+		/*Do *NOT* set gatheringDataBoolToTrue()! Since need to use word maps gathered from last time.*/
+		//Searcher.SearchMetaData.set_gatheringDataBoolToTrue();
+		//FileUtils.set_dataGenerationMode();	
 		
-		ThmSearch.TermDocumentMatrix.createTermDocumentMatrixSVD();
-		
-		//ThmSearch.TermDocumentMatrix.createTermDocumentMatrixSVD(ImmutableList.<TheoremContainer>copyOf(parsedExpressionList));
+		ThmSearch.TermDocumentMatrix.createTermDocumentMatrixSVD(ImmutableList.<TheoremContainer>copyOf(parsedExpressionList));
 		FileUtils.closeKernelLinkInstance();
 	}
 }

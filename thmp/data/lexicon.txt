@@ -13,6 +13,7 @@ log ent
 separate verb
 sheaf ent
 tower ent
+family ent
 unitary adj
 separated adj
 space ent

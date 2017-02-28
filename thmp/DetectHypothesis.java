@@ -393,6 +393,7 @@ public class DetectHypothesis {
 	private static void serializeDataToFile(Stats stats, List<DefinitionListWithThm> defThmList) {
 		//List<Object> listToSerialize = new ArrayList<Object>();
 		//listToSerialize.add(parsedExpressionList);
+		logger.info("Serializing parsedExpressionList to file...");
 		FileUtils.serializeObjToFile(parsedExpressionList, parsedExpressionSerialFileStr);
 		
 		//serialize words used for context vecs
@@ -417,6 +418,7 @@ public class DetectHypothesis {
 		//append to stats file!
 		FileUtils.appendObjToFile(stats, statsFileStr);
 		FileUtils.writeToFile(ALL_THM_WORDS_LIST, allThmWordsStringFileStr);
+		logger.info("Done serializing parsedExpressionList & co to files! Beginning to compute SVD for parsedExpressionList thms.");
 		
 		/* Creates the term document matrix, and serializes to .mx file.
 		 * If this step fails, need to re-run to produce matrix. Run at end of this method.*/

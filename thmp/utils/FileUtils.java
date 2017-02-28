@@ -28,8 +28,6 @@ import com.wolfram.jlink.KernelLink;
 import com.wolfram.jlink.MathLinkException;
 import com.wolfram.jlink.MathLinkFactory;
 
-import exceptions.ParseRuntimeException;
-import thmp.ParsedExpression;
 
 /**
  * Utility functions pertaining to files.

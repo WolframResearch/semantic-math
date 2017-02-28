@@ -2,124 +2,122 @@
 <!-- Build the thm parse project -->
 
 <project name="thmParse" basedir=".">
-	
-	<property name="builddir" value="${basedir}/bin/"/>
-	<property name="srcdir" value="${basedir}/src/thmp/"/>
-	<property name="datadir" value="${basedir}/src/thmp/data"/>
-	<property name="server_datadir" value="/Users/yihed/Documents/workspaceEE/ThmpServlet/WebContent/src/thmp/data"/>
-	<property name="exceptionsSrcdir" value="${basedir}/src/exceptions/"/>
-	
+
+	<property name="builddir" value="${basedir}/bin/" />
+	<property name="srcdir" value="${basedir}/src/thmp/" />
+	<property name="datadir" value="${basedir}/src/thmp/data" />
+	<property name="server_datadir" value="/Users/yihed/Documents/workspaceEE/ThmpServlet/WebContent/src/thmp/data" />
+	<property name="exceptionsSrcdir" value="${basedir}/src/exceptions/" />
+
 	<!-- main lib containing jar such as JLink, Guava etc -->
-	<property name="libdir" value="${basedir}/lib/"/>
+	<property name="libdir" value="${basedir}/lib/" />
 	<!-- lib containing jars such as thmSearch, thmUtils etc-->
-	<property name="thmplibdir" value="${basedir}/bin/"/>
-	<property name="jarname" value="thmParse.jar"/>
-	<property name="utilsJarName" value="thmUtils.jar"/>
-	
+	<property name="thmplibdir" value="${basedir}/bin/" />
+	<property name="jarname" value="thmParse.jar" />
+	<property name="utilsJarName" value="thmUtils.jar" />
+
 	<target name="clean" description="clean">
-		<delete failonerror="false" file="${basedir}/${jarname}"/>
+		<delete failonerror="false" file="${basedir}/${jarname}" />
 	</target>
-	
-	<!-- Copy data such as lexicon.txt into server directory, i.e. WEB-INF -->
-		<target name="copydata">
-			<copy todir="${server_datadir}">
-				<fileset dir="${datadir}">
-					<include name="lexicon.txt"/>
-					<include name="parsedExpressionList.dat"/>
-					<include name="threeGramData.txt"/>
-					<include name="twoGramData.txt"/>
-					<include name="allThmWordsList.dat"/>
-					<include name="NGramData.txt"/>
-				</fileset>
-			</copy>
-		</target>
-	
+
+	<!-- Copy data such as lexicon.txt into server directory, i.e. WEB-INF. 
+		This is already included in build.xml in building the war file. -->
+	<target name="copydata">
+		<copy todir="${server_datadir}">
+			<fileset dir="${datadir}">
+				<include name="lexicon.txt" />
+				<include name="parsedExpressionList.dat" />
+				<include name="threeGramData.txt" />
+				<include name="twoGramData.txt" />
+				<include name="allThmWordsList.dat" />
+				<include name="NGramData.txt" />
+			</fileset>
+		</copy>
+	</target>
+
 	<target name="compileExceptions" description="compile exceptions package">
-	  <mkdir dir="${builddir}"/>
-	  <javac		
-			srcdir="${exceptionsSrcdir}"
-			destdir="${builddir}"
-			debug="true"			
-		>
-		<classpath>			
-			<fileset dir="${thmplibdir}">
-				<include name="**/*.class"/>
-			</fileset>
-			<fileset dir="${libdir}">
-				<include name="**/*.jar"/>
-				<!-- <include name="**/SystemFiles/*"/>-->
-			</fileset>
-		</classpath>
+		<mkdir dir="${builddir}" />
+		<javac srcdir="${exceptionsSrcdir}" destdir="${builddir}" debug="true">
+			<classpath>
+				<fileset dir="${thmplibdir}">
+					<include name="**/*.class" />
+				</fileset>
+				<fileset dir="${libdir}">
+					<include name="**/*.jar" />
+					<!-- <include name="**/SystemFiles/*"/>-->
+				</fileset>
+			</classpath>
 		</javac>
 	</target>
-	
+
 	<target name="compileThmp" description="compile main thmp package">
-	  <mkdir dir="${builddir}"/>
-	  <javac		
-			srcdir="${srcdir}"
-			destdir="${builddir}"
-			debug="true"			
-		>
-		<exclude name="/TestMathParser.java"/>
-		<exclude name="/ThmP1Test.java"/>
-			
-		<classpath>			
-			<fileset dir="${thmplibdir}">
-				<include name="**/*.class"/>
-			</fileset>
-			<fileset dir="${libdir}">
-				<include name="**/*.jar"/>
-				<!-- <include name="**/SystemFiles/*"/>-->
-			</fileset>
-			<fileset dir="${builddir}">
-			  <include name="**/*.class"/>
-			</fileset>	
-		</classpath>
+		<mkdir dir="${builddir}" />
+		<javac srcdir="${srcdir}" destdir="${builddir}" debug="true">
+			<exclude name="/TestMathParser.java" />
+			<exclude name="/ThmP1Test.java" />
+
+			<classpath>
+				<fileset dir="${thmplibdir}">
+					<include name="**/*.class" />
+				</fileset>
+				<fileset dir="${libdir}">
+					<include name="**/*.jar" />
+					<!-- <include name="**/SystemFiles/*"/>-->
+				</fileset>
+				<fileset dir="${builddir}">
+					<include name="**/*.class" />
+				</fileset>
+			</classpath>
 		</javac>
 	</target>
 
 	<target name="compile" description="compile">
-		<mkdir dir="${builddir}"/>
-		<javac		
-			srcdir="${srcdir}"
-			destdir="${builddir}"
-			debug="true"
-		>
-		<classpath>			
-			<fileset dir="${thmplibdir}">
-				<include name="**/*.class"/>
-			</fileset>
-			<fileset dir="${libdir}">
-			  <include name="**/*.jar"/>
-			  <!-- <include name="**/SystemFiles/*"/>-->
-			</fileset>
-		</classpath>
+		<mkdir dir="${builddir}" />
+		<javac srcdir="${srcdir}" destdir="${builddir}" debug="true">
+			<classpath>
+				<fileset dir="${thmplibdir}">
+					<include name="**/*.class" />
+				</fileset>
+				<fileset dir="${libdir}">
+					<include name="**/*.jar" />
+					<!-- <include name="**/SystemFiles/*"/>-->
+				</fileset>
+			</classpath>
 		</javac>
 	</target>
-	
+
 	<target name="buildjar" description="build jar file">
-		<jar
-			destfile="${basedir}/${jarname}"
-			basedir="${basedir}/build"
-		>
-		<manifest>
-			<attribute name="Main-Class" value="src/thmp/ThmP1Test"/>
-		</manifest>
-		<exclude name="src/"/>
-		<exclude name="~/"/>
-		<exclude name="bin/"/>
-		<exclude name="lib/"/>
-		<exclude name="${basedir}/*.txt"/>
-		<exclude name="${basedir}/*.xml"/>
-		<exclude name="**/*.jar"/>		
+		<jar destfile="${basedir}/${jarname}" basedir="${basedir}/build">
+			<manifest>
+				<attribute name="Main-Class" value="src/thmp/ThmP1Test" />
+			</manifest>
+			<exclude name="src/" />
+			<exclude name="~/" />
+			<exclude name="bin/" />
+			<exclude name="lib/" />
+			<exclude name="${basedir}/*.txt" />
+			<exclude name="${basedir}/*.xml" />
+			<exclude name="**/*.jar" />
 		</jar>
 	</target>
-	
-	
+
+	<target name="copyJarsToThmpServlet">
+		<copy todir="${server_datadir}">
+			<fileset dir="${datadir}">
+				<include name="lexicon.txt" />
+				<include name="parsedExpressionList.dat" />
+				<include name="threeGramData.txt" />
+				<include name="twoGramData.txt" />
+				<include name="allThmWordsList.dat" />
+				<include name="NGramData.txt" />
+			</fileset>
+		</copy>
+	</target>
+
 	<target name="run" description="run the build process">
-		<antcall target="clean"/>
-		<antcall target="compile"/>
-		<antcall target="buildjar"/>
+		<antcall target="clean" />
+		<antcall target="compile" />
+		<antcall target="buildjar" />
 	</target>
 
 </project>
