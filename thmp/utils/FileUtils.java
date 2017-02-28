@@ -194,7 +194,7 @@ public class FileUtils {
 	 * @param deserializedList
 	 * @param fileInputStream
 	 * @param checkVersion whether to check for DESERIAL_VERSION_NUM 
-	 * @return
+	 * @return A *List* of items from the file.
 	 */
 	public static Object deserializeListFromInputStream(InputStream inputStream, boolean checkVersion) {
 		

@@ -18,6 +18,7 @@ import com.google.common.collect.Multimap;
 
 import thmp.DetectHypothesis.DefinitionListWithThm;
 import thmp.Maps;
+import thmp.TheoremContainer;
 import thmp.ThmP1;
 import thmp.search.SearchCombined.ThmHypPair;
 import thmp.search.SearchWordPreprocess.WordWrapper;
@@ -152,10 +153,10 @@ public class TriggerMathThm2 {
 		//pass in thmList to ensure the right order (insertion order) of thms 
 		//is preserved or MathObjList and mathObjMMap. Multimaps don't preserve insertion order
 			/*should just pass in mathObjMMap!! */
-			
-			/*////buildMathObjMx(mathObjMMap, thmList, coordinatesList, weightsList); 
+			/*buildMathObjMx is filled in already.*/
+			/*buildMathObjMx(mathObjMMap, thmList, coordinatesList, weightsList); 
 			//mathObjMx now presented as sparse array
-			////sparseArrayInputSB = constructSparseArrayInputString(coordinatesList, weightsList);*/
+			sparseArrayInputSB = constructSparseArrayInputString(coordinatesList, weightsList);*/
 		}
 		
 		mathObjList = ImmutableList.copyOf(thmList);
@@ -287,13 +288,13 @@ public class TriggerMathThm2 {
 	 * Use given list of words and given list of thms, in that precise order!
 	 * Be careful about thm ordering used! Since col index in term document mx depends on it!
 	 */
-	private static void gatherTermDocumentMxEntries(ImmutableList<DefinitionListWithThm> defThmList,
+	private static void gatherTermDocumentMxEntries(ImmutableList<TheoremContainer> defThmList,
 			List<int[]> coordinatesList, List<Double> weightsList) {
 		
 		//map of annotated words and their scores. Previous run's scores
 		Map<String, Integer> wordsScoreMap = CollectThm.ThmWordsMaps.get_wordsScoreMapNoAnno();
 		
-		Iterator<DefinitionListWithThm> defThmListIter = defThmList.iterator();
+		Iterator<TheoremContainer> defThmListIter = defThmList.iterator();
 		
 		//list of coordinate pairs containing non zero, used to construct sparse array.
 		//each array has size 2.
@@ -304,7 +305,7 @@ public class TriggerMathThm2 {
 		int mathObjCounter = 0;
 		//int keywordIndexNullCounter = 0;
 		while (defThmListIter.hasNext()) {
-			String thm = defThmListIter.next().getThmWithDefStr();
+			String thm = defThmListIter.next().getEntireThmStr();
 			//get collection of words.
 			String[] curMathObjCol = WordForms.splitThmIntoSearchWords(thm.toLowerCase());
 			//Collection<String> curMathObjCol = mathObjMMap.get(thm);			
@@ -531,8 +532,11 @@ public class TriggerMathThm2 {
 		
 		String priorityWords = ConstantsInSearch.get_priorityWords();
 		//keywordDict is annotated with "hyp"/"stm"
-		int dictSz = keywordIndexDict.keySet().size();
-		double[] queryVec = new double[dictSz];
+		//int dictSz = keywordIndexDict.keySet().size();
+		int queryVecLen = ThmSearch.ThmSearchQuery.getQUERY_VEC_LENGTH();
+		
+		//System.out.println("TriggerMathThm2 - query vector length: " + queryVecLen);
+		double[] queryVec = new double[queryVecLen];
 		double norm = 0;
 		//highest weight amongst the single words
 		double highestWeight = 0;
@@ -543,19 +547,19 @@ public class TriggerMathThm2 {
 			String term = thmAr[i];
 			double newNorm;
 			//this also normalizes the word
-			newNorm = addToNorm(thmAr, wordsScoreMap, queryVec, norm, i, term);
+			newNorm = addToNorm(thmAr, wordsScoreMap, queryVec, norm, i, term, queryVecLen);
 			if(newNorm - norm > highestWeight){
 				highestWeight = newNorm - norm;
 			}
 			//search 2 & 3-grams
 			if(i < thmAr.length-1){
 				String nextTermCombined = term + " " + thmAr[i+1];
-				newNorm = addToNorm(thmAr, wordsScoreMap, queryVec, newNorm, i, nextTermCombined);	
+				newNorm = addToNorm(thmAr, wordsScoreMap, queryVec, newNorm, i, nextTermCombined, queryVecLen);	
 				//System.out.println("combined word: " + nextTermCombined + ". norm: " + newNorm);
 				
 				if(i < thmAr.length-2){
 					String threeTermsCombined = nextTermCombined + " " + thmAr[i+2];
-					newNorm = addToNorm(thmAr, wordsScoreMap, queryVec, newNorm, i, threeTermsCombined);
+					newNorm = addToNorm(thmAr, wordsScoreMap, queryVec, newNorm, i, threeTermsCombined, queryVecLen);
 				}
 			}
 			if(term.matches(priorityWords)){
@@ -598,8 +602,8 @@ public class TriggerMathThm2 {
 		//transform into query list String 
 		StringBuilder sb = new StringBuilder();
 		sb.append("{{");
-		for(int j = 0; j < dictSz; j++){
-			String t = j == dictSz-1 ? queryVec[j] + "" : queryVec[j] + ", ";
+		for(int j = 0; j < queryVecLen; j++){
+			String t = j == queryVecLen-1 ? queryVec[j] + "" : queryVec[j] + ", ";
 			sb.append(t);
 		}
 		sb.append("}}");
@@ -618,7 +622,7 @@ public class TriggerMathThm2 {
 	 * @return
 	 */
 	private static double addToNorm(String[] thmAr, Map<String, Integer> wordsScoreMap, double[] triggerTermsVec,
-			double norm, int i, String term) {
+			double norm, int i, String term, int queryVecLen) {
 		Integer termScore = wordsScoreMap.get(term);
 		//get singular forms		
 		if(termScore == null){
@@ -652,8 +656,8 @@ public class TriggerMathThm2 {
 		
 		//triggerTermsVec[rowIndex] = termScore;
 		/*keywordDict starts indexing from 0!*/
-		Integer rowIndex = keywordIndexDict.get(term);		
-		if(termScore != null && rowIndex != null){
+		Integer rowIndex = keywordIndexDict.get(term);				
+		if(termScore != null && rowIndex != null && rowIndex < queryVecLen){
 			//just adding the termscore, without squaring, works better
 			//norm += Math.pow(termScore, 2);
 			norm += Math.pow(termScore, 2);
@@ -683,13 +687,15 @@ public class TriggerMathThm2 {
 				//the key & related words should have *already* been normalized,
 				//when getting deserialized, to use consistent set of words as keywordIndexDict.
 				Integer relatedWordRowIndex = keywordIndexDict.get(relatedWord);
+				if(rowIndex >= queryVecLen){
+					continue;
+				}
 				if(null != relatedWordRowIndex){
 					triggerTermsVec[relatedWordRowIndex] = relatedWordScore;
 					norm += Math.pow(relatedWordScore, 2);
 				}					
 			}
-		}
-		
+		}		
 		return norm;
 	}
 
@@ -726,7 +732,7 @@ public class TriggerMathThm2 {
 		return sparseArrayInputSB;
 	}
 	
-	public static StringBuilder sparseArrayInputSB(ImmutableList<DefinitionListWithThm> thmList){
+	public static StringBuilder sparseArrayInputSB(ImmutableList<TheoremContainer> thmList){
 		
 		List<int[]> coordinatesList = new ArrayList<int[]>();
 		List<Double> weightsList = new ArrayList<Double>();

@@ -1,6 +1,5 @@
 package thmp.search;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -15,7 +14,7 @@ import org.apache.logging.log4j.Logger;
 import com.google.common.collect.ImmutableList;
 import com.wolfram.jlink.*;
 
-import thmp.DetectHypothesis.DefinitionListWithThm;
+import thmp.TheoremContainer;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 
@@ -49,6 +48,7 @@ public class ThmSearch {
 	 * Class for finding nearest giving query.
 	 */
 	public static class ThmSearchQuery{
+		private static final int QUERY_VEC_LENGTH;
 	private static final KernelLink ml;	
 	static{		
 		//use OS system variable to tell whether on VM or local machine, and set InstallDirectory 
@@ -67,6 +67,7 @@ public class ThmSearch {
 		ml = FileUtils.getKernelLinkInstance();
 		String msg = "Kernel instance acquired...";
 		logger.info(msg);
+		int vector_vec_length = -1;
 		
 		try{
 			ServletContext servletContext = CollectThm.getServletContext();
@@ -93,16 +94,30 @@ public class ThmSearch {
 					+ "u =" + TermDocumentMatrix.MX_CONTEXT_NAME + "u;"
 					+ "v =" + TermDocumentMatrix.MX_CONTEXT_NAME + "v;");
 			ml.discardAnswer();*/
-			ml.evaluate("Length[corMx[[1]]]");
 			
-			System.out.println("ThmSearch - corMx row dimension (num of words): " + ml.getExpr());
+			//ml.evaluate("Length[corMx[[1]]]");
+			ml.evaluate("Length[mx]");
+			ml.waitForAnswer();			
+			try{
+				vector_vec_length = ml.getExpr().asInt();				
+				System.out.println("ThmSearch - mx row dimension (num of words): " + vector_vec_length);
+			}catch(ExprFormatException e){
+				String msg1 = "ExprFormatException when getting row dimension! " + e.getMessage();
+				logger.error(msg1);
+				throw new IllegalStateException(msg1);
+			}
+			
 		}catch(MathLinkException e){
 			msg = "MathLinkException when loading mx file!";
 			logger.error(msg + e);
 			throw new IllegalStateException(msg, e);
-		}		
+		}
+		QUERY_VEC_LENGTH = vector_vec_length;
 	}
 	
+	public static int getQUERY_VEC_LENGTH(){
+		return QUERY_VEC_LENGTH;
+	}
 	/**
 	 * Constructs the String query to be evaluated.
 	 * Submits it to kernel for evaluation.
@@ -130,7 +145,6 @@ public class ThmSearch {
 				ml.waitForAnswer();
 				Expr qVec = ml.getExpr();
 				logger.info("ThmSearch - transposed queryVecStr: " + qVec);
-				//System.out.println("qVec: " + qVec);
 			}else{				
 				ml.discardAnswer();
 			}
@@ -383,11 +397,6 @@ public class ThmSearch {
 				//subtract IdentityMatrix to avoid self-compounding
 				ml.evaluate("corMx = Clip[Correlation[Transpose[m]]-IdentityMatrix[" + rowDimension 
 						+ "], {.6, Infinity}, {0, 0}]/.Indeterminate->0.0;");
-				msg = "Corr. mx clipped!";
-				logger.info(msg);
-				System.out.println(msg);
-				//ml.waitForAnswer();
-				//System.out.println("clipped corr mx: " + ml.getExpr());
 				
 				if(getCorMx){
 					ml.waitForAnswer();
@@ -398,6 +407,12 @@ public class ThmSearch {
 				}else{
 					ml.discardAnswer();
 				}
+				
+				msg = "Corr. mx clipped! Ready to add corMx to m.";
+				logger.info(msg);
+				System.out.println(msg);
+				
+				
 				//the entries in corMx.m can range from 0 to ~6
 				ml.evaluate("mx = m + .15*corMx.m;");
 				if(getCorMx){
@@ -408,6 +423,7 @@ public class ThmSearch {
 					ml.discardAnswer();
 				}
 				
+				System.out.println("ThmSearch - cor matrix added!");
 				//take IntegerPart, faster processing later on
 				//ml.evaluate("mx = m + IntegerPart[0.2*corMx];");
 				//ml.discardAnswer();
@@ -526,7 +542,7 @@ public class ThmSearch {
 		 * @param defThmList This instead of list of strings, so not to take up additional memory
 		 * storing just Strings.
 		 */
-		public static void createTermDocumentMatrixSVD(ImmutableList<DefinitionListWithThm> defThmList) {			
+		public static void createTermDocumentMatrixSVD(ImmutableList<TheoremContainer> defThmList) {			
 			//docMx = TriggerMathThm2.mathThmMx();			
 			//mx to keep track of correlations between terms, mx.mx^T
 			//List<List<Integer>> corMxList = new ArrayList<List<Integer>>();
@@ -541,7 +557,7 @@ public class ThmSearch {
 				//int rowDimension = docMx.length;
 				int rowDimension = TriggerMathThm2.mathThmMxRowDim();
 				//int mxColDim = docMx[0].length;
-				int mxColDim = TriggerMathThm2.mathThmMxColDim();
+				int mxColDim = defThmList.size();
 				
 				//set up the matrix corresponding to docMx, to be SVD'd. 
 				//adjust mx entries based on correlation first	
@@ -555,8 +571,6 @@ public class ThmSearch {
 				msg = "ThmSearch.TermDocumentMatrix - mxSB.length(): " + mxSB.length();
 				System.out.println(msg);
 				logger.info(msg);
-				
-				//System.out.println("nested mx " + Arrays.deepToString(docMx));
 				
 				ml.evaluate(mxSB.toString()); //mxSB.append(";") here causes memory bloat?!
 				
@@ -593,8 +607,14 @@ public class ThmSearch {
 				
 				//ml.evaluate("corMx = Clip[ m.Transpose[m], {4, Infinity}, {0, 0} ].m;");
 				//ml.evaluate("correlatedMx = IntegerPart[m.Transpose[m].m];");
-				//ml.discardAnswer();			
+				//ml.discardAnswer();
 				
+				boolean printCorMx = false;
+				if(printCorMx){
+					ml.evaluate("Transpose[m]");
+					ml.waitForAnswer();
+					System.out.println("ThmSearch - [Transpose[m]]: " + ml.getExpr());
+				}
 				//System.out.println("Done clipping!");	
 				boolean getCorMx = false;
 				
@@ -602,9 +622,7 @@ public class ThmSearch {
 				//subtract IdentityMatrix to avoid self-compounding
 				ml.evaluate("corMx = Clip[Correlation[Transpose[m]]-IdentityMatrix[" + rowDimension 
 						+ "], {.6, Infinity}, {0, 0}]/.Indeterminate->0.0;");
-				msg = "Corr. mx clipped!";
-				logger.info(msg);
-				System.out.println(msg);
+				
 				//ml.waitForAnswer();
 				//System.out.println("clipped corr mx: " + ml.getExpr());
 				
@@ -617,19 +635,20 @@ public class ThmSearch {
 				}else{
 					ml.discardAnswer();
 				}
+				msg = "Corr. mx clipped! Ready to add corMx to m.";
+				logger.info(msg);
+				System.out.println(msg);
+				
 				//the entries in corMx.m can range from 0 to ~6
 				ml.evaluate("mx = m + .15*corMx.m;");
 				if(getCorMx){
 					ml.waitForAnswer();
 					Expr expr = ml.getExpr();
-					System.out.println("m + .15*corMx.m " + expr);
+					System.out.println("ThmSearch - m + .15*corMx.m " + expr);
 				}else{
 					ml.discardAnswer();
 				}
 				
-				//take IntegerPart, faster processing later on
-				//ml.evaluate("mx = m + IntegerPart[0.2*corMx];");
-				//ml.discardAnswer();
 				
 				//System.out.println("is matrix? " + r.part(1).matrixQ() + r.part(1));
 				//System.out.println(Arrays.toString((int[])r.part(1).part(1).asArray(Expr.INTEGER, 1)));
@@ -769,13 +788,12 @@ public class ThmSearch {
 				}
 			}
 		}
-		//System.out.println("a=" +toNestedList(corrDocMx));
-
 		return corrDocMx;
 	}
 	/**
 	 * Convert docMx from array form to a String
 	 * that's a nested List for WL.
+	 * @deprecated
 	 */
 	private static String toNestedList(double[][] docMx){
 		StringBuilder sb = new StringBuilder();

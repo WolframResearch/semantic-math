@@ -181,7 +181,7 @@ public class DetectHypothesis {
 	 * Combination of theorem String and the list of
 	 * assumptions needed to define the variables in theorem.
 	 */
-	public static class DefinitionListWithThm implements Serializable {
+	public static class DefinitionListWithThm implements Serializable, TheoremContainer {
 		
 		private static final long serialVersionUID = 7178202892278343033L;
 		private String thmStr;		
@@ -213,6 +213,14 @@ public class DetectHypothesis {
 		 * @return the thmWithDefStr
 		 */
 		public String getThmWithDefStr() {
+			return thmWithDefStr;
+		}
+		
+		/**
+		 * Returns String of thm along with definitions.
+		 */
+		@Override
+		public String getEntireThmStr() {
 			return thmWithDefStr;
 		}
 		
@@ -411,8 +419,8 @@ public class DetectHypothesis {
 		FileUtils.writeToFile(ALL_THM_WORDS_LIST, allThmWordsStringFileStr);
 		
 		/* Creates the term document matrix, and serializes to .mx file.
-		 * If this step fails, need to re-run to produce matrix!*/
-		ThmSearch.TermDocumentMatrix.createTermDocumentMatrixSVD( ImmutableList.copyOf(defThmList));
+		 * If this step fails, need to re-run to produce matrix. Run at end of this method.*/
+		ThmSearch.TermDocumentMatrix.createTermDocumentMatrixSVD(ImmutableList.copyOf(defThmList));
 	}
 	
 	/**

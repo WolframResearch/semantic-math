@@ -16,7 +16,7 @@ import thmp.DetectHypothesis.DefinitionListWithThm;
  * @author yihed
  *
  */
-public class ParsedExpression implements Serializable{
+public class ParsedExpression implements Serializable, TheoremContainer{
 
 	private static final long serialVersionUID = -6334467107326376015L;
 
@@ -59,6 +59,10 @@ public class ParsedExpression implements Serializable{
 		//System.out.println("contextVecStr during ParsedExpression construction! " + contextVecStr);
 	}
 	
+	@Override
+	public String getEntireThmStr(){
+		return this.defListWithThm.getEntireThmStr();
+	}
 	/**
 	 * @return the relationVec
 	 */

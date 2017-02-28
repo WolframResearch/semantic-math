@@ -44,6 +44,7 @@ import thmp.utils.FileUtils;
 import thmp.utils.GatherRelatedWords;
 import thmp.utils.WordForms;
 import thmp.utils.GatherRelatedWords.RelatedWords;
+import thmp.utils.ResourceDeposit;
 
 /**
  * Collects thms by reading in thms from Latex files. Gather
@@ -318,7 +319,7 @@ public class CollectThm {
 			
 			Map<String, Integer> wordsScorePreMap = new HashMap<String, Integer>();
 			
-			//deserialize the word frequency map from file, as gathered from last time the data were generated.
+			/*deserialize the word frequency map from file, as gathered from last time the data were generated.*/
 			//Map<String, Integer> wordFreqMapFromFile = extractWordFreqMap();
 			CONTEXT_VEC_WORDS_FREQ_MAP = extractWordFreqMap();
 			//Map<String, Integer> temp = new HashMap<String, Integer>();
@@ -326,19 +327,21 @@ public class CollectThm {
 			//CONTEXT_VEC_WORDS_FREQ_MAP = ImmutableMap.copyOf(temp);
 			//the values are just the words' indices in wordsList.
 			//this orders the list as well. INDEX map. Can rely on order as map is immutable.
-			CONTEXT_VEC_WORDS_INDEX_MAP = createContextKeywordIndexDict(CONTEXT_VEC_WORDS_FREQ_MAP);
+			
 			//System.out.println("------++++++++-------CONTEXT_VEC_WORDS_MAP.size " + CONTEXT_VEC_WORDS_MAP.size());
 			
 			if(Searcher.SearchMetaData.gatheringDataBool()){				
 				buildScoreMapNoAnno(wordsScorePreMap, docWordsFreqPreMapNoAnno);				
 				Map<String, Integer> keyWordFreqTreeMap = reorderDocWordsFreqMap(docWordsFreqPreMapNoAnno);					
-				docWordsFreqMapNoAnno = ImmutableMap.copyOf(keyWordFreqTreeMap);		
+				docWordsFreqMapNoAnno = ImmutableMap.copyOf(keyWordFreqTreeMap);
+				CONTEXT_VEC_WORDS_INDEX_MAP = null;
 			}else{				
 				buildScoreMapNoAnno(wordsScorePreMap, CONTEXT_VEC_WORDS_FREQ_MAP);
 				/*Do *not* re-order map based on frequency, since need to be consistent with word row
 				 * indices in term document matrix. Also should already be ordered. */
 				docWordsFreqMapNoAnno = CONTEXT_VEC_WORDS_FREQ_MAP;	
 				relatedWordsMap = deserializeAndProcessRelatedWordsMapFromFile(docWordsFreqMapNoAnno);
+				CONTEXT_VEC_WORDS_INDEX_MAP = createContextKeywordIndexDict(CONTEXT_VEC_WORDS_FREQ_MAP);
 			}
 			//this is ok, since from previous set of serialized data.
 			wordsScoreMapNoAnno = ImmutableMap.copyOf(wordsScorePreMap);
@@ -356,6 +359,7 @@ public class CollectThm {
 			//docWordsFreqPreMapNoAnno.putAll(threeGramsMap);
 			//map to be serialized, and used for forming context vectors in next run.
 			contextVecWordsNextTimeMap = docWordsFreqMapNoAnno;
+			//shouldn't need this, since can reconstruct index from immutableMap 
 			contextVecWordsIndexNextTimeMap = ImmutableMap.copyOf(createContextKeywordIndexDict(contextVecWordsNextTimeMap));
 			//deserialize words from allThmWordsList.dat, which were serialized from previous run.
 			//List<String> wordsList = extractWordsList();	 <--superceded by wordsMap
@@ -463,6 +467,7 @@ public class CollectThm {
 		 * deserialize words list used to form context and relation vectors, which were
 		 * formed while parsing through the papers in e.g. DetectHypothesis.java. This is
 		 * so we don't parse everything again at every server initialization.
+		 * Map of words and their frequencies.
 		 * @return
 		 */
 		@SuppressWarnings("unchecked")		
@@ -1130,7 +1135,8 @@ public class CollectThm {
 			List<ParsedExpression> parsedExpressionsList;
 			/*Deserialize objects in parsedExpressionOutputFileStr, so we don't 
 			 * need to read and parse through all papers on every server initialization.
-			 * Can just read from serialized data. */			
+			 * Can just read from serialized data. */
+			
 			parsedExpressionsList = extractParsedExpressionList();
 			
 			List<String> allThmsWithHypPreList = new ArrayList<String>();
@@ -1249,10 +1255,15 @@ public class CollectThm {
 		 */
 		@SuppressWarnings("unchecked")
 		private static List<ParsedExpression> extractParsedExpressionList() {
+			
+			List<ParsedExpression> peList = ResourceDeposit.getParsedExpressionList();
+			if(null != peList){
+				return peList;
+			}
 			//List<ParsedExpression> parsedExpressionsList;
 			//String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
-			//String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
-			String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionListTemplate.dat";
+			String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
+			//String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionListTemplate.dat";
 			
 			if(null != servletContext){
 				InputStream parsedExpressionListInputStream = servletContext.getResourceAsStream(parsedExpressionSerialFileStr);
