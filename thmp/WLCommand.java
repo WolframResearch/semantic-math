@@ -24,7 +24,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 
-import exceptions.IllegalWLCommandStateException;
+import thmp.exceptions.IllegalWLCommandStateException;
 import thmp.ParseToWLTree.WLCommandWrapper;
 import thmp.RelationVec.RelationType;
 import thmp.Struct.ChildRelationType;

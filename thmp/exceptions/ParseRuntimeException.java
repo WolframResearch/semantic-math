@@ -1,4 +1,4 @@
-package exceptions;
+package thmp.exceptions;
 
 import java.io.Serializable;
 

@@ -7,8 +7,7 @@ import java.util.Map;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
-import thmp.search.TermDocMatrix;
-import thmp.search.TermDocMatrix.TermDocMatrixBuilder;
+import thmp.qa.TermDocMatrix.TermDocMatrixBuilder;
 
 /**
  * Uses TermDocMatrix.java to build mx of documents-terms, 

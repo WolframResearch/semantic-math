@@ -1,4 +1,4 @@
-package exceptions;
+package thmp.exceptions;
 
 /**
  * Illegal WLCommand state, such as inconsistency during building.

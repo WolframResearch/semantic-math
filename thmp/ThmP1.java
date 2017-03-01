@@ -31,7 +31,7 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
-import exceptions.ParseRuntimeException;
+import thmp.exceptions.ParseRuntimeException;
 import thmp.ParseState.VariableDefinition;
 import thmp.ParseToWLTree.WLCommandWrapper;
 import thmp.Struct.Article;

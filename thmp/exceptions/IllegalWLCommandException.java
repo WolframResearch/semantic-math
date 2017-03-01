@@ -1,4 +1,4 @@
-package exceptions;
+package thmp.exceptions;
 
 /**
  * Exception when illegal WLCommand is constructed.

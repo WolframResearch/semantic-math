@@ -14,7 +14,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 
-import exceptions.IllegalWLCommandException;
+import thmp.exceptions.IllegalWLCommandException;
 import thmp.RelationVec.RelationType;
 import thmp.WLCommand.ImmutableWLCommand;
 import thmp.WLCommand.ImmutableWLCommand.Builder;

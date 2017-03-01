@@ -17,7 +17,7 @@ import org.apache.logging.log4j.Logger;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
-import exceptions.IllegalWLCommandStateException;
+import thmp.exceptions.IllegalWLCommandStateException;
 import thmp.Struct.ChildRelation;
 import thmp.Struct.NodeType;
 import thmp.ThmP1.ParsedPair;

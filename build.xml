@@ -2,22 +2,26 @@
 <!-- Build the thm parse project -->
 
 <project name="thmParse" basedir=".">
+	<!-- source directory, i.e. Other/ -->
 
-	<property name="builddir" value="${basedir}/bin/" />
+	<property name="builddir" value="${basedir}/build/" />
 	<property name="srcdir" value="${basedir}/src/thmp/" />
+	<property name="search_srcdir" value="${basedir}/src/thmp/search" />
+	<property name="utils_srcdir" value="${basedir}/src/thmp/utils" />
 	<property name="datadir" value="${basedir}/src/thmp/data" />
 	<property name="server_datadir" value="/Users/yihed/Documents/workspaceEE/ThmpServlet/WebContent/src/thmp/data" />
-	<property name="exceptionsSrcdir" value="${basedir}/src/exceptions/" />
+	<property name="exceptionsSrcdir" value="${basedir}/src/thmp/exceptions/" />
 
 	<!-- main lib containing jar such as JLink, Guava etc -->
 	<property name="libdir" value="${basedir}/lib/" />
 	<!-- lib containing jars such as thmSearch, thmUtils etc-->
 	<property name="thmplibdir" value="${basedir}/bin/" />
-	<property name="jarname" value="thmParse.jar" />
-	<property name="utilsJarName" value="thmUtils.jar" />
+	<property name="thmParse_jarname" value="thmParse.jar" />
+	<property name="thmUtils_jarName" value="thmUtils.jar" />
+	<property name="thmSearch_jarName" value="thmSearch.jar" />
 
 	<target name="clean" description="clean">
-		<delete failonerror="false" file="${basedir}/${jarname}" />
+		<delete failonerror="false" file="${basedir}/${thmParse_jarname}" />
 	</target>
 
 	<!-- Copy data such as lexicon.txt into server directory, i.e. WEB-INF. 
@@ -35,9 +39,23 @@
 		</copy>
 	</target>
 
-	<target name="compileExceptions" description="compile exceptions package">
+	<target name="compileExceptions" description="compile Exceptions sources">
 		<mkdir dir="${builddir}" />
-		<javac srcdir="${exceptionsSrcdir}" destdir="${builddir}" debug="true">
+		<javac srcdir="${srcdir}/exceptions" destdir="${builddir}" debug="true">
+			<classpath>
+				<fileset dir="${thmplibdir}">
+					<include name="**/*.class" />
+				</fileset>
+				<fileset dir="${libdir}">
+					<include name="**/*.jar" />
+				</fileset>
+			</classpath>
+		</javac>
+	</target>
+
+	<target name="compileUtils" description="compile Java sources">
+		<mkdir dir="${builddir}" />
+		<javac srcdir="${srcdir}/utils" destdir="${builddir}" debug="true">
 			<classpath>
 				<fileset dir="${thmplibdir}">
 					<include name="**/*.class" />
@@ -50,12 +68,9 @@
 		</javac>
 	</target>
 
-	<target name="compileThmp" description="compile main thmp package">
+	<target name="compileSearch" description="compile Java sources">
 		<mkdir dir="${builddir}" />
-		<javac srcdir="${srcdir}" destdir="${builddir}" debug="true">
-			<exclude name="/TestMathParser.java" />
-			<exclude name="/ThmP1Test.java" />
-
+		<javac srcdir="${srcdir}/search" destdir="${builddir}" debug="true">
 			<classpath>
 				<fileset dir="${thmplibdir}">
 					<include name="**/*.class" />
@@ -64,16 +79,28 @@
 					<include name="**/*.jar" />
 					<!-- <include name="**/SystemFiles/*"/>-->
 				</fileset>
-				<fileset dir="${builddir}">
+			</classpath>
+		</javac>
+	</target>
+
+	<target name="compileThmp" description="compile Java sources">
+		<mkdir dir="${builddir}" />
+		<javac srcdir="${srcdir}" destdir="${builddir}" debug="true">
+			<classpath>
+				<fileset dir="${thmplibdir}">
 					<include name="**/*.class" />
+				</fileset>
+				<fileset dir="${libdir}">
+					<include name="**/*.jar" />
+					<!-- <include name="**/SystemFiles/*"/>-->
 				</fileset>
 			</classpath>
 		</javac>
 	</target>
 
-	<target name="compile" description="compile">
+	<target name="compileRunner" description="compile Java sources">
 		<mkdir dir="${builddir}" />
-		<javac srcdir="${srcdir}" destdir="${builddir}" debug="true">
+		<javac srcdir="${srcdir}/runner" destdir="${builddir}" debug="true">
 			<classpath>
 				<fileset dir="${thmplibdir}">
 					<include name="**/*.class" />
@@ -87,16 +114,16 @@
 	</target>
 
 	<target name="buildjar" description="build jar file">
-		<jar destfile="${basedir}/${jarname}" basedir="${basedir}/build">
+		<jar destfile="${basedir}/${thmParse_jarname}" basedir="${builddir}/thmp">
 			<manifest>
 				<attribute name="Main-Class" value="src/thmp/ThmP1Test" />
 			</manifest>
+			<exclude name="qa/" />
+			<!--<exclude name="test/" />
 			<exclude name="src/" />
-			<exclude name="~/" />
-			<exclude name="bin/" />
 			<exclude name="lib/" />
 			<exclude name="${basedir}/*.txt" />
-			<exclude name="${basedir}/*.xml" />
+			<exclude name="${basedir}/*.xml" /> -->
 			<exclude name="**/*.jar" />
 		</jar>
 	</target>
@@ -105,18 +132,17 @@
 		<copy todir="${server_datadir}">
 			<fileset dir="${datadir}">
 				<include name="lexicon.txt" />
-				<include name="parsedExpressionList.dat" />
-				<include name="threeGramData.txt" />
-				<include name="twoGramData.txt" />
-				<include name="allThmWordsList.dat" />
-				<include name="NGramData.txt" />
 			</fileset>
 		</copy>
 	</target>
 
 	<target name="run" description="run the build process">
 		<antcall target="clean" />
-		<antcall target="compile" />
+		<antcall target="compileThmp" />
+		<!--<antcall target="compileExceptions" />
+		<antcall target="compileUtils" />
+		<antcall target="compileSearch" />		
+		<antcall target="compileRunner" />-->
 		<antcall target="buildjar" />
 	</target>
 
