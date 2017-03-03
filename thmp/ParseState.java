@@ -285,7 +285,12 @@ public class ParseState {
 
 		@Override
 		public String toString(){
-			return definingStruct.toString();
+			if(null != definingStruct){				
+				return definingStruct.toString();				
+			}else{
+				/*Case when de-serializing, since definingStruct is transient*/
+				return "Missing[definingStruct]";
+			}
 		}
 		
 		@Override

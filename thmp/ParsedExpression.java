@@ -63,6 +63,7 @@ public class ParsedExpression implements Serializable, TheoremContainer{
 	public String getEntireThmStr(){
 		return this.defListWithThm.getEntireThmStr();
 	}
+	
 	/**
 	 * @return the relationVec
 	 */
@@ -88,7 +89,8 @@ public class ParsedExpression implements Serializable, TheoremContainer{
 	 * @return the originalThmStr
 	 */
 	public String getOriginalThmStr() {
-		return originalThmStr;
+		/*Use this instead of  originalThmStr, which is transient*/
+		return this.defListWithThm.getThmStr();
 	}
 
 	/**

@@ -486,7 +486,7 @@ public class StructH<H> extends Struct{
 				int commandNumUnits = WLCommand.commandNumUnits(composedCommand);
 			 	WLCommand.increment_commandNumUnits(curCommand, commandNumUnits);
 			}
-			System.out.println("^^^curWrapper: " + curWrapper);
+			//System.out.println("^^^curWrapper: " + curWrapper);
 			
 			//been built into one command already
 			this.WLCommandStrVisitedCount++;
@@ -559,7 +559,7 @@ public class StructH<H> extends Struct{
 			if(prependCommaBool){
 				sb.append(", ");
 			}
-			sb.append("\"Called\"->" + called);			
+			sb.append("\"Called\"->").append("\"").append(called).append("\"");			
 		}
 		//append name
 		String tex = struct.get("tex");
@@ -572,8 +572,8 @@ public class StructH<H> extends Struct{
 		
 		//sb.append(append_name_pptStr());
 		//System.out.println("curCommand: " + curCommand);
-		System.out.println("this.name " + this.nameStr());
-		System.out.println("(((((((((children: " + children + ". childRelationList: " + childRelationList);
+		System.out.println("StructH: this.name " + this.nameStr());
+		System.out.println("StructH: (((((((((children: " + children + ". childRelationList: " + childRelationList);
 		
 		int childrenSize = children.size();
 		int nontrivialChildrenStrCounter = 0;

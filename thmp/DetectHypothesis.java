@@ -204,8 +204,12 @@ public class DetectHypothesis {
 		public String toString(){
 			//initial capacity should be average number of characters.
 			StringBuilder sb = new StringBuilder(250);
-			sb.append("- definitionList: ").append(definitionList)
-				.append("thmStr: -").append(thmStr);
+			if(null != this.definitionList){
+				sb.append("- definitionList: ").append(definitionList);
+			}
+			if(null != thmStr){
+				sb.append("thmStr: -").append(thmStr);
+			}
 			return sb.toString();
 		}
 
@@ -337,7 +341,7 @@ public class DetectHypothesis {
 			try{
 				extractThmsFromFiles(inputBF, defThmList, stats, inputFile.getName());				
 			}catch(Throwable e){
-				logger.error(e.getMessage());			
+				logger.error("Error during thm exptraction and parsing!"+e.getMessage());			
 				throw e;
 			}finally{
 				//serialize, so don't discard the items already parsed.
@@ -394,30 +398,34 @@ public class DetectHypothesis {
 		//List<Object> listToSerialize = new ArrayList<Object>();
 		//listToSerialize.add(parsedExpressionList);
 		logger.info("Serializing parsedExpressionList to file...");
-		FileUtils.serializeObjToFile(parsedExpressionList, parsedExpressionSerialFileStr);
-		
-		//serialize words used for context vecs
-		//wordListToSerializeList.add(ALL_THM_WORDS_LIST);
-		//System.out.println("------++++++++-------putting in : ALL_THM_WORDS_LIST.size " + ALL_THM_WORDS_LIST.size());
-		FileUtils.serializeObjToFile(ALL_THM_WORDS_LIST, allThmWordsSerialFileStr);
-		
-		List<Map<String, Integer>> wordMapToSerializeList = new ArrayList<Map<String, Integer>>();
-		wordMapToSerializeList.add(ALL_THM_WORDS_FREQ_MAP);
-		FileUtils.serializeObjToFile(wordMapToSerializeList, allThmWordsMapSerialFileStr);
-		//this list is for human inspecting the result.
-		List<String> wordMapStringList = new ArrayList<String>();
-		wordMapStringList.add(ALL_THM_WORDS_FREQ_MAP.toString());
-		FileUtils.writeToFile(wordMapStringList, allThmWordsMapStringFileStr);
-		
-		//write parsedExpressionList to file
-		FileUtils.writeToFile(parsedExpressionStrList, parsedExpressionStringFileStr);
-		//FileUtils.writeToFile(DefinitionList, definitionStrFileStr);
-		
-		//write just the thms
-		FileUtils.writeToFile(allThmsStrWithSpaceList, allThmsStringFileStr);
-		//append to stats file!
-		FileUtils.appendObjToFile(stats, statsFileStr);
-		FileUtils.writeToFile(ALL_THM_WORDS_LIST, allThmWordsStringFileStr);
+		try{
+			FileUtils.serializeObjToFile(parsedExpressionList, parsedExpressionSerialFileStr);		
+			//serialize words used for context vecs
+			//wordListToSerializeList.add(ALL_THM_WORDS_LIST);
+			//System.out.println("------++++++++-------putting in : ALL_THM_WORDS_LIST.size " + ALL_THM_WORDS_LIST.size());
+			FileUtils.serializeObjToFile(ALL_THM_WORDS_LIST, allThmWordsSerialFileStr);
+			
+			List<Map<String, Integer>> wordMapToSerializeList = new ArrayList<Map<String, Integer>>();
+			wordMapToSerializeList.add(ALL_THM_WORDS_FREQ_MAP);
+			FileUtils.serializeObjToFile(wordMapToSerializeList, allThmWordsMapSerialFileStr);
+			//this list is for human inspecting the result.
+			List<String> wordMapStringList = new ArrayList<String>();
+			wordMapStringList.add(ALL_THM_WORDS_FREQ_MAP.toString());
+			FileUtils.writeToFile(wordMapStringList, allThmWordsMapStringFileStr);
+			
+			//write parsedExpressionList to file
+			FileUtils.writeToFile(parsedExpressionStrList, parsedExpressionStringFileStr);
+			//FileUtils.writeToFile(DefinitionList, definitionStrFileStr);
+			
+			//write just the thms
+			FileUtils.writeToFile(allThmsStrWithSpaceList, allThmsStringFileStr);
+			//append to stats file!
+			FileUtils.appendObjToFile(stats, statsFileStr);
+			FileUtils.writeToFile(ALL_THM_WORDS_LIST, allThmWordsStringFileStr);
+		}catch(Throwable e){
+			logger.error("Error occurred when writing and serializing to file! " + e.getMessage());
+			throw e;
+		}
 		logger.info("Done serializing parsedExpressionList & co to files! Beginning to compute SVD for parsedExpressionList thms.");
 		
 		/* Creates the term document matrix, and serializes to .mx file.
@@ -799,7 +807,7 @@ public class DetectHypothesis {
 		ParseRun.parseInput(thmStr, parseState, PARSE_INPUT_VERBOSE, stats);
 		System.out.println("~~~~~~Done parsing~~~~~~~");		
 				
-		System.out.println("Adding " + thmWithDefSB + " to theorem " + thmStr);
+		//System.out.println("Adding " + thmWithDefSB + " to theorem " + thmStr);
 		
 		thmWithDefSB.append(thmStr);
 		DefinitionListWithThm defListWithThm = 

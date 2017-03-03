@@ -295,16 +295,15 @@ public class ParseToWLTree{
 			
 			List<WLCommand> wlCommandWithOptionalTermsList = new ArrayList<WLCommand>();			
 			boolean commandRemoved = false;
-			Iterator<WLCommand> reverseWLCommandListIter = reverseWLCommandList.iterator();			
-			while (reverseWLCommandListIter.hasNext()) {
-				
-				WLCommand curCommand = reverseWLCommandListIter.next();
-				
+			Iterator<WLCommand> reverseWLCommandListIter = reverseWLCommandList.iterator();		
+			
+			while (reverseWLCommandListIter.hasNext()) {				
+				WLCommand curCommand = reverseWLCommandListIter.next();				
 				boolean beforeTriggerIndex = false;
-				if(struct.type().equals("prep")){			
+				/*if(struct.type().equals("prep")){			
 					System.out.println("\nADDING STRUCT " + struct + " for command " + curCommand);
 					System.out.println("curCommand.getOptionalTermsCount(): " + curCommand.getOptionalTermsCount());					
-				}				
+				}*/				
 				CommandSat commandSat = WLCommand.addComponent(curCommand, struct, beforeTriggerIndex);
 				
 				/*boolean sat = commandSat.isCommandSat();
@@ -339,13 +338,13 @@ public class ParseToWLTree{
 					}else if(commandSat.onlyOptionalTermAdded() 
 							&& !commandSat.hasOptionalTermsLeft()
 							&& curCommand.getDefaultOptionalTermsCount() > 0){
-						//add and build again, now that optional terms have been satisfied.
+						/*add and build again, now that optional terms have been satisfied.*/
 						satisfiedCommandsList.add(curCommand);
 						reverseWLCommandListIter.remove();
 						commandRemoved = true;
+						//System.out.println("===========COMMAND REMOVED="+curCommand);
 					}
-					
-					/*If optional commands still left, remove from commandsList, add shallow copy back, so 
+					/*If optional commands still left, and removed from commandsList, add shallow copy back, so 
 					   incrementing compoenentWithOtherHeadCount does not affect the new copy. Treating the new
 					   copy as if its optional terms were not optional, so it's not done yet */
 					if(commandSat.hasOptionalTermsLeft() && commandRemoved){
@@ -365,7 +364,7 @@ public class ParseToWLTree{
 					reverseWLCommandListIter.remove();
 					commandRemoved = true;
 					//System.out.println("\n***COMMAND REMOVED. struct "+ struct );
-				}				
+				}	
 			}			
 			//only bother reverse the reverseWLCommandList back if it was changed.
 			if(commandRemoved){
@@ -470,9 +469,15 @@ public class ParseToWLTree{
 					//System.out.println();
 					//if(commandSat != null){						
 					if(beforeTriggerSat){
-						//System.out.println("***-----------*got BEFORE as TRUE for command " + curCommand);
+						//System.out.println("***-----------*got BEFORE as TRUE for command " + curCommand); //HERE
 						if(curCommandSatWhole && isComponentAdded){							
 							satisfiedCommandsList.add(curCommand);
+							if(commandSat.hasOptionalTermsLeft()){
+								//System.out.println("++++++++++add to wlCommandWithOptionalTermsList " + curCommand);
+								WLCommand shallowCopy = WLCommand.shallowWLCommandCopy(curCommand);
+								WLCommandList.add(shallowCopy);
+								//System.out.println("********SSHHHHHALOOOOOOW COPY " + shallowCopy);
+							}
 						}else{		
 							//if(!curCommandSatWhole || hasOptionalTermsLeft){
 							WLCommandList.add(curCommand);
@@ -693,7 +698,7 @@ public class ParseToWLTree{
 			structToAppendCommandStr = (grandparentStruct == null ? 
 					(parentStruct == null ? structToAppendCommandStr : parentStruct) : 
 						(grandparentStruct instanceof StructH ? parentStruct : grandparentStruct)); */
-			////////
+			
 			try{
 				WLCommand.build(curCommand, parseState);
 			}catch(IllegalWLCommandStateException e){
@@ -781,7 +786,7 @@ public class ParseToWLTree{
 			WLCommand copyWithOptTermsCommand = curCommand.getCopyWithOptTermsCommand();
 			if(null != copyWithOptTermsCommand && copyWithOptTermsCommand.isSatisfiedWithOptionalTerms()
 					&& copyWithOptTermsCommand.getDefaultOptionalTermsCount() > 0){
-				//continue; //<--keep working on this! Feb 2017
+				continue; //<--keep working on this! Feb 2017 <--what's wrong with this approach? March 2017
 			}
 			
 			//parent might have been used already, e.g. if A and B, parent of

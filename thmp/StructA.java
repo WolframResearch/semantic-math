@@ -8,6 +8,7 @@ import java.util.Set;
 
 import thmp.ParseToWLTree.WLCommandWrapper;
 import thmp.Struct.NodeType;
+import thmp.utils.WordForms;
 
 public class StructA<A, B> extends Struct{
 
@@ -353,23 +354,24 @@ public class StructA<A, B> extends Struct{
 		}else if(!curCommand.equals(this.commandBuilt)){
 			this.WLCommandStrVisitedCount++;
 		}
-		StringBuilder tempSB = new StringBuilder();
+		
 		//don't include prepositions for spanning purposes, since prepositions are almost 
 		//always counted if its subsequent entity is, but counting it gives false high span
 		//scores, especially compared to the case when they are absorbed into a StructH, in
 		//which case they are not counted.
 		if(curCommand != null && !this.type.equals("pre")){ 
 			boolean added = WLCommand.increment_commandNumUnits(curCommand, this);
-			if(added){
+			/*if(added){
 				//tempSB.append(" ADDED ");
 				//System.out.println("ADDED for command " + curCommand + " THIS  " + this);
-			}
+			}*/
 		}
 		//whether to wrap braces around the subcontent, to group terms together.
 		//wrap if type is phrase, etc
 		boolean wrapBraces = false;
 		boolean inConj = false;
-		String str = "";
+		//String str = "";
+		StringBuilder tempSB = new StringBuilder();
 		//tempStr to add to
 		//String tempStr = "";		
 		
@@ -378,32 +380,43 @@ public class StructA<A, B> extends Struct{
 		if(this.type.matches("conj_.*|disj_.*")){
 			String toAppend = this.type.matches("conj_.*") ? "Conjunction" : "Disjunction";
 			//str += this.type.split("_")[0] + " ";
-			str += toAppend;
+			//str += toAppend;
 			inConj = true;
 			//wrapBraces = true;
 			//tempStr += "[";
-			tempSB.append("[");
+			tempSB.append(toAppend).append("[");
 		}
 		
 		if(this.type.equals("phrase") //|| this.type.equals("prep")
 				){
 			wrapBraces = true;		
 			//tempStr += "{";
-			tempSB.append("[");
+			tempSB.append("{");
 		}		
 		
 		if(this.prev1 != null){
-			if(inConj){ //tempStr += "{";
-				tempSB.append("[");
-			}
+			/*if(inConj){ //tempStr += "{";
+				tempSB.append("{");
+			}*/
 			//if(prev1 instanceof Struct && ((Struct) prev1).WLCommandStr() == null){
 			if((PREV1_TYPE.isTypeStruct()) ){
 					//&& ((Struct) prev1).WLCommandWrapperList() == null){
 				List<WLCommandWrapper> prev1WrapperList = ((Struct) prev1).WLCommandWrapperList();
 				if(prev1WrapperList == null){
 					String prev1Str = ((Struct) prev1).simpleToString(includeType, curCommand);
-					if(!prev1Str.matches("\\s*")){
-						tempSB.append(prev1Str);
+					if(!WordForms.getWhiteEmptySpacePattern().matcher(prev1Str).matches()){
+						//tempSB.append(prev1Str);
+						int tempSBLen = tempSB.length();
+						if(tempSBLen > 1){
+							char tempSBLastChar = tempSB.charAt(tempSBLen-1);
+							if(' ' != tempSBLastChar && ' ' != prev1Str.charAt(0)){
+								tempSB.append(" ").append(prev1Str);							
+							}else{
+								tempSB.append(prev1Str);
+							}
+						}else{
+							tempSB.append(prev1Str);							
+						}
 					}
 				}else{
 					tempSB.append(prev1WrapperList.get(0).WLCommandStr());
@@ -421,9 +434,9 @@ public class StructA<A, B> extends Struct{
 				}
 			}
 			
-			if(inConj){ //tempStr += "}";
-				tempSB.append("]");
-			}
+			/*if(inConj){ //tempStr += "}";
+				tempSB.append("}");
+			}*/
 		}
 		
 		if(prev2 != null){
@@ -436,7 +449,7 @@ public class StructA<A, B> extends Struct{
 					//System.out.println("######prev2: " + prev2);
 					String prev2Str = ((Struct) prev2).simpleToString(includeType, curCommand);
 					if(!prev2Str.matches("\\s*")){
-						if(!tempSB.toString().matches("\\s*")){ //tempStr += ", ";
+						if(tempSB.length() > 0){ //tempStr += ", ";
 							tempSB.append(", ");
 						}
 						//prev2String += prev2Str;
@@ -444,24 +457,29 @@ public class StructA<A, B> extends Struct{
 					}
 				 }else{
 					// prev2String += prev2WrapperList.get(0).WLCommandStr();
-					 prev2SB.append(prev2WrapperList.get(0).WLCommandStr());
+					 if(tempSB.length() > 0){
+						 prev2SB.append(", ");						 
+					 }
+					 prev2SB.append(prev2WrapperList.get(0).WLCommandStr());					 
 				 }
 			}else if(PREV2_TYPE.equals(NodeType.STR) && !((String)prev2).matches("\\s*")){			
 				//prev2String += ", " + prev2;	
 				prev2SB.append(", ").append(prev2);
 			}
 			//tempStr += inConj ? "{" + prev2String + "}" : prev2String;
-			tempSB.append(inConj ? "[" + prev2SB + "]" : prev2SB);
+			/*tempSB.append(inConj ? "[" + prev2SB + "]" : prev2SB);*/
+			tempSB.append(prev2SB);
 		}
 		if(wrapBraces){ //tempStr += "}";
-			tempSB.append("]");
+			tempSB.append("}");
 		}
 		if(inConj){ //tempStr += "]";
+			//this one must be left in place
 			tempSB.append("]");
 		}
 		//str += tempStr;
-		str += tempSB;
-		return str;
+		return tempSB.toString();
+		//return str;
 	}
 	
 	@Override
@@ -475,17 +493,23 @@ public class StructA<A, B> extends Struct{
 		List<String> contentStrList = new ArrayList<String>();
 		if(PREV1_TYPE != null){
 			if(PREV1_TYPE.equals(NodeType.STR)){
-				contentStrList.add((String) prev1);	
+				String prev1Str = (String)prev1;
+				if(!WordForms.getWhiteEmptySpacePattern().matcher(prev1Str).matches()){
+					contentStrList.add(prev1Str);	
+				}				
 			}else if(PREV1_TYPE.isTypeStruct()){
 				contentStrList.addAll(((Struct)prev1).contentStrList());
 			}
 		}
 		if(PREV2_TYPE != null){
 			if(PREV2_TYPE.equals(NodeType.STR)){
-			//should not have the space even if list is empty before!
-			String prev2Str = contentStrList.isEmpty() 
-					? (String) prev2 : " " + (String) prev2;
-					contentStrList.add(prev2Str);
+			//should not have the space if list is empty before
+				String prev2Str = (String)prev2;
+				if(!WordForms.getWhiteEmptySpacePattern().matcher(prev2Str).matches()){
+					prev2Str = contentStrList.isEmpty() 
+							? prev2Str : " " + prev2Str;
+					contentStrList.add(prev2Str);		
+				}				
 			}else if(PREV2_TYPE.isTypeStruct()){
 				contentStrList.addAll(((Struct)prev2).contentStrList());
 			}

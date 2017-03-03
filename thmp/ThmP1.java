@@ -2424,7 +2424,7 @@ public class ThmP1 {
 												// // over if(not
 												// this // case){do_something}
 												Struct nextStruct = j + 1 < inputStructListSize ? inputStructList.get(j + 1) : null;
-												
+												/*conj/disj handling*/
 												if (nextStruct != null && type1.equals("and")
 														&& nextStruct.prev1NodeType().equals(NodeType.STR)
 														&& isSingularVerb((String) nextStruct.prev1())) {
@@ -2717,8 +2717,8 @@ public class ThmP1 {
 				int parsedStructListSize = structListList.size();
 				
 				//if only one ent,
-				//e.g. "then $ $", misrepresented StructH as ent, 
-				//if should have been an "assert"
+				//e.g. "then $ $", misrepresented StructH as StructA, 
+				//if should have been an "assert".
 				if(structListList.size() < 3){
 					
 					//go through structList see 
@@ -2732,7 +2732,7 @@ public class ThmP1 {
 						if(struct.isLatexStruct()){
 							//if(true) throw new IllegalStateException(structListList.toString());
 							assert !struct.isStructA() 
-								: "Struct must be StructA to be latexStruct.";						
+								: "Struct must be StructH to be latexStruct!";						
 							//couldConvertToAssert = true;
 							toBeConvertedStruct = struct;
 							break;
@@ -3795,7 +3795,8 @@ public class ThmP1 {
 								//variableNamesMap.put(tempSymStruct.prev1().toString(), tempEntStruct);
 								String name = tempSymStruct.prev1().toString();
 								parseState.addLocalVariableStructPair(name, tempEntStruct);
-								tempEntStruct.struct().put("called", name);
+								/**tempEntStruct.struct().put("called", name);*/
+								//<--put this back in if want StructH to remember its name, probably better to use parseState's map.
 								break ploop;
 							}
 						}
@@ -3918,10 +3919,24 @@ public class ThmP1 {
 			String ppt = "";
 			if(absorbedStruct.prev1NodeType().isTypeStruct()){
 				//ppt = ((Struct)absorbedStruct.prev1()).simpleToString(true,  ); //<--deal with ent_symb!
+				List<String> pptList = ((Struct)absorbedStruct).contentStrList();
+				StringBuilder pptSB = new StringBuilder(25);
+				for(String p : pptList){
+					pptSB.append(p).append(", ");
+				}				
+				int pptSBLen = pptSB.length();
+				if(pptSBLen > 2){
+					ppt = pptSB.substring(0, pptSBLen-2);					
+				}
 			}else{
 				ppt = absorbedStruct.prev1().toString();
 			}
-			if(absorbedStruct.type().equals("symb")){
+			
+			String absorbedStructType = absorbedStruct.type();
+			int absorbedStructTypeLen = absorbedStructType.length();
+			//"conj_symb", "disj_symb"
+			if(absorbedStructTypeLen > 3 
+					&& absorbedStructType.subSequence(absorbedStructTypeLen-4, absorbedStructTypeLen).equals("symb")){
 				newStruct.struct().put("called", ppt);
 			}else{
 				newStruct.struct().put(ppt, "ppt");

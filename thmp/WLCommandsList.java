@@ -154,9 +154,12 @@ public class WLCommandsList {
 		//e.g. "The field extension $F/Q$ splits."
 		wLCommandMapBuilder.put("verbAlone", addCommand(new PBuilder("symb|ent|pro|noun", null, true).addRelationType(RelationType._IS), 
 				new PBuilder("pro", "we", WLCommand.PosTermType.NEGATIVE),
-				new PBuilder("~HasProperty~["),  new PBuilder("verbAlone", null, true, true, false), new PBuilder("]")));		
+				new PBuilder(" ~HasProperty~ {"),  new PBuilder("verbAlone", null, true, true, false).addRelationType(RelationType.IS_), 
+				new PBuilder(" ,", "OPT"), new PBuilder("prep", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}")));	
 		
-		wLCommandMapBuilder.put("texAssert", addCommand(new PBuilder("texAssert", null, true, true, false)));
+		/*Don't think this command is effective right now. March 2017.*/
+		wLCommandMapBuilder.put("texAssert", addCommand(new PBuilder("hyp|if|then", null, false), 
+				new PBuilder("texAssert", null, true, true, false)));
 		
 		//assert_hypo: 
 		//WLCommandMapBuilder.put("hyp", addCommand(new String[] { "assert, , true", "hyp, , trigger", "ent|symb, , true"
@@ -185,7 +188,7 @@ public class WLCommandsList {
 		
 		/*WLCommandMapBuilder.put("exist", addCommand(
 				new String[] { ", there, false", "Exists[", ", exists*, trigger",  "ent|symb|phrase|noun, , true", "]"}));*/
-		wLCommandMapBuilder.put("there", addCommand(new PBuilder(null, "there", false, true, false), new PBuilder("Exists["),
+		wLCommandMapBuilder.put("there", addCommand(new PBuilder(null, "there", false, true, false), new PBuilder("Exist["),
 				new PBuilder(null, "exists*|is", false), new PBuilder("ent|symb|phrase|noun", null, true, RelationType.EXIST),
 				 new PBuilder("]") ));
 		
@@ -230,7 +233,7 @@ public class WLCommandsList {
 		//***action*** commands
 		wLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro|noun|det", null, true, false, false, //PosTermConnotation.DEFINED,
 				RelationType._IS), 
-				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), new PBuilder("\\[Element]"),
+				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), new PBuilder(" \\[Element] "),
 				//negative term, to stop command if encountered
 				new PBuilder("adj", null, WLCommand.PosTermType.NEGATIVE), //new PBuilder("{", "OPT1"), 
 				//new PBuilder("pre", null, true, false, "OPT1"),
@@ -240,7 +243,7 @@ public class WLCommandsList {
 		//e.g. "$X$ is connected", "$F$ is isomorphic to ..."
 		wLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro|noun|det", null, true, RelationType._IS), 
 				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), 
-				new PBuilder("~HasProperty~"), new PBuilder("adj|phrase|noun|prep", null, true, false, false, RelationType.IS_),
+				new PBuilder(" ~HasProperty~ "), new PBuilder("adj|phrase|noun|prep", null, true, false, false, RelationType.IS_),
 				new PBuilder(", {\"Qualifier\"->", "OPT"), 
 				new PBuilder("prep", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}", "OPT")
 				)); 
@@ -260,7 +263,7 @@ public class WLCommandsList {
 		//e.g. "R is of finite type"
 		wLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro|noun|det", null, true, RelationType._IS), 
 				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), 
-				new PBuilder("~HasProperty~"), new PBuilder("pre", "of", false),
+				new PBuilder(" ~HasProperty~ "), new PBuilder("pre", "of", false),
 				new PBuilder("noun|ent", null, true, false, false, RelationType.IS_) ));
 		
 		//negative of above
@@ -373,7 +376,7 @@ public class WLCommandsList {
 		//WLCommandMapBuilder.put("have", addCommand(new String[] { "ent|symb|pro, , true", "verb, have|has, trigger", "\\HasProperty[", ", , true", "]"}));
 		wLCommandMapBuilder.put("have", addCommand(new PBuilder("ent|symb|pro|noun", null, true).addRelationType(RelationType._IS),
 				new PBuilder("verb", "have|has", false, true, false), 
-				new PBuilder("~HasProperty~"), new PBuilder(null, null, true).addRelationType(RelationType.IS_) ));
+				new PBuilder(" ~HasProperty~ "), new PBuilder(null, null, true).addRelationType(RelationType.IS_) ));
 				
 		/*
 		WLCommandMapBuilder.put("is contained", addCommand(new String[] { "symb|ent|pro, , true", "auxpass, , trigger",

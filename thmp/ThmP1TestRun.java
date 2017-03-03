@@ -20,7 +20,7 @@ public class ThmP1TestRun {
 	static{
 		/* Setting to data generation (rather than search) mode, so not to try to read
 		 * in a bunch of serialized data used for search in CollectThm. 
-		 * But *don't* do this on server! Since it will affect search, which is running
+		 * But *don't* do this when parsing on the server! Since it will affect search, which is running
 		 * in the same JVM session.*/
 		Searcher.SearchMetaData.set_gatheringDataBoolToTrue();
 		FileUtils.set_dataGenerationMode();
@@ -577,8 +577,13 @@ public class ThmP1TestRun {
 					+ "let $\\mathfrak{M} \\to [0,\\infty)$ be a finitely additive measure. Then $\\mu$ can be written "
 					+ "as the sum of a countably additive measure and a purely finitely additive measure.";
 			st = "there exists a point $c$ in $[a,b]$";
-			st = "$M$ admits a surface";
+			st = "$M$ admits a surface";	
+			st = "Let $c$ be an integer and $r$ be a real number.";
+			st = "if $x > 1$, then $A$ is a ring";				
+			st = "$R_\\mathfrak m$ is universally catenary for all maximal ideals $\\mathfrak m$";
+			st = "$R_\\mathfrak m$ is universally catenary in $R $";
 			
+			//st = "The variables $x $ and $ y$ converge in distribution.";			
 			//st = "$A$ is isomorphic to $B$";
 			//st = "take the log of $f$ over the field";
 			//st = "field lies above ring";

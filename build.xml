@@ -114,9 +114,9 @@
 	</target>
 
 	<target name="buildjar" description="build jar file">
-		<jar destfile="${basedir}/${thmParse_jarname}" basedir="${builddir}/thmp">
+		<jar destfile="${basedir}/${thmParse_jarname}" basedir="${builddir}">
 			<manifest>
-				<attribute name="Main-Class" value="src/thmp/ThmP1Test" />
+				<attribute name="Main-Class" value="src/thmp/ThmP1TestRun" />
 			</manifest>
 			<exclude name="qa/" />
 			<!--<exclude name="test/" />

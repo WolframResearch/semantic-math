@@ -1262,10 +1262,11 @@ public class CollectThm {
 			}
 			//List<ParsedExpression> parsedExpressionsList;
 			//String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
-			String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
-			//String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionListTemplate.dat";
+			//String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
+			String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionListTemplate.dat";
 			
 			if(null != servletContext){
+				parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
 				InputStream parsedExpressionListInputStream = servletContext.getResourceAsStream(parsedExpressionSerialFileStr);
 				return (List<ParsedExpression>)thmp.utils.FileUtils
 						.deserializeListFromInputStream(parsedExpressionListInputStream);	
