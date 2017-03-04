@@ -26,7 +26,6 @@ public class ExtractFromParsedExpressionList {
 		
 		ParsedExpression pe = peList.get(17);
 		System.out.println("defListWithThm: "+pe.getDefListWithThm());
-		System.out.println("file" +pe.getDefListWithThm().getSrcFileName()); 
-		
+		System.out.println("file" +pe.getDefListWithThm().getSrcFileName());		
 	}
 }

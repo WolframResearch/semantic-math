@@ -1192,21 +1192,23 @@ public class ThmP1 {
 			}
 		}
 		
+		/*Used for defluffing, in case the sentence is just sequence of many special characters*/
 		int symbEntCount = 0;
 		for (Pair pair : pairs) {
 			String pos = pair.pos();
 			if(pair.pos().equals("ent") || pos.equals("symb")
 					|| pos.equals("")){
-				symbEntCount++;				
+				symbEntCount++;		
 			}else{
 				containsOnlySymbEnt = false;
 			}
 		}
+		
 		double pairs_sz = pairs.size();
 		//return if no meaningful parse could be extracted. This happens for 
 		//if all expressions are latex. Heuristic for detecting sentences that are just
 		//conglomerates of latex expressions, but that are not enclosed in "$" or "\begin{equation}", etc
-		if(containsOnlySymbEnt 
+		if((containsOnlySymbEnt && pairs_sz > 1) /*<--so single-token $x>1$ can still get parsed*/
 				|| (symbEntCount/pairs_sz > MAX_ALLOWED_ENT_PERCENTAGE && pairs_sz > MIN_PAIRS_SIZE_THRESHOLD_FOR_FLUFF)
 				|| symbEntCount > 12){
 			//set trivial structlist, so that previous structlist doesn't get parsed again.
@@ -1222,8 +1224,8 @@ public class ThmP1 {
 		double bestCurProb = 0;
 		String prevType = "", nextType = "", tempCurType = "", tempPrevType = "", tempNextType = "", bestCurType = "";
 
-		int posListSz = posList.size();
-		//System.out.println("FIRST pairs: " + pairs);
+		int posListSz = posList.size();		
+		/*Resort to automatic pos tagger*/
 		for (int index = 0; index < pairsLen; index++) {
 			//int pairsLen = pairs.size();
 			curpair = pairs.get(index);
@@ -1336,8 +1338,7 @@ public class ThmP1 {
 					//System.out.println("!!pairs " + pairs);
 					System.out.println("Using posTagger to tag word: " +  curWord + " with pos: " + pos);
 				}
-			}
-			
+			}			
 			String pos = curpair.pos();
 			if(unknownWordPos && !pos.equals("")){
 				parseState.addUnknownWordPosToMap(curWord, pos);
@@ -1345,20 +1346,9 @@ public class ThmP1 {
 			}
 		}
 		
-		//turn "symb" pos into "ent" if followed by "pre",
-		//e.g. "given $x$ in a compact space", but not if preceded by an ent.
-		for (int index = 0; index < pairsLen; index++) {			
-			curpair = pairs.get(index);
-			String curPos = curpair.pos();				
-			if(curPos.equals("symb") 
-					&& index < pairsLen-1 && pairs.get(index+1).pos().equals("pre") 
-					&& index > 0 && !pairs.get(index-1).pos().equals("ent") ){
-				curpair.set_pos("ent");
-				mathIndexList.add(index);
-			}
-		}
+		ThmP1AuxiliaryClass.updatePosInPairsList(mathIndexList, pairs);
 		
-		// map of math entities, has mathObj + ppt's
+		/* map of math entities, has math object + ppt's */
 		List<StructH<HashMap<String, String>>> mathEntList = new ArrayList<StructH<HashMap<String, String>>>();
 
 		// combine adj with math ent's; try combine adjacent ent's
@@ -1405,13 +1395,16 @@ public class ThmP1 {
 			if(null == mathObjName){
 				throw new IllegalArgumentException( pairs.toString());
 			}
-			//tempMap.put("name", mathObjName);			
+					
 			StringBuilder nameSB = new StringBuilder(mathObjName);
 			Pair nextPair;
-			// if next pair is also ent, combine.
+			//System.out.println("ThmP1.java - mathIndexList.size() - 1 " + (mathIndexList.size() - 1) + 
+					//" " + (index < pairs.size()-1) + " " + pairs.get(index + 1).pos());
+			
+			// if next pair is also ent, combine ents.
 			if (j < mathIndexList.size() - 1 && index < pairs.size()-1 
-					&& (nextPair=pairs.get(index + 1)).pos().matches("\\d+")) {
-				
+					&& ((nextPair=pairs.get(index + 1)).pos().equals("ent") || nextPair.pos().matches("\\d+"))) {
+				//if(true) throw new IllegalStateException();
 				String name = nextPair.word();
 				// if next pair is also ent, and is latex expression
 				if (name.contains("$")) {
@@ -1440,8 +1433,7 @@ public class ThmP1 {
 					pairs.get(index + 1).set_pos(entPosStr);
 					String givenName = pairs.get(index + 1).word();
 					tempMap.put("called", givenName);
-					// do not overwrite previously named symbol
-					
+					// do not overwrite previously named symbol					
 				}
 			} /*
 				 * else if ((index + 2 < pairsSize && pairs.get(index +
@@ -1740,8 +1732,6 @@ public class ThmP1 {
 					}
 				}*/
 
-				//String curWord = curPair.word();
-
 				// leaf of prev2 is empty string ""
 				StructA<String, String> newStruct = 
 						new StructA<String, String>(curWord, NodeType.STR, prev2, NodeType.STR, curPair.pos());
@@ -1789,6 +1779,28 @@ public class ThmP1 {
 			// add as property
 
 		}
+
+		int structListSz  = structList.size();
+		if(structListSz < 4 && structListSz > 0){			
+			Struct firstStruct = structList.get(0);
+			Struct lastStruct = structList.get(structListSz-1);
+			//String firstStructType = firstStruct.type();
+			
+			//if(true) throw new IllegalStateException();
+			if((1 == structListSz || firstStruct.containsPos("hyp") || firstStruct.containsPos("if"))
+					&& lastStruct.containsLatexStruct()){
+				//if(true) throw new IllegalStateException();
+				if(!lastStruct.has_child()){
+					String tex = lastStruct.struct().get("tex");
+					tex = null == tex ? "" : tex;
+					StructA<String, String> convertedStructA = new StructA<String, String>(lastStruct.nameStr(), 
+							NodeType.STR, tex, NodeType.STR, "texAssert");
+					structList.set(structListSz - 1, convertedStructA);
+				}				
+				//lastStruct.set_type("texAssert");
+			}			
+		}
+		
 		System.out.println("\n^^^^structList: " + structList);
 		
 		parseState.setTokenList(structList);
@@ -2470,7 +2482,6 @@ public class ThmP1 {
 										// break;
 										t++;
 									}
-
 								}
 							}
 
@@ -2540,6 +2551,7 @@ public class ThmP1 {
 		//list of context vectors.
 		List<int[]> contextVecList = new ArrayList<int[]>();		
 		
+		/*There was at least one spanning parse.*/
 		if (headStructListSz > 0) {		
 			
 			List<Struct> structList = headStructList.structList();
@@ -2712,68 +2724,10 @@ public class ThmP1 {
 			//ones that did not form into any grammar rules in previous round.
 			//recursively call this, discard bigger and bigger components, that are
 			//the smallest in each round.			
-			if(!isReparse){
-			
-				int parsedStructListSize = structListList.size();
+			if(!isReparse){			
+				int parsedStructListSize = structListList.size();				
+				ThmP1AuxiliaryClass.convertToTexAssert(parseState, inputStructList, structListList);	
 				
-				//if only one ent,
-				//e.g. "then $ $", misrepresented StructH as StructA, 
-				//if should have been an "assert".
-				if(structListList.size() < 3){
-					
-					//go through structList see 
-					//boolean couldConvertToAssert = false;
-					List<Struct> entSubstitutedStructList = new ArrayList<Struct>(inputStructList);
-					Struct toBeConvertedStruct = null;
-					
-					for(StructList sList : structListList){
-						Struct struct = sList.get(0);
-						//entToAssertStructList.add(struct);
-						if(struct.isLatexStruct()){
-							//if(true) throw new IllegalStateException(structListList.toString());
-							assert !struct.isStructA() 
-								: "Struct must be StructH to be latexStruct!";						
-							//couldConvertToAssert = true;
-							toBeConvertedStruct = struct;
-							break;
-						}						
-					}
-					
-					if(null != toBeConvertedStruct){
-						
-						//need to convert toBeConvertedStruct to a StructA 
-						//with type "assert".						
-						String toBeConvertedStructName = toBeConvertedStruct.nameStr();
-						
-						for(int k = 0; k < entSubstitutedStructList.size(); k++){
-							
-							Struct structToSubstitute = entSubstitutedStructList.get(k);
-							if(structToSubstitute.nameStr().equals(toBeConvertedStructName)){
-								//if s already has child, then means probably should not turn into assertion,
-								//since most children are appended during mx-building
-								if(structToSubstitute.has_child()){
-									break;
-								}
-								
-								//StructH should not have any properties .  Look through properties of toBeConvertedStruct?
-								StructA<String, String> convertedStructA = new StructA<String, String>(toBeConvertedStructName, 
-										NodeType.STR, "", NodeType.STR, "texAssert");
-								
-								convertedStructA.set_parentStruct(structToSubstitute.parentStruct());
-								//convertedStructA.set_maxDownPathScore(structToSubstitute.maxDownPathScore());
-								
-								entSubstitutedStructList.set(k, convertedStructA);
-								//if(true) throw new IllegalStateException(inputStructList.toString());
-								//isReparse = true;
-								parseState.setTokenList(entSubstitutedStructList);
-								//don't set isReparse, so to allow defluffing in the recursion call.
-								System.out.println("~~REPARSING with assert");
-								parse(parseState);						
-								System.out.println("~~REPARSING with assert DONE");
-							}
-						}						
-					}
-				}						
 			if(!parseState.isRecentParseSpanning()){
 			//String totalParsedString = "";
 			double totalScore = 1; //product of component scores
@@ -2933,7 +2887,6 @@ public class ThmP1 {
 		}
 		return parseState;
 	}
-
 
 	private static class HeadStructComparator implements Comparator<Struct>{
 		
@@ -3119,12 +3072,13 @@ public class ThmP1 {
 		}
 		
 		if(DEBUG) System.out.println("##commandNumUnitsList " + commandNumUnitsList );
-		//only add nontrivial results, but add trivial results (>=3) if no nontrivial ones exist.
+		//only add nontrivial results, but add trivial results (>=2) if no nontrivial ones exist.
 		//This works as the results are sorted, and nontrivial ones come first in sorted list.
 		boolean parsedExprAdded = false;
 		for(int i = 0; i < sortedParsedPairMMapList.size(); i++){
 			//only add nontrivial results //finalOrderingList.get(i)
-			if(parsedExprAdded && commandNumUnitsList.get(i) < 3){				
+			//Need to experiment more with this heuristic 2!
+			if(parsedExprAdded && commandNumUnitsList.get(i) < 2){				
 				continue;
 			}else{
 				parsedExprAdded = true;
@@ -3149,7 +3103,7 @@ public class ThmP1 {
 			//Also add the long form to parsedExpr	
 			parsedExpr.add(longFormParsedPairList.get(finalOrderingList.get(i)));
 			if(DEBUG){
-				System.out.println("longForm, commandUnits: " + commandNumUnitsList.get(i) +". numUnits: " +numUnitsList.get(i) 
+				System.out.println(commandNumUnitsList + " longForm, commandUnits: " + commandNumUnitsList.get(i) +". numUnits: " +numUnitsList.get(i) 
 					+ ". "+ longFormParsedPairList.get(finalOrderingList.get(i)));
 			}
 		}	

@@ -158,7 +158,7 @@ public class WLCommandsList {
 				new PBuilder(" ,", "OPT"), new PBuilder("prep", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}")));	
 		
 		/*Don't think this command is effective right now. March 2017.*/
-		wLCommandMapBuilder.put("texAssert", addCommand(new PBuilder("hyp|if|then", null, false), 
+		wLCommandMapBuilder.put("texAssert", addCommand(new PBuilder("hyp|if|then", null, false, false, "OPT"), 
 				new PBuilder("texAssert", null, true, true, false)));
 		
 		//assert_hypo: 
@@ -349,7 +349,7 @@ public class WLCommandsList {
 		//	 "ent|symb, , true", "]" }));
 		wLCommandMapBuilder.put("for every", addCommand(//new PBuilder("assert", null, true, false, "OPT"),
 				new PBuilder(null, "for every|for any|for all", false, true, false), 
-				new PBuilder("\\[ForAll]["), new PBuilder("ent|symb", null, true, RelationType._IS).addRelationType(RelationType.IF), 
+				new PBuilder("ForAll["), new PBuilder("ent|symb", null, true, RelationType._IS).addRelationType(RelationType.IF), 
 				new PBuilder("]") ));
 		
 		//WLCommandMapBuilder.put("suppose", addCommand(new String[] { "hyp, , trigger",

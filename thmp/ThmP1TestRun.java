@@ -577,12 +577,28 @@ public class ThmP1TestRun {
 					+ "let $\\mathfrak{M} \\to [0,\\infty)$ be a finitely additive measure. Then $\\mu$ can be written "
 					+ "as the sum of a countably additive measure and a purely finitely additive measure.";
 			st = "there exists a point $c$ in $[a,b]$";
-			st = "$M$ admits a surface";	
+			st = "$M$ admits a surface";
 			st = "Let $c$ be an integer and $r$ be a real number.";
 			st = "if $x > 1$, then $A$ is a ring";				
 			st = "$R_\\mathfrak m$ is universally catenary for all maximal ideals $\\mathfrak m$";
 			st = "$R_\\mathfrak m$ is universally catenary in $R $";
-			
+			st = "given $z>2$, then $R$ is ring";
+			st = "$x$ is given by $x=f(t)$";
+			st = "Given any function $f$, there are infinitely many zeros in $g(zeta(f))$.";
+			st = "Under the hypotheses  $1=1$, we have $2=2$.";			
+			st = "then all integers is prime";
+			st = "there are infinitely many eleven in $g(zeta(f))$.";
+			st = "The following identity holds:  $1=1$.";
+			st = "then all integers are prime";
+			st = "Given the hypotheses $1=1$, we have $2=2$.";
+			st = "under the hypotheses $f > 1$";
+			st = "we have $2=2$.";
+			st = "The following identity holds:  $1=1$.";
+			st = "$1=1$";
+			st = "If $1=1$, then all integers are prime.";
+			st = "if $1=1$";
+			//st = "then all integers are prime.";
+			//st = "then all integers are prime";
 			//st = "The variables $x $ and $ y$ converge in distribution.";			
 			//st = "$A$ is isomorphic to $B$";
 			//st = "take the log of $f$ over the field";

@@ -246,7 +246,7 @@ public abstract class Struct implements Serializable{
 	//To be used in ParseToWLTree.
 	public abstract String simpleToString(boolean includeType, WLCommand curCommand);
 	
-	public abstract String simpleToString2(boolean includeType, WLCommand curCommand);
+	//public abstract String simpleToString2(boolean includeType, WLCommand curCommand);
 	
 	//public abstract void append_WLCommandStr(String WLCommandStr);
 
@@ -314,6 +314,12 @@ public abstract class Struct implements Serializable{
 	//to be overridden
 	public abstract String type();
 	
+	public boolean containsPos(String pos){
+		return (null != this.type() && this.type().equals(pos)) 
+				|| (null != this.extraPosSet() && this.extraPosSet().contains(pos));
+	}
+	
+	public abstract boolean isLeafNodeCouldHaveChildren();
 	//to be overwritten in StructH
 	public abstract List<Struct> children();
 
@@ -344,6 +350,15 @@ public abstract class Struct implements Serializable{
 	 * Used to convert ent into assert if necessary. 
 	 */
 	public boolean isLatexStruct() {
+		return false;
+	}
+	
+	/**
+	 * Only applicable for StructH. Either $...$ or 
+	 * has absorbed an $...$.
+	 * @return
+	 */
+	public boolean containsLatexStruct() {
 		return false;
 	}
 

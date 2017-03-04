@@ -67,7 +67,6 @@ public class StructA<A, B> extends Struct{
 	//be unique. It's the parents' paths to here that can differ
 	//private List<MatrixPathNode> mxPathNodeList;
 	private WLCommand commandBuilt;
-	//private boolean commandVisitedTwice;
 	
 	//is this ever needed?
 	public StructA(A prev1, NodeType prev1Type, B prev2, NodeType prev2Type, String type, StructList structList){		
@@ -255,16 +254,20 @@ public class StructA<A, B> extends Struct{
 	}
 	
 	/**
-	 * 
 	 * @param includeType
 	 * @param curCommand Command that the returned String is built towards.
 	 * curCommand is null if this struct should not be counted towards commandNumUnits.
 	 * Should only be called during building command, WLCommand.build()!
+	 * (during ParseToWLTree.buildWLCommandTreeDfs()).
+	 * This updates scores, e.g. commandNumUnits.
 	 * @return
 	 */
 	@Override
 	public String simpleToString(boolean includeType, WLCommand curCommand){
 
+		if(type.equals("assert")){
+			System.out.println("StructA - ");
+		}
 		//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
 		if(this.WLCommandWrapperList != null){
 			int wrapperListSz = WLCommandWrapperList.size();
@@ -275,9 +278,10 @@ public class StructA<A, B> extends Struct{
 			
 			if(curWrapper != null){
 				int commandNumUnits = WLCommand.commandNumUnits(composedCommand);
+				System.out.println("StructA -- commandNumUnits: " + commandNumUnits);
 				if(!this.type.equals("pre")){
-					WLCommand.increment_commandNumUnits(curCommand, commandNumUnits);
-					System.out.println("increment_commandNumUnits : numUnits " + commandNumUnits + " composedCommand: " + composedCommand); 
+					WLCommand.increment_commandNumUnits(curCommand, commandNumUnits); ///////+1
+					//System.out.println("increment_commandNumUnits : numUnits " + commandNumUnits + " composedCommand: " + composedCommand); 
 				}
 			}
 			//been built into one command already
@@ -338,14 +342,17 @@ public class StructA<A, B> extends Struct{
 	}
 	
 	//auxilliary method for simpleToString and called inside StructH.simpleToString2
-	@Override
-	public String simpleToString2(boolean includeType, WLCommand curCommand){		
-		
+	//@Override
+	private String simpleToString2(boolean includeType, WLCommand curCommand){		
+		/*if(type.equals("assert")){
+			System.out.println("StructA -");
+			//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
+		}*/
 		//return "" if commandStr is not null, so to not repeat commands.
 		//if(this.WLCommandStr != null) return "";
-		if(this.WLCommandWrapperList != null){ 
+		/*if(this.WLCommandWrapperList != null){ 
 			return "";
-		}		
+		}*/		
 		//been built into one command already
 		//this.WLCommandStrVisitedCount++;
 		if(null == this.commandBuilt){
@@ -480,6 +487,11 @@ public class StructA<A, B> extends Struct{
 		//str += tempStr;
 		return tempSB.toString();
 		//return str;
+	}
+	
+	@Override
+	public boolean isLeafNodeCouldHaveChildren(){
+		return this.PREV1_TYPE.equals(NodeType.STR) && this.PREV2_TYPE.equals(NodeType.STR);
 	}
 	
 	@Override

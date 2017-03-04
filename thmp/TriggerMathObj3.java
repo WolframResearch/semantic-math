@@ -406,7 +406,7 @@ public class TriggerMathObj3 {
 		
 		getSubContent(struct, triggerTermList);
 		getChildrenNames(struct, triggerTermList);
-		System.out.println("TRIGGER_MATH_OBJ_LIST " + triggerTermList);
+		//System.out.println("TRIGGER_MATH_OBJ_LIST " + triggerTermList);
 		
 		String highestMathObj = getTopTerm(triggerTermList);
 		

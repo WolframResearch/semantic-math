@@ -129,6 +129,7 @@ public class ParseToWLTree{
 	 * @param usedStructsBool (Not really useful.)
 	 * @param waitingStructList	Temporary list to add Struct's to.
 	 * @return Whether the slots before triggerWordIndex have been satisfied.
+	 * @deprecated
 	 */
 	private static boolean findStructs(List<Struct> structDeque, WLCommand curCommand, 
 			boolean[] usedStructsBool, List<Struct> waitingStructList){
@@ -776,7 +777,9 @@ public class ParseToWLTree{
 	private static boolean appendWLCommandStr2(Struct struct, ParseStruct curParseStruct, StringBuilder parsedSB,
 			Multimap<ParseStructType, ParsedPair> partsMap, int[] contextVec, boolean contextVecConstructed,
 			List<WLCommandWrapper> structWrapperList, int structWrapperListSz, int structWithOtherHeadThreshold) {
-		
+		/*if(structWrapperListSz>1){
+			throw new IllegalStateException(structWrapperListSz+"");
+		}*/
 		boolean noClashCommandFound = false;
 		for(int i = structWrapperListSz - 1; i > -1; i--){	
 			WLCommandWrapper curWrapper = structWrapperList.get(i);
@@ -891,7 +894,10 @@ public class ParseToWLTree{
 		//boolean contextVecConstructed = false;
 		
 		//ParseStruct curParseStruct = headParseStruct;
-		
+		/*if(struct.type().equals("Then")){
+			System.out.println("ParseToWLTree -");
+		}*/
+		//if(true) throw new IllegalStateException(struct.WLCommandStrVisitedCount()+"");
 		//ArrayListMultimap.create()
 		//System.out.println("^^^^struct.WLCommandStrVisitedCount() " +struct.WLCommandStrVisitedCount()
 			//+" for struct: " + struct +" ^^^WLCommandWrapperList: "+ struct.WLCommandWrapperList());
@@ -899,7 +905,13 @@ public class ParseToWLTree{
 		if(null != struct.WLCommandWrapperList() 
 				//this should not be checking WLCommandStrVisitedCount, since count should be 1 
 				// after the command has been built. 12/13/2016.   2/18/2017
-				&& struct.WLCommandStrVisitedCount() < 1){	
+				// <--Usually StructA that serves as the head is different from the Struct's being 
+				//picked up as components. 3/2017.
+				&& (struct.WLCommandStrVisitedCount() < 1 
+					/*Leaf node with own command, e.g. texAssert. Should evolve into checking
+					 * if headStruct is same as the struct used in command*/
+					|| (struct.isLeafNodeCouldHaveChildren() && struct.WLCommandStrVisitedCount() < 2))
+					){	
 			//if(struct.WLCommandWrapperList() != null){
 			/*if(WLCommand.structsWithOtherHeadCount(struct.WLCommand()) 
 				> WLCommand.totalComponentCount(struct.WLCommand()) -2){
@@ -910,6 +922,7 @@ public class ParseToWLTree{
 			contextVecConstructed = appendWLCommandStr(struct, curParseStruct, parsedSB, partsMMap, curStructContextVec,
 					contextVecConstructed, parseState);
 			shouldPrint = false;
+			
 			//reset WLCommandStr back to null, so next 
 			//dfs path can create it from scratch
 			//no need to do so as wrapper instances are created anew each dfs run
@@ -957,7 +970,7 @@ public class ParseToWLTree{
 			}
 
 			if(shouldPrint) parsedSB.append("]");
-		} else if (!struct.isStructA()) {
+		} else {/*StructH in this case*/
 
 			if(shouldPrint) parsedSB.append(struct.toString());
 
@@ -992,7 +1005,7 @@ public class ParseToWLTree{
 		struct.clear_WLCommandStrVisitedCount();		
 		struct.set_previousBuiltStruct(null);
 		struct.set_structToAppendCommandStr(null);
-		//enabling this causes Structs to be added multiple times! 2/2017.
+		//clearUsedInCommandsSet() causes Structs to be added multiple times! 2/2017.
 		//struct.clearUsedInCommandsSet();
 		struct.clear_commandBuilt();
 		

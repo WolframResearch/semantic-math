@@ -153,6 +153,7 @@ cardinality ent
 formula noun
 automorphism ent
 measure ent
+hypotheses ent
 sequent ent
 integer ent
 divisible adj
@@ -170,6 +171,7 @@ power ent
 module ent
 characteristic ent
 set ent
+under hyp
 transformation ent
 matrix ent
 function ent
@@ -185,9 +187,11 @@ generator ent
 lye verb
 either det
 local adj
+with hyp
 regular adj
 noetherian adj
 transition noun
+zero num
 zero adj
 zerodivisor ent
 nonzerodivisor ent

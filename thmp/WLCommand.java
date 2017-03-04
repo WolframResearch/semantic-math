@@ -237,7 +237,7 @@ public class WLCommand implements Serializable{
 	 * To be compared with numUnits of the structToAppendCommandStr.
 	 * (Usually higher than that numUnits, since numUnits does not include
 	 * # of children nodes of StructH's).
-	 * The higher this number, the more spanning this command is.
+	 * The *higher* this number, the more spanning this command is. Hence better.
 	 * Again not intrinsic, depends on DFS path.
 	 */
 	private int commandNumUnits;	
@@ -1059,7 +1059,7 @@ public class WLCommand implements Serializable{
 	 * @param structToAppendCommandStr
 	 * @return Whether nextStruct already has associated head.
 	 */
-	private static boolean updateWrapper(Struct nextStruct, Struct structToAppendCommandStr, WLCommand curCommand){
+	private static boolean updateHeadStruct(Struct nextStruct, Struct structToAppendCommandStr, WLCommand curCommand){
 		
 		Struct prevHeadStruct = nextStruct.structToAppendCommandStr();
 		boolean prevStructHeaded = false; 
@@ -1141,10 +1141,13 @@ public class WLCommand implements Serializable{
 				//System.out.println("&&&posTermStruct " + nextStruct);
 				//get WLCommandWrapperList
 				if(nextStruct != null){
-					if(updateWrapper(nextStruct, structToAppendCommandStr, curCommand)){
+					if(updateHeadStruct(nextStruct, structToAppendCommandStr, curCommand)){
 						//curCommand.structsWithOtherHeadCount++;
 					}
 					
+					/*Update commandNumUnits, which for terms that are included in built string would be updated 
+					  via simpleToString() */
+					increment_commandNumUnits(curCommand, nextStruct);
 				//if(nextStruct != null){
 				//if != null, some Wrappers have been added, so already associated to some commands.
 				/*if(nextStructWrapperList != null){						
@@ -1206,7 +1209,7 @@ public class WLCommand implements Serializable{
 					//should check first if contains WLCommandStr, i.e. has been converted to some 
 					//commands already
 					nextWord = TriggerMathObj3.get_mathObjFromStruct(nextStruct, curCommand);
-
+					
 					if(nextWord.equals("")){
 						//already added numUnits to Struct above, don't do it again.
 						nextWord = nextStruct.simpleToString(true, null);						
@@ -1221,7 +1224,7 @@ public class WLCommand implements Serializable{
 				structToAppendCommandStr.set_posteriorBuiltStruct(nextStruct);				
 				//check if been assigned to a different head
 				//prevStructHeaded = updateWrapper(nextStruct, structToAppendCommandStr);
-				updateWrapper(nextStruct, structToAppendCommandStr, curCommand);
+				updateHeadStruct(nextStruct, structToAppendCommandStr, curCommand);
 				
 				/*if(nextStruct.structToAppendCommandStr() == null){						
 					prevStructHeaded = false;
@@ -1241,7 +1244,7 @@ public class WLCommand implements Serializable{
 				//should have size > 0 always <--nope! if element is not a true WLCommand, like an auxilliary string
 				if(curCommandComponentList.size() > 0){					
 					Struct nextStruct = curCommandComponentList.get(0);
-					updateWrapper(nextStruct, structToAppendCommandStr, curCommand);
+					updateHeadStruct(nextStruct, structToAppendCommandStr, curCommand);
 						//curCommand.structsWithOtherHeadCount++;
 										
 					nextStruct.set_previousBuiltStruct(structToAppendCommandStr);
@@ -1285,7 +1288,7 @@ public class WLCommand implements Serializable{
 		if(DEBUG){
 			logger.info("curCommand: " + curCommand);
 			System.out.println("~~~structToAppendCommandStr to append wrapper: " + structToAppendCommandStr);
-			System.out.println("curCommand just appended: " + curCommand);
+			//System.out.println("curCommand just appended: " + curCommand);
 			//System.out.println(curCommand.posTermList.get(0).posTermStruct);
 		}
 		
@@ -1976,7 +1979,7 @@ public class WLCommand implements Serializable{
 	
 	/**
 	 * Increment the commandNumUnits by 1, only if newStruct is a leaf node, to avoid double counting
-	 * per Struct.
+	 * per Struct. In particular it's not recursive.
 	 * @param curCommand
 	 */
 	public static boolean increment_commandNumUnits(WLCommand curCommand, Struct newStruct){

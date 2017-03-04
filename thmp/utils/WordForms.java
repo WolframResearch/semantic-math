@@ -363,7 +363,6 @@ public class WordForms {
 	}
 	
 	/**
-	 * 
 	 * @param thm
 	 * @return
 	 */

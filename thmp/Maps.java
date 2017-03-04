@@ -525,11 +525,12 @@ public class Maps {
 			posPreMMap.put("define", "verb");
 			posPreMMap.put("has", "vbs");
 
-			// special participles
+			// special participles			
 			posPreMMap.put("given", "parti_COMP");		
 			posPreMMap.put("been", "parti");
 			posPreMMap.put("written", "parti");
 			posPreMMap.put("given by", "partiby");
+			posPreMMap.put("given", "hyp");
 			
 			// Heads for starting definitions.
 			//"denote by...", "call...", 
@@ -801,7 +802,7 @@ public class Maps {
 			structMap.put("let_ent", new Rule("let", 1));
 			structMap.put("if_assert", new Rule("If", 1));
 			structMap.put("iff_assert", new Rule("Iff", 1));
-			structMap.put("hyp_assert", new Rule("If", 1));
+			structMap.put("hyp_assert", new Rule("If", 1));			
 			structMap.put("if_texAssert", new Rule("If", 1));
 			structMap.put("iff_texAssert", new Rule("Iff", 1));
 			structMap.put("hyp_texAssert", new Rule("If", 1));

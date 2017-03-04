@@ -176,6 +176,11 @@ public class StructH<H> extends Struct{
 	public boolean isLatexStruct() {
 		return isLatexStruct;
 	}
+	
+	@Override
+	public boolean containsLatexStruct() {
+		return isLatexStruct || null != struct.get("tex");
+	}
 
 	/**
 	 * @param isLatexStruct the isLatexStruct to set
@@ -477,7 +482,8 @@ public class StructH<H> extends Struct{
 			return this.WLCommandStr;
 		} */		
 		if(this.WLCommandWrapperList != null){
-			int wrapperListSz = WLCommandWrapperList.size();
+			//if(true) throw new IllegalStateException();
+ 			int wrapperListSz = WLCommandWrapperList.size();
 			//wrapperListSz should be > 0, since list is created when first wrapper is added
 			WLCommandWrapper curWrapper = WLCommandWrapperList.get(wrapperListSz - 1);
 			WLCommand composedCommand = curWrapper.WLCommand();
@@ -489,7 +495,13 @@ public class StructH<H> extends Struct{
 			//System.out.println("^^^curWrapper: " + curWrapper);
 			
 			//been built into one command already
-			this.WLCommandStrVisitedCount++;
+			if(null == this.commandBuilt){
+				this.commandBuilt = curCommand;
+				this.WLCommandStrVisitedCount++;
+			}else if(!curCommand.equals(this.commandBuilt)){
+				this.WLCommandStrVisitedCount++;				
+			}
+			//this.WLCommandStrVisitedCount++;
 			curCommand.addComposedWLCommands(composedCommand);
 			return curWrapper.WLCommandStr();			
 		}		
@@ -501,8 +513,8 @@ public class StructH<H> extends Struct{
 	/**
 	 * Auxilliary method for simpleToString and StructA.simpleToString.
 	 */
-	@Override
-	public String simpleToString2(boolean includeType, WLCommand curCommand){
+	//@Override
+	private String simpleToString2(boolean includeType, WLCommand curCommand){
 		
 		if(curCommand != null) {
 			WLCommand.increment_commandNumUnits(curCommand, this);
@@ -636,6 +648,11 @@ public class StructH<H> extends Struct{
 		return sb.toString();
 	}
 	
+	@Override
+	public boolean isLeafNodeCouldHaveChildren(){
+		//return 0 == children.size();
+		return true;
+	}
 	/*@Override
 	public boolean commandVisited(){
 		return true;

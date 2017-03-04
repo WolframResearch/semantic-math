@@ -1,5 +1,8 @@
 package thmp;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import thmp.Struct.NodeType;
 
 public class ThmP1AuxiliaryClass {
@@ -188,6 +191,119 @@ public class ThmP1AuxiliaryClass {
 				}
 			}
 			
+		}
+	}	
+
+	/**
+	 * @param mathIndexList
+	 * @param pairs
+	 * @param pairsLen
+	 */
+	public static void updatePosInPairsList(List<Integer> mathIndexList, List<Pair> pairs) {
+		Pair curpair;
+		int pairsLen = pairs.size();
+		//turn "symb" pos into "ent" if followed by "pre",
+		//e.g. "given $x$ in a compact space", but not if preceded by an ent.
+		for (int index = 0; index < pairsLen; index++) {		
+			curpair = pairs.get(index);
+			String curWord = curpair.word();	
+			String curPos = curpair.pos();				
+			if(curPos.equals("symb") 
+					&& index < pairsLen-1 && pairs.get(index+1).pos().equals("pre") 
+					&& index > 0 && !pairs.get(index-1).pos().equals("ent") ){
+				curpair.set_pos("ent");
+				mathIndexList.add(index);
+			}
+			//changing num to either adj or ent
+			if("num".equals(curPos)){
+				if(index < pairsLen-1){
+					if(pairs.get(index+1).pos().equals("ent")){
+						curpair.set_pos("adj");
+					}else{
+						curpair.set_pos("ent");
+						mathIndexList.add(index);
+					}
+				}else{
+					curpair.set_pos("ent");
+					mathIndexList.add(index);
+				}
+			}
+		}
+		
+		if(pairsLen > 0){
+			Pair lastPair = pairs.get(pairsLen-1);
+			String lastPairPos = lastPair.pos();
+			if("verb".equals(lastPairPos) || "vbs".equals(lastPairPos)){
+				lastPair.set_pos("verbAlone");
+			}
+		}
+	}
+	
+
+	/**
+	 * @param parseState
+	 * @param inputStructList
+	 * @param structListList
+	 */
+	public static void convertToTexAssert(ParseState parseState, List<Struct> inputStructList,
+			List<StructList> structListList) {
+		//if only one ent,
+		//e.g. "then $ $", misrepresented StructH as StructA, 
+		//if should have been an "assert".
+		if(structListList.size() < 3){
+			
+			//go through structList see 
+			//boolean couldConvertToAssert = false;
+			List<Struct> entSubstitutedStructList = new ArrayList<Struct>(inputStructList);
+			Struct toBeConvertedStruct = null;
+			
+			for(StructList sList : structListList){
+				Struct struct = sList.get(0);
+				//entToAssertStructList.add(struct);
+				if(struct.isLatexStruct()){
+					//if(true) throw new IllegalStateException(structListList.toString());
+					assert !struct.isStructA() 
+						: "Struct must be StructH to be latexStruct!";						
+					//couldConvertToAssert = true;
+					toBeConvertedStruct = struct;
+					break;
+				}						
+			}
+			System.out.println("ThmP1 - toBeConvertedStruct " + toBeConvertedStruct);
+			if(null != toBeConvertedStruct){
+				
+				//need to convert toBeConvertedStruct to a StructA 
+				//with type "assert".						
+				String toBeConvertedStructName = toBeConvertedStruct.nameStr();
+				
+				for(int k = 0; k < entSubstitutedStructList.size(); k++){
+					
+					Struct structToSubstitute = entSubstitutedStructList.get(k);
+					if(structToSubstitute.nameStr().equals(toBeConvertedStructName)){
+						//if s already has child, then means probably should not turn into assertion,
+						//since most children are appended during mx-building
+						if(structToSubstitute.has_child()){
+							break;
+						}
+						
+						//StructH should not have any properties .  Look through properties of toBeConvertedStruct?
+						StructA<String, String> convertedStructA = new StructA<String, String>(toBeConvertedStructName, 
+								NodeType.STR, "", NodeType.STR, "texAssert");
+						
+						convertedStructA.set_parentStruct(structToSubstitute.parentStruct());
+						//convertedStructA.set_maxDownPathScore(structToSubstitute.maxDownPathScore());
+						
+						entSubstitutedStructList.set(k, convertedStructA);
+						//if(true) throw new IllegalStateException(inputStructList.toString());
+						//isReparse = true;
+						parseState.setTokenList(entSubstitutedStructList);
+						//don't set isReparse, so to allow defluffing in the recursion call.
+						System.out.println("~~REPARSING with assert");
+						ThmP1.parse(parseState);						
+						System.out.println("~~REPARSING with assert DONE");
+					}
+				}						
+			}
 		}
 	}
 }
