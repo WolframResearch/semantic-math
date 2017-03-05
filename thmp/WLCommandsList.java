@@ -157,15 +157,13 @@ public class WLCommandsList {
 				new PBuilder(" ~HasProperty~ {"),  new PBuilder("verbAlone", null, true, true, false).addRelationType(RelationType.IS_), 
 				new PBuilder(" ,", "OPT"), new PBuilder("prep", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}")));	
 		
-		/*Don't think this command is effective right now. March 2017.*/
+		/*e.g. If $x > y$.*/
 		wLCommandMapBuilder.put("texAssert", addCommand(new PBuilder("hyp|if|then", null, false, false, "OPT"), 
 				new PBuilder("texAssert", null, true, true, false)));
 		
-		//assert_hypo: 
-		//WLCommandMapBuilder.put("hyp", addCommand(new String[] { "assert, , true", "hyp, , trigger", "ent|symb, , true"
-		  //}));
-		wLCommandMapBuilder.put("hyp", addCommand(new PBuilder("assert", null, true), new PBuilder("hyp", null, false, true, false), 
-				new PBuilder("ent|symb", null, true, RelationType.IF) ));
+		//$A$ is $B$ is $C$. This case is covered in the code by converting ent to texAssert
+		/*wLCommandMapBuilder.put("if", addCommand(new PBuilder("assert", null, true), new PBuilder("hyp|if", null, false, true, false), 
+				new PBuilder("ent|symb", null, true, RelationType.IF), new PBuilder("verb|vbs", null, WLCommand.PosTermType.NEGATIVE)));*/
 
 		/*****More specific commands******/
 		//WLCommandMapBuilder.put("element", addCommand(

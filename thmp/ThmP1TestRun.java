@@ -597,7 +597,16 @@ public class ThmP1TestRun {
 			st = "$1=1$";
 			st = "If $1=1$, then all integers are prime.";
 			st = "if $1=1$";
-			//st = "then all integers are prime.";
+			st = "Let $a$,$b$,$c$ be integers";
+			st = "given $b ac$, then $ fsf$";
+			st = "The nonzero integers $a$ and $b$ are said to be relatively prime if $(a,b)=1$.";
+			st = "The nonzero integers $a$ and $b$ are relatively prime when $(a,b)=1$.";
+			st = "The product of two primitive polynomials is itself primitive.";
+			st = "$A$ is itself prime";
+			st = "Any polynomial of odd degree that has real coefficients must have a real root.";
+			st = "Any polynomial that has real coefficients is local";
+			//st = "The product of two primitive polynomials is primitive.";
+			//st = "$A $ is said to be prime";
 			//st = "then all integers are prime";
 			//st = "The variables $x $ and $ y$ converge in distribution.";			
 			//st = "$A$ is isomorphic to $B$";

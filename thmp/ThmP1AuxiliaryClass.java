@@ -189,11 +189,58 @@ public class ThmP1AuxiliaryClass {
 					secondTreeStruct.set_prev2(newLeftChild);
 					reorganizeConjDisjVerbphraseTree((Struct)struct.prev2(), newLeftChild);
 				}
-			}
-			
+			}			
 		}
 	}	
 
+	/**
+	 * @param structList
+	 */
+	protected static void convertStructToTexAssert(List<Struct> structList) {
+		int structListSz  = structList.size();
+		if(0 == structListSz) return;
+		
+		Struct lastStruct = structList.get(structListSz-1);
+		Struct firstStruct = structList.get(0);		
+		if(structListSz > 3){			
+			firstStruct = structList.get(structListSz - 2);
+		}
+		convertStructToTexAssertHelper(structList, structListSz, firstStruct, lastStruct);
+	}
+
+	/**
+	 * @param structList
+	 * @param structListSz
+	 * @param firstStruct
+	 * @param lastStruct
+	 */
+	private static void convertStructToTexAssertHelper(List<Struct> structList, int structListSz, Struct firstStruct,
+			Struct lastStruct) {
+		//if(true) throw new IllegalStateException(lastStruct.containsLatexStruct() +" " + lastStruct.toString());
+		if((1 == structListSz || firstStruct.containsPos("hyp") || firstStruct.containsPos("if"))
+				&& lastStruct.containsLatexStruct()){
+			//if(true) throw new IllegalStateException();
+			if(!lastStruct.has_child()){
+				String tex = lastStruct.struct().get("tex");
+				tex = null == tex ? "" : tex;
+				StructA<String, String> convertedStructA = new StructA<String, String>(lastStruct.nameStr(), 
+						NodeType.STR, tex, NodeType.STR, "texAssert");
+				structList.set(structListSz - 1, convertedStructA);
+			}				
+			//lastStruct.set_type("texAssert");
+		}
+	}
+	
+	protected static String getChildRelationStringFromStructPrev1(Struct struct){
+		String childRelationStr;// = struct.prev1().toString();
+		if(struct.prev1NodeType().equals(NodeType.STR)){
+			childRelationStr = struct.prev1().toString();
+		}else{
+			childRelationStr = ((Struct)struct.prev1()).nameStr();
+		}
+		return childRelationStr;
+	}
+	
 	/**
 	 * @param mathIndexList
 	 * @param pairs

@@ -32,6 +32,12 @@ public class StructList implements Serializable{
 		this.highestDownScoreIndex = -1;
 	}
 	
+	public StructList(Struct struct){
+		this.structList = new ArrayList<Struct>();
+		this.structList.add(struct);
+		this.highestDownScoreIndex = -1;
+	}
+	
 	/**
 	 * @return the isDiagonalElementInMx
 	 */

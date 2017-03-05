@@ -721,13 +721,13 @@ public class Maps {
 			structMap.put("verb_csubj", new Rule("verbphrase", 1));
 			structMap.put("be_ent", new Rule("verbphrase", .7));
 			structMap.put("verb_adj", new Rule("verbphrase", 1));
-			structMap.put("verb_pro", new Rule("verbphrase", 1));
+			structMap.put("verb_pro", new Rule("verbphrase", 1)); //HERE
 			structMap.put("verb_symb", new Rule("verbphrase", 1));
 			structMap.put("verb_np", new Rule("verbphrase", 1));
 			structMap.put("verb_prep", new Rule("verbphrase", 1));
 			structMap.put("verb_num", new Rule("verbphrase", 1));
 			structMap.put("verb_np", new Rule("verbphrase", 1));
-			structMap.put("verb_pre", new Rule("verbphrase", .8));
+			structMap.put("verb_pre", new Rule("verbphrase", .6));
 			structMap.put("verb_phrase", new Rule("verbphrase", 1));
 			structMap.put("verb_partient", new Rule("verbphrase", 1));
 			structMap.put("verb_noun", new Rule("verbphrase", 1));

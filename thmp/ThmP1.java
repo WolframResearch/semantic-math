@@ -84,7 +84,7 @@ public class ThmP1 {
 	
 	//pattern for Latex expressions being possible assert's, i.e. starting/ending with $ and 
 	//containing operators such as ">, ="
-	private static final Pattern LATEX_ASSERT_PATTERN = Pattern.compile("\\$(?:[^$]+[=><][^$]+)\\$");
+	private static final Pattern LATEX_ASSERT_PATTERN = Pattern.compile("\\$(?:[^$]+)\\$");
 	
 	// list of parts of speech, ent, verb etc <--should make immutable
 	private static final List<String> posList;
@@ -105,7 +105,7 @@ public class ThmP1 {
 	//moving to parseState...
 	private static List<ParsedPair> parsedExpr = new ArrayList<ParsedPair>();
 	
-	private static final ImmutableListMultimap<String, FixedPhrase> fixedPhraseMap;	
+	private static final ImmutableListMultimap<String, FixedPhrase> fixedPhraseMMap;	
 	
 	private static final Map<String, Integer> twoGramMap = NGramSearch.get2GramsMap();
 	private static final Map<String, Integer> threeGramMap = ThreeGramSearch.get3GramsMap();
@@ -177,7 +177,7 @@ public class ThmP1 {
 	static{
 		fluffMap = Maps.BuildMaps.fluffMap;
 		//mathObjMap = Maps.BuildMaps.mathObjMap;
-		fixedPhraseMap = Maps.fixedPhraseMap();
+		fixedPhraseMMap = Maps.fixedPhraseMap();
 		structMap = Maps.structMap();
 		anchorMap = Maps.anchorMap();
 		posMMap = Maps.posMMap();		
@@ -715,15 +715,19 @@ public class ThmP1 {
 			if (i < strAr.length - 1) {
 				
 				String potentialTrigger = curWord + " " + strAr[i + 1];
-				if (fixedPhraseMap.containsKey(potentialTrigger)) {
+				if (fixedPhraseMMap.containsKey(potentialTrigger)) {
 					//primordial pair to be set if valid fixed phrase is found.
 					//Ugly solution, but this avoids creating a whole new class
 					//with just an in and a Pair as members.
 					Pair emptyPair = new Pair(null, null);
+					//if(true) throw new IllegalStateException(potentialTrigger);
 					int numWordsDown = findFixedPhrase(potentialTrigger, i, strAr, emptyPair);
-					if(null != emptyPair.pos()){
-						pairs.add(emptyPair);			
-						if(emptyPair.pos().equals("ent")) mathIndexList.add(pairs.size() - 1);						
+					if(numWordsDown > 1){
+						/*null if word phrase is fluff*/
+						if(null != emptyPair.pos()){
+							pairs.add(emptyPair);			
+							if(emptyPair.pos().equals("ent")) mathIndexList.add(pairs.size() - 1);	
+						}
 						i += numWordsDown - 1;						
 						continue strloop;
 					}
@@ -1361,9 +1365,10 @@ public class ThmP1 {
 			mathPair.set_pos(entPosStr);
 			
 			StructH<HashMap<String, String>> tempStructH = new StructH<HashMap<String, String>>("ent");
-			
+			//if(true) throw new IllegalStateException(mathObjName);
 			if(LATEX_ASSERT_PATTERN.matcher(mathObjName).matches()){
 				tempStructH.setLatexStructToTrue();
+				
 			}
 			
 			List<String> posList = posMMap.get(mathObjName);
@@ -1780,32 +1785,14 @@ public class ThmP1 {
 
 		}
 
-		int structListSz  = structList.size();
-		if(structListSz < 4 && structListSz > 0){			
-			Struct firstStruct = structList.get(0);
-			Struct lastStruct = structList.get(structListSz-1);
-			//String firstStructType = firstStruct.type();
-			
-			//if(true) throw new IllegalStateException();
-			if((1 == structListSz || firstStruct.containsPos("hyp") || firstStruct.containsPos("if"))
-					&& lastStruct.containsLatexStruct()){
-				//if(true) throw new IllegalStateException();
-				if(!lastStruct.has_child()){
-					String tex = lastStruct.struct().get("tex");
-					tex = null == tex ? "" : tex;
-					StructA<String, String> convertedStructA = new StructA<String, String>(lastStruct.nameStr(), 
-							NodeType.STR, tex, NodeType.STR, "texAssert");
-					structList.set(structListSz - 1, convertedStructA);
-				}				
-				//lastStruct.set_type("texAssert");
-			}			
-		}
+		ThmP1AuxiliaryClass.convertStructToTexAssert(structList);
 		
 		System.out.println("\n^^^^structList: " + structList);
 		
 		parseState.setTokenList(structList);
 		return parseState;
 	}
+
 
 	/**
 	 * Remove parts of speech pairs that are very unlikely, so to leave the pos to 
@@ -1883,9 +1870,9 @@ public class ThmP1 {
 		// do first two words instead of 1, e.g. "for all" instead
 		// of just "for"
 		// since compound words contain at least 2 words
-		List<FixedPhrase> fixedPhraseList = fixedPhraseMap.get(potentialTrigger);
+		List<FixedPhrase> fixedPhraseList = fixedPhraseMMap.get(potentialTrigger);
 		int numWordsDown = 0;
-		//fixedPhrases should actually reside in a trie instead a Multimap!
+		//fixedPhrases should better reside in a trie instead a Multimap
 		Iterator<FixedPhrase> fixedPhraseListIter = fixedPhraseList.iterator();
 		while (fixedPhraseListIter.hasNext()) {
 			FixedPhrase fixedPhrase = fixedPhraseListIter.next();
@@ -1894,8 +1881,7 @@ public class ThmP1 {
 			StringBuilder joinedSB = new StringBuilder(20);
 			
 			int k = i;
-			while (k < strAr.length && k - i < numWordsDown) {
-				
+			while (k < strAr.length && k - i < numWordsDown) {				
 				joinedSB.append(strAr[k]).append(" ");
 				k++;
 			}
@@ -1904,7 +1890,7 @@ public class ThmP1 {
 			Matcher matcher = fixedPhrase.phrasePattern().matcher(joinedTrimmed);
 			if (matcher.matches()) {
 				String pos = fixedPhrase.pos();
-				if(!pos.equals("fluff")){				
+				if(!"fluff".equals(pos)){				
 					emptyPair.set_word(joinedTrimmed);
 					emptyPair.set_pos(pos);
 				}
@@ -2702,16 +2688,14 @@ public class ThmP1 {
 					if (i >= j) {
 						break;
 					}
-				}
-				
+				}				
 				StructList tempStructList = mx.get(i).get(j);
-
 				if (tempStructList.size() > 0) {					
-					//but adding at 0 is slow! Add at end and reverse!
+					//but adding at 0 is slow! Add at end and reverse once!
 					structListList.add(0, tempStructList);
 					structCoordinates.add(0, new int[]{i, j});
 				}
-				// a singleton on the diagonal <--not necessarily true any more
+				// a singleton on the diagonal
 				if (i == j) {
 					j--;
 				} else {
@@ -2817,15 +2801,14 @@ public class ThmP1 {
 					//get something other than 0th??
 					newStructList.add(structList_i.get(0));					
 				}
-				parseState.setTokenList(newStructList);
-				
-				//parseAgain defluffs based on ones that are not connected to neighbors.
-				ParseAgain.parseAgain(newStructList, structCoordinates, parseState);
+				//don't set here! Set in parseAgain parseState.setTokenList(newStructList);
+				/*parseAgain() defluffs based on tokens that are not connected to neighbors.*/
+				ParseAgain.parseAgain(newStructList, structCoordinates, parseState, mx);
 				
 				System.out.println("\n=__+++++_======structList after Defluffing round 1: " + parseState.getTokenList());
 				
 				//if still no spanning parse found in above defluffing approach, now
-				//try another approach: dropping elements, 
+				//try another approach: dropping elements 
 				if(!parseState.isRecentParseSpanning()){
 				
 					//form new structList
@@ -3412,11 +3395,9 @@ public class ThmP1 {
 				
 				for(int p = 0; p < kPlus1StructArrayList.size(); p++){
 					Struct struct = kPlus1StructArrayList.get(p);
-					if(struct.prev1NodeType().equals(NodeType.STR)){
-						
-						String childRelationStr = struct.prev1().toString();
+					if(struct.prev1NodeType().equals(NodeType.STR)){						
+						String childRelationStr = ThmP1AuxiliaryClass.getChildRelationStringFromStructPrev1(struct);
 						childRelation = new ChildRelation.PrepChildRelation(childRelationStr);
-						
 						break;
 					}
 				}
@@ -3450,7 +3431,8 @@ public class ThmP1 {
 				
 				StructA<?, ?> struct2Prev1 = (StructA<?, ?>)struct2.prev1();
 				if(struct2Prev1.type().equals("adj") ){
-					childRelation = new ChildRelation.HypChildRelation(struct2Prev1.prev1().toString());
+					String childRelationStr = ThmP1AuxiliaryClass.getChildRelationStringFromStructPrev1(struct2Prev1);
+					childRelation = new ChildRelation.HypChildRelation(childRelationStr);
 					childToAdd = (Struct)struct2.prev2();
 				}
 				
@@ -3460,14 +3442,16 @@ public class ThmP1 {
 					//e.g. "phrase[adj[maximal], prep[pre[among], [ent{name=ring}]]]"
 					//childRelation = extractHypChildRelation(struct2Prev1);
 					//childRelation = new ChildRelation.HypChildRelation(((Struct)struct2Prev1.prev1()).contentStr());
-					childRelation = new ChildRelation.HypChildRelation(struct2Prev1.prev1().toString());	
+					String childRelationStr = ThmP1AuxiliaryClass.getChildRelationStringFromStructPrev1(struct2Prev1);
+					childRelation = new ChildRelation.HypChildRelation(childRelationStr);	
 					((Struct)struct2Prev2).set_parentStruct(newStruct);
 					childToAdd = struct2Prev2;
 				}else if(struct2Prev2.prev2NodeType().equals(NodeType.STRUCTH)){
 					//the right-most grandchild
 					//System.out.println("^######^#^##^#^#^!@@ prev2Struct.prev2 " + struct2Prev2.prev2());
 					//childRelation = extractHypChildRelation((Struct)struct2Prev2.prev1());
-					childRelation = new ChildRelation.HypChildRelation(struct2Prev2.prev1().toString());
+					String childRelationStr = ThmP1AuxiliaryClass.getChildRelationStringFromStructPrev1(struct2Prev2);
+					childRelation = new ChildRelation.HypChildRelation(childRelationStr);
 					((Struct)(struct2Prev2.prev2())).set_parentStruct(newStruct);
 					childToAdd = (Struct)struct2Prev2.prev2();
 					//System.out.println("&^^^^setting (Struct)(prev2Struct.prev2()) " + (Struct)(struct2Prev2.prev2()) + 
@@ -4336,7 +4320,8 @@ public class ThmP1 {
 		//separate out punctuations, separate out words away from punctuations.
 		//compile this!		
 		//Note this also changes the tex, be more careful!
-		String[] wordsArray = inputStr.replaceAll("([^\\.,!:;]*)([\\.,:!;]{1})", "$1 $2").split("\\s+");
+		String[] wordsArray = inputStr.replaceAll("([^\\.,!:;]*)([\\.,:!;]{1})([^\\.,!:;]*)", "$1 $2 $3").split("\\s+");
+		//String[] wordsArray = inputStr.replaceAll("([^\\.,!:;]*)([\\.,:!;]{1})", "$1 $2").split("\\s+");
 		
 		//System.out.println("wordsArray " + Arrays.toString(wordsArray));
 		int wordsArrayLen = wordsArray.length;
@@ -4421,7 +4406,7 @@ public class ThmP1 {
 				}
 			}
 
-			// fluff phrases all start in posMap
+			// fluff phrases all start with some key in posMMap
 			String curWordLower = curWord.toLowerCase();
 			if (posMMap.containsKey(curWordLower)) {
 				String pos = posMMap.get(curWordLower).get(0);
@@ -4549,7 +4534,8 @@ public class ThmP1 {
 					sentenceBuilder.append(" ").append(curWord);
 				}
 				//throw new IllegalStateException("punctuation: " + curWord);
-			} else if(i == wordsArrayLen - 1){ 
+			}
+			else if(i == wordsArrayLen - 1){ 
 				sentenceList.add(sentenceBuilder.toString());
 				sentenceBuilder.setLength(0);
 			}

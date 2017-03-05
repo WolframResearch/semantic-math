@@ -958,8 +958,7 @@ public class WLCommand implements Serializable{
 			super.commandsCountMap = commandsCountMap;		
 			super.posTermList = posList;
 			super.componentCounter = componentCount;
-			super.totalComponentCount = componentCount;
-			
+			super.totalComponentCount = componentCount;			
 			super.triggerWordIndex = triggerWordIndex;
 			super.lastAddedCompIndex = triggerWordIndex;
 			super.optionalTermsCount = optionalTermsCount;
@@ -981,15 +980,13 @@ public class WLCommand implements Serializable{
 		
 		//System.out.println("+++++++++++++++++++++commandsMap " + commandsMap);
 		for(Struct nextStruct : commandsMap.values()){
-			//System.out.println("~~~nextStruct inside commandsMap " + nextStruct + " " + nextStruct.dfsDepth());
 			
-			//should never be null, commandsMap should be all filled
+			//should never be null, commandsMap should be all filled, except maybe optional posTerms.
 			if(nextStruct != null){
 				Struct nextStructParent = nextStruct.parentStruct();
 				Struct curStruct = nextStruct;
 				//System.out.println("+++nextStructParent " + nextStructParent);
-				while(nextStructParent != null){
-					
+				while(nextStructParent != null){					
 					//System.out.println("***ParentPrev2" + nextStructParent.prev1() + " "  + nextStruct == nextStructParent.prev2());
 					Integer whichChild = curStruct == nextStructParent.prev1() ? LEFTCHILD : 
 						(curStruct == nextStructParent.prev2() ? RIGHTCHILD : NEITHERCHILD);
@@ -998,14 +995,12 @@ public class WLCommand implements Serializable{
 						int existingChild = structIntMap.get(nextStructParent);
 						if(nextStructParent.isStructA() && existingChild != NEITHERCHILD
 								&& whichChild != existingChild){
-							//check if has left child, right child, or both.
-							
+							/*check if has left child, right child, or both.*/							
 							structIntMap.put(nextStructParent, BOTHCHILDREN);
 							//update curStruct so to correctly determine which child parent is 
 							curStruct = nextStructParent;
 							//colored twice, need to put its parent in map
-							nextStructParent = nextStructParent.parentStruct();
-							
+							nextStructParent = nextStructParent.parentStruct();							
 						}else{
 							break;
 						}
@@ -1014,8 +1009,7 @@ public class WLCommand implements Serializable{
 						curStruct = nextStructParent;
 						nextStructParent = nextStructParent.parentStruct(); 
 					}					
-				}
-				
+				}				
 			}			
 		}
 
@@ -1043,11 +1037,16 @@ public class WLCommand implements Serializable{
 				}
 			}
 		}		
-
-		//if head is ent (firstPosTermStruct.type().equals("ent") && ) and 
-		//everything in this command belongs to or is a child of the head ent struct		
+		//if head is ent (firstPosTermStruct.type().equals("ent") ) or texAssert and 
+		//everything in this command belongs to or is a child of the head ent struct				
+		if(highestStruct.type().equals("texAssert") && null != highestStruct.parentStruct()){
+			Struct parentStruct = highestStruct.parentStruct();
+			String parentStructType = parentStruct.type();
+			if("If".equals(parentStructType) || "hypo".equals(parentStructType)){
+				highestStruct = parentStruct;
+			}
+		}		
 		structToAppendCommandStr = highestStruct;
-		
 		//System.out.println("structToAppendCommandStr" + structToAppendCommandStr);
 		return structToAppendCommandStr;
 	}
@@ -1129,8 +1128,7 @@ public class WLCommand implements Serializable{
 		
 		EnumMap<PosTermConnotation, Struct> connotationMap = null;
 		
-		for(PosTerm term : posTermList){
-			
+		for(PosTerm term : posTermList){			
 			if(term.isNegativeTerm()){
 				continue;
 			}			

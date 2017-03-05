@@ -428,6 +428,7 @@ public abstract class Struct implements Serializable{
 		String childRelationStr;
 		
 		public ChildRelation(String relation){
+			//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
 			this.childRelationStr = relation;
 		}
 		

@@ -265,9 +265,6 @@ public class StructA<A, B> extends Struct{
 	@Override
 	public String simpleToString(boolean includeType, WLCommand curCommand){
 
-		if(type.equals("assert")){
-			System.out.println("StructA - ");
-		}
 		//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
 		if(this.WLCommandWrapperList != null){
 			int wrapperListSz = WLCommandWrapperList.size();
