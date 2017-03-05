@@ -23,6 +23,7 @@ import com.wolfram.jlink.Expr;
 import com.wolfram.jlink.MathLinkException;
 
 import thmp.ProcessInput;
+import thmp.utils.DataUtility;
 import thmp.utils.WordForms;
 
 /**
@@ -56,11 +57,13 @@ public class SearchCombined {
 		private String thmStr;
 		private String hypStr;
 		private String srcFileName;
+		private String arxivURL;
 		
 		public ThmHypPair(String thmStr_, String hypStr_, String srcFileName_){
 			this.thmStr = thmStr_;
 			this.hypStr = hypStr_;
 			this.srcFileName = srcFileName_;
+			this.arxivURL = DataUtility.createArxivURLFromFileName(srcFileName_);
 		}
 		
 		@Override
@@ -81,6 +84,9 @@ public class SearchCombined {
 		}
 		public String srcFileName(){
 			return this.srcFileName;
+		}
+		public String arxivURL(){
+			return this.arxivURL;
 		}
 	}
 	

@@ -61,14 +61,14 @@ public class ThmInput {
 	private static final Pattern LABEL_PATTERN = Pattern.compile("(.*?)\\\\label\\{(?:[^}]*)\\}\\s*(.*?)");
 	//private static final Pattern DIGIT_PATTERN = Pattern.compile(".*\\d+.*");
 
-	// boldface typesetting. \cat{} refers to category. MUST *Update* DF_EMPH_PATTERN_REPLACEMENT when updating this!
-	//e.g. {\em lll\/}
+	/* Boldface typesetting. \cat{} refers to category. MUST *Update* DF_EMPH_PATTERN_REPLACEMENT when updating this!
+	   e.g. {\em lll\/} */
 	private static final Pattern DF_EMPH_PATTERN = Pattern
 			.compile("\\\\df\\{([^\\}]*)\\}|\\\\emph\\{([^\\}]*)\\}|\\{\\\\em\\s+([^\\}]+)[\\\\/]*\\}|\\\\cat\\{([^}]*)\\}|\\{\\\\it\\s*([^}]*)\\}"
-					+ "|\\\\ref\\{([^}]*)\\}");
-	// replacement for DF_EMPH_PATTERN, should have same number of groups as
-	// number of patterns in DF_EMPH_PATTERN.
-	private static final String DF_EMPH_PATTERN_REPLACEMENT = "$1$2$3$4$5$6";
+					+ "|\\\\ref\\{([^}]*)\\}|\\\\subsection\\{([^}]*)\\}|\\\\section\\{([^}]*)\\}");
+	/* Replacement for DF_EMPH_PATTERN, should have same number of groups as
+	   number of patterns in DF_EMPH_PATTERN. */
+	private static final String DF_EMPH_PATTERN_REPLACEMENT = "$1$2$3$4$5$6$7$8";
 
 	/*private static Pattern[] GROUP1_PATTERN_ARRAY = new Pattern[] { Pattern.compile("\\\\df\\{([^\\}]*)\\}"),
 			Pattern.compile("\\\\emph\\{([^}]*)\\}"), Pattern.compile("\\\\cat\\{([^}]*)\\}"),

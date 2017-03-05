@@ -1,6 +1,8 @@
 package thmp.utils;
 
 import java.util.Iterator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Class for utility functions for manipulating data.
@@ -8,6 +10,14 @@ import java.util.Iterator;
  */
 public class DataUtility {
 
+	private static final Pattern FILE_NAME_PATTERN1 = Pattern.compile("([A-Za-z]+)([\\d]+)");
+	private static final Pattern FILE_NAME_PATTERN2 = Pattern.compile("[\\d]+\\.[\\d]+");
+	
+	/**
+	 * O(n) time to find the max element of an iterable.
+	 * @param iterable
+	 * @return
+	 */
 	public static <T extends Comparable<T>> T findMax(Iterable<T> iterable){
 		
 		Iterator<T> iter = iterable.iterator();
@@ -23,6 +33,31 @@ public class DataUtility {
 			}
 		}
 		return max;
+	}
+	
+	/**
+	 * 
+	 * @param srcFileName, two forms, e.g. math0211002, or 4387.86213
+	 * @return
+	 */
+	public static String createArxivURLFromFileName(String srcFileName){
+		//StringBuilder urlSB = new StringBuilder("https://arxiv.org/abs/");
+		String url = srcFileName;
+		String paperRef = null;
+		Matcher matcher;
+		if((matcher=FILE_NAME_PATTERN1.matcher(srcFileName)).matches()){
+			//turn into e.g. "https://arxiv.org/abs/math/0211144"
+			paperRef = matcher.group(1) + "/" + matcher.group(2);
+			//urlSB.append(matcher.group(1));
+		}else if((matcher=FILE_NAME_PATTERN2.matcher(srcFileName)).matches()){
+			//turn into e.g. "https://arxiv.org/abs/4387.86213"
+			paperRef = srcFileName;
+			//urlSB.append(srcFileName);
+		}
+		if(null != paperRef){
+			url = "https://arxiv.org/abs/" + paperRef;
+		}
+		return url;
 	}
 	
 }
