@@ -10,7 +10,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -55,7 +58,11 @@ public class ThmInput {
 	
 	//new theorem pattern. E.g. \newtheorem{corollary}[theorem]{Corollary}
 	static final Pattern NEW_THM_PATTERN = Pattern.compile("\\\\newtheorem\\{([^}]+)\\}(?:[^{]*)\\{([^}]+).*");
-		
+	/*another custom definition specification, \newcommand{\xra}  {\xrightarrow}
+	  Need to be smart about e.g. \newcommand{\\un}[1]{\\underline{#1}} !*/
+	//static final Pattern NEW_THM_PATTERN2 = Pattern.compile("\\s*\\\\newcommand\\{([^}]+)\\}\\s*\\{([^}]+).*");
+	static final Pattern NEW_THM_PATTERN2 = Pattern.compile("\\s*\\\\newcommand\\{([^}]+)\\}\\s*\\{(.+?)\\}\\s*");
+	
 	static final Pattern THM_TERMS_PATTERN = Pattern.compile("Theorem|Proposition|Lemma|Corollary|Conjecture|Definition");
 	
 	private static final Pattern LABEL_PATTERN = Pattern.compile("(.*?)\\\\label\\{(?:[^}]*)\\}\\s*(.*?)");
@@ -106,7 +113,7 @@ public class ThmInput {
 		List<String> thmWebDisplayList = new ArrayList<String>();
 		List<String> bareThmList = new ArrayList<String>();
 		List<String> thmList = readThm(srcFileBReader, thmWebDisplayList, bareThmList);
-		System.out.println("ThmInput - thmList: " + thmList);
+		System.out.println("ThmInput - thmList after processing: " + thmList);
 		if (writeToFile) {
 			// Path fileTo = Paths.get("src/thmp/data/thmFile5.txt");
 			// Path fileTo =
@@ -151,31 +158,37 @@ public class ThmInput {
 		// \\\\end\\{def(?:.*)
 		Pattern thmStartPattern = THM_START_PATTERN;
 		Pattern thmEndPattern = THM_END_PATTERN;
-		List<String> macrosList = new ArrayList<String>();
+		List<String> customBeginThmList = new ArrayList<String>();
+		Map<Pattern, String> macrosMap = new HashMap<Pattern, String>();
 		
 		List<String> thms = new ArrayList<String>();
 
-		String line;
-		
+		String line;		
 		//read in custom macros, break as soon as \begin{document} encountered
-		while ((line = srcFileReader.readLine()) != null) {
-			
+		while ((line = srcFileReader.readLine()) != null) {			
 			Matcher newThmMatcher;			
 			if(BEGIN_PATTERN.matcher(line).find()){
 				break;
 			}else if((newThmMatcher = NEW_THM_PATTERN.matcher(line)).find()){
 				//should be a proposition, hypothesis, etc
 				if(THM_TERMS_PATTERN.matcher(newThmMatcher.group(2)).find()){
-					macrosList.add(newThmMatcher.group(2));		
+					customBeginThmList.add(newThmMatcher.group(1));		
 				}
-			}			
+			}else if((newThmMatcher = NEW_THM_PATTERN2.matcher(line)).matches()){
+				//macrosList.add(newThmMatcher)
+				macrosMap.put(Pattern.compile(Matcher.quoteReplacement(newThmMatcher.group(1))), Matcher.quoteReplacement(newThmMatcher.group(2)));
+				/*if(newThmMatcher.group(1).equals("\\xra")){
+					System.out.println("*****replacement " + newThmMatcher.group(2));
+					System.out.println(Pattern.compile(Matcher.quoteReplacement(newThmMatcher.group(1))).matcher("\\xra").matches());
+				}*/
+			}
 		}
 		
 		//append list of macros to THM_START_STR and THM_END_STR
-		if(!macrosList.isEmpty()){
+		if(!customBeginThmList.isEmpty()){
 			StringBuilder startBuilder = new StringBuilder();
 			StringBuilder endBuilder = new StringBuilder();
-			for(String macro : macrosList){
+			for(String macro : customBeginThmList){
 				//create start and end macros
 				startBuilder.append("\\\\begin\\{").append(macro).append(".*");				
 				endBuilder.append("\\\\end\\{").append(macro).append(".*");
@@ -183,19 +196,18 @@ public class ThmInput {
 			thmStartPattern = Pattern.compile(THM_START_STR + startBuilder);
 			thmEndPattern = Pattern.compile(THM_END_STR + endBuilder);	
 		}
-			
+		//Pattern p = Pattern.compile("\\\\xra");
+		//System.out.println("------macrosMap: "+ macrosMap);
 		StringBuilder newThmSB = new StringBuilder();
 		boolean inThm = false;
 		Matcher matcher = thmStartPattern.matcher(line);
 		if (matcher.find()) {
 			inThm = true;
 		}
-		while ((line = srcFileReader.readLine()) != null) {
-			
+		while ((line = srcFileReader.readLine()) != null) {			
 			if (WordForms.getWhiteEmptySpacePattern().matcher(line).find()){
 				continue;
-			}
-			
+			}			
 			// if(line.matches("(?:\\\\begin\\{def[^}]*\\}|\\\\begin\\{lem[^}]*\\}|\\\\begin\\{th[^}]*\\}|\\\\begin\\{prop[^}]*\\})(?:.)*")){
 			matcher = thmStartPattern.matcher(line);
 			if (matcher.find()) {
@@ -215,8 +227,8 @@ public class ThmInput {
 				// don't strip.
 				// replace enumerate and \item with *
 				//System.out.println("newThmSB! " + newThmSB);
-				String thm = removeTexMarkup(newThmSB.toString(), thmWebDisplayList, bareThmList) + "\n";
-
+				String thm = removeTexMarkup(newThmSB.toString(), thmWebDisplayList, bareThmList, macrosMap) + "\n";
+				
 				/*
 				 * String[] meat = thm.split("\\\\label\\{([a-zA-Z]|-)*\\} ");
 				 * String noTexString = ""; //get the second part, meat[1], if
@@ -242,6 +254,10 @@ public class ThmInput {
 		return thms;
 	}
 
+	public static String removeTexMarkup(String thmStr, List<String> thmWebDisplayList,
+			List<String> bareThmList) {
+		return removeTexMarkup(thmStr, thmWebDisplayList, bareThmList, null);
+	}
 	/**
 	 * Processes Latex input, e.g. by removing syntax used purely for display and not
 	 * useful for parsing, such as \textit{ }.
@@ -253,12 +269,12 @@ public class ThmInput {
 	 * @return Thm without the "\begin{lemma}", "\label{}", etc parts.
 	 */	
 	public static String removeTexMarkup(String thmStr, List<String> thmWebDisplayList,
-			List<String> bareThmList) {
+			List<String> bareThmList, Map<Pattern, String> macrosMap) {
 
 		boolean getWebDisplayList = thmWebDisplayList == null ? false : true;
 		boolean getBareThmList = bareThmList == null ? false : true;		
 		
-		// replace \df{} and \emph{} with their content
+		/* replace \df{} and \emph{} with their content */
 		Matcher matcher = DF_EMPH_PATTERN.matcher(thmStr);
 		thmStr = matcher.replaceAll(DF_EMPH_PATTERN_REPLACEMENT);
 
@@ -273,6 +289,12 @@ public class ThmInput {
 		//replace \item with bullet points (*)
 		thmStr = matcher.replaceAll(" (*)");
 		
+		/*custom macros*/
+		if(null != macrosMap){
+			for(Entry<Pattern, String> macroEntry : macrosMap.entrySet()){
+				thmStr = macroEntry.getKey().matcher(thmStr).replaceAll(macroEntry.getValue());				
+			}
+		}
 		// containing the words inside \label and \index etc, but not the words
 		// "\label", "\index",
 		// for bag-of-words searching.
@@ -281,7 +303,6 @@ public class ThmInput {
 		// replace \index{...} with its content for wordsThmStr and nothing for
 		// web display version
 		matcher = INDEX_PATTERN.matcher(wordsThmStr);
-
 		if (matcher.matches()) {
 			// String insideIndexStr = new String(matcher.group(1));
 			// insideIndexStr = insideIndexStr.replaceAll("!", " ");
@@ -290,12 +311,11 @@ public class ThmInput {
 			// replace a!b!c inside \index with spaced-out versions
 			wordsThmStr = wordsThmStr.replaceAll("!", " ");
 		}
-
 		if(getWebDisplayList || getBareThmList){
 			matcher = INDEX_PATTERN.matcher(thmStr);
 			thmStr = matcher.replaceAll("");
 		}
-		
+
 		//bare thm string with no label content at the beginning.
 		String bareThmStr = thmStr;
 		// remove label. Need to be careful, since label can occur in middle of sentence,
@@ -336,7 +356,7 @@ public class ThmInput {
 				bareThmStr = wordsThmStr;
 			}
 		}
-
+		
 		if(getBareThmList){
 			bareThmList.add(bareThmStr);
 		}

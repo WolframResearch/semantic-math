@@ -231,7 +231,7 @@ public class WLCommandsList {
 		//***action*** commands
 		wLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro|noun|det", null, true, false, false, //PosTermConnotation.DEFINED,
 				RelationType._IS), 
-				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), new PBuilder(" \\[Element] "),
+				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), new PBuilder(" ~HasProperty~ "), //new PBuilder(" \\[Element] "),
 				//negative term, to stop command if encountered
 				new PBuilder("adj", null, WLCommand.PosTermType.NEGATIVE), //new PBuilder("{", "OPT1"), 
 				//new PBuilder("pre", null, true, false, "OPT1"),

@@ -605,6 +605,7 @@ public class ThmP1TestRun {
 			st = "$A$ is itself prime";
 			st = "Any polynomial of odd degree that has real coefficients must have a real root.";
 			st = "Any polynomial that has real coefficients is local";
+			
 			//st = "The product of two primitive polynomials is primitive.";
 			//st = "$A $ is said to be prime";
 			//st = "then all integers are prime";
