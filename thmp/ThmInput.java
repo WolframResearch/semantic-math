@@ -295,6 +295,8 @@ public class ThmInput {
 				thmStr = macroEntry.getKey().matcher(thmStr).replaceAll(macroEntry.getValue());				
 			}
 		}
+		//run through the trie
+		
 		// containing the words inside \label and \index etc, but not the words
 		// "\label", "\index",
 		// for bag-of-words searching.
