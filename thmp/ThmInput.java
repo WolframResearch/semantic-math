@@ -19,6 +19,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import thmp.utils.MacrosTrie;
+import thmp.utils.MacrosTrie.MacrosTrieBuilder;
 import thmp.utils.WordForms;
 
 /**
@@ -61,8 +62,8 @@ public class ThmInput {
 	static final Pattern NEW_THM_PATTERN = Pattern.compile("\\\\newtheorem\\{([^}]+)\\}(?:[^{]*)\\{([^}]+).*");
 	/*another custom definition specification, \newcommand{\xra}  {\xrightarrow}
 	  Need to be smart about e.g. \newcommand{\\un}[1]{\\underline{#1}} !*/
-	//static final Pattern NEW_THM_PATTERN2 = Pattern.compile("\\s*\\\\newcommand\\{([^}]+)\\}\\s*\\{([^}]+).*");
-	static final Pattern NEW_THM_PATTERN2 = Pattern.compile("\\s*\\\\newcommand\\{([^}]+)\\}\\s*(?:\\[(\\d)\\])*\\s*\\{(.+?)\\}\\s*");
+	//Should also support \newcommand{cmd}[args][opt]{def} with optional terms
+	static final Pattern NEW_THM_PATTERN2 = Pattern.compile("\\s*\\\\(?:re){0,1}newcommand\\{([^}]+)\\}\\s*(?:\\[(\\d)\\])*\\s*\\{(.+?)\\}\\s*");
 	
 	static final Pattern THM_TERMS_PATTERN = Pattern.compile("Theorem|Proposition|Lemma|Corollary|Conjecture|Definition");
 	
@@ -161,7 +162,7 @@ public class ThmInput {
 		Pattern thmEndPattern = THM_END_PATTERN;
 		List<String> customBeginThmList = new ArrayList<String>();
 		//Map<Pattern, String> macrosMap = new HashMap<Pattern, String>();
-		MacrosTrie macrosTrie = new MacrosTrie();
+		MacrosTrieBuilder macrosTrieBuilder = new MacrosTrieBuilder();
 		
 		List<String> thms = new ArrayList<String>();
 
@@ -182,7 +183,7 @@ public class ThmInput {
 				String replacementStr = newThmMatcher.group(3);
 				String slotCountStr = newThmMatcher.group(2);
 				int slotCount = null == slotCountStr ? 0 : Integer.valueOf(slotCountStr);
-				macrosTrie.addTrieNode(commandStr, replacementStr, slotCount);
+				macrosTrieBuilder.addTrieNode(commandStr, replacementStr, slotCount);
 
 				/*if(newThmMatcher.group(1).equals("\\xra")){
 					System.out.println("*****replacement " + newThmMatcher.group(2));
@@ -190,6 +191,8 @@ public class ThmInput {
 				}*/
 			}
 		}
+		/*Ensure immutability of Trie*/
+		MacrosTrie macrosTrie = macrosTrieBuilder.build();
 		//System.out.println("macrosTrie " + macrosTrie);
 		//append list of macros to THM_START_STR and THM_END_STR
 		if(!customBeginThmList.isEmpty()){
@@ -233,9 +236,9 @@ public class ThmInput {
 				// strip \df, \empf. Index followed by % strip, not percent
 				// don't strip.
 				// replace enumerate and \item with *
-				//System.out.println("newThmSB! " + newThmSB);				
+				System.out.println("newThmSB! " + newThmSB);				
 				String thm = removeTexMarkup(newThmSB.toString(), thmWebDisplayList, bareThmList, macrosTrie) + "\n";
-				//System.out.println("after removeTexMarkup! " + thm);
+				System.out.println("after removeTexMarkup! " + thm);
 				/*
 				 * String[] meat = thm.split("\\\\label\\{([a-zA-Z]|-)*\\} ");
 				 * String noTexString = ""; //get the second part, meat[1], if
@@ -305,8 +308,6 @@ public class ThmInput {
 		if(null != macrosTrie){
 			thmStr = macrosTrie.replaceMacrosInThmStr(thmStr);
 		}
-		//run through the trie
-		
 		// containing the words inside \label and \index etc, but not the words
 		// "\label", "\index",
 		// for bag-of-words searching.
@@ -316,9 +317,6 @@ public class ThmInput {
 		// web display version
 		matcher = INDEX_PATTERN.matcher(wordsThmStr);
 		if (matcher.matches()) {
-			// String insideIndexStr = new String(matcher.group(1));
-			// insideIndexStr = insideIndexStr.replaceAll("!", " ");
-			// System.out.println(insideIndexStr);
 			wordsThmStr = matcher.replaceAll("$1");
 			// replace a!b!c inside \index with spaced-out versions
 			wordsThmStr = wordsThmStr.replaceAll("!", " ");
@@ -334,37 +332,11 @@ public class ThmInput {
 		// shouldn't strip away everything before label.
 		matcher = LABEL_PATTERN.matcher(thmStr);
 		if (matcher.matches()) {
-			/*
-			String labelContent = matcher.group(2);
-			
-			Matcher matcher2 = DIGIT_PATTERN.matcher(labelContent);
-			String withLabelContent = null;
-			//the labels with the digits usually don't contain any useful math content,
-			//so discard in that case.
-			if (!matcher2.matches()) {
-				
-				withLabelContent = matcher.group(1) + labelContent + ":: " + matcher.group(3);
-				wordsThmStr = withLabelContent;				
-				// keep label content
-				thmStr = withLabelContent;
-			} else {
-				wordsThmStr = matcher.group(1) + " " + matcher.group(3);
-				System.out.println("AFTER label: " + wordsThmStr);
-			}
-			*/
 			wordsThmStr = matcher.replaceAll("$1$2");			
 			thmStr = wordsThmStr;
 			
 			//this is only executed when getting theorems for context parsing.
-			if(getBareThmList){			
-				/*StringBuilder sb = new StringBuilder();
-				if(withLabelContent != null){					
-					//label often contains dashes "-"
-					String[] labelAr = (labelContent + ".").split(" |-");
-					for(String word : labelAr){
-						sb.append(word + " ");
-					}					
-				}*/
+			if(getBareThmList){	
 				bareThmStr = wordsThmStr;
 			}
 		}

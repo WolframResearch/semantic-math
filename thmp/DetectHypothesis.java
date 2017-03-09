@@ -32,6 +32,7 @@ import thmp.search.ThmSearch;
 import thmp.utils.FileUtils;
 import thmp.utils.MacrosTrie;
 import thmp.utils.WordForms;
+import thmp.utils.MacrosTrie.MacrosTrieBuilder;
 
 /**
  * Used to detect hypotheses in a sentence.
@@ -500,14 +501,15 @@ public class DetectHypothesis {
 		//Pattern thmStartPattern = ThmInput.THM_START_PATTERN;
 		//Pattern thmEndPattern = ThmInput.THM_END_PATTERN;
 		List<String> customBeginThmList = new ArrayList<String>();
-		MacrosTrie macrosTrie = new MacrosTrie();
+		
+		MacrosTrieBuilder macrosTrieBuilder = new MacrosTrieBuilder();
 		//contextual sentences outside of theorems, to be scanned for
 		//definitions, and parse those definitions. Reset between theorems.
 		StringBuilder contextSB = new StringBuilder();
 		
-		//List<DefinitionListWithThm> definitionListWithThmList = new ArrayList<DefinitionListWithThm>();
-		
-		String line = extractMacros(srcFileReader, customBeginThmList, macrosTrie);
+		//List<DefinitionListWithThm> definitionListWithThmList = new ArrayList<DefinitionListWithThm>();		
+		String line = extractMacros(srcFileReader, customBeginThmList, macrosTrieBuilder);
+		MacrosTrie macrosTrie = macrosTrieBuilder.build();
 		
 		//append list of macros to THM_START_STR and THM_END_STR
 		Pattern[] customPatternAr = addMacrosToThmBeginEndPatterns(customBeginThmList);
@@ -602,10 +604,11 @@ public class DetectHypothesis {
 						}					
 					}
 				}
-				//If multiple latex documents gathered together in one file.
-				macrosTrie = new MacrosTrie();
+				//If multiple latex documents gathered together in one file.				
+				macrosTrieBuilder = new MacrosTrieBuilder();
 				customBeginThmList = new ArrayList<String>();
-				line = extractMacros(srcFileReader, customBeginThmList, macrosTrie);				
+				line = extractMacros(srcFileReader, customBeginThmList, macrosTrieBuilder);
+				macrosTrie = macrosTrieBuilder.build();
 				//append list of macros to THM_START_STR and THM_END_STR
 				customPatternAr = addMacrosToThmBeginEndPatterns(customBeginThmList);				
 				continue;
@@ -713,7 +716,7 @@ public class DetectHypothesis {
 	 * @throws IOException
 	 */
 	private static String extractMacros(BufferedReader srcFileReader, List<String> macrosList, 
-			MacrosTrie macrosTrie) throws IOException {
+			MacrosTrieBuilder macrosTrieBuilder) throws IOException {
 		
 		String line = null;		
 		while ((line = srcFileReader.readLine()) != null) {
@@ -732,7 +735,7 @@ public class DetectHypothesis {
 				String replacementStr = newThmMatcher.group(3);
 				String slotCountStr = newThmMatcher.group(2);
 				int slotCount = null == slotCountStr ? 0 : Integer.valueOf(slotCountStr);
-				macrosTrie.addTrieNode(commandStr, replacementStr, slotCount);
+				macrosTrieBuilder.addTrieNode(commandStr, replacementStr, slotCount);
 			}			
 		}
 		//if(true)throw new IllegalStateException("macros: "+macrosList);
