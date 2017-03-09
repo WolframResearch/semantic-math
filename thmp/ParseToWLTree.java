@@ -706,15 +706,13 @@ public class ParseToWLTree{
 				e.printStackTrace();
 				logger.info(e.getStackTrace());
 				continue;
-			}
-			
+			}			
 			//now append Str to wrapper inside build()
 			//structToAppendCommandStr.append_WLCommandStr(curCommandString);
 			
 			//parentStruct.append_WLCommandStr(curCommandString);
 			//System.out.println(curCommandString);
-		}
-		
+		}		
 	}
 	
 	/**

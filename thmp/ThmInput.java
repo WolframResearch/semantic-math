@@ -18,6 +18,7 @@ import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import thmp.utils.MacrosTrie;
 import thmp.utils.WordForms;
 
 /**
@@ -61,7 +62,7 @@ public class ThmInput {
 	/*another custom definition specification, \newcommand{\xra}  {\xrightarrow}
 	  Need to be smart about e.g. \newcommand{\\un}[1]{\\underline{#1}} !*/
 	//static final Pattern NEW_THM_PATTERN2 = Pattern.compile("\\s*\\\\newcommand\\{([^}]+)\\}\\s*\\{([^}]+).*");
-	static final Pattern NEW_THM_PATTERN2 = Pattern.compile("\\s*\\\\newcommand\\{([^}]+)\\}\\s*\\{(.+?)\\}\\s*");
+	static final Pattern NEW_THM_PATTERN2 = Pattern.compile("\\s*\\\\newcommand\\{([^}]+)\\}\\s*(?:\\[(\\d)\\])*\\s*\\{(.+?)\\}\\s*");
 	
 	static final Pattern THM_TERMS_PATTERN = Pattern.compile("Theorem|Proposition|Lemma|Corollary|Conjecture|Definition");
 	
@@ -105,7 +106,7 @@ public class ThmInput {
 		// String srcFileStr = "src/thmp/data/multilinearAlgebra.txt";
 		//String srcFileStr = "src/thmp/data/functionalAnalysis.txt";
 		//String srcFileStr = "src/thmp/data/fieldsRawTex.txt";
-		String srcFileStr = "src/thmp/data/thmsFeb26.txt";
+		String srcFileStr = "src/thmp/data/thmsFeb27.txt";
 		// String srcFileStr = "src/thmp/data/test1.txt";
 		FileReader srcFileReader = new FileReader(srcFileStr);
 		BufferedReader srcFileBReader = new BufferedReader(srcFileReader);
@@ -159,7 +160,8 @@ public class ThmInput {
 		Pattern thmStartPattern = THM_START_PATTERN;
 		Pattern thmEndPattern = THM_END_PATTERN;
 		List<String> customBeginThmList = new ArrayList<String>();
-		Map<Pattern, String> macrosMap = new HashMap<Pattern, String>();
+		//Map<Pattern, String> macrosMap = new HashMap<Pattern, String>();
+		MacrosTrie macrosTrie = new MacrosTrie();
 		
 		List<String> thms = new ArrayList<String>();
 
@@ -176,14 +178,19 @@ public class ThmInput {
 				}
 			}else if((newThmMatcher = NEW_THM_PATTERN2.matcher(line)).matches()){
 				//macrosList.add(newThmMatcher)
-				macrosMap.put(Pattern.compile(Matcher.quoteReplacement(newThmMatcher.group(1))), Matcher.quoteReplacement(newThmMatcher.group(2)));
+				String commandStr = newThmMatcher.group(1);
+				String replacementStr = newThmMatcher.group(3);
+				String slotCountStr = newThmMatcher.group(2);
+				int slotCount = null == slotCountStr ? 0 : Integer.valueOf(slotCountStr);
+				macrosTrie.addTrieNode(commandStr, replacementStr, slotCount);
+
 				/*if(newThmMatcher.group(1).equals("\\xra")){
 					System.out.println("*****replacement " + newThmMatcher.group(2));
 					System.out.println(Pattern.compile(Matcher.quoteReplacement(newThmMatcher.group(1))).matcher("\\xra").matches());
 				}*/
 			}
 		}
-		
+		//System.out.println("macrosTrie " + macrosTrie);
 		//append list of macros to THM_START_STR and THM_END_STR
 		if(!customBeginThmList.isEmpty()){
 			StringBuilder startBuilder = new StringBuilder();
@@ -226,9 +233,9 @@ public class ThmInput {
 				// strip \df, \empf. Index followed by % strip, not percent
 				// don't strip.
 				// replace enumerate and \item with *
-				//System.out.println("newThmSB! " + newThmSB);
-				String thm = removeTexMarkup(newThmSB.toString(), thmWebDisplayList, bareThmList, macrosMap) + "\n";
-				
+				//System.out.println("newThmSB! " + newThmSB);				
+				String thm = removeTexMarkup(newThmSB.toString(), thmWebDisplayList, bareThmList, macrosTrie) + "\n";
+				//System.out.println("after removeTexMarkup! " + thm);
 				/*
 				 * String[] meat = thm.split("\\\\label\\{([a-zA-Z]|-)*\\} ");
 				 * String noTexString = ""; //get the second part, meat[1], if
@@ -269,7 +276,7 @@ public class ThmInput {
 	 * @return Thm without the "\begin{lemma}", "\label{}", etc parts.
 	 */	
 	public static String removeTexMarkup(String thmStr, List<String> thmWebDisplayList,
-			List<String> bareThmList, Map<Pattern, String> macrosMap) {
+			List<String> bareThmList, MacrosTrie macrosTrie) {
 
 		boolean getWebDisplayList = thmWebDisplayList == null ? false : true;
 		boolean getBareThmList = bareThmList == null ? false : true;		
@@ -290,10 +297,13 @@ public class ThmInput {
 		thmStr = matcher.replaceAll(" (*)");
 		
 		/*custom macros*/
-		if(null != macrosMap){
+		/*if(null != macrosMap){
 			for(Entry<Pattern, String> macroEntry : macrosMap.entrySet()){
 				thmStr = macroEntry.getKey().matcher(thmStr).replaceAll(macroEntry.getValue());				
 			}
+		}*/
+		if(null != macrosTrie){
+			thmStr = macrosTrie.replaceMacrosInThmStr(thmStr);
 		}
 		//run through the trie
 		

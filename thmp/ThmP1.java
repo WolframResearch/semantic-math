@@ -3830,7 +3830,6 @@ public class ThmP1 {
 		public int getRecentEntIndex() {
 			return recentEntIndex;
 		}
-
 		
 		public EntityBundle(Struct firstEnt, Struct recentEnt, int recentEntIndex){
 			this.recentEnt = recentEnt;

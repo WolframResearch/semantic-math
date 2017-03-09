@@ -30,6 +30,7 @@ import thmp.search.CollectThm;
 import thmp.search.Searcher;
 import thmp.search.ThmSearch;
 import thmp.utils.FileUtils;
+import thmp.utils.MacrosTrie;
 import thmp.utils.WordForms;
 
 /**
@@ -498,17 +499,18 @@ public class DetectHypothesis {
 		
 		//Pattern thmStartPattern = ThmInput.THM_START_PATTERN;
 		//Pattern thmEndPattern = ThmInput.THM_END_PATTERN;
-		List<String> macrosList = new ArrayList<String>();
+		List<String> customBeginThmList = new ArrayList<String>();
+		MacrosTrie macrosTrie = new MacrosTrie();
 		//contextual sentences outside of theorems, to be scanned for
 		//definitions, and parse those definitions. Reset between theorems.
 		StringBuilder contextSB = new StringBuilder();
 		
 		//List<DefinitionListWithThm> definitionListWithThmList = new ArrayList<DefinitionListWithThm>();
 		
-		String line = extractMacros(srcFileReader, macrosList);
+		String line = extractMacros(srcFileReader, customBeginThmList, macrosTrie);
 		
 		//append list of macros to THM_START_STR and THM_END_STR
-		Pattern[] customPatternAr = addMacrosToThmBeginEndPatterns(macrosList);
+		Pattern[] customPatternAr = addMacrosToThmBeginEndPatterns(customBeginThmList);
 		
 		Pattern thmStartPattern = customPatternAr[0];
 		Pattern thmEndPattern = customPatternAr[1];	
@@ -553,7 +555,7 @@ public class DetectHypothesis {
 				// don't strip.
 				// replace enumerate and \item with *
 				//thmWebDisplayList, and bareThmList should both be null
-				String contextStr = ThmInput.removeTexMarkup(contextSB.toString(), null, null);
+				String contextStr = ThmInput.removeTexMarkup(contextSB.toString(), null, null, macrosTrie);
 				
 				//scan contextSB for assumptions and definitions
 				//and parse the definitions
@@ -600,10 +602,12 @@ public class DetectHypothesis {
 						}					
 					}
 				}
-				//should start with new macro-reading code.
-				line = extractMacros(srcFileReader, macrosList);				
+				//If multiple latex documents gathered together in one file.
+				macrosTrie = new MacrosTrie();
+				customBeginThmList = new ArrayList<String>();
+				line = extractMacros(srcFileReader, customBeginThmList, macrosTrie);				
 				//append list of macros to THM_START_STR and THM_END_STR
-				customPatternAr = addMacrosToThmBeginEndPatterns(macrosList);				
+				customPatternAr = addMacrosToThmBeginEndPatterns(customBeginThmList);				
 				continue;
 			}
 
@@ -708,7 +712,8 @@ public class DetectHypothesis {
 	 * @param macrosList
 	 * @throws IOException
 	 */
-	private static String extractMacros(BufferedReader srcFileReader, List<String> macrosList) throws IOException {
+	private static String extractMacros(BufferedReader srcFileReader, List<String> macrosList, 
+			MacrosTrie macrosTrie) throws IOException {
 		
 		String line = null;		
 		while ((line = srcFileReader.readLine()) != null) {
@@ -722,6 +727,12 @@ public class DetectHypothesis {
 				if(ThmInput.THM_TERMS_PATTERN.matcher(newThmMatcher.group(2)).matches()){
 					macrosList.add(newThmMatcher.group(1));	
 				}
+			}else if((newThmMatcher = ThmInput.NEW_THM_PATTERN2.matcher(line)).matches()){
+				String commandStr = newThmMatcher.group(1);
+				String replacementStr = newThmMatcher.group(3);
+				String slotCountStr = newThmMatcher.group(2);
+				int slotCount = null == slotCountStr ? 0 : Integer.valueOf(slotCountStr);
+				macrosTrie.addTrieNode(commandStr, replacementStr, slotCount);
 			}			
 		}
 		//if(true)throw new IllegalStateException("macros: "+macrosList);
