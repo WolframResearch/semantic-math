@@ -236,9 +236,9 @@ public class ThmInput {
 				// strip \df, \empf. Index followed by % strip, not percent
 				// don't strip.
 				// replace enumerate and \item with *
-				System.out.println("newThmSB! " + newThmSB);				
+				//System.out.println("newThmSB! " + newThmSB);				
 				String thm = removeTexMarkup(newThmSB.toString(), thmWebDisplayList, bareThmList, macrosTrie) + "\n";
-				System.out.println("after removeTexMarkup! " + thm);
+				//System.out.println("after removeTexMarkup! " + thm);
 				/*
 				 * String[] meat = thm.split("\\\\label\\{([a-zA-Z]|-)*\\} ");
 				 * String noTexString = ""; //get the second part, meat[1], if

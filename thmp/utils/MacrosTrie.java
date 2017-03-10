@@ -132,7 +132,10 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 			this.commandStr = commandStr_;
 			this.replacementStr = replacementStr_;
 		}
-		
+		/**
+		 * @param c
+		 * @return null if nodeMap does not contain a TrieNode corresponding to c
+		 */
 		public MacrosTrieNode getTrieNode(char c){
 			return nodeMap.get(c);
 		}
@@ -233,9 +236,25 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 					trieNodeList.set(j, nextNode);
 					continue;
 				}else{
-					//substitute with replacement String.
-					i = formReplacementString(thmStr, i, nextNode, commandStrSB); //HERE too long
+					//go down to see if a longer command can be satisfied
+					int k = i+1;
+					MacrosTrieNode futureNode = null;
+					MacrosTrieNode runningNode = null;
+					int futureIndex = i;
+					while(k < thmStrLen && null != (runningNode = nextNode.getTrieNode(thmStr.charAt(k)))){
+						if(null != runningNode.commandStr && null != runningNode.replacementStr){
+							futureNode = runningNode;
+							futureIndex = k;
+						}
+						k++;
+					}
 					
+					if(null != futureNode){
+						i = futureIndex;
+						nextNode = futureNode;
+					}
+					//substitute with replacement String.
+					i = formReplacementString(thmStr, i, nextNode, commandStrSB); //HERE too long					
 					//i = nextStartingIndex-1;
 					commandStrTriggered = nextNode.commandStr;
 					//trieNodeListIter.remove();
@@ -270,6 +289,7 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 		String templateReplacementString = trieNode.replacementStr;
 		if(slotCount == 0){
 			replacementSB.append(templateReplacementString);
+			//System.out.println("replacementSB " + templateReplacementString);
 			return curIndex;
 		}
 		
