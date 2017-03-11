@@ -1,7 +1,5 @@
 package thmp.utils;
 
-import java.util.Map;
-
 import thmp.utils.WordTrie.WordTrieNode;
 
 public abstract class WordTrie<T extends WordTrieNode>{

@@ -551,6 +551,7 @@ public class StructH<H> extends Struct{
 				sb.append(", ");
 			}
 			sb.append("\"Property\"->{");
+			WLCommand.increment_commandNumUnits(curCommand, this);
 			pptAppended = true;
 		}
 		

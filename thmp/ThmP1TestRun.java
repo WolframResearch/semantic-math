@@ -583,8 +583,7 @@ public class ThmP1TestRun {
 			st = "$R_\\mathfrak m$ is universally catenary for all maximal ideals $\\mathfrak m$";
 			st = "$R_\\mathfrak m$ is universally catenary in $R $";
 			st = "given $z>2$, then $R$ is ring";
-			st = "$x$ is given by $x=f(t)$";
-			st = "Given any function $f$, there are infinitely many zeros in $g(zeta(f))$.";
+			st = "$x$ is given by $x=f(t)$";			
 			st = "Under the hypotheses  $1=1$, we have $2=2$.";			
 			st = "then all integers is prime";
 			st = "there are infinitely many eleven in $g(zeta(f))$.";
@@ -605,6 +604,7 @@ public class ThmP1TestRun {
 			st = "$A$ is itself prime";
 			st = "Any polynomial of odd degree that has real coefficients must have a real root.";
 			st = "Any polynomial that has real coefficients is local";
+			st = "Given any function $f$, there are infinitely many zeros in $g(zeta(f))$."; //<--the score of good parse went down!
 			
 			//st = "The product of two primitive polynomials is primitive.";
 			//st = "$A $ is said to be prime";
