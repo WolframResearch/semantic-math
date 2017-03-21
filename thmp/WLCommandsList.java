@@ -143,9 +143,11 @@ public class WLCommandsList {
 		//triggered by types. Add such judiciously.
 		//the commands with types as keys are triggered only if no specific-scope commands have been triggered
 		//e.g. $f$ maps $X$ to $Y$.
-		wLCommandMapBuilder.put("verb", addCommand(new PBuilder("symb|ent|pro|noun", null, true), 
-				new PBuilder("pro", "we", WLCommand.PosTermType.NEGATIVE),
+		wLCommandMapBuilder.put("verb", addCommand(new PBuilder("det|symb|ent|pro|noun", null, true), 
+				//new PBuilder("pro", "we", WLCommand.PosTermType.NEGATIVE),
+				new PBuilder("verb|vbs", null, WLCommand.PosTermType.NEGATIVE),
 				new PBuilder(", Connective["),  new PBuilder("verb", null, true, true, false), new PBuilder("], "),
+				new PBuilder("verb|vbs", null, WLCommand.PosTermType.NEGATIVE),
 				new PBuilder("symb|ent|noun|adj|prep|phrase", null, true, false, false).addRelationType(RelationType._IS),
 				new PBuilder(", {\"Qualifiers\"->", "OPT"), 
 				//the relation should incorporate several types. 

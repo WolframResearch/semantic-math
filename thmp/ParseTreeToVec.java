@@ -379,7 +379,7 @@ public class ParseTreeToVec {
 			if(contextVec[termRowIndex] <= 0 || forceAdjust){
 				contextVec[termRowIndex] = structParentIndex;
 			}
-			System.out.println("ParseTreeToVec - struct " + struct + " termStr " + termStr + " ### rowIndex " + termRowIndex + " parent index " + structParentIndex);
+			System.out.println("ParseTreeToVec - " + " termStr " + termStr + " ### rowIndex " + termRowIndex + " parent index " + structParentIndex);
 		}else{
 			//pass parentIndex down to children, in case of intermediate StructA that doesn't have a content string.
 			//eg assert[A, B], the assert does not have content string.

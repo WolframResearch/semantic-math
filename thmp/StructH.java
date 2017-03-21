@@ -590,8 +590,8 @@ public class StructH<H> extends Struct{
 		
 		//sb.append(append_name_pptStr());
 		//System.out.println("curCommand: " + curCommand);
-		System.out.println("StructH: this.name " + this.nameStr());
-		System.out.println("StructH: (((((((((children: " + children + ". childRelationList: " + childRelationList);
+		//System.out.println("StructH: this.name " + this.nameStr());
+		//System.out.println("StructH: (((((((((children: " + children + ". childRelationList: " + childRelationList);
 		
 		int childrenSize = children.size();
 		int nontrivialChildrenStrCounter = 0;

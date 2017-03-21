@@ -1787,28 +1787,15 @@ public class ThmP1 {
 					newStruct.set_prev2(det);
 					structList.remove(structListSize - 1);
 				}
-
 				structList.add(newStruct);
-
 			}
-
-			// ...try multiple entities instead of first one found
-			// add to list of properties
-			// if adjective, group with nearest entity
-			// after going through entities in sentence first
-			// also templating, "is" is a big hint word
-			// add as property
-
 		}
-
 		ThmP1AuxiliaryClass.convertStructToTexAssert(structList);
 		
-		System.out.println("\n^^^^structList: " + structList);
-		
+		System.out.println("\n^^^^structList: " + structList);		
 		parseState.setTokenList(structList);
 		return parseState;
 	}
-
 
 	/**
 	 * Remove parts of speech pairs that are very unlikely, so to leave the pos to 
@@ -1874,7 +1861,6 @@ public class ThmP1 {
 	}
 
 	/**
-	 * 
 	 * @param potentialTrigger
 	 * @param i Starting index of this fixed phrase.
 	 * @param strAr
@@ -3229,7 +3215,7 @@ public class ThmP1 {
 		//ParseToWLTree.dfs(uHeadStruct, parsedSB, true);	
 		System.out.println(wlSB);
 		ParseToWLTree.dfsCleanUp(uHeadStruct);
-		System.out.println("~~~ DONE WLCommands DFS ~~~");
+		System.out.println("~~~~~~~~~~~ DONE one round WLCommands DFS for one long form ~~~");
 		return wlSB;
 	}
 
@@ -3560,7 +3546,7 @@ public class ThmP1 {
 			if(struct2.isStructA()){
 				if(CONJ_DISJ_PATTERN1.matcher(struct2.type()).matches()){
 					//if(struct2.type().charAt(0) == 'c') throw new RuntimeException(struct2.toString() + " " + struct2.prev1NodeType());
-					/*create new structA and thread struct1 over the conjunction in struct2*/ //HERE
+					/*create new structA and thread struct1 over the conjunction in struct2*/ 
 					if(!struct2.prev1NodeType().equals(NodeType.STRUCTH) || !struct2.prev2NodeType().equals(NodeType.STRUCTH)){
 						return null;
 					}
@@ -3572,7 +3558,9 @@ public class ThmP1 {
 					Map<String, String> structMap2 = ent2.struct();
 					
 					structMap1.put("called", ent1.nameStr());
-					structMap2.put("called", ent2.nameStr()) ;
+					structMap2.put("called", ent2.nameStr());
+					//System.out.println("ThmP1 - names " + ent1.nameStr() + " " + ent2.nameStr());
+					/*threads struct1.nameStr() over the two children of struct2 */
 					structMap1.put("name", struct1.nameStr());
 					structMap2.put("name", struct1.nameStr()) ;
 					
@@ -3624,8 +3612,7 @@ public class ThmP1 {
 
 			if(!struct1.isStructA() || struct2.isStructA()){
 				return null;
-			}
-			
+			}			
 			//absorb the non-struct into the struct
 			Struct absorbingStruct = struct2;
 			Struct absorbedStruct = struct1;
@@ -3638,12 +3625,11 @@ public class ThmP1 {
 		}
 		//absorb second into first
 		else if(newType.equals("absorb2")){
-			assert(!struct1.isStructA() && struct2.isStructA());
 			
+			assert(!struct1.isStructA() && struct2.isStructA());			
 			if(struct1.isStructA() || !struct2.isStructA()){
 				return null;
-			}
-			
+			}			
 			Struct absorbingStruct = struct1;
 			Struct absorbedStruct = struct2;
 			
@@ -3936,13 +3922,17 @@ public class ThmP1 {
 						symb2 = ((Struct)absorbedStruct.prev2()).prev1().toString();
 					}
 					
-					StructH<HashMap<String, String>> ent1 = new StructH<HashMap<String, String>>(absorbingStruct.struct(), "ent");
+					StructH<HashMap<String, String>> ent1 
+						= new StructH<HashMap<String, String>>(new HashMap<String, String>(absorbingStruct.struct()), "ent");
 					ent1.struct().put("called", symb1);
-					StructH<HashMap<String, String>> ent2 = new StructH<HashMap<String, String>>(absorbingStruct.struct(), "ent");
+					StructH<HashMap<String, String>> ent2 
+						= new StructH<HashMap<String, String>>(new HashMap<String, String>(absorbingStruct.struct()), "ent");
 					ent2.struct().put("called", symb2);
+					//System.out.println("ThmP1 - symb1/2 " + ent1 + " " + ent2);
 					
 					newStruct = new StructA<Struct, Struct>(ent1, NodeType.STRUCTH, ent2, NodeType.STRUCTH, 
-							absorbedStructType.substring(0, 4) + "_ent");					
+							absorbedStructType.substring(0, 4) + "_ent");
+					//System.out.println("ThmP1 - newStruct " + newStruct);
 				}else{
 					newStruct.struct().put("called", ppt);					
 				}

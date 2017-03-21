@@ -242,19 +242,16 @@ public class ParseToWLTree{
 						return false;
 					}
 				}
-				//dequeIterCounter--;
 			}
 			curCommandSat = false;
 			//done iterating through deque, but no match found; curCommand cannot be satisfied
 			break;
-		}
-		
+		}		
 		if(logger.getLevel().equals(Level.INFO)){
 			String msg = "---waitingStructList " + waitingStructList + " for command " + curCommand;
 			System.out.println(msg);
 			logger.info(msg);
-		}
-		
+		}		
 		return curCommandSat;
 	}
 	
@@ -440,7 +437,6 @@ public class ParseToWLTree{
 						continue;
 					}
 					
-					//System.out.println(" For triggered Command + " + curCommand);
 					for(int i = structList.size()-1; i > -1; i--){
 						
 						Struct curStruct = structList.get(i);
@@ -470,7 +466,7 @@ public class ParseToWLTree{
 					//System.out.println();
 					//if(commandSat != null){						
 					if(beforeTriggerSat){
-						//System.out.println("***-----------*got BEFORE as TRUE for command " + curCommand); //HERE
+						//System.out.println("***-----------*got BEFORE as TRUE for command " + curCommand); 
 						if(curCommandSatWhole && isComponentAdded){							
 							satisfiedCommandsList.add(curCommand);
 							if(commandSat.hasOptionalTermsLeft()){
@@ -801,12 +797,12 @@ public class ParseToWLTree{
 					shouldAppendCommandStr = false;
 				}
 			}
-			if(struct.type().equals("If")){
+			if(true || struct.type().equals("If")){
 				System.out.println("ParseToWLTree - appendWLCommandStr "+ struct);
-				System.out.println("ParseToWLTree - (Struct)this.prev1).type() "+ ((Struct)struct.prev1()).type());
+				System.out.println("ParseToWLTree - curCommand "+ curCommand);
 				System.out.println("WLCommand.structsWithOtherHeadCount(curCommand) " + WLCommand.structsWithOtherHeadCount(curCommand));
 				//throw new RuntimeException("WLCommandWrapperList " +this.WLCommandWrapperList);
-			}			//HERE
+			}			
 			if(WLCommand.structsWithOtherHeadCount(curCommand) <= structWithOtherHeadThreshold
 					&& shouldAppendCommandStr
 					//&& struct.WLCommandStrVisitedCount() == 0
@@ -1009,7 +1005,11 @@ public class ParseToWLTree{
 		struct.clear_WLCommandWrapperList();
 		struct.clear_WLCommandStrVisitedCount();		
 		struct.set_previousBuiltStruct(null);
-		struct.set_structToAppendCommandStr(null);
+		/*don't delete this! March 2017.
+		 * Should not set to null, as another command will need to know if struct 
+		 * already has a headStruct, to resolve clashes.*/
+		//struct.set_structToAppendCommandStr(null);
+		
 		//clearUsedInCommandsSet() causes Structs to be added multiple times! 2/2017.
 		//struct.clearUsedInCommandsSet();
 		struct.clear_commandBuilt();
