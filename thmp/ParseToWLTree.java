@@ -778,18 +778,19 @@ public class ParseToWLTree{
 		/*if(structWrapperListSz>1){
 			throw new IllegalStateException(structWrapperListSz+"");
 		}*/
+
 		boolean noClashCommandFound = false;
 		for(int i = structWrapperListSz - 1; i > -1; i--){	
 			WLCommandWrapper curWrapper = structWrapperList.get(i);
 			WLCommand curCommand = curWrapper.wlCommand;
-			
+
 			/*If the copy containing optional terms are satisfied, don't include this one. */
 			WLCommand copyWithOptTermsCommand = curCommand.getCopyWithOptTermsCommand();
 			if(null != copyWithOptTermsCommand && copyWithOptTermsCommand.isSatisfiedWithOptionalTerms()
 					&& copyWithOptTermsCommand.getDefaultOptionalTermsCount() > 0){
-				continue; //<--keep working on this! Feb 2017 <--what's wrong with this approach? March 2017
+				continue; //<--keep working on this! Feb 2017 <--what's wrong with this approach? March 2017.
 			}
-			
+
 			//parent might have been used already, e.g. if A and B, parent of
 			//A and B is "conj_..."
 			boolean shouldAppendCommandStr = true;
@@ -800,11 +801,17 @@ public class ParseToWLTree{
 					shouldAppendCommandStr = false;
 				}
 			}
-			
+			if(struct.type().equals("If")){
+				System.out.println("ParseToWLTree - appendWLCommandStr "+ struct);
+				System.out.println("ParseToWLTree - (Struct)this.prev1).type() "+ ((Struct)struct.prev1()).type());
+				System.out.println("WLCommand.structsWithOtherHeadCount(curCommand) " + WLCommand.structsWithOtherHeadCount(curCommand));
+				//throw new RuntimeException("WLCommandWrapperList " +this.WLCommandWrapperList);
+			}			//HERE
 			if(WLCommand.structsWithOtherHeadCount(curCommand) <= structWithOtherHeadThreshold
 					&& shouldAppendCommandStr
 					//&& struct.WLCommandStrVisitedCount() == 0
 					){
+				
 				//System.out.println("wrapperList Size" + structWrapperListSz);
 				//System.out.println(struct.WLCommandStr());
 				//parsedSB.append(struct.WLCommandStr());
@@ -905,7 +912,7 @@ public class ParseToWLTree{
 				// after the command has been built. 12/13/2016.   2/18/2017
 				// <--Usually StructA that serves as the head is different from the Struct's being 
 				//picked up as components. 3/2017.
-				&& (struct.WLCommandStrVisitedCount() < 1 
+				&& (struct.WLCommandStrVisitedCount() < 1  
 					/*Leaf node with own command, e.g. texAssert. Should evolve into checking
 					 * if headStruct is same as the struct used in command*/
 					|| (struct.isLeafNodeCouldHaveChildren() && struct.WLCommandStrVisitedCount() < 2))

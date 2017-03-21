@@ -144,9 +144,15 @@ public class StructA<A, B> extends Struct{
 	 */
 	public StructA<A, B> copy(){
 		//shallow copy of structlist
-		StructList copiedStructlist = this.structList.copy();
-		StructA<A, B> newStruct = new StructA<A, B>(this.prev1, this.PREV1_TYPE, 
-				this.prev2, this.PREV2_TYPE, this.type, copiedStructlist);
+		StructA<A, B> newStruct;
+		if(null != this.structList){
+			StructList copiedStructlist = this.structList.copy();	
+			newStruct = new StructA<A, B>(this.prev1, this.PREV1_TYPE, 
+					this.prev2, this.PREV2_TYPE, this.type, copiedStructlist);
+		}else{
+			newStruct = new StructA<A, B>(this.prev1, this.PREV1_TYPE, 
+					this.prev2, this.PREV2_TYPE, this.type);
+		}
 		newStruct.maxDownPathScore = this.maxDownPathScore;
 		newStruct.numUnits = this.numUnits;
 		newStruct.score = this.score;
@@ -265,6 +271,11 @@ public class StructA<A, B> extends Struct{
 	@Override
 	public String simpleToString(boolean includeType, WLCommand curCommand){
 
+		if(this.type.equals("assert")){
+			System.out.println("StructA - this "+ this);
+			System.out.println("StructA - (Struct)this.prev1).type() "+ ((Struct)this.prev1).type());
+			//throw new RuntimeException("WLCommandWrapperList " +this.WLCommandWrapperList);
+		}
 		//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
 		if(this.WLCommandWrapperList != null){
 			int wrapperListSz = WLCommandWrapperList.size();

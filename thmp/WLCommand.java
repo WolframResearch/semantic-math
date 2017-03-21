@@ -618,8 +618,7 @@ public class WLCommand implements Serializable{
 				this(posStr, DEFAULT_AUX_NAME_STR, true,
 						false, optionGroup, AUXINDEX);
 				//this.commandComponent = new WLCommandComponent(posStr, DEFAULT_AUX_NAME_STR);	
-				//this.positionInMap = AUXINDEX;
-				
+				//this.positionInMap = AUXINDEX;				
 			}
 			
 			/**
@@ -1054,6 +1053,7 @@ public class WLCommand implements Serializable{
 	/**
 	 * Update the wrapper list to update nextStruct's headStruct to structToAppendCommandStr.
 	 * Used for compositing commands, so not to use same struct in multiple commands.
+	 * Called during command *build* time.
 	 * @param nextStruct
 	 * @param structToAppendCommandStr
 	 * @return Whether nextStruct already has associated head.
@@ -1061,6 +1061,7 @@ public class WLCommand implements Serializable{
 	private static boolean updateHeadStruct(Struct nextStruct, Struct structToAppendCommandStr, WLCommand curCommand){
 		
 		Struct prevHeadStruct = nextStruct.structToAppendCommandStr();
+		//whether the struct already has a head.
 		boolean prevStructHeaded = false; 
 		
 		if (prevHeadStruct != null) {
@@ -1078,22 +1079,31 @@ public class WLCommand implements Serializable{
 				//int wrapperListSz = prevHeadStructWrapperList.size();	
 				//get the last-added command. <--should iterate and add count to all previous commands
 				//with this wrapper? <--command building goes inside-out
-								
+				/*Update all wrapper in prevHeadStructWrapperList since commands in all wrappers touch this struct*/
 				for(WLCommandWrapper wrapper : prevHeadStructWrapperList){
 					System.out.println("-------------prevHeadStructWrapperList wrapper: " + wrapper);
 					WLCommand lastWrapperCommand = wrapper.WLCommand();				
 					System.out.println("curCommand: " + curCommand);
-					// increment the headCount of the last wrapper object, should update every command's count.
+					// increment the headCount of the last wrapper object, should update every wrapper's count.
 					if(!curCommand.equals(lastWrapperCommand)){
-						lastWrapperCommand.structsWithOtherHeadCount++;
+						lastWrapperCommand.structsWithOtherHeadCount++; //HERE
 					}
 				}
+				nextStruct.set_structToAppendCommandStr(structToAppendCommandStr);
+				structToAppendCommandStr.set_structToAppendCommandStr(structToAppendCommandStr);
 				//System.out.println("Wrapper command struct " + headStruct);
 				//System.out.println("***Wrapper Command to update: " + lastWrapperCommand);				
-			}
+			}else if(structToAppendCommandStr.dfsDepth() >= prevHeadStruct.dfsDepth() ){
+				curCommand.structsWithOtherHeadCount++;
+				//if(true) throw new RuntimeException("WLCommand " + curCommand);
+			}			
 			prevStructHeaded = true;			
+		}else{
+			nextStruct.set_structToAppendCommandStr(structToAppendCommandStr);
+			structToAppendCommandStr.set_structToAppendCommandStr(structToAppendCommandStr);
 		}
-		nextStruct.set_structToAppendCommandStr(structToAppendCommandStr);
+		//structToAppendCommandStr.set_structToAppendCommandStr(structToAppendCommandStr);
+		//nextStruct.set_structToAppendCommandStr(structToAppendCommandStr);
 		return prevStructHeaded;
 	}
 	
@@ -1279,8 +1289,8 @@ public class WLCommand implements Serializable{
 			System.out.print("BUILT COMMAND: " + commandSB);
 			System.out.println("HEAD STRUCT: " + structToAppendCommandStr);
 		}
-		//System.out.println("*******%######structToAppendCommandStr " +structToAppendCommandStr);
-		//"****%###structToAppendCommandStr " +structToAppendCommandStr		
+		System.out.println("WLCommand - *******%######structsWithOtherHeadCount " +curCommand.structsWithOtherHeadCount +" " +curCommand );
+		//"****%###structToAppendCommandStr " +structToAppendCommandStr	
 		WLCommandWrapper curCommandWrapper = structToAppendCommandStr.add_WLCommandWrapper(curCommand);
 		
 		if(DEBUG){
@@ -2062,9 +2072,9 @@ public class WLCommand implements Serializable{
 			//default auxiliary terms should not be compiled, as
 			//they are not meant to be compared with anything.
 			if(!name.equals(DEFAULT_AUX_NAME_STR)){
-				//end of word. To prevent "verbphrase" from matching "verb"
-				this.posPattern = Pattern.compile("^(?:" + posTerm + ")$");
+				this.posPattern = Pattern.compile("^(?:" + posTerm + ")$");				
 				this.namePattern = Pattern.compile(name);
+				
 			}else{
 				//if auxiliary component, compile trivial patterns instead of 
 				//leaving them as null, to avoid any potential NPE.

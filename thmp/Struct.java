@@ -114,10 +114,8 @@ public abstract class Struct implements Serializable{
 	 */
 	public boolean isStructA(){
 		boolean isStructA = this.struct() == null;
-		//enforcing principle that all StructH should be of type "ent"
-		if(!isStructA){
-			assert(this.type().equals("ent"));
-		}
+		//enforcing principle that all StructH should be of type "ent"		
+		assert(isStructA || this.type().equals("ent"));
 		return isStructA;
 	}
 	

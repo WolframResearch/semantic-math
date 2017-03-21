@@ -622,14 +622,7 @@ public class DetectHypothesis {
 				contextSB.append(" ").append(line);
 			}
 		}
-
-		parseState.writeUnknownWordsToFile();
-		
-		//Stats stats = new Stats(headParseStructNullNum, totalThmsNum);
-		// srcFileReader.close();
-		// System.out.println("Inside ThmInput, thmsList " + thms);
-		// System.out.println("thmWebDisplayList " + thmWebDisplayList);
-		//return stats;
+		parseState.writeUnknownWordsToFile();		
 	}
 
 	/**
@@ -641,7 +634,6 @@ public class DetectHypothesis {
 	 */
 	private static String processParseHypThm(StringBuilder newThmSB, ParseState parseState, Stats stats, 
 			List<DefinitionListWithThm> definitionListWithThmList, String srcFileName){
-		//if(true) throw new IllegalStateException(newThmSB.toString());
 		
 		// process here, return two versions, one for bag of words, one
 		// for display

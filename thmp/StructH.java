@@ -76,8 +76,7 @@ public class StructH<H> extends Struct{
 	
 	private WLCommand commandBuilt;
 	
-	public StructH(Map<String, String> struct, String type){
-	
+	public StructH(Map<String, String> struct, String type){	
 		this.struct = struct;
 		this.type = type;
 		this.children = new ArrayList<Struct>();
@@ -96,21 +95,24 @@ public class StructH<H> extends Struct{
 		this.structList = structList;
 	}
 
-	public StructH(String type){		
+	/**
+	 * name in struct is mandatory.
+	 * @param type
+	 * @param name
+	 */
+	public StructH(String type){
 		this.type = type;
 		this.children = new ArrayList<Struct>();
 		this.childRelationList = new ArrayList<ChildRelation>();
 		this.score = 1;
-	}
-	
+	}	
 	
 	/**
 	 * Set parent pointer
 	 * @param parent  parent Struct
 	 */
 	@Override
-	public void set_parentStruct(Struct parent){
-		
+	public void set_parentStruct(Struct parent){		
 		this.parentStruct = parent;
 	}
 	
@@ -190,6 +192,7 @@ public class StructH<H> extends Struct{
 	}
 
 	public void set_struct(HashMap<String, String> struct){
+		assert(struct.containsKey("name"));
 		this.struct = struct;
 	}
 
@@ -480,7 +483,8 @@ public class StructH<H> extends Struct{
 		// later).
 		/*if(this.WLCommandStr != null){
 			return this.WLCommandStr;
-		} */		
+		} */
+		
 		if(this.WLCommandWrapperList != null){
 			//if(true) throw new IllegalStateException();
  			int wrapperListSz = WLCommandWrapperList.size();
@@ -499,7 +503,8 @@ public class StructH<H> extends Struct{
 				this.commandBuilt = curCommand;
 				this.WLCommandStrVisitedCount++;
 			}else if(!curCommand.equals(this.commandBuilt)){
-				this.WLCommandStrVisitedCount++;				
+				this.WLCommandStrVisitedCount++;
+				
 			}
 			//this.WLCommandStrVisitedCount++;
 			curCommand.addComposedWLCommands(composedCommand);

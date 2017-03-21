@@ -1411,29 +1411,45 @@ public class ThmP1 {
 					&& ((nextPair=pairs.get(index + 1)).pos().equals("ent") || nextPair.pos().matches("\\d+"))) {
 				//if(true) throw new IllegalStateException();
 				String name = nextPair.word();
+				boolean entFused = false;
 				// if next pair is also ent, and is latex expression
 				if (name.contains("$")) {
-					tempMap.put("tex", name);			
+					/*but don't absorb ent if token after name is conj/disj*/
+					String secondNextPairName;
+					if(index < pairs.size()-3 && ((secondNextPairName=pairs.get(index + 2).word()).equals("and")
+							|| secondNextPairName.equals("or")) ){
+						String thirdNextPairName = pairs.get(index + 3).word();
+						if(!WordForms.areTexExprSimilar(thirdNextPairName, name)){
+							tempMap.put("tex", name);
+							entFused = true;
+						}
+					}else{
+						tempMap.put("tex", name);
+						entFused = true;
+					}
 				}else{
 					nameSB.append(" ").append(name);
+					entFused = true;
 				}
 				//remove since each entry in mathIndexList indicates
 				//a different ent not connected to current one.
-				mathIndexList.remove(j + 1);				
-				nextPair.set_pos(entPosStr);
+				if(entFused){
+					mathIndexList.remove(j + 1);				
+					nextPair.set_pos(entPosStr);
+				}
 			}
 			tempMap.put("name", nameSB.toString());
-			// look right one place in pairs, if symbol found, add it to
-			// namesMap
-			// if it's the given name for an ent.
+			/* look right one place in pairs, if symbol found, add it to
+			// namesMap, but not if symbol is part of conjunction, e.g. given integers $p$ and $q$.*/
 			int pairsSize = pairs.size();
 			if (index + 1 < pairsSize && pairs.get(index + 1).pos().equals("symb")
 					//don't fuse if e.g. mathObjName is "map"
 					&& !noFuseEntSet.contains(mathObjName)) {
 				//the word following symbol is "and"
-				if (index + 2 == pairsSize 
-						|| AND_OR_PATTERN.matcher(pairs.get(index+2).pos()).find()){
-								
+				if (index + 2 == pairsSize || AND_OR_PATTERN.matcher(pairs.get(index+2).pos()).find()
+						//&& pairs.get(index+3).equals("") 
+						){
+					//if(true) throw new RuntimeException();	
 				}else{
 					pairs.get(index + 1).set_pos(entPosStr);
 					String givenName = pairs.get(index + 1).word();
@@ -1449,13 +1465,13 @@ public class ThmP1 {
 				 */
 			// look left one place, combine symb_ent, but only if curWord
 			// doesn't also have other pos, e.g. verb, as in "$f$ maps a to b".
-			if (index > 0 && pairs.get(index - 1).pos().equals("symb")) {
-				
+			if (index > 0 && pairs.get(index - 1).pos().equals("symb")) {				
 				if(fuseSymbEnt){
 					pairs.get(index - 1).set_pos(entPosStr);
 					String givenName = pairs.get(index - 1).word();
 					// combine the symbol with ent's name together
 					tempMap.put("name", givenName + " " + tempMap.get("name"));
+					//if(true) throw new RuntimeException();
 				}
 			}
 			// combine nouns with ent's right after, ie noun_ent
@@ -2441,10 +2457,10 @@ public class ThmP1 {
 													// should work a score in to
 													// conj/disj! The longer the
 													// conj/disj the higher
-													NodeType struct1Type = struct1.isStructA() ? NodeType.STRUCTA : NodeType.STRUCTH;
+													NodeType struct1Type = p_struct.isStructA() ? NodeType.STRUCTA : NodeType.STRUCTH;
 													NodeType struct2Type = struct2.isStructA() ? NodeType.STRUCTA : NodeType.STRUCTH;
 													
-													//System.out.println("^^^Inside CONJ/DISJ. Struct1 " + struct1 + " Struct2 " + struct2);
+													//System.out.println("^^^Inside CONJ/DISJ. Struct1 " + p_struct +" "+ struct1Type + " Struct2 " + struct2);
 													
 													StructA<Struct, Struct> parentStruct = new StructA<Struct, Struct>(
 															p_struct, struct1Type, struct2, struct2Type, newType + "_" + type2,
@@ -2500,9 +2516,9 @@ public class ThmP1 {
 									if(null == entityBundle){
 										continue;
 									}
-									recentEnt = entityBundle.recentEnt;
-									firstEnt = entityBundle.firstEnt;
-									recentEntIndex = entityBundle.recentEntIndex;
+									recentEnt = entityBundle.getRecentEnt();
+									firstEnt = entityBundle.getFirstEnt();
+									recentEntIndex = entityBundle.getRecentEntIndex();
 								}
 							}
 
@@ -3533,17 +3549,53 @@ public class ThmP1 {
 				mx.get(i).get(j).add(newStruct);
 			}
 		}else if(newType.equals("fuse")){	
-			//fuse ent's, e.g. "integer linear combination"
-			if(!struct1.isStructA() && !struct2.isStructA()){
-				//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
-				//System.out.println("struct1 " + struct1);
+			if(!struct1.isStructA()){
 				//first struct cannot have collected children for this
 				//rule to be meaningful
 				//struct1 can't be independent word if it has picked up children.
-				if(!struct1.children().isEmpty()){
-					
+				if(!struct1.children().isEmpty()){			
 					return null;
 				}
+			/* if the following word is conj/disj, e.g. given integers $pp$ and $qq$ */			
+			if(struct2.isStructA()){
+				if(CONJ_DISJ_PATTERN1.matcher(struct2.type()).matches()){
+					//if(struct2.type().charAt(0) == 'c') throw new RuntimeException(struct2.toString() + " " + struct2.prev1NodeType());
+					/*create new structA and thread struct1 over the conjunction in struct2*/ //HERE
+					if(!struct2.prev1NodeType().equals(NodeType.STRUCTH) || !struct2.prev2NodeType().equals(NodeType.STRUCTH)){
+						return null;
+					}
+						
+					Struct ent1 = ((Struct)struct2.prev1()).copy();
+					Struct ent2 = ((Struct)struct2.prev2()).copy();
+					
+					Map<String, String> structMap1 = ent1.struct();
+					Map<String, String> structMap2 = ent2.struct();
+					
+					structMap1.put("called", ent1.nameStr());
+					structMap2.put("called", ent2.nameStr()) ;
+					structMap1.put("name", struct1.nameStr());
+					structMap2.put("name", struct1.nameStr()) ;
+					
+					/*put properties of struct1 to ent1 and ent2*/
+					Map<String, String> struct1Map = struct1.struct();
+					for(Map.Entry<String, String> entry : struct1Map.entrySet()){
+						if(entry.getValue().equals("ppt")){
+							structMap1.put(entry.getKey(), "ppt");
+							structMap2.put(entry.getKey(), "ppt");
+						}
+					}					
+					StructA<Struct, Struct> newStruct = new StructA<Struct, Struct>(ent1, NodeType.STRUCTH, ent2, NodeType.STRUCTH, 
+							struct2.type().substring(0, 4) + "_ent");					
+					newStruct.set_maxDownPathScore(newDownPathScore);					
+					mx.get(i).get(j).add(newStruct);
+				}
+			}
+			//fuse ent's, e.g. "integer linear combination"
+			else{
+				//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
+				//System.out.println("struct1 " + struct1);
+				
+				
 				Struct newStruct = struct2.copy();
 				
 				Map<String, String> structMap = newStruct.struct();
@@ -3562,6 +3614,7 @@ public class ThmP1 {
 				newStruct.set_maxDownPathScore(newDownPathScore);
 				
 				mx.get(i).get(j).add(newStruct);
+			}
 			}
 		}
 		//absorb first into second
@@ -3759,10 +3812,8 @@ public class ThmP1 {
 			
 			if(newType.equals("assert")){
 				parseState.setRecentAssert(parentStruct);
-				//System.out.println("Assert added! parentStruct" + parentStruct);
 			}
 			
-			// mx.get(i).set(j, parentStruct);
 			mx.get(i).get(j).add(parentStruct);
 		}
 		// found a grammar rule match, move on to next mx column
@@ -3778,8 +3829,7 @@ public class ThmP1 {
 	private static ChildRelation extractHypChildRelation(Struct hypStruct) {
 		ChildRelation childRelation;
 		String hypStructPrev1Str = "";
-		String hypStructPrev2Str = "";
-		
+		String hypStructPrev2Str = "";		
 		//System.out.println("!!!hypStruct " + hypStruct + " hypStruct.prev1NodeType(): " + hypStruct.prev1NodeType());
 		
 		if(hypStruct.prev1NodeType().equals(NodeType.STRUCTA) ){
@@ -3839,6 +3889,7 @@ public class ThmP1 {
 	}
 
 	/**
+	 * Absorb absorbedStruct into absorbingStruct.
 	 * @param mx
 	 * @param firstEnt
 	 * @param i
@@ -3871,10 +3922,30 @@ public class ThmP1 {
 			
 			String absorbedStructType = absorbedStruct.type();
 			int absorbedStructTypeLen = absorbedStructType.length();
-			//"conj_symb", "disj_symb"
+			/*case of "conj_symb", "disj_symb", since ent_symb should have been absorbed in tokenize() */
 			if(absorbedStructTypeLen > 3 
 					&& absorbedStructType.subSequence(absorbedStructTypeLen-4, absorbedStructTypeLen).equals("symb")){
-				newStruct.struct().put("called", ppt);
+				if(CONJ_DISJ_PATTERN1.matcher(absorbedStructType).matches()){
+					/*Form new StructA as conjunction of absorbingStruct */
+					String symb1 = "";
+					String symb2 = "";
+					if(absorbedStruct.prev1NodeType().equals(NodeType.STRUCTA)){
+						symb1 = ((Struct)absorbedStruct.prev1()).prev1().toString();
+					}
+					if(absorbedStruct.prev1NodeType().equals(NodeType.STRUCTA)){
+						symb2 = ((Struct)absorbedStruct.prev2()).prev1().toString();
+					}
+					
+					StructH<HashMap<String, String>> ent1 = new StructH<HashMap<String, String>>(absorbingStruct.struct(), "ent");
+					ent1.struct().put("called", symb1);
+					StructH<HashMap<String, String>> ent2 = new StructH<HashMap<String, String>>(absorbingStruct.struct(), "ent");
+					ent2.struct().put("called", symb2);
+					
+					newStruct = new StructA<Struct, Struct>(ent1, NodeType.STRUCTH, ent2, NodeType.STRUCTH, 
+							absorbedStructType.substring(0, 4) + "_ent");					
+				}else{
+					newStruct.struct().put("called", ppt);					
+				}
 			}else{
 				newStruct.struct().put(ppt, "ppt");
 			}
