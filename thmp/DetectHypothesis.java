@@ -10,7 +10,6 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -63,15 +62,12 @@ public class DetectHypothesis {
 	private static final List<ParsedExpression> parsedExpressionList = new ArrayList<ParsedExpression>();
 	private static final List<String> parsedExpressionStrList = new ArrayList<String>();
 	private static final List<String> DefinitionListWithThmStrList = new ArrayList<String>();
-	private static final List<String> allThmHypStrList = new ArrayList<String>();
 	private static final List<String> allThmsStrWithSpaceList = new ArrayList<String>();
-	//private static final List<String> DefinitionList = new ArrayList<String>();
 	
 	private static final String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
 	private static final String parsedExpressionStringFileStr = "src/thmp/data/parsedExpressionList.txt";
 	private static final String allThmsStringFileStr = "src/thmp/data/allThmsList.txt";
 	
-	private static final String definitionStrFileStr = "src/thmp/data/parsedExpressionDefinitions.txt";
 	//files to serialize theorem words to.
 	private static final String allThmWordsMapSerialFileStr = "src/thmp/data/allThmWordsMap.dat";
 	private static final String allThmWordsMapStringFileStr = "src/thmp/data/allThmWordsMap.txt";
@@ -89,7 +85,7 @@ public class DetectHypothesis {
 	
 	private static final boolean PARSE_INPUT_VERBOSE = true;
 	//whether to gather a list of statistics, such as percentage of thms with full parses, or non-null head ParseStruct's.
-	private static final boolean GATHER_STATS = true;
+	//private static final boolean GATHER_STATS = true;
 	
 	//pattern for lines to skip any kind of parsing, even hypothesis-detection.
 	//skip examples and bibliographies  
@@ -265,6 +261,12 @@ public class DetectHypothesis {
 		return false;
 	}
 	
+	/**
+	 * Normal use is when args is 2-String argument, first is path to dir containing
+	 * tex files, second is list of tex files in that dir.
+	 * @param args
+	 * @throws Throwable
+	 */
 	public static void main(String[] args) throws Throwable{
 		//only parse if sentence is hypothesis, when parsing outside theorems.
 		//to build up variableNamesMMap. Should also collect the sentence that 
@@ -279,17 +281,15 @@ public class DetectHypothesis {
 		//boolean isDirectory = false;
 		//could be file or dir
 		File inputFile = null;
-		if(argsLen > 0){
+		Set<String> texFileSet = null;
+		if(argsLen > 1){
 			String argsSrcStr = args[0];
-			//try{
-				//check if is directory
-				inputFile = new File(argsSrcStr);	
-			/*}catch(FileNotFoundException e){
-				inputBFCreatedBool = false;
-				System.out.println("Cannot find file specified via command line!");
-				//for now:
-				throw new IllegalStateException("Cannot find file specified via command line!");
-			}*/
+			inputFile = new File(argsSrcStr);
+			String texFileNamesSerialFileStr = args[1];
+			texFileSet = deserializeTexFileNames(texFileNamesSerialFileStr);
+			if(null == texFileSet){
+				return;
+			}
 		}
 		//resort to default file if no arg supplied
 		else{
@@ -309,10 +309,11 @@ public class DetectHypothesis {
 		List<DefinitionListWithThm> defThmList = new ArrayList<DefinitionListWithThm>();		
 		Stats stats = new Stats();
 		if(inputFile.isDirectory()){
-			//get all filenames from dir		
-			File[] files = inputFile.listFiles();
+			//get all filenames from dir. Get tex file names from serialized file data.
+			//File[] files = inputFile.listFiles();			
 			try{
-				for(File file : files){
+				for(String fileName : texFileSet){
+					File file = new File(fileName);		 //watch out to ensure path is right!!
 					BufferedReader inputBF = null;
 					try{
 						inputBF = new BufferedReader(new FileReader(file));	
@@ -358,6 +359,11 @@ public class DetectHypothesis {
 		}
 		
 		FileUtils.cleanupJVMSession();
+	}
+
+	@SuppressWarnings("unchecked")
+	private static Set<String> deserializeTexFileNames(String texFileNamesSerialFileStr) {
+		return ((List<Set<String>>)FileUtils.deserializeListFromFile(texFileNamesSerialFileStr)).get(0);
 	}
 
 	/**

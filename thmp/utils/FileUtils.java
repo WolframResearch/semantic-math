@@ -170,7 +170,7 @@ public class FileUtils {
 	 * files deserialized in this JVM session. Don't call this if don't want to check
 	 * for DESERIAL_VERSION_NUM.
 	 * @param serialFileStr
-	 * @return List of objects
+	 * @return *List* of objects
 	 */	
 	public static Object deserializeListFromFile(String serialFileStr){
 		

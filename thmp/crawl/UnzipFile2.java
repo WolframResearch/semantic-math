@@ -37,9 +37,9 @@ public class UnzipFile2 {
 	//name of file containing .gz file data.
 	//lines such as "math-463636754.gz: gzip compressed data, was '....tar'"
 	private static final String gzFileInfoFileNameStr = "fileStats.txt";
-	private static final Pattern TEX_PATTERN = Pattern.compile(".*(?:tex|TeX) .*");
+	static final Pattern TEX_PATTERN = Pattern.compile(".*(?:tex|TeX) .*");
 	//extensions I don't want, but still get classified as TeX (auxiliary) file by 'file' command
-	private static final Pattern NONTEX_EXTENSION_PATTERN = Pattern.compile(".+(?:\\.sty|\\.pstex_t|auxiliary).*");
+	static final Pattern NONTEX_EXTENSION_PATTERN = Pattern.compile(".+(?:\\.sty|\\.pstex_t|auxiliary).*");
 	
 	/**
 	 * Retrieves list of filenames in this directory. In this case .gz files to
@@ -94,7 +94,7 @@ public class UnzipFile2 {
 		Map<String, String> texFileInfoMap = createTexFileInfoMap();
 		System.out.println("UnzipFile2.getTexMathFileNames - texFileInfoMap: " + texFileInfoMap);
 		
-		File[] files = dir.listFiles();		
+		File[] files = dir.listFiles();	
 		for(File file : files){
 			//file name is just the name, not path
 			String fileName = file.getName();
@@ -107,7 +107,7 @@ public class UnzipFile2 {
 	}
 	
 	/**
-	 * 
+	 * Pick out tex source files from system output of "file filename".
 	 * @return
 	 */
 	private static Map<String, String> createTexFileInfoMap() {
@@ -177,7 +177,7 @@ public class UnzipFile2 {
 		byte[] buf = new byte[1024];
 		try {
 			// fileNames is non-empty list.
-			GZIPInputStream gzipInputStream = null;
+			//GZIPInputStream gzipInputStream = null;
 			FileInputStream fileInputStream = null;
 			FileOutputStream fileOutputStream = null;
 			//output stream for the output in all the .gz files.
@@ -213,8 +213,6 @@ public class UnzipFile2 {
 				fileOutputStream.close();
 			}
 			
-			//totalOutputStream.close();
-
 		} catch (IOException e) {
 			e.printStackTrace();
 			throw new IllegalStateException(Arrays.toString(e.getStackTrace()));
@@ -312,12 +310,11 @@ public class UnzipFile2 {
 		 * Files.createDirectories(path);
 		 */
 		
-		// get all file names in the source directory		
+		// get all file names in the source directory
 		//List<String> fileNames = getFileNames(srcBasePath);
 		List<String> texFileNames = getTexMathFileNames(srcBasePath);
 		//System.out.println(fileNames);
 		// list of files we just extracted. These should be .txt files.
-		//List<String> extractedFiles = unzipGz(srcBasePath, destBasePath, texFileNames);
 		List<String> extractedFiles = extractTexContent(srcBasePath, destBasePath, texFileNames);
 		
 		//commenting out for now, to not extract thms

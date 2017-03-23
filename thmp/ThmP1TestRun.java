@@ -604,11 +604,12 @@ public class ThmP1TestRun {
 			st = "$A$ is itself prime";
 			st = "Any polynomial of odd degree that has real coefficients must have a real root.";
 			st = "Any polynomial that has real coefficients is local";
-			st = "Given any function $f$, there are infinitely many zeros in $g(zeta(f))$."; //<--the score of good parse went down!
+			st = "Given any function $f$, there are infinitely many zeros in $g(zeta(f))$.";
+			st = "field is perfect";
 			//st = "Integers $p$ and $q$ are coprime if and only if there exist integers $n$ and $m$ such that $np - mq = 1$";
 			//st = "Integers $p$ and $q$ are coprime if there exist an integer $n$ such that $np - mq = 1$";
-			st = "Integers $p$ and $q$ are coprime if there exist an integer $n$";
-			st = "given sets $s$ and $t$";
+			//st = "Integers $p$ and $q$ are coprime if there exist an integer $n$";
+			
 			//st = "The product of two primitive polynomials is primitive.";
 			//st = "$A $ is said to be prime";
 			//st = "then all integers are prime";

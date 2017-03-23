@@ -155,7 +155,7 @@ public class WLCommandsList {
 				));		
 		//e.g. "The field extension $F/Q$ splits."
 		wLCommandMapBuilder.put("verbAlone", addCommand(new PBuilder("symb|ent|pro|noun", null, true).addRelationType(RelationType._IS), 
-				new PBuilder("pro", "we", WLCommand.PosTermType.NEGATIVE),
+				new PBuilder("pro", "we", WLCommand.PosTermType.NEGATIVE),				
 				new PBuilder(" ~HasProperty~ {"),  new PBuilder("verbAlone", null, true, true, false).addRelationType(RelationType.IS_), 
 				new PBuilder(" ,", "OPT"), new PBuilder("prep", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}")));	
 		
@@ -239,11 +239,11 @@ public class WLCommandsList {
 				//new PBuilder("pre", null, true, false, "OPT1"),
 				new PBuilder("symb|ent|phrase", null, true, false, false, RelationType.IS_)//, new PBuilder("}", "OPT1")
 				)); // PosTermConnotation.DEFINING,
-		
+		//merge these two?!
 		//e.g. "$X$ is connected", "$F$ is isomorphic to ..."
 		wLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro|noun|det", null, true, RelationType._IS), 
 				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), 
-				new PBuilder(" ~HasProperty~ "), new PBuilder("adj|phrase|noun|prep", null, true, false, false, RelationType.IS_),
+				new PBuilder(" ~HasProperty~ "), new PBuilder("adj|ent|phrase|noun|prep", null, true, false, false, RelationType.IS_),
 				new PBuilder(", {\"Qualifier\"->", "OPT"), 
 				new PBuilder("prep", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}", "OPT")
 				)); 
