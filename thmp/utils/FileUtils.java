@@ -59,7 +59,7 @@ public class FileUtils {
 	/**
 	 * Write content to file at absolute path.
 	 * @param contentList
-	 * @param fileTo
+	 * @param fileToPath
 	 */
 	public static void writeToFile(List<? extends CharSequence> contentList, Path fileToPath) {
 		try {
@@ -90,8 +90,8 @@ public class FileUtils {
 	/**
 	 * Write content to file at absolute path.
 	 * 
-	 * @param contentList
-	 * @param fileTo
+	 * @param obj
+	 * @param fileToStr
 	 */
 	public static void writeToFile(Object obj, String fileToStr) {
 		List<String> contentList = new ArrayList<String>();

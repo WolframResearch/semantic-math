@@ -1271,8 +1271,12 @@ public class CollectThm {
 				return (List<ParsedExpression>)thmp.utils.FileUtils
 						.deserializeListFromInputStream(parsedExpressionListInputStream);	
 			}else{
+				//when processing on byblis
+				if(!System.getProperty("os.name").equals("Mac OS X")){
+					parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
+				}
 				return (List<ParsedExpression>)thmp.utils.FileUtils
-						.deserializeListFromFile(parsedExpressionSerialFileStr);	
+						.deserializeListFromFile(parsedExpressionSerialFileStr);
 			}
 		}
 		

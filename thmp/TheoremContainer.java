@@ -1,7 +1,8 @@
 package thmp;
 
 /**
- * Theorem container containing theorem extraction method.
+ * Theorem container interface represents a theorem with 
+ * associated data. 
  * @author yihed
  *
  */

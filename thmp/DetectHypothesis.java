@@ -281,13 +281,15 @@ public class DetectHypothesis {
 		//boolean isDirectory = false;
 		//could be file or dir
 		File inputFile = null;
-		Set<String> texFileSet = null;
+		/*absolute path to files and the tar file name they live in*/
+		Map<String, String> texFileNamesMap = null;
 		if(argsLen > 1){
 			String argsSrcStr = args[0];
 			inputFile = new File(argsSrcStr);
 			String texFileNamesSerialFileStr = args[1];
-			texFileSet = deserializeTexFileNames(texFileNamesSerialFileStr);
-			if(null == texFileSet){
+			//set of *absolute* path names.
+			texFileNamesMap = deserializeTexFileNames(texFileNamesSerialFileStr);
+			if(null == texFileNamesMap){
 				return;
 			}
 		}
@@ -309,20 +311,25 @@ public class DetectHypothesis {
 		List<DefinitionListWithThm> defThmList = new ArrayList<DefinitionListWithThm>();		
 		Stats stats = new Stats();
 		if(inputFile.isDirectory()){
+			//if(true) throw new IllegalStateException("input is directory! texFileNamesMap: " + texFileNamesMap);
 			//get all filenames from dir. Get tex file names from serialized file data.
 			//File[] files = inputFile.listFiles();			
 			try{
-				for(String fileName : texFileSet){
-					File file = new File(fileName);		 //watch out to ensure path is right!!
+				for(Map.Entry<String, String> fileNameEntry : texFileNamesMap.entrySet()){
+					//this is absolute file path
+					String fileName = fileNameEntry.getKey();
+					File file = new File(fileName);
 					BufferedReader inputBF = null;
 					try{
 						inputBF = new BufferedReader(new FileReader(file));	
 					}catch(FileNotFoundException e){						
-						String msg = "Source file not found!";
+						String msg = fileName + " source file not found!";
 						System.out.println(msg);
 						logger.error(msg);
+						continue;
 					}
-					extractThmsFromFiles(inputBF, defThmList, stats, file.getName());
+					String tarFileName = fileNameEntry.getValue();
+					extractThmsFromFiles(inputBF, defThmList, stats, tarFileName);
 					FileUtils.silentClose(inputBF);
 				}
 			}catch(Throwable e){
@@ -356,14 +363,13 @@ public class DetectHypothesis {
 		boolean deserialize = false;
 		if(deserialize){
 			deserializeParsedExpressionsList();
-		}
-		
+		}		
 		FileUtils.cleanupJVMSession();
 	}
 
 	@SuppressWarnings("unchecked")
-	private static Set<String> deserializeTexFileNames(String texFileNamesSerialFileStr) {
-		return ((List<Set<String>>)FileUtils.deserializeListFromFile(texFileNamesSerialFileStr)).get(0);
+	private static Map<String, String> deserializeTexFileNames(String texFileNamesSerialFileStr) {
+		return ((List<Map<String, String>>)FileUtils.deserializeListFromFile(texFileNamesSerialFileStr)).get(0);
 	}
 
 	/**

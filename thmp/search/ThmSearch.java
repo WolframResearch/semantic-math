@@ -18,6 +18,8 @@ import thmp.TheoremContainer;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 
+import static thmp.utils.MathLinkUtils.evaluateWLCommand;
+
 /**
  * Theorem search. Does the computation in WL using JLink. 
  * @author yihed
@@ -49,7 +51,7 @@ public class ThmSearch {
 	 */
 	public static class ThmSearchQuery{
 		private static final int QUERY_VEC_LENGTH;
-	private static final KernelLink ml;	
+		private static final KernelLink ml;	
 	static{		
 		//use OS system variable to tell whether on VM or local machine, and set InstallDirectory 
 		//path accordingly.
@@ -118,10 +120,11 @@ public class ThmSearch {
 	public static int getQUERY_VEC_LENGTH(){
 		return QUERY_VEC_LENGTH;
 	}
+	
 	/**
 	 * Constructs the String query to be evaluated.
 	 * Submits it to kernel for evaluation.
-	 * @param queryVecStr should be in vec form!
+	 * @param queryVecStr should be a vec and not English words, i.e. {{v1, v2, ...}}!
 	 * @return List of indices of nearest thms. Indices in, eg MathObjList 
 	 * (Indices in all such lists should coincide).
 	 * @throws MathLinkException 
@@ -140,16 +143,14 @@ public class ThmSearch {
 			//System.out.println("thmsearch - corMx : " + ml.getExpr());
 			String msg = "Transposing and applying corMx...";
 			logger.info(msg);
-			//process query first with corMx. 
-				
+			//process query first with corMx. Convert to column vec.			
 			ml.evaluate("q0 = Transpose[" + queryVecStr + "] + 0.08*corMx.Transpose["+ queryVecStr +"];");
 			boolean getQ = false;
 			if(getQ){
 				ml.waitForAnswer();
 				Expr qVec = ml.getExpr();
-				logger.info("ThmSearch - transposed queryVecStr: " + qVec);
-				
-			}else{				
+				logger.info("ThmSearch - transposed queryVecStr: " + qVec);				
+			}else{
 				ml.discardAnswer();
 			}
 			//ml.evaluate("corMx");
@@ -179,8 +180,7 @@ public class ThmSearch {
 			//ml.evaluate("q = Inverse[d].Transpose[u].(q/.{0.0->mxMeanValue})");
 			//ml.evaluate("q = dInverse.uTranspose.(q0/.{0.0->mxMeanValue})");
 			ml.evaluate("q = dInverse.uTranspose.q0;");
-			//ml.discardAnswer();
-			
+			//ml.discardAnswer();			
 			getQ = false;
 			if(getQ){
 				ml.waitForAnswer();
@@ -209,10 +209,6 @@ public class ThmSearch {
 		//ml.evaluate("v[[1]]");
 		//ml.getExpr();
 		//System.out.println("DIMENSIONS " +ml.getExpr());
-		
-		/*ml.evaluate("q");
-		ml.waitForAnswer();
-		System.out.println("q " +ml.getExpr()); */		
 		
 		int[] nearestVecArray;
 		try{
@@ -319,14 +315,51 @@ public class ThmSearch {
 	}	
 	
 	}//end of class
+	
 	public static class TermDocumentMatrix{
 		
 		//private static final String PATH_TO_MX = "FileNameJoin[{Directory[], \"termDocumentMatrixSVD.mx\"}]";		
 		private static final String PATH_TO_MX = getSystemMxFilePath();
 		private static final String MX_CONTEXT_NAME = "TermDocumentMatrix`";
-		private static KernelLink ml;
+		private static final String PROJECTED_MX_CONTEXT_NAME = "ProjectedTDMatrixContext`";
+		private static final String PROJECTED_MX_NAME = "ProjectedTDMatrix`";
+		private static KernelLink ml;		
+		private static final String D_INVERSE_NAME = "dInverse";
+		private static final String U_TRANSPOSE_NAME = "uTranspose";
+		private static final String COR_MX_NAME = "corMx";
 		
-		public static void createTermDocumentMatrixSVD() {			
+		/**
+		 * 
+		 * @param HighDimTDMatrix
+		 */
+		public static void serializeHighDimensionalTDMx(String HighDimTDMatrix){
+			
+		}
+		
+		/**
+		 * Path to mx file with projection mx context, previously SVD'd.
+		 * @param projectionMx
+		 * @param termDocumentMxPath Path to term document matrix, as row vectors.
+		 */
+		public static void createTermDocumentMatrixFromProjectionMx(String projectionMxPath, 
+				String termDocumentMxPath ) {	
+			evaluateWLCommand("<<"+projectionMxPath);
+			//mx that was DumpSave'd from one tar file.
+			evaluateWLCommand("<<"+termDocumentMxPath + "; AppendTo[$ContextPath," + PROJECTED_MX_CONTEXT_NAME + "]");
+			
+			//evaluateWLCommand(PROJECTED_MX_CONTEXT_NAME , true, false);
+			
+			String dInverseName = D_INVERSE_NAME;
+			String uTransposeName = U_TRANSPOSE_NAME;
+			String corMxName = COR_MX_NAME;
+			String projectedMxName = "";
+			ProjectionMatrix.applyProjectionMatrix(PROJECTED_MX_CONTEXT_NAME, dInverseName, uTransposeName, 
+					corMxName, projectedMxName);
+			//PATH_TO_MX should be to directory!
+			ml.evaluate("DumpSave[\"" + termDocumentMxPath  +     "\", \"     ProjectedTDMatrix`\"]");
+		}
+		
+		public static void createTermDocumentMatrixSVD() {	
 			//docMx = TriggerMathThm2.mathThmMx();			
 			//mx to keep track of correlations between terms, mx.mx^T
 			//List<List<Integer>> corMxList = new ArrayList<List<Integer>>();
@@ -401,8 +434,7 @@ public class ThmSearch {
 				//the entries in clipped correlation are between 0.3 and 1.
 				//subtract IdentityMatrix to avoid self-compounding
 				ml.evaluate("corMx = Clip[Correlation[Transpose[m]]-IdentityMatrix[" + rowDimension 
-						+ "], {.6, Infinity}, {0, 0}]/.Indeterminate->0.0;");
-				
+						+ "], {.6, Infinity}, {0, 0}]/.Indeterminate->0.0;");			
 				if(getCorMx){
 					ml.waitForAnswer();
 					Expr expr = ml.getExpr();
@@ -426,40 +458,15 @@ public class ThmSearch {
 					System.out.println("m + .15*corMx.m " + expr);
 				}else{
 					ml.discardAnswer();
-				}
-				
+				}				
 				System.out.println("ThmSearch - cor matrix added!");
-				//take IntegerPart, faster processing later on
-				//ml.evaluate("mx = m + IntegerPart[0.2*corMx];");
-				//ml.discardAnswer();
 				
-				//Expr r = ml.getExpr();
-				//add to m
-				
-				//System.out.println("is matrix? " + r.part(1).matrixQ() + r.part(1));
-				//System.out.println(Arrays.toString((int[])r.part(1).part(1).asArray(Expr.INTEGER, 1)));
-				
-				/*int corMxLen1 = r.part(1).length();
-				for(int i = 0; i < corMxLen1; i++){
-					Integer[] thm_iListBoxed = ArrayUtils.toObject((int[])r.part(1).part(i+1).asArray(Expr.INTEGER, 1));
-					List<Integer> thm_iList = Arrays.asList(thm_iListBoxed);
-					corMxList.add(thm_iList);
-				}*/
-				//adjust entries of docMx based on corMxList
-				//do this in WL, not loops here!
-				//int[][] corrAdjustedDocMx = corrAdjustDocMx(docMx, corMxList);
-				//mx = toNestedList(corrAdjustedDocMx);
-				
-				//write matrix to file, so no need to form it each time
 				
 				//System.out.println(nearestVec.length() + "  " + Arrays.toString((int[])nearestVec.part(1).asArray(Expr.INTEGER, 1)));
 				String dimMsg = "Dimensions of docMx: " + rowDimension + " " +mxColDim + ". Starting SVD...";
 				System.out.print(dimMsg);
 				logger.info(dimMsg);
-				//System.out.println(mx);
 				
-				//ml.evaluate("mx=" + mx +"//N;");
-				//ml.discardAnswer();	
 				
 				/*ml.evaluate("Mean[Mean[0.2*Transpose[ Covariance[Transpose[mx]].mx ]]]");
 				//ml.evaluate("mx");

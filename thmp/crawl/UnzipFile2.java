@@ -37,6 +37,7 @@ public class UnzipFile2 {
 	//name of file containing .gz file data.
 	//lines such as "math-463636754.gz: gzip compressed data, was '....tar'"
 	private static final String gzFileInfoFileNameStr = "fileStats.txt";
+	//math0208018: LaTeX 2e document text
 	static final Pattern TEX_PATTERN = Pattern.compile(".*(?:tex|TeX) .*");
 	//extensions I don't want, but still get classified as TeX (auxiliary) file by 'file' command
 	static final Pattern NONTEX_EXTENSION_PATTERN = Pattern.compile(".+(?:\\.sty|\\.pstex_t|auxiliary).*");
