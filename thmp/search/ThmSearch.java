@@ -321,42 +321,55 @@ public class ThmSearch {
 		//private static final String PATH_TO_MX = "FileNameJoin[{Directory[], \"termDocumentMatrixSVD.mx\"}]";		
 		private static final String PATH_TO_MX = getSystemMxFilePath();
 		private static final String MX_CONTEXT_NAME = "TermDocumentMatrix`";
-		private static final String PROJECTED_MX_CONTEXT_NAME = "ProjectedTDMatrixContext`";
-		private static final String PROJECTED_MX_NAME = "ProjectedTDMatrix`";
+		protected static final String PROJECTED_MX_CONTEXT_NAME = "ProjectedTDMatrixContext`";
+		protected static final String FULL_TERM_DOCUMENT_MX_CONTEXT_NAME = "FullTDMatrix`";
+		//projected full term-document matrix, so "v^T" in SVD.
+		protected static final String PROJECTED_MX_NAME = "ProjectedTDMatrix";
+		private static final String FULL_TERM_DOCUMENT_MX_NAME = "FullTDMatrix";
+		protected static final String CONCATENATED_PROJECTED_TERM_DOCUMENT_MX_NAME = "ConcatenatedTDMatrix";
 		private static KernelLink ml;		
 		private static final String D_INVERSE_NAME = "dInverse";
 		private static final String U_TRANSPOSE_NAME = "uTranspose";
 		private static final String COR_MX_NAME = "corMx";
 		
 		/**
-		 * 
-		 * @param HighDimTDMatrix
+		 * Serialize the high-dimensional term-document mx, 
+		 * as formed from one run of DetectHypothesis.java.  
+		 * @param HighDimTDMatrix presented as *Sparse*Array's.
+		 * fullTermDocumentMxPath such as "0208_001/0208/FullTDMatrix.mx"
 		 */
-		public static void serializeHighDimensionalTDMx(String HighDimTDMatrix){
-			
+		public static void serializeHighDimensionalTDMx(String HighDimTDSparseMatrix, String fullTermDocumentMxPath){			
+			evaluateWLCommand(FULL_TERM_DOCUMENT_MX_CONTEXT_NAME + "=" + HighDimTDSparseMatrix+"//N");
+			//don't use special context for now, March 2017
+			evaluateWLCommand("DumpSave[\"" + fullTermDocumentMxPath + "\"," + FULL_TERM_DOCUMENT_MX_NAME + "]");
 		}
 		
 		/**
-		 * Path to mx file with projection mx context, previously SVD'd.
-		 * @param projectionMx
-		 * @param termDocumentMxPath Path to term document matrix, as row vectors.
+		 * Projects the full TD mx down to lower dimension given previosly created SVD matrices.
+		 * @param fullTermDocumentMxPath path to full high-dim term document mx. e.g. 
+		 * "0208_001/0208/FullTDMatrix.mx" 
+		 * @param projectionMxPath Path to mx file with projection matrix context, created from previous SVD.
+		 * @param termDocumentMxPath Path to projected term document matrix (as row vectors), e.g. 
+		 * "0208_001/0208/ProjectedTDMatrix.mx"
 		 */
-		public static void createTermDocumentMatrixFromProjectionMx(String projectionMxPath, 
-				String termDocumentMxPath ) {	
+		public static void createTermDocumentMatrixFromProjectionMx(String fullTermDocumentMxPath, String projectionMxPath, 
+				String projectedTermDocumentMxPath) {	
 			evaluateWLCommand("<<"+projectionMxPath);
-			//mx that was DumpSave'd from one tar file.
-			evaluateWLCommand("<<"+termDocumentMxPath + "; AppendTo[$ContextPath," + PROJECTED_MX_CONTEXT_NAME + "]");
+			//full mx that was DumpSave'd from one tar file.
+			//may not be using context!
+			evaluateWLCommand("<<"+fullTermDocumentMxPath + "; AppendTo[$ContextPath," + PROJECTED_MX_CONTEXT_NAME + "]");
 			
 			//evaluateWLCommand(PROJECTED_MX_CONTEXT_NAME , true, false);
-			
+			String fullTDMxName = FULL_TERM_DOCUMENT_MX_NAME;
 			String dInverseName = D_INVERSE_NAME;
 			String uTransposeName = U_TRANSPOSE_NAME;
 			String corMxName = COR_MX_NAME;
-			String projectedMxName = "";
-			ProjectionMatrix.applyProjectionMatrix(PROJECTED_MX_CONTEXT_NAME, dInverseName, uTransposeName, 
-					corMxName, projectedMxName);
-			//PATH_TO_MX should be to directory!
-			ml.evaluate("DumpSave[\"" + termDocumentMxPath  +     "\", \"     ProjectedTDMatrix`\"]");
+			//String queryMxStrName, String dInverseName, String uTransposeName, 
+			//String corMxName, String projectedMxName
+			ProjectionMatrix.applyProjectionMatrix(fullTDMxName, dInverseName, uTransposeName, 
+					corMxName, PROJECTED_MX_NAME);
+			//PATH_TO_MX should be to directory! 
+			evaluateWLCommand("DumpSave[\"" + termDocumentMxPath  + "\" "+ PROJECTED_MX_NAME+ "]");
 		}
 		
 		public static void createTermDocumentMatrixSVD() {	

@@ -15,7 +15,15 @@ public class MathLinkUtils {
 	private static final Logger logger = LogManager.getLogger(MathLinkUtils.class);
 	
 	public static Expr evaluateWLCommand(String cmd){
-		return MathLinkUtils.evaluateWLCommand(cmd, false, false);
+		return MathLinkUtils.evaluateWLCommand(ml, cmd, false, false);
+	}
+	
+	public static Expr evaluateWLCommand(KernelLink ml, String cmd){
+		return MathLinkUtils.evaluateWLCommand(ml, cmd, false, false);
+	}
+	
+	public static Expr evaluateWLCommand(String cmd, boolean getResultingExpr, boolean throwOnException){
+		return evaluateWLCommand(ml, cmd, getResultingExpr, throwOnException);
 	}
 	
 	/**
@@ -23,7 +31,7 @@ public class MathLinkUtils {
 	 * @param cmd Should not contain semicolon at end.
 	 * @param getResultingExpr
 	 */
-	public static Expr evaluateWLCommand(String cmd, boolean getResultingExpr, boolean throwOnException){
+	public static Expr evaluateWLCommand(KernelLink ml, String cmd, boolean getResultingExpr, boolean throwOnException){
 		
 		int cmdLen = cmd.length();
 		try{
@@ -53,4 +61,5 @@ public class MathLinkUtils {
 			}
 		}
 	}
+	
 }
