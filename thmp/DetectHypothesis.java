@@ -69,7 +69,7 @@ public class DetectHypothesis {
 	private static final String allThmsStringFileStr = "src/thmp/data/allThmsList.txt";
 	
 	//files to serialize theorem words to.
-	private static final String allThmWordsMapSerialFileStr = "src/thmp/data/allThmWordsMap.dat";
+	public static final String allThmWordsMapSerialFileStr = "src/thmp/data/allThmWordsMap.dat";
 	private static final String allThmWordsMapStringFileStr = "src/thmp/data/allThmWordsMap.txt";
 	//not used by next runs, but nice to have the list for inspection.
 	private static final String allThmWordsSerialFileStr = "src/thmp/data/allThmWordsList.dat";
@@ -115,6 +115,7 @@ public class DetectHypothesis {
 	/**
 	 * Statistics class to record statistics such as the percentage of thms 
 	 * that have spanning parses and/or non-null headParseStruct's.
+	 * Should use -D etc to indicate what type of parameters.
 	 */
 	public static class Stats{
 		//number of thms for which headParseStruct == null
@@ -261,13 +262,48 @@ public class DetectHypothesis {
 		return false;
 	}
 	
+	private static class InputParams{
+		
+		String texFilesDirPath;
+		String serializedTexFileNamesFileStr;
+		//e.g. "0208_001/0208/ProjectedTDMatrix.mx"
+		String pathToProjectionMx;
+		
+		//where to put the full dim TD matrix
+		String fullTermDocumentMxPath;
+		//map of word frequencies.
+		String pathToWordFreqMap;
+		
+		InputParams(String args[]){
+			int argsLen = args.length;
+			if(argsLen > 1){
+				texFilesDirPath = args[0];
+				//inputFile = new File(argsSrcStr);
+				serializedTexFileNamesFileStr = args[1];
+			
+				if(argsLen > 4){
+					pathToProjectionMx = args[2];
+					fullTermDocumentMxPath = args[3];
+					pathToWordFreqMap = args[4];
+				}			
+			}
+		}
+		String getPathToProjectionMx(){
+			return pathToProjectionMx;
+		}
+	}
+	
 	/**
 	 * Normal use is when args is 2-String argument, first is path to dir containing
 	 * tex files, second is list of tex files in that dir.
+	 * 1st, path to directory containing .tex files. 
+	 * 2nd, texFileNamesSerialFileStr, path to file names that contain names of the .tex files 
+	 * that should be parsed.
+	 * 3rd, path to projection mx.
 	 * @param args
 	 * @throws Throwable
 	 */
-	public static void main(String[] args) throws Throwable{
+	public static void main(String[] args){
 		//only parse if sentence is hypothesis, when parsing outside theorems.
 		//to build up variableNamesMMap. Should also collect the sentence that 
 		//defines a variable, to include inside the theorem for search.
@@ -281,12 +317,16 @@ public class DetectHypothesis {
 		//boolean isDirectory = false;
 		//could be file or dir
 		File inputFile = null;
+		InputParams inputParams = new InputParams(args);
 		/*absolute path to files and the tar file name they live in*/
 		Map<String, String> texFileNamesMap = null;
-		if(argsLen > 1){
-			String argsSrcStr = args[0];
-			inputFile = new File(argsSrcStr);
-			String texFileNamesSerialFileStr = args[1];
+		String texFileNamesSerialFileStr = inputParams.serializedTexFileNamesFileStr;
+		if(texFileNamesSerialFileStr != null){
+			//String argsSrcStr = args[0];
+			String texFilesDirPath = inputParams.texFilesDirPath;
+			inputFile = new File(texFilesDirPath);			
+			//String texFileNamesSerialFileStr = inputParams.serializedTexFileNamesFileStr;
+			
 			//set of *absolute* path names.
 			texFileNamesMap = deserializeTexFileNames(texFileNamesSerialFileStr);
 			if(null == texFileNamesMap){
@@ -308,7 +348,7 @@ public class DetectHypothesis {
 				throw new IllegalStateException("Source file not found!");
 			}*/
 		}		
-		List<DefinitionListWithThm> defThmList = new ArrayList<DefinitionListWithThm>();		
+		List<DefinitionListWithThm> defThmList = new ArrayList<DefinitionListWithThm>();
 		Stats stats = new Stats();
 		if(inputFile.isDirectory()){
 			//if(true) throw new IllegalStateException("input is directory! texFileNamesMap: " + texFileNamesMap);
@@ -337,7 +377,7 @@ public class DetectHypothesis {
 				throw e;
 			}finally{
 				//serialize, so don't discard the items already parsed.
-				serializeDataToFile(stats, defThmList);			
+				serializeDataToFile(stats, defThmList, inputParams);			
 			}
 		}else{
 			BufferedReader inputBF = null;
@@ -355,7 +395,7 @@ public class DetectHypothesis {
 				throw e;
 			}finally{
 				//serialize, so don't discard the items already parsed.
-				serializeDataToFile(stats, defThmList);					
+				serializeDataToFile(stats, defThmList, inputParams);			
 			}
 		}
 		//System.out.println("thmList " +allThmsStrWithSpaceList );
@@ -397,8 +437,7 @@ public class DetectHypothesis {
 		//why do I need this??
 		/*for(DefinitionListWithThm def : defThmList){
 			DefinitionList.add(def.getDefinitionList().toString());
-		}*/
-		
+		}*/		
 		//return stats;
 	}
 
@@ -407,10 +446,17 @@ public class DetectHypothesis {
 	 * The serializations done in this method should remain atomic, i.e. do *not* perform 
 	 * a subset of steps only, since we rely on the different serialized data to come from
 	 * the same source with the same settings.
+	 * @param pathToProjectionMx path to  projection mx, if specified.
 	 */
-	private static void serializeDataToFile(Stats stats, List<DefinitionListWithThm> defThmList) {
+	private static void serializeDataToFile(Stats stats, List<DefinitionListWithThm> defThmList,
+			InputParams inputParams) {
 		//List<Object> listToSerialize = new ArrayList<Object>();
 		//listToSerialize.add(parsedExpressionList);
+		
+		String pathToProjectionMx = inputParams.getPathToProjectionMx();
+		String pathToWordFreqMap = inputParams.pathToWordFreqMap;
+		String fullTermDocumentMxPath = inputParams.fullTermDocumentMxPath;
+		
 		logger.info("Serializing parsedExpressionList to file...");
 		try{
 			FileUtils.serializeObjToFile(parsedExpressionList, parsedExpressionSerialFileStr);		
@@ -443,8 +489,38 @@ public class DetectHypothesis {
 		logger.info("Done serializing parsedExpressionList & co to files! Beginning to compute SVD for parsedExpressionList thms.");
 		
 		/* Creates the term document matrix, and serializes to .mx file.
-		 * If this step fails, need to re-run to produce matrix. Run at end of this method.*/
-		ThmSearch.TermDocumentMatrix.createTermDocumentMatrixSVD(ImmutableList.copyOf(defThmList));
+		 * If this step fails, need to re-run to produce matrix. This should run at end of this method,
+		 * so others have already serialized in case this fails.*/
+		ImmutableList<TheoremContainer> immutableDefThmList = ImmutableList.copyOf(defThmList);
+		if(null == pathToProjectionMx || null == pathToWordFreqMap ){			 
+			ThmSearch.TermDocumentMatrix.createTermDocumentMatrixSVD(immutableDefThmList);			
+		}else{
+			Map<String, Integer> wordFreqMap = getWordFreqMap(pathToWordFreqMap);
+			//first serialize full dimensional TD mx, then project using provided projection mx.
+			ThmSearch.TermDocumentMatrix.serializeHighDimensionalTDMx(immutableDefThmList, fullTermDocumentMxPath, wordFreqMap);
+			//replace the last bit of the path with the name of the reduced mx.
+			String pathToReducedDimTDMx = replaceFullTDMxName(fullTermDocumentMxPath, ThmSearch.TermDocumentMatrix.PROJECTED_MX_NAME);
+			ThmSearch.TermDocumentMatrix.projectTermDocumentMatrix(fullTermDocumentMxPath, pathToProjectionMx, 
+					pathToReducedDimTDMx);
+		}
+	}
+	
+	private static String replaceFullTDMxName(String fullTermDocumentMxPath, String projectedMxName){
+		char separatorChar = File.separatorChar;
+		int i = fullTermDocumentMxPath.length() - 1;
+		while(i > -1 && fullTermDocumentMxPath.charAt(i) != separatorChar){
+			i--;
+		}
+		if(i == -1){
+			return projectedMxName;
+		}
+		return fullTermDocumentMxPath.substring(0, i+1) + projectedMxName;		
+	}
+	
+	@SuppressWarnings("unchecked")
+	private static Map<String, Integer> getWordFreqMap(String pathToWordFreqMap){
+		Map<String, Integer> wordFreqMap = ((List<Map<String, Integer>>)FileUtils.deserializeListFromFile(pathToWordFreqMap)).get(0);
+		return wordFreqMap;
 	}
 	
 	/**

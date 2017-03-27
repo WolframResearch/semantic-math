@@ -472,7 +472,8 @@ public class CollectThm {
 		 */
 		@SuppressWarnings("unchecked")		
 		private static ImmutableMap<String, Integer> extractWordFreqMap() {	
-			String allThmWordsSerialFileStr = "src/thmp/data/allThmWordsMap.dat";
+			//It is "src/thmp/data/allThmWordsMap.dat";
+			String allThmWordsSerialFileStr = thmp.DetectHypothesis.allThmWordsMapSerialFileStr;
 			if(null != servletContext){
 				InputStream allThmWordsSerialInputStream = servletContext.getResourceAsStream(allThmWordsSerialFileStr);
 				Map<String, Integer> map 
@@ -966,11 +967,11 @@ public class CollectThm {
 		}
 
 		/**
-		 * Fills up wordsScoreMapBuilder
-		 * @param wordsScoreMapBuilder
+		 * Fills up wordsScorePreMap
+		 * @param wordsScorePreMap empty map to be filled.
 		 * @param docWordsFreqPreMapNoAnno Map of words and their document-wide frequencies.
 		 */
-		private static void buildScoreMapNoAnno(Map<String, Integer> wordsScorePreMap,
+		public static void buildScoreMapNoAnno(Map<String, Integer> wordsScorePreMap,
 				Map<String, Integer> docWordsFreqPreMapNoAnno){		
 			
 			addWordScoresFromMap(wordsScorePreMap, docWordsFreqPreMapNoAnno);

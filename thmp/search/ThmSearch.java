@@ -3,6 +3,7 @@ package thmp.search;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 import javax.servlet.ServletContext;
@@ -324,7 +325,7 @@ public class ThmSearch {
 		protected static final String PROJECTED_MX_CONTEXT_NAME = "ProjectedTDMatrixContext`";
 		protected static final String FULL_TERM_DOCUMENT_MX_CONTEXT_NAME = "FullTDMatrix`";
 		//projected full term-document matrix, so "v^T" in SVD.
-		protected static final String PROJECTED_MX_NAME = "ProjectedTDMatrix";
+		public static final String PROJECTED_MX_NAME = "ProjectedTDMatrix";
 		private static final String FULL_TERM_DOCUMENT_MX_NAME = "FullTDMatrix";
 		protected static final String CONCATENATED_PROJECTED_TERM_DOCUMENT_MX_NAME = "ConcatenatedTDMatrix";
 		private static KernelLink ml;		
@@ -336,10 +337,42 @@ public class ThmSearch {
 		 * Serialize the high-dimensional term-document mx, 
 		 * as formed from one run of DetectHypothesis.java.  
 		 * @param HighDimTDMatrix presented as *Sparse*Array's.
-		 * fullTermDocumentMxPath such as "0208_001/0208/FullTDMatrix.mx"
+		 * fullTermDocumentMxPath such as "0208_001/0208/FullTDMatrix.mx".
 		 */
-		public static void serializeHighDimensionalTDMx(String HighDimTDSparseMatrix, String fullTermDocumentMxPath){			
-			evaluateWLCommand(FULL_TERM_DOCUMENT_MX_CONTEXT_NAME + "=" + HighDimTDSparseMatrix+"//N");
+		public static void serializeHighDimensionalTDMx(ImmutableList<TheoremContainer> defThmList,
+				String fullTermDocumentMxPath, Map<String, Integer> thmWordsFreqMap){			
+			//String HighDimTDSparseMatrix, 
+			/*ml = MathLinkFactory.createKernelLink(ARGV);
+			System.out.println("MathLink created! "+ ml);
+			//discard initial pakets the kernel sends over.
+			ml.discardAnswer();*/
+			ml = FileUtils.getKernelLinkInstance();
+			String msg = "Kernel instance acquired...";
+			logger.info(msg);
+			//int rowDimension = docMx.length;
+			int rowDimension = thmWordsFreqMap.size();
+			//int mxColDim = docMx[0].length;
+			int mxColDim = defThmList.size();
+			
+			//set up the matrix corresponding to docMx, to be SVD'd. 
+			//adjust mx entries based on correlation first	
+			//StringBuilder mxSB = new StringBuilder("m = Developer`ToPackedArray@");
+			//mxSB.append(toNestedList(docMx)).append("//N;");
+			/* *Need* to specify dimension! Since the Automatic dimension might be less than 
+			 * or equal to the size of the keywordList, if some words are not hit by the current thm corpus. */
+			StringBuilder mxSB = TriggerMathThm2.sparseArrayInputSB(defThmList, thmWordsFreqMap)
+					.insert(0, "m=SparseArray[1+").append(",{"+rowDimension).append(",").append(mxColDim+"}];");
+			//System.out.println("ThmSearch. - mxSB " + mxSB);
+			msg = "ThmSearch.TermDocumentMatrix - mxSB.length(): " + mxSB.length();
+			System.out.println(msg);
+			logger.info(msg);
+			
+			//ml.evaluate(mxSB.toString()); //mxSB.append(";") here causes memory bloat?!
+			
+			evaluateWLCommand(FULL_TERM_DOCUMENT_MX_CONTEXT_NAME + "=" + mxSB.toString());
+			msg = "Kernel has the matrix!";
+			logger.info(msg);
+			System.out.println(msg);
 			//don't use special context for now, March 2017
 			evaluateWLCommand("DumpSave[\"" + fullTermDocumentMxPath + "\"," + FULL_TERM_DOCUMENT_MX_NAME + "]");
 		}
@@ -352,7 +385,7 @@ public class ThmSearch {
 		 * @param termDocumentMxPath Path to projected term document matrix (as row vectors), e.g. 
 		 * "0208_001/0208/ProjectedTDMatrix.mx"
 		 */
-		public static void createTermDocumentMatrixFromProjectionMx(String fullTermDocumentMxPath, String projectionMxPath, 
+		public static void projectTermDocumentMatrix(String fullTermDocumentMxPath, String projectionMxPath, 
 				String projectedTermDocumentMxPath) {	
 			evaluateWLCommand("<<"+projectionMxPath);
 			//full mx that was DumpSave'd from one tar file.
@@ -368,8 +401,7 @@ public class ThmSearch {
 			//String corMxName, String projectedMxName
 			ProjectionMatrix.applyProjectionMatrix(fullTDMxName, dInverseName, uTransposeName, 
 					corMxName, PROJECTED_MX_NAME);
-			//PATH_TO_MX should be to directory! 
-			evaluateWLCommand("DumpSave[\"" + termDocumentMxPath  + "\" "+ PROJECTED_MX_NAME+ "]");
+			evaluateWLCommand("DumpSave[\"" + projectedTermDocumentMxPath  + "\" "+ PROJECTED_MX_NAME+ "]");
 		}
 		
 		public static void createTermDocumentMatrixSVD() {	
@@ -643,7 +675,8 @@ public class ThmSearch {
 				//System.out.println("Done clipping!");	
 				boolean getCorMx = false;
 				
-				//the entries in clipped correlation are between 0.3 and 1.
+				/*The entries in clipped correlation are between 0.3 and 1. Correlation between *words*,
+				  not theorems. */
 				//subtract IdentityMatrix to avoid self-compounding
 				ml.evaluate("corMx = Clip[Correlation[Transpose[m]]-IdentityMatrix[" + rowDimension 
 						+ "], {.6, Infinity}, {0, 0}]/.Indeterminate->0.0;");

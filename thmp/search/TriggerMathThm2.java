@@ -282,6 +282,13 @@ public class TriggerMathThm2 {
 		return sparseArraySB;
 	}
 	
+	private static void gatherTermDocumentMxEntries(ImmutableList<TheoremContainer> defThmList,
+			List<int[]> coordinatesList, List<Double> weightsList) {
+		//map of annotated words and their scores. Previous run's scores
+		Map<String, Integer> wordsScoreMap = CollectThm.ThmWordsMaps.get_wordsScoreMapNoAnno();
+		gatherTermDocumentMxEntries(defThmList, coordinatesList, weightsList, wordsScoreMap);	
+	}
+	
 	/**
 	 * Gather the TermDocumentMatrix entries to be turned into SparseArray.
 	 * Weigh inversely based on word frequencies extracted from 
@@ -290,10 +297,7 @@ public class TriggerMathThm2 {
 	 * Be careful about thm ordering used! Since col index in term document mx depends on it!
 	 */
 	private static void gatherTermDocumentMxEntries(ImmutableList<TheoremContainer> defThmList,
-			List<int[]> coordinatesList, List<Double> weightsList) {
-		//System.out.println("TriggerMathThm2 = keywordIndexDict : "+keywordIndexDict);
-		//map of annotated words and their scores. Previous run's scores
-		Map<String, Integer> wordsScoreMap = CollectThm.ThmWordsMaps.get_wordsScoreMapNoAnno();
+			List<int[]> coordinatesList, List<Double> weightsList, Map<String, Integer> wordsScoreMap) {
 		
 		Iterator<TheoremContainer> defThmListIter = defThmList.iterator();
 		
@@ -745,10 +749,28 @@ public class TriggerMathThm2 {
 	public static StringBuilder sparseArrayInputSB(ImmutableList<TheoremContainer> thmList){
 		
 		List<int[]> coordinatesList = new ArrayList<int[]>();
-		List<Double> weightsList = new ArrayList<Double>();
-		
+		List<Double> weightsList = new ArrayList<Double>();		
 		gatherTermDocumentMxEntries(thmList, coordinatesList, weightsList);
 		/*mathObjMx now presented as sparse array*/		
+		return constructSparseArrayInputString(coordinatesList, weightsList);
+	}
+	
+	/**
+	 * @param thmList
+	 * @param docWordsFreqMap Use specified frequency map to re-create scores.
+	 * @return
+	 */
+	public static StringBuilder sparseArrayInputSB(ImmutableList<TheoremContainer> thmList,
+			Map<String, Integer> docWordsFreqMap){
+		
+		List<int[]> coordinatesList = new ArrayList<int[]>();
+		List<Double> weightsList = new ArrayList<Double>();
+		Map<String, Integer> wordsScoreMap = new HashMap<String, Integer>();
+		
+		CollectThm.ThmWordsMaps.buildScoreMapNoAnno(wordsScoreMap, docWordsFreqMap);			
+		gatherTermDocumentMxEntries(thmList, coordinatesList, weightsList, wordsScoreMap);
+		
+		/*mathObjMx now presented as sparse array*/	
 		return constructSparseArrayInputString(coordinatesList, weightsList);
 	}
 	
