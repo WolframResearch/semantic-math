@@ -87,7 +87,7 @@ public class ThmSearch {
 			
 			//ml.evaluate("TermDocumentMatrix`mxMeanValue ");
 			//System.out.println("mxMeanValue: " + ml.getExpr());
-			ml.evaluate("AppendTo[$ContextPath, \""+ TermDocumentMatrix.MX_CONTEXT_NAME +"\"];");
+			ml.evaluate("AppendTo[$ContextPath, \""+ TermDocumentMatrix.PROJECTION_MX_CONTEXT_NAME +"\"];");
 			ml.discardAnswer();
 			
 			//should uncompress using this code here.
@@ -131,21 +131,15 @@ public class ThmSearch {
 	 * @throws MathLinkException 
 	 * @throws ExprFormatException 
 	 */
-	public static List<Integer> findNearestVecs(String queryVecStr, int ... num){
-		//System.out.println("queryStr: " + queryStr);
-		//String s = "";
-		//transform query vector to low dimensional space 
-		//String query = "{{1,1,0,0}}";
-		//ml.evaluate("q = " + queryStr + ".mx.Transpose[mx];");
-		//ml.discardAnswer();		
-		
+	public static List<Integer> findNearestVecs(String queryVecStr, int ... num){		
 		try{
 			//ml.evaluate("corMx");
 			//System.out.println("thmsearch - corMx : " + ml.getExpr());
 			String msg = "Transposing and applying corMx...";
 			logger.info(msg);
-			//process query first with corMx. Convert to column vec.			
-			ml.evaluate("q0 = Transpose[" + queryVecStr + "] + 0.08*corMx.Transpose["+ queryVecStr +"];");
+			//process query first with corMx. Convert to column vec.		
+			ml.evaluate("queryVecStrTranspose= Transpose[" + queryVecStr + "]; "
+					+ "q0 = queryVecStrTranspose + 0.08*corMx.queryVecStrTranspose;");
 			boolean getQ = false;
 			if(getQ){
 				ml.waitForAnswer();
@@ -321,13 +315,13 @@ public class ThmSearch {
 		
 		//private static final String PATH_TO_MX = "FileNameJoin[{Directory[], \"termDocumentMatrixSVD.mx\"}]";		
 		private static final String PATH_TO_MX = getSystemMxFilePath();
-		private static final String MX_CONTEXT_NAME = "TermDocumentMatrix`";
-		protected static final String PROJECTED_MX_CONTEXT_NAME = "ProjectedTDMatrixContext`";
+		private static final String PROJECTION_MX_CONTEXT_NAME = "TermDocumentMatrix`";
+		//protected static final String PROJECTED_MX_CONTEXT_NAME = "ProjectedTDMatrixContext`";
 		protected static final String FULL_TERM_DOCUMENT_MX_CONTEXT_NAME = "FullTDMatrix`";
 		//projected full term-document matrix, so "v^T" in SVD.
 		public static final String PROJECTED_MX_NAME = "ProjectedTDMatrix";
-		private static final String FULL_TERM_DOCUMENT_MX_NAME = "FullTDMatrix";
-		protected static final String CONCATENATED_PROJECTED_TERM_DOCUMENT_MX_NAME = "ConcatenatedTDMatrix";
+		public static final String FULL_TERM_DOCUMENT_MX_NAME = "FullTDMatrix";
+		protected static final String COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME = "CombinedTDMatrix";
 		private static KernelLink ml;		
 		private static final String D_INVERSE_NAME = "dInverse";
 		private static final String U_TRANSPOSE_NAME = "uTranspose";
@@ -347,8 +341,7 @@ public class ThmSearch {
 			//discard initial pakets the kernel sends over.
 			ml.discardAnswer();*/
 			ml = FileUtils.getKernelLinkInstance();
-			String msg = "Kernel instance acquired...";
-			logger.info(msg);
+
 			//int rowDimension = docMx.length;
 			int rowDimension = thmWordsFreqMap.size();
 			//int mxColDim = docMx[0].length;
@@ -360,16 +353,17 @@ public class ThmSearch {
 			//mxSB.append(toNestedList(docMx)).append("//N;");
 			/* *Need* to specify dimension! Since the Automatic dimension might be less than 
 			 * or equal to the size of the keywordList, if some words are not hit by the current thm corpus. */
-			StringBuilder mxSB = TriggerMathThm2.sparseArrayInputSB(defThmList, thmWordsFreqMap)
+			StringBuilder mxSB = TriggerMathThm2.sparseArrayInputSB(defThmList, thmWordsFreqMap) //HERE
 					.insert(0, "m=SparseArray[1+").append(",{"+rowDimension).append(",").append(mxColDim+"}];");
 			//System.out.println("ThmSearch. - mxSB " + mxSB);
-			msg = "ThmSearch.TermDocumentMatrix - mxSB.length(): " + mxSB.length();
+			String msg = "ThmSearch.TermDocumentMatrix - mxSB.length(): " + mxSB.length();
 			System.out.println(msg);
 			logger.info(msg);
 			
-			//ml.evaluate(mxSB.toString()); //mxSB.append(";") here causes memory bloat?!
+			//ml.evaluate(mxSB.toString()); //mxSB.append(";") here causes memory bloat?!			
+			evaluateWLCommand(FULL_TERM_DOCUMENT_MX_NAME + "=" + mxSB.toString());
+			//System.out.println("ThmSearch.TermDocumentMatrix.SparseArray formed: " + mxSB);
 			
-			evaluateWLCommand(FULL_TERM_DOCUMENT_MX_CONTEXT_NAME + "=" + mxSB.toString());
 			msg = "Kernel has the matrix!";
 			logger.info(msg);
 			System.out.println(msg);
@@ -387,21 +381,25 @@ public class ThmSearch {
 		 */
 		public static void projectTermDocumentMatrix(String fullTermDocumentMxPath, String projectionMxPath, 
 				String projectedTermDocumentMxPath) {	
-			evaluateWLCommand("<<"+projectionMxPath);
+			String msg = "ThmSearch.TermDocumentMatrix.projectTermDocumentMatrix - starting projection";
+			System.out.println(msg);
+			logger.info(msg);
+			evaluateWLCommand("<<"+projectionMxPath + "; AppendTo[$ContextPath, \"" + PROJECTION_MX_CONTEXT_NAME + "\"]");
 			//full mx that was DumpSave'd from one tar file.
 			//may not be using context!
-			evaluateWLCommand("<<"+fullTermDocumentMxPath + "; AppendTo[$ContextPath," + PROJECTED_MX_CONTEXT_NAME + "]");
-			
+			evaluateWLCommand("<<"+fullTermDocumentMxPath// + "; AppendTo[$ContextPath," + PROJECTED_MX_CONTEXT_NAME + "]"
+					);	
 			//evaluateWLCommand(PROJECTED_MX_CONTEXT_NAME , true, false);
 			String fullTDMxName = FULL_TERM_DOCUMENT_MX_NAME;
 			String dInverseName = D_INVERSE_NAME;
 			String uTransposeName = U_TRANSPOSE_NAME;
 			String corMxName = COR_MX_NAME;
-			//String queryMxStrName, String dInverseName, String uTransposeName, 
-			//String corMxName, String projectedMxName
 			ProjectionMatrix.applyProjectionMatrix(fullTDMxName, dInverseName, uTransposeName, 
 					corMxName, PROJECTED_MX_NAME);
-			evaluateWLCommand("DumpSave[\"" + projectedTermDocumentMxPath  + "\" "+ PROJECTED_MX_NAME+ "]");
+			evaluateWLCommand("DumpSave[\"" + projectedTermDocumentMxPath + "\", "+ PROJECTED_MX_NAME+ "]");
+			msg = "ThmSearch.TermDocumentMatrix.projectTermDocumentMatrix - Done projecting";
+			System.out.println(msg);
+			logger.info(msg);
 		}
 		
 		public static void createTermDocumentMatrixSVD() {	
@@ -450,7 +448,7 @@ public class ThmSearch {
 				}else{	
 					ml.discardAnswer();	
 				}
-				ml.evaluate("Begin[\""+ MX_CONTEXT_NAME +"\"];");
+				ml.evaluate("Begin[\""+ PROJECTION_MX_CONTEXT_NAME +"\"];");
 				ml.discardAnswer();
 				
 				//corMx should be computed using correlation mx
@@ -643,7 +641,7 @@ public class ThmSearch {
 				}else{	
 					ml.discardAnswer();	
 				}
-				ml.evaluate("Begin[\""+ MX_CONTEXT_NAME +"\"];");
+				ml.evaluate("Begin[\""+ PROJECTION_MX_CONTEXT_NAME +"\"];");
 				ml.discardAnswer();
 				
 				//corMx should be computed using correlation mx

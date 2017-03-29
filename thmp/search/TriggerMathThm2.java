@@ -80,7 +80,6 @@ public class TriggerMathThm2 {
 	 * Debug variables
 	 */
 	private static final boolean DEBUG = false;
-
 	private static final double RELATED_WORD_MULTIPLICATION_FACTOR = 4/5.0;
 	
 	static {
@@ -787,8 +786,7 @@ public class TriggerMathThm2 {
 
 	public static int keywordDictSize(){
 		return keywordIndexDict.size();
-	}
-	
+	}	
 	
 	/**
 	 * words and their indices in term document matrix (mathObjMx). Same set of words 

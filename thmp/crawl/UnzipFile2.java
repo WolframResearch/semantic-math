@@ -50,8 +50,7 @@ public class UnzipFile2 {
 	 * @param source
 	 *            directory whose files are to be checked.
 	 */
-	private static List<String> getFileNames(String srcDir) {
-		
+	private static List<String> getFileNames(String srcDir) {		
 		List<String> fileNames = new ArrayList<String>();
 		File dir = new File(srcDir);
 		if (!dir.isDirectory()) {
@@ -59,10 +58,8 @@ public class UnzipFile2 {
 			throw new IllegalStateException("Source directory" + srcDir + " is not a directory!");
 		}
 		File[] files = dir.listFiles();
-		//System.out.println("srcDir inside getFileNames " + srcDir);
 		for (File file : files) {
 			String fileName = file.getName();
-			//System.out.println("reading in fileName inside getFileNames(): " + fileName);
 			// only append ones with .gz extension
 			if (fileName.matches(".*\\.gz$")) {
 				fileNames.add(fileName);

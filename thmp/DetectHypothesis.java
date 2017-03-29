@@ -66,14 +66,20 @@ public class DetectHypothesis {
 	
 	private static final String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
 	private static final String parsedExpressionStringFileStr = "src/thmp/data/parsedExpressionList.txt";
+	private static final String parsedExpressionSerialFileNameStr = "parsedExpressionList.dat";
+	private static final String parsedExpressionStringFileNameStr = "parsedExpressionList.txt";
+	
 	private static final String allThmsStringFileStr = "src/thmp/data/allThmsList.txt";
+	private static final String allThmsStringFileNameStr = "allThmsList.txt";
 	
 	//files to serialize theorem words to.
 	public static final String allThmWordsMapSerialFileStr = "src/thmp/data/allThmWordsMap.dat";
 	private static final String allThmWordsMapStringFileStr = "src/thmp/data/allThmWordsMap.txt";
+	public static final String allThmWordsMapSerialFileNameStr = "allThmWordsMap.dat";
+	private static final String allThmWordsMapStringFileNameStr = "allThmWordsMap.txt";
 	//not used by next runs, but nice to have the list for inspection.
-	private static final String allThmWordsSerialFileStr = "src/thmp/data/allThmWordsList.dat";
-	private static final String allThmWordsStringFileStr = "src/thmp/data/allThmWordsList.txt";
+	//private static final String allThmWordsSerialFileStr = "src/thmp/data/allThmWordsList.dat";
+	//private static final String allThmWordsStringFileStr = "src/thmp/data/allThmWordsList.txt";
 	
 	private static final String statsFileStr = "src/thmp/data/parseStats.txt";
 	
@@ -268,12 +274,21 @@ public class DetectHypothesis {
 		String serializedTexFileNamesFileStr;
 		//e.g. "0208_001/0208/ProjectedTDMatrix.mx"
 		String pathToProjectionMx;
+		//map of word frequencies.
+		String pathToWordFreqMap;
+		String parsedExpressionSerialFileStr = DetectHypothesis.parsedExpressionSerialFileStr;
+		String allThmWordsMapSerialFileStr = DetectHypothesis.allThmWordsMapSerialFileStr;
+		String allThmWordsMapStringFileStr = DetectHypothesis.allThmWordsMapStringFileStr;
+		String parsedExpressionStringFileStr = DetectHypothesis.parsedExpressionStringFileStr; //parsedExpressionStrList
+		String allThmsStringFileStr = DetectHypothesis.allThmsStringFileStr; //allThmsStrWithSpaceList
 		
 		//where to put the full dim TD matrix
 		String fullTermDocumentMxPath;
-		//map of word frequencies.
-		String pathToWordFreqMap;
-		
+		/**
+		 * Usual use needs *4* parameters in args. March 2017.
+		 * texFilesDirPath, serializedTexFileNamesFileStr, pathToProjectionMx, pathToWordFreqMap.
+		 * @param args
+		 */
 		InputParams(String args[]){
 			int argsLen = args.length;
 			if(argsLen > 1){
@@ -281,10 +296,24 @@ public class DetectHypothesis {
 				//inputFile = new File(argsSrcStr);
 				serializedTexFileNamesFileStr = args[1];
 			
-				if(argsLen > 4){
+				if(argsLen > 3){
 					pathToProjectionMx = args[2];
-					fullTermDocumentMxPath = args[3];
-					pathToWordFreqMap = args[4];
+					pathToWordFreqMap = args[3];
+					char fileSeparatorChar = File.separatorChar;
+					int texFilesDirPathLen = texFilesDirPath.length();
+					if(texFilesDirPath.charAt(texFilesDirPathLen-1) != fileSeparatorChar){
+						texFilesDirPath = texFilesDirPath + fileSeparatorChar;
+					}
+					
+					this.parsedExpressionSerialFileStr = texFilesDirPath + DetectHypothesis.parsedExpressionSerialFileNameStr;
+					this.allThmWordsMapSerialFileStr = texFilesDirPath + DetectHypothesis.allThmWordsMapSerialFileNameStr;
+					this.allThmWordsMapStringFileStr = texFilesDirPath + DetectHypothesis.allThmWordsMapStringFileNameStr;
+					this.parsedExpressionStringFileStr = texFilesDirPath + DetectHypothesis.parsedExpressionStringFileNameStr; //parsedExpressionStrList
+					this.allThmsStringFileStr = texFilesDirPath + DetectHypothesis.allThmsStringFileNameStr;
+					
+					//create fullTermDocumentMxPath using base path
+					this.fullTermDocumentMxPath = texFilesDirPath + ThmSearch.TermDocumentMatrix.FULL_TERM_DOCUMENT_MX_NAME + ".mx";
+					
 				}			
 			}
 		}
@@ -294,27 +323,24 @@ public class DetectHypothesis {
 	}
 	
 	/**
+	 * only parse if sentence is hypothesis, when parsing outside theorems.
+		to build up variableNamesMMap. Also collect the sentence that 
+		defines a variable, to include inside the theorem for search.
 	 * Normal use is when args is 2-String argument, first is path to dir containing
 	 * tex files, second is list of tex files in that dir.
 	 * 1st, path to directory containing .tex files. 
 	 * 2nd, texFileNamesSerialFileStr, path to file names that contain names of the .tex files 
 	 * that should be parsed.
 	 * 3rd, path to projection mx.
+	 * Should use configuration file!
 	 * @param args
 	 * @throws Throwable
 	 */
 	public static void main(String[] args){
-		//only parse if sentence is hypothesis, when parsing outside theorems.
-		//to build up variableNamesMMap. Should also collect the sentence that 
-		//defines a variable, to include inside the theorem for search.
-		
-		/* read in a directory name, parse all the files individually. */ 
-		//BufferedReader inputBF = null;		
+		/* read in a directory name, parse all the files individually. */ 		
 		//try to read file path from command line argument first
 		//path should be absolute
-		int argsLen = args.length;
-		//boolean inputBFCreatedBool = false;
-		//boolean isDirectory = false;
+		
 		//could be file or dir
 		File inputFile = null;
 		InputParams inputParams = new InputParams(args);
@@ -456,32 +482,37 @@ public class DetectHypothesis {
 		String pathToProjectionMx = inputParams.getPathToProjectionMx();
 		String pathToWordFreqMap = inputParams.pathToWordFreqMap;
 		String fullTermDocumentMxPath = inputParams.fullTermDocumentMxPath;
+		String parsedExpressionSerialFileStr = inputParams.parsedExpressionSerialFileStr;
+		String allThmWordsMapSerialFileStr = inputParams.allThmWordsMapSerialFileStr;
+		String allThmWordsMapStringFileStr = inputParams.allThmWordsMapStringFileStr;
+		String parsedExpressionStringFileStr = inputParams.parsedExpressionStringFileStr;
+		String allThmsStringFileStr = inputParams.allThmsStringFileStr;
+		//inputParams.allThmWordsStringFileStr;
 		
-		logger.info("Serializing parsedExpressionList to file...");
+		boolean projectionPathsNotNull = (null != pathToProjectionMx && null != pathToWordFreqMap);
+		
+		logger.info("Serializing parsedExpressionList, etc, to file...");
 		try{
 			FileUtils.serializeObjToFile(parsedExpressionList, parsedExpressionSerialFileStr);		
 			//serialize words used for context vecs
-			//wordListToSerializeList.add(ALL_THM_WORDS_LIST);
-			//System.out.println("------++++++++-------putting in : ALL_THM_WORDS_LIST.size " + ALL_THM_WORDS_LIST.size());
-			FileUtils.serializeObjToFile(ALL_THM_WORDS_LIST, allThmWordsSerialFileStr);
+			//FileUtils.serializeObjToFile(ALL_THM_WORDS_LIST, allThmWordsSerialFileStr);
 			
 			List<Map<String, Integer>> wordMapToSerializeList = new ArrayList<Map<String, Integer>>();
 			wordMapToSerializeList.add(ALL_THM_WORDS_FREQ_MAP);
 			FileUtils.serializeObjToFile(wordMapToSerializeList, allThmWordsMapSerialFileStr);
-			//this list is for human inspecting the result.
+			//this list is for human inspection.
 			List<String> wordMapStringList = new ArrayList<String>();
 			wordMapStringList.add(ALL_THM_WORDS_FREQ_MAP.toString());
 			FileUtils.writeToFile(wordMapStringList, allThmWordsMapStringFileStr);
 			
 			//write parsedExpressionList to file
 			FileUtils.writeToFile(parsedExpressionStrList, parsedExpressionStringFileStr);
-			//FileUtils.writeToFile(DefinitionList, definitionStrFileStr);
 			
 			//write just the thms
 			FileUtils.writeToFile(allThmsStrWithSpaceList, allThmsStringFileStr);
 			//append to stats file!
 			FileUtils.appendObjToFile(stats, statsFileStr);
-			FileUtils.writeToFile(ALL_THM_WORDS_LIST, allThmWordsStringFileStr);
+			//FileUtils.writeToFile(ALL_THM_WORDS_LIST, allThmWordsStringFileStr);
 		}catch(Throwable e){
 			logger.error("Error occurred when writing and serializing to file! " + e.getMessage());
 			throw e;
@@ -492,9 +523,7 @@ public class DetectHypothesis {
 		 * If this step fails, need to re-run to produce matrix. This should run at end of this method,
 		 * so others have already serialized in case this fails.*/
 		ImmutableList<TheoremContainer> immutableDefThmList = ImmutableList.copyOf(defThmList);
-		if(null == pathToProjectionMx || null == pathToWordFreqMap ){			 
-			ThmSearch.TermDocumentMatrix.createTermDocumentMatrixSVD(immutableDefThmList);			
-		}else{
+		if(projectionPathsNotNull){
 			Map<String, Integer> wordFreqMap = getWordFreqMap(pathToWordFreqMap);
 			//first serialize full dimensional TD mx, then project using provided projection mx.
 			ThmSearch.TermDocumentMatrix.serializeHighDimensionalTDMx(immutableDefThmList, fullTermDocumentMxPath, wordFreqMap);
@@ -502,6 +531,8 @@ public class DetectHypothesis {
 			String pathToReducedDimTDMx = replaceFullTDMxName(fullTermDocumentMxPath, ThmSearch.TermDocumentMatrix.PROJECTED_MX_NAME);
 			ThmSearch.TermDocumentMatrix.projectTermDocumentMatrix(fullTermDocumentMxPath, pathToProjectionMx, 
 					pathToReducedDimTDMx);
+		}else{
+			ThmSearch.TermDocumentMatrix.createTermDocumentMatrixSVD(immutableDefThmList);						
 		}
 	}
 	
@@ -514,7 +545,7 @@ public class DetectHypothesis {
 		if(i == -1){
 			return projectedMxName;
 		}
-		return fullTermDocumentMxPath.substring(0, i+1) + projectedMxName;		
+		return fullTermDocumentMxPath.substring(0, i+1) + projectedMxName + ".mx";		
 	}
 	
 	@SuppressWarnings("unchecked")

@@ -51,10 +51,11 @@ public class MathLinkUtils {
 				return PLACEHOLDER_EXPR;
 			}
 		}catch(MathLinkException e){
-			String msg = "";
+			String msg = "MathLinkException when evaluating: " + cmd;
 			System.out.println(msg);
 			logger.error(msg);
-			if(throwOnException){
+			if(true){
+			//if(throwOnException){
 				throw new IllegalStateException(e);
 			}else{
 				return PLACEHOLDER_EXPR;				
