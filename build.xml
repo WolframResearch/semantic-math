@@ -10,13 +10,14 @@
 	<property name="utils_srcdir" value="${basedir}/src/thmp/utils" />
 	<property name="datadir" value="${basedir}/src/thmp/data" />
 	<property name="server_datadir" value="/Users/yihed/Documents/workspaceEE/ThmpServlet/WebContent/src/thmp/data" />
+	<property name="server_libdir" value="/Users/yihed/Documents/workspaceEE/ThmpServlet/WebContent/WEB-INF/lib" />
 	<property name="exceptionsSrcdir" value="${basedir}/src/thmp/exceptions/" />
 
 	<!-- main lib containing jar such as JLink, Guava etc -->
 	<property name="libdir" value="${basedir}/lib/" />
 	<!-- lib containing jars such as thmSearch, thmUtils etc-->
 	<property name="thmplibdir" value="${basedir}/bin/" />
-	<property name="thmParse_jarname" value="thmParse.jar" />
+	<property name="thmParse_jarname" value="thmProj.jar" />
 	<property name="thmUtils_jarName" value="thmUtils.jar" />
 	<property name="thmSearch_jarName" value="thmSearch.jar" />
 
@@ -134,6 +135,11 @@
 				<include name="lexicon.txt" />
 			</fileset>
 		</copy>
+		<copy todir="${server_libdir}">				
+			<fileset dir="${basedir}">
+					<include name="${thmParse_jarname}" />
+			</fileset>
+		</copy>			
 	</target>
 
 	<target name="run" description="run the build process">
@@ -144,6 +150,7 @@
 		<antcall target="compileSearch" />		
 		<antcall target="compileRunner" />-->
 		<antcall target="buildjar" />
+		<antcall target="copyJarsToThmpServlet" />
 	</target>
 
 </project>

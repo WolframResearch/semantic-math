@@ -1792,8 +1792,9 @@ public class ThmP1 {
 		}
 		ThmP1AuxiliaryClass.convertStructToTexAssert(structList);
 		
-		System.out.println("\n^^^^structList: " + structList);		
-		parseState.setTokenList(structList);
+		System.out.println("\n^^^^structList: " + structList);			
+		parseState.setTokenList(structList);		
+		
 		return parseState;
 	}
 
@@ -2022,6 +2023,7 @@ public class ThmP1 {
 		// for pronouns
 		int recentEntIndex = -1;
 
+		List<Struct> originalNonSpanningParseStructList = inputStructList;
 		// A matrix of List's. Dimenions of first two Lists are same: square
 		// matrix
 		List<List<StructList>> mx = new ArrayList<List<StructList>>(inputStructListSize);
@@ -2174,7 +2176,11 @@ public class ThmP1 {
 									&& ((String) struct1.prev1()).matches("it|they") && struct1.prev2() != null
 									&& struct1.prev2().equals("")) {
 								if (recentEnt != null && recentEntIndex < j) {
-									String tempName = recentEnt.struct().get("name");									
+									String tempName = null; 
+									//could be a conjunction.
+									if(!recentEnt.isStructA()){
+										tempName = recentEnt.struct().get("name");	
+									}								
 									String name = tempName != null ? tempName : "";
 									struct1.set_prev2(name);
 								}
@@ -2293,7 +2299,6 @@ public class ThmP1 {
 
 										if (l != inputStructListSize - 1)
 											called += " ";
-
 									}
 									// reached end of newly defined word, now
 									// more usual sentence
@@ -2661,7 +2666,7 @@ public class ThmP1 {
 			//methods are introduced). List to be extended.
 			
 			isReparse = true;
-			//negative side effects to parseState that should be discarded? <--side effects yet, 
+			//negative side effects to parseState that should be discarded? <--side effects yes, 
 			//but don't think they are negative
 			parseState.setTokenList(ConditionalParse.superimposeStructList(parseState.getPrevTokenList(), 
 					parseState.getTokenList()));
@@ -2676,12 +2681,12 @@ public class ThmP1 {
 		else if(!isReparse || totalNumUnitsInStructList(inputStructList) > 2){
 			
 			List<StructList> structListList = new ArrayList<StructList>();
-			//list of integral 2-tuples with row and column coordinates.
+			//list of integral 2-tuples with row and column coordinates in mx.
 			//The coordinates at index i are those of the struct at index i
-			//in parsedStructList.
-			List<int[]> structCoordinates = new ArrayList<int[]>();
-			
+			//in parsedStructList (tokenlist).
+			List<int[]> structCoordinates = new ArrayList<int[]>();			
 			int i = 0, j = inputStructListSize - 1;
+			/*Get the upper right edge tip of each nontrivial block in the matrix*/
 			while (j > -1) {
 				i = 0;
 				while (mx.get(i).get(j).size() == 0) {
@@ -2795,17 +2800,17 @@ public class ThmP1 {
 			//with NONE, don't parse again. Half is a good threshold
 			if(commandNumUnitsWithHeadNoneSum > inputStructList.size()/2){
 				//parse again.
-				//form new structList
-				List<Struct> newStructList = new ArrayList<Struct>();
-				
+				//form new structList, so don't temper with original one.
+				List<Struct> newStructList = new ArrayList<Struct>();				
 				for(int k = 0; k < structListList.size(); k++){
 					StructList structList_i = structListList.get(k);					
-					//get something other than 0th??
+					//get something besides 0th??
 					newStructList.add(structList_i.get(0));					
 				}
-				//don't set here! Set in parseAgain parseState.setTokenList(newStructList);
+				//System.out.println("ThmP1 (right before parseAgain() " + parseState.getTokenList());
+				//don't set here! Set in parseAgain -> parseState.setTokenList(newStructList);
 				/*parseAgain() defluffs based on tokens that are not connected to neighbors.*/
-				ParseAgain.parseAgain(newStructList, structCoordinates, parseState, mx);
+				ParseAgain.parseAgain(newStructList, structCoordinates, parseState, mx, originalNonSpanningParseStructList);
 				
 				System.out.println("\n=__+++++_======structList after Defluffing round 1: " + parseState.getTokenList());
 				

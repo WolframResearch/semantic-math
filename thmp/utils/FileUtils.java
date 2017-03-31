@@ -130,6 +130,8 @@ public class FileUtils {
 	
 	/**
 	 * Writes objects in iterable to the file specified by outputFileStr.
+	 * Put objects that are not already List as first element in a List, but
+	 * if obj is already a list, serialize that List (e.g. parsedExpressionList).
 	 * @param list
 	 * @param outputFileStr
 	 */
@@ -181,14 +183,15 @@ public class FileUtils {
 			e.printStackTrace();
 			throw new IllegalStateException("Serialization data file not found!");
 		}
-		
 		return deserializeListFromInputStream(fileInputStream, false);
 	}
 
 	public static Object deserializeListFromInputStream(InputStream inputStream) {
 		return deserializeListFromInputStream(inputStream, false);
 	}
+	
 	/**
+	 * Returns the first object read from inputStream.
 	 * @param deserializedList
 	 * @param fileInputStream
 	 * @param checkVersion whether to check for DESERIAL_VERSION_NUM 
@@ -204,9 +207,9 @@ public class FileUtils {
 			silentClose(inputStream);
 			e.printStackTrace();
 			throw new IllegalStateException("IOException while opening ObjectOutputStream.");
-		}
-		
+		}		
 		try{
+			//read first object in list
 			deserializedObj = objectInputStream.readObject();
 			if(checkVersion){
 				int serialVersionInt = (int)objectInputStream.readObject();
@@ -218,8 +221,7 @@ public class FileUtils {
 								+ "inconsistencies for data used for forming query and theorem pool context vectors.";
 						logger.error(msg);
 						throw new IllegalStateException(msg);
-					}
-					
+					}					
 				}/** else this must be first time deserializing in this JVM session, and so must
 					have been set atomically just now. */				
 			}
@@ -233,13 +235,8 @@ public class FileUtils {
 			e.printStackTrace();
 			throw new IllegalStateException("ClassNotFoundException while writing to file or closing resources.");
 		}finally{
-			try{
-				objectInputStream.close();
-				inputStream.close();
-			}catch(IOException e){
-				e.printStackTrace();
-				throw new IllegalStateException("IOException while closing resources");
-			}
+			silentClose(objectInputStream);
+			silentClose(inputStream);
 		}
 		return deserializedObj;
 	}

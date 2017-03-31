@@ -25,7 +25,7 @@ public class ParseAgain {
 	 * @param parseState
 	 */
 	public static void parseAgain(List<Struct> structList, List<int[]> structCoordinates, 
-			ParseState parseState, List<List<StructList>> mx){
+			ParseState parseState, List<List<StructList>> mx, List<Struct> originalNonSpanningParseStructList){
 		//pick up Structs that are not connected to either neighbor,
 		//which are those whose left neighbor has row column index i-1, 
 		//and whose right neighbor has row index i+1.
@@ -35,7 +35,7 @@ public class ParseAgain {
 		List<Struct> oneNeighborStructList = new ArrayList<Struct>();
 		List<Integer> oneNeighborStructIndexList = new ArrayList<Integer>();
 		
-		List<Struct> originalNonSpanningParseStructList = parseState.getTokenList();
+		//List<Struct> originalNonSpanningParseStructList = parseState.getTokenList();
 		//System.out.println("originalNonSpanningParseStructList len " + originalNonSpanningParseStructList.size());
 		
 		//array to indicate which ones to exclude, 1 means exclude. Think of as bit vector.
@@ -67,7 +67,8 @@ public class ParseAgain {
 			//and next row index is one greater than current col.
 			if(prevCoordinateColIndex == curRow-1 //<= 
 					&& nextCoordinateRowIndex == curCol+1){ //>=
-				/*But this condition is trivially satisfied.*/
+				/*But this condition should be trivially satisfied !!
+				 * but in practice it doesn't always, why??*/
 				loneStructList.add(struct_i);
 				loneStructIndexList.add(i);
 			}else {
@@ -76,11 +77,11 @@ public class ParseAgain {
 			}
 		}
 		System.out.println("ParseAgain - !loneStructList! " + loneStructList);
-		System.out.println("!structCoordinates! " );
+		/*System.out.println("!structCoordinates! " );
 		for(int[] s : structCoordinates){
 			 System.out.println(Arrays.toString(s));
 		}
-		System.out.println(structList);
+		System.out.println(structList);*/
 		//iterate through combinations, in each of which a subset 
 		//of loneStructList is missing.
 		//all possible combinations amount to 2^m, where
@@ -92,7 +93,8 @@ public class ParseAgain {
 		}else if(!oneNeighborStructList.isEmpty()){
 			recurseParse(structList, indicesToExclude, oneNeighborStructIndexList, parseState);
 		}
-		/*Returned from recursion, but still no spanning parse*/
+		/*Returned from recursion, but still no spanning parse. Then iteratively drop elements, to see
+		 * if their *neighbors* form a valid pair, if so, drop the middle Struct.*/
 		if(!parseState.isRecentParseSpanning()){
 			/*remove the ends of the Struct's. Ignore singletons, as they would have been removed*/
 			List<Struct> droppingStructList = new ArrayList<Struct>();
@@ -107,12 +109,14 @@ public class ParseAgain {
 				
 				int k = nextCoordinates[0];
 				int l = nextCoordinates[1];
-				//diagonal tokens would have already been tried in above reparse
+				//diagonal tokens would have already been tried in dropping in above reparse
 				
 				assert k == j + 1;
+				//drop lower right corner of ij block.
 				if(i < j){
 					StructList ijStructList = mx.get(i).get(j-1);
 					if(0 == ijStructList.size()){
+						//System.out.println("ParseAgain-originalNonSpanningParseStructList: " + originalNonSpanningParseStructList);
 						ijStructList = new StructList(originalNonSpanningParseStructList.get(j-1));
 					}
 					/*Note that klStructList *cannot* be empty, because they are coordinates passed in.*/
@@ -131,7 +135,7 @@ public class ParseAgain {
 						continue coordinatesLoop;
 					}
 				}
-				//drop on both sides
+				//Check dropping the corners from both ij block and the kl block
 				if(i < j && k < l){
 					StructList ijStructList = mx.get(i).get(j-1);
 					if(0 == ijStructList.size()){
@@ -164,8 +168,9 @@ public class ParseAgain {
 	}
 
 	/**
+	 * Dropping if pos pair doesn't can't be combined in any way. ??
 	 * @param indexToDropList
-	 * @param indexToDrop
+	 * @param indexToDrop 1 or 2 integers
 	 * @param ijStructList
 	 * @param klStructList
 	 */

@@ -62,7 +62,7 @@ public class SearchIntersection {
 	 * Multimap of words, and the theorems (their indices) in thmList, the word
 	 * shows up in.
 	 */
-	private static final ImmutableMultimap<String, Integer> wordThmMMap;
+	//private static final ImmutableMultimap<String, Integer> wordThmMMap;
 	private static final ImmutableMultimap<String, Integer> wordThmMMapNoAnno;
 	private static final Map<String, RelatedWords> relatedWordsMap;
 
@@ -84,7 +84,7 @@ public class SearchIntersection {
 		// System.out.println(thmList);
 		wordsScoreMap = CollectThm.ThmWordsMaps.get_wordsScoreMapNoAnno();
 		// System.out.println(CollectThm.get_wordsScoreMap());
-		wordThmMMap = CollectThm.ThmWordsMaps.get_wordThmsMMap();
+		//wordThmMMap = CollectThm.ThmWordsMaps.get_wordThmsMMap();//HERE
 		wordThmMMapNoAnno = CollectThm.ThmWordsMaps.get_wordThmsMMapNoAnno();
 		relatedWordsMap = CollectThm.ThmWordsMaps.getRelatedWordsMap();
 		// System.out.println(wordsScoreMap);
@@ -618,11 +618,9 @@ public class SearchIntersection {
 		// boolean relatedWordsFound = false;
 		// for every word, get list of thms containing this word
 		Collection<Integer> wordThms;
-		if (anno) {
-			wordThms = wordThmMMap.get(wordLong);
-		} else {
-			wordThms = wordThmMMapNoAnno.get(word);
-		}
+		//wordThms = wordThmMMap.get(wordLong);		
+		wordThms = wordThmMMapNoAnno.get(word);
+		
 		// only going through the no annotation path
 		RelatedWords relatedWords = relatedWordsMap.get(word);
 		if (null != relatedWords) {
@@ -643,11 +641,10 @@ public class SearchIntersection {
 			String singFormLong = curWrapper.hashToString(singForm);
 			// if(wordsScoreMap.get(singFormLong) != null){
 			if (wordsScoreMap.get(singForm) != null) {
-				if (anno) {
-					wordThms = wordThmMMap.get(singFormLong);
-				} else {
-					wordThms = wordThmMMapNoAnno.get(singForm);
-				}
+				
+				//wordThms = wordThmMMap.get(singFormLong);
+				wordThms = wordThmMMapNoAnno.get(singForm);
+				
 				// wordScore = wordsScoreMap.get(singFormLong);
 				wordScore = wordsScoreMap.get(singForm);
 				wordScore = wordScore == null ? 0 : wordScore;

@@ -24,7 +24,6 @@ import static thmp.utils.MathLinkUtils.evaluateWLCommand;
 /**
  * Theorem search. Does the computation in WL using JLink. 
  * @author yihed
- *
  */
 public class ThmSearch {
 
@@ -68,6 +67,7 @@ public class ThmSearch {
 		}*/
 		
 		ml = FileUtils.getKernelLinkInstance();
+		
 		String msg = "Kernel instance acquired...";
 		logger.info(msg);
 		int vector_vec_length = -1;
@@ -75,18 +75,26 @@ public class ThmSearch {
 		try{
 			ServletContext servletContext = CollectThm.getServletContext();
 			//String pathToMx = "src/thmp/data/termDocumentMatrixSVD.mx";
-			//mx file also depends on the system!
-			String pathToMx = getSystemMxFilePath();
+			/*Need to load both projection matrices, and the matrix of combined 
+			  projected thm vectors */
+			
+			/*mx file also depends on the system!*/
+			String pathToProjectionMx = getSystemProjectionMxFilePath();
+			
+			/*path for the combined list of projected vectors*/
+			String combinedProjectedMxFilePath = getSystemCombinedProjectedMxFilePath();
 			
 			if(null != servletContext){				
-				pathToMx = servletContext.getRealPath(pathToMx);
+				pathToProjectionMx = servletContext.getRealPath(pathToProjectionMx);
+				combinedProjectedMxFilePath = servletContext.getRealPath(combinedProjectedMxFilePath);
 			}
 			
-			ml.evaluate("<<" + pathToMx+";");
+			evaluateWLCommand(ml, "<<"+combinedProjectedMxFilePath, false, true);
+			ml.evaluate("<<" + pathToProjectionMx+";");
 			ml.discardAnswer();
 			
-			//ml.evaluate("TermDocumentMatrix`mxMeanValue ");
-			//System.out.println("mxMeanValue: " + ml.getExpr());
+			//need both Projection mx and the matrices containing row vectors corresponding to lists!
+			
 			ml.evaluate("AppendTo[$ContextPath, \""+ TermDocumentMatrix.PROJECTION_MX_CONTEXT_NAME +"\"];");
 			ml.discardAnswer();
 			
@@ -125,7 +133,8 @@ public class ThmSearch {
 	/**
 	 * Constructs the String query to be evaluated.
 	 * Submits it to kernel for evaluation.
-	 * @param queryVecStr should be a vec and not English words, i.e. {{v1, v2, ...}}!
+	 * @param queryVecStr should be a vec and *not* English words, i.e. {{v1, v2, ...}}!
+	 * @param num is number of results to show.
 	 * @return List of indices of nearest thms. Indices in, eg MathObjList 
 	 * (Indices in all such lists should coincide).
 	 * @throws MathLinkException 
@@ -210,11 +219,10 @@ public class ThmSearch {
 			String msg = "Applying Nearest[]...";
 			System.out.println(msg);
 			logger.info(msg);
-			ml.evaluate("Nearest[v->Range[Dimensions[v][[1]]], First@Transpose[q],"+numNearest+"] - " + LIST_INDEX_SHIFT);
+			String vMx = TermDocumentMatrix.COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME;
+			ml.evaluate("Nearest["+vMx+"->Range[Dimensions["+vMx+"][[1]]], First@Transpose[q],"+numNearest+"] - " + LIST_INDEX_SHIFT);
+			//ml.evaluate("Nearest[v->Range[Dimensions[v][[1]]], First@Transpose[q],"+numNearest+"] - " + LIST_INDEX_SHIFT);
 			
-			//take largest inner product
-			//ml.evaluate("Keys[TakeLargest[AssociationThread[Range[Dimensions[v][[1]]] -> v.First[Transpose[q]]], "+numNearest+"]]");
-			//ml.evaluate("Ordering[v.First[Transpose[q]], -"+numNearest+"]");
 			ml.waitForAnswer();
 			Expr nearestVec = ml.getExpr();
 			//ml.discardAnswer();
@@ -314,19 +322,21 @@ public class ThmSearch {
 	public static class TermDocumentMatrix{
 		
 		//private static final String PATH_TO_MX = "FileNameJoin[{Directory[], \"termDocumentMatrixSVD.mx\"}]";		
-		private static final String PATH_TO_MX = getSystemMxFilePath();
+		private static final String PATH_TO_MX = getSystemProjectionMxFilePath();
 		private static final String PROJECTION_MX_CONTEXT_NAME = "TermDocumentMatrix`";
 		//protected static final String PROJECTED_MX_CONTEXT_NAME = "ProjectedTDMatrixContext`";
 		protected static final String FULL_TERM_DOCUMENT_MX_CONTEXT_NAME = "FullTDMatrix`";
 		//projected full term-document matrix, so "v^T" in SVD.
 		public static final String PROJECTED_MX_NAME = "ProjectedTDMatrix";
 		public static final String FULL_TERM_DOCUMENT_MX_NAME = "FullTDMatrix";
-		protected static final String COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME = "CombinedTDMatrix";
-		private static KernelLink ml;		
+		protected static final String COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME = "CombinedTDMatrix";		
 		private static final String D_INVERSE_NAME = "dInverse";
 		private static final String U_TRANSPOSE_NAME = "uTranspose";
 		private static final String COR_MX_NAME = "corMx";
+		public static final String PARSEDEXPRESSION_LIST_FILE_NAME = "parsedExpressionList.dat";
+		private static final String COMBINED_PARSEDEXPRESSION_LIST_FILE_NAME = "combinedParsedExpressionList.dat";
 		
+		private static KernelLink ml;
 		/**
 		 * Serialize the high-dimensional term-document mx, 
 		 * as formed from one run of DetectHypothesis.java.  
@@ -919,7 +929,7 @@ public class ThmSearch {
 	 * Supports Linux and OS X. 
 	 * @return
 	 */
-	private static String getSystemMxFilePath(){
+	private static String getSystemProjectionMxFilePath(){
 		String pathToMx = "src/thmp/data/termDocumentMatrixSVD.mx";
 		//mx file also depends on the system!		
 		//but only 32-bit vs 64-bit, not OS. Should check bit instead.
@@ -931,7 +941,24 @@ public class ThmSearch {
 		return pathToMx;
 	}
 	
-	//used for initializing this class
-	//public static void initialize(){		
-	//}
+	/**
+	 * Retrieves path to matrix combining projected vecs.
+	 * @return
+	 */
+	private static String getSystemCombinedProjectedMxFilePath(){
+		String pathToMx = "src/thmp/data/" + TermDocumentMatrix
+				.COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME + ".mx";
+		return pathToMx;
+	}
+	
+	/**
+	 * Retrieves path to combined parsedExpressionList.dat.
+	 * @return
+	 */
+	protected static String getSystemCombinedParsedExpressionListFilePath(){
+		String pathToCombinedParsedExpressionListPath = "src/thmp/data/"
+				+TermDocumentMatrix.COMBINED_PARSEDEXPRESSION_LIST_FILE_NAME;
+		return pathToCombinedParsedExpressionListPath;
+	}
+	
 }

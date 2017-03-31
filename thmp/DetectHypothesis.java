@@ -332,9 +332,9 @@ public class DetectHypothesis {
 	 * 2nd, texFileNamesSerialFileStr, path to file names that contain names of the .tex files 
 	 * that should be parsed.
 	 * 3rd, path to projection mx.
+	 * 4th, path to allThmWordsMap
 	 * Should use configuration file!
 	 * @param args
-	 * @throws Throwable
 	 */
 	public static void main(String[] args){
 		/* read in a directory name, parse all the files individually. */ 		

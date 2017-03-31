@@ -10,6 +10,7 @@ import com.wolfram.jlink.Expr;
 import com.wolfram.jlink.KernelLink;
 import com.wolfram.jlink.MathLinkException;
 
+import thmp.ParsedExpression;
 import thmp.search.ThmSearch.TermDocumentMatrix;
 import thmp.utils.FileUtils;
 import thmp.utils.MathLinkUtils;
@@ -21,7 +22,6 @@ import static thmp.utils.MathLinkUtils.evaluateWLCommand;
  * apply projection mx to query vecs, 
  * combine serialized matrices together into List in linear time.
  * @author yihed
- *
  */
 public class ProjectionMatrix {
 	
@@ -31,27 +31,47 @@ public class ProjectionMatrix {
 			+ TermDocumentMatrix.COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME + ".mx";
 	
 	/**
-	 * args is list of paths, e.g. "0208_001/0208/termDocumentMatrixSVD.mx",
-	 * the *projected* term document matrices.
+	 * args is list of paths. 
+	 * Supply list paths to directories, each contanining a parsedExpressionList and
+	 * the *projected* term document matrices for a tar file.
+	 * e.g. "0208_001/0208/projectedTDMatrix.mx",
+	 * 
 	 */
 	public static void main(String[] args){
 		int argsLen = args.length;
 		if(argsLen == 0){
 			throw new IllegalStateException("Suply a list of paths to .mx files!");
 		}
+		List<String> parsedExpressionFilePathList = new ArrayList<String>();
 		//form list of String's of paths, e.g. "0208_001/0208/termDocumentMatrixSVD.mx".
-		List<String> mxFilePathList = new ArrayList<String>();
+		List<String> projectedMxFilePathList = new ArrayList<String>();
 		for(int i = 0; i < argsLen; i++){
 			//be sure to check it's valid path to valid .mx
-			mxFilePathList.add(args[i]);			
+			String path_i = args[i];
+			projectedMxFilePathList.add(path_i + ThmSearch.TermDocumentMatrix.PROJECTED_MX_NAME + ".mx");	
+			parsedExpressionFilePathList.add(path_i + ThmSearch.TermDocumentMatrix.PARSEDEXPRESSION_LIST_FILE_NAME);
 		}
 		String combinedProjectedTDMxName = TermDocumentMatrix.COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME;
 		//String contextPath, String vMxName, String concatenatedListName
-		combineProjectedMx(mxFilePathList, //TermDocumentMatrix.PROJECTED_MX_CONTEXT_NAME, 
+		combineProjectedMx(projectedMxFilePathList, //TermDocumentMatrix.PROJECTED_MX_CONTEXT_NAME, 
 				TermDocumentMatrix.PROJECTED_MX_NAME, combinedProjectedTDMxName);
-				
+		/* Combine parsedExpressionList's */
+		combineParsedExpressionList(parsedExpressionFilePathList);
 	}
 	
+	private static void combineParsedExpressionList(List<String> parsedExpressionFilePathList) {
+		List<ParsedExpression> combinedPEList = new ArrayList<ParsedExpression>();
+		for(String path : parsedExpressionFilePathList){
+			@SuppressWarnings("unchecked")
+			List<ParsedExpression> peList = (List<ParsedExpression>)FileUtils.deserializeListFromFile(path);
+			combinedPEList.addAll(peList);
+		}
+		String targetFilePath = ThmSearch.getSystemCombinedParsedExpressionListFilePath();
+		//List<List<ParsedExpression>> combinedPEListList = new ArrayList<List<ParsedExpression>>();
+		//combinedPEListList.add(combinedPEList);
+		FileUtils.serializeObjToFile(combinedPEList, targetFilePath);
+	}
+
 	/**
 	 * Apply projection matrices (dInverse and uTranspose) to given matrix (vectors should be row vecs).
 	 * @param queryMxStrName mx to be applied, could be 1-D. List of row vectors (List's).
@@ -124,7 +144,7 @@ public class ProjectionMatrix {
 		evaluateWLCommand(ml, "DumpSave[\"" + combinedMxPath + "\"," + concatenatedListName + "]");
 		msg = "In combineProjectedMx(), Done concatenating matrices!";
 		System.out.println(msg);
-		logger.info(msg);
+		logger.info(msg);		
 	}
 	
 }

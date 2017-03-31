@@ -606,6 +606,12 @@ public class ThmP1TestRun {
 			st = "Any polynomial that has real coefficients is local";
 			st = "Given any function $f$, there are infinitely many zeros in $g(zeta(f))$.";
 			st = "field is perfect";
+			st = "Let $ Q^n$ be a graph whose vertices are all the vectors $\\big{ x=(x_1,\\ldots, x_n)~|~x_ $ and two vectors $x$ and $y$ are adjacent if they differ in exactly one coordinate";
+			st = "two vectors $x$ and $y$ are adjacent if they differ in exactly one coordinate";
+			st = "Suppose that ${ haP^ , :  , t\\in\\TT\\}$$ is a semigroup of operators on $L_infty^V$, with generator $\\haclA$, and with finite spectral radius given by \\[sfsg\\]";
+			st = "Finally, we define the {em generator} $\\haclA$ of the semigroup $\\{ \\haP^t\\,:\\,t\\in\\TT\\}$:We write $\\haclA g=h$ if \\be";
+			//st = " $\\Probsub_x$ is the law of $\\bfPhi$ conditional on $\\Phi(0)=x,$ and $\\Expect_x$ is the corresponding expectation.";
+			//st = "two vectors $x$ and $y$ are adjacent";
 			//st = "Integers $p$ and $q$ are coprime if and only if there exist integers $n$ and $m$ such that $np - mq = 1$";
 			//st = "Integers $p$ and $q$ are coprime if there exist an integer $n$ such that $np - mq = 1$";
 			//st = "Integers $p$ and $q$ are coprime if there exist an integer $n$";
@@ -725,7 +731,8 @@ public class ThmP1TestRun {
 			if(processFile){
 				
 				//Scanner sc = new Scanner(new File("src/thmp/data/samplePaper2.txt"));
-				Scanner sc = new Scanner(new File("src/thmp/data/collectThmTestSample.txt"));
+				Scanner sc = new Scanner(new File("/Users/yihed/Downloads/spectral.tex"));
+				//Scanner sc = new Scanner(new File("src/thmp/data/collectThmTestSample.txt"));
 				parseState = parseStateBuilder.build();
 				
 				while(sc.hasNextLine()){				
