@@ -34,20 +34,21 @@ public class ProjectionMatrix {
 	 * args is list of paths. 
 	 * Supply list paths to directories, each contanining a parsedExpressionList and
 	 * the *projected* term document matrices for a tar file.
-	 * e.g. "0208_001/0208/projectedTDMatrix.mx",
+	 * e.g. "0208_001/0208/",
 	 * 
 	 */
 	public static void main(String[] args){
 		int argsLen = args.length;
 		if(argsLen == 0){
-			throw new IllegalStateException("Suply a list of paths to .mx files!");
+			System.out.println("Suply a list of paths to .mx files!");
+			return;
 		}
 		List<String> parsedExpressionFilePathList = new ArrayList<String>();
 		//form list of String's of paths, e.g. "0208_001/0208/termDocumentMatrixSVD.mx".
 		List<String> projectedMxFilePathList = new ArrayList<String>();
 		for(int i = 0; i < argsLen; i++){
 			//be sure to check it's valid path to valid .mx
-			String path_i = args[i];
+			String path_i = FileUtils.addTrailingSlashToPath(args[i]);
 			projectedMxFilePathList.add(path_i + ThmSearch.TermDocumentMatrix.PROJECTED_MX_NAME + ".mx");	
 			parsedExpressionFilePathList.add(path_i + ThmSearch.TermDocumentMatrix.PARSEDEXPRESSION_LIST_FILE_NAME);
 		}

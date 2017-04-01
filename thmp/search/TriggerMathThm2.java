@@ -344,7 +344,7 @@ public class TriggerMathThm2 {
 			}
 			//Sqrt is usually too large, so take log instead of sqrt.
 			//norm = norm < 3 ? 1 : (int)Math.sqrt(norm);
-			norm = Math.sqrt(norm);
+			norm = Math.sqrt(Math.sqrt(norm));
 			//divide by log of norm
 			//System.out.println("keywordIndexDict: "+keywordIndexDict);
 			for (String keyword : gatheredWordsList) {
@@ -436,7 +436,7 @@ public class TriggerMathThm2 {
 			}
 			//Sqrt is usually too large, so take log instead of sqrt.
 			//norm = norm < 3 ? 1 : (int)Math.sqrt(norm);
-			norm = Math.sqrt(norm);
+			norm = Math.sqrt(Math.sqrt(norm));
 			//divide by log of norm
 			//System.out.println("keywordIndexDict: "+keywordIndexDict);
 			for (String keyword : curMathObjCol) {
@@ -598,7 +598,7 @@ public class TriggerMathThm2 {
 		//avoid division by 0 apocalypse, when it was log
 		
 		//norm = norm < 3 ? 1 : (int)Math.log(norm);
-		norm = Math.sqrt(norm);
+		norm = Math.sqrt(Math.sqrt(norm));
 		norm = norm == 0 ? 1 : norm;
 		//divide entries of triggerTermsVec by norm
 		for(int i = 0; i < queryVec.length; i++){

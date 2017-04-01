@@ -45,6 +45,8 @@ public class ThmSearch {
 	//cutoff for a correlated term to be considered
 	private static final int COR_THRESHOLD = 3;
 	private static final int LIST_INDEX_SHIFT = 1;
+	private static final String combinedTDMatrixRangeListName = "combinedRangeList";
+	private static final boolean USE_FULL_MX = false;
 	
 	/**
 	 * Class for finding nearest giving query.
@@ -93,11 +95,26 @@ public class ThmSearch {
 			ml.evaluate("<<" + pathToProjectionMx+";");
 			ml.discardAnswer();
 			
+			if(USE_FULL_MX){
+				evaluateWLCommand(ml, "<<src/thmp/data/"+TermDocumentMatrix.FULL_TERM_DOCUMENT_MX_NAME+".mx");
+			}
 			//need both Projection mx and the matrices containing row vectors corresponding to lists!
 			
 			ml.evaluate("AppendTo[$ContextPath, \""+ TermDocumentMatrix.PROJECTION_MX_CONTEXT_NAME +"\"];");
 			ml.discardAnswer();
 			
+			String vMx;
+			if(USE_FULL_MX){
+				vMx = TermDocumentMatrix.FULL_TERM_DOCUMENT_MX_NAME;
+				evaluateWLCommand(ml, combinedTDMatrixRangeListName + "= Range[Dimensions["+vMx+"][[2]]];"
+						+ vMx + "= Normal["+vMx+"]", false, true);
+				System.out.println("FULL DIM MX LEN (num thms) " + evaluateWLCommand(ml, "Length["+combinedTDMatrixRangeListName+"]", true, true));
+			}else{
+				vMx = TermDocumentMatrix.COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME;
+				evaluateWLCommand(ml, combinedTDMatrixRangeListName + "= Range[Dimensions["+vMx+"][[1]]]", false, true);
+			}
+			
+			//ml.evaluate("Nearest["+vMx+"->Range[Dimensions["+vMx+"][[1]]]
 			//should uncompress using this code here.
 			/*ml.evaluate("mxMeanValue =" + TermDocumentMatrix.MX_CONTEXT_NAME + "mxMeanValue;"
 					+ "corMx =" + TermDocumentMatrix.MX_CONTEXT_NAME + "corMx;"
@@ -110,8 +127,10 @@ public class ThmSearch {
 			ml.evaluate("Length[mx]");
 			ml.waitForAnswer();			
 			try{
-				vector_vec_length = ml.getExpr().asInt();				
-				System.out.println("ThmSearch - mx row dimension (num of words): " + vector_vec_length);
+				vector_vec_length = ml.getExpr().asInt();
+				String msg1 = "ThmSearch - mx row dimension (num of words): " + vector_vec_length;
+				System.out.println(msg1);
+				logger.info(msg1);
 			}catch(ExprFormatException e){
 				String msg1 = "ExprFormatException when getting row dimension! " + e.getMessage();
 				logger.error(msg1);
@@ -140,13 +159,14 @@ public class ThmSearch {
 	 * @throws MathLinkException 
 	 * @throws ExprFormatException 
 	 */
-	public static List<Integer> findNearestVecs(String queryVecStr, int ... num){		
+	public static List<Integer> findNearestVecs(String queryVecStr, int ... num){
 		try{
 			//ml.evaluate("corMx");
 			//System.out.println("thmsearch - corMx : " + ml.getExpr());
 			String msg = "Transposing and applying corMx...";
 			logger.info(msg);
-			//process query first with corMx. Convert to column vec.		
+			//process query first with corMx. Convert to column vec.
+			
 			ml.evaluate("queryVecStrTranspose= Transpose[" + queryVecStr + "]; "
 					+ "q0 = queryVecStrTranspose + 0.08*corMx.queryVecStrTranspose;");
 			boolean getQ = false;
@@ -157,6 +177,7 @@ public class ThmSearch {
 			}else{
 				ml.discardAnswer();
 			}
+			
 			//ml.evaluate("corMx");
 			//System.out.println("corMx:" +ml.getExpr());
 			//ml.waitForAnswer();
@@ -183,17 +204,26 @@ public class ThmSearch {
 			//QueryVecStr has wrong dimension?! Same dim as row/col dim of matrix d!!
 			//ml.evaluate("q = Inverse[d].Transpose[u].(q/.{0.0->mxMeanValue})");
 			//ml.evaluate("q = dInverse.uTranspose.(q0/.{0.0->mxMeanValue})");
-			ml.evaluate("q = dInverse.uTranspose.q0;");
-			//ml.discardAnswer();			
-			getQ = false;
-			if(getQ){
-				ml.waitForAnswer();
-				Expr qVec = ml.getExpr();
-				logger.info("ThmSearch - dInverse.uTranspose.(q0/.{0.0->mxMeanValue}): " + qVec);
-				//System.out.println("qVec: " + qVec);
-			}else{				
-				ml.discardAnswer();
+			if(!USE_FULL_MX){
+				ml.evaluate("q = dInverse.uTranspose.q0;");
+				//ml.discardAnswer();			
+				getQ = false;
+				if(getQ){
+					ml.waitForAnswer();
+					Expr qVec = ml.getExpr();
+					logger.info("ThmSearch - dInverse.uTranspose.(q0/.{0.0->mxMeanValue}): " + qVec);
+					//System.out.println("qVec: " + qVec);
+				}else{				
+					ml.discardAnswer();
+				}
+			}else{
+				evaluateWLCommand(ml,"q = q0");
+				System.out.println("Nontrivial Pos: " + evaluateWLCommand(ml, 
+						"q1=Transpose[q0][[1]]; pos=Position[q1, Except[0.]]", true, true));
+				System.out.println("Values at Pos: " + evaluateWLCommand(ml, 
+						"Map[Part[q1, #]&, pos]", true, true));
 			}
+			
 			//ml.waitForAnswer();
 			//System.out.println("ThmSearch - q after inverse of transpose: " + ml.getExpr());
 			/*ml.evaluate("q = q + vMeanValue;");
@@ -219,8 +249,18 @@ public class ThmSearch {
 			String msg = "Applying Nearest[]...";
 			System.out.println(msg);
 			logger.info(msg);
-			String vMx = TermDocumentMatrix.COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME;
-			ml.evaluate("Nearest["+vMx+"->Range[Dimensions["+vMx+"][[1]]], First@Transpose[q],"+numNearest+"] - " + LIST_INDEX_SHIFT);
+			
+			String vMx;
+			if(USE_FULL_MX){
+				vMx = TermDocumentMatrix.FULL_TERM_DOCUMENT_MX_NAME;
+				evaluateWLCommand(ml, vMx + "= Transpose["+ vMx + "]");
+			}else{
+				vMx = TermDocumentMatrix.COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME;
+			}
+			System.out.println("Dimensions[vMx] " + evaluateWLCommand(ml, "Dimensions["+vMx+"]", true, true));
+			System.out.println("Dimensions@First@Transpose[q] " + evaluateWLCommand(ml, "Dimensions[First@Transpose[q]]", true, true));
+			//String vMx = TermDocumentMatrix.COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME;
+			ml.evaluate("Nearest["+vMx+"->"+ combinedTDMatrixRangeListName +", First@Transpose[q],"+numNearest+"] - " + LIST_INDEX_SHIFT);
 			//ml.evaluate("Nearest[v->Range[Dimensions[v][[1]]], First@Transpose[q],"+numNearest+"] - " + LIST_INDEX_SHIFT);
 			
 			ml.waitForAnswer();
@@ -228,12 +268,13 @@ public class ThmSearch {
 			//ml.discardAnswer();
 			//System.out.println(nearestVec.length() + "  " + Arrays.toString((int[])nearestVec.part(1).asArray(Expr.INTEGER, 1)));
 			//turn into list.
-			msg = "SVD returned nearestVec! "; //+ nearestVec; //<--should not include nearestVec for long vecs, only debugging here!
+			msg = "SVD returned nearestVec! ";
 			System.out.println(msg);
 			logger.info(msg);
 			//use this when using Nearest
 			//int[] nearestVecArray = (int[])nearestVec.part(1).asArray(Expr.INTEGER, 1);
 			 //<--this line generates exprFormatException if sucessive entries are quickly entered.
+			//System.out.println("resulting Expr nearestVec: " + nearestVec);
 			nearestVecArray = (int[])nearestVec.asArray(Expr.INTEGER, 1);
 		}catch(MathLinkException e){
 			logger.error("MathLinkException! " + e.getStackTrace());
@@ -363,7 +404,7 @@ public class ThmSearch {
 			//mxSB.append(toNestedList(docMx)).append("//N;");
 			/* *Need* to specify dimension! Since the Automatic dimension might be less than 
 			 * or equal to the size of the keywordList, if some words are not hit by the current thm corpus. */
-			StringBuilder mxSB = TriggerMathThm2.sparseArrayInputSB(defThmList, thmWordsFreqMap) //HERE
+			StringBuilder mxSB = TriggerMathThm2.sparseArrayInputSB(defThmList, thmWordsFreqMap) 
 					.insert(0, "m=SparseArray[1+").append(",{"+rowDimension).append(",").append(mxColDim+"}];");
 			//System.out.println("ThmSearch. - mxSB " + mxSB);
 			String msg = "ThmSearch.TermDocumentMatrix - mxSB.length(): " + mxSB.length();

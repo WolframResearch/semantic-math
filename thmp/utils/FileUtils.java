@@ -2,6 +2,7 @@ package thmp.utils;
 
 import java.io.BufferedWriter;
 import java.io.Closeable;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -297,6 +298,19 @@ public class FileUtils {
 			}			
 		}	
 		return ml;		
+	}
+	
+	/**
+	 * Add trailing slash to path if not already present.
+	 * @param path
+	 * @return
+	 */
+	public static String addTrailingSlashToPath(String path){
+		int pathLen = path.length();
+		if(File.separatorChar != path.charAt(pathLen-1)){
+			return path + File.separatorChar;
+		}
+		return path;
 	}
 	
 	/**

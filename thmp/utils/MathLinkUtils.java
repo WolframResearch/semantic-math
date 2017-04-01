@@ -15,11 +15,11 @@ public class MathLinkUtils {
 	private static final Logger logger = LogManager.getLogger(MathLinkUtils.class);
 	
 	public static Expr evaluateWLCommand(String cmd){
-		return MathLinkUtils.evaluateWLCommand(ml, cmd, false, false);
+		return MathLinkUtils.evaluateWLCommand(ml, cmd, false, true);
 	}
 	
 	public static Expr evaluateWLCommand(KernelLink ml, String cmd){
-		return MathLinkUtils.evaluateWLCommand(ml, cmd, false, false);
+		return MathLinkUtils.evaluateWLCommand(ml, cmd, false, true);
 	}
 	
 	public static Expr evaluateWLCommand(String cmd, boolean getResultingExpr, boolean throwOnException){
