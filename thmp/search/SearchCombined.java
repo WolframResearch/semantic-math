@@ -284,7 +284,7 @@ public class SearchCombined {
 	public static List<ThmHypPair> searchCombined(String input, Set<String> searchWordsSet, boolean searchContextBool,
 			boolean searchRelationalBool){
 		
-		if(WordForms.getWhiteEmptySpacePattern().matcher(input).matches()) return null;
+		if(WordForms.getWhiteEmptySpacePattern().matcher(input).matches()) return Collections.<ThmHypPair>emptyList();
 		input = input.toLowerCase();
 		
 		//String[] thmAr = WordForms.getWhiteNonEmptySpacePattern().split(input);
@@ -447,6 +447,7 @@ public class SearchCombined {
 			List<Integer> bestCommonVecs = findListsIntersection(nearestVecList, searchState, numCommonVecs,
 					thm, searchContextBool);
 			*/
+			
 			for(ThmHypPair thmStr : bestCommonThmHypPairList){
 				System.out.println(thmStr);
 			}

@@ -274,9 +274,7 @@ public class CollectThm {
 			/* This list is smaller when in gathering data mode, and consists of a representative set 
 			 * of theorems. Much larger in search mode.*/
 			List<String> processedThmList = ThmList.allThmsWithHypList;
-			
-			//System.out.println("After processing: "+thmList);
-			
+						
 				//this is commented out in Jan 2017, since the annotated version is no longer used.
 				//readThm(thmWordsListBuilder, docWordsFreqPreMap, wordThmsMMapBuilder, processedThmList);
 				//same as readThm, just buid maps without annotation
@@ -317,7 +315,7 @@ public class CollectThm {
 			
 			//System.out.println("------++++++++-------CONTEXT_VEC_WORDS_MAP.size " + CONTEXT_VEC_WORDS_MAP.size());
 			
-			if(Searcher.SearchMetaData.gatheringDataBool()){				
+			if(Searcher.SearchMetaData.gatheringDataBool() && null == Searcher.SearchMetaData.previousWordDocFreqMapsPath()){				
 				buildScoreMapNoAnno(wordsScorePreMap, docWordsFreqPreMapNoAnno);				
 				Map<String, Integer> keyWordFreqTreeMap = reorderDocWordsFreqMap(docWordsFreqPreMapNoAnno);					
 				docWordsFreqMapNoAnno = ImmutableMap.copyOf(keyWordFreqTreeMap);
@@ -446,8 +444,11 @@ public class CollectThm {
 		 */
 		@SuppressWarnings("unchecked")		
 		private static ImmutableMap<String, Integer> extractWordFreqMap() {	
-			//It is "src/thmp/data/allThmWordsMap.dat";
-			String allThmWordsSerialFileStr = thmp.DetectHypothesis.allThmWordsMapSerialFileStr;
+			//It is "src/thmp/data/allThmWordsMap.dat";			
+			String pathToPrevDocWordFreqMaps = Searcher.SearchMetaData.previousWordDocFreqMapsPath();
+			String allThmWordsSerialFileStr = (null == pathToPrevDocWordFreqMaps 
+					? thmp.DetectHypothesis.allThmWordsMapSerialFileStr : pathToPrevDocWordFreqMaps);
+
 			if(null != servletContext){
 				InputStream allThmWordsSerialInputStream = servletContext.getResourceAsStream(allThmWordsSerialFileStr);
 				Map<String, Integer> map 
@@ -875,13 +876,11 @@ public class CollectThm {
 			//screen the word for special characters, e.g. "/", don't put these words into map.
 			if(SPECIAL_CHARACTER_PATTERN.matcher(word).find()){
 				return null;
-			}
-			
+			}			
 			int wordFreq = thmWordsFreqMap.containsKey(word) ? thmWordsFreqMap.get(word) : 0;
 			thmWordsFreqMap.put(word, wordFreq + 1);
 			
-			int docWordFreq = docWordsFreqPreMap.containsKey(word) ? docWordsFreqPreMap.get(word) : 0;
-							
+			int docWordFreq = docWordsFreqPreMap.containsKey(word) ? docWordsFreqPreMap.get(word) : 0;							
 			//increase freq of word by 1
 			docWordsFreqPreMap.put(word, docWordFreq + 1);
 			
@@ -934,13 +933,15 @@ public class CollectThm {
 				//if(word.equals("tex")) continue;
 				int wordFreq = entry.getValue();
 				//*Keep* these comments. Experimenting with scoring parameters.
-				//int score = wordFreq < 100 ? (int)Math.round(10 - wordFreq/8) : wordFreq < 300 ? 1 : 0;	
 				//for 1200 thms, CommAlg5 + distributions:
 				//int score = wordFreq < 110 ? (int)Math.round(10 - wordFreq/4) : wordFreq < 300 ? 1 : 0;	
 				//int score = wordFreq < 180 ? (int)Math.round(15 - wordFreq/4) : wordFreq < 450 ? 1 : 0;
-				int score = wordFreq < 40 ? (int)Math.round(10 - wordFreq/3) : (wordFreq < 180 ? (int)Math.round(15 - wordFreq/3) : (wordFreq < 450 ? 2 : 0));	
+				//until april 1:
+				int score = wordFreq < 40 ? (int)Math.round(10 - wordFreq/3) : (wordFreq < 180 ? (int)Math.round(15 - wordFreq/3) : (wordFreq < 450 ? 3 : 0));	
+				//starting April 1:
+				//int score = wordFreq < 40 ? (int)Math.round(15 - wordFreq/3) : (wordFreq < 180 ? (int)Math.round(25 - wordFreq/4) : (wordFreq < 450 ? 4 : 0));	
 				//frequently occurring words, should not score too low since they are mostly math words.
-				score = score <= 0 ? 3 : score;
+				score = score <= 0 ? 4 : score;
 				wordsScorePreMap.put(word, score);
 				//System.out.print("word: "+word +" score: "+score + " freq "+ wordFreq + "$   ");
 			}

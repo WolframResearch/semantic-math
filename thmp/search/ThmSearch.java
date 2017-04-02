@@ -46,7 +46,7 @@ public class ThmSearch {
 	private static final int COR_THRESHOLD = 3;
 	private static final int LIST_INDEX_SHIFT = 1;
 	private static final String combinedTDMatrixRangeListName = "combinedRangeList";
-	private static final boolean USE_FULL_MX = false;
+	private static final boolean USE_FULL_MX = false;	
 	
 	/**
 	 * Class for finding nearest giving query.
@@ -54,6 +54,9 @@ public class ThmSearch {
 	public static class ThmSearchQuery{
 		private static final int QUERY_VEC_LENGTH;
 		private static final KernelLink ml;	
+		private static final String V_MX;
+		private static final boolean DEBUG = false;
+		
 	static{		
 		//use OS system variable to tell whether on VM or local machine, and set InstallDirectory 
 		//path accordingly.
@@ -68,8 +71,7 @@ public class ThmSearch {
 			ARGV = new String[]{"-linkmode", "launch", "-linkname", "math -mathlink"};
 		}*/
 		
-		ml = FileUtils.getKernelLinkInstance();
-		
+		ml = FileUtils.getKernelLinkInstance();		
 		String msg = "Kernel instance acquired...";
 		logger.info(msg);
 		int vector_vec_length = -1;
@@ -101,27 +103,29 @@ public class ThmSearch {
 			//need both Projection mx and the matrices containing row vectors corresponding to lists!
 			
 			ml.evaluate("AppendTo[$ContextPath, \""+ TermDocumentMatrix.PROJECTION_MX_CONTEXT_NAME +"\"];");
-			ml.discardAnswer();
+			ml.discardAnswer();			
 			
-			String vMx;
 			if(USE_FULL_MX){
-				vMx = TermDocumentMatrix.FULL_TERM_DOCUMENT_MX_NAME;
-				evaluateWLCommand(ml, combinedTDMatrixRangeListName + "= Range[Dimensions["+vMx+"][[2]]];"
-						+ vMx + "= Normal["+vMx+"]", false, true);
+				V_MX = TermDocumentMatrix.FULL_TERM_DOCUMENT_MX_NAME;
+				//make rows be theorems
+				evaluateWLCommand(ml, V_MX + "= Transpose["+ V_MX + "]");
+				evaluateWLCommand(ml, combinedTDMatrixRangeListName + "= Range[Length["+V_MX+"]];"
+						+ V_MX + "= Normal["+V_MX+"]", false, true);				
 				System.out.println("FULL DIM MX LEN (num thms) " + evaluateWLCommand(ml, "Length["+combinedTDMatrixRangeListName+"]", true, true));
 			}else{
-				vMx = TermDocumentMatrix.COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME;
-				evaluateWLCommand(ml, combinedTDMatrixRangeListName + "= Range[Dimensions["+vMx+"][[1]]]", false, true);
+				V_MX = TermDocumentMatrix.COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME;
+				evaluateWLCommand(ml, combinedTDMatrixRangeListName + "= Range[Dimensions["+V_MX+"][[1]]]", false, true);
 			}
 			
+			/*String vMx;
+			if(USE_FULL_MX){
+				vMx = TermDocumentMatrix.FULL_TERM_DOCUMENT_MX_NAME;
+				evaluateWLCommand(ml, vMx + "= Transpose["+ vMx + "]");
+			}else{
+				vMx = TermDocumentMatrix.COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME;
+			}*/
 			//ml.evaluate("Nearest["+vMx+"->Range[Dimensions["+vMx+"][[1]]]
 			//should uncompress using this code here.
-			/*ml.evaluate("mxMeanValue =" + TermDocumentMatrix.MX_CONTEXT_NAME + "mxMeanValue;"
-					+ "corMx =" + TermDocumentMatrix.MX_CONTEXT_NAME + "corMx;"
-					+ "d =" + TermDocumentMatrix.MX_CONTEXT_NAME + "d;"
-					+ "u =" + TermDocumentMatrix.MX_CONTEXT_NAME + "u;"
-					+ "v =" + TermDocumentMatrix.MX_CONTEXT_NAME + "v;");
-			ml.discardAnswer();*/
 			
 			//ml.evaluate("Length[corMx[[1]]]");
 			ml.evaluate("Length[mx]");
@@ -205,6 +209,7 @@ public class ThmSearch {
 			//ml.evaluate("q = Inverse[d].Transpose[u].(q/.{0.0->mxMeanValue})");
 			//ml.evaluate("q = dInverse.uTranspose.(q0/.{0.0->mxMeanValue})");
 			if(!USE_FULL_MX){
+				/*q is column vector*/
 				ml.evaluate("q = dInverse.uTranspose.q0;");
 				//ml.discardAnswer();			
 				getQ = false;
@@ -215,6 +220,11 @@ public class ThmSearch {
 					//System.out.println("qVec: " + qVec);
 				}else{				
 					ml.discardAnswer();
+				}
+				
+				if(DEBUG){
+					System.out.println("The Nontrivial Values in query vec: " + evaluateWLCommand(ml, 
+							"q1=Transpose[q][[1]]; pos=Position[q1, Except[0.]]; Map[Part[q1, #]&, pos]", true, true));
 				}
 			}else{
 				evaluateWLCommand(ml,"q = q0");
@@ -250,17 +260,12 @@ public class ThmSearch {
 			System.out.println(msg);
 			logger.info(msg);
 			
-			String vMx;
-			if(USE_FULL_MX){
-				vMx = TermDocumentMatrix.FULL_TERM_DOCUMENT_MX_NAME;
-				evaluateWLCommand(ml, vMx + "= Transpose["+ vMx + "]");
-			}else{
-				vMx = TermDocumentMatrix.COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME;
+			if(DEBUG){
+				System.out.println("Dimensions[vMx] " + evaluateWLCommand(ml, "Dimensions["+V_MX+"]", true, true));
 			}
-			System.out.println("Dimensions[vMx] " + evaluateWLCommand(ml, "Dimensions["+vMx+"]", true, true));
-			System.out.println("Dimensions@First@Transpose[q] " + evaluateWLCommand(ml, "Dimensions[First@Transpose[q]]", true, true));
+			//System.out.println("Dimensions@First@Transpose[q] " + evaluateWLCommand(ml, "Dimensions[First@Transpose[q]]", true, true));
 			//String vMx = TermDocumentMatrix.COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME;
-			ml.evaluate("Nearest["+vMx+"->"+ combinedTDMatrixRangeListName +", First@Transpose[q],"+numNearest+"] - " + LIST_INDEX_SHIFT);
+			ml.evaluate("Nearest["+V_MX+"->"+ combinedTDMatrixRangeListName +", First@Transpose[q],"+numNearest+"] - " + LIST_INDEX_SHIFT);
 			//ml.evaluate("Nearest[v->Range[Dimensions[v][[1]]], First@Transpose[q],"+numNearest+"] - " + LIST_INDEX_SHIFT);
 			
 			ml.waitForAnswer();
@@ -469,8 +474,9 @@ public class ThmSearch {
 				int rowDimension = TriggerMathThm2.mathThmMxRowDim();
 				//int mxColDim = docMx[0].length;
 				int mxColDim = TriggerMathThm2.mathThmMxColDim();
-				
-				//set up the matrix corresponding to docMx, to be SVD'd. 
+				System.out.println("ThmSearch-TermDocumentMatrix - number of keywords: " + rowDimension);
+				System.out.println("ThmSearch-TermDocumentMatrix - number of theorems: " + mxColDim);
+				//set up the matrix corresponding to docMx, to be SVD'd.
 				//adjust mx entries based on correlation first	
 				//StringBuilder mxSB = new StringBuilder("m = Developer`ToPackedArray@");
 				//mxSB.append(toNestedList(docMx)).append("//N;");
@@ -664,7 +670,8 @@ public class ThmSearch {
 				int rowDimension = TriggerMathThm2.mathThmMxRowDim();
 				//int mxColDim = docMx[0].length;
 				int mxColDim = defThmList.size();
-				
+				System.out.println("ThmSearch-TermDocumentMatrix - number of keywords: " + rowDimension);
+				System.out.println("ThmSearch-TermDocumentMatrix - number of theorems: " + mxColDim);
 				//set up the matrix corresponding to docMx, to be SVD'd. 
 				//adjust mx entries based on correlation first	
 				//StringBuilder mxSB = new StringBuilder("m = Developer`ToPackedArray@");

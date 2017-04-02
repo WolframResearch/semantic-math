@@ -118,6 +118,17 @@ public class DetectHypothesis {
 		//ThmSearch.TermDocumentMatrix.createTermDocumentMatrixSVD();
 	}
 	
+	public static class Runner{
+		
+		public static void main(String[] args){
+			InputParams inputParams = new InputParams(args);
+			if(inputParams.usePreviousDocWordsFreqMaps){
+				Searcher.SearchMetaData.set_previousWordDocFreqMapsPath(inputParams.getPathToDocWordsFreqMap());
+			}			
+			DetectHypothesis.readAndProcessInputData(inputParams);
+		}
+	}
+	
 	/**
 	 * Statistics class to record statistics such as the percentage of thms 
 	 * that have spanning parses and/or non-null headParseStruct's.
@@ -273,6 +284,7 @@ public class DetectHypothesis {
 		String texFilesDirPath;
 		String serializedTexFileNamesFileStr;
 		//e.g. "0208_001/0208/ProjectedTDMatrix.mx"
+		boolean usePreviousDocWordsFreqMaps;
 		String pathToProjectionMx;
 		//map of word frequencies.
 		String pathToWordFreqMap;
@@ -299,6 +311,7 @@ public class DetectHypothesis {
 				if(argsLen > 3){
 					pathToProjectionMx = args[2];
 					pathToWordFreqMap = args[3];
+					usePreviousDocWordsFreqMaps = true;
 					char fileSeparatorChar = File.separatorChar;
 					int texFilesDirPathLen = texFilesDirPath.length();
 					if(texFilesDirPath.charAt(texFilesDirPathLen-1) != fileSeparatorChar){
@@ -320,6 +333,10 @@ public class DetectHypothesis {
 		String getPathToProjectionMx(){
 			return pathToProjectionMx;
 		}
+		
+		String getPathToDocWordsFreqMap(){
+			return pathToWordFreqMap;
+		}
 	}
 	
 	/**
@@ -336,14 +353,15 @@ public class DetectHypothesis {
 	 * Should use configuration file!
 	 * @param args
 	 */
-	public static void main(String[] args){
+	private static void readAndProcessInputData(//String[] args
+			InputParams inputParams) {
 		/* read in a directory name, parse all the files individually. */ 		
 		//try to read file path from command line argument first
 		//path should be absolute
 		
 		//could be file or dir
 		File inputFile = null;
-		InputParams inputParams = new InputParams(args);
+		
 		/*absolute path to files and the tar file name they live in*/
 		Map<String, String> texFileNamesMap = null;
 		String texFileNamesSerialFileStr = inputParams.serializedTexFileNamesFileStr;

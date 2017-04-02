@@ -144,10 +144,9 @@ public class TriggerMathThm2 {
 		//mathObjMx = new int[keywordList.size()][mathObjMMap.keySet().size()];	
 		//mathObjMx = new int[keywordList.size()][thmWordsList.size()];
 			mathObjMx = new double[keywordList.size()][thmWordsMapList.size()];
-			System.out.println("TriggerMathThm2 - number of keywords: " + keywordList.size());
-			System.out.println("TriggerMathThm2 - number of theorems deserialized (i.e in previous round): " 
-					+ keywordList.size() + " " + thmWordsMapList.size());
-		//System.out.println("BEFORE mathObjMMap" +mathObjMMap);
+			//System.out.println("TriggerMathThm2 - number of keywords: " + keywordList.size());
+			//System.out.println("TriggerMathThm2 - number of theorems deserialized (i.e in previous round): " 
+					//+ thmWordsMapList.size());
 			List<int[]> coordinatesList = new ArrayList<int[]>();
 			List<Double> weightsList = new ArrayList<Double>();
 		//pass in thmList to ensure the right order (insertion order) of thms 

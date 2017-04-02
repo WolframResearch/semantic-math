@@ -41,6 +41,10 @@ public interface Searcher<S> {
 		//whether currently gathering data (e.g. in DetectHypothesis.java), 
 		//rather than actively searching.
 		private static boolean gatheringDataBool;
+		/* Used to separate the case when gatheringDataBool, where in fact want maps collected
+		 * in previous runs, e.g. when using a pre-computed projection matrix for SVD.*/
+		//private static boolean usePreviousWordDocFreqMaps;
+		private static String previousWordDocFreqMapsPath;
 		
 		public static void set_gatheringDataBoolToTrue(){
 			//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
@@ -49,6 +53,16 @@ public interface Searcher<S> {
 		
 		public static boolean gatheringDataBool(){
 			return gatheringDataBool;
+		}
+		
+		/* Used to separate the case when gatheringDataBool, where in fact want maps collected
+		 * in previous runs, e.g. when using a pre-computed projection matrix for SVD.*/
+		public static String previousWordDocFreqMapsPath() {
+			return previousWordDocFreqMapsPath;
+		}
+
+		public static void set_previousWordDocFreqMapsPath(String path) {
+			SearchMetaData.previousWordDocFreqMapsPath = path;
 		}
 	}
 }
