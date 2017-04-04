@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMultimap;
@@ -29,13 +31,14 @@ public enum ParseStructType {
 	 */
 	private static final ImmutableListMultimap<String, ParseStructType> StringParseStructTypeMap;
 	
+	private static final Pattern CONJ_DISJ_PATTERN = Pattern.compile("(?:conj|disj)_(.+)");
 	static{
 		//type should not be determined based just on head type
 		//construct a multimap, and take its inverse
 		//The string value can be either pos (part of speech) or word string
 		//should be as specific as possible. E.g. use "for all" rather than "hyp"
 		ImmutableListMultimap.Builder<ParseStructType, String> builder =
-				new ImmutableListMultimap.Builder<ParseStructType, String>();
+				new ImmutableListMultimap.Builder<ParseStructType, String>();		
 		builder.putAll(HYP, Arrays.asList("letbe", "let", "hypo", "partient", "if", "If", "where", "assuming", "assume", "Cond"));
 		builder.putAll(HYP_iff, Arrays.asList("if and only if", "iff", "Iff"));
 		builder.putAll(OBJ, Arrays.asList("ent", "MathObj"));
@@ -64,6 +67,10 @@ public enum ParseStructType {
 	public static ParseStructType getType(Struct struct) {
 		//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
 		String typeStr = struct.type();
+		Matcher matcher;
+		if((matcher=CONJ_DISJ_PATTERN.matcher(typeStr)).matches()){
+			typeStr = matcher.group(1);
+		}
 		
 		ParseStructType type;		
 		if(StringParseStructTypeMap.containsKey(typeStr)){

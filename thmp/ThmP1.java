@@ -76,7 +76,7 @@ public class ThmP1 {
 	//end part of latex expression word, e.g. " B)$-module"
 	private static final Pattern LATEX_END_PATTER = Pattern.compile("[^$]*\\$.*");
 	private static final Pattern LATEX_BEGIN_PATTERN = Pattern.compile("[^$]*\\${1,2}.*");
-	private static final Pattern POSSIBLE_ADJ_PATTERN = Pattern.compile("(?:.+tive|.+wise|.+ary|.+ble|.+ous)$");
+	private static final Pattern POSSIBLE_ADJ_PATTERN = Pattern.compile("(?:.+tive|.+wise|.+ary|.+ble|.+ous|.+ent|.+like)$");
 	private static final Pattern ESSENTIAL_POS_PATTERN = Pattern.compile("ent|conj_ent|verb|vbs|if|symb|pro");
 	private static final Pattern VERB_POS_PATTERN = Pattern.compile("verb|vbs");	
 	private static final Pattern SINGLE_WORD_TEX_PATTERN = Pattern.compile("\\$[^$]+\\$[^\\s]*"); 
@@ -688,8 +688,7 @@ public class ThmP1 {
 					type = "symb";
 				}
 				// go with the pos of the last word, e.g. $k$-algebra
-				else if (DASH_ENT_PATTERN.matcher(curWord).find()) { //\\$[^$]+\\$[^-\\s]*-[^\\s]*
-					
+				else if (DASH_ENT_PATTERN.matcher(curWord).find()) { //\\$[^$]+\\$[^-\\s]*-[^\\s]*					
 					String[] curWordAr = curWord.split("-");
 					String tempWord = curWordAr[curWordAr.length - 1];
 					List<String> tempPosList = posMMap.get(tempWord);
@@ -715,13 +714,14 @@ public class ThmP1 {
 			if (i < strAr.length - 1) {
 				
 				String potentialTrigger = curWord + " " + strAr[i + 1];
+				//System.out.println("potential trigger: " + potentialTrigger );
 				if (fixedPhraseMMap.containsKey(potentialTrigger)) {
 					//primordial pair to be set if valid fixed phrase is found.
 					//Ugly solution, but this avoids creating a whole new class
 					//with just an in and a Pair as members.
 					Pair emptyPair = new Pair(null, null);
 					//if(true) throw new IllegalStateException(potentialTrigger);
-					int numWordsDown = findFixedPhrase(potentialTrigger, i, strAr, emptyPair);
+					int numWordsDown = findFixedPhrase(potentialTrigger, i, strAr, emptyPair);					
 					if(numWordsDown > 1){
 						/*null if word phrase is fluff*/
 						if(null != emptyPair.pos()){
@@ -776,8 +776,7 @@ public class ThmP1 {
 				wordPos = "ent";
 			}
 
-			if (null != wordPos && wordPos.equals("ent")) { 
-				
+			if (null != wordPos && wordPos.equals("ent")) { 				
 				curWord = posList.isEmpty() ? singular : curWord;
 				String tempWord = curWord;
 				int pairsSize;
@@ -786,13 +785,11 @@ public class ThmP1 {
 				//should be superceded by using the two-gram map above! <--this way can be more deliberate 
 				//and flexible than using n-grams, e.g. if composite math noun, eg "finite field"
 				while (i - k > -1 && posMMap.containsKey((tempWord=strAr[i - k] + " " + tempWord))
-						&& posMMap.get(tempWord).get(0).equals("ent")) {
-					
+						&& posMMap.get(tempWord).get(0).equals("ent")) {					
 					// remove previous pair from pairs if it has new match.
 					// pairs.size should be > 0, ie previous word should be
 					// classified already
 					if ((pairsSize=pairs.size()) > 0 && pairs.get(pairsSize - 1).word().equals(strAr[i - k])) {
-
 						// remove from mathIndexList if already counted
 						List<String> preWordPosList = posMMap.get(pairs.get(pairsSize - 1).word());
 						if (!preWordPosList.isEmpty() && preWordPosList.get(0).equals("ent")) {							
@@ -834,8 +831,7 @@ public class ThmP1 {
 						pairs.get(pairsSize - 1).set_word(pairs.get(pairsSize - 1).word() + " " + curWord);
 						continue;
 					}					
-				}
-				
+				}				
 				Pair pair = new Pair(curWord, "ent");
 				addExtraPosToPair(pair, posList);
 				pairs.add(pair);
@@ -866,16 +862,15 @@ public class ThmP1 {
 				}	
 				Pair emptyPair = new Pair(null, null);
 				//keep going until all words in an n-gram are gathered
-				while (tempPos.matches("[^_]*_COMP|[^_]*_comp") && i < strAr.length - 1) {					
-					
+				while (tempPos.matches("[^_]+_COMP|[^_]+_comp") && i < strAr.length - 1) {					
 					//if there's a next word, see if these words form triggers for fixed phrases
 					if(i < strAr.length - 2){
 						String potentialTrigger = strAr[i+1] + " " + strAr[i+2];
 						int numWordsDown = findFixedPhrase(potentialTrigger, i+1, strAr,
 								emptyPair);
-						if(null != emptyPair.pos()){
+						if(numWordsDown > 1){						
 							//-2 because we were looking ahead and fed i+1 to findFixedPhrase().
-							i += numWordsDown - 2;
+							//i += numWordsDown - 2;
 							break;
 						}
 					}					
@@ -907,12 +902,11 @@ public class ThmP1 {
 				eliminateUnlikelyPosPairs(pair, pairs);
 				pairs.add(pair);
 				
-				if(null != emptyPair.pos()){
+				/*if(null != emptyPair.pos()){
 					emptyPair = fuseAdverbAdj(pairs, curWord, emptyPair);	
 					pairs.add(emptyPair);
 					if(emptyPair.pos().equals("ent")) mathIndexList.add(pairs.size() - 1);
-					//System.out.println("emptyPair added! pairs: " + pairs);
-				}	
+				}*/	
 				//System.out.println("(((((((pair: " + pair);
 			}
 			// if plural form
@@ -1034,6 +1028,9 @@ public class ThmP1 {
 							}
 						}
 					}
+				}else if(strAr.length == i + 1){
+					//word is last word, e.g. "$X$ is connected"
+					curPos = "adj";
 				}
 				// previous word is "is, are", then group with previous word to
 				// verb
@@ -1443,10 +1440,10 @@ public class ThmP1 {
 			// namesMap, but not if symbol is part of conjunction, e.g. given integers $p$ and $q$.*/
 			int pairsSize = pairs.size();
 			if (index + 1 < pairsSize && pairs.get(index + 1).pos().equals("symb")
-					//don't fuse if e.g. mathObjName is "map"
+					//don't fuse if mathObjName is e.g. "map"
 					&& !noFuseEntSet.contains(mathObjName)) {
 				//the word following symbol is "and"
-				if (index + 2 == pairsSize || AND_OR_PATTERN.matcher(pairs.get(index+2).pos()).find()
+				if (index + 2 < pairsSize && AND_OR_PATTERN.matcher(pairs.get(index+2).pos()).find()
 						//&& pairs.get(index+3).equals("") 
 						){
 					//if(true) throw new RuntimeException();	
@@ -1862,6 +1859,7 @@ public class ThmP1 {
 	}
 
 	/**
+	 * Note that emptyPair pos is null if word phrase is fluf.						
 	 * @param potentialTrigger
 	 * @param i Starting index of this fixed phrase.
 	 * @param strAr
@@ -1870,33 +1868,36 @@ public class ThmP1 {
 	 */
 	private static int findFixedPhrase(String potentialTrigger, int i, String[] strAr,
 			Pair emptyPair) {
-		// do first two words instead of 1, e.g. "for all" instead
-		// of just "for"
-		// since compound words contain at least 2 words
+		/* Use first two words instead of one, e.g. "for all" instead of just "for"
+		 * since compound words contain at least 2 words */
 		List<FixedPhrase> fixedPhraseList = fixedPhraseMMap.get(potentialTrigger);
+		if(fixedPhraseList.isEmpty()){
+			return 0;
+		}
 		int numWordsDown = 0;
 		//fixedPhrases should better reside in a trie instead a Multimap
 		Iterator<FixedPhrase> fixedPhraseListIter = fixedPhraseList.iterator();
 		while (fixedPhraseListIter.hasNext()) {
 			FixedPhrase fixedPhrase = fixedPhraseListIter.next();
-			numWordsDown = fixedPhrase.numWordsDown();
-			
+			numWordsDown = fixedPhrase.numWordsDown();			
 			StringBuilder joinedSB = new StringBuilder(20);
-			
+			//System.out.println("fixed phrase: " + fixedPhrase +  " " + numWordsDown);
 			int k = i;
 			while (k < strAr.length && k - i < numWordsDown) {				
 				joinedSB.append(strAr[k]).append(" ");
 				k++;
-			}
-			
+			}			
 			String joinedTrimmed = joinedSB.toString().trim();
 			Matcher matcher = fixedPhrase.phrasePattern().matcher(joinedTrimmed);
 			if (matcher.matches()) {
 				String pos = fixedPhrase.pos();
-				if(!"fluff".equals(pos)){				
+				if(!"fluff".equals(pos)){		
 					emptyPair.set_word(joinedTrimmed);
 					emptyPair.set_pos(pos);
 				}
+				break;
+			}else{
+				numWordsDown = 0;
 			}
 		}
 		return numWordsDown;
@@ -3268,10 +3269,9 @@ public class ThmP1 {
 	private static boolean isSingularVerb(String word) {
 		// did not find singular verbs that don't end in "s"
 		int wordLen = word.length();
-
-		if (wordLen < 2 || word.charAt(wordLen - 1) != 's')
+		if (wordLen < 2 || word.charAt(wordLen - 1) != 's'){
 			return false;
-
+		}
 		// strip away 's'
 		List<String> posList = posMMap.get(word.substring(0, wordLen - 2));
 		//String pos = posMMap.get(word.substring(0, wordLen - 2)).get(0);
@@ -3281,8 +3281,6 @@ public class ThmP1 {
 		// strip away es if applicable
 		else if (wordLen > 2 && word.charAt(wordLen - 2) == 'e') {
 			posList = posMMap.get(word.substring(0, wordLen - 3));
-
-
 			if (!posList.isEmpty() && posList.get(0).matches("verb|verb_comp"))
 				return true;
 		}
@@ -3302,8 +3300,8 @@ public class ThmP1 {
 	 * @param firstEnt
 	 * @param recentEnt
 	 * @param recentEntIndex
-	 * @param i Indices in mx.
-	 * @param j
+	 * @param i row index in mx.
+	 * @param j column index in mx.
 	 * @param k
 	 * @param type1
 	 * @param type2
@@ -3376,8 +3374,7 @@ public class ThmP1 {
 				//which should be attached to immediately prior word
 				//System.out.println("children: " + hypStruct+ " &&&"+ struct1 + " *** " + struct2);
 				if(childRelation.childRelationStr().contains("which") ){
-					//System.out.println("structToAppendChild : " + (structToAppendChild instanceof StructH) + " ! structToAppendChild.children(): " + structToAppendChild.children() );
-					
+					//System.out.println("structToAppendChild : " + (structToAppendChild instanceof StructH) + " ! structToAppendChild.children(): " + structToAppendChild.children() );				
 					if(structToAppendChild.children().size() > 0){
 						return new EntityBundle(firstEnt, recentEnt, recentEntIndex);
 					}
@@ -3398,8 +3395,7 @@ public class ThmP1 {
 			// add to child relation, usually a preposition, 
 			//eg  "from", "over"
 			// could also be verb, "consist", "lies"			
-				List<Struct> kPlus1StructArrayList = mx.get(k + 1).get(k + 1).structList();			
-				
+				List<Struct> kPlus1StructArrayList = mx.get(k + 1).get(k + 1).structList();					
 				for(int p = 0; p < kPlus1StructArrayList.size(); p++){
 					Struct struct = kPlus1StructArrayList.get(p);
 					if(struct.prev1NodeType().equals(NodeType.STR)){						
@@ -3410,7 +3406,7 @@ public class ThmP1 {
 				}
 			}
 			
-			if(childRelation == null){
+			if(null == childRelation){
 				//should throw checked exception, and let the program keep running, rather than
 				//runtime exception 				
 				logger.info("Inside ThmP1.reduce(), childRelation should not be null! " + parseState.getTokenList());
@@ -3441,10 +3437,8 @@ public class ThmP1 {
 					String childRelationStr = ThmP1AuxiliaryClass.getChildRelationStringFromStructPrev1(struct2Prev1);
 					childRelation = new ChildRelation.HypChildRelation(childRelationStr);
 					childToAdd = (Struct)struct2.prev2();
-				}
-				
-				Struct struct2Prev2 = (Struct)struct2.prev2();				
-				
+				}				
+				Struct struct2Prev2 = (Struct)struct2.prev2();								
 				if(struct2.prev2NodeType().equals(NodeType.STRUCTH)){
 					//e.g. "phrase[adj[maximal], prep[pre[among], [ent{name=ring}]]]"
 					//childRelation = extractHypChildRelation(struct2Prev1);
@@ -3491,9 +3485,9 @@ public class ThmP1 {
 				}*/
 				 
 				//if struct2 is e.g. a prep, only want the ent in the prep
-				//to be added.
-				
-				if(struct2.type().equals("prep") && struct2.prev2NodeType().equals(NodeType.STRUCTH)
+				//to be added. Or symb, "$P$ in $R$ is prime."
+				if(struct2.type().equals("prep") && struct2.prev2NodeType().isTypeStruct() 
+						//.equals(NodeType.STRUCTH) || ((Struct)struct2.prev2()).type().equals("symb")
 						//if struct2 is of type "hypo", only add the condition, i.e. second
 						//e.g. "ideal which is prime"
 						|| struct2.type().equals("hypo") && struct2.prev2NodeType().isTypeStruct()){

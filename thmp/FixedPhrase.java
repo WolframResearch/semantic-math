@@ -25,15 +25,12 @@ public class FixedPhrase {
 	//part of speech
 	private String pos;
 	
-	public FixedPhrase(String regex, String pos){
+	public FixedPhrase(String regexStr, String pos){
 		//compile the regex into a Pattern.
-		this.phrasePattern = Pattern.compile(regex);
-		
-		this.pos = pos;
-		
+		this.phrasePattern = Pattern.compile(regexStr);		
+		this.pos = pos;		
 		//determine the number of words to look down
-		this.numWordsDown = regex.split(" ").length;		
-		
+		this.numWordsDown = regexStr.split(" ").length;		
 	}
 	
 	public String pos(){
@@ -48,4 +45,7 @@ public class FixedPhrase {
 		return this.phrasePattern;
 	}
 	
+	public String toString(){
+		return this.phrasePattern.toString();
+	}
 }

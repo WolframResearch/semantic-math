@@ -90,15 +90,12 @@ public class ParseStruct implements Serializable{
 		WLCommandStr = wLCommandStr;
 	}
 
-	//the parent ParseStruct
 	private ParseStruct parentParseStruct;
 	
 	public ParseStruct(){
-		//this.componentType = type;
 		this.childrenParseStructList = new ArrayList<ParseStruct>();
 		this.wrapperMMap = ArrayListMultimap.create();
 		this.triggerWordsMap = new HashMap<String, WLCommandWrapper>();
-		//this.wrapperMMap.put(type, headStruct);		
 		//how about just point to the same tree?
 		//this.map = ArrayListMultimap.create(subParseTree);
 	}
@@ -118,8 +115,7 @@ public class ParseStruct implements Serializable{
 	
 	public void set_parentParseStruct(ParseStruct parent){
 		this.parentParseStruct = parent;
-	}
-	
+	}	
 	
 	@Override
 	public String toString(){
@@ -153,7 +149,6 @@ public class ParseStruct implements Serializable{
 				sb.append("{").append(childParseStruct).append("}");
 			}
 			i--;
-			//throw new IllegalStateException(entry.getValue().toString());
 		}		
 		return sb.toString();
 	}

@@ -10,6 +10,7 @@ logarithmic adj
 CW complex ent
 homology ent
 log ent
+value ent
 separate verb
 sheaf ent
 tower ent
@@ -94,7 +95,6 @@ localization ent
 respect verb
 submodule ent_comp
 indeed fluff
-one adj
 can verb_comp
 "can be" verb
 could verb_comp
@@ -194,6 +194,10 @@ with hyp
 regular adj
 noetherian adj
 transition noun
+one ent_comp
+one num_comp
+one adj_comp
+"one has" then
 zero num
 zero adj
 zerodivisor ent
@@ -210,6 +214,7 @@ ring ent
 graded adj
 integral adj
 algebra ent
+coalgebra ent
 catenary adj
 universal adj
 topology ent

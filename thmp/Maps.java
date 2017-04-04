@@ -388,6 +388,7 @@ public class Maps {
 			posPreMMap.put("isomorphic", "adj");
 			posPreMMap.put("for", "pre_COMP"); // can be composite word, use first pos
 											// if composite not in posmap
+			posPreMMap.put("for", "hyp");
 			posPreMMap.put("measurable", "adj");
 			posPreMMap.put("nondecreasing", "adj");
 			posPreMMap.put("positive", "adj");
@@ -447,7 +448,7 @@ public class Maps {
 			posPreMMap.put("for all", "hyp");
 			posPreMMap.put("for each", "hyp");
 			posPreMMap.put("for any", "hyp");
-
+			
 			// prepositions
 			posPreMMap.put("or", "or");
 			posPreMMap.put("and", "and");
@@ -852,6 +853,8 @@ public class Maps {
 			structMap.put("noun_phrase", new Rule("np", 1));
 			structMap.put("ent_phrase", new Rule("newchild", 1));
 			structMap.put("ent_Cond", new Rule("newchild", 1));
+			/*$A$ is such that $A > B$*/
+			structMap.put("verb_Cond", new Rule("verbphrase", .8));
 			structMap.put("ent_ppt", new Rule("newchild", 1));
 			structMap.put("ent_expr", new Rule("addstruct", 1)); // ent_tex. Add
 																	// member to
@@ -1048,14 +1051,27 @@ public class Maps {
 				// String line = sc.nextLine();
 				String[] fixedPhraseData = line.split("\\s*\\|\\s*");
 	
-				if (fixedPhraseData.length < 3)
+				if (fixedPhraseData.length < 2){
 					continue;
+				}
+				String trigger;
+				String triggerRegexStr;
+				String pos;
+				if (fixedPhraseData.length == 2){
+					triggerRegexStr = fixedPhraseData[0];
+					String[] firstTwoWords = triggerRegexStr.split("\\s+");
+					if(firstTwoWords.length < 2){
+						continue;
+					}
+					trigger = firstTwoWords[0] + " " + firstTwoWords[1];
+					pos = fixedPhraseData[1];
+				}else{
+					trigger = fixedPhraseData[0];
+					triggerRegexStr = fixedPhraseData[1];
+					pos = fixedPhraseData[2];
+				}
 	
-				String trigger = fixedPhraseData[0];
-				String triggerRegex = fixedPhraseData[1];
-				String pos = fixedPhraseData[2];
-	
-				fixedPhraseMMapBuilder.put(trigger, new FixedPhrase(triggerRegex, pos));
+				fixedPhraseMMapBuilder.put(trigger, new FixedPhrase(triggerRegexStr, pos));
 			}
 		}catch(IOException e){
 			e.printStackTrace();

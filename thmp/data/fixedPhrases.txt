@@ -11,8 +11,9 @@ radius of | radius of convergence | ent
 as well | as well as | and
 in this | in this case | fluff
 in the | in the sense that | fluff
+in the | in the sense of | fluff
 in other | in other words | fluff
 in particular | in particular | fluff
 by passage | by passage to | pre
 is called | is called | auxpass
-more generally | more generally | fluf
+more generally | more generally | fluff

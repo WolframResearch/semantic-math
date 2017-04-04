@@ -352,6 +352,10 @@ public class WLCommandsList {
 				new PBuilder("ForAll["), new PBuilder("ent|symb", null, true, RelationType._IS).addRelationType(RelationType.IF), 
 				new PBuilder("]") ));
 		
+		wLCommandMapBuilder.put("for", addCommand(new PBuilder(null, null, WLCommand.PosTermType.NEGATIVE),
+				new PBuilder("hyp", null, false, true, false), new PBuilder("ent|symb", null, true, RelationType.IF),
+				new PBuilder(null, null, WLCommand.PosTermType.NEGATIVE) ));
+		
 		//WLCommandMapBuilder.put("suppose", addCommand(new String[] { "hyp, , trigger",
 			//"assert, , true" })); 
 		//note that "hyp" also includes "which is...", which can occur in statements, and not just hypotheses!

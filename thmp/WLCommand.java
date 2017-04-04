@@ -1727,7 +1727,8 @@ public class WLCommand implements Serializable{
 
 	/**
 	 * Find parent/ancestors if they satisfy same type/name requirements, if going backwards
-	 * through the parse tree in dfs traversal order.
+	 * through the parse tree in dfs traversal order. E.g. $A$ in $B$ is p. should go to the
+	 * $A$ as the subject rather than stopping at $B$.
 	 * @param componentPosPattern
 	 * @param componentNamePattern
 	 * @param struct
@@ -1747,12 +1748,10 @@ public class WLCommand implements Serializable{
 		while(structParent != null){
 			//System.out.println("***@@*@@*@@*****parent: " + structParent );
 			String structParentType = structParent.type();
-			String parentType = CONJ_DISJ_PATTERN.matcher(structParentType).find() ?
+			String parentType = CONJ_DISJ_PATTERN.matcher(structParentType).matches() ?
 					//curStructInDequeParent.type().matches("conj_.+|disj_.+") ?
-					structParentType.split("_")[1] : structParentType;
-					
-			String parentNameStr = "";
-			
+					structParentType.split("_")[1] : structParentType;					
+			String parentNameStr = "";			
 			if(structParent.isStructA()){
 				if(structParent.prev1NodeType().equals(NodeType.STR)){
 					parentNameStr = structParent.prev1().toString();
@@ -1761,8 +1760,8 @@ public class WLCommand implements Serializable{
 				parentNameStr = structParent.struct().get("name");
 			}
 			//System.out.println("###################parentNameStr " + parentNameStr + " parentType " +  parentType);
-			//should match both type and term. Get parent of struct, e.g. "log of f is g" should get all of
-			//"log of f", instead of just "f". I.e. get all of StructH.
+			/*should match both type and term. Get parent of struct, e.g. "log of f is g" should get all of
+			 *log of f", instead of just "f". I.e. get all of StructH.*/
 			
 			//System.out.println("\n^^^^^^^^" + ".name(): " + curCommandComponent.name() + " parentStr: " + parentNameStr+" type " +
 			//componentType + " parentType " + parentType);						
@@ -1806,8 +1805,7 @@ public class WLCommand implements Serializable{
 				structParent = structParent.parentStruct();
 
 			}*/
-			else{
-				
+			else{				
 				break;
 			}
 		}

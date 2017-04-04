@@ -612,7 +612,15 @@ public class ThmP1TestRun {
 			st = "Finally, we define the {em generator} $\\haclA$ of the semigroup $\\{ \\haP^t\\,:\\,t\\in\\TT\\}$:We write $\\haclA g=h$ if \\be";
 			st = "Let $(a,b)$ be such that $ \\ tau(a,b)=0$, then $ \\ mathcal{M}(a,b)$ is   non-empty and connected.";
 			st = "$a S$ is non-empty and connected"; //<--parse this "non-empty" should be grouped together as connected
-			
+			st = "Let $(a,b)$ be such that $ \\ tau(a,b)=0$";
+			st = "there are only finitely many classes of combinatorially equivalent esentations of complexity $n$.";
+			st = "The line bundle $L \\ rightarrow A$ is positive in the sense of Kodaira if and only if it is positive in the sense of Grauert";
+			st = "Let $C$ be a coalgebra over $R$, and let $L$ be a subset of $G(C)$.";
+			st = "if any two grouplike elements in $L$ are $R$-linearly independent";
+			st = "for all but finitely many values of $c$";
+			st = "$P$ is prime for the ideal $P$ in $R$";
+			st = "one has $x=y$";
+			st = "${s_i}_n$ is bounded independent of $n$";
 			//st = " $\\Probsub_x$ is the law of $\\bfPhi$ conditional on $\\Phi(0)=x,$ and $\\Expect_x$ is the corresponding expectation.";
 			//st = "two vectors $x$ and $y$ are adjacent";
 			//st = "Integers $p$ and $q$ are coprime if and only if there exist integers $n$ and $m$ such that $np - mq = 1$";
