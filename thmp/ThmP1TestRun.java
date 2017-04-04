@@ -610,6 +610,9 @@ public class ThmP1TestRun {
 			st = "two vectors $x$ and $y$ are adjacent if they differ in exactly one coordinate";
 			st = "Suppose that ${ haP^ , :  , t\\in\\TT\\}$$ is a semigroup of operators on $L_infty^V$, with generator $\\haclA$, and with finite spectral radius given by \\[sfsg\\]";
 			st = "Finally, we define the {em generator} $\\haclA$ of the semigroup $\\{ \\haP^t\\,:\\,t\\in\\TT\\}$:We write $\\haclA g=h$ if \\be";
+			st = "Let $(a,b)$ be such that $ \\ tau(a,b)=0$, then $ \\ mathcal{M}(a,b)$ is   non-empty and connected.";
+			st = "$a S$ is non-empty and connected"; //<--parse this "non-empty" should be grouped together as connected
+			
 			//st = " $\\Probsub_x$ is the law of $\\bfPhi$ conditional on $\\Phi(0)=x,$ and $\\Expect_x$ is the corresponding expectation.";
 			//st = "two vectors $x$ and $y$ are adjacent";
 			//st = "Integers $p$ and $q$ are coprime if and only if there exist integers $n$ and $m$ such that $np - mq = 1$";

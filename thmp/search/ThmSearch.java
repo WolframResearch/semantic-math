@@ -87,10 +87,12 @@ public class ThmSearch {
 			
 			/*path for the combined list of projected vectors*/
 			String combinedProjectedMxFilePath = getSystemCombinedProjectedMxFilePath();
+			String fullMxPath = "src/thmp/data/"+TermDocumentMatrix.FULL_TERM_DOCUMENT_MX_NAME+".mx";
 			
 			if(null != servletContext){				
 				pathToProjectionMx = servletContext.getRealPath(pathToProjectionMx);
 				combinedProjectedMxFilePath = servletContext.getRealPath(combinedProjectedMxFilePath);
+				fullMxPath = servletContext.getRealPath(fullMxPath);
 			}
 			
 			evaluateWLCommand(ml, "<<"+combinedProjectedMxFilePath, false, true);
@@ -98,7 +100,7 @@ public class ThmSearch {
 			ml.discardAnswer();
 			
 			if(USE_FULL_MX){
-				evaluateWLCommand(ml, "<<src/thmp/data/"+TermDocumentMatrix.FULL_TERM_DOCUMENT_MX_NAME+".mx");
+				evaluateWLCommand(ml, "<<"+fullMxPath);
 			}
 			//need both Projection mx and the matrices containing row vectors corresponding to lists!
 			

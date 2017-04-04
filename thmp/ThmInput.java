@@ -64,6 +64,9 @@ public class ThmInput {
 	  Need to be smart about e.g. \newcommand{\\un}[1]{\\underline{#1}} !*/
 	//Should also support \newcommand{cmd}[args][opt]{def} with optional terms
 	static final Pattern NEW_THM_PATTERN2 = Pattern.compile("\\s*\\\\(?:re){0,1}newcommand\\{([^}]+)\\}\\s*(?:\\[(\\d)\\])*\\s*\\{(.+?)\\}\\s*");
+	/*e.g. \def\X{{\cal X}};  \def \author {William {\sc Smith}}; 
+	 *Currently not covering: \def <command> <parameter-text>{<replacement-text>} e.g. \def\testonearg[#1]{\typeout{Testing one arg: '#1'}} */
+	static final Pattern NEW_THM_PATTERN3 = Pattern.compile("\\s*\\\\def\\s*([^{]+?)\\s*\\{(.+?)\\}\\s*");
 	
 	static final Pattern THM_TERMS_PATTERN = Pattern.compile("Theorem|Proposition|Lemma|Corollary|Conjecture|Definition");
 	
@@ -90,12 +93,13 @@ public class ThmInput {
 					+ "|\\\\begin\\{slogan\\}|\\\\end\\{slogan\\}|\\\\sbsb|\\\\cat|\\\\bs"
 					+ "|\\\\section\\{(?:[^}]*)\\}\\s*|\\\\noindent|\\\\begin\\{abstract\\}|\\\\cite\\{[^}]+\\}|\\\\cite\\[[^\\]]+\\]",
 					Pattern.CASE_INSENSITIVE);
-	private static final Pattern ELIMINATE_BEGIN_END_THM_PATTERN = Pattern
-			.compile("\\\\begin\\{def(?:[^}]*)\\}\\s*|\\\\begin\\{lem(?:[^}]*)\\}\\s*|\\\\begin\\{th(?:[^}]*)\\}\\s*"
+	static final String ELIMINATE_BEGIN_END_THM_STR = "\\\\begin\\{def(?:[^}]*)\\}\\s*|\\\\begin\\{lem(?:[^}]*)\\}\\s*|\\\\begin\\{th(?:[^}]*)\\}\\s*"
 					+ "|\\\\begin\\{pr(?:[^}]*)\\}\\s*|\\\\begin\\{proclaim(?:[^}]*)\\}\\s*|\\\\begin\\{co(?:[^}]*)\\}\\s*"
 					+ "|\\\\end\\{def(?:[^}]*)\\}\\s*|\\\\end\\{lem(?:[^}]*)\\}\\s*|\\\\end\\{th(?:[^}]*)\\}\\s*"
 					+ "|\\\\end\\{pr(?:[^}]*)\\}\\s*|\\\\end\\{proclaim(?:[^}]*)\\}\\s*|\\\\end\\{co(?:[^}]*)\\}\\s*"
-					+ "|\\\\end\\{pr(?:[^}]*)\\}\\s*", Pattern.CASE_INSENSITIVE);
+					+ "|\\\\end\\{pr(?:[^}]*)\\}\\s*";
+	static final Pattern ELIMINATE_BEGIN_END_THM_PATTERN = Pattern
+			.compile(ELIMINATE_BEGIN_END_THM_STR, Pattern.CASE_INSENSITIVE);
 	
 	private static final Pattern ITEM_PATTERN = Pattern.compile("\\\\item");
 
@@ -230,14 +234,15 @@ public class ThmInput {
 				// if(line.matches("\\\\end\\{definition\\}|\\\\end\\{lemma\\}|\\\\end\\{thm\\}|\\\\end\\{theorem\\}")){
 				inThm = false;
 				//append the e.g. "\end{theorem}"
-				newThmSB.append(" ").append(line);//HERE
+				newThmSB.append(" ").append(line);
 				// process here, return two versions, one for bag of words, one
 				// for display
 				// strip \df, \empf. Index followed by % strip, not percent
 				// don't strip.
 				// replace enumerate and \item with *
 				//System.out.println("newThmSB! " + newThmSB);				
-				String thm = removeTexMarkup(newThmSB.toString(), thmWebDisplayList, bareThmList, macrosTrie) + "\n";
+				String thm = removeTexMarkup(newThmSB.toString(), thmWebDisplayList, bareThmList, macrosTrie,
+						ELIMINATE_BEGIN_END_THM_PATTERN) + "\n";
 				//System.out.println("after removeTexMarkup! " + thm);
 				/*
 				 * String[] meat = thm.split("\\\\label\\{([a-zA-Z]|-)*\\} ");
@@ -266,7 +271,7 @@ public class ThmInput {
 
 	public static String removeTexMarkup(String thmStr, List<String> thmWebDisplayList,
 			List<String> bareThmList) {
-		return removeTexMarkup(thmStr, thmWebDisplayList, bareThmList, null);
+		return removeTexMarkup(thmStr, thmWebDisplayList, bareThmList, null, ELIMINATE_BEGIN_END_THM_PATTERN);
 	}
 	/**
 	 * Processes Latex input, e.g. by removing syntax used purely for display and not
@@ -279,7 +284,7 @@ public class ThmInput {
 	 * @return Thm without the "\begin{lemma}", "\label{}", etc parts.
 	 */	
 	public static String removeTexMarkup(String thmStr, List<String> thmWebDisplayList,
-			List<String> bareThmList, MacrosTrie macrosTrie) {
+			List<String> bareThmList, MacrosTrie macrosTrie, Pattern eliminateBeginEndThmPattern) {
 
 		boolean getWebDisplayList = thmWebDisplayList == null ? false : true;
 		boolean getBareThmList = bareThmList == null ? false : true;		
@@ -292,8 +297,8 @@ public class ThmInput {
 		matcher = ELIMINATE_PATTERN.matcher(thmStr);
 		thmStr = matcher.replaceAll("");
 		
-		//comment out this line if want to retain "\begin{theorem}", etc
-		thmStr = ELIMINATE_BEGIN_END_THM_PATTERN.matcher(thmStr).replaceAll("");
+		/*comment out this line if want to retain "\begin{theorem}", etc*/
+		thmStr = eliminateBeginEndThmPattern.matcher(thmStr).replaceAll("");
 		
 		matcher = ITEM_PATTERN.matcher(thmStr);
 		//replace \item with bullet points (*)

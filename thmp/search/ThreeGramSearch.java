@@ -51,7 +51,7 @@ public class ThreeGramSearch {
 	
 	private static final Path threeGramsFilePath = Paths.get("src/thmp/data/threeGramData.txt");
 	//additional three grams to be intetionally added. 
-	private static final String[] ADDITIONAL_THREE_GRAMS = new String[]{"formal power series"};
+	private static final String[] ADDITIONAL_THREE_GRAMS = new String[]{"formal power series", "one to one"};
 	// name of two gram data file containing additional 2-grams that should be included. These don't have
 	//frequencies associated with them.
 	private static final String THREE_GRAM_DATA_FILESTR = "src/thmp/data/threeGramData.txt";	

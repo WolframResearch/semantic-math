@@ -3,12 +3,9 @@ package thmp.utils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -17,13 +14,13 @@ import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.ImmutableMap;
 
-import thmp.utils.WordTrie.WordTrieNode;
-
 /**
  * Trie for custom macros commands.
+ * E.g.:
  * \newcommand{\xra}  {\xrightarrow}
  * \newcommand{\\un}[1]{\\underline{#1}}
- * Should use a Builder to build MacrosTrie, and make it immutable!
+ * \def\X{{\cal X}}
+ * Use a Builder to build MacrosTrie. MacrosTrie is immutable.
  * @author yihed
  */
 public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
@@ -50,6 +47,8 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 		 * Walk down the trie and adds the TrieNode where appropriate.
 		 * @param c
 		 * @param node
+		 * @param slotCount E.g. the count #1 in \newcommand{\\un}[1]{\\underline{#1}}. 
+		 * slotCount = 0 if no count present.
 		 */
 		public void addTrieNode(String commandStr, String replacementStr, int slotCount){
 			

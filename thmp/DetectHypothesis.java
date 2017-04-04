@@ -653,6 +653,7 @@ public class DetectHypothesis {
 		
 		Pattern thmStartPattern = customPatternAr[0];
 		Pattern thmEndPattern = customPatternAr[1];	
+		Pattern eliminateBeginEndThmPattern = customPatternAr[2];
 		
 		StringBuilder newThmSB = new StringBuilder();
 		Matcher matcher;
@@ -694,7 +695,8 @@ public class DetectHypothesis {
 				// don't strip.
 				// replace enumerate and \item with *
 				//thmWebDisplayList, and bareThmList should both be null
-				String contextStr = ThmInput.removeTexMarkup(contextSB.toString(), null, null, macrosTrie);
+				String contextStr = ThmInput.removeTexMarkup(contextSB.toString(), null, null, macrosTrie,
+						eliminateBeginEndThmPattern);
 				
 				//scan contextSB for assumptions and definitions
 				//and parse the definitions
@@ -711,8 +713,7 @@ public class DetectHypothesis {
 			//if and not else if, since \begin{} and \end{} could be on same line.
 			if (thmEndPattern.matcher(line).matches()) {
 				
-				inThm = false;
-				
+				inThm = false;				
 				if(0 == newThmSB.length()){
 					continue;
 				}
@@ -723,7 +724,8 @@ public class DetectHypothesis {
 				newThmSB.append(" ").append(line);
 				
 				//parse hyp and thm. BE SURE TO ONLY RE-ORDER WORDS based on word freuqency at last run, before serializing!
-				String thm = processParseHypThm(newThmSB, parseState, stats, definitionListWithThmList, fileName);
+				String thm = processParseHypThm(newThmSB, parseState, stats, definitionListWithThmList, fileName, macrosTrie,
+						eliminateBeginEndThmPattern);
 				allThmsStrWithSpaceList.add(thm + "\n\n");
 				
 				//with hyps
@@ -770,7 +772,8 @@ public class DetectHypothesis {
 	 * @param definitionListWithThmList
 	 */
 	private static String processParseHypThm(StringBuilder newThmSB, ParseState parseState, Stats stats, 
-			List<DefinitionListWithThm> definitionListWithThmList, String srcFileName){
+			List<DefinitionListWithThm> definitionListWithThmList, String srcFileName, MacrosTrie macrosTrie,
+			Pattern eliminateBeginEndThmPattern){
 		
 		// process here, return two versions, one for bag of words, one
 		// for display
@@ -778,7 +781,9 @@ public class DetectHypothesis {
 		// don't strip.
 		// replace enumerate and \item with *
 		//thmWebDisplayList, and bareThmList should both be null
-		String thm = ThmInput.removeTexMarkup(newThmSB.toString(), null, null);
+		//String contextStr = ThmInput.removeTexMarkup(contextSB.toString(), null, null, macrosTrie);
+		String thm = ThmInput.removeTexMarkup(newThmSB.toString(), null, null, macrosTrie,
+				eliminateBeginEndThmPattern);
 		
 		//Must clear headParseStruct and curParseStruct of parseState, so newThm
 		//has its own stand-alone parse tree.
@@ -815,22 +820,28 @@ public class DetectHypothesis {
 	 */
 	private static Pattern[] addMacrosToThmBeginEndPatterns(List<String> macrosList) {
 		//compiler will inline these, so don't add function calls to stack.
-		Pattern[] customPatternAr = new Pattern[]{ThmInput.THM_START_PATTERN, ThmInput.THM_END_PATTERN};
+		Pattern[] customPatternAr = new Pattern[]{ThmInput.THM_START_PATTERN, ThmInput.THM_END_PATTERN,
+				ThmInput.ELIMINATE_BEGIN_END_THM_PATTERN};
 		if(!macrosList.isEmpty()){
 			StringBuilder startBuilder = new StringBuilder();
 			StringBuilder endBuilder = new StringBuilder();
+			StringBuilder eliminateBuilder = new StringBuilder();
 			for(String macro : macrosList){
-				//create start and end macros
-				//but only if isn't already included in THM_START_PATTERN
+				//create start and end macros  .*\\\\begin\\s*\\{def(?:.*)
+				//but only if isn't already included in THM_START_PATTERN \\\\begin\\{def(?:[^}]*)\\}\\s*
 				if(ThmInput.THM_START_PATTERN.matcher("\\begin{" + macro).matches()){
 					continue;
 				}
 				startBuilder.append("|.*\\\\begin\\s*\\{").append(macro).append(".*");				
 				endBuilder.append("|.*\\\\end\\s*\\{").append(macro).append(".*");
+				eliminateBuilder.append("|\\\\begin\\s*\\{").append(macro).append("\\}\\s*");
+				eliminateBuilder.append("|\\\\end\\s*\\{").append(macro).append("\\}\\s*");
 			}
 			if(startBuilder.length() > 0){
 				customPatternAr[0] = Pattern.compile(ThmInput.THM_START_STR + startBuilder);
-				customPatternAr[1] = Pattern.compile(ThmInput.THM_END_STR + endBuilder);	
+				customPatternAr[1] = Pattern.compile(ThmInput.THM_END_STR + endBuilder);
+				customPatternAr[2] = Pattern.compile(ThmInput.ELIMINATE_BEGIN_END_THM_STR + endBuilder, 
+						Pattern.CASE_INSENSITIVE);
 			}
 		}
 		//if(true) throw new IllegalStateException("updated macros list: " + Arrays.deepToString(customPatternAr));
@@ -841,10 +852,10 @@ public class DetectHypothesis {
 	 * Read in custom macros, break as soon as \begin{...} encountered, 
 	 * in particular \begin{document}. There are no \begin{...} in the preamble
 	 * @param srcFileReader
-	 * @param macrosList
+	 * @param thmMacrosList *Only* macros to indicate begin of new theorems, propositions, etc.
 	 * @throws IOException
 	 */
-	private static String extractMacros(BufferedReader srcFileReader, List<String> macrosList, 
+	private static String extractMacros(BufferedReader srcFileReader, List<String> thmMacrosList, 
 			MacrosTrieBuilder macrosTrieBuilder) throws IOException {
 		
 		String line = null;		
@@ -857,7 +868,7 @@ public class DetectHypothesis {
 			}else if((newThmMatcher = ThmInput.NEW_THM_PATTERN.matcher(line)).matches()){
 				//should be a proposition, hypothesis, etc. E.g. don't look through proofs.
 				if(ThmInput.THM_TERMS_PATTERN.matcher(newThmMatcher.group(2)).matches()){
-					macrosList.add(newThmMatcher.group(1));	
+					thmMacrosList.add(newThmMatcher.group(1));	
 				}
 			}else if((newThmMatcher = ThmInput.NEW_THM_PATTERN2.matcher(line)).matches()){
 				String commandStr = newThmMatcher.group(1);
@@ -865,7 +876,12 @@ public class DetectHypothesis {
 				String slotCountStr = newThmMatcher.group(2);
 				int slotCount = null == slotCountStr ? 0 : Integer.valueOf(slotCountStr);
 				macrosTrieBuilder.addTrieNode(commandStr, replacementStr, slotCount);
-			}			
+			}else if((newThmMatcher = ThmInput.NEW_THM_PATTERN3.matcher(line)).matches()){
+				//case of \def\X{{\cal X}}
+				String commandStr = newThmMatcher.group(1);
+				String replacementStr = newThmMatcher.group(2);
+				macrosTrieBuilder.addTrieNode(commandStr, replacementStr, 0);
+			}		
 		}
 		//if(true)throw new IllegalStateException("macros: "+macrosList);
 		return line;
