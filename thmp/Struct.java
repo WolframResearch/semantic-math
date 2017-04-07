@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 
 import thmp.ParseToWLTree.WLCommandWrapper;
+import thmp.Struct.ChildRelation;
 
 /*
  * Struct to contain entities in sentence
@@ -324,10 +325,90 @@ public abstract class Struct implements Serializable{
 	//to be overwritten in StructH
 	public abstract List<ChildRelation> childRelationList();
 	
-	//to be overwritten in StructH. Not abstract, not applicable
-	//to StructA
-	public void add_child(Struct child, ChildRelation relation){		
+	protected abstract void setHasChildToTrue();
+	
+	protected boolean contentEquals(Struct other){
+		return false;
 	}
+	
+	public void add_child(Struct child, ChildRelation relation){
+		assert(!this.equals(child));		
+		if(this.contentEquals(child)){			
+			return;
+		}
+		this.setHasChildToTrue();
+		children().add(child);
+		childRelationList().add(relation);
+		child.set_parentStruct(this);
+	}
+	
+	/**
+	 * @param includeType
+	 * @param curCommand
+	 * @param sb StringBuilder to append child qualifier string to.
+	 * @return child String
+	 */
+	protected String appendChildrenQualifierString(boolean includeType, WLCommand curCommand) {
+		List<Struct> children = this.children();
+		List<ChildRelation> childRelationList = this.childRelationList();
+		int childrenSize = children.size();
+		int nontrivialChildrenStrCounter = 0;
+		//System.out.println("appendChildrenQualifierStrin struct " + this +" children: " + children);
+		StringBuilder childSb = new StringBuilder(30);
+		if(childrenSize > 0){			
+			for(int i = 0; i < childrenSize; i++){
+				Struct child = children.get(i);
+				String childRelationStr = childRelationList.get(i).childRelationStr;
+				/*if(child.WLCommandWrapperList() != null){
+					continue;
+				}*/
+				//str += ", ";
+				//str += childRelation.get(i) + " ";	
+				//System.out.println("^^^cur child: " + child);
+				//System.out.println("Used? "+ child.usedInOtherCommandComponent(curCommand) + " child: " +child);
+				
+				//only append curChidRelation if child is a StructH, to avoid
+				//including the relation twice, eg in case child is of type "prep"
+				//if this child has been used in another component of the same command.	
+				if(!child.usedInOtherCommandComponent(curCommand)){
+					
+					String childStr = child.simpleToString(includeType, curCommand);						
+					if(!childStr.matches("\\s*")){
+					//System.out.println("Childstr " + childStr);
+						nontrivialChildrenStrCounter++;
+						//don't want "symb", e.g. $G$ with $H$ prime. 
+						childRelationStr = (child.isStructA() && !child.type().equals("symb") 
+								//e.g. "field which is perfect", don't want "which"								
+								)
+								? "" : childRelationStr;
+						
+						//System.out.println("\n **^^^*** childRelation" + childRelationStr);
+						if(childRelationStr.equals("")){
+							//childSb.append("{").append(childStr).append("}");
+							childSb.append(childStr);
+							childSb.append(", ");
+						}else{
+							childSb.append("{\"" + childRelationStr + "\", " + childStr + "}");
+							childSb.append(", ");							
+						}
+						int childSbLen = childSb.length();
+						childSb = childSb.delete(childSbLen-2, childSbLen);
+						//WLCommand.increment_commandNumUnits(curCommand, this); //HERE
+					}
+				}
+			}
+			if(0 < childSb.length()){
+				if(nontrivialChildrenStrCounter > 1){
+					childSb.insert(0, ", \"Qualifiers\" -> {").append("}");
+				}else{
+					childSb.insert(0, ", \"Qualifiers\" -> ");
+				}				
+				//sb.append(childSb);
+			}					
+		}
+		return childSb.toString();
+	}
+	
 	
 	// to be overriden
 	public abstract Map<String, String> struct();

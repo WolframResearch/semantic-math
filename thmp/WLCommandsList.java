@@ -155,7 +155,7 @@ public class WLCommandsList {
 				));		
 		//e.g. "The field extension $F/Q$ splits."
 		wLCommandMapBuilder.put("verbAlone", addCommand(new PBuilder("symb|ent|pro|noun", null, true).addRelationType(RelationType._IS), 
-				new PBuilder("pro", "we", WLCommand.PosTermType.NEGATIVE),				
+				new PBuilder("pro", "we", WLCommand.PosTermType.NEGATIVE),		
 				new PBuilder(" ~HasProperty~ {"),  new PBuilder("verbAlone", null, true, true, false).addRelationType(RelationType.IS_), 
 				new PBuilder(" ,", "OPT"), new PBuilder("prep", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}")));	
 		

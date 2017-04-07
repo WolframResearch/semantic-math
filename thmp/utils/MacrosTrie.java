@@ -31,6 +31,7 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 	private static final Map<String, String> commandAndReplacementStrMap = new HashMap<String, String>();
 	private static final Integer CAPTURING_GROUP_SHIFT = 1;
 	
+	
 	public static class MacrosTrieBuilder{
 		
 		MacrosTrieNode rootNode;
@@ -220,7 +221,7 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 			if(this.rootNode.nodeMap.containsKey(c)){
 				trieNodeList.add(this.rootNode);
 			}
-			
+			int futureIndex = i;
 			for(int j = 0; j < trieNodeList.size(); j++){
 				//MacrosTrieNode curNode = trieNodeListIter.next();
 				MacrosTrieNode curNode = trieNodeList.get(j);
@@ -239,7 +240,7 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 					int k = i+1;
 					MacrosTrieNode futureNode = null;
 					MacrosTrieNode runningNode = null;
-					int futureIndex = i;
+					//int futureIndex = i;
 					while(k < thmStrLen && null != (runningNode = nextNode.getTrieNode(thmStr.charAt(k)))){
 						if(null != runningNode.commandStr && null != runningNode.replacementStr){
 							futureNode = runningNode;
@@ -249,11 +250,14 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 					}
 					
 					if(null != futureNode){
-						i = futureIndex;
+						String longerCommandStr = thmStr.substring(i+1, futureIndex+1);
+						thmSB.append(longerCommandStr);
+						//i = futureIndex;
 						nextNode = futureNode;
 					}
-					//substitute with replacement String.
-					i = formReplacementString(thmStr, i, nextNode, commandStrSB); //HERE too long					
+					//form the replacement String. Returns updated index (in original thmStr) to start further examination.
+					futureIndex = formReplacementString(thmStr, futureIndex, nextNode, commandStrSB);	
+					//System.out.println("updated index" + futureIndex +" commandStrSB " + commandStrSB);
 					//i = nextStartingIndex-1;
 					commandStrTriggered = nextNode.commandStr;
 					//trieNodeListIter.remove();
@@ -261,13 +265,24 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 					//don't clear trieNodeList to allow for nested macros.
 					break;
 				}
-			}			
-			if(commandStrSB.length() > 0){				
-				int thmSBLen = thmSB.length();
-				thmSB.delete(thmSBLen - commandStrTriggered.length(), thmSBLen);
-				thmSB.append(commandStrSB);
+			}
+			/*e.g. don't turn \label into \lambdable*/
+			if(commandStrSB.length() > 0){
+				String nextCharStr = "";
+				if(futureIndex < thmStrLen-1){
+					nextCharStr = String.valueOf(thmStr.charAt(futureIndex+1));
+				}
+				//System.out.println("nextCharStr "+nextCharStr);
+				if(!WordForms.ALPHABET_PATTERN.matcher(nextCharStr).matches()){
+					i = futureIndex;
+					int thmSBLen = thmSB.length();
+					//System.out.println("commandStrTriggered: " + commandStrTriggered + " thmSB: " + thmSB + " thmStr "+thmStr);
+					thmSB.delete(thmSBLen - commandStrTriggered.length(), thmSBLen); 
+					thmSB.append(commandStrSB);
+					commandStrSB.setLength(0);
+					trieNodeList = new ArrayList<MacrosTrieNode>();
+				}
 				commandStrSB.setLength(0);
-				trieNodeList = new ArrayList<MacrosTrieNode>();
 			}
 		}
 		return thmSB.toString();

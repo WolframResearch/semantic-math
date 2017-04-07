@@ -233,7 +233,10 @@ public class ThmP1AuxiliaryClass {
 	
 	protected static String getChildRelationStringFromStructPrev1(Struct struct){
 		String childRelationStr;// = struct.prev1().toString();
-		if(struct.prev1NodeType().equals(NodeType.STR)){
+		String structType = struct.type();
+		if(structType.equals("adverb")){
+			childRelationStr = "";
+		}else if(struct.prev1NodeType().equals(NodeType.STR)){
 			childRelationStr = struct.prev1().toString();
 		}else{
 			childRelationStr = ((Struct)struct.prev1()).nameStr();

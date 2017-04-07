@@ -8,22 +8,35 @@ package thmp;
 
 public class Rule {
 	//relation between parts of speech, e.g. pre_ent has relation "prep"
-	private String relation;
+	private String actionRelation;
+	/*New combined pos, *non-action* relation, e.g. when a new child needs
+	 * to be appended to a StructA, the relationAction is "newchild", and
+	 * the pos of the new StructA is combinedPos */
+	private String combinedPos;
 	private double probability;
 	
-	// probability = 1 if 
 	public Rule(String rel){
-		this.relation = rel;
+		this.actionRelation = rel;
 		this.probability = 1;
 	}
 
 	public Rule(String rel, double prob){
-		this.relation = rel;
+		this.actionRelation = rel;
 		this.probability = prob;
 	}
 
-	public String relation(){
-		return this.relation;
+	public Rule(String rel, String combinedPos_, double prob){
+		this.actionRelation = rel;
+		this.combinedPos = combinedPos_;
+		this.probability = prob;
+	}
+	
+	public String actionRelation(){
+		return this.actionRelation;
+	}
+	
+	public String combinedPos(){
+		return this.combinedPos;
 	}
 	
 	public double prob(){
@@ -32,12 +45,12 @@ public class Rule {
 
 	@Override
 	public String toString() {
-		return "Rule [relation=" + relation + ", probability=" + probability + "]";
+		return "Rule [relation=" + actionRelation + ", probability=" + probability + "]";
 	}
 
 	// set relation
 	public void set_relation(String rel){
-		this.relation = rel;
+		this.actionRelation = rel;
 	}
 
 	// set probability

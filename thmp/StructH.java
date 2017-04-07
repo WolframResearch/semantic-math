@@ -50,11 +50,11 @@ public class StructH<H> extends Struct{
 	//Depth from root of the tree. Root has depth 0. *Not* intrinsic to the Struct, 
 	//depends on the DFS path.
 	private int depth;
-	private boolean hasChild = false;
-	private List<Struct> children; 
+	private boolean hasChild;
+	private List<Struct> children = new ArrayList<Struct>();
 	//relation to child, eg "of," "which is", "over", 
 	//as in "field over Q."
-	private List<ChildRelation> childRelationList;	
+	private List<ChildRelation> childRelationList = new ArrayList<ChildRelation>();	
 	private double score;
 	private double DOWNPATHSCOREDEFAULT = 1;
 	private double maxDownPathScore = DOWNPATHSCOREDEFAULT;
@@ -79,8 +79,6 @@ public class StructH<H> extends Struct{
 	public StructH(Map<String, String> struct, String type){	
 		this.struct = struct;
 		this.type = type;
-		this.children = new ArrayList<Struct>();
-		this.childRelationList = new ArrayList<ChildRelation>();
 		this.score = 1;
 	}
 	
@@ -89,8 +87,6 @@ public class StructH<H> extends Struct{
 		this.maxDownPathScore = downPathScore;
 		this.struct = struct;
 		this.type = type;
-		this.children = new ArrayList<Struct>();
-		this.childRelationList = new ArrayList<ChildRelation>();
 		this.score = 1;
 		this.structList = structList;
 	}
@@ -102,8 +98,6 @@ public class StructH<H> extends Struct{
 	 */
 	public StructH(String type){
 		this.type = type;
-		this.children = new ArrayList<Struct>();
-		this.childRelationList = new ArrayList<ChildRelation>();
 		this.score = 1;
 	}	
 	
@@ -294,13 +288,19 @@ public class StructH<H> extends Struct{
 		childRelationList.add(new ChildRelation(""));
 	}
 
+	@Override
+	protected void setHasChildToTrue(){
+		this.hasChild = true;
+	}
+
 	/**
 	 * Compare, if the struct is nonempty, the names, and returns 
 	 * true if and only if the names are the same. 
 	 * @param other
 	 * @return
 	 */
-	private boolean contentEquals(Struct other){
+	@Override
+	protected boolean contentEquals(Struct other){
 		
 		if(null == other || other.isStructA()){
 			return false;
@@ -323,19 +323,6 @@ public class StructH<H> extends Struct{
 			}
 		}
 		return false;
-	}
-	
-	@Override
-	public void add_child(Struct child, ChildRelation relation){
-		assert(!this.equals(child));
-		
-		if(this.contentEquals(child)){			
-			return;
-		}
-		hasChild = true;
-		children.add(child);
-		childRelationList.add(relation);
-		child.set_parentStruct(this);
 	}
 	
 	public boolean has_child(){
@@ -591,69 +578,15 @@ public class StructH<H> extends Struct{
 		//sb.append(append_name_pptStr());
 		//System.out.println("curCommand: " + curCommand);
 		//System.out.println("StructH: this.name " + this.nameStr());
-		//System.out.println("StructH: (((((((((children: " + children + ". childRelationList: " + childRelationList);
-		
-		int childrenSize = children.size();
-		int nontrivialChildrenStrCounter = 0;
-		if(childrenSize > 0){			
-			StringBuilder childSb = new StringBuilder();
-			for(int i = 0; i < childrenSize; i++){	
-				Struct child = children.get(i);
-				String childRelationStr = childRelationList.get(i).childRelationStr;
-				/*if(child.WLCommandWrapperList() != null){
-					continue;
-				}*/
-				//str += ", ";
-				//str += childRelation.get(i) + " ";	
-				//System.out.println("^^^cur child: " + child);
-				//System.out.println("Used? "+ child.usedInOtherCommandComponent(curCommand) + " child: " +child);
-				
-				//only append curChidRelation if child is a StructH, to avoid
-				//including the relation twice, eg in case child is of type "prep"
-				//if this child has been used in another component of the same command.				
-				if(!child.usedInOtherCommandComponent(curCommand)){
-					
-					String childStr = child.simpleToString(includeType, curCommand);						
-					if(!childStr.matches("\\s*")){
-					//System.out.println("Childstr " + childStr);
-						nontrivialChildrenStrCounter++;
-						//don't want "symb", e.g. $G$ with $H$ prime. 
-						childRelationStr = (child.isStructA() && !child.type().equals("symb") 
-								//e.g. "field which is perfect", don't want "which"								
-								)
-								? "" : childRelationStr;
-						
-						//System.out.println("\n **^^^*** childRelation" + childRelationStr);
-						if(childRelationStr.equals("")){
-							childSb.append("{").append(childStr).append("}");
-							if(i < childrenSize-1){
-								childSb.append(", ");
-							}
-						}else{
-							childSb.append("{\"" + childRelationStr + "\", " + childStr + "}");
-							if(i < childrenSize-1){
-								childSb.append(", ");
-							}
-						}
-					}
-				}
-			}
-			if(0 < childSb.length()){
-				if(nontrivialChildrenStrCounter > 1){
-					sb.append(", \"Qualifiers\" -> {").append(childSb).append("}");
-				}else{
-					sb.append(", \"Qualifiers\" -> ").append(childSb);
-				}				
-				//sb.append(childSb);
-			}			
-		}
+		//System.out.println("StructH: (((((((((children: " + children + ". childRelationList: " + childRelationList);		
+		sb.append(appendChildrenQualifierString(includeType, curCommand));
 		if(includeType){ 
 			sb.append("]");
 		}
 				
 		return sb.toString();
 	}
-	
+
 	@Override
 	public boolean isLeafNodeCouldHaveChildren(){
 		//return 0 == children.size();

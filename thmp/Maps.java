@@ -688,10 +688,11 @@ public class Maps {
 			// noun_symb should be combined in code
 
 			//structMap.put("pre_noun", new Rule("ppt", 1)); // nounphrase
-			structMap.put("adj_symb", new Rule("phrase", 1));
-			
+			structMap.put("adj_symb", new Rule("phrase", 1));			
 			structMap.put("adj_noun", new Rule("noun", 1));
-			structMap.put("adj_prep", new Rule("phrase", .97));
+			//structMap.put("adj_prep", new Rule("phrase", .95));
+			//"independent of $n$"
+			structMap.put("adj_prep", new Rule("newchild", "adverb", .95));
 			structMap.put("gerund_noun", new Rule("gerundp", 1)); // gerundphrase
 			structMap.put("ent_gerundp", new Rule("newchild", 1));
 			
@@ -722,14 +723,16 @@ public class Maps {
 			structMap.put("verb_csubj", new Rule("verbphrase", 1));
 			structMap.put("be_ent", new Rule("verbphrase", .7));
 			structMap.put("verb_adj", new Rule("verbphrase", 1));
-			structMap.put("verb_pro", new Rule("verbphrase", 1)); //HERE
+			//e.g. "$s_n$ converges independent of $n$"
+			structMap.put("verb_adverb", new Rule("newchild", "verb", 0.8));
+			structMap.put("verb_pro", new Rule("verbphrase", 1));
 			structMap.put("verb_symb", new Rule("verbphrase", 1));
 			structMap.put("verb_np", new Rule("verbphrase", 1));
 			structMap.put("verb_prep", new Rule("verbphrase", 1));
 			structMap.put("verb_num", new Rule("verbphrase", 1));
 			structMap.put("verb_np", new Rule("verbphrase", 1));
 			structMap.put("verb_pre", new Rule("verbphrase", .6));
-			structMap.put("verb_phrase", new Rule("verbphrase", 1));
+			structMap.put("verb_phrase", new Rule("verbphrase", 0.8));
 			structMap.put("verb_partient", new Rule("verbphrase", 1));
 			structMap.put("verb_noun", new Rule("verbphrase", 1));
 			structMap.put("verbAlone_adverb", new Rule("verbphrase", .9));
@@ -750,6 +753,8 @@ public class Maps {
 			structMap.put("vbs_symb", new Rule("verbphrase", 1));
 			structMap.put("vbs_np", new Rule("verbphrase", 1));
 			structMap.put("vbs_prep", new Rule("verbphrase", 1));
+			structMap.put("vbs_adverb", new Rule("newchild", "verbAlone", 1));
+			
 			structMap.put("vbs_num", new Rule("verbphrase", 1));
 			structMap.put("vbs_np", new Rule("verbphrase", 1));			
 			structMap.put("vbs_pre", new Rule("verbphrase", .7));
@@ -847,6 +852,7 @@ public class Maps {
 			//absorb the non-struct into the struct. Should only 
 			//have one non-ent
 			structMap.put("adj_ent", new Rule("absorb1", 1));
+			structMap.put("adj_adverb", new Rule("newchild", "adj", .8));
 			structMap.put("ent_symb", new Rule("absorb2", 1));
 			
 			// eg "property that a is b"

@@ -267,7 +267,8 @@ public class ThmSearch {
 			}
 			//System.out.println("Dimensions@First@Transpose[q] " + evaluateWLCommand(ml, "Dimensions[First@Transpose[q]]", true, true));
 			//String vMx = TermDocumentMatrix.COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME;
-			ml.evaluate("Nearest["+V_MX+"->"+ combinedTDMatrixRangeListName +", First@Transpose[q],"+numNearest+"] - " + LIST_INDEX_SHIFT);
+			ml.evaluate("Nearest["+V_MX+"->"+ combinedTDMatrixRangeListName +", First@Transpose[q],"+numNearest+", Method->\"Scan\"] - " 
+					+ LIST_INDEX_SHIFT);
 			//ml.evaluate("Nearest[v->Range[Dimensions[v][[1]]], First@Transpose[q],"+numNearest+"] - " + LIST_INDEX_SHIFT);
 			
 			ml.waitForAnswer();
@@ -596,7 +597,8 @@ public class ThmSearch {
 				//number of singular values to keep. Determined (roughly) based on the number of
 				//theorems (col dimension of mx)
 				//int k = NUM_SINGULAR_VAL_TO_KEEP;
-				int k = mxColDim < 35 ? mxColDim : (mxColDim < 400 ? 35 : (mxColDim < 1000 ? 40 : (mxColDim < 3000 ? 50 : 60)));
+				//int k = mxColDim < 35 ? mxColDim : (mxColDim < 400 ? 35 : (mxColDim < 1000 ? 40 : (mxColDim < 3000 ? 50 : 60)));
+				int k = mxColDim < 25 ? mxColDim : 25;
 				ml.evaluate("ClearSystemCache[]; {u, d, v} = SingularValueDecomposition[mx, " + k +"];");
 				//ml.waitForAnswer();
 				ml.discardAnswer();
@@ -817,8 +819,9 @@ public class ThmSearch {
 				//number of singular values to keep. Determined (roughly) based on the number of
 				//theorems (col dimension of mx)
 				//int k = NUM_SINGULAR_VAL_TO_KEEP;
-				int minDim = 40;
-				int k = mxColDim < minDim ? mxColDim : (mxColDim < 400 ? minDim : (mxColDim < 1000 ? 45 : (mxColDim < 3000 ? 50 : 60)));
+				//int minDim = 40;
+				//int k = mxColDim < minDim ? mxColDim : (mxColDim < 400 ? minDim : (mxColDim < 1000 ? 45 : (mxColDim < 3000 ? 50 : 60)));
+				int k = mxColDim < 25 ? mxColDim : 25;
 				ml.evaluate("ClearSystemCache[]; {u, d, v} = SingularValueDecomposition[mx, " + k +"];");
 				//ml.waitForAnswer();
 				ml.discardAnswer();

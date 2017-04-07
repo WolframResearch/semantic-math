@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 import thmp.ParseToWLTree.WLCommandWrapper;
+import thmp.Struct.ChildRelation;
 import thmp.Struct.NodeType;
 import thmp.utils.WordForms;
 
@@ -32,6 +33,11 @@ public class StructA<A, B> extends Struct{
 	//private String type2; //type of prev2. Also not used! Commented out Dec 2016.
 	private NodeType PREV1_TYPE;
 	private NodeType PREV2_TYPE;
+	private List<Struct> children = new ArrayList<Struct>(); 
+	//relation to child, eg "of," "which is", "over", 
+	//as in "independent of $n$."
+	private List<ChildRelation> childRelationList = new ArrayList<ChildRelation>();	
+	private boolean hasChild;
 	
 	//additional part of speech
 	private volatile Set<String> extraPosSet;
@@ -175,6 +181,11 @@ public class StructA<A, B> extends Struct{
 		return curStructA.prev1.toString();
 	}
 	
+	@Override
+	protected void setHasChildToTrue(){
+		this.hasChild = true;
+	}
+	
 	/**
 	 * Set parent pointer
 	 * @param parent	parent Struct
@@ -271,11 +282,11 @@ public class StructA<A, B> extends Struct{
 	@Override
 	public String simpleToString(boolean includeType, WLCommand curCommand){
 
-		if(this.type.equals("assert")){
+		/*if(this.type.equals("assert")){
 			System.out.println("StructA - this "+ this);
 			System.out.println("StructA - (Struct)this.prev1).type() "+ ((Struct)this.prev1).type());
 			//throw new RuntimeException("WLCommandWrapperList " +this.WLCommandWrapperList);
-		}
+		}*/
 		//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
 		if(this.WLCommandWrapperList != null){
 			int wrapperListSz = WLCommandWrapperList.size();
@@ -286,11 +297,9 @@ public class StructA<A, B> extends Struct{
 			
 			if(curWrapper != null){
 				int commandNumUnits = WLCommand.commandNumUnits(composedCommand);
-				System.out.println("StructA -- commandNumUnits: " + commandNumUnits);
-				if(!this.type.equals("pre")){
-					WLCommand.increment_commandNumUnits(curCommand, commandNumUnits); ///////+1
-					//System.out.println("increment_commandNumUnits : numUnits " + commandNumUnits + " composedCommand: " + composedCommand); 
-				}
+				System.out.println("StructA -- commandNumUnits: " + commandNumUnits);				
+				WLCommand.increment_commandNumUnits(curCommand, commandNumUnits); ///////+1
+					//System.out.println("increment_commandNumUnits : numUnits " + commandNumUnits + " composedCommand: " + composedCommand); 				
 			}
 			//been built into one command already
 			if(null == this.commandBuilt){
@@ -309,25 +318,31 @@ public class StructA<A, B> extends Struct{
 			
 			StringBuilder fullContentSB = new StringBuilder((String)this.prev1);
 			//System.out.println("*********prev1 type: " + type());
+			
+			String childStr = appendChildrenQualifierString(includeType, curCommand);
+			
+			//String prev1Str = (String)this.prev1;
 			if(this.type.equals("det") || this.type.equals("pro")){				
 				if(!prev2.equals("")){
-					fullContentSB.insert(0, "Reference[\"").append("\", \"").append((String)this.prev2).append("\"]");
+					fullContentSB.insert(0, "Reference[\"").append("\", \"").append((String)this.prev2)
+						.append(childStr).append("\"]");
 				}else{
-					fullContentSB.insert(0, "Reference[\"").append("\"]");
+					fullContentSB.insert(0, "Reference[\"").append(childStr).append("\"]");
 				}
 			}else{
 				//quotes around prev1 string
 				fullContentSB.insert(0, "\"").append("\"");
-				if(this.type.equals("adj")){
-					fullContentSB.insert(0, "MathProperty[").append("]");
+				if(this.type.equals("adj") || this.type.equals("adverb")){
+					fullContentSB.insert(0, "MathProperty[").append(childStr).append("]");
 				}else if(prev2.equals("")){
 					/*use "Math" Head here generally so not to have headless object. But perhaps should be more specific.*/
-					fullContentSB.insert(0, "Math[").append("]");
+					fullContentSB.insert(0, "Math[").append(childStr).append("]");
 				}
 				if(!prev2.equals("")){
-					fullContentSB.insert(0, "Math[").append(", \"").append((String)this.prev2).append("\"]");
+					fullContentSB.insert(0, "Math[").append(", \"").append((String)this.prev2).append(childStr).append("\"]");
 				}
-			}			
+			}				
+			
 			//been built into one command already
 			//this.WLCommandStrVisitedCount++;
 			if(null == this.commandBuilt){
@@ -447,8 +462,7 @@ public class StructA<A, B> extends Struct{
 						tempSB.append(prev1);
 					//}
 				}
-			}
-			
+			}			
 			/*if(inConj){ //tempStr += "}";
 				tempSB.append("}");
 			}*/
@@ -485,6 +499,8 @@ public class StructA<A, B> extends Struct{
 			/*tempSB.append(inConj ? "[" + prev2SB + "]" : prev2SB);*/
 			tempSB.append(prev2SB);
 		}
+		tempSB.append(appendChildrenQualifierString(includeType, curCommand));
+		
 		if(wrapBraces){ //tempStr += "}";
 			tempSB.append("}");
 		}
@@ -664,7 +680,7 @@ public class StructA<A, B> extends Struct{
 	}
 	
 	public boolean has_child(){
-		return false;
+		return hasChild;
 	}
 	
 	@Override
@@ -794,13 +810,13 @@ public class StructA<A, B> extends Struct{
 	}
 	
 	@Override
-	public ArrayList<Struct> children() {
-		return null;
+	public List<Struct> children() {
+		return this.children;
 	}
-
+	
 	@Override
 	public List<ChildRelation> childRelationList() {
-		return null;
+		return this.childRelationList;
 	}
 	
 }

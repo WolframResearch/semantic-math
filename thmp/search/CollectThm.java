@@ -937,11 +937,12 @@ public class CollectThm {
 				//int score = wordFreq < 110 ? (int)Math.round(10 - wordFreq/4) : wordFreq < 300 ? 1 : 0;	
 				//int score = wordFreq < 180 ? (int)Math.round(15 - wordFreq/4) : wordFreq < 450 ? 1 : 0;
 				//until april 1:
-				int score = wordFreq < 40 ? (int)Math.round(10 - wordFreq/3) : (wordFreq < 180 ? (int)Math.round(15 - wordFreq/3) : (wordFreq < 450 ? 3 : 0));	
+				//int score = wordFreq < 40 ? (int)Math.round(10 - wordFreq/3) : (wordFreq < 180 ? (int)Math.round(15 - wordFreq/3) : (wordFreq < 450 ? 3 : 0));	
 				//starting April 1:
-				//int score = wordFreq < 40 ? (int)Math.round(15 - wordFreq/3) : (wordFreq < 180 ? (int)Math.round(25 - wordFreq/4) : (wordFreq < 450 ? 4 : 0));	
+				int score = wordFreq < 40 ? (int)Math.round(20 - wordFreq/3) : (wordFreq < 180 ? (int)Math.round(35 - wordFreq/4) 
+						: (wordFreq < 350 ? 4 : (wordFreq < 450 ? 3 : 2)));	
 				//frequently occurring words, should not score too low since they are mostly math words.
-				score = score <= 0 ? 4 : score;
+				score = score <= 0 ? 3 : score;
 				wordsScorePreMap.put(word, score);
 				//System.out.print("word: "+word +" score: "+score + " freq "+ wordFreq + "$   ");
 			}

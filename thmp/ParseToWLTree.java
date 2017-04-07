@@ -103,9 +103,9 @@ public class ParseToWLTree{
 			}			
 		}
 		//look up using type
-		if(triggeredSet.isEmpty() && WLCommandMap.containsKey(triggerType)){
+		//if(triggeredSet.isEmpty() && WLCommandMap.containsKey(triggerType)){
 			triggeredSet.addAll(WLCommandMap.get(triggerType));
-		}
+		//}
 		
 		Matcher pluralMatcher;
 		if(triggeredSet.isEmpty() && (pluralMatcher = PLURAL_PATTERN.matcher(triggerKeyWord)).find() ){
@@ -377,7 +377,7 @@ public class ParseToWLTree{
 			WLCommandList.addAll(wlCommandWithOptionalTermsList);
 		}		
 		
-		String triggerKeyWord = "";
+		String triggerKeyWord = ""; //e.g. "is"
 		if (struct.isStructA() && struct.prev1NodeType().equals(NodeType.STR)) {
 			triggerKeyWord = (String)struct.prev1();			
 		}else if(!struct.isStructA()){

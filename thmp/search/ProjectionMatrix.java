@@ -48,7 +48,7 @@ public class ProjectionMatrix {
 		List<String> projectedMxFilePathList = new ArrayList<String>();
 		for(int i = 0; i < argsLen; i++){
 			//be sure to check it's valid path to valid .mx
-			String path_i = FileUtils.addTrailingSlashToPath(args[i]);
+			String path_i = FileUtils.addIfAbsentTrailingSlashToPath(args[i]);
 			projectedMxFilePathList.add(path_i + ThmSearch.TermDocumentMatrix.PROJECTED_MX_NAME + ".mx");	
 			parsedExpressionFilePathList.add(path_i + ThmSearch.TermDocumentMatrix.PARSEDEXPRESSION_LIST_FILE_NAME);
 		}

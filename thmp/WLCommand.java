@@ -1076,7 +1076,7 @@ public class WLCommand implements Serializable{
 			List<WLCommandWrapper> prevHeadStructWrapperList = prevHeadStruct.WLCommandWrapperList();
 			//no need to update structsWithOtherHeadCount if the heads are already same. Note the two
 			//commands could be different, just with the same head.
-			System.out.println("++++======+++++structToAppendCommandStr != prevHeadStruct "+ structToAppendCommandStr.dfsDepth() +" ++++" + prevHeadStruct.dfsDepth());
+			//System.out.println("++++======+++++structToAppendCommandStr != prevHeadStruct "+ structToAppendCommandStr.dfsDepth() +" ++++" + prevHeadStruct.dfsDepth());
 			int structToAppendCommandStrDfsDepth = structToAppendCommandStr.dfsDepth();
 			int prevHeadStructDfsDepth = prevHeadStruct.dfsDepth();
 			if(//structToAppendCommandStr != prevHeadStruct 
@@ -2037,6 +2037,11 @@ public class WLCommand implements Serializable{
 	 * @param curCommand
 	 */
 	public static boolean increment_commandNumUnits(WLCommand curCommand, Struct newStruct){
+		//don't add for insignificant tokens, that would only be counted when occuring as StructA
+		//and not StructH.
+		if(newStruct.type().equals("pre")){
+			return false;
+		}
 		if(!newStruct.isStructA() 
 			|| newStruct.prev1NodeType().equals(NodeType.STR) && newStruct.prev2NodeType().equals(NodeType.STR)){
 			curCommand.commandNumUnits++;	

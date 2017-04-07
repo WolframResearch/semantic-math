@@ -305,7 +305,7 @@ public class FileUtils {
 	 * @param path
 	 * @return
 	 */
-	public static String addTrailingSlashToPath(String path){
+	public static String addIfAbsentTrailingSlashToPath(String path){
 		int pathLen = path.length();
 		if(File.separatorChar != path.charAt(pathLen-1)){
 			return path + File.separatorChar;

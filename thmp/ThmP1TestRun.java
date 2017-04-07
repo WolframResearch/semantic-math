@@ -621,6 +621,10 @@ public class ThmP1TestRun {
 			st = "$P$ is prime for the ideal $P$ in $R$";
 			st = "one has $x=y$";
 			st = "${s_i}_n$ is bounded independent of $n$";
+			st = "$S$ is perfect in $R$";
+			st = "$S$ is perfect consistently";
+			st = "${s_i}_n$ is bounded independent of $n$";
+			//st = "$abc $ is right exact over $R$";
 			//st = " $\\Probsub_x$ is the law of $\\bfPhi$ conditional on $\\Phi(0)=x,$ and $\\Expect_x$ is the corresponding expectation.";
 			//st = "two vectors $x$ and $y$ are adjacent";
 			//st = "Integers $p$ and $q$ are coprime if and only if there exist integers $n$ and $m$ such that $np - mq = 1$";

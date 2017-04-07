@@ -293,6 +293,7 @@ public class DetectHypothesis {
 		String allThmWordsMapStringFileStr = DetectHypothesis.allThmWordsMapStringFileStr;
 		String parsedExpressionStringFileStr = DetectHypothesis.parsedExpressionStringFileStr; //parsedExpressionStrList
 		String allThmsStringFileStr = DetectHypothesis.allThmsStringFileStr; //allThmsStrWithSpaceList
+		static final String texFilesSerializedListFileName = "texFileNamesSetList.dat";
 		
 		//where to put the full dim TD matrix
 		String fullTermDocumentMxPath;
@@ -303,14 +304,16 @@ public class DetectHypothesis {
 		 */
 		InputParams(String args[]){
 			int argsLen = args.length;
-			if(argsLen > 1){
+			if(argsLen > 0){
 				texFilesDirPath = args[0];
 				//inputFile = new File(argsSrcStr);
-				serializedTexFileNamesFileStr = args[1];
-			
-				if(argsLen > 3){
-					pathToProjectionMx = args[2];
-					pathToWordFreqMap = args[3];
+				//serializedTexFileNamesFileStr = args[1];
+				serializedTexFileNamesFileStr = thmp.utils.FileUtils
+						.addIfAbsentTrailingSlashToPath(texFilesDirPath) +texFilesSerializedListFileName;
+				
+				if(argsLen > 2){
+					pathToProjectionMx = args[1];
+					pathToWordFreqMap = args[2];
 					usePreviousDocWordsFreqMaps = true;
 					char fileSeparatorChar = File.separatorChar;
 					int texFilesDirPathLen = texFilesDirPath.length();
@@ -325,8 +328,7 @@ public class DetectHypothesis {
 					this.allThmsStringFileStr = texFilesDirPath + DetectHypothesis.allThmsStringFileNameStr;
 					
 					//create fullTermDocumentMxPath using base path
-					this.fullTermDocumentMxPath = texFilesDirPath + ThmSearch.TermDocumentMatrix.FULL_TERM_DOCUMENT_MX_NAME + ".mx";
-					
+					this.fullTermDocumentMxPath = texFilesDirPath + ThmSearch.TermDocumentMatrix.FULL_TERM_DOCUMENT_MX_NAME + ".mx";					
 				}			
 			}
 		}
@@ -384,6 +386,7 @@ public class DetectHypothesis {
 				//inputBF = new BufferedReader(new FileReader("src/thmp/data/fieldsRawTex.txt"));
 				//inputBF = new BufferedReader(new FileReader("src/thmp/data/samplePaper1.txt"));
 				inputFile = new File("src/thmp/data/Total.txt");
+				inputFile = new File("src/thmp/data/math0210227");
 				//inputFile = new File("src/thmp/data/thmsFeb26.txt");
 				//inputBF = new BufferedReader(new FileReader("src/thmp/data/Total.txt"));
 				//inputBF = new BufferedReader(new FileReader("src/thmp/data/fieldsThms2.txt"));
@@ -413,16 +416,21 @@ public class DetectHypothesis {
 						continue;
 					}
 					String tarFileName = fileNameEntry.getValue();
-					extractThmsFromFiles(inputBF, defThmList, stats, tarFileName);
+					try{
+						extractThmsFromFiles(inputBF, defThmList, stats, tarFileName);
+					}catch(Throwable e){
+						System.out.println("File being processed: " + fileName);
+						throw e;
+					}
 					FileUtils.silentClose(inputBF);
 				}
 			}catch(Throwable e){
 				logger.error(e.getStackTrace());			
 				throw e;
-			}finally{
+			}//finally{
 				//serialize, so don't discard the items already parsed.
 				serializeDataToFile(stats, defThmList, inputParams);			
-			}
+			//}
 		}else{
 			BufferedReader inputBF = null;
 			try{
@@ -437,10 +445,10 @@ public class DetectHypothesis {
 			}catch(Throwable e){
 				logger.error("Error during thm exptraction and parsing!"+e.getMessage());			
 				throw e;
-			}finally{
+			}//finally{
 				//serialize, so don't discard the items already parsed.
 				serializeDataToFile(stats, defThmList, inputParams);			
-			}
+			//}
 		}
 		//System.out.println("thmList " +allThmsStrWithSpaceList );
 		//deserialize objects
@@ -550,7 +558,7 @@ public class DetectHypothesis {
 			ThmSearch.TermDocumentMatrix.projectTermDocumentMatrix(fullTermDocumentMxPath, pathToProjectionMx, 
 					pathToReducedDimTDMx);
 		}else{
-			ThmSearch.TermDocumentMatrix.createTermDocumentMatrixSVD(immutableDefThmList);						
+			ThmSearch.TermDocumentMatrix.createTermDocumentMatrixSVD(immutableDefThmList);
 		}
 	}
 	

@@ -136,7 +136,9 @@ public class ThmP1 {
 	* many ent's that should be fused (e.g. ring) were not, leading to parse
 	* explosions. */
 	private static final String[] NO_FUSE_ENT = new String[]{"map"};
+	private static final String[] NO_FUSE_ADJ = new String[]{"independent"};
 	private static final Set<String> noFuseEntSet;
+	private static final Set<String> noFuseAdjSet;
 	private static final Pattern PUNCTUATION_PATTERN = Pattern.compile("(\\.|;|,|!|:)$");
 	
 	//used in dfs, to determine whether to iterate over.
@@ -194,6 +196,10 @@ public class ThmP1 {
 			noFuseEntSet.add(ent);
 		}
 		
+		noFuseAdjSet = new HashSet<String>();
+		for(String ent : NO_FUSE_ADJ){
+			noFuseAdjSet.add(ent);
+		}
 	}
 	
 	private static void setUpPosTagger(){
@@ -1931,11 +1937,13 @@ public class ThmP1 {
 		// if adverb-adj pair, eg "clearly good"
 		// And combine adj_adj to adj, eg right exact
 		List<String> posList = posMMap.get(curWord);
-		if (pairs.size() > 0 && !posList.isEmpty() && posList.get(0).equals("adj")) {
+		if (pairs.size() > 0 && !posList.isEmpty() && posList.get(0).equals("adj") && !noFuseAdjSet.contains(curWord)) {
 			StringBuilder adverbSB = new StringBuilder();			
 			Pair lastPair;
 			int pairsSize = pairs.size();
-			while ( pairsSize > 0 && ((lastPair=pairs.get(pairsSize - 1)).pos().equals("adverb") || lastPair.pos().equals("adj"))) {
+			while ( pairsSize > 0 && ((lastPair=pairs.get(pairsSize - 1)).pos().equals("adverb") 
+					|| lastPair.pos().equals("adj") && !noFuseAdjSet.contains(lastPair.word())
+					)) {
 				//curWord = pairs.get(pairsSize - 1).word() + " " + curWord;
 				adverbSB.insert(0, " ").insert(0, lastPair.word());
 				pairs.remove(pairsSize - 1);					
@@ -3316,7 +3324,8 @@ public class ThmP1 {
 		/*if(type2.equals("ent")){
 			System.out.println("Reducing _ent! i " + newRule.relation() + ". struct1: " + struct1 +  "  " + struct2);
 		}*/
-		String newType = newRule.relation();
+		String newType = newRule.actionRelation();
+		String combinedPos = newRule.combinedPos();
 		double newScore = newRule.prob();
 		double newDownPathScore = struct1.maxDownPathScore() * struct2.maxDownPathScore() * newScore;
 		double parentDownPathScore = struct1.maxDownPathScore() * struct2.maxDownPathScore() * newScore;
@@ -3336,23 +3345,16 @@ public class ThmP1 {
 			
 			//could be struct1, or prev2 of struct1
 			Struct structToAppendChild = newStruct;
-			// struct1 should be of type StructH to receive a
-			// child. If of type "conj_ent" or "disj_ent", then use 
+			// If struct1 has type "conj_ent" or "disj_ent", then use 
 			// the latter element in the conjunction/disjunction.			
 			if(CONJ_DISJ_PATTERN1.matcher(struct1.type()).matches()
 					&& struct1.prev2NodeType().equals(NodeType.STRUCTH)){
 				structToAppendChild = ((Struct)struct1.prev2()).copy();
 				newStruct.set_prev2(structToAppendChild);
 			}
-			
-			//assert !structToAppendChild.isStructA() : "struct1 does not have type StructH in reduce() for \"newchild\" relation!";
-			/*"struct1 does not have type StructH in reduce() for \"newchild\" relation!" ensures rule correctness;*/
-			if(structToAppendChild.isStructA()){
-				return null;
-			}
 			ChildRelation childRelation = null;
 			Struct childToAdd = struct2;
-			
+		
 			if(struct2.type().equals("hypo")){				
 				//prev1 has type Struct
 				//e.g. "Field which is perfect", ...hypo[hyp[which is], perfect]
@@ -3389,8 +3391,7 @@ public class ThmP1 {
 				if(hypStruct.type().equals("cond") ){
 					childRelation = extractHypChildRelation(hypStruct);
 				}
-				childToAdd = (Struct)struct2.prev2();
-				
+				childToAdd = (Struct)struct2.prev2();				
 			}else{			
 			// add to child relation, usually a preposition, 
 			//eg  "from", "over"
@@ -3414,6 +3415,31 @@ public class ThmP1 {
 				//return null;
 				//throw new ParseRuntimeException("Inside ThmP1.reduce(), childRelation should not be null! " + parseState.getTokenList());
 				//throw new IllegalStateException("Inside ThmP1.reduce(), childRelation should not be null! " + parseState.getTokenList());
+			}			
+			//if struct2 is e.g. a prep, only want the ent in the prep
+			//to be added. Or symb, "$P$ in $R$ is prime."
+			if(struct2.type().equals("prep") && struct2.prev2NodeType().isTypeStruct() 
+					//.equals(NodeType.STRUCTH) || ((Struct)struct2.prev2()).type().equals("symb")
+					//if struct2 is of type "hypo", only add the condition, i.e. second
+					//e.g. "ideal which is prime"
+					|| struct2.type().equals("hypo") && struct2.prev2NodeType().isTypeStruct()){
+				childToAdd = (Struct)struct2.prev2();
+			}
+			
+			/*"struct1 does not have type StructH in reduce() for \"newchild\" relation!" ensures rule correctness;*/
+			if(structToAppendChild.isStructA()){
+				//e.g. "independent of $n$"	
+				//if(struct2.type().equals("adverb"))
+					//if(true) throw new IllegalStateException("childToAdd " + childToAdd + " relation " + childRelation+ " combinedPos "+combinedPos);
+				newStruct.set_maxDownPathScore(newDownPathScore);
+				structToAppendChild.set_maxDownPathScore(newDownPathScore);
+				childToAdd.set_childRelationType(childRelation.childRelationType());				
+				structToAppendChild.add_child(childToAdd, childRelation); 
+				
+				newStruct.set_type(null == combinedPos ? "" : combinedPos);
+				mx.get(i).get(j).add(newStruct);
+				
+				return new EntityBundle(firstEnt, recentEnt, recentEntIndex);
 			}
 			
 			//if type equivalent to to-be-parent's type and is "pre", don't add, 
@@ -3465,7 +3491,6 @@ public class ThmP1 {
 				firstEnt = structToAppendChild;
 			}
 
-			//should not even call add child if struct1 is a StructA
 			if (!structToAppendChild.isStructA()) {
 				// why does this cast not trigger unchecked warning <-- Because wildcard.
 				//if already has child that's pre_ent, attach to that child,
@@ -3484,20 +3509,11 @@ public class ThmP1 {
 					}
 				}*/
 				 
-				//if struct2 is e.g. a prep, only want the ent in the prep
-				//to be added. Or symb, "$P$ in $R$ is prime."
-				if(struct2.type().equals("prep") && struct2.prev2NodeType().isTypeStruct() 
-						//.equals(NodeType.STRUCTH) || ((Struct)struct2.prev2()).type().equals("symb")
-						//if struct2 is of type "hypo", only add the condition, i.e. second
-						//e.g. "ideal which is prime"
-						|| struct2.type().equals("hypo") && struct2.prev2NodeType().isTypeStruct()){
-					childToAdd = (Struct)struct2.prev2();
-				}
+				
 				//set the type, corresponds to whether the relation is via preposition or conditional.
 				//e.g. "over" vs "such as".
-				childToAdd.set_childRelationType(childRelation.childRelationType());
-				
-				((StructH<?>) structToAppendChild).add_child(childToAdd, childRelation); 
+				childToAdd.set_childRelationType(childRelation.childRelationType());				
+				structToAppendChild.add_child(childToAdd, childRelation); 
 				
 				struct2.set_parentStruct(structToAppendChild); //redundant
 				childToAdd.set_parentStruct(structToAppendChild); //redundant
@@ -3505,11 +3521,8 @@ public class ThmP1 {
 				recentEnt = structToAppendChild;
 				recentEntIndex = j;				
 			}
-
 			newStruct.set_maxDownPathScore(newDownPathScore);
-
 			mx.get(i).get(j).add(newStruct);
-
 		} 
 		else if (newType.equals("addstruct")){
 			// add struct2 content to struct1.struct, depending on type2
@@ -3580,8 +3593,6 @@ public class ThmP1 {
 			//fuse ent's, e.g. "integer linear combination"
 			else{
 				//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
-				//System.out.println("struct1 " + struct1);
-				
 				
 				Struct newStruct = struct2.copy();
 				
@@ -4313,7 +4324,13 @@ public class ThmP1 {
 				System.out.print(struct.prev2());
 				parsedLongFormSB.append(struct.prev2());
 			}
+			
+			List<Struct> children = struct.children();
 
+			if (children.size() > 0){
+				span = appendChildrenStringToLongForm(struct, parsedLongFormSB, span, conjDisjVerbphrase, isRightChild,
+						structDepth, children);
+			}
 			System.out.print("]");
 			parsedLongFormSB.append("]");
 		} else {
@@ -4321,41 +4338,59 @@ public class ThmP1 {
 			System.out.print(struct.toString());
 			parsedLongFormSB.append(struct.toString());
 			span++;
-			
+
 			List<Struct> children = struct.children();
-			List<ChildRelation> childRelation = struct.childRelationList();
-			
-			if (children == null || children.size() == 0){
+
+			if (children.size() == 0){
 				return span;
 			}
-			System.out.print("[");
-			parsedLongFormSB.append("[");
-			
-			StringBuilder childrenSB = new StringBuilder(40);
-			
-			for (int i = 0; i < children.size(); i++) {
-				childrenSB.append(childRelation.get(i) + " ");
-				
-				//System.out.print(childRelation.get(i) + " ");
-				//parsedLongFormSB.append(childRelation.get(i) + " ");
-				
-				Struct child_i = children.get(i);
-				child_i.set_dfsDepth(structDepth + 1);
-				
-				span = buildLongFormParseDFS(child_i, childrenSB, span, conjDisjVerbphrase, isRightChild);
-				childrenSB.append(", ");
-			}
-			int childrenSBLen = childrenSB.length();
-			String childrenStr = "";
-			if(childrenSBLen > 0){
-				childrenStr = childrenSB.substring(0, childrenSBLen-2);
-			}
-			System.out.print(childrenStr);
-			parsedLongFormSB.append(childrenStr);
-			
-			System.out.print("]");
-			parsedLongFormSB.append("]");
+			span = appendChildrenStringToLongForm(struct, parsedLongFormSB, span, conjDisjVerbphrase, isRightChild,
+					structDepth, children);
 		}
+		return span;
+	}
+
+	/**
+	 * @param struct
+	 * @param parsedLongFormSB
+	 * @param span
+	 * @param conjDisjVerbphrase
+	 * @param isRightChild
+	 * @param structDepth
+	 * @param children
+	 * @return
+	 */
+	public static int appendChildrenStringToLongForm(Struct struct, StringBuilder parsedLongFormSB, int span,
+			ConjDisjVerbphrase conjDisjVerbphrase, boolean isRightChild, int structDepth, List<Struct> children) {
+		List<ChildRelation> childRelation = struct.childRelationList();
+		
+		System.out.print("[");
+		parsedLongFormSB.append("[");
+		
+		StringBuilder childrenSB = new StringBuilder(40);
+		
+		for (int i = 0; i < children.size(); i++) {
+			childrenSB.append(childRelation.get(i) + " ");
+			
+			//System.out.print(childRelation.get(i) + " ");
+			//parsedLongFormSB.append(childRelation.get(i) + " ");
+			
+			Struct child_i = children.get(i);
+			child_i.set_dfsDepth(structDepth + 1);
+			
+			span = buildLongFormParseDFS(child_i, childrenSB, span, conjDisjVerbphrase, isRightChild);
+			childrenSB.append(", ");
+		}
+		int childrenSBLen = childrenSB.length();
+		String childrenStr = "";
+		if(childrenSBLen > 0){
+			childrenStr = childrenSB.substring(0, childrenSBLen-2);
+		}
+		System.out.print(childrenStr);
+		parsedLongFormSB.append(childrenStr);
+		
+		System.out.print("]");
+		parsedLongFormSB.append("]");
 		return span;
 	}
 
