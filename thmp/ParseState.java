@@ -34,8 +34,7 @@ import java.util.Arrays;
 public class ParseState {
 	
 	//placeholder context vector
-	private static int[] PLACEHOLDER_CONTEXT_VEC = new int[CollectThm.ThmWordsMaps.get_CONTEXT_VEC_SIZE()];
-	
+	private static int[] PLACEHOLDER_CONTEXT_VEC = new int[CollectThm.ThmWordsMaps.get_CONTEXT_VEC_SIZE()];	
 	//current String being parsed. I.e. the unit
 	//of the input that's being tokenized, so 
 	//delimiter-separated.
@@ -59,6 +58,9 @@ public class ParseState {
 	//context vector that takes into account structure of parse tree, i.e.
 	//the relations between different Structs.
 	private BigInteger relationalVec;
+	//number of non-tex tokens, used during search, so can discard theorems that
+	//are almost all latex expressions.
+	private int numNonTexTokens;
 	
 	private boolean writeUnknownWordsToFileBool;
 	
@@ -854,9 +856,11 @@ public class ParseState {
 	/**
 	 * Clear variables, reset state, headParseStruct etc, to not contaminate
 	 * variable space for next parse. One parse run is defined
-	 * to be the unit    given to the preprocessor.
+	 * to be the unit given to the preprocessor in Thmp1.java. 
+	 * So can contain multiple sentences. E.g. an entire theorem.
 	 */
 	public void parseRunLocalCleanUp(){
+		this.numNonTexTokens = 0;
 		this.setCurParseStruct(null);
 		this.setHeadParseStruct(null);
 		//reset list of context vectors
@@ -883,6 +887,14 @@ public class ParseState {
 		sb.append("localVariableNamesMMap: " + localVariableNamesMMap);
 		sb.append("inThmFlag: " + inThmFlag);
 		return sb.toString();
+	}
+
+	public int numNonTexTokens() {
+		return numNonTexTokens;
+	}
+
+	public void addToNumNonTexTokens(int numNonTexTokensToAdd) {
+		this.numNonTexTokens += numNonTexTokensToAdd;
 	}
 	
 }

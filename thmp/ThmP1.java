@@ -596,6 +596,7 @@ public class ThmP1 {
 			return parseState;
 		}
 		
+		int numNonTexTokens = 0;
 		//if contains nothing other than symbols and ents, probably spurious latex expression,
 		//don't parse in that case.
 		boolean containsOnlySymbEnt = true;
@@ -709,10 +710,10 @@ public class ThmP1 {
 				if (type.equals("ent")){
 					mathIndexList.add(pairs.size() - 1);
 				}
-				//if(true) throw new IllegalStateException("pair "+pair.word());
 				noTexSB.append(LATEX_PLACEHOLDER_STR);
 				continue strloop;
-			}
+			}/*Done with handling tex tokens.*/
+			numNonTexTokens++;
 			
 			noTexSB.append(" ").append(curWord).append(" ");
 			// check for trigger words of fixed phrases, e.g. "with this said",
@@ -824,7 +825,6 @@ public class ThmP1 {
 						//e.g. "ring map of finite type."
 						if(i < strAr.length - 1){
 							String nextWord = strAr[i+1];
-
 							List<String> nextWordPosList = posMMap.get(nextWord);
 							if(!nextWordPosList.isEmpty() && nextWordPosList.get(0).equals("pre")
 									//or a latx symbol name
@@ -1197,7 +1197,8 @@ public class ThmP1 {
 					}
 				}
 			}
-		}
+		}/*End of strloop.*/
+		parseState.addToNumNonTexTokens(numNonTexTokens);
 		
 		/*Used for defluffing, in case the sentence is just sequence of many special characters*/
 		int symbEntCount = 0;

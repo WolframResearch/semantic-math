@@ -10,6 +10,7 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -106,6 +107,7 @@ public class DetectHypothesis {
 	
 	private static final Pattern END_DOCUMENT_PATTERN = Pattern.compile("\\\\end\\{document\\}.*");
 	private static final Pattern NEW_DOCUMENT_PATTERN = Pattern.compile(".*\\\\documentclass.*");
+	private static final int NUM_NON_TEX_TOKEN_THRESHOLD = 4;
 	
 	static{
 		Searcher.SearchMetaData.set_gatheringDataBoolToTrue();
@@ -200,6 +202,9 @@ public class DetectHypothesis {
 	public static class DefinitionListWithThm implements Serializable, TheoremContainer {
 		
 		private static final long serialVersionUID = 7178202892278343033L;
+		static final DefinitionListWithThm PLACEHOLDER_DEF_LIST_WITH_THM 
+			= new DefinitionListWithThm("", Collections.<VariableDefinition>emptyList(), "", "");
+		
 		private String thmStr;		
 		//thmStr, with definition strings prepended.
 		private String thmWithDefStr;
@@ -214,6 +219,21 @@ public class DetectHypothesis {
 			this.definitionList = definitionList;
 			this.thmWithDefStr = thmWithDefStr;
 			this.srcFileName = srcFileName_;
+		}
+		
+		@Override
+		public boolean equals(Object other){
+			if(!(other instanceof DefinitionListWithThm)){
+				return false;
+			}
+			DefinitionListWithThm otherDefThm = (DefinitionListWithThm)other;
+			if(!this.thmWithDefStr.equals(otherDefThm.thmWithDefStr)){
+				return false;
+			}
+			if(!this.srcFileName.equals(otherDefThm.srcFileName)){
+				return false;
+			}
+			return true;
 		}
 		
 		@Override
@@ -359,9 +379,9 @@ public class DetectHypothesis {
 			InputParams inputParams) {
 		/* read in a directory name, parse all the files individually. */ 		
 		//try to read file path from command line argument first
-		//path should be absolute
+		//path should be absolute.
 		
-		//could be file or dir
+		/*could be file or dir*/
 		File inputFile = null;
 		
 		/*absolute path to files and the tar file name they live in*/
@@ -450,8 +470,8 @@ public class DetectHypothesis {
 				serializeDataToFile(stats, defThmList, inputParams);			
 			//}
 		}
-		//System.out.println("thmList " +allThmsStrWithSpaceList );
-		//deserialize objects
+		System.out.println("STATS -- percentage of non-trivial ParseStruct heads: " + stats.getNonNullPercentage() 
+			+ " out of total " + stats.getTotalThmsNum() + "thms");
 		boolean deserialize = false;
 		if(deserialize){
 			deserializeParsedExpressionsList();
@@ -483,8 +503,7 @@ public class DetectHypothesis {
 			logger.error(e.getStackTrace());
 		}
 		//System.out.println("DefinitionListWithThm list: " + defThmList);
-		System.out.println("STATS -- percentage of non-trivial ParseStruct heads: " + stats.getNonNullPercentage() 
-			+ " out of total " + stats.getTotalThmsNum() + "thms");
+		
 		DefinitionListWithThmStrList.add(defThmList.toString()+ "\n");
 		//why do I need this??
 		/*for(DefinitionListWithThm def : defThmList){
@@ -732,12 +751,9 @@ public class DetectHypothesis {
 				newThmSB.append(" ").append(line);
 				
 				//parse hyp and thm. BE SURE TO ONLY RE-ORDER WORDS based on word freuqency at last run, before serializing!
-				String thm = processParseHypThm(newThmSB, parseState, stats, definitionListWithThmList, fileName, macrosTrie,
+				processParseHypThm(newThmSB, parseState, stats, definitionListWithThmList, fileName, macrosTrie,
 						eliminateBeginEndThmPattern);
-				allThmsStrWithSpaceList.add(thm + "\n\n");
 				
-				//with hyps
-				//allThmHypStrList.add();
 				continue;
 			}else if(END_DOCUMENT_PATTERN.matcher(line).matches()){
 				parseState.parseRunGlobalCleanUp();
@@ -807,7 +823,11 @@ public class DetectHypothesis {
 		//append to newThmSB additional hypotheses that are applicable to the theorem.				
 		DefinitionListWithThm thmDef = appendHypothesesAndParseThm(thm, parseState, stats, srcFileName);
 		
-		definitionListWithThmList.add(thmDef);
+		if(!thmDef.equals(DefinitionListWithThm.PLACEHOLDER_DEF_LIST_WITH_THM)){
+			definitionListWithThmList.add(thmDef);
+			allThmsStrWithSpaceList.add(thm + "\n\n");
+		}
+		
 		//System.out.println("___-------++++++++++++++" + thmDef);
 		//should parse the theorem.
 		//serialize the full parse, i.e. parsedExpression object, along with original input.				
@@ -817,7 +837,7 @@ public class DetectHypothesis {
 		}*/
 		//local clean up, after done with a theorem, but still within same document.
 		parseState.parseRunLocalCleanUp();
-		newThmSB.setLength(0);
+		newThmSB.setLength(0);		
 		return thm;
 	}
 	
@@ -842,8 +862,9 @@ public class DetectHypothesis {
 				}
 				startBuilder.append("|.*\\\\begin\\s*\\{").append(macro).append(".*");				
 				endBuilder.append("|.*\\\\end\\s*\\{").append(macro).append(".*");
-				eliminateBuilder.append("|\\\\begin\\s*\\{").append(macro).append("\\}\\s*");
-				eliminateBuilder.append("|\\\\end\\s*\\{").append(macro).append("\\}\\s*");
+				//e.g. "\\begin{lemma*} if no numbering needed"
+				eliminateBuilder.append("|\\\\begin\\s*\\{").append(macro).append("\\**\\}\\s*");
+				eliminateBuilder.append("|\\\\end\\s*\\{").append(macro).append("\\**\\}\\s*");
 			}
 			if(startBuilder.length() > 0){
 				customPatternAr[0] = Pattern.compile(ThmInput.THM_START_STR + startBuilder);
@@ -940,6 +961,17 @@ public class DetectHypothesis {
 		int thmStrLen = thmStr.length();		
 		boolean mathMode = false;
 		
+		//Parse the thm first, with the variableNamesMMap already updated to include contexual definitions.
+				//should return parsedExpression object, and serialize it. But only pick up definitions that are 
+				//not defined locally within this theorem.
+		System.out.println("~~~~~~parsing~~~~~~~~~~");		
+		ParseRun.parseInput(thmStr, parseState, PARSE_INPUT_VERBOSE, stats);
+		System.out.println("~~~~~~Done parsing~~~~~~~");		
+		
+		if(parseState.numNonTexTokens() < NUM_NON_TEX_TOKEN_THRESHOLD){
+			return DefinitionListWithThm.PLACEHOLDER_DEF_LIST_WITH_THM;
+		}
+		
 		//filter through text and try to pick up definitions.
 		for(int i = 0; i < thmStrLen; i++){
 			
@@ -967,13 +999,6 @@ public class DetectHypothesis {
 			}			
 		}
 
-		//Parse the thm first, with the variableNamesMMap already updated to include contexual definitions.
-		//should return parsedExpression object, and serialize it. But only pick up definitions that are 
-		//not defined locally within this theorem.
-		System.out.println("~~~~~~parsing~~~~~~~~~~");		
-		ParseRun.parseInput(thmStr, parseState, PARSE_INPUT_VERBOSE, stats);
-		System.out.println("~~~~~~Done parsing~~~~~~~");		
-				
 		//System.out.println("Adding " + thmWithDefSB + " to theorem " + thmStr);
 		
 		thmWithDefSB.append(thmStr);
@@ -982,6 +1007,7 @@ public class DetectHypothesis {
 		
 		//relational and context vecs can't be null, since ImmutableList cannot contain null elements
 		BigInteger relationalContextVec = parseState.getRelationalContextVec();
+		
 		if(null == relationalContextVec){
 			//write placeholder
 			relationalContextVec = new BigInteger(1, new byte[1]);

@@ -16,13 +16,11 @@ import com.google.common.collect.Multimap;
  * HYP, DEF, PROP. Can also be "Restriction"
  * 
  * @author yihed
- *
  */
 
 public enum ParseStructType {
 	// thm and prop are prety much the same (in terms of structure)
-	// NONE means shoud retain original type
-	//difference between HYP and RES??
+	// NONE means shoud retain original type.
 	HYP, HYP_iff, PPT, OBJ, STM, NONE;
 	
 	/**

@@ -131,14 +131,12 @@ public class ParseStruct implements Serializable{
 		
 		for(Map.Entry<ParseStructType, WLCommandWrapper> entry : wrapperMMapEntries){
 			if(i > 1 || !childrenParseStructList.isEmpty()){
-				sb.append(entry.getKey() + " :> " + entry.getValue().WLCommandStr() + ", ");
+				sb.append("\"").append(entry.getKey()).append("\" :> ").append(entry.getValue().WLCommandStr()).append(", ");
 			}else{
-				sb.append(entry.getKey() + " :> " + entry.getValue().WLCommandStr());
+				sb.append("\"").append(entry.getKey()).append("\" :> ").append(entry.getValue().WLCommandStr());
 			}
 			i--;
-		}		
-		//Collection<Map.Entry<ParseStructType, ParseStruct>> parseStructMMapEntries = 
-			//	childrenParseStructList.entries();
+		}
 		i = childrenParseStructList.size();
 		
 		//recursively call toString

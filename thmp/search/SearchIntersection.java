@@ -691,7 +691,6 @@ public class SearchIntersection {
 
 		// go through common path of processing!
 		// removes endings such as -ing, and uses synonym rep.
-
 		// adjust curScoreToAdd, boost 2, 3-gram scores when applicable
 		curScoreToAdd = tokenType.adjustNGramScore(curScoreToAdd, singletonScoresAr, wordIndexInThm);
 
@@ -699,7 +698,7 @@ public class SearchIntersection {
 			// System.out.println("wordThms " + wordThms);
 			wordThmIndexMMap.putAll(word, wordThms);
 			if (DEBUG) {
-				System.out.println("Word added: " + word + ". Score: " + curScoreToAdd);
+				System.out.println("SearchIntersection-Word added: " + word + ". Score: " + curScoreToAdd);
 			}
 			for (Integer thmIndex : wordThms) {
 				// skip thm if current word already been covered by previous
