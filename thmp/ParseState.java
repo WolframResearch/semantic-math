@@ -40,31 +40,22 @@ public class ParseState {
 	//of the input that's being tokenized, so 
 	//delimiter-separated.
 	private String currentInputStr;
-
-	private Struct recentEnt;
-	
+	private Struct recentEnt;	
 	//recent assert
-	private Struct recentAssert;
-	
+	private Struct recentAssert;	
 	//whether the last parse spans or not
-	private boolean recentParseSpanning;
-	
+	private boolean recentParseSpanning;	
 	//tokenized input list
 	private List<Struct> tokenList;
-	
 	//tokenList of previous parse segment, i.e. punctuation
 	//-delimited parts of the original sentence.
-	private List<Struct> prevTokenList;
-	
+	private List<Struct> prevTokenList;	
 	//parseStruct, for layering built WLCommands
-	private ParseStruct headParseStruct;
-	
+	private ParseStruct headParseStruct;	
 	//list of ParseStruct's, one for each parse tree.
 	private List<ParseStruct> headParseStructList;
-	
 	//current parse struct, somewhere down the tree from headParseStruct
-	private ParseStruct curParseStruct;
-	
+	private ParseStruct curParseStruct;	
 	//context vector that takes into account structure of parse tree, i.e.
 	//the relations between different Structs.
 	private BigInteger relationalVec;
@@ -384,8 +375,7 @@ public class ParseState {
 			    BufferedWriter bw = new BufferedWriter(fw);
 			    PrintWriter outPrintWriter = new PrintWriter(bw))
 			{
-				outPrintWriter.println(sb);
-				
+				outPrintWriter.println(sb);				
 			} catch (IOException e) {
 			   logger.error("IOException while writing to unknown words file!");			   
 			}		
