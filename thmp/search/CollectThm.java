@@ -940,7 +940,7 @@ public class CollectThm {
 				//int score = wordFreq < 40 ? (int)Math.round(10 - wordFreq/3) : (wordFreq < 180 ? (int)Math.round(15 - wordFreq/3) : (wordFreq < 450 ? 3 : 0));	
 				//starting April 1:
 				int score = wordFreq < 40 ? (int)Math.round(20 - wordFreq/3) : (wordFreq < 180 ? (int)Math.round(35 - wordFreq/4) 
-						: (wordFreq < 350 ? 4 : (wordFreq < 450 ? 3 : 2)));	
+						: (wordFreq < 350 ? 4 : (wordFreq < 450 ? 3 : 3)));	
 				//frequently occurring words, should not score too low since they are mostly math words.
 				score = score <= 0 ? 3 : score;
 				wordsScorePreMap.put(word, score);

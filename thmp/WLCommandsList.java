@@ -52,7 +52,7 @@ public class WLCommandsList {
 	 * Final constants used to indicate WLCommand/Aux String as posIndex in PosList.
 	 * Use the getter below instead of public!
 	 */
-	public static final int WLCOMMANDINDEX = -1;
+	public static final int WL_DIRECTIVE_INDEX = -1;
 
 	public static final int AUXINDEX = -2;
 	private static final int DEFAULT_POSITION_IN_MAP = Integer.MIN_VALUE;
@@ -211,9 +211,9 @@ public class WLCommandsList {
 				new PBuilder("prep", null, true, false, "OPT"), new PBuilder("]") ));
 		//WLCommandMapBuilder.put("union",
 			//addCommand(new String[] { ", union, trigger", "Union[", "pre, of, false", "symb|ent, , true", "]" }));
-		wLCommandMapBuilder.put("union", addCommand(new PBuilder(null, "union", false, true, false), 
+		/*wLCommandMapBuilder.put("union", addCommand(new PBuilder(null, "union", false, true, false), 
 				new PBuilder("Union["), new PBuilder("pre", "of", false), 
-				new PBuilder("symb|ent", null, true), new PBuilder("]") ));
+				new PBuilder("symb|ent", null, true), new PBuilder("]") ));*/
 		
 		// label a term to use to trigger a mathObj, communicate to posList,
 		// posList dynamically builds command
@@ -224,10 +224,10 @@ public class WLCommandsList {
 		//WLCommandMapBuilder.put("subset",
 			//	addCommand(new String[] { ", subset, trigger", "Subset[", "pre, of, false", "symb|ent, , true", "]" }));
 		// e.g. "$Z$ is a closed subset of $X$."
-		wLCommandMapBuilder.put("subset", addCommand(
+		/*wLCommandMapBuilder.put("subset", addCommand(
 				new PBuilder(null, "subset", false, true, false), 
 				new PBuilder("Subset["), new PBuilder("pre", "of", false), 
-				new PBuilder("symb|ent", null, true).addRelationType(RelationType._IS_), new PBuilder("]") ));
+				new PBuilder("symb|ent", null, true).addRelationType(RelationType._IS_), new PBuilder("]") ));*/
 		
 		// trigger TriggerMathObj
 		//***action*** commands
@@ -287,9 +287,9 @@ public class WLCommandsList {
 		
 		//if_assert. As well as " if  ", etc
 		//WLCommandMapBuilder.put("if", addCommand(new String[] { "if|If|let, , trigger", "assert, , true" }));
-		wLCommandMapBuilder.put("if", addCommand(new PBuilder("if|If", null, false, true, false), 
-				new PBuilder("assert", null, true) ));
-		wLCommandMapBuilder.put("then", addCommand(new PBuilder("then|Then", null, false, true, false), 
+		wLCommandMapBuilder.put("if", addCommand(new PBuilder("if|If|let|hyp", null, false, true, false), 
+				new PBuilder("assert|texAssert", null, true) ));
+		wLCommandMapBuilder.put("then|texAssert", addCommand(new PBuilder("then|Then", null, false, true, false), 
 				new PBuilder("assert", null, true) ));
 		
 		//"let A be B"; "suppose A is B"
@@ -419,7 +419,7 @@ public class WLCommandsList {
 	 * @return the wlcommandindex
 	 */
 	public static int getWLCOMMANDINDEX() {
-		return WLCOMMANDINDEX;
+		return WL_DIRECTIVE_INDEX;
 	}	
 	
 	private static ImmutableWLCommand addCommand(PBuilder ... pBuilderAr){

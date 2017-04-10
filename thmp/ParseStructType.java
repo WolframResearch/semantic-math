@@ -40,8 +40,7 @@ public enum ParseStructType {
 		builder.putAll(HYP, Arrays.asList("letbe", "let", "hypo", "partient", "if", "If", "where", "assuming", "assume", "Cond"));
 		builder.putAll(HYP_iff, Arrays.asList("if and only if", "iff", "Iff"));
 		builder.putAll(OBJ, Arrays.asList("ent", "MathObj"));
-		builder.putAll(STM, Arrays.asList("then"));
-		
+		builder.putAll(STM, Arrays.asList("then"));		
 		StringParseStructTypeMap = builder.build().inverse();	
 	}
 	

@@ -475,6 +475,7 @@ public class Maps {
 			posPreMMap.put("equal to", "pre");
 			posPreMMap.put("on", "pre");
 			posPreMMap.put("let", "let");
+			posPreMMap.put("let", "hyp");
 			posPreMMap.put("be", "be");
 			posPreMMap.put("of", "pre"); // of is primarily used as anchor
 			posPreMMap.put("over", "pre");
@@ -482,7 +483,8 @@ public class Maps {
 			posPreMMap.put("without", "pre");
 			posPreMMap.put("by", "pre");
 			posPreMMap.put("via", "pre");
-			posPreMMap.put("as", "pre");
+			posPreMMap.put("as", "pre_COMP");
+			posPreMMap.put("as well", "adj");
 			posPreMMap.put("such", "pre_COMP");
 			posPreMMap.put("such that", "cond");
 			//posPreMMap.put("except", "cond");
@@ -649,6 +651,7 @@ public class Maps {
 			// structMap.put("pre_ent", new Rule("preent", 1));
 			// prep stands for "pre phrase"
 			structMap.put("pre_ent", new Rule("prep", 1));
+			structMap.put("pre_texAssert", new Rule("prep", 1));
 			structMap.put("pre_adj", new Rule("prep", 0.8));
 			//structMap.put("tobe_ent", new Rule("Tobe", 0.85));
 			//"$F$ is said to be a field."
@@ -723,7 +726,7 @@ public class Maps {
 			structMap.put("verb_csubj", new Rule("verbphrase", 1));
 			structMap.put("be_ent", new Rule("verbphrase", .7));
 			structMap.put("verb_adj", new Rule("verbphrase", 1));
-			//e.g. "$s_n$ converges independent of $n$"
+			//e.g. "$s_n$ converges independently of $n$", "...implies that..."
 			structMap.put("verb_adverb", new Rule("newchild", "verb", 0.8));
 			structMap.put("verb_pro", new Rule("verbphrase", 1));
 			structMap.put("verb_symb", new Rule("verbphrase", 1));

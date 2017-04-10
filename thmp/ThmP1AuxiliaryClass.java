@@ -194,6 +194,8 @@ public class ThmP1AuxiliaryClass {
 	}	
 
 	/**
+	 * Convert the pos for tex expressions in short input strings to texAssert.
+	 * e.g. "let $x = 0"
 	 * @param structList
 	 */
 	protected static void convertStructToTexAssert(List<Struct> structList) {
@@ -319,7 +321,7 @@ public class ThmP1AuxiliaryClass {
 					break;
 				}						
 			}
-			System.out.println("ThmP1 - toBeConvertedStruct " + toBeConvertedStruct);
+			System.out.println("ThmP1Auxiliary - toBeConvertedStruct " + toBeConvertedStruct);
 			if(null != toBeConvertedStruct){
 				
 				//need to convert toBeConvertedStruct to a StructA 

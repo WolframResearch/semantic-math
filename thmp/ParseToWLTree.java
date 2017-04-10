@@ -1005,7 +1005,7 @@ public class ParseToWLTree{
 		struct.clear_WLCommandWrapperList();
 		struct.clear_WLCommandStrVisitedCount();		
 		struct.set_previousBuiltStruct(null);
-		/*don't delete this! March 2017.
+		/*don't delete below! March 2017.
 		 * Should not set to null, as another command will need to know if struct 
 		 * already has a headStruct, to resolve clashes.*/
 		//struct.set_structToAppendCommandStr(null);

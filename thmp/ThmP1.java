@@ -903,7 +903,7 @@ public class ThmP1 {
 					pair = new Pair(curWord, pos);
 					addExtraPosToPair(pair, posList);
 				}	
-				pair = fuseAdverbAdj(pairs, curWord, pair);	
+				pair = fuseAdverbAdj(pairs, pair);	
 				//System.out.println("ThmP1 - after fusing adverb-adj pair: " + pair);
 				eliminateUnlikelyPosPairs(pair, pairs);
 				pairs.add(pair);
@@ -1150,7 +1150,7 @@ public class ThmP1 {
 					Pair pair = new Pair(curWord, pos);
 					//add any additional pos to pair if applicable.
 					addExtraPosToPair(pair, posList);
-					pair = fuseAdverbAdj(pairs, curWord, pair);					
+					pair = fuseAdverbAdj(pairs, pair);					
 					pairs.add(pair);
 				}else{
 					pairs.add(new Pair(curWord, ""));
@@ -1359,7 +1359,7 @@ public class ThmP1 {
 		/* map of math entities, has math object + ppt's */
 		List<StructH<HashMap<String, String>>> mathEntList = new ArrayList<StructH<HashMap<String, String>>>();
 
-		// combine adj with math ent's; try combine adjacent ent's
+		/* combine adj with math ent's; try combine adjacent ent's */
 		for (int j = 0; j < mathIndexList.size(); j++) {
 			
 			int index = mathIndexList.get(j);
@@ -1371,12 +1371,10 @@ public class ThmP1 {
 			StructH<HashMap<String, String>> tempStructH = new StructH<HashMap<String, String>>("ent");
 			//if(true) throw new IllegalStateException(mathObjName);
 			if(LATEX_ASSERT_PATTERN.matcher(mathObjName).matches()){
-				tempStructH.setLatexStructToTrue();
-				
+				tempStructH.setLatexStructToTrue();				
 			}
 			
-			List<String> posList = posMMap.get(mathObjName);
-			
+			List<String> posList = posMMap.get(mathObjName);			
 			boolean entAdded = false;
 			if(!posList.isEmpty()){
 				entAdded = posList.get(0).equals("ent");
@@ -1497,18 +1495,24 @@ public class ThmP1 {
 			// ...get more than adj ... multi-word descriptions
 			// set the pos as the current index in mathEntList
 			// adjectives or determiners
+			boolean adjEncountered = false;
 			String curPos;
 			while (index - k > -1 && (curPos = pairs.get(index - k).pos()).matches("adj|det|num|and|or")) {
 				Pair curPair = pairs.get(index - k);
 				String curWord = curPair.word();
 				
 				if("and".equals(curPos) || "or".equals(curPos)){
-					k++;
-					continue;
+					if(adjEncountered){
+						k++;
+						continue;
+					}else{
+						break;
+					}
 				}
 				
 				//combine adverb-adj pair (not redundant with prior calls to fuseAdjAdverbPair())
 				if(curPos.equals("adj") && index-k-1 > -1){
+					adjEncountered = true;
 					Pair adverbPair;
 					StringBuilder adverbWordSB = new StringBuilder(20);
 					int k2 = index-k-1;
@@ -1933,18 +1937,24 @@ public class ThmP1 {
 	 * @param pair
 	 * @return
 	 */
-	private static Pair fuseAdverbAdj(List<Pair> pairs, String curWord, Pair pair) {
+	private static Pair fuseAdverbAdj(List<Pair> pairs//, String curWord
+			, Pair pair
+			) {
 		
 		// if adverb-adj pair, eg "clearly good"
 		// And combine adj_adj to adj, eg right exact
+		String curWord = pair.word();
 		List<String> posList = posMMap.get(curWord);
+		//if(pair.word().equals("as well")) throw new RuntimeException(posMMap.get(curWord)+"");
 		if (pairs.size() > 0 && !posList.isEmpty() && posList.get(0).equals("adj") && !noFuseAdjSet.contains(curWord)) {
 			StringBuilder adverbSB = new StringBuilder();			
 			Pair lastPair;
+			
 			int pairsSize = pairs.size();
 			while ( pairsSize > 0 && ((lastPair=pairs.get(pairsSize - 1)).pos().equals("adverb") 
 					|| lastPair.pos().equals("adj") && !noFuseAdjSet.contains(lastPair.word())
 					)) {
+				
 				//curWord = pairs.get(pairsSize - 1).word() + " " + curWord;
 				adverbSB.insert(0, " ").insert(0, lastPair.word());
 				pairs.remove(pairsSize - 1);					
@@ -2080,7 +2090,7 @@ public class ThmP1 {
 			
 			//create additional structs on the diagonal if extra pos present.
 			Set<String> extraPosSet = diagonalStruct.extraPosSet();
-			//System.out.println("@@@@@@ diagonalStruct " + diagonalStruct + "|||" +extraPosSet);
+			//System.out.println("@@@@ diagonalStruct " + diagonalStruct + "|||" +extraPosSet);
 			if(extraPosSet != null){
 				
 				for(String pos : extraPosSet){
@@ -3394,9 +3404,8 @@ public class ThmP1 {
 				}
 				childToAdd = (Struct)struct2.prev2();				
 			}else{			
-			// add to child relation, usually a preposition, 
-			//eg  "from", "over"
-			// could also be verb, "consist", "lies"			
+				// Add to child relation, usually a preposition, 
+				// e.g. "from", "over". Could also be verb, "consist", "lies"			
 				List<Struct> kPlus1StructArrayList = mx.get(k + 1).get(k + 1).structList();					
 				for(int p = 0; p < kPlus1StructArrayList.size(); p++){
 					Struct struct = kPlus1StructArrayList.get(p);
@@ -3406,16 +3415,12 @@ public class ThmP1 {
 						break;
 					}
 				}
-			}
-			
+			}			
 			if(null == childRelation){
 				//should throw checked exception, and let the program keep running, rather than
 				//runtime exception 				
 				logger.info("Inside ThmP1.reduce(), childRelation should not be null! " + parseState.getTokenList());
 				childRelation = new ChildRelation("");
-				//return null;
-				//throw new ParseRuntimeException("Inside ThmP1.reduce(), childRelation should not be null! " + parseState.getTokenList());
-				//throw new IllegalStateException("Inside ThmP1.reduce(), childRelation should not be null! " + parseState.getTokenList());
 			}			
 			//if struct2 is e.g. a prep, only want the ent in the prep
 			//to be added. Or symb, "$P$ in $R$ is prime."
@@ -3449,6 +3454,20 @@ public class ThmP1 {
 			if(childRelationType.equals(ChildRelationType.PREP) && 
 					//use struct1 and not structToAppendChild.
 					struct1.childRelationType().equals(ChildRelationType.PREP)){
+				return new EntityBundle(firstEnt, recentEnt, recentEntIndex);
+			}
+			
+			if(struct2.type().equals("prep") && struct2.prev2NodeType().isTypeStruct()
+					&& ((Struct)struct2.prev2()).type().equals("texAssert")){
+				
+				StructA<String, String> convertedStructA = new StructA<String, String>(structToAppendChild.nameStr(), 
+						NodeType.STR, "", NodeType.STR, "texAssert");
+				
+				convertedStructA.add_child(childToAdd, childRelation);				
+				childToAdd.set_childRelationType(childRelation.childRelationType());				
+				
+				convertedStructA.set_maxDownPathScore(newDownPathScore);
+				mx.get(i).get(j).add(convertedStructA);
 				return new EntityBundle(firstEnt, recentEnt, recentEntIndex);
 			}
 			
@@ -3508,8 +3527,7 @@ public class ThmP1 {
 						childAdded = true;
 						break;
 					}
-				}*/
-				 
+				}*/				 
 				
 				//set the type, corresponds to whether the relation is via preposition or conditional.
 				//e.g. "over" vs "such as".
@@ -3538,13 +3556,11 @@ public class ThmP1 {
 
 				if (!struct1.isStructA()  && struct2.prev1NodeType().equals(NodeType.STR)) {
 					((StructH<?>) newStruct).struct().put("tex", (String)struct2.prev1());
-				}
-				
+				}				
 				recentEnt = newStruct;
 				recentEntIndex = j;
 				
 				newStruct.set_maxDownPathScore(newDownPathScore);
-
 				mx.get(i).get(j).add(newStruct);
 			}
 		}else if(newType.equals("fuse")){	

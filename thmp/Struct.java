@@ -370,8 +370,8 @@ public abstract class Struct implements Serializable{
 				//only append curChidRelation if child is a StructH, to avoid
 				//including the relation twice, eg in case child is of type "prep"
 				//if this child has been used in another component of the same command.	
-				if(!child.usedInOtherCommandComponent(curCommand)){
-					
+				//System.out.println("Struct - child.usedInOtherCommandComponent(curCommand)" + child.usedInOtherCommandComponent(curCommand));
+				if(!child.usedInOtherCommandComponent(curCommand)){					
 					String childStr = child.simpleToString(includeType, curCommand);						
 					if(!childStr.matches("\\s*")){
 					//System.out.println("Childstr " + childStr);
@@ -388,15 +388,14 @@ public abstract class Struct implements Serializable{
 							childSb.append(childStr);
 							childSb.append(", ");
 						}else{
-							childSb.append("{\"" + childRelationStr + "\", " + childStr + "}");
-							childSb.append(", ");							
-						}
-						int childSbLen = childSb.length();
-						childSb = childSb.delete(childSbLen-2, childSbLen);
+							childSb.append("{\"").append(childRelationStr).append("\", ").append(childStr).append("}, ");
+						}											
 						//WLCommand.increment_commandNumUnits(curCommand, this); //HERE
 					}
 				}
 			}
+			int childSbLen = childSb.length();
+			childSb = childSb.delete(childSbLen-2, childSbLen);
 			if(0 < childSb.length()){
 				if(nontrivialChildrenStrCounter > 1){
 					childSb.insert(0, ", \"Qualifiers\" -> {").append("}");

@@ -37,6 +37,7 @@ public class ParseRun {
 	public static void parseInput(String st, ParseState parseState, boolean isVerbose, Stats stats){
 		
 		List<BigInteger> relationalContextVecList = new ArrayList<BigInteger>();			
+		parseState.resetNumNonTexTokens();
 		
 		String[] strAr = ThmP1.preprocess(st);			
 		

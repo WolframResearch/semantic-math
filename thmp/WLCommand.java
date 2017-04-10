@@ -1225,7 +1225,7 @@ public class WLCommand implements Serializable{
 			int positionInMap = term.positionInMap;			
 			String nextWord = "";			
 			//neither WL command or auxilliary String
-			if(positionInMap != WLCommandsList.AUXINDEX && positionInMap != WLCommandsList.WLCOMMANDINDEX){
+			if(positionInMap != WLCommandsList.AUXINDEX && positionInMap != WLCommandsList.WL_DIRECTIVE_INDEX){
 				
 				List<Struct> curCommandComponentList = commandsMap.get(commandComponent);
 				if(positionInMap >= curCommandComponentList.size()){
@@ -1264,12 +1264,13 @@ public class WLCommand implements Serializable{
 				if(term.triggerMathObj){
 					//should check first if contains WLCommandStr, i.e. has been converted to some 
 					//commands already
-					nextWord = TriggerMathObj3.get_mathObjFromStruct(nextStruct, curCommand);
+					//nextWord = TriggerMathObj3.get_mathObjFromStruct(nextStruct, curCommand);
 					
-					if(nextWord.equals("")){
+					//if(nextWord.equals("")){
 						//already added numUnits to Struct above, don't do it again.
-						nextWord = nextStruct.simpleToString(true, null);						
-					}
+						//nextWord = nextStruct.simpleToString(true, null);	
+					//}
+					nextWord = nextStruct.simpleToString(true, curCommand);
 				}else{
 					//takes into account pro, and the ent it should refer to
 					nextWord = nextStruct.simpleToString(true, curCommand);
@@ -1289,8 +1290,8 @@ public class WLCommand implements Serializable{
 					nextStruct.structToAppendCommandStr().WLCommand().structsWithOtherHeadCount--;									
 				}
 				nextStruct.set_structToAppendCommandStr(structToAppendCommandStr); */				
-			}//index indicating this is a WL command.
-			else if(positionInMap == WLCommandsList.WLCOMMANDINDEX){
+			}//index indicating this is a WL directive, e.g. \\[ELement]
+			else if(positionInMap == WLCommandsList.WL_DIRECTIVE_INDEX){
 				//should change to use simpletoString from Struct
 				nextWord = term.commandComponent.posStr;
 				//in case of WLCommand eg \\[ELement]
@@ -1321,8 +1322,7 @@ public class WLCommand implements Serializable{
 			}
 			
 			if(term.isOptionalTerm()){
-				int optionalGroupNum = term.optionalGroupNum();
-				
+				int optionalGroupNum = term.optionalGroupNum();				
 				if(0 == optionalTermsGroupCountMap.get(optionalGroupNum)){
 					commandSB.append(nextWord);//.append(" ");
 				}
@@ -2039,13 +2039,15 @@ public class WLCommand implements Serializable{
 	public static boolean increment_commandNumUnits(WLCommand curCommand, Struct newStruct){
 		//don't add for insignificant tokens, that would only be counted when occuring as StructA
 		//and not StructH.
-		if(newStruct.type().equals("pre")){
+		String newStructType = newStruct.type();
+		if(newStructType.equals("pre")){
 			return false;
 		}
 		if(!newStruct.isStructA() 
 			|| newStruct.prev1NodeType().equals(NodeType.STR) && newStruct.prev2NodeType().equals(NodeType.STR)){
 			curCommand.commandNumUnits++;	
 			//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
+			//System.out.println("WLCommand increment_commandNumUnits - newStruct " + newStruct);
 			return true;
 		}
 		return false;

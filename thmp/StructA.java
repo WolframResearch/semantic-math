@@ -297,8 +297,7 @@ public class StructA<A, B> extends Struct{
 			
 			if(curWrapper != null){
 				int commandNumUnits = WLCommand.commandNumUnits(composedCommand);
-				System.out.println("StructA -- commandNumUnits: " + commandNumUnits);				
-				WLCommand.increment_commandNumUnits(curCommand, commandNumUnits); ///////+1
+				WLCommand.increment_commandNumUnits(curCommand, commandNumUnits);
 					//System.out.println("increment_commandNumUnits : numUnits " + commandNumUnits + " composedCommand: " + composedCommand); 				
 			}
 			//been built into one command already
@@ -337,9 +336,10 @@ public class StructA<A, B> extends Struct{
 				}else if(prev2.equals("")){
 					/*use "Math" Head here generally so not to have headless object. But perhaps should be more specific.*/
 					fullContentSB.insert(0, "Math[").append(childStr).append("]");
+					//if(this.type.equals("texAssert")) System.out.println("StructA -struct "+ this +"has child? " +this.hasChild);
 				}
 				if(!prev2.equals("")){
-					fullContentSB.insert(0, "Math[").append(", \"").append((String)this.prev2).append(childStr).append("\"]");
+					fullContentSB.insert(0, "Math[").append(", \"").append((String)this.prev2).append(childStr).append("\"]");					
 				}
 			}				
 			

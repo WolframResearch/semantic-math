@@ -893,6 +893,13 @@ public class ParseState {
 		return numNonTexTokens;
 	}
 
+	/**
+	 * Sets numNonTexTokens to 0.
+	 */
+	public void resetNumNonTexTokens() {
+		this.numNonTexTokens = 0;
+	}
+	
 	public void addToNumNonTexTokens(int numNonTexTokensToAdd) {
 		this.numNonTexTokens += numNonTexTokensToAdd;
 	}

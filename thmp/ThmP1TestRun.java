@@ -624,7 +624,13 @@ public class ThmP1TestRun {
 			st = "$S$ is perfect in $R$";			
 			st = "${s_i}_n$ is bounded independent of $n$";
 			st = "$S$ is perfect consistently";
-			
+			st = "The usual order on $R$ is a total order";
+			st = "Let $n, m \\in N$ with $n < m$. Then no function $f : {1,2,...,m} -> {1,2,...,n}$ can be an injection";
+			st = "Let $n, m \\in N$ with $n < m$"; //Revisit! Why span score 3 but no output string?
+			st = " $c(A)<= c(B) $ and  $c(B) <= c(A) $ together imply that  $cA) = c(B)$.";
+			st = "If $A$ is finite and $g:A ->B $ is a surjection, then $B$ is finite as well"; 
+			st = "There is a subset of $N$ that is countable"; //revisit! Some longforms produced are not triggering!
+			st = "Suppose that $f : [a, b] -> R$ is the difference of two bounded increasing functions";
 			//st = "$abc $ is right exact over $R$";
 			//st = " $\\Probsub_x$ is the law of $\\bfPhi$ conditional on $\\Phi(0)=x,$ and $\\Expect_x$ is the corresponding expectation.";
 			//st = "two vectors $x$ and $y$ are adjacent";

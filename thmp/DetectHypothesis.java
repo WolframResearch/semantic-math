@@ -929,8 +929,7 @@ public class DetectHypothesis {
 		for(int i = 0; i < contextStrAr.length; i++){
 			String sentence = contextStrAr[i];
 			if(isHypothesis(sentence)){	
-				System.out.println("isHypothesis! " + sentence);
-				//if(true) throw new IllegalStateException(sentence);				
+				//System.out.println("isHypothesis! " + sentence);			
 				parseState.setCurParseStruct(null);
 				parseState.setHeadParseStruct(null);
 				ParseRun.parseInput(sentence, parseState, PARSE_INPUT_VERBOSE, stats);
@@ -964,9 +963,9 @@ public class DetectHypothesis {
 		//Parse the thm first, with the variableNamesMMap already updated to include contexual definitions.
 				//should return parsedExpression object, and serialize it. But only pick up definitions that are 
 				//not defined locally within this theorem.
-		System.out.println("~~~~~~parsing~~~~~~~~~~");		
+		//System.out.println("~~~~~~parsing~~~~~~~~~~");		
 		ParseRun.parseInput(thmStr, parseState, PARSE_INPUT_VERBOSE, stats);
-		System.out.println("~~~~~~Done parsing~~~~~~~");		
+		//System.out.println("~~~~~~Done parsing~~~~~~~");		
 		
 		if(parseState.numNonTexTokens() < NUM_NON_TEX_TOKEN_THRESHOLD){
 			return DefinitionListWithThm.PLACEHOLDER_DEF_LIST_WITH_THM;
