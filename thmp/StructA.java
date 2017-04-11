@@ -341,14 +341,14 @@ public class StructA<A, B> extends Struct{
 				//quotes around prev1 string
 				fullContentSB.insert(0, "\"").append("\"");
 				if(this.type.equals("adj") || this.type.equals("adverb") || this.type.equals("qualifier") ){
-					fullContentSB.insert(0, "MathProperty[").append(childStr).append("]");
+					fullContentSB.insert(0, " MathProperty[").append(childStr).append("]");
 				}else if(prev2.equals("")){
 					/*use "Math" Head here generally so not to have headless object. But perhaps should be more specific.*/
 					fullContentSB.insert(0, "Math[").append(childStr).append("]");
 					//if(this.type.equals("texAssert")) System.out.println("StructA -struct "+ this +"has child? " +this.hasChild);
 				}
 				if(!prev2.equals("")){
-					fullContentSB.insert(0, "Math[").append(", \"").append((String)this.prev2).append(childStr).append("\"]");					
+					fullContentSB.insert(0, "Math[").append(", \"").append((String)this.prev2).append("\"]");					
 				}
 			}				
 			

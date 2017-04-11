@@ -628,8 +628,7 @@ public class ThmP1TestRun {
 			st = "Let $n, m \\in N$ with $n < m$. Then no function $f : {1,2,...,m} -> {1,2,...,n}$ can be an injection";
 			st = "Let $n, m \\in N$ with $n < m$"; //Revisit! Why span score 3 but no output string?
 			st = " $c(A)<= c(B) $ and  $c(B) <= c(A) $ together imply that  $cA) = c(B)$.";
-			st = "If $A$ is finite and $g:A ->B $ is a surjection, then $B$ is finite as well"; 
-			st = "There is a subset of $N$ that is countable"; //revisit! Some longforms produced are not triggering!
+			st = "If $A$ is finite and $g:A ->B $ is a surjection, then $B$ is finite as well"; 			
 			st = "Suppose that $f : [a, b] -> R$ is the difference of two bounded rising functions";
 			st = "Any linear function $L : R^p \\[RightArrow] R^q$ is continuous";
 			st = "Then $ F'(x) = f(x)$ for all $x \\elem (a,b)$";	//revisit!	
@@ -638,7 +637,13 @@ public class ThmP1TestRun {
 			//st = "suppose that $f_n$ converges to $f$ pointwise";
 			//st = "Suppose that $f_n->g$ uniformly on $[a,b]$";
 			st = "Then $f$ is increasing on $(a,b)$";
-			st = "$sfg$ converges independent of $n$";
+			//st = "$sfg$ converges independent of $n$";
+			st = "Let $f:R^p -> R^q$ be differentiable at the point $x$";
+			st = "Then all directional derivatives exist at $x$ and $D_uf(x)=Df(x)(u)$.";//revisit, last ent should be parsed as texAssert
+			st = "If   $\\sum a_k$ converges conditionally";
+			st = "there is some rearrangement of $\\sum a_k$  which converges to $x$";
+			st = "There is a subset of $N$ that is countable"; //revisit! Commands produced but not attached!
+			
 			//st = "$abc $ is right exact over $R$";
 			//st = " $\\Probsub_x$ is the law of $\\bfPhi$ conditional on $\\Phi(0)=x,$ and $\\Expect_x$ is the corresponding expectation.";
 			//st = "two vectors $x$ and $y$ are adjacent";

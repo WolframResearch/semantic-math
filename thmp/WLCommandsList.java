@@ -150,16 +150,16 @@ public class WLCommandsList {
 				new PBuilder("verb|vbs", null, WLCommand.PosTermType.NEGATIVE),
 				new PBuilder(", ~Connective["),  new PBuilder("verb", null, true, true, false), new PBuilder("]~, "),
 				new PBuilder("verb|vbs", null, WLCommand.PosTermType.NEGATIVE), new PBuilder(" {", "OPT"), 
-				new PBuilder("symb|ent|noun|adj|prep|phrase", null, true, false, false).addRelationType(RelationType._IS),
+				new PBuilder("symb|ent|noun|adj|prep|phrase|qualifier", null, true, false, false).addRelationType(RelationType._IS),
 				new PBuilder(", {\"Qualifiers\"->", "OPT"), 
 				//the relation should incorporate several types. 
-				new PBuilder("prep", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}}", "OPT")
+				new PBuilder("prep|qualifier", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}}", "OPT")
 				));		
 		//e.g. "The field extension $F/Q$ splits."
 		wLCommandMapBuilder.put("verbAlone", addCommand(new PBuilder("symb|ent|pro|noun", null, true).addRelationType(RelationType._IS), 
 				new PBuilder("pro", "we", WLCommand.PosTermType.NEGATIVE),		
 				new PBuilder(" ~HasProperty~ {"),  new PBuilder("verbAlone", null, true, true, false).addRelationType(RelationType.IS_), 
-				new PBuilder(" ,", "OPT"), new PBuilder("prep", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}")));	
+				new PBuilder(" ,", "OPT"), new PBuilder("prep|qualifier", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}")));	
 		
 		/*e.g. If $x > y$.*/
 		wLCommandMapBuilder.put("texAssert", addCommand(new PBuilder("hyp|if|then", null, false, false, "OPT"), 
@@ -204,13 +204,13 @@ public class WLCommandsList {
 			//	addCommand(new String[] { ", derivative, trigger", "Derivative[", "pre, of, false", "symb|ent, , true", "]" }));
 		wLCommandMapBuilder.put("derivative", addCommand(new PBuilder(null, "derivative", false, true, false), 
 				new PBuilder("Derivative["), new PBuilder("pre", "of", false), new PBuilder("symb|ent", null, true), 
-				new PBuilder(", ", "OPT"), new PBuilder("prep", null, true, false, "OPT"), new PBuilder("]") ));
+				new PBuilder(", ", "OPT"), new PBuilder("prep|qualifier", null, true, false, "OPT"), new PBuilder("]") ));
 		//WLCommandMapBuilder.put("log",
 			//addCommand(new String[] { ", log, trigger", "Log[", "pre, of, false", "symb|ent, , true", "]" }));
 		wLCommandMapBuilder.put("log", addCommand(new PBuilder(null, "log", false, true, false), 
 				new PBuilder("Log["), new PBuilder("pre", "of", false), 
 				new PBuilder("symb|ent", null, true), new PBuilder(", ", "OPT"),
-				new PBuilder("prep", null, true, false, "OPT"), new PBuilder("]") ));
+				new PBuilder("prep|qualifier", null, true, false, "OPT"), new PBuilder("]") ));
 		//WLCommandMapBuilder.put("union",
 			//addCommand(new String[] { ", union, trigger", "Union[", "pre, of, false", "symb|ent, , true", "]" }));
 		/*wLCommandMapBuilder.put("union", addCommand(new PBuilder(null, "union", false, true, false), 
@@ -246,7 +246,7 @@ public class WLCommandsList {
 		wLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro|noun|det", null, true, RelationType._IS), 
 				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), 
 				new PBuilder(" ~HasProperty~ "), new PBuilder("{", "OPT"), 
-				new PBuilder("adj|ent|phrase|noun|prep", null, true, false, false, RelationType.IS_),
+				new PBuilder("adj|ent|phrase|noun|prep|qualifier", null, true, false, false, RelationType.IS_),
 				new PBuilder(", {\"Qualifier\"->", "OPT"), 
 				new PBuilder("prep", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}}", "OPT")
 				)); 

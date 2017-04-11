@@ -1610,7 +1610,6 @@ public class WLCommand implements Serializable{
 		}
 		
 		//System.out.println("GOT HERE****** newStruct " + newStruct);
-
 		//int addedComponentsColSz = commandsMap.get(commandComponent).size();
 		
 		//disqualify term if negative term triggered

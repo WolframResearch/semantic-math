@@ -598,6 +598,8 @@ preferred adj
 twisted adj
 dehn adj
 foliation ent
+rearrangement ent
+arrangement ent
 geodesic ent
 handled adj
 semigroup ent

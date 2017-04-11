@@ -77,7 +77,7 @@ public class ThmP1 {
 	//end part of latex expression word, e.g. " B)$-module"
 	private static final Pattern LATEX_END_PATTER = Pattern.compile("[^$]*\\$.*");
 	private static final Pattern LATEX_BEGIN_PATTERN = Pattern.compile("[^$]*\\${1,2}.*");
-	private static final Pattern POSSIBLE_ADJ_PATTERN = Pattern.compile("(?:.+tive|.+wise|.+ary|.+ble|.+ous|.+ent|.+like)$");
+	private static final Pattern POSSIBLE_ADJ_PATTERN = Pattern.compile("(?:.+tive|.+wise|.+ary|.+ble|.+ous|.+ent|.+like|.+nal)$");
 	private static final Pattern ESSENTIAL_POS_PATTERN = Pattern.compile("ent|conj_ent|verb|vbs|if|symb|pro");
 	private static final Pattern VERB_POS_PATTERN = Pattern.compile("verb|vbs");	
 	private static final Pattern SINGLE_WORD_TEX_PATTERN = Pattern.compile("\\$[^$]+\\$[^\\s]*"); 
@@ -248,10 +248,7 @@ public class ThmP1 {
 		//between WLCommand and WLCommandWrap.
 		private transient WLCommand wlCommand;
 		//the ParseStructType of this parsedStr, eg "STM", "HYP", etc.
-		private ParseStructType parseStructType;
-		//parse struct corresponding to the parseStructType
-		//private ParseStruct parseStruct;
-		
+		private ParseStructType parseStructType;		
 		private String stringForm;
 		
 		public ParsedPair(String parsedStr, double score, String form){
@@ -1597,7 +1594,7 @@ public class ThmP1 {
 		for (int j = anchorList.size() - 1; j > -1; j--) {
 			int index = anchorList.get(j);
 			String anchor = pairs.get(index).word();
-
+			/*This section should be gradually phased out, replaced by matrix element manipulations. April 2017.*/
 			switch (anchor) {
 			case "of":
 				// the expression before this anchor is an entity
@@ -1623,9 +1620,15 @@ public class ThmP1 {
 						boolean nextPairEnt = false;
 						String entPos = "";
 						if(nextPos.matches("\\d+")){
-							nextPairEnt = true;
-							childStruct = mathEntList.get(Integer.valueOf(nextPos));
-							entPos = nextPos;
+							//don't fuse if e.g. "$A$ of $B$ which is $p$"
+							String nextNextPos;
+							if(index + 3 >= pairs.size() || 
+									!((nextNextPos=pairs.get(index+2).pos()).equals("hyp") || nextNextPos.equals("rpro") ) ){
+								//System.out.println("ThmP1 nextNextPos " + nextNextPos);
+								nextPairEnt = true;
+								childStruct = mathEntList.get(Integer.valueOf(nextPos));
+								entPos = nextPos;
+							}
 						}else if(index + 2 < pairs.size() && nextPos.equals("art")){
 							String nextNextPos = pairs.get(index+2).pos();
 							if(nextNextPos.matches("\\d+")){
@@ -1644,10 +1647,14 @@ public class ThmP1 {
 							tempStruct.add_child(childStruct, new ChildRelation("of"));
 						}
 						else if(nextPos.equals("symb") || nextPos.equals("noun")){	
+							String nextNextPos;
+							if(index + 3 >= pairs.size() || 
+									!((nextNextPos=pairs.get(index+2).pos()).equals("hyp") || nextNextPos.equals("rpro") ) ){
 							pairs.get(index).set_pos(prevPair.pos());
 							childStruct = new StructA<String, String>(nextPair.word(), NodeType.STR, "", NodeType.STR, nextPos);
 							tempStruct.add_child(childStruct, new ChildRelation("of"));
 							nextPair.set_pos(prevPair.pos());							
+						}
 						}
 					} 
 					else if (prevPair.pos().equals("noun") && nextPos.matches("\\d+")) {
@@ -1669,12 +1676,12 @@ public class ThmP1 {
 						pairs.get(index).set_pos(posMMap.get(anchor).get(0));
 					}
 				} 
-				else {
+				//else {
 					// if the previous token is not an ent.
 					// Set anchor to its normal part of speech word, like "of"
 					// to "pre"
 					pairs.get(index).set_pos(posMMap.get(anchor).get(0));
-				}				
+				//}				
 				break;
 			}
 		}
@@ -3417,7 +3424,7 @@ public class ThmP1 {
 			if(null == childRelation){
 				//should throw checked exception, and let the program keep running, rather than
 				//runtime exception 				
-				logger.info("Inside ThmP1.reduce(), childRelation should not be null! " + parseState.getTokenList());
+				logger.info("ThmP1.reduce() - childRelation is null for structlist: " + parseState.getTokenList());
 				childRelation = new ChildRelation("");
 			}			
 			//if struct2 is e.g. a prep, only want the ent in the prep

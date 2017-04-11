@@ -493,6 +493,7 @@ public class Maps {
 			posPreMMap.put("where", "hyp");
 			posPreMMap.put("which is", "hyp");
 			posPreMMap.put("which are", "hyp");
+			posPreMMap.put("which", "hyp");
 			posPreMMap.put("that is", "hyp");
 			posPreMMap.put("that are", "hyp");
 			
@@ -739,7 +740,7 @@ public class Maps {
 			structMap.put("verb_phrase", new Rule("verbphrase", 0.8));
 			structMap.put("verb_partient", new Rule("verbphrase", 1));
 			structMap.put("verb_noun", new Rule("verbphrase", 1));
-			structMap.put("verbAlone_qualifier", new Rule("verbphrase", .9));
+			structMap.put("verbAlone_qualifier", new Rule("newchild", "verbAlone", 0.85));
 			
 			structMap.put("det_verbphrase", new Rule("assert", 1));
 			//remove, because verbphrase should be able to finish a sentence
@@ -829,6 +830,7 @@ public class Maps {
 			structMap.put("texAssert_prep", new Rule("assert", .5));
 			structMap.put("texAssert_iff", new Rule("assert", .5));
 			structMap.put("hyp_hyp", new Rule("hyp", 1));
+			structMap.put("hyp_verbphrase", new Rule("hypo", 0.6));
 			structMap.put("hyp_assert", new Rule("hypo", 1));
 			structMap.put("hyp_texAssert", new Rule("hypo", 1));
 			structMap.put("hyp_ent", new Rule("hypo", 1));
@@ -860,6 +862,7 @@ public class Maps {
 			structMap.put("adj_qualifier", new Rule("newchild", "adj", .8));
 			structMap.put("verb_prep", new Rule("newchild", "verbphrase", .85));
 			structMap.put("verbAlone_prep", new Rule("newchild", "verbphrase", .85));
+			structMap.put("verbAlone_adverb", new Rule("newchild", "verbAlone", .85));
 			structMap.put("ent_symb", new Rule("absorb2", 1));
 			
 			// eg "property that a is b"
