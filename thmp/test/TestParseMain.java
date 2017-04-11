@@ -15,6 +15,7 @@ import com.google.common.collect.Multimap;
 import thmp.ParseState;
 import thmp.ParseStructType;
 import thmp.ThmP1;
+import thmp.exceptions.ParseRuntimeException.IllegalSyntaxException;
 import thmp.ParseState.ParseStateBuilder;
 
 /**
@@ -87,7 +88,12 @@ public class TestParseMain {
 		for(int i = 0; i < strAr.length; i++){
 			//alternate commented out line to enable tex converter
 			//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim()) ));
-			parseState = ThmP1.tokenize(strAr[i].trim(), parseState);
+			try {
+				parseState = ThmP1.tokenize(strAr[i].trim(), parseState);
+			} catch (IllegalSyntaxException e) {
+				e.printStackTrace();
+				continue;
+			}
 			parseState = ThmP1.parse(parseState);
 		}
 	

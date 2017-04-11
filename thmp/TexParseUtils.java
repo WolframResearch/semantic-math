@@ -2,6 +2,7 @@ package thmp;
 
 import java.util.Arrays;
 
+import thmp.exceptions.ParseRuntimeException.IllegalSyntaxException;
 import thmp.utils.WordForms;
 
 /**
@@ -57,8 +58,7 @@ public class TexParseUtils {
 				itemSb.append(" " + curWord);
 			}			
 			index++;
-		}
-		
+		}		
 	}
 	
 	/**
@@ -70,7 +70,11 @@ public class TexParseUtils {
 		String[] itemStrAr = ThmP1.preprocess(itemStr);
 		
 		for(String sentence : itemStrAr){
-			parseState = ThmP1.tokenize(sentence.trim(), parseState);
+			try {
+				parseState = ThmP1.tokenize(sentence.trim(), parseState);
+			} catch (IllegalSyntaxException e) {
+				e.printStackTrace();
+			}
 			parseState = ThmP1.parse(parseState);
 		}
 	}

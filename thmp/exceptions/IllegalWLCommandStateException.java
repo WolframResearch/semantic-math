@@ -8,7 +8,7 @@ package thmp.exceptions;
  */
 public class IllegalWLCommandStateException extends Exception{
 
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = -7887030339571251652L;
 	
 	public IllegalWLCommandStateException(){
 		super();

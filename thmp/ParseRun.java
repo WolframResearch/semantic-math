@@ -7,6 +7,7 @@ import java.util.List;
 
 import thmp.DetectHypothesis.Stats;
 import thmp.ThmP1.ParsedPair;
+import thmp.exceptions.ParseRuntimeException.IllegalSyntaxException;
 import thmp.utils.WordForms;
 
 /**
@@ -47,8 +48,14 @@ public class ParseRun {
 			}
 			//alternate commenting out line to enable tex converter
 			//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim()) ));
-
-			parseState = ThmP1.tokenize(strAr[i].trim(), parseState);
+			String curStrTrimmed = strAr[i].trim();
+			try {
+				parseState = ThmP1.tokenize(curStrTrimmed, parseState);
+			} catch (IllegalSyntaxException e) {
+				System.out.println("Input contains illegal syntax!");
+				e.printStackTrace();
+				continue;
+			}
 			
 			parseState = ThmP1.parse(parseState);
 			

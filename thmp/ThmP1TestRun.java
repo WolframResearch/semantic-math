@@ -643,6 +643,7 @@ public class ThmP1TestRun {
 			st = "If   $\\sum a_k$ converges conditionally";
 			st = "there is some rearrangement of $\\sum a_k$  which converges to $x$";
 			st = "There is a subset of $N$ that is countable"; //revisit! Commands produced but not attached!
+			st = "$S  is a ring";
 			
 			//st = "$abc $ is right exact over $R$";
 			//st = " $\\Probsub_x$ is the law of $\\bfPhi$ conditional on $\\Phi(0)=x,$ and $\\Expect_x$ is the corresponding expectation.";

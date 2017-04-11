@@ -61,6 +61,7 @@ public class ParseState {
 	//number of non-tex tokens, used during search, so can discard theorems that
 	//are almost all latex expressions.
 	private int numNonTexTokens;
+	private ParseErrorCode parseErrorCode = ParseErrorCode.NO_ERROR;
 	
 	private boolean writeUnknownWordsToFileBool;
 	
@@ -113,6 +114,10 @@ public class ParseState {
 	private static HashMultimap<String, String> extrapolatedPosMMap = HashMultimap.create(); 		
 	private static final Logger logger = LogManager.getLogger(ParseState.class);	
 	private static final String UNKNOWN_WORDS_FILE_NAME_STR = "src/thmp/data/unknownWords2.txt";
+	
+	public static enum ParseErrorCode{
+		NO_ERROR, PARSE_ERROR;
+	}
 	
 	/**
 	 * Wrapper class around variable string name (Head), also records
@@ -863,6 +868,7 @@ public class ParseState {
 		this.numNonTexTokens = 0;
 		this.setCurParseStruct(null);
 		this.setHeadParseStruct(null);
+		this.parseErrorCode = ParseErrorCode.NO_ERROR;
 		//reset list of context vectors
 		this.thmContextVecList = new ArrayList<int[]>();
 		this.localVariableNamesMMap = ArrayListMultimap.create();
@@ -878,6 +884,14 @@ public class ParseState {
 	public void parseRunGlobalCleanUp(){
 		parseRunLocalCleanUp();
 		this.globalVariableNamesMMap = ArrayListMultimap.create();
+	}
+	
+	public void setParseErrorCode(ParseErrorCode errorCode){
+		this.parseErrorCode = errorCode;
+	}
+	
+	public ParseErrorCode getParseErrorCode(){
+		return this.parseErrorCode;
 	}
 	
 	@Override

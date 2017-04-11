@@ -32,6 +32,7 @@ import com.google.common.collect.Multimap;
 
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 import thmp.exceptions.ParseRuntimeException;
+import thmp.exceptions.ParseRuntimeException.IllegalSyntaxException;
 import thmp.ParseState.VariableDefinition;
 import thmp.ParseToWLTree.WLCommandWrapper;
 import thmp.Struct.Article;
@@ -155,6 +156,7 @@ public class ThmP1 {
 			+ "|(?:.*(\\\\begin\\{eqnarray[*]*\\}.*))");
 	private static final Pattern END_ALIGN_PATTERN = Pattern.compile("(?:(.*\\\\end\\{align[*]*\\}).*)|(?:(.*\\\\end\\{equation).*)"
 			+ "|(?:.*(\\\\end\\{eqnarray[*]*\\}.*))");
+	private static final Pattern SYMB_PATTERN = Pattern.compile("\\$[^$]{1,2}\\$");
 	//This *must* be updated if {BEGIN/END}_ALIGN_PATTERN is updated!
 	private static final String ALIGN_PATTERN_REPLACEMENT_STR = "";//"$1$2$3";
 	
@@ -553,8 +555,9 @@ public class ThmP1 {
 	 * @param sentence string to be tokenized
 	 * @param parseState current state of the parse.
 	 * @return List of Struct's
+	 * @throws IllegalSyntaxException 
 	 */
-	public static ParseState tokenize(String sentence, ParseState parseState){
+	public static ParseState tokenize(String sentence, ParseState parseState) throws IllegalSyntaxException{
 		
 		if(WordForms.getWhiteEmptySpacePattern().matcher(sentence).matches()){
 			return parseState;
@@ -645,8 +648,7 @@ public class ThmP1 {
 			// latex expressions that start with '$'
 			if (LATEX_BEGIN_PATTERN.matcher(curWord).matches()) {
 				
-				String latexExpr = curWord;
-				
+				String latexExpr = curWord;				
 				//not a single-word latex expression, i.e. $R$-module
 				if (i < strArLength - 1 && !SINGLE_WORD_TEX_PATTERN.matcher(curWord).matches( )
 						&& (curWord.charAt(wordlen - 1) != '$' || wordlen == 2 || wordlen == 1)) {
@@ -660,17 +662,22 @@ public class ThmP1 {
 					//else if (curWord.matches("[^$]*\\$.*")) {
 						//latexExpr += " " + curWord;
 						//i++;
-					} else {						
+					} else {
+						boolean texNotClosed = false;
 						while (i < strArLength && curWord.length() > 0
 								&& !LATEX_END_PATTER.matcher(curWord).find()){//curWord.charAt(curWord.length() - 1) != '$') {
 							latexExpr += " " + curWord;
 							i++;
-
-							if (i == strArLength)
+							if (i == strArLength){
+								texNotClosed = true;
 								break;
-
-							curWord = i < strArLength - 1 && strAr[i].equals("") ? strAr[++i] : strAr[i];
-							
+							}
+							curWord = i < strArLength - 1 && strAr[i].equals("") ? strAr[++i] : strAr[i];							
+						}
+						//reached end but tex expr did not finish.
+						if(texNotClosed){
+							parseState.setParseErrorCode(ParseState.ParseErrorCode.PARSE_ERROR);
+							throw new ParseRuntimeException.IllegalSyntaxException("ThmP1.tokenize(): Unfinished Tex expression.");
 						}
 					}
 					//add the end of the latex expression, only if it's the last part (i.e. $)
@@ -689,7 +696,7 @@ public class ThmP1 {
 							&& (i+1 == stringLength || i+1 < stringLength && !posMap.get(str[i+1] ).matches("verb|vbs")) ) {
 						type = "assert";
 					} */
-				} else if (curWord.matches("\\$[^$]{1,2}\\$")) {
+				} else if (SYMB_PATTERN.matcher(curWord).matches()) {
 					type = "symb";
 				}
 				// go with the pos of the last word, e.g. $k$-algebra
@@ -711,8 +718,8 @@ public class ThmP1 {
 				noTexSB.append(LATEX_PLACEHOLDER_STR);
 				continue strloop;
 			}/*Done with handling tex tokens.*/
-			numNonTexTokens++;
 			
+			numNonTexTokens++;			
 			noTexSB.append(" ").append(curWord).append(" ");
 			// check for trigger words of fixed phrases, e.g. "with this said",
 			// "all but finitely many", as well as 2- or 3-grams.
