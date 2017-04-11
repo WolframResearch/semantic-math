@@ -605,6 +605,7 @@ public class StructH<H> extends Struct{
 	/**
 	 * @return set of properties of this StructH.
 	 */
+	@Override
 	public Set<String> getPropertySet(){
 		//seek out the properties in struct
 		//thread-safe with volatile boolean isPropertySetEmpty. But could add to map multiple times

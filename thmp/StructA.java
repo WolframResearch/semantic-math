@@ -1,6 +1,7 @@
 package thmp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -271,6 +272,14 @@ public class StructA<A, B> extends Struct{
 	}
 	
 	/**
+	 * Only applicable to StructH.
+	 */
+	@Override
+	public Set<String> getPropertySet(){
+		return Collections.<String>emptySet();
+	}
+	
+	/**
 	 * @param includeType
 	 * @param curCommand Command that the returned String is built towards.
 	 * curCommand is null if this struct should not be counted towards commandNumUnits.
@@ -331,7 +340,7 @@ public class StructA<A, B> extends Struct{
 			}else{
 				//quotes around prev1 string
 				fullContentSB.insert(0, "\"").append("\"");
-				if(this.type.equals("adj") || this.type.equals("adverb")){
+				if(this.type.equals("adj") || this.type.equals("adverb") || this.type.equals("qualifier") ){
 					fullContentSB.insert(0, "MathProperty[").append(childStr).append("]");
 				}else if(prev2.equals("")){
 					/*use "Math" Head here generally so not to have headless object. But perhaps should be more specific.*/

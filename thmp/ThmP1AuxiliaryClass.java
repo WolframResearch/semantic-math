@@ -1,12 +1,19 @@
 package thmp;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
+import com.google.common.collect.ListMultimap;
+
+import thmp.Struct.ChildRelation;
 import thmp.Struct.NodeType;
 
 public class ThmP1AuxiliaryClass {
 
+	private static final ListMultimap<String, String> posMMap = Maps.posMMap();
+	
 	public static class ConjDisjVerbphrase{
 		private boolean hasConjDisjVerbphrase;
 		//"assert" type found. Change this assert to conj_ or disj_assert,
@@ -218,15 +225,22 @@ public class ThmP1AuxiliaryClass {
 	 */
 	private static void convertStructToTexAssertHelper(List<Struct> structList, int structListSz, Struct firstStruct,
 			Struct lastStruct) {
-		//if(true) throw new IllegalStateException(lastStruct.containsLatexStruct() +" " + lastStruct.toString());
-		if((1 == structListSz || firstStruct.containsPos("hyp") || firstStruct.containsPos("if"))
+		//if(true) throw new IllegalStateException(lastStruct.containsLatexStruct() +" " + firstStruct.toString());
+		if((1 == structListSz || firstStruct.containsPos("hyp") || firstStruct.containsPos("if") || firstStruct.containsPos("then"))
 				&& lastStruct.containsLatexStruct()){
-			//if(true) throw new IllegalStateException();
+			//if(true) throw new IllegalStateException(structList.toString());
 			if(!lastStruct.has_child()){
 				String tex = lastStruct.struct().get("tex");
 				tex = null == tex ? "" : tex;
 				StructA<String, String> convertedStructA = new StructA<String, String>(lastStruct.nameStr(), 
 						NodeType.STR, tex, NodeType.STR, "texAssert");
+				
+				Set<String> pptSet = lastStruct.getPropertySet();
+				for(String ppt : pptSet){
+					convertedStructA.add_child(new StructA<String, String>(ppt, NodeType.STR, "", NodeType.STR, "adj"), 
+							new ChildRelation(""));
+				}
+				
 				structList.set(structListSz - 1, convertedStructA);
 			}				
 			//lastStruct.set_type("texAssert");
@@ -244,6 +258,35 @@ public class ThmP1AuxiliaryClass {
 			childRelationStr = ((Struct)struct.prev1()).nameStr();
 		}
 		return childRelationStr;
+	}
+	
+	/**
+	 * 
+	 * @param word
+	 * @param targetPos
+	 * @return the subset of targetPos that the pos of word contains. 
+	 */
+	protected static List<String> posListContains(String word, String ... targetPosAr){
+		List<String> posContainedList = new ArrayList<String>();
+		List<String> wordPosList = posMMap.get(word);
+		List<String> targetPosList = new ArrayList<String>();
+		targetPosList.addAll(Arrays.asList(targetPosAr));
+		
+		wordPosLoop: for(String wordPos : wordPosList){
+			int targetPosListLen = targetPosList.size();
+			for(int i = 0; i < targetPosListLen; i++){
+				String targetPos = targetPosList.get(i);
+				if(targetPos.equals(wordPos)){
+					posContainedList.add(wordPos);
+					targetPosList.remove(i);
+					if(targetPosList.isEmpty()){
+						break wordPosLoop;
+					}
+					continue wordPosLoop;
+				}				
+			}
+		}		
+		return posContainedList;
 	}
 	
 	/**
@@ -290,14 +333,14 @@ public class ThmP1AuxiliaryClass {
 			}
 		}
 	}
-	
 
 	/**
+	 * Used in re-parsing if no spanning parse found initially. 
 	 * @param parseState
 	 * @param inputStructList
 	 * @param structListList
 	 */
-	public static void convertToTexAssert(ParseState parseState, List<Struct> inputStructList,
+	protected static void convertToTexAssert(ParseState parseState, List<Struct> inputStructList,
 			List<StructList> structListList) {
 		//if only one ent,
 		//e.g. "then $ $", misrepresented StructH as StructA, 
@@ -352,7 +395,7 @@ public class ThmP1AuxiliaryClass {
 						//don't set isReparse, so to allow defluffing in the recursion call.
 						System.out.println("~~REPARSING with assert");
 						ThmP1.parse(parseState);						
-						System.out.println("~~REPARSING with assert DONE");
+						//System.out.println("~~REPARSING with assert DONE");
 					}
 				}						
 			}

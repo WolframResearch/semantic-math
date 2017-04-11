@@ -441,7 +441,8 @@ public class Maps {
 			
 			// parts of speech
 			posPreMMap.put("for every", "hyp");
-			posPreMMap.put("suppose", "hyp");
+			posPreMMap.put("suppose", "hyp_COMP");
+			posPreMMap.put("suppose that", "hyp");
 			posPreMMap.put("assume", "hyp");
 			posPreMMap.put("assuming", "hyp");
 			posPreMMap.put("consider", "hyp");
@@ -658,6 +659,7 @@ public class Maps {
 			//structMap.put("verbphrase_Tobe", new Rule("verbphrase", .85));
 			
 			structMap.put("ent_prep", new Rule("newchild", 1));
+			structMap.put("ent_adj", new Rule("newchild", .9));
 			structMap.put("pre_symb", new Rule("prep", 1));
 			structMap.put("parti_prep", new Rule("phrase", 1));
 			structMap.put("pre_phrase", new Rule("prep", 1));
@@ -693,9 +695,8 @@ public class Maps {
 			//structMap.put("pre_noun", new Rule("ppt", 1)); // nounphrase
 			structMap.put("adj_symb", new Rule("phrase", 1));			
 			structMap.put("adj_noun", new Rule("noun", 1));
-			//structMap.put("adj_prep", new Rule("phrase", .95));
 			//"independent of $n$"
-			structMap.put("adj_prep", new Rule("newchild", "adverb", .95));
+			structMap.put("adj_prep", new Rule("newchild", "qualifier", .95));
 			structMap.put("gerund_noun", new Rule("gerundp", 1)); // gerundphrase
 			structMap.put("ent_gerundp", new Rule("newchild", 1));
 			
@@ -727,18 +728,18 @@ public class Maps {
 			structMap.put("be_ent", new Rule("verbphrase", .7));
 			structMap.put("verb_adj", new Rule("verbphrase", 1));
 			//e.g. "$s_n$ converges independently of $n$", "...implies that..."
-			structMap.put("verb_adverb", new Rule("newchild", "verb", 0.8));
+			structMap.put("verb_qualifier", new Rule("newchild", "verbAlone", 0.8));
 			structMap.put("verb_pro", new Rule("verbphrase", 1));
 			structMap.put("verb_symb", new Rule("verbphrase", 1));
 			structMap.put("verb_np", new Rule("verbphrase", 1));
-			structMap.put("verb_prep", new Rule("verbphrase", 1));
+			//structMap.put("verb_prep", new Rule("verbphrase", .7));
 			structMap.put("verb_num", new Rule("verbphrase", 1));
 			structMap.put("verb_np", new Rule("verbphrase", 1));
 			structMap.put("verb_pre", new Rule("verbphrase", .6));
 			structMap.put("verb_phrase", new Rule("verbphrase", 0.8));
 			structMap.put("verb_partient", new Rule("verbphrase", 1));
 			structMap.put("verb_noun", new Rule("verbphrase", 1));
-			structMap.put("verbAlone_adverb", new Rule("verbphrase", .9));
+			structMap.put("verbAlone_qualifier", new Rule("verbphrase", .9));
 			
 			structMap.put("det_verbphrase", new Rule("assert", 1));
 			//remove, because verbphrase should be able to finish a sentence
@@ -756,7 +757,7 @@ public class Maps {
 			structMap.put("vbs_symb", new Rule("verbphrase", 1));
 			structMap.put("vbs_np", new Rule("verbphrase", 1));
 			structMap.put("vbs_prep", new Rule("verbphrase", 1));
-			structMap.put("vbs_adverb", new Rule("newchild", "verbAlone", 1));
+			structMap.put("vbs_qualifier", new Rule("newchild", "verbAlone", 1));
 			
 			structMap.put("vbs_num", new Rule("verbphrase", 1));
 			structMap.put("vbs_np", new Rule("verbphrase", 1));			
@@ -770,6 +771,7 @@ public class Maps {
 			structMap.put("symb_verbphrase", new Rule("assert", 1));
 			structMap.put("ent_verbphrase", new Rule("assert", 1));
 			structMap.put("ent_verbAlone", new Rule("assert", 1));
+			structMap.put("symb_verbAlone", new Rule("assert", 1));
 			structMap.put("pro_verbphrase", new Rule("assert", 1));
 			//"A is p, so is B"
 			structMap.put("so_verbphrase", new Rule("So", 1));
@@ -855,7 +857,9 @@ public class Maps {
 			//absorb the non-struct into the struct. Should only 
 			//have one non-ent
 			structMap.put("adj_ent", new Rule("absorb1", 1));
-			structMap.put("adj_adverb", new Rule("newchild", "adj", .8));
+			structMap.put("adj_qualifier", new Rule("newchild", "adj", .8));
+			structMap.put("verb_prep", new Rule("newchild", "verbphrase", .85));
+			structMap.put("verbAlone_prep", new Rule("newchild", "verbphrase", .85));
 			structMap.put("ent_symb", new Rule("absorb2", 1));
 			
 			// eg "property that a is b"
@@ -871,7 +875,8 @@ public class Maps {
 
 			//structMap.put("adverb_adj", new Rule("adj", .7)); /// *******
 			structMap.put("adverb_verbphrase", new Rule("assert", 1));
-
+			structMap.put("qualifier_prep", new Rule("newchild", "qualifier", .8)); //could also be adverb
+			
 			// grammar rules for 2nd run <-- not used!
 			structMap2 = new HashMap<String, String>();
 			structMap2.put("ent_verb", "assert");

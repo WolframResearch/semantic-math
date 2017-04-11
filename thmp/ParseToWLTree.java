@@ -26,6 +26,7 @@ import thmp.WLCommand.ImmutableWLCommand;
 import thmp.WLCommand.PosTerm;
 import thmp.WLCommand.WLCommandComponent;
 import thmp.utils.Buggy;
+import thmp.utils.WordForms;
 
 /**
  * Parses to WL Tree. Using more WL-like structures.
@@ -57,7 +58,7 @@ public class ParseToWLTree{
 	/**
 	 * Trigger word lookup map.
 	 */
-	private static final Multimap<String, ImmutableWLCommand> WLCommandMap = WLCommandsList.WLCommandMap();
+	private static final Multimap<String, ImmutableWLCommand> WLCommandMMap = WLCommandsList.WLCommandMap();
 	
 	private static final Logger logger = LogManager.getLogger(ParseToWLTree.class);
 	private static final Pattern PLURAL_PATTERN = Pattern.compile("(.+)s");
@@ -88,35 +89,36 @@ public class ParseToWLTree{
 		Collection<ImmutableWLCommand> triggeredSet;
 		//copy into mutable collection. 
 		//Note: using HashSet will introduce non-determinacy, as ordering is not insertion order.		
-		triggeredSet = new ArrayList<ImmutableWLCommand>(WLCommandMap.get(triggerKeyWord));
+		triggeredSet = new ArrayList<ImmutableWLCommand>(WLCommandMMap.get(triggerKeyWord));
 		
 		//if(triggeredCol.isEmpty()){
 		//add words from triggerWords redirects in case there's an entry there.
 		//trigger word redirects: eg are -> is, since they are functionally equivalent
-		if(triggerWordLookupMap.containsKey(triggerKeyWord)
+		Collection<String> triggerWordLookupCol = triggerWordLookupMap.get(triggerKeyWord);
+		if(!triggerWordLookupCol.isEmpty()
 				//Allow type to trigger entries in triggerWordLookupMap, e.g. type is "be"
 				//|| triggerWordLookupMap.containsKey(triggerType)
 				){
-			Collection<String> col= triggerWordLookupMap.get(triggerKeyWord);
-			for(String s : col){
-				triggeredSet.addAll(WLCommandMap.get(s));
-			}			
+			for(String s : triggerWordLookupCol){
+				triggeredSet.addAll(WLCommandMMap.get(s));
+			}
+			//if(true) throw new IllegalStateException("triggerWordLookupCol" + triggerWordLookupCol);
 		}
 		//look up using type
 		//if(triggeredSet.isEmpty() && WLCommandMap.containsKey(triggerType)){
-			triggeredSet.addAll(WLCommandMap.get(triggerType));
+			triggeredSet.addAll(WLCommandMMap.get(triggerType));
 		//}
 		
-		Matcher pluralMatcher;
-		if(triggeredSet.isEmpty() && (pluralMatcher = PLURAL_PATTERN.matcher(triggerKeyWord)).find() ){
-			String keyWordSingular = pluralMatcher.group(1);
-			triggeredSet.addAll(WLCommandMap.get(keyWordSingular));
+		int triggerKeyWordLen = triggerKeyWord.length();
+		if(triggeredSet.isEmpty() && triggerKeyWordLen > 2 && triggerKeyWord.charAt(triggerKeyWordLen-1) == 's'){
+			String keyWordSingular = WordForms.getSingularForm(triggerKeyWord);
+			triggeredSet.addAll(WLCommandMMap.get(keyWordSingular));
 		}
 
 		if(triggeredSet.isEmpty() && triggerWordLookupMap.containsKey(triggerType)){			
 			Collection<String> col= triggerWordLookupMap.get(triggerType);
 			for(String s : col){
-				triggeredSet.addAll(WLCommandMap.get(s));
+				triggeredSet.addAll(WLCommandMMap.get(s));
 			}			
 		}
 		return triggeredSet;

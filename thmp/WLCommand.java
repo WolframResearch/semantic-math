@@ -680,8 +680,7 @@ public class WLCommand implements Serializable{
 					return new PosTerm(commandComponent, positionInMap, includeInBuiltString,
 							isTrigger, isTriggerMathObj, posTermConnotation, relationTypeList);
 				}
-			}		
-			
+			}					
 		}
 		
 		private PosTerm(WLCommandComponent commandComponent, int position, boolean includeInBuiltString,
@@ -733,6 +732,9 @@ public class WLCommand implements Serializable{
 			sb.append("{").append(this.commandComponent).append(", ").append(this.positionInMap);
 			if(null != this.posTermStruct){
 				sb.append(", ").append(this.posTermStruct);
+			}
+			if(this.isNegativeTerm()){
+				sb.append(", NEGATIVE");
 			}
 			sb.append("}");
 			return sb.toString();
@@ -807,8 +809,7 @@ public class WLCommand implements Serializable{
 		@Override
 		public boolean isNegativeTerm(){
 			return true;
-		}
-		
+		}		
 	}
 	
 	public static class OptionalPosTerm extends PosTerm{
@@ -1169,6 +1170,7 @@ public class WLCommand implements Serializable{
 			throw new IllegalWLCommandStateException("build() is called, but componentCounter "
 					+ "is still > 0! Current command: " + curCommand);
 		}
+		//System.out.println("WLCommand - triggerWord " + curCommand.triggerWord);
 		ListMultimap<WLCommandComponent, Struct> commandsMap = curCommand.commandsMap;
 		//value is 0 if that group is satisfied
 		Map<Integer, Integer> optionalTermsGroupCountMap = curCommand.optionalTermsGroupCountMap;
@@ -1484,8 +1486,10 @@ public class WLCommand implements Serializable{
 			boolean hasOptionalTermsLeft = (curCommand.optionalTermsCount > 0);
 			return new CommandSat(true, hasOptionalTermsLeft, false);
 		}
-		
-		//be careful with type, could be conj_.
+		/*if(curCommand.triggerWord.equals("if")){
+			System.out.println("WLCommand ~"+ curCommand);
+		}*/		
+		//Get appropriate type if could be conj_ or disj_.
 		String structPreType = newStruct.type();
 		String structType = CONJ_DISJ_PATTERN.matcher(structPreType).find() ?
 				structPreType.split("_")[1] : structPreType;			
@@ -1529,8 +1533,7 @@ public class WLCommand implements Serializable{
 		//System.out.println("GOT HERE****** posTermList " + posTermList + " i-1: " + (lastAddedComponentIndex-1));
 		int i = lastAddedComponentIndex;
 		//short-circuit if trigger is the first nontrivial term.
-		if(before && onlyTrivialTermsBefore(posTermList, i-1)){	
-			
+		if(before && onlyTrivialTermsBefore(posTermList, i-1)){				
 			return new CommandSat(false, curCommand.optionalTermsCount > 0, false, true);
 		}
 		
@@ -1557,19 +1560,19 @@ public class WLCommand implements Serializable{
 		}	
 		
 		PosTerm curPosTerm = posTermList.get(i);
+		
 		commandComponent = curPosTerm.commandComponent;
 		boolean isOptionalTerm = curPosTerm.isOptionalTerm();
 		int posTermPositionInMap = curPosTerm.positionInMap;
 		
 		Pattern commandComponentPosPattern = commandComponent.getPosPattern();
 		Pattern commandComponentNamePattern = commandComponent.getNamePattern();		
-		//checked here
+		
 		while( /* if auxilliary term*/
 				posTermPositionInMap < 0
 				|| (!commandComponentPosPattern.matcher(structType).find() || !commandComponentNamePattern.matcher(structName).find())
 				//!structType.matches(commandComponentPosTerm) || !structName.matches(commandComponentName)) 
-				&& (isOptionalTerm || curPosTerm.isNegativeTerm())
-				
+				&& (isOptionalTerm || curPosTerm.isNegativeTerm())				
 				/* ensure index within bounds*/
 				//&& i < posTermListSz - 1 
 				){
@@ -1614,6 +1617,7 @@ public class WLCommand implements Serializable{
 		if(curPosTerm.isNegativeTerm() 
 				&& commandComponentPosPattern.matcher(structType).find()
 				&& commandComponentNamePattern.matcher(structName).find()){
+			//System.out.println("WLCommand- addComponent negative term?: "+ curPosTerm.isNegativeTerm() + " " + newStruct);			
 			boolean disqualified = true;
 			return new CommandSat(disqualified);
 		}
@@ -2209,7 +2213,6 @@ public class WLCommand implements Serializable{
 	public enum PosTermType{
 		//stop the command (untrigger) once encountered.
 		NEGATIVE;
-		
 	}
 
 	/**

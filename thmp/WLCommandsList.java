@@ -87,6 +87,8 @@ public class WLCommandsList {
 		triggerWordLookupMapBuilder.put("lie", "is");
 		triggerWordLookupMapBuilder.put("letbe", "if");
 		triggerWordLookupMapBuilder.put("let", "if");
+		triggerWordLookupMapBuilder.put("suppose", "if");
+		triggerWordLookupMapBuilder.put("suppose that", "if");
 		triggerWordLookupMapBuilder.put("where", "if");
 		triggerWordLookupMapBuilder.put("for any", "for every");
 		triggerWordLookupMapBuilder.put("for all", "for every");
@@ -146,12 +148,12 @@ public class WLCommandsList {
 		wLCommandMapBuilder.put("verb", addCommand(new PBuilder("det|symb|ent|pro|noun", null, true), 
 				//new PBuilder("pro", "we", WLCommand.PosTermType.NEGATIVE),
 				new PBuilder("verb|vbs", null, WLCommand.PosTermType.NEGATIVE),
-				new PBuilder(", Connective["),  new PBuilder("verb", null, true, true, false), new PBuilder("], "),
-				new PBuilder("verb|vbs", null, WLCommand.PosTermType.NEGATIVE),
+				new PBuilder(", ~Connective["),  new PBuilder("verb", null, true, true, false), new PBuilder("]~, "),
+				new PBuilder("verb|vbs", null, WLCommand.PosTermType.NEGATIVE), new PBuilder(" {", "OPT"), 
 				new PBuilder("symb|ent|noun|adj|prep|phrase", null, true, false, false).addRelationType(RelationType._IS),
 				new PBuilder(", {\"Qualifiers\"->", "OPT"), 
 				//the relation should incorporate several types. 
-				new PBuilder("prep", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}", "OPT")
+				new PBuilder("prep", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}}", "OPT")
 				));		
 		//e.g. "The field extension $F/Q$ splits."
 		wLCommandMapBuilder.put("verbAlone", addCommand(new PBuilder("symb|ent|pro|noun", null, true).addRelationType(RelationType._IS), 
@@ -243,9 +245,10 @@ public class WLCommandsList {
 		//e.g. "$X$ is connected", "$F$ is isomorphic to ..."
 		wLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro|noun|det", null, true, RelationType._IS), 
 				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), 
-				new PBuilder(" ~HasProperty~ "), new PBuilder("adj|ent|phrase|noun|prep", null, true, false, false, RelationType.IS_),
+				new PBuilder(" ~HasProperty~ "), new PBuilder("{", "OPT"), 
+				new PBuilder("adj|ent|phrase|noun|prep", null, true, false, false, RelationType.IS_),
 				new PBuilder(", {\"Qualifier\"->", "OPT"), 
-				new PBuilder("prep", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}", "OPT")
+				new PBuilder("prep", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}}", "OPT")
 				)); 
 		
 		/*wLCommandMapBuilder.put("is", addCommand(new PBuilder("symb|ent|pro|noun", null, true, RelationType._IS), 
@@ -289,8 +292,11 @@ public class WLCommandsList {
 		//WLCommandMapBuilder.put("if", addCommand(new String[] { "if|If|let, , trigger", "assert, , true" }));
 		wLCommandMapBuilder.put("if", addCommand(new PBuilder("if|If|let|hyp", null, false, true, false), 
 				new PBuilder("assert|texAssert", null, true) ));
-		wLCommandMapBuilder.put("then|texAssert", addCommand(new PBuilder("then|Then", null, false, true, false), 
-				new PBuilder("assert", null, true) ));
+		putToWLCommandMapBuilder(wLCommandMapBuilder, "if", new PBuilder("hyp|if|If|let", null, false, true, false), 
+				new PBuilder("ent", null, true) );
+		
+		wLCommandMapBuilder.put("then", addCommand(new PBuilder("then|Then", null, false, true, false), 
+				new PBuilder("assert|texAssert", null, true) ));
 		
 		//"let A be B"; "suppose A is B"
 		wLCommandMapBuilder.put("let", addCommand(new PBuilder("let|suppose", null, false, true, false), 
@@ -307,8 +313,8 @@ public class WLCommandsList {
 		
 		//WLCommandMapBuilder.put("auxpass", addCommand(new String[] { "ent, , true",
 			//	"auxpass, , trigger_true", "ent|csubj, , true" }));
-		wLCommandMapBuilder.put("auxpass", addCommand(new PBuilder("ent", null, true), new PBuilder(", Connective["),
-				new PBuilder("auxpass", null, true, true, false), new PBuilder("], "),
+		wLCommandMapBuilder.put("auxpass", addCommand(new PBuilder("ent", null, true), new PBuilder(", ~Connective["),
+				new PBuilder("auxpass", null, true, true, false), new PBuilder("]~, "),
 				new PBuilder("ent|csubj|prep", null, true) ));
 		
 		//definitions: e.g. "denote by $F$ a field", but note that "call this field $F$" should have different order as to which
@@ -330,7 +336,7 @@ public class WLCommandsList {
 		//"define $F$ to be a field";
 		putToWLCommandMapBuilder(wLCommandMapBuilder, "define", new PBuilder("verb", null, false, true, false),
 				new PBuilder("ent|symb", null, true, false, false, PosTermConnotation.DEFINED), 
-				new PBuilder(null, "as|to be|by", false), new PBuilder("~DefinedBy~"), 
+				new PBuilder(null, "as|to be|by", false), new PBuilder(" ~DefinedBy~ "), 
 				new PBuilder("ent|symb", null, true, false, false, PosTermConnotation.DEFINING)
 				.addRelationType(RelationType.IS_));
 		
@@ -349,7 +355,7 @@ public class WLCommandsList {
 		//	 "ent|symb, , true", "]" }));
 		wLCommandMapBuilder.put("for every", addCommand(//new PBuilder("assert", null, true, false, "OPT"),
 				new PBuilder(null, "for every|for any|for all", false, true, false), 
-				new PBuilder("ForAll["), new PBuilder("ent|symb", null, true, RelationType._IS).addRelationType(RelationType.IF), 
+				new PBuilder("ForAll["), new PBuilder("ent|symb|texAssert", null, true, RelationType._IS).addRelationType(RelationType.IF), 
 				new PBuilder("]") ));
 		
 		wLCommandMapBuilder.put("for", addCommand(new PBuilder(null, null, WLCommand.PosTermType.NEGATIVE),
@@ -476,7 +482,6 @@ public class WLCommandsList {
 			if(curPosTerm.isNegativeTerm()){			
 				continue;
 			}
-			
 			
 			if(curPosTerm.isOptionalTerm()){
 				//should only count nontrivial (non-AUX) optional terms!

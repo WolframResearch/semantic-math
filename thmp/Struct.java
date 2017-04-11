@@ -331,12 +331,16 @@ public abstract class Struct implements Serializable{
 		return false;
 	}
 	
+	public abstract Set<String> getPropertySet();
+	
 	public void add_child(Struct child, ChildRelation relation){
 		assert(!this.equals(child));		
-		if(this.contentEquals(child)){			
+		/*if(this.contentEquals(child)){			
 			return;
-		}
+		}*/
 		this.setHasChildToTrue();
+		/* these two should always be modified together, better to put
+		 * child + relation in a static nested class*/
 		children().add(child);
 		childRelationList().add(relation);
 		child.set_parentStruct(this);
@@ -377,16 +381,14 @@ public abstract class Struct implements Serializable{
 					//System.out.println("Childstr " + childStr);
 						nontrivialChildrenStrCounter++;
 						//don't want "symb", e.g. $G$ with $H$ prime. 
-						childRelationStr = (child.isStructA() && !child.type().equals("symb") 
-								//e.g. "field which is perfect", don't want "which"								
-								)
-								? "" : childRelationStr;
+						/*childRelationStr = (child.isStructA() && !child.type().equals("symb"))
+								//e.g. "field which is perfect", don't want "which"	
+								? "" : childRelationStr;*/
 						
 						//System.out.println("\n **^^^*** childRelation" + childRelationStr);
 						if(childRelationStr.equals("")){
 							//childSb.append("{").append(childStr).append("}");
-							childSb.append(childStr);
-							childSb.append(", ");
+							childSb.append(childStr).append(", ");
 						}else{
 							childSb.append("{\"").append(childRelationStr).append("\", ").append(childStr).append("}, ");
 						}											
@@ -395,8 +397,8 @@ public abstract class Struct implements Serializable{
 				}
 			}
 			int childSbLen = childSb.length();
-			childSb = childSb.delete(childSbLen-2, childSbLen);
-			if(0 < childSb.length()){
+			if(2 < childSbLen){
+				childSb = childSb.delete(childSbLen-2, childSbLen);
 				if(nontrivialChildrenStrCounter > 1){
 					childSb.insert(0, ", \"Qualifiers\" -> {").append("}");
 				}else{

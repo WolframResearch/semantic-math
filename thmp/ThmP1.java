@@ -45,6 +45,7 @@ import thmp.search.NGramSearch;
 import thmp.search.ThreeGramSearch;
 import thmp.utils.WordForms;
 import thmp.utils.WordForms.TokenType;
+import static thmp.ThmP1AuxiliaryClass.posListContains;
 
 public class ThmP1 {
 
@@ -1078,7 +1079,6 @@ public class ThmP1 {
 				// if next word is entity, then adj
 				else if (strAr.length > i + 1 && posMMap.containsKey(strAr[i+1]) && 
 						posMMap.get(strAr[i+1]).get(0).equals("ent")) {
-
 					// combine with adverb if previous one is adverb
 					if (pairsSize > 0 && pairs.get(pairsSize - 1).pos().equals("adverb")) {
 						curWord = pairs.get(pairsSize - 1).word() + " " + curWord;
@@ -1086,26 +1086,35 @@ public class ThmP1 {
 					}
 					curPos = "adj";
 				}
-
 				Pair pair = new Pair(curWord, curPos);
 				pairs.add(pair);
 			}
-			else if (WordForms.isGerundForm(curWord)) {
-				
+			else if (WordForms.isGerundForm(curWord)) {				
 				String curType = "gerund";
+				//if(true) throw new IllegalStateException("curWord "+ curWord+" " + (strAr[i+1]));
 				if (i < strAr.length - 1 && posMMap.containsKey(strAr[i + 1]) && posMMap.get(strAr[i + 1]).contains("pre")) {
 					// eg "consisting of" functions as pre
 					curWord = curWord + " " + strAr[++i];
 					curType = "pre";
 				} else if (i < strAr.length - 1 ){
 					String nextWord = strAr[i + 1];
-					List<String> nextPosList = posMMap.get(nextWord);
-					if(!nextPosList.isEmpty() && (nextPosList.get(0).equals("ent") || nextPosList.get(0).equals("noun"))){
+					int nextWordLen = nextWord.length();
+					if(!posListContains(nextWord, "ent", "noun").isEmpty()
+							//((nextType=nextPosList.get(0)).equals("ent") || nextType.equals("noun"))
+							){
 					// eg "vanishing locus" functions as amod: adjectivial
 					// modifier
 					//curWord = curWord + " " + str[++i];
 					//curType = "amod";
 						curType = "adj"; //adj, so can be grouped together with ent's later
+					}else if(nextWord.charAt(nextWordLen-1) == 's'){
+						String singularForm = WordForms.getSingularForm(nextWord);
+						if(!singularForm.equals(nextWord) ){
+							strAr[i + 1] = singularForm;
+							if(!posListContains(singularForm, "ent", "noun").isEmpty()){
+								curType = "adj";							
+							}
+						}
 					}
 				}//e.g. "the following are equivalent"
 				else if (i > 0 && ARTICLE_PATTERN.matcher(strAr[i - 1]).find()){
@@ -2171,7 +2180,7 @@ public class ThmP1 {
 							}
 
 							String[] split2 = type2.split("_");
-							if (split2.length > 1 && CONJ_DISJ_PATTERN1.matcher(split2[0]).find()) {
+							if (split2.length > 1 && CONJ_DISJ_PATTERN1.matcher(split2[0]).matches()) {
 								type2 = split2[1];
 							}
 
@@ -2358,17 +2367,6 @@ public class ThmP1 {
 									//continue innerloop;
 								}
 							}
-
-							// search for tokens larger than immediate ones
-							// in case A_or_A or A_and_A set the mx element
-							// right below
-							// to null
-							// to set precedence, so A won't be grouped to
-							// others later
-							// and if the next word is a verb, it is not
-							// singular
-							// ie F and G is isomorphic
-							
 							// iterate through the List at position (i-t, i-1), to handle conjunction and disjunction
 							if (i > 0 && i + 1 < inputStructListSize) {
 
@@ -2894,7 +2892,7 @@ public class ThmP1 {
 			parseState.setRecentParseSpanning(true);
 		}else{
 			parseState.setRecentParseSpanning(false);
-		}
+		}		
 		return parseState;
 	}
 
