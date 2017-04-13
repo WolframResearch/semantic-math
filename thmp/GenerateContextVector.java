@@ -137,8 +137,7 @@ public class GenerateContextVector {
 			
 		}catch(MathLinkException e){
 			e.printStackTrace();
-		}
-		
+		}		
 	}
 	
 	/**
@@ -175,13 +174,9 @@ public class GenerateContextVector {
 	 */
 	private static String createContextVector(List<int[]> contextVecList, String thm) {
 		
-		//if(thm.matches("\\s*")) return "";
-		
 		String[] strAr = ThmP1.preprocess(thm);
 		//System.out.println("****length " + strAr.length + " " + thm);
-		//strAr = ThmP1.preprocess(thm);
-		//List<int[]> parseContextVecList = new ArrayList<int[]>();
-
+		
 		ParseStateBuilder parseStateBuilder = new ParseStateBuilder();
 		parseStateBuilder.setWriteUnknownWordsToFile(WRITE_UNKNOWNWORDS);
 		ParseState parseState = parseStateBuilder.build();

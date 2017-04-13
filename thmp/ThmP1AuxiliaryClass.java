@@ -365,44 +365,68 @@ public class ThmP1AuxiliaryClass {
 						: "Struct must be StructH to be latexStruct!";						
 					//couldConvertToAssert = true;
 					toBeConvertedStruct = struct;
+					convertStructToTexStruct(parseState, entSubstitutedStructList, toBeConvertedStruct);
 					break;
-				}						
-			}
-			System.out.println("ThmP1Auxiliary - toBeConvertedStruct " + toBeConvertedStruct);
-			if(null != toBeConvertedStruct){
-				
-				//need to convert toBeConvertedStruct to a StructA 
-				//with type "assert".						
-				String toBeConvertedStructName = toBeConvertedStruct.nameStr();
-				
-				for(int k = 0; k < entSubstitutedStructList.size(); k++){
-					
-					Struct structToSubstitute = entSubstitutedStructList.get(k);
-					if(structToSubstitute.nameStr().equals(toBeConvertedStructName)){
-						//if s already has child, then means probably should not turn into assertion,
-						//since most children are appended during mx-building
-						if(structToSubstitute.has_child()){
-							break;
+				}else if(ThmP1.CONJ_DISJ_PATTERN1.matcher(struct.type()).matches()){
+					//then $a=y$ and $hs=s$
+					if(struct.prev1NodeType().isTypeStruct() && struct.prev2NodeType().isTypeStruct()){
+						Struct struct1 = ((Struct)struct.prev1());
+						Struct struct2 = ((Struct)struct.prev2());
+						if(struct1.isLatexStruct()){
+							convertStructToTexStruct(parseState, entSubstitutedStructList, struct1);
 						}
-						
-						//StructH should not have any properties .  Look through properties of toBeConvertedStruct?
-						StructA<String, String> convertedStructA = new StructA<String, String>(toBeConvertedStructName, 
-								NodeType.STR, "", NodeType.STR, "texAssert");
-						
-						convertedStructA.set_parentStruct(structToSubstitute.parentStruct());
-						//convertedStructA.set_maxDownPathScore(structToSubstitute.maxDownPathScore());
-						
-						entSubstitutedStructList.set(k, convertedStructA);
-						//if(true) throw new IllegalStateException(inputStructList.toString());
-						//isReparse = true;
-						parseState.setTokenList(entSubstitutedStructList);
-						//don't set isReparse, so to allow defluffing in the recursion call.
-						System.out.println("~~REPARSING with assert");
-						ThmP1.parse(parseState);						
-						//System.out.println("~~REPARSING with assert DONE");
+						if(struct2.isLatexStruct()){
+							convertStructToTexStruct(parseState, entSubstitutedStructList, struct2);
+						}
 					}
-				}						
+				}
 			}
+			
+		}
+	}
+
+	/**
+	 * @param parseState
+	 * @param entSubstitutedStructList
+	 * @param toBeConvertedStruct
+	 */
+	private static void convertStructToTexStruct(ParseState parseState, List<Struct> entSubstitutedStructList,
+			Struct toBeConvertedStruct) {
+		System.out.println("ThmP1Auxiliary - toBeConvertedStruct " + toBeConvertedStruct);
+
+		if(null != toBeConvertedStruct){
+			
+			//need to convert toBeConvertedStruct to a StructA 
+			//with type "assert".						
+			String toBeConvertedStructName = toBeConvertedStruct.nameStr();
+			
+			for(int k = 0; k < entSubstitutedStructList.size(); k++){
+				
+				Struct structToSubstitute = entSubstitutedStructList.get(k);
+				if(structToSubstitute.nameStr().equals(toBeConvertedStructName)){
+					//if s already has child, then means probably should not turn into assertion,
+					//since most children are appended during mx-building
+					if(structToSubstitute.has_child()){
+						break;
+					}
+					
+					//StructH should not have any properties .  Look through properties of toBeConvertedStruct?
+					StructA<String, String> convertedStructA = new StructA<String, String>(toBeConvertedStructName, 
+							NodeType.STR, "", NodeType.STR, "texAssert");
+					
+					convertedStructA.set_parentStruct(structToSubstitute.parentStruct());
+					//convertedStructA.set_maxDownPathScore(structToSubstitute.maxDownPathScore());
+					
+					entSubstitutedStructList.set(k, convertedStructA);
+					//if(true) throw new IllegalStateException(inputStructList.toString());
+					//isReparse = true;
+					parseState.setTokenList(entSubstitutedStructList);
+					//don't set isReparse, so to allow defluffing in the recursion call.
+					System.out.println("~~REPARSING with assert");
+					ThmP1.parse(parseState);						
+					//System.out.println("~~REPARSING with assert DONE");
+				}
+			}						
 		}
 	}
 }

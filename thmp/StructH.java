@@ -478,7 +478,7 @@ public class StructH<H> extends Struct{
 			//wrapperListSz should be > 0, since list is created when first wrapper is added
 			WLCommandWrapper curWrapper = WLCommandWrapperList.get(wrapperListSz - 1);
 			WLCommand composedCommand = curWrapper.WLCommand();
-			
+			//if(WLCommand.structsWithOtherHeadCount(composedCommand) == 0){//HERE
 			if(curCommand != null){
 				int commandNumUnits = WLCommand.commandNumUnits(composedCommand);
 			 	WLCommand.increment_commandNumUnits(curCommand, commandNumUnits);
@@ -496,6 +496,7 @@ public class StructH<H> extends Struct{
 			//this.WLCommandStrVisitedCount++;
 			curCommand.addComposedWLCommands(composedCommand);
 			return curWrapper.WLCommandStr();			
+			//}
 		}		
 		//String name = this.struct.get("name");
 		//return name == null ? this.type : name;

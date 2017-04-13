@@ -1102,13 +1102,11 @@ public class WLCommand implements Serializable{
 					}
 				}else if(structToAppendCommandStrDfsDepth == prevHeadStructDfsDepth){
 					curCommand.structsWithOtherHeadCount++;
-					//leavePrevHeadInPlace = true;
 				}
-				//if(!leavePrevHeadInPlace){
 				nextStruct.set_structToAppendCommandStr(structToAppendCommandStr);
 				structToAppendCommandStr.set_structToAppendCommandStr(structToAppendCommandStr);
 				setAncestorStructToAppendCommandStr(nextStruct, structToAppendCommandStr, curCommand);
-				//}
+				
 				//System.out.println("WLCommand - !!Case structToAppendCommandStr.dfsDepth() <= prevHeadStruct.dfsDepth()  ");
 				//System.out.println("Wrapper command struct " + headStruct);
 				//System.out.println("***Wrapper Command to update: " + lastWrapperCommand);				
@@ -1141,9 +1139,9 @@ public class WLCommand implements Serializable{
 			System.out.println("structToAppendCommandStr " +structToAppendCommandStr + " structToAppendCommandStr.dfsDepth() " + structToAppendCommandStr.dfsDepth());
 			System.out.println("WLCommand -setAncestorStruct curCommand " + curCommand);			
 		}*/
-		
+		int structToAppendCommandStrDfsDepth = structToAppendCommandStr.dfsDepth();
 		while(null != (parentStruct = nextStruct.parentStruct()) 
-				&& parentStruct.dfsDepth() > structToAppendCommandStr.dfsDepth()
+				&& parentStruct.dfsDepth() > structToAppendCommandStrDfsDepth
 				){
 			if(null == (parentStructHead = parentStruct.structToAppendCommandStr()) || parentStructHead.dfsDepth() > structToAppendCommandStr.dfsDepth()){
 				parentStruct.set_structToAppendCommandStr(structToAppendCommandStr);
@@ -1337,14 +1335,14 @@ public class WLCommand implements Serializable{
 		if(DEBUG){
 			System.out.println("\n CUR COMMAND: triggerWord " +curCommand.getTriggerWord() + ". " + curCommand + " ");
 			System.out.print("BUILT COMMAND: " + commandSB);
-			System.out.println("HEAD STRUCT: " + structToAppendCommandStr);
+			System.out.println("HEAD STRUCT: " + structToAppendCommandStr + " structsWithOtherHeadCount: " + curCommand.structsWithOtherHeadCount);
 		}
 		System.out.println("WLCommand - *******%######structsWithOtherHeadCount " +curCommand.structsWithOtherHeadCount +" " +curCommand );
 		//"****%###structToAppendCommandStr " +structToAppendCommandStr	
 		WLCommandWrapper curCommandWrapper = structToAppendCommandStr.add_WLCommandWrapper(curCommand);
 		
 		if(DEBUG){
-			logger.info("curCommand: " + curCommand);
+			//logger.info("curCommand: " + curCommand);
 			System.out.println("~~~structToAppendCommandStr to append wrapper: " + structToAppendCommandStr);
 			//System.out.println("curCommand just appended: " + curCommand);
 			//System.out.println(curCommand.posTermList.get(0).posTermStruct);

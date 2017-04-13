@@ -799,12 +799,12 @@ public class ParseToWLTree{
 					shouldAppendCommandStr = false;
 				}
 			}
-			if(true || struct.type().equals("If")){
+			/*if(true || struct.type().equals("If")){
 				System.out.println("ParseToWLTree - appendWLCommandStr "+ struct);
 				System.out.println("ParseToWLTree - curCommand "+ curCommand);
 				System.out.println("WLCommand.structsWithOtherHeadCount(curCommand) " + WLCommand.structsWithOtherHeadCount(curCommand));
 				//throw new RuntimeException("WLCommandWrapperList " +this.WLCommandWrapperList);
-			}			
+			}*/			
 			if(WLCommand.structsWithOtherHeadCount(curCommand) <= structWithOtherHeadThreshold
 					&& shouldAppendCommandStr
 					//&& struct.WLCommandStrVisitedCount() == 0
@@ -840,6 +840,7 @@ public class ParseToWLTree{
 						}
 					}
 				}*/
+				
 				ParsedPair pair = new ParsedPair(curWrapper.wlCommandStr, //null, 
 						struct.maxDownPathScore(),
 						struct.numUnits(), WLCommand.commandNumUnits(curCommand), curCommand);
@@ -848,8 +849,7 @@ public class ParseToWLTree{
 				noClashCommandFound = true;
 				//determine whether to create new child ParseStruct, or add to current
 				//layer
-				/*if(checkParseStructType(parseStructType)){
-					
+				/*if(checkParseStructType(parseStructType)){					
 					ParseStruct childParseStruct = new ParseStruct();
 					//append child to headParseStruct
 					curParseStruct.addToSubtree(parseStructType, childParseStruct);
@@ -901,8 +901,8 @@ public class ParseToWLTree{
 			System.out.println("ParseToWLTree -");
 		}*/
 		//if(true) throw new IllegalStateException(struct.WLCommandStrVisitedCount()+"");
-		//ArrayListMultimap.create()
-		//System.out.println("^^^^struct.WLCommandStrVisitedCount() " +struct.WLCommandStrVisitedCount()
+		
+		//System.out.println("^^^^ParseToWLTree-struct.WLCommandStrVisitedCount() " +struct.WLCommandStrVisitedCount()
 			//+" for struct: " + struct +" ^^^WLCommandWrapperList: "+ struct.WLCommandWrapperList());
 		//command should not have been built into some other command
 		if(null != struct.WLCommandWrapperList() 
@@ -914,7 +914,10 @@ public class ParseToWLTree{
 					/*Leaf node with own command, e.g. texAssert. Should evolve into checking
 					 * if headStruct is same as the struct used in command*/
 					|| (struct.isLeafNodeCouldHaveChildren() && struct.WLCommandStrVisitedCount() < 2))
-					){	
+					){
+			if(struct.type().equals("assert")){
+				System.out.println("^^^^ParseToWLTree-struct " + struct + " " );
+			}
 			//if(struct.WLCommandWrapperList() != null){
 			/*if(WLCommand.structsWithOtherHeadCount(struct.WLCommand()) 
 				> WLCommand.totalComponentCount(struct.WLCommand()) -2){
@@ -924,8 +927,7 @@ public class ParseToWLTree{
 			//collects the built WLCommand strings.
 			contextVecConstructed = appendWLCommandStr(struct, curParseStruct, parsedSB, partsMMap, curStructContextVec,
 					contextVecConstructed, parseState);
-			shouldPrint = false;
-			
+			shouldPrint = false;			
 			//reset WLCommandStr back to null, so next 
 			//dfs path can create it from scratch
 			//no need to do so as wrapper instances are created anew each dfs run

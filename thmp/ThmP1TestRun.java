@@ -631,19 +631,20 @@ public class ThmP1TestRun {
 			st = "If $A$ is finite and $g:A ->B $ is a surjection, then $B$ is finite as well"; 			
 			st = "Suppose that $f : [a, b] -> R$ is the difference of two bounded rising functions";
 			st = "Any linear function $L : R^p \\[RightArrow] R^q$ is continuous";
-			st = "Then $ F'(x) = f(x)$ for all $x \\elem (a,b)$";	//revisit!	
 			st = "Suppose that $f :[a,b] \\[RightArrow] R $  is continuous and we define $F : [a,b] \\[RightArrow] R$ by $F=\\int f dx$";
 			st = "Suppose that $f_n->f$ pointwise and $f_n->g$ uniformly on $[a,b]$, Then we have $f=g$."; 
 			//st = "suppose that $f_n$ converges to $f$ pointwise";
 			//st = "Suppose that $f_n->g$ uniformly on $[a,b]$";
 			st = "Then $f$ is increasing on $(a,b)$";
 			//st = "$sfg$ converges independent of $n$";
-			st = "Let $f:R^p -> R^q$ be differentiable at the point $x$";
-			st = "Then all directional derivatives exist at $x$ and $D_uf(x)=Df(x)(u)$.";//revisit, last ent should be parsed as texAssert
+			st = "Let $f:R^p -> R^q$ be differentiable at the point $x$";			
 			st = "If   $\\sum a_k$ converges conditionally";
 			st = "there is some rearrangement of $\\sum a_k$  which converges to $x$";
-			st = "There is a subset of $N$ that is countable"; //revisit! Commands produced but not attached!
 			st = "$S  is a ring";
+			st = "There is a subset of $N$ that is countable"; //triggered cmd's got high scores but were not attached??
+			st = "Then $ F'(x) = f(x)$ for all $x \\elem (a,b)$";	//revisit!	
+			st = "Then all directional derivatives exist at $x$ and $D_uf(x)=Df(x)(u)$.";//revisit, last ent should be parsed as texAssert
+			
 			
 			//st = "$abc $ is right exact over $R$";
 			//st = " $\\Probsub_x$ is the law of $\\bfPhi$ conditional on $\\Phi(0)=x,$ and $\\Expect_x$ is the corresponding expectation.";

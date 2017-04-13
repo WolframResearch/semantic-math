@@ -74,7 +74,7 @@ public class ThmP1 {
 	private static final Pattern AND_OR_PATTERN = Pattern.compile("and|or");
 	private static final Pattern IS_ARE_BE_PATTERN = Pattern.compile("is|are|be");
 	private static final Pattern CALLED_PATTERN = Pattern.compile("called|defined|said|denoted");
-	private static final Pattern CONJ_DISJ_PATTERN1 = Pattern.compile("(?:conj|disj).*");
+	protected static final Pattern CONJ_DISJ_PATTERN1 = Pattern.compile("(?:conj|disj).*");
 	//end part of latex expression word, e.g. " B)$-module"
 	private static final Pattern LATEX_END_PATTER = Pattern.compile("[^$]*\\$.*");
 	private static final Pattern LATEX_BEGIN_PATTERN = Pattern.compile("[^$]*\\${1,2}.*");
@@ -610,8 +610,7 @@ public class ThmP1 {
 			if(WordForms.getWhiteEmptySpacePattern().matcher(curWord).matches()){
 				continue;
 			}			
-			Matcher negativeAdjMatcher;
-			
+			Matcher negativeAdjMatcher;			
 			String type = "ent"; 
 			int wordlen = strAr[i].length();
 			//this needs to be evaluated at each iteration.
@@ -626,8 +625,7 @@ public class ThmP1 {
 				StringBuilder latexExprSB = new StringBuilder(mathModeMatcher.replaceAll(ALIGN_PATTERN_REPLACEMENT_STR));
 				
 				while(i++ < strArLength-1){
-					curWord = strAr[i];
-					
+					curWord = strAr[i];					
 					//not checking for nested \begin{align} and \begin{equation}
 					if((mathModeEndMatcher = END_ALIGN_PATTERN.matcher(curWord)).matches()){
 						//latexExprSB.append(" " + mathModeEndMatcher.replaceAll("$1$2"));
@@ -636,8 +634,7 @@ public class ThmP1 {
 					}else{
 						latexExprSB.append(" " + curWord);
 					}					
-				}
-				
+				}				
 				Pair pair = new Pair(latexExprSB.toString(), type);
 				pairs.add(pair);
 				mathIndexList.add(pairs.size() - 1);
@@ -2656,7 +2653,7 @@ public class ThmP1 {
 				
 				System.out.println(uHeadStructScore);
 				System.out.println(uHeadStruct.numUnits());
-
+				
 				String parsedString = ParseToWL.parseToWL(uHeadStruct);
 				//parsedExpr.add(new ParsedPair(parsedString, maxDownPathScore, "wl"));
 				System.out.print(parsedString + " \n ** ");
@@ -2685,9 +2682,7 @@ public class ThmP1 {
 				//the headStruct is still from the parse of the previous parse segment,
 				//since there was no parse, and partial parses haven's happened yet.
 				&& ((triggerWordsMap = parseState.getHeadParseStruct().getTriggerWordsMap())
-						.containsKey("define") 
-						|| triggerWordsMap
-						.containsKey("let"))
+						.containsKey("define") || triggerWordsMap.containsKey("let"))
 				)
 		{
 			System.out.println("No full parse!");
@@ -3074,10 +3069,10 @@ public class ThmP1 {
 		}
 		//if top-ranked element has ParseStructType None and there exist lower-ranked
 		//ones that have nontrivial ParseStructType's. <--Shouldn't be a problem now, Jan 2017.
+		//actually it is, April 2017.
 		if(nonTrivialTypeExists){
 			
-			Multimap<ParseStructType, ParsedPair> firstMap = sortedParsedPairMMapList.get(0);
-			
+			Multimap<ParseStructType, ParsedPair> firstMap = sortedParsedPairMMapList.get(0);			
 			if(1 == firstMap.size() && firstMap.containsKey(ParseStructType.NONE)){				
 				//the top-ranked one has type None, even when there are nontrivial ones that rank lower
 				for(int i = 1; i < sortedParsedPairMMapList.size(); i++){
@@ -3087,6 +3082,9 @@ public class ThmP1 {
 							|| mmap.containsKey(ParseStructType.HYP_iff)){
 						sortedParsedPairMMapList.remove(i);
 						sortedParsedPairMMapList.add(0, mmap);	
+						int initialRank = finalOrderingList.get(i);
+						finalOrderingList.remove(i);
+						finalOrderingList.add(0, initialRank);
 						break;
 					}
 				}				
@@ -3241,7 +3239,7 @@ public class ThmP1 {
 			ParsedPair pair = new ParsedPair(wlSB.toString(), //parseState.getCurParseStruct(), 
 					uHeadStruct.maxDownPathScore(),
 					uHeadStruct.numUnits(), span, null);
-			//partsMap.put(type, curWrapper.WLCommandStr);	
+			//partsMap.put(type, curWrapper.WLCommandStr);
 			parseStructMMap.put(ParseStructType.NONE, pair);
 		}
 		
