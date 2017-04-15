@@ -346,6 +346,20 @@ public abstract class Struct implements Serializable{
 		child.set_parentStruct(this);
 	}
 	
+	public void copyChildrenToStruct(Struct targetStruct){
+		if(!this.has_child()){
+			return;
+		}		
+		List<Struct> childrenList = children();
+		List<ChildRelation> childRelationList = childRelationList();
+		int childrenListSz = childrenList.size();
+		assert childrenListSz == childRelationList.size();
+		
+		for(int i = 0; i < childrenListSz; i++){			
+			targetStruct.add_child(childrenList.get(i), childRelationList.get(i));
+		}
+	}
+	
 	/**
 	 * @param includeType
 	 * @param curCommand

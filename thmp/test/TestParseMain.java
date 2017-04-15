@@ -48,7 +48,7 @@ public class TestParseMain {
 
 	/**
 	 * ADD TO TESTS:
-	 * ""the twisted $K$--theory $K^0(X,\\cA)$ is isomorphic to the Grothendieck group of Neumann equivalence class of projections in $C(X, \\K_\\cA)$";"
+	 * "5;"
 	 */
 	
 	
@@ -157,8 +157,7 @@ public class TestParseMain {
 		desiredMap.put(ParseStructType.HYP, "\\[ForAll][ Math[\"Property\"->\"prime\", \"$\\mathfrak p$\", \"minimal\"] ]");
 		//Math["Type"->"element", "$S$"]
 		parseThm(thm, desiredMap);
-	}
-	
+	}	
 	
 	public void testStm2(){
 		String thm = "$f$ is holomorphic on $D(0, r)$";

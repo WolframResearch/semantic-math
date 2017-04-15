@@ -650,14 +650,21 @@ public class ThmP1TestRun {
 			st = "Then  $c(A)<= c(B) $ and  $c(B) <= c(A) $ together imply that  $cA) = c(B) $";
 			st = "Let $A $ and  $B $ be sets. Then $s=1$ imply that $ sf g$";
 			st = "Then all directional derivatives exist at $x$ and $D_uf(x)=Df(x)(u)$.";
+			st = "If $A$ is finite and $g:A ->B $ is a surjection, then $B$ is finite as well. ";
+			st = "If $g:A ->B $, then $B is finite.";
+			st = "If $a \\elem R$ we define $a+ = max(a, 0)$ and $a\\[Minus] =\\[Minus] min(a, 0)$";
+			st = "Suppose that $f :[a,b] \\[RightArrow] R $  is continuous and we define $F : [a,b] \\[RightArrow] R$ by  $F=\\int f dx$.";
+			st = "Suppose that $f_n->f$ pointwise and $f_n->g$ uniformly on $[a,b]$.";//revisit, "and" parsing is off
+			//st = "Suppose that $f_n->f$ pointwise";
+			//st = "Suppose that $f_n->g$ uniformly on $[a,b]$";
 			
+			//st = "Then we have $f=g$";			
 			//st = "$abc $ is right exact over $R$";
 			//st = " $\\Probsub_x$ is the law of $\\bfPhi$ conditional on $\\Phi(0)=x,$ and $\\Expect_x$ is the corresponding expectation.";
 			//st = "two vectors $x$ and $y$ are adjacent";
 			//st = "Integers $p$ and $q$ are coprime if and only if there exist integers $n$ and $m$ such that $np - mq = 1$";
 			//st = "Integers $p$ and $q$ are coprime if there exist an integer $n$ such that $np - mq = 1$";
-			//st = "Integers $p$ and $q$ are coprime if there exist an integer $n$";
-			
+			//st = "Integers $p$ and $q$ are coprime if there exist an integer $n$";			
 			//st = "The product of two primitive polynomials is primitive.";
 			//st = "$A $ is said to be prime";
 			//st = "then all integers are prime";

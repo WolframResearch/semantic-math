@@ -2379,134 +2379,33 @@ public class ThmP1 {
 									//continue innerloop;
 								}
 							}
-							/* iterate through the List at position (i-t, i-1), to handle conjunction and disjunction.
-							 * And and or handling code here.*/
-							if (i > 0 && i + 1 < inputStructListSize) {
-								/*
-								 * // set parent struct in row // above //
-								 * mx.get(i - 1).set(j, // parentStruct);
-								 * mx.get(i - 1).get(j).add(parentStruct); //
-								 * set the next token to "", so // not //
-								 * classified again // with others //
-								 * mx.get(i+1).set(j, null); // already
-								 * classified, no need // to // keep reduce with
-								 * mx // manipulations break; } } } // this case
-								 * can be combined with if // statement //
-								 * above, use single while loop } else
-								 */
-								if (AND_OR_PATTERN.matcher(type1).matches()) {
-									//t tracks how many rows up to go in previous column
-									int t = 1; 
-									String andOrType = type1.equals("or") ? "disj" : "conj";
-									searchConjLoop: while (i - t > -1) {
-										//i-1 to look at the column before i.
-										List<Struct> structArrayList = mx.get(i - t).get(i - 1).structList();
-										int structArrayListSz = structArrayList.size();
-										if (structArrayListSz == 0) {
-											t++;
-											continue;
-										}
-										/* Search for the farthest allowable ent, keep going up along the column.
-										 * e.g. "Given ring of finite presentation and field of finite type".
-										 * variable t indicates how far back. */
-										if(type2.equals("ent") && i - t - 2 > -1){
-											List<Struct> structRightBeforeAndOrList = mx.get(i-1).get(i-1).structList();
-											Struct structRightBeforeAndOr = null;
-											if(structRightBeforeAndOrList.size() > 0){
-												structRightBeforeAndOr = structRightBeforeAndOrList.get(0);												
-											}
-											
-											if(null == structRightBeforeAndOr 
-													|| !WordForms.areTexExprSimilar(structRightBeforeAndOr.nameStr(), struct2.nameStr())){
-											
-											/*always along the same column i-1. Recall i is row of combined term.*/
-											List<Struct> structArrayList2 = mx.get(i-t-1).get(i-1).structList();
-											List<Struct> structArrayList3 = mx.get(i-t-2).get(i-1).structList();											
-											/* Less than double-looping O(mn) on average because of the conditionals.*/
-											for(Struct list2Struct : structArrayList2){			
-												if(list2Struct.type().equals("prep")){
-													for(Struct list3Struct : structArrayList3){
-														if(list3Struct.type().equals("ent")){
-															t++;
-															//System.out.println("!!! list2Struct: " + list2Struct + " " + list3Struct);
-															continue searchConjLoop;
-														}
-													}
-													break;
-												}
-											}
-										}
-											/*if(structArrayList2.get(0).type().equals("prep")
-													&& structArrayList3.get(0).type().equals("ent")){
-												t++;
-												continue;
-											}*/		
-										}
-										// iterate over Structs at (i-l, i-1)
-										for (int p = 0; p < structArrayListSz; p++) {
-											
-											Struct p_struct = structArrayList.get(p);											
-											if (type2.equals(p_struct.type())) {
-												
-												// In case of conj, only proceed
-												// if // next
-												// word is not a singular verb.
-												// // Single case with
-												// complicated
-												// logic, // so it's easier more
-												// readable to // write //
-												// if(this
-												// case){ // }then{do_something}
-												// // over if(not
-												// this // case){do_something}
-												Struct nextStruct = j + 1 < inputStructListSize ? inputStructList.get(j + 1) : null;
-												/*conj/disj handling*/
-												if (nextStruct != null && type1.equals("and")
-														&& nextStruct.prev1NodeType().equals(NodeType.STR)
-														&& isSingularVerb((String) nextStruct.prev1())) {
-													/* Intentionally left blank, for improved clarity. */
-													//In case of conj, only proceed if next
-													// word is not a singular verb.
-												} else {
-													// type is expression, eg "a
-													// and
-													// b".
-													// Come up with a scoring
-													// system
-													// for and/or!
-													// should work a score in to
-													// conj/disj! The longer the
-													// conj/disj the higher
-													NodeType struct1Type = p_struct.isStructA() ? NodeType.STRUCTA : NodeType.STRUCTH;
-													NodeType struct2Type = struct2.isStructA() ? NodeType.STRUCTA : NodeType.STRUCTH;
-													
-													//System.out.println("^^^Inside CONJ/DISJ. Struct1 " + p_struct +" "+ struct1Type + " Struct2 " + struct2);
-													
-													StructA<Struct, Struct> parentStruct = new StructA<Struct, Struct>(
-															p_struct, struct1Type, struct2, struct2Type, andOrType + "_" + type2,
-															mx.get(i - t).get(j));
-													//if(true) throw new RuntimeException(parentStruct.toString());
-													p_struct.set_parentStruct(parentStruct);
-													struct2.set_parentStruct(parentStruct);
-													//types are same, so scores should be same, so should only be punished once
-													//use score instead of product
-													double maxDownPathScore = p_struct.maxDownPathScore();
-													parentStruct.set_maxDownPathScore(maxDownPathScore);
-
-													mx.get(i - t).get(j).add(parentStruct);
-													// mx.get(i+1).set(j, null);
-													//stopLoop = true;
-													break searchConjLoop;
-												}
-											}
-										}
-										// if (stopLoop)
-										// break;
-										t++;
-									}/*Done searchConj loop*/
-									convertLastEntToTexAssert(inputStructListSize, mx, j, i, k, struct2, t, andOrType);
+							
+							Collection<Rule> ruleCol = null;
+							// reduce if structMap has a rule for reducing combined
+							if (structMap.containsKey(combined)) {
+								ruleCol = structMap.get(combined);
+							}else if(type2.equals("ent") && k+1==j && struct2.isLatexStruct() && j < inputStructListSize-1){
+								//potentially change ent into texAssert
+								Struct nextStruct = inputStructList.get(j+1);
+								String nextCombinedPos = "ent_"+nextStruct.type();
+								String newType = type1+"_texAssert";
+								
+								if(!structMap.containsKey(nextCombinedPos) 
+										){
+									StructA<String, String> convertedStructA = new StructA<String, String>(struct2.nameStr(), 
+											NodeType.STR, "", NodeType.STR, "texAssert");
+									struct2.copyChildrenToStruct(convertedStructA);
+									struct2List.set(0, convertedStructA);
+									
+									if(structMap.containsKey(newType)){										
+										type2 = "texAssert";
+										struct2 = convertedStructA;
+										ruleCol = structMap.get(newType);
+									}
 								}
-							}
+							}							
+							handConjDisjInLongForm(inputStructList, inputStructListSize, mx, j, i, k, struct2, type1,
+									type2);
 
 							// potentially change assert to latex expr. <--Why?
 							/*if (type2.equals("assert") && struct2.prev1NodeType().equals(NodeType.STR)
@@ -2519,15 +2418,11 @@ public class ThmP1 {
 							if (type1.equals("ent") && !struct1.isStructA()) {
 								String called = struct1.struct().get("called");
 								if (called != null){
-									parseState.addLocalVariableStructPair(called, struct1);
-									
+									parseState.addLocalVariableStructPair(called, struct1);									
 								}
 							}
-
-							// reduce if structMap has a rule for reducing combined
-							if (structMap.containsKey(combined)) {
-								Collection<Rule> ruleCol = structMap.get(combined);
-
+							
+							if(null != ruleCol){
 								Iterator<Rule> ruleColIter = ruleCol.iterator();
 								while (ruleColIter.hasNext()) {
 									Rule ruleColNext = ruleColIter.next();
@@ -2542,6 +2437,7 @@ public class ThmP1 {
 									recentEntIndex = entityBundle.getRecentEntIndex();
 								}
 							}
+							
 
 						} // loop listIter1 ends here
 					} // loop listIter2 ends here
@@ -2811,6 +2707,8 @@ public class ThmP1 {
 			//add up the e.g. 1's at the end. If the sum is below a certain percentage of inputStructList.size(), 
 			//which means the rest span well, don't spend time doing second parse.
 			int commandNumUnitsWithHeadNoneSum = 0;
+			//combined Multimap to hold entries from all maps in parsedPairMMapList
+			Multimap<ParseStructType, ParsedPair> combinedMMap = ArrayListMultimap.create();
 			
 			for(Multimap<ParseStructType, ParsedPair> mmap: parsedPairMMapList){
 				Collection<ParsedPair> pairColl = mmap.get(ParseStructType.NONE);
@@ -2820,8 +2718,11 @@ public class ThmP1 {
 					//same as pair.numUnits.
 					commandNumUnitsWithHeadNoneSum += pair.commandNumUnits;
 				}
+				combinedMMap.putAll(mmap);
 			}
-			orderPairsAndPutToLists(parsedPairMMapList, headParseStructList, parseState, longFormParsedPairList, contextVecList);
+			List<Multimap<ParseStructType, ParsedPair>> parsedPairMMapList2 = new ArrayList<Multimap<ParseStructType, ParsedPair>>();
+			parsedPairMMapList2.add(combinedMMap);
+			orderPairsAndPutToLists(parsedPairMMapList2, headParseStructList, parseState, longFormParsedPairList, contextVecList);
 			
 			//if commandNumUnitsWithHeadNoneSum sufficiently low: so sufficiently few parses
 			//with NONE, don't parse again. Half is a good threshold
@@ -2903,6 +2804,149 @@ public class ThmP1 {
 			parseState.setRecentParseSpanning(false);
 		}		
 		return parseState;
+	}
+
+	/**
+	 * @param inputStructList
+	 * @param inputStructListSize
+	 * @param mx
+	 * @param j
+	 * @param i
+	 * @param k
+	 * @param struct2
+	 * @param type1
+	 * @param type2
+	 */
+	private static void handConjDisjInLongForm(List<Struct> inputStructList, int inputStructListSize,
+			List<List<StructList>> mx, int j, int i, int k, Struct struct2, String type1, String type2) {
+		/* iterate through the List at position (i-t, i-1), to handle conjunction and disjunction.
+		 * And and or handling code here.*/
+		if (i > 0 && i + 1 < inputStructListSize) {
+			/*
+			 * // set parent struct in row // above //
+			 * mx.get(i - 1).set(j, // parentStruct);
+			 * mx.get(i - 1).get(j).add(parentStruct); //
+			 * set the next token to "", so // not //
+			 * classified again // with others //
+			 * mx.get(i+1).set(j, null); // already
+			 * classified, no need // to // keep reduce with
+			 * mx // manipulations break; } } } // this case
+			 * can be combined with if // statement //
+			 * above, use single while loop } else
+			 */
+			if (AND_OR_PATTERN.matcher(type1).matches()) {
+				//t tracks how many rows up to go in previous column
+				int t = 1; 
+				String andOrType = type1.equals("or") ? "disj" : "conj";
+				searchConjLoop: while (i - t > -1) {
+					//i-1 to look at the column before i.
+					List<Struct> structArrayList = mx.get(i - t).get(i - 1).structList();
+					int structArrayListSz = structArrayList.size();
+					if (structArrayListSz == 0) {
+						t++;
+						continue;
+					}
+					/* Search for the farthest allowable ent, keep going up along the column.
+					 * e.g. "Given ring of finite presentation and field of finite type".
+					 * variable t indicates how far back. */
+					if(type2.equals("ent") && i - t - 2 > -1){
+						List<Struct> structRightBeforeAndOrList = mx.get(i-1).get(i-1).structList();
+						Struct structRightBeforeAndOr = null;
+						if(structRightBeforeAndOrList.size() > 0){
+							structRightBeforeAndOr = structRightBeforeAndOrList.get(0);												
+						}
+						
+						if(null == structRightBeforeAndOr 
+								|| !WordForms.areTexExprSimilar(structRightBeforeAndOr.nameStr(), struct2.nameStr())){
+						
+						/*always along the same column i-1. Recall i is row of combined term.*/
+						List<Struct> structArrayList2 = mx.get(i-t-1).get(i-1).structList();
+						List<Struct> structArrayList3 = mx.get(i-t-2).get(i-1).structList();											
+						/* Less than double-looping O(mn) on average because of the conditionals.*/
+						for(Struct list2Struct : structArrayList2){			
+							if(list2Struct.type().equals("prep")){
+								for(Struct list3Struct : structArrayList3){
+									if(list3Struct.type().equals("ent")){
+										t++;
+										//System.out.println("!!! list2Struct: " + list2Struct + " " + list3Struct);
+										continue searchConjLoop;
+									}
+								}
+								break;
+							}
+						}
+					}
+						/*if(structArrayList2.get(0).type().equals("prep")
+								&& structArrayList3.get(0).type().equals("ent")){
+							t++;
+							continue;
+						}*/		
+					}
+					// iterate over Structs at (i-l, i-1)
+					for (int p = 0; p < structArrayListSz; p++) {
+						
+						Struct p_struct = structArrayList.get(p);											
+						if (type2.equals(p_struct.type())) {
+							
+							// In case of conj, only proceed
+							// if // next
+							// word is not a singular verb.
+							// // Single case with
+							// complicated
+							// logic, // so it's easier more
+							// readable to // write //
+							// if(this
+							// case){ // }then{do_something}
+							// // over if(not
+							// this // case){do_something}
+							Struct nextStruct = j + 1 < inputStructListSize ? inputStructList.get(j + 1) : null;
+							/*conj/disj handling*/
+							if (nextStruct != null && type1.equals("and")
+									&& nextStruct.prev1NodeType().equals(NodeType.STR)
+									&& isSingularVerb((String) nextStruct.prev1())) {
+								/* Intentionally left blank, for improved clarity. */
+								//In case of conj, only proceed if next
+								// word is not a singular verb.
+							} else {
+								// type is expression, eg "a
+								// and
+								// b".
+								// Come up with a scoring
+								// system
+								// for and/or!
+								// should work a score in to
+								// conj/disj! The longer the
+								// conj/disj the higher
+								NodeType struct1Type = p_struct.isStructA() ? NodeType.STRUCTA : NodeType.STRUCTH;
+								NodeType struct2Type = struct2.isStructA() ? NodeType.STRUCTA : NodeType.STRUCTH;
+								
+								//System.out.println("^^^Inside CONJ/DISJ. Struct1 " + p_struct +" "+ struct1Type + " Struct2 " + struct2);
+								
+								StructA<Struct, Struct> parentStruct = new StructA<Struct, Struct>(
+										p_struct, struct1Type, struct2, struct2Type, andOrType + "_" + type2,
+										mx.get(i - t).get(j));
+								//if(true) throw new RuntimeException(parentStruct.toString());
+								p_struct.set_parentStruct(parentStruct);
+								struct2.set_parentStruct(parentStruct);
+								//types are same, so scores should be same, so should only be punished once
+								//use score instead of product
+								double maxDownPathScore = p_struct.maxDownPathScore();
+								parentStruct.set_maxDownPathScore(maxDownPathScore);
+
+								mx.get(i - t).get(j).add(parentStruct);
+								// mx.get(i+1).set(j, null);
+								//stopLoop = true;
+								break searchConjLoop;
+							}
+						}
+					}
+					// if (stopLoop)
+					// break;
+					t++;
+				}/*Done searchConj loop*/
+				convertLastEntToTexAssert(inputStructListSize, mx, j, i, k, struct2, t, andOrType);
+			}
+		}
 	}
 
 	/**
@@ -3027,7 +3071,6 @@ public class ThmP1 {
 			firstScore *= parsedPair.score();
 		}
 		
-		System.out.println("****parsedPairMMapList " + parsedPairMMapList);
 		numUnitsList.add(firstNumUnits);
 		commandNumUnitsList.add(firstCommandNumUnits);
 		scoresList.add(firstScore);
@@ -4702,6 +4745,11 @@ public class ThmP1 {
 				} else { //in Latex
 					lastWordAdded = curWord;
 					sentenceBuilder.append(" ").append(curWord);
+					if(i == wordsArrayLen - 1){ 
+						//could also throw IllegalSyntax exception here
+						sentenceList.add(sentenceBuilder.toString());
+						sentenceBuilder.setLength(0);
+					}
 				}
 				//throw new IllegalStateException("punctuation: " + curWord);
 			}

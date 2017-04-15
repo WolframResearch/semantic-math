@@ -86,10 +86,16 @@ public class ParseToWLTree{
 	 */
 	private static Collection<ImmutableWLCommand> get_triggerCol(String triggerKeyWord, String triggerType){
 		
-		Collection<ImmutableWLCommand> triggeredSet;
+		Collection<ImmutableWLCommand> triggeredList;
 		//copy into mutable collection. 
-		//Note: using HashSet will introduce non-determinacy, as ordering is not insertion order.		
-		triggeredSet = new ArrayList<ImmutableWLCommand>(WLCommandMMap.get(triggerKeyWord));
+		/*Note: using HashSet will introduce non-determinacy in parses, as ordering is not insertion order.*/		
+		triggeredList = new ArrayList<ImmutableWLCommand>(WLCommandMMap.get(triggerKeyWord));
+		Set<String> triggeredWordsSet = new HashSet<String>();
+		Set<ImmutableWLCommand> triggeredCommandSet = new HashSet<ImmutableWLCommand>(triggeredList);
+		
+		for(WLCommand command : triggeredList){
+			triggeredWordsSet.add(command.getTriggerWord());
+		}
 		
 		//if(triggeredCol.isEmpty()){
 		//add words from triggerWords redirects in case there's an entry there.
@@ -100,30 +106,66 @@ public class ParseToWLTree{
 				//|| triggerWordLookupMap.containsKey(triggerType)
 				){
 			for(String s : triggerWordLookupCol){
-				triggeredSet.addAll(WLCommandMMap.get(s));
+				//triggeredList.addAll(WLCommandMMap.get(s));
+				Collection<ImmutableWLCommand> sCommandsCol = WLCommandMMap.get(s);
+				addTriggeredCollectionToList(triggeredList, triggeredWordsSet, triggeredCommandSet, sCommandsCol);
 			}
 			//if(true) throw new IllegalStateException("triggerWordLookupCol" + triggerWordLookupCol);
 		}
 		//look up using type
 		//if(triggeredSet.isEmpty() && WLCommandMap.containsKey(triggerType)){
-			triggeredSet.addAll(WLCommandMMap.get(triggerType));
+			//triggeredList.addAll(WLCommandMMap.get(triggerType));
+			Collection<ImmutableWLCommand> sCommandsCol = WLCommandMMap.get(triggerType);
+			addTriggeredCollectionToList(triggeredList, triggeredWordsSet, triggeredCommandSet, sCommandsCol);
 		//}
 		
 		int triggerKeyWordLen = triggerKeyWord.length();
-		if(triggeredSet.isEmpty() && triggerKeyWordLen > 2 && triggerKeyWord.charAt(triggerKeyWordLen-1) == 's'){
+		if(triggeredList.isEmpty() && triggerKeyWordLen > 2 && triggerKeyWord.charAt(triggerKeyWordLen-1) == 's'){
 			String keyWordSingular = WordForms.getSingularForm(triggerKeyWord);
-			triggeredSet.addAll(WLCommandMMap.get(keyWordSingular));
+			sCommandsCol = WLCommandMMap.get(keyWordSingular);
+			addTriggeredCollectionToList(triggeredList, triggeredWordsSet, triggeredCommandSet, sCommandsCol);
 		}
 
-		if(triggeredSet.isEmpty() && triggerWordLookupMap.containsKey(triggerType)){			
+		if(triggeredList.isEmpty() && triggerWordLookupMap.containsKey(triggerType)){			
 			Collection<String> col= triggerWordLookupMap.get(triggerType);
 			for(String s : col){
-				triggeredSet.addAll(WLCommandMMap.get(s));
+				//triggeredList.addAll(WLCommandMMap.get(s));
+				sCommandsCol = WLCommandMMap.get(s);
+				addTriggeredCollectionToList(triggeredList, triggeredWordsSet, triggeredCommandSet, sCommandsCol);
 			}			
 		}
-		return triggeredSet;
+		return triggeredList;
+	}
+
+	/**
+	 * @param triggeredList
+	 * @param triggeredWordsSet
+	 * @param triggeredCommandSet
+	 * @param sCommandsCol
+	 */
+	private static void addTriggeredCollectionToList(Collection<ImmutableWLCommand> triggeredList,
+			Set<String> triggeredWordsSet, Set<ImmutableWLCommand> triggeredCommandSet,
+			Collection<ImmutableWLCommand> sCommandsCol) {
+		for(ImmutableWLCommand sCommand : sCommandsCol){
+			if(!commandAlreadyAddedInTriggerSet(sCommand, triggeredWordsSet, triggeredCommandSet)){
+				triggeredList.add(sCommand);
+			}
+		}
 	}
 	
+	private static boolean commandAlreadyAddedInTriggerSet(ImmutableWLCommand sCommand, Set<String> triggeredWordsSet,
+			Set<ImmutableWLCommand> triggeredCommandSet) {
+		String triggerWord = sCommand.getTriggerWord();
+		if(triggeredWordsSet.contains(triggerWord)){
+			if(triggeredCommandSet.contains(sCommand)){
+				return true;
+			}
+		}
+		triggeredWordsSet.add(triggerWord);
+		triggeredCommandSet.add(sCommand);
+		return false;
+	}
+
 	/**
 	 * Match the slots in posTermList with Structs in structDeque.
 	 * @param posTermList	posTermList for curCommand.

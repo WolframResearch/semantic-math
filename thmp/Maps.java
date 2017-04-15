@@ -166,6 +166,7 @@ public class Maps {
 			//create temporary hashMultimap to avoid duplicates, 
 			//temporary since ListMultimap is a better structure for this.
 			SetMultimap<String, String> posPreMMap = LinkedHashMultimap.create();	
+			//ideally make this immutable
 			structMap = ArrayListMultimap.create();
 			mathObjMap = new HashMap<String, String>();
 			fluffMap = new HashMap<String, String>();
@@ -629,6 +630,7 @@ public class Maps {
 			//structMap.put("ifstate_thenstate", new Rule("ifthen", 1));
 			structMap.put("If_Then", new Rule("IfThen", 1));
 			structMap.put("Iff_Then", new Rule("IffThen", 1));
+			structMap.put("If_assert", new Rule("IfThen", 1));
 			structMap.put("has_ent", new Rule("hasent", 1));
 			structMap.put("or_ent", new Rule("orent", 1));
 			structMap.put("ent_orent", new Rule("or", 1));
@@ -698,6 +700,7 @@ public class Maps {
 			structMap.put("adj_noun", new Rule("noun", 1));
 			//"independent of $n$"
 			structMap.put("adj_prep", new Rule("newchild", "qualifier", .95));
+			structMap.put("adverb_prep", new Rule("newchild", "qualifier", .95));
 			structMap.put("gerund_noun", new Rule("gerundp", 1)); // gerundphrase
 			structMap.put("ent_gerundp", new Rule("newchild", 1));
 			
@@ -828,12 +831,13 @@ public class Maps {
 			structMap.put("texAssert_Iff", new Rule("assert", .5));
 			structMap.put("texAssert_hypo", new Rule("assert", .5));
 			structMap.put("texAssert_prep", new Rule("assert", .5));
+			structMap.put("texAssert_qualifier", new Rule("assert", .5));
 			structMap.put("texAssert_iff", new Rule("assert", .5));
 			structMap.put("hyp_hyp", new Rule("hyp", 1));
 			structMap.put("hyp_verbphrase", new Rule("hypo", 0.6));
 			structMap.put("hyp_assert", new Rule("hypo", 1));
 			structMap.put("hyp_texAssert", new Rule("hypo", 1));
-			structMap.put("hyp_ent", new Rule("hypo", 1));
+			//structMap.put("hyp_ent", new Rule("hypo", 1));
 			structMap.put("def_ent", new Rule("Def", 1));
 			structMap.put("def_symb", new Rule("Def", 1));
 			//e.g. "denote by $F$ a field";

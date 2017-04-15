@@ -10,7 +10,9 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.SetMultimap;
 
 import thmp.ParseRun;
 import thmp.ParseState;
@@ -145,17 +147,18 @@ public class ParseEqualityCheck {
 		
 		for(ParseStructType parseStructType : desiredWlCommandWrapperMMap.keys()){
 			Collection<WLCommandWrapper> wrapperCol = wlCommandWrapperMMap2.get(parseStructType);
-			Map<String, SimplifiedPosTermList> triggerPosListMap = null;
+			Multimap<String, SimplifiedPosTermList> triggerPosListMap = null;
 			if(null != wrapperCol){
 				triggerPosListMap = createSimplifiedPosTermListMap(wrapperCol);				
 			}else{
 				return false;
 			}
 			Collection<WLCommandWrapper> desiredWrapperCol = desiredWlCommandWrapperMMap.get(parseStructType);
-			Map<String, SimplifiedPosTermList> desiredTriggerPosListMap = null;
+			Multimap<String, SimplifiedPosTermList> desiredTriggerPosListMap = null;
 			desiredTriggerPosListMap = createSimplifiedPosTermListMap(desiredWrapperCol);
 			
 			if(!triggerPosListMap.equals(desiredTriggerPosListMap)){
+				//the Multimap is a set multimap, so order of set per key doesn't matter for equality.
 				return false;
 			}		
 			//System.out.println("ParseEqualityCheck: triggerPosListMap "+triggerPosListMap + "\n desiredTriggerPosListMap " + desiredTriggerPosListMap);
@@ -166,8 +169,9 @@ public class ParseEqualityCheck {
 	/**
 	 * @param wrapperCol
 	 */
-	private static Map<String, SimplifiedPosTermList> createSimplifiedPosTermListMap(Collection<WLCommandWrapper> wrapperCol) {
-		Map<String, SimplifiedPosTermList> triggerPosListMap = new HashMap<String, SimplifiedPosTermList>();
+	private static Multimap<String, SimplifiedPosTermList> createSimplifiedPosTermListMap(Collection<WLCommandWrapper> wrapperCol) {
+		
+		Multimap<String, SimplifiedPosTermList> triggerPosListMap = HashMultimap.create();
 		//construct SimplifiedPosTermList from wlCommand coresponding to each wrapper
 		for(WLCommandWrapper wrapper : wrapperCol){
 			WLCommand wlCommand = wrapper.WLCommand();
