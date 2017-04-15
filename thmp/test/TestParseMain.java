@@ -16,6 +16,8 @@ import thmp.ParseState;
 import thmp.ParseStructType;
 import thmp.ThmP1;
 import thmp.exceptions.ParseRuntimeException.IllegalSyntaxException;
+import thmp.test.ParseEqualityCheck.ParseResult;
+import thmp.utils.FileUtils;
 import thmp.ParseState.ParseStateBuilder;
 
 /**
@@ -26,7 +28,12 @@ import thmp.ParseState.ParseStateBuilder;
 public class TestParseMain {
 
 	private static final boolean WRITE_UNKNOWN_WORDS_TO_FILE = false;
-
+	private static final List<ParseResult> parseResultsList;
+	
+	static{
+		parseResultsList = deserializeParseResults();
+	}
+	
 	@Before
 	public void setUp() throws Exception {
 		/*Maps.buildMap();
@@ -36,7 +43,7 @@ public class TestParseMain {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}*/
-		ThmP1.setUnitTestingToTrue();
+		ThmP1.setUnitTestingToTrue();		
 	}
 
 	/**
@@ -44,7 +51,7 @@ public class TestParseMain {
 	 * ""the twisted $K$--theory $K^0(X,\\cA)$ is isomorphic to the Grothendieck group of Neumann equivalence class of projections in $C(X, \\K_\\cA)$";"
 	 */
 	
-	@Test
+	
 	public void basicTests() throws IOException{
 		List<String> stList = new ArrayList<String>();
 		//list of expected parses to compare output to
@@ -120,7 +127,7 @@ public class TestParseMain {
 	desiredMap7.put(ParseStructType.STM, "MathObj{$R/\\mathfrak p$} \\[Element] MathObj{catenary}");
 	parsedMMapList.add(desiredMap7);*/	
 	
-	@Test
+	
 	public void testStm5(){
 		String thm = "f is a function with radius of convergence r";
 		
@@ -130,7 +137,7 @@ public class TestParseMain {
 		parseThm(thm, desiredMap);
 	}
 	
-	@Test
+	
 	public void testStm4(){
 		String thm = "take derivative of log of f";
 		
@@ -140,7 +147,7 @@ public class TestParseMain {
 		parseThm(thm, desiredMap);
 	}
 
-	@Test
+	
 	public void testStm3(){
 		String thm = "$R/\\mathfrak p$ is catenary for every minimal prime $\\mathfrak p$";
 		
@@ -152,7 +159,7 @@ public class TestParseMain {
 		parseThm(thm, desiredMap);
 	}
 	
-	@Test
+	
 	public void testStm2(){
 		String thm = "$f$ is holomorphic on $D(0, r)$";
 		
@@ -164,7 +171,7 @@ public class TestParseMain {
 		parseThm(thm, desiredMap);
 	}
 	
-	@Test
+	
 	public void testStm2_1(){
 		String thm = "The derivative of $f$ is $\\sum_j j $";
 		
@@ -179,7 +186,7 @@ public class TestParseMain {
 	//desiredMap6.put(ParseStructType.STM, "Derivative[ $f$ ]  \\[Element] MathObj{{$\\sum_j j $}}");
 	//parsedMMapList.add(desiredMap6);
 	
-	@Test
+	
 	public void testStm1(){
 		//"$R/\\mathfrak p$ is catenary for every minimal prime $\\mathfrak p$"
 		String thm = "f is a function with radius of convergence r and finitely many roots";
@@ -195,7 +202,7 @@ public class TestParseMain {
 	//stList.add("f is a function with radius of convergence r and finitely many roots");
 	//desiredMap5.put(ParseStructType.STM, "f \\[Element] function[{function, {with, Conj[{radius of convergence, r}, {roots, finitely many}]}}]");
 	
-	@Test
+	
 	public void testHyp1(){
 		String thm = "given an element f of a set $S$";
 		
@@ -208,7 +215,7 @@ public class TestParseMain {
 	/**
 	 * Test $R_\\mathfrak m$ is universally catenary for all maximal ideals $\\mathfrak m$
 	 */
-	@Test
+	
 	public void test2(){
 		String thm = "$R_\\mathfrak m$ is universally catenary for all maximal ideals $\\mathfrak m$";
 		//String parsed = "{HYP=[ \\[ForAll][ MathObj{maximal ideal, $\\mathfrak m$} ]  1.0  2  3], STM=[ MathObj{$R_\\mathfrak m$} \\[Element] MathObj{universally catenary}  0.9  3  4]}\n";
@@ -223,7 +230,7 @@ public class TestParseMain {
 	/**
 	 * Test $M/gM$ is Cohen-Macaulay with maximal regular sequence $f_1, \\ldots, f_{d-1}$.
 	 */
-	@Test
+	
 	public void test3(){
 		String thm = "$M/gM$ is Cohen-Macaulay with maximal regular sequence $f_1, \\ldots, f_{d-1}$.";
 		//String parsed = "{STM=[ MathObj{$M/gM$} \\[Element] ring[{cohen-macaulay, {with, sequence, $f_1, \\ldots, f_{d-1}$, maximal regular}}]  0.85  5  6]}\n";
@@ -233,5 +240,23 @@ public class TestParseMain {
 				"Math[\"Name\"->\"$M/gM$\"] \\[Element] ring[[cohen-macaulay, [with, \"Name\"->\"sequence\", \"$f_1 , \\ldots , f_{d-1}$\", \"Property\"->\"maximal regular\"]]]");
 		parseThm(thm, desiredMap);
 	}
+	
+	@Test
+	public void test10(){
+		for(ParseResult pr : parseResultsList){
+			boolean s = ParseEqualityCheck.checkParse(pr);
+			assert s;
+		}
+	}
+	
+	private static List<ParseResult> deserializeParseResults(){
+		String serialFileStr = thmp.utils.SerializeParseResult.parseResultSerialFile;
+		
+		@SuppressWarnings("unchecked")
+		List<ParseResult> parseResultList = (List<ParseResult>)FileUtils.deserializeListFromFile(serialFileStr);
+		System.out.println("parseResultList " +parseResultList);
+		return parseResultList;
+	}
+	
 	
 }

@@ -749,8 +749,8 @@ public class WLCommand implements Serializable{
 		 * @return
 		 */
 		public int optionalGroupNum(){			
-			throw new UnsupportedOperationException("Cannot call optionalGroupNum()"
-					+ "on a non-optional PosTerm!");
+			throw new UnsupportedOperationException(
+					"Cannot call optionalGroupNum() on a non-optional PosTerm!");
 		}
 		
 		/**
@@ -1165,8 +1165,8 @@ public class WLCommand implements Serializable{
 	public static String build(WLCommand curCommand, ParseState parseState) throws IllegalWLCommandStateException{
 		//command is satisfied only if componentCounter is 0
 		if(curCommand.componentCounter > 0){ 
-			throw new IllegalWLCommandStateException("build() is called, but componentCounter "
-					+ "is still > 0! Current command: " + curCommand);
+			String msg = "build() is called, but componentCounter is still > 0! Current command: ";
+			throw new IllegalWLCommandStateException(msg + curCommand);
 		}
 		//System.out.println("WLCommand - triggerWord " + curCommand.triggerWord);
 		ListMultimap<WLCommandComponent, Struct> commandsMap = curCommand.commandsMap;

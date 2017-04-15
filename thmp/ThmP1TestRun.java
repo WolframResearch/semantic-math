@@ -642,9 +642,14 @@ public class ThmP1TestRun {
 			st = "there is some rearrangement of $\\sum a_k$  which converges to $x$";
 			st = "$S  is a ring";
 			st = "There is a subset of $N$ that is countable"; //triggered cmd's got high scores but were not attached??
-			st = "Then $ F'(x) = f(x)$ for all $x \\elem (a,b)$";	//revisit!	
-			st = "Then all directional derivatives exist at $x$ and $D_uf(x)=Df(x)(u)$.";//revisit, last ent should be parsed as texAssert
-			
+			st = "Then $ F'(x) = f(x)$ for all $x \\elem (a,b)$";	//revisit!			
+			st = "The usual order on $R$ is a total order";
+			st = "Let $n, m \\in N$ with $n < m$. Then no function $f : {1,2,...,m} -> {1,2,...,n}$ can be an injection.";
+			st = "If $A$ is finite and $g:A ->B $ is a surjection, then $B$ is finite as well";
+			st = "Let $A $ and  $B $ be sets. Then  $c(A)<= c(B) $ and  $c(B) <= c(A) $ together imply that  $cA) = c(B) $";
+			st = "Then  $c(A)<= c(B) $ and  $c(B) <= c(A) $ together imply that  $cA) = c(B) $";
+			st = "Let $A $ and  $B $ be sets. Then $s=1$ imply that $ sf g$";
+			st = "Then all directional derivatives exist at $x$ and $D_uf(x)=Df(x)(u)$.";
 			
 			//st = "$abc $ is right exact over $R$";
 			//st = " $\\Probsub_x$ is the law of $\\bfPhi$ conditional on $\\Phi(0)=x,$ and $\\Expect_x$ is the corresponding expectation.";

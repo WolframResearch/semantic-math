@@ -29,6 +29,9 @@ import java.util.Arrays;
  * Captures state of the parse, such as recent entities used (recentEnt).
  * To be used to assist ThmP1.parse(). To transfer information between
  * adjacent sentences, to preserve contextual information.
+ * 
+ * Every time a new attribute or property is added, check if it needs to be reset
+ * between parses, if so, reset in local/globalParseCleanUp.
  * @author yihed
  */
 public class ParseState {
@@ -873,6 +876,7 @@ public class ParseState {
 		this.thmContextVecList = new ArrayList<int[]>();
 		this.localVariableNamesMMap = ArrayListMultimap.create();
 		this.inThmFlag = false;
+		this.recentParseSpanning = false;
 		logger.info("(cleanup)@@@headParseStruct" + headParseStruct);
 	}	
 	
@@ -880,9 +884,13 @@ public class ParseState {
 	 * Global clean up, e.g. after \end{document}.
 	 * In addition to everything parseRunLocalCleanUp() does, 
 	 * also cleans up localVariableNamesMMap.
+	 * 
 	 */
 	public void parseRunGlobalCleanUp(){
 		parseRunLocalCleanUp();
+		this.recentAssert = null;
+		this.prevTokenList = null;
+		this.tokenList = null;
 		this.globalVariableNamesMMap = ArrayListMultimap.create();
 	}
 	

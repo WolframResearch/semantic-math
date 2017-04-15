@@ -1,0 +1,185 @@
+package thmp.test;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import com.google.common.collect.Multimap;
+
+import thmp.ParseRun;
+import thmp.ParseState;
+import thmp.ParseStruct;
+import thmp.ParseStructType;
+import thmp.WLCommandsList;
+import thmp.ParseState.ParseStateBuilder;
+import thmp.ParseToWLTree.WLCommandWrapper;
+import thmp.Struct;
+import thmp.WLCommand;
+import thmp.WLCommand.PosTerm;
+
+/**
+ * Check if two parses are the same, by comparing the
+ * WLCommands they trigger, as well as the posList.
+ * 
+ * @author yihed
+ *
+ */
+public class ParseEqualityCheck {
+
+	private static final Logger logger = LogManager.getLogger(ParseState.class);
+	
+	/**
+	 * Result of parses to be serialized.
+	 */
+	public static class ParseResult implements Serializable{
+		
+		private static final long serialVersionUID = -3525356017635047097L;
+		
+		private String inputString;
+		private ParseStruct headParseStruct;
+		
+		public ParseResult(String inputString_, ParseStruct headParseStruct_){
+			this.inputString = inputString_;
+			this.headParseStruct = headParseStruct_;
+		}
+		
+		public String inputString(){
+			return inputString;
+		}
+		
+		public ParseStruct headParseStruct(){
+			return headParseStruct;
+		}
+		
+		@Override
+		public String toString(){
+			return this.inputString + " " + this.headParseStruct;
+		}
+	}
+	
+	/**
+	 *  Constructed from a WLCommand.
+	 */
+	public static class SimplifiedPosTermList{
+		
+		List<String> simplifiedPosTermList;
+		
+		public SimplifiedPosTermList(List<PosTerm> posTermList){
+			simplifiedPosTermList = new ArrayList<String>();
+			//keep only the strings and their ordering information about the posTerm
+			for(PosTerm posTerm : posTermList){
+				int positionInMap = posTerm.positionInMap();
+				if(posTerm.isNegativeTerm() || positionInMap == WLCommandsList.AUXINDEX || positionInMap == WLCommandsList.WL_DIRECTIVE_INDEX){
+					continue;
+				}
+				Struct posTermStruct = posTerm.posTermStruct();
+				if(null != posTermStruct){
+					simplifiedPosTermList.add(posTermStruct.nameStr()); //could use posTermStruct.contentStrList()			
+				}				
+			}
+		}
+		
+		@Override
+		public String toString(){
+			return simplifiedPosTermList.toString();
+		}
+		
+		@Override
+		public boolean equals(Object other){
+			if(!(other instanceof SimplifiedPosTermList)){
+				return false;
+			}
+			SimplifiedPosTermList otherList = (SimplifiedPosTermList)other;
+			List<String> list = otherList.simplifiedPosTermList;
+			int listSz = list.size();
+			if(listSz != simplifiedPosTermList.size()){
+				String msg = "simplifiedPosTermList sizes are not the same!";
+				logMessage(msg);
+				return false;
+			}
+			for(int i = 0; i < listSz; i++){
+				String term1 = simplifiedPosTermList.get(i);
+				String term2 = list.get(i);
+				if(!term1.equals(term2)){
+					return false;
+				}
+			}
+			return true;
+		}
+		
+	}
+	
+	public static boolean checkParse(ParseResult parseResult){
+		String inputString = parseResult.inputString();
+		ParseStruct desiredHeadParseStruct = parseResult.headParseStruct();
+		boolean isVerbose = false;
+		ParseStateBuilder parseStateBuilder = new ParseStateBuilder();		
+		ParseState parseState = parseStateBuilder.build();
+		ParseRun.parseInput(inputString, parseState, isVerbose);
+		ParseStruct headParseStruct = parseState.getHeadParseStruct();
+		//System.out.println("headParseStruct " + headParseStruct);
+		return compareParseStruct(desiredHeadParseStruct, headParseStruct);
+	}
+	
+	/**
+	 * Compares the wrapperMMap in parseStruct. Including 
+	 * parseStructType, and WLCommandWrapper and its contents, 
+	 * e.g. WLCommand, triggerTerm, posList structs.
+	 * @return
+	 */
+	private static boolean compareParseStruct(ParseStruct desiredPS, ParseStruct ps){
+		Multimap<ParseStructType, WLCommandWrapper> desiredWlCommandWrapperMMap = desiredPS.getWLCommandWrapperMMap();
+		Multimap<ParseStructType, WLCommandWrapper> wlCommandWrapperMMap2 = ps.getWLCommandWrapperMMap();
+		
+		if(desiredWlCommandWrapperMMap.size() != wlCommandWrapperMMap2.size()){
+			String msg = "ParseEqualityCheck - compareParseStruct(): sizes of maps are different!";
+			logMessage(msg);
+			return false;
+		}
+		
+		for(ParseStructType parseStructType : desiredWlCommandWrapperMMap.keys()){
+			Collection<WLCommandWrapper> wrapperCol = wlCommandWrapperMMap2.get(parseStructType);
+			Map<String, SimplifiedPosTermList> triggerPosListMap = null;
+			if(null != wrapperCol){
+				triggerPosListMap = createSimplifiedPosTermListMap(wrapperCol);				
+			}else{
+				return false;
+			}
+			Collection<WLCommandWrapper> desiredWrapperCol = desiredWlCommandWrapperMMap.get(parseStructType);
+			Map<String, SimplifiedPosTermList> desiredTriggerPosListMap = null;
+			desiredTriggerPosListMap = createSimplifiedPosTermListMap(desiredWrapperCol);
+			if(!triggerPosListMap.equals(desiredTriggerPosListMap)){
+				return false;
+			}		
+			//System.out.println("ParseEqualityCheck: triggerPosListMap "+triggerPosListMap + "\n desiredTriggerPosListMap " + desiredTriggerPosListMap);
+		}
+		return true;
+	}
+
+	/**
+	 * @param wrapperCol
+	 */
+	private static Map<String, SimplifiedPosTermList> createSimplifiedPosTermListMap(Collection<WLCommandWrapper> wrapperCol) {
+		Map<String, SimplifiedPosTermList> triggerPosListMap = new HashMap<String, SimplifiedPosTermList>();
+		//construct SimplifiedPosTermList from wlCommand coresponding to each wrapper
+		for(WLCommandWrapper wrapper : wrapperCol){
+			WLCommand wlCommand = wrapper.WLCommand();
+			String triggerWord = wlCommand.getTriggerWord();
+			SimplifiedPosTermList simplifiedPosTermList = new SimplifiedPosTermList(WLCommand.posTermList(wlCommand));
+			triggerPosListMap.put(triggerWord, simplifiedPosTermList);
+		}
+		return triggerPosListMap;
+	}
+	
+	private static void logMessage(String msg){
+		logger.error(msg);
+		System.out.println(msg);
+	}
+	
+}

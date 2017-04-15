@@ -1821,8 +1821,9 @@ public class ThmP1 {
 		ThmP1AuxiliaryClass.convertStructToTexAssert(structList);
 		
 		System.out.println("\n^^^^structList: " + structList);			
-		parseState.setTokenList(structList);		
+		parseState.setTokenList(structList);
 		
+		parseState.setRecentParseSpanning(false);
 		return parseState;
 	}
 
@@ -2378,9 +2379,9 @@ public class ThmP1 {
 									//continue innerloop;
 								}
 							}
-							// iterate through the List at position (i-t, i-1), to handle conjunction and disjunction
+							/* iterate through the List at position (i-t, i-1), to handle conjunction and disjunction.
+							 * And and or handling code here.*/
 							if (i > 0 && i + 1 < inputStructListSize) {
-
 								/*
 								 * // set parent struct in row // above //
 								 * mx.get(i - 1).set(j, // parentStruct);
@@ -2394,10 +2395,11 @@ public class ThmP1 {
 								 * above, use single while loop } else
 								 */
 								if (AND_OR_PATTERN.matcher(type1).matches()) {
-									
-									int t = 1;
+									//t tracks how many rows up to go in previous column
+									int t = 1; 
+									String andOrType = type1.equals("or") ? "disj" : "conj";
 									searchConjLoop: while (i - t > -1) {
-										//i-1 because looking at the column before i.
+										//i-1 to look at the column before i.
 										List<Struct> structArrayList = mx.get(i - t).get(i - 1).structList();
 										int structArrayListSz = structArrayList.size();
 										if (structArrayListSz == 0) {
@@ -2466,8 +2468,6 @@ public class ThmP1 {
 													//In case of conj, only proceed if next
 													// word is not a singular verb.
 												} else {
-
-													String newType = type1.equals("or") ? "disj" : "conj";
 													// type is expression, eg "a
 													// and
 													// b".
@@ -2483,7 +2483,7 @@ public class ThmP1 {
 													//System.out.println("^^^Inside CONJ/DISJ. Struct1 " + p_struct +" "+ struct1Type + " Struct2 " + struct2);
 													
 													StructA<Struct, Struct> parentStruct = new StructA<Struct, Struct>(
-															p_struct, struct1Type, struct2, struct2Type, newType + "_" + type2,
+															p_struct, struct1Type, struct2, struct2Type, andOrType + "_" + type2,
 															mx.get(i - t).get(j));
 													//if(true) throw new RuntimeException(parentStruct.toString());
 													p_struct.set_parentStruct(parentStruct);
@@ -2503,7 +2503,8 @@ public class ThmP1 {
 										// if (stopLoop)
 										// break;
 										t++;
-									}
+									}/*Done searchConj loop*/
+									convertLastEntToTexAssert(inputStructListSize, mx, j, i, k, struct2, t, andOrType);
 								}
 							}
 
@@ -2706,7 +2707,6 @@ public class ThmP1 {
 			parseState = parse(parseState, true);
 		} 
 		else if(!isReparse || totalNumUnitsInStructList(inputStructList) > 2){
-			
 			List<StructList> structListList = new ArrayList<StructList>();
 			//list of integral 2-tuples with row and column coordinates in mx.
 			//The coordinates at index i are those of the struct at index i
@@ -2903,6 +2903,54 @@ public class ThmP1 {
 			parseState.setRecentParseSpanning(false);
 		}		
 		return parseState;
+	}
+
+	/**
+	 * @param inputStructListSize
+	 * @param mx
+	 * @param j
+	 * @param i
+	 * @param k
+	 * @param struct2
+	 * @param t
+	 * @param andOrType
+	 */
+	private static void convertLastEntToTexAssert(int inputStructListSize, List<List<StructList>> mx, int j, int i,
+			int k, Struct struct2, int t, String andOrType) {
+		if(i-t == -1 && j == inputStructListSize-1 && struct2.isLatexStruct()){
+			//reached beginning of input, but did not find matching type.
+			//possibly turn ent into texAssert. e.g. "$f$ is continuous and $f(0)=0$".
+			//And struct2 is last token.
+			if(!struct2.isStructA()){
+				//iterate over previous column, looking for an assert, so to make 
+				//struct2 have type texAssert. Pairs are (i,k) and (k+1,j).
+				int r = i-1; 
+				int colNum = k-1;
+				Struct assertStruct = null;
+				int assertRowIndex = 0;
+				rowLoop: while(r > -1){
+					StructList colNumStructList = mx.get(r).get(colNum);
+					List<Struct> structList = colNumStructList.structList();
+					for(Struct struct : structList){
+						if(struct.type().equals("assert")){
+							assertStruct = struct;
+							assertRowIndex = r;
+							break rowLoop;
+						}
+					}
+					r--;
+				}
+				if(null != assertStruct){
+					StructA<String, String> convertedStructA = new StructA<String, String>(struct2.nameStr(), 
+							NodeType.STR, "", NodeType.STR, "texAssert");
+					//mx.get(k+1).get(j).add(convertedStructA);										
+					StructA<Struct, Struct> conjAssertStruct = new StructA<Struct, Struct>(assertStruct,
+							NodeType.STRUCTA, convertedStructA, NodeType.STRUCTA, andOrType+"_assert");
+					
+					mx.get(assertRowIndex).get(j).add(conjAssertStruct);
+				}				
+			}			
+		}
 	}
 
 	private static class HeadStructComparator implements Comparator<Struct>{
@@ -3107,8 +3155,9 @@ public class ThmP1 {
 			Multimap<ParseStructType, ParsedPair> map = sortedParsedPairMMapList.get(i);
 			
 			parseStructMapList.add(map.toString() + "\n");
-			if(unitTesting) parseStructMaps.add(map);
-			
+			if(unitTesting){ 
+				parseStructMaps.add(map);
+			}
 			//add to parsedExpr  parsedExpr.add(new ParsedPair(totalParsedString, totalScore, "wl"));
 			//note that Multimap does not necessarily preserve insertion order!
 			for(Map.Entry<ParseStructType, ParsedPair> structTypePair : map.entries()){
