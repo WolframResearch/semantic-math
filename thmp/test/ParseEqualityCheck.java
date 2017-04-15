@@ -154,6 +154,7 @@ public class ParseEqualityCheck {
 			Collection<WLCommandWrapper> desiredWrapperCol = desiredWlCommandWrapperMMap.get(parseStructType);
 			Map<String, SimplifiedPosTermList> desiredTriggerPosListMap = null;
 			desiredTriggerPosListMap = createSimplifiedPosTermListMap(desiredWrapperCol);
+			
 			if(!triggerPosListMap.equals(desiredTriggerPosListMap)){
 				return false;
 			}		

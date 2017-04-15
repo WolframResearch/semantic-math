@@ -24,7 +24,7 @@ public class SerializeParseResult {
 	
 	public static void main(String args[]){
 		List<String> inputStrList = new ArrayList<String>();
-		inputStrList.add("take derivative of log of f");
+		addInputToList(inputStrList);
 		List<ParseResult> parseResultList = new ArrayList<ParseResult>();
 		
 		boolean isVerbose = false;
@@ -39,6 +39,15 @@ public class SerializeParseResult {
 			parseResultList.add(pr);
 		}
 		FileUtils.serializeObjToFile(parseResultList, parseResultSerialFile);
+	}
+
+	/**
+	 * @param inputStrList
+	 */
+	private static void addInputToList(List<String> inputStrList) {
+		inputStrList.add("take derivative of log of f");
+		inputStrList.add("$M/gM$ is Cohen-Macaulay with maximal regular sequence $f_1, \\ldots, f_{d-1}$.");
+		
 	}
 	
 }
