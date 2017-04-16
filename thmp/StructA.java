@@ -349,7 +349,7 @@ public class StructA<A, B> extends Struct{
 					//if(this.type.equals("texAssert")) System.out.println("StructA -struct "+ this +"has child? " +this.hasChild);
 				}
 				if(!prev2.equals("")){
-					fullContentSB.insert(0, "Math[").append(", \"").append((String)this.prev2).append("\"]");					
+					fullContentSB.insert(0, "Math[").append(", \"").append((String)this.prev2).append(childStr).append("\"]");					
 				}
 			}				
 			

@@ -1048,13 +1048,13 @@ public class ParseToWLTree{
 	 */
 	public static void dfsCleanUp(Struct struct) {
 		
-		struct.clear_WLCommandWrapperList();
 		struct.clear_WLCommandStrVisitedCount();		
 		struct.set_previousBuiltStruct(null);
-		/*don't delete below! March 2017.
-		 * Should not set to null, as another command will need to know if struct 
-		 * already has a headStruct, to resolve clashes.*/
+		/*don't delete comment below! March 2017.
+		 * Should not set structToAppendCommandStr to null, as another command will need to know if struct 
+		 * already has a headStruct, to resolve clashes. <--But shouldn't between different longforms!*/
 		//struct.set_structToAppendCommandStr(null);
+		//struct.clear_WLCommandWrapperList();
 		
 		//clearUsedInCommandsSet() causes Structs to be added multiple times! 2/2017.
 		//struct.clearUsedInCommandsSet();

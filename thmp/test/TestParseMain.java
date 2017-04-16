@@ -243,9 +243,10 @@ public class TestParseMain {
 	@Test
 	public void test10(){
 		for(ParseResult pr : parseResultsList){
-			boolean s = ParseEqualityCheck.checkParse(pr);
-			assert s;
+			//boolean s = ParseEqualityCheck.checkParse(pr);
+			//assertTrue(s);
 		}
+		assertTrue(ParseEqualityCheck.checkParse(parseResultsList.get(7)));
 	}
 	
 	private static List<ParseResult> deserializeParseResults(){

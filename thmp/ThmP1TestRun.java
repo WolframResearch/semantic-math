@@ -655,6 +655,11 @@ public class ThmP1TestRun {
 			st = "If $a \\elem R$ we define $a+ = max(a, 0)$ and $a\\[Minus] =\\[Minus] min(a, 0)$";
 			st = "Suppose that $f :[a,b] \\[RightArrow] R $  is continuous and we define $F : [a,b] \\[RightArrow] R$ by  $F=\\int f dx$.";
 			st = "Suppose that $f_n->f$ pointwise and $f_n->g$ uniformly on $[a,b]$.";//revisit, "and" parsing is off
+			st = "Let $x \\elem R$. If $\\sum a_k$ converges conditionally, then there is some rearrangement of $\\sum a_k$  which converges to $x$";
+			st = "$M/gM$ is Cohen-Macaulay with maximal regular sequence $f_1, \\ldots, f_{d-1}$.";
+			st = "$R_\\mathfrak m$ is universally catenary for all maximal ideals $\\mathfrak m$";
+			//st = " given $xs $";
+			
 			//st = "Suppose that $f_n->f$ pointwise";
 			//st = "Suppose that $f_n->g$ uniformly on $[a,b]$";
 			

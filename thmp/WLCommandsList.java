@@ -162,7 +162,8 @@ public class WLCommandsList {
 				new PBuilder(" ,", "OPT"), new PBuilder("prep|qualifier", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}"));	
 		
 		/*e.g. If $x > y$.*/
-		putToWLCommandMapBuilder(wLCommandMapBuilder, "texAssert", new PBuilder("hyp|if|then", null, false, false, "OPT"), 
+		putToWLCommandMapBuilder(wLCommandMapBuilder, "texAssert", new PBuilder("hyp|if|then", null,//"^(?!for every|for all|for any).*$", 
+				/*this regex is not perfect, ie "for allj" returns false rather than true*/ false, false, "OPT"), 
 				new PBuilder("texAssert", null, true, true, false));
 		
 		//$A$ is $B$ is $C$. This case is covered in the code by converting ent to texAssert

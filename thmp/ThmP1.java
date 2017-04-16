@@ -2386,21 +2386,30 @@ public class ThmP1 {
 								ruleCol = structMap.get(combined);
 							}else if(type2.equals("ent") && k+1==j && struct2.isLatexStruct() && j < inputStructListSize-1){
 								//potentially change ent into texAssert
-								Struct nextStruct = inputStructList.get(j+1);
-								String nextCombinedPos = "ent_"+nextStruct.type();
+								//Struct nextStruct = inputStructList.get(j+1);
+								String nextStructType = inputStructList.get(j+1).type();
+								String nextCombinedPos = "ent_"+nextStructType;
 								String newType = type1+"_texAssert";
 								
 								if(!structMap.containsKey(nextCombinedPos) 
-										){
-									StructA<String, String> convertedStructA = new StructA<String, String>(struct2.nameStr(), 
-											NodeType.STR, "", NodeType.STR, "texAssert");
-									struct2.copyChildrenToStruct(convertedStructA);
-									struct2List.set(0, convertedStructA);
+										&& !nextStructType.equals("verb") && !nextStructType.equals("vbs")){
 									
 									if(structMap.containsKey(newType)){										
+										StructA<String, String> convertedStructA = new StructA<String, String>(struct2.nameStr(), 
+												NodeType.STR, "", NodeType.STR, "texAssert");
+										struct2.copyChildrenToStruct(convertedStructA);
+										struct2List.set(0, convertedStructA);
 										type2 = "texAssert";
 										struct2 = convertedStructA;
 										ruleCol = structMap.get(newType);
+									}else{
+										String newType2 = "texAssert_"+type2;
+										if(structMap.containsKey(newType2)){
+											StructA<String, String> convertedStructA = new StructA<String, String>(struct2.nameStr(), 
+													NodeType.STR, "", NodeType.STR, "texAssert");
+											struct2.copyChildrenToStruct(convertedStructA);
+											struct2List.set(0, convertedStructA);
+										}										
 									}
 								}
 							}							
@@ -2535,8 +2544,7 @@ public class ThmP1 {
 				}				
 				//ParseStruct headParseStruct = new ParseStruct();
 				/* Get the WL form build from WLCommand's. Compute span scores. */
-				treeTraversal(uHeadStruct, headParseStructList, parsedPairMMapList, curStructContextvec, span,
-						parseState);
+				treeTraversal(uHeadStruct, headParseStructList, parsedPairMMapList, curStructContextvec, span, parseState);
 				//headParseStructList.add(headParseStruct);
 				contextVecList.add(curStructContextvec);
 				
@@ -4368,7 +4376,9 @@ public class ThmP1 {
 		
 		int structDepth = struct.dfsDepth();
 		String structType = struct.type();
-		
+		/*if(struct.type().equals("texAssert")){
+			System.out.print("");
+		}*/
 		if (struct.isStructA()) {
 			
 			if(structType.equals("hyp") || structType.equals("if")){

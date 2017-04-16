@@ -1042,8 +1042,18 @@ public class WLCommand implements Serializable{
 		if(highestStruct.type().equals("texAssert") && null != highestStruct.parentStruct()){
 			Struct parentStruct = highestStruct.parentStruct();
 			String parentStructType = parentStruct.type();
-			if("If".equals(parentStructType) || "hypo".equals(parentStructType)){
-				highestStruct = parentStruct;
+			if("If".equals(parentStructType) || "hypo".equals(parentStructType) ){				
+				if(parentStruct.prev1NodeType().isTypeStruct()){
+					Struct siblingStruct = (Struct)parentStruct.prev1();
+					Object s = siblingStruct.prev1();
+					if(null != s){
+						String siblingStructPrev1Str = s.toString();
+						if(!siblingStructPrev1Str.equals("for all") && !siblingStructPrev1Str.equals("for every")
+								&& !siblingStructPrev1Str.equals("for any")){
+							highestStruct = parentStruct;						
+						}
+					}
+				}
 			}
 		}		
 		structToAppendCommandStr = highestStruct;
@@ -1197,9 +1207,7 @@ public class WLCommand implements Serializable{
 				//System.out.println("&&&posTermStruct " + nextStruct);
 				//get WLCommandWrapperList
 				if(nextStruct != null){
-					if(updateHeadStruct(nextStruct, structToAppendCommandStr, curCommand)){
-						//curCommand.structsWithOtherHeadCount++;
-					}
+					updateHeadStruct(nextStruct, structToAppendCommandStr, curCommand);
 					
 					/*Update commandNumUnits, which for terms that are included in built string would be updated 
 					  via simpleToString() */

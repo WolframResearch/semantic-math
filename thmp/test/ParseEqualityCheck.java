@@ -70,10 +70,10 @@ public class ParseEqualityCheck {
 	 */
 	public static class SimplifiedPosTermList{
 		
-		List<String> simplifiedPosTermList;
+		List<List<String>> simplifiedPosTermList;
 		
 		public SimplifiedPosTermList(List<PosTerm> posTermList){
-			simplifiedPosTermList = new ArrayList<String>();
+			simplifiedPosTermList = new ArrayList<List<String>>();
 			//keep only the strings and their ordering information about the posTerm
 			for(PosTerm posTerm : posTermList){
 				int positionInMap = posTerm.positionInMap();
@@ -82,7 +82,8 @@ public class ParseEqualityCheck {
 				}
 				Struct posTermStruct = posTerm.posTermStruct();
 				if(null != posTermStruct){
-					simplifiedPosTermList.add(posTermStruct.nameStr()); //could use posTermStruct.contentStrList()			
+					//simplifiedPosTermList.add(posTermStruct.nameStr()); //could use posTermStruct.contentStrList()		
+					simplifiedPosTermList.add(posTermStruct.contentStrList());// 
 				}				
 			}
 		}
@@ -93,12 +94,18 @@ public class ParseEqualityCheck {
 		}
 		
 		@Override
+		public int hashCode(){
+			return simplifiedPosTermList.hashCode();
+		}
+		
+		@Override
 		public boolean equals(Object other){
+			//if(true) return false;
 			if(!(other instanceof SimplifiedPosTermList)){
 				return false;
 			}
 			SimplifiedPosTermList otherList = (SimplifiedPosTermList)other;
-			List<String> list = otherList.simplifiedPosTermList;
+			List<List<String>> list = otherList.simplifiedPosTermList;
 			int listSz = list.size();
 			if(listSz != simplifiedPosTermList.size()){
 				String msg = "simplifiedPosTermList sizes are not the same!";
@@ -106,15 +113,20 @@ public class ParseEqualityCheck {
 				return false;
 			}
 			for(int i = 0; i < listSz; i++){
-				String term1 = simplifiedPosTermList.get(i);
-				String term2 = list.get(i);
-				if(!term1.equals(term2)){
+				List<String> term1 = simplifiedPosTermList.get(i);
+				List<String> term2 = list.get(i);
+				int sz = term1.size();
+				if(sz != term2.size()){
 					return false;
+				}
+				for(int j = 0; j < sz; j++){
+					if(!term1.get(j).equals(term2.get(j))){
+						return false;
+					}
 				}
 			}
 			return true;
-		}
-		
+		}		
 	}
 	
 	public static boolean checkParse(ParseResult parseResult){
@@ -125,7 +137,7 @@ public class ParseEqualityCheck {
 		ParseState parseState = parseStateBuilder.build();
 		ParseRun.parseInput(inputString, parseState, isVerbose);
 		ParseStruct headParseStruct = parseState.getHeadParseStruct();
-		//System.out.println("headParseStruct " + headParseStruct);
+		System.out.println("@@@@@@@@@@headParseStruct " + headParseStruct);
 		return compareParseStruct(desiredHeadParseStruct, headParseStruct);
 	}
 	
@@ -140,6 +152,8 @@ public class ParseEqualityCheck {
 		Multimap<ParseStructType, WLCommandWrapper> wlCommandWrapperMMap2 = ps.getWLCommandWrapperMMap();
 		
 		if(desiredWlCommandWrapperMMap.size() != wlCommandWrapperMMap2.size()){
+			System.out.println(desiredWlCommandWrapperMMap);
+			System.out.println(wlCommandWrapperMMap2);
 			String msg = "ParseEqualityCheck - compareParseStruct(): sizes of maps are different!";
 			logMessage(msg);
 			return false;
@@ -156,7 +170,7 @@ public class ParseEqualityCheck {
 			Collection<WLCommandWrapper> desiredWrapperCol = desiredWlCommandWrapperMMap.get(parseStructType);
 			Multimap<String, SimplifiedPosTermList> desiredTriggerPosListMap = null;
 			desiredTriggerPosListMap = createSimplifiedPosTermListMap(desiredWrapperCol);
-			
+			System.out.println("triggerPosListMap "+ triggerPosListMap);///
 			if(!triggerPosListMap.equals(desiredTriggerPosListMap)){
 				//the Multimap is a set multimap, so order of set per key doesn't matter for equality.
 				return false;
