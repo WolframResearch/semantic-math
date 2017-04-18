@@ -81,10 +81,12 @@ public class WLCommandsList {
 		//keys can be types.
 		triggerWordLookupMapBuilder.put("be", "is");
 		triggerWordLookupMapBuilder.put("are", "is");
+		triggerWordLookupMapBuilder.put("is not", "is");
+		triggerWordLookupMapBuilder.put("are not", "is");
 		triggerWordLookupMapBuilder.put("has", "have");
 		//triggerWordLookupMapBuilder.put("have", "is");
-		triggerWordLookupMapBuilder.put("belong", "is");
-		triggerWordLookupMapBuilder.put("lie", "is");
+		//triggerWordLookupMapBuilder.put("belong", "is");
+		//triggerWordLookupMapBuilder.put("lie", "is");
 		triggerWordLookupMapBuilder.put("letbe", "if");
 		triggerWordLookupMapBuilder.put("let", "if");
 		triggerWordLookupMapBuilder.put("suppose", "if");
@@ -273,9 +275,9 @@ public class WLCommandsList {
 		//negative of above
 		//putToWLCommandMapBuilder(wLCommandMapBuilder, "is not", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is not|are not|be not, trigger",
 				//"Not[\\[Element]]", "symb|ent|adj|phrase, , true, TriggerMathObj" }));
-		putToWLCommandMapBuilder(wLCommandMapBuilder, "is not", new PBuilder("symb|ent|pro|noun|det", null, true, RelationType._IS), 
+		/*putToWLCommandMapBuilder(wLCommandMapBuilder, "is not", new PBuilder("symb|ent|pro|noun|det", null, true, RelationType._IS), 
 				new PBuilder("verb|vbs|be", "not is|is not|are not|not are|be not|not be", false, true, false), 
-				new PBuilder("Not[\\[Element]]"), new PBuilder("symb|ent|adj|phrase", null, true, false, true, RelationType.IS_) );
+				new PBuilder("Not[\\[Element]]"), new PBuilder("symb|ent|adj|phrase", null, true, false, true, RelationType.IS_) );*/
 		
 		//putToWLCommandMapBuilder(wLCommandMapBuilder, "act", addCommand(new String[] { "Action[", "symb|ent|pro, , true", ", act|acts, trigger",
 				//";", "symb|ent|pro, , true, TriggerMathObj", ";", ", by, false, OPT", "ent, , true, OPT", "]" }));		

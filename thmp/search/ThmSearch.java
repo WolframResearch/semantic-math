@@ -96,8 +96,7 @@ public class ThmSearch {
 			}
 			
 			evaluateWLCommand(ml, "<<"+combinedProjectedMxFilePath, false, true);
-			ml.evaluate("<<" + pathToProjectionMx+";");
-			ml.discardAnswer();
+			evaluateWLCommand(ml, "<<"+pathToProjectionMx, false, true);
 			
 			if(USE_FULL_MX){
 				evaluateWLCommand(ml, "<<"+fullMxPath);
@@ -550,8 +549,7 @@ public class ThmSearch {
 				
 				msg = "Corr. mx clipped! Ready to add corMx to m.";
 				logger.info(msg);
-				System.out.println(msg);
-				
+				System.out.println(msg);				
 				
 				//the entries in corMx.m can range from 0 to ~6
 				ml.evaluate("mx = m + .15*corMx.m;");
@@ -564,12 +562,10 @@ public class ThmSearch {
 				}				
 				System.out.println("ThmSearch - cor matrix added!");
 				
-				
 				//System.out.println(nearestVec.length() + "  " + Arrays.toString((int[])nearestVec.part(1).asArray(Expr.INTEGER, 1)));
 				String dimMsg = "Dimensions of docMx: " + rowDimension + " " +mxColDim + ". Starting SVD...";
 				System.out.print(dimMsg);
 				logger.info(dimMsg);
-				
 				
 				/*ml.evaluate("Mean[Mean[0.2*Transpose[ Covariance[Transpose[mx]].mx ]]]");
 				//ml.evaluate("mx");
@@ -645,7 +641,8 @@ public class ThmSearch {
 				ml.evaluate("End[];");
 				ml.discardAnswer();
 				
-				ml.evaluate("DumpSave[\"" + PATH_TO_MX + "\", \"TermDocumentMatrix`\"]");
+				ml.evaluate("DumpSave[\"" + PATH_TO_MX + "\", {TermDocumentMatrix`mxMeanValue, "
+						+ "TermDocumentMatrix`uTranspose, TermDocumentMatrix`dInverse, TermDocumentMatrix`corMx}];");
 				ml.discardAnswer();
 			}catch(MathLinkException e){
 				System.out.println("error at launch!");

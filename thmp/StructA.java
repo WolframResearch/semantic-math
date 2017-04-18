@@ -400,7 +400,7 @@ public class StructA<A, B> extends Struct{
 		//scores, especially compared to the case when they are absorbed into a StructH, in
 		//which case they are not counted.
 		if(curCommand != null && !this.type.equals("pre")){ 
-			boolean added = WLCommand.increment_commandNumUnits(curCommand, this);
+			WLCommand.increment_commandNumUnits(curCommand, this);
 			/*if(added){
 				//tempSB.append(" ADDED ");
 				//System.out.println("ADDED for command " + curCommand + " THIS  " + this);
@@ -427,7 +427,7 @@ public class StructA<A, B> extends Struct{
 			tempSB.append(toAppend).append("[");
 		}
 		
-		if(this.type.equals("phrase") //|| this.type.equals("prep")
+		if(this.type.equals("phrase") || this.type.equals("prep")
 				){
 			wrapBraces = true;		
 			//tempStr += "{";

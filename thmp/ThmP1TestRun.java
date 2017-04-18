@@ -658,7 +658,14 @@ public class ThmP1TestRun {
 			st = "Let $x \\elem R$. If $\\sum a_k$ converges conditionally, then there is some rearrangement of $\\sum a_k$  which converges to $x$";
 			st = "$M/gM$ is Cohen-Macaulay with maximal regular sequence $f_1, \\ldots, f_{d-1}$.";
 			st = "$R_\\mathfrak m$ is universally catenary for all maximal ideals $\\mathfrak m$";
-			//st = " given $xs $";
+			st = " we assume that this resolution is given by $\\Hilb^{G} (\\mathbb{C}^n)$ ";
+			st = "We define a generalization of the Cartan matrix of the case $n=2$";
+			st = "$F$ is an extension over $Q$";
+			st = "$F$ does not lie over $Q$";
+			st = "$F$ lies over $Q$";
+			st = "$I$ is not prime";
+			st = "$F$ is a field over $Q$";
+			st = "$I$ is not prime";
 			
 			//st = "Suppose that $f_n->f$ pointwise";
 			//st = "Suppose that $f_n->g$ uniformly on $[a,b]$";

@@ -424,7 +424,7 @@ public class Maps {
 			posPreMMap.put("do", "verb_COMP");
 			posPreMMap.put("does not", "not");
 			posPreMMap.put("do not", "not");
-			posPreMMap.put("not", "adverb");
+			posPreMMap.put("not", "not");
 
 			// nouns that are not mathObj, only put not-so-relevant terms here
 			posPreMMap.put("form", "noun_COMP");
@@ -863,9 +863,16 @@ public class Maps {
 			//absorb the non-struct into the struct. Should only 
 			//have one non-ent
 			structMap.put("adj_ent", new Rule("absorb1", 1));
+			structMap.put("not_ent", new Rule("absorb1", 1));
+			structMap.put("not_symb", new Rule("absorb1", 1));
+			
 			structMap.put("adj_qualifier", new Rule("newchild", "adj", .8));
-			structMap.put("verb_prep", new Rule("newchild", "verbphrase", .85));
-			structMap.put("verbAlone_prep", new Rule("newchild", "verbphrase", .85));
+			//structMap.put("verb_prep", new Rule("newchild", "verbphrase", .85));
+			structMap.put("verb_prep", new Rule("verbphrase", .9));
+			/*structMap.put("verb_not", new Rule("newchild", "verb", .9));
+			structMap.put("vbs_not", new Rule("newchild", "vbs", .9));
+			structMap.put("verbAlone_not", new Rule("newchild", "verbAlone", .9));*/
+			structMap.put("verbAlone_prep", new Rule("newchild", "verbAlone", .85));
 			structMap.put("verbAlone_adverb", new Rule("newchild", "verbAlone", .85));
 			structMap.put("ent_symb", new Rule("absorb2", 1));
 			

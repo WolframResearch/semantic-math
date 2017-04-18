@@ -29,6 +29,7 @@ public class TestParseMain {
 
 	private static final boolean WRITE_UNKNOWN_WORDS_TO_FILE = false;
 	private static final List<ParseResult> parseResultsList;
+	private static final List<String> assertionErrorInputStrList = new ArrayList<String>();
 	
 	static{
 		parseResultsList = deserializeParseResults();
@@ -243,10 +244,18 @@ public class TestParseMain {
 	@Test
 	public void test10(){
 		for(ParseResult pr : parseResultsList){
-			//boolean s = ParseEqualityCheck.checkParse(pr);
-			//assertTrue(s);
+			try{
+				boolean s = ParseEqualityCheck.checkParse(pr);
+				assertTrue(s);
+			}catch(AssertionError e){	
+				e.printStackTrace();
+				assertionErrorInputStrList.add(pr.inputString());
+			}
 		}
-		assertTrue(ParseEqualityCheck.checkParse(parseResultsList.get(7)));
+		if(!assertionErrorInputStrList.isEmpty()){
+			throw new AssertionError("Tests did not pass! List of inputs that failed: " + assertionErrorInputStrList);
+		}
+		//assertTrue(ParseEqualityCheck.checkParse(parseResultsList.get(7)));
 	}
 	
 	private static List<ParseResult> deserializeParseResults(){

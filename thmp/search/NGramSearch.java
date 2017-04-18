@@ -42,8 +42,8 @@ public class NGramSearch {
 	//file to write 2 grams to
 	private static final Path twoGramsFilePath = Paths.get("src/thmp/data/twoGrams.txt");
 	
-	private static volatile BufferedReader TWO_GRAM_DATA_BR;
-	private static volatile BufferedReader THREE_GRAM_DATA_BR;
+	//private static volatile BufferedReader TWO_GRAM_DATA_BR;
+	//private static volatile BufferedReader THREE_GRAM_DATA_BR;
 	private static volatile ServletContext servletContext;
 	
 	// default two-gram averageFreqCount when total number of two grams is 0
@@ -61,9 +61,9 @@ public class NGramSearch {
 	 * Set the BufferedReader for scraped two grams.
 	 * @param bf
 	 */
-	public static void setTwoGramBR(BufferedReader br){
+	/*public static void setTwoGramBR(BufferedReader br){
 		TWO_GRAM_DATA_BR = br;
-	}
+	}*/
 	
 	/**
 	 * Set the BufferedReader for scraped two grams.
@@ -85,13 +85,13 @@ public class NGramSearch {
 	 * Set the BufferedReader for scraped two grams.
 	 * @param bf
 	 */
-	public static void setThreeGramBR(BufferedReader br){
+	/*public static void setThreeGramBR(BufferedReader br){
 		THREE_GRAM_DATA_BR = br;
-	}
+	}*/
 	
-	public static BufferedReader THREE_GRAM_DATA_BR(){
+	/*public static BufferedReader THREE_GRAM_DATA_BR(){
 		return THREE_GRAM_DATA_BR;
-	}
+	}*/
 	
 	public static class TwoGramSearch{
 		//private static final File twoGramsFile = new File("src/thmp/data/twoGrams.txt");

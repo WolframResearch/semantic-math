@@ -66,7 +66,7 @@ public class ContextSearch implements Searcher<String>{
 		//FileReader contextVecFile;
 		//BufferedReader contextVecFileBReader;
 		
-		BufferedReader contextVecFileBReader = CollectThm.contextVecBR();
+		BufferedReader contextVecFileBReader = null;//CollectThm.contextVecBR();
 		//if not set remotely by the server.
 		if(null == contextVecFileBReader){
 			try{

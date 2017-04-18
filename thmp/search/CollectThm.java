@@ -78,7 +78,7 @@ public class CollectThm {
 	//There are intentionally *not* final.
 	//private static volatile BufferedReader rawFileReader;
 	//BufferedReader for context vectors.  <--should preferably not be global variables!
-	private static volatile BufferedReader contextVecBR;
+	//private static volatile BufferedReader contextVecBR;
 	//corresponding list of file readers
 	//private static volatile List<BufferedReader> rawFileReaderList;
 	//macros file
@@ -122,13 +122,13 @@ public class CollectThm {
 	 * Set context vector BufferedReader.
 	 * @param srcFileReader
 	 */
-	public static void setContextVecBF(BufferedReader contextVectorsBR) {
+	/*public static void setContextVecBF(BufferedReader contextVectorsBR) {
 		contextVecBR = contextVectorsBR;		
-	}
+	}*/
 	
-	public static BufferedReader contextVecBR(){
+	/*public static BufferedReader contextVecBR(){
 		return contextVecBR;
-	}
+	}*/
 	
 	/**
 	 * Set servlet context, if run from server.

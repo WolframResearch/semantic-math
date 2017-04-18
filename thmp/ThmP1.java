@@ -1185,7 +1185,7 @@ public class ThmP1 {
 			
 			int pairsSize = pairs.size();
 			//case only meaningful if pairsSize>2
-			if (pairsSize > 2) {
+			if (pairsSize > 1) {
 				Pair pair = pairs.get(pairsSize - 1);
 
 				// combine "no" and "not" with verbs
@@ -1194,14 +1194,14 @@ public class ThmP1 {
 					if (pairs.size() > 1 && (word.matches("not|no")
 							|| pairs.get(pairsSize - 2).pos().matches("not"))) {
 						//String newWord = pair.word().matches("is|are") ? "not" : "not " + pair.word();
-						String newWord = word + " " + pair.word();
+						String newWord = pair.word() + " " + word;
 						pair.set_word(newWord);
 						pairs.remove(pairsSize - 2);
 					}
 
 					if (i + 1 < strAr.length && strAr[i + 1].matches("not|no")) {
 						//String newWord = pair.word().matches("is|are") ? "not" : "not " + pair.word();
-						String newWord = strAr[i+1] + " " + pair.word();
+						String newWord = pair.word() + " " + strAr[i+1];
 						pair.set_word(newWord);
 						i++;
 					}
@@ -1713,21 +1713,22 @@ public class ThmP1 {
 					continue;
 				}
 				StructH<HashMap<String, String>> curStruct = mathEntList.get(Integer.valueOf(curPos));
-				
-				Set<String> posList = curPair.extraPosSet();
-				
-				if(posList != null){
-					//start from 1, as extraPosList only contains *additional* pos
-					//besides the most probable pos.
-					for(String pos : posList){
-						 if(pos.equals("noun")){
-							continue;
-						}
-						curStruct.addExtraPos(pos);
-					}
-				}
+
 				//could have been set to null
 				if (curStruct != null) {
+					
+					Set<String> posList = curPair.extraPosSet();
+					if(posList != null){
+						//start from 1, as extraPosList only contains *additional* pos
+						//besides the most probable pos.
+						for(String pos : posList){
+							 if(pos.equals("noun")){
+								continue;
+							 }
+							 //System.out.println("mathEntList: "+mathEntList);f
+							 curStruct.addExtraPos(pos);
+						}
+					}				
 					structList.add(curStruct);
 				}
 				prevPos = curPos;
@@ -3747,7 +3748,9 @@ public class ThmP1 {
 			
 			assert(struct1.isStructA() && !struct2.isStructA());
 
-			if(!struct1.isStructA() || struct2.isStructA()){
+			//if(!struct1.isStructA() || struct2.isStructA()){
+			if(!struct1.isStructA() //|| struct2.isStructA()
+					){
 				return null;
 			}			
 			//absorb the non-struct into the struct
@@ -4029,7 +4032,6 @@ public class ThmP1 {
 			//add as property
 			String ppt = "";
 			if(absorbedStruct.prev1NodeType().isTypeStruct()){
-				//ppt = ((Struct)absorbedStruct.prev1()).simpleToString(true,  ); //<--deal with ent_symb!
 				List<String> pptList = ((Struct)absorbedStruct).contentStrList();
 				StringBuilder pptSB = new StringBuilder(25);
 				for(String p : pptList){
@@ -4071,19 +4073,32 @@ public class ThmP1 {
 							absorbedStructType.substring(0, 4) + "_ent");
 					//System.out.println("ThmP1 - newStruct " + newStruct);
 				}else{
-					newStruct.struct().put("called", ppt);					
+					if(!newStruct.isStructA()){
+						newStruct.struct().put("called", ppt);
+					}else{
+						Struct childStruct = new StructA<String, String>(ppt, NodeType.STR, "", NodeType.STR, absorbedStructType);
+						newStruct.add_child(childStruct, new ChildRelation(""));
+					}
 				}
 			}else{
-				newStruct.struct().put(ppt, "ppt");
+				//newStruct.struct().put(ppt, "ppt");
+				if(!newStruct.isStructA()){
+					newStruct.struct().put(ppt, "ppt");
+				}else{
+					Struct childStruct = new StructA<String, String>(ppt, NodeType.STR, "", NodeType.STR, absorbedStructType);
+					newStruct.add_child(childStruct, new ChildRelation(""));
+				}
 			}
 			// update firstEnt so to have the right children
-			if (firstEnt == absorbingStruct) {
-				firstEnt = newStruct;
+			if(!absorbingStruct.isStructA()){
+				if (firstEnt == absorbingStruct) {
+					firstEnt = newStruct;
+				}
+				recentEnt = newStruct;
 			}
-			recentEnt = newStruct;
 			newStruct.set_maxDownPathScore(newDownPathScore);
 			mx.get(i).get(j).add(newStruct);
-		//}
+			
 			return recentEnt;
 	}
 

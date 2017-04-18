@@ -88,6 +88,8 @@ public class WLCommand implements Serializable{
 	 * only applicable for WLCommands with optional terms. */
 	private transient WLCommand copyWithOptTermsCommand;
 	private transient WLCommand copyWithOutOptTermsCommand;
+	//map of trigger terms focus on  
+	private static final transient Map<String, String> negativeTriggerCommandsMap;
 	
 	/**
 	 * Index of trigger word in posTermList.
@@ -251,7 +253,14 @@ public class WLCommand implements Serializable{
 	private static final int RIGHTCHILD = 1;
 	private static final int BOTHCHILDREN = 0;
 	private static final int NEITHERCHILD = 2;
+	private static final Pattern TRIGGER_WORD_NOT_PATTERN = Pattern.compile("^(.*not .+|.+ not.*)$");
 	
+	static {
+		
+		negativeTriggerCommandsMap = new HashMap<String, String>();
+		negativeTriggerCommandsMap.put("~HasProperty~", " ~HasNotProperty~ ");
+		negativeTriggerCommandsMap.put(" ~HasProperty~ ", " ~HasNotProperty~ ");
+	}
 	/**
 	 * Immutable subclass .
 	 * The mutable version created by WLCommand copies from this immutable version 
@@ -599,7 +608,7 @@ public class WLCommand implements Serializable{
 			}
 			
 			/**
-			 * Auxiliary Strings, e.g. brackets "[".
+			 * Auxiliary Strings, e.g. brackets "["., ~HasProperty~
 			 */
 			public PBuilder(String posStr){				
 				this.commandComponent = new WLCommandComponent(posStr, DEFAULT_AUX_NAME_STR);	
@@ -1042,17 +1051,22 @@ public class WLCommand implements Serializable{
 		if(highestStruct.type().equals("texAssert") && null != highestStruct.parentStruct()){
 			Struct parentStruct = highestStruct.parentStruct();
 			String parentStructType = parentStruct.type();
-			if("If".equals(parentStructType) || "hypo".equals(parentStructType) ){				
+			if("If".equals(parentStructType) || "hypo".equals(parentStructType) ){	
+				boolean updateParentBool = true;
 				if(parentStruct.prev1NodeType().isTypeStruct()){
 					Struct siblingStruct = (Struct)parentStruct.prev1();
 					Object s = siblingStruct.prev1();
 					if(null != s){
 						String siblingStructPrev1Str = s.toString();
-						if(!siblingStructPrev1Str.equals("for all") && !siblingStructPrev1Str.equals("for every")
-								&& !siblingStructPrev1Str.equals("for any")){
-							highestStruct = parentStruct;						
+						if(siblingStructPrev1Str.equals("for all") || siblingStructPrev1Str.equals("for every")
+								|| siblingStructPrev1Str.equals("for any")){
+							updateParentBool = false;
+							//highestStruct = parentStruct;						
 						}
 					}
+				}
+				if(updateParentBool){
+					highestStruct = parentStruct;
 				}
 			}
 		}		
@@ -1186,6 +1200,7 @@ public class WLCommand implements Serializable{
 		//counts should now be all 0
 		Map<WLCommandComponent, Integer> commandsCountMap = curCommand.commandsCountMap;
 		List<PosTerm> posTermList = curCommand.posTermList;
+		int posTermListSz = posTermList.size();
 		//use StringBuilder!
 		StringBuilder commandSB = new StringBuilder();
 		//the latest Struct to be touched, for determining if an aux String should be displayed
@@ -1196,10 +1211,19 @@ public class WLCommand implements Serializable{
 		
 		EnumMap<PosTermConnotation, Struct> connotationMap = null;
 		
-		for(PosTerm term : posTermList){			
+		boolean commandNegatedBool = false;		
+		int triggerWordIndex = curCommand.triggerWordIndex;
+		Struct posTermStruct = posTermList.get(triggerWordIndex).posTermStruct;
+		if(posTermStruct != null){
+			if(TRIGGER_WORD_NOT_PATTERN.matcher(posTermStruct.nameStr()).matches()){
+				commandNegatedBool = true;
+			}
+		}
+		
+		for(PosTerm term : posTermList){		
 			if(term.isNegativeTerm()){
 				continue;
-			}			
+			}	
 			if(!term.includeInBuiltString){		
 				//set its head Struct to structToAppendCommandStr,
 				// ***This should always be null, because haven't set it yet.
@@ -1298,10 +1322,12 @@ public class WLCommand implements Serializable{
 					nextStruct.structToAppendCommandStr().WLCommand().structsWithOtherHeadCount--;									
 				}
 				nextStruct.set_structToAppendCommandStr(structToAppendCommandStr); */				
-			}//index indicating this is a WL directive, e.g. \\[ELement]
+			}
 			else if(positionInMap == WLCommandsList.WL_DIRECTIVE_INDEX){
+				//index indicating this is a WL directive
 				//should change to use simpletoString from Struct
 				nextWord = term.commandComponent.posStr;
+				
 				//in case of WLCommand eg \\[ELement]
 				//this list should contain Structs that corresponds to a WLCommand
 				List<Struct> curCommandComponentList = commandsMap.get(commandComponent);
@@ -1310,7 +1336,6 @@ public class WLCommand implements Serializable{
 				if(curCommandComponentList.size() > 0){					
 					Struct nextStruct = curCommandComponentList.get(0);
 					updateHeadStruct(nextStruct, structToAppendCommandStr, curCommand);
-						//curCommand.structsWithOtherHeadCount++;
 										
 					nextStruct.set_previousBuiltStruct(structToAppendCommandStr);
 					structToAppendCommandStr.set_posteriorBuiltStruct(nextStruct);
@@ -1324,9 +1349,15 @@ public class WLCommand implements Serializable{
 					} */
 				}				
 			} else {
-				//auxilliary Strings inside a WLCommand, eg "[", "\[Element]"				
+				//auxilliary Strings inside a WLCommand, eg "[", "\[Element]", ~HasProperty~	
 				nextWord = term.commandComponent.posStr;
 				//System.out.print("nextWord : " + nextWord + "prevStruct: " + prevStructHeaded);
+				if(commandNegatedBool){
+					String negativeDirective = negativeTriggerCommandsMap.get(nextWord);
+					if(null != negativeDirective){
+						nextWord = negativeDirective;
+					}
+				}
 			}
 			
 			if(term.isOptionalTerm()){
