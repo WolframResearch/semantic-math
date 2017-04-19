@@ -165,6 +165,7 @@ public class StructA<A, B> extends Struct{
 		newStruct.score = this.score;
 		newStruct.parentStruct = this.parentStruct;
 		newStruct.set_childRelationType(this.childRelationType());
+		this.copyChildrenToStruct(newStruct);
 		//newStruct.WLCommandStr = this.WLCommandStr;
 		return newStruct;
 	}

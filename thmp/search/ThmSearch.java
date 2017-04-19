@@ -115,7 +115,7 @@ public class ThmSearch {
 				System.out.println("FULL DIM MX LEN (num thms) " + evaluateWLCommand(ml, "Length["+combinedTDMatrixRangeListName+"]", true, true));
 			}else{
 				V_MX = TermDocumentMatrix.COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME;
-				evaluateWLCommand(ml, combinedTDMatrixRangeListName + "= Range[Dimensions["+V_MX+"][[1]]]", false, true);
+				evaluateWLCommand(ml, combinedTDMatrixRangeListName + "= Range[Length["+V_MX+"]]", false, true);
 			}
 			
 			/*String vMx;
@@ -129,7 +129,7 @@ public class ThmSearch {
 			//should uncompress using this code here.
 			
 			//ml.evaluate("Length[corMx[[1]]]");
-			ml.evaluate("Length[mx]");
+			ml.evaluate("Length[" + TermDocumentMatrix.PROJECTION_MX_CONTEXT_NAME +"corMx]");
 			ml.waitForAnswer();			
 			try{
 				vector_vec_length = ml.getExpr().asInt();

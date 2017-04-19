@@ -375,7 +375,7 @@ public class Maps {
 			posPreMMap.put("disjoint", "adj");
 			posPreMMap.put("perfect", "adj");
 			posPreMMap.put("equivalent", "adj");
-			posPreMMap.put("finite", "adj");
+			posPreMMap.put("finite", "adj_comp");
 			posPreMMap.put("linear", "adj");
 			posPreMMap.put("invertible", "adj");
 			posPreMMap.put("independent", "adj");
@@ -610,7 +610,7 @@ public class Maps {
 			
 			// put in template matching, prepositions, of, by, with
 
-			anchorMap.put("of", "of");
+			////anchorMap.put("of", "of");
 			// anchorMap.put("that is", "that is"); //careful with spaces
 			// local "or", ie or of the same types
 			// anchorMap.put("or", "or");
@@ -761,11 +761,11 @@ public class Maps {
 			structMap.put("vbs_symb", new Rule("verbphrase", 1));
 			structMap.put("vbs_np", new Rule("verbphrase", 1));
 			structMap.put("vbs_prep", new Rule("verbphrase", 1));
-			structMap.put("vbs_qualifier", new Rule("newchild", "verbAlone", 1));
+			structMap.put("vbs_qualifier", new Rule("newchild", "verbAlone", 1)); //<-trigger
+			//structMap.put("vbs_qualifier", new Rule("newchild", "verbphrase", 1));
 			
 			structMap.put("vbs_num", new Rule("verbphrase", 1));
-			structMap.put("vbs_np", new Rule("verbphrase", 1));			
-			structMap.put("vbs_pre", new Rule("verbphrase", .7));
+			//structMap.put("vbs_pre", new Rule("verbphrase", .7));
 			structMap.put("vbs_phrase", new Rule("verbphrase", 1));
 			structMap.put("vbs_partient", new Rule("verbphrase", 1));
 			structMap.put("vbs_noun", new Rule("verbphrase", 1));
@@ -791,7 +791,7 @@ public class Maps {
 
 			structMap.put("hypo_assert", new Rule("assert", 1));
 			structMap.put("hypo_texAssert", new Rule("assert", 1));
-			structMap.put("verbphrase_prep", new Rule("verbphrase", 1));
+			structMap.put("verbphrase_prep", new Rule("verbphrase", .6));
 			structMap.put("vbs_partiby", new Rule("verb", 1));
 			structMap.put("partiby_ent", new Rule("phrase", 1));
 			structMap.put("partiby_noun", new Rule("phrase", 1));
@@ -825,7 +825,7 @@ public class Maps {
 			structMap.put("assert_If", new Rule("assert", .5));
 			structMap.put("assert_Iff", new Rule("assert", .5));
 			structMap.put("assert_hypo", new Rule("assert", .5));
-			structMap.put("assert_prep", new Rule("assert", .5));
+			//structMap.put("assert_prep", new Rule("assert", .5));
 			structMap.put("assert_iff", new Rule("assert", .4));
 			structMap.put("texAssert_If", new Rule("assert", .5));
 			structMap.put("texAssert_Iff", new Rule("assert", .5));
@@ -837,7 +837,8 @@ public class Maps {
 			structMap.put("hyp_verbphrase", new Rule("hypo", 0.6));
 			structMap.put("hyp_assert", new Rule("hypo", 1));
 			structMap.put("hyp_texAssert", new Rule("hypo", 1));
-			//structMap.put("hyp_ent", new Rule("hypo", 1));
+			//$F$ that is finite. 
+			structMap.put("hyp_ent", new Rule("hypo", .7));
 			structMap.put("def_ent", new Rule("Def", 1));
 			structMap.put("def_symb", new Rule("Def", 1));
 			//e.g. "denote by $F$ a field";
@@ -865,6 +866,7 @@ public class Maps {
 			structMap.put("adj_ent", new Rule("absorb1", 1));
 			structMap.put("not_ent", new Rule("absorb1", 1));
 			structMap.put("not_symb", new Rule("absorb1", 1));
+			structMap.put("not_adj", new Rule("absorb1", "adj", 1));
 			
 			structMap.put("adj_qualifier", new Rule("newchild", "adj", .8));
 			//structMap.put("verb_prep", new Rule("newchild", "verbphrase", .85));
@@ -889,7 +891,7 @@ public class Maps {
 
 			//structMap.put("adverb_adj", new Rule("adj", .7)); /// *******
 			structMap.put("adverb_verbphrase", new Rule("assert", 1));
-			structMap.put("qualifier_prep", new Rule("newchild", "qualifier", .8)); //could also be adverb
+			 structMap.put("qualifier_prep", new Rule("newchild", "qualifier", .8)); //could also be adverb //HERE
 			
 			// grammar rules for 2nd run <-- not used!
 			structMap2 = new HashMap<String, String>();

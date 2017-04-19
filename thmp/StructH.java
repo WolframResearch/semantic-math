@@ -269,10 +269,10 @@ public class StructH<H> extends Struct{
 		for(int i = 0; i < this.children.size(); i++){
 			Struct child = children.get(i);
 			newStructH.add_child(child, this.childRelationList.get(i));
-			//copy should not modify the state of the original struct, change name.
+			//copy should not modify the state of the original struct! But this changes
+			//the parent of the child!
 			child.set_parentStruct(newStructH);
-		}
-		
+		}		
 		newStructH.set_parentStruct(parentStruct);
 		
 		if(this.isLatexStruct){
@@ -367,14 +367,11 @@ public class StructH<H> extends Struct{
 		if(this.possessivePrev != null){
 			sb.append("possessivePrev: ");
 			sb.append(possessivePrev.type());
-			//str += "possessivePrev: " + possessivePrev.type();
 		}
 		/*if(children.size() > 0){
 			sb.append(" children: ");
 			sb.append(children);
 		}*/
-		//str+= " children.size(): ";
-		//str += children.size();
 		return sb.append(']').toString();
 	}
 	

@@ -10,6 +10,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -69,6 +72,8 @@ public class TriggerMathThm2 {
 	//private static final int[][] mathObjMx;
 	private static double[][] mathObjMx;
 	private static StringBuilder sparseArrayInputSB;
+
+	private static final Logger logger = LogManager.getLogger(TriggerMathThm.class);
 	//list of thms, same order as in thmList, and the words with their frequencies.
 	private static final List<ImmutableMap<String, Integer>> thmWordsMapList;
 	
@@ -546,7 +551,7 @@ public class TriggerMathThm2 {
 		//keywordDict is annotated with "hyp"/"stm"
 		//int dictSz = keywordIndexDict.keySet().size();
 		int queryVecLen = ThmSearch.ThmSearchQuery.getQUERY_VEC_LENGTH();
-		
+		logger.info("TriggerMathThm - queryVecLen: " + queryVecLen);
 		//System.out.println("TriggerMathThm2 - query vector length: " + queryVecLen);
 		double[] queryVec = new double[queryVecLen];
 		double norm = 0;

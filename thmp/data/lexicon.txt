@@ -67,9 +67,10 @@ bounded adj_COMP
 analytic adj
 converge verbAlone
 along pre
+meridian ent
+annuli ent
 great adj
 hard adj
-finite adj_comp
 open adj
 open ent
 extension ent

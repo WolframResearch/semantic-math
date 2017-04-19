@@ -71,9 +71,12 @@ public class ParseEqualityCheck {
 	public static class SimplifiedPosTermList{
 		
 		List<List<String>> simplifiedPosTermList;
+		//list of children in each posStruct
+		List<Integer> childrenNumList;
 		
 		public SimplifiedPosTermList(List<PosTerm> posTermList){
 			simplifiedPosTermList = new ArrayList<List<String>>();
+			childrenNumList = new ArrayList<Integer>();
 			//keep only the strings and their ordering information about the posTerm
 			for(PosTerm posTerm : posTermList){
 				int positionInMap = posTerm.positionInMap();
@@ -84,6 +87,7 @@ public class ParseEqualityCheck {
 				if(null != posTermStruct){
 					//simplifiedPosTermList.add(posTermStruct.nameStr()); //could use posTermStruct.contentStrList()		
 					simplifiedPosTermList.add(posTermStruct.contentStrList());// 
+					childrenNumList.add(posTermStruct.children().size());
 				}				
 			}
 		}
@@ -112,6 +116,19 @@ public class ParseEqualityCheck {
 				logMessage(msg);
 				return false;
 			}
+			List<Integer> otherChildrenNumList = otherList.childrenNumList;
+			int otherChildrenNumListSz = otherChildrenNumList.size();
+			if(otherChildrenNumListSz != childrenNumList.size()){
+				String msg = "childrenNumList sizes are not the same!";
+				logMessage(msg);
+				return false;
+			}
+			
+			for(int i = 0; i < otherChildrenNumListSz; i++){
+				if(otherChildrenNumList.get(i) != childrenNumList.get(i)){
+					return false;
+				}
+			}
 			for(int i = 0; i < listSz; i++){
 				List<String> term1 = simplifiedPosTermList.get(i);
 				List<String> term2 = list.get(i);
@@ -137,7 +154,7 @@ public class ParseEqualityCheck {
 		ParseState parseState = parseStateBuilder.build();
 		ParseRun.parseInput(inputString, parseState, isVerbose);
 		ParseStruct headParseStruct = parseState.getHeadParseStruct();
-		System.out.println("@@@@@@@@@@headParseStruct " + headParseStruct);
+		System.out.println("@@@ " + headParseStruct);
 		return compareParseStruct(desiredHeadParseStruct, headParseStruct);
 	}
 	

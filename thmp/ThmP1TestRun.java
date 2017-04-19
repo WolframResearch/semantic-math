@@ -659,14 +659,24 @@ public class ThmP1TestRun {
 			st = "$M/gM$ is Cohen-Macaulay with maximal regular sequence $f_1, \\ldots, f_{d-1}$.";
 			st = "$R_\\mathfrak m$ is universally catenary for all maximal ideals $\\mathfrak m$";
 			st = " we assume that this resolution is given by $\\Hilb^{G} (\\mathbb{C}^n)$ ";
-			st = "We define a generalization of the Cartan matrix of the case $n=2$";
-			st = "$F$ is an extension over $Q$";
+			st = "We define a generalization of the Cartan matrix of the case $n=2$";			
 			st = "$F$ does not lie over $Q$";
 			st = "$F$ lies over $Q$";
-			st = "$I$ is not prime";
 			st = "$F$ is a field over $Q$";
 			st = "$I$ is not prime";
+			st = "$F$ is an extension that is finite over $Q$";
+			st = "the twisted $K$-theory $K^0(X,\\cA)$ is isomorphic to Grothendieck group of Neumann equivalence class of projections in $C(X, \\K_\\cA)$";
+			st = "take the derivative of log of $f $";
+			st = "There are field in the class $\\mathcal{X}$ that are not finite modifications of rings.";
+			st = "If the Alexander polynomial of $K$ is not $1$";
+			st = "$\\partial \\Sigma$ is not a meridian for $K$";
+			st = "for all components $U$ of $supp(w)$ which are not annuli"; //revisit! children added repeatedly
+			//st = "take the derivative of $f$";
+			//st = "$A $ is isomorphic to $B $ of $C $ in $D $";
+			//st = "$A $ is isomorphic to $B $ in $D $";
 			
+			//st = "given extension of ring";
+			//If the Alexander polynomial of $K$ is not $1$
 			//st = "Suppose that $f_n->f$ pointwise";
 			//st = "Suppose that $f_n->g$ uniformly on $[a,b]$";
 			

@@ -338,6 +338,7 @@ public abstract class Struct implements Serializable{
 		/*if(this.contentEquals(child)){			
 			return;
 		}*/
+		//System.out.println("Struct - add_child" + Arrays.deepToString(Thread.currentThread().getStackTrace()));
 		this.setHasChildToTrue();
 		/* these two should always be modified together, better to put
 		 * child + relation in a static nested class*/
@@ -355,8 +356,11 @@ public abstract class Struct implements Serializable{
 		int childrenListSz = childrenList.size();
 		assert childrenListSz == childRelationList.size();
 		
-		for(int i = 0; i < childrenListSz; i++){			
-			targetStruct.add_child(childrenList.get(i), childRelationList.get(i));
+		for(int i = 0; i < childrenListSz; i++){	
+			Struct child = childrenList.get(i);
+			targetStruct.add_child(child, childRelationList.get(i));
+			//parent is not well-defined, e.g. could have multiple parents.
+			//child.set_parentStruct(targetStruct);
 		}
 	}
 	

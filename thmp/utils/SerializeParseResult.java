@@ -56,11 +56,17 @@ public class SerializeParseResult {
 		inputStrList.add("$R/\\mathfrak p$ is catenary for every minimal prime $\\mathfrak p$");
 		inputStrList.add("quotient over ring is quotient");
 		inputStrList.add("let f be g");
-		inputStrList.add("the twisted $K$--theory $K^0(X,\\cA)$ is isomorphic to the Grothendieck group of Neumann equivalence class of projections in $C(X, \\K_\\cA)$");
+		inputStrList.add("the twisted $K$-theory $K^0(X,\\cA)$ is isomorphic to the Grothendieck group of Neumann equivalence class of projections in $C(X, \\K_\\cA)$");
 		inputStrList.add("Integers $p$ and $q$ are coprime if and only if there exist integers $n$ and $m$ such that $np - mq = 1$");
 		inputStrList.add("Suppose that $f :[a,b] \\[RightArrow] R $  is continuous and we define $F : [a,b] \\[RightArrow] R$ by  $F=\\int f dx$.");//
 		inputStrList.add("Suppose that $f_n->g$ uniformly on $[a,b]$");
 		inputStrList.add("Let $x \\elem R$. If $\\sum a_k$ converges conditionally, then there is some rearrangement of$\\sum a_k$  which converges to $x$");
+		inputStrList.add("$F$ is an extension that is finite over $Q$");		
+		inputStrList.add("Suppose that $f_n->f$ pointwise");
+		inputStrList.add("There are field in the class $\\mathcal{X}$ that are not finite modifications of rings.");
+		
+		//inputStrList.add("");
+		//inputStrList.add("");
 		//inputStrList.add("");
 		//inputStrList.add("");
 	}

@@ -1595,10 +1595,11 @@ public class ThmP1 {
 		
 		System.out.println("PAIRS! " + pairs);
 		// combine anchors into entities. Such as "of".
-		for (int j = anchorList.size() - 1; j > -1; j--) {
+		/*for (int j = anchorList.size() - 1; j > -1; j--) {
 			int index = anchorList.get(j);
 			String anchor = pairs.get(index).word();
-			/*This section should be gradually phased out, replaced by matrix element manipulations. April 2017.*/
+			//This section should be gradually phased out, replaced by matrix element manipulations. April 2017.
+			 * e.g. "given extension of ring" incomplete pos
 			switch (anchor) {
 			case "of":
 				// the expression before this anchor is an entity
@@ -1642,22 +1643,21 @@ public class ThmP1 {
 							}													
 						}
 						if(nextPairEnt){	
-							pairs.get(index).set_pos(entPos);													
-							// set to null instead of removing, to keep indices
-							// right.
+							//pairs.get(index).set_pos(entPos);													
+							// set to null instead of removing, to keep indices right.
 							if (entPos != prevPair.pos()){
 								mathEntList.set(Integer.valueOf(entPos), null);
 							}							
 							tempStruct.add_child(childStruct, new ChildRelation("of"));
-						}
-						else if(nextPos.equals("symb") || nextPos.equals("noun")){	
+							pairs.get(index).set_pos(nextPos);
+						}else if(nextPos.equals("symb") || nextPos.equals("noun")){	
 							String nextNextPos;
 							if(index + 3 >= pairs.size() || 
 									!((nextNextPos=pairs.get(index+2).pos()).equals("hyp") || nextNextPos.equals("rpro") ) ){
 							pairs.get(index).set_pos(prevPair.pos());
 							childStruct = new StructA<String, String>(nextPair.word(), NodeType.STR, "", NodeType.STR, nextPos);
 							tempStruct.add_child(childStruct, new ChildRelation("of"));
-							nextPair.set_pos(prevPair.pos());							
+							nextPair.set_pos(prevPair.pos());
 						}
 						}
 					} 
@@ -1688,7 +1688,7 @@ public class ThmP1 {
 				//}				
 				break;
 			}
-		}
+		}*/
 
 		// list of structs to return
 		List<Struct> structList = new ArrayList<Struct>();
@@ -2252,10 +2252,8 @@ public class ThmP1 {
 									&& struct2.prev1().toString().matches("of") && j + 1 < inputStructListSize
 									&& inputStructList.get(j + 1).type().equals("symb")) {
 								
-								List<Struct> childrenList = struct1.children();
-							
-								//System.out.println("STRUCT1 " + struct1 + " CHILDREN " + struct1.children());
-								
+								/* Commented out April 19, 2017
+								 * List<Struct> childrenList = struct1.children(); 
 								boolean childAdded = false;
 								//iterate backwards, want the latest-added child that fits
 								int childrenListSize = childrenList.size();
@@ -2271,11 +2269,9 @@ public class ThmP1 {
 								if(!childAdded){
 									struct1.add_child(inputStructList.get(j + 1), new ChildRelation("of"));
 									inputStructList.get(j + 1).set_parentStruct(struct1);
-								}
-								
-								mx.get(i).get(j + 1).add(struct1);
-								
-								nextColStartRow = i;
+								}								
+								mx.get(i).get(j + 1).add(struct1);								
+								nextColStartRow = i;*/
 							} else if (combined.equals("pro_verb")) {
 								if (struct1.prev1().equals("we") && struct2.prev1().equals("say")) {
 									struct1.set_type(FLUFF);
@@ -2469,7 +2465,7 @@ public class ThmP1 {
 		
 		//System.out.println("headStructListSz " + headStructListSz);
 		if(logger.getLevel().equals(Level.INFO)){
-			String msg = "headStructListSz " + headStructListSz;
+			String msg = "headStructListSz: " + headStructListSz;
 			System.out.println(msg);
 			logger.info(msg);
 		}
@@ -3476,7 +3472,10 @@ public class ThmP1 {
 			}
 			ChildRelation childRelation = null;
 			Struct childToAdd = struct2;
-		
+			/*if(struct2.type().equals("prep")){
+				System.out.println("ThmP1 - struct2 " + struct2);
+			}*/
+			
 			if(struct2.type().equals("hypo")){				
 				//prev1 has type Struct
 				//e.g. "Field which is perfect", ...hypo[hyp[which is], perfect]
@@ -3550,8 +3549,9 @@ public class ThmP1 {
 					//if(true) throw new IllegalStateException("childToAdd " + childToAdd + " relation " + childRelation+ " combinedPos "+combinedPos);
 				newStruct.set_maxDownPathScore(newDownPathScore);
 				structToAppendChild.set_maxDownPathScore(newDownPathScore);
+				
 				childToAdd.set_childRelationType(childRelation.childRelationType());				
-				structToAppendChild.add_child(childToAdd, childRelation); 
+				structToAppendChild.add_child(childToAdd, childRelation);
 				
 				newStruct.set_type(null == combinedPos ? "" : combinedPos);
 				mx.get(i).get(j).add(newStruct);
@@ -3562,10 +3562,15 @@ public class ThmP1 {
 			//if type equivalent to to-be-parent's type and is "pre", don't add, 
 			//e.g. "field F in C over Q"
 			ChildRelationType childRelationType = childRelation.childRelationType();
+			String childRelationString = childRelation.childRelationStr;
 			if(childRelationType.equals(ChildRelationType.PREP) && 
+					!childRelationString.equals("of") &&
 					//use struct1 and not structToAppendChild.
 					struct1.childRelationType().equals(ChildRelationType.PREP)){
 				return new EntityBundle(firstEnt, recentEnt, recentEntIndex);
+			}else{
+				//bonus for tighter combination, e.g. "$A$ of $B$"
+				newDownPathScore += 0.05;
 			}
 			
 			if(struct2.type().equals("prep") && struct2.prev2NodeType().isTypeStruct()
@@ -4478,9 +4483,9 @@ public class ThmP1 {
 			System.out.print("]");
 			parsedLongFormSB.append("]");
 		} else {
-			
-			System.out.print(struct.toString());
-			parsedLongFormSB.append(struct.toString());
+			String structStr = struct.toString();
+			System.out.print(structStr);
+			parsedLongFormSB.append(structStr);
 			span++;
 
 			List<Struct> children = struct.children();

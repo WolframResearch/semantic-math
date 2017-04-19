@@ -253,7 +253,9 @@ public class TestParseMain {
 			}
 		}
 		if(!assertionErrorInputStrList.isEmpty()){
-			throw new AssertionError("Tests did not pass! List of inputs that failed: " + assertionErrorInputStrList);
+			String msg = "Tests did not pass! List of inputs that failed: " + assertionErrorInputStrList;
+			System.out.println(msg);
+			throw new AssertionError(msg);
 		}
 		//assertTrue(ParseEqualityCheck.checkParse(parseResultsList.get(7)));
 	}
