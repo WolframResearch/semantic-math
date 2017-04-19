@@ -2173,7 +2173,7 @@ public class ThmP1 {
 						Struct struct1 = structList1Iter.next();
 						//System.out.println("STRUCT1 " + struct1);						
 						Iterator<Struct> structList2Iter = struct2List.iterator();
-						
+						int structList2IterCounter = 0;
 						while (structList2Iter.hasNext()) {
 							Struct struct2 = structList2Iter.next();
 							//System.out.println("...with STRUCT2 " + struct2);
@@ -2311,12 +2311,19 @@ public class ThmP1 {
 								
 								mx.get(i).get(j).add(newStruct);
 								continue innerloop;
+							}else if(combined.equals("hyp_ent") && j == inputStructListSize-1){
+								//e.g. "suppose $A$ is $B$". Better to add
+								if(struct2.isLatexStruct()){
+									struct2 = struct2.copyToStructA("texAssert");
+									structList2.set(structList2IterCounter, struct2);
+									type2 = "texAssert";
+									combined = "hyp_texAssert";
+								}
 							}
-						
 							// handle "is called" -- "verb_parti", also "is
 							// defined"
 							// for definitions
-							else if (combined.matches("verb_parti") && IS_ARE_BE_PATTERN.matcher(struct1.prev1().toString()).find()
+							else if (combined.equals("verb_parti") && IS_ARE_BE_PATTERN.matcher(struct1.prev1().toString()).find()
 									&& CALLED_PATTERN.matcher(struct2.prev1().toString()).find()) {
 								String called = "";
 								int l = j + 1;
@@ -2410,7 +2417,7 @@ public class ThmP1 {
 									}
 								}
 							}							
-							handConjDisjInLongForm(inputStructList, inputStructListSize, mx, j, i, k, struct2, type1,
+							handleConjDisjInLongForm(inputStructList, inputStructListSize, mx, j, i, k, struct2, type1,
 									type2);
 
 							// potentially change assert to latex expr. <--Why?
@@ -2442,11 +2449,10 @@ public class ThmP1 {
 									firstEnt = entityBundle.getFirstEnt();
 									recentEntIndex = entityBundle.getRecentEntIndex();
 								}
-							}
-							
-
-						} // loop listIter1 ends here
-					} // loop listIter2 ends here
+							}							
+							structList2IterCounter++;
+						} // loop listIter2 ends here
+					} // loop listIter1 ends here
 					//System.out.println("loop for (int k = j - 1; k >= i; k--)");
 					// loop for (int k = j - 1; k >= i; k--) { ends here
 				}
@@ -2481,8 +2487,8 @@ public class ThmP1 {
 			
 			List<Struct> structList = headStructList.structList();
 			//sort headStructList so that only dfs over the head structs whose
-			//scores are above a certain threshold, and to guarantee that a minimum 
-			//number of spanning parses have been counted
+			//scores are above a certain threshold, to avoid parse explosion. 
+			//And to guarantee that a minimum number of spanning parses have been counted.
 			Collections.sort(structList, new HeadStructComparator());
 			
 			StringBuilder parsedSB = new StringBuilder();
@@ -2525,7 +2531,7 @@ public class ThmP1 {
 				//no WLCommand parse. The bigger the better.
 				int span = 0;
 				ConjDisjVerbphrase conjDisjVerbphrase = new ConjDisjVerbphrase();
-				boolean isRightChild = true;
+				boolean isRightChild = true; System.out.println("ThmP1-longform: ");
 				//get the "long" form, not WL form, with this dfs()
 				span = buildLongFormParseDFS(uHeadStruct, parsedSB, span, conjDisjVerbphrase, isRightChild);
 				//if conj_verbphrase or disj_verbphrase encountered, and these conclude the 
@@ -2541,7 +2547,7 @@ public class ThmP1 {
 				}				
 				//ParseStruct headParseStruct = new ParseStruct();
 				/* Get the WL form build from WLCommand's. Compute span scores. */
-				treeTraversal(uHeadStruct, headParseStructList, parsedPairMMapList, curStructContextvec, span, parseState);
+				wlCommandTreeTraversal(uHeadStruct, headParseStructList, parsedPairMMapList, curStructContextvec, span, parseState);
 				//headParseStructList.add(headParseStruct);
 				contextVecList.add(curStructContextvec);
 				
@@ -2558,7 +2564,7 @@ public class ThmP1 {
 				
 				String parsedString = ParseToWL.parseToWL(uHeadStruct);
 				//parsedExpr.add(new ParsedPair(parsedString, maxDownPathScore, "wl"));
-				System.out.print(parsedString + " \n ** ");
+				System.out.println("ThmP1-parsedString: "+parsedString);
 				
 				parsedSB.setLength(0); //should just declare new StringBuilder instead!
 			}
@@ -2696,7 +2702,7 @@ public class ThmP1 {
 					parsedSB.append("; ");
 				}
 				
-				StringBuilder wlSB = treeTraversal(kHeadStruct, headParseStructList, parsedPairMMapList, curStructContextvec, 
+				StringBuilder wlSB = wlCommandTreeTraversal(kHeadStruct, headParseStructList, parsedPairMMapList, curStructContextvec, 
 						span, parseState);
 				longFormParsedPairList.add(new ParsedPair(parsedSB.toString(), totalScore, 
 						"long"));
@@ -2822,7 +2828,7 @@ public class ThmP1 {
 	 * @param type1
 	 * @param type2
 	 */
-	private static void handConjDisjInLongForm(List<Struct> inputStructList, int inputStructListSize,
+	private static void handleConjDisjInLongForm(List<Struct> inputStructList, int inputStructListSize,
 			List<List<StructList>> mx, int j, int i, int k, Struct struct2, String type1, String type2) {
 		/* iterate through the List at position (i-t, i-1), to handle conjunction and disjunction.
 		 * And and or handling code here.*/
@@ -2949,7 +2955,7 @@ public class ThmP1 {
 					// break;
 					t++;
 				}/*Done searchConj loop*/
-				convertLastEntToTexAssert(inputStructListSize, mx, j, i, k, struct2, t, andOrType);
+				convertLastEntToTexAssertInConjDisj(inputStructListSize, mx, j, i, k, struct2, t, andOrType);
 			}
 		}
 	}
@@ -2964,7 +2970,7 @@ public class ThmP1 {
 	 * @param t
 	 * @param andOrType
 	 */
-	private static void convertLastEntToTexAssert(int inputStructListSize, List<List<StructList>> mx, int j, int i,
+	private static void convertLastEntToTexAssertInConjDisj(int inputStructListSize, List<List<StructList>> mx, int j, int i,
 			int k, Struct struct2, int t, String andOrType) {
 		if(i-t == -1 && j == inputStructListSize-1 && struct2.isLatexStruct()){
 			//reached beginning of input, but did not find matching type.
@@ -3276,7 +3282,7 @@ public class ThmP1 {
 	 * @param parseState current parseState
 	 * @return LongForm parse (a string representation of the parse tree which will be turned into WL form)
 	 */
-	private static StringBuilder treeTraversal(Struct uHeadStruct, List<ParseStruct> headParseStructList, 
+	private static StringBuilder wlCommandTreeTraversal(Struct uHeadStruct, List<ParseStruct> headParseStructList, 
 			List<Multimap<ParseStructType, ParsedPair>> parsedPairMMapList,
 			int[] curStructContextVec, int span, ParseState parseState) {
 		
@@ -3499,9 +3505,11 @@ public class ThmP1 {
 				if(childRelation.childRelationStr().contains("which") ){
 					//System.out.println("structToAppendChild : " + (structToAppendChild instanceof StructH) + " ! structToAppendChild.children(): " + structToAppendChild.children() );				
 					if(structToAppendChild.children().size() > 0){
+						//this is questionable, and also seems fragile.
 						return new EntityBundle(firstEnt, recentEnt, recentEntIndex);
 					}
 				}
+				
 				childToAdd = (Struct)struct2.prev2();
 			}else if(struct2.type().equals("Cond")){
 				//e.g. "prime $I$ such that it's maximal."
@@ -3564,7 +3572,7 @@ public class ThmP1 {
 			ChildRelationType childRelationType = childRelation.childRelationType();
 			String childRelationString = childRelation.childRelationStr;
 			if(childRelationType.equals(ChildRelationType.PREP) && 
-					!childRelationString.equals("of") &&
+					!childRelationString.equals("of") && !childRelationString.equals("which") &&
 					//use struct1 and not structToAppendChild.
 					struct1.childRelationType().equals(ChildRelationType.PREP)){
 				return new EntityBundle(firstEnt, recentEnt, recentEntIndex);

@@ -398,22 +398,16 @@ public class ThmP1AuxiliaryClass {
 			
 			//need to convert toBeConvertedStruct to a StructA 
 			//with type "assert".						
-			String toBeConvertedStructName = toBeConvertedStruct.nameStr();
-			
+			String toBeConvertedStructName = toBeConvertedStruct.nameStr();			
 			for(int k = 0; k < entSubstitutedStructList.size(); k++){
 				
 				Struct structToSubstitute = entSubstitutedStructList.get(k);
 				if(structToSubstitute.nameStr().equals(toBeConvertedStructName)){
-					//if s already has child, then means probably should not turn into assertion,
-					//since most children are appended during mx-building
-					if(structToSubstitute.has_child()){
-						break;
-					}
-					
 					//StructH should not have any properties .  Look through properties of toBeConvertedStruct?
 					StructA<String, String> convertedStructA = new StructA<String, String>(toBeConvertedStructName, 
 							NodeType.STR, "", NodeType.STR, "texAssert");
 					
+					structToSubstitute.copyChildrenToStruct(convertedStructA);
 					convertedStructA.set_parentStruct(structToSubstitute.parentStruct());
 					//convertedStructA.set_maxDownPathScore(structToSubstitute.maxDownPathScore());
 					

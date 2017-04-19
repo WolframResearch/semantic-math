@@ -66,14 +66,14 @@ public class StructList implements Serializable{
 	}
 
 	/**
-	 * Shallow copy of this.structList, as structList is a list
+	 *  copy of this.structList, structList is a list
 	 * of pointers to Struct's.
 	 * @return
 	 */
 	public StructList copy(){
 		StructList newStructlist = new StructList();
 		//newStructlist.structList.addAll(this.structList);
-		newStructlist.structList = this.structList;
+		newStructlist.structList = new ArrayList<Struct>(this.structList);
 		newStructlist.highestDownScoreIndex = this.highestDownScoreIndex;
 		return newStructlist;
 	}

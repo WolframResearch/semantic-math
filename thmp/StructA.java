@@ -170,6 +170,9 @@ public class StructA<A, B> extends Struct{
 		return newStruct;
 	}
 	
+	public StructA<? extends Object, ? extends Object> copyToStructA(String newType){
+		return this;
+	}
 	/**
 	 * Retrieves the left-most child of this struct, which should
 	 * be a String based on the structure of Struct.
@@ -303,12 +306,13 @@ public class StructA<A, B> extends Struct{
 			//wrapperListSz should be > 0, since list is created when first wrapper is added
 			
 			WLCommandWrapper curWrapper = WLCommandWrapperList.get(wrapperListSz - 1);
-			WLCommand composedCommand = curWrapper.WLCommand();
+			WLCommand composedCommand = curWrapper.WLCommand(); 
+			if(WLCommand.structsWithOtherHeadCount(composedCommand) == 0){
 			//if(WLCommand.structsWithOtherHeadCount(composedCommand) == 0){//HERE
 			if(curWrapper != null){
 				int commandNumUnits = WLCommand.commandNumUnits(composedCommand);
 				WLCommand.increment_commandNumUnits(curCommand, commandNumUnits);
-					//System.out.println("increment_commandNumUnits : numUnits " + commandNumUnits + " composedCommand: " + composedCommand); 				
+				//System.out.println("increment_commandNumUnits : numUnits " + commandNumUnits + " composedCommand: " + composedCommand); 				
 			}
 			//been built into one command already
 			if(null == this.commandBuilt){
@@ -321,6 +325,7 @@ public class StructA<A, B> extends Struct{
 			//System.out.println("++++++===curWrapper " +curWrapper.WLCommandStr() + " " + this );
 			curCommand.addComposedWLCommands(composedCommand);
 			return curWrapper.WLCommandStr();	
+			}
 			//}
 		}		
 		

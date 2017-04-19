@@ -132,7 +132,10 @@ public class WordFrequency {
 				wordsFileBufferedReader.close();
 			}catch(IOException e){
 				e.printStackTrace();
-				logger.error("IOException while closing buffered reader! " + e.getStackTrace());
+				String msg = "IOException while closing buffered reader! " + e.getStackTrace();
+				logger.error(msg);
+				throw new IllegalStateException(msg);
+				
 			}
 			
 			wordPosMap = ImmutableMap.copyOf(wordPosPreMap);
@@ -170,6 +173,9 @@ public class WordFrequency {
 				
 			} catch (IOException e) {
 				e.printStackTrace();
+				String msg = "IOException thrown in getStockFreq()" + e.getStackTrace();
+				logger.error(msg);
+				throw new IllegalStateException(msg);
 			}
 		}
 	

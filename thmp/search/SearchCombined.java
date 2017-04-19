@@ -141,17 +141,15 @@ public class SearchCombined {
 	 * @param parsedExpressionListInputStream InputStream containing serialized ParsedExpressions.
 	 * @param allThmWordsSerialBReader BufferedReader to file containing words from previous run's theorem data.
 	 */
-	public static void initializeSearchWithResource(BufferedReader freqWordsFileBuffer, List<BufferedReader> texSourceFileBufferList,
-			BufferedReader macrosReader, InputStream parsedExpressionListInputStream, InputStream allThmWordsSerialInputStream,
-			ServletContext servletContext_){
+	public static void initializeSearchWithResource(ServletContext servletContext_){
 		//CollectFreqWords.setResources(freqWordsFileBuffer);
 		CollectThm.setServletContext(servletContext_);
 		
 		//CollectThm.setWordFrequencyBR(freqWordsFileBuffer);
-		CollectThm.setResources(texSourceFileBufferList, macrosReader, parsedExpressionListInputStream, allThmWordsSerialInputStream);	
+		//CollectThm.setResources(texSourceFileBufferList, macrosReader, parsedExpressionListInputStream, allThmWordsSerialInputStream);	
 		
 		ProcessInput.setServletContext(servletContext_);
-		ProcessInput.setResources(macrosReader);		
+		//ProcessInput.setResources(macrosReader);		
 		//servletContext = servletContext_;
 	}
 	

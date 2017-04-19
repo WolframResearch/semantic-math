@@ -97,8 +97,9 @@ public class WordForms {
 			try{
 				synonymsBF = new BufferedReader(new FileReader(new File(synonymsFileStr)));
 			}catch(FileNotFoundException e){
-				logger.error("WordForms.java initializer - FileNotFoundException when creating FileReader for "
-						+ "synonymsFileStr");
+				String msg = "WordForms.java initializer - FileNotFoundException when creating FileReader for synonymsFileStr";
+				logger.error(msg);
+				throw new IllegalStateException(msg);
 			}			
 		}
 		//gather synonyms together from file
@@ -175,7 +176,9 @@ public class WordForms {
 				}*/				
 			}	
 		}catch(IOException e){
-			logger.error("WordForms.readSynonymMapFromFile : IOException when reading BufferedReader!");;
+			String msg = "WordForms.readSynonymMapFromFile : IOException when reading BufferedReader!";
+			logger.error(msg);
+			throw new IllegalStateException(msg);
 		}
 	}
 

@@ -64,8 +64,8 @@ public class SerializeParseResult {
 		inputStrList.add("$F$ is an extension that is finite over $Q$");		
 		inputStrList.add("Suppose that $f_n->f$ pointwise");
 		inputStrList.add("There are field in the class $\\mathcal{X}$ that are not finite modifications of rings.");
+		inputStrList.add("for all components $U$ of $supp(w)$ which are not annuli");
 		
-		//inputStrList.add("");
 		//inputStrList.add("");
 		//inputStrList.add("");
 		//inputStrList.add("");

@@ -363,6 +363,7 @@ public abstract class Struct implements Serializable{
 			//child.set_parentStruct(targetStruct);
 		}
 	}
+	public abstract StructA<? extends Object, ? extends Object> copyToStructA(String newType);
 	
 	/**
 	 * @param includeType

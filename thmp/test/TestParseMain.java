@@ -257,7 +257,6 @@ public class TestParseMain {
 			System.out.println(msg);
 			throw new AssertionError(msg);
 		}
-		//assertTrue(ParseEqualityCheck.checkParse(parseResultsList.get(7)));
 	}
 	
 	private static List<ParseResult> deserializeParseResults(){

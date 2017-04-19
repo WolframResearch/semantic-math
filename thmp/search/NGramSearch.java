@@ -19,6 +19,9 @@ import java.util.regex.Pattern;
 
 import javax.servlet.ServletContext;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.google.common.collect.ListMultimap;
 
 import thmp.ProcessInput;
@@ -37,18 +40,17 @@ import thmp.utils.WordForms;
 
 public class NGramSearch {
 
+	private static final Logger logger = LogManager.getLogger(NGramSearch.class);
 	//get the non math fluff words
 	private static final Set<String> nonMathFluffWordsSet = WordFrequency.ComputeFrequencyData.trueFluffWordsSet();	
 	//file to write 2 grams to
-	private static final Path twoGramsFilePath = Paths.get("src/thmp/data/twoGrams.txt");
+	private static final Path twoGramsFilePath = Paths.get("src","thmp","data","twoGrams.txt"); //class.forname
 	
-	//private static volatile BufferedReader TWO_GRAM_DATA_BR;
-	//private static volatile BufferedReader THREE_GRAM_DATA_BR;
 	private static volatile ServletContext servletContext;
 	
 	// default two-gram averageFreqCount when total number of two grams is 0
 	private static final int ADDITIONAL_TWO_GRAM_DEFAULT_COUNT = 5;
-
+	
 	private static final Pattern WHITESPACE_PATTERN = WordForms.getWhiteEmptySpacePattern();
 	private static final Pattern INVALID_WORD_PATTERN = Pattern.compile("\\s*|.*[\\\\|$].*"); 
 	//words to be taken off of two-gram map
@@ -56,7 +58,9 @@ public class NGramSearch {
 	
 	//should use this to detect fluff in first word.
 	private static final Set<String> fluffWordsSet = WordForms.getFluffSet();
-	
+	static{
+		logger.info("Finished initializing NGramSearch.java");
+	}
 	/**
 	 * Set the BufferedReader for scraped two grams.
 	 * @param bf
@@ -142,8 +146,8 @@ public class NGramSearch {
 					BufferedReader twoGramBF = new BufferedReader(new FileReader(TWO_GRAM_DATA_FILESTR));
 					readAdditionalTwoGrams(twoGramBF, initialTwoGramsSet);
 				}catch(FileNotFoundException e){
-					e.printStackTrace();
-					throw new RuntimeException(e);
+					logger.error(e);
+					throw new IllegalStateException(e);
 				}
 			}else{
 				InputStream twoGramInputStream = servletContext.getResourceAsStream(TWO_GRAM_DATA_FILESTR);
@@ -262,7 +266,9 @@ public class NGramSearch {
 				initialTwoGramsSet.add(word);				
 			}
 		}catch(IOException e){
-			e.printStackTrace();
+			String msg = "IOException in readAdditionalTwoGrams: " +e.getMessage();
+			logger.error(msg);
+			throw new IllegalStateException(msg);
 		}		
 	}
 	

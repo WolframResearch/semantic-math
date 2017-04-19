@@ -40,6 +40,9 @@ import thmp.utils.MacrosTrie.MacrosTrieBuilder;
  * Serializes ALL_THM_WORDS_LIST to file, to be used as seed words for next time
  * search is initialized.
  * 
+ * The class DetectHypothesis should always be run from the nested class Runner,
+ * as it sets the relevant settings.
+ * 
  * @author yihed
  *
  */
@@ -110,7 +113,6 @@ public class DetectHypothesis {
 	private static final int NUM_NON_TEX_TOKEN_THRESHOLD = 4;
 	
 	static{
-		Searcher.SearchMetaData.set_gatheringDataBoolToTrue();
 		FileUtils.set_dataGenerationMode();	
 		/*The "next time" form previous time refers to current run in this static initializer.*/
 		ALL_THM_WORDS_LIST = new ArrayList<String>(CollectThm.ThmWordsMaps.get_contextVecWordsNextTimeMap().keySet());
@@ -124,9 +126,13 @@ public class DetectHypothesis {
 		
 		public static void main(String[] args){
 			InputParams inputParams = new InputParams(args);
+			//need separate runner class to set
 			if(inputParams.usePreviousDocWordsFreqMaps){
 				Searcher.SearchMetaData.set_previousWordDocFreqMapsPath(inputParams.getPathToDocWordsFreqMap());
 			}			
+			/*This line means we must be careful when evoking this class, which will 
+			 * set_gatheringDataBoolToTrue() */
+			Searcher.SearchMetaData.set_gatheringDataBoolToTrue();
 			DetectHypothesis.readAndProcessInputData(inputParams);
 		}
 	}

@@ -147,14 +147,16 @@ public class CollectThm {
 	 * Should just set servlet context instead of BufferedReaders!!
 	 * @param srcFileReader
 	 */
-	public static void setResources(List<BufferedReader> srcFileReaderList, BufferedReader macrosReader,
-			InputStream parsedExpressionListStream, InputStream allThmWordsSerialIStream) {
+	/*public static void setResources(//List<BufferedReader> srcFileReaderList, 
+			BufferedReader macrosReader
+			//InputStream parsedExpressionListStream, InputStream allThmWordsSerialIStream
+			) {
 		//rawFileReaderList = srcFileReaderList;
 		macrosDefReader = macrosReader;
 		//parsedExpressionListInputStream = parsedExpressionListStream;
 		//allThmWordsSerialInputStream = allThmWordsSerialIStream;
 		//System.out.print("buffered readers first passed in: " + srcFileReaderList);		
-	}
+	}*/
 	
 	/*public static void setWordFrequencyBR(BufferedReader freqWordsBR) {
 		wordFrequencyBR = freqWordsBR;
@@ -1149,6 +1151,9 @@ public class CollectThm {
 					//to be used for parsing. Booleans specify options such as whether to
 					//convert tex symbols to words, replace macros, etc.
 					bareThmsList = ProcessInput.processInput(bareThmsList, true, false, false);
+					
+					macrosDefReader 
+						= new BufferedReader(new InputStreamReader(servletContext.getResourceAsStream("src/thmp/data/texMacros.txt")));	
 					processedThmsList = ProcessInput.processInput(extractedThmsList, macrosDefReader, REPLACE_TEX, TEX_TO_WORDS, REPLACE_MACROS);
 					//the BufferedStream containing macros is set when rawFileReaderList is set.
 					macroReplacedThmsList = ProcessInput.get_macroReplacedThmList();

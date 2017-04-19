@@ -53,7 +53,7 @@ public class ProcessInput {
 	
 	private static final Pattern TEX_CONTENT_PATTERN;
 	//set this reader when called from servlet with FileInputStream info
-	private static BufferedReader macrosBReader;
+	//private static BufferedReader macrosBReader;
 	//servlet context if run from server
 	private static ServletContext servletContext;
 		
@@ -97,9 +97,9 @@ public class ProcessInput {
 	 * Sets the BufferedReader of the macro file InputStream 
 	 * @param macrosReader
 	 */
-	public static void setResources(BufferedReader macrosReader){
+	/*public static void setResources(BufferedReader macrosReader){
 		macrosBReader = macrosReader;
-	}
+	}*/
 	
 	/**
 	 * Set servlet context, if run from server.
@@ -159,7 +159,7 @@ public class ProcessInput {
 	 * @return
 	 */
 	public static List<String> processInput(List<String> thmInputList, boolean replaceTex){			
-		BufferedReader macrosBufferedReader = macrosBReader;
+		BufferedReader macrosBufferedReader;// = macrosBReader;
 		if(null != servletContext){
 			InputStream macrosFileStream = servletContext
 					.getResourceAsStream(MACROS_SRC);

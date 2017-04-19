@@ -281,6 +281,31 @@ public class StructH<H> extends Struct{
 		return newStructH;
 	}
 	
+	/**
+	 * To be used in e.g. turning into texAssert. Use should be very limited, loses information!
+	 * @param newType
+	 * @return
+	 */
+	@Override
+	public StructA<? extends Object, ? extends Object> copyToStructA(String newType){
+		StringBuilder pptSB = new StringBuilder(30);
+		for(String ppt : this.propertySet){
+			pptSB.append(ppt).append(" ");
+		}
+		int pptSBLen = pptSB.length();
+		if(pptSBLen > 1){
+			pptSB.deleteCharAt(pptSBLen-1);
+		}
+
+		StructA<String, String> convertedStructA = new StructA<String, String>(this.nameStr(), 
+				NodeType.STR, pptSB.toString(), NodeType.STR, newType);
+		
+		this.copyChildrenToStruct(convertedStructA);
+		convertedStructA.set_parentStruct(this.parentStruct());
+
+		return convertedStructA;
+	}
+	
 	public void add_previous(Struct prev){
 		hasChild = true;
 		children.add(prev);
@@ -369,8 +394,8 @@ public class StructH<H> extends Struct{
 			sb.append(possessivePrev.type());
 		}
 		/*if(children.size() > 0){
-			sb.append(" children: ");
-			sb.append(children);
+			//sb.append(" children: ");
+			sb.append("||"+children.size() + "||");
 		}*/
 		return sb.append(']').toString();
 	}
@@ -475,7 +500,7 @@ public class StructH<H> extends Struct{
 			//wrapperListSz should be > 0, since list is created when first wrapper is added
 			WLCommandWrapper curWrapper = WLCommandWrapperList.get(wrapperListSz - 1);
 			WLCommand composedCommand = curWrapper.WLCommand();
-			//if(WLCommand.structsWithOtherHeadCount(composedCommand) == 0){//HERE
+			if(WLCommand.structsWithOtherHeadCount(composedCommand) == 0){//HERE
 			if(curCommand != null){
 				int commandNumUnits = WLCommand.commandNumUnits(composedCommand);
 			 	WLCommand.increment_commandNumUnits(curCommand, commandNumUnits);
@@ -487,13 +512,12 @@ public class StructH<H> extends Struct{
 				this.commandBuilt = curCommand;
 				this.WLCommandStrVisitedCount++;
 			}else if(!curCommand.equals(this.commandBuilt)){
-				this.WLCommandStrVisitedCount++;
-				
+				this.WLCommandStrVisitedCount++;				
 			}
 			//this.WLCommandStrVisitedCount++;
 			curCommand.addComposedWLCommands(composedCommand);
 			return curWrapper.WLCommandStr();			
-			//}
+			}
 		}		
 		//String name = this.struct.get("name");
 		//return name == null ? this.type : name;
@@ -506,6 +530,9 @@ public class StructH<H> extends Struct{
 	//@Override
 	private String simpleToString2(boolean includeType, WLCommand curCommand){
 		
+		if(this.struct.get("name").equals("component")){
+			System.out.print("");
+		}
 		if(curCommand != null) {
 			WLCommand.increment_commandNumUnits(curCommand, this);
 		}

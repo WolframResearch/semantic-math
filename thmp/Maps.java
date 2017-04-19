@@ -837,7 +837,7 @@ public class Maps {
 			structMap.put("hyp_verbphrase", new Rule("hypo", 0.6));
 			structMap.put("hyp_assert", new Rule("hypo", 1));
 			structMap.put("hyp_texAssert", new Rule("hypo", 1));
-			//$F$ that is finite. 
+			//$F$ that is $abc$. 
 			structMap.put("hyp_ent", new Rule("hypo", .7));
 			structMap.put("def_ent", new Rule("Def", 1));
 			structMap.put("def_symb", new Rule("Def", 1));
@@ -881,6 +881,7 @@ public class Maps {
 			// eg "property that a is b"
 			structMap.put("noun_phrase", new Rule("np", 1));
 			structMap.put("ent_phrase", new Rule("newchild", 1));
+			structMap.put("ent_qualifier", new Rule("newchild", .7));
 			structMap.put("ent_Cond", new Rule("newchild", 1));
 			/*$A$ is such that $A > B$*/
 			structMap.put("verb_Cond", new Rule("verbphrase", .8));

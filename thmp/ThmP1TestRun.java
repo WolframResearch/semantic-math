@@ -670,11 +670,14 @@ public class ThmP1TestRun {
 			st = "There are field in the class $\\mathcal{X}$ that are not finite modifications of rings.";
 			st = "If the Alexander polynomial of $K$ is not $1$";
 			st = "$\\partial \\Sigma$ is not a meridian for $K$";
-			st = "for all components $U$ of $supp(w)$ which are not annuli"; //revisit! children added repeatedly
+			st = "for all components $U$ of $supp(w)$ which are not annuli"; //revisit! children added repeatedly in one parse.
+			//for above, hypo[hyp[for all], [ent{called=$U$, name=component}][[ent{name=$supp(w)$}][verbphrase[verb[are not], [ent{name=annuli}]]which verbphrase[verb[are not]
+			st = "Suppose that $f_n->g$ uniformly on $[a,b]$";
+			st = "the derived series of $G=\\pi_1(\\sk)$ does not stabilize at finite $n$";
+			st = "";
+			//st = "given $A  $ such that $A = o$";
 			//st = "take the derivative of $f$";
 			//st = "$A $ is isomorphic to $B $ of $C $ in $D $";
-			//st = "$A $ is isomorphic to $B $ in $D $";
-			
 			//st = "given extension of ring";
 			//If the Alexander polynomial of $K$ is not $1$
 			//st = "Suppose that $f_n->f$ pointwise";
