@@ -422,7 +422,7 @@ public class Maps {
 			// adverbs qualify verbs, adj, noun phrases, determiners, clauses etc
 			posPreMMap.put("does", "verb_COMP");
 			posPreMMap.put("do", "verb_COMP");
-			posPreMMap.put("does not", "not");
+			posPreMMap.put("does not", "not"); //verb??
 			posPreMMap.put("do not", "not");
 			posPreMMap.put("not", "not");
 
@@ -508,6 +508,7 @@ public class Maps {
 			posPreMMap.put("whose", "rpro");
 			posPreMMap.put("which", "rpro_COMP");
 			posPreMMap.put("that", "rpro_COMP");
+			posPreMMap.put("that", "hyp");
 			posPreMMap.put("whom", "rpro");
 
 			// verbs, verbs map does not support -ing form, ie divide->dividing
@@ -774,9 +775,10 @@ public class Maps {
 
 			structMap.put("symb_verbphrase", new Rule("assert", 1));
 			structMap.put("ent_verbphrase", new Rule("assert", 1));
-			structMap.put("ent_verbAlone", new Rule("assert", 1));
+			structMap.put("ent_verbAlone", new Rule("assert", 1));			
 			structMap.put("symb_verbAlone", new Rule("assert", 1));
 			structMap.put("pro_verbphrase", new Rule("assert", 1));
+			structMap.put("pro_verbAlone", new Rule("assert", 1));
 			//"A is p, so is B"
 			structMap.put("so_verbphrase", new Rule("So", 1));
 			structMap.put("pro_csubj", new Rule("pobj", 1)); // could be iobj ->
@@ -854,7 +856,8 @@ public class Maps {
 			structMap.put("rpro_verbphrase", new Rule("phrase", 1));
 			//e.g. "which contains"
 			structMap.put("rpro_verb", new Rule("hyp", .9));
-			structMap.put("rpro_assert", new Rule("phrase", 1));
+			structMap.put("rpro_assert", new Rule("phrase", 1));//HERE
+			
 			structMap.put("parti_phrase", new Rule("hypo", .8));
 			structMap.put("amod_noun", new Rule("csubj", 1));
 			structMap.put("amod_ent", new Rule("csubj", 1)); // structMap.put("gerund_np",

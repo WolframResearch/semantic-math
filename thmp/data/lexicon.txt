@@ -69,6 +69,13 @@ converge verbAlone
 along pre
 meridian ent
 annuli ent
+coloring ent
+arc ent
+holonomy ent
+probability ent
+interchange ent
+intersect verb
+change verb
 great adj
 hard adj
 open adj

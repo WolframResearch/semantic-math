@@ -46,8 +46,10 @@ public abstract class Struct implements Serializable{
 	//down the tree. Used for constructing ParseStruct tree.
 	private boolean containsHyp;
 	
-	/*  childRelationType to its parent, if this struct is a child.
-	 */
+	//logical parent, e.g. $p$ such that $p$ is prime. the parent of prime
+	//private Struct logicalParent;
+	
+	/*  childRelationType to its parent, if this struct is a child. */
 	private ChildRelationType childRelationType = ChildRelationType.OTHER;
 	
 	private Article article = Article.NONE;
@@ -193,9 +195,16 @@ public abstract class Struct implements Serializable{
 	/**
 	 * Set parent pointer of this struct
 	 */
-	public abstract void set_parentStruct(Struct parent);
-	
+	public abstract void set_parentStruct(Struct parent);	
 	public abstract Struct parentStruct();
+	
+	/*public void set_logicalParentStruct(Struct parent){
+	
+	}
+	
+	public Struct logicalParentStruct(){
+		
+	}*/
 
 	/**
 	 * Only meaningful for StructH.

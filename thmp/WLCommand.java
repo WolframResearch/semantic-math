@@ -253,10 +253,10 @@ public class WLCommand implements Serializable{
 	private static final int RIGHTCHILD = 1;
 	private static final int BOTHCHILDREN = 0;
 	private static final int NEITHERCHILD = 2;
-	private static final Pattern TRIGGER_WORD_NOT_PATTERN = Pattern.compile("^(.*not .+|.+ not.*)$");
+	// could be "has no"
+	private static final Pattern TRIGGER_WORD_NOT_PATTERN = Pattern.compile("^(.*not* .+|.+ no(?:t|$).*)$");
 	
-	static {
-		
+	static {	
 		negativeTriggerCommandsMap = new HashMap<String, String>();
 		negativeTriggerCommandsMap.put("~HasProperty~", " ~HasNotProperty~ ");
 		negativeTriggerCommandsMap.put(" ~HasProperty~ ", " ~HasNotProperty~ ");
@@ -1270,11 +1270,12 @@ public class WLCommand implements Serializable{
 					}
 					continue;
 				}				
+				//this is same as term.getPosTermStruct()
 				Struct nextStruct = curCommandComponentList.get(positionInMap);
-				//don't set struct here! Can lead to wrong struct for parent-child pairs!
-				//term.set_posTermStruct(nextStruct);
-				
-				//prevStruct = nextStruct;				
+				if(nextStruct.nameStr().endsWith("gap")){
+					//
+					System.out.println("WLCommand - parent struct for 'gap': " + nextStruct.parentStruct());
+				}
 				if(nextStruct.previousBuiltStruct() != null){ 
 					//set to null for next parse dfs iteration
 					//****don't need to set to null here, but 
@@ -1671,7 +1672,7 @@ public class WLCommand implements Serializable{
 			
 			//check for parent, see if has same type & name etc, if going backwards.
 			if(before){
-				newStruct = findMatchingParent(commandComponentPosPattern, commandComponentNamePattern, newStruct);
+				newStruct = findMatchingParent(commandComponentPosPattern, commandComponentNamePattern, newStruct, curCommand);
 			}
 			
 			commandsMap.put(commandComponent, newStruct);
@@ -1698,8 +1699,7 @@ public class WLCommand implements Serializable{
 				if(null != curCount){
 					optionalTermsGroupCountMap.put(optionalGroupNum, curCount-1);
 				}
-			}
-			
+			}			
 			curCommand.lastAddedCompIndex = i;
 			componentAdded = true;			
 			boolean hasOptionalTermsLeft = (curCommand.optionalTermsCount > 0);
@@ -1711,10 +1711,8 @@ public class WLCommand implements Serializable{
 			}
 			if(before && onlyTrivialTermsBefore(posTermList, i-1)){
 				commandSat.setBeforeTriggerSatToTrue();
-			}
-			
-			return commandSat;
-			
+			}			
+			return commandSat;			
 		} else {
 			
 			/*if(disqualifyCommand(commandComponent, commandComponentPosPattern, commandsCountMap, commandsMap)){
@@ -1769,25 +1767,20 @@ public class WLCommand implements Serializable{
 	/**
 	 * Find parent/ancestors if they satisfy same type/name requirements, if going backwards
 	 * through the parse tree in dfs traversal order. E.g. $A$ in $B$ is p. should go to the
-	 * $A$ as the subject rather than stopping at $B$.
+	 * $A$ as the subject rather than stopping at $B$. Should be called only if struct being
+	 * added occurs before the trigger term.
 	 * @param componentPosPattern
 	 * @param componentNamePattern
 	 * @param struct
 	 * @return
 	 */
 	private static Struct findMatchingParent(Pattern componentPosPattern, Pattern componentNamePattern,
-			Struct struct){
+			Struct struct, WLCommand curCommand){
 		
 		Struct structToAdd = struct;
 		Struct structParent = struct.parentStruct();
-		/*boolean print = false;
-		if(!structToAdd.isStructA()){
-			print = true;
-			System.out.println("**************************** before: " + structToAdd);
-		}*/
 		
 		while(structParent != null){
-			//System.out.println("***@@*@@*@@*****parent: " + structParent );
 			String structParentType = structParent.type();
 			String parentType = CONJ_DISJ_PATTERN.matcher(structParentType).matches() ?
 					//curStructInDequeParent.type().matches("conj_.+|disj_.+") ?
@@ -1800,20 +1793,17 @@ public class WLCommand implements Serializable{
 			}else{
 				parentNameStr = structParent.struct().get("name");
 			}
-			//System.out.println("###################parentNameStr " + parentNameStr + " parentType " +  parentType);
 			/*should match both type and term. Get parent of struct, e.g. "log of f is g" should get all of
-			 *log of f", instead of just "f". I.e. get all of StructH.*/
-			
-			//System.out.println("\n^^^^^^^^" + ".name(): " + curCommandComponent.name() + " parentStr: " + parentNameStr+" type " +
-			//componentType + " parentType " + parentType);						
+			 *log of f", instead of just "f". I.e. get all of StructH.*/			
 			if(componentNamePattern.matcher(parentNameStr).find()								
 					//parentNameStr.matches(curCommandComponent.nameStr()) 
 					&& componentPosPattern.matcher(parentType).find()){
 				/*if(!structToAdd.isStructA()){
 					System.out.println("++++structToAdd " + structToAdd + " parent : " + structToAdd.parentStruct());
 				}*/
+				//structToAdd.add_usedInCommand(curCommand); <--removes children. e.g. the holonomy of $\\partial \\Sigma$ has no fixed points
 				structToAdd = structParent;
-				structParent = structParent.parentStruct();
+				structParent = structParent.parentStruct();				
 				
 			}//super hacky, find a better way!! By setting the parent, couldn't set for some reason this time
 			// <--Nov 2016. All ents such that ent's could skip two generations, i.e. be grandparent of ent.
@@ -1840,8 +1830,6 @@ public class WLCommand implements Serializable{
 				}
 			}
 			else if(!structParent.isStructA() && !structParent.childRelationType().equals(ChildRelationType.OTHER)){
-				System.out.println("^^^^^^^^" + structParent + " is parent of " + structToAdd + " componentNamePattern " + componentPosPattern);
-				System.out.println("further parent: " + structParent.parentStruct());
 				structToAdd = structParent;
 				structParent = structParent.parentStruct();
 
@@ -1849,6 +1837,26 @@ public class WLCommand implements Serializable{
 			else{				
 				break;
 			}
+		}
+		//e.g. "$p$ such that $p$ is a prime is odd or even"
+		Struct structGrandParent;
+		Struct newBaseStruct = null;
+		if(null != structParent && componentPosPattern.matcher("ent").matches() 
+				&& (structParent.childRelationType().equals(ChildRelationType.HYP)
+				|| (structGrandParent=structParent.parentStruct()) != null
+					&& structGrandParent.childRelationType().equals(ChildRelationType.HYP)
+					&& (newBaseStruct = structGrandParent) != null//trivial check to make assignment
+				)
+				){
+			if(null == newBaseStruct){
+				newBaseStruct = structParent;
+			}
+			Struct newParentStruct = newBaseStruct.parentStruct();
+			if(null != newParentStruct && componentPosPattern.matcher(newParentStruct.type()).matches()){
+				structToAdd = newParentStruct;
+				//newBaseStruct.add_usedInCommand(curCommand);
+				//System.out.println("WLCommand - structToAdd.children " + structToAdd.children());
+			}			
 		}
 		/*if(print){
 			System.out.println("**************************** after: " + structToAdd);

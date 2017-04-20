@@ -250,7 +250,7 @@ public class ThmP1AuxiliaryClass {
 	protected static String getChildRelationStringFromStructPrev1(Struct struct){
 		String childRelationStr;// = struct.prev1().toString();
 		String structType = struct.type();
-		if(structType.equals("adverb") || structType.equals("adj")){
+		if(structType.equals("adverb") || structType.equals("adj") || structType.equals("not")){
 			childRelationStr = "";
 		}else if(struct.prev2NodeType().isTypeStruct() && ((Struct)struct.prev2()).type().equals("prep")){
 			// e.g. "differentiable at $x=0$"

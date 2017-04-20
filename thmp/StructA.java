@@ -307,8 +307,7 @@ public class StructA<A, B> extends Struct{
 			
 			WLCommandWrapper curWrapper = WLCommandWrapperList.get(wrapperListSz - 1);
 			WLCommand composedCommand = curWrapper.WLCommand(); 
-			if(WLCommand.structsWithOtherHeadCount(composedCommand) == 0){
-			//if(WLCommand.structsWithOtherHeadCount(composedCommand) == 0){//HERE
+			if(WLCommand.structsWithOtherHeadCount(composedCommand) == 0){//HERE
 			if(curWrapper != null){
 				int commandNumUnits = WLCommand.commandNumUnits(composedCommand);
 				WLCommand.increment_commandNumUnits(curCommand, commandNumUnits);
@@ -326,7 +325,6 @@ public class StructA<A, B> extends Struct{
 			curCommand.addComposedWLCommands(composedCommand);
 			return curWrapper.WLCommandStr();	
 			}
-			//}
 		}		
 		
 		if(PREV1_TYPE.equals(NodeType.STR) && PREV2_TYPE.equals(NodeType.STR)){
@@ -334,8 +332,7 @@ public class StructA<A, B> extends Struct{
 			StringBuilder fullContentSB = new StringBuilder((String)this.prev1);
 			//System.out.println("*********prev1 type: " + type());
 			
-			String childStr = appendChildrenQualifierString(includeType, curCommand);
-			
+			String childStr = appendChildrenQualifierString(includeType, curCommand);			
 			//String prev1Str = (String)this.prev1;
 			if(this.type.equals("det") || this.type.equals("pro")){				
 				if(!prev2.equals("")){

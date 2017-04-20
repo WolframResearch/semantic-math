@@ -674,7 +674,18 @@ public class ThmP1TestRun {
 			//for above, hypo[hyp[for all], [ent{called=$U$, name=component}][[ent{name=$supp(w)$}][verbphrase[verb[are not], [ent{name=annuli}]]which verbphrase[verb[are not]
 			st = "Suppose that $f_n->g$ uniformly on $[a,b]$";
 			st = "the derived series of $G=\\pi_1(\\sk)$ does not stabilize at finite $n$";
-			st = "";
+			st = "they do not intersect";
+			st = "the colorings do not change for either arcs involved At a virtual crossing ";
+			st = "all elements not conjugate to the powers of $T_a$ and $T_b$ are pseudo-Anosov";
+			st = "$q$ has no zeros in $A$";
+			st = "the element $ \\ r ho(\\ gamma)$ fixes no points in the interior of $I$";
+			st = "$S^1\\ x M_K$ admits no symplectic structure";
+			st = "Suppose the representations $ \\ tau$ of $B_n$ are not all faithful.";
+			st = "The interchange of two distant critical points of the surface diagram does not change the induced map on homology. ";
+			st = "We require the signed resolution res($T$) to coincide with res($S$)  on the circles which do not intersect this disc";//stucture
+			st = "the probability $a_k(u)$ that there are no double gaps satisfies $$ \\ beta (u)^k\\ leq a_k (u)\\ leq \\ beta (u)^{k-1}$$";//revisit! Multiple children attached.
+			st = "the holonomy of $ \\ partial \\ Sigma$ has no fixed points"; //also fix parse. assert[[ent{name=holonomy}][[ent{name=$ \ partial \ Sigma$}]of [ent{name=$ \ partial \ Sigma$}]],
+			
 			//st = "given $A  $ such that $A = o$";
 			//st = "take the derivative of $f$";
 			//st = "$A $ is isomorphic to $B $ of $C $ in $D $";

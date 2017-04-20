@@ -84,9 +84,9 @@ public class WLCommandsList {
 		triggerWordLookupMapBuilder.put("is not", "is");
 		triggerWordLookupMapBuilder.put("are not", "is");
 		triggerWordLookupMapBuilder.put("has", "have");
+		triggerWordLookupMapBuilder.put("has no", "is");
 		//triggerWordLookupMapBuilder.put("have", "is");
-		//triggerWordLookupMapBuilder.put("belong", "is");
-		//triggerWordLookupMapBuilder.put("lie", "is");
+		
 		triggerWordLookupMapBuilder.put("letbe", "if");
 		triggerWordLookupMapBuilder.put("let", "if");
 		triggerWordLookupMapBuilder.put("suppose", "if");

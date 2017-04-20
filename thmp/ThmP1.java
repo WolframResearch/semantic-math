@@ -79,6 +79,7 @@ public class ThmP1 {
 	private static final Pattern LATEX_END_PATTER = Pattern.compile("[^$]*\\$.*");
 	private static final Pattern LATEX_BEGIN_PATTERN = Pattern.compile("[^$]*\\${1,2}.*");
 	private static final Pattern POSSIBLE_ADJ_PATTERN = Pattern.compile("(?:.+tive|.+wise|.+ary|.+ble|.+ous|.+ent|.+like|.+nal)$");
+	private static final Pattern POSSIBLE_ENT_PATTERN = Pattern.compile("(?:.+tion|.+son)$");
 	private static final Pattern ESSENTIAL_POS_PATTERN = Pattern.compile("ent|conj_ent|verb|vbs|if|symb|pro");
 	private static final Pattern VERB_POS_PATTERN = Pattern.compile("verb|vbs");	
 	private static final Pattern SINGLE_WORD_TEX_PATTERN = Pattern.compile("\\$[^$]+\\$[^\\s]*"); 
@@ -1169,6 +1170,8 @@ public class ThmP1 {
 			else if(POSSIBLE_ADJ_PATTERN.matcher(curWord).matches()){
 				//Try to guess part of speech based on endings 
 				pairs.add(new Pair(curWord, "adj"));
+			}else if(POSSIBLE_ENT_PATTERN.matcher(curWord).matches()){
+				pairs.add(new Pair(curWord, "ent"));
 			} 
 			else if (!WordForms.getWhiteNonEmptySpaceNotAllPattern().matcher(curWord).matches()) { // try to minimize this case.				
 				System.out.println("word not in dictionary: " + curWord);
@@ -3508,8 +3511,7 @@ public class ThmP1 {
 						//this is questionable, and also seems fragile.
 						return new EntityBundle(firstEnt, recentEnt, recentEntIndex);
 					}
-				}
-				
+				}				
 				childToAdd = (Struct)struct2.prev2();
 			}else if(struct2.type().equals("Cond")){
 				//e.g. "prime $I$ such that it's maximal."
@@ -4534,7 +4536,8 @@ public class ThmP1 {
 			
 			Struct child_i = children.get(i);
 			child_i.set_dfsDepth(structDepth + 1);
-			
+			//should be set, because parents could have been copied in mx building 
+			//child_i.set_parentStruct(struct);//introduced April 20, need to test out.
 			span = buildLongFormParseDFS(child_i, childrenSB, span, conjDisjVerbphrase, isRightChild);
 			childrenSB.append(", ");
 		}
