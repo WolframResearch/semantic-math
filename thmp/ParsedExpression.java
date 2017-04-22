@@ -34,13 +34,12 @@ public class ParsedExpression implements Serializable, TheoremContainer{
 	//Or come up with better writeObject for tree structure.
 	private transient ParseStruct headParseStruct;
 	
-	//relational vector, @see RelationVec.java.
-	private BigInteger relationVec;
-	
-	//context vector, @see ContextVec.java
+	//relational vector, see RelationVec.java.
+	/*private BigInteger relationVec; //should be moved so to be serialized separately	
+	//context vector, see ContextVec.java
 	private transient int[] contextVec;
 	//need the String form for serialization
-	private String contextVecStr;
+	private String contextVecStr;*/
 	
 	/*public ParsedExpression(String thmStr, List<Struct> parseRootList){
 		this.originalThmStr = thmStr;
@@ -48,15 +47,15 @@ public class ParsedExpression implements Serializable, TheoremContainer{
 	}*/
 	
 	public ParsedExpression(String thmStr, ParseStruct headParseStruct,
-			DefinitionListWithThm defListWithThm, int[] contextVec, 
-			BigInteger relationVec){
+			DefinitionListWithThm defListWithThm 
+			//, int[] contextVec, BigInteger relationVec
+			){
 		this.originalThmStr = thmStr;
 		this.headParseStruct = headParseStruct;
 		this.defListWithThm = defListWithThm;
-		this.relationVec = relationVec;
+		/*this.relationVec = relationVec;
 		this.contextVec = contextVec;
-		this.contextVecStr = GenerateContextVector.contextVecIntArrayToString(contextVec);
-		//System.out.println("contextVecStr during ParsedExpression construction! " + contextVecStr);
+		this.contextVecStr = GenerateContextVector.contextVecIntArrayToString(contextVec);*/
 	}
 	
 	@Override
@@ -67,23 +66,23 @@ public class ParsedExpression implements Serializable, TheoremContainer{
 	/**
 	 * @return the relationVec
 	 */
-	public BigInteger getRelationVec() {
+	/*public BigInteger getRelationVec() {
 		return relationVec;
-	}
+	}*/
 
 	/**
 	 * @return the contextVec
 	 */
-	public int[] getContextVec() {
+	/*public int[] getContextVec() {
 		return contextVec;
-	}
+	}*/
 
 	/**
 	 * @return the String representation of contextVec 
 	 */
-	public String contextVecStr() {
+	/*public String contextVecStr() {
 		return contextVecStr;
-	}
+	}*/
 	
 	/**
 	 * @return the originalThmStr

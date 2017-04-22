@@ -212,6 +212,7 @@ public class GenerateContextVector {
 	 */
 	public static String contextVecIntArrayToString(int[] contextVec){
 		if(null == contextVec) return null;
+		//Should NOT rely on toString()!!
 		String contextVecStr = Arrays.toString(contextVec);
 		Matcher matcher = BRACKETS_PATTERN.matcher(contextVecStr);
 		return matcher.replaceAll("{$1}");		

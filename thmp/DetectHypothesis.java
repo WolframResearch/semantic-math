@@ -28,6 +28,7 @@ import thmp.ParseState.VariableDefinition;
 import thmp.ParseState.VariableName;
 import thmp.search.CollectThm;
 import thmp.search.Searcher;
+import thmp.search.TheoremGet.ContextRelationVecPair;
 import thmp.search.ThmSearch;
 import thmp.utils.FileUtils;
 import thmp.utils.MacrosTrie;
@@ -64,14 +65,18 @@ public class DetectHypothesis {
 	
 	//contains ParsedExpressions, to be serialized to persistent storage
 	private static final List<ParsedExpression> parsedExpressionList = new ArrayList<ParsedExpression>();
+	//for inspection
 	private static final List<String> parsedExpressionStrList = new ArrayList<String>();
+	private static final List<ContextRelationVecPair> contextRelationVecPairList = new ArrayList<ContextRelationVecPair>();
 	private static final List<String> DefinitionListWithThmStrList = new ArrayList<String>();
 	private static final List<String> allThmsStrWithSpaceList = new ArrayList<String>();
 	
 	private static final String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
+	private static final String contextRelationPairSerialFileStr = "src/thmp/data/vecs/contextRelationVecPairList0";
 	private static final String parsedExpressionStringFileStr = "src/thmp/data/parsedExpressionList.txt";
 	private static final String parsedExpressionSerialFileNameStr = "parsedExpressionList.dat";
 	private static final String parsedExpressionStringFileNameStr = "parsedExpressionList.txt";
+	private static final String contextRelationPairSerialFileNameStr = ThmSearch.TermDocumentMatrix.CONTEXT_VEC_PAIR_LIST_FILE_NAME;
 	
 	private static final String allThmsStringFileStr = "src/thmp/data/allThmsList.txt";
 	private static final String allThmsStringFileNameStr = "allThmsList.txt";
@@ -213,17 +218,20 @@ public class DetectHypothesis {
 		
 		private String thmStr;		
 		//thmStr, with definition strings prepended.
-		private String thmWithDefStr;
+		private transient String thmWithDefStr;
+		
+		private String definitionStr;
 		//name of source file from which thm is extracted.
 		private String srcFileName;
 		
-		private List<VariableDefinition> definitionList = new ArrayList<VariableDefinition>();
+		private transient List<VariableDefinition> definitionList = new ArrayList<VariableDefinition>();
 		
 		public DefinitionListWithThm(String thmStr, List<VariableDefinition> definitionList,
-				String thmWithDefStr, String srcFileName_){
+				String definitionStr_, String srcFileName_){
 			this.thmStr = thmStr;
 			this.definitionList = definitionList;
-			this.thmWithDefStr = thmWithDefStr;
+			this.thmWithDefStr = definitionStr_ + " " + thmStr;
+			this.definitionStr = definitionStr_;
 			this.srcFileName = srcFileName_;
 		}
 		
@@ -233,7 +241,7 @@ public class DetectHypothesis {
 				return false;
 			}
 			DefinitionListWithThm otherDefThm = (DefinitionListWithThm)other;
-			if(!this.thmWithDefStr.equals(otherDefThm.thmWithDefStr)){
+			if(!this.definitionStr.equals(otherDefThm.definitionStr)){
 				return false;
 			}
 			if(!this.srcFileName.equals(otherDefThm.srcFileName)){
@@ -258,10 +266,13 @@ public class DetectHypothesis {
 		/**
 		 * @return the thmWithDefStr
 		 */
-		public String getThmWithDefStr() {
+		/*public String getThmWithDefStr() {
 			return thmWithDefStr;
-		}
+		}*/
 		
+		public String getDefinitionStr(){
+			return this.definitionStr;
+		}
 		/**
 		 * Returns String of thm along with definitions.
 		 */
@@ -315,6 +326,7 @@ public class DetectHypothesis {
 		//map of word frequencies.
 		String pathToWordFreqMap;
 		String parsedExpressionSerialFileStr = DetectHypothesis.parsedExpressionSerialFileStr;
+		String contextRelationPairSerialFileStr = DetectHypothesis.contextRelationPairSerialFileStr;
 		String allThmWordsMapSerialFileStr = DetectHypothesis.allThmWordsMapSerialFileStr;
 		String allThmWordsMapStringFileStr = DetectHypothesis.allThmWordsMapStringFileStr;
 		String parsedExpressionStringFileStr = DetectHypothesis.parsedExpressionStringFileStr; //parsedExpressionStrList
@@ -348,6 +360,7 @@ public class DetectHypothesis {
 					}
 					
 					this.parsedExpressionSerialFileStr = texFilesDirPath + DetectHypothesis.parsedExpressionSerialFileNameStr;
+					this.contextRelationPairSerialFileStr = texFilesDirPath + "vecs/" + DetectHypothesis.contextRelationPairSerialFileNameStr;
 					this.allThmWordsMapSerialFileStr = texFilesDirPath + DetectHypothesis.allThmWordsMapSerialFileNameStr;
 					this.allThmWordsMapStringFileStr = texFilesDirPath + DetectHypothesis.allThmWordsMapStringFileNameStr;
 					this.parsedExpressionStringFileStr = texFilesDirPath + DetectHypothesis.parsedExpressionStringFileNameStr; //parsedExpressionStrList
@@ -534,6 +547,7 @@ public class DetectHypothesis {
 		String pathToWordFreqMap = inputParams.pathToWordFreqMap;
 		String fullTermDocumentMxPath = inputParams.fullTermDocumentMxPath;
 		String parsedExpressionSerialFileStr = inputParams.parsedExpressionSerialFileStr;
+		String contextRelationPairSerialFileStr = inputParams.contextRelationPairSerialFileStr;
 		String allThmWordsMapSerialFileStr = inputParams.allThmWordsMapSerialFileStr;
 		String allThmWordsMapStringFileStr = inputParams.allThmWordsMapStringFileStr;
 		String parsedExpressionStringFileStr = inputParams.parsedExpressionStringFileStr;
@@ -544,7 +558,9 @@ public class DetectHypothesis {
 		
 		logger.info("Serializing parsedExpressionList, etc, to file...");
 		try{
-			FileUtils.serializeObjToFile(parsedExpressionList, parsedExpressionSerialFileStr);		
+			FileUtils.serializeObjToFile(parsedExpressionList, parsedExpressionSerialFileStr);
+			FileUtils.serializeObjToFile(contextRelationVecPairList, contextRelationPairSerialFileStr);
+			
 			//serialize words used for context vecs
 			//FileUtils.serializeObjToFile(ALL_THM_WORDS_LIST, allThmWordsSerialFileStr);
 			
@@ -955,7 +971,7 @@ public class DetectHypothesis {
 		
 		//ListMultimap<VariableName, VariableDefinition> variableNamesMMap = parseState.getGlobalVariableNamesMMap();
 		//String thmStr = thmSB.toString();
-		StringBuilder thmWithDefSB = new StringBuilder();		
+		StringBuilder definitionSB = new StringBuilder();		
 		StringBuilder latexExpr = new StringBuilder();
 		
 		List<VariableDefinition> variableDefinitionList = new ArrayList<VariableDefinition>();
@@ -994,7 +1010,7 @@ public class DetectHypothesis {
 					//definition strings to thmWithDefSB. Should only append
 					//variables that are not defined within the same thm.				
 					List<VariableDefinition> varDefList = pickOutVariables(latexExpr.toString(), //variableNamesMMap,
-							parseState, varDefSet, thmWithDefSB);
+							parseState, varDefSet, definitionSB);
 					
 					variableDefinitionList.addAll(varDefList);
 					latexExpr.setLength(0);
@@ -1006,9 +1022,9 @@ public class DetectHypothesis {
 
 		//System.out.println("Adding " + thmWithDefSB + " to theorem " + thmStr);
 		
-		thmWithDefSB.append(thmStr);
+		//thmWithDefSB.append(thmStr);
 		DefinitionListWithThm defListWithThm = 
-				new DefinitionListWithThm(thmStr, variableDefinitionList, thmWithDefSB.toString(), srcFileName);
+				new DefinitionListWithThm(thmStr, variableDefinitionList, definitionSB.toString(), srcFileName);
 		
 		//relational and context vecs can't be null, since ImmutableList cannot contain null elements
 		BigInteger relationalContextVec = parseState.getRelationalContextVec();
@@ -1025,9 +1041,12 @@ public class DetectHypothesis {
 		//create parsedExpression to serialize to persistent storage to be used later
 		//for search, etc
 		ParsedExpression parsedExpression = new ParsedExpression(thmStr, parseState.getHeadParseStruct(),
-						defListWithThm, combinedContextVec, relationalContextVec);
+						defListWithThm//, combinedContextVec, relationalContextVec
+						);
 		
 		parsedExpressionList.add(parsedExpression);
+		ContextRelationVecPair vecsPair = new ContextRelationVecPair(combinedContextVec, relationalContextVec);
+		contextRelationVecPairList.add(vecsPair);
 		parsedExpressionStrList.add(parsedExpression.toString());
 		//return this to supply to search later
 		return defListWithThm;

@@ -368,6 +368,7 @@ public class ThmSearch {
 	}//end of class
 	
 	public static class TermDocumentMatrix{
+		/*May introduce cyclic dependencies if have nontrivial static initializer in this class! Check e.g. TheoremGet.java */
 		
 		//private static final String PATH_TO_MX = "FileNameJoin[{Directory[], \"termDocumentMatrixSVD.mx\"}]";		
 		private static final String PATH_TO_MX = getSystemProjectionMxFilePath();
@@ -382,6 +383,9 @@ public class ThmSearch {
 		private static final String U_TRANSPOSE_NAME = "uTranspose";
 		private static final String COR_MX_NAME = "corMx";
 		public static final String PARSEDEXPRESSION_LIST_FILE_NAME = "parsedExpressionList.dat";
+		//Do not attach .dat at end of this file name.
+		public static final String CONTEXT_VEC_PAIR_LIST_FILE_NAME = "contextRelationVecPairList";
+		
 		private static final String COMBINED_PARSEDEXPRESSION_LIST_FILE_NAME = "combinedParsedExpressionList.dat";
 		
 		private static KernelLink ml;
@@ -1006,9 +1010,9 @@ public class ThmSearch {
 	 * @return
 	 */
 	protected static String getSystemCombinedParsedExpressionListFilePath(){
-		String pathToCombinedParsedExpressionListPath = "src/thmp/data/"
+		String combinedParsedExpressionListPath = "src/thmp/data/"
 				+TermDocumentMatrix.COMBINED_PARSEDEXPRESSION_LIST_FILE_NAME;
-		return pathToCombinedParsedExpressionListPath;
+		return combinedParsedExpressionListPath;
 	}
 	
 }

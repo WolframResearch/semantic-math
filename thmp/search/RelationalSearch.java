@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.google.common.collect.TreeMultimap;
 
 import thmp.GenerateRelationVec;
@@ -15,6 +18,7 @@ import thmp.ParseState;
 import thmp.ParseState.ParseStateBuilder;
 import thmp.search.SearchCombined.ThmHypPair;
 import thmp.search.Searcher.SearcherState;
+import thmp.search.TheoremGet.ContextRelationVecPair;
 import thmp.RelationVec;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
@@ -30,13 +34,13 @@ import thmp.utils.WordForms;
  */
 public class RelationalSearch implements Searcher<BigInteger>{
 
-	private static final List<BigInteger> relationVecList;
+	//private static final List<BigInteger> relationVecList;
+	private static final Logger logger = LogManager.getLogger(RelationalSearch.class);
 	private SearcherState<BigInteger> searcherState;
 	
 	static{
-		//relationVecList = GenerateRelationVec.getRelationVecList();
 		//should get vectors from deserialized ParsedExpression's List
-		relationVecList = CollectThm.ThmList.allThmsRelationVecList();		
+		//relationVecList = CollectThm.ThmList.allThmsRelationVecList();		
 	}
 	
 	@Override
@@ -157,7 +161,8 @@ public class RelationalSearch implements Searcher<BigInteger>{
 		
 		for(int i = 0; i < nearestThmIndexListSz; i++){
 			int thmIndex = nearestThmIndexList.get(i);
-			BigInteger relationVec_i = relationVecList.get(thmIndex);
+			ContextRelationVecPair vecPair = TheoremGet.getContextRelationVecFromIndex(thmIndex);
+			BigInteger relationVec_i = vecPair.relationVec();
 			//relationVecList.add(relationVec_i);
 			//if(true) throw new IllegalStateException();
 			int hammingDistance_i = RelationVec.hammingDistance2(queryRelationVec, relationVec_i);

@@ -37,7 +37,9 @@ import java.util.Arrays;
 public class ParseState {
 	
 	//placeholder context vector
-	private static int[] PLACEHOLDER_CONTEXT_VEC = new int[CollectThm.ThmWordsMaps.get_CONTEXT_VEC_SIZE()];	
+	private static int[] PLACEHOLDER_CONTEXT_VEC = new int[CollectThm.ThmWordsMaps.get_CONTEXT_VEC_SIZE()];
+	private static String PLACEHOLDER_CONTEXT_VEC_STR 
+		= GenerateContextVector.contextVecIntArrayToString(PLACEHOLDER_CONTEXT_VEC);
 	//current String being parsed. I.e. the unit
 	//of the input that's being tokenized, so 
 	//delimiter-separated.
@@ -221,14 +223,17 @@ public class ParseState {
 				return false;
 			}
 			return true;
-		}
-		
+		}		
 	}
 	
 	public static int[] PLACEHOLDER_CONTEXT_VEC(){
 		return PLACEHOLDER_CONTEXT_VEC;
 	}
-	
+
+	public static String PLACEHOLDER_CONTEXT_VEC_String(){
+		return PLACEHOLDER_CONTEXT_VEC_STR;
+	}
+
 	/**
 	 * Contain information that define variables, whose names are stored in 
 	 * variableNamesMMap.
@@ -242,8 +247,8 @@ public class ParseState {
 		//is the defining Struct.
 		private transient Struct definingStruct;
 		
-		private VariableName variableName;
-		private String originalDefinitionSentence;
+		private transient VariableName variableName;
+		private transient String originalDefinitionSentence;
 		
 		/**
 		 * originalDefinitionSentence could be null at construction.

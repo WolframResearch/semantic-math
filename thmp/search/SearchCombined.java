@@ -149,6 +149,7 @@ public class SearchCombined {
 		//CollectThm.setResources(texSourceFileBufferList, macrosReader, parsedExpressionListInputStream, allThmWordsSerialInputStream);	
 		
 		ProcessInput.setServletContext(servletContext_);
+		TheoremGet.setServletContext(servletContext_);
 		//ProcessInput.setResources(macrosReader);		
 		//servletContext = servletContext_;
 	}

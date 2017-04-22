@@ -23,6 +23,7 @@ import com.wolfram.jlink.MathLinkException;
 
 import thmp.ThmP1;
 import thmp.search.Searcher.SearcherState;
+import thmp.search.TheoremGet.ContextRelationVecPair;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 
@@ -38,7 +39,7 @@ public class ContextSearch implements Searcher<String>{
 	//private static final List<String> bareThmList = CollectThm.ThmList.get_bareThmList();
 	private static final KernelLink ml = FileUtils.getKernelLinkInstance();
 	//list of strings "{1, 0, ...}" corresponding to contexts of thms, same indexing as in thmList.
-	private static final List<String> allThmsContextVecStrList;
+	//private static final List<String> allThmsContextVecStrList;
 	//private static final List<String> allThmsContextVecStrList;
 	
 	//private static final int LIST_INDEX_SHIFT = 1;
@@ -51,51 +52,7 @@ public class ContextSearch implements Searcher<String>{
 	static{
 		//get the deserialized vectors from CollectThm instead of from thm vec file!
 		//need string form!
-		allThmsContextVecStrList = CollectThm.ThmList.allThmsContextVecList();
-		
-		boolean b = false;
-		//skipping this to get thms from serialized data instead
-		if(b){
-		//need to set this when deployed to VM
-		//String contextVecFileStr = "src/thmp/data/contextVecAll.txt";
-		String contextVecFileStr = "src/thmp/data/contextVectorsFields.txt";
-		//String contextVecFileStr = "src/thmp/data/contextVecCommm5.txt";
-		//String contextVecFileStr = "src/thmp/data/contextVectorsMultilinearAlgebra.txt";
-		
-		//read in contextVecStringList from file, result of GenerateContextVectors.
-		//FileReader contextVecFile;
-		//BufferedReader contextVecFileBReader;
-		
-		BufferedReader contextVecFileBReader = null;//CollectThm.contextVecBR();
-		//if not set remotely by the server.
-		if(null == contextVecFileBReader){
-			try{
-				FileReader contextVecFileReader = new FileReader(contextVecFileStr);
-				contextVecFileBReader = new BufferedReader(contextVecFileReader);
-			}catch(FileNotFoundException e){
-				System.out.println("Context vectors file not found!");
-				e.printStackTrace();
-				throw new IllegalStateException(e);
-			}
-		}
-		
-		try{
-			String line;
-			while((line = contextVecFileBReader.readLine()) != null){
-				//a line is a String of the form "{1, 0, ...}"
-				allThmsContextVecStrList.add(line);
-			}			
-			contextVecFileBReader.close();
-		}catch(FileNotFoundException e){
-			e.printStackTrace();
-			throw new RuntimeException(e);
-		}catch(IOException e){
-			e.printStackTrace();
-			throw new RuntimeException(e);
-		}finally{
-			FileUtils.silentClose(contextVecFileBReader);
-		}
-		}
+		//allThmsContextVecStrList = CollectThm.ThmList.allThmsContextVecList();		
 	}
 
 	@Override
@@ -173,16 +130,19 @@ public class ContextSearch implements Searcher<String>{
 		//start with index 0
 		for(int i = 0; i < nearestThmIndexListSz; i++){
 			int thmIndex = nearestThmIndexList.get(i);
+			ContextRelationVecPair vecPair = TheoremGet.getContextRelationVecFromIndex(thmIndex);
+			String contextVecStr = vecPair.contextVecStr();
+			
 			if(i < nearestThmIndexListSz-1){
 				//except at the end.
-				nearestThmsContextVecSB.append(allThmsContextVecStrList.get(thmIndex) + ",");
+				nearestThmsContextVecSB.append(contextVecStr + ",");
 			}else{
-				nearestThmsContextVecSB.append(allThmsContextVecStrList.get(thmIndex) + "}");
+				nearestThmsContextVecSB.append(contextVecStr + "}");
 			}			
 		}
-		if(true){
+		/*if(false){
 			System.out.println("nearestThmsContextVecSB " + nearestThmsContextVecSB);
-		}
+		}*/
 		//get the nearest thms from the list of thm (indices) passed in
 		//String nearestContextVecsStr = null;
 		String thmVecDim = null;

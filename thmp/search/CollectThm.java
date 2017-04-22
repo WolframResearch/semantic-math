@@ -1050,8 +1050,8 @@ public class CollectThm {
 		private static final ImmutableList<String> allThmSrcFileList;
 		private static final ImmutableList<ThmHypPair> allThmHypPairList;
 		
-		private static final ImmutableList<BigInteger> allThmsRelationVecList;
-		private static final ImmutableList<String> allThmsContextVecList;
+		//private static final ImmutableList<BigInteger> allThmsRelationVecList;
+		//private static final ImmutableList<String> allThmsContextVecList;
 		
 		private static final ImmutableList<String> thmList;
 		//processed with options to replace tex with latex, and expand macros with their definitions
@@ -1084,9 +1084,9 @@ public class CollectThm {
 			List<String> allThmsNoHypPreList = new ArrayList<String>();
 			List<String> allHypPreList = new ArrayList<String>();
 			List<String> allThmSrcFilePreList = new ArrayList<String>();
-			List<BigInteger> relationVecPreList = new ArrayList<BigInteger>();
-			List<String> contextVecPreList = new ArrayList<String>();
-			fillListsFromParsedExpressions(parsedExpressionsList, allThmsWithHypPreList, contextVecPreList, relationVecPreList,
+			//List<BigInteger> relationVecPreList = new ArrayList<BigInteger>();
+			//List<String> contextVecPreList = new ArrayList<String>();
+			fillListsFromParsedExpressions(parsedExpressionsList, allThmsWithHypPreList,// contextVecPreList, relationVecPreList,
 					allThmsNoHypPreList, allHypPreList, allThmSrcFilePreList);			
 			
 			allThmsWithHypList = ImmutableList.copyOf(allThmsWithHypPreList);
@@ -1095,8 +1095,8 @@ public class CollectThm {
 			allThmSrcFileList = ImmutableList.copyOf(allThmSrcFilePreList);
 			allThmHypPairList = createdThmHypPairListFromLists(allThmsNoHypList, allHypList, allThmSrcFileList);
 			
-			allThmsContextVecList = ImmutableList.copyOf(contextVecPreList);
-			allThmsRelationVecList = ImmutableList.copyOf(relationVecPreList);
+			/*allThmsContextVecList = ImmutableList.copyOf(contextVecPreList);
+			allThmsRelationVecList = ImmutableList.copyOf(relationVecPreList);*/
 			
 			ImmutableList.Builder<String> thmListBuilder = ImmutableList.builder();
 			List<String> extractedThmsList = new ArrayList<String>();
@@ -1241,22 +1241,26 @@ public class CollectThm {
 		 * @param relationVecList
 		 */
 		private static void fillListsFromParsedExpressions(List<ParsedExpression> parsedExpressionsList, 
-				List<String> allThmsWithHypList, List<String> contextVecList, List<BigInteger> relationVecList,
+				List<String> allThmsWithHypList, //List<String> contextVecList, List<BigInteger> relationVecList,
 				List<String> allThmsNoHypPreList, List<String> allHypPreList, List<String> allThmSrcFilePreList
 				){
 			//System.out.println("Should be list: " + parsedExpressionsList);
 			for(ParsedExpression parsedExpr : parsedExpressionsList){
 				DefinitionListWithThm defListWithThm = parsedExpr.getDefListWithThm();
-				//get original thm and list of definitions separately, for displaying them separately on the web.
-				allThmsNoHypPreList.add(defListWithThm.getThmStr());
+				
 				/* Build the definition string here, could be earlier in DetectHypothesis.java,
 				 * but in future may want to do different things with the list elements, so better to keep list form.*/
-				StringBuilder defListSB = new StringBuilder(200);
+				/*StringBuilder defListSB = new StringBuilder(200);
 				for(VariableDefinition def : defListWithThm.getDefinitionList()){
 					defListSB.append(def.getOriginalDefinitionSentence()).append('\n');
-				}
-				allHypPreList.add(defListSB.toString());
-				allThmsWithHypList.add(defListWithThm.getThmWithDefStr());
+				}*/
+				String defStr = defListWithThm.getDefinitionStr();
+				allHypPreList.add(defStr);
+				//get original thm and list of definitions separately, for displaying them separately on the web.
+				String thmStr = defListWithThm.getThmStr();
+				allThmsNoHypPreList.add(thmStr);
+				String thmWithDefStr = defStr + " " + thmStr;
+				allThmsWithHypList.add(thmWithDefStr);
 				
 				String fileName = defListWithThm.getSrcFileName();
 				if(null != fileName){
@@ -1265,8 +1269,8 @@ public class CollectThm {
 					allThmSrcFilePreList.add("");
 				}				
 				//allThmSrcFilePreList.add("");
-				contextVecList.add(parsedExpr.contextVecStr());
-				relationVecList.add(parsedExpr.getRelationVec());
+				//contextVecList.add(parsedExpr.contextVecStr());
+				//relationVecList.add(parsedExpr.getRelationVec());
 			}
 		}		
 		
@@ -1275,18 +1279,18 @@ public class CollectThm {
 		 * ParsedExpressions.
 		 * @return
 		 */
-		public static ImmutableList<BigInteger> allThmsRelationVecList(){
+		/*public static ImmutableList<BigInteger> allThmsRelationVecList(){
 			return allThmsRelationVecList;
-		}
+		}*/
 
 		/**
 		 * List of context vectors for all thms, as extracted from deserialized 
 		 * ParsedExpressions.
 		 * @return
 		 */
-		public static ImmutableList<String> allThmsContextVecList(){
+		/*public static ImmutableList<String> allThmsContextVecList(){
 			return allThmsContextVecList;
-		}
+		}*/
 
 		/**
 		 * Get list of theorems with their hypotheses and assumptions attached,

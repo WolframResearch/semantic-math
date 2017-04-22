@@ -58,6 +58,8 @@ public class RelationVec implements Serializable{
 	private static final int parseContextVectorSz;	
 	private static final int NUM_BITS_PER_BYTE = 8;
 	private static final Pattern SPLIT_DELIM_PATTERN = Pattern.compile(WordForms.splitDelim());
+	private static final BigInteger PLACEHOLDER_RELATION_VEC = new BigInteger(new byte[]{0});
+	
 	private static final boolean DEBUG = true;
 	
 	static{
@@ -184,7 +186,7 @@ public class RelationVec implements Serializable{
 				continue;
 			}			
 			List<String> contentStrList = posTermStruct.contentStrList();
-			System.out.println("****************RelationVec - contentStrList: " + contentStrList + " posTerm: " + posTerm);
+			System.out.println("***********RelationVec - contentStrList: " + contentStrList + " posTerm: " + posTerm);
 			
 			List<RelationType> posTermRelationTypeList = posTerm.relationType();
 			//System.out.println("****************RelationVec - posTermRelationTypeList: "  + posTermRelationTypeList);
@@ -403,7 +405,6 @@ public class RelationVec implements Serializable{
 			}
 			return maxBitPos;
 		}
-
 		
 		/**
 		 * @param bitPosList
@@ -434,6 +435,10 @@ public class RelationVec implements Serializable{
 			//this gives the number of set bits in bi2 that differ from the set bits
 			//in bi1, where we only consider bit positions that are set in bi1.
 			return bi.xor(bi1).bitCount();
+		}
+
+		public static BigInteger getPlaceholderRelationVec() {
+			return PLACEHOLDER_RELATION_VEC;
 		}
 	
 }

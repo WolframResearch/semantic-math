@@ -181,8 +181,9 @@ public class FileUtils {
 		try{
 			fileInputStream = new FileInputStream(serialFileStr);
 		}catch(FileNotFoundException e){
-			e.printStackTrace();
-			throw new IllegalStateException("Serialization data file not found!");
+			String msg = "Serialization data file not found! " + serialFileStr;
+			logger.error(msg);
+			throw new IllegalStateException(msg);
 		}
 		return deserializeListFromInputStream(fileInputStream, false);
 	}
