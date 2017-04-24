@@ -26,6 +26,7 @@ import thmp.search.Searcher.SearcherState;
 import thmp.search.TheoremGet.ContextRelationVecPair;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
+import static thmp.utils.MathLinkUtils.evaluateWLCommand;
 
 /**
  * Search results based on context vectors produced during parsing.
@@ -73,7 +74,7 @@ public class ContextSearch implements Searcher<String>{
 	/**
 	 * @param query input query, in English 
 	 * @param nearestThmIndexList List of thm indices, resulting from other 
-	 * search algorithms such as SVD and/or intersection.
+	 * search algorithms such as SVD and/or intersection. Indices are 0-based.
 	 * Gets list of vectors from GenerateContextVectors.java, 
 	 * pick out the nearest structual vectors using Nearest[].
 	 * @return Gives an ordered list of vectors based on context.
@@ -90,7 +91,7 @@ public class ContextSearch implements Searcher<String>{
 			return nearestThmIndexList;		
 		}
 		
-		String queryContextVec;		
+		String queryContextVec;	
 		if(null == searcher){
 			queryContextVec = thmp.GenerateContextVector.createContextVector(query);
 		}else{
@@ -118,7 +119,7 @@ public class ContextSearch implements Searcher<String>{
 		
 		//short-circuit if context vec not meaninful (insignificant entries created)
 		
-		//create range vector for Nearest
+		//create range vector for Nearest. Indices are 0 based. Write own .toString()!
 		Matcher bracketsMatcher = BRACKETS_PATTERN.matcher(nearestThmIndexList.toString());
 		String rangeVec = bracketsMatcher.replaceAll("{$1}");
 		System.out.println("selected thm indices: "+rangeVec);
@@ -167,7 +168,8 @@ public class ContextSearch implements Searcher<String>{
 			
 			ml.evaluate("query = " + queryContextVec);
 			
-			if(printInfoMsg){	
+			boolean printContextVecs = false;
+			if(printContextVecs){	
 				ml.waitForAnswer();
 				System.out.println("query vector in ContextSearch.java: " + ml.getExpr());
 			}else{
@@ -215,26 +217,33 @@ public class ContextSearch implements Searcher<String>{
 			ml.evaluate("q=" + queryContextVec + "/.{0->contextVecMean}");*/
 			
 			//ml.discardAnswer();
-			//extract the few positions from thm vectors, so Nearest only needs to find it for vecs of small lengths!!
-			
-			ml.evaluate("PositionsToReplace = Transpose[{Complement[Range[Length[query]], queryContextVecPositions]}]; "
+			/*extract the few positions from thm vectors, so Nearest only needs to find it for vecs of small lengths!!*/
+			/*Zero out parts in thm vecs returned from intersection, that are zero in query vec. */		
+			/*April 24, 2017
+			 * ml.evaluate("PositionsToReplace = Transpose[{Complement[Range[Length[query]], queryContextVecPositions]}]; "
 					+ "nearestThmsPartReplaced = Map[ReplacePart[#, PositionsToReplace->0] &, nearestThmList]" );
 			
-			if(printInfoMsg){	
+			if(printContextVecs){	
 				ml.waitForAnswer();
 				System.out.println("nearestThmsPartReplaced" + ml.getExpr());
 			}else{
 				ml.discardAnswer();
-			}
-			//ml.evaluate("Nearest[v->Range[Dimensions[v][[1]]], First@Transpose[q],"+numNearest+"] - " + LIST_INDEX_SHIFT);
-			ml.evaluate("Nearest[nearestThmsPartReplaced->"+ rangeVec +", query," 
-					+ nearestThmIndexListSz +"]");
+			}*/
+			//get nonzero entries of query context vector
+			evaluateWLCommand("queryContextVecPositions = Position[query, _?(# != 0 &)][[All,1]]", false, true);
 			
+			Expr nearestContextVecs = evaluateWLCommand(
+					"Keys[SortBy[AssociationThread["+rangeVec+", nearestThmList], -Count[query[[queryContextVecPositions]] - #[[queryContextVecPositions]], 0] &]]", 
+					true, true);
+			
+			//use rangeVec as list of indices.
+			//List indices are 0-based.
+			//ml.evaluate("Nearest[nearestThmsPartReplaced->"+ rangeVec +", query," + nearestThmIndexListSz +"]");
+		
 			/*ml.evaluate("Nearest[" + nearestThmsContextVecSB + "->"+ rangeVec +", query," 
-					+ nearestThmIndexListSz +"]"); */
-			
-			ml.waitForAnswer();
-			Expr nearestContextVecs = ml.getExpr();
+					+ nearestThmIndexListSz +"]"); */			
+			//ml.waitForAnswer();
+			//Expr nearestContextVecs = ml.getExpr();
 			//nearestContextVecsStr = nearestContextVecs.toString();
 			System.out.println("nearestContextVecs: "+nearestContextVecs);			
 			

@@ -32,10 +32,12 @@ public class TheoremGet {
 	
 	static{
 		vecBundleCache = CacheBuilder.newBuilder()
-				.maximumSize(400) //number of entries
+				//.maximumSize(400) //number of entries
+				.maximumSize(400)
 				.build(
 						new CacheLoader<Integer, ContextRelationVecBundle>() {
 							public ContextRelationVecBundle load(Integer bundleKey){
+								System.out.println("TheoremGet - loading a new vec bundle with key " + bundleKey);
 								return new ContextRelationVecBundle(bundleKey);
 			             }});		
 	}
@@ -67,7 +69,7 @@ public class TheoremGet {
 	public static class ContextRelationVecBundle implements Serializable{
 		
 		private static final long serialVersionUID = 760047710418503324L;
-		private static final int NUM_THMS_IN_BUNDLE = 10000;
+		private static final int NUM_THMS_IN_BUNDLE = 10000;//10000;
 		protected static final String BASE_FILE_STR = "src/thmp/data/vecs/" + ThmSearch.TermDocumentMatrix.CONTEXT_VEC_PAIR_LIST_FILE_NAME;
 		//private static final String BASE_FILE_EXT_STR = ".dat";
 		//Name of serialized file. 

@@ -1255,6 +1255,8 @@ public class CollectThm {
 					defListSB.append(def.getOriginalDefinitionSentence()).append('\n');
 				}*/
 				String defStr = defListWithThm.getDefinitionStr();
+				//temporarry since defStr hasn't been serialized yet.
+				defStr = (defStr == null) ? "" : defStr;
 				allHypPreList.add(defStr);
 				//get original thm and list of definitions separately, for displaying them separately on the web.
 				String thmStr = defListWithThm.getThmStr();

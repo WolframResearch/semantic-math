@@ -56,7 +56,7 @@ public class ProjectionMatrix {
 			String path_i = FileUtils.addIfAbsentTrailingSlashToPath(args[i]);
 			projectedMxFilePathList.add(path_i + ThmSearch.TermDocumentMatrix.PROJECTED_MX_NAME + ".mx");	
 			String peFilePath = path_i + ThmSearch.TermDocumentMatrix.PARSEDEXPRESSION_LIST_FILE_NAME;
-			String vecsFilePath = path_i + ThmSearch.TermDocumentMatrix.CONTEXT_VEC_PAIR_LIST_FILE_NAME;
+			String vecsFilePath = path_i + "vecs/" + ThmSearch.TermDocumentMatrix.CONTEXT_VEC_PAIR_LIST_FILE_NAME;
 			addExprsToLists(peFilePath, combinedPEList, vecsFilePath, combinedVecsList);
 		}
 		serializeListsToFile(combinedPEList);
