@@ -2,7 +2,9 @@ package thmp.search;
 
 import java.io.Serializable;
 import java.math.BigInteger;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import javax.servlet.ServletContext;
@@ -176,21 +178,27 @@ public class TheoremGet {
 	public static class ContextRelationVecPair implements Serializable{
 		
 		private static final long serialVersionUID = 5655823515836997828L;
-		private String contextVecStr;
+		//private String contextVecStr;
+		private Map<Integer, Integer> contextVecMap;
+		
 		//relational vector, see RelationVec.java.
 		private BigInteger relationVec;
 		private static final ContextRelationVecPair PLACEHOLDER_CONTEXT_RELATION_VEC;
+		
 		static{
 			BigInteger relationVector = thmp.RelationVec.getPlaceholderRelationVec();
-			int[] contextVecString = ParseState.PLACEHOLDER_CONTEXT_VEC();
-			PLACEHOLDER_CONTEXT_RELATION_VEC = new ContextRelationVecPair(contextVecString, relationVector);
+			//int[] contextVecString = ParseState.PLACEHOLDER_CONTEXT_VEC();
+			PLACEHOLDER_CONTEXT_RELATION_VEC = new ContextRelationVecPair(Collections.<Integer, Integer>emptyMap(), relationVector);
 		}
-		public ContextRelationVecPair(int[] combinedContextVec, BigInteger relationVec_){			
-			this.contextVecStr = GenerateContextVector.contextVecIntArrayToString(combinedContextVec);
+		
+		public ContextRelationVecPair(Map<Integer, Integer> contextVecMap_, BigInteger relationVec_){			
+			//this.contextVecStr = GenerateContextVector.contextVecIntArrayToString(combinedContextVec);
+			this.contextVecMap = contextVecMap_;
 			this.relationVec = relationVec_;
 		}
-		public String contextVecStr(){
-			return this.contextVecStr;
+		
+		public Map<Integer, Integer> contextVecMap(){
+			return this.contextVecMap;
 		}
 		public BigInteger relationVec(){
 			return this.relationVec;

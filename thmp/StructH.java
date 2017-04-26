@@ -801,8 +801,8 @@ public class StructH<H> extends Struct{
 	 * To avoid casting, and to distribute the logic.
 	 */
 	@Override
-	public void setContextVecEntry(int structParentIndex, int[] contextVec, boolean adjustVecFromCommand){
-		ParseTreeToVec.setStructHContextVecEntry(this, structParentIndex, contextVec, adjustVecFromCommand);
+	public void setContextVecEntry(int structParentIndex, Map<Integer, Integer> contextVecMap, boolean adjustVecFromCommand){
+		ParseTreeToVec.setStructHContextVecEntry(this, structParentIndex, contextVecMap, adjustVecFromCommand);
 	}
 	
 }

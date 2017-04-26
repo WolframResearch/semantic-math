@@ -8,7 +8,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -61,18 +64,14 @@ public class GenerateContextVector {
 		// bare thm list, without latex \label's or \index's, or \ref's, etc
 		private static final List<String> bareThmList;
 		// matrix, same dimension of term-document matrix in search. 
-		private static final List<int[]> contextVecList = new ArrayList<int[]>();
+		private static final List<Map<Integer, Integer>> contextVecMapList = new ArrayList<Map<Integer, Integer>>();
 		//list of strings
-		private static final List<String> contextVecStringList = new ArrayList<String>();
-		
+		private static final List<String> contextVecStringList = new ArrayList<String>();		
 		//private static final KernelLink ml = thmp.utils.FileUtils.getKernelLink();
 		
-	static{
-		
-		bareThmList = CollectThm.ThmList.allThmsWithHypList();
-		
-		generateContextVec(bareThmList, contextVecList, contextVecStringList);
-		
+	static{		
+		bareThmList = CollectThm.ThmList.allThmsWithHypList();		
+		generateContextVec(bareThmList, contextVecMapList);		
 		if(WRITE_UNKNOWNWORDS){
 			ThmP1.writeUnknownWordsToFile();
 		}
@@ -82,20 +81,22 @@ public class GenerateContextVector {
 		//get avg value, but should get average of the particular short-listed thms. 
 		//getAverageEntryVal(contextVecStringList, ml);
 		
-		//convert contextVecList 
-		//write context vec list to file, with curly braces
-		Path fileTo = contextVecFilePath;
-		if(fileTo == null){
-			fileTo = Paths.get(CONTEXT_VEC_FILE_STR);
+		boolean writeContextVecsToFile = false; //<--actually not building contextVecStringList currently.
+		if(writeContextVecsToFile){
+			//convert contextVecList 
+			//write context vec list to file, with curly braces
+			Path fileTo = contextVecFilePath;
+			if(fileTo == null){
+				fileTo = Paths.get(CONTEXT_VEC_FILE_STR);
+			}
+			
+			try {
+				Files.write(fileTo, contextVecStringList, Charset.forName("UTF-8"));
+			} catch (IOException e) {
+				e.printStackTrace();
+				throw new RuntimeException(e);
+			}
 		}
-		
-		try {
-			Files.write(fileTo, contextVecStringList, Charset.forName("UTF-8"));
-		} catch (IOException e) {
-			e.printStackTrace();
-			throw new RuntimeException(e);
-		}
-		
 	}
 
 	//used for testing from with outer class main().
@@ -145,15 +146,14 @@ public class GenerateContextVector {
 	 * @param bareThmList
 	 * @param contextVecList
 	 */
-	private static void generateContextVec(List<String> bareThmList, List<int[]> contextVecList,
-			List<String> contextVecStringList){
-
+	private static void generateContextVec(List<String> bareThmList, List<Map<Integer, Integer>> contextVecMapList
+			//, List<String> contextVecStringList1 <--shouldn't need this now.
+			){
 		for(String thm : bareThmList){			
-			String contextVecStr = createContextVector(contextVecList, thm);
-			contextVecStringList.add(contextVecStr);
+			Map<Integer, Integer> contextVecMap = createContextVector(contextVecMapList, thm);
+			//contextVecStringList1.add(contextVecStr);
 		}
-	}
-	
+	}	
 	}
 	
 	/**
@@ -161,18 +161,17 @@ public class GenerateContextVector {
 	 * @param input User's input string.
 	 * @return
 	 */
-	public static String createContextVector(String input) {
-		//should check if actually created, return null if not
+	public static Map<Integer, Integer> createContextVector(String input) {
 		return createContextVector(null, input);
 	}
 	
 	/**
-	 * @param contextVecList List of context vecs to be added to.
+	 * @param contextVecMapList List of context vecs to be added to. <--why needed??
 	 * Don't create new list if null.
 	 * @param thm User's input string.
 	 * @return
 	 */
-	private static String createContextVector(List<int[]> contextVecList, String thm) {
+	private static Map<Integer, Integer> createContextVector(List<Map<Integer, Integer>> contextVecMapList, String thm) {
 		
 		String[] strAr = ThmP1.preprocess(thm);
 		//System.out.println("****length " + strAr.length + " " + thm);
@@ -195,14 +194,14 @@ public class GenerateContextVector {
 			//parseContextVecList.add(parseState.getContextVec());	
 		}
 		
-		int[] contextVec = parseState.getCurThmCombinedContextVec();
+		Map<Integer, Integer> contextVecMap = parseState.getCurThmCombinedContextVecMap();
 		
 		//get context vector and add to contextVecMx
-		if(null != contextVecList){
-			contextVecList.add(contextVec);
+		if(null != contextVecMapList){
+			contextVecMapList.add(contextVecMap);
 		}
-		//System.out.println("Context vec: " + Arrays.toString(ThmP1.getParseContextVector()));		
-		return contextVecIntArrayToString(contextVec);
+		return contextVecMap;
+		//return contextVecIntArrayToString(contextVec);		
 	}
 	
 	/**
@@ -225,6 +224,7 @@ public class GenerateContextVector {
 	 * @param contextVecList
 	 * @return
 	 */
+	@Deprecated
 	public static int[] combineContextVectors(List<int[]> contextVecList){
 		
 		/*System.out.println("^^^ contextVecList to combine ");
@@ -245,10 +245,47 @@ public class GenerateContextVector {
 				if(prevEntry == 0 || prevEntry < 0 && entry > 0){					
 					combinedVector[i] = entry;
 				}
-				if(entry > 0) break;
+				if(entry > 0){ 
+					break;
+				}
 			}
 		}
+		//List<Map<Integer, Integer>> contextVecMapList;
+		
 		return combinedVector;
+	}
+	
+	/**
+	 * Combines the different context vector maps. 
+	 * Only add terms from higher-indexed maps
+	 * if the corresponding terms in previous vectors are 0 or negative. This is to create one single 
+	 * context vector per theorem rather than multiple.
+	 * @param contextVecMapList
+	 * @return
+	 */
+	public static Map<Integer, Integer> combineContextVectorMaps(List<Map<Integer, Integer>> contextVecMapList){
+		
+		if(0 == contextVecMapList.size()){
+			return Collections.emptyMap();
+		}
+		
+		Map<Integer, Integer> combinedMap = new HashMap<Integer, Integer>();
+		
+		for(Map<Integer, Integer> map : contextVecMapList){
+			for(Map.Entry<Integer, Integer> entry : map.entrySet()){				
+				int index = entry.getKey();
+				int curParentIndex = entry.getValue();
+				
+				Integer parentIndex = combinedMap.get(index);
+				if(null == parentIndex || (parentIndex < 0 && curParentIndex > 0)){
+					combinedMap.put(index, curParentIndex);
+					parentIndex = curParentIndex;
+				}				
+			}
+			System.out.println("GenerateContextVec - combining map: " + map);
+		}		
+		System.out.println("GenerateContextVec - combinedMap: " + combinedMap);
+		return combinedMap;
 	}
 	
 	public static void main(String[] args){

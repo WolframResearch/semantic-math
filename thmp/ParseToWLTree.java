@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
@@ -771,7 +772,7 @@ public class ParseToWLTree{
 	 */
 	private static boolean appendWLCommandStr(Struct struct, ParseStruct curParseStruct,
 			StringBuilder parsedSB, Multimap<ParseStructType, ParsedPair> partsMap, 
-			int[] contextVec, boolean contextVecConstructed, ParseState parseState){
+			Map<Integer, Integer> contextVecMap, boolean contextVecConstructed, ParseState parseState){
 		
 		List<WLCommandWrapper> structWrapperList = struct.WLCommandWrapperList();
 		int structWrapperListSz = structWrapperList.size();
@@ -787,14 +788,14 @@ public class ParseToWLTree{
 		
 		/*This threshold means: no component can be part of another command.*/
 		int structWithOtherHeadThreshold = 0;
-		boolean noClashCommandFound = appendWLCommandStr2(struct, curParseStruct, parsedSB, partsMap, contextVec,
+		boolean noClashCommandFound = appendWLCommandStr2(struct, curParseStruct, parsedSB, partsMap, contextVecMap,
 				contextVecConstructed, structWrapperList, structWrapperListSz, structWithOtherHeadThreshold);		
 		contextVecConstructed |= noClashCommandFound;
 		
 		/*relax criteria for how many terms can be part of other commands if no parsePair found */
 		if(!noClashCommandFound && structWrapperListSz > 1){
 			structWithOtherHeadThreshold = 1;
-			noClashCommandFound = appendWLCommandStr2(struct, curParseStruct, parsedSB, partsMap, contextVec,
+			noClashCommandFound = appendWLCommandStr2(struct, curParseStruct, parsedSB, partsMap, contextVecMap,
 					contextVecConstructed, structWrapperList, structWrapperListSz, structWithOtherHeadThreshold);
 			contextVecConstructed |= noClashCommandFound;
 		}		
@@ -813,7 +814,7 @@ public class ParseToWLTree{
 	 * @return noClashCommandFound
 	 */
 	private static boolean appendWLCommandStr2(Struct struct, ParseStruct curParseStruct, StringBuilder parsedSB,
-			Multimap<ParseStructType, ParsedPair> partsMap, int[] contextVec, boolean contextVecConstructed,
+			Multimap<ParseStructType, ParsedPair> partsMap, Map<Integer, Integer> contextVecMap, boolean contextVecConstructed,
 			List<WLCommandWrapper> structWrapperList, int structWrapperListSz, int structWithOtherHeadThreshold) {
 		/*if(structWrapperListSz>1){
 			throw new IllegalStateException(structWrapperListSz+"");
@@ -861,7 +862,8 @@ public class ParseToWLTree{
 				// curCommand's type determines the num attached to head of structH,
 				// e.g. "Exists[structH]" writes enum ParseRelation -2 at the index of structH	
 				if(!contextVecConstructed){
-					ParseTreeToVec.tree2vec(struct, contextVec, curWrapper);
+					ParseTreeToVec.tree2vec(struct, contextVecMap, curWrapper);
+					//System.out.println("ParseToWLTree - contextVecMap " + contextVecMap);
 					contextVecConstructed = true;
 				}
 				//get the ParseStruct based on type
@@ -929,7 +931,7 @@ public class ParseToWLTree{
 	 */
 	public static boolean collectCommandsDfs(Multimap<ParseStructType, ParsedPair> partsMMap, ParseStruct curParseStruct,
 			Struct struct, StringBuilder parsedSB, 
-			int[] curStructContextVec, boolean shouldPrint, boolean contextVecConstructed,
+			Map<Integer, Integer> curStructContextVecMap, boolean shouldPrint, boolean contextVecConstructed,
 			ParseState parseState) {
 		//don't append if already incorporated into a higher command
 		//System.out.print(struct.WLCommandStrVisitedCount());
@@ -967,7 +969,7 @@ public class ParseToWLTree{
 				parsedSB.append(struct.WLCommandStr());
 			} */
 			//collects the built WLCommand strings.
-			contextVecConstructed = appendWLCommandStr(struct, curParseStruct, parsedSB, partsMMap, curStructContextVec,
+			contextVecConstructed = appendWLCommandStr(struct, curParseStruct, parsedSB, partsMMap, curStructContextVecMap,
 					contextVecConstructed, parseState);
 			shouldPrint = false;			
 			//reset WLCommandStr back to null, so next 
@@ -991,7 +993,7 @@ public class ParseToWLTree{
 			
 			if (struct.prev1NodeType().isTypeStruct()) {
 				contextVecConstructed = collectCommandsDfs(partsMMap, curParseStruct,
-						(Struct) struct.prev1(), parsedSB, curStructContextVec, shouldPrint,
+						(Struct) struct.prev1(), parsedSB, curStructContextVecMap, shouldPrint,
 						contextVecConstructed, parseState);
 			}
 
@@ -1002,7 +1004,7 @@ public class ParseToWLTree{
 				// child
 				if(shouldPrint) parsedSB.append(", ");
 				contextVecConstructed = collectCommandsDfs(partsMMap, curParseStruct, 
-						(Struct) struct.prev2(), parsedSB, curStructContextVec, shouldPrint,
+						(Struct) struct.prev2(), parsedSB, curStructContextVecMap, shouldPrint,
 						contextVecConstructed, parseState);
 			}
 
@@ -1034,7 +1036,7 @@ public class ParseToWLTree{
 				if(shouldPrint) parsedSB.append(childRelation.get(i) + " ");
 
 				contextVecConstructed = collectCommandsDfs(partsMMap, curParseStruct,
-						children.get(i), parsedSB, curStructContextVec, shouldPrint,
+						children.get(i), parsedSB, curStructContextVecMap, shouldPrint,
 						contextVecConstructed, parseState);
 			}
 			if(shouldPrint) parsedSB.append("]");

@@ -258,7 +258,7 @@ public abstract class Struct implements Serializable{
 	
 	//public abstract void append_WLCommandStr(String WLCommandStr);
 
-	public abstract void setContextVecEntry(int structParentIndex, int[] contextVec, boolean adjustVecFromCommand);
+	public abstract void setContextVecEntry(int structParentIndex, Map<Integer, Integer> contextVecMap, boolean adjustVecFromCommand);
 	
 	/**
 	 * Sets WLCommandStr to null.

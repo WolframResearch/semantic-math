@@ -429,7 +429,7 @@ public class SearchIntersection {
 			// List<Integer> list = ContextSearch.contextSearch(input,
 			// highestThmList);
 			// if(null != list){
-			Searcher<String> searcher = new ContextSearch();
+			Searcher<Map<Integer, Integer>> searcher = new ContextSearch();
 			int tupleSz = 8;
 			highestThmList = SearchCombined.searchVecWithTuple(input, highestThmList, tupleSz, searcher);
 			// }

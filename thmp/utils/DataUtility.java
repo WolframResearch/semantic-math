@@ -1,5 +1,6 @@
 package thmp.utils;
 
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -33,6 +34,14 @@ public class DataUtility {
 			}
 		}
 		return max;
+	}
+	
+	public static class ReverseIntComparator implements Comparator<Integer>{
+		
+		@Override
+		public int compare(Integer a, Integer b){
+			return a < b ? 1 : (a > b ? -1 : 0);
+		}
 	}
 	
 	/**

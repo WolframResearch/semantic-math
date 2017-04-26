@@ -1033,9 +1033,9 @@ public class DetectHypothesis {
 			//write placeholder
 			relationalContextVec = new BigInteger(1, new byte[1]);
 		}
-		int[] combinedContextVec = parseState.getCurThmCombinedContextVec();
-		if(null == combinedContextVec){
-			combinedContextVec = ParseState.PLACEHOLDER_CONTEXT_VEC();
+		Map<Integer, Integer> combinedContextVecMap = parseState.getCurThmCombinedContextVecMap();
+		if(null == combinedContextVecMap){
+			combinedContextVecMap = ParseState.PLACEHOLDER_CONTEXT_VEC();
 		}
 		
 		//create parsedExpression to serialize to persistent storage to be used later
@@ -1045,7 +1045,7 @@ public class DetectHypothesis {
 						);
 		
 		parsedExpressionList.add(parsedExpression);
-		ContextRelationVecPair vecsPair = new ContextRelationVecPair(combinedContextVec, relationalContextVec);
+		ContextRelationVecPair vecsPair = new ContextRelationVecPair(combinedContextVecMap, relationalContextVec);
 		contextRelationVecPairList.add(vecsPair);
 		parsedExpressionStrList.add(parsedExpression.toString());
 		//return this to supply to search later

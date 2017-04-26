@@ -133,7 +133,7 @@ public class ThmP1 {
 	//For Nearest[] to work. *Not* final because need reassignment.
 	private static final int parseContextVectorSz;
 	//this is cumulative, should be cleared per parse!
-	private static int[] parseContextVector; 
+	//private static Map<Integer, Integer> parseContextVectorMap; 
 	/*Array of strings that should not be fused with neighboring ent's. As
 	* these often act as verbs. Did it programmatically initially, but too 
 	* many ent's that should be fused (e.g. ring) were not, leading to parse
@@ -193,7 +193,7 @@ public class ThmP1 {
 		
 		parseContextVectorSz = CollectThm.ThmWordsMaps.get_CONTEXT_VEC_SIZE();
 		System.out.println("*****+++++ThmP1--parseContextVectorSz: " + parseContextVectorSz);
-		parseContextVector = new int[parseContextVectorSz];
+		//parseContextVector = new int[parseContextVectorSz];
 		
 		noFuseEntSet = new HashSet<String>();
 		for(String ent : NO_FUSE_ENT){
@@ -2481,9 +2481,9 @@ public class ThmP1 {
 		
 		Map<String, WLCommandWrapper> triggerWordsMap;
 		//logger.info("headStructListSz " + headStructListSz);
-		//the default entry value in context vec should be the average of all entries in matrix.
 		//list of context vectors.
-		List<int[]> contextVecList = new ArrayList<int[]>();		
+		//List<int[]> contextVecList = new ArrayList<int[]>();		
+		List<Map<Integer, Integer>> thmContextVecMapList = new ArrayList<Map<Integer, Integer>>();
 		
 		/*There was at least one spanning parse.*/
 		if (headStructListSz > 0) {		
@@ -2529,7 +2529,8 @@ public class ThmP1 {
 				
 				uHeadStruct.set_dfsDepth(0);
 				
-				int[] curStructContextvec = new int[parseContextVectorSz];		
+				//int[] curStructContextvec = new int[parseContextVectorSz];
+				Map<Integer, Integer> curStructContextVecMap = new HashMap<Integer, Integer>();
 				//keep track of span of longForm, used as commandNumUnits in case
 				//no WLCommand parse. The bigger the better.
 				int span = 0;
@@ -2550,9 +2551,11 @@ public class ThmP1 {
 				}				
 				//ParseStruct headParseStruct = new ParseStruct();
 				/* Get the WL form build from WLCommand's. Compute span scores. */
-				wlCommandTreeTraversal(uHeadStruct, headParseStructList, parsedPairMMapList, curStructContextvec, span, parseState);
+				wlCommandTreeTraversal(uHeadStruct, headParseStructList, parsedPairMMapList,// curStructContextvec, 
+						curStructContextVecMap, span, parseState);
 				//headParseStructList.add(headParseStruct);
-				contextVecList.add(curStructContextvec);
+				//contextVecList.add(curStructContextvec);
+				thmContextVecMapList.add(curStructContextVecMap);
 				
 				System.out.println("+++Previous long parse: " + parsedSB);				
 				//defer these additions to orderPairsAndPutToLists()
@@ -2578,7 +2581,7 @@ public class ThmP1 {
 			//order maps from parsedPairMMapList and put into parseStructMapList and parsedExpr.
 			//Also add context vector of highest scores
 			
-			orderPairsAndPutToLists(parsedPairMMapList, headParseStructList, parseState, longFormParsedPairList, contextVecList);
+			orderPairsAndPutToLists(parsedPairMMapList, headParseStructList, parseState, longFormParsedPairList, thmContextVecMapList);
 			//parseStructMapList.add(parseStructMap.toString() + "\n");
 			//append the highest-ranked parse to parseState.curParseStruct
 			
@@ -2666,7 +2669,8 @@ public class ThmP1 {
 			//list of long forms, with flattened tree structure.
 			List<ParsedPair> longFormParsedPairList = new ArrayList<ParsedPair>();
 			
-			int[] curStructContextvec = new int[parseContextVectorSz];	
+			//int[] curStructContextvec = new int[parseContextVectorSz];	
+			Map<Integer, Integer> curStructContextVecMap = new HashMap<Integer, Integer>();
 			
 			for (int k = 0; k < parsedStructListSize; k++) {
 				StringBuilder parsedSB = new StringBuilder();
@@ -2705,14 +2709,14 @@ public class ThmP1 {
 					parsedSB.append("; ");
 				}
 				
-				StringBuilder wlSB = wlCommandTreeTraversal(kHeadStruct, headParseStructList, parsedPairMMapList, curStructContextvec, 
+				StringBuilder wlSB = wlCommandTreeTraversal(kHeadStruct, headParseStructList, parsedPairMMapList, curStructContextVecMap, 
 						span, parseState);
 				longFormParsedPairList.add(new ParsedPair(parsedSB.toString(), totalScore, 
 						"long"));
 			}
 			
 			//add only one vector to list since the pieces are part of one single parse, if no full parse
-			contextVecList.add(curStructContextvec);
+			thmContextVecMapList.add(curStructContextVecMap);
 			
 			//defer these to ordered addition in orderPairsAndPutToLists!
 			//parsedExpr.add(new ParsedPair(parsedSB.toString(), totalScore, "long"));						
@@ -2736,7 +2740,7 @@ public class ThmP1 {
 			}
 			List<Multimap<ParseStructType, ParsedPair>> parsedPairMMapList2 = new ArrayList<Multimap<ParseStructType, ParsedPair>>();
 			parsedPairMMapList2.add(combinedMMap);
-			orderPairsAndPutToLists(parsedPairMMapList2, headParseStructList, parseState, longFormParsedPairList, contextVecList);
+			orderPairsAndPutToLists(parsedPairMMapList2, headParseStructList, parseState, longFormParsedPairList, thmContextVecMapList);
 			
 			//if commandNumUnitsWithHeadNoneSum sufficiently low: so sufficiently few parses
 			//with NONE, don't parse again. Half is a good threshold
@@ -3034,7 +3038,7 @@ public class ThmP1 {
 	 */
 	private static void orderPairsAndPutToLists(List<Multimap<ParseStructType, ParsedPair>> parsedPairMMapList,
 			List<ParseStruct> headParseStructList, ParseState parseState,
-			List<ParsedPair> longFormParsedPairList, List<int[]> contextVecList){
+			List<ParsedPair> longFormParsedPairList, List<Map<Integer, Integer>> contextVecMapList){
 		
 		/*use insertion sort, since number of maps in parsedPairMMapList is usually very small, ~1-5.
 		 * For maps with multiple entries (e.g. one sentence with both a HYP and a STM), add the numUnits and 
@@ -3235,15 +3239,16 @@ public class ThmP1 {
 		}	
 		//assign the global context vec as the vec of the highest-ranked parse
 		int bestIndex = finalOrderingList.get(0);
-		if(contextVecList.size() == 1){
+		Map<Integer, Integer> parseContextVectorMap;
+		if(contextVecMapList.size() == 1){
 			//in case there was no full parse, list should only contain one element.
-			//since same vector was passed around to be filled.
-			parseContextVector = contextVecList.get(0);
+			//since same vector was passed around to be filled. <--not necessarily.
+			parseContextVectorMap = contextVecMapList.get(0);
 		}else{
-			parseContextVector = contextVecList.get(finalOrderingList.get(0));			
+			parseContextVectorMap = contextVecMapList.get(finalOrderingList.get(0));			
 			//System.out.println("Best context vector added: " +  Arrays.toString(parseContextVector));
 		}
-		parseState.addContextVecToCurThmParse(parseContextVector);
+		parseState.addContextVecMapToCurThmParse(parseContextVectorMap);
 		
 		ParseStruct bestParseStruct = headParseStructList.get(bestIndex);
 		bestParseStruct.set_parentParseStruct(parseState.getCurParseStruct());
@@ -3286,8 +3291,8 @@ public class ThmP1 {
 	 * @return LongForm parse (a string representation of the parse tree which will be turned into WL form)
 	 */
 	private static StringBuilder wlCommandTreeTraversal(Struct uHeadStruct, List<ParseStruct> headParseStructList, 
-			List<Multimap<ParseStructType, ParsedPair>> parsedPairMMapList,
-			int[] curStructContextVec, int span, ParseState parseState) {
+			List<Multimap<ParseStructType, ParsedPair>> parsedPairMMapList, //int[] curStructContextVec, 
+			Map<Integer, Integer> curStructContextVecMap, int span, ParseState parseState) {
 		
 		StringBuilder parseStructSB = new StringBuilder();
 		//ParseStructType parseStructType = ParseStructType.getType(uHeadStruct);
@@ -3331,11 +3336,11 @@ public class ThmP1 {
 		boolean contextVecConstructed = false;
 		
 		contextVecConstructed = ParseToWLTree.collectCommandsDfs(parseStructMMap, curParseStruct, uHeadStruct, wlSB, 
-				curStructContextVec, true, contextVecConstructed, parseState);
+				curStructContextVecMap, true, contextVecConstructed, parseState);
 		//System.out.println(">>>>>>>>>>uHeadStruct.WLCommandWrapperList()" + uHeadStruct.WLCommandWrapperList()); //DEBUG
 	 	
 		if(!contextVecConstructed){
-			ParseTreeToVec.tree2vec(uHeadStruct, curStructContextVec);
+			ParseTreeToVec.tree2vec(uHeadStruct, curStructContextVecMap);
 		}
 		
 		System.out.println("Parts: " + parseStructMMap);
@@ -4341,12 +4346,11 @@ public class ThmP1 {
 	 * for each String in return array of ThmP1.preprocess(input).
 	 * @return the context vector of highest-ranking parse.
 	 */
-	public static int[] getParseContextVector(){
-		//return null if context vec not meaningful! Like for 2 terms.
+	/*public static int[] getParseContextVector(){
 		int[] parseContextVectorCopy = Arrays.copyOf(parseContextVector, parseContextVectorSz);
 		//parseContextVector = new int[parseContextVectorSz];
 		return parseContextVectorCopy;
-	}
+	}*/
 	
 	/** 
 	 * @return The ParseStruct parts of each parse since last retrieval.

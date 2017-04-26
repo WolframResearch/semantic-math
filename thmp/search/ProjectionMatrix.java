@@ -86,7 +86,8 @@ public class ProjectionMatrix {
 			}
 			FileUtils.serializeObjToFile(curList, path);
 		}
-		String path = baseFileStr + String.valueOf(numThmsInBundle);
+		/*Serialize the remainder*/
+		String path = baseFileStr + String.valueOf(numBundle);
 		List<ContextRelationVecPair> curList = new ArrayList<ContextRelationVecPair>();
 		for(int i = numBundle * numThmsInBundle; i < combinedVecsListSz; i++){
 				curList.add(combinedVecsList.get(i));

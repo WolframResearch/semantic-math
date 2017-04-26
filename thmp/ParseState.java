@@ -24,6 +24,7 @@ import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 
 /**
  * Captures state of the parse, such as recent entities used (recentEnt).
@@ -37,9 +38,10 @@ import java.util.Arrays;
 public class ParseState {
 	
 	//placeholder context vector
-	private static int[] PLACEHOLDER_CONTEXT_VEC = new int[CollectThm.ThmWordsMaps.get_CONTEXT_VEC_SIZE()];
-	private static String PLACEHOLDER_CONTEXT_VEC_STR 
-		= GenerateContextVector.contextVecIntArrayToString(PLACEHOLDER_CONTEXT_VEC);
+	private static Map<Integer, Integer> PLACEHOLDER_CONTEXT_VEC = Collections.emptyMap();
+			//new int[CollectThm.ThmWordsMaps.get_CONTEXT_VEC_SIZE()];
+	/*private static String PLACEHOLDER_CONTEXT_VEC_STR 
+		= GenerateContextVector.contextVecIntArrayToString(PLACEHOLDER_CONTEXT_VEC);*/
 	//current String being parsed. I.e. the unit
 	//of the input that's being tokenized, so 
 	//delimiter-separated.
@@ -112,6 +114,7 @@ public class ParseState {
 	private List<ParsedPair> parsedExpr = new ArrayList<ParsedPair>();	
 	//list of context vectors, each element corresponds to a part of a thm.
 	List<int[]> thmContextVecList = new ArrayList<int[]>();
+	List<Map<Integer, Integer>> thmContextVecMapList = new ArrayList<Map<Integer, Integer>>();
 	//flag to denote whether currently in theorem/lemma/etc or not.
 	private boolean inThmFlag;
 	
@@ -226,13 +229,13 @@ public class ParseState {
 		}		
 	}
 	
-	public static int[] PLACEHOLDER_CONTEXT_VEC(){
+	public static Map<Integer, Integer> PLACEHOLDER_CONTEXT_VEC(){
 		return PLACEHOLDER_CONTEXT_VEC;
 	}
 
-	public static String PLACEHOLDER_CONTEXT_VEC_String(){
+	/*public static String PLACEHOLDER_CONTEXT_VEC_String(){
 		return PLACEHOLDER_CONTEXT_VEC_STR;
-	}
+	}*/
 
 	/**
 	 * Contain information that define variables, whose names are stored in 
@@ -462,6 +465,19 @@ public class ParseState {
 		return GenerateContextVector.combineContextVectors(thmContextVecList);
 	}
 	
+	public Map<Integer, Integer> getCurThmCombinedContextVecMap() {		
+		return GenerateContextVector.combineContextVectorMaps(thmContextVecMapList);
+	}
+	
+	/**
+	 * Adds a context vec to the parse of current thm, since each thm likely consists
+	 * of several parts.
+	 * @param contextVec
+	 */
+	public void addContextVecMapToCurThmParse(Map<Integer, Integer> map){
+		this.thmContextVecMapList.add(map);
+	}
+	
 	/**
 	 * Adds a context vec to the parse of current thm, since each thm likely consists
 	 * of several parts.
@@ -470,7 +486,6 @@ public class ParseState {
 	public void addContextVecToCurThmParse(int[] contextVec) {
 		this.thmContextVecList.add(contextVec);
 	}
-	
 	/**
 	 * Build ParseState using builder, to avoid occurrences of half-baked states,
 	 * and to avoid .
@@ -879,6 +894,7 @@ public class ParseState {
 		this.parseErrorCode = ParseErrorCode.NO_ERROR;
 		//reset list of context vectors
 		this.thmContextVecList = new ArrayList<int[]>();
+		this.thmContextVecMapList = new ArrayList<Map<Integer, Integer>>();
 		this.localVariableNamesMMap = ArrayListMultimap.create();
 		this.inThmFlag = false;
 		this.recentParseSpanning = false;

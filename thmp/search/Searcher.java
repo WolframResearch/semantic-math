@@ -22,7 +22,7 @@ public interface Searcher<S> {
 	 * Searcher state for storing any already-computed vectors,
 	 * to avoid computing search vecs multiple times. 
 	 * T is the type of the vector, e.g. BigInteger for relational vecs,
-	 * and int[] for context vec.
+	 * and Map<Integer, Integer> for context vec.
 	 */
 	public static class SearcherState<T>{
 		T queryVector;

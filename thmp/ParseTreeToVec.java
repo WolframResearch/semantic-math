@@ -69,8 +69,8 @@ public class ParseTreeToVec {
 	 * @param contextVec
 	 * @return
 	 */
-	public static int[] tree2vec(Struct headStruct, int[] contextVec){
-		return tree2vec(headStruct, contextVec, null);
+	public static Map<Integer, Integer> tree2vec(Struct headStruct, Map<Integer, Integer> contextVecMap){
+		return tree2vec(headStruct, contextVecMap, null);
 	}
 	
 	/**
@@ -81,14 +81,14 @@ public class ParseTreeToVec {
 	 * @param WLCommandStr
 	 * @return contextVec filled with indices.
 	 */
-	public static int[] tree2vec(Struct headStruct, int[] contextVec, WLCommandWrapper commandWrapper){
+	public static Map<Integer, Integer> tree2vec(Struct headStruct, Map<Integer, Integer> contextVecMap, WLCommandWrapper commandWrapper){
 		// curCommand's type determines the num attached to head of structH,
 		// e.g. "Exists[structH]" writes enum ParseRelation -2 at the index of structH 
 		//get the entry for head and sets it corresponding to the term for headStruct
 		ParseRelation parseRelation = null;
 		int headVecEntry;
 		if(commandWrapper != null){			
-			parseRelation = ParseRelation.getParseRelation(headStruct, contextVec, commandWrapper.WLCommandStr());
+			parseRelation = ParseRelation.getParseRelation(headStruct, commandWrapper.WLCommandStr());
 			headVecEntry = parseRelation.relationNum;
 			//System.out.println("HERE (in ParseTreeToVec)" + commandWrapper == null ? "" : commandWrapper.WLCommandStr());
 		}else{
@@ -104,12 +104,12 @@ public class ParseTreeToVec {
 		//String termStr = headStruct.contentStr();
 		//int termRowIndex = setContextVecEntry(headStruct, termStr, headVecEntry, contextVec);
 		
-		contextVec = tree2vec(headStruct, headVecEntry, contextVec);
+		tree2vec(headStruct, headVecEntry, contextVecMap);
 		//adjust the context vector, to account for e.g. A \[Element] B
 		if(commandWrapper != null){
-			ParseRelation.adjustContextVec(headStruct, contextVec, commandWrapper, parseRelation);
+			ParseRelation.adjustContextVec(headStruct, contextVecMap, commandWrapper, parseRelation);
 		}
-		return contextVec;
+		return contextVecMap;
 	}
 	
 	/**
@@ -119,14 +119,14 @@ public class ParseTreeToVec {
 	 * @param headStructRowIndex is index of parent (of headStruct).
 	 * @param contextVec current context vector containing indices for terms in parsed string.
 	 */
-	private static int[] tree2vec(Struct headStruct, int headStructParentIndex, int[] contextVec){
+	private static Map<Integer, Integer> tree2vec(Struct headStruct, int headStructParentIndex, Map<Integer, Integer> contextVecMap){
 		
 		//sets the entry correponding to headStruct
 		//setContextVecEntry(headStruct, contextVec, headStructRowIndex);
 		//call the applicable method in either StructA or StructH, with dynamic dispatch
 		boolean adjustVecFromCommand = true;
-		headStruct.setContextVecEntry(headStructParentIndex, contextVec, adjustVecFromCommand);
-		return contextVec;
+		headStruct.setContextVecEntry(headStructParentIndex, contextVecMap, adjustVecFromCommand);
+		return contextVecMap;
 	}
 
 	/**
@@ -137,7 +137,7 @@ public class ParseTreeToVec {
 	 * @param whether to adjust the vect based on WLCommand, false if this is already adjustment.
 	 * @return
 	 */
-	public static void setStructHContextVecEntry(StructH<?> struct, int structParentIndex, int[] contextVec, 
+	public static void setStructHContextVecEntry(StructH<?> struct, int structParentIndex, Map<Integer, Integer> contextVecMap, 
 			boolean adjustVecFromCommand){
 		//termsStr only contains name of struct, properties are considered below 
 		String termStr = struct.nameStr();
@@ -145,7 +145,7 @@ public class ParseTreeToVec {
 		//add struct itself, then its children
 		//don't count parent is parent just all latex expressions
 		if(!termStr.matches("\\$[^$]+\\$")){
-			structIndex = setContextVecEntry(struct, termStr, structParentIndex, contextVec);
+			structIndex = setContextVecEntry(struct, termStr, structParentIndex, contextVecMap);
 		}
 		//if struct does not have entry, try again with
 		
@@ -154,18 +154,18 @@ public class ParseTreeToVec {
 		
 		for(Struct child : children){
 			//System.out.println("child! " + child + " ||| parent! " + struct);
-			tree2vec(child, structIndex, contextVec);
+			tree2vec(child, structIndex, contextVecMap);
 		}
 		
 		//should also set indices of ppt's of StructH, e.g. "maximal ideal", maximal is ppt of ideal 
 		Set<String> propertySet = struct.getPropertySet();
 		//mark indices for words that are properties
 		for(String propertyStr : propertySet){		
-			setContextVecEntry(struct, propertyStr, structIndex, contextVec);
+			setContextVecEntry(struct, propertyStr, structIndex, contextVecMap);
 			//separate here instead of in setContextVecEntry, make all  point to the ent			
 		}
 		if(adjustVecFromCommand){
-			adjustFromWrapper(struct, contextVec);
+			adjustFromWrapper(struct, contextVecMap);
 		}
 	}
 	
@@ -176,7 +176,7 @@ public class ParseTreeToVec {
 	 * @param structParentIndex row index of parent of struct
 	 * @return
 	 */
-	public static void setStructAContextVecEntry(StructA<?, ?> struct, int structParentIndex, int[] contextVec, 
+	public static void setStructAContextVecEntry(StructA<?, ?> struct, int structParentIndex, Map<Integer, Integer> contextVecMap, 
 			boolean adjustVecFromCommand){
 		
 		List<String> termStrList = struct.contentStrList();
@@ -187,21 +187,21 @@ public class ParseTreeToVec {
 		int structIndex = structParentIndex;
 		int termStrListLen = termStrList.size();
 		if(termStrListLen > 0){
-			structIndex = setContextVecEntry(struct, termStrList.get(0), structParentIndex, contextVec);
+			structIndex = setContextVecEntry(struct, termStrList.get(0), structParentIndex, contextVecMap);
 		}
 		for(int i = 1; i < termStrListLen; i++){
-			setContextVecEntry(struct, termStrList.get(i), structParentIndex, contextVec);
+			setContextVecEntry(struct, termStrList.get(i), structParentIndex, contextVecMap);
 		}
 		//do prev1 and prev2
 		if(struct.prev1NodeType().isTypeStruct()){
-			tree2vec((Struct)(struct.prev1()), structIndex, contextVec);
+			tree2vec((Struct)(struct.prev1()), structIndex, contextVecMap);
 		}
 		
 		if(struct.prev2NodeType().isTypeStruct()){
-			tree2vec((Struct)(struct.prev2()), structIndex, contextVec);
+			tree2vec((Struct)(struct.prev2()), structIndex, contextVecMap);
 		}		
 		if(adjustVecFromCommand){
-			adjustFromWrapper(struct, contextVec);
+			adjustFromWrapper(struct, contextVecMap);
 		}
 	}
 
@@ -210,16 +210,16 @@ public class ParseTreeToVec {
 	 * @param struct
 	 * @param contextVec
 	 */
-	private static void adjustFromWrapper(Struct struct, int[] contextVec) {
+	private static void adjustFromWrapper(Struct struct, Map<Integer, Integer> contextVecMap) {
 		List<WLCommandWrapper> wrapperList = struct.WLCommandWrapperList();		
 		if(wrapperList != null){
 			WLCommandWrapper wrapper = wrapperList.get(0);
 			//System.out.println("struct! " + struct + " |||wrapper! " + wrapper);
-			ParseRelation parseRelation = ParseRelation.getParseRelation(struct, contextVec, wrapper.WLCommandStr());
+			ParseRelation parseRelation = ParseRelation.getParseRelation(struct, wrapper.WLCommandStr());
 				//headVecEntry = parseRelation.relationNum;
 				//System.out.println("HERE (in ParseTreeToVec)" + commandWrapper == null ? "" : commandWrapper.WLCommandStr());
 			
-			ParseRelation.adjustContextVec(struct, contextVec, wrapper, parseRelation);
+			ParseRelation.adjustContextVec(struct, contextVecMap, wrapper, parseRelation);
 			
 		}
 	}
@@ -236,7 +236,7 @@ public class ParseTreeToVec {
 	 * if headStruct, e.g. ParseRelation.EXISTS for Exists[structH]
 	 * @return row index corresponding to Struct that was just inserted into.
 	 */
-	private static int setContextVecEntry(Struct struct, String termStr, int structParentIndex, int[] contextVec){
+	private static int setContextVecEntry(Struct struct, String termStr, int structParentIndex, Map<Integer, Integer> contextVecMap){
 		//sets the entry to the index of the parent	
 		
 		//String termStr = struct.contentStr();
@@ -255,7 +255,7 @@ public class ParseTreeToVec {
 			int parentIndex = structParentIndex;
 			if(null != lastWordRowIndex){
 				parentIndex = lastWordRowIndex;
-				addTermStrToVec(struct, lastWord, structParentIndex, contextVec);
+				addTermStrToVec(struct, lastWord, structParentIndex, contextVecMap);
 			}//else do nothing, because lastWord does not have an entry in term-document matrix anyway
 			
 			//set the parent of the prior words as the index of the last word. But if word-pair
@@ -276,15 +276,15 @@ public class ParseTreeToVec {
 						if(prevWord.matches(".*ly") || posMMap.containsEntry(prevWord, "adverb")){
 							//modify parent index of prevWord.
 							boolean forceAdjust = true;
-							addTermStrToVec(struct, prevWord, wordIndex, contextVec, forceAdjust);
+							addTermStrToVec(struct, prevWord, wordIndex, contextVecMap, forceAdjust);
 						}
 					}
 				}
-				addTermStrToVec(struct, word, parentIndex, contextVec);
+				addTermStrToVec(struct, word, parentIndex, contextVecMap);
 			}
 		}
 		
-		int termRowIndex = addTermStrToVec(struct, termStr, structParentIndex, contextVec);	
+		int termRowIndex = addTermStrToVec(struct, termStr, structParentIndex, contextVecMap);	
 		//if termStr was not added, use lastWordRowIndex. Relies on fact that addTermStrToVec()
 		//returns structParentIndex back if termStr not added.
 		termRowIndex = (termRowIndex == structParentIndex && null != lastWordRowIndex) ? lastWordRowIndex : termRowIndex;
@@ -310,9 +310,9 @@ public class ParseTreeToVec {
 		return rowIndex;
 	}
 	
-	private static int addTermStrToVec(Struct struct, String termStr, int structParentIndex, int[] contextVec) {
+	private static int addTermStrToVec(Struct struct, String termStr, int structParentIndex, Map<Integer, Integer> contextVecMap) {
 		boolean forceAdjust = false;
-		return addTermStrToVec(struct, termStr, structParentIndex, contextVec, forceAdjust);
+		return addTermStrToVec(struct, termStr, structParentIndex, contextVecMap, forceAdjust);
 	}
 	
 	/**
@@ -325,8 +325,8 @@ public class ParseTreeToVec {
 	 * @param contextVec
 	 * @return
 	 */
-	private static int addTermStrToVec(Struct struct, String termStr, int structParentIndex, int[] contextVec, 
-			boolean forceAdjust) {
+	private static int addTermStrToVec(Struct struct, String termStr, int structParentIndex, 
+			Map<Integer, Integer> contextVecMap, boolean forceAdjust) {
 		Integer termRowIndex = contextKeywordIndexDict.get(termStr);
 		//to be used if no appropriate termRowIndex found
 		Integer someRelatedWordIndex = null;
@@ -345,7 +345,7 @@ public class ParseTreeToVec {
 		}
 		//System.out.println("##### Setting context vec, termStr " + termStr + " termRowIndex " + termRowIndex);
 		if(termRowIndex == null){
-		//removes endings such as -ing, and uses synonym rep.
+			//removes endings such as -ing, and uses synonym rep.
 			termStr = WordForms.normalizeWordForm(termStr);
 			if(!GATHERING_DATA_BOOL){
 			//check related words again
@@ -367,8 +367,10 @@ public class ParseTreeToVec {
 						if(null == someRelatedWordIndex){ 
 							someRelatedWordIndex = relatedWordRowIndex;
 						}
-						if(contextVec[relatedWordRowIndex] <= 0 || forceAdjust){
-							contextVec[relatedWordRowIndex] = structParentIndex;
+						Integer prevParentIndex = contextVecMap.get(relatedWordRowIndex);
+						if(null == prevParentIndex || prevParentIndex < 0 || forceAdjust){ //contextVec[relatedWordRowIndex] <= 0
+							contextVecMap.put(relatedWordRowIndex, structParentIndex);
+							//contextVec[relatedWordRowIndex] = structParentIndex;
 						}
 					}
 				}
@@ -376,8 +378,10 @@ public class ParseTreeToVec {
 		}
 		if(termRowIndex != null){
 			//if hasn't been assigned to a valid index before, or only relational index
-			if(contextVec[termRowIndex] <= 0 || forceAdjust){
-				contextVec[termRowIndex] = structParentIndex;
+			Integer prevParentIndex = contextVecMap.get(termRowIndex);
+			if(null == prevParentIndex || prevParentIndex < 0 || forceAdjust){//contextVec[termRowIndex] <= 0 
+				contextVecMap.put(termRowIndex, structParentIndex);
+				//contextVec[termRowIndex] = structParentIndex;
 			}
 			System.out.println("ParseTreeToVec - " + " termStr " + termStr + " ### rowIndex " + termRowIndex + " parent index " + structParentIndex);
 		}else{
@@ -424,7 +428,7 @@ public class ParseTreeToVec {
 		 * @param struct Struct from which structure of the command can be extracted.
 		 * @return
 		 */
-		public static ParseRelation getParseRelation(Struct struct, int[] contextVec, String WLCommandStr){
+		public static ParseRelation getParseRelation(Struct struct, String WLCommandStr){
 			
 			if(WLCommandStr.contains("\\[Element]")){
 				//use the WLCommand structure to determine A and B in A\[Element]B,
@@ -454,18 +458,18 @@ public class ParseTreeToVec {
 		 * @param commandWrapper
 		 * @return
 		 */
-		public static void adjustContextVec(Struct struct, int[] contextVec, WLCommandWrapper commandWrapper,
+		public static void adjustContextVec(Struct struct, Map<Integer, Integer> contextVecMap, WLCommandWrapper commandWrapper,
 				ParseRelation parseRelation){
 			//String WLCommandStr = commandWrapper.WLCommandStr();
 			if(parseRelation.equals(ELEMENT)){
 				//use the WLCommand structure to determine A and B in A\[Element]B,
 				//set entry at B to the row index of A: B points to A.
-				setContextVec(struct, contextVec, commandWrapper, ELEMENT);
+				setContextVec(struct, contextVecMap, commandWrapper, ELEMENT);
 				
 			}else if(parseRelation.equals(HASPPT)){
 				//use the WLCommand structure to determine A and B in A\[Element]B,
 				//set entry at B to the row index of A: B points to A.
-				setContextVec(struct, contextVec, commandWrapper, HASPPT);				
+				setContextVec(struct, contextVecMap, commandWrapper, HASPPT);				
 			}
 			
 		}
@@ -473,7 +477,7 @@ public class ParseTreeToVec {
 		/**
 		 * Sets the context vec to take into account e.g. A\[Element] B.
 		 */
-		private static void setContextVec(Struct struct, int[] contextVec, WLCommandWrapper commandWrapper,
+		private static void setContextVec(Struct struct, Map<Integer, Integer> contextVecMap, WLCommandWrapper commandWrapper,
 				ParseRelation relation){
 			//get the list of PosTerms, containing info on the structs making up the command
 			WLCommand command = commandWrapper.WLCommand();
@@ -485,10 +489,10 @@ public class ParseTreeToVec {
 			System.out.println("posTermList " + posTermList + " triggerTermIndex " + triggerTermIndex);
 			switch(relation){
 			case ELEMENT:
-				adjustParentIndex(posTermList, command, triggerTermIndex, contextVec);
+				adjustParentIndex(posTermList, command, triggerTermIndex, contextVecMap);
 				break;
 			case HASPPT:
-				adjustParentIndex(posTermList, command, triggerTermIndex, contextVec);
+				adjustParentIndex(posTermList, command, triggerTermIndex, contextVecMap);
 				break;
 			default:
 				
@@ -504,7 +508,8 @@ public class ParseTreeToVec {
 		 * @param triggerTermIndex
 		 * @param contextVec
 		 */
-		private static void adjustParentIndex(List<PosTerm> posTermList, WLCommand command, int triggerTermIndex, int[] contextVec){
+		private static void adjustParentIndex(List<PosTerm> posTermList, WLCommand command, int triggerTermIndex, 
+				Map<Integer, Integer> contextVecMap){
 			/*for(int i = 0; i < posTermList.size(); i++){
 			PosTerm posTerm = posTermList.get(i);
 			System.out.println(" STRUCT " + posTermList.get(i).commandComponent());
@@ -570,7 +575,7 @@ public class ParseTreeToVec {
 				//addTermStrToVec(curStruct, curStructTermStr, parentTermRowIndex, contextVec);
 				//System.out.println("!curStruct " + curStruct);
 				boolean adjustVecFromCommand = false;
-				curStruct.setContextVecEntry(parentTermRowIndex, contextVec, adjustVecFromCommand);
+				curStruct.setContextVecEntry(parentTermRowIndex, contextVecMap, adjustVecFromCommand);
 			}
 		}
 		}

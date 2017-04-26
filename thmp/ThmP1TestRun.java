@@ -685,7 +685,8 @@ public class ThmP1TestRun {
 			st = "We require the signed resolution res($T$) to coincide with res($S$)  on the circles which do not intersect this disc";//stucture
 			st = "the probability $a_k(u)$ that there are no double gaps satisfies $$ \\ beta (u)^k\\ leq a_k (u)\\ leq \\ beta (u)^{k-1}$$";//revisit! Multiple children attached.
 			st = "the holonomy of $ \\ partial \\ Sigma$ has no fixed points"; //also fix parse. assert[[ent{name=holonomy}][[ent{name=$ \ partial \ Sigma$}]of [ent{name=$ \ partial \ Sigma$}]],
-			
+			st = "there exist monomial ideals in ring";
+			//st = "there are complex parameters";
 			//st = "given $A  $ such that $A = o$";
 			//st = "take the derivative of $f$";
 			//st = "$A $ is isomorphic to $B $ of $C $ in $D $";
@@ -798,6 +799,7 @@ public class ThmP1TestRun {
 				}
 			}
 			
+			System.out.println("parseState contextVecMap " + parseState.getCurThmCombinedContextVecMap());
 			boolean streamInput = false;
 			if(streamInput){
 				Scanner sc = new Scanner(System.in);
