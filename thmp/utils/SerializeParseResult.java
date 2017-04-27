@@ -66,8 +66,14 @@ public class SerializeParseResult {
 		inputStrList.add("There are field in the class $\\mathcal{X}$ that are not finite modifications of rings.");
 		inputStrList.add("for all components $U$ of $supp(w)$ which are not annuli");		
 		inputStrList.add("the holonomy of $\\partial \\Sigma$ has no fixed points");
-		
 		inputStrList.add("$\\lambda$ run over all pairs of partitions which are complementary with respect to $R$");
+		inputStrList.add("$s_n$ does not converge");
+		inputStrList.add("If the Alexander polynomial of $K$ is not $1$");
+		
+		//inputStrList.add("");
+		//inputStrList.add("");
+		//inputStrList.add("");
+		//inputStrList.add("");
 		//inputStrList.add("");
 		//inputStrList.add("");
 		//inputStrList.add("");

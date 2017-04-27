@@ -28,8 +28,9 @@ public class StructH<H> extends Struct{
 	//*additional* part of speech
 	private volatile Set<String> extraPosSet;
 	
-	//the number of times this WLCommandStr has been visited.
-	//To not repeat, print only when this is even
+	//the number of times this Struct has been visited in collect-WLCommandStr DFS.
+	//To not redundantly include strings, gather into final grammar 
+	//rule string only if this is 0.
 	private int WLCommandStrVisitedCount;
 	//List of WLCommandWrapper associated with this Struct, should have 
 	//corresponding WLCommandStr. Each Wrapper contains its index in list.
@@ -500,7 +501,10 @@ public class StructH<H> extends Struct{
 			//wrapperListSz should be > 0, since list is created when first wrapper is added
 			WLCommandWrapper curWrapper = WLCommandWrapperList.get(wrapperListSz - 1);
 			WLCommand composedCommand = curWrapper.WLCommand();
-			if(WLCommand.structsWithOtherHeadCount(composedCommand) == 0){//HERE
+			Struct structHeadWithOtherHead;
+			if(WLCommand.structsWithOtherHeadCount(composedCommand) == 0 || 
+					null != (structHeadWithOtherHead = composedCommand.structHeadWithOtherHead())
+					&& this.dfsDepth() == structHeadWithOtherHead.dfsDepth()){//HERE
 			if(curCommand != null){
 				int commandNumUnits = WLCommand.commandNumUnits(composedCommand);
 			 	WLCommand.increment_commandNumUnits(curCommand, commandNumUnits);
@@ -544,8 +548,6 @@ public class StructH<H> extends Struct{
 		}else if(!curCommand.equals(this.commandBuilt)){
 			this.WLCommandStrVisitedCount++;
 		}
-		
-		//String str = "";
 		StringBuilder sb = new StringBuilder();
 		
 		if(includeType){			
@@ -607,8 +609,7 @@ public class StructH<H> extends Struct{
 		sb.append(appendChildrenQualifierString(includeType, curCommand));
 		if(includeType){ 
 			sb.append("]");
-		}
-				
+		}				
 		return sb.toString();
 	}
 

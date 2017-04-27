@@ -194,7 +194,7 @@ public class WLCommandsList {
 		/*putToWLCommandMapBuilder(wLCommandMapBuilder, "exist", addCommand(
 				new String[] { ", there, false", "Exists[", ", exists*, trigger",  "ent|symb|phrase|noun, , true", "]"}));*/
 		putToWLCommandMapBuilder(wLCommandMapBuilder, "there", new PBuilder(null, "there", false, true, false), new PBuilder("Exist["),
-				new PBuilder(null, "exists*|is", false), new PBuilder("ent|symb|phrase|noun", null, true, RelationType.EXIST),
+				new PBuilder(null, "exists*|is|are", false), new PBuilder("ent|symb|phrase|noun", null, true, RelationType.EXIST),
 				 new PBuilder("]" ));
 		
 		//putToWLCommandMapBuilder(wLCommandMapBuilder, "is", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is|are|be, trigger",
@@ -295,8 +295,6 @@ public class WLCommandsList {
 		//putToWLCommandMapBuilder(wLCommandMapBuilder, "if", addCommand(new String[] { "if|If|let, , trigger", "assert, , true" }));
 		putToWLCommandMapBuilder(wLCommandMapBuilder, "if", new PBuilder("if|If|let|hyp", null, false, true, false), 
 				new PBuilder("assert|texAssert", null, true));
-		putToWLCommandMapBuilder(wLCommandMapBuilder, "if", new PBuilder("hyp|if|If|let", null, false, true, false), 
-				new PBuilder("ent", null, true) );
 		
 		putToWLCommandMapBuilder(wLCommandMapBuilder, "then", new PBuilder("then|Then", null, false, true, false), 
 				new PBuilder("assert|texAssert", null, true) );

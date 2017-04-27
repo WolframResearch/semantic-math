@@ -690,6 +690,13 @@ public class ThmP1TestRun {
 			st = "Fix a rectangular Young diagram $R$, and consider all the products of Schur functions $s_\\lambda s_\\lambdac$, where $\\lambda$ and $\\lambdac$ run over all (unordered) pairs of partitions which are complementary with respect to $R$.";//inf loop on server!
 			st = "where $\\lambda$ run over all pairs of partitions which are complementary with respect to $R$"; //revisit!
 			st = "Fix a rectangular Young diagram $R$"; //parse this!
+			st = "$s_n$ does not converge";
+			st = "$J$ is not slice";
+			st = "There are fields in the class $\\mathcal{X}$ that are not finite modificatios of rings";
+			st = "If the Alexander polynomial of $K$ is not $1$";
+			st = "the holonomy of $\\partial \\Sigma$ has no fixed points";
+			st = "Let $p_1,\\dots,p_r$ be the preimages under $w$ of $c^\\ast_0$ with the property that one of the components of a punctured neighborhood of $p_j$ in $\\pa D_m$ maps to $\\gamma$.";
+			st = "Let $p_1,\\dots,p_r$ be the preimages under $w$ of $c^\\ast_0$";//too many parses!
 			
 			//st = "there are complex parameters";
 			//st = "given $A  $ such that $A = o$";

@@ -141,24 +141,25 @@ public class FileUtils {
 		FileOutputStream fileOuputStream = null;
 		ObjectOutputStream objectOutputStream = null;
 		try{
-			fileOuputStream = new FileOutputStream(outputFileStr);
-			objectOutputStream = new ObjectOutputStream(fileOuputStream);
+			fileOuputStream = new FileOutputStream(outputFileStr);			
 		}catch(FileNotFoundException e){
-			e.printStackTrace();
-			throw new IllegalStateException("The output file " + outputFileStr + " cannot be found!");
-		}catch(IOException e){
-			e.printStackTrace();
-			throw new IllegalStateException("IOException while opening ObjectOutputStream");
-		}				
-				//Iterator<? extends Object> iter = iterable.iterator();				
+			new File(findFilePathDirectory(outputFileStr)).mkdirs();
+			try{
+				fileOuputStream = new FileOutputStream(outputFileStr);
+			}catch(FileNotFoundException e2){
+				silentClose(fileOuputStream);
+				throw new IllegalStateException("The output file " + outputFileStr + " cannot be found!");
+			}			
+		}	
 		try{
-					/*while(iter.hasNext()){
-						Object obj = iter.next();
-						objectOutputStream.writeObject(obj);
-					}*/
+			objectOutputStream = new ObjectOutputStream(fileOuputStream);
+		}catch(IOException e){
+			silentClose(fileOuputStream);
+			throw new IllegalStateException("IOException while opening ObjectOutputStream");
+		}
+		try{
 			objectOutputStream.writeObject(list);
 			objectOutputStream.writeObject(SERIAL_VERSION_NUM);
-					//System.out.println("parsedExpressionList: " + parsedExpressionList);
 			objectOutputStream.close();
 			fileOuputStream.close();
 		}catch(IOException e){
@@ -241,6 +242,27 @@ public class FileUtils {
 			silentClose(inputStream);
 		}
 		return deserializedObj;
+	}
+	
+	/**
+	 * Finds the directory component in a file path. I.e. the component
+	 * before the last File.separatorChar, e.g. '/'. If no slash found, 
+	 * return the input String.
+	 * @param filePath
+	 * @return
+	 */
+	public static String findFilePathDirectory(String filePath){
+		int len = filePath.length();
+		int i;
+		for(i = len-1; i > -1; i--){
+			if(filePath.charAt(i) == File.separatorChar){
+				break;
+			}
+		}
+		if(i==-1){
+			i = len;
+		}
+		return filePath.substring(0, i);
 	}
 	
 	/**

@@ -81,7 +81,7 @@ public class ThmP1 {
 	private static final Pattern POSSIBLE_ADJ_PATTERN = Pattern.compile("(?:.+tive|.+wise|.+ary|.+ble|.+ous|.+ent|.+like|.+nal)$");
 	private static final Pattern POSSIBLE_ENT_PATTERN = Pattern.compile("(?:.+tion|.+son)$");
 	private static final Pattern ESSENTIAL_POS_PATTERN = Pattern.compile("ent|conj_ent|verb|vbs|if|symb|pro");
-	private static final Pattern VERB_POS_PATTERN = Pattern.compile("verb|vbs");	
+	private static final Pattern VERB_POS_PATTERN = Pattern.compile("verb|vbs|verbAlone");	
 	private static final Pattern SINGLE_WORD_TEX_PATTERN = Pattern.compile("\\$[^$]+\\$[^\\s]*"); 
 	private static final Pattern ARTICLE_PATTERN = Pattern.compile("a|the|an");
 	
@@ -1192,7 +1192,7 @@ public class ThmP1 {
 				Pair pair = pairs.get(pairsSize - 1);
 
 				// combine "no" and "not" with verbs
-				if (VERB_POS_PATTERN.matcher(pair.pos()).matches()) {
+				if (VERB_POS_PATTERN.matcher(pair.pos()).matches()) { 
 					String word = pairs.get(pairsSize - 2).word();
 					if (pairs.size() > 1 && (word.matches("not|no")
 							|| pairs.get(pairsSize - 2).pos().matches("not"))) {
@@ -1201,9 +1201,9 @@ public class ThmP1 {
 						pair.set_word(newWord);
 						pairs.remove(pairsSize - 2);
 					}
-
 					if (i + 1 < strAr.length && strAr[i + 1].matches("not|no")) {
 						//String newWord = pair.word().matches("is|are") ? "not" : "not " + pair.word();
+						//String newWord = strAr[i+1] + " " + pair.word();
 						String newWord = pair.word() + " " + strAr[i+1];
 						pair.set_word(newWord);
 						i++;
@@ -3039,7 +3039,10 @@ public class ThmP1 {
 	private static void orderPairsAndPutToLists(List<Multimap<ParseStructType, ParsedPair>> parsedPairMMapList,
 			List<ParseStruct> headParseStructList, ParseState parseState,
 			List<ParsedPair> longFormParsedPairList, List<Map<Integer, Integer>> contextVecMapList){
-		
+		System.out.println("ThmP1 - longFormParsedPairList ");
+		for(int i = 0; i < longFormParsedPairList.size(); i++){
+			System.out.println(longFormParsedPairList);			
+		}
 		/*use insertion sort, since number of maps in parsedPairMMapList is usually very small, ~1-5.
 		 * For maps with multiple entries (e.g. one sentence with both a HYP and a STM), add the numUnits and 
 		 * commandNumUnits across entries. Keep track of this multiplicity of entries, favor map with smaller 
@@ -4534,7 +4537,7 @@ public class ThmP1 {
 		StringBuilder childrenSB = new StringBuilder(40);
 		
 		for (int i = 0; i < children.size(); i++) {
-			childrenSB.append(childRelation.get(i) + " ");
+			childrenSB.append(childRelation.get(i)).append(" ");
 			
 			//System.out.print(childRelation.get(i) + " ");
 			//parsedLongFormSB.append(childRelation.get(i) + " ");

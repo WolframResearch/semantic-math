@@ -230,10 +230,18 @@ public class Maps {
 		public static void initialize(){			
 		}
 		
+		/**
+		 * Can be used to fend off some parse combinatorial explosion.
+		 * @param negativePosMMap
+		 */
 		private static void fillInNegativePosMMap(ListMultimap<String, String> negativePosMMap) {
 			negativePosMMap.put("there", "adverb");
 			negativePosMMap.put("which", "det");
 			negativePosMMap.put("run", "ent");
+			negativePosMMap.put("the", "adj");
+			negativePosMMap.put("under", "adverb");
+			negativePosMMap.put("let", "verb");
+			negativePosMMap.put("be", "verb");
 		}
 
 		/**
@@ -435,7 +443,7 @@ public class Maps {
 			// adverbs qualify verbs, adj, noun phrases, determiners, clauses etc
 			posPreMMap.put("does", "verb_COMP");
 			posPreMMap.put("do", "verb_COMP");
-			posPreMMap.put("does not", "not"); //verb??
+			posPreMMap.put("does not", "not"); //verb?? <-"not" for now
 			posPreMMap.put("do not", "not");
 			posPreMMap.put("not", "not");
 
@@ -887,9 +895,12 @@ public class Maps {
 			structMap.put("adj_qualifier", new Rule("newchild", "adj", .8));
 			//structMap.put("verb_prep", new Rule("newchild", "verbphrase", .85));
 			structMap.put("verb_prep", new Rule("verbphrase", .9));
-			/*structMap.put("verb_not", new Rule("newchild", "verb", .9));
+			/*Leave these comments.
+			 * structMap.put("verb_not", new Rule("newchild", "verb", .9));
 			structMap.put("vbs_not", new Rule("newchild", "vbs", .9));
 			structMap.put("verbAlone_not", new Rule("newchild", "verbAlone", .9));*/
+			structMap.put("not_verb", new Rule("verb", .85));
+			structMap.put("not_verbAlone", new Rule("verbAlone", .85));
 			structMap.put("verbAlone_prep", new Rule("newchild", "verbAlone", .85));
 			structMap.put("verbAlone_adverb", new Rule("newchild", "verbAlone", .85));
 			structMap.put("ent_symb", new Rule("absorb2", 1));

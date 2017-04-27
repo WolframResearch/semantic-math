@@ -135,6 +135,7 @@ public class ParseToWLTree{
 				addTriggeredCollectionToList(triggeredList, triggeredWordsSet, triggeredCommandSet, sCommandsCol);
 			}			
 		}
+		//System.out.println("ParseToWLTree-triggeredList " + triggeredList);
 		return triggeredList;
 	}
 
@@ -960,9 +961,9 @@ public class ParseToWLTree{
 					 * if headStruct is same as the struct used in command*/
 					|| (struct.isLeafNodeCouldHaveChildren() && struct.WLCommandStrVisitedCount() < 2))
 					){
-			if(struct.type().equals("assert")){
+			/*if(struct.type().equals("assert")){
 				System.out.println("^^^^ParseToWLTree-struct " + struct + " " );
-			}
+			}*/
 			//if(struct.WLCommandWrapperList() != null){
 			/*if(WLCommand.structsWithOtherHeadCount(struct.WLCommand()) 
 				> WLCommand.totalComponentCount(struct.WLCommand()) -2){
