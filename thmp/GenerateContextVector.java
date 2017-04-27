@@ -282,9 +282,9 @@ public class GenerateContextVector {
 					parentIndex = curParentIndex;
 				}				
 			}
-			System.out.println("GenerateContextVec - combining map: " + map);
+			//System.out.println("GenerateContextVec - combining map: " + map);
 		}		
-		System.out.println("GenerateContextVec - combinedMap: " + combinedMap);
+		//System.out.println("GenerateContextVec - combinedMap: " + combinedMap);
 		return combinedMap;
 	}
 	

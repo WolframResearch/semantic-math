@@ -3528,7 +3528,7 @@ public class ThmP1 {
 					childRelation = extractHypChildRelation(hypStruct);
 				}
 				childToAdd = (Struct)struct2.prev2();				
-			}else{			
+			}else{			//HERE
 				// Add to child relation, usually a preposition, 
 				// e.g. "from", "over". Could also be verb, "consist", "lies"			
 				List<Struct> kPlus1StructArrayList = mx.get(k + 1).get(k + 1).structList();					
@@ -3578,14 +3578,15 @@ public class ThmP1 {
 			//e.g. "field F in C over Q"
 			ChildRelationType childRelationType = childRelation.childRelationType();
 			String childRelationString = childRelation.childRelationStr;
-			if(childRelationType.equals(ChildRelationType.PREP) && 
-					!childRelationString.equals("of") && !childRelationString.equals("which") &&
+			if(childRelationType.equals(ChildRelationType.PREP)){
+				if(!childRelationString.equals("of") && !childRelationString.equals("which") &&
 					//use struct1 and not structToAppendChild.
 					struct1.childRelationType().equals(ChildRelationType.PREP)){
-				return new EntityBundle(firstEnt, recentEnt, recentEntIndex);
-			}else{
-				//bonus for tighter combination, e.g. "$A$ of $B$"
-				newDownPathScore += 0.05;
+					return new EntityBundle(firstEnt, recentEnt, recentEntIndex);					
+				}else{
+					//bonus for tighter combination, e.g. "$A$ of $B$"
+					newDownPathScore += 0.05;//HERE
+				}
 			}
 			
 			if(struct2.type().equals("prep") && struct2.prev2NodeType().isTypeStruct()
@@ -3665,8 +3666,8 @@ public class ThmP1 {
 				childToAdd.set_childRelationType(childRelation.childRelationType());				
 				structToAppendChild.add_child(childToAdd, childRelation); 
 				
-				struct2.set_parentStruct(structToAppendChild); //redundant
-				childToAdd.set_parentStruct(structToAppendChild); //redundant
+				struct2.set_parentStruct(structToAppendChild); 
+				//childToAdd.set_parentStruct(structToAppendChild); //redundant
 				
 				recentEnt = structToAppendChild;
 				recentEntIndex = j;				
@@ -4410,7 +4411,7 @@ public class ThmP1 {
 		
 		int structDepth = struct.dfsDepth();
 		String structType = struct.type();
-		/*if(struct.type().equals("texAssert")){
+		/*if(struct.nameStr().equals("probability")){
 			System.out.print("");
 		}*/
 		if (struct.isStructA()) {
@@ -4550,7 +4551,7 @@ public class ThmP1 {
 		if(childrenSBLen > 0){
 			childrenStr = childrenSB.substring(0, childrenSBLen-2);
 		}
-		System.out.print(childrenStr);
+		//already printed out in dfs! System.out.print(childrenStr);
 		parsedLongFormSB.append(childrenStr);
 		
 		System.out.print("]");

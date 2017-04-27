@@ -150,7 +150,7 @@ public abstract class Struct implements Serializable{
 	 * Whether this struct has been used in another component (of the same command).
 	 * Currently only used in the case when a child of a StructH has
 	 * been used as another *entire* component in same command. "Entire" meaning
-	 * a whole PosTerm.
+	 * a whole PosTerm. Checks prev1 and prev2 as well.
 	 * @return
 	 */
 	public boolean usedInOtherCommandComponent(WLCommand curCommand){	
@@ -160,11 +160,59 @@ public abstract class Struct implements Serializable{
 		//for(WLCommand c : usedInCommandsSet){
 			//System.out.println(curCommand.equals(c) + " hc:  " +curCommand.hashCode() + " " + c.hashCode());
 		//}
-		WLCommand copyWithOutOptTermsCommand = curCommand.getCopyWithOutOptTermsCommand();
+		WLCommand copyWithOutOptTermsCommand = curCommand.getCopyWithOutOptTermsCommand();		
+		boolean usedInOtherComponent = usedInOtherCommandComponent(this, curCommand, copyWithOutOptTermsCommand);
+		
+		if(!usedInOtherComponent && this.prev1NodeType().isTypeStruct()){
+			usedInOtherComponent = usedInOtherCommandComponent((Struct)this.prev1(), curCommand, copyWithOutOptTermsCommand);
+		}
+		if(!usedInOtherComponent && this.prev2NodeType().isTypeStruct()){
+			usedInOtherComponent = usedInOtherCommandComponent((Struct)this.prev2(), curCommand, copyWithOutOptTermsCommand);
+		}
+		return usedInOtherComponent;
+	}
+	
+	public boolean usedInOtherCommandComponentInDepth(WLCommand curCommand){	
+		return usedInOtherCommandComponentInDepth(this, curCommand);
+	}
+	/**
+	 * Analogous to usedInOtherCommandComponent, but checks down to every leaf.
+	 * @param curCommand
+	 * @return
+	 */
+	private boolean usedInOtherCommandComponentInDepth(Struct struct, WLCommand curCommand){	
+		
+		//System.out.println("this.usedInCommandsSet: " + this.usedInCommandsSet);
+		//System.out.println(usedInCommandsSet.contains(curCommand) + "curCommand " + curCommand);
+		//for(WLCommand c : usedInCommandsSet){
+			//System.out.println(curCommand.equals(c) + " hc:  " +curCommand.hashCode() + " " + c.hashCode());
+		//}
+		WLCommand copyWithOutOptTermsCommand = curCommand.getCopyWithOutOptTermsCommand();		
+		boolean usedInOtherComponent = usedInOtherCommandComponent(struct, curCommand, copyWithOutOptTermsCommand);
+		
+		if(!usedInOtherComponent && struct.prev1NodeType().isTypeStruct()){
+			usedInOtherComponent = usedInOtherCommandComponent((Struct)struct.prev1(), curCommand, copyWithOutOptTermsCommand);
+		}
+		if(!usedInOtherComponent && struct.prev2NodeType().isTypeStruct()){
+			usedInOtherComponent = usedInOtherCommandComponent((Struct)struct.prev2(), curCommand, copyWithOutOptTermsCommand);
+		}
+		if(!usedInOtherComponent){
+			if(struct.prev1NodeType().isTypeStruct()){
+				usedInOtherComponent = usedInOtherCommandComponentInDepth((Struct)struct.prev1(), curCommand);				
+			}
+			if(!usedInOtherComponent && struct.prev2NodeType().isTypeStruct()){
+				usedInOtherComponent = usedInOtherCommandComponentInDepth((Struct)struct.prev2(), curCommand);				
+			}
+		}
+		return usedInOtherComponent;
+	}
+
+	private boolean usedInOtherCommandComponent(Struct struct, WLCommand curCommand, WLCommand copyWithOutOptTermsCommand){	
+		//WLCommand copyWithOutOptTermsCommand = curCommand.getCopyWithOutOptTermsCommand();
 		if(null != copyWithOutOptTermsCommand){			
 			return this.usedInCommandsSet.contains(curCommand) || this.usedInCommandsSet.contains(copyWithOutOptTermsCommand);
 		}
-		return this.usedInCommandsSet.contains(curCommand);
+		return struct.usedInCommandsSet.contains(curCommand);		
 	}
 	
 	public abstract Struct previousBuiltStruct();
@@ -403,7 +451,10 @@ public abstract class Struct implements Serializable{
 				//including the relation twice, eg in case child is of type "prep"
 				//if this child has been used in another component of the same command.	
 				//System.out.println("Struct - child.usedInOtherCommandComponent(curCommand)" + child.usedInOtherCommandComponent(curCommand));
-				if(!child.usedInOtherCommandComponent(curCommand)){					
+				if(child.type().equals("assert")){
+					System.out.print("Struct.java - assert not used elsewhere");
+				}
+				if(!child.usedInOtherCommandComponentInDepth(curCommand)){						
 					String childStr = child.simpleToString(includeType, curCommand);						
 					if(!childStr.matches("\\s*")){
 					//System.out.println("Childstr " + childStr);

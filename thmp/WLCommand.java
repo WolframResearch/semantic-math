@@ -984,12 +984,13 @@ public class WLCommand implements Serializable{
 		//map to store Structs' parents. The integer can be left child (-1)
 		//right child (1), or 0 (both children covered)
 		Map<Struct, Integer> structIntMap = new HashMap<Struct, Integer>();
+		Set<String> originalStructsNameStrSet = new HashSet<String>();
 		int leastDepth = MAXDFSDEPTH;
 		Struct highestStruct = null;
 		
 		//System.out.println("+++++++++++++++++++++commandsMap " + commandsMap);
 		for(Struct nextStruct : commandsMap.values()){
-			
+			originalStructsNameStrSet.add(nextStruct.nameStr());
 			//should never be null, commandsMap should be all filled, except maybe optional posTerms.
 			if(nextStruct != null){
 				Struct nextStructParent = nextStruct.parentStruct();
@@ -1011,28 +1012,42 @@ public class WLCommand implements Serializable{
 							//colored twice, need to put its parent in map
 							nextStructParent = nextStructParent.parentStruct();							
 						}else{
+							/*if(!nextStructParent.isStructA()){
+								structIntMap.put(nextStructParent, existingChild+1);
+							}*/
 							break;
 						}
-					}else if(whichChild != null){						
-						structIntMap.put(nextStructParent, whichChild);
+					}else if(whichChild != null){
+						//if(nextStructParent.isStructA()){
+							structIntMap.put(nextStructParent, whichChild);
+						//}
+							/*else{
+							//indicate one child for structH.
+							structIntMap.put(nextStructParent, 1);
+						}*/
 						curStruct = nextStructParent;
 						nextStructParent = nextStructParent.parentStruct(); 
 					}					
 				}				
 			}			
 		}
-
+		System.out.println("WLCommand - originalStructsNameStrSet " + originalStructsNameStrSet);
 		for(Entry<Struct, Integer> entry : structIntMap.entrySet()){
 			Integer whichChild = entry.getValue();
 			Struct nextStruct = entry.getKey();
 			//System.out.println("@@@Added Parent: " + nextStruct + " " + whichChild);
 			
-			if(whichChild == BOTHCHILDREN){
+			if(!nextStruct.isStructA() 
+					//Don't add StructH, even if all children present, unless original StructH present.
+					&& originalStructsNameStrSet.contains(nextStruct.nameStr())
+					//children parts could be added redundantly
+					//&& whichChild >= nextStruct.children().size() 
+					|| nextStruct.isStructA() && whichChild == BOTHCHILDREN){
 				int nextStructDepth = nextStruct.dfsDepth();
 				if(nextStructDepth < leastDepth){
 					highestStruct = nextStruct;
 					leastDepth = nextStructDepth;			
-				}
+				}				
 			}
 		}
 		
@@ -1273,7 +1288,6 @@ public class WLCommand implements Serializable{
 				//this is same as term.getPosTermStruct()
 				Struct nextStruct = curCommandComponentList.get(positionInMap);
 				if(nextStruct.nameStr().endsWith("gap")){
-					//
 					System.out.println("WLCommand - parent struct for 'gap': " + nextStruct.parentStruct());
 				}
 				if(nextStruct.previousBuiltStruct() != null){ 
@@ -1669,7 +1683,9 @@ public class WLCommand implements Serializable{
 				//&& addedComponentsColSz < commandComponentCount
 				){
 			//System.out.println("#####inside addComponent, ADDING newStruct: " + newStruct);
-			
+			/*if(newStruct.nameStr().equals("there")){
+				System.out.print("");
+			}*/
 			//check for parent, see if has same type & name etc, if going backwards.
 			if(before){
 				newStruct = findMatchingParent(commandComponentPosPattern, commandComponentNamePattern, newStruct, curCommand);
@@ -1779,7 +1795,9 @@ public class WLCommand implements Serializable{
 		
 		Struct structToAdd = struct;
 		Struct structParent = struct.parentStruct();
-		
+		if(struct.nameStr().equals("there")){
+			System.out.print("");
+		}		
 		while(structParent != null){
 			String structParentType = structParent.type();
 			String parentType = CONJ_DISJ_PATTERN.matcher(structParentType).matches() ?
@@ -1853,10 +1871,10 @@ public class WLCommand implements Serializable{
 			}
 			Struct newParentStruct = newBaseStruct.parentStruct();
 			if(null != newParentStruct && componentPosPattern.matcher(newParentStruct.type()).matches()){
-				structToAdd = newParentStruct;
+				//structToAdd = newParentStruct;//HERE
 				//newBaseStruct.add_usedInCommand(curCommand);
 				//System.out.println("WLCommand - structToAdd.children " + structToAdd.children());
-			}			
+			}		
 		}
 		/*if(print){
 			System.out.println("**************************** after: " + structToAdd);
@@ -1949,7 +1967,7 @@ public class WLCommand implements Serializable{
 		PosTerm triggerPosTerm = curCommand.posTermList.get(curCommand.triggerWordIndex);		
 		WLCommandComponent commandComponent = triggerPosTerm.commandComponent;	
 		triggerPosTerm.set_posTermStruct(newStruct);
-		
+		newStruct.add_usedInCommand(curCommand);
 		int commandComponentCount = curCommand.commandsCountMap.get(commandComponent);
 		
 		curCommand.commandsMap.put(commandComponent, newStruct);

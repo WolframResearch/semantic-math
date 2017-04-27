@@ -165,7 +165,10 @@ public class Maps {
 			String lexiconFileStr = "src/thmp/data/lexicon.txt";
 			//create temporary hashMultimap to avoid duplicates, 
 			//temporary since ListMultimap is a better structure for this.
-			SetMultimap<String, String> posPreMMap = LinkedHashMultimap.create();	
+			SetMultimap<String, String> posPreMMap = LinkedHashMultimap.create();
+			//pos to remove from posPreMMap
+			ListMultimap<String, String> negativePosMMap = ArrayListMultimap.create();
+			fillInNegativePosMMap(negativePosMMap);
 			//ideally make this immutable
 			structMap = ArrayListMultimap.create();
 			mathObjMap = new HashMap<String, String>();
@@ -216,6 +219,10 @@ public class Maps {
 	    	SetMultimap<String, String> essentialPosPreMMap = LinkedHashMultimap.create();
 			posPreMMap = buildMap(posPreMMap, essentialPosPreMMap);
 			essentialPosMMap = ArrayListMultimap.create(essentialPosPreMMap);
+			
+			for(Map.Entry<String, String> entry : negativePosMMap.entries()){
+				posPreMMap.remove(entry.getKey(), entry.getValue());	
+			}
 			posMMap = ArrayListMultimap.create(posPreMMap);
 		}
 		
@@ -223,6 +230,12 @@ public class Maps {
 		public static void initialize(){			
 		}
 		
+		private static void fillInNegativePosMMap(ListMultimap<String, String> negativePosMMap) {
+			negativePosMMap.put("there", "adverb");
+			negativePosMMap.put("which", "det");
+			negativePosMMap.put("run", "ent");
+		}
+
 		/**
 		 * Reads from BufferedReader into temporary map. 
 		 * @param lexiconReader BufferedReader for lexicon
@@ -494,7 +507,7 @@ public class Maps {
 			posPreMMap.put("where", "hyp");
 			posPreMMap.put("which is", "hyp");
 			posPreMMap.put("which are", "hyp");
-			posPreMMap.put("which", "hyp");
+			posPreMMap.put("which", "hyp_COMP");
 			posPreMMap.put("that is", "hyp");
 			posPreMMap.put("that are", "hyp");
 			
@@ -803,7 +816,7 @@ public class Maps {
 			structMap.put("be_partiby", new Rule("verb", 1));
 			structMap.put("be_parti", new Rule("be_parti", .8));
 			structMap.put("verb_be_parti", new Rule("verb", 1));
-			structMap.put("det_verb", new Rule("assert", .5));
+			//structMap.put("det_verb", new Rule("assert", .5));
 
 			structMap.put("disj_verbphrase", new Rule("assert", 1));
 			structMap.put("conj_verbphrase", new Rule("assert", 1));

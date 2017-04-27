@@ -686,6 +686,11 @@ public class ThmP1TestRun {
 			st = "the probability $a_k(u)$ that there are no double gaps satisfies $$ \\ beta (u)^k\\ leq a_k (u)\\ leq \\ beta (u)^{k-1}$$";//revisit! Multiple children attached.
 			st = "the holonomy of $ \\ partial \\ Sigma$ has no fixed points"; //also fix parse. assert[[ent{name=holonomy}][[ent{name=$ \ partial \ Sigma$}]of [ent{name=$ \ partial \ Sigma$}]],
 			st = "there exist monomial ideals in ring";
+			//st = "the probability $a_k(u)$ that there are no double gaps";// satisfies $$ \\ beta (u)^k\\ leq a_k (u)\\ leq \\ beta (u)^{k-1}$$";
+			st = "Fix a rectangular Young diagram $R$, and consider all the products of Schur functions $s_\\lambda s_\\lambdac$, where $\\lambda$ and $\\lambdac$ run over all (unordered) pairs of partitions which are complementary with respect to $R$.";//inf loop on server!
+			st = "where $\\lambda$ run over all pairs of partitions which are complementary with respect to $R$"; //revisit!
+			st = "Fix a rectangular Young diagram $R$"; //parse this!
+			
 			//st = "there are complex parameters";
 			//st = "given $A  $ such that $A = o$";
 			//st = "take the derivative of $f$";
@@ -799,7 +804,7 @@ public class ThmP1TestRun {
 				}
 			}
 			
-			System.out.println("parseState contextVecMap " + parseState.getCurThmCombinedContextVecMap());
+			//System.out.println("parseState contextVecMap " + parseState.getCurThmCombinedContextVecMap());
 			boolean streamInput = false;
 			if(streamInput){
 				Scanner sc = new Scanner(System.in);
