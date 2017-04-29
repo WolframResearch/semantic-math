@@ -164,7 +164,7 @@ public class WLCommandsList {
 				new PBuilder(" ,", "OPT"), new PBuilder("prep|qualifier", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}"));	
 		
 		/*e.g. If $x > y$.*/
-		putToWLCommandMapBuilder(wLCommandMapBuilder, "texAssert", new PBuilder("hyp|if|then", null,//"^(?!for every|for all|for any).*$", 
+		putToWLCommandMapBuilder(wLCommandMapBuilder, "texAssert", new PBuilder("hyp|if|then|let", null,//"^(?!for every|for all|for any).*$", 
 				/*this regex is not perfect, ie "for allj" returns false rather than true*/ false, false, "OPT"), 
 				new PBuilder("texAssert", null, true, true, false));
 		

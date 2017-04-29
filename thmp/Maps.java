@@ -241,6 +241,7 @@ public class Maps {
 			negativePosMMap.put("the", "adj");
 			negativePosMMap.put("under", "adverb");
 			negativePosMMap.put("let", "verb");
+			negativePosMMap.put("let", "hyp");
 			negativePosMMap.put("be", "verb");
 		}
 
@@ -446,7 +447,7 @@ public class Maps {
 			posPreMMap.put("does not", "not"); //verb?? <-"not" for now
 			posPreMMap.put("do not", "not");
 			posPreMMap.put("not", "not");
-
+			
 			// nouns that are not mathObj, only put not-so-relevant terms here
 			posPreMMap.put("form", "noun_COMP");
 
@@ -498,7 +499,7 @@ public class Maps {
 			posPreMMap.put("equal to", "pre");
 			posPreMMap.put("on", "pre");
 			posPreMMap.put("let", "let");
-			posPreMMap.put("let", "hyp");
+			//posPreMMap.put("let", "hyp"); //don't add this, parse explosion
 			posPreMMap.put("be", "be");
 			posPreMMap.put("of", "pre"); // of is primarily used as anchor
 			posPreMMap.put("over", "pre");
@@ -627,7 +628,7 @@ public class Maps {
 			mathObjMap.put("diagram", "mathObj_COMP");
 			mathObjMap.put("commutative diagram", "mathObj");
 			mathObjMap.put("module", "mathObj");
-
+			
 			mathObjMap.put("tex", "mathObj"); // TEMPORARY
 			
 			// put in template matching, prepositions, of, by, with
@@ -751,7 +752,7 @@ public class Maps {
 			// verb_ent, not including past tense verbs, only present tense
 			structMap.put("verb_ent", new Rule("verbphrase", 1));
 			structMap.put("verb_csubj", new Rule("verbphrase", 1));
-			structMap.put("be_ent", new Rule("verbphrase", .7));
+			//structMap.put("be_ent", new Rule("verbphrase", .7));
 			structMap.put("verb_adj", new Rule("verbphrase", 1));
 			//e.g. "$s_n$ converges independently of $n$", "...implies that..."
 			structMap.put("verb_qualifier", new Rule("newchild", "verbAlone", 0.8));

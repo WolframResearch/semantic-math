@@ -695,8 +695,12 @@ public class ThmP1TestRun {
 			st = "There are fields in the class $\\mathcal{X}$ that are not finite modificatios of rings";
 			st = "If the Alexander polynomial of $K$ is not $1$";
 			st = "the holonomy of $\\partial \\Sigma$ has no fixed points";
-			st = "Let $p_1,\\dots,p_r$ be the preimages under $w$ of $c^\\ast_0$ with the property that one of the components of a punctured neighborhood of $p_j$ in $\\pa D_m$ maps to $\\gamma$.";
-			st = "Let $p_1,\\dots,p_r$ be the preimages under $w$ of $c^\\ast_0$";//too many parses!
+			//st = "Let $p_1,\\dots,p_r$ be the preimages under $w$ of $c^\\ast_0$ with the property that one of the components of a punctured neighborhood of $p_j$ in $\\pa D_m$ maps to $\\gamma$.";
+			//st = "Let $p_1,\\dots,p_r$ be the preimages under $w$ of $c^\\ast_0$";//too many parses!			
+			st = "If $ \\ sum a_k$ converges conditionally, then there is some rearrangement of $ \\ sum a_k$  which converges to $x$";
+			
+			//st = "Let $p_1,\\dots,p_r$ be the preimages under $w$"; 			
+			//st = "$p_1,\\dots,p_r$ is the preimage under $w$ of $c^\\ast_0$";
 			
 			//st = "there are complex parameters";
 			//st = "given $A  $ such that $A = o$";

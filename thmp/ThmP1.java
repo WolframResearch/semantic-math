@@ -146,6 +146,7 @@ public class ThmP1 {
 	
 	//used in dfs, to determine whether to iterate over.
 	private static final double LONG_FORM_SCORE_THRESHOLD = .7;
+	private static final int LONG_FORM_MAX_PARSE_LOOP_THRESHOLD = 14;
 	//least num of iterations, even if scores are below LONG_FORM_SCORE_THRESHOLD.
 	private static final int MIN_PARSE_ITERATED_COUNT = 3;
 	//private static final String DASH_ENT_STRING = null;
@@ -2026,14 +2027,10 @@ public class ThmP1 {
 	 * conditions satisfied)
 	 */
 	public static ParseState parse(ParseState parseState, boolean isReparse) {
-		/*System.out.println("**********");
-		System.out.println("Pos of open " + posMMap.get("open"));
-		System.out.println("**********");*/
 		//int parseContextVectorSz = TriggerMathThm2.keywordDictSize();
 		//this is cumulative, should be cleared per parse! Move this back
 		//to initializer after debugging!
-		//parseContextVector = new int[parseContextVectorSz];
-		
+		//parseContextVector = new int[parseContextVectorSz];		
 		List<Struct> inputStructList = parseState.getTokenList();		
 		int inputStructListSize = inputStructList.size();
 		
@@ -2086,7 +2083,6 @@ public class ThmP1 {
 			mx.add(tempList);
 			/*
 			 * mx.add(new ArrayList<Struct>(len));
-			 * 
 			 * for (int i = 0; i < len; i++) { // add len number of null's
 			 * mx.get(l).get(i) .add(null); }
 			 */
@@ -2129,7 +2125,7 @@ public class ThmP1 {
 					}else{
 						newStruct = new StructA<String, String>(structName, NodeType.STR, "", NodeType.STR, pos);					
 					}
-					//System.out.println("NEW STRUCT ADDED " + newStruct + " " + extraPosSet.size());
+					//more likely pos come earlier.
 					mx.get(j).get(j).add(newStruct);
 					newStruct.set_structList(mx.get(j).get(j));
 				}
@@ -2492,7 +2488,7 @@ public class ThmP1 {
 			//sort headStructList so that only dfs over the head structs whose
 			//scores are above a certain threshold, to avoid parse explosion. 
 			//And to guarantee that a minimum number of spanning parses have been counted.
-			Collections.sort(structList, new HeadStructComparator());
+			Collections.sort(structList, HeadStructComparator.getComparator());
 			
 			StringBuilder parsedSB = new StringBuilder();
 			
@@ -2523,7 +2519,7 @@ public class ThmP1 {
 				// Reduces parse explosion.
 				if(uHeadStructScore < LONG_FORM_SCORE_THRESHOLD 
 						&& actualCommandsIteratedCount > MIN_PARSE_ITERATED_COUNT){					
-					continue;
+					break;
 				}
 				actualCommandsIteratedCount++;
 				
@@ -2573,11 +2569,14 @@ public class ThmP1 {
 				System.out.println("ThmP1-parsedString: "+parsedString);
 				
 				parsedSB.setLength(0); //should just declare new StringBuilder instead!
+				if(u > LONG_FORM_MAX_PARSE_LOOP_THRESHOLD){
+					break;
+				}
 			}
 			
-			if(logger.getLevel().equals(Level.INFO)){
+			/*if(logger.getLevel().equals(Level.INFO)){
 				logger.info("actualCommandsIteratedCount: " + actualCommandsIteratedCount);
-			}
+			}*/
 			//order maps from parsedPairMMapList and put into parseStructMapList and parsedExpr.
 			//Also add context vector of highest scores
 			
@@ -3017,6 +3016,14 @@ public class ThmP1 {
 
 	private static class HeadStructComparator implements Comparator<Struct>{
 		
+		private static final HeadStructComparator INSTANCE = new HeadStructComparator();
+		private HeadStructComparator(){			
+		}
+		
+		public static HeadStructComparator getComparator(){
+			return INSTANCE;
+		}
+		
 		//want the highest-scoring ones first, while iterating.
 		@Override
 		public int compare(Struct struct1, Struct struct2){
@@ -3039,10 +3046,10 @@ public class ThmP1 {
 	private static void orderPairsAndPutToLists(List<Multimap<ParseStructType, ParsedPair>> parsedPairMMapList,
 			List<ParseStruct> headParseStructList, ParseState parseState,
 			List<ParsedPair> longFormParsedPairList, List<Map<Integer, Integer>> contextVecMapList){
-		System.out.println("ThmP1 - longFormParsedPairList ");
+		/*System.out.println("ThmP1 - longFormParsedPairList ");
 		for(int i = 0; i < longFormParsedPairList.size(); i++){
-			System.out.println(longFormParsedPairList);			
-		}
+			System.out.println(longFormParsedPairList.get(i));				
+		}*/
 		/*use insertion sort, since number of maps in parsedPairMMapList is usually very small, ~1-5.
 		 * For maps with multiple entries (e.g. one sentence with both a HYP and a STM), add the numUnits and 
 		 * commandNumUnits across entries. Keep track of this multiplicity of entries, favor map with smaller 
@@ -3966,6 +3973,7 @@ public class ThmP1 {
 			
 			mx.get(i).get(j).add(parentStruct);
 		}
+		
 		// found a grammar rule match, move on to next mx column
 		// *****actually, should keep going and keep scores!
 		// break;

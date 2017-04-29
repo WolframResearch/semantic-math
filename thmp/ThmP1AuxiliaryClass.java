@@ -226,7 +226,8 @@ public class ThmP1AuxiliaryClass {
 	private static void convertStructToTexAssertHelper(List<Struct> structList, int structListSz, Struct firstStruct,
 			Struct lastStruct) {
 		//if(true) throw new IllegalStateException(lastStruct.containsLatexStruct() +" " + firstStruct.toString());
-		if((1 == structListSz || firstStruct.containsPos("hyp") || firstStruct.containsPos("if") || firstStruct.containsPos("then"))
+		if((1 == structListSz || firstStruct.containsPos("hyp") || firstStruct.containsPos("if") || firstStruct.containsPos("then")
+				|| firstStruct.containsPos("let"))
 				&& lastStruct.containsLatexStruct()){
 			//if(true) throw new IllegalStateException(structList.toString());
 			if(!lastStruct.has_child()){
@@ -346,6 +347,7 @@ public class ThmP1AuxiliaryClass {
 	 */
 	protected static void convertToTexAssert(ParseState parseState, List<Struct> inputStructList,
 			List<StructList> structListList) {
+		
 		//if only one ent,
 		//e.g. "then $ $", misrepresented StructH as StructA, 
 		//if should have been an "assert".

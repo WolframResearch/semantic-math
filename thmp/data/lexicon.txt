@@ -16,6 +16,7 @@ separate verb
 sheaf ent
 tower ent
 coordinate ent
+punctured adj
 family ent
 unitary adj
 separated adj
@@ -69,6 +70,7 @@ analytic adj
 rectangular adj
 schur adj
 converge verbAlone
+converge verb
 along pre
 meridian ent
 annuli ent

@@ -16,7 +16,7 @@ import thmp.ParseToWLTree.WLCommandWrapper;
 /**
  * ParseStruct is a structure in the parse, can be 
  * STRUCT -- MathematicalStructure.
- * THM, HYP, DEF, PROP
+ * HYP, or STM
  * 
  * @author yihed
  */

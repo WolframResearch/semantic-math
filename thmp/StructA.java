@@ -295,12 +295,12 @@ public class StructA<A, B> extends Struct{
 	@Override
 	public String simpleToString(boolean includeType, WLCommand curCommand){
 
-		if(this.type.equals("assert")){
+		/*if(this.type.equals("assert")){
 			System.out.println("StructA - this "+ this);
 			System.out.println("StructA - (Struct)this.prev1).type() "+ ((Struct)this.prev1).type());
 			System.out.println("this.WLCommandWrapperList " + this.WLCommandWrapperList);
 			//throw new RuntimeException("WLCommandWrapperList " +this.WLCommandWrapperList);
-		}
+		}*/
 		//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
 		if(this.WLCommandWrapperList != null){
 			int wrapperListSz = WLCommandWrapperList.size();
@@ -308,13 +308,17 @@ public class StructA<A, B> extends Struct{
 			
 			WLCommandWrapper curWrapper = WLCommandWrapperList.get(wrapperListSz - 1);
 			WLCommand composedCommand = curWrapper.WLCommand(); 
-			Struct structHeadWithOtherHead;
+			Struct structHeadWithOtherHead = null;
 			if(WLCommand.structsWithOtherHeadCount(composedCommand) == 0 || 
 					null != (structHeadWithOtherHead = composedCommand.structHeadWithOtherHead())
 					//should more precisely check for .equals, but dfsDepth suffices here.
 					&& this.dfsDepth() == structHeadWithOtherHead.dfsDepth()){//HERE
+				//if(WLCommand.structsWithOtherHeadCount(composedCommand) > 0){
+					//System.out.println("structA WLCommand.structsWithOtherHeadCount(composedCommand) " + WLCommand.structsWithOtherHeadCount(composedCommand));
+				//}
 			if(curWrapper != null){
 				int commandNumUnits = WLCommand.commandNumUnits(composedCommand);
+				//System.out.println("StructA - commandNumUnits composed " + commandNumUnits);
 				WLCommand.increment_commandNumUnits(curCommand, commandNumUnits);
 				//System.out.println("increment_commandNumUnits : numUnits " + commandNumUnits + " composedCommand: " + composedCommand); 				
 			}
