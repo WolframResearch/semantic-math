@@ -481,14 +481,14 @@ public class ParseToWLTree{
 					if(commandSat.isCommandSat()){
 						satisfiedCommandsList.add(curCommand);
 						continue;
+					}else if(commandSat.isDisqualified()){
+						continue;
 					}
 					
 					for(int i = structList.size()-1; i > -1; i--){
 						
 						Struct curStruct = structList.get(i);
-						if(curStruct.nameStr().equals("there")){
-							System.out.print("");
-						}
+						
 						//see if the whole command is satisfied, not just the part before trigger word
 						//namely the trigger word is last word
 						boolean beforeTrigger = true;

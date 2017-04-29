@@ -22,6 +22,7 @@ import thmp.WLCommand.OptionalPosTerm;
 import thmp.WLCommand.PosTerm;
 import thmp.WLCommand.PosTerm.PBuilder;
 import thmp.WLCommand.PosTerm.PosTermConnotation;
+import thmp.WLCommand.PosTerm.PositionInStructTree;
 import thmp.WLCommand.WLCommandComponent;
 
 /**
@@ -157,6 +158,16 @@ public class WLCommandsList {
 				//the relation should incorporate several types. 
 				new PBuilder("prep|qualifier", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}}", "OPT")
 				);		
+		/* e.g. "Fix a prime $p$"*/
+		putToWLCommandMapBuilder(wLCommandMapBuilder, "verb", new PBuilder("{"),
+				new PBuilder("verb", null, true, true, false).setPositionInStructTree(PositionInStructTree.FIRST),
+				new PBuilder(", "), new PBuilder(" {", "OPT"), 
+				new PBuilder("symb|ent|noun", null, true, false, false).addRelationType(RelationType._IS),
+				new PBuilder(", {\"Qualifiers\"->", "OPT"), 
+				//the relation should incorporate several types. 
+				new PBuilder("prep|qualifier", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}}", "OPT"),
+				new PBuilder("}")
+				);	
 		//e.g. "The field extension $F/Q$ splits."
 		putToWLCommandMapBuilder(wLCommandMapBuilder, "verbAlone", new PBuilder("symb|ent|pro|noun", null, true).addRelationType(RelationType._IS), 
 				new PBuilder("pro", "we", WLCommand.PosTermType.NEGATIVE),		

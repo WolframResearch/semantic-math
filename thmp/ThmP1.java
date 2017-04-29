@@ -1196,9 +1196,10 @@ public class ThmP1 {
 				if (VERB_POS_PATTERN.matcher(pair.pos()).matches()) { 
 					String word = pairs.get(pairsSize - 2).word();
 					if (pairs.size() > 1 && (word.matches("not|no")
-							|| pairs.get(pairsSize - 2).pos().matches("not"))) {
+							|| pairs.get(pairsSize - 2).pos().equals("not"))) {
 						//String newWord = pair.word().matches("is|are") ? "not" : "not " + pair.word();
-						String newWord = pair.word() + " " + word;
+						//String newWord = pair.word() + " " + word;
+						String newWord = word + " " + pair.word(); //e.g. "does not stabilize"
 						pair.set_word(newWord);
 						pairs.remove(pairsSize - 2);
 					}

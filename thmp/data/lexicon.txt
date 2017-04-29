@@ -76,6 +76,7 @@ meridian ent
 annuli ent
 coloring ent
 arc ent
+critical adj
 holonomy ent
 probability ent
 interchange ent

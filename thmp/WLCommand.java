@@ -268,7 +268,7 @@ public class WLCommand implements Serializable{
 		negativeTriggerCommandsMap = new HashMap<String, String>();
 		negativeTriggerCommandsMap.put("~HasProperty~", " ~HasNotProperty~ ");
 		negativeTriggerCommandsMap.put(" ~HasProperty~ ", " ~HasNotProperty~ ");
-		negativeTriggerCommandsMap.put(" ~HasProperty~ {", " ~HasNotProperty~ ");
+		negativeTriggerCommandsMap.put(" ~HasProperty~ {", " ~HasNotProperty~ {");
 	}
 	/**
 	 * Immutable subclass .
@@ -370,6 +370,22 @@ public class WLCommand implements Serializable{
 		}
 		
 		/**
+		 * Indicates special position the Struct filling the posTerm 
+		 * needs to be in, e.g. first (left-most-child) 
+		 */
+		public static enum PositionInStructTree{
+			FIRST,
+			LAST, 
+			ANY;
+			public boolean isFirstTerm(){
+				return this == FIRST;
+			}
+			public boolean isLastTerm(){
+				return this == LAST;
+			}
+		}
+		
+		/**
 		 * CommandComponent 
 		 */
 		private WLCommandComponent commandComponent;
@@ -382,6 +398,7 @@ public class WLCommand implements Serializable{
 		private Struct posTermStruct;
 		
 		private PosTermConnotation posTermConnotation;
+		private PositionInStructTree positionInStructTree;
 		
 		/**
 		 * position of the relevant term inside a list in commandsMap.
@@ -438,6 +455,7 @@ public class WLCommand implements Serializable{
 			List<RelationType> relationTypeList = new ArrayList<RelationType>();
 			
 			private PosTermConnotation posTermConnotation = PosTermConnotation.NONE;
+			private PositionInStructTree positionInStructTree = PositionInStructTree.ANY;
 			
 			/**
 			 * @return the isTrigger
@@ -669,6 +687,17 @@ public class WLCommand implements Serializable{
 			}
 			
 			/**
+			 * Set special position the struct for term must occur in Struct tree, e.g. FIRST.
+			 * For e.g. "Fix a prime $p$"
+			 * @param positionInStructTree_
+			 * @return
+			 */
+			public PBuilder setPositionInStructTree(PositionInStructTree positionInStructTree_){
+				this.positionInStructTree = positionInStructTree_;
+				return this;
+			}
+			
+			/**
 			 * Sets positionInMap, should be called before build'ing.
 			 * @param positionInMap the positionInMap to set
 			 */
@@ -691,19 +720,19 @@ public class WLCommand implements Serializable{
 				
 				if(this.isOptionalTerm){
 					return new OptionalPosTerm(commandComponent, positionInMap, includeInBuiltString,
-							isTriggerMathObj, optionalGroupNum, relationTypeList);
+							isTriggerMathObj, optionalGroupNum, relationTypeList, positionInStructTree);
 				}else if(this.isNegativeTerm){
 					return new NegativePosTerm(commandComponent, positionInMap);
 				}else{
 					return new PosTerm(commandComponent, positionInMap, includeInBuiltString,
-							isTrigger, isTriggerMathObj, posTermConnotation, relationTypeList);
+							isTrigger, isTriggerMathObj, posTermConnotation, relationTypeList, positionInStructTree);
 				}
 			}					
 		}
 		
 		private PosTerm(WLCommandComponent commandComponent, int position, boolean includeInBuiltString,
 				boolean isTrigger, boolean isTriggerMathObj, PosTermConnotation posTermConnotation,
-				List<RelationType> relationTypeList){
+				List<RelationType> relationTypeList, PositionInStructTree positionInStructTree){
 			this.commandComponent = commandComponent;
 			this.positionInMap = position;
 			this.includeInBuiltString = includeInBuiltString;
@@ -711,6 +740,7 @@ public class WLCommand implements Serializable{
 			this.isTrigger = isTrigger;
 			this.posTermConnotation = posTermConnotation;
 			this.relationType = relationTypeList;
+			this.positionInStructTree = positionInStructTree;
 		}
 		
 		/**
@@ -719,7 +749,7 @@ public class WLCommand implements Serializable{
 		 */
 		public PosTerm termDeepCopy(){				
 			return new PosTerm(commandComponent, positionInMap, includeInBuiltString,
-					isTrigger, triggerMathObj, posTermConnotation, relationType);			
+					isTrigger, triggerMathObj, posTermConnotation, relationType, positionInStructTree);			
 		}	
 		
 		/**
@@ -738,6 +768,20 @@ public class WLCommand implements Serializable{
 
 		public boolean isNegativeTerm(){
 			return false;
+		}
+		/**
+		 * @return whether the captured Struct must be first (DFS) Struct
+		 * in Struct tree, i.e. left-most child.
+		 */
+		public boolean isFirstStructTerm(){
+			return positionInStructTree.isFirstTerm();
+		}
+		/**
+		 * @return whether the captured Struct must be last (DFS) Struct
+		 * in Struct tree, i.e. right-most child.
+		 */
+		public boolean isLastStructTerm(){
+			return positionInStructTree.isLastTerm();
 		}
 		
 		public List<RelationType> relationType(){
@@ -812,7 +856,7 @@ public class WLCommand implements Serializable{
 
 		public NegativePosTerm(WLCommandComponent commandComponent, int position){
 			super(commandComponent, position, false, false, false, PosTermConnotation.NONE,
-					new ArrayList<RelationType>());			
+					new ArrayList<RelationType>(), PositionInStructTree.ANY);			
 		}
 		
 		/**
@@ -840,12 +884,12 @@ public class WLCommand implements Serializable{
 		private int optionalGroupNum;
 		
 		public OptionalPosTerm(WLCommandComponent commandComponent, int position, boolean includeInBuiltString,
-				boolean triggerMathObj, int optionalGroupNum, List<RelationType> relationType) {
+				boolean triggerMathObj, int optionalGroupNum, List<RelationType> relationType, 
+				PositionInStructTree positionInStructTree) {
 			//cannot be trigger if optional term
 			super(commandComponent, position, includeInBuiltString, false, triggerMathObj,
-					PosTermConnotation.NONE, relationType);
-			this.optionalGroupNum = optionalGroupNum;
-			
+					PosTermConnotation.NONE, relationType, positionInStructTree);
+			this.optionalGroupNum = optionalGroupNum;			
 		}
 		
 		/**
@@ -855,7 +899,7 @@ public class WLCommand implements Serializable{
 		@Override
 		public PosTerm termDeepCopy(){			
 			return new OptionalPosTerm(super.commandComponent, super.positionInMap, super.includeInBuiltString,
-					super.triggerMathObj, optionalGroupNum, super.relationType);			
+					super.triggerMathObj, optionalGroupNum, super.relationType, super.positionInStructTree);			
 		}	
 		
 		/**
@@ -1747,6 +1791,12 @@ public class WLCommand implements Serializable{
 				newStruct = findMatchingParent(commandComponentPosPattern, commandComponentNamePattern, newStruct, curCommand);
 			}
 			
+			//check to see if indeed on either first or last branch
+			if(checkIfFirstLastTermStructDisqualified(newStruct, curPosTerm)){
+				boolean disqualified = true;
+				return new CommandSat(disqualified);
+			}
+			
 			commandsMap.put(commandComponent, newStruct);
 			//posTermList.get(i).set...
 			curPosTerm.set_posTermStruct(newStruct);
@@ -1834,6 +1884,60 @@ public class WLCommand implements Serializable{
 		//shouldn't be < 0!
 		return curCommand.componentCounter < 1;
 		*/
+	}
+
+	/**
+	 * @param newStruct
+	 * @param curPosTerm
+	 * @return whether disqualified
+	 */
+	private static boolean checkIfFirstLastTermStructDisqualified(Struct newStruct, PosTerm curPosTerm) {
+		if(curPosTerm.isFirstStructTerm() && !checkOnLeftBranch(newStruct)){
+			return true;
+		}
+		if(curPosTerm.isLastStructTerm() && !checkOnRightBranch(newStruct)){
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Check if struct lies on left-most branch of structTree.
+	 * I.e. always left child of parent.
+	 * @param struct
+	 * @return
+	 */
+	private static boolean checkOnLeftBranch(Struct struct) {
+		//if(true) throw new IllegalStateException();
+		Struct structParent = struct.parentStruct();		
+		while(null != structParent){
+			//child of structH can't be the first-occuring Struct in struct list 
+			if(!structParent.isStructA() || struct != structParent.prev1()){
+				return false;
+			}
+			struct = structParent;
+			structParent = struct.parentStruct();
+		}		
+		return true;
+	}
+		
+	/**
+	 * Check if struct lies on left-most branch of structTree.
+	 * I.e. always left child of parent.
+	 * @param struct
+	 * @return
+	 */
+	private static boolean checkOnRightBranch(Struct struct) {
+
+		Struct structParent = struct.parentStruct();		
+		while(null != structParent){
+			if(structParent.isStructA() && struct != structParent.prev2()){
+				return false;
+			}
+			struct = structParent;
+			structParent = struct.parentStruct();
+		}		
+		return true;
 	}
 
 	/**
@@ -2020,7 +2124,12 @@ public class WLCommand implements Serializable{
 	public static CommandSat addTriggerComponent(WLCommand curCommand, Struct newStruct){
 		//System.out.println("Adding trigger component " + newStruct + " " + curCommand);
 		
-		PosTerm triggerPosTerm = curCommand.posTermList.get(curCommand.triggerWordIndex);		
+		PosTerm triggerPosTerm = curCommand.posTermList.get(curCommand.triggerWordIndex);
+		//check to see if indeed on either first or last branch
+		if(checkIfFirstLastTermStructDisqualified(newStruct, triggerPosTerm)){
+			boolean disqualified = true;
+			return new CommandSat(disqualified);
+		}
 		WLCommandComponent commandComponent = triggerPosTerm.commandComponent;	
 		triggerPosTerm.set_posTermStruct(newStruct);
 		newStruct.add_usedInCommand(curCommand);

@@ -68,10 +68,20 @@ public class SerializeParseResult {
 		inputStrList.add("the holonomy of $\\partial \\Sigma$ has no fixed points");
 		inputStrList.add("$\\lambda$ run over all pairs of partitions which are complementary with respect to $R$");
 		inputStrList.add("$s_n$ does not converge");
-		inputStrList.add("If the Alexander polynomial of $K$ is not $1$");
+		inputStrList.add("If the Alexander polynomial of $K$ is not $1$");		
+		inputStrList.add("they do not intersect");
+		inputStrList.add("The interchange of two distant critical points of the surface diagram does not change the induced map on homology");
+		inputStrList.add("fix a rectangular Young diagram $R$ over a field");
+		inputStrList.add("signed resolution $res(T)$ coincide with $RR$");
+
+		//inputStrList.add("");
+		//inputStrList.add("");
+		//inputStrList.add("");
+		//inputStrList.add("");
+		//inputStrList.add("");
 		
-		//inputStrList.add("");
-		//inputStrList.add("");
+		/* Tests defluffing*/		
+		
 		//inputStrList.add("");
 		//inputStrList.add("");
 		//inputStrList.add("");
