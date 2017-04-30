@@ -396,7 +396,7 @@ public class ThmP1 {
 	 * @param mathIndexList
 	 * @return
 	 */
-	private static int gatherTwoThreeGram(int i, String[] str, List<Pair> pairs, List<Integer> mathIndexList){
+	private static int gatherTwoThreeGram(int i, String[] str, List<Pair> pairs, List<Integer> mathIndexList, ParseState parseState){
 		String curWord = str[i];
 		String middleWord = str[i+1];
 		String nextWord = middleWord;
@@ -415,15 +415,15 @@ public class ThmP1 {
 			
 			//don't want to combine three-grams with "of" in middle
 			if(threeGramMap.containsKey(threeGram) && !middleWord.equals("of")){				
-				if(addNGramToPairs(pairs, mathIndexList, thirdWord, threeGram, tokenType)){
+				if(addNGramToPairs(pairs, mathIndexList, thirdWord, threeGram, tokenType, parseState)){
 					newIndex = i+2;
 				}
 			}else if(threeGramMap.containsKey(threeGramSingular)){				
-				if(addNGramToPairs(pairs, mathIndexList, thirdWordSingular, threeGramSingular, tokenType)){
+				if(addNGramToPairs(pairs, mathIndexList, thirdWordSingular, threeGramSingular, tokenType, parseState)){
 					newIndex = i+2;
 				}
 			}else if(threeGramMap.containsKey(threeGramSingularSingular)){				
-				if(addNGramToPairs(pairs, mathIndexList, thirdWordSingular, threeGramSingularSingular, tokenType)){
+				if(addNGramToPairs(pairs, mathIndexList, thirdWordSingular, threeGramSingularSingular, tokenType, parseState)){
 					newIndex = i+2;
 				}
 			}	
@@ -433,11 +433,11 @@ public class ThmP1 {
 			TokenType tokenType = TokenType.TWOGRAM;
 			if(twoGramMap.containsKey(twoGram)){
 				//if(true) throw new IllegalStateException("two gram! " + twoGram);
-				if(addNGramToPairs(pairs, mathIndexList, nextWord, twoGram, tokenType)){
+				if(addNGramToPairs(pairs, mathIndexList, nextWord, twoGram, tokenType, parseState)){
 					newIndex = i+1;
 				}	
 			}else if(twoGramMap.containsKey(twoGramSingular)){
-				if(addNGramToPairs(pairs, mathIndexList, nextWordSingular, twoGramSingular, tokenType)){
+				if(addNGramToPairs(pairs, mathIndexList, nextWordSingular, twoGramSingular, tokenType, parseState)){
 					newIndex = i+1;
 				}
 			}
@@ -454,7 +454,7 @@ public class ThmP1 {
 	 * @return Whether n-gram was added to pairs
 	 */
 	private static boolean addNGramToPairs(List<Pair> pairsList, List<Integer> mathIndexList, String lastWord,
-			String nGram, TokenType tokenType) {
+			String nGram, TokenType tokenType, ParseState parseState) {
 		//don't want 2,3-grams to end with a preposition, which can break parsing down the line
 		if(posMMap.containsKey(lastWord) && posMMap.get(lastWord).get(0).equals("pre")){
 			return false;
@@ -467,7 +467,7 @@ public class ThmP1 {
 			pos = posList.get(0);
 		}else{
 			/*try to find part of speech algorithmically*/
-			pos = computeNGramPos(nGram, tokenType);
+			pos = computeNGramPos(nGram, tokenType, parseState);
 		}
 		/*Being part of an n-gram indicates that any noun is likely an ent. */
 		if("noun".equals(pos)){
@@ -485,17 +485,15 @@ public class ThmP1 {
 	 * Attemps to guess part of speech of n-grams.
 	 * @return
 	 */
-	private static String computeNGramPos(String nGram, TokenType tokenType){
+	private static String computeNGramPos(String nGram, TokenType tokenType, ParseState parseState){
 		
 		int nGramLen = nGram.length();
 		String[] nGramAr = nGram.split("\\s+");
-		//use enum instead!
 		String pos = "";
 		String firstWord = nGramAr[0];
 		int firstWordLen = firstWord.length();
 		
-		if(tokenType.equals(TokenType.TWOGRAM)){			
-			
+		if(tokenType.equals(TokenType.TWOGRAM)){					
 			List<String> posList = posMMap.get(firstWord);
 			boolean isFirstWordAdverb = !posList.isEmpty() ? posList.get(0).equals("adverb") : 
 				(firstWord.substring(firstWordLen-2, firstWordLen).equals("ly") ? true : false);
@@ -503,6 +501,16 @@ public class ThmP1 {
 			if (isFirstWordAdverb && nGram.substring(nGramLen - 2, nGramLen).equals("ed")) {
 				pos = "adj";				
 			}
+		}
+		if("".equals(pos)){
+			if(POSSIBLE_ADJ_PATTERN.matcher(nGram).matches()){
+				//Try to guess part of speech based on endings 
+				pos = "adj";
+				addUnknownWordToSet(parseState, nGram);
+			}else if(POSSIBLE_ENT_PATTERN.matcher(nGram).matches()){
+				pos = "ent";
+				addUnknownWordToSet(parseState, nGram);
+			} 
 		}
 		return pos;
 	}
@@ -707,7 +715,7 @@ public class ThmP1 {
 						type = tempPosList.get(0);
 					}					
 				}
-				
+				//if(true) throw new IllegalStateException("type"+type);
 				Pair pair = new Pair(latexExpr, type);
 				pairs.add(pair);
 				
@@ -719,11 +727,9 @@ public class ThmP1 {
 			}/*Done with handling tex tokens.*/
 			
 			numNonTexTokens++;			
-			noTexSB.append(" ").append(curWord).append(" ");
 			// check for trigger words of fixed phrases, e.g. "with this said",
 			// "all but finitely many", as well as 2- or 3-grams.
-			if (i < strAr.length - 1) {
-				
+			if (i < strAr.length - 1) {				
 				String potentialTrigger = curWord + " " + strAr[i + 1];
 				//System.out.println("potential trigger: " + potentialTrigger );
 				if (fixedPhraseMMap.containsKey(potentialTrigger)) {
@@ -737,19 +743,24 @@ public class ThmP1 {
 						/*null if word phrase is fluff*/
 						if(null != emptyPair.pos()){
 							pairs.add(emptyPair);			
-							if(emptyPair.pos().equals("ent")) mathIndexList.add(pairs.size() - 1);	
+							if(emptyPair.pos().equals("ent")){ 
+								mathIndexList.add(pairs.size() - 1);								
+							}							
+							noTexSB.append(" ").append(emptyPair.word()).append(" ");						
 						}
-						i += numWordsDown - 1;						
+						i += numWordsDown - 1;
 						continue strloop;
 					}
 				}				
-				int newIndex = gatherTwoThreeGram(i, strAr, pairs, mathIndexList);
+				int newIndex = gatherTwoThreeGram(i, strAr, pairs, mathIndexList, parseState);
 				//a two or three gram was picked up
 				if(newIndex > i){ 					
 					i = newIndex;
+					noTexSB.append(" ").append(pairs.get(pairs.size()-1).word()).append(" ");
 					continue;				
 				}				
-			}			
+			}		
+			noTexSB.append(" ").append(curWord).append(" ");
 			/*Done with tex parsing, so can strip away special chars from word.*/
 			Matcher matcher;
 			if((matcher=WordForms.getSPECIAL_CHARS_AROUND_WORD_PATTERN().matcher(curWord)).matches()){
@@ -1137,6 +1148,9 @@ public class ThmP1 {
 				}else{				
 					Pair pair = new Pair(curWord, curType);
 					pairs.add(pair);
+					if("ent".equals(curType)){
+						mathIndexList.add(pairs.size() - 1);
+					}
 				}
 			}
 			else if (curWord.matches("[a-zA-Z]")) {
@@ -1149,6 +1163,7 @@ public class ThmP1 {
 				///Use "ent" for now instead of "num", because more rules for ent-combos.
 				Pair pair = new Pair(strAr[i], "ent");
 				pairs.add(pair);
+				mathIndexList.add(pairs.size() - 1);
 			}//negative adjective word, not that unusual.
 			else if((negativeAdjMatcher = NEGATIVE_ADJECTIVE_PATTERN.matcher(curWord)).find()){
 				
@@ -1171,16 +1186,18 @@ public class ThmP1 {
 			else if(POSSIBLE_ADJ_PATTERN.matcher(curWord).matches()){
 				//Try to guess part of speech based on endings 
 				pairs.add(new Pair(curWord, "adj"));
+				addUnknownWordToSet(parseState, curWord);
 			}else if(POSSIBLE_ENT_PATTERN.matcher(curWord).matches()){
+				//if(true) throw new RuntimeException();
 				pairs.add(new Pair(curWord, "ent"));
+				mathIndexList.add(pairs.size()-1);
+				addUnknownWordToSet(parseState, curWord);
 			} 
 			else if (!WordForms.getWhiteNonEmptySpaceNotAllPattern().matcher(curWord).matches()) { // try to minimize this case.				
 				System.out.println("word not in dictionary: " + curWord);
-				pairs.add(new Pair(curWord, ""));				
-				if(parseState.writeUnknownWordsToFileBool() && isValidWord(curWord)){
-				// collect & write unknown words to file
-					unknownWords.add(curWord);
-				}
+				pairs.add(new Pair(curWord, ""));
+				//if(true) throw new IllegalStateException("curWord" + curWord);
+				addUnknownWordToSet(parseState, curWord);
 			} 
 			else { 
 				// must be blank space at this point, so curWord doesn't count
@@ -1325,12 +1342,12 @@ public class ThmP1 {
 				//uses contextual tags to maximize entropy.
 				if(null == posTagger){
 					setUpPosTagger();
-				}
-				
+				}				
 				//use sentence with latex substituted.
 				String sentenceToTag = noTexSB.toString();
 				
 				String taggedSentence = posTagger.tagString(sentenceToTag);
+				//System.out.println("taggedSentence " + sentenceToTag);
 				//must find word in tagged sentence, which looks like 
 				//e.g. "a_DT field_NN is_VBZ a_DT ring_NN".
 				//better way to fish the pos out?
@@ -1831,6 +1848,17 @@ public class ThmP1 {
 		
 		parseState.setRecentParseSpanning(false);
 		return parseState;
+	}
+
+	/**
+	 * @param parseState
+	 * @param curWord
+	 */
+	private static void addUnknownWordToSet(ParseState parseState, String curWord) {
+		if(parseState.writeUnknownWordsToFileBool() && isValidWord(curWord)){
+			// collect & write unknown words to file
+				unknownWords.add(curWord);
+			}
 	}
 
 	/**
@@ -3244,12 +3272,13 @@ public class ThmP1 {
 			//Also add the long form to parsedExpr	
 			parsedExpr.add(longFormParsedPairList.get(finalOrderingList.get(i)));
 			if(DEBUG){
-				System.out.println(commandNumUnitsList + " longForm, commandUnits: " + commandNumUnitsList.get(i) +". numUnits: " +numUnitsList.get(i) 
+				System.out.println("ThmP1-" +commandNumUnitsList + " longForm, commandUnits: " + commandNumUnitsList.get(i) +". numUnits: " +numUnitsList.get(i) 
 					+ ". "+ longFormParsedPairList.get(finalOrderingList.get(i)));
 			}
 		}	
 		//assign the global context vec as the vec of the highest-ranked parse
 		int bestIndex = finalOrderingList.get(0);
+		System.out.println("ThmP1 - headParseStructList.size " + headParseStructList.size());
 		Map<Integer, Integer> parseContextVectorMap;
 		if(contextVecMapList.size() == 1){
 			//in case there was no full parse, list should only contain one element.

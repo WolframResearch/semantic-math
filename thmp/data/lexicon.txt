@@ -10,11 +10,13 @@ complex adj
 logarithmic adj
 CW complex ent
 homology ent
+serre ent
 log ent
 value ent
 separate verb
 sheaf ent
 tower ent
+axiom ent
 coordinate ent
 punctured adj
 family ent

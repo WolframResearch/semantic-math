@@ -850,6 +850,8 @@ public class ParseToWLTree{
 				System.out.println("WLCommand.structsWithOtherHeadCount(curCommand) " + WLCommand.structsWithOtherHeadCount(curCommand));
 				//throw new RuntimeException("WLCommandWrapperList " +this.WLCommandWrapperList);
 			}*/			
+			//System.out.println("ParseToWLTree WLCommand.structsWithOtherHeadCount(curCommand) " 
+				//+ WLCommand.structsWithOtherHeadCount(curCommand));
 			if(WLCommand.structsWithOtherHeadCount(curCommand) <= structWithOtherHeadThreshold
 					&& shouldAppendCommandStr
 					//&& struct.WLCommandStrVisitedCount() == 0

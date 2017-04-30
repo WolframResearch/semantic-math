@@ -703,8 +703,9 @@ public class ThmP1TestRun {
 			//st = "signed resolution $res(T)$ to coincide with $RR$";
 			st = "The interchange of two distant critical points of the surface diagram does not change the induced map on homology";
 			st = "fix a rectangular Young diagram $R$ over a field";
-			st = "signed resolution $res(T)$ coincide with $RR$";
-			st = "take derivative of log of $f$";
+			st = "A morphism of C-algebras $f : A \\longrightarrow B$ with axiom is called a noncommutative Serre fibration";
+			//st = "A morphism of algebras exists";
+			//st = "a morphism is called a noncommutative serre fibration";
 			
 			//st = "Let $p_1,\\dots,p_r$ be the preimages under $w$"; 			
 			//st = "$p_1,\\dots,p_r$ is the preimage under $w$ of $c^\\ast_0$";			

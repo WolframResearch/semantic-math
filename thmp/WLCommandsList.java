@@ -357,7 +357,7 @@ public class WLCommandsList {
 				//"\\[Element]", "symb|ent|adj|phrase, , true, TriggerMathObj" }));
 		putToWLCommandMapBuilder(wLCommandMapBuilder, "is called", new PBuilder("symb|ent|pro", null, true, false, false,
 				PosTermConnotation.DEFINING), 
-				new PBuilder("auxpass", "is called", false, true, false), new PBuilder("\\[Element]"),
+				new PBuilder("auxpass", "is called", false, true, false), new PBuilder(" \\[Element] "),
 				new PBuilder("symb|ent|adj|phrase", null, true, false, false, PosTermConnotation.DEFINED,
 						RelationType._IS) );
 		

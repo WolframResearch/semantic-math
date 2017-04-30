@@ -63,8 +63,9 @@ public class ThmInput {
 	/*another custom definition specification, \newcommand{\xra}  {\xrightarrow}
 	  Need to be smart about e.g. \newcommand{\\un}[1]{\\underline{#1}} !*/
 	//Should also support \newcommand{cmd}[args][opt]{def} with optional terms
-	static final Pattern NEW_THM_PATTERN2 = Pattern.compile("\\s*\\\\(?:re){0,1}newcommand\\{([^}]+)\\}\\s*(?:\\[(\\d)\\])*\\s*\\{(.+?)\\}\\s*");
+	static final Pattern NEW_THM_PATTERN2 = Pattern.compile("\\s*\\\\(?:re){0,1}newcommand\\{*([^}{]+)\\}*\\s*(?:\\[(\\d)\\])*\\s*\\{(.+?)\\}\\s*");
 	/*e.g. \def\X{{\cal X}};  \def \author {William {\sc Smith}}; 
+	 * Need to support e.g. \def\G{\hbox{\boldmath{}$G$\ unboldmath}}
 	 *Currently not covering: \def <command> <parameter-text>{<replacement-text>} e.g. \def\testonearg[#1]{\typeout{Testing one arg: '#1'}} */
 	static final Pattern NEW_THM_PATTERN3 = Pattern.compile("\\s*\\\\def\\s*([^{]+?)\\s*\\{(.+?)\\}\\s*");
 	
