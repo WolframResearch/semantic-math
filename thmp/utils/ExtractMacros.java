@@ -62,8 +62,7 @@ public class ExtractMacros {
 					String command = matcher.group(1);
 					String val = matcher.group(2);
 					defMap.put(command, val);
-				}
-				
+				}				
 			}
 		} catch (IOException e) {
 			e.printStackTrace();

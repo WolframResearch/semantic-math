@@ -262,7 +262,7 @@ public class WLCommand implements Serializable{
 	// pattern used to detect negative terms
 	private static final Pattern TRIGGER_WORD_NOT_PATTERN = Pattern.compile("^(?:.*not* .+|.+ no(?:t|$).*)$");
 	//pattern to be replaced with the empty string, to turn the negative term into the positive corresponding part.
-	private static final Pattern NEGATIVE_TRIGGER_PATTERN = Pattern.compile("(?:does not\\s*|do not\\s*|not\\s*)");
+	protected static final Pattern NEGATIVE_TRIGGER_PATTERN = Pattern.compile("(?:does not\\s*|do not\\s*|\\s*not\\s*| no$)");
 	
 	static {	
 		negativeTriggerCommandsMap = new HashMap<String, String>();
@@ -419,7 +419,7 @@ public class WLCommand implements Serializable{
 		private boolean triggerMathObj;
 		
 		private boolean isTrigger;
-		
+		private boolean isPropertyTerm;
 		//relationType for building relation vectors. 
 		private List<RelationType> relationType;
 		
@@ -449,6 +449,9 @@ public class WLCommand implements Serializable{
 			private boolean isOptionalTerm;
 			//used to "untrigger" commands
 			private boolean isNegativeTerm;
+			//whether should be made into property term, if corresponding trigger allows so.
+			//e.g. "this polynomial is not $1$", use "is" inside ppt term Math["$1"]"
+			private boolean isPropertyTerm;
 			//0 by default
 			private int optionalGroupNum;
 			//relationType for building relation vectors. 
@@ -494,8 +497,7 @@ public class WLCommand implements Serializable{
 				// commandStrParts[1] : "*";
 				nameStr = (null == nameStr) ? ".*" : nameStr;
 				
-				//String[] cmdPart2Ar = commandStrParts[2].trim().split("_");
-				
+				//String[] cmdPart2Ar = commandStrParts[2].trim().split("_");				
 				//could be trigger_true, to indicate inclusion in posString
 				//boolean useInPosList = cmdPart2Ar.length > 1 ? Boolean.valueOf(cmdPart2Ar[1])
 						//: Boolean.valueOf(cmdPart2Ar[0]);	
@@ -685,7 +687,11 @@ public class WLCommand implements Serializable{
 				this.relationTypeList.addAll(Arrays.asList(relationTypeAr));
 				return this;
 			}
-			
+
+			public PBuilder makePropertyTerm(){
+				this.isPropertyTerm = true;
+				return this;
+			}
 			/**
 			 * Set special position the struct for term must occur in Struct tree, e.g. FIRST.
 			 * For e.g. "Fix a prime $p$"
@@ -725,14 +731,15 @@ public class WLCommand implements Serializable{
 					return new NegativePosTerm(commandComponent, positionInMap);
 				}else{
 					return new PosTerm(commandComponent, positionInMap, includeInBuiltString,
-							isTrigger, isTriggerMathObj, posTermConnotation, relationTypeList, positionInStructTree);
+							isTrigger, isTriggerMathObj, posTermConnotation, relationTypeList, positionInStructTree,
+							isPropertyTerm);
 				}
 			}					
 		}
 		
 		private PosTerm(WLCommandComponent commandComponent, int position, boolean includeInBuiltString,
 				boolean isTrigger, boolean isTriggerMathObj, PosTermConnotation posTermConnotation,
-				List<RelationType> relationTypeList, PositionInStructTree positionInStructTree){
+				List<RelationType> relationTypeList, PositionInStructTree positionInStructTree, boolean isPropertyTerm_){
 			this.commandComponent = commandComponent;
 			this.positionInMap = position;
 			this.includeInBuiltString = includeInBuiltString;
@@ -741,6 +748,7 @@ public class WLCommand implements Serializable{
 			this.posTermConnotation = posTermConnotation;
 			this.relationType = relationTypeList;
 			this.positionInStructTree = positionInStructTree;
+			this.isPropertyTerm = isPropertyTerm_;
 		}
 		
 		/**
@@ -749,7 +757,8 @@ public class WLCommand implements Serializable{
 		 */
 		public PosTerm termDeepCopy(){				
 			return new PosTerm(commandComponent, positionInMap, includeInBuiltString,
-					isTrigger, triggerMathObj, posTermConnotation, relationType, positionInStructTree);			
+					isTrigger, triggerMathObj, posTermConnotation, relationType, positionInStructTree,
+					isPropertyTerm);			
 		}	
 		
 		/**
@@ -758,7 +767,14 @@ public class WLCommand implements Serializable{
 		public boolean isTrigger() {
 			return this.isTrigger;
 		}
-		
+		/**
+		 * Whether should be made into property term, if corresponding trigger allows so.
+		 * e.g. "this polynomial is not $1$", use "is" inside ppt term Math["$1"]"
+		 * @return
+		 */
+		public boolean isPropertyTerm(){
+			return this.isPropertyTerm;
+		}
 		/**
 		 * @return the isOptionalTerm
 		 */
@@ -856,7 +872,7 @@ public class WLCommand implements Serializable{
 
 		public NegativePosTerm(WLCommandComponent commandComponent, int position){
 			super(commandComponent, position, false, false, false, PosTermConnotation.NONE,
-					new ArrayList<RelationType>(), PositionInStructTree.ANY);			
+					new ArrayList<RelationType>(), PositionInStructTree.ANY, false);			
 		}
 		
 		/**
@@ -888,7 +904,7 @@ public class WLCommand implements Serializable{
 				PositionInStructTree positionInStructTree) {
 			//cannot be trigger if optional term
 			super(commandComponent, position, includeInBuiltString, false, triggerMathObj,
-					PosTermConnotation.NONE, relationType, positionInStructTree);
+					PosTermConnotation.NONE, relationType, positionInStructTree, false);
 			this.optionalGroupNum = optionalGroupNum;			
 		}
 		
@@ -1393,7 +1409,7 @@ public class WLCommand implements Serializable{
 				}
 				
 				//check if need to trigger triggerMathObj
-				if(term.triggerMathObj){
+				/*if(term.triggerMathObj){
 					//should check first if contains WLCommandStr, i.e. has been converted to some 
 					//commands already
 					//nextWord = TriggerMathObj3.get_mathObjFromStruct(nextStruct, curCommand);
@@ -1406,7 +1422,9 @@ public class WLCommand implements Serializable{
 				}else{
 					//takes into account pro, and the ent it should refer to
 					nextWord = nextStruct.simpleToString(true, curCommand);
-				}
+				}*/
+			//	System.out.println("WLCommand triggerPosTer: " + triggerPosTerm.isPropertyTerm + " " + triggerPosTerm);
+				nextWord = nextStruct.simpleToString(true, curCommand, triggerPosTerm, term);
 				//System.out.println("WLCommand - nextWord: " + nextWord + " for struct: " + nextStruct);
 				//simple way to present the Struct
 				//set to the head struct the currently built command will be appended to
@@ -2448,7 +2466,6 @@ public class WLCommand implements Serializable{
 	
 	/**
 	 * Type of component, i.e. negative.
-	 * 
 	 */
 	public enum PosTermType{
 		//stop the command (untrigger) once encountered.

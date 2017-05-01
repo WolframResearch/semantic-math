@@ -2701,6 +2701,7 @@ public class ThmP1 {
 			Map<Integer, Integer> curStructContextVecMap = new HashMap<Integer, Integer>();
 			
 			for (int k = 0; k < parsedStructListSize; k++) {
+				//Map<Integer, Integer> curStructContextVecMap = new HashMap<Integer, Integer>();
 				StringBuilder parsedSB = new StringBuilder();
 				// int highestScoreIndex = ArrayDFS(parsedStructList.get(k));
 				int highestScoreIndex = 0;
@@ -2740,10 +2741,9 @@ public class ThmP1 {
 				StringBuilder wlSB = wlCommandTreeTraversal(kHeadStruct, headParseStructList, parsedPairMMapList, curStructContextVecMap, 
 						span, parseState);
 				longFormParsedPairList.add(new ParsedPair(parsedSB.toString(), totalScore, 
-						"long"));
-			}
-			
-			//add only one vector to list since the pieces are part of one single parse, if no full parse
+						"long"));	//combine into one list!!					
+			}			
+			//add just one vector to list to capture all relations found.
 			thmContextVecMapList.add(curStructContextVecMap);
 			
 			//defer these to ordered addition in orderPairsAndPutToLists!
@@ -2768,8 +2768,22 @@ public class ThmP1 {
 			}
 			List<Multimap<ParseStructType, ParsedPair>> parsedPairMMapList2 = new ArrayList<Multimap<ParseStructType, ParsedPair>>();
 			parsedPairMMapList2.add(combinedMMap);
-			orderPairsAndPutToLists(parsedPairMMapList2, headParseStructList, parseState, longFormParsedPairList, thmContextVecMapList);
-			
+			//combine the parseStructs into one
+			ParseStruct combinedParseStruct = new ParseStruct();
+			for(int t = 0; t < headParseStructList.size(); t++){
+				ParseStruct parseStruct = headParseStructList.get(t);
+				Multimap<ParseStructType, WLCommandWrapper> wrapperMMap = parseStruct.getWLCommandWrapperMMap();
+				for(Map.Entry<ParseStructType, WLCommandWrapper> entry : wrapperMMap.entries()){
+					ParseStructType type = entry.getKey();
+					if(type != ParseStructType.NONE){
+						combinedParseStruct.addParseStructWrapper(type, entry.getValue());						
+					}
+				}
+			}
+			List<ParseStruct> combinedHeadParseStructList = new ArrayList<ParseStruct>();
+			combinedHeadParseStructList.add(combinedParseStruct);
+			orderPairsAndPutToLists(parsedPairMMapList2, combinedHeadParseStructList, parseState, longFormParsedPairList, thmContextVecMapList);
+			System.out.println("THmP1- headParseStructList" + headParseStructList);
 			//if commandNumUnitsWithHeadNoneSum sufficiently low: so sufficiently few parses
 			//with NONE, don't parse again. Half is a good threshold
 			if(commandNumUnitsWithHeadNoneSum > inputStructList.size()/2){
@@ -3275,10 +3289,14 @@ public class ThmP1 {
 				System.out.println("ThmP1-" +commandNumUnitsList + " longForm, commandUnits: " + commandNumUnitsList.get(i) +". numUnits: " +numUnitsList.get(i) 
 					+ ". "+ longFormParsedPairList.get(finalOrderingList.get(i)));
 			}
-		}	
+		}
+		//arsedPairMMapList,
+		//List<ParseStruct> headParseStructList, ParseState parseState,
+		//List<ParsedPair> longFormParsedPairList;
 		//assign the global context vec as the vec of the highest-ranked parse
 		int bestIndex = finalOrderingList.get(0);
-		System.out.println("ThmP1 - headParseStructList.size " + headParseStructList.size());
+		System.out.println("ThmP1 - parsedPairMMapList.size " + parsedPairMMapList.size());
+		System.out.println("ThmP1 - longFormParsedPairList.size " + longFormParsedPairList.size());
 		Map<Integer, Integer> parseContextVectorMap;
 		if(contextVecMapList.size() == 1){
 			//in case there was no full parse, list should only contain one element.

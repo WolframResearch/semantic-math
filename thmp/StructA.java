@@ -6,10 +6,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
 
 import thmp.ParseToWLTree.WLCommandWrapper;
 import thmp.Struct.ChildRelation;
 import thmp.Struct.NodeType;
+import thmp.WLCommand.PosTerm;
 import thmp.utils.WordForms;
 
 public class StructA<A, B> extends Struct{
@@ -283,6 +285,10 @@ public class StructA<A, B> extends Struct{
 		return Collections.<String>emptySet();
 	}
 	
+	@Override
+	public String simpleToString(boolean includeType, WLCommand curCommand){
+		return simpleToString(includeType, curCommand, null, null);
+	}
 	/**
 	 * @param includeType
 	 * @param curCommand Command that the returned String is built towards.
@@ -293,7 +299,7 @@ public class StructA<A, B> extends Struct{
 	 * @return
 	 */
 	@Override
-	public String simpleToString(boolean includeType, WLCommand curCommand){
+	public String simpleToString(boolean includeType, WLCommand curCommand, PosTerm triggerPosTerm, PosTerm curPosTerm){
 
 		/*if(this.type.equals("assert")){
 			System.out.println("StructA - this "+ this);
@@ -340,6 +346,7 @@ public class StructA<A, B> extends Struct{
 			
 			StringBuilder fullContentSB = new StringBuilder((String)this.prev1);
 			//System.out.println("*********prev1 type: " + type());
+			String makePptStr = retrievePosTermPptStr(triggerPosTerm, curPosTerm);
 			
 			String childStr = appendChildrenQualifierString(includeType, curCommand);			
 			//String prev1Str = (String)this.prev1;
@@ -357,11 +364,12 @@ public class StructA<A, B> extends Struct{
 					fullContentSB.insert(0, " MathProperty[").append(childStr).append("]");
 				}else if(prev2.equals("")){
 					/*use "Math" Head here generally so not to have headless object. But perhaps should be more specific.*/
-					fullContentSB.insert(0, "Math[").append(childStr).append("]");
+					fullContentSB.insert(0, makePptStr).insert(0, "Math[").append(childStr).append("]");
 					//if(this.type.equals("texAssert")) System.out.println("StructA -struct "+ this +"has child? " +this.hasChild);
+					///throw new IllegalStateException("makePptStr " + makePptStr + " " + triggerPosTerm.isPropertyTerm());
 				}
 				if(!prev2.equals("")){
-					fullContentSB.insert(0, "Math[").append(", \"").append((String)this.prev2).append(childStr).append("\"]");					
+					fullContentSB.insert(0, makePptStr).insert(0, "Math[").append(", \"").append((String)this.prev2).append(childStr).append("\"]");
 				}
 			}				
 			
@@ -382,13 +390,14 @@ public class StructA<A, B> extends Struct{
 			return fullContentSB.toString();
 		}else{		
 			//System.out.println("+++" + this.simpleToString2(includeType, curCommand));
-			return this.simpleToString2(includeType, curCommand);
+			return this.simpleToString2(includeType, curCommand, triggerPosTerm);
 		}
 	}
+
 	
 	//auxilliary method for simpleToString and called inside StructH.simpleToString2
 	//@Override
-	private String simpleToString2(boolean includeType, WLCommand curCommand){		
+	private String simpleToString2(boolean includeType, WLCommand curCommand, PosTerm triggerPosTerm){		
 		/*if(type.equals("assert")){
 			System.out.println("StructA -");
 			//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
@@ -575,6 +584,9 @@ public class StructA<A, B> extends Struct{
 		return contentStrList;
 	}
 	
+	/**
+	 * @return will not be null.
+	 */
 	@Override
 	public String nameStr(){		
 		String nameStr = "";

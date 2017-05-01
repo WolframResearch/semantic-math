@@ -2,6 +2,7 @@ package thmp;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,6 +10,7 @@ import java.util.HashSet;
 
 import thmp.ParseToWLTree.WLCommandWrapper;
 import thmp.Struct.ChildRelation;
+import thmp.WLCommand.PosTerm;
 
 /*
  * Struct to contain entities in sentence
@@ -300,7 +302,31 @@ public abstract class Struct implements Serializable{
 	
 	//Simple toString to return the bare minimum to identify this Struct.
 	//To be used in ParseToWLTree.
+	public abstract String simpleToString(boolean includeType, WLCommand curCommand, PosTerm triggerPosTerm, PosTerm curPosTerm);
 	public abstract String simpleToString(boolean includeType, WLCommand curCommand);
+	/**
+	 * @param triggerPosTerm
+	 * @param curPosTerm
+	 * @return
+	 */
+	String retrievePosTermPptStr(PosTerm triggerPosTerm, PosTerm curPosTerm) {
+		String makePptStr = "";
+		Struct triggerPosTermStruct;
+		if(null != triggerPosTerm && curPosTerm.isPropertyTerm() 
+				&& null != (triggerPosTermStruct=triggerPosTerm.posTermStruct())){
+			String triggerNameStr = triggerPosTermStruct.nameStr();
+			Matcher matcher;
+			if((matcher=WLCommand.NEGATIVE_TRIGGER_PATTERN.matcher(triggerNameStr)).find()){
+				makePptStr = matcher.replaceAll("");
+			}else{
+				makePptStr = triggerNameStr;
+			}
+			if(!makePptStr.equals("")){
+				makePptStr = "\"" + makePptStr + "\", ";
+			}
+		}
+		return makePptStr;
+	}
 	
 	//public abstract String simpleToString2(boolean includeType, WLCommand curCommand);
 	
@@ -571,6 +597,18 @@ public abstract class Struct implements Serializable{
 				article = NONE;
 			}
 			return article;
+		}
+		
+		@Override
+		public String toString(){
+			switch(this){
+			case A:
+				return "a";
+			case THE:
+				return "the";
+			default:
+				return "";
+			}
 		}
 	}
 	

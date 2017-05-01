@@ -723,7 +723,7 @@ public class Maps {
 			structMap.put("adj_noun", new Rule("noun", 1));
 			//"independent of $n$"
 			structMap.put("adj_prep", new Rule("newchild", "qualifier", .95));
-			structMap.put("adverb_prep", new Rule("newchild", "qualifier", .95));
+			structMap.put("adverb_prep", new Rule("newchild", "qualifier", .85));
 			structMap.put("gerund_noun", new Rule("gerundp", 1)); // gerundphrase
 			structMap.put("ent_gerundp", new Rule("newchild", 1));
 			

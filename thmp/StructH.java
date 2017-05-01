@@ -11,6 +11,7 @@ import java.util.Set;
 
 import thmp.ParseToWLTree.WLCommandWrapper;
 import thmp.Struct.NodeType;
+import thmp.WLCommand.PosTerm;
 
 /**
  * 
@@ -477,6 +478,13 @@ public class StructH<H> extends Struct{
 	}
 	
 	/**
+	 * Does not support three-argument form currently.
+	 */
+	@Override
+	public String simpleToString(boolean includeType, WLCommand curCommand){
+		return simpleToString(includeType, curCommand, null, null);
+	}
+	/**
 	 * Simple toString to return the bare minimum to present this Struct.
 	 * To be used in ParseToWLTree.
 	 * @param includeType	Whether to include the type, eg "MathObj"
@@ -484,7 +492,8 @@ public class StructH<H> extends Struct{
 	 * @return
 	 */
 	@Override
-	public String simpleToString(boolean includeType, WLCommand curCommand){
+	public String simpleToString(boolean includeType, WLCommand curCommand, PosTerm triggerPosTerm,
+			PosTerm curPosTerm){
 		//if(this.posteriorBuiltStruct != null) return "";
 		//this.WLCommandStrVisitedCount++;
 		// instead of checking WLCommandStr, check if wrapperList is null
@@ -525,18 +534,18 @@ public class StructH<H> extends Struct{
 		}		
 		//String name = this.struct.get("name");
 		//return name == null ? this.type : name;
-		return this.simpleToString2(includeType, curCommand);
+		return this.simpleToString2(includeType, curCommand, triggerPosTerm, curPosTerm);
 	}
 	
 	/**
 	 * Auxilliary method for simpleToString and StructA.simpleToString.
 	 */
 	//@Override
-	private String simpleToString2(boolean includeType, WLCommand curCommand){
+	private String simpleToString2(boolean includeType, WLCommand curCommand, PosTerm triggerPosTerm, 
+			PosTerm curPosTerm){
 		
-		if(this.struct.get("name").equals("component")){
-			System.out.print("");
-		}
+		String makePptStr = retrievePosTermPptStr(triggerPosTerm, curPosTerm);
+		
 		if(curCommand != null) {
 			WLCommand.increment_commandNumUnits(curCommand, this);
 		}
@@ -552,7 +561,7 @@ public class StructH<H> extends Struct{
 		
 		if(includeType){			
 			sb.append(this.type.equals("ent") ? "Math" : this.type);
-			sb.append("[");
+			sb.append("[").append(makePptStr);
 		}
 		boolean prependCommaBool = false;
 		
@@ -573,7 +582,17 @@ public class StructH<H> extends Struct{
 			WLCommand.increment_commandNumUnits(curCommand, this);
 			pptAppended = true;
 		}
-		
+		if(this.article() != Article.NONE){
+			if(pptAppended){
+				sb.append("\"").append(this.article()).append("\", ");
+			}else{
+				if(prependCommaBool){
+					sb.append(", ");
+				}
+				sb.append("\"Property\"->{\"").append(this.article()).append("\"");				
+				pptAppended = true;
+			}
+		}
 		while(pptStrListIter.hasNext()){
 			String nextStr = pptStrListIter.next();
 			if(pptStrListIter.hasNext()){
@@ -788,7 +807,7 @@ public class StructH<H> extends Struct{
 	}
 	
 	/**
-	 * @return nameStr Empty string is no name specified.
+	 * @return nameStr Empty string is no name specified. Will not be null.
 	 */
 	@Override
 	public String nameStr(){		

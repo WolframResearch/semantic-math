@@ -253,14 +253,14 @@ public class WLCommandsList {
 				//negative term, to stop command if encountered
 				new PBuilder("adj", null, WLCommand.PosTermType.NEGATIVE), //new PBuilder("{", "OPT1"), 
 				//new PBuilder("pre", null, true, false, "OPT1"),
-				new PBuilder("symb|ent|phrase", null, true, false, false, RelationType.IS_)//, new PBuilder("}", "OPT1")
+				new PBuilder("symb|ent|phrase", null, true, false, false, RelationType.IS_).makePropertyTerm()//, new PBuilder("}", "OPT1")
 				); // PosTermConnotation.DEFINING,
 		//merge these two?!
 		//e.g. "$X$ is connected", "$F$ is isomorphic to ..."
 		putToWLCommandMapBuilder(wLCommandMapBuilder, "is", new PBuilder("symb|ent|pro|noun|det", null, true, RelationType._IS), 
 				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), 
 				new PBuilder(" ~HasProperty~ "), new PBuilder("{", "OPT"), 
-				new PBuilder("adj|ent|phrase|noun|prep|qualifier", null, true, false, false, RelationType.IS_),
+				new PBuilder("adj|ent|phrase|noun|prep|qualifier", null, true, false, false, RelationType.IS_).makePropertyTerm(),
 				new PBuilder(", {\"Qualifier\"->", "OPT"), 
 				new PBuilder("prep", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}}", "OPT")
 				); 
