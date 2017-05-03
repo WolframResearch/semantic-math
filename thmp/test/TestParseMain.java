@@ -268,5 +268,4 @@ public class TestParseMain {
 		return parseResultList;
 	}
 	
-	
 }

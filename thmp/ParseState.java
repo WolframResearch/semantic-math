@@ -912,6 +912,7 @@ public class ParseState {
 		this.recentAssert = null;
 		this.prevTokenList = null;
 		this.tokenList = null;
+		this.recentEnt = null;
 		this.globalVariableNamesMMap = ArrayListMultimap.create();
 	}
 	

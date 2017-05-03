@@ -1424,7 +1424,7 @@ public class WLCommand implements Serializable{
 					nextWord = nextStruct.simpleToString(true, curCommand);
 				}*/
 			//	System.out.println("WLCommand triggerPosTer: " + triggerPosTerm.isPropertyTerm + " " + triggerPosTerm);
-				nextWord = nextStruct.simpleToString(true, curCommand, triggerPosTerm, term);
+				nextWord = nextStruct.simpleToString(true, curCommand, triggerPosTerm, term, );
 				//System.out.println("WLCommand - nextWord: " + nextWord + " for struct: " + nextStruct);
 				//simple way to present the Struct
 				//set to the head struct the currently built command will be appended to

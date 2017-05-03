@@ -9,10 +9,15 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import com.wolfram.jlink.Expr;
+
 import thmp.ParseToWLTree.WLCommandWrapper;
 import thmp.Struct.NodeType;
 import thmp.WLCommand.PosTerm;
-
+import thmp.utils.ExprUtils;
+import thmp.utils.ExprUtils.AssocExprWrapper;
+import thmp.utils.ExprUtils.MathExprWrapper;
+import thmp.utils.ExprUtils.RuleExprWrapper;
 /**
  * 
  * *Need* to modify copy() when any field is added to StructH class.
@@ -476,13 +481,17 @@ public class StructH<H> extends Struct{
 		this.WLCommandWrapperList.add(curCommandWrapper);
 		return curCommandWrapper;
 	}
-	
+
+	@Override
+	public String simpleToString(boolean includeType, WLCommand curCommand, List<Expr> exprList){
+		return simpleToString(includeType, curCommand, null, null, exprList);
+	}
 	/**
 	 * Does not support three-argument form currently.
 	 */
 	@Override
 	public String simpleToString(boolean includeType, WLCommand curCommand){
-		return simpleToString(includeType, curCommand, null, null);
+		return simpleToString(includeType, curCommand, null, null, new ArrayList<Expr>());
 	}
 	/**
 	 * Simple toString to return the bare minimum to present this Struct.
@@ -493,7 +502,7 @@ public class StructH<H> extends Struct{
 	 */
 	@Override
 	public String simpleToString(boolean includeType, WLCommand curCommand, PosTerm triggerPosTerm,
-			PosTerm curPosTerm){
+			PosTerm curPosTerm, List<   Expr> exprList){
 		//if(this.posteriorBuiltStruct != null) return "";
 		//this.WLCommandStrVisitedCount++;
 		// instead of checking WLCommandStr, check if wrapperList is null
@@ -534,7 +543,7 @@ public class StructH<H> extends Struct{
 		}		
 		//String name = this.struct.get("name");
 		//return name == null ? this.type : name;
-		return this.simpleToString2(includeType, curCommand, triggerPosTerm, curPosTerm);
+		return this.simpleToString2(includeType, curCommand, triggerPosTerm, curPosTerm, exprList);
 	}
 	
 	/**
@@ -542,10 +551,12 @@ public class StructH<H> extends Struct{
 	 */
 	//@Override
 	private String simpleToString2(boolean includeType, WLCommand curCommand, PosTerm triggerPosTerm, 
-			PosTerm curPosTerm){
+			PosTerm curPosTerm, List<Expr> exprList){
 		
 		String makePptStr = retrievePosTermPptStr(triggerPosTerm, curPosTerm);
 		
+		List<RuleExprWrapper> ruleExprWrapperList = new ArrayList<RuleExprWrapper>();
+				
 		if(curCommand != null) {
 			WLCommand.increment_commandNumUnits(curCommand, this);
 		}
@@ -560,8 +571,11 @@ public class StructH<H> extends Struct{
 		StringBuilder sb = new StringBuilder();
 		
 		if(includeType){			
-			sb.append(this.type.equals("ent") ? "Math" : this.type);
-			sb.append("[").append(makePptStr);
+			if(!"".equals(makePptStr)){
+				sb.append(this.type.equals("ent") ? "MathProperty" : this.type).append("[").append(makePptStr);				
+			}else{
+				sb.append(this.type.equals("ent") ? "Math" : this.type).append("[");			
+			}
 		}
 		boolean prependCommaBool = false;
 		
@@ -569,6 +583,8 @@ public class StructH<H> extends Struct{
 		String name = struct.get("name");
 		if(null != name){
 			sb.append("\"Name\"->\"").append(name).append("\"");
+			RuleExprWrapper ruleWrapper = new RuleExprWrapper(new Expr("Name"), new Expr(name));
+			ruleExprWrapperList.add(ruleWrapper);
 			prependCommaBool = true;
 		}
 		
@@ -619,13 +635,24 @@ public class StructH<H> extends Struct{
 				sb.append(", ");
 			}
 			sb.append("\"Tex\"->\"").append(tex).append("\"");
+			
 		}
 		
 		//sb.append(append_name_pptStr());
 		//System.out.println("curCommand: " + curCommand);
 		//System.out.println("StructH: this.name " + this.nameStr());
-		//System.out.println("StructH: (((((((((children: " + children + ". childRelationList: " + childRelationList);		
-		sb.append(appendChildrenQualifierString(includeType, curCommand));
+		//System.out.println("StructH: (((((((((children: " + children + ". childRelationList: " + childRelationList);
+		List<RuleExprWrapper> childRuleExprWrapperList = new ArrayList<RuleExprWrapper>();
+		sb.append(appendChildrenQualifierString(includeType, curCommand, childRuleExprWrapperList));		
+		if(childRuleExprWrapperList.size() > 0){
+			//add to rules list
+			ruleExprWrapperList.add(childRuleExprWrapperList.get(0));
+		}
+		
+		AssocExprWrapper assocExprWrapper = new AssocExprWrapper(ruleExprWrapperList);
+		MathExprWrapper mathExprWrapper = new MathExprWrapper(assocExprWrapper);
+		exprList.add(mathExprWrapper.expr());
+		
 		if(includeType){ 
 			sb.append("]");
 		}				

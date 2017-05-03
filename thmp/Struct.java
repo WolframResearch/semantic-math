@@ -3,6 +3,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
+
+import com.wolfram.jlink.Expr;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,6 +14,10 @@ import java.util.HashSet;
 import thmp.ParseToWLTree.WLCommandWrapper;
 import thmp.Struct.ChildRelation;
 import thmp.WLCommand.PosTerm;
+import thmp.utils.ExprUtils;
+import thmp.utils.ExprUtils.AssocExprWrapper;
+import thmp.utils.ExprUtils.ExprWrapper;
+import thmp.utils.ExprUtils.RuleExprWrapper;
 
 /*
  * Struct to contain entities in sentence
@@ -302,8 +309,11 @@ public abstract class Struct implements Serializable{
 	
 	//Simple toString to return the bare minimum to identify this Struct.
 	//To be used in ParseToWLTree.
-	public abstract String simpleToString(boolean includeType, WLCommand curCommand, PosTerm triggerPosTerm, PosTerm curPosTerm);
+	public abstract String simpleToString(boolean includeType, WLCommand curCommand, PosTerm triggerPosTerm, 
+			PosTerm curPosTerm, List<Expr> exprList);
 	public abstract String simpleToString(boolean includeType, WLCommand curCommand);
+	public abstract String simpleToString(boolean includeType, WLCommand curCommand, List<Expr> exprList);
+	
 	/**
 	 * @param triggerPosTerm
 	 * @param curPosTerm
@@ -452,16 +462,19 @@ public abstract class Struct implements Serializable{
 	 * @param includeType
 	 * @param curCommand
 	 * @param sb StringBuilder to append child qualifier string to.
+	 * @param childAssocWrapperList List to be filled with one association,
+	 * e.g. "Qualifiers" -> {"with", Math["Name"->"axiom"]}.
 	 * @return child String
 	 */
-	protected String appendChildrenQualifierString(boolean includeType, WLCommand curCommand) {
+	protected String appendChildrenQualifierString(boolean includeType, WLCommand curCommand, List<RuleExprWrapper> childRuleWrapperList) {
 		List<Struct> children = this.children();
 		List<ChildRelation> childRelationList = this.childRelationList();
 		int childrenSize = children.size();
 		int nontrivialChildrenStrCounter = 0;
 		//System.out.println("appendChildrenQualifierStrin struct " + this +" children: " + children);
 		StringBuilder childSb = new StringBuilder(30);
-		if(childrenSize > 0){			
+		if(childrenSize > 0){	
+			List<Expr> childExprList = new ArrayList<Expr>();
 			for(int i = 0; i < childrenSize; i++){
 				Struct child = children.get(i);
 				String childRelationStr = childRelationList.get(i).childRelationStr;
@@ -477,11 +490,12 @@ public abstract class Struct implements Serializable{
 				//including the relation twice, eg in case child is of type "prep"
 				//if this child has been used in another component of the same command.	
 				//System.out.println("Struct - child.usedInOtherCommandComponent(curCommand)" + child.usedInOtherCommandComponent(curCommand));
-				if(child.type().equals("assert")){
+				/*if(child.type().equals("assert")){
 					System.out.print("Struct.java - assert not used elsewhere");
-				}
-				if(!child.usedInOtherCommandComponentInDepth(curCommand)){						
-					String childStr = child.simpleToString(includeType, curCommand);						
+				}*/
+				if(!child.usedInOtherCommandComponentInDepth(curCommand)){
+					List<Expr> exprList = new ArrayList<Expr>();
+					String childStr = child.simpleToString(includeType, curCommand, exprList);						
 					if(!childStr.matches("\\s*")){
 					//System.out.println("Childstr " + childStr);
 						nontrivialChildrenStrCounter++;
@@ -491,12 +505,16 @@ public abstract class Struct implements Serializable{
 								? "" : childRelationStr;*/
 						
 						//System.out.println("\n **^^^*** childRelation" + childRelationStr);
+						//e.g. "Qualifiers" -> {"with", Math["Name"->"axiom"]}
+						
 						if(childRelationStr.equals("")){
 							//childSb.append("{").append(childStr).append("}");
 							childSb.append(childStr).append(", ");
 						}else{
 							childSb.append("{\"").append(childRelationStr).append("\", ").append(childStr).append("}, ");
-						}											
+							childExprList.add(new Expr(childRelationStr));
+						}
+						childExprList.addAll(exprList);
 						//WLCommand.increment_commandNumUnits(curCommand, this); //HERE
 					}
 				}
@@ -508,9 +526,13 @@ public abstract class Struct implements Serializable{
 					childSb.insert(0, ", \"Qualifiers\" -> {").append("}");
 				}else{
 					childSb.insert(0, ", \"Qualifiers\" -> ");
-				}				
-				//sb.append(childSb);
-			}					
+				}
+				RuleExprWrapper childExprWrapper = new RuleExprWrapper(new Expr("Qualifier"), ExprUtils.listExpr(childExprList));
+				//List<RuleExprWrapper> ruleExprWrapperList = new ArrayList<RuleExprWrapper>();
+				//ruleExprWrapperList.add(childExprWrapper);
+				//childAssocWrapperList.add(new AssocExprWrapper(ruleExprWrapperList));	
+				childRuleWrapperList.add(childExprWrapper);	
+			}	
 		}
 		return childSb.toString();
 	}

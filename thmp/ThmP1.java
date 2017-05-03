@@ -258,7 +258,13 @@ public class ThmP1 {
 		public ParsedPair(String parsedStr, double score, String form){
 			this(parsedStr, score, form, true);
 		}
-		//toStringForm, True means final form, toString here, false otherwise
+		
+		/**
+		 * @param parsedStr
+		 * @param score
+		 * @param form
+		 * @param toStringForm True means final form, toString here, false otherwise.
+		 */
 		private ParsedPair(String parsedStr, double score, String form, boolean toStringForm){
 			this.parsedStr = parsedStr;
 			this.score = score;
@@ -2699,6 +2705,8 @@ public class ThmP1 {
 			
 			//int[] curStructContextvec = new int[parseContextVectorSz];	
 			Map<Integer, Integer> curStructContextVecMap = new HashMap<Integer, Integer>();
+			StringBuilder longFormSb = new StringBuilder();
+			double combinedScore = 1;
 			
 			for (int k = 0; k < parsedStructListSize; k++) {
 				//Map<Integer, Integer> curStructContextVecMap = new HashMap<Integer, Integer>();
@@ -2740,11 +2748,21 @@ public class ThmP1 {
 				
 				StringBuilder wlSB = wlCommandTreeTraversal(kHeadStruct, headParseStructList, parsedPairMMapList, curStructContextVecMap, 
 						span, parseState);
-				longFormParsedPairList.add(new ParsedPair(parsedSB.toString(), totalScore, 
-						"long"));	//combine into one list!!					
-			}			
+				
+				combinedScore *= totalScore;
+				longFormSb.append(parsedSB + " ");
+				//longFormParsedPairList.add(new ParsedPair(parsedSB.toString(), totalScore, 
+						//"long"));	//combine into one list!!					
+			}	
 			//add just one vector to list to capture all relations found.
 			thmContextVecMapList.add(curStructContextVecMap);
+			
+			String longFormStr = "";
+			int longFormSbLen = longFormSb.length();
+			if(longFormSbLen > 1){
+				longFormStr = longFormSb.substring(0, longFormSbLen-1);
+			}
+			longFormParsedPairList.add(new ParsedPair(longFormStr, combinedScore, "long"));
 			
 			//defer these to ordered addition in orderPairsAndPutToLists!
 			//parsedExpr.add(new ParsedPair(parsedSB.toString(), totalScore, "long"));						
@@ -2783,7 +2801,7 @@ public class ThmP1 {
 			List<ParseStruct> combinedHeadParseStructList = new ArrayList<ParseStruct>();
 			combinedHeadParseStructList.add(combinedParseStruct);
 			orderPairsAndPutToLists(parsedPairMMapList2, combinedHeadParseStructList, parseState, longFormParsedPairList, thmContextVecMapList);
-			System.out.println("THmP1- headParseStructList" + headParseStructList);
+			//System.out.println("THmP1- headParseStructList" + headParseStructList);
 			//if commandNumUnitsWithHeadNoneSum sufficiently low: so sufficiently few parses
 			//with NONE, don't parse again. Half is a good threshold
 			if(commandNumUnitsWithHeadNoneSum > inputStructList.size()/2){

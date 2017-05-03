@@ -694,21 +694,22 @@ public class ThmP1TestRun {
 			st = "$J$ is not slice";
 			st = "There are fields in the class $\\mathcal{X}$ that are not finite modificatios of rings";
 			st = "If the Alexander polynomial of $K$ is not $1$";
-			st = "the holonomy of $\\partial \\Sigma$ has no fixed points";
 			//st = "Let $p_1,\\dots,p_r$ be the preimages under $w$ of $c^\\ast_0$ with the property that one of the components of a punctured neighborhood of $p_j$ in $\\pa D_m$ maps to $\\gamma$.";
 			//st = "Let $p_1,\\dots,p_r$ be the preimages under $w$ of $c^\\ast_0$";//too many parses!			
 			st = "If $ \\ sum a_k$ converges conditionally, then there is some rearrangement of $ \\ sum a_k$  which converges to $x$";
 			st = "we call $p  $ a prime";//remove "we call"
 			st = "for all components $U$ of $supp(w)$ which are not annuli";
 			//st = "signed resolution $res(T)$ to coincide with $RR$";
-			st = "The interchange of two distant critical points of the surface diagram does not change the induced map on homology";
 			st = "fix a rectangular Young diagram $R$ over a field";
 			st = "polynomial $f$ has one root";
 			st = "${s_n}_n$ converges uniformly to $x=1$";
 			st = "the polynomial is $1$";
 			st = "$f$ is a prime";
-			//st = "A morphism of C-algebras $f : A \\longrightarrow B$ with axiom is called a noncommutative Serre fibration";
+			st = "the holonomy of $\\partial \\Sigma$ has no fixed points";
+			st = "The interchange of two distant critical points of the surface diagram does not change the induced map on homology";
+
 			//st = "they do not intersect";
+			st = "A morphism of C-algebras $f : A \\longrightarrow B$ with axiom is called a noncommutative Serre fibration";
 			//st = "A morphism of algebras exists";
 			//st = "a morphism is called a noncommutative serre fibration";			
 			//st = "Let $p_1,\\dots,p_r$ be the preimages under $w$"; 			

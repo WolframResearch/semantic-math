@@ -8,10 +8,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 
+import com.wolfram.jlink.Expr;
+
 import thmp.ParseToWLTree.WLCommandWrapper;
 import thmp.Struct.ChildRelation;
 import thmp.Struct.NodeType;
 import thmp.WLCommand.PosTerm;
+import thmp.utils.ExprUtils;
+import thmp.utils.ExprUtils.AssocExprWrapper;
 import thmp.utils.WordForms;
 
 public class StructA<A, B> extends Struct{
@@ -286,8 +290,13 @@ public class StructA<A, B> extends Struct{
 	}
 	
 	@Override
+	public String simpleToString(boolean includeType, WLCommand curCommand, List<Expr> exprList){
+		return simpleToString(includeType, curCommand, null, null, exprList);
+	}
+	
+	@Override
 	public String simpleToString(boolean includeType, WLCommand curCommand){
-		return simpleToString(includeType, curCommand, null, null);
+		return simpleToString(includeType, curCommand, null, null, new ArrayList<Expr>());
 	}
 	/**
 	 * @param includeType
@@ -299,7 +308,8 @@ public class StructA<A, B> extends Struct{
 	 * @return
 	 */
 	@Override
-	public String simpleToString(boolean includeType, WLCommand curCommand, PosTerm triggerPosTerm, PosTerm curPosTerm){
+	public String simpleToString(boolean includeType, WLCommand curCommand, PosTerm triggerPosTerm, PosTerm curPosTerm,
+			List<Expr> exprList){
 
 		/*if(this.type.equals("assert")){
 			System.out.println("StructA - this "+ this);
@@ -345,31 +355,94 @@ public class StructA<A, B> extends Struct{
 		if(PREV1_TYPE.equals(NodeType.STR) && PREV2_TYPE.equals(NodeType.STR)){
 			
 			StringBuilder fullContentSB = new StringBuilder((String)this.prev1);
+			Expr prev1Expr = new Expr((String)this.prev1);
 			//System.out.println("*********prev1 type: " + type());
 			String makePptStr = retrievePosTermPptStr(triggerPosTerm, curPosTerm);
-			
-			String childStr = appendChildrenQualifierString(includeType, curCommand);			
+			//child must return an Association ExprWrapper 
+			//e.g. "Qualifiers" -> {"with", Math["Name"->"axiom"]}
+			List<AssocExprWrapper> childAssocWrapperList = new ArrayList<AssocExprWrapper>();
+			String childStr = appendChildrenQualifierString(includeType, curCommand, childAssocWrapperList);
+			Expr headExpr;
+			//List<Expr> strExprList = new ArrayList<Expr>();
 			//String prev1Str = (String)this.prev1;
 			if(this.type.equals("det") || this.type.equals("pro")){				
 				if(!prev2.equals("")){
 					fullContentSB.insert(0, "Reference[\"").append("\", \"").append((String)this.prev2)
 						.append(childStr).append("\"]");
+					headExpr = new Expr(Expr.SYMBOL, "Reference");
+					if(childAssocWrapperList.size() > 0){
+						exprList.add(new Expr(headExpr, new Expr[]{prev1Expr, new Expr((String)this.prev2), 
+								childAssocWrapperList.get(0).expr()}));
+					}else{
+						exprList.add(new Expr(headExpr, new Expr[]{prev1Expr, new Expr((String)this.prev2)}));						
+					}
 				}else{
 					fullContentSB.insert(0, "Reference[\"").append(childStr).append("\"]");
+					headExpr = new Expr(Expr.SYMBOL, "Reference");
+					if(childAssocWrapperList.size() > 0){
+						exprList.add(new Expr(headExpr, new Expr[]{prev1Expr, childAssocWrapperList.get(0).expr()}));
+					}else{
+						exprList.add(new Expr(headExpr, new Expr[]{prev1Expr}));
+					}
 				}
 			}else{
-				//quotes around prev1 string
+				//quotes around prev1 string, construct Expr from children
 				fullContentSB.insert(0, "\"").append("\"");
 				if(this.type.equals("adj") || this.type.equals("adverb") || this.type.equals("qualifier") ){
+					
 					fullContentSB.insert(0, " MathProperty[").append(childStr).append("]");
+					
+					headExpr = new Expr(Expr.SYMBOL, "MathProperty");
+					if(childAssocWrapperList.size() > 0){
+						exprList.add(new Expr(headExpr, new Expr[]{prev1Expr, childAssocWrapperList.get(0).expr()}));
+					}else{
+						exprList.add(new Expr(headExpr, new Expr[]{prev1Expr}));
+					}
+						
 				}else if(prev2.equals("")){
 					/*use "Math" Head here generally so not to have headless object. But perhaps should be more specific.*/
-					fullContentSB.insert(0, makePptStr).insert(0, "Math[").append(childStr).append("]");
+					if(!"".equals(makePptStr)){
+						fullContentSB.insert(0, makePptStr).insert(0, "MathProperty[").append(childStr).append("]");
+						Expr makePptExpr = new Expr(makePptStr);
+						headExpr = new Expr(Expr.SYMBOL, "MathProperty");
+						if(childAssocWrapperList.size() > 0){
+							exprList.add(new Expr(headExpr, new Expr[]{makePptExpr, prev1Expr, childAssocWrapperList.get(0).expr()}));
+						}else{
+							exprList.add(new Expr(headExpr, new Expr[]{makePptExpr, prev1Expr}));							
+						}
+					}else{
+						fullContentSB.insert(0, "Math[").append(childStr).append("]");
+						headExpr = new Expr(Expr.SYMBOL, "Math");
+						if(childAssocWrapperList.size() > 0){
+							exprList.add(new Expr(headExpr, new Expr[]{prev1Expr, childAssocWrapperList.get(0).expr()}));
+						}else{
+							exprList.add(new Expr(headExpr, new Expr[]{prev1Expr}));							
+						}
+					}
 					//if(this.type.equals("texAssert")) System.out.println("StructA -struct "+ this +"has child? " +this.hasChild);
 					///throw new IllegalStateException("makePptStr " + makePptStr + " " + triggerPosTerm.isPropertyTerm());
 				}
 				if(!prev2.equals("")){
-					fullContentSB.insert(0, makePptStr).insert(0, "Math[").append(", \"").append((String)this.prev2).append(childStr).append("\"]");
+					if(!"".equals(makePptStr)){
+						fullContentSB.insert(0, makePptStr).insert(0, "MathProperty[").append(", \"").append((String)this.prev2).append(childStr).append("\"]");
+						Expr makePptExpr = new Expr(makePptStr);
+						Expr existingExpr = ExprUtils.sequenceExpr(exprList);
+						headExpr = new Expr(Expr.SYMBOL, "MathProperty");
+						if(childAssocWrapperList.size() > 0){
+							exprList.add(new Expr(headExpr, new Expr[]{makePptExpr, existingExpr, new Expr((String)this.prev2), childAssocWrapperList.get(0).expr()}));
+						}else{
+							exprList.add(new Expr(headExpr, new Expr[]{makePptExpr, existingExpr, new Expr((String)this.prev2)}));							
+						}
+					}else{
+						fullContentSB.insert(0, "Math[").append(", \"").append((String)this.prev2).append(childStr).append("\"]");
+						Expr existingExpr = ExprUtils.sequenceExpr(exprList);
+						headExpr = new Expr(Expr.SYMBOL, "Math");
+						if(childAssocWrapperList.size() > 0){
+							exprList.add(new Expr(headExpr, new Expr[]{existingExpr, new Expr((String)this.prev2), childAssocWrapperList.get(0).expr()}));
+						}else{
+							exprList.add(new Expr(headExpr, new Expr[]{existingExpr, new Expr((String)this.prev2)}));							
+						}
+					}
 				}
 			}				
 			
@@ -380,8 +453,7 @@ public class StructA<A, B> extends Struct{
 				this.WLCommandStrVisitedCount++;
 			}else if(!curCommand.equals(this.commandBuilt)){
 				this.WLCommandStrVisitedCount++;
-			}
-			
+			}			
 			WLCommand.increment_commandNumUnits(curCommand, this);		
 			//if(added){
 				//fullContentSB.append(" ADDED ");
@@ -390,14 +462,15 @@ public class StructA<A, B> extends Struct{
 			return fullContentSB.toString();
 		}else{		
 			//System.out.println("+++" + this.simpleToString2(includeType, curCommand));
-			return this.simpleToString2(includeType, curCommand, triggerPosTerm);
+			return this.simpleToString2(includeType, curCommand, triggerPosTerm, exprList);
 		}
 	}
 
 	
 	//auxilliary method for simpleToString and called inside StructH.simpleToString2
 	//@Override
-	private String simpleToString2(boolean includeType, WLCommand curCommand, PosTerm triggerPosTerm){		
+	private String simpleToString2(boolean includeType, WLCommand curCommand, PosTerm triggerPosTerm,
+			List<Expr> exprList){		
 		/*if(type.equals("assert")){
 			System.out.println("StructA -");
 			//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
@@ -454,7 +527,7 @@ public class StructA<A, B> extends Struct{
 			//tempStr += "{";
 			tempSB.append("{");
 		}		
-		
+		//NEED TO CONSTRUCT EXPR's here, including Conj and Disj Expr's!!!
 		if(this.prev1 != null){
 			/*if(inConj){ //tempStr += "{";
 				tempSB.append("{");
@@ -464,7 +537,7 @@ public class StructA<A, B> extends Struct{
 					//&& ((Struct) prev1).WLCommandWrapperList() == null){
 				List<WLCommandWrapper> prev1WrapperList = ((Struct) prev1).WLCommandWrapperList();
 				if(prev1WrapperList == null){
-					String prev1Str = ((Struct) prev1).simpleToString(includeType, curCommand);
+					String prev1Str = ((Struct) prev1).simpleToString(includeType, curCommand, exprList);
 					if(!WordForms.getWhiteEmptySpacePattern().matcher(prev1Str).matches()){
 						//tempSB.append(prev1Str);
 						int tempSBLen = tempSB.length();
@@ -507,7 +580,7 @@ public class StructA<A, B> extends Struct{
 				List<WLCommandWrapper> prev2WrapperList = ((Struct)prev2).WLCommandWrapperList();
 				 if(prev2WrapperList == null){
 					//System.out.println("######prev2: " + prev2);
-					String prev2Str = ((Struct) prev2).simpleToString(includeType, curCommand);
+					String prev2Str = ((Struct) prev2).simpleToString(includeType, curCommand, exprList);
 					if(!prev2Str.matches("\\s*")){
 						if(tempSB.length() > 0){ //tempStr += ", ";
 							tempSB.append(", ");
@@ -530,8 +603,11 @@ public class StructA<A, B> extends Struct{
 			/*tempSB.append(inConj ? "[" + prev2SB + "]" : prev2SB);*/
 			tempSB.append(prev2SB);
 		}
-		tempSB.append(appendChildrenQualifierString(includeType, curCommand));
-		
+		List<AssocExprWrapper> assocWrapperList = new ArrayList<AssocExprWrapper>();
+		tempSB.append(appendChildrenQualifierString(includeType, curCommand, assocWrapperList));
+		if(assocWrapperList.size() > 0){
+			exprList.add(assocWrapperList.get(0).expr());
+		}
 		if(wrapBraces){ //tempStr += "}";
 			tempSB.append("}");
 		}
