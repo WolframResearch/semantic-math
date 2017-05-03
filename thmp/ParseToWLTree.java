@@ -17,6 +17,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import com.wolfram.jlink.Expr;
 
 import thmp.exceptions.IllegalWLCommandStateException;
 import thmp.Struct.ChildRelation;
@@ -833,7 +834,7 @@ public class ParseToWLTree{
 					&& copyWithOptTermsCommand.getDefaultOptionalTermsCount() > 0){
 				continue; //<--keep working on this! Feb 2017 <--what's wrong with this approach? March 2017.
 			}
-
+			
 			//parent might have been used already, e.g. if A and B, parent of
 			//A and B is "conj_..."
 			boolean shouldAppendCommandStr = true;
@@ -888,8 +889,8 @@ public class ParseToWLTree{
 						}
 					}
 				}*/
-				
-				ParsedPair pair = new ParsedPair(curWrapper.wlCommandStr, //null, 
+				//curWrapper.commandExpr;
+				ParsedPair pair = new ParsedPair(curWrapper.wlCommandStr, curWrapper.commandExpr, //null, 
 						struct.maxDownPathScore(),
 						struct.numUnits(), WLCommand.commandNumUnits(curCommand), curCommand);
 				//partsMap.put(type, curWrapper.WLCommandStr);	
@@ -991,8 +992,7 @@ public class ParseToWLTree{
 		
 		if (struct.isStructA()) {
 			
-			if(shouldPrint) parsedSB.append(struct.type());			
-			
+			if(shouldPrint) parsedSB.append(struct.type());					
 			if(shouldPrint) parsedSB.append("[");
 			
 			if (struct.prev1NodeType().isTypeStruct()) {
@@ -1111,7 +1111,7 @@ public class ParseToWLTree{
 		 * in the order the commands are built: inner -> outer, earlier ->
 		 * later.
 		 */
-		private WLCommand wlCommand;
+		private transient WLCommand wlCommand;
 		//WLCommand's index in list
 		private int listIndex;
 		//built command String associated with this command.
@@ -1120,7 +1120,9 @@ public class ParseToWLTree{
 		private int leastDepth;
 		//highest struct in tree amongst Structs that build this WLCommand, ie closest to root.
 		//This is called structToAppendCommandStr when used in WLCommand.java.
-		private Struct highestStruct;
+		private transient Struct highestStruct;
+		//Expr corresponding to the wlCommandStr.
+		private Expr commandExpr;
 		
 		public WLCommandWrapper(WLCommand curCommand, int listIndex){			
 			this.wlCommand = curCommand;
@@ -1145,6 +1147,14 @@ public class ParseToWLTree{
 		 */
 		public Struct highestStruct(){
 			return this.highestStruct;
+		}
+		
+		public void set_commandExpr(Expr expr){
+			this.commandExpr = expr;
+		}
+		
+		public Expr commandExpr(){
+			return this.commandExpr;
 		}
 		
 		//shouldn't need this

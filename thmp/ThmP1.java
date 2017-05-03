@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
+import com.wolfram.jlink.Expr;
 
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 import thmp.exceptions.ParseRuntimeException;
@@ -233,7 +234,7 @@ public class ThmP1 {
 		
 		private String parsedStr;
 		//score based on probabilities as defined in Maps.posMMap.
-		private double score;
+		private transient double score;
 		//long form or WL-like expr. Useful for "under the hood"
 		//can be "long" or "wl". Switch to an enum!
 		private String form;
@@ -243,14 +244,15 @@ public class ThmP1 {
 		//private int counter;
 		//number of units in this parse, as in numUnits (leaf nodes) in Class Struct.
 		//same as commandNumUnits when ParseStructType is NONE. Lower is better.
-		private int numUnits;
+		private transient int numUnits;
 		/*the commandNumUnits associated to the WLCommand that gives this parsedStr. Higher is better.*/
-		private int commandNumUnits;
+		private transient int commandNumUnits;
 		//the WLCommand associated to this ParsedPair.
 		//Don't serialize wlCommand! Will introduce infinite recursion
 		//when trying to serialize this, because of circular referencing 
 		//between WLCommand and WLCommandWrap.
 		private transient WLCommand wlCommand;
+		private transient Expr totalCommandExpr;
 		//the ParseStructType of this parsedStr, eg "STM", "HYP", etc.
 		private ParseStructType parseStructType;		
 		private String stringForm;
@@ -283,13 +285,14 @@ public class ThmP1 {
 		 * @param commandNumUnits
 		 * @param wlCommand @Nullable null if no WLCommand was picked up.
 		 */
-		public ParsedPair(String parsedStr, double score, int numUnits, 
+		public ParsedPair(String parsedStr, Expr commandExpr_, double score, int numUnits, 
 				int commandNumUnits, WLCommand wlCommand){
 			this(parsedStr, score, DEFAULT_FORM_STR, false);
 			this.wlCommand = wlCommand;
 			this.numUnits = numUnits;
 			this.commandNumUnits = commandNumUnits;
 			this.stringForm = this.toString();
+			this.totalCommandExpr = commandExpr_;
 		}
 		
 		/**
@@ -299,6 +302,9 @@ public class ThmP1 {
 			return wlCommand;
 		}
 		
+		public Expr totalCommandExpr(){
+			return this.totalCommandExpr;
+		}
 		/**
 		 * Used in case of no WLCommand parse string, then use alternate measure
 		 * of span, deduced from longForm dfs.
@@ -307,12 +313,12 @@ public class ThmP1 {
 		 * @param commandNumUnits
 		 */
 		public ParsedPair(double score, int numUnits, int commandNumUnits, WLCommand wlCommand){
-			this("", score, numUnits, commandNumUnits, wlCommand);
+			this("", null, score, numUnits, commandNumUnits, wlCommand);
 		}
 		
 		public ParsedPair(String parsedStr, double score, int numUnits, int commandNumUnits, WLCommand wlCommand, 
 				ParseStructType type){
-			this(parsedStr, score, numUnits, commandNumUnits, wlCommand);
+			this(parsedStr, null, score, numUnits, commandNumUnits, wlCommand);
 			this.parseStructType = type;
 			this.stringForm = this.toString();
 		}
@@ -3420,10 +3426,13 @@ public class ThmP1 {
 		}
 		
 		System.out.println("Parts: " + parseStructMMap);
+		for(Map.Entry<ParseStructType, ParsedPair> entry : parseStructMMap.entries()){
+			System.out.println(entry.getValue().totalCommandExpr());
+		}
 		//**parseStructMapList.add(parseStructMap.toString() + "\n");
 		//if parseStructMap empty, ie no WLCommand was found, but long parse form might still be good
 		if(parseStructMMap.isEmpty()){
-			ParsedPair pair = new ParsedPair(wlSB.toString(), //parseState.getCurParseStruct(), 
+			ParsedPair pair = new ParsedPair(wlSB.toString(), null,//parseState.getCurParseStruct(), 
 					uHeadStruct.maxDownPathScore(),
 					uHeadStruct.numUnits(), span, null);
 			//partsMap.put(type, curWrapper.WLCommandStr);

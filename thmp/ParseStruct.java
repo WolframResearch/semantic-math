@@ -10,8 +10,10 @@ import java.util.Map;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import com.wolfram.jlink.Expr;
 
 import thmp.ParseToWLTree.WLCommandWrapper;
+import thmp.utils.ExprUtils;
 
 /**
  * ParseStruct is a structure in the parse, can be 
@@ -120,34 +122,46 @@ public class ParseStruct implements Serializable{
 	@Override
 	public String toString(){
 		StringBuilder sb = new StringBuilder();
-		return this.toString(sb);
+		return this.toString(sb, new ArrayList<Expr>());
 	}
 	
-	private String toString(StringBuilder sb){
+	/**
+	 * fills exprList with commandExpr's collected during DFS.
+	 * @param sb
+	 * @param exprList
+	 * @return
+	 */
+	public String toString(StringBuilder sb, List<Expr> exprList){
 		
 		Collection<Map.Entry<ParseStructType, WLCommandWrapper>> wrapperMMapEntries = 
 				wrapperMMap.entries();
 		int i = wrapperMMapEntries.size();
 		
+		List<Expr> curLevelExprList = new ArrayList<Expr>();
+		boolean hasChild = childrenParseStructList.isEmpty();
 		for(Map.Entry<ParseStructType, WLCommandWrapper> entry : wrapperMMapEntries){
-			if(i > 1 || !childrenParseStructList.isEmpty()){
-				sb.append("\"").append(entry.getKey()).append("\" :> ").append(entry.getValue().WLCommandStr()).append(", ");
+			WLCommandWrapper wrapper = entry.getValue();
+			Expr commandExpr = wrapper.commandExpr();
+			curLevelExprList.add(commandExpr);
+			if(i > 1 || !hasChild){			
+				sb.append("\"").append(entry.getKey()).append("\" :> ").append(wrapper.WLCommandStr()).append(", ");
 			}else{
-				sb.append("\"").append(entry.getKey()).append("\" :> ").append(entry.getValue().WLCommandStr());
+				sb.append("\"").append(entry.getKey()).append("\" :> ").append(wrapper.WLCommandStr());
 			}
 			i--;
 		}
-		i = childrenParseStructList.size();
 		
+		i = childrenParseStructList.size();		
 		//recursively call toString
 		for(ParseStruct childParseStruct : childrenParseStructList){
 			if(i > 1){
-				sb.append("{").append(childParseStruct).append("};");
+				sb.append("{").append(childParseStruct.toString(sb, curLevelExprList)).append("};");
 			}else{
-				sb.append("{").append(childParseStruct).append("}");
+				sb.append("{").append(childParseStruct.toString(sb, curLevelExprList)).append("}");
 			}
 			i--;
-		}		
+		}	
+		exprList.add(ExprUtils.listExpr(curLevelExprList));
 		return sb.toString();
 	}
 	

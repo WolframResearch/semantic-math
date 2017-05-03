@@ -710,6 +710,7 @@ public class ThmP1TestRun {
 
 			//st = "they do not intersect";
 			st = "A morphism of C-algebras $f : A \\longrightarrow B$ with axiom is called a noncommutative Serre fibration";
+			st = "field is ring";
 			//st = "A morphism of algebras exists";
 			//st = "a morphism is called a noncommutative serre fibration";			
 			//st = "Let $p_1,\\dots,p_r$ be the preimages under $w$"; 			

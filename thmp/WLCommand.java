@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -23,6 +24,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
+import com.wolfram.jlink.Expr;
 
 import thmp.exceptions.IllegalWLCommandStateException;
 import thmp.ParseToWLTree.WLCommandWrapper;
@@ -33,6 +35,7 @@ import thmp.WLCommand.PosTerm;
 import thmp.WLCommand.WLCommandComponent;
 import thmp.WLCommand.PosTerm.PosTermConnotation;
 import thmp.utils.Buggy;
+import thmp.utils.ExprUtils;
 
 /**
  * WL command, containing the components that need to be hashed. 
@@ -358,7 +361,7 @@ public class WLCommand implements Serializable{
 	public static class PosTerm implements Serializable{		
 
 		private static final long serialVersionUID = 5279307889713339412L;
-
+		private static final int DEFAULT_ARG_NUM = -1;
 		/**
 		 * Enums used to indicate special connotations of PosTerm, 
 		 * e.g. defining and defined terms 
@@ -420,6 +423,12 @@ public class WLCommand implements Serializable{
 		
 		private boolean isTrigger;
 		private boolean isPropertyTerm;
+		/*the position for the argument in the arg list for command, e.g. "A ~HasProperty~ B"
+		 * A has argNum 1 and B has argNum 2. This is automatically determined with respect to 
+		 * the trigger term for binary operators, if argNum is not explicitly given.*/
+		private int argNum = DEFAULT_ARG_NUM;
+		private boolean isExprHead;
+		private boolean isExprHeadArg;
 		//relationType for building relation vectors. 
 		private List<RelationType> relationType;
 		
@@ -452,6 +461,9 @@ public class WLCommand implements Serializable{
 			//whether should be made into property term, if corresponding trigger allows so.
 			//e.g. "this polynomial is not $1$", use "is" inside ppt term Math["$1"]"
 			private boolean isPropertyTerm;
+			private int argNum;
+			private boolean isExprHead;
+			private boolean isExprHeadArg;
 			//0 by default
 			private int optionalGroupNum;
 			//relationType for building relation vectors. 
@@ -692,6 +704,30 @@ public class WLCommand implements Serializable{
 				this.isPropertyTerm = true;
 				return this;
 			}
+			
+			public PBuilder updateArgNum(int argNum_){
+				this.argNum = argNum_;
+				return this;
+			}
+			
+			/**
+			 * Head of Expr, e.g. HasProperty in 
+			 * "A ~HasProperty~ B" i.e. HasProperty[A, B]
+			 * @return
+			 */
+			public PBuilder makeExprHead(){
+				this.isExprHead = true;
+				return this;
+			}
+			/**
+			 * make into argument for exprHead, e.g. 
+			 * "implies" in Connective["implies"].
+			 * @return
+			 */
+			public PBuilder makeExprHeadArg(){
+				this.isExprHeadArg = true;
+				return this;
+			}
 			/**
 			 * Set special position the struct for term must occur in Struct tree, e.g. FIRST.
 			 * For e.g. "Fix a prime $p$"
@@ -732,7 +768,7 @@ public class WLCommand implements Serializable{
 				}else{
 					return new PosTerm(commandComponent, positionInMap, includeInBuiltString,
 							isTrigger, isTriggerMathObj, posTermConnotation, relationTypeList, positionInStructTree,
-							isPropertyTerm);
+							isPropertyTerm, argNum, isExprHead, isExprHeadArg);
 				}
 			}					
 		}
@@ -751,6 +787,16 @@ public class WLCommand implements Serializable{
 			this.isPropertyTerm = isPropertyTerm_;
 		}
 		
+		private PosTerm(WLCommandComponent commandComponent, int position, boolean includeInBuiltString,
+				boolean isTrigger, boolean isTriggerMathObj, PosTermConnotation posTermConnotation,
+				List<RelationType> relationTypeList, PositionInStructTree positionInStructTree, boolean isPropertyTerm_,
+				int argNum_, boolean isExprHead_, boolean isExprHeadArg_){
+			this(commandComponent, position, includeInBuiltString, isTrigger, isTriggerMathObj, posTermConnotation,
+					relationTypeList, positionInStructTree, isPropertyTerm_);
+			this.isExprHead = isExprHead_;
+			this.isExprHeadArg = isExprHeadArg_;
+			this.argNum = argNum_;
+		}
 		/**
 		 * Creates deep copy of this PosTerm.
 		 * @return
@@ -758,7 +804,7 @@ public class WLCommand implements Serializable{
 		public PosTerm termDeepCopy(){				
 			return new PosTerm(commandComponent, positionInMap, includeInBuiltString,
 					isTrigger, triggerMathObj, posTermConnotation, relationType, positionInStructTree,
-					isPropertyTerm);			
+					isPropertyTerm, argNum, isExprHead, isExprHeadArg);			
 		}	
 		
 		/**
@@ -774,6 +820,14 @@ public class WLCommand implements Serializable{
 		 */
 		public boolean isPropertyTerm(){
 			return this.isPropertyTerm;
+		}
+		/**
+		 * the position for the argument in the arg list for command, e.g. "A ~HasProperty~ B".
+		 * A has argNum 1 and B has argNum 2. This is automatically determined with respect to 
+		 * the trigger term for binary operators, if argNum is not explicitly given.
+		 */
+		public int argNum(){
+			return this.argNum;
 		}
 		/**
 		 * @return the isOptionalTerm
@@ -1051,10 +1105,10 @@ public class WLCommand implements Serializable{
 	 */
 	private static Struct findCommandHead(ListMultimap<WLCommandComponent, Struct> commandsMap, WLCommand curCommand){
 		Struct structToAppendCommandStr;
-		if(commandsMap.size()==3){
+		/*if(commandsMap.size()==3){
 			System.out.print("");
 			//throw new IllegalStateException(commandsMap.toString());
-		}
+		}*/
 		//map to store Structs' parents. The integer can be left child (-1)
 		//right child (1), or 0 (both children covered)
 		Map<Struct, Integer> structIntMap = new HashMap<Struct, Integer>();
@@ -1339,11 +1393,27 @@ public class WLCommand implements Serializable{
 			}
 		}
 		//int posTermListSz = posTermList.size();
+		//map to keep track of arguments of expr's for the built command. The key is the position
+		//(slot number) of the arg in the arg list.
+		Map<Integer, List<Expr>> exprArgsListTMap = new TreeMap<Integer, List<Expr>>();
+		//symbol string for Expr head, must be nontrivial for each WLCommand, 
+		//e.g. "HasProperty" in "A ~HasProperty~ B"
+		String exprHeadSymbolStr = null;
+		//argument list for ExprHead, as in "implies" in "A ~Connective["implies"]~ B"
+		List<Expr> exprHeadArgList = new ArrayList<Expr>();
+		//boolean beforeExprHead = true;
+		int curArgNumCount = 0;
 		for(int i = 0; i < posTermListSz; i++){
 			PosTerm term = posTermList.get(i);
 			if(term.isNegativeTerm()){
 				continue;
-			}	
+			}
+			if(term.isExprHead){
+				//beforeExprHead = false;
+				//posIndex should be WLCommandsList.AUXINDEX or WLCommandsList.WL_DIRECTIVE_INDEX
+				exprHeadSymbolStr = term.commandComponent.posStr;				
+				curArgNumCount = 1;
+			}
 			if(!term.includeInBuiltString){	
 				//set its head Struct to structToAppendCommandStr,
 				// ***This should always be null, because haven't set it yet.
@@ -1371,9 +1441,9 @@ public class WLCommand implements Serializable{
 				continue;
 			}
 			WLCommandComponent commandComponent = term.commandComponent;
-			
+			List<Expr> termExprList = new ArrayList<Expr>();
 			int positionInMap = term.positionInMap;			
-			String nextWord = "";			
+			String nextWord = "";
 			//neither directive or auxilliary String, e.g. "~HasProperty~", "{"
 			if(positionInMap != WLCommandsList.AUXINDEX && positionInMap != WLCommandsList.WL_DIRECTIVE_INDEX){
 				
@@ -1423,8 +1493,9 @@ public class WLCommand implements Serializable{
 					//takes into account pro, and the ent it should refer to
 					nextWord = nextStruct.simpleToString(true, curCommand);
 				}*/
-			//	System.out.println("WLCommand triggerPosTer: " + triggerPosTerm.isPropertyTerm + " " + triggerPosTerm);
-				nextWord = nextStruct.simpleToString(true, curCommand, triggerPosTerm, term, );
+				//	System.out.println("WLCommand triggerPosTer: " + triggerPosTerm.isPropertyTerm + " " + triggerPosTerm);
+				nextWord = nextStruct.simpleToString(true, curCommand, triggerPosTerm, term, termExprList);
+				System.out.println("WLCommand - term/termExprList " + term + " / " + termExprList);
 				//System.out.println("WLCommand - nextWord: " + nextWord + " for struct: " + nextStruct);
 				//simple way to present the Struct
 				//set to the head struct the currently built command will be appended to
@@ -1491,17 +1562,28 @@ public class WLCommand implements Serializable{
 						commandStrListTriggerIndex = commandStrListCounter;
 					}
 					commandStrListCounter++;
+					addTermExprToTMap(exprArgsListTMap, curArgNumCount, term, termExprList);					
 				}
-			}else{			
+			}else{
 				//commandSB.append(nextWord);//.append(" ");
 				commandStrList.add(nextWord);
 				if(term.isTrigger){
 					commandStrListTriggerIndex = commandStrListCounter;
 				}
 				commandStrListCounter++;
+				//depends on whether the term is the an arg to the head Expr.
+				if(term.isExprHeadArg){
+					exprHeadArgList.addAll(termExprList);
+				}else{					
+					addTermExprToTMap(exprArgsListTMap, curArgNumCount, term, termExprList);									
+				}
 			}
+		}		
+		if(null == exprHeadSymbolStr){
+			String msg = "exprHeadSymbolStr for command cannot be null!";
+			logger.error(msg);
+			throw new IllegalWLCommandStateException(msg);
 		}
-		
 		//"****%###structToAppendCommandStr " +structToAppendCommandStr	
 		WLCommandWrapper curCommandWrapper = structToAppendCommandStr.add_WLCommandWrapper(curCommand);
 		
@@ -1515,6 +1597,31 @@ public class WLCommand implements Serializable{
 				//System.out.println("variableName: " + variableName);
 			}
 		}		
+		//gather together the WLCommand Expr
+		Expr headSymbolExpr;
+		if(exprHeadArgList.isEmpty()){			
+			headSymbolExpr = new Expr(Expr.SYMBOL, exprHeadSymbolStr);
+		}else{
+			headSymbolExpr = ExprUtils.createExprFromList(exprHeadSymbolStr, exprHeadArgList);
+		}
+		//consolidating the Expr's inside the args lists into a single Expr. So each argument
+		//is represented by a single Expr.
+		Expr[] exprArgsAr = new Expr[exprArgsListTMap.size()];
+		int exprArgsArCounter = 0;
+		for(Map.Entry<Integer, List<Expr>> entry : exprArgsListTMap.entrySet()){
+			Expr entryExpr;
+			List<Expr> singleArgList = entry.getValue();
+			int singleArgListSz = singleArgList.size();
+			if(singleArgListSz > 1){
+				entryExpr = ExprUtils.listExpr(singleArgList);
+			}else{
+				entryExpr = singleArgList.get(0);
+			}
+			exprArgsAr[exprArgsArCounter++] = entryExpr;			
+		}		
+		Expr commandHeadExpr = new Expr(headSymbolExpr, exprArgsAr);
+		
+		//gather together the WLCommand Str
 		StringBuilder commandSB2 = new StringBuilder(100);
 		for(int i = 0; i < commandStrList.size(); i++){
 			String strToAppend = commandStrList.get(i);
@@ -1533,9 +1640,30 @@ public class WLCommand implements Serializable{
 			System.out.println("WLCommand - *******%######structsWithOtherHeadCount " +curCommand.structsWithOtherHeadCount +" " +curCommand );
 		}
 		
+		curCommandWrapper.set_commandExpr(commandHeadExpr);
 		curCommandWrapper.set_highestStruct(structToAppendCommandStr);		
 		curCommandWrapper.set_WLCommandStr(commandSB2);
 		return commandSB2.toString();
+	}
+
+	/**
+	 * @param exprArgsListTMap
+	 * @param curArgNumCount
+	 * @param term
+	 * @param termExprList
+	 */
+	private static void addTermExprToTMap(Map<Integer, List<Expr>> exprArgsListTMap, int curArgNumCount, PosTerm term,
+			List<Expr> termExprList) {
+		//insert into TreeMap with appropriate slot number, 
+		int termSlotNum = term.argNum == PosTerm.DEFAULT_ARG_NUM ? curArgNumCount : term.argNum;
+		List<Expr> argNumExprList = exprArgsListTMap.get(termSlotNum);
+		if(null == argNumExprList){
+			argNumExprList = new ArrayList<Expr>();
+			argNumExprList.addAll(termExprList);
+			exprArgsListTMap.put(termSlotNum, argNumExprList);
+		}else{
+			argNumExprList.addAll(termExprList);
+		}
 	}
 	
 	/**

@@ -502,7 +502,7 @@ public class StructH<H> extends Struct{
 	 */
 	@Override
 	public String simpleToString(boolean includeType, WLCommand curCommand, PosTerm triggerPosTerm,
-			PosTerm curPosTerm, List<   Expr> exprList){
+			PosTerm curPosTerm, List<Expr> exprList){
 		//if(this.posteriorBuiltStruct != null) return "";
 		//this.WLCommandStrVisitedCount++;
 		// instead of checking WLCommandStr, check if wrapperList is null

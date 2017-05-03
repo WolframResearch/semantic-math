@@ -16,6 +16,7 @@ import thmp.Struct.NodeType;
 import thmp.WLCommand.PosTerm;
 import thmp.utils.ExprUtils;
 import thmp.utils.ExprUtils.AssocExprWrapper;
+import thmp.utils.ExprUtils.RuleExprWrapper;
 import thmp.utils.WordForms;
 
 public class StructA<A, B> extends Struct{
@@ -360,8 +361,8 @@ public class StructA<A, B> extends Struct{
 			String makePptStr = retrievePosTermPptStr(triggerPosTerm, curPosTerm);
 			//child must return an Association ExprWrapper 
 			//e.g. "Qualifiers" -> {"with", Math["Name"->"axiom"]}
-			List<AssocExprWrapper> childAssocWrapperList = new ArrayList<AssocExprWrapper>();
-			String childStr = appendChildrenQualifierString(includeType, curCommand, childAssocWrapperList);
+			List<RuleExprWrapper> childRuleWrapperList = new ArrayList<RuleExprWrapper>();
+			String childStr = appendChildrenQualifierString(includeType, curCommand, childRuleWrapperList);
 			Expr headExpr;
 			//List<Expr> strExprList = new ArrayList<Expr>();
 			//String prev1Str = (String)this.prev1;
@@ -370,17 +371,17 @@ public class StructA<A, B> extends Struct{
 					fullContentSB.insert(0, "Reference[\"").append("\", \"").append((String)this.prev2)
 						.append(childStr).append("\"]");
 					headExpr = new Expr(Expr.SYMBOL, "Reference");
-					if(childAssocWrapperList.size() > 0){
+					if(childRuleWrapperList.size() > 0){
 						exprList.add(new Expr(headExpr, new Expr[]{prev1Expr, new Expr((String)this.prev2), 
-								childAssocWrapperList.get(0).expr()}));
+								childRuleWrapperList.get(0).expr()}));
 					}else{
 						exprList.add(new Expr(headExpr, new Expr[]{prev1Expr, new Expr((String)this.prev2)}));						
 					}
 				}else{
 					fullContentSB.insert(0, "Reference[\"").append(childStr).append("\"]");
 					headExpr = new Expr(Expr.SYMBOL, "Reference");
-					if(childAssocWrapperList.size() > 0){
-						exprList.add(new Expr(headExpr, new Expr[]{prev1Expr, childAssocWrapperList.get(0).expr()}));
+					if(childRuleWrapperList.size() > 0){
+						exprList.add(new Expr(headExpr, new Expr[]{prev1Expr, childRuleWrapperList.get(0).expr()}));
 					}else{
 						exprList.add(new Expr(headExpr, new Expr[]{prev1Expr}));
 					}
@@ -393,8 +394,8 @@ public class StructA<A, B> extends Struct{
 					fullContentSB.insert(0, " MathProperty[").append(childStr).append("]");
 					
 					headExpr = new Expr(Expr.SYMBOL, "MathProperty");
-					if(childAssocWrapperList.size() > 0){
-						exprList.add(new Expr(headExpr, new Expr[]{prev1Expr, childAssocWrapperList.get(0).expr()}));
+					if(childRuleWrapperList.size() > 0){
+						exprList.add(new Expr(headExpr, new Expr[]{prev1Expr, childRuleWrapperList.get(0).expr()}));
 					}else{
 						exprList.add(new Expr(headExpr, new Expr[]{prev1Expr}));
 					}
@@ -405,16 +406,16 @@ public class StructA<A, B> extends Struct{
 						fullContentSB.insert(0, makePptStr).insert(0, "MathProperty[").append(childStr).append("]");
 						Expr makePptExpr = new Expr(makePptStr);
 						headExpr = new Expr(Expr.SYMBOL, "MathProperty");
-						if(childAssocWrapperList.size() > 0){
-							exprList.add(new Expr(headExpr, new Expr[]{makePptExpr, prev1Expr, childAssocWrapperList.get(0).expr()}));
+						if(childRuleWrapperList.size() > 0){
+							exprList.add(new Expr(headExpr, new Expr[]{makePptExpr, prev1Expr, childRuleWrapperList.get(0).expr()}));
 						}else{
 							exprList.add(new Expr(headExpr, new Expr[]{makePptExpr, prev1Expr}));							
 						}
 					}else{
 						fullContentSB.insert(0, "Math[").append(childStr).append("]");
 						headExpr = new Expr(Expr.SYMBOL, "Math");
-						if(childAssocWrapperList.size() > 0){
-							exprList.add(new Expr(headExpr, new Expr[]{prev1Expr, childAssocWrapperList.get(0).expr()}));
+						if(childRuleWrapperList.size() > 0){
+							exprList.add(new Expr(headExpr, new Expr[]{prev1Expr, childRuleWrapperList.get(0).expr()}));
 						}else{
 							exprList.add(new Expr(headExpr, new Expr[]{prev1Expr}));							
 						}
@@ -428,8 +429,8 @@ public class StructA<A, B> extends Struct{
 						Expr makePptExpr = new Expr(makePptStr);
 						Expr existingExpr = ExprUtils.sequenceExpr(exprList);
 						headExpr = new Expr(Expr.SYMBOL, "MathProperty");
-						if(childAssocWrapperList.size() > 0){
-							exprList.add(new Expr(headExpr, new Expr[]{makePptExpr, existingExpr, new Expr((String)this.prev2), childAssocWrapperList.get(0).expr()}));
+						if(childRuleWrapperList.size() > 0){
+							exprList.add(new Expr(headExpr, new Expr[]{makePptExpr, existingExpr, new Expr((String)this.prev2), childRuleWrapperList.get(0).expr()}));
 						}else{
 							exprList.add(new Expr(headExpr, new Expr[]{makePptExpr, existingExpr, new Expr((String)this.prev2)}));							
 						}
@@ -437,8 +438,8 @@ public class StructA<A, B> extends Struct{
 						fullContentSB.insert(0, "Math[").append(", \"").append((String)this.prev2).append(childStr).append("\"]");
 						Expr existingExpr = ExprUtils.sequenceExpr(exprList);
 						headExpr = new Expr(Expr.SYMBOL, "Math");
-						if(childAssocWrapperList.size() > 0){
-							exprList.add(new Expr(headExpr, new Expr[]{existingExpr, new Expr((String)this.prev2), childAssocWrapperList.get(0).expr()}));
+						if(childRuleWrapperList.size() > 0){
+							exprList.add(new Expr(headExpr, new Expr[]{existingExpr, new Expr((String)this.prev2), childRuleWrapperList.get(0).expr()}));
 						}else{
 							exprList.add(new Expr(headExpr, new Expr[]{existingExpr, new Expr((String)this.prev2)}));							
 						}
@@ -603,10 +604,10 @@ public class StructA<A, B> extends Struct{
 			/*tempSB.append(inConj ? "[" + prev2SB + "]" : prev2SB);*/
 			tempSB.append(prev2SB);
 		}
-		List<AssocExprWrapper> assocWrapperList = new ArrayList<AssocExprWrapper>();
-		tempSB.append(appendChildrenQualifierString(includeType, curCommand, assocWrapperList));
-		if(assocWrapperList.size() > 0){
-			exprList.add(assocWrapperList.get(0).expr());
+		List<RuleExprWrapper> ruleWrapperList = new ArrayList<RuleExprWrapper>();
+		tempSB.append(appendChildrenQualifierString(includeType, curCommand, ruleWrapperList));
+		if(ruleWrapperList.size() > 0){
+			exprList.add(ruleWrapperList.get(0).expr());
 		}
 		if(wrapBraces){ //tempStr += "}";
 			tempSB.append("}");
