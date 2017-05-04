@@ -315,6 +315,7 @@ public abstract class Struct implements Serializable{
 	public abstract String simpleToString(boolean includeType, WLCommand curCommand, List<Expr> exprList);
 	
 	/**
+	 * E.g. is
 	 * @param triggerPosTerm
 	 * @param curPosTerm
 	 * @return
@@ -330,9 +331,6 @@ public abstract class Struct implements Serializable{
 				makePptStr = matcher.replaceAll("");
 			}else{
 				makePptStr = triggerNameStr;
-			}
-			if(!makePptStr.equals("")){
-				makePptStr = "\"" + makePptStr + "\", ";
 			}
 		}
 		return makePptStr;

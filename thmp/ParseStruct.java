@@ -122,16 +122,18 @@ public class ParseStruct implements Serializable{
 	@Override
 	public String toString(){
 		StringBuilder sb = new StringBuilder();
-		return this.toString(sb, new ArrayList<Expr>());
+		return this.createStringAndRetrieveExpr(sb, new ArrayList<Expr>());
 	}
 	
 	/**
-	 * fills exprList with commandExpr's collected during DFS.
+	 * Fills exprList with commandExpr's collected during DFS.
+	 * To be used in servlet, etc, to get the entire Expr structure.
+	 * Creates a single Expr and add to exprList.
 	 * @param sb
 	 * @param exprList
 	 * @return
 	 */
-	public String toString(StringBuilder sb, List<Expr> exprList){
+	public String createStringAndRetrieveExpr(StringBuilder sb, List<Expr> exprList){
 		
 		Collection<Map.Entry<ParseStructType, WLCommandWrapper>> wrapperMMapEntries = 
 				wrapperMMap.entries();
@@ -155,9 +157,9 @@ public class ParseStruct implements Serializable{
 		//recursively call toString
 		for(ParseStruct childParseStruct : childrenParseStructList){
 			if(i > 1){
-				sb.append("{").append(childParseStruct.toString(sb, curLevelExprList)).append("};");
+				sb.append("{").append(childParseStruct.createStringAndRetrieveExpr(sb, curLevelExprList)).append("};");
 			}else{
-				sb.append("{").append(childParseStruct.toString(sb, curLevelExprList)).append("}");
+				sb.append("{").append(childParseStruct.createStringAndRetrieveExpr(sb, curLevelExprList)).append("}");
 			}
 			i--;
 		}	

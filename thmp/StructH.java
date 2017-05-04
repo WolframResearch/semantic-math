@@ -583,7 +583,8 @@ public class StructH<H> extends Struct{
 		StringBuilder sb = new StringBuilder();		
 		if(includeType){			
 			if(!"".equals(makePptStr)){
-				sb.append(this.type.equals("ent") ? "MathProperty" : this.type).append("[").append(makePptStr);	
+				String pptCommaStr = "\"" + makePptStr + "\", ";				
+				sb.append(this.type.equals("ent") ? "MathProperty" : this.type).append("[").append(pptCommaStr);
 				ruleExprWrapperList.add(new RuleExprWrapper(new Expr("X"), new Expr(makePptStr)));
 				headExprWrapperType = ExprWrapperType.MATHPPT;
 			}else{

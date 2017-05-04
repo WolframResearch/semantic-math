@@ -772,7 +772,8 @@ public class Maps {
 			//remove, because verbphrase should be able to finish a sentence
 			//structMap.put("verb_parti", new Rule("verbphrase", 1));
 			structMap.put("auxpass_pobj", new Rule("verbphrase", 1)); // passive
-			structMap.put("auxpass_ent", new Rule("verbphrase", 1)); 
+			structMap.put("auxpass_ent", new Rule("verbphrase", 1));
+			structMap.put("auxpass_symb", new Rule("verbphrase", 0.7));
 			structMap.put("auxpass_adj", new Rule("verbphrase", 1));	// auxiliary
 
 			//TEMP RULE

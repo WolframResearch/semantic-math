@@ -18,6 +18,7 @@ public class ExprUtils {
 	private static final Expr sequenceHeadExpr = new Expr(Expr.SYMBOL, "Sequence");
 	private static final Expr ruleHeadExpr = new Expr(Expr.SYMBOL, "Rule");
 	private static final Expr mathHeadExpr = new Expr(Expr.SYMBOL, "Math");
+	private static final Expr mathPptHeadExpr = new Expr(Expr.SYMBOL, "MathProperty");
 	
 	public enum ExprWrapperType{
 		RULE,
@@ -118,6 +119,12 @@ public class ExprUtils {
 		return new Expr(mathHeadExpr, new Expr[]{assocExprWrapper.expr});
 	}
 	
+	public static Expr mathPptExpr(AssocExprWrapper assocExprWrapper){		
+		/*if(!assocHeadExpr.equals(assocExpr.head())){
+			throw new IllegalArgumentException("The argument to an Math Expr must be an association!");
+		}*/			
+		return new Expr(mathPptHeadExpr, new Expr[]{assocExprWrapper.expr});
+	}
 	/**
 	 * Construct a list of Expr's from the input exprList.
 	 * @param exprList

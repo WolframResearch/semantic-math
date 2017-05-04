@@ -228,7 +228,8 @@ public class ThmP1 {
 	}
 
 	/**
-	 * Class consisting of a parsed String and its score
+	 * Class consisting of a parsed String and its score. Used primarily
+	 * for displaying parsed results, whether on servlet or locally.
 	 */
 	public static class ParsedPair{
 		
@@ -252,15 +253,25 @@ public class ThmP1 {
 		//when trying to serialize this, because of circular referencing 
 		//between WLCommand and WLCommandWrap.
 		private transient WLCommand wlCommand;
+		//Could be null, even when totalCommandExprStr is not null.
 		private transient Expr totalCommandExpr;
+		//used by servlet to display. Could be null, even when totalCommandExprStr is not null.
+		private String totalCommandExprStr;
 		//the ParseStructType of this parsedStr, eg "STM", "HYP", etc.
 		private ParseStructType parseStructType;		
 		private String stringForm;
 		
-		public ParsedPair(String parsedStr, double score, String form){
+		/**
+		 * Used primarily by the servlet for display.
+		 * @param parsedStr
+		 * @param totalCommandExprString_
+		 * @param score
+		 * @param form
+		 */
+		public ParsedPair(String parsedStr, String totalCommandExprString_, double score, String form){
 			this(parsedStr, score, form, true);
+			this.totalCommandExprStr = totalCommandExprString_;
 		}
-		
 		/**
 		 * @param parsedStr
 		 * @param score
@@ -2600,7 +2611,7 @@ public class ThmP1 {
 				//System.out.println("*******SHORT FORM: " + wlSB);
 				//parsedExpr.add(new ParsedPair(parsedSB.toString(), maxDownPathScore, "long"));				
 				
-				longFormParsedPairList.add(new ParsedPair(parsedSB.toString(), uHeadStructScore, "long"));
+				longFormParsedPairList.add(new ParsedPair(parsedSB.toString(), null, uHeadStructScore, "long"));
 				
 				System.out.println(uHeadStructScore);
 				System.out.println(uHeadStruct.numUnits());
@@ -2768,7 +2779,7 @@ public class ThmP1 {
 			if(longFormSbLen > 1){
 				longFormStr = longFormSb.substring(0, longFormSbLen-1);
 			}
-			longFormParsedPairList.add(new ParsedPair(longFormStr, combinedScore, "long"));
+			longFormParsedPairList.add(new ParsedPair(longFormStr, null, combinedScore, "long"));
 			
 			//defer these to ordered addition in orderPairsAndPutToLists!
 			//parsedExpr.add(new ParsedPair(parsedSB.toString(), totalScore, "long"));						

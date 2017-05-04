@@ -403,7 +403,8 @@ public class StructA<A, B> extends Struct{
 				}else if(prev2.equals("")){
 					/*use "Math" Head here generally so not to have headless object. But perhaps should be more specific.*/
 					if(!"".equals(makePptStr)){
-						fullContentSB.insert(0, makePptStr).insert(0, "MathProperty[").append(childStr).append("]");
+						String pptCommaStr = "\"" + makePptStr + "\", ";
+						fullContentSB.insert(0, pptCommaStr).insert(0, "MathProperty[").append(childStr).append("]");
 						Expr makePptExpr = new Expr(makePptStr);
 						headExpr = new Expr(Expr.SYMBOL, "MathProperty");
 						if(childRuleWrapperList.size() > 0){

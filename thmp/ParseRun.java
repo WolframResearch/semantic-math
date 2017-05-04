@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.wolfram.jlink.Expr;
+
 import thmp.DetectHypothesis.Stats;
 import thmp.ThmP1.ParsedPair;
 import thmp.exceptions.ParseRuntimeException.IllegalSyntaxException;
@@ -69,7 +71,13 @@ public class ParseRun {
 		parseState.setRelationalContextVec(relationalContextVecList);
 		
 		if(isVerbose) {
-			System.out.println("@@@" + parseState.getHeadParseStruct());
+			ParseStruct headParseStruct = parseState.getHeadParseStruct();
+			List<Expr> exprList = new ArrayList<Expr>();
+			StringBuilder sb = new StringBuilder(100);
+			String headParseStructStr = headParseStruct.createStringAndRetrieveExpr(sb, exprList);
+			System.out.println("@@@" + headParseStructStr);
+			System.out.println("EXPR: " + exprList.get(0));
+			
 			System.out.println("ParseRun - For str: " + st);
 			BigInteger relationVec = parseState.getRelationalContextVec();
 			System.out.println("Relational Vector num of bits set: " + (relationVec == null ? "vec null." : relationVec.bitCount()));
