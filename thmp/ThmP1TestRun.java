@@ -707,12 +707,13 @@ public class ThmP1TestRun {
 			st = "$f$ is a prime";
 			st = "the holonomy of $\\partial \\Sigma$ has no fixed points";
 			st = "The interchange of two distant critical points of the surface diagram does not change the induced map on homology";
-
 			//st = "they do not intersect";
+			st = "${s_n}_n$ converges uniformly to $x=1$";
+			st = "$A$ implies $B$ over field";
 			st = "A morphism of C-algebras $f : A \\longrightarrow B$ with axiom is called a noncommutative Serre fibration";
-			st = "field is ring";
+			
 			//st = "A morphism of algebras exists";
-			//st = "a morphism is called a noncommutative serre fibration";			
+			//st = "a morphism is called a noncommutative serre fibration";
 			//st = "Let $p_1,\\dots,p_r$ be the preimages under $w$"; 			
 			//st = "$p_1,\\dots,p_r$ is the preimage under $w$ of $c^\\ast_0$";			
 			//st = "there are complex parameters";

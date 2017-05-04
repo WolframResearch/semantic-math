@@ -3425,7 +3425,7 @@ public class ThmP1 {
 			ParseTreeToVec.tree2vec(uHeadStruct, curStructContextVecMap);
 		}
 		
-		System.out.println("Parts: " + parseStructMMap);
+		System.out.println("Parts (parseStructMMap): " + parseStructMMap);
 		for(Map.Entry<ParseStructType, ParsedPair> entry : parseStructMMap.entries()){
 			System.out.println(entry.getValue().totalCommandExpr());
 		}

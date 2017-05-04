@@ -150,8 +150,8 @@ public class WLCommandsList {
 		//e.g. $f$ maps $X$ to $Y$.
 		putToWLCommandMapBuilder(wLCommandMapBuilder, "verb", new PBuilder("det|symb|ent|pro|noun", null, true), 
 				//new PBuilder("pro", "we", WLCommand.PosTermType.NEGATIVE),
-				new PBuilder("verb|vbs", null, WLCommand.PosTermType.NEGATIVE),
-				new PBuilder(" ~Connective["),  new PBuilder("verb", null, true, true, false), new PBuilder("]~ "),
+				new PBuilder("verb|vbs", null, WLCommand.PosTermType.NEGATIVE), new PBuilder(" ~"), new PBuilder("Connective").makeExprHead(),
+				new PBuilder("["), new PBuilder("verb", null, true, true, false).makeExprHeadArg(), new PBuilder("]~ "),
 				new PBuilder("verb|vbs", null, WLCommand.PosTermType.NEGATIVE), new PBuilder(" {", "OPT"), 
 				new PBuilder("symb|ent|noun|adj|prep|phrase|qualifier", null, true, false, false).addRelationType(RelationType._IS),
 				new PBuilder(", {\"Qualifiers\"->", "OPT"), 
@@ -170,8 +170,8 @@ public class WLCommandsList {
 				);	
 		//e.g. "The field extension $F/Q$ splits."
 		putToWLCommandMapBuilder(wLCommandMapBuilder, "verbAlone", new PBuilder("symb|ent|pro|noun", null, true).addRelationType(RelationType._IS), 
-				new PBuilder("pro", "we", WLCommand.PosTermType.NEGATIVE),		
-				new PBuilder(" ~HasProperty~ {"),  new PBuilder("verbAlone", null, true, true, false).addRelationType(RelationType.IS_), 
+				new PBuilder("pro", "we", WLCommand.PosTermType.NEGATIVE), new PBuilder(" ~"), new PBuilder("HasProperty").makeExprHead(),
+				new PBuilder("~ {"), new PBuilder("verbAlone", null, true, true, false).addRelationType(RelationType.IS_), 
 				new PBuilder(" ,", "OPT"), new PBuilder("prep|qualifier", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}"));	
 		
 		/*e.g. If $x > y$.*/
@@ -325,7 +325,8 @@ public class WLCommandsList {
 		
 		//putToWLCommandMapBuilder(wLCommandMapBuilder, "auxpass", addCommand(new String[] { "ent, , true",
 			//	"auxpass, , trigger_true", "ent|csubj, , true" }));
-		putToWLCommandMapBuilder(wLCommandMapBuilder, "auxpass", new PBuilder("ent", null, true), new PBuilder(" ~Connective["),
+		putToWLCommandMapBuilder(wLCommandMapBuilder, "auxpass", new PBuilder("ent", null, true), new PBuilder(" ~"),
+				new PBuilder("Connective").makeExprHead(), new PBuilder("["),
 				new PBuilder("auxpass", null, true, true, false), new PBuilder("]~ "),
 				new PBuilder("ent|csubj|prep", null, true) );
 		
@@ -357,7 +358,8 @@ public class WLCommandsList {
 				//"\\[Element]", "symb|ent|adj|phrase, , true, TriggerMathObj" }));
 		putToWLCommandMapBuilder(wLCommandMapBuilder, "is called", new PBuilder("symb|ent|pro", null, true, false, false,
 				PosTermConnotation.DEFINING), 
-				new PBuilder("auxpass", "is called", false, true, false), new PBuilder(" \\[Element] "),
+				new PBuilder("auxpass", "is called", false, true, false), new PBuilder(" \\["),
+				new PBuilder("Element").makeExprHead(), new PBuilder("] "),
 				new PBuilder("symb|ent|adj|phrase", null, true, false, false, PosTermConnotation.DEFINED,
 						RelationType._IS) );
 		
@@ -367,7 +369,7 @@ public class WLCommandsList {
 		//	 "ent|symb, , true", "]" }));
 		putToWLCommandMapBuilder(wLCommandMapBuilder, "for every", //new PBuilder("assert", null, true, false, "OPT"),
 				new PBuilder(null, "for every|for any|for all", false, true, false), 
-				new PBuilder("ForAll["), new PBuilder("ent|symb|texAssert", null, true, RelationType._IS).addRelationType(RelationType.IF), 
+				new PBuilder("Forall["), new PBuilder("ent|symb|texAssert", null, true, RelationType._IS).addRelationType(RelationType.IF), 
 				new PBuilder("]") );
 		
 		putToWLCommandMapBuilder(wLCommandMapBuilder, "for", new PBuilder(null, null, WLCommand.PosTermType.NEGATIVE),

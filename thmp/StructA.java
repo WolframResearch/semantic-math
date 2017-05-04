@@ -466,10 +466,16 @@ public class StructA<A, B> extends Struct{
 			return this.simpleToString2(includeType, curCommand, triggerPosTerm, exprList);
 		}
 	}
-
 	
-	//auxilliary method for simpleToString and called inside StructH.simpleToString2
-	//@Override
+	/**
+	 * Auxilliary method for simpleToString; also called inside StructH.simpleToString2.
+	 * Try to get a single Expr onto exprList, so to construct only one Expr per struct.simpleToString call.
+	 * @param includeType
+	 * @param curCommand
+	 * @param triggerPosTerm
+	 * @param exprList
+	 * @return
+	 */
 	private String simpleToString2(boolean includeType, WLCommand curCommand, PosTerm triggerPosTerm,
 			List<Expr> exprList){		
 		/*if(type.equals("assert")){
@@ -489,7 +495,7 @@ public class StructA<A, B> extends Struct{
 		}else if(!curCommand.equals(this.commandBuilt)){
 			this.WLCommandStrVisitedCount++;
 		}
-		
+		List<Expr> curLevelExprList = new ArrayList<Expr>();
 		//don't include prepositions for spanning purposes, since prepositions are almost 
 		//always counted if its subsequent entity is, but counting it gives false high span
 		//scores, especially compared to the case when they are absorbed into a StructH, in
@@ -510,10 +516,12 @@ public class StructA<A, B> extends Struct{
 		//tempStr to add to
 		//String tempStr = "";		
 		
+		Expr conjDisjHeadExpr = null;
 		//str += this.type.matches("conj_.*|disj_.*") ? this.type.split("_")[0] +  " " : "";		
 		//also wrap braces around prev1 and prev2 or the conj/disj
 		if(this.type.matches("conj_.*|disj_.*")){
 			String toAppend = this.type.matches("conj_.*") ? "Conjunction" : "Disjunction";
+			conjDisjHeadExpr = new Expr(Expr.SYMBOL, toAppend);
 			//str += this.type.split("_")[0] + " ";
 			//str += toAppend;
 			inConj = true;
@@ -538,7 +546,7 @@ public class StructA<A, B> extends Struct{
 					//&& ((Struct) prev1).WLCommandWrapperList() == null){
 				List<WLCommandWrapper> prev1WrapperList = ((Struct) prev1).WLCommandWrapperList();
 				if(prev1WrapperList == null){
-					String prev1Str = ((Struct) prev1).simpleToString(includeType, curCommand, exprList);
+					String prev1Str = ((Struct) prev1).simpleToString(includeType, curCommand, curLevelExprList);
 					if(!WordForms.getWhiteEmptySpacePattern().matcher(prev1Str).matches()){
 						//tempSB.append(prev1Str);
 						int tempSBLen = tempSB.length();
@@ -554,7 +562,9 @@ public class StructA<A, B> extends Struct{
 						}
 					}
 				}else{
-					tempSB.append(prev1WrapperList.get(0).WLCommandStr());
+					WLCommandWrapper prev1Wrapper = prev1WrapperList.get(0);
+					tempSB.append(prev1Wrapper.WLCommandStr());					
+					curLevelExprList.add(prev1Wrapper.commandExpr());
 				}
 			}else if(PREV1_TYPE.equals(NodeType.STR) && !prev1.equals("")){
 				//if(!type.matches("pre|partiby")){
@@ -564,7 +574,9 @@ public class StructA<A, B> extends Struct{
 						//tempSB.append("\"").append(prev1).append("\"");
 					//}
 					//else{
-						tempSB.append(prev1);
+					String prev1Str = prev1.toString();
+					tempSB.append(prev1Str);
+					curLevelExprList.add(new Expr(prev1Str));
 					//}
 				}
 			}			
@@ -581,7 +593,7 @@ public class StructA<A, B> extends Struct{
 				List<WLCommandWrapper> prev2WrapperList = ((Struct)prev2).WLCommandWrapperList();
 				 if(prev2WrapperList == null){
 					//System.out.println("######prev2: " + prev2);
-					String prev2Str = ((Struct) prev2).simpleToString(includeType, curCommand, exprList);
+					String prev2Str = ((Struct) prev2).simpleToString(includeType, curCommand, curLevelExprList);
 					if(!prev2Str.matches("\\s*")){
 						if(tempSB.length() > 0){ //tempStr += ", ";
 							tempSB.append(", ");
@@ -594,21 +606,33 @@ public class StructA<A, B> extends Struct{
 					 if(tempSB.length() > 0){
 						 prev2SB.append(", ");						 
 					 }
-					 prev2SB.append(prev2WrapperList.get(0).WLCommandStr());					 
+					 WLCommandWrapper prev2Wrapper = prev2WrapperList.get(0);
+					 prev2SB.append(prev2Wrapper.WLCommandStr());
+					 curLevelExprList.add(prev2Wrapper.commandExpr());
 				 }
 			}else if(PREV2_TYPE.equals(NodeType.STR) && !((String)prev2).matches("\\s*")){			
 				//prev2String += ", " + prev2;	
-				prev2SB.append(", ").append(prev2);
+				String prev2Str = prev2.toString();				
+				prev2SB.append(", ").append(prev2Str);
+				curLevelExprList.add(new Expr(prev2Str));
 			}
 			//tempStr += inConj ? "{" + prev2String + "}" : prev2String;
 			/*tempSB.append(inConj ? "[" + prev2SB + "]" : prev2SB);*/
 			tempSB.append(prev2SB);
-		}
+		}		
 		List<RuleExprWrapper> ruleWrapperList = new ArrayList<RuleExprWrapper>();
 		tempSB.append(appendChildrenQualifierString(includeType, curCommand, ruleWrapperList));
 		if(ruleWrapperList.size() > 0){
-			exprList.add(ruleWrapperList.get(0).expr());
+			curLevelExprList.add(ruleWrapperList.get(0).expr());
+		}	
+		Expr combinedLevelExpr; 		
+		if(null != conjDisjHeadExpr){
+			combinedLevelExpr = ExprUtils.createExprFromList(conjDisjHeadExpr, curLevelExprList);
+		}else{
+			combinedLevelExpr = ExprUtils.listExpr(curLevelExprList);
 		}
+		exprList.add(combinedLevelExpr);
+		
 		if(wrapBraces){ //tempStr += "}";
 			tempSB.append("}");
 		}

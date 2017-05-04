@@ -461,7 +461,7 @@ public class WLCommand implements Serializable{
 			//whether should be made into property term, if corresponding trigger allows so.
 			//e.g. "this polynomial is not $1$", use "is" inside ppt term Math["$1"]"
 			private boolean isPropertyTerm;
-			private int argNum;
+			private int argNum = DEFAULT_ARG_NUM;
 			private boolean isExprHead;
 			private boolean isExprHeadArg;
 			//0 by default
@@ -1580,7 +1580,7 @@ public class WLCommand implements Serializable{
 			}
 		}		
 		if(null == exprHeadSymbolStr){
-			String msg = "exprHeadSymbolStr for command cannot be null!";
+			String msg = "exprHeadSymbolStr for command cannot be null! ";
 			logger.error(msg);
 			throw new IllegalWLCommandStateException(msg);
 		}
@@ -1607,6 +1607,7 @@ public class WLCommand implements Serializable{
 		//consolidating the Expr's inside the args lists into a single Expr. So each argument
 		//is represented by a single Expr.
 		Expr[] exprArgsAr = new Expr[exprArgsListTMap.size()];
+		System.out.println("WLCommand exprArgsListTMap.size() " +exprArgsListTMap.size());
 		int exprArgsArCounter = 0;
 		for(Map.Entry<Integer, List<Expr>> entry : exprArgsListTMap.entrySet()){
 			Expr entryExpr;

@@ -16,7 +16,10 @@ import thmp.Struct.NodeType;
 import thmp.WLCommand.PosTerm;
 import thmp.utils.ExprUtils;
 import thmp.utils.ExprUtils.AssocExprWrapper;
+import thmp.utils.ExprUtils.ExprWrapper;
+import thmp.utils.ExprUtils.ExprWrapperType;
 import thmp.utils.ExprUtils.MathExprWrapper;
+import thmp.utils.ExprUtils.MathPptExprWrapper;
 import thmp.utils.ExprUtils.RuleExprWrapper;
 /**
  * 
@@ -538,6 +541,7 @@ public class StructH<H> extends Struct{
 			}
 			//this.WLCommandStrVisitedCount++;
 			curCommand.addComposedWLCommands(composedCommand);
+			exprList.add(curWrapper.commandExpr());
 			return curWrapper.WLCommandStr();			
 			}
 		}		
@@ -548,8 +552,14 @@ public class StructH<H> extends Struct{
 	
 	/**
 	 * Auxilliary method for simpleToString and StructA.simpleToString.
+	 * Try to get a single Expr onto exprList, so to construct only one Expr per struct.simpleToString call.
+	 * @param includeType
+	 * @param curCommand
+	 * @param triggerPosTerm
+	 * @param curPosTerm
+	 * @param exprList
+	 * @return
 	 */
-	//@Override
 	private String simpleToString2(boolean includeType, WLCommand curCommand, PosTerm triggerPosTerm, 
 			PosTerm curPosTerm, List<Expr> exprList){
 		
@@ -568,13 +578,17 @@ public class StructH<H> extends Struct{
 		}else if(!curCommand.equals(this.commandBuilt)){
 			this.WLCommandStrVisitedCount++;
 		}
-		StringBuilder sb = new StringBuilder();
 		
+		ExprWrapperType headExprWrapperType = ExprWrapperType.OTHER;
+		StringBuilder sb = new StringBuilder();		
 		if(includeType){			
 			if(!"".equals(makePptStr)){
-				sb.append(this.type.equals("ent") ? "MathProperty" : this.type).append("[").append(makePptStr);				
+				sb.append(this.type.equals("ent") ? "MathProperty" : this.type).append("[").append(makePptStr);	
+				ruleExprWrapperList.add(new RuleExprWrapper(new Expr("X"), new Expr(makePptStr)));
+				headExprWrapperType = ExprWrapperType.MATHPPT;
 			}else{
-				sb.append(this.type.equals("ent") ? "Math" : this.type).append("[");			
+				sb.append(this.type.equals("ent") ? "Math" : this.type).append("[");		
+				headExprWrapperType = ExprWrapperType.MATH;
 			}
 		}
 		boolean prependCommaBool = false;
@@ -588,6 +602,7 @@ public class StructH<H> extends Struct{
 			prependCommaBool = true;
 		}
 		
+		List<Expr> pptExprList = new ArrayList<Expr>();
 		boolean pptAppended = false;
 		Iterator<String> pptStrListIter = getPropertySet().iterator();		
 		if(pptStrListIter.hasNext()){
@@ -599,15 +614,17 @@ public class StructH<H> extends Struct{
 			pptAppended = true;
 		}
 		if(this.article() != Article.NONE){
+			String articleStr = this.article().toString();
 			if(pptAppended){
-				sb.append("\"").append(this.article()).append("\", ");
+				sb.append("\"").append(articleStr).append("\", ");
 			}else{
 				if(prependCommaBool){
 					sb.append(", ");
 				}
-				sb.append("\"Property\"->{\"").append(this.article()).append("\"");				
+				sb.append("\"Property\"->{\"").append(articleStr).append("\"");				
 				pptAppended = true;
 			}
+			pptExprList.add(new Expr(articleStr));
 		}
 		while(pptStrListIter.hasNext()){
 			String nextStr = pptStrListIter.next();
@@ -616,9 +633,12 @@ public class StructH<H> extends Struct{
 			}else{
 				sb.append("\"").append(nextStr).append("\"");
 			}
+			pptExprList.add(new Expr(nextStr));
 		}
 		if(pptAppended){
 			sb.append("}");
+			Expr pptListExpr = ExprUtils.listExpr(pptExprList);			
+			ruleExprWrapperList.add(new RuleExprWrapper(new Expr("Property"), pptListExpr));
 		}
 		
 		String called = struct.get("called");
@@ -626,7 +646,8 @@ public class StructH<H> extends Struct{
 			if(prependCommaBool){
 				sb.append(", ");
 			}
-			sb.append("\"Called\"->").append("\"").append(called).append("\"");			
+			sb.append("\"Called\"->").append("\"").append(called).append("\"");
+			ruleExprWrapperList.add(new RuleExprWrapper(new Expr("Called"), new Expr(called)));
 		}
 		//append name
 		String tex = struct.get("tex");
@@ -634,8 +655,8 @@ public class StructH<H> extends Struct{
 			if(prependCommaBool){
 				sb.append(", ");
 			}
-			sb.append("\"Tex\"->\"").append(tex).append("\"");
-			
+			sb.append("\"TeX\"->\"").append(tex).append("\"");
+			ruleExprWrapperList.add(new RuleExprWrapper(new Expr("TeX"), new Expr(tex)));
 		}
 		
 		//sb.append(append_name_pptStr());
@@ -650,7 +671,12 @@ public class StructH<H> extends Struct{
 		}
 		
 		AssocExprWrapper assocExprWrapper = new AssocExprWrapper(ruleExprWrapperList);
-		MathExprWrapper mathExprWrapper = new MathExprWrapper(assocExprWrapper);
+		ExprWrapper mathExprWrapper;
+		if(headExprWrapperType == ExprWrapperType.MATHPPT){
+			mathExprWrapper = new MathPptExprWrapper(assocExprWrapper);
+		}else{
+			mathExprWrapper = new MathExprWrapper(assocExprWrapper);
+		}		 
 		exprList.add(mathExprWrapper.expr());
 		
 		if(includeType){ 
