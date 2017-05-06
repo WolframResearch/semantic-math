@@ -15,6 +15,7 @@ import thmp.search.TheoremGet.ContextRelationVecPair;
 import thmp.search.ThmSearch.TermDocumentMatrix;
 import thmp.utils.FileUtils;
 import thmp.utils.MathLinkUtils;
+import thmp.utils.MathLinkUtils.WLEvaluationMedium;
 
 import static thmp.utils.MathLinkUtils.evaluateWLCommand;
 
@@ -22,11 +23,12 @@ import static thmp.utils.MathLinkUtils.evaluateWLCommand;
  * Tools for manipulating created projection matrix, 
  * apply projection mx to query vecs, 
  * combine serialized matrices together into List in linear time.
+ * These tools are normally run locally on build machines, rather than on the server.
  * @author yihed
  */
 public class ProjectionMatrix {
 	
-	private static final KernelLink ml = FileUtils.getKernelLinkInstance();
+	//private static final KernelLink ml = FileUtils.getKernelLinkInstance();
 	private static final Logger logger = LogManager.getLogger(ProjectionMatrix.class);
 	private static final String combinedMxPath = "src/thmp/data/" 
 			+ TermDocumentMatrix.COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME + ".mx";
@@ -134,23 +136,27 @@ public class ProjectionMatrix {
 	 */
 	public static void applyProjectionMatrix(String queryMxStrName, String dInverseName, String uTransposeName, 
 			String corMxName, String projectedMxName){
+		
+		WLEvaluationMedium medium = FileUtils.acquireWLEvaluationMedium();		
 		String msg = "ProjectionMatrix.applyProjectionMatrix- Transposing and applying corMx...";
 		logger.info(msg);
 		String queryMxStrTransposeName = "queryMxStrNameTranspose";
 		queryMxStrTransposeName = queryMxStrName;
-		try {
-			//process query first with corMx. Convert to column vectors, so rows represent words.		
-			ml.evaluate(//queryMxStrTransposeName+" = Transpose[" + queryMxStrName + "];" +
-					 "q0 = " + queryMxStrTransposeName + "+ 0.08*" + corMxName + "."+ queryMxStrTransposeName +";");
-			ml.discardAnswer();
+		//try {
+			//process query first with corMx. Convert to column vectors, so rows represent words.
+			evaluateWLCommand(medium, "q0 =" + queryMxStrTransposeName + "+ 0.08*" + corMxName + "."+ queryMxStrTransposeName, false, true);
+			//ml.evaluate("q0 = " + queryMxStrTransposeName + "+ 0.08*" + corMxName + "."+ queryMxStrTransposeName +";");
+			//ml.discardAnswer();
 			//System.out.println("ProjectionMatrix.applyProjectionMatrix, "
 				//	+evaluateWLCommand("(" + corMxName + "."+ queryMxStrTransposeName+")[[1]]", true, false));
-			//applies projection mx with given vectors. Need to Transpose from column vectors, so rows represent thms.			
-			ml.evaluate(projectedMxName + "= Transpose[" + dInverseName + "." + uTransposeName + ".q0];");
-			ml.discardAnswer();
-		} catch (MathLinkException e) {
+			//applies projection mx with given vectors. Need to Transpose from column vectors, so rows represent thms.
+			evaluateWLCommand(medium, projectedMxName + "= Transpose[" + dInverseName + "." + uTransposeName + ".q0]", false, true);
+			//ml.evaluate(projectedMxName + "= Transpose[" + dInverseName + "." + uTransposeName + ".q0];");
+			//ml.discardAnswer();
+		/*} catch (MathLinkException e) {
 			throw new IllegalStateException(e);
-		}		
+		}*/		
+		FileUtils.releaseWLEvaluationMedium(medium);
 	}
 	
 	/**
@@ -167,6 +173,8 @@ public class ProjectionMatrix {
 		String msg = "ProjectionMatrix.combineProjectedMx- about to get paths from files.";
 		System.out.println(msg);
 		logger.info(msg);
+		WLEvaluationMedium ml = FileUtils.acquireWLEvaluationMedium();
+
 		/* Need to get overall length */
 		evaluateWLCommand(ml, "lengthCount=0");
 		int fileCounter = 1;
@@ -194,6 +202,8 @@ public class ProjectionMatrix {
 		//System.out.println("ProjectionMatrix, concatenatedListName "+evaluateWLCommand(concatenatedListName, true, true));
 		
 		evaluateWLCommand(ml, "DumpSave[\"" + combinedMxPath + "\"," + concatenatedListName + "]");
+		FileUtils.releaseWLEvaluationMedium(ml);
+		
 		msg = "In combineProjectedMx(), Done concatenating matrices!";
 		System.out.println(msg);
 		logger.info(msg);		

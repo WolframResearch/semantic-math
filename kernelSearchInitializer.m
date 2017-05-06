@@ -1,10 +1,10 @@
 (* ::Package:: *)
 
 BeginPackage["KernelSearchInitializer`"]
-(*To be placed under servlet src dir, e.g. /usr/share/tomcat/webapps/theoremSearchTest2/src*)
+(*To be placed under servlet src dir, e.g. /usr/share/tomcat/webapps/theoremSearchTest/src*)
 
 
-servletBaseDirPath=FileNameJoin[{"", "usr","share","tomcat","webapps","theoremSearchTest2","src","thmp","data"}];
+servletBaseDirPath=FileNameJoin[{"", "usr","share","tomcat","webapps","theoremSearchTest","src","thmp","data"}];
 pathToProjectionMx=FileNameJoin[{servletBaseDirPath, "termDocumentMatrixSVD.mx"}];
 combinedProjectedMxFilePath=FileNameJoin[{servletBaseDirPath, "CombinedTDMatrix.mx"}];
 <<combinedProjectedMxFilePath;

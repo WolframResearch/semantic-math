@@ -11,6 +11,7 @@
 	<property name="datadir" value="${basedir}/src/thmp/data" />
 	<property name="server_datadir" value="/Users/yihed/Documents/workspaceEE/ThmpServlet/WebContent/src/thmp/data" />
 	<property name="server_libdir" value="/Users/yihed/Documents/workspaceEE/ThmpServlet/WebContent/WEB-INF/lib" />
+	<property name="server_srcdir" value="/Users/yihed/Documents/workspaceEE/ThmpServlet/WebContent/src" />
 	<property name="exceptionsSrcdir" value="${basedir}/src/thmp/exceptions/" />
 
 	<!-- main lib containing jar such as JLink, Guava etc -->
@@ -88,6 +89,7 @@
 		<mkdir dir="${builddir}" />
 		<javac srcdir="${srcdir}" destdir="${builddir}" debug="true">
 			<classpath>
+				<!--Should not use these classes-->
 				<fileset dir="${thmplibdir}">
 					<include name="**/*.class" />
 				</fileset>
@@ -139,7 +141,12 @@
 			<fileset dir="${basedir}">
 					<include name="${thmParse_jarname}" />
 			</fileset>
-		</copy>			
+		</copy>	
+		<copy todir="${server_srcdir}">
+			<fileset dir="${basedir}/src">
+				<include name="kernelSearchInitializer.m" />
+			</fileset>
+		</copy>	
 	</target>
 
 	<target name="run" description="run the build process">
