@@ -299,7 +299,8 @@ public class WLCommandsList {
 				new PBuilder("symb|ent|pro", null, true, false, true), new PBuilder(",", "OPT"), 
 				new PBuilder(null, "by", false, false, "OPT"), new PBuilder(null, null, true, false, "OPT"), new PBuilder("]") );	
 		//$f$ maps $x$ to $y$
-		putToWLCommandMapBuilder(wLCommandMapBuilder, "map", new PBuilder("Map["), new PBuilder("symb|ent|pro", null, true), 
+		putToWLCommandMapBuilder(wLCommandMapBuilder, "map", new PBuilder("Map").makeExprHead(), new PBuilder("["), 
+				new PBuilder("symb|ent|pro", null, true), 
 				new PBuilder("verb|vbs", "map|maps", false, true, false), new PBuilder(","),
 				new PBuilder("symb|ent|pro", null, true, false, true), new PBuilder(","), new PBuilder(null, "to", false), 
 				new PBuilder("symb|ent|pro", null, true, false, true), new PBuilder("]") );
@@ -316,20 +317,21 @@ public class WLCommandsList {
 		putToWLCommandMapBuilder(wLCommandMapBuilder, "let", new PBuilder("let|suppose", null, false, true, false), 
 				new PBuilder("symb|ent|pro|noun", null, true, false, false, PosTermConnotation.DEFINED,
 						RelationType._IS), 
-				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), new PBuilder("\\[Element]"),
+				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), new PBuilder("\\["), 
+				new PBuilder("Element").makeExprHead(), new PBuilder("]"),
 				new PBuilder("symb|ent|phrase", null, true, false, true, PosTermConnotation.DEFINING, RelationType.IS_));
 		
 		//putToWLCommandMapBuilder(wLCommandMapBuilder, "equal to", addCommand(new String[] { "symb|ent, , true",
 		//"==", "equal to, , trigger", "symb|ent|phrase, , true, TriggerMathObj" }));
 		putToWLCommandMapBuilder(wLCommandMapBuilder, "equal to", new PBuilder("symb|ent", null, true, RelationType._IS), 
-				new PBuilder("=="), new PBuilder("equal to", null, false, true, false), 
+				new PBuilder("==").makeExprHead(), new PBuilder("equal to", null, false, true, false), 
 				new PBuilder("symb|ent|phrase", null, true, false, true, RelationType._IS) );
 		
 		//putToWLCommandMapBuilder(wLCommandMapBuilder, "auxpass", addCommand(new String[] { "ent, , true",
 			//	"auxpass, , trigger_true", "ent|csubj, , true" }));
 		putToWLCommandMapBuilder(wLCommandMapBuilder, "auxpass", new PBuilder("ent", null, true), new PBuilder(" ~"),
 				new PBuilder("Connective").makeExprHead(), new PBuilder("["),
-				new PBuilder("auxpass", null, true, true, false), new PBuilder("]~ "),
+				new PBuilder("auxpass", null, true, true, false).makeExprHeadArg(), new PBuilder("]~ "),
 				new PBuilder("ent|csubj|prep", null, true) );
 		
 		//definitions: e.g. "denote by $F$ a field", but note that "call this field $F$" should have different order as to which

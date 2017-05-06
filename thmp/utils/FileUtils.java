@@ -28,6 +28,14 @@ import org.apache.logging.log4j.Logger;
 import com.wolfram.jlink.KernelLink;
 import com.wolfram.jlink.MathLinkException;
 import com.wolfram.jlink.MathLinkFactory;
+import com.wolfram.kernelserver.KernelPool;
+import com.wolfram.kernelserver.KernelPoolException;
+import com.wolfram.msp.servlet.MSPManager;
+import com.wolfram.msp.servlet.MSPStatics;
+import com.wolfram.webkernel.IKernel;
+
+import thmp.utils.MathLinkUtils.WLEvaluationMedium;
+import thmp.utils.MathLinkUtils.WLEvaluationMedium.EvaluationMediumType;
 
 
 /**
@@ -55,8 +63,12 @@ public class FileUtils {
 	private static boolean dataGenerationModeBool;	
 	//servletContext used when running from Tomcat
 	private static ServletContext servletContext;
+	private static final String KERNEL_POOL_NAME = "General";
 	private static final String RELATED_WORDS_MAP_SERIAL_FILE_STR = "src/thmp/data/relatedWordsMap.dat";
-	
+	//get kernel pool, then acquire kernel instance from the pool.			
+	private static MSPManager mspManager; //(MSPManager)servletContext.getAttribute(MSPStatics.MSP_MANAGER_ATTR);
+	private static KernelPool kernelPool;	        
+    
 	/**
 	 * Write content to file at absolute path.
 	 * @param contentList
@@ -73,6 +85,8 @@ public class FileUtils {
 
 	public static void setServletContext(ServletContext servletContext_){
 		servletContext = servletContext_;
+		mspManager = (MSPManager)servletContext.getAttribute(MSPStatics.MSP_MANAGER_ATTR);
+		kernelPool = mspManager.getKernelPool(KERNEL_POOL_NAME);
 	}
 	
 	public static ServletContext getServletContext(){
@@ -305,10 +319,13 @@ public class FileUtils {
 	
 	/**
 	 * Get KernelLink instance, 
-	 * create one is none exists already.
+	 * create one is none exists already. Should only be called when not running on servlet
 	 * @return KernelLink instance.
 	 */
 	public static KernelLink getKernelLinkInstance() {
+		if(null != servletContext){
+			throw new IllegalStateException("Should be getting kernel from kernel pool if running on servlet!");
+		}
 		//double-checked locking
 		if(null == ml){
 			//finer-grained locking than synchronizing whole method
@@ -337,6 +354,35 @@ public class FileUtils {
 	}
 	
 	/**
+	 * Get either kernel or link when running on servlet, depending on whether running on server.
+	 */
+	public static WLEvaluationMedium acquireWLEvaluationMedium(){
+		
+		WLEvaluationMedium medium = null;
+		if(null == servletContext){
+			//running locally.
+			return new WLEvaluationMedium(getKernelLinkInstance());
+		}else{
+			//running on servlet.
+			assert null != kernelPool;
+			try {
+				medium = new WLEvaluationMedium(kernelPool.acquireKernel());
+			} catch (KernelPoolException e) {
+				e.printStackTrace(); //HANDLE, see how Cloud deals with it. Fall back on link?? Not great
+			} catch (InterruptedException e) {
+				e.printStackTrace(); //HANDLE, should guarantee return is no null.
+			}
+	        return medium;
+		}        
+	}
+	
+	public static void releaseWLEvaluationMedium(WLEvaluationMedium medium){
+		if(medium.evaluationMediumType == EvaluationMediumType.KERNEL){
+			kernelPool.releaseKernel(medium.kernel());
+		}
+	}
+	
+	/**
 	 * Creates the kernel link instance if none exists yet in this
 	 * JVM session. Ensures only a single link instance is created, since 
 	 * only one is needed.
@@ -356,7 +402,7 @@ public class FileUtils {
 			// "\"/usr/local/Wolfram/Mathematica/11.0/Executables/MathKernel\"
 			// -mathlink"};
 			ARGV = new String[] { "-linkmode", "launch", "-linkname", "math -mathlink" };
-		}
+		} 
 		try {
 			ml = MathLinkFactory.createKernelLink(ARGV);
 			String msg = "MathLink created! " + ml;

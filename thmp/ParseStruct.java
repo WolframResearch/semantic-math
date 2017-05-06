@@ -144,7 +144,8 @@ public class ParseStruct implements Serializable{
 		for(Map.Entry<ParseStructType, WLCommandWrapper> entry : wrapperMMapEntries){
 			WLCommandWrapper wrapper = entry.getValue();
 			Expr commandExpr = wrapper.commandExpr();
-			curLevelExprList.add(commandExpr);
+			Expr ruleExpr = ExprUtils.ruleExpr(new Expr(entry.getKey().toString()), commandExpr);
+			curLevelExprList.add(ruleExpr);			
 			if(i > 1 || !hasChild){			
 				sb.append("\"").append(entry.getKey()).append("\" :> ").append(wrapper.WLCommandStr()).append(", ");
 			}else{
@@ -154,7 +155,6 @@ public class ParseStruct implements Serializable{
 		}
 		
 		i = childrenParseStructList.size();		
-		//recursively call toString
 		for(ParseStruct childParseStruct : childrenParseStructList){
 			if(i > 1){
 				sb.append("{").append(childParseStruct.createStringAndRetrieveExpr(sb, curLevelExprList)).append("};");

@@ -711,8 +711,8 @@ public class ThmP1TestRun {
 			st = "${s_n}_n$ converges uniformly to $x=1$";
 			st = "$A$ implies $B$ over field";
 			st = "A morphism of C-algebras $f : A \\longrightarrow B$ with axiom is called a noncommutative Serre fibration";//revisit! first token detached
-			st = "field is ring";
-			st = "this prime is called $p$";
+			//st = "if field is ring";
+			//st = "this prime is called $p$";
 			
 			//st = "A morphism of algebras exists";
 			//st = "a morphism is called a noncommutative serre fibration";

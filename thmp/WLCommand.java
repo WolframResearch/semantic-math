@@ -1579,11 +1579,7 @@ public class WLCommand implements Serializable{
 				}
 			}
 		}		
-		if(null == exprHeadSymbolStr){
-			String msg = "exprHeadSymbolStr for command cannot be null! ";
-			logger.error(msg);
-			throw new IllegalWLCommandStateException(msg);
-		}
+		
 		//"****%###structToAppendCommandStr " +structToAppendCommandStr	
 		WLCommandWrapper curCommandWrapper = structToAppendCommandStr.add_WLCommandWrapper(curCommand);
 		
@@ -1598,6 +1594,12 @@ public class WLCommand implements Serializable{
 			}
 		}		
 		//gather together the WLCommand Expr
+		if(null == exprHeadSymbolStr){
+			/*String msg = "exprHeadSymbolStr for command cannot be null! ";
+			logger.error(msg);
+			throw new IllegalWLCommandStateException(msg);*/
+			exprHeadSymbolStr = "List";
+		}
 		Expr headSymbolExpr;
 		if(exprHeadArgList.isEmpty()){			
 			headSymbolExpr = new Expr(Expr.SYMBOL, exprHeadSymbolStr);
@@ -1607,7 +1609,7 @@ public class WLCommand implements Serializable{
 		//consolidating the Expr's inside the args lists into a single Expr. So each argument
 		//is represented by a single Expr.
 		Expr[] exprArgsAr = new Expr[exprArgsListTMap.size()];
-		System.out.println("WLCommand exprArgsListTMap.size() " +exprArgsListTMap.size());
+		System.out.println("WLCommand exprArgsListTMap " +exprArgsListTMap);
 		int exprArgsArCounter = 0;
 		for(Map.Entry<Integer, List<Expr>> entry : exprArgsListTMap.entrySet()){
 			Expr entryExpr;
@@ -1621,6 +1623,8 @@ public class WLCommand implements Serializable{
 			exprArgsAr[exprArgsArCounter++] = entryExpr;			
 		}		
 		Expr commandHeadExpr = new Expr(headSymbolExpr, exprArgsAr);
+		curCommandWrapper.set_commandExpr(commandHeadExpr);
+		
 		
 		//gather together the WLCommand Str
 		StringBuilder commandSB2 = new StringBuilder(100);
@@ -1641,7 +1645,6 @@ public class WLCommand implements Serializable{
 			System.out.println("WLCommand - *******%######structsWithOtherHeadCount " +curCommand.structsWithOtherHeadCount +" " +curCommand );
 		}
 		
-		curCommandWrapper.set_commandExpr(commandHeadExpr);
 		curCommandWrapper.set_highestStruct(structToAppendCommandStr);		
 		curCommandWrapper.set_WLCommandStr(commandSB2);
 		return commandSB2.toString();
@@ -2434,9 +2437,9 @@ public class WLCommand implements Serializable{
 		}
 		if(!newStruct.isStructA() 
 			|| newStruct.prev1NodeType().equals(NodeType.STR) && newStruct.prev2NodeType().equals(NodeType.STR)){
-			if(newStruct.type().equals("let")) {//throw new IllegalStateException(curCommand.toString());
+			/*if(newStruct.type().equals("let")) {//throw new IllegalStateException(curCommand.toString());
 				System.out.print("");
-			}
+			}*/
 			curCommand.commandNumUnits++;	
 			//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
 			//System.out.println("WLCommand increment_commandNumUnits - newStruct " + newStruct);

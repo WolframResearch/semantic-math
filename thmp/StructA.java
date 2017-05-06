@@ -333,12 +333,13 @@ public class StructA<A, B> extends Struct{
 				//if(WLCommand.structsWithOtherHeadCount(composedCommand) > 0){
 					//System.out.println("structA WLCommand.structsWithOtherHeadCount(composedCommand) " + WLCommand.structsWithOtherHeadCount(composedCommand));
 				//}
-			if(curWrapper != null){
+			
 				int commandNumUnits = WLCommand.commandNumUnits(composedCommand);
 				//System.out.println("StructA - commandNumUnits composed " + commandNumUnits);
 				WLCommand.increment_commandNumUnits(curCommand, commandNumUnits);
+				
 				//System.out.println("increment_commandNumUnits : numUnits " + commandNumUnits + " composedCommand: " + composedCommand); 				
-			}
+			
 			//been built into one command already
 			if(null == this.commandBuilt){
 				this.commandBuilt = curCommand;
@@ -349,6 +350,7 @@ public class StructA<A, B> extends Struct{
 			//System.out.println("WLCommandStrVisitedCount" + this.WLCommandStrVisitedCount);
 			//System.out.println("++++++===curWrapper " +curWrapper.WLCommandStr() + " " + this );
 			curCommand.addComposedWLCommands(composedCommand);
+			exprList.add(curWrapper.commandExpr());
 			return curWrapper.WLCommandStr();	
 			}
 		}		

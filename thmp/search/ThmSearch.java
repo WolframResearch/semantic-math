@@ -17,6 +17,7 @@ import com.wolfram.jlink.*;
 
 import thmp.TheoremContainer;
 import thmp.utils.FileUtils;
+import thmp.utils.MathLinkUtils.WLEvaluationMedium;
 import thmp.utils.WordForms;
 
 import static thmp.utils.MathLinkUtils.evaluateWLCommand;
@@ -49,11 +50,11 @@ public class ThmSearch {
 	private static final boolean USE_FULL_MX = false;	
 	
 	/**
-	 * Class for finding nearest giving query.
+	 * Class for finding nearest giving query. Normally run on servlet, and not locally.
 	 */
 	public static class ThmSearchQuery{
 		private static final int QUERY_VEC_LENGTH;
-		private static final KernelLink ml;	
+		//private static final KernelLink ml;	
 		private static final String V_MX;
 		private static final boolean DEBUG = false;
 		
@@ -70,17 +71,19 @@ public class ThmSearch {
 					//"\"/usr/local/Wolfram/Mathematica/11.0/Executables/MathKernel\" -mathlink"};
 			ARGV = new String[]{"-linkmode", "launch", "-linkname", "math -mathlink"};
 		}*/
-		
-		ml = FileUtils.getKernelLinkInstance();		
+		//this ml should only be used at initialization. 
+		WLEvaluationMedium ml;
+		ml = FileUtils.acquireWLEvaluationMedium();		
 		String msg = "Kernel instance acquired...";
 		logger.info(msg);
 		int vector_vec_length = -1;
 		
-		try{
+		//try{
 			ServletContext servletContext = CollectThm.getServletContext();
 			//String pathToMx = "src/thmp/data/termDocumentMatrixSVD.mx";
 			/*Need to load both projection matrices, and the matrix of combined 
 			  projected thm vectors */
+			//WL  initialization is redundant if running on server, should have been initialized with server pool.
 			
 			/*mx file also depends on the system!*/
 			String pathToProjectionMx = getSystemProjectionMxFilePath();
@@ -103,8 +106,9 @@ public class ThmSearch {
 			}
 			//need both Projection mx and the matrices containing row vectors corresponding to lists!
 			
-			ml.evaluate("AppendTo[$ContextPath, \""+ TermDocumentMatrix.PROJECTION_MX_CONTEXT_NAME +"\"];");
-			ml.discardAnswer();			
+			evaluateWLCommand(ml, "AppendTo[$ContextPath, \""+ TermDocumentMatrix.PROJECTION_MX_CONTEXT_NAME +"\"]", false, true);
+			//ml.evaluate("AppendTo[$ContextPath, \""+ TermDocumentMatrix.PROJECTION_MX_CONTEXT_NAME +"\"];");
+			//ml.discardAnswer();			
 			
 			if(USE_FULL_MX){
 				V_MX = TermDocumentMatrix.FULL_TERM_DOCUMENT_MX_NAME;
@@ -129,10 +133,11 @@ public class ThmSearch {
 			//should uncompress using this code here.
 			
 			//ml.evaluate("Length[corMx[[1]]]");
-			ml.evaluate("Length[" + TermDocumentMatrix.PROJECTION_MX_CONTEXT_NAME +"corMx]");
-			ml.waitForAnswer();			
+			Expr vecLengthExpr = evaluateWLCommand(ml, "Length[" + TermDocumentMatrix.PROJECTION_MX_CONTEXT_NAME +"corMx]", true, true);
+			//ml.evaluate("Length[" + TermDocumentMatrix.PROJECTION_MX_CONTEXT_NAME +"corMx]");
+			//ml.waitForAnswer();			
 			try{
-				vector_vec_length = ml.getExpr().asInt();
+				vector_vec_length = vecLengthExpr.asInt();
 				String msg1 = "ThmSearch - mx row dimension (num of words): " + vector_vec_length;
 				System.out.println(msg1);
 				logger.info(msg1);
@@ -142,11 +147,11 @@ public class ThmSearch {
 				throw new IllegalStateException(msg1);
 			}
 			
-		}catch(MathLinkException e){
+		/*}catch(MathLinkException e){
 			msg = "MathLinkException when loading mx file!";
 			logger.error(msg + e);
 			throw new IllegalStateException(msg, e);
-		}
+		}*/
 		QUERY_VEC_LENGTH = vector_vec_length;
 	}
 	
@@ -165,22 +170,20 @@ public class ThmSearch {
 	 * @throws ExprFormatException 
 	 */
 	public static List<Integer> findNearestVecs(String queryVecStr, int ... num){
-		try{
+		WLEvaluationMedium medium = FileUtils.acquireWLEvaluationMedium();
+		//try{
 			//ml.evaluate("corMx");
 			//System.out.println("thmsearch - corMx : " + ml.getExpr());
 			String msg = "Transposing and applying corMx...";
 			logger.info(msg);
 			//process query first with corMx. Convert to column vec.
-			
-			ml.evaluate("queryVecStrTranspose= Transpose[" + queryVecStr + "]; "
-					+ "q0 = queryVecStrTranspose + 0.08*corMx.queryVecStrTranspose;");
-			boolean getQ = false;
-			if(getQ){
-				ml.waitForAnswer();
-				Expr qVec = ml.getExpr();
+			boolean getResult = false;
+			Expr qVec = evaluateWLCommand(medium, "queryVecStrTranspose= Transpose[" + queryVecStr + "]; "
+					+ "q0 = queryVecStrTranspose + 0.08*corMx.queryVecStrTranspose;", getResult, true);
+			//ml.evaluate("queryVecStrTranspose= Transpose[" + queryVecStr + "]; "
+				//	+ "q0 = queryVecStrTranspose + 0.08*corMx.queryVecStrTranspose;");
+			if(getResult){				
 				logger.info("ThmSearch - transposed queryVecStr: " + qVec);				
-			}else{
-				ml.discardAnswer();
 			}
 			
 			//ml.evaluate("corMx");
@@ -211,27 +214,24 @@ public class ThmSearch {
 			//ml.evaluate("q = dInverse.uTranspose.(q0/.{0.0->mxMeanValue})");
 			if(!USE_FULL_MX){
 				/*q is column vector*/
-				ml.evaluate("q = dInverse.uTranspose.q0;");
+				getResult = false;
+				qVec = evaluateWLCommand(medium, "q = dInverse.uTranspose.q0;", getResult, true);
+				//ml.evaluate("q = dInverse.uTranspose.q0;");
 				//ml.discardAnswer();			
-				getQ = false;
-				if(getQ){
-					ml.waitForAnswer();
-					Expr qVec = ml.getExpr();
+				if(getResult){
 					logger.info("ThmSearch - dInverse.uTranspose.(q0/.{0.0->mxMeanValue}): " + qVec);
 					//System.out.println("qVec: " + qVec);
-				}else{				
-					ml.discardAnswer();
 				}
 				
-				if(DEBUG){
-					System.out.println("The Nontrivial Values in query vec: " + evaluateWLCommand(ml, 
+				if(DEBUG){					
+					System.out.println("The Nontrivial Values in query vec: " + evaluateWLCommand(medium, 
 							"q1=Transpose[q][[1]]; pos=Position[q1, Except[0.]]; Map[Part[q1, #]&, pos]", true, true));
 				}
 			}else{
-				evaluateWLCommand(ml,"q = q0");
-				System.out.println("Nontrivial Pos: " + evaluateWLCommand(ml, 
+				evaluateWLCommand(medium,"q = q0", false, true);
+				System.out.println("Nontrivial Pos: " + evaluateWLCommand(medium, 
 						"q1=Transpose[q0][[1]]; pos=Position[q1, Except[0.]]", true, true));
-				System.out.println("Values at Pos: " + evaluateWLCommand(ml, 
+				System.out.println("Values at Pos: " + evaluateWLCommand(medium, 
 						"Map[Part[q1, #]&, pos]", true, true));
 			}
 			
@@ -240,9 +240,9 @@ public class ThmSearch {
 			/*ml.evaluate("q = q + vMeanValue;");
 			ml.discardAnswer();*/
 			//System.out.println("q + vMeanValue: " + ml.getExpr());
-		}catch(MathLinkException e){
+		/*}catch(MathLinkException e){
 			throw new IllegalStateException(e);
-		}
+		}*/
 		//vMeanValue
 		//use Nearest to get numNearest number of nearest vectors, 
 		int numNearest;
@@ -257,23 +257,23 @@ public class ThmSearch {
 		
 		int[] nearestVecArray;
 		try{
-			String msg = "Applying Nearest[]...";
+			msg = "Applying Nearest[]...";
 			System.out.println(msg);
 			logger.info(msg);
 			
 			if(DEBUG){
-				System.out.println("Dimensions[vMx] " + evaluateWLCommand(ml, "Dimensions["+V_MX+"]", true, true));
+				System.out.println("Dimensions[vMx] " + evaluateWLCommand(medium, "Dimensions["+V_MX+"]", true, true));
 			}
 			//System.out.println("Dimensions@First@Transpose[q] " + evaluateWLCommand(ml, "Dimensions[First@Transpose[q]]", true, true));
 			//String vMx = TermDocumentMatrix.COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME;
-			ml.evaluate("Nearest["+V_MX+"->"+ combinedTDMatrixRangeListName +", First@Transpose[q],"+numNearest+", Method->\"Scan\"] - " 
-					+ LIST_INDEX_SHIFT);
-			//ml.evaluate("Nearest[v->Range[Dimensions[v][[1]]], First@Transpose[q],"+numNearest+"] - " + LIST_INDEX_SHIFT);
+			Expr nearestVec = evaluateWLCommand(medium, "Nearest["+V_MX+"->"+ combinedTDMatrixRangeListName +", First@Transpose[q],"+numNearest+", Method->\"Scan\"] - " 
+					+ LIST_INDEX_SHIFT, true, false);
+			//ml.evaluate("Nearest["+V_MX+"->"+ combinedTDMatrixRangeListName +", First@Transpose[q],"+numNearest+", Method->\"Scan\"] - " 
+				//	+ LIST_INDEX_SHIFT);
 			
-			ml.waitForAnswer();
-			Expr nearestVec = ml.getExpr();
-			//ml.discardAnswer();
-			//System.out.println(nearestVec.length() + "  " + Arrays.toString((int[])nearestVec.part(1).asArray(Expr.INTEGER, 1)));
+			//ml.waitForAnswer();
+			//Expr nearestVec = ml.getExpr();
+			
 			//turn into list.
 			msg = "SVD returned nearestVec! ";
 			System.out.println(msg);
@@ -283,13 +283,12 @@ public class ThmSearch {
 			 //<--this line generates exprFormatException if sucessive entries are quickly entered.
 			//System.out.println("resulting Expr nearestVec: " + nearestVec);
 			nearestVecArray = (int[])nearestVec.asArray(Expr.INTEGER, 1);
-		}catch(MathLinkException e){
-			logger.error("MathLinkException! " + e.getStackTrace());
-			throw new RuntimeException(e);
 		}catch(ExprFormatException e){
 			logger.error("ExprFormatException! " + e.getStackTrace());
 			throw new RuntimeException(e);
 		}
+		
+		FileUtils.releaseWLEvaluationMedium(medium);
 		Integer[] nearestVecArrayBoxed = ArrayUtils.toObject(nearestVecArray);
 		List<Integer> nearestVecList = Arrays.asList(nearestVecArrayBoxed);
 		
@@ -301,6 +300,7 @@ public class ThmSearch {
 		}
 		System.out.println("~~~~~");
 		//System.out.println("nearestVecList from within ThmSearch.java: " + nearestVecList);
+		
 		return nearestVecList;
 	}
 	
@@ -402,8 +402,9 @@ public class ThmSearch {
 			System.out.println("MathLink created! "+ ml);
 			//discard initial pakets the kernel sends over.
 			ml.discardAnswer();*/
-			ml = FileUtils.getKernelLinkInstance();
-
+			WLEvaluationMedium medium = FileUtils.acquireWLEvaluationMedium();
+			//ml = FileUtils.getKernelLinkInstance();
+			
 			//int rowDimension = docMx.length;
 			int rowDimension = thmWordsFreqMap.size();
 			//int mxColDim = docMx[0].length;
@@ -423,14 +424,15 @@ public class ThmSearch {
 			logger.info(msg);
 			
 			//ml.evaluate(mxSB.toString()); //mxSB.append(";") here causes memory bloat?!			
-			evaluateWLCommand(FULL_TERM_DOCUMENT_MX_NAME + "=" + mxSB.toString());
+			evaluateWLCommand(medium, FULL_TERM_DOCUMENT_MX_NAME + "=" + mxSB.toString(), false, true);
 			//System.out.println("ThmSearch.TermDocumentMatrix.SparseArray formed: " + mxSB);
 			
 			msg = "Kernel has the matrix!";
 			logger.info(msg);
 			System.out.println(msg);
 			//don't use special context for now, March 2017
-			evaluateWLCommand("DumpSave[\"" + fullTermDocumentMxPath + "\"," + FULL_TERM_DOCUMENT_MX_NAME + "]");
+			evaluateWLCommand(medium, "DumpSave[\"" + fullTermDocumentMxPath + "\"," + FULL_TERM_DOCUMENT_MX_NAME + "]", false, true);
+			FileUtils.releaseWLEvaluationMedium(medium);
 		}
 		
 		/**
@@ -446,11 +448,12 @@ public class ThmSearch {
 			String msg = "ThmSearch.TermDocumentMatrix.projectTermDocumentMatrix - starting projection";
 			System.out.println(msg);
 			logger.info(msg);
-			evaluateWLCommand("<<"+projectionMxPath + "; AppendTo[$ContextPath, \"" + PROJECTION_MX_CONTEXT_NAME + "\"]");
+			WLEvaluationMedium medium = FileUtils.acquireWLEvaluationMedium();
+			evaluateWLCommand(medium, "<<"+projectionMxPath + "; AppendTo[$ContextPath, \"" + PROJECTION_MX_CONTEXT_NAME + "\"]", false, true);
 			//full mx that was DumpSave'd from one tar file.
 			//may not be using context!
-			evaluateWLCommand("<<"+fullTermDocumentMxPath// + "; AppendTo[$ContextPath," + PROJECTED_MX_CONTEXT_NAME + "]"
-					);	
+			evaluateWLCommand(medium, "<<"+fullTermDocumentMxPath// + "; AppendTo[$ContextPath," + PROJECTED_MX_CONTEXT_NAME + "]"
+					, false, true);	
 			//evaluateWLCommand(PROJECTED_MX_CONTEXT_NAME , true, false);
 			String fullTDMxName = FULL_TERM_DOCUMENT_MX_NAME;
 			String dInverseName = D_INVERSE_NAME;
@@ -458,10 +461,11 @@ public class ThmSearch {
 			String corMxName = COR_MX_NAME;
 			ProjectionMatrix.applyProjectionMatrix(fullTDMxName, dInverseName, uTransposeName, 
 					corMxName, PROJECTED_MX_NAME);
-			evaluateWLCommand("DumpSave[\"" + projectedTermDocumentMxPath + "\", "+ PROJECTED_MX_NAME+ "]");
+			evaluateWLCommand(medium, "DumpSave[\"" + projectedTermDocumentMxPath + "\", "+ PROJECTED_MX_NAME+ "]", false, true);
 			msg = "ThmSearch.TermDocumentMatrix.projectTermDocumentMatrix - Done projecting";
 			System.out.println(msg);
 			logger.info(msg);
+			FileUtils.releaseWLEvaluationMedium(medium);
 		}
 		
 		public static void createTermDocumentMatrixSVD() {	
