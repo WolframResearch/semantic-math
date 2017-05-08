@@ -269,6 +269,7 @@ public class WLCommand implements Serializable{
 	
 	static {	
 		negativeTriggerCommandsMap = new HashMap<String, String>();
+		negativeTriggerCommandsMap.put("HasProperty", "HasNotProperty");
 		negativeTriggerCommandsMap.put("~HasProperty~", " ~HasNotProperty~ ");
 		negativeTriggerCommandsMap.put(" ~HasProperty~ ", " ~HasNotProperty~ ");
 		negativeTriggerCommandsMap.put(" ~HasProperty~ {", " ~HasNotProperty~ {");
@@ -369,7 +370,7 @@ public class WLCommand implements Serializable{
 		public static enum PosTermConnotation{
 			DEFINING, /*e.g. entity field*/
 			DEFINED, /*e.g. variable $F$*/
-			NONE;			
+			NONE;			 
 		}
 		
 		/**
@@ -1495,7 +1496,7 @@ public class WLCommand implements Serializable{
 				}*/
 				//	System.out.println("WLCommand triggerPosTer: " + triggerPosTerm.isPropertyTerm + " " + triggerPosTerm);
 				nextWord = nextStruct.simpleToString(true, curCommand, triggerPosTerm, term, termExprList);
-				System.out.println("WLCommand - term/termExprList " + term + " / " + termExprList);
+				//System.out.println("WLCommand - term/termExprList " + term + " / " + termExprList);
 				//System.out.println("WLCommand - nextWord: " + nextWord + " for struct: " + nextStruct);
 				//simple way to present the Struct
 				//set to the head struct the currently built command will be appended to
@@ -1539,7 +1540,7 @@ public class WLCommand implements Serializable{
 					} */
 				}				
 			} else {
-				//auxilliary Strings inside a WLCommand, eg "[", "\[Element]", ~HasProperty~	
+				//auxilliary Strings inside a WLCommand, eg "[", "~".	
 				nextWord = term.commandComponent.posStr;
 				//System.out.print("nextWord : " + nextWord + "prevStruct: " + prevStructHeaded);
 				if(commandNegatedBool){
@@ -1618,6 +1619,7 @@ public class WLCommand implements Serializable{
 			if(singleArgListSz > 1){
 				entryExpr = ExprUtils.listExpr(singleArgList);
 			}else{
+				System.out.println("WLCommand - curCommand " + curCommand);
 				entryExpr = singleArgList.get(0);
 			}
 			exprArgsAr[exprArgsArCounter++] = entryExpr;			
@@ -1658,14 +1660,20 @@ public class WLCommand implements Serializable{
 	 */
 	private static void addTermExprToTMap(Map<Integer, List<Expr>> exprArgsListTMap, int curArgNumCount, PosTerm term,
 			List<Expr> termExprList) {
+		if(!term.includeInBuiltString() || term.positionInMap == WLCommandsList.AUXINDEX
+				|| term.positionInMap == WLCommandsList.WL_DIRECTIVE_INDEX){
+			return;
+		}
 		//insert into TreeMap with appropriate slot number, 
 		int termSlotNum = term.argNum == PosTerm.DEFAULT_ARG_NUM ? curArgNumCount : term.argNum;
 		List<Expr> argNumExprList = exprArgsListTMap.get(termSlotNum);
+		
 		if(null == argNumExprList){
 			argNumExprList = new ArrayList<Expr>();
 			argNumExprList.addAll(termExprList);
+			//if(termExprList.isEmpty()) throw new RuntimeException(term+ " ....." +termExprList.toString());
 			exprArgsListTMap.put(termSlotNum, argNumExprList);
-		}else{
+		}else{			
 			argNumExprList.addAll(termExprList);
 		}
 	}
@@ -1836,7 +1844,10 @@ public class WLCommand implements Serializable{
 		//System.out.println("GOT HERE****** posTermList " + posTermList + " i-1: " + (lastAddedComponentIndex-1));
 		int i = lastAddedComponentIndex;
 		//short-circuit if trigger is the first nontrivial term.
-		if(before && onlyTrivialTermsBefore(posTermList, i-1)){				
+		if(before && onlyTrivialTermsBefore(posTermList, i-1)){
+			if("element".equals(curCommand.triggerWord)){
+				System.out.print("");
+			}
 			return new CommandSat(false, curCommand.optionalTermsCount > 0, false, true);
 		}
 		
@@ -1912,8 +1923,10 @@ public class WLCommand implements Serializable{
 					//commandComponentPosPattern.matcher(structType) + (isOptionalTerm || curPosTerm.isNegativeTerm()) + posTermPositionInMap);
 		}
 		
-		//System.out.println("GOT HERE****** newStruct " + newStruct);
 		//int addedComponentsColSz = commandsMap.get(commandComponent).size();
+		/*if("verbAlone".equals(curCommand.triggerWord)){
+			System.out.println("WLCommand - trigger verbAlone, curPosTerm.isNegativeTerm() "+ curPosTerm.isNegativeTerm());
+		}*/
 		
 		//disqualify term if negative term triggered
 		if(curPosTerm.isNegativeTerm() 
@@ -1985,8 +1998,7 @@ public class WLCommand implements Serializable{
 				commandSat.setBeforeTriggerSatToTrue();
 			}			
 			return commandSat;			
-		} else {
-			
+		} else {			
 			/*if(disqualifyCommand(commandComponent, commandComponentPosPattern, commandsCountMap, commandsMap)){
 				boolean disqualified = true;
 				return new CommandSat(disqualified);
@@ -2027,10 +2039,8 @@ public class WLCommand implements Serializable{
 				//use counter to track whether map is satisfied
 				curCommand.componentCounter--;
 				break;
-			}//else if(commandComponent.posTerm.equals("WL") && commandComponentCount > 0){}
-			
+			}//else if(commandComponent.posTerm.equals("WL") && commandComponentCount > 0){}			
 		}			
-		
 		//shouldn't be < 0!
 		return curCommand.componentCounter < 1;
 		*/
@@ -2105,9 +2115,9 @@ public class WLCommand implements Serializable{
 		
 		Struct structToAdd = struct;
 		Struct structParent = struct.parentStruct();
-		if(struct.nameStr().equals("there")){
+		/*if(struct.nameStr().equals("there")){
 			System.out.print("");
-		}		
+		}*/		
 		while(structParent != null){
 			String structParentType = structParent.type();
 			String parentType = CONJ_DISJ_PATTERN.matcher(structParentType).matches() ?
@@ -2275,12 +2285,24 @@ public class WLCommand implements Serializable{
 		//System.out.println("Adding trigger component " + newStruct + " " + curCommand);
 		
 		PosTerm triggerPosTerm = curCommand.posTermList.get(curCommand.triggerWordIndex);
-		//check to see if indeed on either first or last branch
+		//check to see if on either first or last branch (i.e. bounding branch of parse tree)
 		if(checkIfFirstLastTermStructDisqualified(newStruct, triggerPosTerm)){
 			boolean disqualified = true;
 			return new CommandSat(disqualified);
 		}
-		WLCommandComponent commandComponent = triggerPosTerm.commandComponent;	
+		WLCommandComponent commandComponent = triggerPosTerm.commandComponent;
+		Pattern commandComponentPosPattern = commandComponent.posPattern;
+		Pattern commandComponentNamePattern = commandComponent.namePattern;
+		String structType = newStruct.type();
+		String structName = newStruct.nameStr();
+		
+		if(!commandComponentPosPattern.matcher(structType).matches()
+				//structType.matches(commandComponentPosTerm) 	
+				|| !commandComponentNamePattern.matcher(structName).matches()){
+			boolean disqualified = true;
+			return new CommandSat(disqualified);
+		}		
+			
 		triggerPosTerm.set_posTermStruct(newStruct);
 		newStruct.add_usedInCommand(curCommand);
 		int commandComponentCount = curCommand.commandsCountMap.get(commandComponent);

@@ -18,6 +18,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.servlet.ServletContext;
@@ -32,6 +33,7 @@ import com.wolfram.kernelserver.KernelPool;
 import com.wolfram.kernelserver.KernelPoolException;
 import com.wolfram.msp.servlet.MSPManager;
 import com.wolfram.msp.servlet.MSPStatics;
+import com.wolfram.webkernel.EvaluationException;
 import com.wolfram.webkernel.IKernel;
 
 import thmp.utils.MathLinkUtils.WLEvaluationMedium;
@@ -87,6 +89,39 @@ public class FileUtils {
 		servletContext = servletContext_;
 		mspManager = (MSPManager)servletContext.getAttribute(MSPStatics.MSP_MANAGER_ATTR);
 		kernelPool = mspManager.getKernelPool(KERNEL_POOL_NAME);
+		logger.info("setServletContext - kernelPool.getKernels(): " + kernelPool.getKernels());
+		IKernel kernel0=null;
+		/*for(Map.Entry<String, IKernel> k : kernelPool.getKernels().entrySet()){
+			kernel0 = k.getValue();
+			break;
+		}*/
+		kernel0 = kernelPool.createKernel();
+		logger.info("kernel0 created : " + kernel0);
+		//IKernel kernel0 = kernelPool.getKernels().get(0);
+		try {		
+			
+			kernel0.initialize();
+			kernelPool.registerKernel(kernel0);
+			logger.info("kernel0.evaluate(1+2) "+kernel0.evaluate("1+2"));
+		} catch (EvaluationException e) {
+			logger.error("troubel evaluating");
+			throw new IllegalStateException(e);
+		}catch (Exception e) {
+			logger.error("troubel registering and initializing");
+			throw new IllegalStateException(e);
+		}
+		/*try {
+			IKernel kernel0 = kernelPool.getKernels().get(0);
+			IKernel kernel1 = kernelPool.getKernels().get(1);
+			kernel0.initialize();
+			kernelPool.registerKernel(kernel0);
+			kernel1.initialize();
+			kernelPool.registerKernel(kernel1);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			logger.error("troubel registering and initializing");
+			throw new IllegalStateException(e);
+		}*/ 
 	}
 	
 	public static ServletContext getServletContext(){
@@ -368,9 +403,11 @@ public class FileUtils {
 			try {
 				medium = new WLEvaluationMedium(kernelPool.acquireKernel());
 			} catch (KernelPoolException e) {
-				e.printStackTrace(); //HANDLE, see how Cloud deals with it. Fall back on link?? Not great
+				//e.printStackTrace(); //HANDLE, see how Cloud deals with it. Fall back on link?? Not great
+				throw new IllegalStateException("trying to acquire " + e.getMessage());
 			} catch (InterruptedException e) {
 				e.printStackTrace(); //HANDLE, should guarantee return is no null.
+				throw new IllegalStateException(e);
 			}
 	        return medium;
 		}        

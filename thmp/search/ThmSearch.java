@@ -73,9 +73,7 @@ public class ThmSearch {
 		}*/
 		//this ml should only be used at initialization. 
 		WLEvaluationMedium ml;
-		ml = FileUtils.acquireWLEvaluationMedium();		
-		String msg = "Kernel instance acquired...";
-		logger.info(msg);
+				
 		int vector_vec_length = -1;
 		
 		//try{
@@ -92,35 +90,48 @@ public class ThmSearch {
 			String combinedProjectedMxFilePath = getSystemCombinedProjectedMxFilePath();
 			String fullMxPath = "src/thmp/data/"+TermDocumentMatrix.FULL_TERM_DOCUMENT_MX_NAME+".mx";
 			
-			if(null != servletContext){				
+			if(null != servletContext){			//this should be redundant	
 				pathToProjectionMx = servletContext.getRealPath(pathToProjectionMx);
 				combinedProjectedMxFilePath = servletContext.getRealPath(combinedProjectedMxFilePath);
 				fullMxPath = servletContext.getRealPath(fullMxPath);
 			}
 			
-			evaluateWLCommand(ml, "<<"+combinedProjectedMxFilePath, false, true);
-			evaluateWLCommand(ml, "<<"+pathToProjectionMx, false, true);
-			
-			if(USE_FULL_MX){
-				evaluateWLCommand(ml, "<<"+fullMxPath);
+			if(!USE_FULL_MX){
+				V_MX = TermDocumentMatrix.COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME;
+			}else{
+				V_MX = TermDocumentMatrix.FULL_TERM_DOCUMENT_MX_NAME;
 			}
+			
+			ml = FileUtils.acquireWLEvaluationMedium();
+			String msg = "Kernel instance acquired in ThmSearchQuery...";
+			logger.info(msg);
+
+			if(null == servletContext){				
+				evaluateWLCommand(ml, "<<"+combinedProjectedMxFilePath, false, true);
+				evaluateWLCommand(ml, "<<"+pathToProjectionMx, false, true);
+				evaluateWLCommand(ml, "AppendTo[$ContextPath, \""+ TermDocumentMatrix.PROJECTION_MX_CONTEXT_NAME +"\"]", false, true);	
+				if(!USE_FULL_MX){
+					evaluateWLCommand(ml, combinedTDMatrixRangeListName + "= Range[Length["+V_MX+"]]", false, true);
+				}
+				if(USE_FULL_MX){
+					evaluateWLCommand(ml, "<<"+fullMxPath);
+				}				
+				if(USE_FULL_MX){				
+					//make rows be theorems
+					evaluateWLCommand(ml, V_MX + "= Transpose["+ V_MX + "]");
+					evaluateWLCommand(ml, combinedTDMatrixRangeListName + "= Range[Length["+V_MX+"]];"
+							+ V_MX + "= Normal["+V_MX+"]", false, true);				
+					System.out.println("FULL DIM MX LEN (num thms) " + evaluateWLCommand(ml, "Length["+combinedTDMatrixRangeListName+"]", true, true));
+				}/*else{
+					V_MX = TermDocumentMatrix.COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME;
+					evaluateWLCommand(ml, combinedTDMatrixRangeListName + "= Range[Length["+V_MX+"]]", false, true);
+				}*/
+			}			
+			
 			//need both Projection mx and the matrices containing row vectors corresponding to lists!
 			
-			evaluateWLCommand(ml, "AppendTo[$ContextPath, \""+ TermDocumentMatrix.PROJECTION_MX_CONTEXT_NAME +"\"]", false, true);
 			//ml.evaluate("AppendTo[$ContextPath, \""+ TermDocumentMatrix.PROJECTION_MX_CONTEXT_NAME +"\"];");
-			//ml.discardAnswer();			
-			
-			if(USE_FULL_MX){
-				V_MX = TermDocumentMatrix.FULL_TERM_DOCUMENT_MX_NAME;
-				//make rows be theorems
-				evaluateWLCommand(ml, V_MX + "= Transpose["+ V_MX + "]");
-				evaluateWLCommand(ml, combinedTDMatrixRangeListName + "= Range[Length["+V_MX+"]];"
-						+ V_MX + "= Normal["+V_MX+"]", false, true);				
-				System.out.println("FULL DIM MX LEN (num thms) " + evaluateWLCommand(ml, "Length["+combinedTDMatrixRangeListName+"]", true, true));
-			}else{
-				V_MX = TermDocumentMatrix.COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME;
-				evaluateWLCommand(ml, combinedTDMatrixRangeListName + "= Range[Length["+V_MX+"]]", false, true);
-			}
+			//ml.discardAnswer();
 			
 			/*String vMx;
 			if(USE_FULL_MX){
@@ -145,8 +156,9 @@ public class ThmSearch {
 				String msg1 = "ExprFormatException when getting row dimension! " + e.getMessage();
 				logger.error(msg1);
 				throw new IllegalStateException(msg1);
+			}finally{
+				FileUtils.releaseWLEvaluationMedium(ml);				
 			}
-			
 		/*}catch(MathLinkException e){
 			msg = "MathLinkException when loading mx file!";
 			logger.error(msg + e);
@@ -286,9 +298,10 @@ public class ThmSearch {
 		}catch(ExprFormatException e){
 			logger.error("ExprFormatException! " + e.getStackTrace());
 			throw new RuntimeException(e);
-		}
+		}finally{
+			FileUtils.releaseWLEvaluationMedium(medium);
+		}		
 		
-		FileUtils.releaseWLEvaluationMedium(medium);
 		Integer[] nearestVecArrayBoxed = ArrayUtils.toObject(nearestVecArray);
 		List<Integer> nearestVecList = Arrays.asList(nearestVecArrayBoxed);
 		
@@ -478,7 +491,7 @@ public class ThmSearch {
 				//discard initial pakets the kernel sends over.
 				ml.discardAnswer();*/
 				ml = FileUtils.getKernelLinkInstance();
-				String msg = "Kernel instance acquired...";
+				String msg = "Kernel instance acquired in createTermDocumentMatrixSVD...";
 				logger.info(msg);
 				//int rowDimension = docMx.length;
 				int rowDimension = TriggerMathThm2.mathThmMxRowDim();
@@ -673,7 +686,7 @@ public class ThmSearch {
 				//discard initial pakets the kernel sends over.
 				ml.discardAnswer();*/
 				ml = FileUtils.getKernelLinkInstance();
-				String msg = "Kernel instance acquired...";
+				String msg = "Kernel instance acquired in createTermDocumentMatrixSVD...";
 				logger.info(msg);
 				//int rowDimension = docMx.length;
 				int rowDimension = TriggerMathThm2.mathThmMxRowDim();

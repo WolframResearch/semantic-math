@@ -148,6 +148,7 @@ public class ParseEqualityCheck {
 	
 	public static boolean checkParse(ParseResult parseResult){
 		String inputString = parseResult.inputString();
+		System.out.println("ParseEqualityCheck - input " + inputString);
 		ParseStruct desiredHeadParseStruct = parseResult.headParseStruct();
 		boolean isVerbose = false;
 		ParseStateBuilder parseStateBuilder = new ParseStateBuilder();		

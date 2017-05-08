@@ -822,8 +822,10 @@ public class ParseToWLTree{
 		/*if(structWrapperListSz>1){
 			throw new IllegalStateException(structWrapperListSz+"");
 		}*/
-
+		//System.out.println("ParseToWLTree - wrapperList Size" + structWrapperListSz);
+		//System.out.println("wrapperList" + structWrapperList);
 		boolean noClashCommandFound = false;
+		//Iterate backwards, since the ones that are built later should have wider scope, i.e. cover more of the tree
 		for(int i = structWrapperListSz - 1; i > -1; i--){	
 			WLCommandWrapper curWrapper = structWrapperList.get(i);
 			WLCommand curCommand = curWrapper.wlCommand;
@@ -858,9 +860,6 @@ public class ParseToWLTree{
 					//&& struct.WLCommandStrVisitedCount() == 0
 					){
 				
-				//System.out.println("wrapperList Size" + structWrapperListSz);
-				//System.out.println(struct.WLCommandStr());
-				//parsedSB.append(struct.WLCommandStr());
 				parsedSB.append(curWrapper.wlCommandStr);
 				
 				//form the int[] contex vector by going down struct				
@@ -1111,7 +1110,7 @@ public class ParseToWLTree{
 		 * in the order the commands are built: inner -> outer, earlier ->
 		 * later.
 		 */
-		private transient WLCommand wlCommand;
+		private WLCommand wlCommand;
 		//WLCommand's index in list
 		private int listIndex;
 		//built command String associated with this command.

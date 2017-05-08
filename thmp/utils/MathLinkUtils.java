@@ -12,7 +12,7 @@ import com.wolfram.webkernel.IKernel;
 
 public class MathLinkUtils {
 	//to be used locally, not on server.
-	private static final KernelLink localMathLink = FileUtils.getKernelLinkInstance();
+	//private static final KernelLink localMathLink = FileUtils.getKernelLinkInstance();
 	//private static ServletContext servletContext;
 	//placeholder Expr to avoid using null.
 	private static final Expr PLACEHOLDER_EXPR = new Expr("");

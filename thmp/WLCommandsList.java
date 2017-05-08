@@ -54,7 +54,7 @@ public class WLCommandsList {
 	 * Use the getter below instead of public!
 	 */
 	public static final int WL_DIRECTIVE_INDEX = -1;
-
+	/* e.g. "[", "~" */
 	public static final int AUXINDEX = -2;
 	private static final int DEFAULT_POSITION_IN_MAP = Integer.MIN_VALUE;
 	
@@ -86,6 +86,8 @@ public class WLCommandsList {
 		triggerWordLookupMapBuilder.put("are not", "is");
 		triggerWordLookupMapBuilder.put("has", "have");
 		triggerWordLookupMapBuilder.put("has no", "is");
+		
+		triggerWordLookupMapBuilder.put("exists", "exist");
 		//triggerWordLookupMapBuilder.put("have", "is");
 		
 		triggerWordLookupMapBuilder.put("letbe", "if");
@@ -146,11 +148,11 @@ public class WLCommandsList {
 		 */
 		/*****General-scope commands******/
 		//triggered by types. Add such judiciously.
-		//the commands with types as keys are triggered only if no specific-scope commands have been triggered
 		//e.g. $f$ maps $X$ to $Y$.
 		putToWLCommandMapBuilder(wLCommandMapBuilder, "verb", new PBuilder("det|symb|ent|pro|noun", null, true), 
 				//new PBuilder("pro", "we", WLCommand.PosTermType.NEGATIVE),
-				new PBuilder("verb|vbs", null, WLCommand.PosTermType.NEGATIVE), new PBuilder(" ~"), new PBuilder("Connective").makeExprHead(),
+				new PBuilder("verb|vbs", null, WLCommand.PosTermType.NEGATIVE), 
+				new PBuilder(" ~"), new PBuilder("Connective").makeExprHead(),
 				new PBuilder("["), new PBuilder("verb", null, true, true, false).makeExprHeadArg(), new PBuilder("]~ "),
 				new PBuilder("verb|vbs", null, WLCommand.PosTermType.NEGATIVE), new PBuilder(" {", "OPT"), 
 				new PBuilder("symb|ent|noun|adj|prep|phrase|qualifier", null, true, false, false).addRelationType(RelationType._IS),
@@ -170,8 +172,8 @@ public class WLCommandsList {
 				);	
 		//e.g. "The field extension $F/Q$ splits."
 		putToWLCommandMapBuilder(wLCommandMapBuilder, "verbAlone", new PBuilder("symb|ent|pro|noun", null, true).addRelationType(RelationType._IS), 
-				new PBuilder("pro", "we", WLCommand.PosTermType.NEGATIVE), new PBuilder(" ~"), new PBuilder("HasProperty").makeExprHead(),
-				new PBuilder("~ {"), new PBuilder("verbAlone", null, true, true, false).addRelationType(RelationType.IS_), 
+				new PBuilder(null, "we", WLCommand.PosTermType.NEGATIVE), new PBuilder(" ~"), new PBuilder("HasProperty").makeExprHead(),
+				new PBuilder("~ {"), new PBuilder("verbAlone", "^(?:(?!exist)).+", true, true, false).addRelationType(RelationType.IS_), 
 				new PBuilder(" ,", "OPT"), new PBuilder("prep|qualifier", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}"));	
 		
 		/*e.g. If $x > y$.*/
@@ -209,6 +211,10 @@ public class WLCommandsList {
 				new PBuilder("Exist").makeExprHead(), new PBuilder("["),
 				new PBuilder(null, "exists*|is|are", false), new PBuilder("ent|symb|phrase|noun", null, true, RelationType.EXIST),
 				 new PBuilder("]" ));
+		putToWLCommandMapBuilder(wLCommandMapBuilder, "exist", new PBuilder("Exist").makeExprHead(), new PBuilder("["),
+				new PBuilder("ent|symb|phrase|noun", null, true, RelationType.EXIST),
+				new PBuilder(null, "exists*", false, true, false), 
+				new PBuilder("]" ));
 		
 		//putToWLCommandMapBuilder(wLCommandMapBuilder, "is", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is|are|be, trigger",
 			//	"\\[Element]", "symb|ent|phrase, , true, TriggerMathObj" }));
@@ -251,7 +257,7 @@ public class WLCommandsList {
 		//***action*** commands
 		putToWLCommandMapBuilder(wLCommandMapBuilder, "is", new PBuilder("symb|ent|pro|noun|det", null, true, false, false, //PosTermConnotation.DEFINED,
 				RelationType._IS), 
-				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), new PBuilder(" ~"), new PBuilder("HasProperty").makeExprHead(), //new PBuilder(" \\[Element] "),
+				new PBuilder("verb|vbs|be", "is|are|be|has no", false, true, false), new PBuilder(" ~"), new PBuilder("HasProperty").makeExprHead(), //new PBuilder(" \\[Element] "),
 				new PBuilder("~ "), //negative term, to stop command if encountered
 				new PBuilder("adj", null, WLCommand.PosTermType.NEGATIVE), //new PBuilder("{", "OPT1"), 
 				//new PBuilder("pre", null, true, false, "OPT1"),
@@ -260,7 +266,7 @@ public class WLCommandsList {
 		//merge these two?!
 		//e.g. "$X$ is connected", "$F$ is isomorphic to ..."
 		putToWLCommandMapBuilder(wLCommandMapBuilder, "is", new PBuilder("symb|ent|pro|noun|det", null, true, RelationType._IS), 
-				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), new PBuilder(" ~"),
+				new PBuilder("verb|vbs|be|has no", "is|are|be", false, true, false), new PBuilder(" ~"),
 				new PBuilder("HasProperty").makeExprHead(), new PBuilder("~ "), new PBuilder("{", "OPT"), 
 				new PBuilder("adj|ent|phrase|noun|prep|qualifier", null, true, false, false, RelationType.IS_).makePropertyTerm(),
 				new PBuilder(", {\"Qualifier\"->", "OPT"), 

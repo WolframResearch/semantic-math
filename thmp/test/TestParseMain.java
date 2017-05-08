@@ -264,7 +264,7 @@ public class TestParseMain {
 		
 		@SuppressWarnings("unchecked")
 		List<ParseResult> parseResultList = (List<ParseResult>)FileUtils.deserializeListFromFile(serialFileStr);
-		System.out.println("parseResultList " +parseResultList);
+		//System.out.println("parseResultList " +parseResultList); //encounter null Expr in Rule Expr, cause did not make Expr serializable
 		return parseResultList;
 	}
 	
