@@ -430,6 +430,7 @@ public class WLCommand implements Serializable{
 		private int argNum = DEFAULT_ARG_NUM;
 		private boolean isExprHead;
 		private boolean isExprHeadArg;
+		private boolean isOptionalTermHead;
 		//relationType for building relation vectors. 
 		private List<RelationType> relationType;
 		
@@ -465,6 +466,7 @@ public class WLCommand implements Serializable{
 			private int argNum = DEFAULT_ARG_NUM;
 			private boolean isExprHead;
 			private boolean isExprHeadArg;
+			private boolean isOptionalTermHead;
 			//0 by default
 			private int optionalGroupNum;
 			//relationType for building relation vectors. 
@@ -730,6 +732,15 @@ public class WLCommand implements Serializable{
 				return this;
 			}
 			/**
+			 * make into head for a group of optional terms.
+			 * @return
+			 */
+			public PBuilder makeOptionalTermHead(){
+				this.isOptionalTermHead = true;
+				return this;
+			}
+			
+			/**
 			 * Set special position the struct for term must occur in Struct tree, e.g. FIRST.
 			 * For e.g. "Fix a prime $p$"
 			 * @param positionInStructTree_
@@ -763,7 +774,7 @@ public class WLCommand implements Serializable{
 				
 				if(this.isOptionalTerm){
 					return new OptionalPosTerm(commandComponent, positionInMap, includeInBuiltString,
-							isTriggerMathObj, optionalGroupNum, relationTypeList, positionInStructTree);
+							isTriggerMathObj, optionalGroupNum, relationTypeList, positionInStructTree, isOptionalTermHead);
 				}else if(this.isNegativeTerm){
 					return new NegativePosTerm(commandComponent, positionInMap);
 				}else{
@@ -792,6 +803,7 @@ public class WLCommand implements Serializable{
 				boolean isTrigger, boolean isTriggerMathObj, PosTermConnotation posTermConnotation,
 				List<RelationType> relationTypeList, PositionInStructTree positionInStructTree, boolean isPropertyTerm_,
 				int argNum_, boolean isExprHead_, boolean isExprHeadArg_){
+			
 			this(commandComponent, position, includeInBuiltString, isTrigger, isTriggerMathObj, posTermConnotation,
 					relationTypeList, positionInStructTree, isPropertyTerm_);
 			this.isExprHead = isExprHead_;
@@ -878,12 +890,21 @@ public class WLCommand implements Serializable{
 		}
 		
 		/**
-		 * optionalGroupNum can only be called on optionalPosTerm.
-		 * @return
+		 * optionalGroupNum should only be called on optionalPosTerm. 
+		 * Else an UnsupportedOperationException is thrown.
+		 * @return The group number for this optional term.
 		 */
 		public int optionalGroupNum(){			
 			throw new UnsupportedOperationException(
 					"Cannot call optionalGroupNum() on a non-optional PosTerm!");
+		}
+		
+		/**
+		 * optional term heads could be auxiliary string, so don't necessarily count as "optional term".
+		 * @return
+		 */
+		public boolean isOptionalTermHead(){
+			return isOptionalTermHead;
 		}
 		
 		/**
@@ -956,21 +977,23 @@ public class WLCommand implements Serializable{
 		
 		public OptionalPosTerm(WLCommandComponent commandComponent, int position, boolean includeInBuiltString,
 				boolean triggerMathObj, int optionalGroupNum, List<RelationType> relationType, 
-				PositionInStructTree positionInStructTree) {
+				PositionInStructTree positionInStructTree, boolean isOptionalTermHead_) {
 			//cannot be trigger if optional term
 			super(commandComponent, position, includeInBuiltString, false, triggerMathObj,
 					PosTermConnotation.NONE, relationType, positionInStructTree, false);
-			this.optionalGroupNum = optionalGroupNum;			
+			this.optionalGroupNum = optionalGroupNum;
+			super.isOptionalTermHead = isOptionalTermHead_;
 		}
 		
 		/**
-		 * Copies PosTerm.
+		 * Copies optional PosTerm.
 		 * @return
 		 */
 		@Override
 		public PosTerm termDeepCopy(){			
 			return new OptionalPosTerm(super.commandComponent, super.positionInMap, super.includeInBuiltString,
-					super.triggerMathObj, optionalGroupNum, super.relationType, super.positionInStructTree);			
+					super.triggerMathObj, optionalGroupNum, super.relationType, super.positionInStructTree,
+					super.isOptionalTermHead);			
 		}	
 		
 		/**
@@ -1349,6 +1372,41 @@ public class WLCommand implements Serializable{
 	}
 
 	/**
+	 * Auxiliary class used in WLCommand.build(), for building optional terms Expr's.
+	 */
+	private static class OptTermsArgNumPair{
+		int curArgNumInTMap;
+		//position in list of the entry with curArgNumInTMap in argument TreeMap, exprArgsListTMap
+		int posInTMapEntryList;
+		/**
+		 * This constructor should only be used for head, or first opt term encountered
+		 * @param curArgNumInTMap_
+		 * @param exprArgsListTMap
+		 */
+		OptTermsArgNumPair(int curArgNumInTMap_, Map<Integer, List<Expr>> exprArgsListTMap){
+			this.curArgNumInTMap = curArgNumInTMap_;
+			List<Expr> argList = exprArgsListTMap.get(curArgNumInTMap_);
+			if(null == argList){
+				this.posInTMapEntryList = 0;
+			}else{
+				this.posInTMapEntryList = argList.size();
+			}
+			
+		}
+		
+		 int curArgNumInTMap() {
+			return curArgNumInTMap;
+		}
+
+		/**
+		 * @return position in list of the entry with curArgNumInTMap in argument TreeMap, exprArgsListTMap
+		 */
+		 int posInTMapEntryList() {
+			return posInTMapEntryList;
+		}
+		
+	}
+	/**
 	 * Builds the WLCommand from commandsMap & posTermList after it's satisfied.
 	 * Should be called after being satisfied. 
 	 * @param curCommand command being built
@@ -1364,10 +1422,22 @@ public class WLCommand implements Serializable{
 		}
 		//System.out.println("WLCommand - triggerWord " + curCommand.triggerWord);
 		ListMultimap<WLCommandComponent, Struct> commandsMap = curCommand.commandsMap;
-		//value is 0 if that group is satisfied
+		//value is 0 if that group is satisfied. 
 		Map<Integer, Integer> optionalTermsGroupCountMap = curCommand.optionalTermsGroupCountMap;
+		//map to keep track of Expr's formed for optional terms, values should be pairs of integers, 
+		//for argNum  where the num needs to be inserted into treeMap, and the position in the list of that
+		//treeMap entry
+		//Map<Expr, Integer[]> optionalExprMap = new HashMap<Expr, Integer[]>();
+		//keys are group num of optional group, values are current arg numb, and the pos in List
+		//in an entry in treemap
+		//should be used on either the first term, or the optional terms' head term for a group.
+		Map<Integer, OptTermsArgNumPair> optTermsArgNumPairMap = new HashMap<Integer, OptTermsArgNumPair>();
+		//Key is group num of optional group, value are arg strings for that Expr.
+		ListMultimap<Integer, List<Expr>> optTermsExprListMMap = ArrayListMultimap.create();
+		//head Expr's for optional terms
+		Map<Integer, String> optTermsHeadStringMap = new HashMap<Integer, String>();
 		
-		//counts should now be all 0
+		//counts should now be all 0, indicating that component has been satisfied.
 		Map<WLCommandComponent, Integer> commandsCountMap = curCommand.commandsCountMap;
 		List<PosTerm> posTermList = curCommand.posTermList;
 		int posTermListSz = posTermList.size();
@@ -1376,10 +1446,8 @@ public class WLCommand implements Serializable{
 		List<String> commandStrList = new ArrayList<String>();
 		int commandStrListTriggerIndex = -1;
 		int commandStrListCounter = 0;
-		//the latest Struct to be touched, for determining if an aux String should be displayed
-		//boolean prevStructHeaded = false;	
-		//Struct headStruct = curCommand.headStruct;
-		//determine which head to attach this command to
+		
+		//determine which struct in the tree to attach this command to
 		Struct structToAppendCommandStr = findCommandHead(commandsMap, curCommand);
 		
 		EnumMap<PosTermConnotation, Struct> connotationMap = null;
@@ -1409,11 +1477,16 @@ public class WLCommand implements Serializable{
 			if(term.isNegativeTerm()){
 				continue;
 			}
+			String termComponentPosStr = term.commandComponent.posStr;
 			if(term.isExprHead){
 				//beforeExprHead = false;
 				//posIndex should be WLCommandsList.AUXINDEX or WLCommandsList.WL_DIRECTIVE_INDEX
-				exprHeadSymbolStr = term.commandComponent.posStr;				
+				exprHeadSymbolStr = termComponentPosStr;				
 				curArgNumCount = 1;
+			}
+			if(term.isOptionalTermHead()){
+				//if(true) throw new RuntimeException("");
+				optTermsHeadStringMap.put(term.optionalGroupNum(), termComponentPosStr);
 			}
 			if(!term.includeInBuiltString){	
 				//set its head Struct to structToAppendCommandStr,
@@ -1556,14 +1629,24 @@ public class WLCommand implements Serializable{
 			
 			if(term.isOptionalTerm()){
 				int optionalGroupNum = term.optionalGroupNum();				
+				//check all optional terms are satisfied.
 				if(0 == optionalTermsGroupCountMap.get(optionalGroupNum)){
 					//commandSB.append(nextWord);//.append(" ");
 					commandStrList.add(nextWord);
-					if(term.isTrigger){
+					/*if(term.isTrigger){
 						commandStrListTriggerIndex = commandStrListCounter;
-					}
+					}*/
 					commandStrListCounter++;
-					addTermExprToTMap(exprArgsListTMap, curArgNumCount, term, termExprList);					
+					if(term.isOptionalTermHead() || !optTermsArgNumPairMap.containsKey(optionalGroupNum)){
+						OptTermsArgNumPair argNumPair = new OptTermsArgNumPair(curArgNumCount, exprArgsListTMap);
+						optTermsArgNumPairMap.put(optionalGroupNum, argNumPair) ;	
+						
+					}
+					if(term.positionInMap != WLCommandsList.AUXINDEX
+							&& term.positionInMap != WLCommandsList.WL_DIRECTIVE_INDEX){						
+						optTermsExprListMMap.put(optionalGroupNum, termExprList);
+					}					
+					/////addTermExprToTMap(exprArgsListTMap, curArgNumCount, term, termExprList);					
 				}
 			}else{
 				//commandSB.append(nextWord);//.append(" ");
@@ -1579,6 +1662,45 @@ public class WLCommand implements Serializable{
 					addTermExprToTMap(exprArgsListTMap, curArgNumCount, term, termExprList);									
 				}
 			}
+		}
+		//create make optional term Expr's, and insert in appropriate list in exprArgsListTMap.
+		for(Map.Entry<Integer, OptTermsArgNumPair> entry : optTermsArgNumPairMap.entrySet()){
+			int optTermGroupNum = entry.getKey();
+			OptTermsArgNumPair argNumPair = entry.getValue();
+			//form the Expr from Expr args. Should not be null for valid grammar rules
+			List<List<Expr>> exprList = optTermsExprListMMap.get(optTermGroupNum);
+			
+			List<Expr> combinedExprList = new ArrayList<Expr>();
+			for(List<Expr> list : exprList){
+				combinedExprList.addAll(list);
+			}
+			String curOptTermsHeadStr = optTermsHeadStringMap.get(optTermGroupNum);
+			Expr curOptExpr;
+			//curOptTermsHeadStr = null == curOptTermsHeadStr ? "List" : curOptTermsHeadStr;
+			if(null == curOptTermsHeadStr){
+				curOptExpr = ExprUtils.createExprFromList("List", combinedExprList);
+			}else{
+				Expr expr = new Expr(Expr.SYMBOL, curOptTermsHeadStr);
+				curOptExpr = ExprUtils.ruleExpr(expr, ExprUtils.createExprFromList("List", combinedExprList));
+			}
+			
+			int curArgNumInTMap = argNumPair.curArgNumInTMap;
+			int posInTermExprList = argNumPair.posInTMapEntryList;
+			List<Expr> termExprList = exprArgsListTMap.get(curArgNumInTMap);			
+			if(null == termExprList){
+				if(posInTermExprList > 0){
+					throw new IllegalWLCommandStateException("Optional terms addition: termExprList should be empty!");
+				}
+				termExprList = new ArrayList<Expr>();
+				termExprList.add(curOptExpr);
+				//if(termExprList.isEmpty()) throw new RuntimeException(term+ " ....." +termExprList.toString());
+				exprArgsListTMap.put(curArgNumInTMap, termExprList);
+			}else{
+				if(posInTermExprList > termExprList.size()){
+					throw new IllegalWLCommandStateException("Optional terms addition index is wrong!");
+				}
+				termExprList.add(posInTermExprList, curOptExpr);
+			}			
 		}		
 		
 		//"****%###structToAppendCommandStr " +structToAppendCommandStr	
@@ -1625,8 +1747,7 @@ public class WLCommand implements Serializable{
 			exprArgsAr[exprArgsArCounter++] = entryExpr;			
 		}		
 		Expr commandHeadExpr = new Expr(headSymbolExpr, exprArgsAr);
-		curCommandWrapper.set_commandExpr(commandHeadExpr);
-		
+		curCommandWrapper.set_commandExpr(commandHeadExpr);		
 		
 		//gather together the WLCommand Str
 		StringBuilder commandSB2 = new StringBuilder(100);

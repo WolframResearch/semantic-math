@@ -717,7 +717,8 @@ public class ThmP1TestRun {
 			st = "given an element f of a set $S$";
 			st = "the holonomy of $\\partial \\Sigma$ has no fixed points";
 			st = "$R_\\mathfrak m$ is universally catenary for all maximal ideals $\\mathfrak m$";
-			
+			st = "fix a $p$ over a $a$ order in $b$";
+			st = "fix young diagram over a field";
 			//st = "a morphism is called a noncommutative serre fibration";
 			//st = "Let $p_1,\\dots,p_r$ be the preimages under $w$"; 			
 			//st = "$p_1,\\dots,p_r$ is the preimage under $w$ of $c^\\ast_0$";			

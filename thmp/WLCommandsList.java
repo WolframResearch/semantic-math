@@ -165,11 +165,20 @@ public class WLCommandsList {
 				new PBuilder("verb", null, true, true, false).setPositionInStructTree(PositionInStructTree.FIRST),
 				new PBuilder(", "), new PBuilder(" {", "OPT"), 
 				new PBuilder("symb|ent|noun", null, true, false, false).addRelationType(RelationType._IS),
-				new PBuilder(", {\"Qualifiers\"->", "OPT"), 
+				new PBuilder(", {\"Qualifiers\"->", "OPT"), //new PBuilder("Qualifiers", "OPT").makeOptionalTermHead(),
 				//the relation should incorporate several types. 
 				new PBuilder("prep|qualifier", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}}", "OPT"),
 				new PBuilder("}")
-				);	
+				);
+		/*putToWLCommandMapBuilder(wLCommandMapBuilder, "fix", new PBuilder("{"), //test rule!!
+				new PBuilder("verb", null, true, true, false).setPositionInStructTree(PositionInStructTree.FIRST),
+				new PBuilder(", "), new PBuilder(" {", "OPT"), 
+				new PBuilder("ent", null, true, false, false).addRelationType(RelationType._IS),
+				new PBuilder(", {", "OPT"), new PBuilder("Qualifiers", "OPT").makeOptionalTermHead(),
+				//the relation should incorporate several types. 
+				new PBuilder("prep|qualifier", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}}", "OPT"),
+				new PBuilder("}")
+				);*/
 		//e.g. "The field extension $F/Q$ splits."
 		putToWLCommandMapBuilder(wLCommandMapBuilder, "verbAlone", new PBuilder("symb|ent|pro|noun", null, true).addRelationType(RelationType._IS), 
 				new PBuilder(null, "we", WLCommand.PosTermType.NEGATIVE), new PBuilder(" ~"), new PBuilder("HasProperty").makeExprHead(),
@@ -269,9 +278,9 @@ public class WLCommandsList {
 				new PBuilder("verb|vbs|be|has no", "is|are|be", false, true, false), new PBuilder(" ~"),
 				new PBuilder("HasProperty").makeExprHead(), new PBuilder("~ "), new PBuilder("{", "OPT"), 
 				new PBuilder("adj|ent|phrase|noun|prep|qualifier", null, true, false, false, RelationType.IS_).makePropertyTerm(),
-				new PBuilder(", {\"Qualifier\"->", "OPT"), 
+				new PBuilder(", {\"Qualifiers\"->", "OPT"), 
 				new PBuilder("prep", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}}", "OPT")
-				); 
+				);
 		
 		/*putToWLCommandMapBuilder(wLCommandMapBuilder, "is", addCommand(new PBuilder("symb|ent|pro|noun", null, true, RelationType._IS), 
 				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), 
