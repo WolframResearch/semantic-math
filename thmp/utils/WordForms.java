@@ -48,6 +48,7 @@ public class WordForms {
 	/*Used to remove specical characters from words*/
 	private static final Pattern SPECIAL_CHARS_AROUND_WORD_PATTERN 
 		= Pattern.compile("[\\{\\[\\(]+(.+?)[\\}\\]\\)]*|[\\{\\[\\(]*(.+?)[\\}\\]\\)]+");
+	private static final Pattern IRREG_PLURAL_ENDINGS_PATTERN = Pattern.compile("s|h|x");
 	
 	private static final String synonymsFileStr = "src/thmp/data/synonyms.txt";
 	private static final ImmutableMap<String, String> synonymRepMap;
@@ -205,9 +206,8 @@ public class WordForms {
 		}
 		//if letter before "es" is not "s", eg "kisses", or "ch", eg "catches",
 		//add e back, to preserve terms that end in "e", eg "agrees"
-		String irregPluralEndings = "s|h|x";
 		int wordLen = word.length();
-		if(k==1 && wordLen > 1 && !String.valueOf(word.charAt(wordLen-1)).matches(irregPluralEndings)){
+		if(k==1 && wordLen > 1 && !IRREG_PLURAL_ENDINGS_PATTERN.matcher(String.valueOf(word.charAt(wordLen-1))).matches()){
 			word = word+"e";
 		}
 		return word;

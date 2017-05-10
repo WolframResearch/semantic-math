@@ -76,7 +76,7 @@ public class ParseRun {
 			StringBuilder sb = new StringBuilder(100);
 			String headParseStructStr = headParseStruct.createStringAndRetrieveExpr(sb, exprList);
 			System.out.println("@@@" + headParseStructStr);
-			System.out.println("EXPR: " + exprList.get(0));
+			System.out.println("EXPR: \n" + exprList.get(0));
 			
 			System.out.println("ParseRun - For str: " + st);
 			BigInteger relationVec = parseState.getRelationalContextVec();

@@ -585,7 +585,7 @@ public class StructH<H> extends Struct{
 			if(!"".equals(makePptStr)){
 				String pptCommaStr = "\"" + makePptStr + "\", ";				
 				sb.append(this.type.equals("ent") ? "MathProperty" : this.type).append("[").append(pptCommaStr);
-				ruleExprWrapperList.add(new RuleExprWrapper(new Expr("X"), new Expr(makePptStr)));
+				ruleExprWrapperList.add(new RuleExprWrapper(new Expr("Mode"), new Expr(makePptStr)));
 				headExprWrapperType = ExprWrapperType.MATHPPT;
 			}else{
 				sb.append(this.type.equals("ent") ? "Math" : this.type).append("[");		
@@ -597,8 +597,10 @@ public class StructH<H> extends Struct{
 		//append name
 		String name = struct.get("name");
 		if(null != name){
-			sb.append("\"Name\"->\"").append(name).append("\"");
-			RuleExprWrapper ruleWrapper = new RuleExprWrapper(new Expr("Name"), new Expr(name));
+			/*sb.append("\"Name\"->\"").append(name).append("\"");
+			RuleExprWrapper ruleWrapper = new RuleExprWrapper(new Expr("Name"), new Expr(name));*/
+			sb.append("\"Type\"->\"").append(name).append("\"");
+			RuleExprWrapper ruleWrapper = new RuleExprWrapper(new Expr("Type"), new Expr(name));
 			ruleExprWrapperList.add(ruleWrapper);
 			prependCommaBool = true;
 		}
@@ -647,8 +649,10 @@ public class StructH<H> extends Struct{
 			if(prependCommaBool){
 				sb.append(", ");
 			}
-			sb.append("\"Called\"->").append("\"").append(called).append("\"");
-			ruleExprWrapperList.add(new RuleExprWrapper(new Expr("Called"), new Expr(called)));
+			/*sb.append("\"Called\"->").append("\"").append(called).append("\"");
+			ruleExprWrapperList.add(new RuleExprWrapper(new Expr("Called"), new Expr(called)));*/
+			sb.append("\"Name\"->").append("\"").append(called).append("\"");
+			ruleExprWrapperList.add(new RuleExprWrapper(new Expr("Name"), new Expr(called)));
 		}
 		//append name
 		String tex = struct.get("tex");

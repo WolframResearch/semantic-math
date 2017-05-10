@@ -144,12 +144,14 @@ public class ParseStruct implements Serializable{
 		for(Map.Entry<ParseStructType, WLCommandWrapper> entry : wrapperMMapEntries){
 			WLCommandWrapper wrapper = entry.getValue();
 			Expr commandExpr = wrapper.commandExpr();
-			Expr ruleExpr = ExprUtils.ruleExpr(new Expr(entry.getKey().toString()), commandExpr);
-			curLevelExprList.add(ruleExpr);			
+			//e.g. "STM"
+			String entryKeyStr = entry.getKey().toString();
+			Expr ruleExpr = ExprUtils.ruleExpr(new Expr(entryKeyStr), commandExpr);			
+			curLevelExprList.add(ruleExpr);		
 			if(i > 1 || !hasChild){			
-				sb.append("\"").append(entry.getKey()).append("\" :> ").append(wrapper.WLCommandStr()).append(", ");
+				sb.append("\"").append(entryKeyStr).append("\" :> ").append(wrapper.WLCommandStr()).append(", ");
 			}else{
-				sb.append("\"").append(entry.getKey()).append("\" :> ").append(wrapper.WLCommandStr());
+				sb.append("\"").append(entryKeyStr).append("\" :> ").append(wrapper.WLCommandStr());
 			}
 			i--;
 		}
@@ -163,7 +165,10 @@ public class ParseStruct implements Serializable{
 			}
 			i--;
 		}	
-		exprList.add(ExprUtils.listExpr(curLevelExprList));
+		//put rule in "Sentence" Head
+		Expr sentenceExpr = ExprUtils.sentenceExpr(ExprUtils.sequenceExpr(curLevelExprList));
+		//exprList.add(ExprUtils.listExpr(curLevelExprList));
+		exprList.add(sentenceExpr);
 		return sb.toString();
 	}
 	

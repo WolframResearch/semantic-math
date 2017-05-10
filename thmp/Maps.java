@@ -771,11 +771,13 @@ public class Maps {
 			structMap.put("det_verbphrase", new Rule("assert", 1));
 			//remove, because verbphrase should be able to finish a sentence
 			//structMap.put("verb_parti", new Rule("verbphrase", 1));
+			//e.g. auxpass: "is connected"
 			structMap.put("auxpass_pobj", new Rule("verbphrase", 1)); // passive
 			structMap.put("auxpass_ent", new Rule("verbphrase", 1));
 			structMap.put("auxpass_symb", new Rule("verbphrase", 0.7));
 			structMap.put("auxpass_adj", new Rule("verbphrase", 1));	// auxiliary
-
+			structMap.put("auxpass_prep", new Rule("verbphrase", 1));
+			
 			//TEMP RULE
 			//structMap.put("assert_csubj", new Rule("", 1));
 			
@@ -809,7 +811,7 @@ public class Maps {
 			structMap.put("poss_csubj", new Rule("pobj", .95));
 			structMap.put("predet_csubj", new Rule("csubj", 1));
 			structMap.put("np_verbphrase", new Rule("assert", 1));
-			structMap.put("symb_auxpass", new Rule("assert", .8));
+			structMap.put("symb_auxpass", new Rule("assert", .8)); //"$X$ is connected."
 			structMap.put("np_auxpass", new Rule("assert", .8));
 			structMap.put("ent_auxpass", new Rule("assert", .8));
 			structMap.put("pro_auxpass", new Rule("assert", .8));

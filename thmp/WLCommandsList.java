@@ -84,7 +84,8 @@ public class WLCommandsList {
 		triggerWordLookupMapBuilder.put("are", "is");
 		triggerWordLookupMapBuilder.put("is not", "is");
 		triggerWordLookupMapBuilder.put("are not", "is");
-		triggerWordLookupMapBuilder.put("has", "have");
+		//triggerWordLookupMapBuilder.put("has", "have");
+		triggerWordLookupMapBuilder.put("has", "is");
 		triggerWordLookupMapBuilder.put("has no", "is");
 		
 		triggerWordLookupMapBuilder.put("exists", "exist");
@@ -266,7 +267,7 @@ public class WLCommandsList {
 		//***action*** commands
 		putToWLCommandMapBuilder(wLCommandMapBuilder, "is", new PBuilder("symb|ent|pro|noun|det", null, true, false, false, //PosTermConnotation.DEFINED,
 				RelationType._IS), 
-				new PBuilder("verb|vbs|be", "is|are|be|has no", false, true, false), new PBuilder(" ~"), new PBuilder("HasProperty").makeExprHead(), //new PBuilder(" \\[Element] "),
+				new PBuilder("verb|vbs|be", "is|are|be|has no|has", false, true, false), new PBuilder(" ~"), new PBuilder("HasProperty").makeExprHead(), //new PBuilder(" \\[Element] "),
 				new PBuilder("~ "), //negative term, to stop command if encountered
 				new PBuilder("adj", null, WLCommand.PosTermType.NEGATIVE), //new PBuilder("{", "OPT1"), 
 				//new PBuilder("pre", null, true, false, "OPT1"),
@@ -275,7 +276,7 @@ public class WLCommandsList {
 		//merge these two?!
 		//e.g. "$X$ is connected", "$F$ is isomorphic to ..."
 		putToWLCommandMapBuilder(wLCommandMapBuilder, "is", new PBuilder("symb|ent|pro|noun|det", null, true, RelationType._IS), 
-				new PBuilder("verb|vbs|be|has no", "is|are|be", false, true, false), new PBuilder(" ~"),
+				new PBuilder("verb|vbs|be|has no|has", "is|are|be", false, true, false), new PBuilder(" ~"),
 				new PBuilder("HasProperty").makeExprHead(), new PBuilder("~ "), new PBuilder("{", "OPT"), 
 				new PBuilder("adj|ent|phrase|noun|prep|qualifier", null, true, false, false, RelationType.IS_).makePropertyTerm(),
 				new PBuilder(", {\"Qualifiers\"->", "OPT"), 
@@ -344,7 +345,7 @@ public class WLCommandsList {
 		
 		//putToWLCommandMapBuilder(wLCommandMapBuilder, "auxpass", addCommand(new String[] { "ent, , true",
 			//	"auxpass, , trigger_true", "ent|csubj, , true" }));
-		putToWLCommandMapBuilder(wLCommandMapBuilder, "auxpass", new PBuilder("ent", null, true), new PBuilder(" ~"),
+		putToWLCommandMapBuilder(wLCommandMapBuilder, "auxpass", new PBuilder("ent|symb", null, true), new PBuilder(" ~"),
 				new PBuilder("Connective").makeExprHead(), new PBuilder("["),
 				new PBuilder("auxpass", null, true, true, false).makeExprHeadArg(), new PBuilder("]~ "),
 				new PBuilder("ent|csubj|prep", null, true) );

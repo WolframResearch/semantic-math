@@ -698,7 +698,7 @@ public class ThmP1TestRun {
 			//st = "Let $p_1,\\dots,p_r$ be the preimages under $w$ of $c^\\ast_0$";//too many parses!			
 			st = "If $ \\ sum a_k$ converges conditionally, then there is some rearrangement of $ \\ sum a_k$  which converges to $x$";
 			st = "we call $p  $ a prime";//remove "we call"
-			st = "for all components $U$ of $supp(w)$ which are not annuli";
+			
 			//st = "signed resolution $res(T)$ to coincide with $RR$";
 			st = "fix a rectangular Young diagram $R$ over a field";
 			st = "polynomial $f$ has one root";
@@ -708,17 +708,29 @@ public class ThmP1TestRun {
 			st = "the holonomy of $\\partial \\Sigma$ has no fixed points";
 			st = "The interchange of two distant critical points of the surface diagram does not change the induced map on homology";
 			//st = "they do not intersect";
-			st = "${s_n}_n$ converges uniformly to $x=1$";
-			st = "$A$ implies $B$ over field";
+			st = "${s_n}_n$ converges uniformly to $x=1$";			
 			st = "A morphism of C-algebras $f : A \\longrightarrow B$ with axiom is called a noncommutative Serre fibration";//revisit! first token detached
 			//st = "if field is ring";
 			//st = "this prime is called $p$";			
-			st = "A morphism of algebras exists";
-			st = "given an element f of a set $S$";
+			st = "A morphism of algebras exists";			
 			st = "the holonomy of $\\partial \\Sigma$ has no fixed points";
-			st = "$R_\\mathfrak m$ is universally catenary for all maximal ideals $\\mathfrak m$";
 			st = "fix a $p$ over a $a$ order in $b$";
 			st = "fix young diagram over a field";
+			st = "A morphism of algebras exists";			
+			st = "given an element f of a set $S$";
+			st = "$A$ implies $B$ over field";
+			st = "the polynomial $f$ has one root";
+			st = "$\\lambda$ run over all pairs of partitions which are complementary with respect to $R$";
+			st = "if $R$ is a ring, then $R_\\mathfrak m$ is universally catenary for all maximal ideals $\\mathfrak m$";
+			st = "this field extension $R = F$ over $Q$ is rational";
+			st = "A morphism of C-algebras $f : A \\longrightarrow B$ with axiom is called a noncommutative Serre fibration";
+			st = "if $p$ is a prime and $p$ is odd, then $pq$ is odd";
+			st = "$A$ is connected over ring";
+			st = "$p$ is odd";
+			st = "if $U$ is a space, $U$ is compact if $U\\subset X$";
+			st = "the cellular deviation is singular"; //add "lar" as possible ending!
+			st = "given the sturmian supertrace";
+			st = "given kontsevich's circle";
 			//st = "a morphism is called a noncommutative serre fibration";
 			//st = "Let $p_1,\\dots,p_r$ be the preimages under $w$"; 			
 			//st = "$p_1,\\dots,p_r$ is the preimage under $w$ of $c^\\ast_0$";			
