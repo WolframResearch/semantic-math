@@ -152,6 +152,7 @@ public class ThmP1 {
 	private static final int MIN_PARSE_ITERATED_COUNT = 3;
 	//private static final String DASH_ENT_STRING = null;
 	private static final Pattern DASH_ENT_PATTERN = Pattern.compile("\\$[^$]+\\$[^-\\s]*-[^\\s]*");
+	private static final Pattern DASH_PATTERN = Pattern.compile("^[^-\\s]+-[^\\s]+$");
 	private static final int REPARSE_UPPER_SIZE_LIMIT = 6;
 	private static final Pattern CONJ_DISJ_VP_PATTERN = Pattern.compile("(?:conj|disj)_verbphrase");
 	//directives used to begin latex math mode. *Must* update ALIGN_PATTERN_REPLACEMENT_STR if this is updated.
@@ -181,6 +182,7 @@ public class ThmP1 {
 	private static final Pattern PAREN_PATTERN = Pattern.compile("\\([^)]+\\)");
 	private static final double MAX_ALLOWED_ENT_PERCENTAGE = 0.8;
 	private static final int MIN_PAIRS_SIZE_THRESHOLD_FOR_FLUFF = 7;
+	private static final Pattern POSSESIVE_PATTERN = Pattern.compile("[^\\s]+'s");
 	
 	static{
 		fluffMap = Maps.BuildMaps.fluffMap;
@@ -738,7 +740,7 @@ public class ThmP1 {
 						type = tempPosList.get(0);
 					}					
 				}
-				//if(true) throw new IllegalStateException("type"+type);
+				
 				Pair pair = new Pair(latexExpr, type);
 				pairs.add(pair);
 				
@@ -962,9 +964,13 @@ public class ThmP1 {
 			}
 			else if (posMMap.containsKey(singular3)){
 				addSingularWordToPairsList(mathIndexList, pairs, singular3);
+			}else if(POSSESIVE_PATTERN.matcher(curWord).matches() ){
+				//possesive pronouns, e.g. "zeno's paradox"
+				Pair pair = new Pair(curWord, "poss");
+				pairs.add(pair);
 			}
 			// classify words with dashes; eg sesqui-linear
-			else if (curWord.split("-").length > 1 && !curWord.matches("(?:-.+|.+-)")) {
+			else if (DASH_PATTERN.matcher(curWord).matches() && !curWord.matches("(?:-.+|.+-)")) {
 				String[] splitWords = curWord.split("-");				
 				String lastTerm = splitWords[splitWords.length - 1];
 				//System.out.println("singular" + singular + " curWord: " + curWord + " splitWords: " + Arrays.deepToString(splitWords));
@@ -994,8 +1000,7 @@ public class ThmP1 {
 				}else if (posMMap.containsKey(lastTermS3)){
 					searchKey = lastTermS3;
 					s = singular3;
-				}
-				
+				}				
 				if (!searchKey.equals("")) {
 					Pair pair = new Pair(curWord, posMMap.get(searchKey).get(0).split("_")[0]);
 					pairs.add(pair);
@@ -2358,8 +2363,7 @@ public class ThmP1 {
 								//put the new field "possesivePrev" in Struct
 								if(foundFirstEnt && recentEntIndex < j){
 									newStruct.set_possessivePrev(recentEnt);									
-								}
-								
+								}								
 								mx.get(i).get(j).add(newStruct);
 								continue innerloop;
 							}else if(combined.equals("hyp_ent") && j == inputStructListSize-1){
@@ -4657,8 +4661,7 @@ public class ThmP1 {
 	}
 
 	/**
-	 * Preprocess. Remove fluff words. the, a, an
-	 * 
+	 * Preprocess. Remove fluff words. the, a, an.
 	 * @param str
 	 *            is string of all input to be processed.
 	 * @return array of sentence Strings

@@ -728,9 +728,11 @@ public class ThmP1TestRun {
 			st = "$A$ is connected over ring";
 			st = "$p$ is odd";
 			st = "if $U$ is a space, $U$ is compact if $U\\subset X$";
-			st = "the cellular deviation is singular"; //add "lar" as possible ending!
+			st = "the cellular deviation is singular"; 
 			st = "given the sturmian supertrace";
-			st = "given kontsevich's circle";
+			st = "given kontsevich's circle"; //parse !
+			st = "given field's extension"; //parse !
+			
 			//st = "a morphism is called a noncommutative serre fibration";
 			//st = "Let $p_1,\\dots,p_r$ be the preimages under $w$"; 			
 			//st = "$p_1,\\dots,p_r$ is the preimage under $w$ of $c^\\ast_0$";			
@@ -843,7 +845,7 @@ public class ThmP1TestRun {
 				try{
 				ParseRun.parseInput(st, parseState, isVerbose);
 				}catch(StackOverflowError e){
-					System.out.println("ERRRRRROOORRRRRRRR");
+					System.out.println("ERRRRRROOORRRRRRRR SOF!");
 				}
 			}
 			
@@ -865,8 +867,9 @@ public class ThmP1TestRun {
 			
 			if(processFile){
 				
-				//Scanner sc = new Scanner(new File("src/thmp/data/samplePaper2.txt"));
-				Scanner sc = new Scanner(new File("/Users/yihed/Downloads/spectral.tex"));
+				Scanner sc = new Scanner(new File("src/thmp/data/samplePaper2.txt"));
+				//Scanner sc = new Scanner(new File("/Users/yihed/Downloads/math0302118"));				
+				//Scanner sc = new Scanner(new File("/Users/yihed/Downloads/spectral.tex"));
 				//Scanner sc = new Scanner(new File("src/thmp/data/collectThmTestSample.txt"));
 				parseState = parseStateBuilder.build();
 				
@@ -879,7 +882,9 @@ public class ThmP1TestRun {
 					nextLine = ThmInput.removeTexMarkup(nextLine, null, null);
 					System.out.println(nextLine + "\n");
 					boolean isVerbose = true;
+					System.out.println("ThmP1TestRun - parsing: " + st);
 					ParseRun.parseInput(nextLine, parseState, isVerbose);
+					System.out.println("ThmP1TestRun - DONE parsing: " + st);
 					parseState.parseRunLocalCleanUp();
 				}		
 				

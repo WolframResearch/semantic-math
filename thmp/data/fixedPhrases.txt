@@ -6,6 +6,7 @@ as a | as a result | then
 if and | if and only if | iff
 we say | we say that | fluff
 we say | we say | fluff
+we write | fluff
 said to | said to be | fluff
 radius of | radius of convergence | ent
 as well | as well as | and

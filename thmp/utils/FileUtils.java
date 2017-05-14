@@ -17,6 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -90,12 +91,12 @@ public class FileUtils {
 		mspManager = (MSPManager)servletContext.getAttribute(MSPStatics.MSP_MANAGER_ATTR);
 		kernelPool = mspManager.getKernelPool(KERNEL_POOL_NAME);
 		logger.info("setServletContext - kernelPool.getKernels(): " + kernelPool.getKernels());
-		IKernel kernel0=null;
+		//IKernel kernel0=null;
 		/*for(Map.Entry<String, IKernel> k : kernelPool.getKernels().entrySet()){
 			kernel0 = k.getValue();
 			break;
 		}*/
-		kernel0 = kernelPool.createKernel();
+		/*kernel0 = kernelPool.createKernel();
 		logger.info("kernel0 created : " + kernel0);
 		//IKernel kernel0 = kernelPool.getKernels().get(0);
 		try {		
@@ -109,7 +110,7 @@ public class FileUtils {
 		}catch (Exception e) {
 			logger.error("troubel registering and initializing");
 			throw new IllegalStateException(e);
-		}
+		}*/
 		/*try {
 			IKernel kernel0 = kernelPool.getKernels().get(0);
 			IKernel kernel1 = kernelPool.getKernels().get(1);
@@ -400,14 +401,18 @@ public class FileUtils {
 		}else{
 			//running on servlet.
 			assert null != kernelPool;
+			String msg = "acquireWLEvaluationMedium-trying to acquire kernel with stack trace: " 
+					+ Arrays.deepToString(Thread.currentThread().getStackTrace());
+			logger.info(msg);
 			try {
 				medium = new WLEvaluationMedium(kernelPool.acquireKernel());
 			} catch (KernelPoolException e) {
 				//e.printStackTrace(); //HANDLE, see how Cloud deals with it. Fall back on link?? Not great
-				throw new IllegalStateException("trying to acquire " + e.getMessage());
+				throw new IllegalStateException("KernelPoolException when trying to acquire kernel: " 
+						+ Arrays.toString(e.getStackTrace()));
 			} catch (InterruptedException e) {
 				e.printStackTrace(); //HANDLE, should guarantee return is no null.
-				throw new IllegalStateException(e);
+				throw new IllegalStateException("KernelPoolException when trying to acquire kernel: "+e.getMessage());
 			}
 	        return medium;
 		}        

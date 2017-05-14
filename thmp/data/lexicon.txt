@@ -15,6 +15,7 @@ log ent
 value ent
 separate verb
 sheaf ent
+circle ent
 tower ent
 axiom ent
 coordinate ent

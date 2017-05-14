@@ -419,8 +419,8 @@ public class ThmP1AuxiliaryClass {
 					parseState.setTokenList(entSubstitutedStructList);
 					//don't set isReparse, so to allow defluffing in the recursion call.
 					System.out.println("~~REPARSING with assert");
-					ThmP1.parse(parseState);						
-					//System.out.println("~~REPARSING with assert DONE");
+					boolean isReparse = true; 
+					ThmP1.parse(parseState, isReparse);
 				}
 			}						
 		}
