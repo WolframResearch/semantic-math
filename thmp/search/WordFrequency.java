@@ -26,7 +26,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 
-import thmp.ProcessInput;
+import thmp.parse.ProcessInput;
 import thmp.search.CollectThm.ThmList;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;

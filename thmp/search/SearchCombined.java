@@ -22,7 +22,7 @@ import com.google.common.collect.TreeMultimap;
 import com.wolfram.jlink.Expr;
 import com.wolfram.jlink.MathLinkException;
 
-import thmp.ProcessInput;
+import thmp.parse.ProcessInput;
 import thmp.utils.DataUtility;
 import thmp.utils.WordForms;
 

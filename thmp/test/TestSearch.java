@@ -12,9 +12,9 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
-import thmp.Maps;
-import thmp.ThmP1;
-import thmp.ThmP1.ParsedPair;
+import thmp.parse.Maps;
+import thmp.parse.ThmP1;
+import thmp.parse.ThmP1.ParsedPair;
 import thmp.search.SearchCombined;
 import thmp.search.SearchCombined.ThmHypPair;
 import thmp.search.SearchIntersection;

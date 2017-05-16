@@ -2,6 +2,7 @@ package thmp.search;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -31,12 +32,13 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ListMultimap;
 
-import thmp.DetectHypothesis.DefinitionListWithThm;
-import thmp.Maps;
-import thmp.ParseState.VariableDefinition;
-import thmp.ParsedExpression;
-import thmp.ProcessInput;
-import thmp.ThmInput;
+import thmp.parse.Maps;
+import thmp.parse.ParseStruct;
+import thmp.parse.ParsedExpression;
+import thmp.parse.ProcessInput;
+import thmp.parse.ThmInput;
+import thmp.parse.DetectHypothesis.DefinitionListWithThm;
+import thmp.parse.ParseState.VariableDefinition;
 import thmp.search.SearchCombined.ThmHypPair;
 import thmp.search.SearchWordPreprocess.WordWrapper;
 import thmp.utils.WordForms.WordFreqComparator;
@@ -449,7 +451,7 @@ public class CollectThm {
 			//It is "src/thmp/data/allThmWordsMap.dat";			
 			String pathToPrevDocWordFreqMaps = Searcher.SearchMetaData.previousWordDocFreqMapsPath();
 			String allThmWordsSerialFileStr = (null == pathToPrevDocWordFreqMaps 
-					? thmp.DetectHypothesis.allThmWordsMapSerialFileStr : pathToPrevDocWordFreqMaps);
+					? thmp.parse.DetectHypothesis.allThmWordsMapSerialFileStr : pathToPrevDocWordFreqMaps);
 
 			if(null != servletContext){
 				InputStream allThmWordsSerialInputStream = servletContext.getResourceAsStream(allThmWordsSerialFileStr);
@@ -1227,6 +1229,7 @@ public class CollectThm {
 						parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
 					}
 				}
+				
 				return (List<ParsedExpression>)thmp.utils.FileUtils
 						.deserializeListFromFile(parsedExpressionSerialFileStr);
 			}

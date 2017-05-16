@@ -18,8 +18,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSetMultimap;
 
-import thmp.DetectHypothesis;
-import thmp.ThmInput;
+import thmp.parse.DetectHypothesis;
+import thmp.parse.ThmInput;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 

@@ -2,7 +2,7 @@ package thmp.utils;
 
 import java.util.List;
 
-import thmp.ParsedExpression;;
+import thmp.parse.ParsedExpression;;
 
 /**
  * Place to deposit resources, to be retrieved by various classes.

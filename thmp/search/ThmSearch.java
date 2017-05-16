@@ -15,7 +15,7 @@ import org.apache.logging.log4j.Logger;
 import com.google.common.collect.ImmutableList;
 import com.wolfram.jlink.*;
 
-import thmp.TheoremContainer;
+import thmp.parse.TheoremContainer;
 import thmp.utils.FileUtils;
 import thmp.utils.MathLinkUtils.WLEvaluationMedium;
 import thmp.utils.WordForms;

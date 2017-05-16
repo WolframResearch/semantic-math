@@ -86,13 +86,14 @@
 	</target>
 
 	<target name="compileThmp" description="compile Java sources">
+		<delete dir="${builddir}"/>
 		<mkdir dir="${builddir}" />
 		<javac srcdir="${srcdir}" destdir="${builddir}" debug="true">
 			<classpath>
-				<!--Should not use these classes-->
-				<fileset dir="${thmplibdir}">
+				<!--Should not use these classes!!!-->
+				<!--<fileset dir="${thmplibdir}">
 					<include name="**/*.class" />
-				</fileset>
+				</fileset>-->
 				<fileset dir="${libdir}">
 					<include name="**/*.jar" />
 					<!-- <include name="**/SystemFiles/*"/>-->

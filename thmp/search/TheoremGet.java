@@ -16,8 +16,8 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
-import thmp.GenerateContextVector;
-import thmp.ParseState;
+import thmp.parse.GenerateContextVector;
+import thmp.parse.ParseState;
 import thmp.utils.FileUtils;
 
 /**
@@ -186,7 +186,7 @@ public class TheoremGet {
 		private static final ContextRelationVecPair PLACEHOLDER_CONTEXT_RELATION_VEC;
 		
 		static{
-			BigInteger relationVector = thmp.RelationVec.getPlaceholderRelationVec();
+			BigInteger relationVector = thmp.parse.RelationVec.getPlaceholderRelationVec();
 			//int[] contextVecString = ParseState.PLACEHOLDER_CONTEXT_VEC();
 			PLACEHOLDER_CONTEXT_RELATION_VEC = new ContextRelationVecPair(Collections.<Integer, Integer>emptyMap(), relationVector);
 		}

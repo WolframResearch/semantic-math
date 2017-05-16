@@ -5,8 +5,8 @@ import java.util.List;
 
 import com.google.common.collect.ImmutableList;
 
-import thmp.ParsedExpression;
-import thmp.TheoremContainer;
+import thmp.parse.ParsedExpression;
+import thmp.parse.TheoremContainer;
 import thmp.search.CollectThm;
 import thmp.search.Searcher;
 import thmp.search.ThmSearch;

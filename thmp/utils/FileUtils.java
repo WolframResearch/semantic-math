@@ -359,7 +359,8 @@ public class FileUtils {
 	 * @return KernelLink instance.
 	 */
 	public static KernelLink getKernelLinkInstance() {
-		if(null != servletContext){
+		//put this condition back in place once kernel pool exception fixed!
+		if(false && null != servletContext){
 			throw new IllegalStateException("Should be getting kernel from kernel pool if running on servlet!");
 		}
 		//double-checked locking
@@ -395,7 +396,8 @@ public class FileUtils {
 	public static WLEvaluationMedium acquireWLEvaluationMedium(){
 		
 		WLEvaluationMedium medium = null;
-		if(null == servletContext){
+		//put this condition back in place once kernel pool exception fixed!
+		if(true || null == servletContext){
 			//running locally.
 			return new WLEvaluationMedium(getKernelLinkInstance());
 		}else{

@@ -23,7 +23,7 @@ import javax.servlet.ServletContext;
 
 import com.google.common.collect.TreeMultimap;
 
-import thmp.ProcessInput;
+import thmp.parse.ProcessInput;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 

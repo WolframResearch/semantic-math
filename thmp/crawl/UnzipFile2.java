@@ -20,10 +20,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
-//import net.lingala.zip4j.core.ZipFile;
-//import net.lingala.zip4j.exception.ZipException;
-
-import thmp.ThmInput;
+import thmp.parse.ThmInput;
 
 /**
  * Unzips files, extract math directories, and reads the latex files from them.

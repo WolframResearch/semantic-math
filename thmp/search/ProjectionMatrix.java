@@ -10,7 +10,7 @@ import com.wolfram.jlink.Expr;
 import com.wolfram.jlink.KernelLink;
 import com.wolfram.jlink.MathLinkException;
 
-import thmp.ParsedExpression;
+import thmp.parse.ParsedExpression;
 import thmp.search.TheoremGet.ContextRelationVecPair;
 import thmp.search.ThmSearch.TermDocumentMatrix;
 import thmp.utils.FileUtils;

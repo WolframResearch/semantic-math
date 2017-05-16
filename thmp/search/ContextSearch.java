@@ -23,7 +23,7 @@ import com.wolfram.jlink.ExprFormatException;
 import com.wolfram.jlink.KernelLink;
 import com.wolfram.jlink.MathLinkException;
 
-import thmp.ThmP1;
+import thmp.parse.ThmP1;
 import thmp.search.Searcher.SearcherState;
 import thmp.search.TheoremGet.ContextRelationVecPair;
 import thmp.utils.FileUtils;
@@ -96,14 +96,14 @@ public class ContextSearch implements Searcher<Map<Integer, Integer>>{
 		//String queryContextVec;
 		Map<Integer, Integer> queryContextVecMap;
 		if(null == searcher){
-			queryContextVecMap = thmp.GenerateContextVector.createContextVector(query);
+			queryContextVecMap = thmp.parse.GenerateContextVector.createContextVector(query);
 		}else{
 			//optimization that stores vec in searcherState, 
 			//to avoid repeatedly parsing the same query string.
 			SearcherState<Map<Integer, Integer>> searcherState;
 			
 			if(null == (searcherState = searcher.getSearcherState())){
-				queryContextVecMap = thmp.GenerateContextVector.createContextVector(query);
+				queryContextVecMap = thmp.parse.GenerateContextVector.createContextVector(query);
 				searcher.setSearcherState(new SearcherState<Map<Integer, Integer>>(queryContextVecMap));
 			}else{
 				queryContextVecMap = searcherState.getQueryVec();

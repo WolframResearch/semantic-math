@@ -14,16 +14,16 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.SetMultimap;
 
-import thmp.ParseRun;
-import thmp.ParseState;
-import thmp.ParseStruct;
-import thmp.ParseStructType;
-import thmp.WLCommandsList;
-import thmp.ParseState.ParseStateBuilder;
-import thmp.ParseToWLTree.WLCommandWrapper;
-import thmp.Struct;
-import thmp.WLCommand;
-import thmp.WLCommand.PosTerm;
+import thmp.parse.ParseRun;
+import thmp.parse.ParseState;
+import thmp.parse.ParseStruct;
+import thmp.parse.ParseStructType;
+import thmp.parse.Struct;
+import thmp.parse.WLCommand;
+import thmp.parse.WLCommandsList;
+import thmp.parse.ParseState.ParseStateBuilder;
+import thmp.parse.ParseToWLTree.WLCommandWrapper;
+import thmp.parse.WLCommand.PosTerm;
 
 /**
  * Check if two parses are the same, by comparing the

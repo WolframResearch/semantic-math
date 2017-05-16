@@ -3,11 +3,11 @@ package thmp.utils;
 import java.util.ArrayList;
 import java.util.List;
 
-import thmp.ParseRun;
-import thmp.ParseState;
-import thmp.ParseStruct;
+import thmp.parse.ParseRun;
+import thmp.parse.ParseState;
+import thmp.parse.ParseStruct;
+import thmp.parse.ParseState.ParseStateBuilder;
 import thmp.test.ParseEqualityCheck.ParseResult;
-import thmp.ParseState.ParseStateBuilder;
 
 /**
  * Serialize parse result. Used for testing for now.

@@ -13,13 +13,13 @@ import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.TreeMultimap;
 
-import thmp.GenerateRelationVec;
-import thmp.ParseState;
-import thmp.ParseState.ParseStateBuilder;
+import thmp.parse.GenerateRelationVec;
+import thmp.parse.ParseState;
+import thmp.parse.RelationVec;
+import thmp.parse.ParseState.ParseStateBuilder;
 import thmp.search.SearchCombined.ThmHypPair;
 import thmp.search.Searcher.SearcherState;
 import thmp.search.TheoremGet.ContextRelationVecPair;
-import thmp.RelationVec;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 
@@ -130,14 +130,14 @@ public class RelationalSearch implements Searcher<BigInteger>{
 		BigInteger queryRelationVec;		
 		
 		if(null == searcher){
-			queryRelationVec = thmp.GenerateRelationVec.generateRelationVec(queryStr, parseState);
+			queryRelationVec = thmp.parse.GenerateRelationVec.generateRelationVec(queryStr, parseState);
 		}else{
 			//optimization to store vec in searcherState, 
 			//to avoid repeatedly parsing the same query string.
 			SearcherState<BigInteger> searcherState;
 			
 			if(null == (searcherState = searcher.getSearcherState())){
-				queryRelationVec = thmp.GenerateRelationVec.generateRelationVec(queryStr, parseState);
+				queryRelationVec = thmp.parse.GenerateRelationVec.generateRelationVec(queryStr, parseState);
 				searcher.setSearcherState(new SearcherState<BigInteger>(queryRelationVec));
 			}else{
 				queryRelationVec = searcherState.getQueryVec();

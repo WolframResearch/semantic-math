@@ -29,8 +29,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.SetMultimap;
 
-import thmp.Maps;
-import thmp.ParsedExpression;
+import thmp.parse.Maps;
+import thmp.parse.ParsedExpression;
 import thmp.search.WordFrequency;
 
 public class WordForms {

@@ -24,7 +24,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.ListMultimap;
 
-import thmp.ProcessInput;
+import thmp.parse.ProcessInput;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 
@@ -174,7 +174,7 @@ public class NGramSearch {
 	private static Map<String, Integer> compile2grams(Map<String, Map<String, Integer>> nGramMap, Map<String, Integer> averageWordCounts,
 			Set<String> nGramFirstWordsSet, Set<String> initialTwoGramsSet){
 		
-		ListMultimap<String, String> posMMap = thmp.Maps.posMMap();
+		ListMultimap<String, String> posMMap = thmp.parse.Maps.posMMap();
 		
 		Map<String, Integer> twoGramMap = new HashMap<String, Integer>();		
 		int totalFreqCount = 0;	

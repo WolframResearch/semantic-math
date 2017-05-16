@@ -12,13 +12,13 @@ import org.junit.Test;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
-import thmp.ParseState;
-import thmp.ParseStructType;
-import thmp.ThmP1;
 import thmp.exceptions.ParseRuntimeException.IllegalSyntaxException;
+import thmp.parse.ParseState;
+import thmp.parse.ParseStructType;
+import thmp.parse.ThmP1;
+import thmp.parse.ParseState.ParseStateBuilder;
 import thmp.test.ParseEqualityCheck.ParseResult;
 import thmp.utils.FileUtils;
-import thmp.ParseState.ParseStateBuilder;
 
 /**
  * Parses preliminary set of Strings.

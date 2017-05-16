@@ -19,10 +19,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 
-import thmp.DetectHypothesis.DefinitionListWithThm;
-import thmp.Maps;
-import thmp.TheoremContainer;
-import thmp.ThmP1;
+import thmp.parse.Maps;
+import thmp.parse.TheoremContainer;
+import thmp.parse.ThmP1;
+import thmp.parse.DetectHypothesis.DefinitionListWithThm;
 import thmp.search.SearchCombined.ThmHypPair;
 import thmp.search.SearchWordPreprocess.WordWrapper;
 import thmp.utils.FileUtils;

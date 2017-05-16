@@ -3,7 +3,7 @@ package thmp.runner;
 import java.util.ArrayList;
 import java.util.List;
 
-import thmp.ParsedExpression;
+import thmp.parse.ParsedExpression;
 import thmp.utils.FileUtils;
 
 public class ExtractFromParsedExpressionList {
