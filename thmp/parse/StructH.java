@@ -21,6 +21,7 @@ import thmp.utils.ExprUtils.ExprWrapperType;
 import thmp.utils.ExprUtils.MathExprWrapper;
 import thmp.utils.ExprUtils.MathPptExprWrapper;
 import thmp.utils.ExprUtils.RuleExprWrapper;
+import thmp.utils.WordForms;
 /**
  * 
  * *Need* to modify copy() when any field is added to StructH class.
@@ -584,7 +585,7 @@ public class StructH<H> extends Struct{
 		if(includeType){			
 			if(!"".equals(makePptStr)){
 				String pptCommaStr = "\"" + makePptStr + "\", ";				
-				sb.append(this.type.equals("ent") ? "MathProperty" : this.type).append("[").append(pptCommaStr);
+				sb.append(this.type.equals("ent") ? "MathProperty" : this.type).append("[Mode->\"").append(pptCommaStr);
 				ruleExprWrapperList.add(new RuleExprWrapper(new Expr("Mode"), new Expr(makePptStr)));
 				headExprWrapperType = ExprWrapperType.MATHPPT;
 			}else{
@@ -606,20 +607,17 @@ public class StructH<H> extends Struct{
 		}
 		
 		List<Expr> pptExprList = new ArrayList<Expr>();
-		boolean pptAppended = false;
-		boolean cardAppended = false;
+		//list of cardinalities
+		List<Expr> cardExprList = new ArrayList<Expr>();
+		//boolean pptAppended = false;
+		//boolean cardAppended = false;
+		StringBuilder pptSB = new StringBuilder(30);
+		StringBuilder cardSB = new StringBuilder(15);
 		Iterator<String> pptStrListIter = getPropertySet().iterator();		
-		if(pptStrListIter.hasNext()){
-			if(prependCommaBool){
-				sb.append(", ");
-			}
-			sb.append("\"Property\"->{");
-			WLCommand.increment_commandNumUnits(curCommand, this);
-			pptAppended = true;
-		}
+		
 		if(this.article() != Article.NONE){
 			String articleStr = this.article().toString();
-			if(pptAppended){
+			/*if(pptAppended){
 				sb.append("\"").append(articleStr).append("\", ");
 			}else{
 				if(prependCommaBool){
@@ -627,28 +625,49 @@ public class StructH<H> extends Struct{
 				}
 				sb.append("\"Property\"->{\"").append(articleStr).append("\"");				
 				pptAppended = true;
-			}
-			pptExprList.add(new Expr(articleStr));
+			}*/
+			cardSB.append("\"").append(articleStr).append("\", ");
+			//sb.append("\"Cardinality\"->{\"").append(articleStr).append("\"");	
+			cardExprList.add(new Expr(articleStr));
 		}
 		while(pptStrListIter.hasNext()){
-			String nextStr = pptStrListIter.next();
-			if(pptStrListIter.hasNext()){
-				sb.append("\"").append(nextStr).append("\", ");
+			String nextStr = pptStrListIter.next();			
+			if(WordForms.CARDINALITY_PPT_PATTERN.matcher(nextStr).matches()){
+				cardSB.append("\"").append(nextStr).append("\", ");
+				cardExprList.add(new Expr(nextStr));
 			}else{
-				sb.append("\"").append(nextStr).append("\"");
+				pptSB.append("\"").append(nextStr).append("\", ");
+				pptExprList.add(new Expr(nextStr));				
 			}
-			pptExprList.add(new Expr(nextStr));
 		}
-		if(pptAppended){
-			sb.append("}");
+		if(!pptExprList.isEmpty()){
+			if(prependCommaBool){
+				sb.append(", ");
+			}
+			//increment once, this covers all ppt's.
+			WLCommand.increment_commandNumUnits(curCommand, this);
+			String pptStr = pptSB.toString();
+			int pptSBLen = pptSB.length();
+			if(pptSBLen > 2){ //shouldn't need to check{
+				pptStr = pptSB.substring(0, pptSBLen-2); 
+			}
+			sb.append("\"Property\"->{").append(pptStr).append("}");
 			Expr pptListExpr = ExprUtils.listExpr(pptExprList);			
 			ruleExprWrapperList.add(new RuleExprWrapper(new Expr("Property"), pptListExpr));
 		}
 		//append cardinality list
-		if(cardAppended){
-			sb.append("}");
-			Expr pptListExpr = ExprUtils.listExpr(pptExprList);			
-			ruleExprWrapperList.add(new RuleExprWrapper(new Expr("Property"), pptListExpr));
+		if(!cardExprList.isEmpty()){
+			if(prependCommaBool){
+				sb.append(", ");
+			}
+			String cardStr = cardSB.toString();
+			int cardSBLen = cardSB.length();
+			if(cardSBLen > 2){ //shouldn't need to check
+				cardStr = cardSB.substring(0, cardSBLen-2); 
+			}
+			sb.append("\"Cardinality\"->{").append(cardStr).append("}");
+			Expr cardListExpr = ExprUtils.listExpr(cardExprList);	
+			ruleExprWrapperList.add(new RuleExprWrapper(new Expr("Cardinality"), cardListExpr));
 		}
 		
 		String called = struct.get("called");

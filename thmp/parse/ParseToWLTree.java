@@ -2,6 +2,7 @@ package thmp.parse;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -796,12 +797,14 @@ public class ParseToWLTree{
 		contextVecConstructed |= noClashCommandFound;
 		
 		/*relax criteria for how many terms can be part of other commands if no parsePair found */
+		if(false){ //
 		if(!noClashCommandFound && structWrapperListSz > 1){
 			structWithOtherHeadThreshold = 1;
 			noClashCommandFound = appendWLCommandStr2(struct, curParseStruct, parsedSB, partsMap, contextVecMap,
 					contextVecConstructed, structWrapperList, structWrapperListSz, structWithOtherHeadThreshold);
 			contextVecConstructed |= noClashCommandFound;
 		}		
+		}
 		return contextVecConstructed;
 	}
 
@@ -1180,6 +1183,7 @@ public class ParseToWLTree{
 		public void set_WLCommandStr(StringBuilder WLCommandStr){
 			//this.wlCommandStr = this.wlCommandStr == null ? "" : this.wlCommandStr; //<--now not necessary
 			//System.out.println("&******&&&&&&&****** WLCommandStr before setting " + this.WLCommandStr);
+			System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
 			//Why append and not just set??
 			//this.WLCommandStr += " " + WLCommandStr;
 			//System.out.println("SETTING COMMAND STR " + WLCommandStr);

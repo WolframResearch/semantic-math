@@ -116,8 +116,8 @@ public class WLCommand implements Serializable{
 	/**
 	 * Counter to keep track of how many Structs, with which the current Struct this WLCommand
 	 * instance is associated to (has this struct as StructWLCommandStr), are associated with
-	 * another head. If this number is above some threshold (e.g. > totalComponentCount-1), 
-	 * do not use this WLCommand. Initial value is 0;
+	 * another head. If this number is above some threshold, 
+	 * do not use this WLCommand. Initial threshold is 0;
 	 * Set to totalComponentCount *only* when WLCommand first copied.
 	 */
 	private int structsWithOtherHeadCount;
@@ -1258,7 +1258,8 @@ public class WLCommand implements Serializable{
 	
 	/**
 	 * Update the wrapper list to update nextStruct's headStruct to structToAppendCommandStr.
-	 * Used for compositing commands, so not to use same struct in multiple commands.
+	 * Used for compositing commands, so not to use same struct in multiple commands. I.e.
+	 * clash resolution.
 	 * Called during command *build* time.
 	 * @param nextStruct
 	 * @param structToAppendCommandStr
@@ -1288,23 +1289,24 @@ public class WLCommand implements Serializable{
 			//System.out.println("++++======+++++structToAppendCommandStr != prevHeadStruct "+ structToAppendCommandStr.dfsDepth() +" ++++" + prevHeadStruct.dfsDepth());
 			int structToAppendCommandStrDfsDepth = structToAppendCommandStr.dfsDepth();
 			int prevHeadStructDfsDepth = prevHeadStruct.dfsDepth();
+
 			if(//structToAppendCommandStr != prevHeadStruct 
 					/*Smaller depth is closer to root, so has wider span over the tree. */
 					structToAppendCommandStrDfsDepth <= prevHeadStructDfsDepth){
 				// in this case structToAppendCommandStr should not be
-				// null either				
+				// null either					
 				//int wrapperListSz = prevHeadStructWrapperList.size();	
 				//boolean leavePrevHeadInPlace = false;
 				//get the last-added command. <--should iterate and add count to all previous commands
 				//with this wrapper? <--command building goes inside-out
 				/*Update all wrapper in prevHeadStructWrapperList since commands in all wrappers touch this struct*/
-				if(prevHeadStructWrapperList != null){
+				if(prevHeadStructWrapperList != null){					
+					// increment the structsWithOtherHeadCount of the last wrapper object for every wrapper.
 					for(WLCommandWrapper wrapper : prevHeadStructWrapperList){
 						//System.out.println("-------------prevHeadStructWrapperList wrapper: " + wrapper);
-						WLCommand lastWrapperCommand = wrapper.WLCommand();				
-						//System.out.println("curCommand: " + curCommand);
-						// increment the headCount of the last wrapper object, should update every wrapper's count.
-						if(!curCommand.equals(lastWrapperCommand)){
+						WLCommand lastWrapperCommand = wrapper.WLCommand();
+						
+						if(!curCommand.equals(lastWrapperCommand)){							
 							lastWrapperCommand.structsWithOtherHeadCount++; //HERE
 							if(prevHeadStruct.dfsDepth() == nextStruct.dfsDepth()){
 								lastWrapperCommand.structHeadWithOtherHead = prevHeadStruct;								
@@ -1337,10 +1339,45 @@ public class WLCommand implements Serializable{
 			nextStruct.set_structToAppendCommandStr(structToAppendCommandStr);
 			structToAppendCommandStr.set_structToAppendCommandStr(structToAppendCommandStr);
 			setAncestorStructToAppendCommandStr(nextStruct, structToAppendCommandStr, curCommand);
+			//check the struct's subnodes for 
+			updateSubstructCommands(nextStruct);			
 		}
 		//structToAppendCommandStr.set_structToAppendCommandStr(structToAppendCommandStr);
 		//nextStruct.set_structToAppendCommandStr(structToAppendCommandStr);
 		return prevStructHeaded;
+	}
+
+	/**
+	 * Checks the commands corresponding to sub-struct's. 
+	 * @param nextStruct
+	 */
+	private static void updateSubstructCommands(Struct nextStruct) {
+		if(nextStruct.prev1NodeType().isTypeStruct() ){
+			Struct prev1Struct = (Struct)nextStruct.prev1();			
+			updateSubstructCommandsHelper(prev1Struct);			
+		}
+		if(nextStruct.prev2NodeType().isTypeStruct()){
+			Struct prev2Struct = (Struct)nextStruct.prev2();			
+			updateSubstructCommandsHelper(prev2Struct);
+		}
+	}
+
+	/**
+	 * @param prev1Struct
+	 */
+	private static void updateSubstructCommandsHelper(Struct prev1Struct) {
+		List<WLCommandWrapper> prev1StructWrapperList = prev1Struct.WLCommandWrapperList();
+		if(prev1Struct == prev1Struct.structToAppendCommandStr() && null != prev1StructWrapperList){
+			for(int i = 0; i < prev1StructWrapperList.size(); i++){
+				WLCommand lastWrapperCommand = prev1StructWrapperList.get(i).WLCommand();
+				lastWrapperCommand.structsWithOtherHeadCount++; 	
+			}				
+		}
+		updateSubstructCommands(prev1Struct);
+	}	
+	
+	private static void f(){
+		
 	}
 	
 	private static void setAncestorStructToAppendCommandStr(Struct nextStruct, Struct structToAppendCommandStr,

@@ -16,6 +16,7 @@ import thmp.parse.Struct.NodeType;
 import thmp.parse.WLCommand.PosTerm;
 import thmp.utils.ExprUtils;
 import thmp.utils.ExprUtils.AssocExprWrapper;
+import thmp.utils.ExprUtils.ExprWrapperType;
 import thmp.utils.ExprUtils.RuleExprWrapper;
 import thmp.utils.WordForms;
 
@@ -397,7 +398,10 @@ public class StructA<A, B> extends Struct{
 						appendPptExpr(exprList, fullContentSB, prev1Expr, makePptStr, childRuleWrapperList, childStr,
 								pptCommaStr);
 					}else{
-						fullContentSB.insert(0, " MathProperty[").append(childStr).append("]");					
+						fullContentSB.insert(0, " MathProperty[").append(childStr).append("]");		
+						//ruleExprWrapperList.add(new RuleExprWrapper(new Expr("Mode"), new Expr(makePptStr)));
+						//headExprWrapperType = ExprWrapperType.MATHPPT;
+						
 						headExpr = new Expr(Expr.SYMBOL, "MathProperty");
 						if(childRuleWrapperList.size() > 0){
 							exprList.add(new Expr(headExpr, new Expr[]{prev1Expr, childRuleWrapperList.get(0).expr()}));

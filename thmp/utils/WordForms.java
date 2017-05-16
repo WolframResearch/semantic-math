@@ -49,6 +49,7 @@ public class WordForms {
 	private static final Pattern SPECIAL_CHARS_AROUND_WORD_PATTERN 
 		= Pattern.compile("[\\{\\[\\(]+(.+?)[\\}\\]\\)]*|[\\{\\[\\(]*(.+?)[\\}\\]\\)]+");
 	private static final Pattern IRREG_PLURAL_ENDINGS_PATTERN = Pattern.compile("s|h|x");
+	public static final Pattern CARDINALITY_PPT_PATTERN = Pattern.compile("some|a|an|the|unique|infinite|infinitely many");
 	
 	private static final String synonymsFileStr = "src/thmp/data/synonyms.txt";
 	private static final ImmutableMap<String, String> synonymRepMap;
@@ -223,7 +224,7 @@ public class WordForms {
 		
 		if(freqWordsSet.contains(word)) return word;
 		int wordlen = word.length();
-		if(wordlen < 4) return word; //<--move this below if more endings are checked in future
+		if(wordlen < 4) return word; //<--move this to below if more endings are checked in future
 		
 		String tempWord;
 		if("ly".equals(word.substring(wordlen-2)) && freqWordsSet.contains((tempWord = word.substring(0, wordlen-2)))){

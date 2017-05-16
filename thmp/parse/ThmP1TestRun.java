@@ -733,6 +733,17 @@ public class ThmP1TestRun {
 			st = "we have $a=b$";
 			st = "take a prime $p$";
 			st = "There exists a field extension $\\mathbb{C}$ that is algebraically closed";			
+			st = "There exists a field extension";
+			st = "let $A$ be some simply connected space, then $B$ is trivial if $B$ is the fundamental group of $A$";
+			st = "then $B$ is trivial if $B$ is the fundamental group of $A$";
+			st = "$B$ is trivial if $B$ is the fundamental group of $A$";
+			st = "then $p$ is a odd is $p$ is the fundamental group of $A$";
+			st = "then $p$ is odd if $p$ is the fundamental group of $A$";
+			st = "then $p$ is odd if $p$ is the fundamental group";
+			st = "then $p$ is odd if $p$ is prime";//rule clashing issues!
+			st = "then $p$ is odd if $p$ is prime"; 
+			st = "Integers $p$ and $q$ are coprime if and only if there exist integers $n$ and $m$ such that $np - mq = 1$"; 
+			//st = "Integers $p$ and $q$ are coprime if there exist integers";
 			
 			//st = "a morphism is called a noncommutative serre fibration";
 			//st = "Let $p_1,\\dots,p_r$ be the preimages under $w$"; 			

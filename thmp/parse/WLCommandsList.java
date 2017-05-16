@@ -228,7 +228,7 @@ public class WLCommandsList {
 				 new PBuilder("]" ));
 		putToWLCommandMapBuilder(wLCommandMapBuilder, "exist", new PBuilder("Exist").makeExprHead(), new PBuilder("["),
 				new PBuilder("ent|symb|phrase|noun", null, true, RelationType.EXIST),
-				new PBuilder(null, "exists*", false, true, false), 
+				new PBuilder(null, "exists*", false, true, false).setPositionInStructTree(PositionInStructTree.LAST), 
 				new PBuilder("]" ));
 		
 		//putToWLCommandMapBuilder(wLCommandMapBuilder, "is", addCommand(new String[] { "symb|ent|pro, , true", "verb|vbs|be, is|are|be, trigger",
@@ -331,8 +331,8 @@ public class WLCommandsList {
 		putToWLCommandMapBuilder(wLCommandMapBuilder, "if", new PBuilder("if|If|let|hyp", null, false, true, false), 
 				new PBuilder("assert|texAssert", null, true));
 		
-		putToWLCommandMapBuilder(wLCommandMapBuilder, "then", new PBuilder("then|Then", null, false, true, false), 
-				new PBuilder("assert|texAssert", null, true) );
+		//putToWLCommandMapBuilder(wLCommandMapBuilder, "then", new PBuilder("then|Then", null, false, true, false), 
+			//	new PBuilder("assert|texAssert", null, true) );
 		
 		//"let A be B"; "suppose A is B"
 		putToWLCommandMapBuilder(wLCommandMapBuilder, "let", new PBuilder("let|suppose", null, false, true, false), 
