@@ -790,21 +790,12 @@ public class ParseToWLTree{
 		}*/		
 		//System.out.println("*&&&&&&&&&&&&&&&&&&&&&&&&&&&&structWrapperListSz " + structWrapperListSz);
 		
-		/*This threshold means: no component can be part of another command.*/
+		/*This threshold means: no component can be part of another command. Relaxing this will cause many clashes.*/
 		int structWithOtherHeadThreshold = 0;
 		boolean noClashCommandFound = appendWLCommandStr2(struct, curParseStruct, parsedSB, partsMap, contextVecMap,
 				contextVecConstructed, structWrapperList, structWrapperListSz, structWithOtherHeadThreshold);		
 		contextVecConstructed |= noClashCommandFound;
 		
-		/*relax criteria for how many terms can be part of other commands if no parsePair found */
-		if(false){ //
-		if(!noClashCommandFound && structWrapperListSz > 1){
-			structWithOtherHeadThreshold = 1;
-			noClashCommandFound = appendWLCommandStr2(struct, curParseStruct, parsedSB, partsMap, contextVecMap,
-					contextVecConstructed, structWrapperList, structWrapperListSz, structWithOtherHeadThreshold);
-			contextVecConstructed |= noClashCommandFound;
-		}		
-		}
 		return contextVecConstructed;
 	}
 

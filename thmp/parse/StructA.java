@@ -17,6 +17,7 @@ import thmp.parse.WLCommand.PosTerm;
 import thmp.utils.ExprUtils;
 import thmp.utils.ExprUtils.AssocExprWrapper;
 import thmp.utils.ExprUtils.ExprWrapperType;
+import thmp.utils.ExprUtils.MathPptExprWrapper;
 import thmp.utils.ExprUtils.RuleExprWrapper;
 import thmp.utils.WordForms;
 
@@ -360,12 +361,15 @@ public class StructA<A, B> extends Struct{
 			
 			StringBuilder fullContentSB = new StringBuilder((String)this.prev1);
 			Expr prev1Expr = new Expr((String)this.prev1);
-			//System.out.println("*********prev1 type: " + type());
+			
 			String makePptStr = retrievePosTermPptStr(triggerPosTerm, curPosTerm);
 			//child must return an Association ExprWrapper 
-			//e.g. "Qualifiers" -> {"with", Math["Name"->"axiom"]}
-			List<RuleExprWrapper> childRuleWrapperList = new ArrayList<RuleExprWrapper>();
-			String childStr = appendChildrenQualifierString(includeType, curCommand, childRuleWrapperList);
+			//e.g. "Qualifiers" -> {"with", Math["Name"->"axiom"]}. 
+			//Now it's list with Head Qualifier.
+			
+			//List<RuleExprWrapper> childRuleWrapperList = new ArrayList<RuleExprWrapper>();
+			List<Expr> childExprList = new ArrayList<Expr>();
+			String childStr = appendChildrenQualifierString(includeType, curCommand, childExprList);
 			Expr headExpr;
 			//List<Expr> strExprList = new ArrayList<Expr>();
 			//String prev1Str = (String)this.prev1;
@@ -374,17 +378,17 @@ public class StructA<A, B> extends Struct{
 					fullContentSB.insert(0, "Reference[\"").append("\", \"").append((String)this.prev2)
 						.append(childStr).append("\"]");
 					headExpr = new Expr(Expr.SYMBOL, "Reference");
-					if(childRuleWrapperList.size() > 0){
+					if(childExprList.size() > 0){
 						exprList.add(new Expr(headExpr, new Expr[]{prev1Expr, new Expr((String)this.prev2), 
-								childRuleWrapperList.get(0).expr()}));
+								childExprList.get(0)}));
 					}else{
 						exprList.add(new Expr(headExpr, new Expr[]{prev1Expr, new Expr((String)this.prev2)}));						
 					}
 				}else{
 					fullContentSB.insert(0, "Reference[\"").append(childStr).append("\"]");
 					headExpr = new Expr(Expr.SYMBOL, "Reference");
-					if(childRuleWrapperList.size() > 0){
-						exprList.add(new Expr(headExpr, new Expr[]{prev1Expr, childRuleWrapperList.get(0).expr()}));
+					if(childExprList.size() > 0){
+						exprList.add(new Expr(headExpr, new Expr[]{prev1Expr, childExprList.get(0)}));
 					}else{
 						exprList.add(new Expr(headExpr, new Expr[]{prev1Expr}));
 					}
@@ -395,16 +399,13 @@ public class StructA<A, B> extends Struct{
 				String pptCommaStr = "\"" + makePptStr + "\", ";
 				if(this.type.equals("adj") || this.type.equals("adverb") || this.type.equals("qualifier") ){
 					if(!"".equals(makePptStr)){
-						appendPptExpr(exprList, fullContentSB, prev1Expr, makePptStr, childRuleWrapperList, childStr,
+						appendPptExpr(exprList, fullContentSB, prev1Expr, makePptStr, childExprList, childStr,
 								pptCommaStr);
 					}else{
-						fullContentSB.insert(0, " MathProperty[").append(childStr).append("]");		
-						//ruleExprWrapperList.add(new RuleExprWrapper(new Expr("Mode"), new Expr(makePptStr)));
-						//headExprWrapperType = ExprWrapperType.MATHPPT;
-						
+						fullContentSB.insert(0, " MathProperty[").append(childStr).append("]");						
 						headExpr = new Expr(Expr.SYMBOL, "MathProperty");
-						if(childRuleWrapperList.size() > 0){
-							exprList.add(new Expr(headExpr, new Expr[]{prev1Expr, childRuleWrapperList.get(0).expr()}));
+						if(childExprList.size() > 0){
+							exprList.add(new Expr(headExpr, new Expr[]{prev1Expr, childExprList.get(0)}));
 						}else{
 							exprList.add(new Expr(headExpr, new Expr[]{prev1Expr}));
 						}
@@ -412,13 +413,13 @@ public class StructA<A, B> extends Struct{
 				}else if(prev2.equals("")){
 					/*use "Math" Head here generally so not to have headless object. But perhaps should be more specific.*/
 					if(!"".equals(makePptStr)){						
-						appendPptExpr(exprList, fullContentSB, prev1Expr, makePptStr, childRuleWrapperList, childStr,
+						appendPptExpr(exprList, fullContentSB, prev1Expr, makePptStr, childExprList, childStr,
 								pptCommaStr);
 					}else{
 						fullContentSB.insert(0, "Math[").append(childStr).append("]");
 						headExpr = new Expr(Expr.SYMBOL, "Math");
-						if(childRuleWrapperList.size() > 0){
-							exprList.add(new Expr(headExpr, new Expr[]{prev1Expr, childRuleWrapperList.get(0).expr()}));
+						if(childExprList.size() > 0){
+							exprList.add(new Expr(headExpr, new Expr[]{prev1Expr, childExprList.get(0)}));
 						}else{
 							exprList.add(new Expr(headExpr, new Expr[]{prev1Expr}));							
 						}
@@ -432,8 +433,8 @@ public class StructA<A, B> extends Struct{
 						Expr makePptExpr = new Expr(makePptStr);
 						Expr existingExpr = ExprUtils.sequenceExpr(exprList);
 						headExpr = new Expr(Expr.SYMBOL, "MathProperty");
-						if(childRuleWrapperList.size() > 0){
-							exprList.add(new Expr(headExpr, new Expr[]{makePptExpr, existingExpr, new Expr((String)this.prev2), childRuleWrapperList.get(0).expr()}));
+						if(childExprList.size() > 0){
+							exprList.add(new Expr(headExpr, new Expr[]{makePptExpr, existingExpr, new Expr((String)this.prev2), childExprList.get(0)}));
 						}else{
 							exprList.add(new Expr(headExpr, new Expr[]{makePptExpr, existingExpr, new Expr((String)this.prev2)}));							
 						}
@@ -441,8 +442,8 @@ public class StructA<A, B> extends Struct{
 						fullContentSB.insert(0, "Math[").append(", \"").append((String)this.prev2).append(childStr).append("\"]");
 						Expr existingExpr = ExprUtils.sequenceExpr(exprList);
 						headExpr = new Expr(Expr.SYMBOL, "Math");
-						if(childRuleWrapperList.size() > 0){
-							exprList.add(new Expr(headExpr, new Expr[]{existingExpr, new Expr((String)this.prev2), childRuleWrapperList.get(0).expr()}));
+						if(childExprList.size() > 0){
+							exprList.add(new Expr(headExpr, new Expr[]{existingExpr, new Expr((String)this.prev2), childExprList.get(0)}));
 						}else{
 							exprList.add(new Expr(headExpr, new Expr[]{existingExpr, new Expr((String)this.prev2)}));							
 						}
@@ -479,13 +480,16 @@ public class StructA<A, B> extends Struct{
 	 * @param pptCommaStr
 	 */
 	private void appendPptExpr(List<Expr> exprList, StringBuilder fullContentSB, Expr prev1Expr, String makePptStr,
-			List<RuleExprWrapper> childRuleWrapperList, String childStr, String pptCommaStr) {
+			List<Expr> childExprList, //List<RuleExprWrapper> childRuleWrapperList, 
+			String childStr, String pptCommaStr) {
 		Expr headExpr;
+		//ruleExprWrapperList.add(new RuleExprWrapper(new Expr("Mode"), new Expr(makePptStr)));
+		//headExprWrapperType = ExprWrapperType.MATHPPT;
 		fullContentSB.insert(0, pptCommaStr).insert(0, " MathProperty[").append(childStr).append("]");					
-		headExpr = new Expr(Expr.SYMBOL, "MathProperty");
-		Expr makePptExpr = new Expr(makePptStr);
-		if(childRuleWrapperList.size() > 0){
-			exprList.add(new Expr(headExpr, new Expr[]{makePptExpr, prev1Expr, childRuleWrapperList.get(0).expr()}));
+		headExpr = new Expr(Expr.SYMBOL, "MathProperty"); //new MathPptExprWrapper(assocExprWrapper)
+		Expr makePptExpr = ExprUtils.ruleExpr(new Expr("Mode"), new Expr(makePptStr));
+		if(childExprList.size() > 0){ //should all be rules!
+			exprList.add(new Expr(headExpr, new Expr[]{makePptExpr, prev1Expr, childExprList.get(0)}));
 		}else{
 			exprList.add(new Expr(headExpr, new Expr[]{makePptExpr, prev1Expr}));
 		}
@@ -644,10 +648,11 @@ public class StructA<A, B> extends Struct{
 			/*tempSB.append(inConj ? "[" + prev2SB + "]" : prev2SB);*/
 			tempSB.append(prev2SB);
 		}		
-		List<RuleExprWrapper> ruleWrapperList = new ArrayList<RuleExprWrapper>();
-		tempSB.append(appendChildrenQualifierString(includeType, curCommand, ruleWrapperList));
-		if(ruleWrapperList.size() > 0){
-			curLevelExprList.add(ruleWrapperList.get(0).expr());
+		//List<RuleExprWrapper> ruleWrapperList = new ArrayList<RuleExprWrapper>();
+		List<Expr> childExprList = new ArrayList<Expr>();
+		tempSB.append(appendChildrenQualifierString(includeType, curCommand, childExprList));
+		if(childExprList.size() > 0){
+			curLevelExprList.add(childExprList.get(0));
 		}	
 		Expr combinedLevelExpr; 		
 		if(null != conjDisjHeadExpr){

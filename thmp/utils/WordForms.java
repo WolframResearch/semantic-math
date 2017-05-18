@@ -50,6 +50,7 @@ public class WordForms {
 		= Pattern.compile("[\\{\\[\\(]+(.+?)[\\}\\]\\)]*|[\\{\\[\\(]*(.+?)[\\}\\]\\)]+");
 	private static final Pattern IRREG_PLURAL_ENDINGS_PATTERN = Pattern.compile("s|h|x");
 	public static final Pattern CARDINALITY_PPT_PATTERN = Pattern.compile("some|a|an|the|unique|infinite|infinitely many");
+	private static final Pattern SPACES_AROUND_TEXT_PATTERN = Pattern.compile("\\s*(.+)\\s*");
 	
 	private static final String synonymsFileStr = "src/thmp/data/synonyms.txt";
 	private static final ImmutableMap<String, String> synonymRepMap;
@@ -559,6 +560,10 @@ public class WordForms {
 	
 	public static Pattern getSPECIAL_CHARS_AROUND_WORD_PATTERN(){
 		return SPECIAL_CHARS_AROUND_WORD_PATTERN;
+	}
+	
+	public static Pattern SPACES_AROUND_TEXT_PATTERN(){
+		return SPACES_AROUND_TEXT_PATTERN;
 	}
 	/**
 	 * Get the part of speech corresponding to the pos tag/symbol.

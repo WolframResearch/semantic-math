@@ -742,10 +742,11 @@ public class ThmP1TestRun {
 			st = "then $p$ is odd if $p$ is the fundamental group";
 			st = "then $p$ is odd if $p$ is prime";//rule clashing issues!
 			st = "then $p$ is odd if $p$ is prime"; 
-			st = "Integers $p$ and $q$ are coprime if and only if there exist integers $n$ and $m$ such that $np - mq = 1$"; 
+			st = "Integers $p$ and $q$ are coprime if and only if there exist integers $n$ and $m$ such that $np - mq = 1$";
 			//st = "Integers $p$ and $q$ are coprime if there exist integers";
 			
-			//st = "a morphism is called a noncommutative serre fibration";
+			st = "this morphism is called a noncommutative serre fibration";
+			
 			//st = "Let $p_1,\\dots,p_r$ be the preimages under $w$"; 			
 			//st = "$p_1,\\dots,p_r$ is the preimage under $w$ of $c^\\ast_0$";			
 			//st = "there are complex parameters";

@@ -464,7 +464,8 @@ public abstract class Struct implements Serializable{
 	 * e.g. "Qualifiers" -> {"with", Math["Name"->"axiom"]}.
 	 * @return child String
 	 */
-	protected String appendChildrenQualifierString(boolean includeType, WLCommand curCommand, List<RuleExprWrapper> childRuleWrapperList) {
+	protected String appendChildrenQualifierString(boolean includeType, WLCommand curCommand, //List<RuleExprWrapper> childRuleWrapperList
+			List<Expr> childLevelExprList) {
 		List<Struct> children = this.children();
 		List<ChildRelation> childRelationList = this.childRelationList();
 		int childrenSize = children.size();
@@ -521,15 +522,16 @@ public abstract class Struct implements Serializable{
 			if(2 < childSbLen){
 				childSb = childSb.delete(childSbLen-2, childSbLen);
 				if(nontrivialChildrenStrCounter > 1){
-					childSb.insert(0, ", \"Qualifiers\" -> {").append("}");
+					childSb.insert(0, ", \"Qualifiers\" -> {").append("}");					
 				}else{
-					childSb.insert(0, ", \"Qualifiers\" -> ");
+					childSb.insert(0, ", \"Qualifiers\" -> ");					
 				}
-				RuleExprWrapper childExprWrapper = new RuleExprWrapper(new Expr("Qualifier"), ExprUtils.listExpr(childExprList));
+				//RuleExprWrapper childExprWrapper = new RuleExprWrapper(new Expr("Qualifier"), ExprUtils.listExpr(childExprList));				
 				//List<RuleExprWrapper> ruleExprWrapperList = new ArrayList<RuleExprWrapper>();
 				//ruleExprWrapperList.add(childExprWrapper);
 				//childAssocWrapperList.add(new AssocExprWrapper(ruleExprWrapperList));	
-				childRuleWrapperList.add(childExprWrapper);	
+				//childRuleWrapperList.add(childExprWrapper);	
+				childLevelExprList.add(ExprUtils.qualifierExpr(childExprList));
 			}	
 		}
 		return childSb.toString();

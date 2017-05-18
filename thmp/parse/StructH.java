@@ -566,7 +566,8 @@ public class StructH<H> extends Struct{
 		
 		String makePptStr = retrievePosTermPptStr(triggerPosTerm, curPosTerm);
 		
-		List<RuleExprWrapper> ruleExprWrapperList = new ArrayList<RuleExprWrapper>();
+		//List<RuleExprWrapper> ruleExprWrapperList = new ArrayList<RuleExprWrapper>();
+		List<Expr> curLevelExprList = new ArrayList<Expr>();
 				
 		if(curCommand != null) {
 			WLCommand.increment_commandNumUnits(curCommand, this);
@@ -586,7 +587,8 @@ public class StructH<H> extends Struct{
 			if(!"".equals(makePptStr)){
 				String pptCommaStr = "\"" + makePptStr + "\", ";				
 				sb.append(this.type.equals("ent") ? "MathProperty" : this.type).append("[Mode->\"").append(pptCommaStr);
-				ruleExprWrapperList.add(new RuleExprWrapper(new Expr("Mode"), new Expr(makePptStr)));
+				curLevelExprList.add(new Expr(new Expr("Mode"), new Expr[]{new Expr(makePptStr)}));
+				//ruleExprWrapperList.add(new RuleExprWrapper(new Expr("Mode"), new Expr(makePptStr)));
 				headExprWrapperType = ExprWrapperType.MATHPPT;
 			}else{
 				sb.append(this.type.equals("ent") ? "Math" : this.type).append("[");		
@@ -601,8 +603,9 @@ public class StructH<H> extends Struct{
 			/*sb.append("\"Name\"->\"").append(name).append("\"");
 			RuleExprWrapper ruleWrapper = new RuleExprWrapper(new Expr("Name"), new Expr(name));*/
 			sb.append("\"Type\"->\"").append(name).append("\"");
-			RuleExprWrapper ruleWrapper = new RuleExprWrapper(new Expr("Type"), new Expr(name));
-			ruleExprWrapperList.add(ruleWrapper);
+			curLevelExprList.add(new Expr(new Expr("Type"), new Expr[]{new Expr(name)}));
+			//RuleExprWrapper ruleWrapper = new RuleExprWrapper(new Expr("Type"), new Expr(name));
+			//ruleExprWrapperList.add(ruleWrapper);
 			prependCommaBool = true;
 		}
 		
@@ -653,7 +656,8 @@ public class StructH<H> extends Struct{
 			}
 			sb.append("\"Property\"->{").append(pptStr).append("}");
 			Expr pptListExpr = ExprUtils.listExpr(pptExprList);			
-			ruleExprWrapperList.add(new RuleExprWrapper(new Expr("Property"), pptListExpr));
+			//ruleExprWrapperList.add(new RuleExprWrapper(new Expr("Property"), pptListExpr));
+			curLevelExprList.add(new Expr(new Expr("Property"), new Expr[]{pptListExpr}));
 		}
 		//append cardinality list
 		if(!cardExprList.isEmpty()){
@@ -667,7 +671,8 @@ public class StructH<H> extends Struct{
 			}
 			sb.append("\"Cardinality\"->{").append(cardStr).append("}");
 			Expr cardListExpr = ExprUtils.listExpr(cardExprList);	
-			ruleExprWrapperList.add(new RuleExprWrapper(new Expr("Cardinality"), cardListExpr));
+			//ruleExprWrapperList.add(new RuleExprWrapper(new Expr("Cardinality"), cardListExpr));
+			curLevelExprList.add(new Expr(new Expr("Cardinality"), new Expr[]{cardListExpr}));
 		}
 		
 		String called = struct.get("called");
@@ -678,7 +683,8 @@ public class StructH<H> extends Struct{
 			/*sb.append("\"Called\"->").append("\"").append(called).append("\"");
 			ruleExprWrapperList.add(new RuleExprWrapper(new Expr("Called"), new Expr(called)));*/
 			sb.append("\"Name\"->").append("\"").append(called).append("\"");
-			ruleExprWrapperList.add(new RuleExprWrapper(new Expr("Name"), new Expr(called)));
+			//ruleExprWrapperList.add(new RuleExprWrapper(new Expr("Name"), new Expr(called)));
+			curLevelExprList.add(new Expr(new Expr("Name"), new Expr[]{new Expr(called)}));
 		}
 		//append name
 		String tex = struct.get("tex");
@@ -687,28 +693,29 @@ public class StructH<H> extends Struct{
 				sb.append(", ");
 			}
 			sb.append("\"Label\"->\"").append(tex).append("\"");
-			ruleExprWrapperList.add(new RuleExprWrapper(new Expr("Label"), new Expr(tex)));
+			//ruleExprWrapperList.add(new RuleExprWrapper(new Expr("Label"), new Expr(tex)));
+			curLevelExprList.add(new Expr(new Expr("Label"), new Expr[]{new Expr(tex)}));
 		}
 		
-		//sb.append(append_name_pptStr());
-		//System.out.println("curCommand: " + curCommand);
-		//System.out.println("StructH: this.name " + this.nameStr());
-		//System.out.println("StructH: (((((((((children: " + children + ". childRelationList: " + childRelationList);
-		List<RuleExprWrapper> childRuleExprWrapperList = new ArrayList<RuleExprWrapper>();
-		sb.append(appendChildrenQualifierString(includeType, curCommand, childRuleExprWrapperList));		
-		if(childRuleExprWrapperList.size() > 0){
+		//List<RuleExprWrapper> childRuleExprWrapperList = new ArrayList<RuleExprWrapper>();
+		sb.append(appendChildrenQualifierString(includeType, curCommand, curLevelExprList));		
+		/*if(childRuleExprWrapperList.size() > 0){
 			//add to rules list
 			ruleExprWrapperList.add(childRuleExprWrapperList.get(0));
-		}
+		}*/
 		
-		AssocExprWrapper assocExprWrapper = new AssocExprWrapper(ruleExprWrapperList);
-		ExprWrapper mathExprWrapper;
+		//AssocExprWrapper assocExprWrapper = new AssocExprWrapper(ruleExprWrapperList);
+		//ExprWrapper mathExprWrapper;
+		Expr combinedExpr;
 		if(headExprWrapperType == ExprWrapperType.MATHPPT){
-			mathExprWrapper = new MathPptExprWrapper(assocExprWrapper);
+			//mathExprWrapper = new MathPptExprWrapper(assocExprWrapper);
+			combinedExpr = ExprUtils.mathPptExpr(curLevelExprList);
 		}else{
-			mathExprWrapper = new MathExprWrapper(assocExprWrapper);
+			//mathExprWrapper = new MathExprWrapper(assocExprWrapper);
+			combinedExpr = ExprUtils.mathExpr(curLevelExprList);
 		}		 
-		exprList.add(mathExprWrapper.expr());
+		//exprList.add(mathExprWrapper.expr());
+		exprList.add(combinedExpr);
 		
 		if(includeType){ 
 			sb.append("]");

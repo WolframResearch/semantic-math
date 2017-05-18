@@ -20,6 +20,7 @@ public class ExprUtils {
 	private static final Expr ruleHeadExpr = new Expr(Expr.SYMBOL, "Rule");
 	private static final Expr mathHeadExpr = new Expr(Expr.SYMBOL, "Math");
 	private static final Expr mathPptHeadExpr = new Expr(Expr.SYMBOL, "MathProperty");
+	private static final Expr qualifierHeadExpr = new Expr(Expr.SYMBOL, "Qualifier");
 	
 	public enum ExprWrapperType{
 		RULE,
@@ -54,16 +55,14 @@ public class ExprUtils {
 		}
 	}
 	
-	public static class RuleExprWrapper extends ExprWrapper{
-		
+	public static class RuleExprWrapper extends ExprWrapper{		
 		public RuleExprWrapper(Expr p1, Expr p2){
 			super(ExprUtils.ruleExpr(p1, p2), ExprWrapperType.RULE);
 			//this.expr = ExprUtils.ruleExpr(p1, p2);
 		}		
 	}
 	
-	public static class AssocExprWrapper extends ExprWrapper{
-		
+	public static class AssocExprWrapper extends ExprWrapper{		
 		public AssocExprWrapper(List<RuleExprWrapper> rulesExprWrapperList){
 			super(ExprUtils.assocExpr(rulesExprWrapperList), ExprWrapperType.ASSOC);
 			//this.expr = ExprUtils.assocExpr(rulesExprWrapperList);
@@ -120,11 +119,33 @@ public class ExprUtils {
 		return new Expr(mathHeadExpr, new Expr[]{assocExprWrapper.expr});
 	}
 	
+	/**
+	 * Creates Expr with Math Head, with list of Expr as input.
+	 * @param exprList
+	 * @return
+	 */
+	public static Expr mathExpr(List<Expr> exprList){
+		return createExprFromList(mathHeadExpr, exprList);
+	}
+	
 	public static Expr mathPptExpr(AssocExprWrapper assocExprWrapper){		
 		/*if(!assocHeadExpr.equals(assocExpr.head())){
 			throw new IllegalArgumentException("The argument to an Math Expr must be an association!");
 		}*/			
 		return new Expr(mathPptHeadExpr, new Expr[]{assocExprWrapper.expr});
+	}
+	
+	/**
+	 * Creates Expr with MathProperty Head, with list of Expr as input.
+	 * @param exprList
+	 * @return
+	 */
+	public static Expr mathPptExpr(List<Expr> exprList){	
+		return createExprFromList(mathPptHeadExpr, exprList);
+	}
+	
+	public static Expr qualifierExpr(List<Expr> exprList){	
+		return createExprFromList(qualifierHeadExpr, exprList);
 	}
 	
 	public static Expr sentenceExpr(Expr expr){

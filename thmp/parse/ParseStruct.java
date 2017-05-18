@@ -166,9 +166,16 @@ public class ParseStruct implements Serializable{
 			i--;
 		}	
 		//put rule in "Sentence" Head
-		Expr sentenceExpr = ExprUtils.sentenceExpr(ExprUtils.sequenceExpr(curLevelExprList));
-		//exprList.add(ExprUtils.listExpr(curLevelExprList));
-		exprList.add(sentenceExpr);
+		Expr sentenceExpr;
+		int curLevelExprListSz = curLevelExprList.size();
+		if(curLevelExprListSz > 1){
+			sentenceExpr = ExprUtils.sentenceExpr(ExprUtils.sequenceExpr(curLevelExprList));
+			exprList.add(sentenceExpr);
+		}else if(curLevelExprListSz == 1){
+			sentenceExpr = ExprUtils.sentenceExpr(curLevelExprList.get(0));
+			exprList.add(sentenceExpr);
+		}		 
+		//exprList.add(ExprUtils.listExpr(curLevelExprList));		
 		return sb.toString();
 	}
 	
