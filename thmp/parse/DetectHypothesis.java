@@ -130,6 +130,10 @@ public class DetectHypothesis {
 	public static class Runner{
 		
 		public static void main(String[] args){
+			generateSearchData(args);
+		}
+		
+		public static void generateSearchData(String[] args){
 			InputParams inputParams = new InputParams(args);
 			//need separate runner class to set
 			if(inputParams.usePreviousDocWordsFreqMaps){

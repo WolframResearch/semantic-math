@@ -78,7 +78,9 @@ public class ParseRun {
 			if(null != headParseStruct){
 				String headParseStructStr = headParseStruct.createStringAndRetrieveExpr(sb, exprList);
 				System.out.println("@@@" + headParseStructStr);
-				System.out.println("EXPR: \n" + exprList.get(0));
+				if(!exprList.isEmpty()){
+					System.out.println("EXPR: \n" + exprList.get(0));
+				}
 			}else{
 				System.out.println("@@@");
 			}
