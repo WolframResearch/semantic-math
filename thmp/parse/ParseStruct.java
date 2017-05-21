@@ -157,6 +157,7 @@ public class ParseStruct implements Serializable{
 		}
 		
 		i = childrenParseStructList.size();		
+		System.out.println("childrenParseStructList " +childrenParseStructList);
 		for(ParseStruct childParseStruct : childrenParseStructList){
 			if(i > 1){
 				sb.append("{").append(childParseStruct.createStringAndRetrieveExpr(sb, curLevelExprList)).append("};");

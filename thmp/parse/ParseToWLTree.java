@@ -1172,9 +1172,8 @@ public class ParseToWLTree{
 		 * @param WLCommandStr
 		 */
 		public void set_WLCommandStr(StringBuilder WLCommandStr){
-			//this.wlCommandStr = this.wlCommandStr == null ? "" : this.wlCommandStr; //<--now not necessary
 			//System.out.println("&******&&&&&&&****** WLCommandStr before setting " + this.WLCommandStr);
-			System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
+			//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
 			//Why append and not just set??
 			//this.WLCommandStr += " " + WLCommandStr;
 			//System.out.println("SETTING COMMAND STR " + WLCommandStr);

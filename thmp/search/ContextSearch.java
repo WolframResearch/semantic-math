@@ -1,32 +1,16 @@
 package thmp.search;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.TreeMap;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.wolfram.jlink.Expr;
-import com.wolfram.jlink.ExprFormatException;
-import com.wolfram.jlink.KernelLink;
-import com.wolfram.jlink.MathLinkException;
-
-import thmp.parse.ThmP1;
-import thmp.search.Searcher.SearcherState;
 import thmp.search.TheoremGet.ContextRelationVecPair;
-import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 import static thmp.utils.MathLinkUtils.evaluateWLCommand;
 
@@ -40,10 +24,7 @@ public class ContextSearch implements Searcher<Map<Integer, Integer>>{
 
 	//bare thm list, without latex \label's or \index's, or refs, etc
 	//private static final List<String> bareThmList = CollectThm.ThmList.get_bareThmList();
-	private static final KernelLink ml = FileUtils.getKernelLinkInstance();
-	//list of strings "{1, 0, ...}" corresponding to contexts of thms, same indexing as in thmList.
-	//private static final List<String> allThmsContextVecStrList;
-	//private static final List<String> allThmsContextVecStrList;
+	//private static final KernelLink ml = FileUtils.getKernelLinkInstance();
 	
 	//private static final int LIST_INDEX_SHIFT = 1;
 	private static final Pattern BRACKETS_PATTERN = WordForms.BRACKETS_PATTERN();

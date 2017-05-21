@@ -849,7 +849,7 @@ public class ThmP1TestRun {
 			parseStateBuilder.setWriteUnknownWordsToFile(WRITE_UNKNOWN_WORDS_TO_FILE);
 			
 			/*******whether or not to process text from above********/			
-			boolean processText = true;
+			boolean processText = false;
 			ParseState parseState = parseStateBuilder.build();
 			
 			if(processText){	
@@ -875,12 +875,12 @@ public class ThmP1TestRun {
 			}
 			
 			/*******whether to process file or not********/
-			boolean processFile = false;
+			boolean processFile = true;
 			
 			if(processFile){
 				
-				Scanner sc = new Scanner(new File("src/thmp/data/samplePaper2.txt"));
-				//Scanner sc = new Scanner(new File("/Users/yihed/Downloads/math0302118"));				
+				//Scanner sc = new Scanner(new File("src/thmp/data/samplePaper2.txt"));
+				Scanner sc = new Scanner(new File("/Users/yihed/Downloads/agt-4-38.tex"));				
 				//Scanner sc = new Scanner(new File("/Users/yihed/Downloads/spectral.tex"));
 				//Scanner sc = new Scanner(new File("src/thmp/data/collectThmTestSample.txt"));
 				parseState = parseStateBuilder.build();

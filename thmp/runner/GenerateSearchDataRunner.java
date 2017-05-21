@@ -13,7 +13,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import thmp.parse.DetectHypothesis;
+import thmp.search.SearchIntersection;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 
@@ -24,6 +28,7 @@ import thmp.utils.WordForms;
  */
 public class GenerateSearchDataRunner {
 
+	private static final Logger logger = LogManager.getLogger(SearchIntersection.class);
 	
 	public static void main(String[] args) throws FileNotFoundException, IOException, InterruptedException{
 		//read in location of source file
@@ -46,6 +51,7 @@ public class GenerateSearchDataRunner {
 	 */
 	private static void runScripts(List<String> fileNamesList) throws IOException, InterruptedException{
 		
+		long beforeTime = System.currentTimeMillis();
 		for(String fileName : fileNamesList){			
 			//ProcessBuilder pb = new ProcessBuilder("/home/usr0/yihed/thm/unpack2.sh", fileName);
 			//File workingDir = new File("/home/usr0/yihed/thm");
@@ -54,6 +60,10 @@ public class GenerateSearchDataRunner {
 			
 			//first argument to generateSearchData takes form e.g. 0208_001Untarred/0208
 			int fileNameLen = fileName.length();
+			if(fileNameLen < 12){
+				logger.error("filename length should not be smaller than 12.");
+				continue;
+			}
 			String fileDir = fileName.substring(fileNameLen-12, fileNameLen-4) + "Untarred" + File.separator 
 					+ fileName.substring(fileNameLen-12, fileNameLen-8);
 			//skip untar'ing if directory already exists
@@ -68,10 +78,12 @@ public class GenerateSearchDataRunner {
 			//pr = rt.exec("/home/usr0/yihed/thm/generateSearchData.sh " + fileDir);			
 			//waitAndPrintProcess(pr);
 			DetectHypothesis.Runner.generateSearchData(new String[]{fileDir, 
-					"src/thmp/data/termDocumentMatrixSVD.mx", "src/thmp/data/allThmWordsMap.dat"});
-			
-			System.out.println("Done generating search data for files in " + fileDir);
+					"src/thmp/data/termDocumentMatrixSVD.mx", "src/thmp/data/allThmWordsMap.dat"});			
+			System.out.println("Done generating search data for files in " + fileDir);			
 		}
+		double numMiliSecPerHour = 3600000;
+		long afterTime = System.currentTimeMillis();
+		System.out.println("time it took to evalute data for "+ fileNamesList +" files:" + (afterTime-beforeTime)/numMiliSecPerHour);
 	}
 
 	/**

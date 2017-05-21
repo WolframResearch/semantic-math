@@ -48,9 +48,9 @@ public class ThmInput {
 	 * "|^\\\\begin\\{prop(?:[^}]*)\\}\\s*|^\\\\begin\\{proclaim(?:[^}]*)\\}\\s*"
 	 * );
 	 */	
-	static String THM_END_STR = ".*\\\\end\\s*\\{def(?:.*)|.*\\\\end\\s*\\{lem(?:.*)"
-			+ "|.*\\\\end\\s*\\{th(?:.*)|.*\\\\end\\s*\\{prop.*" 
-			+ "|.*\\\\endproclaim(?:.*)|.*\\\\end\\s*\\{cor(?:.*)|.*\\\\end\\s*\\{conj(?:.*)";
+	static String THM_END_STR = ".*(?:\\\\end\\s*\\{def(?:.*)|\\\\end\\s*\\{lem(?:.*)"
+			+ "|\\\\end\\s*\\{th(?:.*)|\\\\end\\s*\\{prop.*|end\\s*\\{proclaim(?:.*)"
+			+ "|\\\\endproclaim(?:.*)|\\\\end\\s*\\{cor(?:.*)|\\\\end\\s*\\{conj(?:.*))";
 	//static String THM_END_STR = "\\\\end\\{def(?:.*)|\\\\end\\{lem(?:.*)|\\\\end\\{th(?:.*)|\\\\end\\{pro(?:.*)|\\\\endproclaim(?:.*)"
 			//+ "|\\\\end\\{cor(?:.*)";
 	static final Pattern THM_END_PATTERN = Pattern.compile(THM_END_STR);

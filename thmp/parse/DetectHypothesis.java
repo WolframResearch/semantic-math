@@ -116,6 +116,7 @@ public class DetectHypothesis {
 	private static final Pattern END_DOCUMENT_PATTERN = Pattern.compile("\\\\end\\{document\\}.*");
 	private static final Pattern NEW_DOCUMENT_PATTERN = Pattern.compile(".*\\\\documentclass.*");
 	private static final int NUM_NON_TEX_TOKEN_THRESHOLD = 4;
+	private static final int THM_MAX_CHAR_SIZE = 3500;
 	
 	static{
 		FileUtils.set_dataGenerationMode();	
@@ -430,6 +431,7 @@ public class DetectHypothesis {
 				//inputBF = new BufferedReader(new FileReader("src/thmp/data/samplePaper1.txt"));
 				inputFile = new File("src/thmp/data/Total.txt");
 				inputFile = new File("src/thmp/data/math0210227");
+				inputFile = new File("/Users/yihed/Downloads/agt-4-38.tex");
 				//inputFile = new File("src/thmp/data/thmsFeb26.txt");
 				//inputBF = new BufferedReader(new FileReader("src/thmp/data/Total.txt"));
 				//inputBF = new BufferedReader(new FileReader("src/thmp/data/fieldsThms2.txt"));
@@ -444,7 +446,7 @@ public class DetectHypothesis {
 			//if(true) throw new IllegalStateException("input is directory! texFileNamesMap: " + texFileNamesMap);
 			//get all filenames from dir. Get tex file names from serialized file data.
 			//File[] files = inputFile.listFiles();			
-			try{
+			
 				for(Map.Entry<String, String> fileNameEntry : texFileNamesMap.entrySet()){
 					//this is absolute file path
 					String fileName = fileNameEntry.getKey();
@@ -467,10 +469,7 @@ public class DetectHypothesis {
 					}
 					FileUtils.silentClose(inputBF);
 				}
-			}catch(Throwable e){
-				logger.error(e.getStackTrace());			
-				throw e;
-			}//finally{
+			//finally{
 				//serialize, so don't discard the items already parsed.
 				serializeDataToFile(stats, defThmList, inputParams);			
 			//}
@@ -775,7 +774,11 @@ public class DetectHypothesis {
 				
 				//Need to read in until \end{cor} etc
 				newThmSB.append(" ").append(line);
-				
+				//
+				if(newThmSB.length() > THM_MAX_CHAR_SIZE){
+					logger.error("thm length exceeds maximum allowable size: " + newThmSB);
+					continue;
+				}
 				//parse hyp and thm. BE SURE TO ONLY RE-ORDER WORDS based on word freuqency at last run, before serializing!
 				processParseHypThm(newThmSB, parseState, stats, definitionListWithThmList, fileName, macrosTrie,
 						eliminateBeginEndThmPattern);
@@ -989,8 +992,15 @@ public class DetectHypothesis {
 		//Parse the thm first, with the variableNamesMMap already updated to include contexual definitions.
 				//should return parsedExpression object, and serialize it. But only pick up definitions that are 
 				//not defined locally within this theorem.
-		//System.out.println("~~~~~~parsing~~~~~~~~~~");		
-		ParseRun.parseInput(thmStr, parseState, PARSE_INPUT_VERBOSE, stats);
+		//System.out.println("~~~~~~parsing~~~~~~~~~~");
+		try{
+			ParseRun.parseInput(thmStr, parseState, PARSE_INPUT_VERBOSE, stats);
+		}catch(Throwable e){
+			String msg = "Error when parsing thm: " + thmStr;
+			System.out.println(msg);
+			logger.error(msg);
+			throw e;
+		}
 		//System.out.println("~~~~~~Done parsing~~~~~~~");		
 		
 		if(parseState.numNonTexTokens() < NUM_NON_TEX_TOKEN_THRESHOLD){
