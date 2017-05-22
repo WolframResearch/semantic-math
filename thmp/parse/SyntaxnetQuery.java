@@ -56,11 +56,10 @@ public class SyntaxnetQuery {
 		}
 		//get file containing serialized string
 		InputStream fileInputStream;
-		//fileInputStream = new FileInputStream("src/thmp/data/serializedSentence.txt");
 		
-		//this.sentence = Sentence.parseFrom(fileInputStream);
+		/*fileInputStream = new FileInputStream("src/thmp/data/serializedSentence.txt");		
+		this.sentence = Sentence.parseFrom(fileInputStream);*/		
 		
-	
 	}
 	
 	/**
