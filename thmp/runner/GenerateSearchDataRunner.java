@@ -70,7 +70,7 @@ public class GenerateSearchDataRunner {
 			if(!(new File(fileDir)).exists()){
 				Runtime rt = Runtime.getRuntime();
 				Process pr = rt.exec("/home/usr0/yihed/thm/unpack2.sh " + fileName);			
-				waitAndPrintProcess(pr);
+				FileUtils.waitAndPrintProcess(pr);
 				//this name must coincide with that in both bash scripts.		
 				System.out.println("Done unpacking file " + fileName + ". Starting to generate search data");
 			}
@@ -86,33 +86,6 @@ public class GenerateSearchDataRunner {
 		System.out.println("time it took to evalute data for "+ fileNamesList +" files:" + (afterTime-beforeTime)/numMiliSecPerHour);
 	}
 
-	/**
-	 * @param pr
-	 * @throws IOException
-	 * @throws InterruptedException
-	 */
-	private static void waitAndPrintProcess(Process pr) throws IOException, InterruptedException {
-		InputStream inputStream = pr.getInputStream();
-		InputStream errorStream = pr.getErrorStream();
-		InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-		BufferedReader inputReader = new BufferedReader(inputStreamReader);		
-		BufferedReader errorReader = new BufferedReader(new InputStreamReader(errorStream));
-		String line;
-		while(null != (line = inputReader.readLine())){
-			//System.out.println(new String(byteAr, Charset.forName("UTF-8")));
-			System.out.println(line);
-		}
-		//byte[] byteAr = new byte[1024];
-		//while(-1 != inputStream.read(byteAr) ){
-		while(null != (line = errorReader.readLine())){
-			//System.out.println(new String(byteAr, Charset.forName("UTF-8")));
-			System.out.println(line);
-		}
-		pr.waitFor();
-		FileUtils.silentClose(inputReader);
-		FileUtils.silentClose(errorReader);
-	}
-	
 	/**
 	 * Returns list of files 
 	 * @param fileName

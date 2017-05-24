@@ -361,7 +361,9 @@ public class StructA<A, B> extends Struct{
 			
 			StringBuilder fullContentSB = new StringBuilder((String)this.prev1);
 			Expr prev1Expr = new Expr((String)this.prev1);
-			
+			if(((String)this.prev1).equals("maximal ideal")){
+				System.out.println("STRUCTA - -  prev1Expr : " + prev1Expr);
+			}
 			String makePptStr = retrievePosTermPptStr(triggerPosTerm, curPosTerm);
 			//child must return an Association ExprWrapper 
 			//e.g. "Qualifiers" -> {"with", Math["Name"->"axiom"]}. 
@@ -417,21 +419,33 @@ public class StructA<A, B> extends Struct{
 								pptCommaStr);
 					}else{
 						fullContentSB.insert(0, "Math[").append(childStr).append("]");
-						headExpr = new Expr(Expr.SYMBOL, "Math");
+						headExpr = new Expr(Expr.SYMBOL, "Math");						
 						if(childExprList.size() > 0){
 							exprList.add(new Expr(headExpr, new Expr[]{prev1Expr, childExprList.get(0)}));
+							//System.out.println("CHILD EXPR LIST: " + childExprList);
 						}else{
 							exprList.add(new Expr(headExpr, new Expr[]{prev1Expr}));							
 						}
 					}
 					//if(this.type.equals("texAssert")) System.out.println("StructA -struct "+ this +"has child? " +this.hasChild);
 					///throw new IllegalStateException("makePptStr " + makePptStr + " " + triggerPosTerm.isPropertyTerm());
+				}else{
+					fff
 				}
+				
 				if(!prev2.equals("")){
 					if(!"".equals(makePptStr)){
 						fullContentSB.insert(0, makePptStr).insert(0, "MathProperty[").append(", \"").append((String)this.prev2).append(childStr).append("\"]");
 						Expr makePptExpr = new Expr(makePptStr);
-						Expr existingExpr = ExprUtils.sequenceExpr(exprList);
+						Expr existingExpr;
+						int exprListSz = exprList.size();
+						if(exprListSz > 1){
+							existingExpr = ExprUtils.sequenceExpr(exprList);
+						}else if(exprListSz == 1){
+							existingExpr = exprList.get(0);
+						}else{
+							existingExpr = new Expr(Expr.SYMBOL, "Nothing");
+						}
 						headExpr = new Expr(Expr.SYMBOL, "MathProperty");
 						if(childExprList.size() > 0){
 							exprList.add(new Expr(headExpr, new Expr[]{makePptExpr, existingExpr, new Expr((String)this.prev2), childExprList.get(0)}));
@@ -440,7 +454,16 @@ public class StructA<A, B> extends Struct{
 						}
 					}else{
 						fullContentSB.insert(0, "Math[").append(", \"").append((String)this.prev2).append(childStr).append("\"]");
-						Expr existingExpr = ExprUtils.sequenceExpr(exprList);
+						
+						Expr existingExpr;
+						int exprListSz = exprList.size();
+						if(exprListSz > 1){
+							existingExpr = ExprUtils.sequenceExpr(exprList);
+						}else if(exprListSz == 1){
+							existingExpr = exprList.get(0);
+						}else{
+							existingExpr = new Expr(Expr.SYMBOL, "Nothingggg");
+						}
 						headExpr = new Expr(Expr.SYMBOL, "Math");
 						if(childExprList.size() > 0){
 							exprList.add(new Expr(headExpr, new Expr[]{existingExpr, new Expr((String)this.prev2), childExprList.get(0)}));

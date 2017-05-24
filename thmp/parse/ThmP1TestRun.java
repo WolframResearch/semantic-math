@@ -743,9 +743,11 @@ public class ThmP1TestRun {
 			st = "then $p$ is odd if $p$ is prime";//rule clashing issues!
 			st = "then $p$ is odd if $p$ is prime"; 
 			st = "Integers $p$ and $q$ are coprime if and only if there exist integers $n$ and $m$ such that $np - mq = 1$";
-			//st = "Integers $p$ and $q$ are coprime if there exist integers";
-			
+			//st = "Integers $p$ and $q$ are coprime if there exist integers";			
 			st = "this morphism is called a noncommutative serre fibration";
+			st = "$\\lambda$ run over all pairs of partitions which are complementary with respect to $R$";
+			st = "A morphism of C-algebras $f : A \\longrightarrow B$ with axiom is called a noncommutative Serre fibration";
+			st = "$R_\\mathfrak m$ is universally catenary for all maximal ideals $\\mathfrak m$";
 			
 			//st = "Let $p_1,\\dots,p_r$ be the preimages under $w$"; 			
 			//st = "$p_1,\\dots,p_r$ is the preimage under $w$ of $c^\\ast_0$";			
@@ -849,7 +851,7 @@ public class ThmP1TestRun {
 			parseStateBuilder.setWriteUnknownWordsToFile(WRITE_UNKNOWN_WORDS_TO_FILE);
 			
 			/*******whether or not to process text from above********/			
-			boolean processText = false;
+			boolean processText = true;
 			ParseState parseState = parseStateBuilder.build();
 			
 			if(processText){	
@@ -875,7 +877,7 @@ public class ThmP1TestRun {
 			}
 			
 			/*******whether to process file or not********/
-			boolean processFile = true;
+			boolean processFile = false;
 			
 			if(processFile){
 				

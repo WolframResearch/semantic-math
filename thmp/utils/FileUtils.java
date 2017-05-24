@@ -1,5 +1,6 @@
 package thmp.utils;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.Closeable;
 import java.io.File;
@@ -9,6 +10,7 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
@@ -462,5 +464,34 @@ public class FileUtils {
 
 	public static String getRELATED_WORDS_MAP_SERIAL_FILE_STR(){
 		return RELATED_WORDS_MAP_SERIAL_FILE_STR;
+	}
+	
+	/**
+	 * Waits for process to complete, and prints output.
+	 * Should only be used locally! Because unnecessary IO if on server.
+	 * @param pr
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
+	public static void waitAndPrintProcess(Process pr) throws IOException, InterruptedException {
+		InputStream inputStream = pr.getInputStream();
+		InputStream errorStream = pr.getErrorStream();
+		InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+		BufferedReader inputReader = new BufferedReader(inputStreamReader);		
+		BufferedReader errorReader = new BufferedReader(new InputStreamReader(errorStream));
+		String line;
+		while(null != (line = inputReader.readLine())){
+			//System.out.println(new String(byteAr, Charset.forName("UTF-8")));
+			System.out.println(line);
+		}
+		//byte[] byteAr = new byte[1024];
+		//while(-1 != inputStream.read(byteAr) ){
+		while(null != (line = errorReader.readLine())){
+			//System.out.println(new String(byteAr, Charset.forName("UTF-8")));
+			System.out.println(line);
+		}
+		pr.waitFor();
+		FileUtils.silentClose(inputReader);
+		FileUtils.silentClose(errorReader);
 	}
 }
