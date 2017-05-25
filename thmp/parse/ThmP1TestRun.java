@@ -746,8 +746,9 @@ public class ThmP1TestRun {
 			//st = "Integers $p$ and $q$ are coprime if there exist integers";			
 			st = "this morphism is called a noncommutative serre fibration";
 			st = "$\\lambda$ run over all pairs of partitions which are complementary with respect to $R$";
-			st = "A morphism of C-algebras $f : A \\longrightarrow B$ with axiom is called a noncommutative Serre fibration";
 			st = "$R_\\mathfrak m$ is universally catenary for all maximal ideals $\\mathfrak m$";
+			st = "A morphism of C-algebras $f : A \\longrightarrow B$ with axiom is called a noncommutative Serre fibration";//need parsing!
+			st = "a morphism of C-algebras $sfsff$ is called a fibration";
 			
 			//st = "Let $p_1,\\dots,p_r$ be the preimages under $w$"; 			
 			//st = "$p_1,\\dots,p_r$ is the preimage under $w$ of $c^\\ast_0$";			

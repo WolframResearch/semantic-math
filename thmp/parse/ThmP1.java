@@ -154,6 +154,7 @@ public class ThmP1 {
 	//private static final String DASH_ENT_STRING = null;
 	private static final Pattern DASH_ENT_PATTERN = Pattern.compile("\\$[^$]+\\$[^-\\s]*-[^\\s]*");
 	private static final Pattern DASH_PATTERN = Pattern.compile("^[^-\\s]+-[^\\s]+$");
+	private static final Pattern DASH_P = Pattern.compile("-");
 	private static final int REPARSE_UPPER_SIZE_LIMIT = 6;
 	private static final Pattern CONJ_DISJ_VP_PATTERN = Pattern.compile("(?:conj|disj)_verbphrase");
 	//directives used to begin latex math mode. *Must* update ALIGN_PATTERN_REPLACEMENT_STR if this is updated.
@@ -972,7 +973,8 @@ public class ThmP1 {
 			}
 			// classify words with dashes; eg sesqui-linear
 			else if (DASH_PATTERN.matcher(curWord).matches() && !curWord.matches("(?:-.+|.+-)")) {
-				String[] splitWords = curWord.split("-");				
+				//String[] splitWords = curWord.split("-");
+				String[] splitWords = DASH_P.split(curWord);
 				String lastTerm = splitWords[splitWords.length - 1];
 				//System.out.println("singular" + singular + " curWord: " + curWord + " splitWords: " + Arrays.deepToString(splitWords));
 				boolean pairAdded = false;
@@ -1003,18 +1005,22 @@ public class ThmP1 {
 					s = singular3;
 				}				
 				if (!searchKey.equals("")) {
-					Pair pair = new Pair(curWord, posMMap.get(searchKey).get(0).split("_")[0]);
+					String pos = posMMap.get(searchKey).get(0).split("_")[0];
+					Pair pair = new Pair(curWord, pos);
+					if("ent".equals(pos)){
+						mathIndexList.add(pairs.size());
+					}
 					pairs.add(pair);
 					pairAdded = true;
 				} // if lastTerm is entity, eg A-module
 				
-				if (isTokenEnt(lastTerm) || isTokenEnt(lastTermS1)
-						|| isTokenEnt(lastTermS2) || isTokenEnt(lastTermS3)) {
+				if (!pairAdded && (isTokenEnt(lastTerm) || isTokenEnt(lastTermS1)
+						|| isTokenEnt(lastTermS2) || isTokenEnt(lastTermS3))) {
 					//use this if want to preserve original plurality
 					/*Pair pair = new Pair(curWord, "ent"); */
 					Pair pair = new Pair(s, "ent");
+					mathIndexList.add(pairs.size());
 					pairs.add(pair);
-					mathIndexList.add(pairs.size() - 1);
 					pairAdded = true;
 				}
 				if(!pairAdded){

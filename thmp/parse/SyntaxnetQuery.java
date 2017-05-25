@@ -172,7 +172,7 @@ public class SyntaxnetQuery {
 		System.out.println(s.getTokenList());*/
 		SyntaxnetQuery query = new SyntaxnetQuery("this is a pipe");
 		Sentence s = query.sentence;
-		System.out.println("Sentence token list: " + s.getTokenList());
+		//System.out.println("Sentence token list: " + s.getTokenList());
 	}	
 
 }

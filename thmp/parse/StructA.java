@@ -428,9 +428,11 @@ public class StructA<A, B> extends Struct{
 						}
 					}
 					//if(this.type.equals("texAssert")) System.out.println("StructA -struct "+ this +"has child? " +this.hasChild);
-					///throw new IllegalStateException("makePptStr " + makePptStr + " " + triggerPosTerm.isPropertyTerm());
+					//throw new IllegalStateException("makePptStr " + makePptStr + " " + triggerPosTerm.isPropertyTerm());
 				}else{
-					fff
+					//headExpr = new Expr(Expr.SYMBOL, "Math");
+					//exprList.add(new Expr(headExpr, new Expr[]{prev1Expr}));
+					//System.out.println("StructA - prev1Expr: " + prev1Expr);
 				}
 				
 				if(!prev2.equals("")){
@@ -444,7 +446,8 @@ public class StructA<A, B> extends Struct{
 						}else if(exprListSz == 1){
 							existingExpr = exprList.get(0);
 						}else{
-							existingExpr = new Expr(Expr.SYMBOL, "Nothing");
+							existingExpr = prev1Expr;
+							//existingExpr = new Expr(Expr.SYMBOL, "Nothing");
 						}
 						headExpr = new Expr(Expr.SYMBOL, "MathProperty");
 						if(childExprList.size() > 0){
@@ -462,7 +465,7 @@ public class StructA<A, B> extends Struct{
 						}else if(exprListSz == 1){
 							existingExpr = exprList.get(0);
 						}else{
-							existingExpr = new Expr(Expr.SYMBOL, "Nothingggg");
+							existingExpr = prev1Expr;
 						}
 						headExpr = new Expr(Expr.SYMBOL, "Math");
 						if(childExprList.size() > 0){
