@@ -100,6 +100,9 @@ public class SyntaxnetQuery {
 		this.sentence = PLACEHOLDER_SENTENCE;
 	}
 	
+	public Sentence sentence(){
+		return this.sentence;
+	}
 	/**
 	 * 
 	 * @param    start and end indices of word in original sentence
@@ -135,8 +138,7 @@ public class SyntaxnetQuery {
 		}else if(targetIndex == tokenListSz){//must be that targetIndex == tokenListSz
 			int index = targetIndex-1;
 			headIndex = getTokenHeadHelper(tokenStr, tokenList, headIndex, index);	
-		}
-		
+		}		
 		return headIndex;
 	}
 
@@ -164,15 +166,15 @@ public class SyntaxnetQuery {
 		//System.out.println(c.getTokenList().get(4).getHead());
 		/*for(SentenceOuterClass.Token token : c.getTokenList()){
 			System.out.println("Another token: ");
-			System.out.println(token);
-			
+			System.out.println(token);		
 		}*/
 		/*Sentence.Builder b = Sentence.newBuilder();
 		Sentence s = b.build();
 		System.out.println(s.getTokenList());*/
-		SyntaxnetQuery query = new SyntaxnetQuery("this is a pipe");
+		SyntaxnetQuery query = new SyntaxnetQuery("this is jane's hat");
 		Sentence s = query.sentence;
-		//System.out.println("Sentence token list: " + s.getTokenList());
+		
+		System.out.println("Sentence token list: " + s.getTokenList());
 	}	
 
 }

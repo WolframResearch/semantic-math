@@ -285,7 +285,8 @@ public class StructH<H> extends Struct{
 			child.set_parentStruct(newStructH);
 		}		
 		newStructH.set_parentStruct(parentStruct);
-		
+		newStructH.setNoTexTokenListIndex(this.noTexTokenListIndex());
+		newStructH.setNumCoincidingRelationIndex(this.numCoincidingRelationIndex());
 		if(this.isLatexStruct){
 			newStructH.setLatexStructToTrue();
 		}

@@ -886,6 +886,8 @@ public class ParseToWLTree{
 				ParsedPair pair = new ParsedPair(curWrapper.wlCommandStr, curWrapper.commandExpr, //null, 
 						struct.maxDownPathScore(),
 						struct.numUnits(), WLCommand.commandNumUnits(curCommand), curCommand);
+				pair.setNumCoincidingRelationIndex(struct.numCoincidingRelationIndex());
+				
 				//partsMap.put(type, curWrapper.WLCommandStr);	
 				partsMap.put(parseStructType, pair);
 				noClashCommandFound = true;

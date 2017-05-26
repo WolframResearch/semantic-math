@@ -749,6 +749,7 @@ public class ThmP1TestRun {
 			st = "$R_\\mathfrak m$ is universally catenary for all maximal ideals $\\mathfrak m$";
 			st = "A morphism of C-algebras $f : A \\longrightarrow B$ with axiom is called a noncommutative Serre fibration";//need parsing!
 			st = "a morphism of C-algebras $sfsff$ is called a fibration";
+			st = "there are fields in the class $\\mathbb{C}$ which are not finite modifications of rings"; //syntaxnet ordering!
 			
 			//st = "Let $p_1,\\dots,p_r$ be the preimages under $w$"; 			
 			//st = "$p_1,\\dots,p_r$ is the preimage under $w$ of $c^\\ast_0$";			

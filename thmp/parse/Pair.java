@@ -17,6 +17,8 @@ public class Pair {
 	//Set of additional parts of speech, set instead of list, 
 	//to avoid accidental duplicates, which contribute to parse explosions.
 	private Set<String> extraPosSet;
+	//index in the token list without TeX, for syntaxnet.
+	private int noTexTokenListIndex;
 	
 	public Pair(String word, String pos){
 		this.word = word;
@@ -35,6 +37,16 @@ public class Pair {
 		this.pos = newPos;
 	}
 	
+	public void setNoTexTokenListIndex(int index){
+		this.noTexTokenListIndex = index;
+	}
+	/**
+	 * index in the token list without TeX, for syntaxnet.
+	 * @return
+	 */
+	public int noTexTokenListIndex(){
+		return this.noTexTokenListIndex;
+	}
 	/**
 	 * @return Additional parts of speech
 	 */
@@ -64,7 +76,7 @@ public class Pair {
 	@Override
 	public String toString(){
 		StringBuilder sb = new StringBuilder(30);
-		sb.append("[").append(this.word).append(", ").append(this.pos);
+		sb.append("[").append(this.word).append(", ").append(this.pos).append(", ").append(noTexTokenListIndex);
 		
 		if(null != extraPosSet){
 			sb.append(extraPosSet);

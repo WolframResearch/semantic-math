@@ -34,6 +34,8 @@ import com.google.common.collect.Multimap;
 import com.wolfram.jlink.Expr;
 
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
+import syntaxnet.SentenceOuterClass.Sentence;
+import syntaxnet.SentenceOuterClass.Token;
 import thmp.exceptions.ParseRuntimeException;
 import thmp.exceptions.ParseRuntimeException.IllegalSyntaxException;
 import thmp.parse.ParseState.VariableDefinition;
@@ -175,7 +177,7 @@ public class ThmP1 {
 	
 	private static final Pattern HYP_PATTERN = WordForms.get_HYP_PATTERN();
 	private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
-	private static final String LATEX_PLACEHOLDER_STR = " text ";
+	private static final String LATEX_PLACEHOLDER_STR = "X ";
 	private static final Pattern PAREN_END_PATTERN = Pattern.compile("[^)]*\\)");
 	private static final Pattern PAREN_START_PATTERN = Pattern.compile("\\([^)]*");
 	private static final Pattern BRACKET_END_PATTERN = Pattern.compile("[^]]*\\]");
@@ -252,6 +254,7 @@ public class ThmP1 {
 		private transient int numUnits;
 		/*the commandNumUnits associated to the WLCommand that gives this parsedStr. Higher is better.*/
 		private transient int commandNumUnits;
+		private transient int numCoincidingStruct;
 		//the WLCommand associated to this ParsedPair.
 		//Don't serialize wlCommand! Will introduce infinite recursion
 		//when trying to serialize this, because of circular referencing 
@@ -310,6 +313,12 @@ public class ThmP1 {
 			this.totalCommandExpr = commandExpr_;
 		}
 		
+		public void setNumCoincidingRelationIndex(int num){
+			this.numCoincidingStruct = num;
+		}
+		public int numCoincidingRelationIndex(){
+			return numCoincidingStruct;
+		}
 		/**
 		 * @return the wlCommand
 		 */
@@ -398,7 +407,7 @@ public class ThmP1 {
 					//return parseStructType + " :>" + this.parsedStr + numUnitsSB;
 				}else{
 					return "<|" + this.form.toUpperCase() + "->" + parseStructType + " :>" + this.parsedStr + ", \"Scores\"->{" 
-							+ String.valueOf(score) + numUnitsSB + "}|>";
+							+ String.valueOf(numCoincidingStruct) + ", " + String.valueOf(score) + numUnitsSB + "}|>";
 					//return parseStructType + " :>" + this.parsedStr + ", " + String.valueOf(score) + numUnitsSB;
 				}				
 			}else{
@@ -406,8 +415,8 @@ public class ThmP1 {
 					return this.parsedStr;
 					//return parseStructType + " :>" + this.parsedStr + numUnitsSB;
 				}else{
-					return "<|" + this.form.toUpperCase() + "->" + this.parsedStr + ", \"Scores\"->{" + String.valueOf(score) + numUnitsSB
-						+ "}|>";
+					return "<|" + this.form.toUpperCase() + "->" + this.parsedStr + ", \"Scores\"->{" + String.valueOf(numCoincidingStruct)
+						+ ", " + String.valueOf(score) + numUnitsSB + "}|>";
 				}
 			}
 		}
@@ -622,9 +631,9 @@ public class ThmP1 {
 		String[] strAr = WHITESPACE_PATTERN.split(sentence);
 		
 		//String with latex substituted with the word "text". For use
-		//by the posTagger. Since "text" is likely provide the right 
+		//by the posTagger and syntaxnet. Since "text" is likely provide the right 
 		//tag for words that surround it.
-		StringBuilder noTexSB = new StringBuilder(50);
+		StringBuilder noTexSB = new StringBuilder(150);
 		
 		//\begin{enumerate} should be the first word in the sentence, based on how they are built
 		//in the preprocessor.
@@ -633,21 +642,23 @@ public class ThmP1 {
 			TexParseUtils.parseEnumerate(strAr, parseState);			
 			return parseState;
 		}
-		
+		//for syntaxnet
+		Struct[] noTexTokenStructAr = new Struct[strAr.length];
 		int numNonTexTokens = 0;
+		//used to keep track of index of tokens in strLoop, for syntaxnet
+		int lastNoTexTokenIndex = 0;
 		//if contains nothing other than symbols and ents, probably spurious latex expression,
-		//don't parse in that case.
+		//don't parse in that case. 
+		//strAr length could change.
 		boolean containsOnlySymbEnt = true;
 		strloop: for (int i = 0; i < strAr.length; i++) {
 
-			String curWord = strAr[i];
-			//System.out.println("at beginning: curWord: " + curWord);
-			
+			String curWord = strAr[i];			
 			//sometimes some blank space falls through, in which case just skip.
 			if(WordForms.getWhiteEmptySpacePattern().matcher(curWord).matches()){
 				continue;
 			}			
-			Matcher negativeAdjMatcher;			
+			Matcher negativeAdjMatcher;	
 			String type = "ent"; 
 			int wordlen = strAr[i].length();
 			//this needs to be evaluated at each iteration.
@@ -673,15 +684,21 @@ public class ThmP1 {
 					}					
 				}				
 				Pair pair = new Pair(latexExprSB.toString(), type);
+				pair.setNoTexTokenListIndex(lastNoTexTokenIndex);
 				pairs.add(pair);
 				mathIndexList.add(pairs.size() - 1);
-				noTexSB.append(LATEX_PLACEHOLDER_STR);
+				if(i > lastNoTexTokenIndex+1){
+					for(int p = lastNoTexTokenIndex+1; p < i; p++){
+						noTexSB.append(strAr[p]).append(" ");						
+					}
+				}
+				noTexSB.append(LATEX_PLACEHOLDER_STR);	
+				lastNoTexTokenIndex = i;
 				continue;
 			}
 			
 			// latex expressions that start with '$'
-			if (LATEX_BEGIN_PATTERN.matcher(curWord).matches()) {
-				
+			if (LATEX_BEGIN_PATTERN.matcher(curWord).matches()) {				
 				String latexExpr = curWord;				
 				//not a single-word latex expression, i.e. $R$-module
 				if (i < strArLength - 1 && !SINGLE_WORD_TEX_PATTERN.matcher(curWord).matches( )
@@ -744,12 +761,20 @@ public class ThmP1 {
 				}
 				
 				Pair pair = new Pair(latexExpr, type);
+				pair.setNoTexTokenListIndex(lastNoTexTokenIndex);
 				pairs.add(pair);
 				
 				if (type.equals("ent")){
 					mathIndexList.add(pairs.size() - 1);
 				}
-				noTexSB.append(LATEX_PLACEHOLDER_STR);
+				if(i > lastNoTexTokenIndex+1){
+					for(int p = lastNoTexTokenIndex+1; p < i; p++){
+						noTexSB.append(strAr[p]).append(" ");						
+					}
+				}
+				noTexSB.append(LATEX_PLACEHOLDER_STR).append(" ");	
+				//noTexSB.append(LATEX_PLACEHOLDER_STR);
+				lastNoTexTokenIndex = i;
 				continue strloop;
 			}/*Done with handling tex tokens.*/
 			
@@ -773,9 +798,15 @@ public class ThmP1 {
 							if(emptyPair.pos().equals("ent")){ 
 								mathIndexList.add(pairs.size() - 1);								
 							}							
-							noTexSB.append(" ").append(emptyPair.word()).append(" ");						
+							if(i > lastNoTexTokenIndex+1){
+								for(int p = lastNoTexTokenIndex+1; p < i; p++){
+									noTexSB.append(strAr[p]).append(" ");						
+								}
+							}
+							noTexSB.append(emptyPair.word()).append(" ");
 						}
 						i += numWordsDown - 1;
+						lastNoTexTokenIndex = i;
 						continue strloop;
 					}
 				}				
@@ -783,12 +814,24 @@ public class ThmP1 {
 				//a two or three gram was picked up
 				if(newIndex > i){ 					
 					i = newIndex;
-					noTexSB.append(" ").append(pairs.get(pairs.size()-1).word()).append(" ");
+					if(i > lastNoTexTokenIndex+1){
+						for(int p = lastNoTexTokenIndex+1; p < i; p++){
+							noTexSB.append(strAr[p]).append(" ");						
+						}
+					}
+					noTexSB.append(pairs.get(pairs.size()-1).word()).append(" ");
+					lastNoTexTokenIndex = i;
 					continue;				
-				}				
-			}		
-			noTexSB.append(" ").append(curWord).append(" ");
-			/*Done with tex parsing, so can strip away special chars from word.*/
+				}
+			}
+			if(i > lastNoTexTokenIndex+1){
+				for(int p = lastNoTexTokenIndex+1; p < i; p++){
+					noTexSB.append(strAr[p]).append(" ");						
+				}
+			}
+			noTexSB.append(curWord).append(" ");
+			lastNoTexTokenIndex = i;
+			/*Done with tex parsing for current streak, so can strip away special chars from word.*/
 			Matcher matcher;
 			if((matcher=WordForms.getSPECIAL_CHARS_AROUND_WORD_PATTERN().matcher(curWord)).matches()){
 				String tempWord = matcher.group(1);
@@ -1264,7 +1307,11 @@ public class ThmP1 {
 					}
 				}
 			}
+			Pair curPair = pairs.get(pairs.size()-1);
+			curPair.setNoTexTokenListIndex(lastNoTexTokenIndex);
 		}/*End of strloop.*/
+		System.out.println("ThmP1-noTexSB" +noTexSB);
+		parseState.setCurrentInputSansTex(noTexSB.toString());
 		parseState.addToNumNonTexTokens(numNonTexTokens);
 		
 		/*Used for defluffing, in case the sentence is just sequence of many special characters*/
@@ -1273,7 +1320,7 @@ public class ThmP1 {
 			String pos = pair.pos();
 			if(pair.pos().equals("ent") || pos.equals("symb")
 					|| pos.equals("")){
-				symbEntCount++;		
+				symbEntCount++;	
 			}else{
 				containsOnlySymbEnt = false;
 			}
@@ -1597,8 +1644,7 @@ public class ThmP1 {
 						prevPair.set_pos(entPosStr);
 						k++;
 					}*/
-				}
-					
+				}					
 					// look for composite adj (two for now)
 					/*if (index - k - 1 > -1 && !posMMap.get(curWord).isEmpty() && posMMap.get(curWord).get(0).matches("adj")) {
 						// if composite adj
@@ -1761,19 +1807,26 @@ public class ThmP1 {
 			String curWord = curPair.word();
 			
 			//can pos ever be null? <--could be set to null prior
-			if (curPos == null)
+			if (curPos == null){
 				continue;
+			}
 			//if has pos "ent"
 			if (DIGITS_PATTERN.matcher(curPos).matches()) {
-
+				
+				StructH<HashMap<String, String>> curStruct = mathEntList.get(Integer.valueOf(curPos));
+				
 				if (curPos.equals(prevPos)) {
+					int noTexTokenListIndex = curPair.noTexTokenListIndex();
+					if(curWord.equals(curStruct.nameStr())){
+						//"finite modifications", the modification should get the right index
+						curStruct.setNoTexTokenListIndex(noTexTokenListIndex);
+					}
+					noTexTokenStructAr[noTexTokenListIndex] = curStruct;
 					continue;
 				}
-				StructH<HashMap<String, String>> curStruct = mathEntList.get(Integer.valueOf(curPos));
-
+			
 				//could have been set to null
-				if (curStruct != null) {
-					
+				if (curStruct != null) {					
 					Set<String> posList = curPair.extraPosSet();
 					if(posList != null){
 						//start from 1, as extraPosList only contains *additional* pos
@@ -1785,7 +1838,10 @@ public class ThmP1 {
 							 //System.out.println("mathEntList: "+mathEntList);f
 							 curStruct.addExtraPos(pos);
 						}
-					}				
+					}
+					int noTexTokenListIndex = curPair.noTexTokenListIndex();					
+					noTexTokenStructAr[noTexTokenListIndex] = curStruct;
+					curStruct.setNoTexTokenListIndex(noTexTokenListIndex);
 					structList.add(curStruct);
 				}
 				prevPos = curPos;
@@ -1873,9 +1929,22 @@ public class ThmP1 {
 					newStruct.set_prev2(det);
 					structList.remove(structListSize - 1);
 				}
+				int noTexTokenListIndex = curPair.noTexTokenListIndex();
+				noTexTokenStructAr[noTexTokenListIndex] = newStruct;
+				newStruct.setNoTexTokenListIndex(noTexTokenListIndex);
 				structList.add(newStruct);
 			}
 		}
+		int noTexTokenStructArLen = noTexTokenStructAr.length;
+		Struct prevStruct = noTexTokenStructAr[0];
+		for(int i = 1; i < noTexTokenStructArLen; i++){
+			if(null == noTexTokenStructAr[i]){
+				noTexTokenStructAr[i] = prevStruct;
+			}else{
+				prevStruct = noTexTokenStructAr[i];
+			}
+		}
+		parseState.setNoTexTokenStructAr(noTexTokenStructAr);
 		ThmP1AuxiliaryClass.convertStructToTexAssert(structList);
 		
 		System.out.println("\n^^^^structList: " + structList);			
@@ -2545,7 +2614,7 @@ public class ThmP1 {
 		List<Map<Integer, Integer>> thmContextVecMapList = new ArrayList<Map<Integer, Integer>>();
 		
 		/*There was at least one spanning parse.*/
-		if (headStructListSz > 0) {		
+		if (headStructListSz > 0) {
 			
 			List<Struct> structList = headStructList.structList();
 			//sort headStructList so that only dfs over the head structs whose
@@ -2553,8 +2622,21 @@ public class ThmP1 {
 			//And to guarantee that a minimum number of spanning parses have been counted.
 			Collections.sort(structList, HeadStructComparator.getComparator());
 			
-			StringBuilder parsedSB = new StringBuilder();
+			//only get the most likely ones according to syntaxnet query , then attach scores to head
+			//only walk through the most likely ones. Replace above comparison?!
+			if(headStructListSz > 10){//update this num
+				//get the top five (?) highest ranking ones, and apply syntaxnet queries
+				//original token aren't processed! eg stripped of "s"
+				Struct[] noTexTokenStructAr = parseState.noTexTokenStructAr();
+				//sentence
+				SyntaxnetQuery syntaxnetQuery = new SyntaxnetQuery(parseState.currentInputSansTex());
+				Sentence sentence = syntaxnetQuery.sentence();
+				
+				List<Token> tokenList = sentence.getTokenList();
+				Collections.sort(structList, new ThmP1AuxiliaryClass.StructTreeComparator(tokenList, noTexTokenStructAr));				
+			}
 			
+			StringBuilder parsedSB = new StringBuilder();			
 			// System.out.println("index of highest score: " +
 			// ArrayDFS(headStructList));
 			//temporary list to store the ParsedPairs to be sorted. It's list of multimaps, 
@@ -2621,11 +2703,12 @@ public class ThmP1 {
 				//parsedExpr.add(new ParsedPair(wlSB.toString(), maxDownPathScore, "short"));		
 				//System.out.println("*******SHORT FORM: " + wlSB);
 				//parsedExpr.add(new ParsedPair(parsedSB.toString(), maxDownPathScore, "long"));				
+				ParsedPair pair = new ParsedPair(parsedSB.toString(), null, uHeadStructScore, "long");
+				pair.setNumCoincidingRelationIndex(uHeadStruct.numCoincidingRelationIndex());
+				longFormParsedPairList.add(pair);
 				
-				longFormParsedPairList.add(new ParsedPair(parsedSB.toString(), null, uHeadStructScore, "long"));
-				
-				System.out.println(uHeadStructScore);
-				System.out.println(uHeadStruct.numUnits());
+				//System.out.println(uHeadStructScore);
+				//System.out.println(uHeadStruct.numUnits());
 				
 				String parsedString = ParseToWL.parseToWL(uHeadStruct);
 				//parsedExpr.add(new ParsedPair(parsedString, maxDownPathScore, "wl"));
@@ -3151,6 +3234,8 @@ public class ThmP1 {
 		List<Integer> commandNumUnitsList = new ArrayList<Integer>();
 		//use scores to tie-break once scores become more comprehensive
 		List<Double> scoresList = new ArrayList<Double>();
+		//for syntaxnet
+		List<Integer> numTokenRelationList = new ArrayList<Integer>();
 		//number of entries in a Multimap in parsedPairMMapList.
 		List<Integer> mMapSizeList = new ArrayList<Integer>();
 		//whether there exists nontrivial (non-None) ParseStructType's
@@ -3167,6 +3252,7 @@ public class ThmP1 {
 		
 		int firstNumUnits = 0;
 		int firstCommandNumUnits = 0;
+		int firstNumTokenRelation = 0;
 		double firstScore = 1;
 		int firstMMapSize = 0;
 		
@@ -3184,18 +3270,22 @@ public class ThmP1 {
 			}
 			ParsedPair parsedPair = entry.getValue();			
 			firstNumUnits += parsedPair.numUnits();
+			firstNumTokenRelation += parsedPair.numCoincidingStruct;
 			firstCommandNumUnits += parsedPair.commandNumUnits();
+			//if(firstNumTokenRelation > 0) throw new RuntimeException(parsedPair.toString());
 			firstScore *= parsedPair.score();
 		}
 		
 		numUnitsList.add(firstNumUnits);
 		commandNumUnitsList.add(firstCommandNumUnits);
 		scoresList.add(firstScore);
+		numTokenRelationList.add(firstNumTokenRelation);
 		mMapSizeList.add(firstMMapSize);
 		
 		for(int i = 1; i < parsedPairMMapList.size(); i++){
 			int numUnits = 0;
 			int commandNumUnits = 0;
+			int numTokenRelation = 0;
 			double score = 1;
 			Multimap<ParseStructType, ParsedPair> mmap = parsedPairMMapList.get(i);
 			int mMapSize = 0;
@@ -3218,7 +3308,8 @@ public class ThmP1 {
 				//multiplying score has the added benefit that
 				//extraneous parses (extra commands triggered
 				//but not eliminated) will lower the score.
-				score *= parsedPair.score();				
+				score *= parsedPair.score();
+				numTokenRelation += parsedPair.numCoincidingStruct;
 			}
 			
 			int listSz = sortedParsedPairMMapList.size();
@@ -3232,8 +3323,9 @@ public class ThmP1 {
 				int sortedNumUnits = numUnitsList.get(j);
 				int sortedCommandNumUnits = commandNumUnitsList.get(j);
 				double sortedScore = scoresList.get(j);
+				int sortedNumTokenRelation = numTokenRelationList.get(j);
 				int sortedMMapSize = mMapSizeList.get(j);
-				
+				System.out.println("numTokenRelation > sortedNumTokenRelation" + numTokenRelation +" " + sortedNumTokenRelation);
 				//current ParsedPair will rank higher if the following:
 				//Make magic number into constant after experimenting.
 				if(sortedCommandNumUnits < commandNumUnits 						
@@ -3246,13 +3338,27 @@ public class ThmP1 {
 					numUnitsList.add(j, numUnits);
 					commandNumUnitsList.add(j, commandNumUnits);
 					scoresList.add(j, score);
+					numTokenRelationList.add(j, numTokenRelation);
+					
+					finalOrderingList.add(j, i);
+					mMapSizeList.add(j, mMapSize);
+					break;
+				}else if(sortedCommandNumUnits == commandNumUnits && sortedNumUnits+1 >= numUnits 
+						&& 
+						numTokenRelation > sortedNumTokenRelation){
+					sortedParsedPairMMapList.add(j, mmap);
+					numUnitsList.add(j, numUnits);
+					commandNumUnitsList.add(j, commandNumUnits);
+					scoresList.add(j, score);
+					numTokenRelationList.add(j, numTokenRelation);
+					//if(numTokenRelation > 0) throw new IllegalStateException();
 					finalOrderingList.add(j, i);
 					mMapSizeList.add(j, mMapSize);
 					break;
 				}
 				//numUnits can be a little worse, but not more worse by more than 1 unit.
 				else if(sortedCommandNumUnits == commandNumUnits && sortedNumUnits+1 >= numUnits 
-						&& sortedScore < score){
+						&& numTokenRelation == sortedNumTokenRelation && sortedScore < score){
 					//now sortedNumUnits
 					//use scoresList to tie-break
 					//insert with right order
@@ -3260,17 +3366,20 @@ public class ThmP1 {
 					numUnitsList.add(j, numUnits);
 					commandNumUnitsList.add(j, commandNumUnits);
 					scoresList.add(j, score);
+					numTokenRelationList.add(j, numTokenRelation);					
 					finalOrderingList.add(j, i);
 					mMapSizeList.add(j, mMapSize);
 					break;
 				}				
 			}
+			
 			//add at the end if doesn't beat any mmap prior.
 			if(listSz == sortedParsedPairMMapList.size()){
 				sortedParsedPairMMapList.add(listSz, mmap);
 				numUnitsList.add(listSz, numUnits);
 				commandNumUnitsList.add(listSz, commandNumUnits);
 				scoresList.add(listSz, score);
+				numTokenRelationList.add(listSz, numTokenRelation);
 				finalOrderingList.add(listSz, i);
 				mMapSizeList.add(listSz, mMapSize);
 			}			
@@ -3280,7 +3389,8 @@ public class ThmP1 {
 		//actually it is, April 2017.
 		if(nonTrivialTypeExists){
 			
-			Multimap<ParseStructType, ParsedPair> firstMap = sortedParsedPairMMapList.get(0);			
+			Multimap<ParseStructType, ParsedPair> firstMap = sortedParsedPairMMapList.get(0);	
+			
 			if(1 == firstMap.size() && firstMap.containsKey(ParseStructType.NONE)){				
 				//the top-ranked one has type None, even when there are nontrivial ones that rank lower
 				for(int i = 1; i < sortedParsedPairMMapList.size(); i++){
@@ -3324,9 +3434,11 @@ public class ThmP1 {
 				ParsedPair pair = structTypePair.getValue();
 				ParseStructType parseStructType = structTypePair.getKey();
 				WLCommand wlCommand = pair.wlCommand;
-				parsedExpr.add(new ParsedPair(pair.parsedStr, pair.score, 
+				ParsedPair newPair = new ParsedPair(pair.parsedStr, pair.score, 
 						pair.numUnits, pair.commandNumUnits, 
-						wlCommand, parseStructType));				
+						wlCommand, parseStructType);
+				newPair.setNumCoincidingRelationIndex(pair.numCoincidingStruct);
+				parsedExpr.add(newPair);		
 			}
 			
 			//Also add the long form to parsedExpr	
@@ -3449,6 +3561,7 @@ public class ThmP1 {
 		
 		System.out.println("Parts (parseStructMMap): " + parseStructMMap);
 		for(Map.Entry<ParseStructType, ParsedPair> entry : parseStructMMap.entries()){
+			System.out.println("ThmP1-numCoincidingStruct: " + entry.getValue().numCoincidingStruct);
 			System.out.println(entry.getValue().totalCommandExpr());
 		}
 		//**parseStructMapList.add(parseStructMap.toString() + "\n");
@@ -3457,6 +3570,7 @@ public class ThmP1 {
 			ParsedPair pair = new ParsedPair(wlSB.toString(), null,//parseState.getCurParseStruct(), 
 					uHeadStruct.maxDownPathScore(),
 					uHeadStruct.numUnits(), span, null);
+			pair.setNumCoincidingRelationIndex(uHeadStruct.numCoincidingRelationIndex());			
 			//partsMap.put(type, curWrapper.WLCommandStr);
 			parseStructMMap.put(ParseStructType.NONE, pair);
 		}
@@ -3605,7 +3719,7 @@ public class ThmP1 {
 				assert struct2.prev1NodeType().equals(NodeType.STRUCTA);
 				
 				StructA<?, ?> hypStruct = (StructA<?, ?>)struct2.prev1();
-				if(hypStruct.type().equals("hyp") ){
+				if(hypStruct.type().equals("hyp")){
 					childRelation = extractHypChildRelation(hypStruct);
 					//throw new IllegalStateException();
 				}
@@ -3615,15 +3729,15 @@ public class ThmP1 {
 				if(null == childRelation){
 					childRelation = new ChildRelation("");
 				}
-				//which should be attached to immediately prior word
+				//which should be attached to immediately prior word <--not necessarily true!!
 				//System.out.println("children: " + hypStruct+ " &&&"+ struct1 + " *** " + struct2);
-				if(childRelation.childRelationStr().contains("which") ){
+				/*if(childRelation.childRelationStr().contains("which") ){
 					//System.out.println("structToAppendChild : " + (structToAppendChild instanceof StructH) + " ! structToAppendChild.children(): " + structToAppendChild.children() );				
 					if(structToAppendChild.children().size() > 0){
 						//this is questionable, and also seems fragile.
 						return new EntityBundle(firstEnt, recentEnt, recentEntIndex);
 					}
-				}				
+				}*/				
 				childToAdd = (Struct)struct2.prev2();
 			}else if(struct2.type().equals("Cond")){
 				//e.g. "prime $I$ such that it's maximal."

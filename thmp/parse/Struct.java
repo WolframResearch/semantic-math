@@ -55,6 +55,11 @@ public abstract class Struct implements Serializable{
 	//down the tree. Used for constructing ParseStruct tree.
 	private boolean containsHyp;
 	
+	//index in the struct (and token) array without TeX, for syntaxnet.
+	private int noTexTokenListIndex; 
+	//cache, for comparison
+	private int numCoincidingStruct = -1;
+	
 	//logical parent, e.g. $p$ such that $p$ is prime. the parent of prime
 	//private Struct logicalParent;
 	
@@ -88,6 +93,35 @@ public abstract class Struct implements Serializable{
 	public void set_childRelationType(ChildRelationType type){
 		this.childRelationType = type;
 	}
+	//change to array index!!
+	public void setNoTexTokenListIndex(int index){
+		this.noTexTokenListIndex = index;
+	}
+	/**
+	 * index in the token list without TeX, for syntaxnet.
+	 * @return
+	 */
+	public int noTexTokenListIndex(){
+		return this.noTexTokenListIndex;
+	}
+	
+	public void setNumCoincidingRelationIndex(int num){
+		this.numCoincidingStruct = num;
+	}
+	public int numCoincidingRelationIndex(){
+		return numCoincidingStruct;
+	}
+	/*public void setNoTexStructAr(Struct[] ar){
+		this.noTexTokenAr = ar;
+	}*/
+	
+	/**
+	 * index in the token list without TeX, for syntaxnet.
+	 * @return
+	 */
+	/*public Struct[] noTexStructAr(){
+		return this.noTexTokenAr;
+	}*/
 	
 	/**
 	 * Does this tree contain 

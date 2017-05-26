@@ -2,11 +2,13 @@ package thmp.parse;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.ListMultimap;
 
+import syntaxnet.SentenceOuterClass.Token;
 import thmp.parse.Struct.ChildRelation;
 import thmp.parse.Struct.NodeType;
 
@@ -200,6 +202,75 @@ public class ThmP1AuxiliaryClass {
 		}
 	}	
 
+	public static class StructTreeComparator implements Comparator<Struct>{
+		
+		private List<Token> tokenList;
+		private Struct[] noTexTokenStructAr;
+		
+		public StructTreeComparator(List<Token> tokenList_, Struct[] noTexTokenStructAr_){
+			this.tokenList = tokenList_;
+			this.noTexTokenStructAr = noTexTokenStructAr_;
+			for(Token t : tokenList){
+				System.out.print("ThmP1Auxiliary - token: " + t);
+				System.out.println("~~~~~~~~~~~~~~");
+			}
+		}
+		
+		/**
+		 * Should be head structs.
+		 */
+		public int compare(Struct struct1, Struct struct2){
+			//use constant final field instead of 1!
+			int count1 = struct1.numCoincidingRelationIndex() != -1 ? struct1.numCoincidingRelationIndex() : f(struct1);
+			int count2 = struct2.numCoincidingRelationIndex() != -1 ? struct2.numCoincidingRelationIndex() : f(struct2);
+			struct1.setNumCoincidingRelationIndex(count1);
+			struct2.setNumCoincidingRelationIndex(count2);
+			System.out.println("ThmP1Auxiliary class - count1: " + count1 + " count2: " + count2);
+			return count1 > count2 ? -1 : (count1 < count2 ? 1 : 0);
+		}
+		
+		private int f(Struct struct){
+			int curLevelCount = 0;
+			int parentTokenStructArIndex = struct.noTexTokenListIndex();
+			System.out.println("ThmP1A - parent struct: " + struct);
+			System.out.println("ThmP1A - parentTokenStructArIndex: " + parentTokenStructArIndex);
+			
+			List<Struct> childrenList = struct.children();
+			
+			for(Struct child : childrenList){
+				int childTokenStructArIndex = child.noTexTokenListIndex();				
+				int childTokenHead = tokenList.get(childTokenStructArIndex).getHead();
+				System.out.println("ThmP1A - child: " + child + " childTokenStructArIndex " + childTokenStructArIndex);
+				/*if(child.nameStr().equals("modification") && struct.nameStr().equals("field")){
+					throw new IllegalStateException("child's name is modification; parent: " + struct);	
+				}*/
+				boolean b = false;
+				if(childTokenStructArIndex < tokenList.size()){
+					if(childTokenHead == parentTokenStructArIndex){
+						curLevelCount++;
+						b = true;
+					}
+				}
+				if(!b && childTokenHead < noTexTokenStructAr.length 
+						&& noTexTokenStructAr[childTokenHead].nameStr().equals(struct.nameStr()) ){
+					curLevelCount++;
+					b = true;
+				}
+				curLevelCount += f(child);
+			}			
+			if(struct.prev1NodeType().isTypeStruct()){
+				curLevelCount += f((Struct)struct.prev1());
+			}
+			if(struct.prev2NodeType().isTypeStruct()){
+				curLevelCount += f((Struct)struct.prev2());
+			}
+			return curLevelCount;
+		}
+		
+	}
+	
+	/***Done with static nested classes***/
+	
 	/**
 	 * Convert the pos for tex expressions in short input strings to texAssert.
 	 * e.g. "let $x = 0"
@@ -396,8 +467,7 @@ public class ThmP1AuxiliaryClass {
 			Struct toBeConvertedStruct) {
 		System.out.println("ThmP1Auxiliary - toBeConvertedStruct " + toBeConvertedStruct);
 
-		if(null != toBeConvertedStruct){
-			
+		if(null != toBeConvertedStruct){			
 			//need to convert toBeConvertedStruct to a StructA 
 			//with type "assert".						
 			String toBeConvertedStructName = toBeConvertedStruct.nameStr();			

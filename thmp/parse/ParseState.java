@@ -69,6 +69,10 @@ public class ParseState {
 	//are almost all latex expressions.
 	private int numNonTexTokens;
 	private ParseErrorCode parseErrorCode = ParseErrorCode.NO_ERROR;
+	//input with tex replaced by e.g. "X", to be used for making syntaxnet queries
+	private String currentInputSansTex;
+	//struct array      struct token index info, for making syntaxnet queries.
+	private Struct[] noTexTokenStructAr;
 	
 	private boolean writeUnknownWordsToFileBool;
 	
@@ -790,6 +794,30 @@ public class ParseState {
 		}
 	}
 
+	public void setCurrentInputSansTex(String inputNoTex){
+		this.currentInputSansTex = inputNoTex;
+	}
+	
+	/**
+	 * Input with tex replaced by e.g. "X", to be used for making syntaxnet queries.
+	 * @return
+	 */
+	public String currentInputSansTex(){
+		return this.currentInputSansTex;
+	}
+	
+	public void setNoTexTokenStructAr(Struct[] noTexTokenStructAr){
+		this.noTexTokenStructAr = noTexTokenStructAr;
+	}
+	
+	/**
+	 * Input with tex replaced by e.g. "X", to be used for making syntaxnet queries.
+	 * @return
+	 */
+	public Struct[] noTexTokenStructAr(){
+		return this.noTexTokenStructAr;
+	}
+	
 	/**
 	 * @return the tokenList
 	 */
@@ -898,6 +926,8 @@ public class ParseState {
 		this.localVariableNamesMMap = ArrayListMultimap.create();
 		this.inThmFlag = false;
 		this.recentParseSpanning = false;
+		this.currentInputSansTex = null;
+		this.noTexTokenStructAr = null;
 		logger.info("(cleanup)@@@headParseStruct" + headParseStruct);
 	}	
 	
