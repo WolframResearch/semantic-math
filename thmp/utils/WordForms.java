@@ -441,11 +441,39 @@ public class WordForms {
 			
 			if(this.equals(SINGLETON)){ 
 				return thmWordSpanMMap.containsEntry(thmIndex, wordIndex);
-			}
-			
+			}			
+			return false;
+		}		
+	}
+	
+	/**
+	 * If two names slight variations of each other, i.e. one is plural form of the other.
+	 * Currently used for determining token similarities after querying syntaxnet.
+	 * @param name1
+	 * @param name2
+	 * @return
+	 */
+	public static boolean areNamesSimilar(String name1, String name2){
+		if(name1.equals(name2)){
+			return true;
+		}
+		int len1 = name1.length();
+		int len2 = name2.length();
+		int longerLen = len1 > len2 ? len1 : len2;
+		int shorterLen = len1 + len2 - longerLen;
+		//e.g. "deity" vs "deities"
+		if(longerLen - shorterLen > 2){
 			return false;
 		}
-		
+		if(shorterLen > 2){
+			int commonLen = shorterLen-1;
+			if(name1.substring(0, commonLen).equals(name2.substring(0, commonLen))){
+				return true;
+			}else{
+				return false;
+			}
+		}
+		return false;
 	}
 	
 	/**

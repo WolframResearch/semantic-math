@@ -187,6 +187,8 @@ public class ThmP1 {
 	private static final double MAX_ALLOWED_ENT_PERCENTAGE = 0.8;
 	private static final int MIN_PAIRS_SIZE_THRESHOLD_FOR_FLUFF = 7;
 	private static final Pattern POSSESIVE_PATTERN = Pattern.compile("[^\\s]+'s");
+	private static final int PARSE_NUM_MAX = 6;
+	private static final int SYNTAXNET_PARSE_THRESHOLD = 10;
 	
 	static{
 		fluffMap = Maps.BuildMaps.fluffMap;
@@ -2623,17 +2625,23 @@ public class ThmP1 {
 			Collections.sort(structList, HeadStructComparator.getComparator());
 			
 			//only get the most likely ones according to syntaxnet query , then attach scores to head
-			//only walk through the most likely ones. Replace above comparison?!
-			if(headStructListSz > 10){//update this num
-				//get the top five (?) highest ranking ones, and apply syntaxnet queries
+			//only walk through the most likely ones. 
+			if(headStructListSz > SYNTAXNET_PARSE_THRESHOLD){
+				//Sort according to number of relations that coincide with syntaxnet parse.
 				//original token aren't processed! eg stripped of "s"
 				Struct[] noTexTokenStructAr = parseState.noTexTokenStructAr();
-				//sentence
 				SyntaxnetQuery syntaxnetQuery = new SyntaxnetQuery(parseState.currentInputSansTex());
 				Sentence sentence = syntaxnetQuery.sentence();
 				
 				List<Token> tokenList = sentence.getTokenList();
-				Collections.sort(structList, new ThmP1AuxiliaryClass.StructTreeComparator(tokenList, noTexTokenStructAr));				
+				//this sort does not obliviate above sort, since it is stable.
+				Collections.sort(structList, new ThmP1AuxiliaryClass.StructTreeComparator(tokenList, noTexTokenStructAr));
+				//take the top Structs, to cut down on time spent building WLCommands.
+				List<Struct> structList2 = new ArrayList<Struct>();
+				for(int p = 0; p < PARSE_NUM_MAX; p++){
+					structList2.add(structList.get(p));
+				}
+				structList = structList2;
 			}
 			
 			StringBuilder parsedSB = new StringBuilder();			
@@ -3227,7 +3235,7 @@ public class ThmP1 {
 		 * commandNumUnits across entries. Keep track of this multiplicity of entries, favor map with smaller 
 		 * number of entries if span the same.
 		 */
-		System.out.println("<<<<<<<ThmP1 parsedPairMMapList " + parsedPairMMapList);
+		//System.out.println("<<<<<<<ThmP1 parsedPairMMapList " + parsedPairMMapList);
 		List<Multimap<ParseStructType, ParsedPair>> sortedParsedPairMMapList = new ArrayList<Multimap<ParseStructType, ParsedPair>>();
 		//evolving list of numUnits scores for elements in sortedParsedPairMMapList
 		List<Integer> numUnitsList = new ArrayList<Integer>();
@@ -3325,7 +3333,7 @@ public class ThmP1 {
 				double sortedScore = scoresList.get(j);
 				int sortedNumTokenRelation = numTokenRelationList.get(j);
 				int sortedMMapSize = mMapSizeList.get(j);
-				System.out.println("numTokenRelation > sortedNumTokenRelation" + numTokenRelation +" " + sortedNumTokenRelation);
+				//System.out.println("numTokenRelation > sortedNumTokenRelation" + numTokenRelation +" " + sortedNumTokenRelation);
 				//current ParsedPair will rank higher if the following:
 				//Make magic number into constant after experimenting.
 				if(sortedCommandNumUnits < commandNumUnits 						
@@ -3333,55 +3341,33 @@ public class ThmP1 {
 								//or there is MMapSize difference.
 						|| (sortedMMapSize > 0 && mMapSize > 0 && sortedMMapSize > mMapSize
 						   && (sortedNumUnits - numUnits) > ((double)sortedCommandNumUnits - commandNumUnits)/2)){
-					//insert with right order
-					sortedParsedPairMMapList.add(j, mmap);
-					numUnitsList.add(j, numUnits);
-					commandNumUnitsList.add(j, commandNumUnits);
-					scoresList.add(j, score);
-					numTokenRelationList.add(j, numTokenRelation);
-					
-					finalOrderingList.add(j, i);
-					mMapSizeList.add(j, mMapSize);
+					insertPairToOrderedList(sortedParsedPairMMapList, numUnitsList, commandNumUnitsList, scoresList,
+							numTokenRelationList, mMapSizeList, finalOrderingList, i, numUnits, commandNumUnits,
+							numTokenRelation, score, mmap, mMapSize, j);
 					break;
 				}else if(sortedCommandNumUnits == commandNumUnits && sortedNumUnits+1 >= numUnits 
 						&& 
 						numTokenRelation > sortedNumTokenRelation){
-					sortedParsedPairMMapList.add(j, mmap);
-					numUnitsList.add(j, numUnits);
-					commandNumUnitsList.add(j, commandNumUnits);
-					scoresList.add(j, score);
-					numTokenRelationList.add(j, numTokenRelation);
-					//if(numTokenRelation > 0) throw new IllegalStateException();
-					finalOrderingList.add(j, i);
-					mMapSizeList.add(j, mMapSize);
+					insertPairToOrderedList(sortedParsedPairMMapList, numUnitsList, commandNumUnitsList, scoresList,
+							numTokenRelationList, mMapSizeList, finalOrderingList, i, numUnits, commandNumUnits,
+							numTokenRelation, score, mmap, mMapSize, j);
 					break;
 				}
 				//numUnits can be a little worse, but not more worse by more than 1 unit.
 				else if(sortedCommandNumUnits == commandNumUnits && sortedNumUnits+1 >= numUnits 
 						&& numTokenRelation == sortedNumTokenRelation && sortedScore < score){
-					//now sortedNumUnits
-					//use scoresList to tie-break
-					//insert with right order
-					sortedParsedPairMMapList.add(j, mmap);
-					numUnitsList.add(j, numUnits);
-					commandNumUnitsList.add(j, commandNumUnits);
-					scoresList.add(j, score);
-					numTokenRelationList.add(j, numTokenRelation);					
-					finalOrderingList.add(j, i);
-					mMapSizeList.add(j, mMapSize);
+					insertPairToOrderedList(sortedParsedPairMMapList, numUnitsList, commandNumUnitsList, scoresList,
+							numTokenRelationList, mMapSizeList, finalOrderingList, i, numUnits, commandNumUnits,
+							numTokenRelation, score, mmap, mMapSize, j);
 					break;
 				}				
 			}
 			
 			//add at the end if doesn't beat any mmap prior.
 			if(listSz == sortedParsedPairMMapList.size()){
-				sortedParsedPairMMapList.add(listSz, mmap);
-				numUnitsList.add(listSz, numUnits);
-				commandNumUnitsList.add(listSz, commandNumUnits);
-				scoresList.add(listSz, score);
-				numTokenRelationList.add(listSz, numTokenRelation);
-				finalOrderingList.add(listSz, i);
-				mMapSizeList.add(listSz, mMapSize);
+				insertPairToOrderedList(sortedParsedPairMMapList, numUnitsList, commandNumUnitsList, scoresList,
+						numTokenRelationList, mMapSizeList, finalOrderingList, i, numUnits, commandNumUnits,
+						numTokenRelation, score, mmap, mMapSize, listSz);
 			}			
 		}
 		//if top-ranked element has ParseStructType None and there exist lower-ranked
@@ -3493,6 +3479,38 @@ public class ThmP1 {
 			setParseStateFromPunctuation(punctuation, parseState);
 		}
 				
+	}
+
+	/**
+	 * @param sortedParsedPairMMapList
+	 * @param numUnitsList
+	 * @param commandNumUnitsList
+	 * @param scoresList
+	 * @param numTokenRelationList
+	 * @param mMapSizeList
+	 * @param finalOrderingList
+	 * @param i
+	 * @param numUnits
+	 * @param commandNumUnits
+	 * @param numTokenRelation
+	 * @param score
+	 * @param mmap
+	 * @param mMapSize
+	 * @param j
+	 */
+	private static void insertPairToOrderedList(List<Multimap<ParseStructType, ParsedPair>> sortedParsedPairMMapList,
+			List<Integer> numUnitsList, List<Integer> commandNumUnitsList, List<Double> scoresList,
+			List<Integer> numTokenRelationList, List<Integer> mMapSizeList, List<Integer> finalOrderingList, int i,
+			int numUnits, int commandNumUnits, int numTokenRelation, double score,
+			Multimap<ParseStructType, ParsedPair> mmap, int mMapSize, int j) {
+		sortedParsedPairMMapList.add(j, mmap);
+		numUnitsList.add(j, numUnits);
+		commandNumUnitsList.add(j, commandNumUnits);
+		scoresList.add(j, score);
+		numTokenRelationList.add(j, numTokenRelation);
+		//if(numTokenRelation > 0) throw new IllegalStateException();
+		finalOrderingList.add(j, i);
+		mMapSizeList.add(j, mMapSize);
 	}
 	
 	/**

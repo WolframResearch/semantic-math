@@ -45,7 +45,7 @@ public class SyntaxnetQuery {
 	}
 	
 	/**
-	 * Should only call once per input!
+	 * This construction is expensive!
 	 * @param input Input string to parse.
 	 */
 	public SyntaxnetQuery(String input){
@@ -77,7 +77,7 @@ public class SyntaxnetQuery {
 		try {
 			fileInputStream = new FileInputStream("src/thmp/data/serializedSentence.txt");
 		} catch (FileNotFoundException e) {
-			String msg = "FileNotFoundException when  ....  " + Arrays.toString(e.getStackTrace());
+			String msg = "FileNotFoundException when opening serialized sentence file: " + Arrays.toString(e.getStackTrace());
 			handleParseError(msg);
 			return;
 		}		
