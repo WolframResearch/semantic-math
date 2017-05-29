@@ -205,6 +205,8 @@ public class ThmP1AuxiliaryClass {
 
 	public static class StructTreeComparator implements Comparator<Struct>{
 		
+		private static final String PREPOSITION_TAG_STR = "IN";
+		private static final String ADP_CATEGORY_STR = "ADP";
 		private List<Token> tokenList;
 		private Struct[] noTexTokenStructAr;
 		
@@ -220,8 +222,9 @@ public class ThmP1AuxiliaryClass {
 		/**
 		 * Should be head structs.
 		 */
+		@Override
 		public int compare(Struct struct1, Struct struct2){
-			//use constant final field instead of 1!
+			//use constant final field instead of -1!
 			int count1 = struct1.numCoincidingRelationIndex() != -1 ? struct1.numCoincidingRelationIndex() : getStructTreeRelationCount(struct1);
 			int count2 = struct2.numCoincidingRelationIndex() != -1 ? struct2.numCoincidingRelationIndex() : getStructTreeRelationCount(struct2);
 			struct1.setNumCoincidingRelationIndex(count1);
@@ -229,6 +232,19 @@ public class ThmP1AuxiliaryClass {
 			System.out.println("ThmP1Auxiliary class - count1: " + count1 + " count2: " + count2);
 			return count1 > count2 ? -1 : (count1 < count2 ? 1 : 0);
 		}
+		
+		
+		private void getStructTreeRelationCount2(Struct struct){
+			int curLevelCount = 0;
+			for(int i = 0; i < tokenList.size(); i++){
+				Token token = tokenList.get(i);
+				
+				Struct curStruct = noTexTokenStructAr[i];
+				
+				//noTexTokenStructAr;
+			}
+			
+		}		
 		
 		private int getStructTreeRelationCount(Struct struct){
 			int curLevelCount = 0;
@@ -241,16 +257,48 @@ public class ThmP1AuxiliaryClass {
 			for(Struct child : childrenList){
 				int childTokenStructArIndex = child.noTexTokenListIndex();
 				String childName = child.nameStr();
+				if(childName.equals("surface diagram")){
+					System.out.println("ThmP1A *-* childTokenStructArIndex : "+childTokenStructArIndex);
+				}
 				if(childTokenStructArIndex < tokenListSz){
 					//build in fault tolerance for index offset
 					Token childToken = tokenList.get(childTokenStructArIndex);
 					String childTokenName = childToken.getWord();
 					boolean childAdded = false;
-					if(WordForms.areNamesSimilar(childName, childTokenName)){
-						curLevelCount = getChildRelationCount(struct, curLevelCount, parentTokenStructArIndex, child,
-							childTokenStructArIndex);
-						childAdded = true;
-					}					
+					Struct childStruct = noTexTokenStructAr[childTokenStructArIndex];
+					
+					String[] childNameAr = childName.split(" ");
+					if(childNameAr.length > 1 && childTokenStructArIndex + childNameAr.length-1 < tokenList.size()){
+						childTokenStructArIndex = childTokenStructArIndex + childNameAr.length-1;
+						childToken = tokenList.get(childTokenStructArIndex);
+						childTokenName = childToken.getWord();
+					}
+					
+					if(childTokenStructArIndex < noTexTokenStructAr.length-1){
+						int i = childTokenStructArIndex+1;
+						Struct nextStruct = noTexTokenStructAr[i];
+						//only need to check reference equality
+						while(childStruct == nextStruct){
+							if(WordForms.areNamesSimilar(nextStruct.nameStr(), childTokenName)){
+								curLevelCount = getChildRelationCount(struct, curLevelCount, parentTokenStructArIndex, child,
+									childTokenStructArIndex);
+								childAdded = true;
+								break;
+							}
+							if(i < noTexTokenStructAr.length-1){
+								nextStruct = noTexTokenStructAr[++i];
+							}else{
+								break;
+							}							
+							}
+					}
+					if(!childAdded){
+						if(WordForms.areNamesSimilar(childName, childTokenName)){
+							curLevelCount = getChildRelationCount(struct, curLevelCount, parentTokenStructArIndex, child,
+								childTokenStructArIndex);
+							childAdded = true;
+						}	
+					}
 					if(!childAdded && childTokenStructArIndex > 1){
 						childToken = tokenList.get(childTokenStructArIndex-1);
 						childTokenName = childToken.getWord();						
@@ -298,11 +346,15 @@ public class ThmP1AuxiliaryClass {
 		 * @param childTokenStructArIndex
 		 * @return
 		 */
-		private int getChildRelationCount(Struct struct, int curLevelCount, int parentTokenStructArIndex, Struct child,
+		private int getChildRelationCount(Struct struct, int curLevelCount, int parentTokenStructArIndex, 
+				Struct child,
 				int childTokenStructArIndex) {
 			int childTokenHead = tokenList.get(childTokenStructArIndex).getHead();
 			Token parentToken = tokenList.get(childTokenHead);
 			String parentTokenName = parentToken.getWord();
+			if(child.nameStr().equals("critical point")){
+				System.out.println("ThmP1A - childTokenStructArIndex of critical point: "+childTokenStructArIndex);
+			}
 			System.out.println("ThmP1A - child: " + child + " childTokenStructArIndex " + childTokenStructArIndex);
 			/*if(child.nameStr().equals("modification") && struct.nameStr().equals("field")){
 				throw new IllegalStateException("child's name is modification; parent: " + struct);	
@@ -310,18 +362,44 @@ public class ThmP1AuxiliaryClass {
 			String parentName = struct.nameStr();			
 			boolean childAdded = false;
 			if(childTokenStructArIndex < tokenList.size()){
-				if(childTokenHead == parentTokenStructArIndex){
+				
+				if(PREPOSITION_TAG_STR.equals(parentToken.getTag()) || ADP_CATEGORY_STR.equals(parentToken.getCategory())){
+					parentTokenStructArIndex = parentToken.getHead();
+					parentTokenName = tokenList.get(parentTokenStructArIndex).getWord();
+				}
+				if(childTokenHead < noTexTokenStructAr.length 
+						&& noTexTokenStructAr[childTokenHead] == noTexTokenStructAr[parentTokenStructArIndex]
+						//childTokenHead == parentTokenStructArIndex
+						){
 					//check to ensure parent names coincide, so don't add false positives
 					//in case indices happen to be the same.
-					if(WordForms.areNamesSimilar(parentName, parentTokenName)){
-						curLevelCount++;
-						childAdded = true;	
-					}					
+					Struct curStruct = noTexTokenStructAr[childTokenHead]; //this below shouldn't be necessary!!!
+					if(childTokenHead < noTexTokenStructAr.length-1){
+						int i = childTokenHead+1;
+						Struct nextStruct = noTexTokenStructAr[i];
+						while(curStruct == nextStruct){
+							if(WordForms.areNamesSimilar(nextStruct.nameStr(), parentTokenName)){
+								curLevelCount++;
+								childAdded = true;
+								break;
+							}							
+							if(i < noTexTokenStructAr.length-1){
+								nextStruct = noTexTokenStructAr[++i];
+							}else{
+								break;
+							}
+						}						
+					}
+										
+				}
+				if(!childAdded && WordForms.areNamesSimilar(parentName, parentTokenName)){
+					curLevelCount++;
+					childAdded = true;	
 				}
 			}
 			if(!childAdded){				
 				//"IN" is tag for preposition, 
-				if(parentToken.getTag().equals("IN") || parentToken.getCategory().equals("ADP")){
+				if(PREPOSITION_TAG_STR.equals(parentToken.getTag()) || ADP_CATEGORY_STR.equals(parentToken.getCategory())){
 					int grandParentToken = parentToken.getHead();
 					String grandParentTokenName = tokenList.get(grandParentToken).getWord();
 					if(grandParentToken == parentTokenStructArIndex){

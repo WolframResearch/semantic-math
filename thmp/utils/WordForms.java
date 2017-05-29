@@ -461,9 +461,29 @@ public class WordForms {
 		int len2 = name2.length();
 		int longerLen = len1 > len2 ? len1 : len2;
 		int shorterLen = len1 + len2 - longerLen;
+		
 		//e.g. "deity" vs "deities"
 		if(longerLen - shorterLen > 2){
-			return false;
+			String longerWord;
+			String shorterWord;
+			if(longerLen == len1){
+				longerWord = name1;
+				shorterWord = name2;
+			}else{
+				longerWord = name2;
+				shorterWord = name1;
+			}
+			String[] wordAr = WHITE_NONEMPTY_SPACE_PATTERN.split(longerWord);
+			if(wordAr.length > 1){
+				return areNamesSimilar(wordAr[wordAr.length-1], shorterWord);
+				/*for(String word : wordAr){
+					if(areNamesSimilar(word, shorterWord)){
+						return true;
+					}
+				} */
+			}else{
+				return false;				
+			}
 		}
 		if(shorterLen > 2){
 			int commonLen = shorterLen-1;

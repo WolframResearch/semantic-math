@@ -314,7 +314,7 @@ public class StructH<H> extends Struct{
 		
 		this.copyChildrenToStruct(convertedStructA);
 		convertedStructA.set_parentStruct(this.parentStruct());
-
+		convertedStructA.setNoTexTokenListIndex(this.noTexTokenListIndex());
 		return convertedStructA;
 	}
 	

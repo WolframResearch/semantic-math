@@ -63,7 +63,7 @@ public class SerializeParseResult {
 		inputStrList.add("Let $x \\elem R$. If $\\sum a_k$ converges conditionally, then there is some rearrangement of$\\sum a_k$  which converges to $x$");
 		inputStrList.add("$F$ is an extension that is finite over $Q$");		
 		inputStrList.add("Suppose that $f_n->f$ pointwise");
-		inputStrList.add("There are field in the class $\\mathcal{X}$ that are not finite modifications of rings.");
+		inputStrList.add("There are fields in the class $\\mathcal{X}$ that are not finite modifications of rings.");
 		inputStrList.add("for all components $U$ of $supp(w)$ which are not annuli");		
 		inputStrList.add("the holonomy of $\\partial \\Sigma$ has no fixed points");
 		inputStrList.add("$\\lambda$ run over all pairs of partitions which are complementary with respect to $R$");

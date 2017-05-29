@@ -177,7 +177,7 @@ public class ThmP1 {
 	
 	private static final Pattern HYP_PATTERN = WordForms.get_HYP_PATTERN();
 	private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
-	private static final String LATEX_PLACEHOLDER_STR = "X ";
+	private static final String LATEX_PLACEHOLDER_STR = "X";
 	private static final Pattern PAREN_END_PATTERN = Pattern.compile("[^)]*\\)");
 	private static final Pattern PAREN_START_PATTERN = Pattern.compile("\\([^)]*");
 	private static final Pattern BRACKET_END_PATTERN = Pattern.compile("[^]]*\\]");
@@ -434,7 +434,8 @@ public class ThmP1 {
 	 * @param mathIndexList
 	 * @return
 	 */
-	private static int gatherTwoThreeGram(int i, String[] str, List<Pair> pairs, List<Integer> mathIndexList, ParseState parseState){
+	private static int gatherTwoThreeGram(int i, String[] str, List<Pair> pairs, List<Integer> mathIndexList, int lastNoTexTokenIndex,
+			ParseState parseState){
 		String curWord = str[i];
 		String middleWord = str[i+1];
 		String nextWord = middleWord;
@@ -453,15 +454,15 @@ public class ThmP1 {
 			
 			//don't want to combine three-grams with "of" in middle
 			if(threeGramMap.containsKey(threeGram) && !middleWord.equals("of")){				
-				if(addNGramToPairs(pairs, mathIndexList, thirdWord, threeGram, tokenType, parseState)){
+				if(addNGramToPairs(pairs, mathIndexList, thirdWord, threeGram, tokenType, lastNoTexTokenIndex, parseState)){
 					newIndex = i+2;
 				}
 			}else if(threeGramMap.containsKey(threeGramSingular)){				
-				if(addNGramToPairs(pairs, mathIndexList, thirdWordSingular, threeGramSingular, tokenType, parseState)){
+				if(addNGramToPairs(pairs, mathIndexList, thirdWordSingular, threeGramSingular, tokenType, lastNoTexTokenIndex, parseState)){
 					newIndex = i+2;
 				}
 			}else if(threeGramMap.containsKey(threeGramSingularSingular)){				
-				if(addNGramToPairs(pairs, mathIndexList, thirdWordSingular, threeGramSingularSingular, tokenType, parseState)){
+				if(addNGramToPairs(pairs, mathIndexList, thirdWordSingular, threeGramSingularSingular, tokenType, lastNoTexTokenIndex, parseState)){
 					newIndex = i+2;
 				}
 			}	
@@ -471,11 +472,11 @@ public class ThmP1 {
 			TokenType tokenType = TokenType.TWOGRAM;
 			if(twoGramMap.containsKey(twoGram)){
 				//if(true) throw new IllegalStateException("two gram! " + twoGram);
-				if(addNGramToPairs(pairs, mathIndexList, nextWord, twoGram, tokenType, parseState)){
+				if(addNGramToPairs(pairs, mathIndexList, nextWord, twoGram, tokenType, lastNoTexTokenIndex, parseState)){
 					newIndex = i+1;
 				}	
 			}else if(twoGramMap.containsKey(twoGramSingular)){
-				if(addNGramToPairs(pairs, mathIndexList, nextWordSingular, twoGramSingular, tokenType, parseState)){
+				if(addNGramToPairs(pairs, mathIndexList, nextWordSingular, twoGramSingular, tokenType, lastNoTexTokenIndex, parseState)){
 					newIndex = i+1;
 				}
 			}
@@ -492,7 +493,7 @@ public class ThmP1 {
 	 * @return Whether n-gram was added to pairs
 	 */
 	private static boolean addNGramToPairs(List<Pair> pairsList, List<Integer> mathIndexList, String lastWord,
-			String nGram, TokenType tokenType, ParseState parseState) {
+			String nGram, TokenType tokenType, int lastNoTexTokenIndex, ParseState parseState) {
 		//don't want 2,3-grams to end with a preposition, which can break parsing down the line
 		if(posMMap.containsKey(lastWord) && posMMap.get(lastWord).get(0).equals("pre")){
 			return false;
@@ -511,7 +512,8 @@ public class ThmP1 {
 		if("noun".equals(pos)){
 			pos = "ent";
 		}	
-		Pair phrasePair = new Pair(nGram, pos);								
+		Pair phrasePair = new Pair(nGram, pos);
+		phrasePair.setNoTexTokenListIndex(lastNoTexTokenIndex);
 		pairsList.add(phrasePair);
 		if(pos.equals("ent")){ 
 			mathIndexList.add(pairsList.size() - 1);
@@ -696,17 +698,19 @@ public class ThmP1 {
 				}
 				noTexSB.append(LATEX_PLACEHOLDER_STR);	
 				lastNoTexTokenIndex = i;
-				continue;
+				continue strloop;
 			}
 			
 			// latex expressions that start with '$'
-			if (LATEX_BEGIN_PATTERN.matcher(curWord).matches()) {				
-				String latexExpr = curWord;				
+			if (LATEX_BEGIN_PATTERN.matcher(curWord).matches()) {		
+				String latexExpr = curWord;
+				String dashWord = "";
 				//not a single-word latex expression, i.e. $R$-module
 				if (i < strArLength - 1 && !SINGLE_WORD_TEX_PATTERN.matcher(curWord).matches( )
 						&& (curWord.charAt(wordlen - 1) != '$' || wordlen == 2 || wordlen == 1)) {
 					
 					i++;
+					lastNoTexTokenIndex++;
 					curWord = strAr[i];
 					
 					if (i < strArLength - 1 && curWord.equals("")) {
@@ -721,11 +725,19 @@ public class ThmP1 {
 								&& !LATEX_END_PATTER.matcher(curWord).find()){//curWord.charAt(curWord.length() - 1) != '$') {
 							latexExpr += " " + curWord;
 							i++;
+							//lastNoTexTokenIndex is used to add tokens in n-grams etc, if they are added together later.
+							lastNoTexTokenIndex++;
 							if (i == strArLength){
 								texNotClosed = true;
 								break;
 							}
-							curWord = i < strArLength - 1 && strAr[i].equals("") ? strAr[++i] : strAr[i];							
+							if(i < strArLength - 1 && strAr[i].equals("")){
+								curWord = strAr[++i];
+								lastNoTexTokenIndex++;
+							}else{
+								curWord = strAr[i];
+							}
+							//curWord = i < strArLength - 1 && strAr[i].equals("") ? strAr[++i] : strAr[i];							
 						}
 						//reached end but tex expr did not finish.
 						if(texNotClosed){
@@ -756,6 +768,7 @@ public class ThmP1 {
 				else if (DASH_ENT_PATTERN.matcher(curWord).find()) { //\\$[^$]+\\$[^-\\s]*-[^\\s]*					
 					String[] curWordAr = curWord.split("-");
 					String tempWord = curWordAr[curWordAr.length - 1];
+					dashWord = "-" + tempWord;
 					List<String> tempPosList = posMMap.get(tempWord);
 					if (!tempPosList.isEmpty()) {
 						type = tempPosList.get(0);
@@ -774,7 +787,7 @@ public class ThmP1 {
 						noTexSB.append(strAr[p]).append(" ");						
 					}
 				}
-				noTexSB.append(LATEX_PLACEHOLDER_STR).append(" ");	
+				noTexSB.append(LATEX_PLACEHOLDER_STR).append(dashWord).append(" ");	
 				//noTexSB.append(LATEX_PLACEHOLDER_STR);
 				lastNoTexTokenIndex = i;
 				continue strloop;
@@ -812,16 +825,21 @@ public class ThmP1 {
 						continue strloop;
 					}
 				}				
-				int newIndex = gatherTwoThreeGram(i, strAr, pairs, mathIndexList, parseState);
+				int newIndex = gatherTwoThreeGram(i, strAr, pairs, mathIndexList, lastNoTexTokenIndex, parseState);
 				//a two or three gram was picked up
-				if(newIndex > i){ 					
-					i = newIndex;
+				if(newIndex > i){
 					if(i > lastNoTexTokenIndex+1){
 						for(int p = lastNoTexTokenIndex+1; p < i; p++){
 							noTexSB.append(strAr[p]).append(" ");						
 						}
 					}
-					noTexSB.append(pairs.get(pairs.size()-1).word()).append(" ");
+					StringBuilder nGramSB = new StringBuilder(25);
+					for(int p = i; p <= newIndex; p++){
+						nGramSB.append(strAr[p]).append(" ");
+					}
+					i = newIndex;
+					noTexSB.append(nGramSB);
+					//noTexSB.append(pairs.get(pairs.size()-1).word()).append(" ");
 					lastNoTexTokenIndex = i;
 					continue;				
 				}
@@ -1288,7 +1306,6 @@ public class ThmP1 {
 			//case only meaningful if pairsSize>2
 			if (pairsSize > 1) {
 				Pair pair = pairs.get(pairsSize - 1);
-
 				// combine "no" and "not" with verbs
 				if (VERB_POS_PATTERN.matcher(pair.pos()).matches()) { 
 					String word = pairs.get(pairsSize - 2).word();
@@ -1313,6 +1330,7 @@ public class ThmP1 {
 			curPair.setNoTexTokenListIndex(lastNoTexTokenIndex);
 		}/*End of strloop.*/
 		System.out.println("ThmP1-noTexSB" +noTexSB);
+		//if(true) throw new IllegalStateException(noTexSB.toString());
 		parseState.setCurrentInputSansTex(noTexSB.toString());
 		parseState.addToNumNonTexTokens(numNonTexTokens);
 		
@@ -1819,7 +1837,7 @@ public class ThmP1 {
 				
 				if (curPos.equals(prevPos)) {
 					int noTexTokenListIndex = curPair.noTexTokenListIndex();
-					if(curWord.equals(curStruct.nameStr())){
+					if(WordForms.areNamesSimilar(curWord, curStruct.nameStr())){
 						//"finite modifications", the modification should get the right index
 						curStruct.setNoTexTokenListIndex(noTexTokenListIndex);
 					}
@@ -1844,6 +1862,7 @@ public class ThmP1 {
 					int noTexTokenListIndex = curPair.noTexTokenListIndex();					
 					noTexTokenStructAr[noTexTokenListIndex] = curStruct;
 					curStruct.setNoTexTokenListIndex(noTexTokenListIndex);
+					System.out.println("ThmP1 *-* noTexTokenListIndex/newStruct: "+noTexTokenListIndex + " ... "+curStruct);
 					structList.add(curStruct);
 				}
 				prevPos = curPos;
@@ -1934,6 +1953,7 @@ public class ThmP1 {
 				int noTexTokenListIndex = curPair.noTexTokenListIndex();
 				noTexTokenStructAr[noTexTokenListIndex] = newStruct;
 				newStruct.setNoTexTokenListIndex(noTexTokenListIndex);
+				System.out.println("ThmP1 *-* noTexTokenListIndex/newStruct: "+noTexTokenListIndex + " ... "+newStruct);
 				structList.add(newStruct);
 			}
 		}
@@ -1946,6 +1966,11 @@ public class ThmP1 {
 				prevStruct = noTexTokenStructAr[i];
 			}
 		}
+		
+		for(int j = 0; j < noTexTokenStructAr.length; j++){
+			System.out.println("noTexTokenStructAr[j] --" +j+" "+ noTexTokenStructAr[j]);
+		}
+		//if(true) throw new IllegalStateException();
 		parseState.setNoTexTokenStructAr(noTexTokenStructAr);
 		ThmP1AuxiliaryClass.convertStructToTexAssert(structList);
 		
@@ -2642,6 +2667,7 @@ public class ThmP1 {
 					structList2.add(structList.get(p));
 				}
 				structList = structList2;
+				headStructListSz = PARSE_NUM_MAX;
 			}
 			
 			StringBuilder parsedSB = new StringBuilder();			
