@@ -753,7 +753,7 @@ public class ThmP1TestRun {
 			st = "there are fields in the class $\\mathbb{C}$ which are not finite modifications of rings"; //syntaxnet ordering example
 			//analyze this with syntaxnet:
 			st =      "The interchange of two distant critical points of the surface diagram does not change the induced map on homology";			
-			//st = "The interchange of two 4distant 5critical 6points of the 9surface diagram does not change the induced map on homology";
+			//st = "The interchange of two 4distant 5critical 6points of the 9surface diagram does not change the induced 16map on homology";
 			
 			//st = "Let $p_1,\\dots,p_r$ be the preimages under $w$"; 			
 			//st = "$p_1,\\dots,p_r$ is the preimage under $w$ of $c^\\ast_0$";			
