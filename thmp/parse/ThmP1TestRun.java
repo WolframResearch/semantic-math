@@ -863,7 +863,7 @@ public class ThmP1TestRun {
 			if(processText){	
 				boolean isVerbose = true;
 				try{
-				ParseRun.parseInput(st, parseState, isVerbose);
+					ParseRun.parseInput(st, parseState, isVerbose);
 				}catch(StackOverflowError e){
 					System.out.println("ERRRRRROOORRRRRRRR SOF!");
 				}

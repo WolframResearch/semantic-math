@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -35,8 +36,8 @@ public class TestParseMain {
 		parseResultsList = deserializeParseResults();
 	}
 	
-	@Before
-	public void setUp() throws Exception {
+	@BeforeClass
+	public static void setUp() throws Exception {
 		/*Maps.buildMap();
 		try {
 			Maps.readLexicon();
