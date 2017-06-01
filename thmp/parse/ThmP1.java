@@ -891,6 +891,8 @@ public class ThmP1 {
 				wordPos = "ent";
 			}
 
+			int futureWordIndexAfterCardinal = i;
+			Pair emptyPair0 = new Pair(null, null);
 			if (null != wordPos && wordPos.equals("ent")) { 				
 				curWord = posList.isEmpty() ? singular : curWord;
 				String tempWord = curWord;
@@ -917,7 +919,7 @@ public class ThmP1 {
 					//curWord = strAr[i - k] + " " + curWord;
 					k++;					
 				}
-
+				
 				// if previous Pair is also an ent, fuse them, but only if current ent
 				// does not belong to noFuseEntSet e.g. "map"			
 				pairsSize = pairs.size();
@@ -956,6 +958,10 @@ public class ThmP1 {
 				pairs.add(pair);
 				int pairsSize = pairs.size();
 				anchorList.add(pairsSize - 1);
+			}else if((futureWordIndexAfterCardinal=WordForms.isCardinality(curWord, strAr, i, emptyPair0)) > i){
+				//if(true) throw new IllegalStateException();
+				pairs.add(emptyPair0);
+				i = futureWordIndexAfterCardinal-1;
 			}
 			// check part of speech (pos)
 			else if (posMMap.containsKey(curWord)){ //|| posMMap.containsKey(curWord.toLowerCase())) {
@@ -1259,6 +1265,7 @@ public class ThmP1 {
 				Pair pair = new Pair(strAr[i], "symb");
 				pairs.add(pair);
 			}
+			
 			// Get numbers. Incorporate written-out numbers, eg "two"
 			else if (curWord.matches("\\d+")) {
 				///Use "ent" for now instead of "num", because more rules for ent-combos.
@@ -1497,7 +1504,7 @@ public class ThmP1 {
 		/* map of math entities, has math object + ppt's */
 		List<StructH<HashMap<String, String>>> mathEntList = new ArrayList<StructH<HashMap<String, String>>>();
 
-		/* combine adj with math ent's; try combine adjacent ent's */
+		/* combine adj with math ent's; try combine adjacent ent's. Create math entities as instances of StructH. */
 		for (int j = 0; j < mathIndexList.size(); j++) {
 			
 			int index = mathIndexList.get(j);
@@ -1635,7 +1642,7 @@ public class ThmP1 {
 			// adjectives or determiners
 			boolean adjEncountered = false;
 			String curPos;
-			while (index - k > -1 && (curPos = pairs.get(index - k).pos()).matches("adj|det|num|and|or")) {
+			while (index - k > -1 && (curPos = pairs.get(index - k).pos()).matches("adj|det|num|quant|and|or")) {
 				Pair curPair = pairs.get(index - k);
 				String curWord = curPair.word();
 				
@@ -1646,8 +1653,7 @@ public class ThmP1 {
 					}else{
 						break;
 					}
-				}
-				
+				}				
 				//combine adverb-adj pair (not redundant with prior calls to fuseAdjAdverbPair())
 				if(curPos.equals("adj") && index-k-1 > -1){
 					adjEncountered = true;
@@ -1680,9 +1686,14 @@ public class ThmP1 {
 						}
 					}*/
 				//System.out.println("^^^^^^^^^^put word " + curWord);
-				tempMap.put(curWord, "ppt");
+				if(curPos.equals(WordForms.QUANTITY_POS)){
+					tempMap.put(curPos, curWord);
+				}else{
+					tempMap.put(curWord, "ppt");					
+				}
 				// mark the pos field in those absorbed pairs as index in
 				// mathEntList
+				//System.out.println("curPos "+curPos + " curWord " +curWord );
 				curPair.set_pos(entPosStr);
 				k++;
 			}
@@ -1839,7 +1850,7 @@ public class ThmP1 {
 				
 				StructH<HashMap<String, String>> curStruct = mathEntList.get(Integer.valueOf(curPos));			
 				if (curPos.equals(prevPos)) {
-					int noTexTokenListIndex = curPair.noTexTokenListIndex();
+					//int noTexTokenListIndex = curPair.noTexTokenListIndex();
 					/*if(WordForms.areNamesSimilar(curWord, curStruct.nameStr())){
 						//"finite modifications", the modification should get the right index
 						curStruct.setNoTexTokenListIndex(noTexTokenListIndex);
@@ -2236,9 +2247,9 @@ public class ThmP1 {
 		
 		Struct recentEnt = parseState.getRecentEnt();	
 		// shouldn't be 0 to start with?!
-		if (inputStructListSize == 0)
+		if (inputStructListSize == 0){
 			return parseState;
-
+		}
 		// first Struct
 		Struct firstEnt = null;
 		boolean foundFirstEnt = false;
@@ -2679,6 +2690,7 @@ public class ThmP1 {
 				//original token aren't processed! eg stripped of "s"
 				Struct[] noTexTokenStructAr = parseState.noTexTokenStructAr();
 				SyntaxnetQuery syntaxnetQuery = new SyntaxnetQuery(parseState.currentInputSansTex());
+				parseState.setSyntaxnetQuery(syntaxnetQuery);
 				Sentence sentence = syntaxnetQuery.sentence();
 				
 				List<Token> tokenList = sentence.getTokenList();

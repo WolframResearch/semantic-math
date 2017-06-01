@@ -50,7 +50,7 @@ public class TestParseMain {
 
 	/**
 	 * ADD TO TESTS:
-	 * "5;"
+	 * 
 	 */
 	
 	
@@ -76,8 +76,7 @@ public class TestParseMain {
 		for(int j = 0; j < stList.size(); j++){
 			String str = stList.get(j);
 			Multimap<ParseStructType, String> map = parsedMMapList.get(j);
-			parseThm(str, map);
-					
+			parseThm(str, map);					
 		}	
 	}
 

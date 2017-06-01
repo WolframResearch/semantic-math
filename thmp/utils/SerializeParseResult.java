@@ -73,7 +73,8 @@ public class SerializeParseResult {
 		inputStrList.add("The interchange of two distant critical points of the surface diagram does not change the induced map on homology");
 		inputStrList.add("fix a rectangular Young diagram $R$ over a field");
 		inputStrList.add("signed resolution $res(T)$ coincide with $RR$");
-
+		inputStrList.add("there exist fourty-eight hundred and eighty-six triangles"); //test cardinality
+		
 		//inputStrList.add("");
 		//inputStrList.add("");
 		//inputStrList.add("");

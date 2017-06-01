@@ -73,6 +73,8 @@ public class ParseState {
 	private String currentInputSansTex;
 	//struct array      struct token index info, for making syntaxnet queries.
 	private Struct[] noTexTokenStructAr;
+	//cache the most recent SyntaxnetQuery, since its construction is costly.
+	private SyntaxnetQuery syntaxnetQuery;
 	
 	private boolean writeUnknownWordsToFileBool;
 	
@@ -704,12 +706,10 @@ public class ParseState {
 		
 		if(null != variableDef.getDefiningStruct()){
 			return variableDef.definingStruct;
-		}
-		
+		}		
 		return null;		
 	}
 	
-
 	/**
 	 * Get list of VariableDefinition's with specified name.
 	 * @param name
@@ -909,6 +909,18 @@ public class ParseState {
 		this.inThmFlag = inThm;
 	}
 	
+	public SyntaxnetQuery getRecentSyntaxnetQuery(){
+		return this.syntaxnetQuery;
+	}
+	
+	/**
+	 * Cache the most recent SyntaxnetQuery, since its construction is costly.
+	 * @param syntaxnetQuery_
+	 */
+	public void setSyntaxnetQuery(SyntaxnetQuery syntaxnetQuery_){
+		this.syntaxnetQuery = syntaxnetQuery_;
+	}
+	
 	/**
 	 * Clear variables, reset state, headParseStruct etc, to not contaminate
 	 * variable space for next parse. One parse run is defined
@@ -928,6 +940,7 @@ public class ParseState {
 		this.recentParseSpanning = false;
 		this.currentInputSansTex = null;
 		this.noTexTokenStructAr = null;
+		this.syntaxnetQuery = null;
 		logger.info("(cleanup)@@@headParseStruct" + headParseStruct);
 	}	
 	

@@ -30,6 +30,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.SetMultimap;
 
 import thmp.parse.Maps;
+import thmp.parse.Pair;
 import thmp.parse.ParsedExpression;
 import thmp.search.WordFrequency;
 
@@ -49,8 +50,13 @@ public class WordForms {
 	private static final Pattern SPECIAL_CHARS_AROUND_WORD_PATTERN 
 		= Pattern.compile("[\\{\\[\\(]+(.+?)[\\}\\]\\)]*|[\\{\\[\\(]*(.+?)[\\}\\]\\)]+");
 	private static final Pattern IRREG_PLURAL_ENDINGS_PATTERN = Pattern.compile("s|h|x");
+	/*Don't include numerical quantities such as "one", "five" etc here, which should be determined from algorithm */
 	public static final Pattern CARDINALITY_PPT_PATTERN = Pattern.compile("some|a|an|the|unique|infinite|infinitely many");
+	private static final Pattern NUMBER_PATTERN = Pattern.compile("one|two|three|four|five|six|seven|eight|nine|ten|twenty|"
+			+ "thirty|fourty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion");
+	//private static final Pattern NUMBER_PATTERN2 = Pattern.compile("hundred|thousand|million|billion"); 
 	private static final Pattern SPACES_AROUND_TEXT_PATTERN = Pattern.compile("\\s*(.+)\\s*");
+	public static final String QUANTITY_POS = "quant";
 	
 	private static final String synonymsFileStr = "src/thmp/data/synonyms.txt";
 	private static final ImmutableMap<String, String> synonymRepMap;
@@ -497,6 +503,84 @@ public class WordForms {
 	}
 	
 	/**
+	 * Determine if input word is a cardinality, e.g. five-thirty-eight.
+	 * @param word Word to determine if numeric quantity.
+	 * @param inputStrAr Array of strings, whose members constitute the original input string.
+	 * @param wordIndex index of word in inputStrAr.
+	 * @return index to start the next token after current quantity ends, if current is quantity.
+	 */
+	public static int isCardinality(String word, String[] inputStrAr, int wordIndex, Pair emptyPair){
+		//take care of dashes!!!
+		int inputStrArLen = inputStrAr.length;
+		int nextTokenStartIndex = wordIndex;
+		StringBuilder sb = new StringBuilder(25);
+		String[] ar = word.split("-");
+		//if(ar.length > 1) throw new RuntimeException(word);
+		//	boolean dashBool = ar.length > 1;
+		if(ar.length > 1){
+			//String[] inputStrAr1 = word.split("-");
+			int wordIndex1 = 0; 
+			///Pair emptyPair1 = new Pair(null, null);
+			int temp = isCardinality(ar[0], ar, wordIndex1, emptyPair);
+			if(temp > wordIndex1){
+				sb.append(word).append(" ");
+				if(++nextTokenStartIndex >= inputStrArLen){
+					return nextTokenStartIndex;
+				}
+				word = inputStrAr[nextTokenStartIndex];
+			}
+		}		
+		if(NUMBER_PATTERN.matcher(word).matches()){
+			nextTokenStartIndex++;
+			boolean conjAppended = false;
+			sb.append(word);
+			while(nextTokenStartIndex < inputStrArLen){
+				String nextWord = inputStrAr[nextTokenStartIndex];
+				ar = nextWord.split("-");
+				if(ar.length > 1){
+					//String[] inputStrAr1 = nextWord.split("-");
+					int wordIndex1 = 0; 
+					///Pair emptyPair1 = new Pair(null, null);
+					int temp = isCardinality(ar[0], ar, wordIndex1, emptyPair);
+					if(temp > wordIndex1){
+						if(conjAppended){
+							sb.append(" and");	
+							conjAppended = false;
+						}
+						sb.append(" ").append(nextWord);
+						if(++nextTokenStartIndex >= inputStrArLen){
+							break;
+						}
+					}
+				}					
+				if(//NUMBER_PATTERN2.matcher(inputStrAr[nextTokenStartIndex]).matches() ||
+						NUMBER_PATTERN.matcher(inputStrAr[nextTokenStartIndex]).matches()){
+					if(conjAppended){
+						sb.append(" and");	
+						conjAppended = false;
+					}
+					sb.append(" ").append(inputStrAr[nextTokenStartIndex]);
+					nextTokenStartIndex++;				
+				}else if("and".equals(inputStrAr[nextTokenStartIndex])){
+					conjAppended = true;
+					nextTokenStartIndex++;
+				}else{
+					break;
+				}
+			}
+			if(conjAppended){
+				nextTokenStartIndex--;
+			}
+			emptyPair.set_word(sb.toString());
+			emptyPair.set_pos(QUANTITY_POS);
+			System.out.println("wordIndex " + wordIndex+ "  nextTokenStartIndex " + nextTokenStartIndex);
+			return nextTokenStartIndex;
+		}		
+		
+		return nextTokenStartIndex;		
+	}
+	
+	/**
 	 * Heuristic for determining if two latex expressions are similar 
 	 * enough, to warrant them being grouped together via conjunction or
 	 * disjunction. E.g. let $S$, $T$ be rings.
@@ -613,6 +697,7 @@ public class WordForms {
 	public static Pattern SPACES_AROUND_TEXT_PATTERN(){
 		return SPACES_AROUND_TEXT_PATTERN;
 	}
+	
 	/**
 	 * Get the part of speech corresponding to the pos tag/symbol.
 	 * E.g. i -> "pre". Placed here instead of in subclass, so it can

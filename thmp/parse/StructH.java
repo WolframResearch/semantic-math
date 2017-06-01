@@ -659,7 +659,12 @@ public class StructH<H> extends Struct{
 			Expr pptListExpr = ExprUtils.listExpr(pptExprList);			
 			//ruleExprWrapperList.add(new RuleExprWrapper(new Expr("Property"), pptListExpr));
 			curLevelExprList.add(new Expr(new Expr("Property"), new Expr[]{pptListExpr}));
-		}
+		}		
+		String s = struct.get(WordForms.QUANTITY_POS);
+		if(null != s){
+			cardSB.append("\"").append(s).append("\", ");
+			cardExprList.add(new Expr(s));			
+		}		
 		//append cardinality list
 		if(!cardExprList.isEmpty()){
 			if(prependCommaBool){

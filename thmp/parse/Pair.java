@@ -36,6 +36,10 @@ public class Pair {
 	public void set_pos(String newPos){
 		this.pos = newPos;
 	}
+
+	public void set_word(String newWord){
+		this.word = newWord;
+	}
 	
 	public void setNoTexTokenListIndex(int index){
 		this.noTexTokenListIndex = index;
@@ -86,8 +90,5 @@ public class Pair {
 		
 	}
 	
-	public void set_word(String newWord){
-		this.word = newWord;
-	}
 
 }
