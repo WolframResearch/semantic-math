@@ -755,7 +755,12 @@ public class ThmP1TestRun {
 			st =      "The interchange of two distant critical points of the surface diagram does not change the induced map on homology";			
 			//st = "The interchange of two 4distant 5critical 6points of the 9surface diagram does not change the induced 16map on homology";
 			st = "there exist fourty-eight hundred and eighty-six triangles";
-			
+			st = "$A$ implies ring over field";
+			st = "there exist fourty-eight hundred and eighty-six triangles";
+			st = "$p$ is prime";
+			st = "The interchange of two distant critical points of the surface diagram does not change the induced map on homology";
+			st = "signed resolution $res(T)$ coincide with $RR$";
+			st = "";
 			//st = "Let $p_1,\\dots,p_r$ be the preimages under $w$"; 			
 			//st = "$p_1,\\dots,p_r$ is the preimage under $w$ of $c^\\ast_0$";			
 			//st = "there are complex parameters";
@@ -884,12 +889,13 @@ public class ThmP1TestRun {
 			}
 			
 			/*******whether to process file or not********/
-			boolean processFile = false;
+			boolean processFile = true;
 			
 			if(processFile){
 				
 				//Scanner sc = new Scanner(new File("src/thmp/data/samplePaper2.txt"));
-				Scanner sc = new Scanner(new File("/Users/yihed/Downloads/agt-4-38.tex"));				
+				Scanner sc = new Scanner(new File("/Users/yihed/Downloads/DimThy24Feb04.tex"));	
+				
 				//Scanner sc = new Scanner(new File("/Users/yihed/Downloads/spectral.tex"));
 				//Scanner sc = new Scanner(new File("src/thmp/data/collectThmTestSample.txt"));
 				parseState = parseStateBuilder.build();

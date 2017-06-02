@@ -67,6 +67,19 @@ public class ParseToWLTree{
 	private static final Pattern PLURAL_PATTERN = Pattern.compile("(.+)s");
 	private static final Pattern CONJ_DISJ_PATTERN = Pattern.compile("conj_.+|disj_.+");
 	private static final Pattern CONJ_DISJ_PATTERN2 = Pattern.compile("(?:conj|disj)(.*)");
+	//map of whitelisted verbs that should not trigger command with trigger term "verbphrase".
+	private static final Set<String> WHITELIST_VERB_SET;
+	
+	static{
+		WHITELIST_VERB_SET = new HashSet<String>();
+		String[] whitelistVerbAr = new String[]{"is","are","has","have","exist","do","does"};
+		for(String verb : whitelistVerbAr){
+			WHITELIST_VERB_SET.add(verb);
+			WHITELIST_VERB_SET.add(verb + " no");
+			WHITELIST_VERB_SET.add(verb + " not");
+		}
+		
+	}
 	
 	/**
 	 * Entry point for depth first search.
@@ -87,7 +100,8 @@ public class ParseToWLTree{
 	 * Get the triggered collection.
 	 * @param struct
 	 */
-	private static Collection<ImmutableWLCommand> get_triggerCol(String triggerKeyWord, String triggerType){
+	private static Collection<ImmutableWLCommand> get_triggerCol(String triggerKeyWord, String triggerType,
+			Struct struct){
 		
 		Collection<ImmutableWLCommand> triggeredList;
 		//copy into mutable collection. 
@@ -116,11 +130,17 @@ public class ParseToWLTree{
 			//if(true) throw new IllegalStateException("triggerWordLookupCol" + triggerWordLookupCol);
 		}
 		//look up using type
-		//if(triggeredSet.isEmpty() && WLCommandMap.containsKey(triggerType)){
-			//triggeredList.addAll(WLCommandMMap.get(triggerType));
+		boolean triggerTypeBool = true;
+		if("verbphrase".equals(triggerType) || struct.prev1NodeType().isTypeStruct()){
+			String verbStr = ((Struct)struct.prev1()).nameStr();
+			if(WHITELIST_VERB_SET.contains(verbStr)){
+				triggerTypeBool = false;
+			}			
+		}
+		if(triggerTypeBool){
 			Collection<ImmutableWLCommand> sCommandsCol = WLCommandMMap.get(triggerType);
 			addTriggeredCollectionToList(triggeredList, triggeredWordsSet, triggeredCommandSet, sCommandsCol);
-		//}
+		
 		
 		int triggerKeyWordLen = triggerKeyWord.length();
 		if(triggeredList.isEmpty() && triggerKeyWordLen > 2 && triggerKeyWord.charAt(triggerKeyWordLen-1) == 's'){
@@ -137,6 +157,7 @@ public class ParseToWLTree{
 				addTriggeredCollectionToList(triggeredList, triggeredWordsSet, triggeredCommandSet, sCommandsCol);
 			}			
 		}
+	}
 		//System.out.println("ParseToWLTree-triggeredList " + triggeredList);
 		return triggeredList;
 	}
@@ -306,14 +327,13 @@ public class ParseToWLTree{
 	/**
 	 * Searches through parse tree and matches with ParseStruct's.
 	 * Builds tree of WLCommands.
-	 * Convert to visitor pattern!
 	 * 
-	 * @param parseMap Map of String maps to which parseStructType.
-	 * @param struct HeadStruct, 
+	 * @param struct The head Struct. 
 	 * @param parsedSB StringBuilder. Don't actually need it here for now.
 	 * @param headStruct the nearest ParseStruct that's collecting parses
 	 * @param numSpaces is the number of spaces to print. Increment space if number is 
-	 * @param structList List of Struct's collected so far, in dfs traversal order.
+	 * @param structList List of Struct's collected so far, in (almost) dfs traversal order, 
+	 * parents are visited first before any child.
 	 */
 	private static void buildWLCommandTreeDfs(Struct struct, StringBuilder parsedSB, //ParseStruct headParseStruct, 
 			int numSpaces, List<Struct> structList, List<WLCommand> WLCommandList, boolean printTiers,
@@ -441,14 +461,14 @@ public class ParseToWLTree{
 		
 		//if trigger a WLCommand, 
 		boolean isTrigger = false;
-		Collection<ImmutableWLCommand> triggeredCol = get_triggerCol(triggerKeyWord, structType);
+		Collection<ImmutableWLCommand> triggeredCol = get_triggerCol(triggerKeyWord, structType, struct);
 		//System.out.println("keyWord: "+ triggerKeyWord +"****************triggerCol: " + triggeredCol);
 		//use getSingular
 		if(triggeredCol.isEmpty() && triggerKeyWord.length() > 2 
 				&& triggerKeyWord.charAt(triggerKeyWord.length() - 1) == 's'){
 			//need to write out all other cases, like ending in "es"
 			String triggerWordSingular = triggerKeyWord.substring(0, triggerKeyWord.length() - 1);
-			triggeredCol = get_triggerCol(triggerWordSingular, structType);				
+			triggeredCol = get_triggerCol(triggerWordSingular, structType, struct);				
 		}
 		
 		//is trigger, add all commands in list 
@@ -486,7 +506,7 @@ public class ParseToWLTree{
 					}else if(commandSat.isDisqualified()){
 						continue;
 					}
-					
+					//add components before the trigger.
 					for(int i = structList.size()-1; i > -1; i--){
 						
 						Struct curStruct = structList.get(i);
@@ -531,10 +551,9 @@ public class ParseToWLTree{
 							WLCommandList.add(curCommand);
 						}
 					}
-			}						
+			}
 			isTrigger = true;	
-			structList.add(struct);
-		
+			structList.add(struct);		
 		if (struct.isStructA()) {
 			
 			if(printTiers){

@@ -678,7 +678,8 @@ public class ThmP1 {
 				//currently replace it with empty string
 				StringBuilder latexExprSB = new StringBuilder(mathModeMatcher.replaceAll(ALIGN_PATTERN_REPLACEMENT_STR));
 				
-				while(i++ < strArLength-1){
+				while(i < strArLength-1){
+					i++;
 					curWord = strAr[i];					
 					//not checking for nested \begin{align} and \begin{equation}
 					if((mathModeEndMatcher = END_ALIGN_PATTERN.matcher(curWord)).matches()){
@@ -1985,7 +1986,13 @@ public class ThmP1 {
 					structList.remove(structListSize - 1);
 				}
 				int noTexTokenListIndex = curPair.noTexTokenListIndex();
-				noTexTokenStructAr[noTexTokenListIndex] = newStruct;
+				try{
+					noTexTokenStructAr[noTexTokenListIndex] = newStruct;
+				}catch(IndexOutOfBoundsException e){
+					String msg = "IndexOutOfBoundsException when setting noTexTokenStructAr!" + e.getMessage();
+					logger.error(msg);
+					System.out.println(msg);
+				}
 				newStruct.setNoTexTokenListIndex(noTexTokenListIndex);
 				System.out.println("ThmP1 *-* noTexTokenListIndex/newStruct: "+noTexTokenListIndex + " ... "+newStruct);
 				structList.add(newStruct);
@@ -2075,7 +2082,6 @@ public class ThmP1 {
 		pairs.add(pair);	
 		addExtraPosToPair(pair, posList);
 		if("ent".equals(pos)){
-			//HERE
 			mathIndexList.add(pairs.size() - 1);			
 		}
 	}
@@ -2685,7 +2691,7 @@ public class ThmP1 {
 			
 			//only get the most likely ones according to syntaxnet query , then attach scores to head
 			//only walk through the most likely ones. 
-			if(headStructListSz > SYNTAXNET_PARSE_THRESHOLD){
+			if(false && headStructListSz > SYNTAXNET_PARSE_THRESHOLD){
 				//Sort according to number of relations that coincide with syntaxnet parse.
 				//original token aren't processed! eg stripped of "s"
 				Struct[] noTexTokenStructAr = parseState.noTexTokenStructAr();

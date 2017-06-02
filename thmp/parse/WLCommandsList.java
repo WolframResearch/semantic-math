@@ -154,7 +154,7 @@ public class WLCommandsList {
 		/*****General-scope commands******/
 		//triggered by types. Add such judiciously.
 		//e.g. $f$ maps $X$ to $Y$.
-		putToWLCommandMapBuilder(wLCommandMapBuilder, "verb", new PBuilder("det|symb|ent|pro|noun", null, true), 
+		/**Working command: putToWLCommandMapBuilder(wLCommandMapBuilder, "verb", new PBuilder("det|symb|ent|pro|noun", null, true), 
 				//new PBuilder("pro", "we", WLCommand.PosTermType.NEGATIVE),
 				new PBuilder("verb|vbs", null, WLCommand.PosTermType.NEGATIVE), 
 				new PBuilder(" ~"), new PBuilder("Connective").makeExprHead(),
@@ -164,13 +164,28 @@ public class WLCommandsList {
 				new PBuilder(", {\"Qualifiers\"->", "OPT"), 
 				//the relation should incorporate several types. 
 				new PBuilder("prep|qualifier", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}}", "OPT")
-				);		
+				);*/
+		//for verbphrases whose verbs don't fall under "is", "has", etc
+		putToWLCommandMapBuilder(wLCommandMapBuilder, "verbphrase", new PBuilder("det|symb|ent|pro|noun", null, true), 
+				//new PBuilder("pro", "we", WLCommand.PosTermType.NEGATIVE),
+				new PBuilder(" ~"), new PBuilder("HasProperty").makeExprHead(), new PBuilder("~ "),
+				new PBuilder("is|are", null, WLCommand.PosTermType.NEGATIVE),
+				new PBuilder("verbphrase", null, true, true, false), 
+				new PBuilder(" {", "OPT"),
+				//new PBuilder("symb|ent|noun|adj|prep|phrase|qualifier", null, true, false, false).addRelationType(RelationType._IS),
+				new PBuilder(", {", "OPT"), new PBuilder("Qualifiers", "OPT").makeOptionalTermHead(), new PBuilder("->", "OPT"),
+				//the relation should incorporate several types. 
+				new PBuilder("prep|qualifier", null, true, false, "OPT").addRelationType(RelationType.IS_), 
+				new PBuilder("}}", "OPT")
+				);
 		/* e.g. "Fix a prime $p$"*/
 		putToWLCommandMapBuilder(wLCommandMapBuilder, "verb", new PBuilder("{"),
 				new PBuilder("^(?!hyp)verb$", null, true, true, false).setPositionInStructTree(PositionInStructTree.FIRST),
 				new PBuilder(", "), new PBuilder(" {", "OPT"), 
 				new PBuilder("symb|ent|noun", null, true, false, false).addRelationType(RelationType._IS),
-				new PBuilder(", {\"Qualifiers\"->", "OPT"), //new PBuilder("Qualifiers", "OPT").makeOptionalTermHead(),
+				//new PBuilder(", {\"Qualifiers\"->", "OPT"), //new PBuilder("Qualifiers", "OPT").makeOptionalTermHead(),
+				new PBuilder(", {", "OPT"),
+				new PBuilder("Qualifiers", "OPT").makeOptionalTermHead(), new PBuilder("->", "OPT"),
 				//the relation should incorporate several types. 
 				new PBuilder("prep|qualifier", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}}", "OPT"),
 				new PBuilder("}")

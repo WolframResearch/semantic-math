@@ -1,5 +1,9 @@
 package thmp.utils;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,19 +14,21 @@ import thmp.parse.ParseState.ParseStateBuilder;
 import thmp.test.ParseEqualityCheck.ParseResult;
 
 /**
- * Serialize parse result. Used for testing for now.
- * 
+ * Serialize parse result. Used for creating test data.
+ * Run with caution! Since will override test data! 
  * @author yihed
  */
 public class SerializeParseResult {
 
 	public static String parseResultSerialFile = "src/thmp/parseResultSerialFile.dat";
+	//previous version of the file, in case gets overwritten.
+	private static String parseResultSerialFileLastTime = "src/thmp/parseResultSerialFileLastTime.dat";
 	
 	public static void f(){
 		
 	}
 	
-	public static void main(String args[]){
+	public static void main(String args[]) throws IOException{
 		List<String> inputStrList = new ArrayList<String>();
 		addInputToList(inputStrList);
 		List<ParseResult> parseResultList = new ArrayList<ParseResult>();
@@ -39,6 +45,7 @@ public class SerializeParseResult {
 			parseResultList.add(pr);
 			parseState.parseRunGlobalCleanUp();
 		}
+		Files.copy(Paths.get(parseResultSerialFileLastTime), Paths.get(parseResultSerialFileLastTime), StandardCopyOption.REPLACE_EXISTING);
 		FileUtils.serializeObjToFile(parseResultList, parseResultSerialFile);
 	}
 

@@ -344,7 +344,7 @@ public class StructA<A, B> extends Struct{
 				
 				//System.out.println("increment_commandNumUnits : numUnits " + commandNumUnits + " composedCommand: " + composedCommand); 				
 			
-			//been built into one command already
+			//if has been built into another command already
 			if(null == this.commandBuilt){
 				this.commandBuilt = curCommand;
 				this.WLCommandStrVisitedCount++;
@@ -401,7 +401,8 @@ public class StructA<A, B> extends Struct{
 				//quotes around prev1 string, construct Expr from children
 				fullContentSB.insert(0, "\"").append("\"");
 				String pptCommaStr = "\"" + makePptStr + "\", ";
-				if(this.type.equals("adj") || this.type.equals("adverb") || this.type.equals("qualifier") ){
+				if(this.type.equals("adj") || this.type.equals("adverb") || this.type.equals("qualifier")){
+					//if(true) throw new IllegalStateException(this.toString());
 					if(!"".equals(makePptStr)){
 						appendPptExpr(exprList, fullContentSB, prev1Expr, makePptStr, childExprList, childStr,
 								pptCommaStr);
@@ -492,7 +493,21 @@ public class StructA<A, B> extends Struct{
 				//System.out.println(" THIS  " + this + " ADDED for command " + curCommand);
 			//}
 			return fullContentSB.toString();
-		}else{		
+		}else if("verbphrase".equals(curCommand.getTriggerWord()) && this.type.equals("verbphrase") 
+				&& this.prev1NodeType().isTypeStruct() && this.prev2NodeType().isTypeStruct()){
+			//handle case when verbphrase is trigger word.
+			StringBuilder fullContentSB = new StringBuilder(50);
+			String prev1Str = ((Struct)this.prev1).nameStr();
+			fullContentSB.append("\"").append(prev1Str).append("\", ");
+			Expr prev1Expr = new Expr(prev1Str);
+			List<Expr> curLevelExprList = new ArrayList<Expr>();
+			curLevelExprList.add(prev1Expr);
+			fullContentSB.insert(0, " MathProperty[").append(((Struct)this.prev2).simpleToString(includeType, 
+					curCommand, triggerPosTerm, curPosTerm, curLevelExprList) ).append("]");						
+			exprList.add(ExprUtils.mathPptExpr(curLevelExprList));
+			return fullContentSB.toString();
+		}
+		else{		
 			//System.out.println("+++" + this.simpleToString2(includeType, curCommand));
 			return this.simpleToString2(includeType, curCommand, triggerPosTerm, exprList);
 		}
@@ -590,7 +605,7 @@ public class StructA<A, B> extends Struct{
 				){
 			wrapBraces = true;		
 			//tempStr += "{";
-			tempSB.append("{");
+			tempSB.append("\"Qualifier\"->{");
 		}		
 		//NEED TO CONSTRUCT EXPR's here, including Conj and Disj Expr's!!!
 		if(this.prev1 != null){
@@ -686,14 +701,19 @@ public class StructA<A, B> extends Struct{
 		if(null != conjDisjHeadExpr){
 			combinedLevelExpr = ExprUtils.createExprFromList(conjDisjHeadExpr, curLevelExprList);
 		}else{
-			combinedLevelExpr = ExprUtils.listExpr(curLevelExprList);
+			if(wrapBraces){
+				Expr qualifierHeadExpr = new Expr(Expr.SYMBOL, "Qualifier");
+				combinedLevelExpr = ExprUtils.createExprFromList(qualifierHeadExpr, curLevelExprList);
+			}else{
+				combinedLevelExpr = ExprUtils.listExpr(curLevelExprList);
+			}
 		}
 		exprList.add(combinedLevelExpr);
 		
-		if(wrapBraces){ //tempStr += "}";
+		if(wrapBraces){
 			tempSB.append("}");
 		}
-		if(inConj){ //tempStr += "]";
+		if(inConj){
 			//this one must be left in place
 			tempSB.append("]");
 		}

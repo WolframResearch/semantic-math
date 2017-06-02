@@ -129,7 +129,7 @@ public class WLCommand implements Serializable{
 	 * the inner command built*/
 	private Struct structHeadWithOtherHead;
 	/**
-	 * Index of last added component inside posList.
+	 * Index of last added component inside posTermList. Used when adding components.
 	 * Starts as triggerIndex.
 	 */
 	private int lastAddedCompIndex;
@@ -1943,7 +1943,6 @@ public class WLCommand implements Serializable{
 	 * @return 				Whether the command is now satisfied
 	 * 
 	 * Add to commandsMap only if component is required as indicated by commandsCountMap.
-	 * BUT: what if the Struct just added isn't the one needed? Keep adding.
 	 * If the name could be several optional ones, eg "in" or "of", so use regex .match("in|of")
 	 */
 	public static CommandSat addComponent(WLCommand curCommand, Struct newStruct, boolean before){
@@ -1992,8 +1991,7 @@ public class WLCommand implements Serializable{
 		int lastAddedComponentIndex = curCommand.lastAddedCompIndex;
 		int triggerWordIndex = curCommand.triggerWordIndex;
 		//could be null.
-		Map<Integer, Integer> optionalTermsGroupCountMap = curCommand.optionalTermsGroupCountMap;
-		
+		Map<Integer, Integer> optionalTermsGroupCountMap = curCommand.optionalTermsGroupCountMap;		
 		WLCommandComponent commandComponent;
 		
 		//String commandComponentPosTerm;
@@ -2003,15 +2001,17 @@ public class WLCommand implements Serializable{
 		int i = lastAddedComponentIndex;
 		//short-circuit if trigger is the first nontrivial term.
 		if(before && onlyTrivialTermsBefore(posTermList, i-1)){
-			if("element".equals(curCommand.triggerWord)){
-				System.out.print("");
-			}
 			return new CommandSat(false, curCommand.optionalTermsCount > 0, false, true);
 		}
 		
 		//if the first time we add a component that's after triggerWordIndex.
 		if(!before && lastAddedComponentIndex < triggerWordIndex){			
 			i = triggerWordIndex;
+		}
+		//if current component is a child of previously added component
+		if(structParentAlreadyAdded(newStruct, posTermList, i)){
+			boolean hasOptionalTermsLeft = (curCommand.optionalTermsCount > 0);
+			return new CommandSat(curCommand.componentCounter < 1, hasOptionalTermsLeft, componentAdded);
 		}
 		
 		//if(lastAddedComponentIndex != curCommand.triggerWordIndex){
@@ -2202,6 +2202,27 @@ public class WLCommand implements Serializable{
 		//shouldn't be < 0!
 		return curCommand.componentCounter < 1;
 		*/
+	}
+
+	/**
+	 * @param newStruct
+	 * @param posTermList
+	 * @param i
+	 * @return
+	 */
+	private static boolean structParentAlreadyAdded(Struct newStruct, List<PosTerm> posTermList, int i) {
+		boolean structParentAlreadyAdded = false;
+		Struct prevStructAdded = posTermList.get(i).posTermStruct;
+		Struct structParent = newStruct.parentStruct();
+		while(structParent != null){
+			if(structParent == prevStructAdded){
+				structParentAlreadyAdded = true;
+				break;
+			}else{
+				structParent = structParent.parentStruct();
+			}
+		}
+		return structParentAlreadyAdded;
 	}
 
 	/**
