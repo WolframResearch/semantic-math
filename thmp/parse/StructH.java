@@ -587,7 +587,7 @@ public class StructH<H> extends Struct{
 		if(includeType){			
 			if(!"".equals(makePptStr)){
 				String pptCommaStr = "\"" + makePptStr + "\", ";				
-				sb.append(this.type.equals("ent") ? "MathProperty" : this.type).append("[Mode->\"").append(pptCommaStr);
+				sb.append(this.type.equals("ent") ? "MathProperty" : this.type).append("[Mode->").append(pptCommaStr);
 				curLevelExprList.add(new Expr(new Expr("Mode"), new Expr[]{new Expr(makePptStr)}));
 				//ruleExprWrapperList.add(new RuleExprWrapper(new Expr("Mode"), new Expr(makePptStr)));
 				headExprWrapperType = ExprWrapperType.MATHPPT;
@@ -597,18 +597,6 @@ public class StructH<H> extends Struct{
 			}
 		}
 		boolean prependCommaBool = false;
-		
-		//append name
-		String name = struct.get("name");
-		if(null != name){
-			/*sb.append("\"Name\"->\"").append(name).append("\"");
-			RuleExprWrapper ruleWrapper = new RuleExprWrapper(new Expr("Name"), new Expr(name));*/
-			sb.append("\"Type\"->\"").append(name).append("\"");
-			curLevelExprList.add(new Expr(new Expr("Type"), new Expr[]{new Expr(name)}));
-			//RuleExprWrapper ruleWrapper = new RuleExprWrapper(new Expr("Type"), new Expr(name));
-			//ruleExprWrapperList.add(ruleWrapper);
-			prependCommaBool = true;
-		}
 		
 		List<Expr> pptExprList = new ArrayList<Expr>();
 		//list of cardinalities
@@ -645,31 +633,34 @@ public class StructH<H> extends Struct{
 			}
 		}
 		if(!pptExprList.isEmpty()){
-			if(prependCommaBool){
+			/*if(prependCommaBool){
 				sb.append(", ");
-			}
+			}*/
+			prependCommaBool = true;
 			//increment once, this covers all ppt's.
 			WLCommand.increment_commandNumUnits(curCommand, this);
 			String pptStr = pptSB.toString();
 			int pptSBLen = pptSB.length();
 			if(pptSBLen > 2){ //shouldn't need to check{
-				pptStr = pptSB.substring(0, pptSBLen-2); 
+				pptStr = pptSB.substring(0, pptSBLen-2);
 			}
-			sb.append("\"Property\"->{").append(pptStr).append("}");
-			Expr pptListExpr = ExprUtils.listExpr(pptExprList);			
+			sb.append("\"Qualifiers\"->{").append(pptStr).append("}");
+			//Expr pptListExpr = ExprUtils.listExpr(pptExprList);
+			curLevelExprList.add(ExprUtils.createExprFromList(new Expr("Qualifiers"), pptExprList));
 			//ruleExprWrapperList.add(new RuleExprWrapper(new Expr("Property"), pptListExpr));
-			curLevelExprList.add(new Expr(new Expr("Property"), new Expr[]{pptListExpr}));
+			//curLevelExprList.add(new Expr(new Expr("Qualifiers"), new Expr[]{pptListExpr}));
 		}		
-		String s = struct.get(WordForms.QUANTITY_POS);
-		if(null != s){
-			cardSB.append("\"").append(s).append("\", ");
-			cardExprList.add(new Expr(s));			
+		String quantityStr = struct.get(WordForms.QUANTITY_POS);
+		if(null != quantityStr){
+			cardSB.append("\"").append(quantityStr).append("\", ");
+			cardExprList.add(new Expr(quantityStr));
+			prependCommaBool = true;		
 		}		
 		//append cardinality list
 		if(!cardExprList.isEmpty()){
-			if(prependCommaBool){
+			/*if(prependCommaBool){
 				sb.append(", ");
-			}
+			}*/
 			String cardStr = cardSB.toString();
 			int cardSBLen = cardSB.length();
 			if(cardSBLen > 2){ //shouldn't need to check
@@ -679,6 +670,21 @@ public class StructH<H> extends Struct{
 			Expr cardListExpr = ExprUtils.listExpr(cardExprList);	
 			//ruleExprWrapperList.add(new RuleExprWrapper(new Expr("Cardinality"), cardListExpr));
 			curLevelExprList.add(new Expr(new Expr("Cardinality"), new Expr[]{cardListExpr}));
+		}
+
+		//append name
+		String name = struct.get("name");
+		if(null != name){
+			if(prependCommaBool){
+				sb.append(", ");
+			}
+			/*sb.append("\"Name\"->\"").append(name).append("\"");
+			RuleExprWrapper ruleWrapper = new RuleExprWrapper(new Expr("Name"), new Expr(name));*/
+			sb.append("\"Type\"->\"").append(name).append("\"");
+			curLevelExprList.add(new Expr(new Expr("Type"), new Expr[]{new Expr(name)}));
+			//RuleExprWrapper ruleWrapper = new RuleExprWrapper(new Expr("Type"), new Expr(name));
+			//ruleExprWrapperList.add(ruleWrapper);
+			prependCommaBool = true;
 		}
 		
 		String called = struct.get("called");

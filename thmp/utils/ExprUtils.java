@@ -20,7 +20,7 @@ public class ExprUtils {
 	private static final Expr ruleHeadExpr = new Expr(Expr.SYMBOL, "Rule");
 	private static final Expr mathHeadExpr = new Expr(Expr.SYMBOL, "Math");
 	private static final Expr mathPptHeadExpr = new Expr(Expr.SYMBOL, "MathProperty");
-	private static final Expr qualifierHeadExpr = new Expr(Expr.SYMBOL, "Qualifier");
+	private static final Expr qualifierHeadExpr = new Expr(Expr.SYMBOL, "Qualifiers");
 	
 	public enum ExprWrapperType{
 		RULE,

@@ -398,7 +398,7 @@ public class FileUtils {
 	public static WLEvaluationMedium acquireWLEvaluationMedium(){
 		
 		WLEvaluationMedium medium = null;
-		//put this condition back in place once kernel pool exception fixed!
+		//**put this condition back in place once KernelPoolException resolved!
 		if(true || null == servletContext){
 			//running locally.
 			return new WLEvaluationMedium(getKernelLinkInstance());

@@ -272,7 +272,7 @@ public class ThmP1AuxiliaryClass {
 						Struct nextStruct = noTexTokenStructAr[i];
 						//only need to check reference equality
 						while(childStruct == nextStruct){
-							if(WordForms.areNamesSimilar(nextStruct.nameStr(), childTokenName)){
+							if(WordForms.areNamesSimilar(nextStruct, childTokenName)){
 								curLevelCount = getChildRelationCount(struct, curLevelCount, parentTokenStructArIndex, child,
 									childTokenStructArIndex);
 								childAdded = true;
@@ -286,7 +286,7 @@ public class ThmP1AuxiliaryClass {
 						}
 					}
 					if(!childAdded){
-						if(WordForms.areNamesSimilar(childName, childTokenName)){
+						if(WordForms.areNamesSimilar(child, childTokenName)){
 							curLevelCount = getChildRelationCount(struct, curLevelCount, parentTokenStructArIndex, child,
 								childTokenStructArIndex);
 							childAdded = true;
@@ -299,7 +299,7 @@ public class ThmP1AuxiliaryClass {
 					childTokenStructArIndex = childTokenStructArIndex-1;
 					Token childToken = tokenList.get(childTokenStructArIndex);
 					String childTokenName = childToken.getWord();						
-					if(WordForms.areNamesSimilar(childName, childTokenName)){						
+					if(WordForms.areNamesSimilar(child, childTokenName)){						
 						curLevelCount = getChildRelationCount(struct, curLevelCount, parentTokenStructArIndex, child,
 								childTokenStructArIndex);
 					}				
@@ -333,7 +333,7 @@ public class ThmP1AuxiliaryClass {
 			if(!childAdded && childTokenStructArIndex > 1){
 				childToken = tokenList.get(childTokenStructArIndex-1);
 				childTokenName = childToken.getWord();						
-				if(WordForms.areNamesSimilar(childName, childTokenName)){
+				if(WordForms.areNamesSimilar(child, childTokenName)){
 					childTokenStructArIndex = childTokenStructArIndex-1;
 					curLevelCount = getChildRelationCount(struct, curLevelCount, parentTokenStructArIndex, child,
 						childTokenStructArIndex);
@@ -343,7 +343,7 @@ public class ThmP1AuxiliaryClass {
 			if(!childAdded && childTokenStructArIndex+1 < tokenListSz){
 				childToken = tokenList.get(childTokenStructArIndex+1);
 				childTokenName = childToken.getWord();						
-				if(WordForms.areNamesSimilar(childName, childTokenName)){
+				if(WordForms.areNamesSimilar(child, childTokenName)){
 					childTokenStructArIndex = childTokenStructArIndex+1;
 					curLevelCount = getChildRelationCount(struct, curLevelCount, parentTokenStructArIndex, child,
 						childTokenStructArIndex);
@@ -395,7 +395,7 @@ public class ThmP1AuxiliaryClass {
 						int i = childTokenHead+1;
 						Struct nextStruct = noTexTokenStructAr[i];
 						while(curStruct == nextStruct){
-							if(WordForms.areNamesSimilar(nextStruct.nameStr(), parentTokenName)){
+							if(WordForms.areNamesSimilar(nextStruct, parentTokenName)){
 								curLevelCount++;
 								childAdded = true;
 								break;
@@ -408,7 +408,7 @@ public class ThmP1AuxiliaryClass {
 						}						
 					}										
 				}
-				if(!childAdded && WordForms.areNamesSimilar(parentName, parentTokenName)){
+				if(!childAdded && WordForms.areNamesSimilar(struct, parentTokenName)){
 					curLevelCount++;
 					childAdded = true;	
 				}
@@ -436,8 +436,7 @@ public class ThmP1AuxiliaryClass {
 			}*/
 			curLevelCount += getStructTreeRelationCount(child);
 			return curLevelCount;
-		}
-		
+		}		
 	}
 	
 	/***Done with static nested classes***/

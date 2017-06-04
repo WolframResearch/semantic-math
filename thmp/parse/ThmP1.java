@@ -177,7 +177,7 @@ public class ThmP1 {
 	
 	private static final Pattern HYP_PATTERN = WordForms.get_HYP_PATTERN();
 	private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
-	private static final String LATEX_PLACEHOLDER_STR = "X";
+	private static final String LATEX_PLACEHOLDER_STR = "XY";
 	private static final Pattern PAREN_END_PATTERN = Pattern.compile("[^)]*\\)");
 	private static final Pattern PAREN_START_PATTERN = Pattern.compile("\\([^)]*");
 	private static final Pattern BRACKET_END_PATTERN = Pattern.compile("[^]]*\\]");
@@ -187,8 +187,10 @@ public class ThmP1 {
 	private static final double MAX_ALLOWED_ENT_PERCENTAGE = 0.8;
 	private static final int MIN_PAIRS_SIZE_THRESHOLD_FOR_FLUFF = 7;
 	private static final Pattern POSSESIVE_PATTERN = Pattern.compile("[^\\s]+'s");
+	private static final Pattern SYNTAXNET_PREP_PATTERN = Pattern.compile("in|on|over|of|from|between|with|by");
 	private static final int PARSE_NUM_MAX = 6;
-	private static final int SYNTAXNET_PARSE_THRESHOLD = 10;
+	private static final int SYNTAXNET_PARSE_THRESHOLD = 5;//8
+	private static final int SYNTAXNET_PREP_THRESHOLD = 1;
 	
 	static{
 		fluffMap = Maps.BuildMaps.fluffMap;
@@ -1686,7 +1688,6 @@ public class ThmP1 {
 							k++;
 						}
 					}*/
-				//System.out.println("^^^^^^^^^^put word " + curWord);
 				if(curPos.equals(WordForms.QUANTITY_POS)){
 					tempMap.put(curPos, curWord);
 				}else{
@@ -1900,15 +1901,14 @@ public class ThmP1 {
 					
 					structList.add(curStruct);
 				}
-				prevPos = curPos;
-				
+				prevPos = curPos;				
 			} else {
 				String prev2 = "";
 				//if(true) throw new IllegalStateException();
 				//check if article
-				if(curPos.equals("art")){					
+				if(curPos.equals("art")){				
 					if(i < pairsSz-1){
-						//combine into subsequent ent
+						//combine article into subsequent ent
 						Pair nextPair = pairs.get(i+1);
 						if(DIGITS_PATTERN.matcher(nextPair.pos()).matches()){
 							StructH<HashMap<String, String>> nextStruct = mathEntList.get(Integer.valueOf(nextPair.pos()));						
@@ -1930,27 +1930,6 @@ public class ThmP1 {
 				// current word hasn't classified into an ent, make structA
 				int structListSize = structList.size();
 				
-				// combine adverbs into the prior verb if applicable,
-				//but only if subsequent word is not of type "parti", 
-				//e.g. "$K$ is separably generated over $k$"
-				/*if (curPair.pos().equals("adverb")) {
-				//bad because this adverb could be modifying subsequent words, e.g. "converges uniformly"
-					if (structListSize > 1 && structList.get(structListSize - 1).type().matches("verb|vbs")) {
-						//only if the subsequent word is not an adjective, or no subsequent word
-						String nextPairPos;
-						if(i == pairsSz - 1 
-								|| !(nextPairPos = pairs.get(i+1).pos()).equals("adj")
-								&& !nextPairPos.equals("parti")){
-							
-							StructA<?, ?> verbStruct = (StructA<?, ?>) structList.get(structListSize - 1);
-							// verbStruct should not have prev2, set prev2 type
-							// to String <--improve this.
-							verbStruct.set_prev2(curPair.word());
-							continue;
-						}
-					}
-				}*/
-
 				// leaf of prev2 is empty string ""
 				StructA<String, String> newStruct = 
 						new StructA<String, String>(curWord, NodeType.STR, prev2, NodeType.STR, curPair.pos());
@@ -1994,7 +1973,7 @@ public class ThmP1 {
 					System.out.println(msg);
 				}
 				newStruct.setNoTexTokenListIndex(noTexTokenListIndex);
-				System.out.println("ThmP1 *-* noTexTokenListIndex/newStruct: "+noTexTokenListIndex + " ... "+newStruct);
+				//System.out.println("ThmP1 *-* noTexTokenListIndex/newStruct: "+noTexTokenListIndex + " ... "+newStruct);
 				structList.add(newStruct);
 			}
 		}
@@ -2164,8 +2143,7 @@ public class ThmP1 {
 	 * @return
 	 */
 	private static Pair fuseAdverbAdj(List<Pair> pairs//, String curWord
-			, Pair pair
-			) {
+			, Pair pair){
 		
 		// if adverb-adj pair, eg "clearly good"
 		// And combine adj_adj to adj, eg right exact
@@ -2279,7 +2257,6 @@ public class ThmP1 {
 				// but does use more space! Need to revisist.
 				tempList.add(new StructList());
 			}
-
 			mx.add(tempList);
 			/*
 			 * mx.add(new ArrayList<Struct>(len));
@@ -2287,7 +2264,8 @@ public class ThmP1 {
 			 * mx.get(l).get(i) .add(null); }
 			 */
 		}
-		
+		//only call syntaxnet if prepositionCount is above certain threshold
+		int prepositionCount = 0;
 		// which row to start at for the next column
 		int nextColStartRow = -1;
 		outerloop: for (int j = 0; j < inputStructListSize; j++) {
@@ -2298,7 +2276,6 @@ public class ThmP1 {
 			// mx.get(j).set(j, diagonalStruct);
 			Struct diagonalStruct = inputStructList.get(j);
 			diagonalStruct.set_structList(mx.get(j).get(j));
-			
 			mx.get(j).get(j).add(diagonalStruct);
 			
 			String structName;
@@ -2307,6 +2284,10 @@ public class ThmP1 {
 				structName = diagonalStruct.prev1().toString();
 			}else{
 				structName = diagonalStruct.struct().get("name");
+			}
+
+			if(SYNTAXNET_PREP_PATTERN.matcher(structName).matches()){
+				prepositionCount++;
 			}
 			
 			//create additional structs on the diagonal if extra pos present.
@@ -2691,7 +2672,7 @@ public class ThmP1 {
 			
 			//only get the most likely ones according to syntaxnet query , then attach scores to head
 			//only walk through the most likely ones. 
-			if(false && headStructListSz > SYNTAXNET_PARSE_THRESHOLD){
+			if(false && prepositionCount > SYNTAXNET_PREP_THRESHOLD && headStructListSz > SYNTAXNET_PARSE_THRESHOLD){
 				//Sort according to number of relations that coincide with syntaxnet parse.
 				//original token aren't processed! eg stripped of "s"
 				Struct[] noTexTokenStructAr = parseState.noTexTokenStructAr();
@@ -5111,8 +5092,7 @@ public class ThmP1 {
 		}
 		if(sentenceList.isEmpty()){
 			sentenceList.add(sentenceBuilder.toString());
-		}
-		
+		}		
 		//System.out.println("sentenceList " + sentenceList);
 		return sentenceList.toArray(new String[0]);
 	}
@@ -5142,4 +5122,7 @@ public class ThmP1 {
 		return sb.toString();
 	}
 
+	public static String LATEX_PLACEHOLDER_STR(){
+		return LATEX_PLACEHOLDER_STR;
+	}
 }

@@ -32,6 +32,8 @@ import com.google.common.collect.SetMultimap;
 import thmp.parse.Maps;
 import thmp.parse.Pair;
 import thmp.parse.ParsedExpression;
+import thmp.parse.Struct;
+import thmp.parse.ThmP1;
 import thmp.search.WordFrequency;
 
 public class WordForms {
@@ -56,6 +58,7 @@ public class WordForms {
 			+ "thirty|fourty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion");
 	//private static final Pattern NUMBER_PATTERN2 = Pattern.compile("hundred|thousand|million|billion"); 
 	private static final Pattern SPACES_AROUND_TEXT_PATTERN = Pattern.compile("\\s*(.+)\\s*");
+	private static final Pattern DASH_PATTERN = Pattern.compile("-");
 	public static final String QUANTITY_POS = "quant";
 	
 	private static final String synonymsFileStr = "src/thmp/data/synonyms.txt";
@@ -453,6 +456,21 @@ public class WordForms {
 	}
 	
 	/**
+	 * Whether name of struct is sufficiently similar to name.
+	 * @param struct
+	 * @param name
+	 * @return
+	 */
+	public static boolean areNamesSimilar(Struct struct, String name){
+		String structName;
+		if(struct.isLatexStruct()){
+			structName = ThmP1.LATEX_PLACEHOLDER_STR();
+		}else{
+			structName = struct.nameStr();
+		}
+		return areNamesSimilar(structName, name);
+	}
+	/**
 	 * If two names slight variations of each other, i.e. one is plural form of the other.
 	 * Currently used for determining token similarities after querying syntaxnet.
 	 * @param name1
@@ -510,12 +528,11 @@ public class WordForms {
 	 * @return index to start the next token after current quantity ends, if current is quantity.
 	 */
 	public static int isCardinality(String word, String[] inputStrAr, int wordIndex, Pair emptyPair){
-		//take care of dashes!!!
+		
 		int inputStrArLen = inputStrAr.length;
 		int nextTokenStartIndex = wordIndex;
 		StringBuilder sb = new StringBuilder(25);
-		String[] ar = word.split("-");
-		//if(ar.length > 1) throw new RuntimeException(word);
+		String[] ar = DASH_PATTERN.split(word);
 		//	boolean dashBool = ar.length > 1;
 		if(ar.length > 1){
 			//String[] inputStrAr1 = word.split("-");
@@ -536,11 +553,9 @@ public class WordForms {
 			sb.append(word);
 			while(nextTokenStartIndex < inputStrArLen){
 				String nextWord = inputStrAr[nextTokenStartIndex];
-				ar = nextWord.split("-");
+				ar = DASH_PATTERN.split(nextWord);
 				if(ar.length > 1){
-					//String[] inputStrAr1 = nextWord.split("-");
 					int wordIndex1 = 0; 
-					///Pair emptyPair1 = new Pair(null, null);
 					int temp = isCardinality(ar[0], ar, wordIndex1, emptyPair);
 					if(temp > wordIndex1){
 						if(conjAppended){
@@ -553,8 +568,7 @@ public class WordForms {
 						}
 					}
 				}					
-				if(//NUMBER_PATTERN2.matcher(inputStrAr[nextTokenStartIndex]).matches() ||
-						NUMBER_PATTERN.matcher(inputStrAr[nextTokenStartIndex]).matches()){
+				if(NUMBER_PATTERN.matcher(inputStrAr[nextTokenStartIndex]).matches()){
 					if(conjAppended){
 						sb.append(" and");	
 						conjAppended = false;

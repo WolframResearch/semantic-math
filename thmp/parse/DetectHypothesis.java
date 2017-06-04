@@ -116,7 +116,7 @@ public class DetectHypothesis {
 	private static final Pattern END_DOCUMENT_PATTERN = Pattern.compile("\\\\end\\{document\\}.*");
 	private static final Pattern NEW_DOCUMENT_PATTERN = Pattern.compile(".*\\\\documentclass.*");
 	private static final int NUM_NON_TEX_TOKEN_THRESHOLD = 4;
-	private static final int THM_MAX_CHAR_SIZE = 3500;
+	private static final int THM_MAX_CHAR_SIZE = 1800;
 	
 	static{
 		FileUtils.set_dataGenerationMode();	
@@ -431,7 +431,7 @@ public class DetectHypothesis {
 				//inputBF = new BufferedReader(new FileReader("src/thmp/data/samplePaper1.txt"));
 				inputFile = new File("src/thmp/data/Total.txt");
 				inputFile = new File("src/thmp/data/math0210227");
-				inputFile = new File("/Users/yihed/Downloads/agt-4-38.tex");
+				inputFile = new File("/Users/yihed/Downloads/math0404441");
 				//inputFile = new File("src/thmp/data/thmsFeb26.txt");
 				//inputBF = new BufferedReader(new FileReader("src/thmp/data/Total.txt"));
 				//inputBF = new BufferedReader(new FileReader("src/thmp/data/fieldsThms2.txt"));

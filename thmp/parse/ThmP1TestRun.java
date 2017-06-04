@@ -750,17 +750,21 @@ public class ThmP1TestRun {
 			st = "A morphism of C-algebras $f : A \\longrightarrow B$ with axiom is called a noncommutative Serre fibration";
 			st = "a morphism of C-algebras $sfsff$ is called a fibration";		
 			st = "the twisted $K$-theory $K^0(Y,\\cA)$ is isomorphic to the Grothendieck group of Neumann equivalence class of projections in $C(X, \\K_\\cA)$";
-			st = "there are fields in the class $\\mathbb{C}$ which are not finite modifications of rings"; //syntaxnet ordering example
 			//analyze this with syntaxnet:
+			st = "there are fields in the class $\\mathbb{C}$ which are not finite modifications of rings"; //syntaxnet ordering example
 			st =      "The interchange of two distant critical points of the surface diagram does not change the induced map on homology";			
 			//st = "The interchange of two 4distant 5critical 6points of the 9surface diagram does not change the induced 16map on homology";
-			st = "there exist fourty-eight hundred and eighty-six triangles";
-			st = "$A$ implies ring over field";
-			st = "there exist fourty-eight hundred and eighty-six triangles";
+			st = "there exist fourty-eight hundred and eighty-six triangles";			
 			st = "$p$ is prime";
+			st = "$A$ implies ring over field";
 			st = "The interchange of two distant critical points of the surface diagram does not change the induced map on homology";
 			st = "signed resolution $res(T)$ coincide with $RR$";
-			st = "";
+			st = "that the set of all projections $X X$ such $ p -LRB- a -RRB- \\leq X $ is";
+			st = "while this problem in full generality can lead to almost any";
+			st = "topology of $X$ for which all the intervals of the form $XZ$ or $XY$";
+			st = "subsets $X$ and $X$ of $X$ by the formulas";
+			st = "this is a signed resolution over ring";
+			st = "Assume that all $f\\in I$ with $\\deg f<n$ are in $I\\tp$ and take $f\\in I$ with $\\deg f=n$";
 			//st = "Let $p_1,\\dots,p_r$ be the preimages under $w$"; 			
 			//st = "$p_1,\\dots,p_r$ is the preimage under $w$ of $c^\\ast_0$";			
 			//st = "there are complex parameters";
@@ -889,12 +893,12 @@ public class ThmP1TestRun {
 			}
 			
 			/*******whether to process file or not********/
-			boolean processFile = true;
+			boolean processFile = false;
 			
 			if(processFile){
 				
 				//Scanner sc = new Scanner(new File("src/thmp/data/samplePaper2.txt"));
-				Scanner sc = new Scanner(new File("/Users/yihed/Downloads/DimThy24Feb04.tex"));	
+				Scanner sc = new Scanner(new File("/Users/yihed/Downloads/math0404441"));	
 				
 				//Scanner sc = new Scanner(new File("/Users/yihed/Downloads/spectral.tex"));
 				//Scanner sc = new Scanner(new File("src/thmp/data/collectThmTestSample.txt"));

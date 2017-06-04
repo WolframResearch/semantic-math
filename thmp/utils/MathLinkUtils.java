@@ -84,8 +84,7 @@ public class MathLinkUtils {
 		}
 	}
 	
-	private static Expr evaluateWLCommandWithKernel(IKernel kernel, String cmd, boolean throwOnException){
-		
+	private static Expr evaluateWLCommandWithKernel(IKernel kernel, String cmd, boolean throwOnException){		
 		try {
 			//make sure this waits. 
 			Expression expression = kernel.evaluate(cmd);
