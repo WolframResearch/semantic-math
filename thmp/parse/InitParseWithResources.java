@@ -9,11 +9,9 @@ package thmp.parse;
 public class InitParseWithResources {
 
 	private static boolean DEBUG = true;
-	
-	private static final String d = "";
-	
-	public static void set_DEBUG_toTrue(){
-		DEBUG = true;
+		
+	public static void set_DEBUG(boolean debug_){
+		DEBUG = debug_;
 	}
 	
 	public static boolean isDEBUG(){

@@ -186,7 +186,7 @@ public class RelationVec implements Serializable{
 				continue;
 			}			
 			List<String> contentStrList = posTermStruct.contentStrList();
-			System.out.println("***********RelationVec - contentStrList: " + contentStrList + " posTerm: " + posTerm);
+			//System.out.println("***********RelationVec - contentStrList: " + contentStrList + " posTerm: " + posTerm);
 			
 			List<RelationType> posTermRelationTypeList = posTerm.relationType();
 			//System.out.println("****************RelationVec - posTermRelationTypeList: "  + posTermRelationTypeList);
@@ -306,7 +306,9 @@ public class RelationVec implements Serializable{
 					if(null == residue){						
 						continue;
 					}
-					System.out.println("RelationVec - adding word " + word);
+					if(DEBUG){
+						System.out.println("RelationVec - adding word " + word);
+					}
 					int bitPos = parseContextVectorSz*modulus + residue;					
 					maxBitPos = addToPosList(bitPosList, maxBitPos, bitPos);					
 					//if parseStructType is HYP, also add to the "IF" segment.

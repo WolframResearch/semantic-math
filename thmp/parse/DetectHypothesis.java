@@ -98,7 +98,7 @@ public class DetectHypothesis {
 	private static final List<String> ALL_THM_WORDS_LIST;
 	private static final Map<String, Integer> ALL_THM_WORDS_FREQ_MAP;
 	
-	private static final boolean PARSE_INPUT_VERBOSE = true;
+	private static final boolean PARSE_INPUT_VERBOSE = false;
 	//whether to gather a list of statistics, such as percentage of thms with full parses, or non-null head ParseStruct's.
 	//private static final boolean GATHER_STATS = true;
 	

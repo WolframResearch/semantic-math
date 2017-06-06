@@ -29,6 +29,7 @@ import thmp.utils.WordForms;
 public class GenerateSearchDataRunner {
 
 	private static final Logger logger = LogManager.getLogger(SearchIntersection.class);
+	private static final double numMiliSecPerHour = 3600000;
 	
 	public static void main(String[] args) throws FileNotFoundException, IOException, InterruptedException{
 		//read in location of source file
@@ -81,9 +82,9 @@ public class GenerateSearchDataRunner {
 					"src/thmp/data/termDocumentMatrixSVD.mx", "src/thmp/data/allThmWordsMap.dat"});			
 			System.out.println("Done generating search data for files in " + fileDir);			
 		}
-		double numMiliSecPerHour = 3600000;
+		
 		long afterTime = System.currentTimeMillis();
-		System.out.println("time it took to evalute data for "+ fileNamesList +" files:" + (afterTime-beforeTime)/numMiliSecPerHour);
+		System.out.println("time it took to evalute data for "+ fileNamesList +" files:" + (afterTime-beforeTime)/numMiliSecPerHour + " hours");
 	}
 
 	/**

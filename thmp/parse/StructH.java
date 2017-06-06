@@ -654,13 +654,14 @@ public class StructH<H> extends Struct{
 		if(null != quantityStr){
 			cardSB.append("\"").append(quantityStr).append("\", ");
 			cardExprList.add(new Expr(quantityStr));
-			prependCommaBool = true;		
+			//prependCommaBool = true;		
 		}		
 		//append cardinality list
 		if(!cardExprList.isEmpty()){
 			/*if(prependCommaBool){
 				sb.append(", ");
 			}*/
+			prependCommaBool = true;
 			String cardStr = cardSB.toString();
 			int cardSBLen = cardSB.length();
 			if(cardSBLen > 2){ //shouldn't need to check
@@ -694,9 +695,9 @@ public class StructH<H> extends Struct{
 			}
 			/*sb.append("\"Called\"->").append("\"").append(called).append("\"");
 			ruleExprWrapperList.add(new RuleExprWrapper(new Expr("Called"), new Expr(called)));*/
-			sb.append("\"Name\"->").append("\"").append(called).append("\"");
+			sb.append("\"Label\"->").append("\"").append(called).append("\"");
 			//ruleExprWrapperList.add(new RuleExprWrapper(new Expr("Name"), new Expr(called)));
-			curLevelExprList.add(new Expr(new Expr("Name"), new Expr[]{new Expr(called)}));
+			curLevelExprList.add(new Expr(new Expr("Label"), new Expr[]{new Expr(called)}));
 		}
 		//append name
 		String tex = struct.get("tex");
@@ -875,8 +876,7 @@ public class StructH<H> extends Struct{
 	}
 
 	@Override
-	public void set_prev1(String str) {
-			
+	public void set_prev1(String str) {			
 	}
 
 	@Override

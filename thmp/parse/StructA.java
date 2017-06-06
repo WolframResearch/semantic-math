@@ -363,9 +363,7 @@ public class StructA<A, B> extends Struct{
 			
 			StringBuilder fullContentSB = new StringBuilder((String)this.prev1);
 			Expr prev1Expr = new Expr((String)this.prev1);
-			if(((String)this.prev1).equals("maximal ideal")){
-				System.out.println("STRUCTA - -  prev1Expr : " + prev1Expr);
-			}
+			
 			String makePptStr = retrievePosTermPptStr(triggerPosTerm, curPosTerm);
 			//child must return an Association ExprWrapper 
 			//e.g. "Qualifiers" -> {"with", Math["Name"->"axiom"]}. 
@@ -421,13 +419,18 @@ public class StructA<A, B> extends Struct{
 						appendPptExpr(exprList, fullContentSB, prev1Expr, makePptStr, childExprList, childStr,
 								pptCommaStr);
 					}else{
-						fullContentSB.insert(0, "Math[").append(childStr).append("]");
-						headExpr = new Expr(Expr.SYMBOL, "Math");						
+						fullContentSB.append(childStr);
+						headExpr = new Expr(Expr.SYMBOL, "Math");					
 						if(childExprList.size() > 0){
 							exprList.add(new Expr(headExpr, new Expr[]{prev1Expr, childExprList.get(0)}));
-							//System.out.println("CHILD EXPR LIST: " + childExprList);
+							fullContentSB.insert(0, "Math[").append("]");
 						}else{
-							exprList.add(new Expr(headExpr, new Expr[]{prev1Expr}));							
+							if("pre".equals(this.type)){
+								exprList.add(new Expr(Expr.SYMBOL, (String)this.prev1));	
+							}else{
+								exprList.add(new Expr(headExpr, new Expr[]{prev1Expr}));	
+								fullContentSB.insert(0, "Math[").append("]");
+							}
 						}
 					}
 					//if(this.type.equals("texAssert")) System.out.println("StructA -struct "+ this +"has child? " +this.hasChild);
@@ -605,7 +608,7 @@ public class StructA<A, B> extends Struct{
 				){
 			wrapBraces = true;		
 			//tempStr += "{";
-			tempSB.append("\"Qualifier\"->{");
+			tempSB.append("\"Qualifiers\"->{");
 		}		
 		//NEED TO CONSTRUCT EXPR's here, including Conj and Disj Expr's!!!
 		if(this.prev1 != null){
@@ -637,7 +640,7 @@ public class StructA<A, B> extends Struct{
 					tempSB.append(prev1Wrapper.WLCommandStr());					
 					curLevelExprList.add(prev1Wrapper.commandExpr());
 				}
-			}else if(PREV1_TYPE.equals(NodeType.STR) && !prev1.equals("")){
+			}else if(PREV1_TYPE.equals(NodeType.STR) && !"".equals(prev1)){
 				//if(!type.matches("pre|partiby")){
 				if(!type.matches("partiby")){
 					//if(prev1.equals("above")){
@@ -702,7 +705,7 @@ public class StructA<A, B> extends Struct{
 			combinedLevelExpr = ExprUtils.createExprFromList(conjDisjHeadExpr, curLevelExprList);
 		}else{
 			if(wrapBraces){
-				Expr qualifierHeadExpr = new Expr(Expr.SYMBOL, "Qualifier");
+				Expr qualifierHeadExpr = new Expr(Expr.SYMBOL, "Qualifiers");
 				combinedLevelExpr = ExprUtils.createExprFromList(qualifierHeadExpr, curLevelExprList);
 			}else{
 				combinedLevelExpr = ExprUtils.listExpr(curLevelExprList);
@@ -910,8 +913,8 @@ public class StructA<A, B> extends Struct{
 	@Override
 	@SuppressWarnings("unchecked")
 	public void set_prev1(Object prev1){
-		this.prev1 = (A)prev1;	 
-		if(PREV1_TYPE.isTypeStruct()){
+		this.prev1 = (A)prev1;
+		if(prev1 instanceof Struct){
 			this.PREV1_TYPE = ((Struct) prev1).isStructA() ? NodeType.STRUCTA : NodeType.STRUCTH;			
 		}
 	}
@@ -919,12 +922,7 @@ public class StructA<A, B> extends Struct{
 	//***this is terrible! Cannot just cast String
 	@SuppressWarnings("unchecked")
 	public void set_prev1(String prev1){		
-		if(!(PREV1_TYPE.equals(NodeType.STR))) {
-			String msg = "PREV1_TYPE should be String rather than " + PREV1_TYPE + "!";		
-			System.out.println(msg);
-			this.PREV1_TYPE = NodeType.STR;
-			//assert false : msg;
-		}
+		this.PREV1_TYPE = NodeType.STR;
 		this.prev1 = (A)prev1;
 	}
 	
@@ -940,12 +938,12 @@ public class StructA<A, B> extends Struct{
 	@SuppressWarnings("unchecked")
 	public void set_prev2(String prev2){
 		this.prev2 = (B)prev2;	
-		if(!(PREV2_TYPE.equals(NodeType.STR))) {
+		//if(!(PREV2_TYPE.equals(NodeType.STR))) {
 			//String msg = "PREV1_TYPE should be String rather than " + PREV1_TYPE + "!";		
 			//System.out.println(msg);
 			this.PREV2_TYPE = NodeType.STR;
 			//assert false : msg;
-		}
+		//}
 	}
 	
 	@Override

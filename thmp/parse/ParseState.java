@@ -726,7 +726,6 @@ public class ParseState {
 	 */
 	public void logState(){
 		//remove this on PRD
-		System.out.println("variableNamesMMap: " + this.globalVariableNamesMMap);
 		logger.info(this.globalVariableNamesMMap);
 	}
 	

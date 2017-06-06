@@ -54,7 +54,7 @@ public class FileUtils {
 	//singleton, only one instance should exist
 	private static volatile KernelLink ml;
 	private static final Logger logger = LogManager.getLogger();
-	
+	private static final boolean IS_OS_X = "Mac OS X".equals(System.getProperty("os.name"));
 	/*random number used to keep track of version of serialized data, new random number 
 	//is generated each time this class is loaded,
 	//so oeffectively once per JVM session.
@@ -493,5 +493,13 @@ public class FileUtils {
 		pr.waitFor();
 		FileUtils.silentClose(inputReader);
 		FileUtils.silentClose(errorReader);
+	}
+	
+	/**
+	 * Whether the OS is MacOS X 
+	 * @return
+	 */
+	public static boolean isOSX(){
+		return IS_OS_X;
 	}
 }

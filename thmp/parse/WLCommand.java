@@ -36,6 +36,7 @@ import thmp.parse.WLCommand.WLCommandComponent;
 import thmp.parse.WLCommand.PosTerm.PosTermConnotation;
 import thmp.utils.Buggy;
 import thmp.utils.ExprUtils;
+import thmp.utils.FileUtils;
 
 /**
  * WL command, containing the components that need to be hashed. 
@@ -157,7 +158,7 @@ public class WLCommand implements Serializable{
 	private static final Pattern DISQUALIFY_PATTERN = Pattern.compile("(if|If|iff|Iff)");
 	private static final String[] DISQUALIFY_STR_ARRAY = new String[]{"if", "If", "if", "Iff"};
 	
-	private static final boolean DEBUG = true;
+	private static final boolean DEBUG = FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : false;
 	private static final Logger logger = LogManager.getLogger(WLCommand.class);
 	
 	/**
@@ -1201,7 +1202,6 @@ public class WLCommand implements Serializable{
 		for(Entry<Struct, Integer> entry : structIntMap.entrySet()){
 			Integer whichChild = entry.getValue();
 			Struct nextStruct = entry.getKey();
-			//System.out.println("@@@Added Parent: " + nextStruct + " " + whichChild);
 			
 			if(!nextStruct.isStructA() 
 					//Don't add StructH, even if all children present, unless original StructH present.
@@ -1252,7 +1252,6 @@ public class WLCommand implements Serializable{
 			}
 		}	
 		structToAppendCommandStr = highestStruct;		
-		//System.out.println("structToAppendCommandStr" + structToAppendCommandStr);
 		return structToAppendCommandStr;
 	}
 	
@@ -1303,7 +1302,6 @@ public class WLCommand implements Serializable{
 				if(prevHeadStructWrapperList != null){					
 					// increment the structsWithOtherHeadCount of the last wrapper object for every wrapper.
 					for(WLCommandWrapper wrapper : prevHeadStructWrapperList){
-						//System.out.println("-------------prevHeadStructWrapperList wrapper: " + wrapper);
 						WLCommand lastWrapperCommand = wrapper.WLCommand();
 						
 						if(!curCommand.equals(lastWrapperCommand)){							
@@ -1321,18 +1319,12 @@ public class WLCommand implements Serializable{
 				}
 				nextStruct.set_structToAppendCommandStr(structToAppendCommandStr);
 				structToAppendCommandStr.set_structToAppendCommandStr(structToAppendCommandStr);
-				setAncestorStructToAppendCommandStr(nextStruct, structToAppendCommandStr, curCommand);
-				
-				//System.out.println("WLCommand - !!Case structToAppendCommandStr.dfsDepth() <= prevHeadStruct.dfsDepth()  ");
-				//System.out.println("Wrapper command struct " + headStruct);
-				//System.out.println("***Wrapper Command to update: " + lastWrapperCommand);				
+				setAncestorStructToAppendCommandStr(nextStruct, structToAppendCommandStr, curCommand);							
 			}else{
 				curCommand.structsWithOtherHeadCount++;
 				if(structToAppendCommandStr.dfsDepth() == nextStruct.dfsDepth()){
 					curCommand.structHeadWithOtherHead = structToAppendCommandStr;								
-				}
-				//System.out.println("WLCOmmand ----- from updateWrapper()");
-				//if(true) throw new RuntimeException("WLCommand " + curCommand);
+				}				
 			}			
 			prevStructHeaded = true;			
 		}else{
@@ -1769,7 +1761,7 @@ public class WLCommand implements Serializable{
 		//consolidating the Expr's inside the args lists into a single Expr. So each argument
 		//is represented by a single Expr.
 		Expr[] exprArgsAr = new Expr[exprArgsListTMap.size()];
-		System.out.println("WLCommand exprArgsListTMap " +exprArgsListTMap);
+		if(DEBUG) System.out.println("WLCommand exprArgsListTMap " +exprArgsListTMap);
 		int exprArgsArCounter = 0;
 		for(Map.Entry<Integer, List<Expr>> entry : exprArgsListTMap.entrySet()){
 			Expr entryExpr;
@@ -1778,7 +1770,9 @@ public class WLCommand implements Serializable{
 			if(singleArgListSz > 1){
 				entryExpr = ExprUtils.listExpr(singleArgList);
 			}else{
-				System.out.println("WLCommand - curCommand " + curCommand);
+				if(DEBUG){
+					System.out.println("WLCommand - curCommand " + curCommand);
+				}
 				entryExpr = singleArgList.get(0);
 			}
 			exprArgsAr[exprArgsArCounter++] = entryExpr;			
@@ -1972,13 +1966,11 @@ public class WLCommand implements Serializable{
 
 		Multimap<WLCommandComponent, Struct> commandsMap = curCommand.commandsMap;
 		
+		//System.out.println("WLCommand - newStruct " + newStruct);
+		//System.out.println("newStruct.prev1() " + newStruct.prev1());
 		String structName = !newStruct.isStructA() ? newStruct.struct().get("name") : 
 			newStruct.prev1NodeType().equals(NodeType.STR) ? (String)newStruct.prev1() : "";
-		//System.out.println("inside addComponent, newStruct: " + newStruct);
-		//System.out.println("###curCommand.triggerWord " + curCommand.triggerWord);
-		//System.out.println("###commandsMap commandsMap " + curCommand.commandsMap);
-		//whether component has been added. Useful to avoid rebuilding commands 
-		
+		//whether component has been added. Useful to avoid rebuilding commands 		
 		boolean componentAdded = false;
 		
 		//need to iterate through the keys of countMap instead of just getting, 
@@ -1997,7 +1989,6 @@ public class WLCommand implements Serializable{
 		//String commandComponentPosTerm;
 		//String commandComponentName;
 		int posTermListSz =  posTermList.size();
-		//System.out.println("GOT HERE****** posTermList " + posTermList + " i-1: " + (lastAddedComponentIndex-1));
 		int i = lastAddedComponentIndex;
 		//short-circuit if trigger is the first nontrivial term.
 		if(before && onlyTrivialTermsBefore(posTermList, i-1)){
@@ -2130,7 +2121,6 @@ public class WLCommand implements Serializable{
 			if(!isOptionalTerm){
 				curCommand.componentCounter--;
 			}else{
-				//System.out.println("*******************curCommand.optionalTermsCount " + curCommand.optionalTermsCount);
 				curCommand.optionalTermsCount--;
 				//System.out.println("*******************curCommand.optionalTermsCount " + curCommand.optionalTermsCount);
 				int optionalGroupNum = curPosTerm.optionalGroupNum();

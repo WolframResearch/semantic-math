@@ -49,6 +49,7 @@ import thmp.parse.ThmP1AuxiliaryClass.ConjDisjVerbphrase.ConjDisjType;
 import thmp.search.CollectThm;
 import thmp.search.NGramSearch;
 import thmp.search.ThreeGramSearch;
+import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 import thmp.utils.WordForms.TokenType;
 
@@ -152,11 +153,13 @@ public class ThmP1 {
 	private static final double LONG_FORM_SCORE_THRESHOLD = .7;
 	private static final int LONG_FORM_MAX_PARSE_LOOP_THRESHOLD = 14;
 	//least num of iterations, even if scores are below LONG_FORM_SCORE_THRESHOLD.
-	private static final int MIN_PARSE_ITERATED_COUNT = 3;
+	private static final int MIN_PARSE_ITERATED_COUNT = 10;
 	//private static final String DASH_ENT_STRING = null;
 	private static final Pattern DASH_ENT_PATTERN = Pattern.compile("\\$[^$]+\\$[^-\\s]*-[^\\s]*");
 	private static final Pattern DASH_PATTERN = Pattern.compile("^[^-\\s]+-[^\\s]+$");
 	private static final Pattern DASH_P = Pattern.compile("-");
+	//if no full parse, try again with the previous parse segment's structure
+	//substituted with this segment's Structs.
 	private static final int REPARSE_UPPER_SIZE_LIMIT = 6;
 	private static final Pattern CONJ_DISJ_VP_PATTERN = Pattern.compile("(?:conj|disj)_verbphrase");
 	//directives used to begin latex math mode. *Must* update ALIGN_PATTERN_REPLACEMENT_STR if this is updated.
@@ -167,8 +170,8 @@ public class ThmP1 {
 	private static final Pattern SYMB_PATTERN = Pattern.compile("\\$[^$]{1,2}\\$");
 	//This *must* be updated if {BEGIN/END}_ALIGN_PATTERN is updated!
 	private static final String ALIGN_PATTERN_REPLACEMENT_STR = "";//"$1$2$3";
-	
-	private static final boolean DEBUG = InitParseWithResources.isDEBUG();
+	//don't print when running on byblis 
+	private static final boolean DEBUG = FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : false;
 	//Pattern used to check if word is valid.
 	//Don't put \', could be in valid word
 	private static final Pattern BACKSLASH_CONTAINMENT_PATTERN = 
@@ -177,7 +180,7 @@ public class ThmP1 {
 	
 	private static final Pattern HYP_PATTERN = WordForms.get_HYP_PATTERN();
 	private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
-	private static final String LATEX_PLACEHOLDER_STR = "XY";
+	private static final String LATEX_PLACEHOLDER_STR = "tex";
 	private static final Pattern PAREN_END_PATTERN = Pattern.compile("[^)]*\\)");
 	private static final Pattern PAREN_START_PATTERN = Pattern.compile("\\([^)]*");
 	private static final Pattern BRACKET_END_PATTERN = Pattern.compile("[^]]*\\]");
@@ -188,7 +191,7 @@ public class ThmP1 {
 	private static final int MIN_PAIRS_SIZE_THRESHOLD_FOR_FLUFF = 7;
 	private static final Pattern POSSESIVE_PATTERN = Pattern.compile("[^\\s]+'s");
 	private static final Pattern SYNTAXNET_PREP_PATTERN = Pattern.compile("in|on|over|of|from|between|with|by");
-	private static final int PARSE_NUM_MAX = 6;
+	private static final int PARSE_NUM_MAX = 8;//6
 	private static final int SYNTAXNET_PARSE_THRESHOLD = 5;//8
 	private static final int SYNTAXNET_PREP_THRESHOLD = 1;
 	
@@ -204,7 +207,7 @@ public class ThmP1 {
 		posList = Maps.posList;
 		
 		parseContextVectorSz = CollectThm.ThmWordsMaps.get_CONTEXT_VEC_SIZE();
-		System.out.println("*****+++++ThmP1--parseContextVectorSz: " + parseContextVectorSz);
+		//System.out.println("*****+++++ThmP1--parseContextVectorSz: " + parseContextVectorSz);
 		//parseContextVector = new int[parseContextVectorSz];
 		
 		noFuseEntSet = new HashSet<String>();
@@ -1305,7 +1308,7 @@ public class ThmP1 {
 				addUnknownWordToSet(parseState, curWord);
 			} 
 			else if (!WordForms.getWhiteNonEmptySpaceNotAllPattern().matcher(curWord).matches()) { // try to minimize this case.				
-				System.out.println("word not in dictionary: " + curWord);
+				if(DEBUG) System.out.println("word not in dictionary: " + curWord);
 				pairs.add(new Pair(curWord, ""));
 				//if(true) throw new IllegalStateException("curWord" + curWord);
 				addUnknownWordToSet(parseState, curWord);
@@ -1343,7 +1346,7 @@ public class ThmP1 {
 			//curPair.setNoTexTokenListIndex(lastNoTexTokenIndex);
 			curPair.setNoTexTokenListIndex(i);
 		}/*End of strloop.*/
-		System.out.println("ThmP1-noTexSB" +noTexSB);
+		if(DEBUG) System.out.println("ThmP1-noTexSB" +noTexSB);
 		//if(true) throw new IllegalStateException(noTexSB.toString());
 		parseState.setCurrentInputSansTex(noTexSB.toString());
 		parseState.addToNumNonTexTokens(numNonTexTokens);
@@ -1452,8 +1455,9 @@ public class ThmP1 {
 			}*/
 			//if yet still no pos found, use the Stanford NLP tagger, calls to which 
 			//does incur overhead.			
-			//Only try to find pos for words that don't contain "\"
-			if(curpair.pos().equals("")){
+			//Only try to find pos for words that don't contain "\" 
+			//Don't run on byblis for now, since slows down data processing
+			if(FileUtils.isOSX() && curpair.pos().equals("")){
 				//tag the whole sentence to find the most accurate tag, since the tagger
 				//uses contextual tags to maximize entropy.
 				if(null == posTagger){
@@ -1879,7 +1883,7 @@ public class ThmP1 {
 					}
 					noTexTokenStructAr[futureTexTokenListIndex] = curStruct;
 					curStruct.setNoTexTokenListIndex(futureTexTokenListIndex);
-					System.out.println("ThmP1 *-* noTexTokenListIndex/newStruct: "+futureTexTokenListIndex + " ... "+curStruct);
+					if(DEBUG) System.out.println("ThmP1 *-* noTexTokenListIndex/newStruct: "+futureTexTokenListIndex + " ... "+curStruct);
 				}
 				//could have been set to null
 				if (curStruct != null) {					
@@ -1986,15 +1990,17 @@ public class ThmP1 {
 				nextStruct = noTexTokenStructAr[i];
 			}
 		}
-		
-		for(int j = 0; j < noTexTokenStructAr.length; j++){
-			System.out.println("noTexTokenStructAr[j] --" +j+" "+ noTexTokenStructAr[j]);
+		if(DEBUG){
+			for(int j = 0; j < noTexTokenStructAr.length; j++){
+				System.out.println("noTexTokenStructAr[j] --" +j+" "+ noTexTokenStructAr[j]);
+			}
 		}
 		//if(true) throw new IllegalStateException();
 		parseState.setNoTexTokenStructAr(noTexTokenStructAr);
 		ThmP1AuxiliaryClass.convertStructToTexAssert(structList);
-		
-		System.out.println("\n^^^^structList: " + structList);			
+		if(DEBUG){
+			System.out.println("\n^^^^structList: " + structList);	
+		}
 		parseState.setTokenList(structList);
 		
 		parseState.setRecentParseSpanning(false);
@@ -2649,7 +2655,7 @@ public class ThmP1 {
 		int headStructListSz = headStructList.size();
 		
 		//System.out.println("headStructListSz " + headStructListSz);
-		if(logger.getLevel().equals(Level.INFO)){
+		if(DEBUG){
 			String msg = "headStructListSz: " + headStructListSz;
 			System.out.println(msg);
 			logger.info(msg);
@@ -2672,7 +2678,7 @@ public class ThmP1 {
 			
 			//only get the most likely ones according to syntaxnet query , then attach scores to head
 			//only walk through the most likely ones. 
-			if(false && prepositionCount > SYNTAXNET_PREP_THRESHOLD && headStructListSz > SYNTAXNET_PARSE_THRESHOLD){
+			if(FileUtils.isOSX() && prepositionCount > SYNTAXNET_PREP_THRESHOLD && headStructListSz > SYNTAXNET_PARSE_THRESHOLD){
 				//Sort according to number of relations that coincide with syntaxnet parse.
 				//original token aren't processed! eg stripped of "s"
 				Struct[] noTexTokenStructAr = parseState.noTexTokenStructAr();
@@ -2732,7 +2738,8 @@ public class ThmP1 {
 				//no WLCommand parse. The bigger the better.
 				int span = 0;
 				ConjDisjVerbphrase conjDisjVerbphrase = new ConjDisjVerbphrase();
-				boolean isRightChild = true; System.out.println("ThmP1-longform: ");
+				boolean isRightChild = true; 
+				System.out.println("ThmP1-longform: ");
 				//get the "long" form, not WL form, with this dfs()
 				span = buildLongFormParseDFS(uHeadStruct, parsedSB, span, conjDisjVerbphrase, isRightChild);
 				//if conj_verbphrase or disj_verbphrase encountered, and these conclude the 
@@ -2754,7 +2761,7 @@ public class ThmP1 {
 				//contextVecList.add(curStructContextvec);
 				thmContextVecMapList.add(curStructContextVecMap);
 				
-				System.out.println("+++Previous long parse: " + parsedSB);				
+				if(DEBUG) System.out.println("+++Previous long parse: " + parsedSB);				
 				//defer these additions to orderPairsAndPutToLists()
 				//parsedExpr.add(new ParsedPair(wlSB.toString(), maxDownPathScore, "short"));		
 				//System.out.println("*******SHORT FORM: " + wlSB);
@@ -2768,7 +2775,7 @@ public class ThmP1 {
 				
 				String parsedString = ParseToWL.parseToWL(uHeadStruct);
 				//parsedExpr.add(new ParsedPair(parsedString, maxDownPathScore, "wl"));
-				System.out.println("ThmP1-parsedString: "+parsedString);
+				//System.out.println("ThmP1-parsedString: "+parsedString);
 				
 				parsedSB.setLength(0); //should just declare new StringBuilder instead!
 				if(u > LONG_FORM_MAX_PARSE_LOOP_THRESHOLD){
@@ -2985,7 +2992,7 @@ public class ThmP1 {
 				/*parseAgain() defluffs based on tokens that are not connected to neighbors.*/
 				ParseAgain.parseAgain(newStructList, structCoordinates, parseState, mx, originalNonSpanningParseStructList);
 				
-				System.out.println("\n=__+++++_======structList after Defluffing round 1: " + parseState.getTokenList());
+				if(DEBUG) System.out.println("\n=__+++++_======structList after Defluffing round 1: " + parseState.getTokenList());
 				
 				//if still no spanning parse found in above defluffing approach, now
 				//try another approach: dropping elements 
@@ -3486,8 +3493,10 @@ public class ThmP1 {
 		//List<ParsedPair> longFormParsedPairList;
 		//assign the global context vec as the vec of the highest-ranked parse
 		int bestIndex = finalOrderingList.get(0);
-		System.out.println("ThmP1 - parsedPairMMapList.size " + parsedPairMMapList.size());
-		System.out.println("ThmP1 - longFormParsedPairList.size " + longFormParsedPairList.size());
+		if(DEBUG){
+			System.out.println("ThmP1 - parsedPairMMapList.size " + parsedPairMMapList.size());
+			System.out.println("ThmP1 - longFormParsedPairList.size " + longFormParsedPairList.size());
+		}
 		Map<Integer, Integer> parseContextVectorMap;
 		if(contextVecMapList.size() == 1){
 			//in case there was no full parse, list should only contain one element.
@@ -3606,7 +3615,7 @@ public class ThmP1 {
 		/*builds the parse tree by matching triggered commands. In particular, build WLCommand
 	     * parse tree by building triggered WLCommand's.*/
 		ParseToWLTree.buildCommandsDfs(uHeadStruct, parseStructSB, 0, printTiers, parseState);
-		System.out.println("\n DONE ParseStruct DFS  + parseStructSB:" + parseStructSB + "  \n");
+		if(DEBUG) System.out.println("\n DONE ParseStruct DFS  + parseStructSB:" + parseStructSB + "  \n");
 		StringBuilder wlSB = new StringBuilder();
 		
 		/* Map of parts used to build up a theorem/def etc, for a single WLCommand/longform. 
@@ -3624,10 +3633,12 @@ public class ThmP1 {
 			ParseTreeToVec.tree2vec(uHeadStruct, curStructContextVecMap);
 		}
 		
-		System.out.println("Parts (parseStructMMap): " + parseStructMMap);
-		for(Map.Entry<ParseStructType, ParsedPair> entry : parseStructMMap.entries()){
-			System.out.println("ThmP1-numCoincidingStruct: " + entry.getValue().numCoincidingStruct);
-			System.out.println(entry.getValue().totalCommandExpr());
+		if(DEBUG){
+			System.out.println("Parts (parseStructMMap): " + parseStructMMap);
+			for(Map.Entry<ParseStructType, ParsedPair> entry : parseStructMMap.entries()){
+				System.out.println("ThmP1-numCoincidingStruct: " + entry.getValue().numCoincidingStruct);
+				System.out.println(entry.getValue().totalCommandExpr());
+			}
 		}
 		//**parseStructMapList.add(parseStructMap.toString() + "\n");
 		//if parseStructMap empty, ie no WLCommand was found, but long parse form might still be good
@@ -3644,10 +3655,12 @@ public class ThmP1 {
 		
 		//ParseToWLTree.dfs(uHeadStruct, wlSB, true);		
 		//parsedSB.append("\n");
-		//ParseToWLTree.dfs(uHeadStruct, parsedSB, true);	
-		System.out.println(wlSB);
+		//ParseToWLTree.dfs(uHeadStruct, parsedSB, true);
 		ParseToWLTree.dfsCleanUp(uHeadStruct);
-		System.out.println("~~~~~~~~~~~ DONE one round WLCommands DFS for one long form ~~~");
+		if(DEBUG){
+			System.out.println("ThmP1 - wlSB: " +wlSB);
+			System.out.println("~~~~~~~~~~~ DONE one round WLCommands DFS for one long form ~~~");
+		}
 		return wlSB;
 	}
 
@@ -4448,7 +4461,9 @@ public class ThmP1 {
 				highestDownScore = pathScore;
 				highestDownScoreIndex = i;
 			}
-			System.out.println("pathScore: " + pathScore);
+			if(DEBUG){
+				System.out.println("ThmP1 - pathScore: " + pathScore);
+			}
 		}
 
 		structList.set_highestDownScoreIndex(highestDownScoreIndex);

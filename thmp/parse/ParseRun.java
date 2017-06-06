@@ -10,6 +10,7 @@ import com.wolfram.jlink.Expr;
 import thmp.exceptions.ParseRuntimeException.IllegalSyntaxException;
 import thmp.parse.DetectHypothesis.Stats;
 import thmp.parse.ThmP1.ParsedPair;
+import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 
 /**
@@ -18,6 +19,8 @@ import thmp.utils.WordForms;
  *
  */
 public class ParseRun {
+
+	private static final boolean DEBUG = FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : false;
 
 	/**
 	 * Parse input String. 
@@ -84,13 +87,13 @@ public class ParseRun {
 			}else{
 				System.out.println("@@@");
 			}
-			
-			System.out.println("ParseRun - For str: " + st);
+			if(DEBUG) System.out.println("ParseRun - For str: " + st);
 			BigInteger relationVec = parseState.getRelationalContextVec();
-			System.out.println("Relational Vector num of bits set: " + (relationVec == null ? "vec null." : relationVec.bitCount()));
+			if(DEBUG) System.out.println("Relational Vector num of bits set: " + (relationVec == null ? "vec null." : relationVec.bitCount()));
 		}
-		parseState.logState();
-		
+		if(DEBUG){
+			parseState.logState();
+		}
 		if(null != stats){
 			ParseStruct head = parseState.getHeadParseStruct();
 			if(null != head && !head.getWLCommandWrapperMMap().isEmpty()){
@@ -109,9 +112,11 @@ public class ParseRun {
 			System.out.println("PARTS: " + parsedOutput);			
 			System.out.println("****ParsedExpr ");			
 		}
-		
-		for(ParsedPair pair : ThmP1.getAndClearParsedExpr()){
-			System.out.println(pair);
+		List<ParsedPair> parsedPairList = ThmP1.getAndClearParsedExpr();
+		if(isVerbose){
+			for(ParsedPair pair : parsedPairList){
+				System.out.println(pair);
+			}
 		}
 	}
 

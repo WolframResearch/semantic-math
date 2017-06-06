@@ -14,6 +14,7 @@ import thmp.search.CollectThm;
 import thmp.search.Searcher;
 import thmp.search.TriggerMathThm2;
 import thmp.utils.GatherRelatedWords.RelatedWords;
+import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 
 /**
@@ -32,6 +33,7 @@ public class ParseTreeToVec {
 	private static final Map<String, Integer> contextKeywordIndexQueryDict = CollectThm.ThmWordsMaps.get_CONTEXT_VEC_WORDS_INDEX_MAP();
 	//contextVecWordsNextTimeMMap
 	private static final Map<String, Integer> contextKeywordIndexThmsDataDict = CollectThm.ThmWordsMaps.get_contextVecWordsIndexNextTimeMap();
+	private static final boolean DEBUG = FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : false;
 	/*The current word-index map to use, this *must* be set to contextKeywordIndexThmsDataDict when producing vecs from thm data source. 
 	* e.g. in DetectHypothesis.java. */
 	private static final Map<String, Integer> contextKeywordIndexDict;
@@ -383,7 +385,7 @@ public class ParseTreeToVec {
 				contextVecMap.put(termRowIndex, structParentIndex);
 				//contextVec[termRowIndex] = structParentIndex;
 			}
-			System.out.println("ParseTreeToVec - " + " termStr " + termStr + " ### rowIndex " + termRowIndex + " parent index " + structParentIndex);
+			if(DEBUG) System.out.println("ParseTreeToVec - termStr " + termStr + " ### rowIndex " + termRowIndex + " parent index " + structParentIndex);
 		}else{
 			//pass parentIndex down to children, in case of intermediate StructA that doesn't have a content string.
 			//eg assert[A, B], the assert does not have content string.
@@ -486,7 +488,9 @@ public class ParseTreeToVec {
 			//WLCommand tempCo  = struct.parentStruct().parentStruct().parentStruct().WLCommandWrapperList().get(0).WLCommand();
 			//System.out.println("!!posTermList.get(0).posTermStruct() " + posTermList.get(0).posTermStruct() + posTermList.get(0).posTermStruct());
 			//WLCommand.posTermList(tempCo).get(0).posTermStruct()
-			System.out.println("posTermList " + posTermList + " triggerTermIndex " + triggerTermIndex);
+			if(DEBUG){
+				System.out.println("posTermList " + posTermList + " triggerTermIndex " + triggerTermIndex);
+			}
 			switch(relation){
 			case ELEMENT:
 				adjustParentIndex(posTermList, command, triggerTermIndex, contextVecMap);
@@ -564,7 +568,7 @@ public class ParseTreeToVec {
 			return;
 		}
 		//parentTermRowIndex = parentTermRowIndex == null ? ELEMENT.relationNum : parentTermRowIndex;
-		System.out.println("***** *got to adjust.");
+		//System.out.println("***** *got to adjust.");
 		/*This has sometimes resulted in infinite loops! When the Struct in an earlier PosTerm is a child  
 		 of the Struct of a later PosTerm, due to erroneous non-linear Struct-adding to posTermList of the command. */
 		for(int i = triggerTermIndex+1; i < posTermList.size(); i++){
