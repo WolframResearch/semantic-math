@@ -723,7 +723,7 @@ public class Maps {
 			//structMap.put("pre_noun", new Rule("ppt", 1)); // nounphrase
 			structMap.put("adj_symb", new Rule("phrase", 1));			
 			structMap.put("adj_noun", new Rule("noun", 1));
-			//"independent of $n$"
+			//"independent of $n$". New pos should not be just "adj".
 			structMap.put("adj_prep", new Rule("newchild", "qualifier", .97));
 			structMap.put("adverb_prep", new Rule("newchild", "qualifier", .85));
 			structMap.put("gerund_noun", new Rule("gerundp", 1)); // gerundphrase
@@ -878,6 +878,8 @@ public class Maps {
 			structMap.put("cond_texAssert", new Rule("Cond", .9));		
 			structMap.put("hyp_phrase", new Rule("hypo", 1));
 			structMap.put("hyp_adj", new Rule("hypo", 1));
+			//e.g. "which are complementary with respect to $R$" 
+			structMap.put("hyp_qualifier", new Rule("hypo", 1));
 			structMap.put("hyp_symb", new Rule("hypo", 1));
 			structMap.put("rpro_ent", new Rule("rproent", 1));
 			structMap.put("ent_rproent", new Rule("newchild", 1));

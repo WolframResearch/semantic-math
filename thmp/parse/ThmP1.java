@@ -50,6 +50,7 @@ import thmp.search.CollectThm;
 import thmp.search.NGramSearch;
 import thmp.search.ThreeGramSearch;
 import thmp.utils.FileUtils;
+import thmp.utils.PlotUtils;
 import thmp.utils.WordForms;
 import thmp.utils.WordForms.TokenType;
 
@@ -89,10 +90,6 @@ public class ThmP1 {
 	private static final Pattern VERB_POS_PATTERN = Pattern.compile("verb|vbs|verbAlone");	
 	private static final Pattern SINGLE_WORD_TEX_PATTERN = Pattern.compile("\\$[^$]+\\$[^\\s]*"); 
 	private static final Pattern ARTICLE_PATTERN = Pattern.compile("a|the|an");
-	
-	//pattern for Latex expressions being possible assert's, i.e. starting/ending with $ and 
-	//containing operators such as ">, ="
-	private static final Pattern LATEX_ASSERT_PATTERN = Pattern.compile("\\$(?:[^$]+)\\$");
 	
 	// list of parts of speech, ent, verb etc <--should make immutable
 	private static final List<String> posList;
@@ -1522,7 +1519,7 @@ public class ThmP1 {
 			
 			StructH<HashMap<String, String>> tempStructH = new StructH<HashMap<String, String>>("ent");
 			//if(true) throw new IllegalStateException(mathObjName);
-			if(LATEX_ASSERT_PATTERN.matcher(mathObjName).matches()){
+			if(WordForms.LATEX_ASSERT_PATTERN().matcher(mathObjName).matches()){
 				tempStructH.setLatexStructToTrue();				
 			}
 			
@@ -2434,7 +2431,7 @@ public class ThmP1 {
 							// handle pattern ent_of_symb
 							//should *not* use "ent" type to determine whether StructH or not!
 							//since conj_ent is counted as ent. Also these checks are terrible.
-							if (!struct1.isStructA() && type2.matches("pre") && struct2.prev1() != null
+							/*if (!struct1.isStructA() && type2.matches("pre") && struct2.prev1() != null
 									&& struct2.prev1().toString().matches("of") && j + 1 < inputStructListSize
 									&& inputStructList.get(j + 1).type().equals("symb")) {
 								
@@ -2458,15 +2455,13 @@ public class ThmP1 {
 								}								
 								mx.get(i).get(j + 1).add(struct1);								
 								nextColStartRow = i;*/
-							} else if (combined.equals("pro_verb")) {
+							/*} else*/ if (combined.equals("pro_verb")) {
 								if (struct1.prev1().equals("we") && struct2.prev1().equals("say")) {
 									struct1.set_type(FLUFF);
 									// mx.get(i).set(j, struct1);
 									mx.get(i).get(j).add(struct1);
 								}
-							}
-
-							if (combined.equals("adj_ent") && !struct2.isStructA()) {
+							} else if (combined.equals("adj_ent") && !struct2.isStructA()) {
 								// update struct
 								Struct newStruct = struct2.copy();
 								String newPpt = "";
@@ -2511,36 +2506,41 @@ public class ThmP1 {
 							else if (combined.equals("verb_parti") && IS_ARE_BE_PATTERN.matcher(struct1.prev1().toString()).find()
 									&& CALLED_PATTERN.matcher(struct2.prev1().toString()).find()) {
 								String called = "";
+								StringBuilder calledSB = new StringBuilder(20);
 								int l = j + 1;
 								// whether definition has started, ie "is called
 								// subgroup of G"
 								boolean defStarted = false;
 								while (l < inputStructListSize) {
-
 									Struct nextStruct = inputStructList.get(l);
 									if (!nextStruct.type().matches("pre|prep|be|verb")) {
 										defStarted = true;
-
 										if (nextStruct.isStructA()) {
-											called += nextStruct.prev1();
+											calledSB.append(nextStruct.prev1());
+											//called += nextStruct.prev1();
 										} else {
-											called += nextStruct.struct().get("name");
+											//called += nextStruct.struct().get("name");
+											calledSB.append(nextStruct.struct().get("name"));
 										}
-
-										if (l != inputStructListSize - 1)
-											called += " ";
+										if (l != inputStructListSize - 1){
+											//called += " ";
+											calledSB.append(" ");
+										}
 									}
 									// reached end of newly defined word, now
-									// more usual sentence
+									// move to further input,
 									// ie move from "subgroup" to "of G"
 									else if (defStarted) {
 										// remove last added space
-										called = called.trim();
+										//called = called.trim();
 										break;
 									}
 									l++;
 								}
-
+								int sbLen = calledSB.length();
+								if(sbLen > 1){
+									called = calledSB.substring(0, sbLen-1);
+								}
 								// Record the symbol/given name associated to an
 								// ent, needed if referring to it later.
 								if (firstEnt != null) {
@@ -2550,20 +2550,9 @@ public class ThmP1 {
 									firstEnt.set_parentStruct(parentStruct);
 									
 									mx.get(0).get(inputStructListSize - 1).add(parentStruct);
-
-									/*int q = 0;
-									String[] calledArray = called.split(" ");
-									String curWord = "";
-
-									while (q < calledArray.length - 1) {
-										curWord += calledArray[q] + " ";
-										q++;
-									}
-									curWord += calledArray[calledArray.length - 1];*/
 									
 									// recentEnt is defined to be "called"
-									parseState.addLocalVariableStructPair(called, recentEnt);
-									
+									parseState.addLocalVariableStructPair(called, recentEnt);									
 									continue outerloop;
 									//continue innerloop;
 								}
@@ -2573,6 +2562,10 @@ public class ThmP1 {
 							// reduce if structMap has a rule for reducing combined
 							if (structMap.containsKey(combined)) {
 								ruleCol = structMap.get(combined);
+								/*if("adj_prep".equals(combined) && !ruleCol.isEmpty()){ 
+									//throw new IllegalStateException("ruleCol "+ struct1 + "--- " + struct2);
+									System.out.println("");
+								}*/
 							}else if(type2.equals("ent") && k+1==j && struct2.isLatexStruct() && j < inputStructListSize-1){
 								//potentially change ent into texAssert
 								//Struct nextStruct = inputStructList.get(j+1);
@@ -2678,7 +2671,8 @@ public class ThmP1 {
 			
 			//only get the most likely ones according to syntaxnet query , then attach scores to head
 			//only walk through the most likely ones. 
-			if(FileUtils.isOSX() && prepositionCount > SYNTAXNET_PREP_THRESHOLD && headStructListSz > SYNTAXNET_PARSE_THRESHOLD){
+			if(//false && 
+					FileUtils.isOSX() && prepositionCount > SYNTAXNET_PREP_THRESHOLD && headStructListSz > SYNTAXNET_PARSE_THRESHOLD){
 				//Sort according to number of relations that coincide with syntaxnet parse.
 				//original token aren't processed! eg stripped of "s"
 				Struct[] noTexTokenStructAr = parseState.noTexTokenStructAr();
@@ -2717,6 +2711,8 @@ public class ThmP1 {
 			
 			for (int u = 0; u < headStructListSz; u++) {
 				Struct uHeadStruct = structList.get(u);
+				PlotUtils.plotTree(uHeadStruct);
+				if(true) throw new IllegalStateException();
 				
 				double uHeadStructScore = uHeadStruct.maxDownPathScore();//uHeadStruct.score(); //uHeadStruct.maxDownPathScore();
 				//System.out.println("*&&*#*&%%%##### ");
@@ -3856,7 +3852,7 @@ public class ThmP1 {
 				childToAdd = (Struct)struct2.prev2();
 			}
 			
-			/*"struct1 does not have type StructH in reduce() for \"newchild\" relation!" ensures rule correctness;*/
+			
 			if(structToAppendChild.isStructA()){
 				//e.g. "independent of $n$"	
 				//if(struct2.type().equals("adverb"))

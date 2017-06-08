@@ -59,6 +59,10 @@ public class WordForms {
 	//private static final Pattern NUMBER_PATTERN2 = Pattern.compile("hundred|thousand|million|billion"); 
 	private static final Pattern SPACES_AROUND_TEXT_PATTERN = Pattern.compile("\\s*(.+)\\s*");
 	private static final Pattern DASH_PATTERN = Pattern.compile("-");
+	//pattern for Latex expressions being possible assert's, i.e. starting/ending with $ and 
+	//containing operators such as ">, ="
+	private static final Pattern LATEX_ASSERT_PATTERN = Pattern.compile("\\$(?:[^$]+)\\$");
+		
 	public static final String QUANTITY_POS = "quant";
 	
 	private static final String synonymsFileStr = "src/thmp/data/synonyms.txt";
@@ -702,6 +706,13 @@ public class WordForms {
 	
 	public static Pattern getEND_SKIP_PATTERN(){
 		return END_SKIP_PATTERN;
+	}
+	/**
+	 * Pattern for expressions being a latex expressions, i.e. starting/ending with $.
+	 * @return
+	 */
+	public static Pattern LATEX_ASSERT_PATTERN(){
+		return LATEX_ASSERT_PATTERN;
 	}
 	
 	public static Pattern getSPECIAL_CHARS_AROUND_WORD_PATTERN(){

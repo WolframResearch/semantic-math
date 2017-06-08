@@ -85,7 +85,11 @@ public abstract class Struct implements Serializable{
 	public boolean containsHyp(){
 		return this.containsHyp;
 	}
-	
+	/**
+	 * childRelationType to its parent, if this struct is a child.
+	 * Default value is ChildRelationType.OTHER.
+	 * @return
+	 */
 	public ChildRelationType childRelationType(){
 		return this.childRelationType;
 	}
@@ -615,7 +619,7 @@ public abstract class Struct implements Serializable{
 	/**
 	 * Possible types of prev1 and prev2
 	 */
-	enum NodeType{
+	public enum NodeType{
 		//NONE type indicates that this is none of the previous ones
 		//used for instance for StructH.
 		STR, STRUCTA, STRUCTH, NONE;
@@ -624,7 +628,7 @@ public abstract class Struct implements Serializable{
 		 * Whether has type either StructA or StructH
 		 * @return
 		 */
-		boolean isTypeStruct(){
+		public boolean isTypeStruct(){
 			return this.equals(STRUCTA) || this.equals(STRUCTH);
 		}
 	}
@@ -714,6 +718,7 @@ public abstract class Struct implements Serializable{
 		 */
 		public static class HypChildRelation extends ChildRelation{
 			
+			private static final long serialVersionUID = 2861506844911474840L;
 			private ChildRelationType childRelationType= ChildRelationType.HYP;
 			
 			public HypChildRelation(String relation){
@@ -736,6 +741,7 @@ public abstract class Struct implements Serializable{
 		 */
 		public static class PrepChildRelation extends ChildRelation{
 			
+			private static final long serialVersionUID = -2343529901137078313L;
 			private ChildRelationType childRelationType = ChildRelationType.PREP;
 			
 			public PrepChildRelation(String relation){

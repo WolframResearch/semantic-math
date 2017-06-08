@@ -763,11 +763,13 @@ public class ThmP1TestRun {
 			st = "topology of $X$ for which all the intervals of the form $XZ$ or $XY$";
 			st = "this is a signed resolution over ring";
 			st = "Assume that all $f\\in I$ with $\\deg f<n$ are in $I\\tp$ and take $f\\in I$ with $\\deg f=n$";
-			st = "the polynomial $f$ has one root";
+			
 			st = "$\\lambda$ run over all pairs of partitions which are complementary with respect to $R$";
 			st = "The interchange of two distant critical points of the surface diagram does not change the induced map on homology";
 			st = "this statement in full generality can lead to almost any conclusion";
 			st = "$\\lambda$ run over all pairs of partitions which are complementary with respect to $R$";
+			st = "field is ring";
+			st = "the polynomial $f$ has one root";
 			
 			//st = "Let $p_1,\\dots,p_r$ be the preimages under $w$"; 			
 			//st = "$p_1,\\dots,p_r$ is the preimage under $w$ of $c^\\ast_0$";			

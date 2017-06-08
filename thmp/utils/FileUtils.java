@@ -441,7 +441,7 @@ public class FileUtils {
 		String OS_name = System.getProperty("os.name");
 		if (OS_name.equals("Mac OS X")) {
 			ARGV = new String[] { "-linkmode", "launch", "-linkname",
-					"\"/Applications/Mathematica2.app/Contents/MacOS/MathKernel\" -mathlink" };
+					"\"/Applications/Mathematica11_0_0.app/Contents/MacOS/MathKernel\" -mathlink" };
 		} else {
 			// path on Linux VM (i.e. puremath.wolfram.com)
 			// ARGV = new String[]{"-linkmode", "launch", "-linkname",

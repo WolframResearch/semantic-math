@@ -48,7 +48,8 @@ public class StructA<A, B> extends Struct{
 	//as in "independent of $n$."
 	private List<ChildRelation> childRelationList = new ArrayList<ChildRelation>();	
 	private boolean hasChild;
-	
+	//whether this represents a Latex expression, e.g. a symbol "$R$"
+	private boolean isLatexStruct;
 	//additional part of speech
 	private volatile Set<String> extraPosSet;
 	//list of Struct at mx element, to which this Struct belongs
@@ -92,23 +93,8 @@ public class StructA<A, B> extends Struct{
 	
 	//should use different constructors to take in either Struct or String, rather than A, B !!!
 	//so don't need the suppressWarnings
-	@SuppressWarnings("unchecked")
 	public StructA(A prev1, NodeType prev1Type, B prev2, NodeType prev2Type, String type){	
-		this.PREV1_TYPE = prev1Type;
-		this.PREV2_TYPE = prev2Type;
-		if(prev1Type == NodeType.STR){
-			this.prev1 = (A)((String)prev1).trim();
-		}else{
-			this.prev1 = prev1;	
-		}		
-		if(prev2Type == NodeType.STR){
-			this.prev2 = (B)((String)prev2).trim();
-		}else{
-			this.prev2 = prev2;	
-		}
-		this.prev1 = prev1;		
-		this.prev2 = prev2;
-		this.type = type; 
+		assignTypesInConstructor(prev1, prev1Type, prev2, prev2Type, type);
 		this.numUnits = 1;
 		this.score = 1;
 	}
@@ -124,11 +110,7 @@ public class StructA<A, B> extends Struct{
 	 */
 	public StructA(A prev1, NodeType prev1Type, B prev2, NodeType prev2Type, String type, double score, StructList structList, 
 			double downPathScore, int numUnits){
-		this.PREV1_TYPE = prev1Type;
-		this.PREV2_TYPE = prev2Type;
-		this.prev1 = prev1;		
-		this.prev2 = prev2;
-		this.type = type; 
+		assignTypesInConstructor(prev1, prev1Type, prev2, prev2Type, type);
 		this.structList = structList;
 		this.score = score;
 		this.maxDownPathScore = downPathScore;
@@ -137,6 +119,34 @@ public class StructA<A, B> extends Struct{
 		//this.mxPathNodeList = new ArrayList<MatrixPathNode>();
 	}
 	
+	/**
+	 * @param prev1
+	 * @param prev1Type
+	 * @param prev2
+	 * @param prev2Type
+	 * @param type
+	 */
+	@SuppressWarnings("unchecked")
+	private void assignTypesInConstructor(A prev1, NodeType prev1Type, B prev2, NodeType prev2Type, String type) {
+		this.PREV1_TYPE = prev1Type;
+		this.PREV2_TYPE = prev2Type;
+		if(prev1Type == NodeType.STR){
+			String prev1Str = (String)prev1;
+			this.prev1 = (A)prev1Str.trim();
+			this.isLatexStruct = WordForms.LATEX_ASSERT_PATTERN().matcher(prev1Str).matches() ? true : false;
+		}else{
+			this.prev1 = prev1;	
+		}		
+		if(prev2Type == NodeType.STR){
+			this.prev2 = (B)((String)prev2).trim();
+		}else{
+			this.prev2 = prev2;	
+		}
+		this.prev1 = prev1;		
+		this.prev2 = prev2;
+		this.type = type;
+	}
+
 	public NodeType prev1NodeType(){
 		return PREV1_TYPE;
 	}
@@ -501,6 +511,9 @@ public class StructA<A, B> extends Struct{
 			//handle case when verbphrase is trigger word.
 			StringBuilder fullContentSB = new StringBuilder(50);
 			String prev1Str = ((Struct)this.prev1).nameStr();
+			if("".equals(prev1Str)){
+				prev1Str = ((Struct)this.prev1).simpleToString(includeType, curCommand);
+			}
 			fullContentSB.append("\"").append(prev1Str).append("\", ");
 			Expr prev1Expr = new Expr(prev1Str);
 			List<Expr> curLevelExprList = new ArrayList<Expr>();
@@ -733,6 +746,10 @@ public class StructA<A, B> extends Struct{
 	@Override
 	public void clear_commandBuilt(){
 		this.commandBuilt = null;
+	}
+	
+	public boolean isLatexStruct() {
+		return isLatexStruct;
 	}
 	
 	@Override
