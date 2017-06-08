@@ -147,10 +147,11 @@ public class ThmP1 {
 	private static final Pattern PUNCTUATION_PATTERN = Pattern.compile("(\\.|;|,|!|:)$");
 	
 	//used in dfs, to determine whether to iterate over.
-	private static final double LONG_FORM_SCORE_THRESHOLD = .7;
-	private static final int LONG_FORM_MAX_PARSE_LOOP_THRESHOLD = 14;
+	private static final double LONG_FORM_SCORE_THRESHOLD;
 	//least num of iterations, even if scores are below LONG_FORM_SCORE_THRESHOLD.
-	private static final int MIN_PARSE_ITERATED_COUNT = 10;
+	private static final int MIN_PARSE_ITERATED_COUNT;
+	private static final int LONG_FORM_MAX_PARSE_LOOP_THRESHOLD;
+	
 	//private static final String DASH_ENT_STRING = null;
 	private static final Pattern DASH_ENT_PATTERN = Pattern.compile("\\$[^$]+\\$[^-\\s]*-[^\\s]*");
 	private static final Pattern DASH_PATTERN = Pattern.compile("^[^-\\s]+-[^\\s]+$");
@@ -169,6 +170,7 @@ public class ThmP1 {
 	private static final String ALIGN_PATTERN_REPLACEMENT_STR = "";//"$1$2$3";
 	//don't print when running on byblis 
 	private static final boolean DEBUG = FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : false;
+	private static final boolean PLOT_DEBUG = false;
 	//Pattern used to check if word is valid.
 	//Don't put \', could be in valid word
 	private static final Pattern BACKSLASH_CONTAINMENT_PATTERN = 
@@ -203,6 +205,16 @@ public class ThmP1 {
 		probMap = Maps.probMap();
 		posList = Maps.posList;
 		
+		if(FileUtils.isOSX()){
+			LONG_FORM_SCORE_THRESHOLD = .5;
+			MIN_PARSE_ITERATED_COUNT = 10;
+			LONG_FORM_MAX_PARSE_LOOP_THRESHOLD = 14;
+		}else{
+			//To make parsing faster when running on byblis.
+			LONG_FORM_SCORE_THRESHOLD = .5;		
+			MIN_PARSE_ITERATED_COUNT = 6;
+			LONG_FORM_MAX_PARSE_LOOP_THRESHOLD = 8;
+		}
 		parseContextVectorSz = CollectThm.ThmWordsMaps.get_CONTEXT_VEC_SIZE();
 		//System.out.println("*****+++++ThmP1--parseContextVectorSz: " + parseContextVectorSz);
 		//parseContextVector = new int[parseContextVectorSz];
@@ -1734,7 +1746,7 @@ public class ThmP1 {
 			mathEntList.add(tempStructH);
 		}
 		
-		System.out.println("PAIRS! " + pairs);
+		if(DEBUG) System.out.println("PAIRS! " + pairs);
 		// combine anchors into entities. Such as "of".
 		/*for (int j = anchorList.size() - 1; j > -1; j--) {
 			int index = anchorList.get(j);
@@ -2711,8 +2723,8 @@ public class ThmP1 {
 			
 			for (int u = 0; u < headStructListSz; u++) {
 				Struct uHeadStruct = structList.get(u);
-				PlotUtils.plotTree(uHeadStruct);
-				if(true) throw new IllegalStateException();
+				if(PLOT_DEBUG) PlotUtils.plotTree(uHeadStruct);
+				//if(true) throw new IllegalStateException();
 				
 				double uHeadStructScore = uHeadStruct.maxDownPathScore();//uHeadStruct.score(); //uHeadStruct.maxDownPathScore();
 				//System.out.println("*&&*#*&%%%##### ");
@@ -2735,7 +2747,7 @@ public class ThmP1 {
 				int span = 0;
 				ConjDisjVerbphrase conjDisjVerbphrase = new ConjDisjVerbphrase();
 				boolean isRightChild = true; 
-				System.out.println("ThmP1-longform: ");
+				if(DEBUG) System.out.println("ThmP1-longform: ");
 				//get the "long" form, not WL form, with this dfs()
 				span = buildLongFormParseDFS(uHeadStruct, parsedSB, span, conjDisjVerbphrase, isRightChild);
 				//if conj_verbphrase or disj_verbphrase encountered, and these conclude the 
@@ -3017,20 +3029,18 @@ public class ThmP1 {
 						parseState.setTokenList(structList);
 						
 						boolean isReparseAgain = true;
-						parseState = parse(parseState, isReparseAgain);
-						
-					}
-					
+						parseState = parse(parseState, isReparseAgain);						
+					}					
 				}
-			}
-			
+			}			
 			//if still no full parse try to see if converting latex expressions $...$ 
 			//from "ent" to "assert" helps.			
-			
-			System.out.println("%%%%%\n");
+			//System.out.println("%%%%%\n");
 		}
 		}
 		}
+		if(PLOT_DEBUG) PlotUtils.plotMx(mx);
+		
 		// print out scores
 		/*
 		 * StructList headStructList = mx.get(0).get(len-1); int

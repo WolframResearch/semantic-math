@@ -162,12 +162,6 @@ public class WLCommand implements Serializable{
 	private static final Logger logger = LogManager.getLogger(WLCommand.class);
 	
 	/**
-	 * Index in list of WLCommand in Struct that 
-	 * *Not* intrinsic to a WLCommand instance, create custom wrapper to put around this?
-	 */
-	//private int s;
-	
-	/**
 	 * Least common head of Structs used to build this command, will become structToAppendCommandStr.
 	 * It is determined during dfs in ParseToWLTree.
 	 */

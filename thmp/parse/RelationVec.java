@@ -18,6 +18,7 @@ import thmp.search.CollectThm;
 import thmp.search.Searcher;
 import thmp.search.TriggerMathThm2;
 import thmp.utils.GatherRelatedWords.RelatedWords;
+import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 
 /**
@@ -60,7 +61,7 @@ public class RelationVec implements Serializable{
 	private static final Pattern SPLIT_DELIM_PATTERN = Pattern.compile(WordForms.splitDelim());
 	private static final BigInteger PLACEHOLDER_RELATION_VEC = new BigInteger(new byte[]{0});
 	
-	private static final boolean DEBUG = true;
+	private static final boolean DEBUG = FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : false;
 	
 	static{
 		if(Searcher.SearchMetaData.gatheringDataBool()){

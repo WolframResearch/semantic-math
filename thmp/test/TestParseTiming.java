@@ -48,7 +48,7 @@ public class TestParseTiming {
 		parseThm(BASE_INPUT);
 		INPUT_LIST = new ArrayList<InputTimingRatioPair>();
 		INPUT_LIST.add(new InputTimingRatioPair("$f$ is a function with radius of convergence $r$", 2.2));//20 ms
-		INPUT_LIST.add(new InputTimingRatioPair("take derivative of log of f", 1.5));	//10 ms
+		INPUT_LIST.add(new InputTimingRatioPair("take derivative of log of f", 1.5));	//10 ms <--trigger syntaxnet query
 		INPUT_LIST.add(new InputTimingRatioPair("$R/\\mathfrak p$ is catenary for every minimal prime $\\mathfrak p$", 1.5)); //2 good??
 		INPUT_LIST.add(new InputTimingRatioPair("The derivative of $f$ is $\\sum_j j $", 1));//1 good?
 		

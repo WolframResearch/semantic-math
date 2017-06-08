@@ -37,21 +37,6 @@ public class StructList implements Serializable{
 		this.structList.add(struct);
 		this.highestDownScoreIndex = -1;
 	}
-	
-	/**
-	 * @return the isDiagonalElementInMx
-	 */
-	/*public boolean getIsDiagonalElementInMx() {
-		return isDiagonalElementInMx;
-	}*/
-
-	/**
-	 * @param isDiagonalElementInMx the isDiagonalElementInMx to set
-	 */
-	/*public void setIsDiagonalElementInMx(boolean isDiagonalElementInMx) {
-		this.isDiagonalElementInMx = isDiagonalElementInMx;
-	}*/
-
 
 	public List<Struct> structList(){
 		return this.structList;
