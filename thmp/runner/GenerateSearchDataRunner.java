@@ -72,7 +72,7 @@ public class GenerateSearchDataRunner {
 				Runtime rt = Runtime.getRuntime();
 				Process pr = rt.exec("/home/usr0/yihed/thm/unpack2.sh " + fileName);			
 				FileUtils.waitAndPrintProcess(pr);
-				//this name must coincide with that in both bash scripts.		
+				/*the script name must coincide with that in both bash scripts.	*/	
 				System.out.println("Done unpacking file " + fileName + ". Starting to generate search data");
 			}
 			

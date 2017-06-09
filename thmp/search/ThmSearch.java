@@ -105,14 +105,15 @@ public class ThmSearch {
 			ml = FileUtils.acquireWLEvaluationMedium();
 			String msg = "Kernel instance acquired in ThmSearchQuery...";
 			logger.info(msg);
-
+			//if kernel pool acquisition were working, this should be done in initialization code
+			evaluateWLCommand(ml, "<<"+combinedProjectedMxFilePath, false, true);
+			evaluateWLCommand(ml, "<<"+pathToProjectionMx, false, true);
+			evaluateWLCommand(ml, "AppendTo[$ContextPath, \""+ TermDocumentMatrix.PROJECTION_MX_CONTEXT_NAME +"\"]", false, true);	
+			if(!USE_FULL_MX){
+				evaluateWLCommand(ml, combinedTDMatrixRangeListName + "= Range[Length["+V_MX+"]]", false, true);
+			}
 			if(null == servletContext){				
-				evaluateWLCommand(ml, "<<"+combinedProjectedMxFilePath, false, true);
-				evaluateWLCommand(ml, "<<"+pathToProjectionMx, false, true);
-				evaluateWLCommand(ml, "AppendTo[$ContextPath, \""+ TermDocumentMatrix.PROJECTION_MX_CONTEXT_NAME +"\"]", false, true);	
-				if(!USE_FULL_MX){
-					evaluateWLCommand(ml, combinedTDMatrixRangeListName + "= Range[Length["+V_MX+"]]", false, true);
-				}
+				
 				if(USE_FULL_MX){
 					evaluateWLCommand(ml, "<<"+fullMxPath);
 				}				

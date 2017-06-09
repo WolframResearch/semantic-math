@@ -1,5 +1,10 @@
 package thmp.search;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,16 +40,51 @@ public class ProjectionMatrix {
 	
 	/**
 	 * args is list of paths. 
-	 * Supply list paths to directories, each contanining a parsedExpressionList and
+	 * Supply list of paths (vararg) to directories, each contanining a parsedExpressionList and
 	 * the *projected* term document matrices for a tar file.
-	 * e.g. "0208_001/0208/",
-	 * 
+	 * e.g. "0208_001Untarred/0208/", or "0304_001Untarred/0304"
+	 * Could also supply file containing such paths, with exact same format.
 	 */
 	public static void main(String[] args){
 		int argsLen = args.length;
 		if(argsLen == 0){
-			System.out.println("Suply a list of paths to .mx files!");
+			System.out.println("Suply a list of paths containing .mx files! E.g. \"0304_001Untarred/0304\"."
+					+ "Or a file containing such paths.");
 			return;
+		}
+		//check if supplied arg is file containing directories, or a single directory.
+		if(1 == argsLen){
+			File file = new File(args[0]);
+			System.out.println("Trying to see if " + args[0] +" is file!");
+			if(file.isFile()){
+				
+				List<String> pathsList = new ArrayList<String>();
+				try{
+					FileReader fileReader = null;
+					BufferedReader bReader = null;
+					try{
+						fileReader = new FileReader(file);
+						bReader = new BufferedReader(fileReader);
+						String line;
+						
+						while((line = bReader.readLine()) != null){
+							pathsList.add(line);
+						}
+					}finally{
+						FileUtils.silentClose(fileReader);
+						FileUtils.silentClose(bReader);
+					}
+					
+				}catch(FileNotFoundException e){
+					throw new IllegalStateException(e);
+				}
+				catch(IOException e){
+					throw new IllegalStateException(e);
+				}
+				args = new String[pathsList.size()];
+				args = pathsList.toArray(args);
+				argsLen = args.length;
+			}
 		}
 		//List<String> parsedExpressionFilePathList = new ArrayList<String>();
 		//List<String> contextRelationVecPairFilePathList = new ArrayList<String>();
@@ -55,7 +95,11 @@ public class ProjectionMatrix {
 		
 		for(int i = 0; i < argsLen; i++){
 			//be sure to check it's valid path to valid .mx
-			String path_i = FileUtils.addIfAbsentTrailingSlashToPath(args[i]);
+			String fileName = args[i];
+			if(!(new File(fileName)).exists()){
+				continue;
+			}
+			String path_i = FileUtils.addIfAbsentTrailingSlashToPath(fileName);
 			projectedMxFilePathList.add(path_i + ThmSearch.TermDocumentMatrix.PROJECTED_MX_NAME + ".mx");	
 			String peFilePath = path_i + ThmSearch.TermDocumentMatrix.PARSEDEXPRESSION_LIST_FILE_NAME;
 			String vecsFilePath = path_i + "vecs/" + ThmSearch.TermDocumentMatrix.CONTEXT_VEC_PAIR_LIST_FILE_NAME;

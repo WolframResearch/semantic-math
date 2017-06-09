@@ -63,7 +63,7 @@ public class Maps {
 	//private static final ImmutableListMultimap<String, FixedPhrase> fixedPhraseMMap;
 	private static ImmutableListMultimap<String, FixedPhrase> fixedPhraseMMap;
 	
-	private static ServletContext servletContext;
+	//private static ServletContext servletContext;
 	
 	private static final Pattern LEXICON_LINE_PATTERN = Pattern.compile("\"([^\"]+)\" ([^\\s]+)");
 	private static String POS_TAGGER_PATH_STR;
@@ -88,9 +88,9 @@ public class Maps {
 	/**
 	 * Sets servletContext.
 	 */
-	public static void setServletContext(ServletContext servletContext_){
+	/*public static void setServletContext(ServletContext servletContext_){
 		servletContext = servletContext_;
-	}
+	}*/
 	
 	//should have commoin init class
 	public static void setServerPosTaggerPathStr(String path){
@@ -181,8 +181,8 @@ public class Maps {
 			BufferedReader fixedPhraseBuffer = null;
 			BufferedReader lexiconBuffer = null;
 			
-			if(null != servletContext){
-				
+			ServletContext servletContext = FileUtils.getServletContext();
+			if(null != servletContext){				
 				InputStream fixedPhraseStream = servletContext.getResourceAsStream(fixedPhraseFileStr);
 				InputStream lexiconFileStrStream = servletContext.getResourceAsStream(lexiconFileStr);
 				

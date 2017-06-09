@@ -95,7 +95,7 @@ public class DetectHypothesis {
 	//serialize the words as well, to bootstrap up after iterations of processing. The math words are going to 
 	//stabilize.
 	//This is ordered based on word frequencies.
-	private static final List<String> ALL_THM_WORDS_LIST;
+	//private static final List<String> ALL_THM_WORDS_LIST;
 	private static final Map<String, Integer> ALL_THM_WORDS_FREQ_MAP;
 	
 	private static final boolean PARSE_INPUT_VERBOSE = false;
@@ -121,7 +121,7 @@ public class DetectHypothesis {
 	static{
 		FileUtils.set_dataGenerationMode();	
 		/*The "next time" form previous time refers to current run in this static initializer.*/
-		ALL_THM_WORDS_LIST = new ArrayList<String>(CollectThm.ThmWordsMaps.get_contextVecWordsNextTimeMap().keySet());
+		//ALL_THM_WORDS_LIST = new ArrayList<String>(CollectThm.ThmWordsMaps.get_contextVecWordsNextTimeMap().keySet());
 		ALL_THM_WORDS_FREQ_MAP = CollectThm.ThmWordsMaps.get_contextVecWordsNextTimeMap();
 		//this SHOULD be done at the end! So keep in sync with the others .dat, so don't need to parse everything twice.
 		//Then use current list, but wordsList's from previous runs.
@@ -324,6 +324,7 @@ public class DetectHypothesis {
 	private static class InputParams{
 		
 		String texFilesDirPath;
+		//file containing names of tex files
 		String serializedTexFileNamesFileStr;
 		//e.g. "0208_001/0208/ProjectedTDMatrix.mx"
 		boolean usePreviousDocWordsFreqMaps;

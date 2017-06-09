@@ -35,7 +35,8 @@ public class ParsedExpression implements Serializable, TheoremContainer{
 	private transient ParseStruct headParseStruct;
 	
 	//relational vector, see RelationVec.java.
-	/*private BigInteger relationVec; //should be moved so to be serialized separately	
+	/* moved so to be serialized separately	to save memory*/
+	/*private BigInteger relationVec; 
 	//context vector, see ContextVec.java
 	private transient int[] contextVec;
 	//need the String form for serialization

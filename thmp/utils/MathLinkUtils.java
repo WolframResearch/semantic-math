@@ -1,5 +1,7 @@
 package thmp.utils;
 
+import java.util.Arrays;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -94,7 +96,9 @@ public class MathLinkUtils {
 				throw new IllegalStateException(e);
 			}else{
 				//don't have another possibly better expression to input anyway.
-				String msg = e.getMessage();
+				String msg = "EvaluationException in evaluateWLCommandWithKernel() on command "
+						+ cmd + " with error message " 
+						+ Arrays.toString(e.getStackTrace());
 				logger.error(msg);
 				return PLACEHOLDER_EXPR;
 			}			
