@@ -9,7 +9,9 @@ import com.wolfram.jlink.Expr;
 
 import thmp.exceptions.ParseRuntimeException.IllegalSyntaxException;
 import thmp.parse.DetectHypothesis.Stats;
+import thmp.parse.ParseState.ParseStateBuilder;
 import thmp.parse.ThmP1.ParsedPair;
+import thmp.utils.ExprUtils;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 
@@ -22,6 +24,24 @@ public class ParseRun {
 
 	private static final boolean DEBUG = FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : false;
 
+	public static void main(String[] args){
+		int argsLen = args.length;
+		if(0 == argsLen){
+			System.out.println("Supply a string to be parsed!");
+			return;
+		}
+		StringBuilder sb = new StringBuilder(50);
+		for(int i = 0; i < argsLen; i++){
+			sb.append(args[i]).append(" ");
+		}
+		
+		Expr expr = parseInput(sb.toString());
+		//don't hardcode address!
+		List<Expr> exprList = new ArrayList<Expr>();
+		exprList.add(expr);
+		FileUtils.serializeObjToFile(exprList, "/Users/yihed/parseFromWL.dat");
+	}
+	
 	/**
 	 * Parse input String. 
 	 * Does *not* clean up parseState, as the caller needs stateful parseState info.
@@ -31,6 +51,33 @@ public class ParseRun {
 	 */
 	public static void parseInput(String st, ParseState parseState, boolean isVerbose){
 		parseInput(st, parseState, isVerbose, null);
+	}
+	
+	/**
+	 * Parse input String. 
+	 * @param st
+	 */
+	public static Expr parseInput(String st){
+		
+		boolean isVerbose = false;
+		ParseStateBuilder parseStateBuilder = new ParseStateBuilder();
+		final boolean WRITE_UNKNOWN_WORDS_TO_FILE = false;
+		parseStateBuilder.setWriteUnknownWordsToFile(WRITE_UNKNOWN_WORDS_TO_FILE);		
+		ParseState parseState = parseStateBuilder.build();
+		
+		parseInput(st, parseState, isVerbose, null);
+		
+		ParseStruct headParseStruct = parseState.getHeadParseStruct();
+		List<Expr> exprList = new ArrayList<Expr>();
+		StringBuilder sb = new StringBuilder(100);
+		
+		if(null != headParseStruct){
+			headParseStruct.createStringAndRetrieveExpr(sb, exprList);
+			if(!exprList.isEmpty()){
+				return exprList.get(0);
+			}
+		}
+		return ExprUtils.FAILED_EXPR();
 	}
 	
 	/**

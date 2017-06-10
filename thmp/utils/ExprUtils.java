@@ -21,6 +21,7 @@ public class ExprUtils {
 	private static final Expr mathHeadExpr = new Expr(Expr.SYMBOL, "Math");
 	private static final Expr mathPptHeadExpr = new Expr(Expr.SYMBOL, "MathProperty");
 	private static final Expr qualifierHeadExpr = new Expr(Expr.SYMBOL, "Qualifiers");
+	private static final Expr FAILED_EXPR = new Expr(Expr.SYMBOL, "$Failed");
 	
 	public enum ExprWrapperType{
 		RULE,
@@ -191,5 +192,9 @@ public class ExprUtils {
 		Expr[] exprAr = new Expr[exprList.size()];
 		exprAr = exprList.toArray(exprAr);
 		return new Expr(headSymbolExpr, exprAr);
+	}
+	
+	public static Expr FAILED_EXPR(){
+		return FAILED_EXPR;
 	}
 }

@@ -416,7 +416,7 @@ public class FileUtils {
 				throw new IllegalStateException("KernelPoolException when trying to acquire kernel: " 
 						+ Arrays.toString(e.getStackTrace()));
 			} catch (InterruptedException e) {
-				e.printStackTrace(); //HANDLE, should guarantee return is no null.
+				e.printStackTrace(); //HANDLE, should guarantee return is not null.
 				throw new IllegalStateException("KernelPoolException when trying to acquire kernel: "+e.getMessage());
 			}
 	        return medium;
