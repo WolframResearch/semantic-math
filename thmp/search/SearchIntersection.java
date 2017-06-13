@@ -8,7 +8,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.regex.Matcher;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -627,6 +626,7 @@ public class SearchIntersection {
 			relatedWordsList = relatedWords.getCombinedList();
 			// relatedWordsFound = true;
 		}
+		String wordSingForm = word;
 		Integer wordScore = 0;
 		if (!wordThms.isEmpty()) {
 			// wordScore = wordsScoreMap.get(wordLong);
@@ -636,20 +636,19 @@ public class SearchIntersection {
 		} else {
 			// String wordOtherForm = curWrapper.otherHashForm();
 			// String singWordOtherForm = curWrapper.otherHashForm();
-
-			String singForm = WordForms.getSingularForm(word);
-			String singFormLong = curWrapper.hashToString(singForm);
+			wordSingForm = WordForms.getSingularForm(word);
+			//String singFormLong = curWrapper.hashToString(singForm);
 			// if(wordsScoreMap.get(singFormLong) != null){
-			if (wordsScoreMap.get(singForm) != null) {
+			if (wordsScoreMap.get(wordSingForm) != null) {
 				
 				//wordThms = wordThmMMap.get(singFormLong);
-				wordThms = wordThmMMapNoAnno.get(singForm);
+				wordThms = wordThmMMapNoAnno.get(wordSingForm);
 				
 				// wordScore = wordsScoreMap.get(singFormLong);
-				wordScore = wordsScoreMap.get(singForm);
+				wordScore = wordsScoreMap.get(wordSingForm);
 				wordScore = wordScore == null ? 0 : wordScore;
 				curScoreToAdd = wordScore + CONTEXT_WORD_BONUS + curWrapper.matchExtraPoints();
-				word = singForm;
+				word = wordSingForm;
 				if (null == relatedWordsList) {
 					relatedWords = relatedWordsMap.get(word);
 					if (null != relatedWords) {
@@ -671,6 +670,12 @@ public class SearchIntersection {
 		if (wordThms.isEmpty()) {
 			String normalizedWord = WordForms.normalizeWordForm(word);
 			Integer tempWordScore = wordsScoreMap.get(normalizedWord);
+			if(null == tempWordScore){
+				normalizedWord = WordForms.normalizeWordForm(wordSingForm);
+				tempWordScore = wordsScoreMap.get(normalizedWord);
+			}
+			//System.out.println("SEARCHINTERSECTION - normalizedWord "+normalizedWord + " wordThmMMapNoAnno.contains() "
+				//	+ wordThmMMapNoAnno.containsKey(normalizedWord));
 			if (null != tempWordScore) {
 				wordThms = wordThmMMapNoAnno.get(normalizedWord);
 				// wordScore = wordsScoreMap.get(singFormLong);
@@ -688,13 +693,12 @@ public class SearchIntersection {
 				}
 			}
 		}
-
 		// go through common path of processing!
 		// removes endings such as -ing, and uses synonym rep.
 		// adjust curScoreToAdd, boost 2, 3-gram scores when applicable
 		curScoreToAdd = tokenType.adjustNGramScore(curScoreToAdd, singletonScoresAr, wordIndexInThm);
 
-		if (wordThms != null && curScoreToAdd != 0) {
+		if (!wordThms.isEmpty() && curScoreToAdd != 0) {
 			// System.out.println("wordThms " + wordThms);
 			wordThmIndexMMap.putAll(word, wordThms);
 			if (DEBUG) {
@@ -703,8 +707,9 @@ public class SearchIntersection {
 			for (Integer thmIndex : wordThms) {
 				// skip thm if current word already been covered by previous
 				// 2/3-gram
-				if (tokenType.ifAddedToMap(thmWordSpanMMap, thmIndex, wordIndexInThm))
+				if (tokenType.ifAddedToMap(thmWordSpanMMap, thmIndex, wordIndexInThm)){
 					continue;
+				}
 				Integer prevScore = thmScoreMap.get(thmIndex);
 				prevScore = prevScore == null ? 0 : prevScore;
 				Integer newScore = prevScore + curScoreToAdd;

@@ -16,8 +16,6 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
-import thmp.parse.GenerateContextVector;
-import thmp.parse.ParseState;
 import thmp.utils.FileUtils;
 
 /**
@@ -71,11 +69,13 @@ public class TheoremGet {
 	public static class ContextRelationVecBundle implements Serializable{
 		
 		private static final long serialVersionUID = 760047710418503324L;
+		//Need to re-partition serialized data, if this number changes!
 		private static final int NUM_THMS_IN_BUNDLE = 10000;//10000;
 		protected static final String BASE_FILE_STR = "src/thmp/data/vecs/" + ThmSearch.TermDocumentMatrix.CONTEXT_VEC_PAIR_LIST_FILE_NAME;
 		//private static final String BASE_FILE_EXT_STR = ".dat";
 		//Name of serialized file. 
-		private String serialFileStr;		
+		private String serialFileStr;
+		//indicates which file to load in memory.
 		private int bundleKey;
 		private List<ContextRelationVecPair> vecsList;
 		

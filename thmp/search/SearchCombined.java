@@ -306,6 +306,7 @@ public class SearchCombined {
 		int numCommonVecs = getNumCommonVecs(inputSB, input);
 		input = inputSB.toString();
 		
+		//eventually move this towards end, only do SVD if no good intersection matches!!
 		List<Integer> nearestVecList = ThmSearch.ThmSearchQuery.findNearestThmsInTermDocMx(input, NUM_NEAREST);
 		if(nearestVecList.isEmpty()){
 			System.out.println("I've got nothing for you yet. Try again.");

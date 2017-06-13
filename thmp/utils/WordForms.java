@@ -55,7 +55,7 @@ public class WordForms {
 	/*Don't include numerical quantities such as "one", "five" etc here, which should be determined from algorithm */
 	public static final Pattern CARDINALITY_PPT_PATTERN = Pattern.compile("some|a|an|the|unique|infinite|infinitely many");
 	private static final Pattern NUMBER_PATTERN = Pattern.compile("one|two|three|four|five|six|seven|eight|nine|ten|twenty|"
-			+ "thirty|fourty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion");
+			+ "thirty|forty|fourty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion");
 	//private static final Pattern NUMBER_PATTERN2 = Pattern.compile("hundred|thousand|million|billion"); 
 	private static final Pattern SPACES_AROUND_TEXT_PATTERN = Pattern.compile("\\s*(.+)\\s*");
 	private static final Pattern DASH_PATTERN = Pattern.compile("-");
@@ -229,7 +229,8 @@ public class WordForms {
 	}
 	
 	/**
-	 * Remove word endings such as "ly"
+	 * Remove word endings such as "ly".
+	 * This does not de-singularize words. 
 	 * @param word
 	 * @return
 	 */

@@ -53,9 +53,12 @@ public class ThmSearch {
 	 * Class for finding nearest giving query. Normally run on servlet, and not locally.
 	 */
 	public static class ThmSearchQuery{
+		
 		private static final int QUERY_VEC_LENGTH;
 		//private static final KernelLink ml;	
 		private static final String V_MX;
+		//string of rule of V_MX to its range vector
+		private static final String V_MX_RULE_NAME;
 		private static final boolean DEBUG = false;
 		
 	static{		
@@ -90,7 +93,8 @@ public class ThmSearch {
 			String combinedProjectedMxFilePath = getSystemCombinedProjectedMxFilePath();
 			String fullMxPath = "src/thmp/data/"+TermDocumentMatrix.FULL_TERM_DOCUMENT_MX_NAME+".mx";
 			
-			if(null != servletContext){			//this should be redundant	
+			if(null != servletContext){			
+				//this should be redundant, if webM initialization was run properly
 				pathToProjectionMx = servletContext.getRealPath(pathToProjectionMx);
 				combinedProjectedMxFilePath = servletContext.getRealPath(combinedProjectedMxFilePath);
 				fullMxPath = servletContext.getRealPath(fullMxPath);
@@ -112,8 +116,7 @@ public class ThmSearch {
 			if(!USE_FULL_MX){
 				evaluateWLCommand(ml, combinedTDMatrixRangeListName + "= Range[Length["+V_MX+"]]", false, true);
 			}
-			if(null == servletContext){				
-				
+			if(null == servletContext){
 				if(USE_FULL_MX){
 					evaluateWLCommand(ml, "<<"+fullMxPath);
 				}				
@@ -128,7 +131,8 @@ public class ThmSearch {
 					evaluateWLCommand(ml, combinedTDMatrixRangeListName + "= Range[Length["+V_MX+"]]", false, true);
 				}*/
 			}			
-			
+			V_MX_RULE_NAME = V_MX +"->"+ combinedTDMatrixRangeListName;
+			evaluateWLCommand(ml, V_MX_RULE_NAME + "=" + V_MX +"->"+ combinedTDMatrixRangeListName, false, true);
 			//need both Projection mx and the matrices containing row vectors corresponding to lists!
 			
 			//ml.evaluate("AppendTo[$ContextPath, \""+ TermDocumentMatrix.PROJECTION_MX_CONTEXT_NAME +"\"];");
@@ -192,7 +196,7 @@ public class ThmSearch {
 			//process query first with corMx. Convert to column vec.
 			boolean getResult = false;
 			Expr qVec = evaluateWLCommand(medium, "queryVecStrTranspose= Transpose[" + queryVecStr + "]; "
-					+ "q0 = queryVecStrTranspose + 0.08*corMx.queryVecStrTranspose;", getResult, true);
+					+ "q0 = queryVecStrTranspose + 0.08*corMx.queryVecStrTranspose", getResult, true);
 			//ml.evaluate("queryVecStrTranspose= Transpose[" + queryVecStr + "]; "
 				//	+ "q0 = queryVecStrTranspose + 0.08*corMx.queryVecStrTranspose;");
 			if(getResult){				
@@ -228,11 +232,11 @@ public class ThmSearch {
 			if(!USE_FULL_MX){
 				/*q is column vector*/
 				getResult = false;
-				qVec = evaluateWLCommand(medium, "q = dInverse.uTranspose.q0;", getResult, true);
+				qVec = evaluateWLCommand(medium, "q = dInverse.uTranspose.q0", getResult, true);
 				//ml.evaluate("q = dInverse.uTranspose.q0;");
-				//ml.discardAnswer();			
+				//ml.discardAnswer();
 				if(getResult){
-					logger.info("ThmSearch - dInverse.uTranspose.(q0/.{0.0->mxMeanValue}): " + qVec);
+					logger.info("ThmSearch - dInverse.uTranspose.q0): " + qVec);
 					//System.out.println("qVec: " + qVec);
 				}
 				
@@ -279,7 +283,7 @@ public class ThmSearch {
 			}
 			//System.out.println("Dimensions@First@Transpose[q] " + evaluateWLCommand(ml, "Dimensions[First@Transpose[q]]", true, true));
 			//String vMx = TermDocumentMatrix.COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME;
-			Expr nearestVec = evaluateWLCommand(medium, "Nearest["+V_MX+"->"+ combinedTDMatrixRangeListName +", First@Transpose[q],"+numNearest+", Method->\"Scan\"] - " 
+			Expr nearestVec = evaluateWLCommand(medium, "Nearest["+V_MX_RULE_NAME +", First@Transpose[q],"+numNearest+", Method->\"Scan\"] - " 
 					+ LIST_INDEX_SHIFT, true, false);
 			//ml.evaluate("Nearest["+V_MX+"->"+ combinedTDMatrixRangeListName +", First@Transpose[q],"+numNearest+", Method->\"Scan\"] - " 
 				//	+ LIST_INDEX_SHIFT);
@@ -295,10 +299,12 @@ public class ThmSearch {
 			//int[] nearestVecArray = (int[])nearestVec.part(1).asArray(Expr.INTEGER, 1);
 			 //<--this line generates exprFormatException if sucessive entries are quickly entered.
 			//System.out.println("resulting Expr nearestVec: " + nearestVec);
+			logger.info("ThmSearch - nearestVec: " + nearestVec);
 			nearestVecArray = (int[])nearestVec.asArray(Expr.INTEGER, 1);
 		}catch(ExprFormatException e){
-			logger.error("ExprFormatException! " + e.getStackTrace());
-			throw new RuntimeException(e);
+			logger.error("ExprFormatException when searching for nearestVec! " + e);
+			throw new IllegalStateException(e);
+			//return Collections.emptyList();
 		}finally{
 			FileUtils.releaseWLEvaluationMedium(medium);
 		}		
@@ -962,7 +968,7 @@ public class ThmSearch {
 	
 	public static void main(String[] args) {		
 		
-		KernelLink ml = FileUtils.getKernelLinkInstance();
+		//KernelLink ml = FileUtils.getKernelLinkInstance();
 		try{			
 			//String result = ml.evaluateToOutputForm("Transpose@" + toNestedList(docMx), 0);
 			//String result = ml.evaluateToOutputForm("4+4", 0);
@@ -992,7 +998,7 @@ public class ThmSearch {
 			throw new IllegalStateException("IndexOutOfBoundsException during evaluation!", e);
 		}
 		finally{
-			ml.close();
+			//ml.close();
 		}		
 	}
 	

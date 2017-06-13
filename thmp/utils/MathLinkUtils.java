@@ -77,7 +77,7 @@ public class MathLinkUtils {
 		
 		switch(medium.evaluationMediumType){
 		case KERNEL:
-			return evaluateWLCommandWithKernel(medium.kernel(), cmd, throwOnException);
+			return evaluateWLCommandWithKernel(medium.kernel(), cmd, getResultingExpr, throwOnException);
 		case LINK:
 			return evaluateWLCommandWithLink(medium.link(), cmd, getResultingExpr, throwOnException);
 		default:
@@ -86,11 +86,24 @@ public class MathLinkUtils {
 		}
 	}
 	
-	private static Expr evaluateWLCommandWithKernel(IKernel kernel, String cmd, boolean throwOnException){		
+	private static Expr evaluateWLCommandWithKernel(IKernel kernel, String cmd, boolean getResultingExpr, boolean throwOnException){
+		int cmdLen = cmd.length();
 		try {
-			//make sure this waits. 
-			Expression expression = kernel.evaluate(cmd);
-			return expression.getExpr();					
+			if(getResultingExpr){
+				if(cmd.charAt(cmdLen-1) == ';'){
+					cmd = cmd.substring(0, cmdLen-1);
+				}
+				//kernel.evaluate() calls kernel.eval(), which waits.
+				Expression expression = kernel.evaluate(cmd);
+				return expression.getExpr();	
+			}else{
+				if(cmd.charAt(cmd.length()-1) != ';'){
+					cmd = cmd + ";";
+				}
+				//kernel.evaluate() calls kernel.eval(), which waits.
+				kernel.evaluate(cmd);
+				return PLACEHOLDER_EXPR;
+			}
 		} catch (EvaluationException e) {
 			if(throwOnException){
 				throw new IllegalStateException(e);
@@ -125,7 +138,7 @@ public class MathLinkUtils {
 			}
 		}catch(MathLinkException e){
 			String msg = "MathLinkException when evaluating: " + cmd;
-			System.out.println(msg);
+			//System.out.println(msg);
 			logger.error(msg);
 			if(true){
 			//if(throwOnException){

@@ -774,8 +774,9 @@ public class CollectThm {
 						}
 					}
 					if(FreqWordsSet.freqWordsSet.contains(word) && !nGramFirstWordsSet.contains(word)
-							&& skipWordBasedOnPos) continue;					
-					
+							&& skipWordBasedOnPos){ 
+						continue;					
+					}
 					//check the following word
 					if(j < thmAr.length-1){
 						String nextWordCombined = word + " " + thmAr[j+1];
@@ -888,7 +889,6 @@ public class CollectThm {
 			//increase freq of word by 1
 			docWordsFreqPreMap.put(word, docWordFreq + 1);
 			
-			//put both original and long form.
 			wordThmsMMapBuilder.put(word, curThmIndex);
 			return word;
 		}

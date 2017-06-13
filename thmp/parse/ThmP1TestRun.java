@@ -769,7 +769,9 @@ public class ThmP1TestRun {
 			st = "field is ring";
 			st = "this is a signed resolution over ring";
 			st = "the polynomial $f$ has one root";
-			
+			st = "$\\lambda$ are all pairs of partitions which are complementary with respect to $R$";
+			st = "if $x>0$";
+			st = "if $A$, then $B$";
 			//st = "Let $p_1,\\dots,p_r$ be the preimages under $w$"; 			
 			//st = "$p_1,\\dots,p_r$ is the preimage under $w$ of $c^\\ast_0$";			
 			//st = "there are complex parameters";
