@@ -642,8 +642,7 @@ public class SearchIntersection {
 			if (wordsScoreMap.get(wordSingForm) != null) {
 				
 				//wordThms = wordThmMMap.get(singFormLong);
-				wordThms = wordThmMMapNoAnno.get(wordSingForm);
-				
+				wordThms = wordThmMMapNoAnno.get(wordSingForm);				
 				// wordScore = wordsScoreMap.get(singFormLong);
 				wordScore = wordsScoreMap.get(wordSingForm);
 				wordScore = wordScore == null ? 0 : wordScore;
@@ -798,7 +797,7 @@ public class SearchIntersection {
 	 *            web display.
 	 * @return
 	 */
-	public static List<ThmHypPair> search(String inputStr, Set<String> searchWordsSet) {
+	/*public static List<ThmHypPair> search(String inputStr, Set<String> searchWordsSet) {
 		
 		boolean contextSearchBool = false;
 		List<Integer> highestThms = getHighestThmList(inputStr, searchWordsSet, contextSearchBool);
@@ -810,7 +809,7 @@ public class SearchIntersection {
 			return Collections.<ThmHypPair>emptyList();
 		}
 		return SearchCombined.thmListIndexToThmHypPair(highestThms);
-	}
+	}*/
 
 	/**
 	 * Reads in keywords. Gets theorems with highest scores for this.
@@ -818,7 +817,7 @@ public class SearchIntersection {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		System.out.println("searchIntersection- Total number of thms " + CollectThm.ThmList.allThmHypPairList().size());
+		System.out.println("searchIntersection- Total number of thms " + CollectThm.ThmList.numThms());
 		Scanner sc = new Scanner(System.in);
 	
 		while (sc.hasNextLine()) {
@@ -835,9 +834,9 @@ public class SearchIntersection {
 			// searchWordsSet is null.
 			List<Integer> highestThms = getHighestThmList(thm, null, contextSearchBool, NUM_NEAREST_VECS);
 
-			if (highestThms == null)
+			if (highestThms == null){
 				continue;
-
+			}
 			/*
 			 * String[] thmAr = thm.split("\\s+"); if(thmAr.length > 1 &&
 			 * thmAr[0].equals("context")){ highestThms =

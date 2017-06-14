@@ -28,23 +28,23 @@ public class TheoremGet {
 	
 	private static final LoadingCache<Integer, ContextRelationVecBundle> vecBundleCache;
 	private static final Logger logger = LogManager.getLogger(TheoremGet.class);
-	private static ServletContext servletContext;
+	private static final ServletContext servletContext = FileUtils.getServletContext();
 	
 	static{
 		vecBundleCache = CacheBuilder.newBuilder()
 				//.maximumSize(400) //number of entries
-				.maximumSize(50) //14mb x 50 = 700mb
+				.maximumSize(80) //14mb x 80 = 1120mb
 				.build(
 						new CacheLoader<Integer, ContextRelationVecBundle>() {
 							public ContextRelationVecBundle load(Integer bundleKey){
 								System.out.println("TheoremGet - loading a new vec bundle with key " + bundleKey);
 								return new ContextRelationVecBundle(bundleKey);
-			             }});		
+						}});		
 	}
 	
-	public static void setServletContext(ServletContext servletContext_){
+	/*public static void setServletContext(ServletContext servletContext_){
 		servletContext = servletContext_;
-	}
+	}*/
 	
 	/**
 	 * Get the ContextRelationVecs corresponding to a thm given its index.
@@ -57,7 +57,10 @@ public class TheoremGet {
 		try{
 			bundle = vecBundleCache.get(bundleKey);
 		}catch(ExecutionException e){
-			logger.error("ExecutionException when getting thm from LoadingCache! for index: " + thmIndex);
+			String msg = "ExecutionException when getting thm from LoadingCache! for index: " + thmIndex;
+			//print for testing locally
+			System.out.println(msg);
+			logger.error(msg);
 			return ContextRelationVecPair.PLACEHOLDER_CONTEXT_RELATION_VEC;
 		}
 		return bundle.getContextRelationVecsFromIndex(thmIndex-bundleKey*ContextRelationVecBundle.numThmsInBundle());
@@ -136,6 +139,7 @@ public class TheoremGet {
 	}
 	
 	/** Key containing range. Should just use starting index */
+	@Deprecated
 	public static class ContextRelationBundleKey{
 		
 		private int startingIndex;

@@ -266,7 +266,7 @@ public class TriggerMathObj3 {
 	 * @param mathObjMMap
 	 * @deprecated
 	 */	
-	private static void addThmsFromList(List<String> keywordList,
+	/*private static void addThmsFromList(List<String> keywordList,
 			Map<String, Integer> keywordMap, Multimap<String, String> mathObjMMap){
 		ImmutableList<ImmutableMap<String, Integer>> thmWordsList = CollectThm.ThmWordsMaps.get_thmWordsFreqListNoAnno();
 		//index of thm in thmWordsList, to be used as part of name
@@ -276,7 +276,7 @@ public class TriggerMathObj3 {
 			//List<String> keyWordsList = wordsMap.keySet().asList();
 			addKeywordToMathObj(thmName, wordsMap.keySet().asList(), keywordList, keywordMap, mathObjMMap);
 		}
-	}
+	}*/
 	
 	/*
 	private static void buildMathObjMx(List<String> keywordList, Multimap<String, String> mathObjMMap,

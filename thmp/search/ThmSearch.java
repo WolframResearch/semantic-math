@@ -487,7 +487,10 @@ public class ThmSearch {
 			logger.info(msg);
 			FileUtils.releaseWLEvaluationMedium(medium);
 		}
-		
+		/**
+		 * The method with argument createTermDocumentMatrixSVD(thmList)
+		 * should be preferred over this argument-less one.
+		 */
 		public static void createTermDocumentMatrixSVD() {	
 			//docMx = TriggerMathThm2.mathThmMx();			
 			//mx to keep track of correlations between terms, mx.mx^T

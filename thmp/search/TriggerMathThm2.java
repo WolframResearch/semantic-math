@@ -23,6 +23,7 @@ import thmp.parse.Maps;
 import thmp.parse.TheoremContainer;
 import thmp.parse.ThmP1;
 import thmp.parse.DetectHypothesis.DefinitionListWithThm;
+import thmp.search.CollectThm.ThmList;
 import thmp.search.SearchCombined.ThmHypPair;
 import thmp.search.SearchWordPreprocess.WordWrapper;
 import thmp.utils.FileUtils;
@@ -49,10 +50,10 @@ public class TriggerMathThm2 {
 	private static final List<String> mathObjList;
 	
 	/* These three maps follow consistent ordering */
-	private static final List<String> webDisplayThmList;
+	/*private static final List<String> webDisplayThmList;
 	private static final ImmutableList<String> webDisplayThmHypOnlyList;
-	private static final ImmutableList<String> webDisplayThmNoHypList;
-	private static final ImmutableList<String> webDisplayThmSrcFileList;
+	//private static final ImmutableList<String> webDisplayThmNoHypList;
+	private static final ImmutableList<String> webDisplayThmSrcFileList;*/
 	private static final ImmutableList<ThmHypPair> webDisplayThmHypPairList;
 	
 	/**
@@ -70,12 +71,12 @@ public class TriggerMathThm2 {
 	//private static final Pattern BRACES_PATTERN
 	/* Matrix of keywords. */
 	//private static final int[][] mathObjMx;
-	private static double[][] mathObjMx;
+	///****private static double[][] mathObjMx;
 	private static StringBuilder sparseArrayInputSB;
 
 	private static final Logger logger = LogManager.getLogger(TriggerMathThm.class);
 	//list of thms, same order as in thmList, and the words with their frequencies.
-	private static final List<ImmutableMap<String, Integer>> thmWordsMapList;
+	///private static final List<ImmutableMap<String, Integer>> thmWordsMapList;
 	
 	//private static final ImmutableMap<String, Integer> docWordsFreqMapNoAnno = CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno();
 	private static final ImmutableMap<String, Integer> docWordsFreqMapNoAnno;
@@ -96,7 +97,7 @@ public class TriggerMathThm2 {
 		//occuring words come earlier. This based on set of theorems in previous run.
 		docWordsFreqMapNoAnno = CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno();
 		keywordIndexDict = ImmutableMap.copyOf(CollectThm.ThmWordsMaps.createContextKeywordIndexDict(docWordsFreqMapNoAnno));
-		thmWordsMapList = CollectThm.ThmWordsMaps.get_thmWordsFreqListNoAnno();
+		///thmWordsMapList = CollectThm.ThmWordsMaps.get_thmWordsFreqListNoAnno();
 		
 		/* Don't need to build the giant mathObjMx if not generating data.	*/	
 		if(!Searcher.SearchMetaData.gatheringDataBool()){
@@ -122,12 +123,12 @@ public class TriggerMathThm2 {
 		//thmWordsMapList = CollectThm.ThmWordsMaps.get_thmWordsFreqListNoAnno();
 		
 			// ImmutableList.Builder<String> keywordList = ImmutableList.builder();
-			List<String> keywordList = new ArrayList<String>();
+			//List<String> keywordList = new ArrayList<String>();
 		
 		// which keyword corresponds to which index	in the keywords list
 		// ImmutableMap.Builder<String, Integer> keyDictBuilder = ImmutableMap.builder();
 		//map of String (keyword), and integer (index in keywordList) of keyword.
-			Map<String, Integer> keywordIndexMap = new HashMap<String, Integer>(); ///<--this is not necessary!
+			//Map<String, Integer> keywordIndexMap = new HashMap<String, Integer>(); ///<--this is not necessary!
 		//ImmutableList.Builder<String> mathObjListBuilder = ImmutableList.builder();
 		//to be list that contains the theorems, in the order they are inserted
 		//ImmutableList.Builder<String> mathObjListBuilder = ImmutableList.builder();
@@ -136,24 +137,25 @@ public class TriggerMathThm2 {
 		//should already been ordered in CollectThm
 		//Map<String, Integer> docWordsFreqMapNoAnno = CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno();
 		
+			//**Commented out June 10, 2017
 		// math object pre map. keys are theorems, values are keywords in that thm.
-			Multimap<String, String> mathObjMMap = ArrayListMultimap.create();
-				//adds thms from CollectThm.thmWordsList. The thm name is its index in thmWordsList.
-			addThmsFromList(keywordList, keywordIndexMap, mathObjMMap);
-				//follows order in keywordIndexDict
-			keywordList = new ArrayList<String>(keywordIndexDict.keySet());
+			//Multimap<String, String> mathObjMMap = ArrayListMultimap.create();
+			//adds thms from CollectThm.thmWordsList. The thm name is its index in thmWordsList.
+			//addThmsFromList(keywordList, keywordIndexMap, mathObjMMap);
+			//follows order in keywordIndexDict
+			//keywordList = new ArrayList<String>(keywordIndexDict.keySet());
 		//keyword index map not needed
 		
 		//keywordIndexDict = ImmutableMap.copyOf(keywordIndexMap);
 		
 		//mathObjMx = new int[keywordList.size()][mathObjMMap.keySet().size()];	
 		//mathObjMx = new int[keywordList.size()][thmWordsList.size()];
-			mathObjMx = new double[keywordList.size()][thmWordsMapList.size()];
+			//mathObjMx = new double[keywordList.size()][thmWordsMapList.size()];
 			//System.out.println("TriggerMathThm2 - number of keywords: " + keywordList.size());
 			//System.out.println("TriggerMathThm2 - number of theorems deserialized (i.e in previous round): " 
 					//+ thmWordsMapList.size());
-			List<int[]> coordinatesList = new ArrayList<int[]>();
-			List<Double> weightsList = new ArrayList<Double>();
+			//List<int[]> coordinatesList = new ArrayList<int[]>();
+			//List<Double> weightsList = new ArrayList<Double>();
 		//pass in thmList to ensure the right order (insertion order) of thms 
 		//is preserved or MathObjList and mathObjMMap. Multimaps don't preserve insertion order
 			/*should just pass in mathObjMMap!! */
@@ -165,10 +167,10 @@ public class TriggerMathThm2 {
 		
 		mathObjList = ImmutableList.copyOf(thmList);
 		
-		webDisplayThmList = CollectThm.ThmList.allThmsWithHypList();
+		/*webDisplayThmList = CollectThm.ThmList.allThmsWithHypList();
 		webDisplayThmHypOnlyList = CollectThm.ThmList.allHypList();
-		webDisplayThmSrcFileList = CollectThm.ThmList.allThmSrcFileList();
-		webDisplayThmNoHypList = CollectThm.ThmList.allThmsNoHypList();
+		webDisplayThmSrcFileList = CollectThm.ThmList.allThmSrcFileList();*/
+		//webDisplayThmNoHypList = CollectThm.ThmList.allThmsNoHypList();
 		webDisplayThmHypPairList = CollectThm.ThmList.allThmHypPairList();
 		/*for(int i = 0; i < thmWordsList.size(); i++){
 			System.out.println(mathObjList.get(i));
@@ -221,12 +223,13 @@ public class TriggerMathThm2 {
 	/**
 	 * Adds thms by calling addKeywordToMathObj on CollectThm.thmWordsList.
 	 * Weighed by frequencies.
+	 * @deprecated
 	 * @param keywords
 	 * @param keywordList
 	 * @param keywordIndexMap Empty map to be filled. Words and their indices in keywordList.
 	 * @param mathObjMMap Multimap of theorems and their words, key should not be thm!!
 	 */
-	private static void addThmsFromList(List<String> keywordList,
+	/*private static void addThmsFromList(List<String> keywordList,
 			Map<String, Integer> keywordIndexMap, Multimap<String, String> mathObjMMap
 			){
 		//thmWordsList has annotations, such as hyp or stm
@@ -250,7 +253,7 @@ public class TriggerMathThm2 {
 			//need to preserve insertion order!				
 			addKeywordToMathObj(keyWordsList.toArray(new String[keyWordsList.size()]), keywordList, keywordIndexMap, mathObjMMap);
 		}
-	}
+	}*/
 	
 	/**
 	 * e.g. {{1, 2}, {2, 3}} -> {4, 1}
@@ -391,7 +394,7 @@ public class TriggerMathThm2 {
 	 * @param coordinatesList
 	 * @param weightsList
 	 */
-	private static void buildMathObjMx(//List<String> keywordList, 
+	/*private static void buildMathObjMx(//List<String> keywordList, 
 			Multimap<String, String> mathObjMMap, 
 			ImmutableList<String> thmList,
 			List<int[]> coordinatesList, List<Double> weightsList) {
@@ -472,7 +475,7 @@ public class TriggerMathThm2 {
 		//System.out.println("TriggerMathThm2 - wordsScoreMap: "+ wordsScoreMap);
 		System.out.println("TriggerMathThm2 - keywordIndexNullCounter: "+ keywordIndexNullCounter);
 		//System.out.println("~~keywordDict "+keywordDict);
-	}
+	}*/
 
 	/**
 	 * Create query row vector, 1's and 0's.
@@ -721,9 +724,9 @@ public class TriggerMathThm2 {
 	 * @nullable
 	 * @return
 	 */
-	public static double[][] mathThmMx(){
+	/*public static double[][] mathThmMx(){
 		return mathObjMx;
-	}
+	}*/
 	
 	/**
 	 * Number of words used in term-doc mx.
@@ -738,7 +741,7 @@ public class TriggerMathThm2 {
 	 * @return
 	 */
 	public static int mathThmMxColDim(){
-		return thmWordsMapList.size();
+		return ThmList.numThms();
 	}
 	
 	/**
@@ -812,12 +815,12 @@ public class TriggerMathThm2 {
 		//index is 1-based indexing, not 0-based.
 		//System.out.println(CollectThm.get_thmWordsListNoAnno().get(index-1));
 		
-		if(DEBUG){
+		/*if(DEBUG){
 			Map<String, Integer> wordsScoreMap = CollectThm.ThmWordsMaps.get_wordsScoreMapNoAnno();		
 			for(String word : thmWordsMapList.get(index).keySet()){
 				System.out.print(word + " " + wordsScoreMap.get(word) + " " + docWordsFreqMapNoAnno.get(word));
 			}
-		}
+		}*/
 		//System.out.println(thmWordsList.get(index-1));
 		//return mathObjList.get(index-LIST_INDEX_SHIFT);
 		return mathObjList.get(index);
@@ -835,7 +838,8 @@ public class TriggerMathThm2 {
 		//index is 1-based indexing, not 0-based.
 		//System.out.println(CollectThm.get_thmWordsListNoAnno().get(index-1));
 		//return webDisplayThmList.get(index-LIST_INDEX_SHIFT);
-		return webDisplayThmList.get(index);
+		return webDisplayThmHypPairList.get(index).hypStr() + " " 
+				+ webDisplayThmHypPairList.get(index).thmStr();
 	}
 	
 	/**
@@ -845,7 +849,7 @@ public class TriggerMathThm2 {
 	 */
 	public static String getWebDisplayThmHypOnly(int index){
 		//System.out.print("Thm index: " + index + "\t");
-		return webDisplayThmHypOnlyList.get(index);
+		return webDisplayThmHypPairList.get(index).hypStr();
 	}
 	
 	/**
@@ -855,12 +859,12 @@ public class TriggerMathThm2 {
 	 */
 	public static String getWebDisplayThmNoHyp(int index){
 		//System.out.print("Thm index: " + index + "\t");
-		return webDisplayThmNoHypList.get(index);
+		return webDisplayThmHypPairList.get(index).thmStr();
 	}
 	
 	public static String getWebDisplayThmSrcFile(int index){
 		//System.out.print("Thm index: " + index + "\t");
-		return webDisplayThmSrcFileList.get(index);
+		return webDisplayThmHypPairList.get(index).srcFileName();
 	}
 	
 	public static ThmHypPair getWedDisplayThmHypPair(int index){

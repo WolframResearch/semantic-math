@@ -82,7 +82,7 @@ public class TriggerMathObj2 {
 		addKeywordToMathObj("field", new String[]{"algebraically closed"}, keywordList, keywordMap, mathObjMMap);
 		
 		//adds thms from CollectThm.thmWordsList. The thm name is its index in thmWordsList.
-		addThmsFromList(keywordList, keywordMap, mathObjMMap);
+		/**Commented out June 11, 2017. addThmsFromList(keywordList, keywordMap, mathObjMMap);*/
 		
 		// mathObjMultimap = ImmutableMultimap.copyOf(mathObjMMap);
 
@@ -148,7 +148,8 @@ public class TriggerMathObj2 {
 	 * @param keywordMap
 	 * @param mathObjMMap
 	 */
-	private static void addThmsFromList(List<String> keywordList,
+	/**Commented out Jun 11, 2017. To deprecate get_thmWordsFreqListNoAnno. This method might be useful later on.
+	 * private static void addThmsFromList(List<String> keywordList,
 			Map<String, Integer> keywordMap, Multimap<String, String> mathObjMMap){
 		ImmutableList<ImmutableMap<String, Integer>> thmWordsList = CollectThm.ThmWordsMaps.get_thmWordsFreqListNoAnno();
 		//index of thm in thmWordsList, to be used as part of name
@@ -158,7 +159,7 @@ public class TriggerMathObj2 {
 			//List<String> keyWordsList = wordsMap.keySet().asList();
 			addKeywordToMathObj(thmName, wordsMap.keySet().asList(), keywordList, keywordMap, mathObjMMap);
 		}
-	}
+	}*/
 	
 	/**
 	 * Builds the MathObjMx 

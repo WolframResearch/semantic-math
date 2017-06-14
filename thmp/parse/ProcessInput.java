@@ -168,8 +168,7 @@ public class ProcessInput {
 		}else{
 			//set to the default local value if not running on server
 			macrosBufferedReader = getMacrosBReader();
-		}
-		
+		}		
 		return processInput(thmInputList, macrosBufferedReader, replaceTex, false, false);
 	}
 	

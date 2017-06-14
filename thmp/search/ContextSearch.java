@@ -55,6 +55,7 @@ public class ContextSearch implements Searcher<Map<Integer, Integer>>{
 	}
 	
 	/**
+	 * Does context search.
 	 * @param query input query, in English 
 	 * @param nearestThmIndexList List of thm indices, resulting from other 
 	 * search algorithms such as SVD and/or intersection. Indices are 0-based.

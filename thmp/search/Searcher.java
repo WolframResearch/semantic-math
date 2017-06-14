@@ -36,6 +36,15 @@ public interface Searcher<S> {
 		}
 	}
 	
+	/**
+	 * Containing data serialized during preprocessing.
+	 */
+	public static class SearchConfiguration implements Serializable{
+		
+		String s ;
+		
+	}
+	
 	public static class SearchMetaData{
 		
 		//whether currently gathering data (e.g. in DetectHypothesis.java), 

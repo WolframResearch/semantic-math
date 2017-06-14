@@ -27,6 +27,7 @@ import thmp.parse.ParseState.ParseStateBuilder;
 import thmp.parse.ParseState.VariableDefinition;
 import thmp.parse.ParseState.VariableName;
 import thmp.search.CollectThm;
+import thmp.search.SearchCombined.ThmHypPair;
 import thmp.search.Searcher;
 import thmp.search.TheoremGet.ContextRelationVecPair;
 import thmp.search.ThmSearch;
@@ -536,7 +537,7 @@ public class DetectHypothesis {
 	}
 
 	/**
-	 * Serialize collected data to persistent storage.
+	 * Serialize collected data to persistent storage, such as lists of ThmHypPair's.
 	 * The serializations done in this method should remain atomic, i.e. do *not* perform 
 	 * a subset of steps only, since we rely on the different serialized data to come from
 	 * the same source with the same settings.
@@ -558,10 +559,11 @@ public class DetectHypothesis {
 		String allThmsStringFileStr = inputParams.allThmsStringFileStr;
 		//inputParams.allThmWordsStringFileStr;
 		
-		boolean projectionPathsNotNull = (null != pathToProjectionMx && null != pathToWordFreqMap);
-		
+		boolean projectionPathsNotNull = (null != pathToProjectionMx && null != pathToWordFreqMap);		
 		logger.info("Serializing parsedExpressionList, etc, to file...");
 		try{
+			//actually turn ParsedExpression's into ThmHypPair's.
+			List<ThmHypPair> thmHypPairList = convertPEToThmHypPair(parsedExpressionList);
 			FileUtils.serializeObjToFile(parsedExpressionList, parsedExpressionSerialFileStr);
 			FileUtils.serializeObjToFile(contextRelationVecPairList, contextRelationPairSerialFileStr);
 			
@@ -598,7 +600,7 @@ public class DetectHypothesis {
 			Map<String, Integer> wordFreqMap = getWordFreqMap(pathToWordFreqMap);
 			//first serialize full dimensional TD mx, then project using provided projection mx.
 			ThmSearch.TermDocumentMatrix.serializeHighDimensionalTDMx(immutableDefThmList, fullTermDocumentMxPath, wordFreqMap);
-			//replace the last bit of the path with the name of the reduced mx.
+			//replace the last bit of the path with the name of the projected(reduced) mx.
 			String pathToReducedDimTDMx = replaceFullTDMxName(fullTermDocumentMxPath, ThmSearch.TermDocumentMatrix.PROJECTED_MX_NAME);
 			ThmSearch.TermDocumentMatrix.projectTermDocumentMatrix(fullTermDocumentMxPath, pathToProjectionMx, 
 					pathToReducedDimTDMx);
@@ -606,6 +608,19 @@ public class DetectHypothesis {
 			ThmSearch.TermDocumentMatrix.createTermDocumentMatrixSVD(immutableDefThmList);
 		}
 	}
+	
+	/**
+	 * 
+	 * @param peList
+	 * @return
+	 */
+	private static List<ThmHypPair> convertPEToThmHypPair(List<ParsedExpression> peList){
+		List<ThmHypPair> thmHypPairList = new ArrayList<ThmHypPair>();
+		for(ParsedExpression pe : peList){
+			
+		}
+	}
+	//things that need to be packaged: wordThmMMap, thmhyppairs, meta data
 	
 	private static String replaceFullTDMxName(String fullTermDocumentMxPath, String projectedMxName){
 		char separatorChar = File.separatorChar;

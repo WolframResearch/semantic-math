@@ -117,7 +117,7 @@ public class SearchCombined {
 			String thmOnly = TriggerMathThm2.getWebDisplayThmNoHyp(thmIndex);
 			ThmHypPair thmHypPair = new ThmHypPair(thmOnly, hypOnly);*/
 			ThmHypPair thmHypPair = TriggerMathThm2.getWedDisplayThmHypPair(thmIndex);
-			bestCommonThmHypPairList.add(thmHypPair);				
+			bestCommonThmHypPairList.add(thmHypPair);			
 		}
 		return bestCommonThmHypPairList;
 	}
@@ -149,7 +149,8 @@ public class SearchCombined {
 		//CollectThm.setResources(texSourceFileBufferList, macrosReader, parsedExpressionListInputStream, allThmWordsSerialInputStream);	
 		
 		ProcessInput.setServletContext(servletContext_);
-		TheoremGet.setServletContext(servletContext_);
+		//TheoremGet.setServletContext(servletContext_);
+		//ThmHypPairGet.setServletContext(servletContext_);
 		//ProcessInput.setResources(macrosReader);		
 		//servletContext = servletContext_;
 	}

@@ -45,7 +45,8 @@ public class GenerateRelationVec {
 	}
 	
 	/**
-	 * Generate relational vector based on input String.
+	 * Generate relational vector based on the query String. Should only
+	 * be called on the query string during search.
 	 * @param queryStr
 	 * @param parseState
 	 * @return
@@ -71,7 +72,7 @@ public class GenerateRelationVec {
 	
 	public static void main(String[] args){
 		
-		parseAndSerializeThms();
+		//parseAndSerializeThms();
 		
 		//test deserialization
 		//System.out.println("Deserialized relation vectors: " + deserializeRelationVecList());
@@ -80,12 +81,12 @@ public class GenerateRelationVec {
 	/**
 	 * 
 	 */
-	private static void parseAndSerializeThms() {
+	/*private static void parseAndSerializeThms() {
 		ParseStateBuilder parseStateBuilder = new ParseStateBuilder();
 		
 		List<BigInteger> bigIntList = new ArrayList<BigInteger>(); 
 		
-		List<String> bareThmList = CollectThm.ThmList.get_bareThmList();
+		List<String> bareThmList = CollectThm.ThmList.get_webDisplayThmList();
 		//System.out.println("bareThmList" + bareThmList);
 		for(String thm : bareThmList){
 			ParseState parseState = parseStateBuilder.build();
@@ -96,7 +97,7 @@ public class GenerateRelationVec {
 		//serialize the bitSetList. Should run this during static initializer
 		//in PRD.
 		serializeRelationVecList(bigIntList);
-	}	
+	}	*/
 	
 	/**
 	 * Silent so not to clobber the original stack trace.

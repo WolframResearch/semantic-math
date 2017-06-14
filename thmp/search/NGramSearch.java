@@ -25,6 +25,7 @@ import org.apache.logging.log4j.Logger;
 import com.google.common.collect.ListMultimap;
 
 import thmp.parse.ProcessInput;
+import thmp.search.SearchCombined.ThmHypPair;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 
@@ -287,7 +288,8 @@ public class NGramSearch {
 	 */
 	private static void buildNGramMap(Map<String, Map<String, Integer>> nGramMap, Map<String, Integer> totalWordCounts){		
 		//get thmList from CollectThm
-		List<String> thmList = ProcessInput.processInput(CollectThm.ThmList.get_thmList(), true);
+		//List<String> thmList = ProcessInput.processInput(CollectThm.ThmList.allThmsWithHypList(), true);
+		List<String> thmList = CollectThm.ThmList.allThmsWithHypList();
 		//System.out.println(thmList);
 		//skip nonMathFluffWords, collapse list
 		for(String thm : thmList){

@@ -52,7 +52,7 @@ public class WordFrequency {
 	private static final int TOTAL_STOCK_WORD_COUNT = (int)Math.pow(10, 7)*45;
 	static {		
 		// build wordFreqMap
-		List<String> extractedThms = ThmList.get_thmList();
+		List<String> extractedThms = ThmList.allThmsWithHypList();
 		// the boolean argument indicates whether to replace tex symbols with "tex"
 		List<String> thmList = ProcessInput.processInput(extractedThms, true);
 		

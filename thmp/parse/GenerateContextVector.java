@@ -59,19 +59,21 @@ public class GenerateContextVector {
 	/**
 	 * Encapsulate subclass, so can set resources such as contextVecFileStr.
 	 * And can call combineContextVectors() in outer class without initializing everything here.
+	 * @Deprecated June 2017
 	 */
+	@Deprecated
 	public static class GetContextVec{
 		// bare thm list, without latex \label's or \index's, or \ref's, etc
-		private static final List<String> bareThmList;
+		//private static final List<String> bareThmList;
 		// matrix, same dimension of term-document matrix in search. 
 		private static final List<Map<Integer, Integer>> contextVecMapList = new ArrayList<Map<Integer, Integer>>();
 		//list of strings
 		private static final List<String> contextVecStringList = new ArrayList<String>();		
 		//private static final KernelLink ml = thmp.utils.FileUtils.getKernelLink();
 		
-	static{		
-		bareThmList = CollectThm.ThmList.allThmsWithHypList();		
-		generateContextVec(bareThmList, contextVecMapList);		
+	static{	
+		/*bareThmList = CollectThm.ThmList.allThmsWithHypList();		
+		  generateContextVec(bareThmList, contextVecMapList);	*/	
 		if(WRITE_UNKNOWNWORDS){
 			ThmP1.writeUnknownWordsToFile();
 		}
@@ -88,8 +90,7 @@ public class GenerateContextVector {
 			Path fileTo = contextVecFilePath;
 			if(fileTo == null){
 				fileTo = Paths.get(CONTEXT_VEC_FILE_STR);
-			}
-			
+			}			
 			try {
 				Files.write(fileTo, contextVecStringList, Charset.forName("UTF-8"));
 			} catch (IOException e) {
@@ -108,7 +109,8 @@ public class GenerateContextVector {
 	 * to this average, saves to file.
 	 * @param contextVecStringList
 	 */
-	private static void getAverageEntryVal(List<String> contextVecStringList, KernelLink ml){
+	/**Commented out June 2017
+	 * private static void getAverageEntryVal(List<String> contextVecStringList, KernelLink ml){
 		String contextVecAvgFileStr = "src/thmp/data/contextVecAvg.txt";
 		Path contextVecAvgFilePath = Paths.get(contextVecAvgFileStr);
 		int contextVecStringListSz = contextVecStringList.size();
@@ -123,7 +125,6 @@ public class GenerateContextVector {
 			
 			for(int i = 0; i < numIndicesToTake; i++){
 				int nextRandNum = rand.nextInt(   contextVecStringListSz  );
-				//randomIndices[i] = rand.nextInt(   );
 				randomContextVecsSB.append(contextVecStringList.get(nextRandNum) + ", ");				
 			}
 			randomContextVecsSB.append("}");			
@@ -139,7 +140,7 @@ public class GenerateContextVector {
 		}catch(MathLinkException e){
 			e.printStackTrace();
 		}		
-	}
+	}*/
 	
 	/**
 	 * Generates the context vectors.

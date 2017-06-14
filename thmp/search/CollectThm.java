@@ -62,7 +62,8 @@ import thmp.utils.ResourceDeposit;
  */
 public class CollectThm {
 	
-	private static final List<String> rawFileStrList = Arrays.asList(new String[]{
+	/* Commented out June 2017.
+	 * private static final List<String> rawFileStrList = Arrays.asList(new String[]{
 			//"src/thmp/data/testContextVector.txt", 
 			//"src/thmp/data/collectThmTestSample.txt"
 			"src/thmp/data/fieldsRawTex.txt",
@@ -70,7 +71,7 @@ public class CollectThm {
 			//"src/thmp/data/multilinearAlgebra.txt",
 			//"src/thmp/data/functionalAnalysis.txt",			
 			//"src/thmp/data/topology.txt"
-			});
+			});*/
 	
 	private static final Logger logger = LogManager.getLogger();
 	//latex macros source file name src/thmp/data/CommAlg5.txt
@@ -191,7 +192,7 @@ public class CollectThm {
 		/**Versions without annotations***/
 		//List of theorems, each of which
 		//contains map of keywords and their frequencies in a particular theorem.
-		private static final ImmutableList<ImmutableMap<String, Integer>> thmWordsFreqMapListNoAnno;
+		//private static final ImmutableList<ImmutableMap<String, Integer>> thmWordsFreqMapListNoAnno;
 		/*words and their document-wide frequencies. These words are normalized, 
 		e.g. "annihilator", "annihiate" all have the single entry "annihilat" */
 		private static final ImmutableMap<String, Integer> docWordsFreqMapNoAnno;
@@ -256,7 +257,7 @@ public class CollectThm {
 			//put that list into the thm list. The integer indicates the word frequencies.
 			
 			/**Versions with no annotation, eg "hyp"/"stm" **/
-			ImmutableList.Builder<ImmutableMap<String, Integer>> thmWordsListBuilderNoAnno = ImmutableList.builder();
+			//ImmutableList.Builder<ImmutableMap<String, Integer>> thmWordsListBuilderNoAnno = ImmutableList.builder();
 			/* *Only* used in data-gathering mode*/
 			Map<String, Integer> docWordsFreqPreMapNoAnno = new HashMap<String, Integer>();
 			ImmutableSetMultimap.Builder<String, Integer> wordThmsMMapBuilderNoAnno = ImmutableSetMultimap.builder();
@@ -275,7 +276,7 @@ public class CollectThm {
 			//the third true means to extract words from latex symbols, eg oplus->direct sum.
 			//last boolean is whether to replace macros, 
 			//List<String> processedThmList = ThmList.get_processedThmList();		
-			/* This list is smaller when in gathering data mode, and consists of a representative set 
+			/** This list is smaller when in gathering data mode, and consists of a representative set 
 			 * of theorems. Much larger in search mode.*/
 			List<String> processedThmList = ThmList.allThmsWithHypList;
 						
@@ -283,7 +284,8 @@ public class CollectThm {
 				//readThm(thmWordsListBuilder, docWordsFreqPreMap, wordThmsMMapBuilder, processedThmList);
 				//same as readThm, just buid maps without annotation
 				//These all contain the *same* set of words.
-			buildMapsNoAnno(thmWordsListBuilderNoAnno, docWordsFreqPreMapNoAnno, wordThmsMMapBuilderNoAnno, 
+			buildMapsNoAnno(//thmWordsListBuilderNoAnno, 
+					docWordsFreqPreMapNoAnno, wordThmsMMapBuilderNoAnno, 
 						processedThmList, skipGramWordsList);
 			
 			/*use stemToWordsMMap to re-adjust frequency of word stems that came from multiple forms, 
@@ -295,7 +297,7 @@ public class CollectThm {
 			//docWordsFreqMap = ImmutableMap.copyOf(docWordsFreqPreMap); 		
 			//wordThmsIndexMMap = wordThmsMMapBuilder.build();
 			//non-annotated version
-			thmWordsFreqMapListNoAnno = thmWordsListBuilderNoAnno.build();	
+			//thmWordsFreqMapListNoAnno = thmWordsListBuilderNoAnno.build();	
 			
 			//builds scoresMap based on frequency map obtained from CollectThm.
 			//ImmutableMap.Builder<String, Integer> wordsScoreMapBuilder = ImmutableMap.builder();		
@@ -348,7 +350,7 @@ public class CollectThm {
 			//docWordsFreqPreMapNoAnno.putAll(threeGramsMap);
 			//map to be serialized, and used for forming context vectors in next run.
 			contextVecWordsNextTimeMap = docWordsFreqMapNoAnno;
-			//shouldn't need this, since can reconstruct index from immutableMap 
+			//shouldn't need this, since can reconstruct index from immutableMap next time
 			contextVecWordsIndexNextTimeMap = ImmutableMap.copyOf(createContextKeywordIndexDict(contextVecWordsNextTimeMap));
 			//deserialize words from allThmWordsList.dat, which were serialized from previous run.
 			//List<String> wordsList = extractWordsList();	 <--superceded by wordsMap
@@ -440,13 +442,13 @@ public class CollectThm {
 		}
 		
 		/**
-		 * deserialize words list used to form context and relation vectors, which were
+		 * deserialize words map used to form context and relation vectors, which were
 		 * formed while parsing through the papers in e.g. DetectHypothesis.java. This is
 		 * so we don't parse everything again at every server initialization.
-		 * Map of words and their frequencies.
-		 * @return
+		 * 
+		 * @return Map of words and their frequencies.
 		 */
-		@SuppressWarnings("unchecked")		
+		@SuppressWarnings("unchecked")
 		private static ImmutableMap<String, Integer> extractWordFreqMap() {	
 			//It is "src/thmp/data/allThmWordsMap.dat";			
 			String pathToPrevDocWordFreqMaps = Searcher.SearchMetaData.previousWordDocFreqMapsPath();
@@ -689,12 +691,13 @@ public class CollectThm {
 		public static void createSkipGramWordList(List<String> thmList,
 				List<String> skipGramWordList_){
 			System.out.print("Inside createSkipGramWordList!");
-			ImmutableList.Builder<ImmutableMap<String, Integer>> thmWordsFreqListBuilder 
-				= new ImmutableList.Builder<ImmutableMap<String, Integer>>();
+			//ImmutableList.Builder<ImmutableMap<String, Integer>> thmWordsFreqListBuilder 
+				//= new ImmutableList.Builder<ImmutableMap<String, Integer>>();
 			Map<String, Integer> docWordsFreqPreMap = new HashMap<String, Integer>();
 			ImmutableSetMultimap.Builder<String, Integer> wordThmsMMapBuilder 
 				= new ImmutableSetMultimap.Builder<String, Integer>();			
-			buildMapsNoAnno(thmWordsFreqListBuilder, docWordsFreqPreMap, wordThmsMMapBuilder, thmList, skipGramWordList_);						
+			buildMapsNoAnno(//thmWordsFreqListBuilder, 
+					docWordsFreqPreMap, wordThmsMMapBuilder, thmList, skipGramWordList_);						
 		}
 		
 		/**
@@ -708,7 +711,7 @@ public class CollectThm {
 		 * @throws IOException
 		 * @throws FileNotFoundException
 		 */
-		private static void buildMapsNoAnno(ImmutableList.Builder<ImmutableMap<String, Integer>> thmWordsFreqListBuilder,
+		private static void buildMapsNoAnno(//ImmutableList.Builder<ImmutableMap<String, Integer>> thmWordsFreqListBuilder,
 				Map<String, Integer> docWordsFreqPreMap,
 				ImmutableSetMultimap.Builder<String, Integer> wordThmsMMapBuilder, List<String> thmList,
 				List<String> skipGramWordList_){
@@ -822,7 +825,7 @@ public class CollectThm {
 						}
 					}
 				}//done iterating through this thm				 
-				thmWordsFreqListBuilder.add(ImmutableMap.copyOf(thmWordsFreqMap));
+				//thmWordsFreqListBuilder.add(ImmutableMap.copyOf(thmWordsFreqMap));
 				//System.out.println("++THM: " + thmWordsMap);
 			}
 		}
@@ -901,9 +904,9 @@ public class CollectThm {
 		 * Contains map of keywords and their frequencies in a particular theorem.
 		 * @return
 		 */
-		public static ImmutableList<ImmutableMap<String, Integer>> get_thmWordsFreqListNoAnno(){
+		/*public static ImmutableList<ImmutableMap<String, Integer>> get_thmWordsFreqListNoAnno(){
 			return thmWordsFreqMapListNoAnno;
-		}
+		}*/
 
 		/**
 		 * Fills up wordsScorePreMap
@@ -1040,26 +1043,28 @@ public class CollectThm {
 	/**
 	 * Static nested classes that accomodates lazy initialization (so to avoid circular 
 	 * dependency), but also gives benefit of final (cause singleton), immutable (make it so).
-	 * This class is initialized BEFORE the static subclass ThmWordsMaps
+	 * Note: This class is initialized BEFORE the static subclass ThmWordsMaps.
 	 */
 	public static class ThmList{
 		
 		private static final ImmutableList<String> allThmsWithHypList;
 		//just thm. same order as in allThmsWithHypList.
-		private static final ImmutableList<String> allThmsNoHypList;
+		/*private static final ImmutableList<String> allThmsNoHypList;
 		//just hyp. same order as in allThmsWithHypList.
 		private static final ImmutableList<String> allHypList;
-		private static final ImmutableList<String> allThmSrcFileList;
+		private static final ImmutableList<String> allThmSrcFileList;*/
+		private static final int numThms;
 		private static final ImmutableList<ThmHypPair> allThmHypPairList;
 		
 		//private static final ImmutableList<BigInteger> allThmsRelationVecList;
 		//private static final ImmutableList<String> allThmsContextVecList;
 		
-		private static final ImmutableList<String> thmList;
+		//private static final ImmutableList<String> thmList;
 		//processed with options to replace tex with latex, and expand macros with their definitions
-		private static final ImmutableList<String> processedThmList;
 		//list of theorems for web display, without \label{} or \index{} etc
-		private static final ImmutableList<String> webDisplayThmList;	
+		//private static final ImmutableList<String> webDisplayThmList;	
+		/*Commented out June 2017.
+		 * private static final ImmutableList<String> processedThmList;		
 		//list of bare theorems, without label content 
 		private static final ImmutableList<String> bareThmList;	
 		//thm list with just macros replaced
@@ -1069,7 +1074,7 @@ public class CollectThm {
 		//whether to extract words from latex symbols, eg oplus->direct sum.
 		private static final boolean TEX_TO_WORDS = true;
 		//whether to expand macros to their definitions
-		private static final boolean REPLACE_MACROS = true;
+		private static final boolean REPLACE_MACROS = true;*/
 		//Whether in skip gram gathering mode. Used by CollectThm.ThmWordsMaps.
 		private static boolean gather_skip_gram_words;
 		
@@ -1080,35 +1085,36 @@ public class CollectThm {
 			 * need to read and parse through all papers on every server initialization.
 			 * Can just read from serialized data. */
 			
+			//need to modularize to multiple lists stored in cache!!!
 			parsedExpressionsList = extractParsedExpressionList();
 			
 			List<String> allThmsWithHypPreList = new ArrayList<String>();
 			List<String> allThmsNoHypPreList = new ArrayList<String>();
 			List<String> allHypPreList = new ArrayList<String>();
 			List<String> allThmSrcFilePreList = new ArrayList<String>();
-			//List<BigInteger> relationVecPreList = new ArrayList<BigInteger>();
-			//List<String> contextVecPreList = new ArrayList<String>();
-			fillListsFromParsedExpressions(parsedExpressionsList, allThmsWithHypPreList,// contextVecPreList, relationVecPreList,
+			fillListsFromParsedExpressions(parsedExpressionsList, allThmsWithHypPreList,
 					allThmsNoHypPreList, allHypPreList, allThmSrcFilePreList);			
 			
 			allThmsWithHypList = ImmutableList.copyOf(allThmsWithHypPreList);
-			allThmsNoHypList = ImmutableList.copyOf(allThmsNoHypPreList);
+			/*allThmsNoHypList = ImmutableList.copyOf(allThmsNoHypPreList);
 			allHypList = ImmutableList.copyOf(allHypPreList);
-			allThmSrcFileList = ImmutableList.copyOf(allThmSrcFilePreList);
-			allThmHypPairList = createdThmHypPairListFromLists(allThmsNoHypList, allHypList, allThmSrcFileList);
+			allThmSrcFileList = ImmutableList.copyOf(allThmSrcFilePreList);*/
+			
+			allThmHypPairList = createdThmHypPairListFromLists(allThmsNoHypPreList, allHypPreList, allThmSrcFilePreList);
+			numThms = allThmHypPairList.size();
 			
 			/*allThmsContextVecList = ImmutableList.copyOf(contextVecPreList);
 			allThmsRelationVecList = ImmutableList.copyOf(relationVecPreList);*/
 			
-			ImmutableList.Builder<String> thmListBuilder = ImmutableList.builder();
+			/*ImmutableList.Builder<String> thmListBuilder = ImmutableList.builder();
 			List<String> extractedThmsList = new ArrayList<String>();
 			List<String> processedThmsList = new ArrayList<String>();
 			List<String> macroReplacedThmsList = new ArrayList<String>();
 			List<String> webDisplayThmsList = new ArrayList<String>();
-			List<String> bareThmsList = new ArrayList<String>();
-			//System.out.print("rawFileReader: " + rawFileReader);
+			List<String> bareThmsList = new ArrayList<String>();*/
 			//extractedThms = ThmList.get_thmList();
-			try {
+			/* Commented out June 2017.
+			 * try {
 				if(null == servletContext){
 					//this is the case when resources have not been set by servlet, so not on server.
 					for(String fileStr : rawFileStrList){
@@ -1131,25 +1137,14 @@ public class CollectThm {
 					//System.out.println("read from rawFileReader");
 					//System.out.print("ready for processing: " +rawFileReader);
 					
-					/*System.out.println(rawFileReader);
-					String line;
-					while((line=rawFileReader.readLine()) != null){
-						System.out.println(line);
-					}*/ 
 					for(String fileStr : rawFileStrList){
 						InputStream inputStream = servletContext.getResourceAsStream(fileStr);
 						BufferedReader rawFileBReader = new BufferedReader(new InputStreamReader(inputStream));						
-						/*FileReader rawFileReader = new FileReader(fileStr);
-						BufferedReader rawFileBReader = new BufferedReader(rawFileReader);*/
-						
 						extractedThmsList.addAll(ThmInput.readThm(rawFileBReader, webDisplayThmsList, bareThmsList));							
 						inputStream.close();
 						rawFileBReader.close();						
 					}
 					
-					/*for(BufferedReader fileReader : rawFileReaderList){
-						extractedThmsList.addAll(ThmInput.readThm(fileReader, webDisplayThmsList, bareThmsList));
-					}*/
 					//to be used for parsing. Booleans specify options such as whether to
 					//convert tex symbols to words, replace macros, etc.
 					bareThmsList = ProcessInput.processInput(bareThmsList, true, false, false);
@@ -1163,22 +1158,22 @@ public class CollectThm {
 			} catch (IOException e) {
 				e.printStackTrace();
 				throw new RuntimeException("Processing input via ProcessInput failed!\n", e);
-			}
-			thmListBuilder.addAll(extractedThmsList);
-			thmList = thmListBuilder.build();
+			}*/
+			//thmListBuilder.addAll(extractedThmsList);
+			//thmList = thmListBuilder.build();			
 			//webDisplayThmList = ImmutableList.copyOf(webDisplayThmsList);
-			webDisplayThmList = allThmsWithHypList;
-			bareThmList = ImmutableList.copyOf(bareThmsList);
+			//webDisplayThmList = allThmsWithHypList;
+			/*bareThmList = ImmutableList.copyOf(bareThmsList);
 			processedThmList = ImmutableList.copyOf(processedThmsList);
-			macroReplacedThmList = ImmutableList.copyOf(macroReplacedThmsList);
+			macroReplacedThmList = ImmutableList.copyOf(macroReplacedThmsList);*/
 		}
 
 		public static void set_gather_skip_gram_words_toTrue(){
 			gather_skip_gram_words = true;
 		}
 		
-		private static ImmutableList<ThmHypPair> createdThmHypPairListFromLists(ImmutableList<String> allThmsNoHypList_,
-				ImmutableList<String> allHypList_, ImmutableList<String> allThmSrcFileList_) {
+		private static ImmutableList<ThmHypPair> createdThmHypPairListFromLists(List<String> allThmsNoHypList_,
+				List<String> allHypList_, List<String> allThmSrcFileList_) {
 			
 			List<ThmHypPair> thmpHypPairList = new ArrayList<ThmHypPair>();
 			int allHypListSz = allHypList_.size();
@@ -1228,8 +1223,7 @@ public class CollectThm {
 					}else{
 						parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
 					}
-				}
-				
+				}				
 				return (List<ParsedExpression>)thmp.utils.FileUtils
 						.deserializeListFromFile(parsedExpressionSerialFileStr);
 			}
@@ -1238,6 +1232,7 @@ public class CollectThm {
 		/**
 		 * Fill up thmList, contextvectors, and relational vectors from parsed expressions list
 		 * extracted from serialized data.
+		 * This is used to load parsed expressions cache.
 		 * @param parsedExpressionsList
 		 * @param allThmsWithHypList
 		 * @param contextVecList
@@ -1282,6 +1277,7 @@ public class CollectThm {
 		/**
 		 * List of relation vectors for all thms, as extracted from deserialized 
 		 * ParsedExpressions.
+		 * @deprecated
 		 * @return
 		 */
 		/*public static ImmutableList<BigInteger> allThmsRelationVecList(){
@@ -1291,6 +1287,7 @@ public class CollectThm {
 		/**
 		 * List of context vectors for all thms, as extracted from deserialized 
 		 * ParsedExpressions.
+		 * @deprecated
 		 * @return
 		 */
 		/*public static ImmutableList<String> allThmsContextVecList(){
@@ -1307,15 +1304,18 @@ public class CollectThm {
 			return allThmsWithHypList;
 		}
 		
+		public static int numThms(){
+			return numThms;
+		}
 		/**
 		 * Get list of hypotheses and assumptions,
 		 * as collected by DetectHypothesis.java. As extracted from deserialized 
 		 * ParsedExpressions.
 		 * @return an immutable list
 		 */
-		public static ImmutableList<String> allThmsNoHypList(){
+		/*public static ImmutableList<String> allThmsNoHypList(){
 			return allThmsNoHypList;
-		}
+		}*/
 		
 		/**
 		 * Get list of hypotheses and assumptions,
@@ -1323,17 +1323,17 @@ public class CollectThm {
 		 * ParsedExpressions.
 		 * @return an immutable list
 		 */
-		public static ImmutableList<String> allHypList(){
+		/*public static ImmutableList<String> allHypList(){
 			return allHypList;
-		}
+		}*/
 		
 		/**
 		 * Get source file names.
 		 * @return an immutable list
 		 */
-		public static ImmutableList<String> allThmSrcFileList(){
+		/*public static ImmutableList<String> allThmSrcFileList(){
 			return allThmSrcFileList;
-		}
+		}*/
 		
 		/**
 		 * Get source file names.
@@ -1345,40 +1345,41 @@ public class CollectThm {
 		
 		/**
 		 * Get thmList. Macros are expanded to their full forms by default.
+		 * @deprecated
 		 * @return
 		 */
-		public static ImmutableList<String> get_thmList(){
+		/*public static ImmutableList<String> get_thmList(){
 			return thmList;
-		}
+		}*/
 		
 		/**
 		 * Get thmList. List of theorems for web display, without \label{} or \index{} etc.
 		 * @return
 		 */
-		public static ImmutableList<String> get_webDisplayThmList(){
+		/*public static ImmutableList<String> get_webDisplayThmList(){
 			return webDisplayThmList;
-		}
+		}*/
 		
 		/**
 		 * List of theorems for web parsing, without \label{} or \index{}, or label content etc.
 		 * @return
 		 */
-		public static ImmutableList<String> get_bareThmList(){
+		/*public static ImmutableList<String> get_bareThmList(){
 			//System.out.println("bare thms " + bareThmList);
 			return bareThmList;
 		}
 		
 		public static ImmutableList<String> get_processedThmList(){
 			return processedThmList;
-		}
+		}*/
 		
 		/**
 		 * Get original list expanding macros to their full forms.
 		 * @return
 		 */
-		public static ImmutableList<String> get_macroReplacedThmList(){
+		/*public static ImmutableList<String> get_macroReplacedThmList(){
 			return macroReplacedThmList;
-		}		
+		}*/		
 	}
 	
 	/**
