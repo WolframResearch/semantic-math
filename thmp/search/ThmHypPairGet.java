@@ -1,15 +1,22 @@
 package thmp.search;
 
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import javax.servlet.ServletContext;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
 import thmp.search.SearchCombined.ThmHypPair;
+import thmp.search.Searcher.SearchConfiguration;
 import thmp.search.TheoremGet.ContextRelationVecBundle;
 import thmp.search.TheoremGet.ContextRelationVecPair;
 import thmp.utils.FileUtils;
@@ -19,21 +26,25 @@ import thmp.utils.FileUtils;
  * @author yihed
  *
  */
-public class ThmHypPairGet {
+public class ThmHypPairGet{
 
 	private static final LoadingCache<Integer, ThmHypPairBundle> thmBundleCache;
 	private static final ServletContext servletContext = FileUtils.getServletContext();
-	private static final String metaDataFilePath = "/src/thmp/hhh";
+	//private static final String metaDataFilePath = "/src/thmp/hhh";
+	private static final Logger logger = LogManager.getLogger(ThmHypPairGet.class);
+
 	/*do binary search on this list to find the index of the first thm the bundles
 	  length should be around 100 */
 	private static final List<Integer> bundleStartThmIndexList;
-			
+	private static final int totalBundleNum;
+	
 	static{
-		//set the list 
+		//deserialize the list set during preprocessing,  
 		bundleStartThmIndexList = deserializeStartThmIndexList();
+		totalBundleNum = bundleStartThmIndexList.size();
 		thmBundleCache = CacheBuilder.newBuilder()
 				.maximumSize(50) //30mb x 50 = 1500 mb
-				.removalListener( null)
+				//.removalListener( null)
 				.build(
 						new CacheLoader<Integer, ThmHypPairBundle>() {
 							public ThmHypPairBundle load(Integer bundleKey){
@@ -41,28 +52,64 @@ public class ThmHypPairGet {
 								return new ThmHypPairBundle(bundleKey);
 							}
 						}
-						);
+						);	
+	}
 	
+	/**
+	 * Iterates over all possible tars backwards, 
+	 * chronologically
+	 *
+	 */
+	public static class ThmCacheIterator implements Iterator<ThmHypPairBundle>{
+		//deliberately don't subtract 1.
+		private volatile int currentIndex = totalBundleNum;
+		
+		@Override
+		public boolean hasNext() {
+			return currentIndex < 1;
+		}
+
+		/**
+		 * Returns next element in bundles 
+		 * @return Could be null.
+		 */
+		@Override
+		public ThmHypPairBundle next() {
+			this.currentIndex--;
+			try {
+				return thmBundleCache.get(currentIndex);
+			} catch (ExecutionException e) {
+				String msg = "ExecutionException when trying to retrieve bundle! " + e;
+				//print for now for local debugging. 
+				System.out.println(msg);
+				logger.error(msg);
+			}
+			//try return some sort of singleton instance with private constructor
+			return ThmHypPairBundle.PLACEHOLDER_BUNDLE;
+		}
+		
 	}
 	
 	//Bundle used to cache ThmHypPair's in a LoadingCache.
-	public static class ThmHypPairBundle implements Serializable{
+	public static class ThmHypPairBundle implements Serializable, Iterable<ThmHypPair>{
 		
 		private static final long serialVersionUID = 536853474970343329L;
 		//Need to re-partition serialized data, if this number changes!
 		//private static final int NUM_THMS_IN_BUNDLE = 10000;//10000;
 		
 		//need to create these directories
-		protected static final String BASE_FILE_STR = "src/thmp/data/pe/" + ThmSearch.TermDocumentMatrix.CONTEXT_VEC_PAIR_LIST_FILE_NAME;
+		protected static final String BASE_FILE_STR = "src/thmp/data/pe/" 
+				+ ThmSearch.TermDocumentMatrix.PARSEDEXPRESSION_LIST_FILE_NAME_ROOT;
 		//private static final String BASE_FILE_EXT_STR = ".dat";
 		//Name of serialized file. 
-		private String serialFileStr;
-		//indicates which file to load in memory.
+		//private String serialFileStr; <--how is this used??
+		//indicates which file to load in memory. Keys are consecutive, 1, 2,...
+		//*not* theorem starting indices in bundles!
 		private int bundleKey;
 		private List<ThmHypPair> thmPairList;
+		private static final ThmHypPairBundle PLACEHOLDER_BUNDLE = new ThmHypPairBundle();
 		
-		public ThmHypPairBundle(int bundleKey){
-			
+		public ThmHypPairBundle(int bundleKey){			
 			String serialFileStr = BASE_FILE_STR + String.valueOf(bundleKey);
 			if(servletContext != null){
 				serialFileStr = servletContext.getRealPath(serialFileStr);
@@ -70,28 +117,59 @@ public class ThmHypPairGet {
 			thmPairList = deserializeThmHypPairListFromFile(serialFileStr);
 		}
 		
+		private ThmHypPairBundle(){
+			thmPairList = Collections.<ThmHypPair>emptyList();
+		}
+		
 		@SuppressWarnings("unchecked")
 		List<ThmHypPair> deserializeThmHypPairListFromFile(String serialFileStr){
 			return (List<ThmHypPair>)FileUtils.deserializeListFromFile(serialFileStr);
 		}
+
+		@Override
+		public Iterator<ThmHypPair> iterator() {
+			return this.thmPairList.iterator();
+		}		
 		
+		public ThmHypPairBundle PLACEHOLDER_BUNDLE(){
+			return PLACEHOLDER_BUNDLE;
+		}
+	}
+	
+	public static Iterator<ThmHypPairBundle> createThmCacheIterator(){
+		return new ThmCacheIterator();
 	}
 	
 	/**
 	 * Return the bundle containing thm with index thmIndex
 	 * @param thmIndex
-	 * @return
+	 * @return Can be null!
 	 */
 	public static ThmHypPairBundle retrieveBundleWithThm(int thmIndex){
 		int bundleStartThmIndexListIndex = findBundleBeginIndex(thmIndex);
-		return thmBundleCache.get(bundleStartThmIndexListIndex);
+		try {
+			return thmBundleCache.get(bundleStartThmIndexListIndex);
+		} catch (ExecutionException e) {
+			String msg = "ExecutionException when retrieving from cache! " + e;
+			//print for now so visible to local debugging
+			System.out.println(msg);
+			logger.error(msg);
+		}
+		return ThmHypPairBundle.PLACEHOLDER_BUNDLE;
 	}
 	
 	public static ThmHypPair retrieveThmHypPairWithThm(int thmIndex){
 		int bundleStartThmIndexListIndex = findBundleBeginIndex(thmIndex);
-		ThmHypPairBundle bundle = thmBundleCache.get(bundleStartThmIndexListIndex);
-		//
-		
+		try {
+			return thmBundleCache.get(bundleStartThmIndexListIndex)
+					.thmPairList.get(thmIndex - bundleStartThmIndexListIndex);
+		} catch (ExecutionException e) {
+			String msg = "ExecutionException when retrieving from cache! " + e;
+			//print for now so visible to local debugging
+			System.out.println(msg);
+			logger.error(msg);
+		}
+		return ThmHypPair.PLACEHOLDER_PAIR();
 	}
 	
 	/**
@@ -124,12 +202,16 @@ public class ThmHypPairGet {
 	 * Deserialize meta data
 	 * @return
 	 */
-	private static List<String> deserializeStartThmIndexList(){
-		String path = metaDataFilePath;
+	private static List<Integer> deserializeStartThmIndexList(){
+		//String path = metaDataFilePath;
+		String path = SearchConfiguration.searchConfigurationSerialPath();
 		if(null != servletContext){
 			path = servletContext.getRealPath(path);
 		}
-		return ;
+		@SuppressWarnings("unchecked")
+		SearchConfiguration searchConfig 
+			= ((List<SearchConfiguration>)FileUtils.deserializeListFromFile(path)).get(0);
+		return searchConfig.bundleStartThmIndexList();
 	}
 
 }

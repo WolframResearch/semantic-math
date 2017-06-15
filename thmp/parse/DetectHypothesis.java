@@ -564,7 +564,8 @@ public class DetectHypothesis {
 		try{
 			//actually turn ParsedExpression's into ThmHypPair's.
 			List<ThmHypPair> thmHypPairList = convertPEToThmHypPair(parsedExpressionList);
-			FileUtils.serializeObjToFile(parsedExpressionList, parsedExpressionSerialFileStr);
+			//FileUtils.serializeObjToFile(parsedExpressionList, parsedExpressionSerialFileStr);
+			FileUtils.serializeObjToFile(thmHypPairList, parsedExpressionSerialFileStr);
 			FileUtils.serializeObjToFile(contextRelationVecPairList, contextRelationPairSerialFileStr);
 			
 			//serialize words used for context vecs
@@ -610,15 +611,21 @@ public class DetectHypothesis {
 	}
 	
 	/**
-	 * 
+	 * Convert list of ParsedExpression's to list of ThmHypPair's for serialization.
 	 * @param peList
 	 * @return
 	 */
 	private static List<ThmHypPair> convertPEToThmHypPair(List<ParsedExpression> peList){
 		List<ThmHypPair> thmHypPairList = new ArrayList<ThmHypPair>();
 		for(ParsedExpression pe : peList){
-			
+			DefinitionListWithThm defListWithThm = pe.getDefListWithThm();
+			String thm = defListWithThm.thmStr;
+			String def = defListWithThm.definitionStr;
+			String fileName = defListWithThm.srcFileName;
+			ThmHypPair pair = new ThmHypPair(thm, def, fileName);
+			thmHypPairList.add(pair);
 		}
+		return thmHypPairList;
 	}
 	//things that need to be packaged: wordThmMMap, thmhyppairs, meta data
 	

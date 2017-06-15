@@ -1,7 +1,9 @@
 package thmp.search;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -16,6 +18,7 @@ import com.google.common.collect.ImmutableList;
 import com.wolfram.jlink.*;
 
 import thmp.parse.TheoremContainer;
+import thmp.search.ThmHypPairGet.ThmHypPairBundle;
 import thmp.utils.FileUtils;
 import thmp.utils.MathLinkUtils.WLEvaluationMedium;
 import thmp.utils.WordForms;
@@ -281,26 +284,34 @@ public class ThmSearch {
 			if(DEBUG){
 				System.out.println("Dimensions[vMx] " + evaluateWLCommand(medium, "Dimensions["+V_MX+"]", true, true));
 			}
+			//keep trying nearest functions, until sufficiently many below a certain distance threshold is obtained.
+			//Attach bundle iterator to web session.
+			Iterator<ThmHypPairBundle> thmCacheIter = ThmHypPairGet.createThmCacheIterator();
 			//System.out.println("Dimensions@First@Transpose[q] " + evaluateWLCommand(ml, "Dimensions[First@Transpose[q]]", true, true));
 			//String vMx = TermDocumentMatrix.COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME;
-			Expr nearestVec = evaluateWLCommand(medium, "Nearest["+V_MX_RULE_NAME +", First@Transpose[q],"+numNearest+", Method->\"Scan\"] - " 
-					+ LIST_INDEX_SHIFT, true, false);
-			//ml.evaluate("Nearest["+V_MX+"->"+ combinedTDMatrixRangeListName +", First@Transpose[q],"+numNearest+", Method->\"Scan\"] - " 
-				//	+ LIST_INDEX_SHIFT);
-			
-			//ml.waitForAnswer();
-			//Expr nearestVec = ml.getExpr();
-			
-			//turn into list.
-			msg = "SVD returned nearestVec! ";
-			System.out.println(msg);
-			logger.info(msg);
-			//use this when using Nearest
-			//int[] nearestVecArray = (int[])nearestVec.part(1).asArray(Expr.INTEGER, 1);
-			 //<--this line generates exprFormatException if sucessive entries are quickly entered.
-			//System.out.println("resulting Expr nearestVec: " + nearestVec);
-			logger.info("ThmSearch - nearestVec: " + nearestVec);
-			nearestVecArray = (int[])nearestVec.asArray(Expr.INTEGER, 1);
+			List<Integer> closeVecIndices = new ArrayList<Integer>();
+			while(thmCacheIter.hasNext()){
+				Expr nearestVec = evaluateWLCommand(medium, "Nearest["+V_MX_RULE_NAME +", First@Transpose[q],"+numNearest+", Method->\"Scan\"] - " 
+						+ LIST_INDEX_SHIFT, true, false);
+				//ml.evaluate("Nearest["+V_MX+"->"+ combinedTDMatrixRangeListName +", First@Transpose[q],"+numNearest+", Method->\"Scan\"] - " 
+					//	+ LIST_INDEX_SHIFT);
+				
+				//ml.waitForAnswer();
+				//Expr nearestVec = ml.getExpr();
+				
+				//turn into list.
+				msg = "SVD returned nearestVec! ";
+				System.out.println(msg);
+				logger.info(msg);
+				//use this when using Nearest
+				//int[] nearestVecArray = (int[])nearestVec.part(1).asArray(Expr.INTEGER, 1);
+				 //<--this line generates exprFormatException if sucessive entries are quickly entered.
+				//System.out.println("resulting Expr nearestVec: " + nearestVec);
+				logger.info("ThmSearch - nearestVec: " + nearestVec);
+				nearestVecArray = (int[])nearestVec.asArray(Expr.INTEGER, 1);
+				//process distances , keep indices of high ranking ones. if sufficiently close and many, break
+				
+			}
 		}catch(ExprFormatException e){
 			logger.error("ExprFormatException when searching for nearestVec! " + e);
 			throw new IllegalStateException(e);
@@ -402,11 +413,11 @@ public class ThmSearch {
 		private static final String D_INVERSE_NAME = "dInverse";
 		private static final String U_TRANSPOSE_NAME = "uTranspose";
 		private static final String COR_MX_NAME = "corMx";
-		public static final String PARSEDEXPRESSION_LIST_FILE_NAME = "parsedExpressionList.dat";
+		public static final String PARSEDEXPRESSION_LIST_FILE_NAME_ROOT = "parsedExpressionList";
 		//Do not attach .dat at end of this file name.
 		public static final String CONTEXT_VEC_PAIR_LIST_FILE_NAME = "contextRelationVecPairList";
-		
-		private static final String COMBINED_PARSEDEXPRESSION_LIST_FILE_NAME = "combinedParsedExpressionList.dat";
+		/*Name deliberately does not include .dat*/
+		private static final String COMBINED_PARSEDEXPRESSION_LIST_FILE_NAME = "combinedParsedExpressionList";
 		
 		private static KernelLink ml;
 		/**
@@ -1027,17 +1038,18 @@ public class ThmSearch {
 	 * @return
 	 */
 	private static String getSystemCombinedProjectedMxFilePath(){
-		String pathToMx = "src/thmp/data/" + TermDocumentMatrix
+		String pathToMx = "src/thmp/data/tdmx" + TermDocumentMatrix
 				.COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME + ".mx";
 		return pathToMx;
 	}
 	
 	/**
-	 * Retrieves path to combined parsedExpressionList.dat.
+	 * Retrieves base of the path to combined parsedExpressionList[i].
+	 * Does not include the index. Note name should not include ".dat".
 	 * @return
 	 */
-	protected static String getSystemCombinedParsedExpressionListFilePath(){
-		String combinedParsedExpressionListPath = "src/thmp/data/"
+	protected static String getSystemCombinedParsedExpressionListFilePathBase(){
+		String combinedParsedExpressionListPath = "src/thmp/data/pe/"
 				+TermDocumentMatrix.COMBINED_PARSEDEXPRESSION_LIST_FILE_NAME;
 		return combinedParsedExpressionListPath;
 	}

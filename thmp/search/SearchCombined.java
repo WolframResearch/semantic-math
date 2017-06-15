@@ -58,6 +58,7 @@ public class SearchCombined {
 		private String hypStr;
 		private String srcFileName;
 		private String arxivURL;
+		private static final ThmHypPair PLACEHOLDER_PAIR = new ThmHypPair("", "", "");
 		
 		public ThmHypPair(String thmStr_, String hypStr_, String srcFileName_){
 			this.thmStr = thmStr_;
@@ -87,6 +88,10 @@ public class SearchCombined {
 		}
 		public String arxivURL(){
 			return this.arxivURL;
+		}
+		
+		public static ThmHypPair PLACEHOLDER_PAIR(){
+			return PLACEHOLDER_PAIR;
 		}
 	}
 	

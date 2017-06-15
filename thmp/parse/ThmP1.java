@@ -3068,8 +3068,8 @@ public class ThmP1 {
 	 * @param inputStructList
 	 * @param inputStructListSize
 	 * @param mx
-	 * @param j
-	 * @param i
+	 * @param j Column index in mx.
+	 * @param i Row index in mx.
 	 * @param k
 	 * @param struct2
 	 * @param type1

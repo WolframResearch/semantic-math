@@ -1,5 +1,6 @@
 package thmp.search;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 
@@ -37,12 +38,28 @@ public interface Searcher<S> {
 	}
 	
 	/**
-	 * Containing data serialized during preprocessing.
+	 * Containing data serialized during preprocessing. To be used later for post processing,
+	 * such as combining lists, etc.
 	 */
 	public static class SearchConfiguration implements Serializable{
 		
-		String s ;
+		private static final long serialVersionUID = 1408487446908500897L;
+		//Where an instance of this class should be serialized.
+		private static final String searchConfigurationSerialPath = "thmp/src/data/searchConfiguration.dat";
+		//used in ThmHypPairGet. Containing indices of thms that are the first in a bundle. 
+		private List<Integer> bundleStartThmIndexList;
 		
+		public SearchConfiguration(List<Integer> bundleStartThmIndexList_){
+			this.bundleStartThmIndexList = bundleStartThmIndexList_;
+		}
+		
+		public List<Integer> bundleStartThmIndexList(){
+			return bundleStartThmIndexList;
+		}
+		
+		public static String searchConfigurationSerialPath(){
+			return searchConfigurationSerialPath;
+		}
 	}
 	
 	public static class SearchMetaData{

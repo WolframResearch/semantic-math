@@ -150,7 +150,8 @@ public class CollectThm {
 	 * Should just set servlet context instead of BufferedReaders!!
 	 * @param srcFileReader
 	 */
-	/*public static void setResources(//List<BufferedReader> srcFileReaderList, 
+	/*Commented out June 2017
+	 * public static void setResources(//List<BufferedReader> srcFileReaderList, 
 			BufferedReader macrosReader
 			//InputStream parsedExpressionListStream, InputStream allThmWordsSerialIStream
 			) {
@@ -159,10 +160,6 @@ public class CollectThm {
 		//parsedExpressionListInputStream = parsedExpressionListStream;
 		//allThmWordsSerialInputStream = allThmWordsSerialIStream;
 		//System.out.print("buffered readers first passed in: " + srcFileReaderList);		
-	}*/
-	
-	/*public static void setWordFrequencyBR(BufferedReader freqWordsBR) {
-		wordFrequencyBR = freqWordsBR;
 	}*/
 	
 	/**
@@ -190,9 +187,6 @@ public class CollectThm {
 		//Multimap of keywords and the theorems they are in, in particular their indices in thmList
 		//private static final ImmutableMultimap<String, Integer> wordThmsIndexMMap;
 		/**Versions without annotations***/
-		//List of theorems, each of which
-		//contains map of keywords and their frequencies in a particular theorem.
-		//private static final ImmutableList<ImmutableMap<String, Integer>> thmWordsFreqMapListNoAnno;
 		/*words and their document-wide frequencies. These words are normalized, 
 		e.g. "annihilator", "annihiate" all have the single entry "annihilat" */
 		private static final ImmutableMap<String, Integer> docWordsFreqMapNoAnno;
@@ -253,8 +247,6 @@ public class CollectThm {
 			i.e. word of maps to their stems. */
 			//synonymRepMap = WordForms.getSynonymsMap();
 			stemToWordsMMap = WordForms.stemToWordsMMap();
-			//pass builder into a reader function. For each thm, builds immutable list of keywords, 
-			//put that list into the thm list. The integer indicates the word frequencies.
 			
 			/**Versions with no annotation, eg "hyp"/"stm" **/
 			//ImmutableList.Builder<ImmutableMap<String, Integer>> thmWordsListBuilderNoAnno = ImmutableList.builder();
@@ -262,9 +254,6 @@ public class CollectThm {
 			Map<String, Integer> docWordsFreqPreMapNoAnno = new HashMap<String, Integer>();
 			ImmutableSetMultimap.Builder<String, Integer> wordThmsMMapBuilderNoAnno = ImmutableSetMultimap.builder();
 			
-			// name of n gram data file containing n-grams that should be included. These don't have
-			//frequencies associated with them.
-			//String NGRAM_DATA_FILESTR = "src/thmp/data/NGramData.txt";
 			//read in n-grams from file named NGRAM_DATA_FILESTR and put in appropriate maps, 
 			//either twogrammap or threegrammap
 			//readAdditionalNGrams(NGRAM_DATA_FILESTR);
@@ -272,56 +261,38 @@ public class CollectThm {
 			nGramFirstWordsSet.addAll(NGramSearch.get_2GramFirstWordsSet());
 			nGramFirstWordsSet.addAll(ThreeGramSearch.get_3GramFirstWordsSet());
 			skipGramWordsList = new ArrayList<String>();
-			//List<String> extractedThms = ThmList.get_thmList();
-			//the third true means to extract words from latex symbols, eg oplus->direct sum.
-			//last boolean is whether to replace macros, 
-			//List<String> processedThmList = ThmList.get_processedThmList();		
+
 			/** This list is smaller when in gathering data mode, and consists of a representative set 
 			 * of theorems. Much larger in search mode.*/
-			List<String> processedThmList = ThmList.allThmsWithHypList;
-						
-				//this is commented out in Jan 2017, since the annotated version is no longer used.
-				//readThm(thmWordsListBuilder, docWordsFreqPreMap, wordThmsMMapBuilder, processedThmList);
-				//same as readThm, just buid maps without annotation
-				//These all contain the *same* set of words.
-			buildMapsNoAnno(//thmWordsListBuilderNoAnno, 
-					docWordsFreqPreMapNoAnno, wordThmsMMapBuilderNoAnno, 
-						processedThmList, skipGramWordsList);
-			
-			/*use stemToWordsMMap to re-adjust frequency of word stems that came from multiple forms, 
-			 as these are much more likely to be math words, so don't want to scale down too much */
-			adjustWordFreqMapWithStemMultiplicity(docWordsFreqPreMapNoAnno, stemToWordsMMap);
-			
-			//thmWordsFreqList = thmWordsListBuilder.build();	
-			
-			//docWordsFreqMap = ImmutableMap.copyOf(docWordsFreqPreMap); 		
-			//wordThmsIndexMMap = wordThmsMMapBuilder.build();
-			//non-annotated version
-			//thmWordsFreqMapListNoAnno = thmWordsListBuilderNoAnno.build();	
-			
-			//builds scoresMap based on frequency map obtained from CollectThm.
-			//ImmutableMap.Builder<String, Integer> wordsScoreMapBuilder = ImmutableMap.builder();		
-			//buildScoreMap(wordsScoreMapBuilder);
-			//wordsScoreMap = wordsScoreMapBuilder.build();		
-			
-			//first compute the average word frequencies for singleton words
-			averageSingletonWordFrequency = computeSingletonWordsFrequency(docWordsFreqPreMapNoAnno);			
-			//add lexicon words to docWordsFreqMapNoAnno, which only contains collected words from thm corpus,
-			//collected based on frequnency, right now. These words do not have corresponding thm indices.
-			addLexiconWordsToContextKeywordDict(docWordsFreqPreMapNoAnno, averageSingletonWordFrequency);
-			
+			////.....List<String> processedThmList = ThmList.allThmsWithHypList; 
+				
 			Map<String, Integer> wordsScorePreMap = new HashMap<String, Integer>();
 			
 			/*deserialize the word frequency map from file, as gathered from last time the data were generated.*/
-			//Map<String, Integer> wordFreqMapFromFile = extractWordFreqMap();
 			CONTEXT_VEC_WORDS_FREQ_MAP = extractWordFreqMap();
 			
 			//the values are just the words' indices in wordsList.
 			//this orders the list as well. INDEX map. Can rely on order as map is immutable.
 			
 			//System.out.println("------++++++++-------CONTEXT_VEC_WORDS_MAP.size " + CONTEXT_VEC_WORDS_MAP.size());
-			
-			if(Searcher.SearchMetaData.gatheringDataBool() && null == Searcher.SearchMetaData.previousWordDocFreqMapsPath()){				
+			//try to uniformize these approaches! Should generate maps separately, and use pre-generated set of maps!!!
+			if(Searcher.SearchMetaData.gatheringDataBool() && null == Searcher.SearchMetaData.previousWordDocFreqMapsPath()){	
+				
+				//should not build if not searching
+				//These all contain the *same* set of words.
+				buildMapsNoAnno(//thmWordsListBuilderNoAnno, 
+						docWordsFreqPreMapNoAnno, wordThmsMMapBuilderNoAnno, 
+							processedThmList, skipGramWordsList);		
+				
+				//first compute the average word frequencies for singleton words
+				averageSingletonWordFrequency = computeSingletonWordsFrequency(docWordsFreqPreMapNoAnno);			
+				//add lexicon words to docWordsFreqMapNoAnno, which only contains collected words from thm corpus,
+				//collected based on frequnency, right now. These words do not have corresponding thm indices.
+				addLexiconWordsToContextKeywordDict(docWordsFreqPreMapNoAnno, averageSingletonWordFrequency);
+				/*use stemToWordsMMap to re-adjust frequency of word stems that came from multiple forms, 
+				 as these are much more likely to be math words, so don't want to scale down too much */
+				adjustWordFreqMapWithStemMultiplicity(docWordsFreqPreMapNoAnno, stemToWordsMMap);				
+				
 				buildScoreMapNoAnno(wordsScorePreMap, docWordsFreqPreMapNoAnno);				
 				Map<String, Integer> keyWordFreqTreeMap = reorderDocWordsFreqMap(docWordsFreqPreMapNoAnno);					
 				docWordsFreqMapNoAnno = ImmutableMap.copyOf(keyWordFreqTreeMap);
@@ -352,15 +323,44 @@ public class CollectThm {
 			contextVecWordsNextTimeMap = docWordsFreqMapNoAnno;
 			//shouldn't need this, since can reconstruct index from immutableMap next time
 			contextVecWordsIndexNextTimeMap = ImmutableMap.copyOf(createContextKeywordIndexDict(contextVecWordsNextTimeMap));
-			//deserialize words from allThmWordsList.dat, which were serialized from previous run.
-			//List<String> wordsList = extractWordsList();	 <--superceded by wordsMap
 			//write skipGramWordsList to file
 			if(GATHER_SKIP_GRAM_WORDS){
 				String skipGramWordsListFileStr = "src/thmp/data/skipGramWordsList.txt";
 				FileUtils.writeToFile(skipGramWordsList, skipGramWordsListFileStr);
 			}
 		}
-
+		
+		/**
+		 * Builds the relevant maps. E.g. to gather a comprehensive and representative
+		 * set of word frequency maps.
+		 * @param docWordsFreqPreMapNoAnno
+		 * @param wordThmsMMapBuilderNoAnno
+		 * @param wordsScorePreMap
+		 */
+		public static void createDocWordsFreqMap(Map<String, Integer> docWordsFreqPreMapNoAnno,
+				ImmutableSetMultimap.Builder<String, Integer> wordThmsMMapBuilderNoAnno,
+				List<String> processedThmList,
+				Map<String, Integer> wordsScorePreMap) {
+			//should not build if not searching
+			//These all contain the *same* set of words.
+			buildMapsNoAnno(//thmWordsListBuilderNoAnno, 
+					docWordsFreqPreMapNoAnno, wordThmsMMapBuilderNoAnno, 
+						processedThmList, skipGramWordsList);		
+			
+			//first compute the average word frequencies for singleton words
+			int avgSingletonWordFreq = computeSingletonWordsFrequency(docWordsFreqPreMapNoAnno);			
+			//add lexicon words to docWordsFreqMapNoAnno, which only contains collected words from thm corpus,
+			//collected based on frequnency, right now. These words do not have corresponding thm indices.
+			addLexiconWordsToContextKeywordDict(docWordsFreqPreMapNoAnno, avgSingletonWordFreq);
+			/*use stemToWordsMMap to re-adjust frequency of word stems that came from multiple forms, 
+			 as these are much more likely to be math words, so don't want to scale down too much */
+			adjustWordFreqMapWithStemMultiplicity(docWordsFreqPreMapNoAnno, stemToWordsMMap);			
+			
+			buildScoreMapNoAnno(wordsScorePreMap, docWordsFreqPreMapNoAnno);				
+			Map<String, Integer> keyWordFreqTreeMap = reorderDocWordsFreqMap(docWordsFreqPreMapNoAnno);					
+			docWordsFreqPreMapNoAnno = keyWordFreqTreeMap;
+			//docWordsFreqMapNoAnno = ImmutableMap.copyOf(keyWordFreqTreeMap);
+		}
 		/**
 		 * Deserializes and processes, normalize the words. Related words are only used
 		 * to process queries, not the corpus; applied to all search algorithms.
@@ -691,13 +691,96 @@ public class CollectThm {
 		public static void createSkipGramWordList(List<String> thmList,
 				List<String> skipGramWordList_){
 			System.out.print("Inside createSkipGramWordList!");
-			//ImmutableList.Builder<ImmutableMap<String, Integer>> thmWordsFreqListBuilder 
-				//= new ImmutableList.Builder<ImmutableMap<String, Integer>>();
 			Map<String, Integer> docWordsFreqPreMap = new HashMap<String, Integer>();
 			ImmutableSetMultimap.Builder<String, Integer> wordThmsMMapBuilder 
 				= new ImmutableSetMultimap.Builder<String, Integer>();			
 			buildMapsNoAnno(//thmWordsFreqListBuilder, 
 					docWordsFreqPreMap, wordThmsMMapBuilder, thmList, skipGramWordList_);						
+		}
+		
+		public static void buildMapsNoAnno(
+				Map<String, Integer> docWordsFreqPreMap, ImmutableSetMultimap.Builder<String, Integer> wordThmsMMapBuilder,
+				List<String> thmList){
+			
+			Map<String, Integer> twoGramsMap = NGramsMap.get_twoGramsMap();
+			Map<String, Integer> threeGramsMap = NGramsMap.get_threeGramsMap();			
+			ListMultimap<String, String> posMMap = Maps.posMMap();
+			
+			for(int i = 0; i < thmList.size(); i++){
+				//System.out.println(counter++);
+				String thm = thmList.get(i);
+				//number of words to skip if an n gram has been added.
+				int numFutureWordsToSkip = 0;
+				//split along e.g. "\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:"
+				String[] thmAr = WordForms.splitThmIntoSearchWords(thm.toLowerCase());
+				
+				//words and their frequencies.
+				Map<String, Integer> thmWordsFreqMap = new HashMap<String, Integer>();				
+				
+				for(int j = 0; j < thmAr.length; j++){
+					
+					String singletonWordAdded = null;
+					String twoGramAdded = null;
+					String threeGramAdded = null;					
+					String word = thmAr[j];	
+					//only keep words with lengths > 2
+					//System.out.println(word);
+					int lengthCap = 3;
+					//word length could change, so no assignment to variable.
+					if(word.length() < lengthCap){
+						continue;
+					}
+					
+					//get singular forms if plural, put singular form in map
+					//Should be more careful on some words that shouldn't be singular-ized!					
+					word = WordForms.getSingularForm(word);	
+					
+					//also don't skip if word is contained in lexicon										
+					
+					if(WordForms.getFluffSet().contains(word)) continue;
+					List<String> wordPosList = posMMap.get(word);
+					if(!wordPosList.isEmpty()){
+						String wordPos = wordPosList.get(0);							
+							//wordPos.equals("verb") <--should have custom verb list
+							//so don't keep irrelevant verbs such as "are", "take"
+					}
+					
+					if(FreqWordsSet.freqWordsSet.contains(word) && !nGramFirstWordsSet.contains(word)){ 
+						continue;					
+					}
+					//check the following word
+					if(j < thmAr.length-1){
+						String nextWordCombined = word + " " + thmAr[j+1];
+						Integer twoGramFreq = twoGramsMap.get(nextWordCombined);
+						if(twoGramFreq != null){
+							int freq = (int)(twoGramFreq*TWO_GRAM_FREQ_REDUCTION_FACTOR);
+							twoGramFreq = freq == 0 ? 1 : freq;
+							twoGramAdded = addNGramToMaps(nextWordCombined, i, thmWordsFreqMap, //thmWordsFreqListBuilder, 
+									docWordsFreqPreMap, wordThmsMMapBuilder, twoGramFreq);
+						}
+						//try to see if these three words form a valid 3-gram
+						if(j < thmAr.length-2){
+							String threeWordsCombined = nextWordCombined + " " + thmAr[j+2];
+							Integer threeGramFreq = threeGramsMap.get(threeWordsCombined);
+							if(threeGramFreq != null){
+								//reduce frequency so 3-grams weigh more 
+								int freq = (int)(threeGramFreq*THREE_GRAM_FREQ_REDUCTION_FACTOR);
+								threeGramFreq = freq == 0 ? 1 : freq;
+								threeGramAdded = addNGramToMaps(threeWordsCombined, i, thmWordsFreqMap, //thmWordsFreqListBuilder, 
+										docWordsFreqPreMap,	wordThmsMMapBuilder, threeGramFreq);
+							}
+						}
+					}					
+						//removes endings such as -ing, and uses synonym rep.
+						//e.g. "annihilate", "annihilator", etc all map to "annihilat"
+						word = WordForms.normalizeWordForm(word);
+					
+					singletonWordAdded = addWordToMaps(word, i, thmWordsFreqMap, //thmWordsFreqListBuilder, 
+							docWordsFreqPreMap, wordThmsMMapBuilder);
+				}//done iterating through this thm				 
+				//thmWordsFreqListBuilder.add(ImmutableMap.copyOf(thmWordsFreqMap));
+				//System.out.println("++THM: " + thmWordsMap);
+			}
 		}
 		
 		/**
@@ -896,18 +979,6 @@ public class CollectThm {
 			return word;
 		}
 		
-		/*public static ImmutableList<ImmutableMap<String, Integer>> get_thmWordsFreqList(){
-			return thmWordsFreqList;
-		}*/
-		
-		/**
-		 * Contains map of keywords and their frequencies in a particular theorem.
-		 * @return
-		 */
-		/*public static ImmutableList<ImmutableMap<String, Integer>> get_thmWordsFreqListNoAnno(){
-			return thmWordsFreqMapListNoAnno;
-		}*/
-
 		/**
 		 * Fills up wordsScorePreMap
 		 * @param wordsScorePreMap empty map to be filled.
@@ -1208,7 +1279,7 @@ public class CollectThm {
 			
 			if(null != servletContext){
 				if(!Searcher.SearchMetaData.gatheringDataBool()){
-					parsedExpressionSerialFileStr = ThmSearch.getSystemCombinedParsedExpressionListFilePath();
+					parsedExpressionSerialFileStr = ThmSearch.getSystemCombinedParsedExpressionListFilePathBase();
 				}else{
 					parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
 				}
@@ -1219,7 +1290,7 @@ public class CollectThm {
 				//when processing on byblis
 				if(!System.getProperty("os.name").equals("Mac OS X")){
 					if(!Searcher.SearchMetaData.gatheringDataBool()){
-						parsedExpressionSerialFileStr = ThmSearch.getSystemCombinedParsedExpressionListFilePath();
+						parsedExpressionSerialFileStr = ThmSearch.getSystemCombinedParsedExpressionListFilePathBase();
 					}else{
 						parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
 					}

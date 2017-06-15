@@ -67,7 +67,8 @@ public class RelationVec implements Serializable{
 		if(Searcher.SearchMetaData.gatheringDataBool()){
 			//Sets the dictionary to the mode for producing context vecs from data source to be searched.
 			// e.g. in DetectHypothesis.java.
-			keywordIndexDict = contextKeywordIndexThmsDataDict;
+			//shoudl use same pre-computed map to ensure consistency!
+			keywordIndexDict = contextKeywordIndexThmsDataDict;f
 			GATHERING_DATA_BOOL = true;
 		}else{
 			keywordIndexDict = contextKeywordIndexQueryDict;
