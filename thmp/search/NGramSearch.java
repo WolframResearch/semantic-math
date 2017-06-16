@@ -22,10 +22,11 @@ import javax.servlet.ServletContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ListMultimap;
 
-import thmp.parse.ProcessInput;
 import thmp.search.SearchCombined.ThmHypPair;
+import thmp.search.Searcher.SearchMetaData;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 
@@ -113,31 +114,88 @@ public class NGramSearch {
 		// name of two gram data file containing additional 2-grams that should be included. These don't have
 		// frequencies associated with them. Load these into maps first and accumulate their frequencies.
 		private static final String TWO_GRAM_DATA_FILESTR = "src/thmp/data/twoGramData.txt";		
-		
-		private static int averageTwoGramFreqCount;
+		//****private static int averageTwoGramFreqCount;
+		//private static final String twoGramsMapPath = "src/thmp/data/twoGramsMap.dat";
 		
 		//nGramMap Map of maps. Keys are words in text, and entries are maps whose keys are 2nd terms
 		// in 2 grams, and entries are frequency counts.
-		//this field will be exposed to build 3-grams
-		private static final Map<String, Map<String, Integer>> nGramMap;
+		//this field will be exposed to build 3-grams, and so far only for that purpose.
+		//private static final Map<String, Map<String, Integer>> twoGramTotalOccurenceMap;
 		
 		//set that contains the first word of each n-grams.
-		private static final Set<String> nGramFirstWordsSet;
-		static{
-			
+		private static final Set<String> twoGramFirstWordsSet;
+		static{			
 			UNDESIRABLE_POS_COMBO_SET = new HashSet<String>();
 			String[] undesirablePosAr = new String[]{"ent_verb", "ent_vbs", "ent_verbAlone"};
 			UNDESIRABLE_POS_COMBO_SET.addAll(Arrays.asList(undesirablePosAr));
 			
+			//*****start method here
 			//System.out.println("Gathering 2-grams...");
-			nGramMap = new HashMap<String, Map<String, Integer>>();
+			//Map<String, Map<String, Integer>> nGramMap;//////
+			//***twoGramTotalOccurenceMap = new HashMap<String, Map<String, Integer>>();
 			//total word counts of all 2 grams
-			Map<String, Integer> totalWordCounts = new HashMap<String, Integer>();
+			/* Commented out June 2017.
+			 * Map<String, Integer> totalWordCountsMap = new HashMap<String, Integer>();
+			 
 			//build nGram map, 
-			buildNGramMap(nGramMap, totalWordCounts);
+			buildNGramMap(twoGramTotalOccurenceMap, totalWordCountsMap);
+			
+			//computes the average frequencies of words that follow the first word in all 2-grams
+			Map<String, Integer> averageWordCounts = computeAverageFreq(twoGramTotalOccurenceMap, totalWordCountsMap);
+			*/
+			//set of scraped two grams read in from two grams file.
+			/*Set<String> initialTwoGramsSet = new HashSet<String>();
+			//fills in initialTwoGramsSet with scraped two gram starter set
+			if(null == servletContext){
+				try{
+					BufferedReader twoGramBF = new BufferedReader(new FileReader(TWO_GRAM_DATA_FILESTR));
+					readAdditionalTwoGrams(twoGramBF, initialTwoGramsSet);
+				}catch(FileNotFoundException e){
+					logger.error(e);
+					throw new IllegalStateException(e);
+				}
+			}else{
+				InputStream twoGramInputStream = servletContext.getResourceAsStream(TWO_GRAM_DATA_FILESTR);
+				BufferedReader twoGramBF = new BufferedReader(new InputStreamReader(twoGramInputStream));				
+				readAdditionalTwoGrams(twoGramBF, initialTwoGramsSet);
+			}*/
+			//build this set from twoGramsMap by taking first words at initialization.
+			
+			//get list of 2 grams that show up frequently. Read from serialized version.
+			String twoGramsSerialPath = FileUtils.getServletPath(SearchMetaData.twoGramsFreqMapPath());
+			
+			@SuppressWarnings("unchecked")
+			Map<String, Integer> m = ((List<Map<String, Integer>>)FileUtils.deserializeListFromFile(twoGramsSerialPath)).get(0);
+			twoGramsMap = ImmutableMap.copyOf(m);
+			
+			twoGramFirstWordsSet = WordForms.gatherKeyFirstWordSetFromMap(twoGramsMap);
+			
+			//twoGramsMap = compile2grams(twoGramTotalOccurenceMap, averageWordCounts, nGramFirstWordsSet, initialTwoGramsSet);
+			//****
+			System.out.println("NGramSearch - Done with deserializing 2-grams!");
+		}
+	
+		public static Map<String, Integer> gatherAndBuild2GramsMaps(List<String> thmList){
+			Map<String, Map<String, Integer>> twoGramTotalOccurenceMap 
+				= new HashMap<String, Map<String, Integer>>();
+			return gatherAndBuild2GramsMaps(thmList, twoGramTotalOccurenceMap);
+		}
+		
+		/**
+		 * Gather and build two-gram map from given (comprehensive) list of theorems. To be used
+		 * to serialize the map later. averageTwoGramFreqCount
+		 * @param thmList
+		 * @return nGram
+		 */
+		public static Map<String, Integer> gatherAndBuild2GramsMaps(List<String> thmList, 
+				Map<String, Map<String, Integer>> twoGramTotalOccurenceMap){
+			//total word counts of all 2 grams
+			Map<String, Integer> totalWordCountsMap = new HashMap<String, Integer>();
+			//build nGram map, 
+			buildNGramMap(twoGramTotalOccurenceMap, totalWordCountsMap);
 	
 			//computes the average frequencies of words that follow the first word in all 2-grams
-			Map<String, Integer> averageWordCounts = computeAverageFreq(nGramMap, totalWordCounts);
+			Map<String, Integer> averageWordCountsMap = computeAverageFreq(twoGramTotalOccurenceMap, totalWordCountsMap);
 			
 			//set of scraped two grams read in from two grams file.
 			Set<String> initialTwoGramsSet = new HashSet<String>();
@@ -155,14 +213,11 @@ public class NGramSearch {
 				BufferedReader twoGramBF = new BufferedReader(new InputStreamReader(twoGramInputStream));				
 				readAdditionalTwoGrams(twoGramBF, initialTwoGramsSet);
 			}
-			nGramFirstWordsSet = new HashSet<String>();
+			Set<String> nGramFirstWordsSet = new HashSet<String>();
 			//get list of 2 grams that show up frequently
-			twoGramsMap = compile2grams(nGramMap, averageWordCounts, nGramFirstWordsSet, initialTwoGramsSet);
-			//System.out.println("twoGramsMapSz" + twoGramsMap.size());
-			//System.out.println(twoGramsMap);
-			System.out.println("NGramSearch - Done with gathering 2-grams!");
+			return compile2grams(twoGramTotalOccurenceMap, averageWordCountsMap, nGramFirstWordsSet, initialTwoGramsSet);
 		}
-	
+		
 	/**
 	 * compile list of 2 grams from nGramMap. Retain ones that show up higher than 3/2 of avg frequency.
 	 * @return 2 grams, and their raw frequencies in doc.
@@ -172,15 +227,17 @@ public class NGramSearch {
 	 * @param initialTwoGramsSet
 	 * @return
 	 */
-	private static Map<String, Integer> compile2grams(Map<String, Map<String, Integer>> nGramMap, Map<String, Integer> averageWordCounts,
-			Set<String> nGramFirstWordsSet, Set<String> initialTwoGramsSet){
+	private static Map<String, Integer> compile2grams(Map<String, Map<String, Integer>> twoGramTotalOccurenceMap, 
+			Map<String, Integer> averageWordCounts, Set<String> nGramFirstWordsSet, Set<String> initialTwoGramsSet
+			//int averageTwoGramFreqCount
+			){
 		
 		ListMultimap<String, String> posMMap = thmp.parse.Maps.posMMap();
 		
 		Map<String, Integer> twoGramMap = new HashMap<String, Integer>();		
 		int totalFreqCount = 0;	
 		int totalTwoGrams = 0;
-		for(Map.Entry<String, Map<String, Integer>> wordMapEntry : nGramMap.entrySet()){
+		for(Map.Entry<String, Map<String, Integer>> wordMapEntry : twoGramTotalOccurenceMap.entrySet()){
 			String word = wordMapEntry.getKey();
 			int averageWordCount = averageWordCounts.get(word);
 			List<String> wordPosList = posMMap.get(word);
@@ -206,8 +263,7 @@ public class NGramSearch {
 					if(UNDESIRABLE_POS_COMBO_SET.contains(firstWordPos + "_" + nextWordPosList.get(0))){
 						continue;
 					}
-				}
-				
+				}				
 				if(nextWordCount > averageWordCount*freqThreshold || initialTwoGramsSet.contains(twoGram)){							
 					twoGramMap.put(twoGram, nextWordCount);
 					initialTwoGramsSet.remove(twoGram);
@@ -218,13 +274,14 @@ public class NGramSearch {
 				}
 			}
 		}
+		int averageTwoGramFreqCount;
 		//totalTwoGrams should not be 0, unless really tiny source text set.
 		if(totalTwoGrams != 0){ 
 			averageTwoGramFreqCount = totalFreqCount/totalTwoGrams;
 		}else{
 			averageTwoGramFreqCount = ADDITIONAL_TWO_GRAM_DEFAULT_COUNT;
 		}	
-		//add additional two grams that were not programmatically selected		
+		//add additional two grams that were not programmatically selected
 		for(String twoGram : ADDITIONAL_TWO_GRAMS){
 			if(!twoGramMap.containsKey(twoGram)){
 				twoGramMap.put(twoGram, averageTwoGramFreqCount);
@@ -273,15 +330,17 @@ public class NGramSearch {
 		}		
 	}
 	
-	/**
-	 * Iterate through all the words. Record the frequency counts.
-	 * Skip if a frequent word.
+	/*
 	 * @param averageCounts records the average frequency counts of words that follow
 	 * each word that's its key in this map. This is used to compute the average freq of words
 	 * that follow a given word. This is less than the total count of that key word in the document, 
 	 * as fluff words are skipped.
+	 */
+	/**
+	 * Iterate through all the words. Record the frequency counts.
+	 * Skip if a frequent word as recorded in English frequent words list.
 	 * @param totalWordCounts Total counts of words that follow this word, equivalent to size of map in
-	 * nGramMap corresponding to this key word.
+	 * nGramMap corresponding to this key word. Expected to be empty at input.
 	 * @param nGramMap Map of maps. Keys are words in text, and entries are maps whose keys are 2nd terms
 	 * in 2 grams, and entries are frequency counts. I.e. map of words that show up, and the words that 
 	 * immediately follow and their counts.
@@ -291,6 +350,17 @@ public class NGramSearch {
 		//List<String> thmList = ProcessInput.processInput(CollectThm.ThmList.allThmsWithHypList(), true);
 		List<String> thmList = CollectThm.ThmList.allThmsWithHypList();
 		//System.out.println(thmList);
+		buildNGramMap2(nGramMap, totalWordCounts, thmList);
+	}
+
+	/**
+	 * 
+	 * @param nGramMap Expected to be empty at input
+	 * @param totalWordCounts
+	 * @param thmList
+	 */
+	private static void buildNGramMap2(Map<String, Map<String, Integer>> nGramMap, Map<String, Integer> totalWordCounts,
+			List<String> thmList) {
 		//skip nonMathFluffWords, collapse list
 		for(String thm : thmList){
 			//split into words
@@ -320,8 +390,7 @@ public class NGramSearch {
 						|| nextWord.length() < 2 || INVALID_WORD_PATTERN.matcher(curWord).matches()){					
 					i++;
 					continue;
-				}
-				
+				}				
 				//add to nGramMap
 				Map<String, Integer> wordMap = nGramMap.get(curWord);
 				if(wordMap != null){
@@ -345,6 +414,20 @@ public class NGramSearch {
 				
 			}
 		}
+	}
+	
+	/**
+	 * Iterate through all the words. Record the frequency counts.
+	 * Skip if a frequent word as recorded in English frequent words list.
+	 * @param totalWordCounts Total counts of words that follow this word, equivalent to size of map in
+	 * nGramMap corresponding to this key word.
+	 * @param nGramMap Map of maps. Keys are words in text, and entries are maps whose keys are 2nd terms
+	 * in 2 grams, and entries are frequency counts. I.e. map of words that show up, and the words that 
+	 * immediately follow and their counts.
+	 */
+	public static void buildNGramMap(List<String> thmList,
+			Map<String, Map<String, Integer>> nGramMap, Map<String, Integer> totalWordCounts){		
+		buildNGramMap2(nGramMap, totalWordCounts, thmList);
 	}
 	
 	/**
@@ -374,24 +457,24 @@ public class NGramSearch {
 		return TwoGramSearch.twoGramsMap;
 	}
 
-	public static int averageTwoGramFreqCount(){
+	/*public static int averageTwoGramFreqCount(){
 		return TwoGramSearch.averageTwoGramFreqCount;
-	}
+	}*/
 	
 	/**
 	 * Get 2-grams and their frequencies.
 	 * @return
 	 */
-	public static Map<String, Map<String, Integer>> get_nGramMap(){
-		return TwoGramSearch.nGramMap;
-	}	
+	/*public static Map<String, Map<String, Integer>> get_twoGramTotalOccurenceMap(){
+		return TwoGramSearch.twoGramTotalOccurenceMap;
+	}*/	
 	
 	/**
 	 * 
 	 * @return Set of first words in the collected 2-grams.
 	 */
 	public static Set<String> get_2GramFirstWordsSet(){
-		return TwoGramSearch.nGramFirstWordsSet;
+		return TwoGramSearch.twoGramFirstWordsSet;
 	}
 
 	/**

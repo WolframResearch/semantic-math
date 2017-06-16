@@ -43,7 +43,8 @@ public class RelationVec implements Serializable{
 	private static final long serialVersionUID = 7990758362732085287L;
 
 	//map of words and their indices.
-	private static final Map<String, Integer> contextKeywordIndexThmsDataDict = CollectThm.ThmWordsMaps.get_contextVecWordsIndexNextTimeMap();
+	private static final Map<String, Integer> contextKeywordIndexThmsDataDict = CollectThm.ThmWordsMaps.get_CONTEXT_VEC_WORDS_INDEX_MAP();
+	//.get_contextVecWordsIndexNextTimeMap();
 	
 	//used for forming query vecs, as these are words used when the thm source vecs were formed, words and their indices
 	//Ordered according to frequency.
@@ -67,14 +68,15 @@ public class RelationVec implements Serializable{
 		if(Searcher.SearchMetaData.gatheringDataBool()){
 			//Sets the dictionary to the mode for producing context vecs from data source to be searched.
 			// e.g. in DetectHypothesis.java.
-			//shoudl use same pre-computed map to ensure consistency!
-			keywordIndexDict = contextKeywordIndexThmsDataDict;f
+			//shoudl use same pre-computed map in both cases to ensure consistency!
+			///keywordIndexDict = contextKeywordIndexThmsDataDict;
 			GATHERING_DATA_BOOL = true;
 		}else{
-			keywordIndexDict = contextKeywordIndexQueryDict;
+			///keywordIndexDict = contextKeywordIndexQueryDict;
 			relatedWordsMap = CollectThm.ThmWordsMaps.getRelatedWordsMap();
 			GATHERING_DATA_BOOL = false;
 		}
+		keywordIndexDict = contextKeywordIndexQueryDict;		
 		parseContextVectorSz = keywordIndexDict.size();
 	}
 	/**

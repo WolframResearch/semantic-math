@@ -21,9 +21,11 @@ import java.util.regex.Pattern;
 
 import javax.servlet.ServletContext;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.TreeMultimap;
 
 import thmp.parse.ProcessInput;
+import thmp.search.Searcher.SearchMetaData;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 
@@ -39,15 +41,15 @@ import thmp.utils.WordForms;
  */
 public class ThreeGramSearch {
 
-	private static final TreeMultimap<String, String> threeGramMap;
-	//frequency counts of three-grams
-	private static final Map<String, Integer> threeGramCountsMap;
 	
-	private static final List<String> threeGramList;
+	//frequency counts of three-grams
+	//***private static final Map<String, Integer> threeGramCountsMap;
+	
+	//**private static final List<String> threeGramList;
 	//map of three grams and their frequencies, filtered from threeGramCountsMap.
 	private static final Map<String, Integer> threeGramFreqMap;
 	//
-	private static final Set<String> threeGramFirstWordsSet = new HashSet<String>();
+	private static final Set<String> threeGramFirstWordsSet;
 	
 	private static final Path threeGramsFilePath = Paths.get("src/thmp/data/threeGramData.txt");
 	//additional three grams to be intetionally added. 
@@ -58,13 +60,14 @@ public class ThreeGramSearch {
 	private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
 	
 	//map of maps containing first words of 2 grams as keys, and maps of 2nd words and their counts as values
-	private static final Map<String, Map<String, Integer>> twoGramFreqMap = NGramSearch.get_nGramMap();
+	//private static final Map<String, Map<String, Integer>> twoGramFreqMap = NGramSearch.twoGramTotalOccurenceMap();
 	private static int averageThreeGramFreqCount;
 	private static final int DEFAULT_THREE_GRAM_FREQ_COUNT = 5;
 	//should put these in map
 	//private static final String FLUFF_WORDS = "a|the|tex|of|and|on|let|lemma|for|to|that|with|is|be|are|there|by"
 		//	+ "|any|as|if|we|suppose|then|which|in|from|this|assume|this|have";
 	private static final Set<String> fluffWordsSet;
+	//private static final String threeGramsMapPath = "src/thmp/data/threeGramsMap.dat";
 	
 	//the reciprocal of this is the portion of the map we want to take
 	private static final int MAP_PORTION = 2;
@@ -73,10 +76,13 @@ public class ThreeGramSearch {
 	static{
 		//gather the 3-grams, fill in threeGramMap
 		//get thmList from CollectThm
-		List<String> thmList = ProcessInput.processInput(CollectThm.ThmList.allThmsWithHypList(), true);
+		//List<String> thmList = ProcessInput.processInput(CollectThm.ThmList.allThmsWithHypList(), true);
+		////List<String> thmList = CollectThm.ThmList.allThmsWithHypList();
 		
 		fluffWordsSet = WordForms.getFluffSet();
-		threeGramCountsMap = new HashMap<String, Integer>();		
+		//*****
+		/* Commented out June 2017.
+		 * threeGramCountsMap = new HashMap<String, Integer>();		
 		//build the threeGramCountsMap
 		get3GramCounts(thmList, threeGramCountsMap);		
 		
@@ -84,9 +90,67 @@ public class ThreeGramSearch {
 		//create Multimap with custom value comparator.
 		ThreeGramComparator threeGramComparator = new ThreeGramComparator();
 		StringComparator stringComparator = new StringComparator();
-		threeGramMap = TreeMultimap.create(stringComparator, threeGramComparator);
 		
-		buildThreeGramMap(threeGramMap);
+		TreeMultimap<String, String> threeGramMap;///used internally during building
+		threeGramMap = TreeMultimap.create(stringComparator, threeGramComparator);*/
+		
+		//buildThreeGramMap(threeGramMap);
+		
+		/*Set<String> initialThreeGramsSet = new HashSet<String>();
+		//fill in initial default set of scraped three grams
+		BufferedReader threeGramBR = null;
+		ServletContext servletContext = NGramSearch.getServletContext();*/
+		/*if(null == servletContext){
+			try{
+				threeGramBR = new BufferedReader(new FileReader(THREE_GRAM_DATA_FILESTR));
+				readAdditionalThreeGrams(threeGramBR, initialThreeGramsSet);				
+			}catch(FileNotFoundException e){
+				e.printStackTrace();
+			}finally{
+				FileUtils.silentClose(threeGramBR);
+			}
+		}else{
+			InputStream twoGramInputStream = servletContext.getResourceAsStream(THREE_GRAM_DATA_FILESTR);
+			threeGramBR = new BufferedReader(new InputStreamReader(twoGramInputStream));		
+			readAdditionalThreeGrams(threeGramBR, initialThreeGramsSet);
+			FileUtils.silentClose(twoGramInputStream);
+			FileUtils.silentClose(threeGramBR);
+		}*/
+		//obtain the most frequent three grams from the previous threeGramMap, definitely
+		//keep the ones from initialThreeGramsSet
+
+		//read threeGramMap from serialized file
+		String threeGramsFreqMapPath = FileUtils.getServletPath(SearchMetaData.threeGramsFreqMapPath());
+		@SuppressWarnings("unchecked")
+		Map<String, Integer> m = ((List<Map<String, Integer>>)FileUtils.deserializeListFromFile(threeGramsFreqMapPath)).get(0);
+		threeGramFreqMap = ImmutableMap.copyOf(m);
+		threeGramFirstWordsSet = WordForms.gatherKeyFirstWordSetFromMap(threeGramFreqMap);
+		//threeGramList = filterThreeGrams(threeGramMap, threeGramFreqMap, initialThreeGramsSet);
+		//*****
+		//System.out.println(threeGramFreqMap);		
+		System.out.println("ThreeGramSearch - Done deserializing 3-grams!");
+	}		
+	
+	/**
+	 * Gather and build three-gram map from given (comprehensive) list of theorems. To be used
+		 * to serialize the map later.
+	 * @param thmList
+	 * @return Three grams and their frequencies
+	 */
+	public static Map<String, Integer> gatherAndBuild3GramsMap(List<String> thmList, 
+			Map<String, Map<String, Integer>> twoGramTotalOccurenceMap){
+		//fluffWordsSet = WordForms.getFluffSet();
+		Map<String, Integer> threeGramCountsMap = new HashMap<String, Integer>();		
+		//build the threeGramCountsMap
+		get3GramCounts(thmList, threeGramCountsMap);		
+		
+		//create Comparator instances used to compare frequencies.
+		//create Multimap with custom value comparator.
+		ThreeGramComparator threeGramComparator = new ThreeGramComparator(threeGramCountsMap);
+		StringComparator stringComparator = new StringComparator();
+		TreeMultimap<String, String> threeGramMap = TreeMultimap.create(stringComparator, threeGramComparator);
+		
+		buildThreeGramMap(threeGramMap, threeGramCountsMap);
 		
 		Set<String> initialThreeGramsSet = new HashSet<String>();
 		//fill in initial default set of scraped three grams
@@ -108,13 +172,13 @@ public class ThreeGramSearch {
 			FileUtils.silentClose(twoGramInputStream);
 			FileUtils.silentClose(threeGramBR);
 		}
-		threeGramFreqMap = new HashMap<String, Integer>();
+		Map<String, Integer> threeGramFreqMap = new HashMap<String, Integer>();
 		//obtain the most frequent three grams from the previous threeGramMap, definitely
 		//keep the ones from initialThreeGramsSet
-		threeGramList = filterThreeGrams(threeGramMap, threeGramFreqMap, initialThreeGramsSet);
-		//System.out.println(threeGramFreqMap);
-		System.out.println("ThreeGramSearch - Done with gathering 3-grams!");
-	}		
+		filterThreeGrams(threeGramMap, threeGramFreqMap, initialThreeGramsSet, twoGramTotalOccurenceMap,
+				threeGramCountsMap);
+		return threeGramFreqMap;
+	}
 	
 	/**
 	 * Collect 3 grams from thmList.
@@ -185,7 +249,13 @@ public class ThreeGramSearch {
 		
 	}
 	
-	private static void buildThreeGramMap(TreeMultimap<String, String> threeGramMap){
+	/**
+	 * Fills in threeGramMap using threeGramCountsMap.
+	 * @param threeGramMap
+	 * @param threeGramCountsMap
+	 */
+	private static void buildThreeGramMap(TreeMultimap<String, String> threeGramMap,
+			Map<String, Integer> threeGramCountsMap){
 		
 		for(Map.Entry<String, Integer> entry : threeGramCountsMap.entrySet()){
 			//put to threeGramMap
@@ -206,9 +276,12 @@ public class ThreeGramSearch {
 	 * @param threeGramMap
 	 * @param threeGramFreqMap Collected three grams and their frequencies.
 	 * @param initialThreeGramsSet Scraped set of three grams that definitely should be kept.
+	 * @param threeGramCountsMap three gram frequency counts.
+	 * @return List of three grams, usually used for human inspection, not at runtime.
 	 */
 	private static List<String> filterThreeGrams(TreeMultimap<String, String> threeGramMap, Map<String, Integer> threeGramFreqMap,
-			Set<String> initialThreeGramsSet){
+			Set<String> initialThreeGramsSet, Map<String, Map<String, Integer>> twoGramTotalOccurenceMap,
+			Map<String, Integer> threeGramCountsMap){
 		List<String> threeGramList = new ArrayList<String>();
 		//System.out.println(threeGramMap);
 		int threeGramFreqSum = 0;
@@ -232,7 +305,7 @@ public class ThreeGramSearch {
 				threeGramFreqMap.put(threeGram, threeGramFreq);
 				threeGramFreqSum += threeGramFreq;
 				totalThreeGramAdded++;
-				threeGramFirstWordsSet.add(firstWord);
+				//threeGramFirstWordsSet.add(firstWord);
 				upTo--;
 			}
 			
@@ -247,7 +320,7 @@ public class ThreeGramSearch {
 				String word1 = threeGramAr[1];
 				
 				//maps of 2 grams that start with firstWord or word1
-				Map<String, Integer> firstWordMap = twoGramFreqMap.get(firstWord);
+				Map<String, Integer> firstWordMap = twoGramTotalOccurenceMap.get(firstWord);
 				
 				int threeGramFreq = threeGramCountsMap.get(threeGram);
 				boolean added = false;
@@ -255,7 +328,7 @@ public class ThreeGramSearch {
 					added = addTo3GramList(threeGramList, firstWordMap, threeGram, word1, threeGramFreq, firstWord);
 					if(!added){
 						String word2 = threeGramAr[2];
-						Map<String, Integer> word1Map = twoGramFreqMap.get(word1);
+						Map<String, Integer> word1Map = twoGramTotalOccurenceMap.get(word1);
 						if(word1Map != null){
 							added = addTo3GramList(threeGramList, word1Map, threeGram, word2, threeGramFreq, firstWord);							
 						}
@@ -264,7 +337,7 @@ public class ThreeGramSearch {
 				if(!added && initialThreeGramsSet.contains(threeGram)){
 					threeGramList.add(threeGram);
 					threeGramFreqMap.put(threeGram, threeGramFreq);
-					threeGramFirstWordsSet.add(firstWord);
+					//threeGramFirstWordsSet.add(firstWord);
 					initialThreeGramsSet.remove(threeGram);
 					added = true;
 				}
@@ -300,7 +373,7 @@ public class ThreeGramSearch {
 		if(!threeGramFreqMap.containsKey(threeGram)){
 			threeGramList.add(threeGram);
 			threeGramFreqMap.put(threeGram, averageThreeGramFreqCount);
-			threeGramFirstWordsSet.add(threeGram.split("\\s+")[0]);
+			//threeGramFirstWordsSet.add(threeGram.split("\\s+")[0]);
 		}
 	}
 
@@ -319,7 +392,7 @@ public class ThreeGramSearch {
 		if((totalPairFreq != null && threeGramFreq > totalPairFreq/2)){
 			threeGramList.add(threeGram);
 			threeGramFreqMap.put(threeGram, threeGramFreq);
-			threeGramFirstWordsSet.add(firstWord);
+			//threeGramFirstWordsSet.add(firstWord);
 			added = true;
 		}
 		return added;
@@ -365,6 +438,12 @@ public class ThreeGramSearch {
 	 * ThreeGram comparator based on the three gram counts in threeGramCountsMap
 	 */
 	private static class ThreeGramComparator implements Comparator<String>{
+		
+		Map<String, Integer> threeGramCountsMap;
+		
+		public ThreeGramComparator(Map<String, Integer> threeGramCountsMap_){
+			this.threeGramCountsMap = threeGramCountsMap_;
+		}
 		/**
 		 * Compare based on counts
 		 * @param s1
@@ -407,7 +486,7 @@ public class ThreeGramSearch {
 		//System.out.println(threeGramList);
 		boolean write2gramsToFile = false;
 		if(write2gramsToFile){ 
-			FileUtils.writeToFile(threeGramList, threeGramsFilePath);
+			//FileUtils.writeToFile(threeGramList, threeGramsFilePath);
 		}
 	}
 }

@@ -657,6 +657,22 @@ public class WordForms {
 	}
 	
 	/**
+	 * Retrieves set of first words in the keys of the given map. Used in e.g.
+	 * NGram gathering.
+	 * @param map
+	 * @return
+	 */
+	public static Set<String> gatherKeyFirstWordSetFromMap(Map<String, Integer> map){
+		Set<String> set = new HashSet<String>();
+		for(String s : map.keySet()){
+			//gathering algorithm should have ensured that keys cannot be white spaces
+			String firstWord = WHITE_NONEMPTY_SPACE_PATTERN.split(s)[0];
+			set.add(firstWord);
+		}
+		return set;
+	}
+	
+	/**
 	 * Word Stems to various word forms with that stem.  
 	 * @return
 	 */

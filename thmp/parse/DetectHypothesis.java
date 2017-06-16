@@ -21,7 +21,9 @@ import java.util.regex.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Multimap;
 
 import thmp.parse.ParseState.ParseStateBuilder;
 import thmp.parse.ParseState.VariableDefinition;
@@ -29,6 +31,7 @@ import thmp.parse.ParseState.VariableName;
 import thmp.search.CollectThm;
 import thmp.search.SearchCombined.ThmHypPair;
 import thmp.search.Searcher;
+import thmp.search.Searcher.SearchMetaData;
 import thmp.search.TheoremGet.ContextRelationVecPair;
 import thmp.search.ThmSearch;
 import thmp.utils.FileUtils;
@@ -123,7 +126,7 @@ public class DetectHypothesis {
 		FileUtils.set_dataGenerationMode();	
 		/*The "next time" form previous time refers to current run in this static initializer.*/
 		//ALL_THM_WORDS_LIST = new ArrayList<String>(CollectThm.ThmWordsMaps.get_contextVecWordsNextTimeMap().keySet());
-		ALL_THM_WORDS_FREQ_MAP = CollectThm.ThmWordsMaps.get_contextVecWordsNextTimeMap();
+		ALL_THM_WORDS_FREQ_MAP = CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno();//.get_contextVecWordsNextTimeMap();
 		//this SHOULD be done at the end! So keep in sync with the others .dat, so don't need to parse everything twice.
 		//Then use current list, but wordsList's from previous runs.
 		//ThmSearch.TermDocumentMatrix.createTermDocumentMatrixSVD();
@@ -333,6 +336,7 @@ public class DetectHypothesis {
 		//map of word frequencies.
 		String pathToWordFreqMap;
 		String parsedExpressionSerialFileStr = DetectHypothesis.parsedExpressionSerialFileStr;
+		String wordThmIndexMMapSerialFileStr = Searcher.SearchMetaData.wordThmIndexMMapSerialFilePath();
 		String contextRelationPairSerialFileStr = DetectHypothesis.contextRelationPairSerialFileStr;
 		String allThmWordsMapSerialFileStr = DetectHypothesis.allThmWordsMapSerialFileStr;
 		String allThmWordsMapStringFileStr = DetectHypothesis.allThmWordsMapStringFileStr;
@@ -368,6 +372,7 @@ public class DetectHypothesis {
 					
 					this.parsedExpressionSerialFileStr = texFilesDirPath + DetectHypothesis.parsedExpressionSerialFileNameStr;
 					this.contextRelationPairSerialFileStr = texFilesDirPath + "vecs/" + DetectHypothesis.contextRelationPairSerialFileNameStr;
+					this.wordThmIndexMMapSerialFileStr = texFilesDirPath + SearchMetaData.wordThmIndexMMapSerialFileName() ;
 					this.allThmWordsMapSerialFileStr = texFilesDirPath + DetectHypothesis.allThmWordsMapSerialFileNameStr;
 					this.allThmWordsMapStringFileStr = texFilesDirPath + DetectHypothesis.allThmWordsMapStringFileNameStr;
 					this.parsedExpressionStringFileStr = texFilesDirPath + DetectHypothesis.parsedExpressionStringFileNameStr; //parsedExpressionStrList
@@ -554,6 +559,7 @@ public class DetectHypothesis {
 		String parsedExpressionSerialFileStr = inputParams.parsedExpressionSerialFileStr;
 		String contextRelationPairSerialFileStr = inputParams.contextRelationPairSerialFileStr;
 		String allThmWordsMapSerialFileStr = inputParams.allThmWordsMapSerialFileStr;
+		String wordThmIndexMMapSerialFileStr = inputParams.wordThmIndexMMapSerialFileStr;
 		String allThmWordsMapStringFileStr = inputParams.allThmWordsMapStringFileStr;
 		String parsedExpressionStringFileStr = inputParams.parsedExpressionStringFileStr;
 		String allThmsStringFileStr = inputParams.allThmsStringFileStr;
@@ -562,8 +568,15 @@ public class DetectHypothesis {
 		boolean projectionPathsNotNull = (null != pathToProjectionMx && null != pathToWordFreqMap);		
 		logger.info("Serializing parsedExpressionList, etc, to file...");
 		try{
-			//actually turn ParsedExpression's into ThmHypPair's.
-			List<ThmHypPair> thmHypPairList = convertPEToThmHypPair(parsedExpressionList);
+			//Multimap of words and the indices of thm's. To be used by intersection search
+			//The indices need to be processed again later when combined into one MMap for multiple tars.
+			Multimap<String, Integer> wordThmIndexMMap = ArrayListMultimap.create();
+			//actually turn ParsedExpression's into ThmHypPair's. To facilitate deserialization
+			//into cache at runtime with minimal processing.
+			List<ThmHypPair> thmHypPairList = convertPEToThmHypPairAndProcessThms(parsedExpressionList, wordThmIndexMMap);
+			List<Multimap<String, Integer>> wordThmIndexMMapList = new ArrayList<Multimap<String, Integer>>();
+			wordThmIndexMMapList.add(wordThmIndexMMap);
+			FileUtils.serializeObjToFile(wordThmIndexMMapList, wordThmIndexMMapSerialFileStr);
 			//FileUtils.serializeObjToFile(parsedExpressionList, parsedExpressionSerialFileStr);
 			FileUtils.serializeObjToFile(thmHypPairList, parsedExpressionSerialFileStr);
 			FileUtils.serializeObjToFile(contextRelationVecPairList, contextRelationPairSerialFileStr);
@@ -613,17 +626,21 @@ public class DetectHypothesis {
 	/**
 	 * Convert list of ParsedExpression's to list of ThmHypPair's for serialization.
 	 * @param peList
+	 * @param wordThmIndexMMap map used for intersection 
 	 * @return
 	 */
-	private static List<ThmHypPair> convertPEToThmHypPair(List<ParsedExpression> peList){
+	private static List<ThmHypPair> convertPEToThmHypPairAndProcessThms(List<ParsedExpression> peList,
+			Multimap<String, Integer> wordThmIndexMMap){
 		List<ThmHypPair> thmHypPairList = new ArrayList<ThmHypPair>();
+		int thmIndex = 0;
 		for(ParsedExpression pe : peList){
 			DefinitionListWithThm defListWithThm = pe.getDefListWithThm();
 			String thm = defListWithThm.thmStr;
 			String def = defListWithThm.definitionStr;
 			String fileName = defListWithThm.srcFileName;
 			ThmHypPair pair = new ThmHypPair(thm, def, fileName);
-			thmHypPairList.add(pair);
+			thmHypPairList.add(pair);			
+			CollectThm.ThmWordsMaps.addToWordThmIndexMap(wordThmIndexMMap, def + " " + thm, thmIndex++);
 		}
 		return thmHypPairList;
 	}

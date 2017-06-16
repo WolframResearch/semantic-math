@@ -497,6 +497,21 @@ public class FileUtils {
 	}
 	
 	/**
+	 * Retrieves path to resource pointed to by path, 
+	 * taking into account whether 
+	 * currently running in servlet environment.
+	 * @param path
+	 * @return
+	 */
+	public static String getServletPath(String path){
+		if(null != servletContext){
+			return servletContext.getRealPath(path);
+		}else{
+			return path;
+		}
+	}
+	
+	/**
 	 * Whether the OS is MacOS X 
 	 * @return
 	 */

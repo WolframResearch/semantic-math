@@ -38,8 +38,10 @@ public interface Searcher<S> {
 	}
 	
 	/**
-	 * Containing data serialized during preprocessing. To be used later for post processing,
+	 * Containing data serialized during data processing and building. 
+	 * To be used later for post processing,
 	 * such as combining lists, etc.
+	 * Should only contain fields that need to be serialized.
 	 */
 	public static class SearchConfiguration implements Serializable{
 		
@@ -71,6 +73,12 @@ public interface Searcher<S> {
 		 * in previous runs, e.g. when using a pre-computed projection matrix for SVD.*/
 		//private static boolean usePreviousWordDocFreqMaps;
 		private static String previousWordDocFreqMapsPath;
+		//one is created for each tar, then combined for multiple tars, in ProjectionMatrix.java.
+		private static final String wordThmIndexMMapSerialFileName = "wordThmIndexMMap.dat";
+		private static final String wordThmIndexMMapSerialFilePath = "src/thmp/data/" + wordThmIndexMMapSerialFileName;
+		private static final String wordDocFreqMapPath = "src/thmp/data/allThmWordsMap.dat";
+		private static final String threeGramsFreqMapPath = "src/thmp/data/threeGramsMap.dat";
+		private static final String twoGramsFreqMapPath = "src/thmp/data/twoGramsMap.dat";
 		
 		public static void set_gatheringDataBoolToTrue(){
 			//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
@@ -81,7 +89,27 @@ public interface Searcher<S> {
 			return gatheringDataBool;
 		}
 		
-		/* Used to separate the case when gatheringDataBool, where in fact want maps collected
+		public static String wordThmIndexMMapSerialFilePath(){
+			return wordThmIndexMMapSerialFilePath;
+		}
+		
+		public static String wordThmIndexMMapSerialFileName(){
+			return wordThmIndexMMapSerialFileName;
+		}
+		
+		public static String wordDocFreqMapPath(){
+			return wordDocFreqMapPath;
+		}
+		
+		public static String threeGramsFreqMapPath(){
+			return threeGramsFreqMapPath;
+		}
+		
+		public static String twoGramsFreqMapPath(){
+			return twoGramsFreqMapPath;
+		}
+		
+		/** Used to separate the case when gatheringDataBool, where in fact want maps collected
 		 * in previous runs, e.g. when using a pre-computed projection matrix for SVD.*/
 		public static String previousWordDocFreqMapsPath() {
 			return previousWordDocFreqMapsPath;

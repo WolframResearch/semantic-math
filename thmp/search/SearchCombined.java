@@ -319,7 +319,7 @@ public class SearchCombined {
 			return Collections.<ThmHypPair>emptyList();
 		}
 		
-		SearchState searchState = SearchIntersection.getHighestThms(input, searchWordsSet, searchContextBool, NUM_NEAREST);
+		SearchState searchState = SearchIntersection.intersectionSearch(input, searchWordsSet, searchContextBool, NUM_NEAREST);
 
 		String[] inputAr = WordForms.getWhiteNonEmptySpacePattern().split(input);		
 		//context search doesn't do anything if only one token.

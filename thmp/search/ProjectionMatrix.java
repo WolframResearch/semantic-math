@@ -6,17 +6,23 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import com.wolfram.jlink.Expr;
 import com.wolfram.jlink.KernelLink;
 import com.wolfram.jlink.MathLinkException;
 
 import thmp.parse.ParsedExpression;
 import thmp.search.SearchCombined.ThmHypPair;
+import thmp.search.Searcher.SearchConfiguration;
+import thmp.search.Searcher.SearchMetaData;
 import thmp.search.TheoremGet.ContextRelationVecPair;
 import thmp.search.ThmSearch.TermDocumentMatrix;
 import thmp.utils.FileUtils;
@@ -81,10 +87,12 @@ public class ProjectionMatrix {
 		
 		int loopTotal = argsLen / TAR_COUNT_PER_BUNDLE + 1;
 		int vecsFileNameCounter = 0;
-		//will go up to O(10^6) when all jars are included.
+		//will go up to O(10^6) when all tars are included.
 		int thmCounter = 0;
-		//process TAR_COUNT_PER_BUNDLE each time. This loops
-		// about 1569/15 ~ 105 times if all tar files supplied.
+		//combined MMap from multiple tars.
+		Multimap<String, Integer> combinedWordThmIndexMMap = ArrayListMultimap.create();
+		//process TAR_COUNT_PER_BUNDLE each time. This loops over tar files.
+		//Loops about 1569/15 ~ 105 times if all tar files supplied.
 		for(int i = 0; i < loopTotal; i++){
 			int start = i * TAR_COUNT_PER_BUNDLE;
 			int nextIndex = (i+1)*TAR_COUNT_PER_BUNDLE;
@@ -101,10 +109,13 @@ public class ProjectionMatrix {
 					projectedMxFilePathList.add(path_i + ThmSearch.TermDocumentMatrix.PROJECTED_MX_NAME + ".mx");	
 					String peFilePath = path_i + ThmSearch.TermDocumentMatrix.PARSEDEXPRESSION_LIST_FILE_NAME_ROOT;
 					String vecsFilePath = path_i + "vecs/" + ThmSearch.TermDocumentMatrix.CONTEXT_VEC_PAIR_LIST_FILE_NAME;
-					addExprsToLists(peFilePath, combinedPEList, vecsFilePath, combinedVecsList);
+					String wordThmIndexMMapPath = path_i + SearchMetaData.wordThmIndexMMapSerialFileName();
+					thmCounter = addExprsToLists(peFilePath, combinedPEList, vecsFilePath, combinedVecsList, wordThmIndexMMapPath,
+							combinedWordThmIndexMMap, thmCounter
+							);
 				}				
 				bundleStartThmIndexList.add(thmCounter);
-				thmCounter += combinedPEList.size();
+				//thmCounter += combinedPEList.size();
 				
 				serializeListsToFile(combinedPEList, i);
 				combinedPEList = new ArrayList<ThmHypPair>();
@@ -128,7 +139,14 @@ public class ProjectionMatrix {
 		Searcher.SearchConfiguration searchConfig = new Searcher.SearchConfiguration(bundleStartThmIndexList);
 		List<Searcher.SearchConfiguration> searchConfigList = new ArrayList<Searcher.SearchConfiguration>();
 		searchConfigList.add(searchConfig);
-		FileUtils.serializeObjToFile(searchConfigList, Searcher.SearchConfiguration.searchConfigurationSerialPath());
+		FileUtils.serializeObjToFile(searchConfigList, SearchConfiguration.searchConfigurationSerialPath());
+		
+		//serialize map into one file, to be loaded at once in memory at runtime.
+		//should be ~240 MB.
+	 	String wordThmIndexMMapPath = FileUtils.getServletPath(SearchMetaData.wordThmIndexMMapSerialFilePath());
+	 	List<Multimap<String, Integer>> combinedWordThmIndexMMapList = new ArrayList<Multimap<String, Integer>>();
+	 	combinedWordThmIndexMMapList.add(combinedWordThmIndexMMap);	 	
+	 	FileUtils.serializeObjToFile(combinedWordThmIndexMMapList, wordThmIndexMMapPath);
 		/* Combine parsedExpressionList's */
 		//combineParsedExpressionList(parsedExpressionFilePathList);
 	}
@@ -228,11 +246,28 @@ public class ProjectionMatrix {
 		//FileUtils.serializeObjToFile(combinedPEList, targetFilePath);
 	}
 
+	
 	@SuppressWarnings("unchecked")
-	private static void addExprsToLists(String peFilePath, List<ThmHypPair> combinedPEList, String vecsFilePath,
-			List<ContextRelationVecPair> combinedVecsList) {
-		combinedPEList.addAll( (List<ThmHypPair>)FileUtils.deserializeListFromFile(peFilePath) );		
-		combinedVecsList.addAll( (List<ContextRelationVecPair>)FileUtils.deserializeListFromFile(vecsFilePath)  );
+	private static int addExprsToLists(String peFilePath, List<ThmHypPair> combinedPEList, String vecsFilePath,
+			List<ContextRelationVecPair> combinedVecsList, String wordThmIndexMMapPath, 
+			Multimap<String, Integer> combinedWordThmIndexMMap, 
+			int startingThmIndex) {
+		List<ThmHypPair> thmHypPairList = (List<ThmHypPair>)FileUtils.deserializeListFromFile(peFilePath);
+		int thmHypPairListSz = thmHypPairList.size();
+		combinedPEList.addAll(thmHypPairList);	
+		combinedVecsList.addAll((List<ContextRelationVecPair>)FileUtils.deserializeListFromFile(vecsFilePath));
+		Multimap<String, Integer> wordThmIndexMMap = ((List<Multimap<String, Integer>>)
+				FileUtils.deserializeListFromFile(wordThmIndexMMapPath)).get(0);
+		
+		for(String keyWord : wordThmIndexMMap.keySet()){			
+			//update the indices of the thms with respect to the tar's position.
+			Collection<Integer> updatedIndices = new ArrayList<Integer>();
+			for(int index : wordThmIndexMMap.get(keyWord)){
+				updatedIndices.add(index + startingThmIndex);
+			}
+			combinedWordThmIndexMMap.putAll(keyWord, updatedIndices);
+		}
+		return startingThmIndex + thmHypPairListSz;
 	}
 
 	/*private static void combineParsedExpressionList(List<String> parsedExpressionFilePathList) {

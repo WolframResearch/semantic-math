@@ -32,7 +32,8 @@ public class ParseTreeToVec {
 	/* Map of words and their *indices* */
 	private static final Map<String, Integer> contextKeywordIndexQueryDict = CollectThm.ThmWordsMaps.get_CONTEXT_VEC_WORDS_INDEX_MAP();
 	//contextVecWordsNextTimeMMap
-	private static final Map<String, Integer> contextKeywordIndexThmsDataDict = CollectThm.ThmWordsMaps.get_contextVecWordsIndexNextTimeMap();
+	private static final Map<String, Integer> contextKeywordIndexThmsDataDict = CollectThm.ThmWordsMaps.get_CONTEXT_VEC_WORDS_INDEX_MAP();
+	//.get_contextVecWordsIndexNextTimeMap();
 	private static final boolean DEBUG = FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : false;
 	/*The current word-index map to use, this *must* be set to contextKeywordIndexThmsDataDict when producing vecs from thm data source. 
 	* e.g. in DetectHypothesis.java. */

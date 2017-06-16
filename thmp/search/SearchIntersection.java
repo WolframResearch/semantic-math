@@ -144,7 +144,7 @@ public class SearchIntersection {
 	 */
 	public static List<ThmHypPair> getHighestThmStringList(String input, Set<String> searchWordsSet,
 			boolean contextSearchBool) {
-		SearchState searchState = getHighestThms(input, searchWordsSet, contextSearchBool);
+		SearchState searchState = intersectionSearch(input, searchWordsSet, contextSearchBool);
 		if (null == searchState)
 			return Collections.<ThmHypPair>emptyList();
 		List<Integer> highestThmsList = searchState.intersectionVecList();
@@ -163,18 +163,26 @@ public class SearchIntersection {
 	 */
 	public static List<Integer> getHighestThmList(String input, Set<String> searchWordsSet, boolean contextSearchBool,
 			int... num) {
-		SearchState searchState = getHighestThms(input, searchWordsSet, contextSearchBool, num);
+		SearchState searchState = intersectionSearch(input, searchWordsSet, contextSearchBool, num);
 		if (null == searchState)
 			return Collections.emptyList();
 		return searchState.intersectionVecList();
 	}
 
-	// computes singleton scores for words in list
-	private static int computeSingletonScores(List<WordWrapper> wordWrapperList, int[] singletonScoresAr) {
-		int wrapperListSz = wordWrapperList.size();
+	/**
+	 * Computes singleton scores for words in list
+	 * THIS IS BAD, since doens't consider normalized word etc, endings etc
+	 * Unless just an estimate!
+	 * @param wordWrapperList
+	 * @param singletonScoresAr
+	 * @return
+	 */
+	private static int computeSingletonScores(String[] inputWordsAr, int[] singletonScoresAr) {
+		int wrapperListSz = inputWordsAr.length;
 		int totalSingletonAdded = 0;
 		for (int i = 0; i < wrapperListSz; i++) {
-			String word = wordWrapperList.get(i).word();
+			String word = inputWordsAr[i];//wordWrapperList.get(i).word();
+			
 			Integer score = wordsScoreMap.get(word);
 			if (score == null) {
 				word = WordForms.getSingularForm(word);
@@ -191,7 +199,7 @@ public class SearchIntersection {
 	}
 
 	/**
-	 * Builds scoreThmMMap
+	 * Builds scoreThmMMap. Main intersection search method.
 	 * 
 	 * @param input
 	 *            input String
@@ -204,7 +212,7 @@ public class SearchIntersection {
 	 * @return SearchState containing list of indices of highest-scored thms.
 	 *         Sorted in ascending order, best first. List is 0-based.
 	 */
-	public static SearchState getHighestThms(String input, Set<String> searchWordsSet, boolean contextSearchBool,
+	public static SearchState intersectionSearch(String input, Set<String> searchWordsSet, boolean contextSearchBool,
 			int... num) {
 
 		if (WordForms.getWhiteEmptySpacePattern().matcher(input).matches())
@@ -221,8 +229,9 @@ public class SearchIntersection {
 
 		// make input list of words
 		// this pre-processing should be deprecated! <--Feb 2017.
-		List<WordWrapper> wordWrapperList = SearchWordPreprocess.sortWordsType(input);
-
+		//List<WordWrapper> wordWrapperList = SearchWordPreprocess.sortWordsType(input);
+		
+		String[] inputWordsAr = WordForms.splitThmIntoSearchWords(input.toLowerCase());
 		// create searchState to record the intersectionVecList, and map of
 		// tokens and their span scores.
 		SearchState searchState = new SearchState();
@@ -240,7 +249,6 @@ public class SearchIntersection {
 			numHighest = SearchCombined.getNumCommonVecs(inputSB, input);
 			input = inputSB.toString();
 		}
-
 		/*
 		 * Map of theorems, in particular their indices in thmList, and the
 		 * scores corresponding to the keywords they contain. The rarer a
@@ -278,60 +286,60 @@ public class SearchIntersection {
 		// index
 		Multimap<Integer, String> indexStartingWordsMMap = ArrayListMultimap.create();
 
-		int wordWrapperListSz = wordWrapperList.size();
+		int inputWordsArSz = inputWordsAr.length;
 		// array instead of list for lower overhead.
-		int[] singletonScoresAr = new int[wordWrapperListSz];
-		// pre-compute the scores for singleton words in query
-		int totalSingletonAdded = computeSingletonScores(wordWrapperList, singletonScoresAr);
+		int[] singletonScoresAr = new int[inputWordsArSz];
+		// pre-compute the scores for singleton words in query <--TRY TO ELIMINATE THIS!!!
+		int totalSingletonAdded = computeSingletonScores(inputWordsAr, singletonScoresAr);
 		searchState.set_totalWordAdded(totalSingletonAdded);
-
+		
 		// array of words to indicate frequencies that this word was included in
 		// either a singleton or n-gram
-		int[] wordCountArray = new int[wordWrapperListSz];
+		int[] wordCountArray = new int[inputWordsArSz];
 		// whether current word has been included in a singleton or n-gram
 
-		for (int i = firstIndex; i < wordWrapperListSz; i++) {
-			WordWrapper curWrapper = wordWrapperList.get(i);
-			String word = curWrapper.word();
-
+		for (int i = firstIndex; i < inputWordsArSz; i++) {
+			//WordWrapper curWrapper = wordWrapperList.get(i);
+			//String word = curWrapper.word();
+			String word = inputWordsAr[i];
 			// other annotation form of word.
 			// String wordOtherForm;
 			// elicit higher score if wordLong fits
 			// also turn into singular form if applicable
-			String wordLong = curWrapper.hashToString();
+			/////use word!! String wordLong = curWrapper.hashToString();
+			
 			int scoreAdded = 0;
 
 			// check for 2 grams
 			if (i < wordWrapperListSz - 1) {
 				String nextWord = wordWrapperList.get(i + 1).word();
-				String nextWordCombined = wordLong + " " + nextWord;
+				//String nextWordCombined = wordLong + " " + nextWord;
 				String twoGram = word + " " + nextWord;
 
-				// check for 3 grams. Again only first word is annotated.
+				// check for 3 grams.
 				if (i < wordWrapperListSz - 2) {
 					String thirdWord = wordWrapperList.get(i + 2).word();
-					String threeWordsCombined = wordLong + " " + thirdWord;
+					//String threeWordsCombined = wordLong + " " + thirdWord;
 					String threeGram = twoGram + " " + thirdWord;
 					if (threeGramsMap.containsKey(threeGram)) {
 						scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, wordThmIndexMMap,
-								curWrapper, threeGram, threeWordsCombined, i, WordForms.TokenType.THREEGRAM,
+								//curWrapper, 
+								threeGram, i, WordForms.TokenType.THREEGRAM,
 								singletonScoresAr, searchWordsSet);
 						if (scoreAdded > 0) {
 							wordCountArray[i] = wordCountArray[i] + 1;
 							wordCountArray[i + 1] = wordCountArray[i + 1] + 1;
 							wordCountArray[i + 2] = wordCountArray[i + 2] + 1;
 							totalWordsScore += scoreAdded;
-
 							numWordsAdded++;
 							indexStartingWordsMMap.put(i, threeGram);
 						}
 					}
 				}
-
 				if (twoGramsMap.containsKey(twoGram)) {
-
-					scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, wordThmIndexMMap, curWrapper,
-							twoGram, nextWordCombined, i, WordForms.TokenType.TWOGRAM, singletonScoresAr,
+					scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, wordThmIndexMMap, //curWrapper,
+							twoGram, //nextWordCombined, 
+							i, WordForms.TokenType.TWOGRAM, singletonScoresAr,
 							searchWordsSet);
 					if (scoreAdded > 0) {
 						wordCountArray[i] = wordCountArray[i] + 1;
@@ -350,8 +358,9 @@ public class SearchIntersection {
 			// "closed range" all weigh a lot. Scale proportionally down with
 			// respect to the average
 			// score of all words added.
-			scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, wordThmIndexMMap, curWrapper, word,
-					wordLong, i, WordForms.TokenType.SINGLETON, singletonScoresAr, searchWordsSet);
+			scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, wordThmIndexMMap, //curWrapper, 
+					word, //wordLong, 
+					i, WordForms.TokenType.SINGLETON, singletonScoresAr, searchWordsSet);
 			if (scoreAdded > 0) {
 				wordCountArray[i] = wordCountArray[i] + 1;
 				totalWordsScore += scoreAdded;
@@ -607,7 +616,9 @@ public class SearchIntersection {
 	 */
 	private static int addWordThms(Map<Integer, Integer> thmScoreMap, TreeMultimap<Integer, Integer> scoreThmMMap,
 			Multimap<Integer, Integer> thmWordSpanMMap, ListMultimap<String, Integer> wordThmIndexMMap,
-			WordWrapper curWrapper, String word, String wordLong, int wordIndexInThm, WordForms.TokenType tokenType,
+			//WordWrapper curWrapper, 
+			String word, //String wordLong, 
+			int wordIndexInThm, WordForms.TokenType tokenType,
 			int[] singletonScoresAr, Set<String> searchWordsSet) {
 		// update scores map
 		int curScoreToAdd = 0;

@@ -284,8 +284,9 @@ public class ThmSearch {
 			if(DEBUG){
 				System.out.println("Dimensions[vMx] " + evaluateWLCommand(medium, "Dimensions["+V_MX+"]", true, true));
 			}
-			//keep trying nearest functions, until sufficiently many below a certain distance threshold is obtained.
-			//Attach bundle iterator to web session.
+			//Keep trying nearest functions, until sufficiently many below a certain distance threshold is obtained.
+			//Attach bundle iterator to web session. Must iterate over same range as intersection search!!!
+			//Should pass here the range of thms searched for intersection, and just search over these range.
 			Iterator<ThmHypPairBundle> thmCacheIter = ThmHypPairGet.createThmCacheIterator();
 			//System.out.println("Dimensions@First@Transpose[q] " + evaluateWLCommand(ml, "Dimensions[First@Transpose[q]]", true, true));
 			//String vMx = TermDocumentMatrix.COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME;
@@ -310,6 +311,7 @@ public class ThmSearch {
 				logger.info("ThmSearch - nearestVec: " + nearestVec);
 				nearestVecArray = (int[])nearestVec.asArray(Expr.INTEGER, 1);
 				//process distances , keep indices of high ranking ones. if sufficiently close and many, break
+				//need to implement caching on WL side!
 				
 			}
 		}catch(ExprFormatException e){
