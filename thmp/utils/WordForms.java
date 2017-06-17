@@ -341,6 +341,8 @@ public class WordForms {
 	 * Canonicalize word. Used by all algorithms to pre-process words.
 	 * Deliberately not combined with singularization, as sometimes need
 	 * to be used separately.
+	 * Does *NOT* check if the input word is already valid or not. Due to 
+	 * initialization dependencies (would be cyclic).
 	 * @param word
 	 * @return
 	 */
@@ -423,6 +425,14 @@ public class WordForms {
 			}
 		}
 		
+		/**
+		 * Adjusts the integral word score for N-grams, such that the N-gram's score
+		 * is the sum of the constituent words' scores, plus some bonus.
+		 * @param curScoreToAdd
+		 * @param singletonScoresAr
+		 * @param wordIndex
+		 * @return
+		 */
 		public int adjustNGramScore(int curScoreToAdd, int[] singletonScoresAr, int wordIndex){
 			switch(this){
 				case SINGLETON:

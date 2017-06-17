@@ -241,7 +241,9 @@ public class CollectThm {
 		/* Related words scraped from wiktionary, etc. 
 		 * Related words are *only* used
 		 * to process queries, not the corpus; applied to all search algorithms. Therefore
-		 * intentionally *not* final .
+		 * intentionally *not* final.
+		 * Keys to relatedWordsMap are not necessarily normalized, only normalized if key not 
+		 * already contained in docWordsFreqMapNoAnno
 		 */
 		private static final Map<String, GatherRelatedWords.RelatedWords> relatedWordsMap;
 		
@@ -313,7 +315,9 @@ public class CollectThm {
 				docWordsFreqMapNoAnno = ImmutableMap.copyOf(docWordsFreqPreMap);
 				
 				//***docWordsFreqMapNoAnno = ImmutableMap.copyOf(keyWordFreqTreeMap); //<--previous one
-				/*relatedWordsMap is only used during search, not data gathering! */
+				/* RelatedWordsMap is only used during search, not data gathering! 
+				 * Keys to relatedWordsMap are not necessarily normalized, only normalized if key not 
+				 * already contained in docWordsFreqMapNoAnno.*/
 				relatedWordsMap = deserializeAndProcessRelatedWordsMapFromFile(docWordsFreqMapNoAnno);
 				CONTEXT_VEC_WORDS_FREQ_MAP = docWordsFreqMapNoAnno;
 				CONTEXT_VEC_WORDS_INDEX_MAP = createContextKeywordIndexDict(docWordsFreqMapNoAnno);

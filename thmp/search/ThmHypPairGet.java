@@ -57,8 +57,7 @@ public class ThmHypPairGet{
 	
 	/**
 	 * Iterates over all possible tars backwards, 
-	 * chronologically
-	 *
+	 * chronologically.
 	 */
 	public static class ThmCacheIterator implements Iterator<ThmHypPairBundle>{
 		//deliberately don't subtract 1.
@@ -68,7 +67,6 @@ public class ThmHypPairGet{
 		public boolean hasNext() {
 			return currentIndex < 1;
 		}
-
 		/**
 		 * Returns next element in bundles 
 		 * @return Could be null.
@@ -86,8 +84,7 @@ public class ThmHypPairGet{
 			}
 			//try return some sort of singleton instance with private constructor
 			return ThmHypPairBundle.PLACEHOLDER_BUNDLE;
-		}
-		
+		}		
 	}
 	
 	//Bundle used to cache ThmHypPair's in a LoadingCache.

@@ -42,10 +42,6 @@ public class TheoremGet {
 						}});		
 	}
 	
-	/*public static void setServletContext(ServletContext servletContext_){
-		servletContext = servletContext_;
-	}*/
-	
 	/**
 	 * Get the ContextRelationVecs corresponding to a thm given its index.
 	 * @param thmIndex

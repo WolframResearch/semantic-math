@@ -13,7 +13,7 @@ import thmp.utils.WordForms;
  * Preprocesses keywords before incorportating them into the termDocMx.
  * E.g. label word as part of hypothesis or conclusion.
  * @author yihed
- *
+ * @deprecated This should no longer be used in intersection search!!
  */
 public class SearchWordPreprocess {
 
@@ -147,6 +147,7 @@ public class SearchWordPreprocess {
 	/**
 	 * 	Class for representing words with a context.
 	 *	Represent context, 
+	 *@deprecated
 	 */
 	public static class WordWrapper{
 		//part of speech, primarily hyp or stm

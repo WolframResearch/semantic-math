@@ -296,11 +296,8 @@ public class ThmSearch {
 						+ LIST_INDEX_SHIFT, true, false);
 				//ml.evaluate("Nearest["+V_MX+"->"+ combinedTDMatrixRangeListName +", First@Transpose[q],"+numNearest+", Method->\"Scan\"] - " 
 					//	+ LIST_INDEX_SHIFT);
+				//get distance, and only those indices that fall below a distance threshold Nearest[{1, 4, 3, 2} -> {"Index", "Distance"}, 5, 2]
 				
-				//ml.waitForAnswer();
-				//Expr nearestVec = ml.getExpr();
-				
-				//turn into list.
 				msg = "SVD returned nearestVec! ";
 				System.out.println(msg);
 				logger.info(msg);
@@ -310,6 +307,7 @@ public class ThmSearch {
 				//System.out.println("resulting Expr nearestVec: " + nearestVec);
 				logger.info("ThmSearch - nearestVec: " + nearestVec);
 				nearestVecArray = (int[])nearestVec.asArray(Expr.INTEGER, 1);
+				
 				//process distances , keep indices of high ranking ones. if sufficiently close and many, break
 				//need to implement caching on WL side!
 				
