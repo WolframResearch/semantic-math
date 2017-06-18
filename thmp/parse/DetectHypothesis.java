@@ -75,10 +75,10 @@ public class DetectHypothesis {
 	private static final List<String> DefinitionListWithThmStrList = new ArrayList<String>();
 	private static final List<String> allThmsStrWithSpaceList = new ArrayList<String>();
 	
-	private static final String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
+	private static final String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList";
 	private static final String contextRelationPairSerialFileStr = "src/thmp/data/vecs/contextRelationVecPairList0";
 	private static final String parsedExpressionStringFileStr = "src/thmp/data/parsedExpressionList.txt";
-	private static final String parsedExpressionSerialFileNameStr = "parsedExpressionList.dat";
+	private static final String parsedExpressionSerialFileNameStr = "parsedExpressionList";
 	private static final String parsedExpressionStringFileNameStr = "parsedExpressionList.txt";
 	private static final String contextRelationPairSerialFileNameStr = ThmSearch.TermDocumentMatrix.CONTEXT_VEC_PAIR_LIST_FILE_NAME;
 	
@@ -572,6 +572,9 @@ public class DetectHypothesis {
 			List<Multimap<String, Integer>> wordThmIndexMMapList = new ArrayList<Multimap<String, Integer>>();
 			wordThmIndexMMapList.add(wordThmIndexMMap);
 			FileUtils.serializeObjToFile(wordThmIndexMMapList, wordThmIndexMMapSerialFileStr);
+			String wordThmIndexMMapTxtFileStr = wordThmIndexMMapSerialFileStr
+					.substring(0, wordThmIndexMMapSerialFileStr.length()-3) + "txt";
+			FileUtils.serializeObjToFile(wordThmIndexMMapList, wordThmIndexMMapTxtFileStr);
 			//FileUtils.serializeObjToFile(parsedExpressionList, parsedExpressionSerialFileStr);
 			FileUtils.serializeObjToFile(thmHypPairList, parsedExpressionSerialFileStr);
 			FileUtils.serializeObjToFile(contextRelationVecPairList, contextRelationPairSerialFileStr);
@@ -588,7 +591,7 @@ public class DetectHypothesis {
 			FileUtils.writeToFile(wordMapStringList, allThmWordsMapStringFileStr);
 			
 			//write parsedExpressionList to file
-			FileUtils.writeToFile(parsedExpressionStrList, parsedExpressionStringFileStr);
+			FileUtils.writeToFile(thmHypPairList, parsedExpressionStringFileStr);
 			
 			//write just the thms
 			FileUtils.writeToFile(allThmsStrWithSpaceList, allThmsStringFileStr);

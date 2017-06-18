@@ -43,7 +43,7 @@ public class ProjectionMatrix {
 	//private static final KernelLink ml = FileUtils.getKernelLinkInstance();
 	private static final Logger logger = LogManager.getLogger(ProjectionMatrix.class);
 	//without the trailing extension ".mx".
-	private static final String combinedMxRootPath = "src/thmp/data/" 
+	private static final String combinedMxRootPath = "src/thmp/data/mx/" 
 			+ TermDocumentMatrix.COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME; //+ ".mx";
 	private static final int TAR_COUNT_PER_BUNDLE = 15;
 	
@@ -121,8 +121,8 @@ public class ProjectionMatrix {
 				combinedPEList = new ArrayList<ThmHypPair>();
 				///return the counter
 				vecsFileNameCounter = splitAndUpdateCombinedVecsList(combinedVecsList, vecsFileNameCounter);
-				//without the trailing ".mx"
-				String combinedProjectedTDMxName = TermDocumentMatrix.COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME;
+				//without the trailing ".mx". E.g. "CombinedTDMatrix0"
+				String combinedProjectedTDMxName = TermDocumentMatrix.COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME + i;
 				//Appends the index i to the name.
 				combineProjectedMx(projectedMxFilePathList, TermDocumentMatrix.PROJECTED_MX_NAME, i, combinedProjectedTDMxName);
 				projectedMxFilePathList = new ArrayList<String>();
@@ -303,7 +303,7 @@ public class ProjectionMatrix {
 			//ml.discardAnswer();
 			//System.out.println("ProjectionMatrix.applyProjectionMatrix, "
 				//	+evaluateWLCommand("(" + corMxName + "."+ queryMxStrTransposeName+")[[1]]", true, false));
-			//applies projection mx with given vectors. Need to Transpose from column vectors, so rows represent thms.
+			/*applies projection mx. Need to Transpose from column vectors, so rows represent thms.*/
 			evaluateWLCommand(medium, projectedMxName + "= Transpose[" + dInverseName + "." + uTransposeName + ".q0]", false, true);
 			//ml.evaluate(projectedMxName + "= Transpose[" + dInverseName + "." + uTransposeName + ".q0];");
 			//ml.discardAnswer();
@@ -316,7 +316,7 @@ public class ProjectionMatrix {
 	/**
 	 * Loads matrices in from mx files, concatenates them into 
 	 * one Internal`Bag.
-	 * @param  List of .mx file names containing the thm vectors (term doc mx for each).
+	 * @param projectedMxFilePathList List of .mx file names containing the thm vectors (term doc mx for each).
 	 * e.g. "0208_001/0208/termDocumentMatrixSVD.mx".
 	 * @param projectedMxContextPath path to context of projected mx. 
 	 * @param projectedMxName name of projected matrix (as list of *row* vectors). Name is same for each .mx file.
@@ -350,7 +350,7 @@ public class ProjectionMatrix {
 		for(int i = 1; i < fileCounter; i++){
 			String ithName = projectedMxName+i;
 			evaluateWLCommand(ml, "Internal`BagPart[bag, Range[rangeCounter+1, (rangeCounter+= Length["+ithName+"]) ]] ="
-					+ ithName);			
+					+ ithName);
 		}
 		evaluateWLCommand(ml, concatenatedListName + "= Internal`BagPart[bag, All]");
 		//System.out.println("ProjectionMatrix, concatenatedListName "+evaluateWLCommand(concatenatedListName, true, true));

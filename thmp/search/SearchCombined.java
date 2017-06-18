@@ -2,6 +2,7 @@ package thmp.search;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -53,7 +54,9 @@ public class SearchCombined {
 	/**
 	 * Thm and hyp pair, used to display on web separately.
 	 */
-	public static class ThmHypPair{
+	public static class ThmHypPair implements Serializable{
+		
+		private static final long serialVersionUID = -6913500705834907026L;
 		private String thmStr;
 		private String hypStr;
 		private String srcFileName;

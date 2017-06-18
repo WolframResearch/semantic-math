@@ -276,24 +276,24 @@ public class CollectThm {
 				String docWordsFreqMapNoAnnoPath = FileUtils.getServletPath(SearchMetaData.wordDocFreqMapPath());
 				@SuppressWarnings("unchecked")
 				Map<String, Integer> docWordsFreqPreMap = ((List<Map<String, Integer>>)FileUtils.deserializeListFromFile(docWordsFreqMapNoAnnoPath)).get(0);
-				
+				docWordsFreqMapNoAnno = ImmutableMap.copyOf(docWordsFreqPreMap);
 				//buildMapsNoAnno(docWordsFreqPreMapNoAnno, wordThmsMMapBuilderNoAnno, 
 					//		processedThmList, skipGramWordsList);		
 				
-				//first compute the average word frequencies for singleton words
+				//compute the average word frequencies for singleton words
 				averageSingletonWordFrequency = computeSingletonWordsFrequency(docWordsFreqPreMap);			
 				//add lexicon words to docWordsFreqMapNoAnno, which only contains collected words from thm corpus,
 				//collected based on frequnency, right now. These words do not have corresponding thm indices.
-				f; addLexiconWordsToContextKeywordDict(docWordsFreqPreMap, averageSingletonWordFrequency); //<--but these should have been adjusted already!!
+				//***addLexiconWordsToContextKeywordDict(docWordsFreqPreMap, averageSingletonWordFrequency); //<--but these should have been adjusted already!!
 				/*use stemToWordsMMap to re-adjust frequency of word stems that came from multiple forms, 
 				 as these are much more likely to be math words, so don't want to scale down too much */
-				adjustWordFreqMapWithStemMultiplicity(docWordsFreqPreMap, stemToWordsMMap);				
+				//***adjustWordFreqMapWithStemMultiplicity(docWordsFreqPreMap, stemToWordsMMap);				
 				
-				buildScoreMapNoAnno(wordsScorePreMap, docWordsFreqPreMap);	
+				buildScoreMapNoAnno(wordsScorePreMap, docWordsFreqMapNoAnno);	
 				//used to optimize forming relation search vecs, which are BigInteger's.
 				//Map<String, Integer> keyWordFreqTreeMap = reorderDocWordsFreqMap(docWordsFreqPreMap);	
 				
-				docWordsFreqMapNoAnno = ImmutableMap.copyOf(docWordsFreqPreMap);
+				//docWordsFreqMapNoAnno = ImmutableMap.copyOf(docWordsFreqPreMap);
 				
 				//***docWordsFreqMapNoAnno = ImmutableMap.copyOf(keyWordFreqTreeMap); //<--previous one
 				/* RelatedWordsMap is only used during search, not data gathering! 

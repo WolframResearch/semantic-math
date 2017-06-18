@@ -60,8 +60,7 @@ public class PreprocessZipfileDir {
 			}
 		}catch(IOException e){
 			throw new IllegalStateException(e);
-		}
-		
+		}		
 	}
 	
 	/**

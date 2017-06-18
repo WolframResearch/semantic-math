@@ -65,7 +65,7 @@ public class ThmSearch {
 		private static final String CACHE_BAG_NAME = "cacheBag";
 		private static final String TIME_BAG_NAME = "timeBag";
 		//distance threshold for Nearest. To be converted programmatically using samples!!
-		private static final double DISTANCE_THRESHOLD = 0.01;
+		private static final double DISTANCE_THRESHOLD;
 		//total number of mx files
 		private static final int TOTAL_MX_COUNT = ThmHypPairGet.totalBundleNum();
 		//cap of mx count in cache. Each mx is about 1.3 mb. Make cap small initially for testing
@@ -107,15 +107,20 @@ public class ThmSearch {
 			//initializeCache[totalMxCount_Integer, mxCountCap_Integer]
 			evaluateWLCommand(ml, "{"+CACHE_BAG_NAME+","+ TIME_BAG_NAME
 					+"} = initializeCache["+TOTAL_MX_COUNT+"," +CACHE_MX_COUNT_CAP+"]", false, true);
+			evaluateWLCommand(ml, "AppendTo[$ContextPath,\"Internal`\"]", false, true);
+			System.out.println("Initializer: TOTAL_MX_COUNT: " +TOTAL_MX_COUNT);			
+			System.out.println("Initializer: CACHE_BAG_NAME: " +evaluateWLCommand(ml, CACHE_BAG_NAME,true, true));
+			System.out.println("Initializer: TIME_BAG_NAME: " +evaluateWLCommand(ml, TIME_BAG_NAME,true, true));
+			System.out.println("Initializer: $VersionNumber: " +evaluateWLCommand(ml, "$VersionNumber",true, true));
 			
 			/*path for the combined list of projected vectors*/
-			String combinedProjectedMxFilePath = getSystemCombinedProjectedMxFilePath();
+			//***String combinedProjectedMxFilePath = getSystemCombinedProjectedMxFilePath();
 			String fullMxPath = "src/thmp/data/"+TermDocumentMatrix.FULL_TERM_DOCUMENT_MX_NAME+".mx";
 			
 			if(null != servletContext){			
-				//this should be redundant, if webM initialization was run properly
+				//***this should be redundant, if webM initialization was run properly
 				pathToProjectionMx = servletContext.getRealPath(pathToProjectionMx);
-				combinedProjectedMxFilePath = servletContext.getRealPath(combinedProjectedMxFilePath);
+				//combinedProjectedMxFilePath = servletContext.getRealPath(combinedProjectedMxFilePath);
 				fullMxPath = servletContext.getRealPath(fullMxPath);
 			}
 			
@@ -125,10 +130,13 @@ public class ThmSearch {
 			}else{
 				V_MX = TermDocumentMatrix.FULL_TERM_DOCUMENT_MX_NAME;
 			}
-			//if kernel pool acquisition were working, this should be done in initialization code
+			//if kernel pool acquisition were working, this should be done in initialization code, right now 
+			//initialization code doesn't seem to be running??
 			//***evaluateWLCommand(ml, "<<"+combinedProjectedMxFilePath, false, true);*/
 			evaluateWLCommand(ml, "<<"+pathToProjectionMx, false, true);
 			evaluateWLCommand(ml, "AppendTo[$ContextPath, \""+ TermDocumentMatrix.PROJECTION_MX_CONTEXT_NAME +"\"]", false, true);	
+			
+			DISTANCE_THRESHOLD = computeDistanceThreshold(ml);
 			/*if(!USE_FULL_MX){
 				evaluateWLCommand(ml, combinedTDMatrixRangeListName + "= Range[Length["+V_MX+"]]", false, true);
 			}*/
@@ -189,9 +197,69 @@ public class ThmSearch {
 	}
 	
 	/**
+	 * Computes the threshold based on distances between lists of strings 
+	 * and select words in them chosen as query words.
+	 * @return
+	 */
+	private static double computeDistanceThreshold(WLEvaluationMedium medium){
+		//first String is thm, second is query
+		String thm0 = "$\\lambda$ run over all pairs of partitions which are complementary with respect to $R$";
+		String thm1 = "The interchange of two distant critical points of the surface diagram does not change the induced map on homology";
+		String thm2 = "let $A$ be some simply connected space, then $B$ is trivial if $B$ is the fundamental group of $A$";
+		String thm3 = "A morphism of C-algebras $f : A \\longrightarrow B$ with axiom is called a noncommutative Serre fibration";
+	
+		String[][] thmAndQueryStringAr = new String[][]{
+			{thm0, "complementary partitions"},
+			{thm1, "critical points of surface diagram"},
+			{thm1, "induced map on homology"},
+			{thm2, "simply connected space"},
+			{thm2, "fundamental group"},
+			{thm3, "morphism of algebras"},
+			{thm3, "noncommutative Serre fibration"}
+		};
+		evaluateWLCommand(medium, "totalDistance=0." , false, true);
+		for(String[] thmQueryPair : thmAndQueryStringAr){
+			//get distancecs
+			String thm = thmQueryPair[0];
+			String thmVecStr = TriggerMathThm2.createQueryNoAnno(thm);
+			String query = thmQueryPair[1];
+			String queryVecStr = TriggerMathThm2.createQueryNoAnno(query);
+			/*applies projection mx. Need to Transpose, so rows represent thms. queryVecStrTranspose is column vec.
+			 * So are q0 and q.*/
+			evaluateWLCommand(medium, "queryVecStrTranspose= Transpose[" + queryVecStr + "]; "
+					+ "q0 = queryVecStrTranspose + 0.08*corMx.queryVecStrTranspose; q = dInverse.uTranspose.q0", false, true);
+			
+			evaluateWLCommand(medium, "thmVecStrTranspose= Transpose[" + thmVecStr + "]; "
+					+ "t0 = thmVecStrTranspose + 0.08*corMx.thmVecStrTranspose; t = dInverse.uTranspose.t0", false, true);
+			
+			evaluateWLCommand(medium, "totalDistance+=EuclideanDistance[t, q]", false, true);	
+		}
+		//Use 3/2 for now, experiment and make it a constant!
+		Expr distanceExpr = evaluateWLCommand(medium, "3/2*totalDistance/"+thmAndQueryStringAr.length , true, true);
+		double threshold = 0.01;
+		try {
+			threshold = distanceExpr.asDouble();
+		} catch (ExprFormatException e) {
+			String msg = "ExprFormatException when evaluating threshold distance for Nearest!";
+			System.out.println(msg);
+			logger.error(msg);
+		}
+		String msg = "The threshold distance for Nearest is computed to be " + threshold;
+		System.out.println(msg);
+		logger.info(msg);		
+		//figure out if 0!!
+		if(0.0 == threshold){
+			logger.error("Threshold is 0!!!");
+			threshold = 0.03;
+		}
+		return threshold;
+	}
+	
+	/**
 	 * Constructs the String query to be evaluated.
 	 * Submits it to kernel for evaluation.
-	 * @param queryVecStr should be a vec and *not* English words, i.e. {{v1, v2, ...}}!
+	 * @param queryVecStr should be a vec and *not* English words, i.e. {{v1, v2, ...}}.
+	 * The embedding dimension of queryVec is the full dimension.
 	 * @param num is number of results to show.
 	 * @return List of indices of nearest thms. Indices in, eg MathObjList 
 	 * (Indices in all such lists should coincide).
@@ -250,8 +318,7 @@ public class ThmSearch {
 				if(getResult){
 					logger.info("ThmSearch - dInverse.uTranspose.q0): " + qVec);
 					//System.out.println("qVec: " + qVec);
-				}
-				
+				}				
 				if(DEBUG){					
 					System.out.println("The Nontrivial Values in query vec: " + evaluateWLCommand(medium, 
 							"q1=Transpose[q][[1]]; pos=Position[q1, Except[0.]]; Map[Part[q1, #]&, pos]", true, true));
@@ -262,8 +329,7 @@ public class ThmSearch {
 						"q1=Transpose[q0][[1]]; pos=Position[q1, Except[0.]]", true, true));
 				System.out.println("Values at Pos: " + evaluateWLCommand(medium, 
 						"Map[Part[q1, #]&, pos]", true, true));
-			}
-			
+			}			
 			//ml.waitForAnswer();
 			//System.out.println("ThmSearch - q after inverse of transpose: " + ml.getExpr());
 			/*ml.evaluate("q = q + vMeanValue;");
@@ -290,9 +356,6 @@ public class ThmSearch {
 			System.out.println(msg);
 			logger.info(msg);
 			
-			if(DEBUG){
-				System.out.println("Dimensions[vMx] " + evaluateWLCommand(medium, "Dimensions["+V_MX+"]", true, true));
-			}
 			//Keep trying nearest functions, until sufficiently many below a certain distance threshold is obtained.
 			//Attach bundle iterator to web session. Must iterate over same range as intersection search!!!
 			//Should pass here the range of thms searched for intersection, and just search over these range.
@@ -300,33 +363,40 @@ public class ThmSearch {
 			//System.out.println("Dimensions@First@Transpose[q] " + evaluateWLCommand(ml, "Dimensions[First@Transpose[q]]", true, true));
 			//String vMx = TermDocumentMatrix.COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME;
 			//count of thms already found.
+			//System.out.println("getMxPathFromSymbol[mxIndex_Integer]: " +evaluateWLCommand(medium, "getMxPathFromSymbol[0]",true, true));
+			
 			int thmsFoundCount = 0;
 			while(thmsFoundCount <= numNearest && mxCacheIter.hasNext()){
 				int nextMxKey = mxCacheIter.next();
 				String nextMxName = TermDocumentMatrix.COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME + nextMxKey;//make this into method!
 				//load the mx first, if not already in memory. This does not load if mx already loaded in cache.
 				//loadMx[mxIndex_Integer, cacheBag_, timeBag_]
-				evaluateWLCommand(medium, "loadMx["+nextMxKey + ","+ CACHE_BAG_NAME + "," + TIME_BAG_NAME +"]");
+				evaluateWLCommand(medium, "loadMx["+nextMxKey + ","+ CACHE_BAG_NAME + "," + TIME_BAG_NAME +"]", false, true);
 				
-				//evaluate nearest findNearest[combinedTDMx_, queryVec_, threshold_Real, numNearest_Integer]
+				System.out.println("nextMxName[[1;;10]]: " +evaluateWLCommand(medium, nextMxName+"[[1;;10]]",true, true));
+				System.out.println("CACHE_BAG_NAME: " +evaluateWLCommand(medium, CACHE_BAG_NAME,true, true));
+				System.out.println("cacheExceedsCapacity[cacheBag]: " +evaluateWLCommand(medium, "cacheExceedsCapacity[cacheBag]",true, true));
+				
+				
+				//Function signature: findNearest[combinedTDMx_, queryVec_, threshold_Real, numNearest_Integer]
 				//get distance, and only those indices that fall below a distance threshold.
 				//***factor out First@Transpose[q]!// also factor out numNearest/2!
 				Expr nearestVec = evaluateWLCommand(medium, "findNearest[" + nextMxName + ",First@Transpose[q],"+ DISTANCE_THRESHOLD +","
-						+numNearest/2 +", Method->\"Scan\"] - " 
+						+numNearest/2 +"] - " 
 						+ LIST_INDEX_SHIFT, true, true);
 				//***Expr nearestVec = evaluateWLCommand(medium, "Nearest["+V_MX_RULE_NAME +", First@Transpose[q],"+numNearest+", Method->\"Scan\"] - " 
 						//+ LIST_INDEX_SHIFT, true, false);
 				//ml.evaluate("Nearest["+V_MX+"->"+ combinedTDMatrixRangeListName +", First@Transpose[q],"+numNearest+", Method->\"Scan\"] - " 
 					//	+ LIST_INDEX_SHIFT);
 				
-				msg = "SVD returned nearestVec! ";
+				msg = "SVD returned nearestVec! "+ nearestVec;
 				System.out.println(msg);
 				logger.info(msg);
 				//use this when using Nearest
 				//int[] nearestVecArray = (int[])nearestVec.part(1).asArray(Expr.INTEGER, 1);
 				 //<--this line generates exprFormatException if sucessive entries are quickly entered.
 				//System.out.println("resulting Expr nearestVec: " + nearestVec);
-				logger.info("ThmSearch - nearestVec: " + nearestVec);
+				//logger.info("ThmSearch - nearestVec: " + nearestVec);
 				nearestVecArray = (int[])nearestVec.asArray(Expr.INTEGER, 1);
 				
 				thmsFoundCount += nearestVecArray.length;
@@ -818,8 +888,9 @@ public class ThmSearch {
 				logger.info(msg);
 				System.out.println(msg);
 				
-				//the entries in corMx.m can range from 0 to ~6
-				ml.evaluate("mx = m + .15*corMx.m;");
+				//the entries in corMx.m can range from 0 to ~6 //This should be the same percentage as 
+				//when forming query vecs!
+				ml.evaluate("mx = m + .08*corMx.m;");
 				if(getCorMx){
 					ml.waitForAnswer();
 					Expr expr = ml.getExpr();
@@ -827,8 +898,6 @@ public class ThmSearch {
 				}else{
 					ml.discardAnswer();
 				}
-				
-				
 				//System.out.println("is matrix? " + r.part(1).matrixQ() + r.part(1));
 				//System.out.println(Arrays.toString((int[])r.part(1).part(1).asArray(Expr.INTEGER, 1)));
 				

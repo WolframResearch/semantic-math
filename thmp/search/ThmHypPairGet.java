@@ -127,7 +127,8 @@ public class ThmHypPairGet{
 		private List<ThmHypPair> thmPairList;
 		private static final ThmHypPairBundle PLACEHOLDER_BUNDLE = new ThmHypPairBundle();
 		
-		public ThmHypPairBundle(int bundleKey){			
+		public ThmHypPairBundle(int bundleKey){	
+			this.bundleKey = bundleKey;
 			String serialFileStr = BASE_FILE_STR + String.valueOf(bundleKey);
 			if(servletContext != null){
 				serialFileStr = servletContext.getRealPath(serialFileStr);
@@ -151,6 +152,13 @@ public class ThmHypPairGet{
 		
 		public ThmHypPairBundle PLACEHOLDER_BUNDLE(){
 			return PLACEHOLDER_BUNDLE;
+		}
+
+		/**
+		 * @return the bundleKey
+		 */
+		public int getBundleKey() {
+			return this.bundleKey;
 		}
 	}
 	

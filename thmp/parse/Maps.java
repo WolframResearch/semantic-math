@@ -109,6 +109,10 @@ public class Maps {
 		return BuildMaps.posMMap;
 	}
 	
+	/**
+	 * Essential pos map used for searching. This includes the words in the lexicon.
+	 * @return
+	 */
 	public static ListMultimap<String, String> essentialPosMMap(){
 		return BuildMaps.essentialPosMMap;
 	}
@@ -143,7 +147,7 @@ public class Maps {
 		// parts of speech map, e.g. "open", "adj"
 		//specify it's a ListMultimap, to make known that insertion order is preserved
 		protected static final ListMultimap<String, String> posMMap;
-		//essential pos map used for searching
+		//essential pos map used for searching. This includes the words in the lexicon.
 		protected static final ListMultimap<String, String> essentialPosMMap;
 		// map of structures, for all, disj, etc
 		// protected static HashMap<String, Rule> structMap;
