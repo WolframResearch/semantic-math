@@ -12,15 +12,11 @@ BeginPackage["CacheManager`"]
 
 
 (* ::Input:: *)
-(*findNearest[threshold_Real,queryVec_,numNearest_Integer]:=Module[{indexDistAr}, indexDistAr=Nearest[indexDistAr->{"Index","Distance"},queryVec,numNearest];Select[indexDistAr,#[[2]]<threshold&][[All,1]]]*)
+(*findNearest[combinedTDMx_,queryVec_,threshold_Real,numNearest_Integer]:=Module[{indexDistAr}, indexDistAr=Nearest[combinedTDMx->{"Index","Distance"},queryVec,numNearest];Select[indexDistAr,#[[2]]<threshold&][[All,1]]]*)
 
 
 (* ::Input:: *)
 (*select[threshold_Real]:=Select[ar,#[[2]]<threshold&]*)
-
-
-(* ::Item:: *)
-(*set $HistoryLength=0 at beginning of package, then restore at end.*)
 
 
 (* ::Item:: *)
@@ -32,12 +28,12 @@ BeginPackage["CacheManager`"]
 
 
 (* ::Input:: *)
-(*$TotalMxCount;$MxCountCap=10;*)
+(*$TotalMxCount;$MxCountCap;*)
 
 
 (* ::Input:: *)
 (*(*1 means already loaded, 0 otherwise. Returns cacheBag and timeBag*)*)
-(*initializeCache[totalMxCount_Integer]:=Module[{cacheBag,timeBag},cacheBag=Internal`Bag[];Table[Internal`StuffBag[cacheBag,0],totalMxCount] ;timeBag=Internal`Bag[];Table[Internal`StuffBag[timeBag,0],totalMxCount];$TotalMxCount=totalMxCount; {cacheBag,timeBag}];*)
+(*initializeCache[totalMxCount_Integer,mxCountCap_Integer]:=Module[{cacheBag,timeBag},cacheBag=Internal`Bag[];Table[Internal`StuffBag[cacheBag,0],totalMxCount] ;timeBag=Internal`Bag[];Table[Internal`StuffBag[timeBag,0],totalMxCount];$TotalMxCount=totalMxCount; $MxCountCap=mxCountCap;$HistoryLength=0; {cacheBag,timeBag}];*)
 
 
 (* ::Item:: *)
@@ -79,11 +75,15 @@ BeginPackage["CacheManager`"]
 
 
 (* ::Input:: *)
-(*getMxPathFromSymbol[mxIndex_Integer]:=FileNameJoin[{"src","thmp","data","CombinedTDMatrix"<>ToString[mxIndex]<>".mx"}];*)
+(*getMxPathFromSymbol[mxIndex_Integer]:=FileNameJoin[{"src","thmp","data","tdmx","CombinedTDMatrix"<>ToString[mxIndex]<>".mx"}];*)
 
 
 (* ::Input:: *)
 (*getMxNameFromSymbol[mxIndex_Integer]:="CombinedTDMatrix"<>ToString[mxIndex];*)
+
+
+(*Not sure when this would be called? Since there a kernel is supposed to be used perpetually*)
+cleanUpCache[]:=($HistoryLength=\[Infinity])
 
 
 EndPackage[]

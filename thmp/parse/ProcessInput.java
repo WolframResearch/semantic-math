@@ -57,8 +57,7 @@ public class ProcessInput {
 	//servlet context if run from server
 	private static ServletContext servletContext;
 		
-	static{
-		
+	static{		
 		ListMultimap<String, String> texCommandWordsPreMMap = ArrayListMultimap.create();
 		//put tex-words pairs into the premap
 		addCommandWords(texCommandWordsPreMMap, "oplus", new String[]{"direct sum"});
@@ -66,8 +65,7 @@ public class ProcessInput {
 		texCommandWordsMMap = ImmutableMultimap.copyOf(texCommandWordsPreMMap);
 		//pattern to match latex symbols between "$", also include \[ \] ****
 		String TEX_CONTENT = "\\$[^$]+\\$|\\$\\$[^$]+\\$\\$";
-		TEX_CONTENT_PATTERN = Pattern.compile(TEX_CONTENT);
-		
+		TEX_CONTENT_PATTERN = Pattern.compile(TEX_CONTENT);		
 	}	
 	
 	private static void addCommandWords(ListMultimap<String, String> texCommandWordsPreMMap, String texCommand, String[] words){
@@ -92,14 +90,6 @@ public class ProcessInput {
 		}
 		return macroReplacedThmList;
 	}
-	
-	/**
-	 * Sets the BufferedReader of the macro file InputStream 
-	 * @param macrosReader
-	 */
-	/*public static void setResources(BufferedReader macrosReader){
-		macrosBReader = macrosReader;
-	}*/
 	
 	/**
 	 * Set servlet context, if run from server.
@@ -233,8 +223,7 @@ public class ProcessInput {
 	private static String inputReplace(String thm, Map<String, String> macrosMap, boolean replaceTex, boolean texToWords, 
 			boolean replaceMacros, List<String> macroReplacedThmPreList){
 		
-		String noTexString = replaceThm(thm, macrosMap, replaceTex, texToWords, replaceMacros, macroReplacedThmPreList);			
-		
+		String noTexString = replaceThm(thm, macrosMap, replaceTex, texToWords, replaceMacros, macroReplacedThmPreList);					
 		return noTexString;
 	}
 

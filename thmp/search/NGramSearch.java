@@ -192,7 +192,7 @@ public class NGramSearch {
 			//total word counts of all 2 grams
 			Map<String, Integer> totalWordCountsMap = new HashMap<String, Integer>();
 			//build nGram map, 
-			buildNGramMap(twoGramTotalOccurenceMap, totalWordCountsMap);
+			buildNGramMap(thmList, twoGramTotalOccurenceMap, totalWordCountsMap);
 	
 			//computes the average frequencies of words that follow the first word in all 2-grams
 			Map<String, Integer> averageWordCountsMap = computeAverageFreq(twoGramTotalOccurenceMap, totalWordCountsMap);
@@ -330,29 +330,6 @@ public class NGramSearch {
 		}		
 	}
 	
-	/*
-	 * @param averageCounts records the average frequency counts of words that follow
-	 * each word that's its key in this map. This is used to compute the average freq of words
-	 * that follow a given word. This is less than the total count of that key word in the document, 
-	 * as fluff words are skipped.
-	 */
-	/**
-	 * Iterate through all the words. Record the frequency counts.
-	 * Skip if a frequent word as recorded in English frequent words list.
-	 * @param totalWordCounts Total counts of words that follow this word, equivalent to size of map in
-	 * nGramMap corresponding to this key word. Expected to be empty at input.
-	 * @param nGramMap Map of maps. Keys are words in text, and entries are maps whose keys are 2nd terms
-	 * in 2 grams, and entries are frequency counts. I.e. map of words that show up, and the words that 
-	 * immediately follow and their counts.
-	 */
-	private static void buildNGramMap(Map<String, Map<String, Integer>> nGramMap, Map<String, Integer> totalWordCounts){		
-		//get thmList from CollectThm
-		//List<String> thmList = ProcessInput.processInput(CollectThm.ThmList.allThmsWithHypList(), true);
-		List<String> thmList = CollectThm.ThmList.allThmsWithHypList();
-		//System.out.println(thmList);
-		buildNGramMap2(nGramMap, totalWordCounts, thmList);
-	}
-
 	/**
 	 * 
 	 * @param nGramMap Expected to be empty at input
@@ -364,7 +341,7 @@ public class NGramSearch {
 		//skip nonMathFluffWords, collapse list
 		for(String thm : thmList){
 			//split into words
-			String[] thmAr = thm.toLowerCase().split(WordForms.splitDelim());
+			String[] thmAr = WordForms.splitThmIntoSearchWords(thm.toLowerCase());
 			String curWord;
 			String nextWord;
 			
@@ -372,25 +349,35 @@ public class NGramSearch {
 				curWord = thmAr[i];
 				nextWord = thmAr[i+1];
 				
-				//take singular forms
-				curWord = WordForms.getSingularForm(curWord);
-				nextWord = WordForms.getSingularForm(nextWord);	
-				
 				//this is a rather large set, should not include so many cases.
 				//words such as "purely inseparable" might be filtered out.
 				//maybe first word could be the small fluff words list from ThreeGramSearch?
 				if(fluffWordsSet.contains(curWord) || curWord.length() < 2 
+						|| WordForms.SPECIAL_CHARS_PATTERN.matcher(curWord).matches()
 						|| INVALID_WORD_PATTERN.matcher(curWord).matches()){	
 					//if(nonMathFluffWordsSet.contains(curWord) || curWord.length() < 2 
 						//	|| curWord.matches("\\s*") || curWord.contains("\\")){	
 					continue;
 				}
 				//screen off 2nd word more discriminantly.
-				if(fluffWordsSet.contains(nextWord) || nonMathFluffWordsSet.contains(nextWord) 
-						|| nextWord.length() < 2 || INVALID_WORD_PATTERN.matcher(curWord).matches()){					
+				if(nextWord.length() < 2 || WordForms.SPECIAL_CHARS_PATTERN.matcher(curWord).matches()
+						|| INVALID_WORD_PATTERN.matcher(curWord).matches()
+						||fluffWordsSet.contains(nextWord) || nonMathFluffWordsSet.contains(nextWord) ){					
 					i++;
 					continue;
-				}				
+				}
+
+				//take singular forms
+				curWord = WordForms.getSingularForm(curWord);
+				nextWord = WordForms.getSingularForm(nextWord);	
+
+				if(fluffWordsSet.contains(curWord)){
+					continue;
+				}
+				if(fluffWordsSet.contains(nextWord)){
+					i++;
+					continue;
+				}
 				//add to nGramMap
 				Map<String, Integer> wordMap = nGramMap.get(curWord);
 				if(wordMap != null){

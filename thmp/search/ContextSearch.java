@@ -102,7 +102,6 @@ public class ContextSearch implements Searcher<Map<Integer, Integer>>{
 			return nearestThmIndexList;
 		}
 		System.out.println("ContextSearch-selected thm indices: " + nearestThmIndexList);
-		//System.out.println("ContextSearch - queryContextVecMap "+ queryContextVecMap);
 		
 		Map<Integer, List<Integer>> thmVecsTMap = new TreeMap<Integer, List<Integer>>(new thmp.utils.DataUtility.ReverseIntComparator());
 		List<Map<Integer, Integer>> nearestThmVecMapList = new ArrayList<Map<Integer, Integer>>();
@@ -142,15 +141,13 @@ public class ContextSearch implements Searcher<Map<Integer, Integer>>{
 		for(Map.Entry<Integer, List<Integer>> entry : thmVecsTMap.entrySet()){
 			nearestVecList.addAll(entry.getValue());			
 		}
-		System.out.println("ContextSearch - nearestContextVecs: "+nearestVecList);
+		System.out.println("ContextSearch - nearestContextVecs: "+nearestVecList 
+				+ " Thms, including hyp: ");
 		
 		for(int i = 0; i < nearestVecList.size(); i++){
 			int thmIndex = nearestVecList.get(i);
-			System.out.println(TriggerMathThm2.getThm(thmIndex));
+			System.out.println(ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex));
 		}
-	
-		//System.out.println("keywordDict: " + TriggerMathThm2.keywordDict());
-		//logger.info("Context search done!");
 		
 		if(null != nearestVecList){
 			return nearestVecList;

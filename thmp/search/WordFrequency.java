@@ -28,6 +28,7 @@ import com.google.common.collect.Multimap;
 
 import thmp.parse.ProcessInput;
 import thmp.search.CollectThm.ThmList;
+import thmp.search.Searcher.SearchMetaData;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 
@@ -45,34 +46,41 @@ public class WordFrequency {
 	private static final Map<String, Integer> corpusWordFreqMap = new HashMap<String, Integer>();
 	private static final Logger logger = LogManager.getLogger(WordFrequency.class);
 	
-	private static final int TOTAL_CORPUS_WORD_COUNT;
+	//private static final int TOTAL_CORPUS_WORD_COUNT;
 	private static final Path trueFluffWordsPath = Paths.get("src/thmp/data/trueFluffWords.txt");
 	
 	//450 million total words in stock word frequency list
 	private static final int TOTAL_STOCK_WORD_COUNT = (int)Math.pow(10, 7)*45;
 	static {		
 		// build wordFreqMap
-		List<String> extractedThms = ThmList.allThmsWithHypList();
+		//List<String> extractedThms = ThmList.allThmsWithHypList();
 		// the boolean argument indicates whether to replace tex symbols with "tex"
-		List<String> thmList = ProcessInput.processInput(extractedThms, true);
-		
-		TOTAL_CORPUS_WORD_COUNT = extractFreq(thmList);
+		//fills corpusWordFreqMap and gets total word count
+		//serialize 
+		//TOTAL_CORPUS_WORD_COUNT = extractFreq(thmList);
 	}
 
-	private static int extractFreq(List<String> thmList) {
+	/**
+	 * fills corpusWordFreqMap and gets total word count.
+	 * @param thmList
+	 * @param corpusWordFreqMap
+	 * @return
+	 */
+	public static int extractThmAllWordsFrequency(List<String> thmList, 
+			Map<String, Integer> corpusWordFreqMap) {
 		int totalCorpusWordCount = 0;
 		for (int i = 0; i < thmList.size(); i++) {
 			String thm = thmList.get(i);
-
-			String[] thmAr = thm.toLowerCase().split(WordForms.splitDelim());
-
+			//String[] thmAr = thm.toLowerCase().split(WordForms.splitDelim());
+			String[] thmAr = WordForms.splitThmIntoSearchWords(thm.toLowerCase());
+			
 			for (int j = 0; j < thmAr.length; j++) {
-
+				
 				String word = thmAr[j];
 				// only keep words with lengths > 2
-				if (word.length() < 3 || word.contains("\\"))
+				if (word.length() < 3 || WordForms.SPECIAL_CHARS_PATTERN.matcher(word).matches()){
 					continue;
-
+				}
 				// get singular forms if plural, put singular form in map
 				// Note, some words shouldn't need to be converted to singular
 				// form!
@@ -85,12 +93,15 @@ public class WordFrequency {
 					corpusWordFreqMap.put(word, 1);
 				}
 				totalCorpusWordCount++;
-			}
-			
+			}			
 		}
 		return totalCorpusWordCount;
 	}
 
+	/**
+	 * Dealing with frequency data as stored in wordFrequency.txt.
+	 * @author yihed
+	 */
 	public static class ComputeFrequencyData{
 		
 		private static final String WORDS_FILE_STR = "src/thmp/data/wordFrequency.txt";
@@ -101,9 +112,9 @@ public class WordFrequency {
 		
 		
 		//subset of words and their pos from the stock file that only stores word and its pos of true fluff words
-		private static ListMultimap<String, String> trueFluffWordsPosMap;
+		//***private static ListMultimap<String, String> trueFluffWordsPosMap;
 		
-		private static Set<String> trueFluffWordsSet;
+		private static final Set<String> trueFluffWordsSet;
 
 		//words that should be included in trueFluffWordsSet, but were left out by algorithm.
 		private static final String[] ADDITIONAL_FLUFF_WORDS = new String[]{"an", "are", "has", "tex", "between"};
@@ -136,9 +147,14 @@ public class WordFrequency {
 				logger.error(msg);
 				throw new IllegalStateException(msg);
 				
-			}
-			
+			}			
 			wordPosMap = ImmutableMap.copyOf(wordPosPreMap);
+			
+			String trueFluffWordsSetPath = FileUtils.getServletPath(SearchMetaData.trueFluffWordsSetPath());
+			@SuppressWarnings("unchecked")
+			Set<String> set = ((List<Set<String>>)FileUtils.deserializeListFromFile(trueFluffWordsSetPath)).get(0);
+			trueFluffWordsSet = set;
+			
 			//build trueFluffWordsSet
 			//buildTrueFluffWordsSet(totalCorpusWordCount, stockFreqMap, wordPosMap, corpusWordFreqMap);
 		}
@@ -184,28 +200,31 @@ public class WordFrequency {
 		 * Deliberately include the static variables in the parameter set, to highlight the dependency on them.
 		 * @param totalCorpusWordCount
 		 */
-		private static void buildTrueFluffWordsSet(Map<String, Integer> stockFreqMap,
-				Map<String, String> wordPosMap, Map<String, Integer> corpusWordFreqMap){
+		public static void buildTrueFluffWordsSet(Set<String> trueFluffWordsSet,
+				//Map<String, Integer> stockFreqMap, Map<String, String> wordPosMap, 
+				Map<String, Integer> corpusWordFreqMap,
+				int TOTAL_CORPUS_WORD_COUNT){
 			
-			trueFluffWordsPosMap = ArrayListMultimap.create();
-			trueFluffWordsSet = new HashSet<String>();
+			//trueFluffWordsPosMap = ArrayListMultimap.create();
+			 //= new HashSet<String>();
 			
 			for(Map.Entry<String, Integer> wordFreqEntry: stockFreqMap.entrySet()){
 				String word = wordFreqEntry.getKey();
 				Integer wordFreq = wordFreqEntry.getValue();
 				String wordPos = wordPosMap.get(word);
 				
-				Integer wordCorpusFreq = corpusWordFreqMap.get(word);
-				if(wordCorpusFreq != null){
-					
-					//put in trueFluffWordsSet if below twice the stock freq
-					if((double)wordCorpusFreq / TOTAL_CORPUS_WORD_COUNT < 2*(double)wordFreq / TOTAL_STOCK_WORD_COUNT){
+				Integer wordMathCorpusFreq = corpusWordFreqMap.get(word);
+				if(wordMathCorpusFreq != null){					
+					//put in trueFluffWordsSet if below twice the stock freq, to filter out English words such as
+					// "is", "the", etc. Math words occur much more frequently in math corpus than their avg English
+					//frequency. Experiment with the 2 here!!
+					if((double)wordMathCorpusFreq / TOTAL_CORPUS_WORD_COUNT < 2*(double)wordFreq / TOTAL_STOCK_WORD_COUNT){
 						trueFluffWordsSet.add(word);
-						trueFluffWordsPosMap.put(word, wordPos);
+						//trueFluffWordsPosMap.put(word, wordPos);
 					}
 				}else{
 					trueFluffWordsSet.add(word);
-					trueFluffWordsPosMap.put(word, wordPos);
+					//trueFluffWordsPosMap.put(word, wordPos);
 				}
 			}
 			
@@ -216,7 +235,7 @@ public class WordFrequency {
 		}
 
 		/**
-		 *  Gets only the non math common words.
+		 * Gets only the non math common words.
 		 * Gets non math fluff words differently, by taking the math words that
 		 * are marked as fluff out of the wordPosMap.
 		 * 
@@ -258,15 +277,7 @@ public class WordFrequency {
 		 * Retrieves set of true fluff words.
 		 * @return
 		 */
-		public static Set<String> trueFluffWordsSet() {
-			if(trueFluffWordsSet == null){
-				synchronized(WordFrequency.class){
-					if(trueFluffWordsSet == null){
-						//build trueFluffWordsSet
-						buildTrueFluffWordsSet(stockFreqMap, wordPosMap, corpusWordFreqMap);
-					}
-				}
-			}		
+		public static Set<String> trueFluffWordsSet() {	
 			return trueFluffWordsSet;
 		}	
 
@@ -275,7 +286,7 @@ public class WordFrequency {
 		 * freqWordsPosMap().
 		 * @return
 		 */
-		public static ListMultimap<String, String> trueFluffWordsPosMap() {
+		/*public static ListMultimap<String, String> trueFluffWordsPosMap() {
 			if(trueFluffWordsPosMap == null){
 				synchronized(WordFrequency.class){
 					if(trueFluffWordsPosMap == null){
@@ -285,7 +296,7 @@ public class WordFrequency {
 				}
 			}
 			return trueFluffWordsPosMap;
-		}	
+		}*/	
 
 		/**
 		 * Retrieves map of true fluff words and their pos. 
@@ -367,7 +378,7 @@ public class WordFrequency {
 			return pos;
 		}
 		
-	}//end of BuildPosMap class
+	}//end of ComputeFrequencyData class
 	
 	/**
 	 * Retrieves map of true fluff words and their pos. 
@@ -389,30 +400,6 @@ public class WordFrequency {
 	 */
 	public static Map<String, Integer> corpusWordFreqMap() {
 		return corpusWordFreqMap;
-	}
-
-	/**
-	 * Computes frequency of words in a sentence, store in map.
-	 * *Not* used right now.
-	 * @deprecated
-	 * @param sentence
-	 * @return
-	 */
-	public static Map<String, Integer> wordFreq(String input) {
-		// keys are words, values are frequencies
-		Map<String, Integer> freqMap = new HashMap<String, Integer>();
-		// split into words
-		String[] inputAr = input.split(" |\\.|\\,|\'|\"|\\(|\\)");
-		for (String word : inputAr) {
-			Integer wordFreq = freqMap.get(word);
-			if (wordFreq == null) {
-				freqMap.put(word, wordFreq + 1);
-			} else {
-				freqMap.put(word, 1);
-			}
-		}
-
-		return freqMap;
 	}
 
 	public static void main(String[] args) {

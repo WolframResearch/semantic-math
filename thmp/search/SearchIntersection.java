@@ -28,7 +28,6 @@ import com.google.common.collect.SetMultimap;
 import com.google.common.collect.TreeMultimap;
 
 import thmp.search.SearchCombined.ThmHypPair;
-import thmp.search.SearchWordPreprocess.WordWrapper;
 import thmp.search.ThmHypPairGet.ThmHypPairBundle;
 import thmp.utils.GatherRelatedWords.RelatedWords;
 import thmp.utils.WordForms;
@@ -53,10 +52,7 @@ public class SearchIntersection {
 	 */
 	private static final ImmutableMap<String, Integer> wordsScoreMap;
 
-	/**
-	 * List of theorems.
-	 */
-	private static final ImmutableList<String> thmList;
+	//**private static final ImmutableList<String> thmList;
 	// private static final ImmutableList<String> webDisplayThmList;
 
 	/**
@@ -92,7 +88,7 @@ public class SearchIntersection {
 		relatedWordsMap = CollectThm.ThmWordsMaps.getRelatedWordsMap();
 		// System.out.println(wordsScoreMap);
 		// thmList = CollectThm.ThmList.get_macroReplacedThmList();
-		thmList = CollectThm.ThmList.allThmsWithHypList();
+		//****thmList = CollectThm.ThmList.allThmsWithHypList();
 		// webDisplayThmList = CollectThm.ThmList.get_webDisplayThmList();
 	}
 
@@ -421,7 +417,8 @@ public class SearchIntersection {
 				counter--;
 				if (DEBUG) {
 					System.out.println(
-							"thm Score " + entry.getKey() + " thmIndex " + thmIndex + " thm " + thmList.get(thmIndex));
+							"thm Score " + entry.getKey() + " thmIndex " + thmIndex + " thm " 
+									+ ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex).thmStr());
 				}
 			}
 		}
@@ -447,7 +444,7 @@ public class SearchIntersection {
 	 * "linear map with closed range", "closed", "range", "closed range" all
 	 * weigh a lot. Scale proportionally down with respect to the average score.
 	 * Just reduce token initial scores instead!
-	 * 
+	 * @deprecated June 2017. Keep for a few months if the need for improved version arises.
 	 * @param thmScoreMap
 	 * @param scoreThmMMap
 	 * @param thmWordSpanMMap
@@ -460,7 +457,7 @@ public class SearchIntersection {
 	 */
 	private static void lowerThmScores(Map<Integer, Integer> thmScoreMap, TreeMultimap<Integer, Integer> scoreThmMMap,
 			Multimap<Integer, Integer> thmWordSpanMMap, ListMultimap<String, Integer> wordThmIndexMMap,
-			Multimap<Integer, String> indexStartingWordsMMap, int[] wordCountArray, List<WordWrapper> wordWrapperList,
+			Multimap<Integer, String> indexStartingWordsMMap, int[] wordCountArray, //List<WordWrapper> wordWrapperList,
 			double avgWordScore) {
 
 		// if freq above certain level
@@ -576,7 +573,7 @@ public class SearchIntersection {
 				scoreThmMMap.put(newThmScore, thmIndex);
 				thmScoreMap.put(thmIndex, newThmScore);
 				if (DEBUG) {
-					String thm = thmList.get(thmIndex);
+					String thm = ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex).thmStr();
 					System.out.println("Adding bonus " + bonusScore + ". num words hit: " + entry.getKey()
 							+ ". newThmScore: " + newThmScore + ". thm: " + thm);
 					// System.out.println("PREV SCORE " + prevScore + " NEW
@@ -806,7 +803,7 @@ public class SearchIntersection {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		System.out.println("searchIntersection- Total number of thms " + CollectThm.ThmList.numThms());
+		System.out.println("searchIntersection- Total number of thms " + ThmHypPairGet.totalThmsCount());
 		Scanner sc = new Scanner(System.in);
 	
 		while (sc.hasNextLine()) {
@@ -831,9 +828,9 @@ public class SearchIntersection {
 			 * thmAr[0].equals("context")){ highestThms =
 			 * ContextSearch.contextSearch(thm, highestThms); }
 			 */
-
+			System.out.println("~ SEARCH RESULTS ~");
 			for (Integer thmIndex : highestThms) {
-				System.out.println(thmList.get(thmIndex));
+				System.out.println(ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex).thmStr());
 			}
 		}
 		sc.close();

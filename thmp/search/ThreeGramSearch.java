@@ -190,7 +190,7 @@ public class ThreeGramSearch {
 			
 			//if(thm.matches("\\s*")) continue;
 			
-			String[] thmAr = thm.toLowerCase().split(WordForms.splitDelim());
+			String[] thmAr = WordForms.splitThmIntoSearchWords(thm.toLowerCase());
 			String word0;
 			String word1;
 			String word2;
@@ -201,14 +201,17 @@ public class ThreeGramSearch {
 				word0 = thmAr[i];
 				//shouldn't happen because the way thm is split
 				//was word0.matches("\\s*"), instead of \\s+
-				if(WHITESPACE_PATTERN.matcher(word0).matches() || word0.contains("\\") || word0.contains("$")){
+				if(WHITESPACE_PATTERN.matcher(word0).matches()
+						|| WordForms.SPECIAL_CHARS_PATTERN.matcher(word0).matches()){
 					//if(word0.matches("(?:\\s+)|(?:(?:[^\\]*)(?:\\\\)(?:[.]*))")){
 					continue;
 				}
 				word1 = thmAr[i+1];
 				//int j = i;
 				
-				while((WHITESPACE_PATTERN.matcher(word1).matches() || word1.contains("\\")) && i < thmAr.length-2){
+				while((WHITESPACE_PATTERN.matcher(word1).matches() 
+						|| WordForms.SPECIAL_CHARS_PATTERN.matcher(word1).matches()) 
+						&& i < thmAr.length-2){
 					word1 = thmAr[i+1];
 					i++;
 				}
@@ -219,7 +222,9 @@ public class ThreeGramSearch {
 				
 				word2 = thmAr[i+2];
 				
-				while((WHITESPACE_PATTERN.matcher(word2).matches() || word2.contains("\\") || word2.contains("$")) && i < thmAr.length-2){
+				while((WHITESPACE_PATTERN.matcher(word2).matches() 
+						|| WordForms.SPECIAL_CHARS_PATTERN.matcher(word2).matches()) 
+						&& i < thmAr.length-2){
 					word1 = thmAr[i+2];
 					i++;
 				}
@@ -325,12 +330,12 @@ public class ThreeGramSearch {
 				int threeGramFreq = threeGramCountsMap.get(threeGram);
 				boolean added = false;
 				if(firstWordMap != null ){
-					added = addTo3GramList(threeGramList, firstWordMap, threeGram, word1, threeGramFreq, firstWord);
+					added = addTo3GramList(threeGramFreqMap, threeGramList, firstWordMap, threeGram, word1, threeGramFreq, firstWord);
 					if(!added){
 						String word2 = threeGramAr[2];
 						Map<String, Integer> word1Map = twoGramTotalOccurenceMap.get(word1);
 						if(word1Map != null){
-							added = addTo3GramList(threeGramList, word1Map, threeGram, word2, threeGramFreq, firstWord);							
+							added = addTo3GramList(threeGramFreqMap, threeGramList, word1Map, threeGram, word2, threeGramFreq, firstWord);							
 						}
 					}					
 				}	
@@ -384,8 +389,8 @@ public class ThreeGramSearch {
 	 * @param word Either second or third word in the 3-gram
 	 * @param firstWord The first word in the 3-gram
 	 */
-	private static boolean addTo3GramList(List<String> threeGramList, Map<String, Integer> wordMap, String threeGram, String word,
-			int threeGramFreq, String firstWord){
+	private static boolean addTo3GramList(Map<String, Integer> threeGramFreqMap, List<String> threeGramList, 
+			Map<String, Integer> wordMap, String threeGram, String word, int threeGramFreq, String firstWord){
 		Integer totalPairFreq = wordMap.get(word);
 		boolean added = false;
 		//

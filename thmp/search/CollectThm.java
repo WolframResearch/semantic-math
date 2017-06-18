@@ -78,14 +78,7 @@ public class CollectThm {
 	private static final Logger logger = LogManager.getLogger();
 	//latex macros source file name src/thmp/data/CommAlg5.txt
 	private static final String MACROS_SRC = "src/thmp/data/texMacros.txt";
-	//private static final List<String> rawFileStrList = Arrays.asList(new String[]{"src/thmp/data/functional_analysis_operator_algebras/distributions.txt"});
-
-	//There are intentionally *not* final.
-	//private static volatile BufferedReader rawFileReader;
-	//BufferedReader for context vectors.  <--should preferably not be global variables!
-	//private static volatile BufferedReader contextVecBR;
-	//corresponding list of file readers
-	//private static volatile List<BufferedReader> rawFileReaderList;
+	
 	//macros file
 	private static volatile BufferedReader macrosDefReader;
 	//InputStream for serialized parsed expressions list
@@ -111,29 +104,17 @@ public class CollectThm {
 	public static class FreqWordsSet{
 
 		//Map of frequent words and their parts of speech (from words file data). Don't need the pos for now.
-		private static final Set<String> freqWordsSet; 
+		private static final Set<String> commonEnglishNonMathWordsSet; 
 		
 		static{
 			//only get the top N words
-			freqWordsSet = WordFrequency.ComputeFrequencyData.trueFluffWordsSet();
+			commonEnglishNonMathWordsSet = WordFrequency.ComputeFrequencyData.trueFluffWordsSet();
 		}
 		
-		public static Set<String> freqWordsSet(){
-			return freqWordsSet;
+		public static Set<String> commonEnglishNonMathWordsSet(){
+			return commonEnglishNonMathWordsSet;
 		}
 	}
-	
-	/**
-	 * Set context vector BufferedReader.
-	 * @param srcFileReader
-	 */
-	/*public static void setContextVecBF(BufferedReader contextVectorsBR) {
-		contextVecBR = contextVectorsBR;		
-	}*/
-	
-	/*public static BufferedReader contextVecBR(){
-		return contextVecBR;
-	}*/
 	
 	/**
 	 * Set servlet context, if run from server.
@@ -303,7 +284,7 @@ public class CollectThm {
 				averageSingletonWordFrequency = computeSingletonWordsFrequency(docWordsFreqPreMap);			
 				//add lexicon words to docWordsFreqMapNoAnno, which only contains collected words from thm corpus,
 				//collected based on frequnency, right now. These words do not have corresponding thm indices.
-				addLexiconWordsToContextKeywordDict(docWordsFreqPreMap, averageSingletonWordFrequency); //<--but these should have been adjusted already!!
+				f; addLexiconWordsToContextKeywordDict(docWordsFreqPreMap, averageSingletonWordFrequency); //<--but these should have been adjusted already!!
 				/*use stemToWordsMMap to re-adjust frequency of word stems that came from multiple forms, 
 				 as these are much more likely to be math words, so don't want to scale down too much */
 				adjustWordFreqMapWithStemMultiplicity(docWordsFreqPreMap, stemToWordsMMap);				
@@ -658,7 +639,7 @@ public class CollectThm {
 					if(FLUFF_WORDS_SET.contains(word)){ 
 						continue;
 					}					
-					if(FreqWordsSet.freqWordsSet.contains(word) && !nGramFirstWordsSet.contains(word)){ 
+					if(FreqWordsSet.commonEnglishNonMathWordsSet.contains(word) && !nGramFirstWordsSet.contains(word)){ 
 						continue;					
 					}
 					//check the following word
@@ -719,6 +700,10 @@ public class CollectThm {
 					String twoGramAdded = null;
 					String threeGramAdded = null;*/				
 					String word = thmAr[j];	
+					//skip words that contain special characters
+					if(WordForms.SPECIAL_CHARS_PATTERN.matcher(word).matches()){
+						continue;
+					}					
 					//only keep words with lengths > 2
 					//System.out.println(word);
 					int lengthCap = 3;
@@ -735,7 +720,7 @@ public class CollectThm {
 					if(FLUFF_WORDS_SET.contains(word)){ 
 						continue;
 					}					
-					if(FreqWordsSet.freqWordsSet.contains(word) && !nGramFirstWordsSet.contains(word)){ 
+					if(FreqWordsSet.commonEnglishNonMathWordsSet.contains(word) && !nGramFirstWordsSet.contains(word)){ 
 						continue;					
 					}
 					//check the following word
@@ -838,7 +823,7 @@ public class CollectThm {
 							//so don't keep irrelevant verbs such as "are", "take"
 						}
 					}
-					if(FreqWordsSet.freqWordsSet.contains(word) && !nGramFirstWordsSet.contains(word)
+					if(FreqWordsSet.commonEnglishNonMathWordsSet.contains(word) && !nGramFirstWordsSet.contains(word)
 							&& skipWordBasedOnPos){ 
 						continue;					
 					}
@@ -1082,14 +1067,14 @@ public class CollectThm {
 	 */
 	public static class ThmList{
 		
-		private static final ImmutableList<String> allThmsWithHypList;
+		//*******private static final ImmutableList<String> allThmsWithHypList;
 		//just thm. same order as in allThmsWithHypList.
 		/*private static final ImmutableList<String> allThmsNoHypList;
 		//just hyp. same order as in allThmsWithHypList.
 		private static final ImmutableList<String> allHypList;
 		private static final ImmutableList<String> allThmSrcFileList;*/
-		private static final int numThms;
-		private static final ImmutableList<ThmHypPair> allThmHypPairList;
+		///private static final int numThms;
+		//****private static final ImmutableList<ThmHypPair> allThmHypPairList;
 		
 		//private static final ImmutableList<BigInteger> allThmsRelationVecList;
 		//private static final ImmutableList<String> allThmsContextVecList;
@@ -1115,13 +1100,13 @@ public class CollectThm {
 		
 		static{	
 			//instead of getting thmList from ThmList, need to get it from serialized data.
-			List<ParsedExpression> parsedExpressionsList;
+			//List<ParsedExpression> parsedExpressionsList;
 			/* Deserialize objects in parsedExpressionOutputFileStr, so we don't 
 			 * need to read and parse through all papers on every server initialization.
 			 * Can just read from serialized data. */
 			
 			//need to modularize to multiple lists stored in cache!!!
-			parsedExpressionsList = extractParsedExpressionList();
+			/**parsedExpressionsList = extractParsedExpressionList();
 			
 			List<String> allThmsWithHypPreList = new ArrayList<String>();
 			List<String> allThmsNoHypPreList = new ArrayList<String>();
@@ -1131,15 +1116,9 @@ public class CollectThm {
 					allThmsNoHypPreList, allHypPreList, allThmSrcFilePreList);			
 			
 			allThmsWithHypList = ImmutableList.copyOf(allThmsWithHypPreList);
-			/*allThmsNoHypList = ImmutableList.copyOf(allThmsNoHypPreList);
-			allHypList = ImmutableList.copyOf(allHypPreList);
-			allThmSrcFileList = ImmutableList.copyOf(allThmSrcFilePreList);*/
 			
 			allThmHypPairList = createdThmHypPairListFromLists(allThmsNoHypPreList, allHypPreList, allThmSrcFilePreList);
-			numThms = allThmHypPairList.size();
-			
-			/*allThmsContextVecList = ImmutableList.copyOf(contextVecPreList);
-			allThmsRelationVecList = ImmutableList.copyOf(relationVecPreList);*/
+			numThms = allThmHypPairList.size();*/
 			
 			/*ImmutableList.Builder<String> thmListBuilder = ImmutableList.builder();
 			List<String> extractedThmsList = new ArrayList<String>();
@@ -1237,8 +1216,6 @@ public class CollectThm {
 				return peList;
 			}
 			//List<ParsedExpression> parsedExpressionsList;
-			//String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
-			//String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList.dat";
 			String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionListTemplate.dat";
 			
 			if(null != servletContext){
@@ -1335,13 +1312,13 @@ public class CollectThm {
 		 * ParsedExpressions.
 		 * @return an immutable list
 		 */
-		public static ImmutableList<String> allThmsWithHypList(){
+		/*public static ImmutableList<String> allThmsWithHypList(){
 			return allThmsWithHypList;
-		}
+		}*/
 		
-		public static int numThms(){
+		/*public static int numThms(){
 			return numThms;
-		}
+		}*/
 		/**
 		 * Get list of hypotheses and assumptions,
 		 * as collected by DetectHypothesis.java. As extracted from deserialized 
@@ -1374,9 +1351,9 @@ public class CollectThm {
 		 * Get source file names.
 		 * @return an immutable list
 		 */
-		public static ImmutableList<ThmHypPair> allThmHypPairList(){
+		/*public static ImmutableList<ThmHypPair> allThmHypPairList(){
 			return allThmHypPairList;
-		}
+		}*/
 		
 		/**
 		 * Get thmList. Macros are expanded to their full forms by default.

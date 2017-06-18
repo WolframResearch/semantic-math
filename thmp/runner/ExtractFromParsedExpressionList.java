@@ -16,10 +16,6 @@ public class ExtractFromParsedExpressionList {
 		writePEThmsToFile();		
 	}
 
-	private static void f(){
-		
-	}
-	
 	/**
 	 * 
 	 */
@@ -35,10 +31,10 @@ public class ExtractFromParsedExpressionList {
 		boolean writeToFile = true;
 		if(writeToFile){
 			for(ParsedExpression pe : peList){
+				//getOriginalThmStr is now transient! Should access with thmWithDefList
 				thmStrList.add(pe.getOriginalThmStr() + "\n\n");
 				fileNamesList.add(pe.getDefListWithThm().getSrcFileName());
 			}
-			//FileUtils.writeToFile(thmStrList, dest);
 			FileUtils.writeToFile(fileNamesList, fileNamesDest);
 		}
 		

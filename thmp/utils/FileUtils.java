@@ -180,6 +180,14 @@ public class FileUtils {
 			   logger.error("IOException while writing to unknown words file!");			   
 			}		
 	}
+	/**
+	 * Puts obj in a list, and serilialize.
+	 * @param obj
+	 * @param outputFileStr
+	 */
+	/*public static void serializeObjAsListToFile(Object obj, String outputFileStr){
+		
+	}*/
 	
 	/**
 	 * Writes objects in iterable to the file specified by outputFileStr.

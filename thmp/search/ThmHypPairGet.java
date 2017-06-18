@@ -36,11 +36,14 @@ public class ThmHypPairGet{
 	/*do binary search on this list to find the index of the first thm the bundles
 	  length should be around 100 */
 	private static final List<Integer> bundleStartThmIndexList;
+	private static final int totalThmsCount;
 	private static final int totalBundleNum;
 	
 	static{
 		//deserialize the list set during preprocessing,  
-		bundleStartThmIndexList = deserializeStartThmIndexList();
+		SearchConfiguration searchConfig = deserializeSearchConfiguration();
+		bundleStartThmIndexList = searchConfig.bundleStartThmIndexList();
+		totalThmsCount = searchConfig.totalThmsCount();
 		totalBundleNum = bundleStartThmIndexList.size();
 		thmBundleCache = CacheBuilder.newBuilder()
 				.maximumSize(50) //30mb x 50 = 1500 mb
@@ -56,7 +59,25 @@ public class ThmHypPairGet{
 	}
 	
 	/**
-	 * Iterates over all possible tars backwards, 
+	 * Iterates over all possible mx or bundles keys backwards, 
+	 * chronologically.
+	 */
+	public static class MxBundleKeyIterator implements Iterator<Integer>{
+		//deliberately don't subtract 1.
+		private volatile int currentIndex = totalBundleNum;
+		
+		@Override
+		public boolean hasNext(){			
+			return this.currentIndex > 0;
+		}		
+		@Override
+		public Integer next(){
+			return --this.currentIndex;
+		}
+	}
+	
+	/**
+	 * Iterates over all possible bundles backwards, 
 	 * chronologically.
 	 */
 	public static class ThmCacheIterator implements Iterator<ThmHypPairBundle>{
@@ -65,7 +86,7 @@ public class ThmHypPairGet{
 		
 		@Override
 		public boolean hasNext() {
-			return currentIndex < 1;
+			return currentIndex > 0;
 		}
 		/**
 		 * Returns next element in bundles 
@@ -137,6 +158,9 @@ public class ThmHypPairGet{
 		return new ThmCacheIterator();
 	}
 	
+	public static Iterator<Integer> createMxBundleKeyIterator(){
+		return new MxBundleKeyIterator();
+	}
 	/**
 	 * Return the bundle containing thm with index thmIndex
 	 * @param thmIndex
@@ -191,15 +215,14 @@ public class ThmHypPairGet{
 				return mid;
 			}
 			mid = (low+high)/2;			
-		}
-		
+		}		
 	}
 	
 	/**
 	 * Deserialize meta data
 	 * @return
 	 */
-	private static List<Integer> deserializeStartThmIndexList(){
+	private static SearchConfiguration deserializeSearchConfiguration(){
 		//String path = metaDataFilePath;
 		String path = SearchConfiguration.searchConfigurationSerialPath();
 		if(null != servletContext){
@@ -208,7 +231,21 @@ public class ThmHypPairGet{
 		@SuppressWarnings("unchecked")
 		SearchConfiguration searchConfig 
 			= ((List<SearchConfiguration>)FileUtils.deserializeListFromFile(path)).get(0);
-		return searchConfig.bundleStartThmIndexList();
+		return searchConfig;
 	}
-
+	/**
+	 * Total number of bundles or mx files for all tars collected.
+	 * @return
+	 */
+	public static int totalBundleNum(){
+		return totalBundleNum;
+	}
+	
+	/**
+	 * Total number of thms in all tars.
+	 * @return
+	 */
+	public static int totalThmsCount(){
+		return totalThmsCount;
+	}
 }

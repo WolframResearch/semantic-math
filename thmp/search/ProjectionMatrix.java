@@ -123,20 +123,19 @@ public class ProjectionMatrix {
 				vecsFileNameCounter = splitAndUpdateCombinedVecsList(combinedVecsList, vecsFileNameCounter);
 				//without the trailing ".mx"
 				String combinedProjectedTDMxName = TermDocumentMatrix.COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME;
-				//String contextPath, String vMxName, String concatenatedListName
-				combineProjectedMx(projectedMxFilePathList, //TermDocumentMatrix.PROJECTED_MX_CONTEXT_NAME, 
-						TermDocumentMatrix.PROJECTED_MX_NAME, i, combinedProjectedTDMxName);
+				//Appends the index i to the name.
+				combineProjectedMx(projectedMxFilePathList, TermDocumentMatrix.PROJECTED_MX_NAME, i, combinedProjectedTDMxName);
 				projectedMxFilePathList = new ArrayList<String>();
 			}
 		}
-		//serialize the remaining
+		//serialize the remaining vecs. //add to thmCounter??
 		if(!combinedVecsList.isEmpty()){
 			//Name deliberately does not contain ".dat" at end.
 			String path = TheoremGet.ContextRelationVecBundle.BASE_FILE_STR 
 					+ String.valueOf(vecsFileNameCounter);
 			FileUtils.serializeObjToFile(combinedVecsList, path);
 		}		
-		Searcher.SearchConfiguration searchConfig = new Searcher.SearchConfiguration(bundleStartThmIndexList);
+		Searcher.SearchConfiguration searchConfig = new Searcher.SearchConfiguration(bundleStartThmIndexList, thmCounter);
 		List<Searcher.SearchConfiguration> searchConfigList = new ArrayList<Searcher.SearchConfiguration>();
 		searchConfigList.add(searchConfig);
 		FileUtils.serializeObjToFile(searchConfigList, SearchConfiguration.searchConfigurationSerialPath());

@@ -43,18 +43,17 @@ public class TriggerMathThm2 {
 	 * column for ring.
 	 * 
 	 * @author yihed
-	 *
 	 */
 
 	/* List of mathObj's, in order they are inserted into mathObjMx */
-	private static final List<String> mathObjList;
+	////private static final List<String> mathObjList;
 	
 	/* These three maps follow consistent ordering */
 	/*private static final List<String> webDisplayThmList;
 	private static final ImmutableList<String> webDisplayThmHypOnlyList;
 	//private static final ImmutableList<String> webDisplayThmNoHypList;
 	private static final ImmutableList<String> webDisplayThmSrcFileList;*/
-	private static final ImmutableList<ThmHypPair> webDisplayThmHypPairList;
+	//////private static final ImmutableList<ThmHypPair> webDisplayThmHypPairList;
 	
 	/**
 	 * Dictionary of keywords -> their index/row number in mathObjMx.
@@ -90,7 +89,7 @@ public class TriggerMathThm2 {
 	
 	static {
 		
-		ImmutableList<String> thmList = CollectThm.ThmList.allThmsWithHypList();
+		//////ImmutableList<String> thmList = CollectThm.ThmList.allThmsWithHypList();
 		relatedWordsMap = CollectThm.ThmWordsMaps.getRelatedWordsMap();
 		//relatedWordsMap = FileUtils.deserializeListFromFile("");
 		//docWordsFreqMapNoAnno should already been ordered based on frequency, more frequently-
@@ -165,13 +164,13 @@ public class TriggerMathThm2 {
 			sparseArrayInputSB = constructSparseArrayInputString(coordinatesList, weightsList);*/
 		}
 		
-		mathObjList = ImmutableList.copyOf(thmList);
+		//mathObjList = ImmutableList.copyOf(thmList);
 		
 		/*webDisplayThmList = CollectThm.ThmList.allThmsWithHypList();
 		webDisplayThmHypOnlyList = CollectThm.ThmList.allHypList();
 		webDisplayThmSrcFileList = CollectThm.ThmList.allThmSrcFileList();*/
 		//webDisplayThmNoHypList = CollectThm.ThmList.allThmsNoHypList();
-		webDisplayThmHypPairList = CollectThm.ThmList.allThmHypPairList();
+		////////webDisplayThmHypPairList = CollectThm.ThmList.allThmHypPairList();
 		/*for(int i = 0; i < thmWordsList.size(); i++){
 			System.out.println(mathObjList.get(i));
 			System.out.println(thmWordsList.get(i));
@@ -386,97 +385,6 @@ public class TriggerMathThm2 {
 		//System.out.println("~~keywordDict "+keywordDict);
 	}
 	
-	/**
-	 * Builds the MathObjMx. Weigh inversely based on word frequencies extracted from 
-	 * CollectThm.java.
-	 * @param mathObjMMap
-	 * @param thmList
-	 * @param coordinatesList
-	 * @param weightsList
-	 */
-	/*private static void buildMathObjMx(//List<String> keywordList, 
-			Multimap<String, String> mathObjMMap, 
-			ImmutableList<String> thmList,
-			List<int[]> coordinatesList, List<Double> weightsList) {
-		
-		//map of annotated words and their scores
-		Map<String, Integer> wordsScoreMap = CollectThm.ThmWordsMaps.get_wordsScoreMapNoAnno();
-		
-		//Iterator<String> mathObjMMapkeysIter = mathObjMMapkeys.iterator();
-		Iterator<String> thmListIter = thmList.iterator();
-		
-		//list of coordinate pairs containing non zero, used to construct sparse array.
-		//each array has size 2.
-		//List<int[]> coordinatesList = new ArrayList<int[]>(); //<--put in argument!
-		//List<Double> weightsList = new ArrayList<Double>();
-		//int[][] d = new int[mathObjMx.length][2];
-		
-		int mathObjCounter = 0;
-		int keywordIndexNullCounter = 0;
-		while (thmListIter.hasNext()) {
-			String thm = thmListIter.next();
-			//String curMathObj = mathObjMMapkeysIter.next();
-			//System.out.println("BUILDING mathObjList " +curMathObj);
-			//mathObjListBuilder.add(thm);
-			Collection<String> curMathObjCol = mathObjMMap.get(thm);
-			//Iterator<String> curMathObjColIter = curMathObjCol.iterator();			
-			double norm = 0;
-			for (String keyword : curMathObjCol) {
-				if(!keywordIndexDict.containsKey(keyword)){
-					keyword = WordForms.normalizeWordForm(keyword);
-				}
-				if(!keywordIndexDict.containsKey(keyword)){
-					continue;
-				}
-				//Integer keyWordIndex = keywordDict.get(keyword);
-				Integer wordScore = wordsScoreMap.get(keyword);
-				if(null == wordScore){
-					//wordsScoreMap is now from previous parse run, so might not have this word.
-					//if the dataset has not stabilized across runs.
-					wordScore = 1;
-				}
-				norm += Math.pow(wordScore, 2);
-				//should not be null, as wordsScoreMap was created using same list of thms.
-				//if(wordScore == null) continue;
-				//weigh each word based on *local* frequency, ie word freq in sentence, not whole doc.
-				//mathObjMx[keyWordIndex][mathObjCounter] = wordScore;
-			}
-			//Sqrt is usually too large, so take log instead of sqrt.
-			//norm = norm < 3 ? 1 : (int)Math.sqrt(norm);
-			norm = Math.sqrt(Math.sqrt(norm));
-			//divide by log of norm
-			//System.out.println("keywordIndexDict: "+keywordIndexDict);
-			for (String keyword : curMathObjCol) {
-				Integer keyWordIndex = keywordIndexDict.get(keyword);
-				if(null == keyWordIndex){
-					keywordIndexNullCounter++;
-					continue;
-				}
-				Integer wordScore = wordsScoreMap.get(keyword);
-				if(null == wordScore){
-					//wordsScoreMap is now from previous parse run, so might not have this word.
-					//if the dataset has not stabilized across runs.
-					wordScore = 1;
-				}
-				//divide by log of norm
-				//could be very small! ie 0 after rounding.
-				double newScore = (double)wordScore/norm;
-				//int newScore = wordScore;
-				if(newScore == 0 && wordScore != 0){
-					newScore = .1;
-				}
-				mathObjMx[keyWordIndex][mathObjCounter] = newScore;
-				coordinatesList.add(new int[]{keyWordIndex, mathObjCounter}) ;
-				weightsList.add(newScore);
-			}			
-			mathObjCounter++;
-		}
-		//System.out.println("TriggerMathThm2 - keywordIndexDict: "+ keywordIndexDict);
-		//System.out.println("TriggerMathThm2 - wordsScoreMap: "+ wordsScoreMap);
-		System.out.println("TriggerMathThm2 - keywordIndexNullCounter: "+ keywordIndexNullCounter);
-		//System.out.println("~~keywordDict "+keywordDict);
-	}*/
-
 	/**
 	 * Create query row vector, 1's and 0's.
 	 * @deprecated SVD queries should be created without word annotations.
@@ -740,9 +648,9 @@ public class TriggerMathThm2 {
 	 * Number of thms used in term-doc mx.
 	 * @return
 	 */
-	public static int mathThmMxColDim(){
+	/*public static int mathThmMxColDim(){
 		return ThmList.numThms();
-	}
+	}*/
 	
 	/**
 	 * String representation of term-document matrix, .
@@ -809,22 +717,12 @@ public class TriggerMathThm2 {
 	 * @param index 0-based index
 	 * @return
 	 */
-	public static String getThm(int index){
-		//System.out.println("docWrodsFreqMap " + docWordsFreqMap);
+	/*public static String getThm(int index){
 		System.out.print("Thm index: " + index + "\t");
 		//index is 1-based indexing, not 0-based.
-		//System.out.println(CollectThm.get_thmWordsListNoAnno().get(index-1));
 		
-		/*if(DEBUG){
-			Map<String, Integer> wordsScoreMap = CollectThm.ThmWordsMaps.get_wordsScoreMapNoAnno();		
-			for(String word : thmWordsMapList.get(index).keySet()){
-				System.out.print(word + " " + wordsScoreMap.get(word) + " " + docWordsFreqMapNoAnno.get(word));
-			}
-		}*/
-		//System.out.println(thmWordsList.get(index-1));
-		//return mathObjList.get(index-LIST_INDEX_SHIFT);
 		return mathObjList.get(index);
-	}
+	}*/
 	
 	/**
 	 * Get theorem given its index (column number) in mathThmMx. For web display.
@@ -832,45 +730,40 @@ public class TriggerMathThm2 {
 	 * @param index 0-based index
 	 * @return
 	 */
-	public static String getWebDisplayThm(int index){
-		//System.out.println("docWrodsFreqMap " + docWordsFreqMap);
+	/*public static String getWebDisplayThm(int index){
 		System.out.print("Thm index: " + index + "\t");
 		//index is 1-based indexing, not 0-based.
-		//System.out.println(CollectThm.get_thmWordsListNoAnno().get(index-1));
-		//return webDisplayThmList.get(index-LIST_INDEX_SHIFT);
 		return webDisplayThmHypPairList.get(index).hypStr() + " " 
 				+ webDisplayThmHypPairList.get(index).thmStr();
-	}
+	}*/
 	
 	/**
 	 * Get hypotheses only for thm with index index.
 	 * @param index 0-based index
 	 * @return
 	 */
-	public static String getWebDisplayThmHypOnly(int index){
+	/***public static String getWebDisplayThmHypOnly(int index){
 		//System.out.print("Thm index: " + index + "\t");
 		return webDisplayThmHypPairList.get(index).hypStr();
-	}
+	}*/
 	
 	/**
 	 * Get theorem string only with index index, without hyp.
 	 * @param index 0-based index
 	 * @return
 	 */
-	public static String getWebDisplayThmNoHyp(int index){
+	/*public static String getWebDisplayThmNoHyp(int index){
 		//System.out.print("Thm index: " + index + "\t");
 		return webDisplayThmHypPairList.get(index).thmStr();
 	}
 	
 	public static String getWebDisplayThmSrcFile(int index){
-		//System.out.print("Thm index: " + index + "\t");
 		return webDisplayThmHypPairList.get(index).srcFileName();
-	}
+	}*/
 	
-	public static ThmHypPair getWedDisplayThmHypPair(int index){
-		//System.out.print("Thm index: " + index + "\t");
+	/*public static ThmHypPair getWedDisplayThmHypPair(int index){
 		return webDisplayThmHypPairList.get(index);
-	}
+	}*/
 	/*public static void main(String[] args){
 		System.out.print(keywordDict.size());
 	}*/

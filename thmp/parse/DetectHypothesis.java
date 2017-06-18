@@ -271,19 +271,14 @@ public class DetectHypothesis {
 			}
 			return sb.toString();
 		}
-
-		/**
-		 * @return the thmWithDefStr
-		 */
-		/*public String getThmWithDefStr() {
-			return thmWithDefStr;
-		}*/
 		
 		public String getDefinitionStr(){
 			return this.definitionStr;
 		}
 		/**
 		 * Returns String of thm along with definitions.
+		 * Note that this field is transient, so will
+		 * return null from serialized data!
 		 */
 		@Override
 		public String getEntireThmStr() {
@@ -762,8 +757,7 @@ public class DetectHypothesis {
 		while ((line = srcFileReader.readLine()) != null) {
 			if (WordForms.getWhiteEmptySpacePattern().matcher(line).matches()){
 				continue;
-			}
-			
+			}			
 			if(SINGLE_LINE_SKIP_PATTERN.matcher(line).matches()){
 				continue;
 			}

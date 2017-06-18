@@ -97,6 +97,7 @@ public class SearchCombined {
 	
 	/**
 	 * Turn list of indices of thms into list of String's.
+	 * Does *NOT* include hyp in returned results!
 	 * @param highestThms
 	 * @return
 	 */
@@ -105,7 +106,8 @@ public class SearchCombined {
 		for(Integer thmIndex : highestThms){
 					//the list thmList as good for web display as the original webDisplayThmList,
 					//because removeTexMarkup() has been applied.
-			foundThmList.add(getThmList().get(thmIndex));	
+			//foundThmList.add(getThmList().get(thmIndex));
+			foundThmList.add(ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex).thmStr());			
 		}
 		return foundThmList;
 	}
@@ -118,16 +120,15 @@ public class SearchCombined {
 	public static List<ThmHypPair> thmListIndexToThmHypPair(List<Integer> highestThms){
 		List<ThmHypPair> bestCommonThmHypPairList = new ArrayList<ThmHypPair>();
 		for(Integer thmIndex : highestThms){
-			/*String hypOnly = TriggerMathThm2.getWebDisplayThmHypOnly(thmIndex);
-			String thmOnly = TriggerMathThm2.getWebDisplayThmNoHyp(thmIndex);
-			ThmHypPair thmHypPair = new ThmHypPair(thmOnly, hypOnly);*/
-			ThmHypPair thmHypPair = TriggerMathThm2.getWedDisplayThmHypPair(thmIndex);
+			//ThmHypPair thmHypPair = TriggerMathThm2.getWedDisplayThmHypPair(thmIndex);
+			//Looks for thm with thmIndex in bundle. Load bundle in not already in memory.
+			ThmHypPair thmHypPair = ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex);
 			bestCommonThmHypPairList.add(thmHypPair);			
 		}
 		return bestCommonThmHypPairList;
 	}
 	
-	private static List<String> getThmList(){
+	/*private static List<String> getThmList(){
 		if(null == thmList){
 			synchronized(SearchCombined.class){
 				if(null == thmList){
@@ -136,7 +137,7 @@ public class SearchCombined {
 			}
 		}
 		return thmList;
-	}
+	}*/
 	
 	/**
 	 * Set resources for list of resource files.

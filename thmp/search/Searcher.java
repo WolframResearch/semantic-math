@@ -50,15 +50,20 @@ public interface Searcher<S> {
 		private static final String searchConfigurationSerialPath = "thmp/src/data/searchConfiguration.dat";
 		//used in ThmHypPairGet. Containing indices of thms that are the first in a bundle. 
 		private List<Integer> bundleStartThmIndexList;
+		private int totalThmsCount;
 		
-		public SearchConfiguration(List<Integer> bundleStartThmIndexList_){
+		public SearchConfiguration(List<Integer> bundleStartThmIndexList_, int totalThmsCount_){
 			this.bundleStartThmIndexList = bundleStartThmIndexList_;
+			this.totalThmsCount = totalThmsCount_;
 		}
 		
 		public List<Integer> bundleStartThmIndexList(){
 			return bundleStartThmIndexList;
 		}
 		
+		public int totalThmsCount(){
+			return this.totalThmsCount;
+		}
 		public static String searchConfigurationSerialPath(){
 			return searchConfigurationSerialPath;
 		}
@@ -79,6 +84,7 @@ public interface Searcher<S> {
 		private static final String wordDocFreqMapPath = "src/thmp/data/allThmWordsMap.dat";
 		private static final String threeGramsFreqMapPath = "src/thmp/data/threeGramsMap.dat";
 		private static final String twoGramsFreqMapPath = "src/thmp/data/twoGramsMap.dat";
+		private static final String trueFluffWordsSetPath = "src/thmp/data/trueFluffWordsSet.dat";
 		
 		public static void set_gatheringDataBoolToTrue(){
 			//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
@@ -109,6 +115,9 @@ public interface Searcher<S> {
 			return twoGramsFreqMapPath;
 		}
 		
+		public static String trueFluffWordsSetPath(){
+			return trueFluffWordsSetPath;
+		}
 		/** Used to separate the case when gatheringDataBool, where in fact want maps collected
 		 * in previous runs, e.g. when using a pre-computed projection matrix for SVD.*/
 		public static String previousWordDocFreqMapsPath() {
