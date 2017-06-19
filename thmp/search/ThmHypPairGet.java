@@ -117,7 +117,7 @@ public class ThmHypPairGet{
 		
 		//need to create these directories
 		protected static final String BASE_FILE_STR = "src/thmp/data/pe/" 
-				+ ThmSearch.TermDocumentMatrix.PARSEDEXPRESSION_LIST_FILE_NAME_ROOT;
+				+ ThmSearch.TermDocumentMatrix.COMBINED_PARSEDEXPRESSION_LIST_FILE_NAME_ROOT;
 		//private static final String BASE_FILE_EXT_STR = ".dat";
 		//Name of serialized file. 
 		//private String serialFileStr; <--how is this used??
@@ -141,7 +141,7 @@ public class ThmHypPairGet{
 		}
 		
 		@SuppressWarnings("unchecked")
-		List<ThmHypPair> deserializeThmHypPairListFromFile(String serialFileStr){
+		private List<ThmHypPair> deserializeThmHypPairListFromFile(String serialFileStr){
 			return (List<ThmHypPair>)FileUtils.deserializeListFromFile(serialFileStr);
 		}
 

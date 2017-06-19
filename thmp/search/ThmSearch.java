@@ -107,11 +107,11 @@ public class ThmSearch {
 			//initializeCache[totalMxCount_Integer, mxCountCap_Integer]
 			evaluateWLCommand(ml, "{"+CACHE_BAG_NAME+","+ TIME_BAG_NAME
 					+"} = initializeCache["+TOTAL_MX_COUNT+"," +CACHE_MX_COUNT_CAP+"]", false, true);
-			evaluateWLCommand(ml, "AppendTo[$ContextPath,\"Internal`\"]", false, true);
-			System.out.println("Initializer: TOTAL_MX_COUNT: " +TOTAL_MX_COUNT);			
-			System.out.println("Initializer: CACHE_BAG_NAME: " +evaluateWLCommand(ml, CACHE_BAG_NAME,true, true));
-			System.out.println("Initializer: TIME_BAG_NAME: " +evaluateWLCommand(ml, TIME_BAG_NAME,true, true));
+			/*System.out.println("Initializer: STUFFBAG: " +evaluateWLCommand(ml, "bag=Internal`Bag[];Internal`StuffBag[bag,1]",true, true));
+			System.out.println("Initializer: STUFFBAG: " +evaluateWLCommand(ml, "Internal`StuffBag[bag,2];bag",true, true));*/
+			
 			System.out.println("Initializer: $VersionNumber: " +evaluateWLCommand(ml, "$VersionNumber",true, true));
+			evaluateWLCommand(ml, "AppendTo[$ContextPath,\"Internal`\"]", false, true);
 			
 			/*path for the combined list of projected vectors*/
 			//***String combinedProjectedMxFilePath = getSystemCombinedProjectedMxFilePath();
@@ -136,7 +136,6 @@ public class ThmSearch {
 			evaluateWLCommand(ml, "<<"+pathToProjectionMx, false, true);
 			evaluateWLCommand(ml, "AppendTo[$ContextPath, \""+ TermDocumentMatrix.PROJECTION_MX_CONTEXT_NAME +"\"]", false, true);	
 			
-			DISTANCE_THRESHOLD = computeDistanceThreshold(ml);
 			/*if(!USE_FULL_MX){
 				evaluateWLCommand(ml, combinedTDMatrixRangeListName + "= Range[Length["+V_MX+"]]", false, true);
 			}*/
@@ -190,6 +189,8 @@ public class ThmSearch {
 			throw new IllegalStateException(msg, e);
 		}*/
 		QUERY_VEC_LENGTH = vector_vec_length;
+		//needs to happen after computing QUERY_VEC_LENGTH
+		DISTANCE_THRESHOLD = computeDistanceThreshold(ml);
 	}
 	
 	public static int getQUERY_VEC_LENGTH(){
@@ -222,21 +223,23 @@ public class ThmSearch {
 			//get distancecs
 			String thm = thmQueryPair[0];
 			String thmVecStr = TriggerMathThm2.createQueryNoAnno(thm);
+			//System.out.println("thmVecStr : " +thmVecStr);
 			String query = thmQueryPair[1];
 			String queryVecStr = TriggerMathThm2.createQueryNoAnno(query);
 			/*applies projection mx. Need to Transpose, so rows represent thms. queryVecStrTranspose is column vec.
 			 * So are q0 and q.*/
 			evaluateWLCommand(medium, "queryVecStrTranspose= Transpose[" + queryVecStr + "]; "
 					+ "q0 = queryVecStrTranspose + 0.08*corMx.queryVecStrTranspose; q = dInverse.uTranspose.q0", false, true);
-			
+			//System.out.println("qExpr " + qExpr);
 			evaluateWLCommand(medium, "thmVecStrTranspose= Transpose[" + thmVecStr + "]; "
 					+ "t0 = thmVecStrTranspose + 0.08*corMx.thmVecStrTranspose; t = dInverse.uTranspose.t0", false, true);
-			
-			evaluateWLCommand(medium, "totalDistance+=EuclideanDistance[t, q]", false, true);	
+			//System.out.println("tExpr " + tExpr);
+			evaluateWLCommand(medium, "totalDistance+=EuclideanDistance[t, q]", false, true);
+			//System.out.println("totalDistance: " +);	
 		}
-		//Use 3/2 for now, experiment and make it a constant!
-		Expr distanceExpr = evaluateWLCommand(medium, "3/2*totalDistance/"+thmAndQueryStringAr.length , true, true);
-		double threshold = 0.01;
+		//Use 3/2 for now, experiment and make it a constant! now around 0.0236
+		Expr distanceExpr = evaluateWLCommand(medium, "3/2*totalDistance/"+thmAndQueryStringAr.length, true, true);
+		double threshold = 0.;
 		try {
 			threshold = distanceExpr.asDouble();
 		} catch (ExprFormatException e) {
@@ -373,10 +376,10 @@ public class ThmSearch {
 				//loadMx[mxIndex_Integer, cacheBag_, timeBag_]
 				evaluateWLCommand(medium, "loadMx["+nextMxKey + ","+ CACHE_BAG_NAME + "," + TIME_BAG_NAME +"]", false, true);
 				
+				/*System.out.println("Length[nextMxName]: " +evaluateWLCommand(medium, "Length["+nextMxName+"]",true, true));
 				System.out.println("nextMxName[[1;;10]]: " +evaluateWLCommand(medium, nextMxName+"[[1;;10]]",true, true));
 				System.out.println("CACHE_BAG_NAME: " +evaluateWLCommand(medium, CACHE_BAG_NAME,true, true));
-				System.out.println("cacheExceedsCapacity[cacheBag]: " +evaluateWLCommand(medium, "cacheExceedsCapacity[cacheBag]",true, true));
-				
+				System.out.println("cacheExceedsCapacity[cacheBag]: " +evaluateWLCommand(medium, "cacheExceedsCapacity[cacheBag]",true, true));*/
 				
 				//Function signature: findNearest[combinedTDMx_, queryVec_, threshold_Real, numNearest_Integer]
 				//get distance, and only those indices that fall below a distance threshold.
@@ -509,7 +512,7 @@ public class ThmSearch {
 		//Do not attach .dat at end of this file name.
 		public static final String CONTEXT_VEC_PAIR_LIST_FILE_NAME = "contextRelationVecPairList";
 		/*Name deliberately does not include .dat*/
-		private static final String COMBINED_PARSEDEXPRESSION_LIST_FILE_NAME = "combinedParsedExpressionList";
+		public static final String COMBINED_PARSEDEXPRESSION_LIST_FILE_NAME_ROOT = "combinedParsedExpressionList";
 		
 		private static KernelLink ml;
 		/**
@@ -1116,7 +1119,7 @@ public class ThmSearch {
 	 */
 	protected static String getSystemCombinedParsedExpressionListFilePathBase(){
 		String combinedParsedExpressionListPath = "src/thmp/data/pe/"
-				+TermDocumentMatrix.COMBINED_PARSEDEXPRESSION_LIST_FILE_NAME;
+				+TermDocumentMatrix.COMBINED_PARSEDEXPRESSION_LIST_FILE_NAME_ROOT;
 		return combinedParsedExpressionListPath;
 	}
 	

@@ -73,7 +73,7 @@ public class TriggerMathThm2 {
 	///****private static double[][] mathObjMx;
 	private static StringBuilder sparseArrayInputSB;
 
-	private static final Logger logger = LogManager.getLogger(TriggerMathThm.class);
+	private static final Logger logger = LogManager.getLogger(TriggerMathThm2.class);
 	//list of thms, same order as in thmList, and the words with their frequencies.
 	///private static final List<ImmutableMap<String, Integer>> thmWordsMapList;
 	

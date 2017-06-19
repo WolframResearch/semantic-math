@@ -40,7 +40,9 @@ initializeCache[totalMxCount_Integer,mxCountCap_Integer]:=Module[{cacheBag,timeB
 (*mxIndex is the index of the mx to load. modifies bags in place. Java calls this function.*)
 
 
-loadMx[mxIndex_Integer,cacheBag_,timeBag_]:=With[{},If[Internal`BagPart[cacheBag,mxIndex]===0,If[cacheExceedsCapacity[cacheBag],loadMxAndClear[mxIndex,cacheBag,timeBag],loadMx[mxIndex]]]];
+(*mxIndex is 0-based indexing!*)
+loadMx[mxIndex_Integer(*0-based*),cacheBag_,timeBag_]:=Module[{},
+If[Internal`BagPart[cacheBag,mxIndex+1]===0,If[cacheExceedsCapacity[cacheBag],loadMxAndClear[mxIndex,cacheBag,timeBag],loadMx[mxIndex]]]]
 
 
 cacheExceedsCapacity[cacheBag_]:=Total[Internal`BagPart[cacheBag,All]]>$MxCountCap
@@ -50,13 +52,13 @@ cacheExceedsCapacity[cacheBag_]:=Total[Internal`BagPart[cacheBag,All]]>$MxCountC
 (*loads the mx, Clears away from memory if necessary. Picks the one with least recent timestamp.*)
 
 
-loadMxAndClear[mxIndex_Integer,cacheBag_,timeBag_]:=Module[{path,mxEvictIndex,mxEvictTime},
+loadMxAndClear[mxIndex_Integer(*0-based*),cacheBag_,timeBag_]:=Module[{path,mxEvictIndex,mxEvictTime},
 path=getMxPathFromSymbol[mxIndex];mxEvictIndex=1;mxEvictTime=Internal`BagPart[timeBag,1];
 Map[If[Internal`BagPart[timeBag,#]<mxEvictTime, mxEvictTime=Internal`BagPart[timeBag,#];
 mxEvictIndex=#]&,Range[2,$TotalMxCount]];
 (*clear symbol*)Internal`BagPart[cacheBag,mxEvictIndex]=0;
-Clear[getMxNameFromSymbol[mxEvictIndex]];
-Internal`BagPart[timeBag,mxIndex]=Now;Internal`BagPart[cacheBag,mxIndex]=1;
+Clear[getMxNameFromSymbol[mxEvictIndex-1]];
+Internal`BagPart[timeBag,mxIndex+1]=Now;Internal`BagPart[cacheBag,mxIndex+1]=1;
 Get[path]];
 
 
@@ -64,17 +66,17 @@ Get[path]];
 (*Loop over the cacheBag, pick out the least recently used amongst those used*)
 
 
-loadMx[mxIndex_Integer]:=With[{path=getMxPathFromSymbol[mxIndex]},Get[path]];
+loadMx[mxIndex_Integer(*0-based*)]:=With[{path=getMxPathFromSymbol[mxIndex]},Get[path]];
 
 
 (* ::Item:: *)
 (*Should concatenate with root of path as well.*)
 
 
-getMxPathFromSymbol[mxIndex_Integer]:=FileNameJoin[{"src","thmp","data","mx","CombinedTDMatrix"<>ToString[mxIndex]<>".mx"}]
+getMxPathFromSymbol[mxIndex_Integer(*0-based*)]:=FileNameJoin[{"src","thmp","data","mx","CombinedTDMatrix"<>ToString[mxIndex]<>".mx"}]
 
 
-getMxNameFromSymbol[mxIndex_Integer]:="CombinedTDMatrix"<>ToString[mxIndex]<>".mx"
+getMxNameFromSymbol[mxIndex_Integer(*0-based*)]:="CombinedTDMatrix"<>ToString[mxIndex]<>".mx"
 
 
 (*Not sure when this would be called? Since there a kernel is supposed to be used perpetually*)

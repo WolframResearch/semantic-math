@@ -456,7 +456,14 @@ public class FileUtils {
 			// ARGV = new String[]{"-linkmode", "launch", "-linkname",
 			// "\"/usr/local/Wolfram/Mathematica/11.0/Executables/MathKernel\"
 			// -mathlink"};
+			String OS_version = System.getProperty("os.version");
 			ARGV = new String[] { "-linkmode", "launch", "-linkname", "math -mathlink" };
+			if(OS_version.equals("2.6.32-696.3.1.el6.x86_64")){ //this only works on byblis68! Others don't have the 11.1.1 executable
+			ARGV = new String[]{"-linkmode", "launch", "-linkname",
+					"\"/Developer/Layouts/11.1.1/Executables/MathKernel\" -mathlink"};
+			}
+			///Developer/Layouts/11.1.1/Executables
+			
 		} 
 		try {
 			ml = MathLinkFactory.createKernelLink(ARGV);
