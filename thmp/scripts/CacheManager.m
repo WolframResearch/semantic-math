@@ -7,11 +7,26 @@ BeginPackage["CacheManager`"]
 (*(*Manage cache of mx loading*)*)
 
 
+$TotalMxCount;$MxCountCap;$ZeroVec;
+
+
 (* ::Item:: *)
 (*given threshold, select ones below that  . *)
 
 
-findNearest[combinedTDMx_,queryVec_,threshold_Real,numNearest_Integer]:=Module[{indexDistAr}, indexDistAr=Nearest[combinedTDMx->{"Index","Distance"},queryVec,numNearest];Select[indexDistAr,#[[2]]<threshold&][[All,1]]]
+findNearest[combinedTDMx_,queryVec_,threshold_Real,numNearest_Integer]:=Module[{indexDistAr}, indexDistAr=Nearest[combinedTDMx->{"Index","Distance"},queryVec,numNearest];
+Select[indexDistAr,#[[2]]<threshold&][[All,1]]-1]
+
+
+(*For debugging for now, returns list with two sublists, first is indices, second distances*)
+findNearestDist[combinedTDMx_,queryVec_,threshold_Real,numNearest_Integer]:=Module[{indexDistAr,selected,validIndices}, indexDistAr=Nearest[combinedTDMx->{"Index","Distance"},queryVec,numNearest];
+selected=Select[indexDistAr,#[[2]]<threshold&];If[{}=!=selected,validIndices=filterNonSense[combinedTDMx[[selected[[All,1]]]]];
+{selected[[validIndices,1]]-1,selected[[validIndices,2]]},{{},{}}]]
+
+
+(*filter out vecs that are close to the zero vec, without much content, e.g. those that contain a lot of tex*)
+filterNonSense[candidateVecs_?MatrixQ]:=Module[{list},list=Reap[Map[If[EuclideanDistance[$ZeroVec,candidateVecs[[#]]]>0.004,Sow[#]]&,
+Range[Length[candidateVecs]]]];If[list[[2]]=!={},list[[2,1]],{}]]
 
 
 (* ::Input:: *)
@@ -26,14 +41,14 @@ findNearest[combinedTDMx_,queryVec_,threshold_Real,numNearest_Integer]:=Module[{
 (*Returns  *)
 
 
-$TotalMxCount;$MxCountCap;
-
-
 (* ::Input:: *)
 (*(*1 means already loaded, 0 otherwise. Returns cacheBag and timeBag*)*)
 
 
-initializeCache[totalMxCount_Integer,mxCountCap_Integer]:=Module[{cacheBag,timeBag},cacheBag=Internal`Bag[];Table[Internal`StuffBag[cacheBag,0],totalMxCount];timeBag=Internal`Bag[];Table[Internal`StuffBag[timeBag,0],totalMxCount];$TotalMxCount=totalMxCount; $MxCountCap=mxCountCap;$HistoryLength=0;{cacheBag,timeBag}]
+(*mxRowDimension, is number of words*)
+initializeCache[totalMxCount_Integer,mxCountCap_Integer,tdMxRowDim_Integer]:=Module[{cacheBag,timeBag},cacheBag=Internal`Bag[];
+Table[Internal`StuffBag[cacheBag,0],totalMxCount];timeBag=Internal`Bag[];Table[Internal`StuffBag[timeBag,0],totalMxCount];
+$TotalMxCount=totalMxCount; $MxCountCap=mxCountCap;$HistoryLength=0;$ZeroVec=Table[0,tdMxRowDim];{cacheBag,timeBag}]
 
 
 (* ::Item:: *)
@@ -42,7 +57,8 @@ initializeCache[totalMxCount_Integer,mxCountCap_Integer]:=Module[{cacheBag,timeB
 
 (*mxIndex is 0-based indexing!*)
 loadMx[mxIndex_Integer(*0-based*),cacheBag_,timeBag_]:=Module[{},
-If[Internal`BagPart[cacheBag,mxIndex+1]===0,If[cacheExceedsCapacity[cacheBag],loadMxAndClear[mxIndex,cacheBag,timeBag],loadMx[mxIndex]]]]
+If[Internal`BagPart[cacheBag,mxIndex+1]===0,
+If[cacheExceedsCapacity[cacheBag],loadMxAndClear[mxIndex,cacheBag,timeBag],loadMx[mxIndex]]]]
 
 
 cacheExceedsCapacity[cacheBag_]:=Total[Internal`BagPart[cacheBag,All]]>$MxCountCap

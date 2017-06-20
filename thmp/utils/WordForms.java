@@ -207,6 +207,7 @@ public class WordForms {
 	 */
 	public static String getSingularForm(String word){
 		//if word in dictionary, should not be processed. Eg "continuous"
+		//System.out.println("WordForms- word "+word);
 		if(getFreqWordsSet().contains(word) || word.length() < 4) return word;
 		
 		String[] singFormsAr = getSingularForms(word);

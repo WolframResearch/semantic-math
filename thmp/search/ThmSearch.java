@@ -43,7 +43,7 @@ public class ThmSearch {
 	//private static final String[] ARGV;
 	
 	//number of nearest vectors to get for Nearest[]
-	private static final int NUM_NEAREST = 20;
+	private static final int NUM_NEAREST = 50;
 	//private static final int NUM_SINGULAR_VAL_TO_KEEP = 20;
 	//cutoff for a correlated term to be considered
 	private static final int COR_THRESHOLD = 3;
@@ -100,18 +100,6 @@ public class ThmSearch {
 			ml = FileUtils.acquireWLEvaluationMedium();
 			String msg = "Kernel instance acquired in ThmSearchQuery...";
 			logger.info(msg);
-			
-			//*****load mx cache manager script.
-			String cacheManagerPath = getSystemCacheManagerPath();
-			evaluateWLCommand(ml, "<<"+cacheManagerPath, false, true);
-			//initializeCache[totalMxCount_Integer, mxCountCap_Integer]
-			evaluateWLCommand(ml, "{"+CACHE_BAG_NAME+","+ TIME_BAG_NAME
-					+"} = initializeCache["+TOTAL_MX_COUNT+"," +CACHE_MX_COUNT_CAP+"]", false, true);
-			/*System.out.println("Initializer: STUFFBAG: " +evaluateWLCommand(ml, "bag=Internal`Bag[];Internal`StuffBag[bag,1]",true, true));
-			System.out.println("Initializer: STUFFBAG: " +evaluateWLCommand(ml, "Internal`StuffBag[bag,2];bag",true, true));*/
-			
-			System.out.println("Initializer: $VersionNumber: " +evaluateWLCommand(ml, "$VersionNumber",true, true));
-			evaluateWLCommand(ml, "AppendTo[$ContextPath,\"Internal`\"]", false, true);
 			
 			/*path for the combined list of projected vectors*/
 			//***String combinedProjectedMxFilePath = getSystemCombinedProjectedMxFilePath();
@@ -189,6 +177,19 @@ public class ThmSearch {
 			throw new IllegalStateException(msg, e);
 		}*/
 		QUERY_VEC_LENGTH = vector_vec_length;
+
+		//*****load mx cache manager script.
+		String cacheManagerPath = getSystemCacheManagerPath();
+		evaluateWLCommand(ml, "<<"+cacheManagerPath, false, true);
+		//initializeCache[totalMxCount_Integer, mxCountCap_Integer, numNearest_Integer]
+		evaluateWLCommand(ml, "{"+CACHE_BAG_NAME+","+ TIME_BAG_NAME
+				+"} = initializeCache["+TOTAL_MX_COUNT+"," +CACHE_MX_COUNT_CAP +","+ TermDocumentMatrix.NUM_SINGULAR_VAL_TO_KEEP +"]", false, true);
+		/*System.out.println("Initializer: STUFFBAG: " +evaluateWLCommand(ml, "bag=Internal`Bag[];Internal`StuffBag[bag,1]",true, true));
+		System.out.println("Initializer: STUFFBAG: " +evaluateWLCommand(ml, "Internal`StuffBag[bag,2];bag",true, true));*/
+		
+		System.out.println("Initializer: $VersionNumber: " +evaluateWLCommand(ml, "$VersionNumber",true, true));
+		evaluateWLCommand(ml, "AppendTo[$ContextPath,\"Internal`\"]", false, true);
+		
 		//needs to happen after computing QUERY_VEC_LENGTH
 		DISTANCE_THRESHOLD = computeDistanceThreshold(ml);
 	}
@@ -203,6 +204,8 @@ public class ThmSearch {
 	 * @return
 	 */
 	private static double computeDistanceThreshold(WLEvaluationMedium medium){
+		//**June 19, debugging for now, skip this step, since slows down startup.
+		if(true) return 0.1;//0.06;// 0.02360689779;
 		//first String is thm, second is query
 		String thm0 = "$\\lambda$ run over all pairs of partitions which are complementary with respect to $R$";
 		String thm1 = "The interchange of two distant critical points of the surface diagram does not change the induced map on homology";
@@ -384,9 +387,16 @@ public class ThmSearch {
 				//Function signature: findNearest[combinedTDMx_, queryVec_, threshold_Real, numNearest_Integer]
 				//get distance, and only those indices that fall below a distance threshold.
 				//***factor out First@Transpose[q]!// also factor out numNearest/2!
-				Expr nearestVec = evaluateWLCommand(medium, "findNearest[" + nextMxName + ",First@Transpose[q],"+ DISTANCE_THRESHOLD +","
+				/**June 19 Expr nearestVec = evaluateWLCommand(medium, "findNearest[" + nextMxName + ",First@Transpose[q],"+ DISTANCE_THRESHOLD +","
 						+numNearest/2 +"] - " 
-						+ LIST_INDEX_SHIFT, true, true);
+						+ LIST_INDEX_SHIFT, true, true);*/
+				Expr nearestVec = evaluateWLCommand(medium, "findNearestDist[" + nextMxName + ",First@Transpose[q],"+ DISTANCE_THRESHOLD +","
+						+numNearest/2 +"]", true, true);
+				//System.out.println("ThmSearch-DISTANCES: "+(double[])nearestVec.part(2).asArray(Expr.REAL, 1));
+				System.out.println("ThmSearch-DISTANCES: "+nearestVec.part(2));
+
+				//first sublist is indices, second distances
+				nearestVec = nearestVec.part(1);
 				//***Expr nearestVec = evaluateWLCommand(medium, "Nearest["+V_MX_RULE_NAME +", First@Transpose[q],"+numNearest+", Method->\"Scan\"] - " 
 						//+ LIST_INDEX_SHIFT, true, false);
 				//ml.evaluate("Nearest["+V_MX+"->"+ combinedTDMatrixRangeListName +", First@Transpose[q],"+numNearest+", Method->\"Scan\"] - " 
@@ -513,6 +523,7 @@ public class ThmSearch {
 		public static final String CONTEXT_VEC_PAIR_LIST_FILE_NAME = "contextRelationVecPairList";
 		/*Name deliberately does not include .dat*/
 		public static final String COMBINED_PARSEDEXPRESSION_LIST_FILE_NAME_ROOT = "combinedParsedExpressionList";
+		private static final int NUM_SINGULAR_VAL_TO_KEEP = 30;
 		
 		private static KernelLink ml;
 		/**
@@ -688,12 +699,13 @@ public class ThmSearch {
 				logger.info(msg);
 				System.out.println(msg);				
 				
-				//the entries in corMx.m can range from 0 to ~6
-				ml.evaluate("mx = m + .15*corMx.m;");
+				//the entries in corMx.m can range from 0 to ~6. Need to be same percentage!! 
+				//Need to combine the two mx creation processes!
+				ml.evaluate("mx = m + .08*corMx.m;");
 				if(getCorMx){
 					ml.waitForAnswer();
 					Expr expr = ml.getExpr();
-					System.out.println("m + .15*corMx.m " + expr);
+					System.out.println("m + .08*corMx.m " + expr);
 				}else{
 					ml.discardAnswer();
 				}				
@@ -731,7 +743,7 @@ public class ThmSearch {
 				//theorems (col dimension of mx)
 				//int k = NUM_SINGULAR_VAL_TO_KEEP;
 				//int k = mxColDim < 35 ? mxColDim : (mxColDim < 400 ? 35 : (mxColDim < 1000 ? 40 : (mxColDim < 3000 ? 50 : 60)));
-				int k = mxColDim < 25 ? mxColDim : 25;
+				int k = mxColDim < NUM_SINGULAR_VAL_TO_KEEP ? mxColDim : NUM_SINGULAR_VAL_TO_KEEP;
 				ml.evaluate("ClearSystemCache[]; {u, d, v} = SingularValueDecomposition[mx, " + k +"];");
 				//ml.waitForAnswer();
 				ml.discardAnswer();
@@ -897,7 +909,7 @@ public class ThmSearch {
 				if(getCorMx){
 					ml.waitForAnswer();
 					Expr expr = ml.getExpr();
-					System.out.println("ThmSearch - m + .15*corMx.m " + expr);
+					System.out.println("ThmSearch - m + .08*corMx.m " + expr);
 				}else{
 					ml.discardAnswer();
 				}
@@ -951,7 +963,7 @@ public class ThmSearch {
 				//int k = NUM_SINGULAR_VAL_TO_KEEP;
 				//int minDim = 40;
 				//int k = mxColDim < minDim ? mxColDim : (mxColDim < 400 ? minDim : (mxColDim < 1000 ? 45 : (mxColDim < 3000 ? 50 : 60)));
-				int k = mxColDim < 25 ? mxColDim : 25;
+				int k = mxColDim < NUM_SINGULAR_VAL_TO_KEEP ? mxColDim : NUM_SINGULAR_VAL_TO_KEEP;
 				ml.evaluate("ClearSystemCache[]; {u, d, v} = SingularValueDecomposition[mx, " + k +"];");
 				//ml.waitForAnswer();
 				ml.discardAnswer();

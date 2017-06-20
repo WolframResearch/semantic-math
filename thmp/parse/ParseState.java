@@ -45,10 +45,11 @@ public class ParseState {
 	//current String being parsed. I.e. the unit
 	//of the input that's being tokenized, so 
 	//delimiter-separated.
+	/* *NOTE* Every time a stateful field is added, be sure to clean it up either locally or globally*/
 	private String currentInputStr;
 	private Struct recentEnt;	
 	//recent assert
-	private Struct recentAssert;	
+	private Struct recentAssert;
 	//whether the last parse spans or not
 	private boolean recentParseSpanning;	
 	//tokenized input list
@@ -71,11 +72,11 @@ public class ParseState {
 	private ParseErrorCode parseErrorCode = ParseErrorCode.NO_ERROR;
 	//input with tex replaced by e.g. "X", to be used for making syntaxnet queries
 	private String currentInputSansTex;
-	//struct array      struct token index info, for making syntaxnet queries.
+	//struct array struct token index info, for making syntaxnet queries.
 	private Struct[] noTexTokenStructAr;
 	//cache the most recent SyntaxnetQuery, since its construction is costly.
 	private SyntaxnetQuery syntaxnetQuery;
-	
+	private boolean curParseExcessiveLatex;
 	private boolean writeUnknownWordsToFileBool;
 	
 	//punctuation at end of current parse segment, segments are separated
@@ -940,6 +941,7 @@ public class ParseState {
 		this.currentInputSansTex = null;
 		this.noTexTokenStructAr = null;
 		this.syntaxnetQuery = null;
+		this.curParseExcessiveLatex = false;
 		logger.info("(cleanup)@@@headParseStruct" + headParseStruct);
 	}	
 	
@@ -964,6 +966,14 @@ public class ParseState {
 	
 	public ParseErrorCode getParseErrorCode(){
 		return this.parseErrorCode;
+	}
+	
+	public void setCurParseExcessiveLatex(boolean bool){
+		this.curParseExcessiveLatex = bool;
+	}
+	
+	public boolean curParseExcessiveLatex(){
+		return this.curParseExcessiveLatex;
 	}
 	
 	@Override

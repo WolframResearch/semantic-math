@@ -178,12 +178,12 @@ public class SearchIntersection {
 				score = wordsScoreMap.get(word);
 			}
 			if (null != score) {
-				singletonScoresAr[i] = score;
-				inputWordsArUpdated[i] = word;
+				singletonScoresAr[i] = score;				
 				totalSingletonAdded++;
 			} else {
 				singletonScoresAr[i] = 0;
 			}
+			inputWordsArUpdated[i] = word;
 		}
 		return totalSingletonAdded;
 	}

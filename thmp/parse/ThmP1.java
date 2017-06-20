@@ -186,8 +186,9 @@ public class ThmP1 {
 	private static final Pattern BRACKET_START_PATTERN = Pattern.compile("\\[[^]]*");	
 	private static final Pattern BRACKETS_PATTERN = Pattern.compile("\\[[^]]+\\]");
 	private static final Pattern PAREN_PATTERN = Pattern.compile("\\([^)]+\\)");
-	private static final double MAX_ALLOWED_ENT_PERCENTAGE = 0.8;
-	private static final int MIN_PAIRS_SIZE_THRESHOLD_FOR_FLUFF = 7;
+	//.8 and not higher, since many latex expressions conglomerate together
+	private static final double MAX_ALLOWED_ENT_PERCENTAGE = 0.80;
+	private static final int MIN_PAIRS_SIZE_THRESHOLD_FOR_FLUFF = 5;
 	private static final Pattern POSSESIVE_PATTERN = Pattern.compile("[^\\s]+'s");
 	private static final Pattern SYNTAXNET_PREP_PATTERN = Pattern.compile("in|on|over|of|from|between|with|by");
 	private static final int PARSE_NUM_MAX = 8;//6
@@ -1361,29 +1362,40 @@ public class ThmP1 {
 		parseState.addToNumNonTexTokens(numNonTexTokens);
 		
 		/*Used for defluffing, in case the sentence is just sequence of many special characters*/
-		int symbEntCount = 0;
+		int texEntCount = 0;
+		int totalCharCount = 0;
+		int texCharCount = 0;
 		for (Pair pair : pairs) {
 			String pos = pair.pos();
+			String word = pair.word();
+			//should denote whether latex pair!! just like latex struct
 			if(pair.pos().equals("ent") || pos.equals("symb")
 					|| pos.equals("")){
-				symbEntCount++;	
+				texEntCount++;
+				texCharCount += word.length();
 			}else{
 				containsOnlySymbEnt = false;
 			}
-		}
-		
+			totalCharCount+= word.length();
+		}		
 		double pairs_sz = pairs.size();
 		//return if no meaningful parse could be extracted. This happens for 
 		//if all expressions are latex. Heuristic for detecting sentences that are just
 		//conglomerates of latex expressions, but that are not enclosed in "$" or "\begin{equation}", etc
+		//this is relevant for eliminating all-tex thms in search corpus as well.
 		if((containsOnlySymbEnt && pairs_sz > 1) /*<--so single-token $x>1$ can still get parsed*/
-				|| (symbEntCount/pairs_sz > MAX_ALLOWED_ENT_PERCENTAGE && pairs_sz > MIN_PAIRS_SIZE_THRESHOLD_FOR_FLUFF)
-				|| symbEntCount > 12){
+				//extract these constants after experimentation! June 2017.
+				//Need to be careful, e.g. in enumerate, those could have high tex percentages, but still meaningful.
+				|| ( ((double)texCharCount)/totalCharCount > 0.83 || texCharCount > 50 )
+				|| (((double)texEntCount)/pairs_sz > MAX_ALLOWED_ENT_PERCENTAGE && pairs_sz > MIN_PAIRS_SIZE_THRESHOLD_FOR_FLUFF)
+				|| texEntCount > 12){
 			//set trivial structlist, so that previous structlist doesn't get parsed again.
 			parseState.setTokenList(new ArrayList<Struct>());
+			parseState.setCurParseExcessiveLatex(true);
+			//if(true) throw new IllegalStateException("Excessive tex!");
 			return parseState;
 		}
-		
+		System.out.println("((double)texCharCount)/totalCharCount: "+((double)texCharCount)/totalCharCount +"  " +totalCharCount);
 		// If phrase isn't in dictionary, ie has type "", then use probMap to
 		// postulate type probabilistically.
 		int pairsLen = pairs.size();

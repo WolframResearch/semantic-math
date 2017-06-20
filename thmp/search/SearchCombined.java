@@ -34,6 +34,7 @@ import thmp.utils.WordForms;
  */
 public class SearchCombined {
 
+	private static final int NUM_NEAREST_SVD = 100;
 	private static final int NUM_NEAREST = 15;
 	//combined number of vectors to take from search results of
 	//svd/nearest and intersection
@@ -317,7 +318,7 @@ public class SearchCombined {
 		input = inputSB.toString();
 		
 		//eventually move this towards end, only do SVD if no good intersection matches!!
-		List<Integer> nearestVecList = ThmSearch.ThmSearchQuery.findNearestThmsInTermDocMx(input, NUM_NEAREST);
+		List<Integer> nearestVecList = ThmSearch.ThmSearchQuery.findNearestThmsInTermDocMx(input, NUM_NEAREST_SVD);
 		if(nearestVecList.isEmpty()){
 			System.out.println("I've got nothing for you yet. Try again.");
 			return Collections.<ThmHypPair>emptyList();

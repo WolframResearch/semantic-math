@@ -1,14 +1,11 @@
 package thmp.runner;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
 
 import thmp.parse.ParsedExpression;
 import thmp.parse.TheoremContainer;
-import thmp.search.CollectThm;
-import thmp.search.Searcher;
 import thmp.search.ThmSearch;
 import thmp.search.TriggerMathThm2;
 import thmp.utils.FileUtils;
@@ -16,7 +13,7 @@ import thmp.utils.FileUtils;
 /**
  * Generate SVD matrix in the form of sparse array. 
  * Useful when e.g. matrix generation in DetectHypothesis 
- * did not complete.
+ * did not complete. This gives the decomposition.
  * @author yihed
  *
  */

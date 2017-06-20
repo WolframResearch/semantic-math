@@ -222,6 +222,7 @@ public class DetectHypothesis {
 	public static class DefinitionListWithThm implements Serializable, TheoremContainer {
 		
 		private static final long serialVersionUID = 7178202892278343033L;
+		//singleton placeholder instance
 		static final DefinitionListWithThm PLACEHOLDER_DEF_LIST_WITH_THM 
 			= new DefinitionListWithThm("", Collections.<VariableDefinition>emptyList(), "", "");
 		
@@ -889,7 +890,7 @@ public class DetectHypothesis {
 		//append to newThmSB additional hypotheses that are applicable to the theorem.				
 		DefinitionListWithThm thmDef = appendHypothesesAndParseThm(thm, parseState, stats, srcFileName);
 		
-		if(!thmDef.equals(DefinitionListWithThm.PLACEHOLDER_DEF_LIST_WITH_THM)){
+		if(thmDef != DefinitionListWithThm.PLACEHOLDER_DEF_LIST_WITH_THM){
 			definitionListWithThmList.add(thmDef);
 			allThmsStrWithSpaceList.add(thm + "\n\n");
 		}
@@ -1040,7 +1041,10 @@ public class DetectHypothesis {
 		}
 		//System.out.println("~~~~~~Done parsing~~~~~~~");		
 		
-		if(parseState.numNonTexTokens() < NUM_NON_TEX_TOKEN_THRESHOLD){
+		if(parseState.numNonTexTokens() < NUM_NON_TEX_TOKEN_THRESHOLD || parseState.curParseExcessiveLatex()){
+			//set parseState flag, not strictly necessary, since cleanup will happen soon,
+			//but set for safe practice.
+			parseState.setCurParseExcessiveLatex(false);
 			return DefinitionListWithThm.PLACEHOLDER_DEF_LIST_WITH_THM;
 		}
 		
@@ -1073,7 +1077,6 @@ public class DetectHypothesis {
 
 		//System.out.println("Adding " + thmWithDefSB + " to theorem " + thmStr);
 		
-		//thmWithDefSB.append(thmStr);
 		DefinitionListWithThm defListWithThm = 
 				new DefinitionListWithThm(thmStr, variableDefinitionList, definitionSB.toString(), srcFileName);
 		
