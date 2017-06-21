@@ -24,6 +24,7 @@ import com.wolfram.jlink.Expr;
 import com.wolfram.jlink.MathLinkException;
 
 import thmp.parse.ProcessInput;
+import thmp.parse.TheoremContainer;
 import thmp.utils.DataUtility;
 import thmp.utils.WordForms;
 

@@ -5,28 +5,26 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
-import com.wolfram.jlink.Expr;
-import com.wolfram.jlink.KernelLink;
-import com.wolfram.jlink.MathLinkException;
 
 import thmp.parse.ParsedExpression;
+import thmp.parse.DetectHypothesis.DefinitionListWithThm;
 import thmp.search.SearchCombined.ThmHypPair;
 import thmp.search.Searcher.SearchConfiguration;
 import thmp.search.Searcher.SearchMetaData;
 import thmp.search.TheoremGet.ContextRelationVecPair;
 import thmp.search.ThmSearch.TermDocumentMatrix;
 import thmp.utils.FileUtils;
-import thmp.utils.MathLinkUtils;
 import thmp.utils.MathLinkUtils.WLEvaluationMedium;
 
 import static thmp.utils.MathLinkUtils.evaluateWLCommand;
@@ -108,6 +106,11 @@ public class ProjectionMatrix {
 					String path_i = FileUtils.addIfAbsentTrailingSlashToPath(fileName);
 					projectedMxFilePathList.add(path_i + ThmSearch.TermDocumentMatrix.PROJECTED_MX_NAME + ".mx");	
 					String peFilePath = path_i + ThmSearch.TermDocumentMatrix.PARSEDEXPRESSION_LIST_FILE_NAME_ROOT;
+					///temporary adjustment to accomodate some nonuniformized data during experimentation - June 2017.
+					if(!Files.exists(Paths.get(peFilePath))){
+						peFilePath += ".dat";
+					}
+					
 					String vecsFilePath = path_i + "vecs/" + ThmSearch.TermDocumentMatrix.CONTEXT_VEC_PAIR_LIST_FILE_NAME;
 					String wordThmIndexMMapPath = path_i + SearchMetaData.wordThmIndexMMapSerialFileName();
 					thmCounter = addExprsToLists(peFilePath, combinedPEList, vecsFilePath, combinedVecsList, wordThmIndexMMapPath,
@@ -169,6 +172,12 @@ public class ProjectionMatrix {
 					String line;
 					
 					while((line = bReader.readLine()) != null){
+						int lineLen = line.length();
+						//in case the file is supplied in the form that includes the mx.
+						//e.g. 0405_001Untarred/0405/FullTDMatrix.mx
+						if(lineLen > 3 && line.substring(lineLen-3).equals(".mx")){
+							line = FileUtils.findFilePathDirectory(line);
+						}
 						pathsList.add(line);
 					}
 				}finally{
@@ -244,14 +253,23 @@ public class ProjectionMatrix {
 		//targetFilePath = ThmSearch.getSystemCombinedContextRelationVecPairListFilePath();
 		//FileUtils.serializeObjToFile(combinedPEList, targetFilePath);
 	}
-
 	
 	@SuppressWarnings("unchecked")
 	private static int addExprsToLists(String peFilePath, List<ThmHypPair> combinedPEList, String vecsFilePath,
 			List<ContextRelationVecPair> combinedVecsList, String wordThmIndexMMapPath, 
 			Multimap<String, Integer> combinedWordThmIndexMMap, 
 			int startingThmIndex) {
-		List<ThmHypPair> thmHypPairList = (List<ThmHypPair>)FileUtils.deserializeListFromFile(peFilePath);
+		//**correct version: List<ThmHypPair> thmHypPairList = (List<ThmHypPair>)FileUtils.deserializeListFromFile(peFilePath);
+		//HACK. (for search, when data was nonuniformized. June 2017)
+		Object obj = ((List<? extends Object>)FileUtils.deserializeListFromFile(peFilePath)).get(0);
+		//List<? > thmHypPairList = (List<? >)FileUtils.deserializeListFromFile(peFilePath);
+		List<ThmHypPair> thmHypPairList;
+		if(obj instanceof ThmHypPair){
+			thmHypPairList = (List<ThmHypPair>)FileUtils.deserializeListFromFile(peFilePath);
+		}else{
+			thmHypPairList = convertPEToThmHypPairTEMP((List<ParsedExpression>)FileUtils.deserializeListFromFile(peFilePath));			
+		}
+		//**Hack ends
 		int thmHypPairListSz = thmHypPairList.size();
 		combinedPEList.addAll(thmHypPairList);	
 		combinedVecsList.addAll((List<ContextRelationVecPair>)FileUtils.deserializeListFromFile(vecsFilePath));
@@ -269,6 +287,22 @@ public class ProjectionMatrix {
 		return startingThmIndex + thmHypPairListSz;
 	}
 
+	//TEMPORARY, for nonuniformized data. June 2017.
+	private static List<ThmHypPair> convertPEToThmHypPairTEMP(List<ParsedExpression> peList){
+		List<ThmHypPair> thmHypPairList = new ArrayList<ThmHypPair>();
+		//int thmIndex = 0;
+		for(ParsedExpression pe : peList){
+			DefinitionListWithThm defListWithThm = pe.getDefListWithThm();
+			String thm = defListWithThm.getThmStr();
+			String def = defListWithThm.getDefinitionStr();
+			String fileName = defListWithThm.getSrcFileName();
+			ThmHypPair pair = new ThmHypPair(thm, def, fileName);
+			thmHypPairList.add(pair);			
+			//CollectThm.ThmWordsMaps.addToWordThmIndexMap(wordThmIndexMMap, def + " " + thm, thmIndex++);
+		}
+		return thmHypPairList;
+	}
+	
 	/*private static void combineParsedExpressionList(List<String> parsedExpressionFilePathList) {
 		List<ParsedExpression> combinedPEList = new ArrayList<ParsedExpression>();
 		for(String path : parsedExpressionFilePathList){
@@ -282,13 +316,15 @@ public class ProjectionMatrix {
 
 	/**
 	 * Apply projection matrices (dInverse and uTranspose) to given matrix (vectors should be row vecs).
-	 * @param queryMxStrName mx to be applied, could be 1-D. List of row vectors (List's).
+	 * The relevan variables should already have been loaded in any kernel the EvaluationMedium is retrieved from.
+	 * @param queryMxStrName mx to be applied (could be 1-D if a single query vec) to. This is List of 
+	 * row vectors (List's).
 	 * @param dInverseName
 	 * @param uTransposeName
 	 * @param corMxName
 	 * @param projectedMxName
 	 */
-	public static void applyProjectionMatrix(String queryMxStrName, String dInverseName, String uTransposeName, 
+	protected static void applyProjectionMatrix(String queryMxStrName, String dInverseName, String uTransposeName, 
 			String corMxName, String projectedMxName){
 		
 		WLEvaluationMedium medium = FileUtils.acquireWLEvaluationMedium();		
@@ -298,7 +334,8 @@ public class ProjectionMatrix {
 		queryMxStrTransposeName = queryMxStrName;
 		//try {
 			//process query first with corMx. Convert to column vectors, so rows represent words.
-			evaluateWLCommand(medium, "q0 =" + queryMxStrTransposeName + "+ 0.08*" + corMxName + "."+ queryMxStrTransposeName, false, true);
+			evaluateWLCommand(medium, "q0 =" + queryMxStrTransposeName + "+ "+
+					TermDocumentMatrix.COR_MX_SCALING_FACTOR+"*" + corMxName + "."+ queryMxStrTransposeName, false, true);
 			//ml.evaluate("q0 = " + queryMxStrTransposeName + "+ 0.08*" + corMxName + "."+ queryMxStrTransposeName +";");
 			//ml.discardAnswer();
 			//System.out.println("ProjectionMatrix.applyProjectionMatrix, "

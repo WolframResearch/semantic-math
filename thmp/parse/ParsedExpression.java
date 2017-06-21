@@ -19,8 +19,6 @@ import thmp.parse.DetectHypothesis.DefinitionListWithThm;
 public class ParsedExpression implements Serializable, TheoremContainer{
 
 	private static final long serialVersionUID = -6334467107326376015L;
-
-	private transient String originalThmStr;
 	
 	private transient List<Struct> parseRootList;
 	
@@ -42,16 +40,11 @@ public class ParsedExpression implements Serializable, TheoremContainer{
 	//need the String form for serialization
 	private String contextVecStr;*/
 	
-	/*public ParsedExpression(String thmStr, List<Struct> parseRootList){
-		this.originalThmStr = thmStr;
-		this.parseRootList = parseRootList;
-	}*/
-	
 	public ParsedExpression(String thmStr, ParseStruct headParseStruct,
 			DefinitionListWithThm defListWithThm 
 			//, int[] contextVec, BigInteger relationVec
 			){
-		this.originalThmStr = thmStr;
+		//this.originalThmStr = thmStr;
 		this.headParseStruct = headParseStruct;
 		this.defListWithThm = defListWithThm;
 		/*this.relationVec = relationVec;

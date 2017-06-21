@@ -6,6 +6,7 @@ import thmp.parse.ParsedExpression;;
 
 /**
  * Place to deposit resources, to be retrieved by various classes.
+ * This should be deprecated -June 2017
  * @author yihed
  *
  */

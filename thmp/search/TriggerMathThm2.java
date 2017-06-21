@@ -86,6 +86,7 @@ public class TriggerMathThm2 {
 	 */
 	private static final boolean DEBUG = false;
 	private static final double RELATED_WORD_MULTIPLICATION_FACTOR = 4/5.0;
+	private static final double DEFAULT_NORMALIZED_WORD_SCORE = 0.3;
 	
 	static {
 		
@@ -95,7 +96,8 @@ public class TriggerMathThm2 {
 		//docWordsFreqMapNoAnno should already been ordered based on frequency, more frequently-
 		//occuring words come earlier. This based on set of theorems in previous run.
 		docWordsFreqMapNoAnno = CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno();
-		keywordIndexDict = ImmutableMap.copyOf(CollectThm.ThmWordsMaps.createContextKeywordIndexDict(docWordsFreqMapNoAnno));
+		//***keywordIndexDict = ImmutableMap.copyOf(CollectThm.ThmWordsMaps.createContextKeywordIndexDict(docWordsFreqMapNoAnno));
+		keywordIndexDict = CollectThm.ThmWordsMaps.get_CONTEXT_VEC_WORDS_INDEX_MAP();
 		///thmWordsMapList = CollectThm.ThmWordsMaps.get_thmWordsFreqListNoAnno();
 		
 		/* Don't need to build the giant mathObjMx if not generating data.	*/	
@@ -300,6 +302,12 @@ public class TriggerMathThm2 {
 	 * CollectThm.java.
 	 * Use given list of words and given list of thms, in that precise order!
 	 * Be careful about thm ordering used! Since col index in term document mx depends on it!
+	 * 
+	 * @param defThmList
+	 * @param coordinatesList
+	 * @param weightsList Should be empty on input. To record list of scores for the words
+	 * added, for each thm.
+	 * @param wordsScoreMap
 	 */
 	private static void gatherTermDocumentMxEntries(ImmutableList<TheoremContainer> defThmList,
 			List<int[]> coordinatesList, List<Double> weightsList, Map<String, Integer> wordsScoreMap) {
@@ -312,23 +320,55 @@ public class TriggerMathThm2 {
 		//List<Double> weightsList = new ArrayList<Double>();
 		//int[][] d = new int[mathObjMx.length][2];
 		
-		int mathObjCounter = 0;
+		int thmCounter = 0;
 		//int keywordIndexNullCounter = 0;
 		while (defThmListIter.hasNext()) {
 			String thm = defThmListIter.next().getEntireThmStr();
 			//get collection of words.
-			String[] curMathObjCol = WordForms.splitThmIntoSearchWords(thm.toLowerCase());
+			//String[] curMathObjCol = WordForms.splitThmIntoSearchWords(thm.toLowerCase());
+			String[] thmAr = WordForms.splitThmIntoSearchWords(thm.toLowerCase());
+			
 			List<String> gatheredWordsList = new ArrayList<String>();
-			//Collection<String> curMathObjCol = mathObjMMap.get(thm);			
+			////
+			
+			int queryVecLen = ThmSearch.ThmSearchQuery.getQUERY_VEC_LENGTH();
+			logger.info("TriggerMathThm - queryVecLen: " + queryVecLen);
+			//System.out.println("TriggerMathThm2 - query vector length: " + queryVecLen);
+			//double[] queryVec = new double[queryVecLen];
 			double norm = 0;
-			for (String keyword : curMathObjCol) {
-				
+			//highest weight amongst the single words
+			double highestWeight = 0;
+			List<Integer> priorityWordsIndexList = new ArrayList<Integer>();
+			List<IndexScorePair> indexScorePairList = new ArrayList<IndexScorePair>();
+			//get norm first, form unnormalized vector, then divide terms by log of norm
+			for (int i = 0; i < thmAr.length; i++) {
+				String term = thmAr[i];
+				double newNorm;
+				//this also normalizes the word
+				newNorm = addToNorm(wordsScoreMap, indexScorePairList, norm, i, term, queryVecLen);
+				if(newNorm - norm > highestWeight){
+					highestWeight = newNorm - norm;
+				}
+				//search 2 & 3-grams
+				if(i < thmAr.length-1){
+					String nextTermCombined = term + " " + thmAr[i+1];
+					newNorm = addToNorm(wordsScoreMap, indexScorePairList, newNorm, i, nextTermCombined, queryVecLen);	
+					//System.out.println("combined word: " + nextTermCombined + ". norm: " + newNorm);
+					
+					if(i < thmAr.length-2){
+						String threeTermsCombined = nextTermCombined + " " + thmAr[i+2];
+						newNorm = addToNorm(wordsScoreMap, indexScorePairList, newNorm, i, threeTermsCombined, queryVecLen);
+					}
+				}
+				norm = newNorm;
+			}			
+			//****************************
+			/*June 2017 double norm = 0;
+			for (String keyword : curMathObjCol) {				
 				if(!keywordIndexDict.containsKey(keyword)){
-					keyword = WordForms.getSingularForm(keyword);	
-
+					keyword = WordForms.getSingularForm(keyword);
 					if(!keywordIndexDict.containsKey(keyword)){
-						keyword = WordForms.normalizeWordForm(keyword);
-						
+						keyword = WordForms.normalizeWordForm(keyword);						
 						if(!keywordIndexDict.containsKey(keyword)){
 							continue;
 						}
@@ -339,7 +379,8 @@ public class TriggerMathThm2 {
 				Integer wordScore = wordsScoreMap.get(keyword);
 				if(null == wordScore){
 					//wordsScoreMap is now from previous parse run, so might not have this word.
-					//if the dataset has not stabilized across runs.
+					//if the dataset has not stabilized across runs. <--actually, now uses same
+					//set of words. June 2017.
 					wordScore = 1;
 				}
 				norm += Math.pow(wordScore, 2);
@@ -347,13 +388,29 @@ public class TriggerMathThm2 {
 				//if(wordScore == null) continue;
 				//weigh each word based on *local* frequency, ie word freq in sentence, not whole doc.
 				//mathObjMx[keyWordIndex][mathObjCounter] = wordScore;
-			}
+			}*/ ///*********************
+			
 			//Sqrt is usually too large, so take log instead of sqrt.
 			//norm = norm < 3 ? 1 : (int)Math.sqrt(norm);
-			norm = Math.sqrt(Math.sqrt(norm));
+			norm = Math.sqrt(Math.sqrt(norm)); //<--needs to be consistent with querying!!!
 			//divide by log of norm
-			//System.out.println("keywordIndexDict: "+keywordIndexDict);
-			for (String keyword : gatheredWordsList) {
+			norm = norm == 0 ? 1 : norm;
+				
+			for(IndexScorePair pair : indexScorePairList){
+				int keyWordIndex = pair.index;
+				double keyWordScore = pair.score;
+				double newScore = keyWordScore/norm; //need to be conssitent
+				if(0. == newScore){
+					//factor out constatn after experimentation !
+					newScore = DEFAULT_NORMALIZED_WORD_SCORE;
+				}
+				coordinatesList.add(new int[]{keyWordIndex, thmCounter});
+				weightsList.add(newScore);
+			}
+			
+			///***********
+			/**** June 2017
+			 * for (String keyword : gatheredWordsList) {
 				Integer keyWordIndex = keywordIndexDict.get(keyword);
 				//keywordIndexDict should contain keyword at this point.
 				if(null == keyWordIndex){
@@ -368,77 +425,18 @@ public class TriggerMathThm2 {
 				}
 				//divide by log of norm
 				//could be very small! ie 0 after rounding.
-				double newScore = (double)wordScore/norm;
+				double newScore = ((double)wordScore)/norm;
 				//int newScore = wordScore;
 				if(newScore == 0 && wordScore != 0){
 					newScore = .1;
 				}
-				//mathObjMx[keyWordIndex][mathObjCounter] = newScore;
-				coordinatesList.add(new int[]{keyWordIndex, mathObjCounter}) ;
+				coordinatesList.add(new int[]{keyWordIndex, thmCounter}) ;
 				weightsList.add(newScore);
-			}			
-			mathObjCounter++;
+			}*/
+			thmCounter++;
 		}
-		//System.out.println("TriggerMathThm2 - keywordIndexDict: "+ keywordIndexDict);
-		//System.out.println("TriggerMathThm2 - wordsScoreMap: "+ wordsScoreMap);
-		//System.out.println("TriggerMathThm2 - keywordIndexNullCounter: "+ keywordIndexNullCounter);
-		//System.out.println("~~keywordDict "+keywordDict);
 	}
 	
-	/**
-	 * Create query row vector, 1's and 0's.
-	 * @deprecated SVD queries should be created without word annotations.
-	 * @param triggerTerms
-	 * @return String representation of query vector, eg {{1,0,1,0}}
-	 */
-	public static String createQuery(String thm){
-		
-		//String[] thmAr = thm.split("\\s+|,|;|\\.");
-		//map of annotated words and their scores
-		Map<String, Integer> wordsScoreMap = CollectThm.ThmWordsMaps.get_wordsScoreMapNoAnno();		
-		//should eliminate unnecessary words first, then send to get wrapped.
-		//<--can only do that if leave the hyp words in, eg if.
-		List<WordWrapper> wordWrapperList = SearchWordPreprocess.sortWordsType(thm);
-		//System.out.println(wordWrapperList);
-		//keywordDict is annotated with "hyp"/"stm"
-		int dictSz = keywordIndexDict.keySet().size();
-		int[] triggerTermsVec = new int[dictSz];
-		
-		for (WordWrapper wordWrapper : wordWrapperList) {
-			//annotated form
-			String termAnno = wordWrapper.hashToString();
-			
-			Integer rowIndex = keywordIndexDict.get(termAnno);
-			//System.out.println("first rowIndex " + rowIndex);
-			if(rowIndex == null){
-				termAnno = wordWrapper.otherHashForm();
-				rowIndex = keywordIndexDict.get(termAnno);				
-			}
-			//should normalize!!
-			
-			//System.out.println("second rowIndex " + rowIndex);
-			if (rowIndex != null) {
-				int termScore = wordsScoreMap.get(termAnno);
-				//System.out.println("termAnno " + termAnno);
-				//System.out.print("termScore " + termScore + "\t");
-				//triggerTermsVec[rowIndex] = termScore;
-				//keywordDict starts indexing from 0!
-				triggerTermsVec[rowIndex] = termScore;
-			}
-		}
-		//transform into query list String 
-		StringBuilder sb = new StringBuilder();
-		sb.append("{{");
-		//String s = "{{";
-		for(int j = 0; j < dictSz; j++){
-			String t = j == dictSz-1 ? triggerTermsVec[j] + "" : triggerTermsVec[j] + ", ";
-			sb.append(t);
-		}
-		sb.append("}}");
-		System.out.println("query vector " + sb);
-		return sb.toString();
-	}
-
 	/**
 	 * Same as creareQuery, no annotation.
 	 * Create query row vector, weighed using word scores,
@@ -450,7 +448,9 @@ public class TriggerMathThm2 {
 	public static String createQueryNoAnno(String thm){
 		//System.out.println("TriggerMathThm - keywordIndexDict map: " + keywordIndexDict);
 		//String[] thmAr = thm.split("\\s+|,|;|\\.");
-		String[] thmAr = thm.split(WordForms.splitDelim());
+		//***String[] thmAr = thm.split(WordForms.splitDelim());
+		String[] thmAr = WordForms.splitThmIntoSearchWords(thm);
+		////////////////
 		//map of non-annotated words and their scores. Use get_wordsScoreMapNoAnno 
 		//and not CONTEXT_VEC_WORDS_MAP.
 		Map<String, Integer> wordsScoreMap = CollectThm.ThmWordsMaps.get_wordsScoreMapNoAnno();	
@@ -469,30 +469,30 @@ public class TriggerMathThm2 {
 		//highest weight amongst the single words
 		double highestWeight = 0;
 		List<Integer> priorityWordsIndexList = new ArrayList<Integer>();
-		
+		List<IndexScorePair> indexScorePairList = new ArrayList<IndexScorePair>();
 		//get norm first, form unnormalized vector, then divide terms by log of norm
 		for (int i = 0; i < thmAr.length; i++) {
 			String term = thmAr[i];
 			double newNorm;
 			//this also normalizes the word
-			newNorm = addToNorm(thmAr, wordsScoreMap, queryVec, norm, i, term, queryVecLen);
+			newNorm = addToNorm(wordsScoreMap, indexScorePairList, norm, i, term, queryVecLen);
 			if(newNorm - norm > highestWeight){
 				highestWeight = newNorm - norm;
 			}
 			//search 2 & 3-grams
 			if(i < thmAr.length-1){
 				String nextTermCombined = term + " " + thmAr[i+1];
-				newNorm = addToNorm(thmAr, wordsScoreMap, queryVec, newNorm, i, nextTermCombined, queryVecLen);	
+				newNorm = addToNorm(wordsScoreMap, indexScorePairList, newNorm, i, nextTermCombined, queryVecLen);	
 				//System.out.println("combined word: " + nextTermCombined + ". norm: " + newNorm);
 				
 				if(i < thmAr.length-2){
 					String threeTermsCombined = nextTermCombined + " " + thmAr[i+2];
-					newNorm = addToNorm(thmAr, wordsScoreMap, queryVec, newNorm, i, threeTermsCombined, queryVecLen);
+					newNorm = addToNorm(wordsScoreMap, indexScorePairList, newNorm, i, threeTermsCombined, queryVecLen);
 				}
 			}
-			if(term.matches(priorityWords)){
+			/*//if(term.matches(priorityWords)){
 				priorityWordsIndexList.add(i);
-			}						
+			}*/						
 			norm = newNorm;
 		}
 		//short-circuit if no relevant term was detected in input thm
@@ -500,8 +500,12 @@ public class TriggerMathThm2 {
 		//but doesn't make sense.
 		if(norm == 0) return "";
 		
+		for(IndexScorePair pair : indexScorePairList){
+			queryVec[pair.index] = pair.score;			
+		}
+		
 		//fill in the priority words with highestWeight
-		for(int index : priorityWordsIndexList){
+		/*//*****for(int index : priorityWordsIndexList){
 			Integer rowIndex = keywordIndexDict.get(thmAr[index]);
 			if(rowIndex != null){
 				double prevWeight = queryVec[rowIndex];
@@ -509,7 +513,7 @@ public class TriggerMathThm2 {
 				queryVec[rowIndex] = highestWeight;
 				norm += weightDiff;
 			}
-		}		
+		}*/		
 		//avoid division by 0 apocalypse, when it was log
 		
 		//norm = norm < 3 ? 1 : (int)Math.log(norm);
@@ -523,7 +527,7 @@ public class TriggerMathThm2 {
 				//avoid completely obliterating a word 
 				if(queryVec[i] == 0){
 					//triggerTermsVec[i] = 1;
-					queryVec[i] = .1;
+					queryVec[i] = DEFAULT_NORMALIZED_WORD_SCORE;
 				}
 			}
 		}		
@@ -538,18 +542,42 @@ public class TriggerMathThm2 {
 		//System.out.println("query vector " + sb);
 		return sb.toString();
 	}
-
+	
+	/**
+	 * Index in query vector, ie vector with length the number of keywords,
+	 * and value is the score;
+	 */
+	private static class IndexScorePair{
+		int index;
+		double score;
+		IndexScorePair(int index_, double score_){
+			this.index = index_;
+			this.score = score_;
+		}
+		int index(){
+			return this.index;
+		}
+		
+		double score(){
+			return this.score;
+		}
+	}
+	
 	/**
 	 * Auxiliary method to createQueryNoAnno. Adds word weight
 	 * to norm, when applicable.
-	 * @param thmAr array of words in thm.
+	 * 
 	 * @param wordsScoreMap
+	 * @param triggerTermsVec
+	 * @param indexScoreArList List of arrays of two, index, and score.
 	 * @param norm
-	 * @param i index in thmAr
+	 * @param i
 	 * @param term
+	 * @param queryVecLen
 	 * @return
 	 */
-	private static double addToNorm(String[] thmAr, Map<String, Integer> wordsScoreMap, double[] triggerTermsVec,
+	private static double addToNorm(Map<String, Integer> wordsScoreMap, //String[] thmAr, 
+			List<IndexScorePair> indexScorePairList,
 			double norm, int i, String term, int queryVecLen) {
 		Integer termScore = wordsScoreMap.get(term);
 		//get singular forms		
@@ -572,32 +600,32 @@ public class TriggerMathThm2 {
 		else{		
 			term = WordForms.normalizeWordForm(term);
 			termScore = wordsScoreMap.get(term);			
-		}
-		
+		}		
 		//if no entry in relatedWordsMap found above, check again
 		if(null != termScore && !relatedWordsFound){
 			RelatedWords relatedWords = relatedWordsMap.get(term);
 			if(null != relatedWords){
 				termRelatedWordsList = relatedWords.getCombinedList();
 			}	
-		}
-		
+		}		
 		//triggerTermsVec[rowIndex] = termScore;
 		/*keywordDict starts indexing from 0!*/
 		Integer rowIndex = keywordIndexDict.get(term);				
+		//it's possible that rowIndex >= queryVecLen
 		if(termScore != null && rowIndex != null && rowIndex < queryVecLen){
 			//just adding the termscore, without squaring, works better
 			//norm += Math.pow(termScore, 2);
 			norm += Math.pow(termScore, 2);
-			thmAr[i] = term;
+			///why this??
+			//***thmAr[i] = term;
 			//shouldn't be null, since termScore!=null
 			//int rowIndex = keywordDict.get(term);
 			//triggerTermsVec[rowIndex] = termScore;
 			//keywordDict starts indexing from 0!
-			triggerTermsVec[rowIndex] = termScore;
-			System.out.println("TriggerMathThm2.java: term just added: " + term + ". " + rowIndex + ". termScore: " + termScore);
-			
-			//System.out.println(Arrays.toString(triggerTermsVec));
+			//****triggerTermsVec[rowIndex] = termScore;
+			indexScorePairList.add(new IndexScorePair(rowIndex, termScore));
+			System.out.println("TriggerMathThm2.java: term just added: " + term + ". " + rowIndex 
+					+ ". termScore: " + termScore);
 		}
 		//add vector entries for related words
 		if(null != termRelatedWordsList){
@@ -619,7 +647,8 @@ public class TriggerMathThm2 {
 					continue;
 				}
 				if(null != relatedWordRowIndex){
-					triggerTermsVec[relatedWordRowIndex] = relatedWordScore;
+					//triggerTermsVec[relatedWordRowIndex] = relatedWordScore;
+					indexScorePairList.add(new IndexScorePair(relatedWordRowIndex, relatedWordScore));
 					norm += Math.pow(relatedWordScore, 2);
 				}					
 			}

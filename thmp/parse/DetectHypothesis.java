@@ -228,7 +228,7 @@ public class DetectHypothesis {
 		
 		private String thmStr;		
 		//thmStr, with definition strings prepended.
-		private transient String thmWithDefStr;
+		//private transient String thmWithDefStr;
 		
 		private String definitionStr;
 		//name of source file from which thm is extracted.
@@ -240,7 +240,7 @@ public class DetectHypothesis {
 				String definitionStr_, String srcFileName_){
 			this.thmStr = thmStr;
 			this.definitionList = definitionList;
-			this.thmWithDefStr = definitionStr_ + " " + thmStr;
+			//this.thmWithDefStr = definitionStr_ + " " + thmStr;
 			this.definitionStr = definitionStr_;
 			this.srcFileName = srcFileName_;
 		}
@@ -283,7 +283,7 @@ public class DetectHypothesis {
 		 */
 		@Override
 		public String getEntireThmStr() {
-			return thmWithDefStr;
+			return definitionStr + " " + thmStr;
 		}
 		
 		/**
@@ -350,11 +350,10 @@ public class DetectHypothesis {
 		InputParams(String args[]){
 			int argsLen = args.length;
 			if(argsLen > 0){
-				texFilesDirPath = args[0];
+				texFilesDirPath = thmp.utils.FileUtils.addIfAbsentTrailingSlashToPath(args[0]);
 				//inputFile = new File(argsSrcStr);
 				//serializedTexFileNamesFileStr = args[1];
-				serializedTexFileNamesFileStr = thmp.utils.FileUtils
-						.addIfAbsentTrailingSlashToPath(texFilesDirPath) +texFilesSerializedListFileName;
+				serializedTexFileNamesFileStr = texFilesDirPath +texFilesSerializedListFileName;
 				
 				if(argsLen > 2){
 					pathToProjectionMx = args[1];
@@ -575,7 +574,7 @@ public class DetectHypothesis {
 			FileUtils.serializeObjToFile(wordThmIndexMMapList, wordThmIndexMMapSerialFileStr);
 			String wordThmIndexMMapTxtFileStr = wordThmIndexMMapSerialFileStr
 					.substring(0, wordThmIndexMMapSerialFileStr.length()-3) + "txt";
-			FileUtils.serializeObjToFile(wordThmIndexMMapList, wordThmIndexMMapTxtFileStr);
+			FileUtils.writeToFile(wordThmIndexMMapList, wordThmIndexMMapTxtFileStr);
 			//FileUtils.serializeObjToFile(parsedExpressionList, parsedExpressionSerialFileStr);
 			FileUtils.serializeObjToFile(thmHypPairList, parsedExpressionSerialFileStr);
 			FileUtils.serializeObjToFile(contextRelationVecPairList, contextRelationPairSerialFileStr);
@@ -643,7 +642,6 @@ public class DetectHypothesis {
 		}
 		return thmHypPairList;
 	}
-	//things that need to be packaged: wordThmMMap, thmhyppairs, meta data
 	
 	private static String replaceFullTDMxName(String fullTermDocumentMxPath, String projectedMxName){
 		char separatorChar = File.separatorChar;

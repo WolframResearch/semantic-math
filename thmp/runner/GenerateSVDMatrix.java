@@ -14,8 +14,9 @@ import thmp.utils.FileUtils;
  * Generate SVD matrix in the form of sparse array. 
  * Useful when e.g. matrix generation in DetectHypothesis 
  * did not complete. This gives the decomposition.
+ * To run: 
+ * 
  * @author yihed
- *
  */
 public class GenerateSVDMatrix{
 

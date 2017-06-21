@@ -305,9 +305,9 @@ public class FileUtils {
 	}
 	
 	/**
-	 * Finds the directory component in a file path. I.e. the component
+	 * Finds the directory component (root) in a file path. I.e. the component
 	 * before the last File.separatorChar, e.g. '/'. If no slash found, 
-	 * return the input String.
+	 * return the input String. So "a/b" part of e.g. a/b/c.dat"'
 	 * @param filePath
 	 * @return
 	 */

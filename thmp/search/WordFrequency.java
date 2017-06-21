@@ -243,7 +243,7 @@ public class WordFrequency {
 		 */
 		public static ImmutableSet<String> get_nonMathFluffWordsSet2() {
 			Set<String> nonMathFluffWordsSet = new HashSet<String>(wordPosMap.keySet());
-			String[] score1mathWords = CollectThm.score1MathWords();
+			String[] score1mathWords = CollectThm.scoreAvgMathWords();
 			String[] additionalFluffWords = CollectThm.additionalFluffWords();
 
 			for (String word : score1mathWords) {

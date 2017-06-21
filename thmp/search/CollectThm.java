@@ -95,9 +95,14 @@ public class CollectThm {
 	 * to be detected as non-fluff words. Put words here to be intentionally included in words map.
 	 * Only singletons here. N-grams should be placed in N-gram files.
 	 */
-	private static final String[] SCORE1MATH_WORDS = new String[]{"ring", "field", "ideal", "finite", "series",
+	private static final String[] SCORE_AVG_MATH_WORDS = new String[]{"ring", "field", "ideal", "finite", "series",
 			"complex", "combination", "regular", "domain", "local", "smooth", "map", "definition", "standard", "prime", "every",
-			"injective", "surjective"};
+			"injective", "surjective", "suppose"};
+	//could be included, if already included, adjust the score to 1. If not, don't add.
+	private static final String[] SCORE1MATH_WORDS = new String[]{"is", "show","have"
+	};
+	private static final String[] SCORE0MATH_WORDS = new String[]{"such","say","will"
+	};
 	//additional fluff words to add, that weren't listed previously
 	private static final String[] ADDITIONAL_FLUFF_WORDS = new String[]{"tex", "is", "are", "an"};
 	
@@ -275,7 +280,8 @@ public class CollectThm {
 				 
 				String docWordsFreqMapNoAnnoPath = FileUtils.getServletPath(SearchMetaData.wordDocFreqMapPath());
 				@SuppressWarnings("unchecked")
-				Map<String, Integer> docWordsFreqPreMap = ((List<Map<String, Integer>>)FileUtils.deserializeListFromFile(docWordsFreqMapNoAnnoPath)).get(0);
+				Map<String, Integer> docWordsFreqPreMap = ((List<Map<String, Integer>>)
+						FileUtils.deserializeListFromFile(docWordsFreqMapNoAnnoPath)).get(0);
 				docWordsFreqMapNoAnno = ImmutableMap.copyOf(docWordsFreqPreMap);
 				//buildMapsNoAnno(docWordsFreqPreMapNoAnno, wordThmsMMapBuilderNoAnno, 
 					//		processedThmList, skipGramWordsList);		
@@ -301,6 +307,7 @@ public class CollectThm {
 				 * already contained in docWordsFreqMapNoAnno.*/
 				relatedWordsMap = deserializeAndProcessRelatedWordsMapFromFile(docWordsFreqMapNoAnno);
 				CONTEXT_VEC_WORDS_FREQ_MAP = docWordsFreqMapNoAnno;
+				//The underlying map is a tree map, don't create immutable map from it for now.
 				CONTEXT_VEC_WORDS_INDEX_MAP = createContextKeywordIndexDict(docWordsFreqMapNoAnno);
 			/*}else{				
 				buildScoreMapNoAnno(wordsScorePreMap, CONTEXT_VEC_WORDS_FREQ_MAP);
@@ -944,22 +951,35 @@ public class CollectThm {
 		public static void buildScoreMapNoAnno(Map<String, Integer> wordsScorePreMap,
 				Map<String, Integer> docWordsFreqPreMapNoAnno){		
 			
-			addWordScoresFromMap(wordsScorePreMap, docWordsFreqPreMapNoAnno);
+			int avgScore = addWordScoresFromMap(wordsScorePreMap, docWordsFreqPreMapNoAnno);
 			//System.out.println("docWordsFreqMapNoAnno "+docWordsFreqMapNoAnno);
 			//put 2 grams in, freq map should already contain 2 grams
 			//addWordScoresFromMap(wordsScorePreMap, twoGramsMap);
 			
 			//put 1 for math words that occur more frequently than the cutoff, but should still be counted, like "ring"	
+			avgScore = avgScore == 0 ? 1 : avgScore;
+			for(String word : SCORE_AVG_MATH_WORDS){ 
+				wordsScorePreMap.put(word, avgScore);
+			}
+			
 			for(String word : SCORE1MATH_WORDS){
-				wordsScorePreMap.put(word, 1);
+				if(wordsScorePreMap.containsKey(word)){
+					wordsScorePreMap.put(word, 1);
+				}
+			}
+			
+			for(String word : SCORE0MATH_WORDS){ 
+				wordsScorePreMap.remove(word);
 			}
 		}
 		
 		/**
 		 * Auxiliary method for buildScoreMapNoAnno. Adds word scores from the desired map.
 		 * @param wordsScorePreMap
+		 * @return average score of words
 		 */
-		private static void addWordScoresFromMap(Map<String, Integer> wordsScorePreMap, Map<String, Integer> mapFrom) {
+		private static int addWordScoresFromMap(Map<String, Integer> wordsScorePreMap, Map<String, Integer> mapFrom) {
+			int totalScore = 0;
 			for(Entry<String, Integer> entry : mapFrom.entrySet()){
 				//+1 so not to divide by 0.
 				//wordsScoreMapBuilderNoAnno.put(entry.getKey(), (int)Math.round(1/Math.log(entry.getValue()+1)*10) );
@@ -979,8 +999,10 @@ public class CollectThm {
 				//frequently occurring words, should not score too low since they are mostly math words.
 				score = score <= 0 ? 3 : score;
 				wordsScorePreMap.put(word, score);
+				totalScore += score;
 				//System.out.print("word: "+word +" score: "+score + " freq "+ wordFreq + "$   ");
 			}
+			return totalScore/mapFrom.size();
 		}
 		
 		/**
@@ -1400,8 +1422,8 @@ public class CollectThm {
 	 * Eg "ring".
 	 * @return
 	 */
-	public static String[] score1MathWords(){
-		return SCORE1MATH_WORDS;
+	public static String[] scoreAvgMathWords(){
+		return SCORE_AVG_MATH_WORDS;
 	}
 	
 	/**

@@ -6,7 +6,7 @@ package thmp.parse;
  * @author yihed
  *
  */
-public interface TheoremContainer {
+public interface TheoremContainer{
 
 	public String getEntireThmStr();
 }
