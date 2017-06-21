@@ -6,6 +6,8 @@ import java.util.List;
 
 import com.google.common.collect.Multimap;
 
+import thmp.utils.FileUtils;
+
 /**
  * Methods to parse again, if the first pass in ThmP1.parse()
  * does not produce spanning parses. Iteratively drops elements that
@@ -17,7 +19,8 @@ import com.google.common.collect.Multimap;
 public class ParseAgain {
 	
 	private static final Multimap<String, Rule> structMap = Maps.structMap();
-
+	private static final boolean DEBUG = FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : false;
+	
 	/**
 	 * 
 	 * @param structList
@@ -34,9 +37,6 @@ public class ParseAgain {
 		/*not completely lonely, has one neighbor.*/
 		List<Struct> oneNeighborStructList = new ArrayList<Struct>();
 		List<Integer> oneNeighborStructIndexList = new ArrayList<Integer>();
-		
-		//List<Struct> originalNonSpanningParseStructList = parseState.getTokenList();
-		//System.out.println("originalNonSpanningParseStructList len " + originalNonSpanningParseStructList.size());
 		
 		//array to indicate which ones to exclude, 1 means exclude. Think of as bit vector.
 		//gradually turn entries at indices that are entries in loneStructIndexList to 1.
@@ -76,12 +76,8 @@ public class ParseAgain {
 				oneNeighborStructIndexList.add(i);				
 			}
 		}
-		System.out.println("ParseAgain - !loneStructList! " + loneStructList);
-		/*System.out.println("!structCoordinates! " );
-		for(int[] s : structCoordinates){
-			 System.out.println(Arrays.toString(s));
-		}
-		System.out.println(structList);*/
+		if(DEBUG) System.out.println("ParseAgain - !loneStructList! " + loneStructList);
+		
 		//iterate through combinations, in each of which a subset 
 		//of loneStructList is missing.
 		//all possible combinations amount to 2^m, where

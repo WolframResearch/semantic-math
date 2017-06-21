@@ -431,10 +431,24 @@ public class FileUtils {
 		}        
 	}
 	
+	/**
+	 * Releases kernel represented by medium instance back to kernel pool.
+	 * Only does something if medium represents kernel from kernelpool.
+	 * Does *not* close link if medium represents MathLink rather than kernel from pool.
+	 * @param medium
+	 */
 	public static void releaseWLEvaluationMedium(WLEvaluationMedium medium){
 		if(medium.evaluationMediumType == EvaluationMediumType.KERNEL){
 			kernelPool.releaseKernel(medium.kernel());
-		}
+		}		
+		/* Don't close link if medium contains link! Since kernel will quit.
+		 * else{
+			KernelLink link = medium.link();
+			if(null != link){
+				link.close();
+			}
+			closeKernelLinkInstance();
+		}*/
 	}
 	
 	/**

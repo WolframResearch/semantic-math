@@ -97,11 +97,12 @@ public class CollectThm {
 	 */
 	private static final String[] SCORE_AVG_MATH_WORDS = new String[]{"ring", "field", "ideal", "finite", "series",
 			"complex", "combination", "regular", "domain", "local", "smooth", "map", "definition", "standard", "prime", "every",
-			"injective", "surjective", "suppose"};
+			"injective", "surjective", "suppose", "any", "commut"};
 	//could be included, if already included, adjust the score to 1. If not, don't add.
-	private static final String[] SCORE1MATH_WORDS = new String[]{"is", "show","have"
+	private static final String[] SCORE1MATH_WORDS = new String[]{"show","have"
 	};
-	private static final String[] SCORE0MATH_WORDS = new String[]{"such","say","will"
+	private static final String[] SCORE0MATH_WORDS = new String[]{"such","say","will", "following","goodwillie","send", "iii",
+			"ii","i", "is"
 	};
 	//additional fluff words to add, that weren't listed previously
 	private static final String[] ADDITIONAL_FLUFF_WORDS = new String[]{"tex", "is", "are", "an"};
@@ -1233,10 +1234,6 @@ public class CollectThm {
 		@SuppressWarnings("unchecked")
 		private static List<ParsedExpression> extractParsedExpressionList() {
 			
-			List<ParsedExpression> peList = ResourceDeposit.getParsedExpressionList();
-			if(null != peList){
-				return peList;
-			}
 			//List<ParsedExpression> parsedExpressionsList;
 			String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionListTemplate.dat";
 			

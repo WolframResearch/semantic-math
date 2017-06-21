@@ -9,7 +9,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -1386,7 +1385,7 @@ public class ThmP1 {
 		if((containsOnlySymbEnt && pairs_sz > 1) /*<--so single-token $x>1$ can still get parsed*/
 				//extract these constants after experimentation! June 2017.
 				//Need to be careful, e.g. in enumerate, those could have high tex percentages, but still meaningful.
-				|| ( ((double)texCharCount)/totalCharCount > 0.83 || texCharCount > 50 )
+				|| ( ((double)texCharCount)/totalCharCount > 0.8 && texCharCount > 50 || texCharCount > 90 )
 				|| (((double)texEntCount)/pairs_sz > MAX_ALLOWED_ENT_PERCENTAGE && pairs_sz > MIN_PAIRS_SIZE_THRESHOLD_FOR_FLUFF)
 				|| texEntCount > 12){
 			//set trivial structlist, so that previous structlist doesn't get parsed again.
@@ -1395,7 +1394,7 @@ public class ThmP1 {
 			//if(true) throw new IllegalStateException("Excessive tex!");
 			return parseState;
 		}
-		System.out.println("((double)texCharCount)/totalCharCount: "+((double)texCharCount)/totalCharCount +"  " +totalCharCount);
+		//System.out.println("((double)texCharCount)/totalCharCount: "+((double)texCharCount)/totalCharCount +"  " +totalCharCount);
 		// If phrase isn't in dictionary, ie has type "", then use probMap to
 		// postulate type probabilistically.
 		int pairsLen = pairs.size();
@@ -2586,10 +2585,6 @@ public class ThmP1 {
 							// reduce if structMap has a rule for reducing combined
 							if (structMap.containsKey(combined)) {
 								ruleCol = structMap.get(combined);
-								/*if("adj_prep".equals(combined) && !ruleCol.isEmpty()){ 
-									//throw new IllegalStateException("ruleCol "+ struct1 + "--- " + struct2);
-									System.out.println("");
-								}*/
 							}else if(type2.equals("ent") && k+1==j && struct2.isLatexStruct() && j < inputStructListSize-1){
 								//potentially change ent into texAssert
 								//Struct nextStruct = inputStructList.get(j+1);
@@ -2784,18 +2779,11 @@ public class ThmP1 {
 				if(DEBUG) System.out.println("+++Previous long parse: " + parsedSB);				
 				//defer these additions to orderPairsAndPutToLists()
 				//parsedExpr.add(new ParsedPair(wlSB.toString(), maxDownPathScore, "short"));		
-				//System.out.println("*******SHORT FORM: " + wlSB);
 				//parsedExpr.add(new ParsedPair(parsedSB.toString(), maxDownPathScore, "long"));				
 				ParsedPair pair = new ParsedPair(parsedSB.toString(), null, uHeadStructScore, "long");
 				pair.setNumCoincidingRelationIndex(uHeadStruct.numCoincidingRelationIndex());
-				longFormParsedPairList.add(pair);
-				
-				//System.out.println(uHeadStructScore);
-				//System.out.println(uHeadStruct.numUnits());
-				
-				String parsedString = ParseToWL.parseToWL(uHeadStruct);
-				//parsedExpr.add(new ParsedPair(parsedString, maxDownPathScore, "wl"));
-				//System.out.println("ThmP1-parsedString: "+parsedString);
+				longFormParsedPairList.add(pair);				
+				//***ParseToWL.parseToWL(uHeadStruct);
 				
 				parsedSB.setLength(0); //should just declare new StringBuilder instead!
 				if(u > LONG_FORM_MAX_PARSE_LOOP_THRESHOLD){
@@ -2803,14 +2791,10 @@ public class ThmP1 {
 				}
 			}
 			
-			/*if(logger.getLevel().equals(Level.INFO)){
-				logger.info("actualCommandsIteratedCount: " + actualCommandsIteratedCount);
-			}*/
 			//order maps from parsedPairMMapList and put into parseStructMapList and parsedExpr.
 			//Also add context vector of highest scores
 			
 			orderPairsAndPutToLists(parsedPairMMapList, headParseStructList, parseState, longFormParsedPairList, thmContextVecMapList);
-			//parseStructMapList.add(parseStructMap.toString() + "\n");
 			//append the highest-ranked parse to parseState.curParseStruct
 			
 		}
@@ -2827,7 +2811,7 @@ public class ThmP1 {
 						.containsKey("define") || triggerWordsMap.containsKey("let"))
 				)
 		{
-			System.out.println("No full parse!");
+			if(DEBUG) System.out.println("No full parse!");
 			
 			//See if desired trigger words are present.
 			//Since trigger words determine which conditional parse to use
@@ -2932,15 +2916,14 @@ public class ThmP1 {
 				//only getting first component parse. Should use priority queue instead of list?
 				//or at least get highest score
 				totalScore *= kHeadStruct.maxDownPathScore();
-				String parsedString = ParseToWL.parseToWL(kHeadStruct);
+				//***String parsedString = ParseToWL.parseToWL(kHeadStruct);
 				
 				if (k < parsedStructListSize - 1){
-					//totalParsedString += parsedString + "; ";
-					System.out.print(";  ");
 					parsedSB.append("; ");
 				}
 				
-				StringBuilder wlSB = wlCommandTreeTraversal(kHeadStruct, headParseStructList, parsedPairMMapList, curStructContextVecMap, 
+				//StringBuilder wlSB = 
+				wlCommandTreeTraversal(kHeadStruct, headParseStructList, parsedPairMMapList, curStructContextVecMap, 
 						span, parseState);
 				
 				combinedScore *= totalScore;
@@ -3629,10 +3612,10 @@ public class ThmP1 {
 		}*/
 		
 		//whether to print the commands in tiers with the spaces in subsequent lines.
-		boolean printTiers = false;
+		////boolean printTiers = false;
 		/*builds the parse tree by matching triggered commands. In particular, build WLCommand
 	     * parse tree by building triggered WLCommand's.*/
-		ParseToWLTree.buildCommandsDfs(uHeadStruct, parseStructSB, 0, printTiers, parseState);
+		ParseToWLTree.buildCommandsDfs(uHeadStruct, parseStructSB, 0, parseState);
 		if(DEBUG) System.out.println("\n DONE ParseStruct DFS  + parseStructSB:" + parseStructSB + "  \n");
 		StringBuilder wlSB = new StringBuilder();
 		
@@ -3667,13 +3650,8 @@ public class ThmP1 {
 			pair.setNumCoincidingRelationIndex(uHeadStruct.numCoincidingRelationIndex());			
 			//partsMap.put(type, curWrapper.WLCommandStr);
 			parseStructMMap.put(ParseStructType.NONE, pair);
-		}
-		
-		parsedPairMMapList.add(parseStructMMap);
-		
-		//ParseToWLTree.dfs(uHeadStruct, wlSB, true);		
-		//parsedSB.append("\n");
-		//ParseToWLTree.dfs(uHeadStruct, parsedSB, true);
+		}		
+		parsedPairMMapList.add(parseStructMMap);		
 		ParseToWLTree.dfsCleanUp(uHeadStruct);
 		if(DEBUG){
 			System.out.println("ThmP1 - wlSB: " +wlSB);

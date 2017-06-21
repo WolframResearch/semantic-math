@@ -68,7 +68,7 @@ public class DetectHypothesis {
 	private static final Pattern BRACKET_SEPARATOR_PATTERN = Pattern.compile("([^\\(\\[\\{]+)[\\(\\[\\{].*");
 	
 	//contains ParsedExpressions, to be serialized to persistent storage
-	private static final List<ParsedExpression> parsedExpressionList = new ArrayList<ParsedExpression>();
+	//***private static final List<ParsedExpression> parsedExpressionList = new ArrayList<ParsedExpression>();
 	//for inspection
 	private static final List<String> parsedExpressionStrList = new ArrayList<String>();
 	private static final List<ContextRelationVecPair> contextRelationVecPairList = new ArrayList<ContextRelationVecPair>();
@@ -443,6 +443,7 @@ public class DetectHypothesis {
 			}*/
 		}		
 		List<DefinitionListWithThm> defThmList = new ArrayList<DefinitionListWithThm>();
+		List<ThmHypPair> thmHypPairList = new ArrayList<ThmHypPair>();
 		Stats stats = new Stats();
 		if(inputFile.isDirectory()){
 			//if(true) throw new IllegalStateException("input is directory! texFileNamesMap: " + texFileNamesMap);
@@ -464,7 +465,7 @@ public class DetectHypothesis {
 					}
 					String tarFileName = fileNameEntry.getValue();
 					try{
-						extractThmsFromFiles(inputBF, defThmList, stats, tarFileName);
+						extractThmsFromFiles(inputBF, defThmList, thmHypPairList, stats, tarFileName);
 					}catch(Throwable e){
 						System.out.println("File being processed: " + fileName);
 						throw e;
@@ -473,7 +474,7 @@ public class DetectHypothesis {
 				}
 			//finally{
 				//serialize, so don't discard the items already parsed.
-				serializeDataToFile(stats, defThmList, inputParams);			
+				serializeDataToFile(stats, thmHypPairList, inputParams);			
 			//}
 		}else{
 			BufferedReader inputBF = null;
@@ -485,17 +486,23 @@ public class DetectHypothesis {
 			}
 			//inputBFCreatedBool = true;
 			try{
-				extractThmsFromFiles(inputBF, defThmList, stats, inputFile.getName());				
+				extractThmsFromFiles(inputBF, defThmList, thmHypPairList, stats, inputFile.getName());				
 			}catch(Throwable e){
 				logger.error("Error during thm exptraction and parsing!"+e.getMessage());			
 				throw e;
 			}//finally{
 				//serialize, so don't discard the items already parsed.
-				serializeDataToFile(stats, defThmList, inputParams);			
+				serializeDataToFile(stats, thmHypPairList, inputParams);			
 			//}
 		}
 		System.out.println("STATS -- percentage of non-trivial ParseStruct heads: " + stats.getNonNullPercentage() 
 			+ " out of total " + stats.getTotalThmsNum() + "thms");
+		//should actually make these local vars, so no need to clear at end
+		parsedExpressionStrList.clear() ;
+		contextRelationVecPairList.clear();
+		DefinitionListWithThmStrList.clear();
+		allThmsStrWithSpaceList.clear();
+		
 		boolean deserialize = false;
 		if(deserialize){
 			deserializeParsedExpressionsList();
@@ -514,14 +521,14 @@ public class DetectHypothesis {
 	 * @param fileName name of file, to append to parsed thms.
 	 * @throws Throwable
 	 */
-	private static void extractThmsFromFiles(BufferedReader inputBF, 
-			List<DefinitionListWithThm> defThmList, Stats stats, String fileName) {
+	private static void extractThmsFromFiles(BufferedReader inputBF, List<DefinitionListWithThm> defThmList, 
+			List<ThmHypPair> thmHypPairList, Stats stats, String fileName) {
 
 		ParseStateBuilder parseStateBuilder = new ParseStateBuilder();		
 		ParseState parseState = parseStateBuilder.build();
 		
 		try{
-			readAndParseThm(inputBF, parseState, defThmList, stats, fileName);		
+			readAndParseThm(inputBF, parseState, defThmList, thmHypPairList, stats, fileName);		
 		}catch(IOException e){
 			e.printStackTrace();
 			logger.error(e.getStackTrace());
@@ -543,10 +550,9 @@ public class DetectHypothesis {
 	 * the same source with the same settings.
 	 * @param pathToProjectionMx path to  projection mx, if specified.
 	 */
-	private static void serializeDataToFile(Stats stats, List<DefinitionListWithThm> defThmList,
+	private static void serializeDataToFile(Stats stats, //List<DefinitionListWithThm> defThmList,
+			List<ThmHypPair> thmHypPairList,
 			InputParams inputParams) {
-		//List<Object> listToSerialize = new ArrayList<Object>();
-		//listToSerialize.add(parsedExpressionList);
 		
 		String pathToProjectionMx = inputParams.getPathToProjectionMx();
 		String pathToWordFreqMap = inputParams.pathToWordFreqMap;
@@ -568,7 +574,7 @@ public class DetectHypothesis {
 			Multimap<String, Integer> wordThmIndexMMap = ArrayListMultimap.create();
 			//actually turn ParsedExpression's into ThmHypPair's. To facilitate deserialization
 			//into cache at runtime with minimal processing.
-			List<ThmHypPair> thmHypPairList = convertPEToThmHypPairAndProcessThms(parsedExpressionList, wordThmIndexMMap);
+			convertPEToThmHypPairAndProcessThms(thmHypPairList, wordThmIndexMMap);
 			List<Multimap<String, Integer>> wordThmIndexMMapList = new ArrayList<Multimap<String, Integer>>();
 			wordThmIndexMMapList.add(wordThmIndexMMap);
 			FileUtils.serializeObjToFile(wordThmIndexMMapList, wordThmIndexMMapSerialFileStr);
@@ -604,20 +610,31 @@ public class DetectHypothesis {
 		}
 		logger.info("Done serializing parsedExpressionList & co to files! Beginning to compute SVD for parsedExpressionList thms.");
 		
+		//e.g. Wed Jun 21 12:14:15 CDT 2017
+		String[] dateAr = WordForms.splitThmIntoSearchWords((new java.util.Date()).toString());
+		int dateArLen = dateAr.length;
+		//texFilesDirPath already contains trailing file separator
+		StringBuilder dateSB = new StringBuilder(inputParams.texFilesDirPath);
+		for(int i = 1; i < 3 && i < dateArLen; i++){
+			dateSB.append(dateAr[i]);
+		}
+		dateSB.append("timestamp");
+		FileUtils.writeToFile("", dateSB.toString());
+		
 		/* Creates the term document matrix, and serializes to .mx file.
 		 * If this step fails, need to re-run to produce matrix. This should run at end of this method,
 		 * so others have already serialized in case this fails.*/
-		ImmutableList<TheoremContainer> immutableDefThmList = ImmutableList.copyOf(defThmList);
+		ImmutableList<TheoremContainer> immutableThmHypPairList = ImmutableList.copyOf(thmHypPairList);
 		if(projectionPathsNotNull){
 			Map<String, Integer> wordFreqMap = getWordFreqMap(pathToWordFreqMap);
 			//first serialize full dimensional TD mx, then project using provided projection mx.
-			ThmSearch.TermDocumentMatrix.serializeHighDimensionalTDMx(immutableDefThmList, fullTermDocumentMxPath, wordFreqMap);
+			ThmSearch.TermDocumentMatrix.serializeHighDimensionalTDMx(immutableThmHypPairList, fullTermDocumentMxPath, wordFreqMap);
 			//replace the last bit of the path with the name of the projected(reduced) mx.
 			String pathToReducedDimTDMx = replaceFullTDMxName(fullTermDocumentMxPath, ThmSearch.TermDocumentMatrix.PROJECTED_MX_NAME);
 			ThmSearch.TermDocumentMatrix.projectTermDocumentMatrix(fullTermDocumentMxPath, pathToProjectionMx, 
 					pathToReducedDimTDMx);
 		}else{
-			ThmSearch.TermDocumentMatrix.createTermDocumentMatrixSVD(immutableDefThmList);
+			ThmSearch.TermDocumentMatrix.createTermDocumentMatrixSVD(immutableThmHypPairList);
 		}
 	}
 	
@@ -627,20 +644,20 @@ public class DetectHypothesis {
 	 * @param wordThmIndexMMap map used for intersection 
 	 * @return
 	 */
-	private static List<ThmHypPair> convertPEToThmHypPairAndProcessThms(List<ParsedExpression> peList,
+	private static void convertPEToThmHypPairAndProcessThms(List<? extends TheoremContainer> peList,
 			Multimap<String, Integer> wordThmIndexMMap){
-		List<ThmHypPair> thmHypPairList = new ArrayList<ThmHypPair>();
+		//List<ThmHypPair> thmHypPairList = new ArrayList<ThmHypPair>();
 		int thmIndex = 0;
-		for(ParsedExpression pe : peList){
-			DefinitionListWithThm defListWithThm = pe.getDefListWithThm();
-			String thm = defListWithThm.thmStr;
+		for(TheoremContainer pe : peList){
+			String thmWithHyp = pe.getEntireThmStr();
+			/*String thm = defListWithThm.thmStr;
 			String def = defListWithThm.definitionStr;
 			String fileName = defListWithThm.srcFileName;
 			ThmHypPair pair = new ThmHypPair(thm, def, fileName);
-			thmHypPairList.add(pair);			
-			CollectThm.ThmWordsMaps.addToWordThmIndexMap(wordThmIndexMMap, def + " " + thm, thmIndex++);
+			thmHypPairList.add(pair);	*/		
+			CollectThm.ThmWordsMaps.addToWordThmIndexMap(wordThmIndexMMap, thmWithHyp, thmIndex++);
 		}
-		return thmHypPairList;
+		//return thmHypPairList;
 	}
 	
 	private static String replaceFullTDMxName(String fullTermDocumentMxPath, String projectedMxName){
@@ -722,6 +739,7 @@ public class DetectHypothesis {
 	 */
 	private static void readAndParseThm(BufferedReader srcFileReader, 
 			ParseState parseState, List<DefinitionListWithThm> definitionListWithThmList,
+			List<ThmHypPair> thmHypPairList,
 			Stats stats, String fileName) throws IOException{
 		
 		//Pattern thmStartPattern = ThmInput.THM_START_PATTERN;
@@ -816,7 +834,7 @@ public class DetectHypothesis {
 					continue;
 				}
 				//parse hyp and thm. BE SURE TO ONLY RE-ORDER WORDS based on word freuqency at last run, before serializing!
-				processParseHypThm(newThmSB, parseState, stats, definitionListWithThmList, fileName, macrosTrie,
+				processParseHypThm(newThmSB, parseState, stats, definitionListWithThmList, thmHypPairList, fileName, macrosTrie,
 						eliminateBeginEndThmPattern);
 				
 				continue;
@@ -859,9 +877,11 @@ public class DetectHypothesis {
 	 * @param parseState
 	 * @param stats
 	 * @param definitionListWithThmList
+	 * @return thm, just thm, no hyp
 	 */
 	private static String processParseHypThm(StringBuilder newThmSB, ParseState parseState, Stats stats, 
-			List<DefinitionListWithThm> definitionListWithThmList, String srcFileName, MacrosTrie macrosTrie,
+			List<DefinitionListWithThm> definitionListWithThmList, List<ThmHypPair> thmHypPairList,
+			String srcFileName, MacrosTrie macrosTrie,
 			Pattern eliminateBeginEndThmPattern){
 		
 		// process here, return two versions, one for bag of words, one
@@ -886,7 +906,7 @@ public class DetectHypothesis {
 		//if contained in local map, should be careful about when to append map.
 		
 		//append to newThmSB additional hypotheses that are applicable to the theorem.				
-		DefinitionListWithThm thmDef = appendHypothesesAndParseThm(thm, parseState, stats, srcFileName);
+		DefinitionListWithThm thmDef = appendHypothesesAndParseThm(thm, parseState, thmHypPairList, stats, srcFileName);
 		
 		if(thmDef != DefinitionListWithThm.PLACEHOLDER_DEF_LIST_WITH_THM){
 			definitionListWithThmList.add(thmDef);
@@ -1010,7 +1030,7 @@ public class DetectHypothesis {
 	 * @param parseState
 	 */
 	private static DefinitionListWithThm appendHypothesesAndParseThm(String thmStr, ParseState parseState, 
-			Stats stats, String srcFileName){
+			List<ThmHypPair> thmHypPairList, Stats stats, String srcFileName){
 		
 		//ListMultimap<VariableName, VariableDefinition> variableNamesMMap = parseState.getGlobalVariableNamesMMap();
 		//String thmStr = thmSB.toString();
@@ -1074,9 +1094,9 @@ public class DetectHypothesis {
 		}
 
 		//System.out.println("Adding " + thmWithDefSB + " to theorem " + thmStr);
-		
+		String definitionStr = definitionSB.toString();
 		DefinitionListWithThm defListWithThm = 
-				new DefinitionListWithThm(thmStr, variableDefinitionList, definitionSB.toString(), srcFileName);
+				new DefinitionListWithThm(thmStr, variableDefinitionList, definitionStr, srcFileName);
 		
 		//relational and context vecs can't be null, since ImmutableList cannot contain null elements
 		BigInteger relationalContextVec = parseState.getRelationalContextVec();
@@ -1092,14 +1112,14 @@ public class DetectHypothesis {
 		
 		//create parsedExpression to serialize to persistent storage to be used later
 		//for search, etc
-		ParsedExpression parsedExpression = new ParsedExpression(thmStr, parseState.getHeadParseStruct(),
-						defListWithThm//, combinedContextVec, relationalContextVec
-						);
-		
-		parsedExpressionList.add(parsedExpression);
+		/*** June 2017 ParsedExpression parsedExpression = new ParsedExpression(thmStr, parseState.getHeadParseStruct(),
+						defListWithThm);*/		
+		//parsedExpressionList.add(parsedExpression);
+		ThmHypPair thmHypPair = new ThmHypPair(thmStr, definitionStr, srcFileName);
+		thmHypPairList.add(thmHypPair);
 		ContextRelationVecPair vecsPair = new ContextRelationVecPair(combinedContextVecMap, relationalContextVec);
 		contextRelationVecPairList.add(vecsPair);
-		parsedExpressionStrList.add(parsedExpression.toString());
+		parsedExpressionStrList.add(thmHypPair.toString());
 		//return this to supply to search later
 		return defListWithThm;
 	}

@@ -18,6 +18,8 @@ import org.apache.logging.log4j.Logger;
 
 import thmp.parse.DetectHypothesis;
 import thmp.search.SearchIntersection;
+import thmp.search.Searcher;
+import thmp.search.ThmSearch.TermDocumentMatrix;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 
@@ -79,7 +81,10 @@ public class GenerateSearchDataRunner {
 			//pr = rt.exec("/home/usr0/yihed/thm/generateSearchData.sh " + fileDir);			
 			//waitAndPrintProcess(pr);
 			DetectHypothesis.Runner.generateSearchData(new String[]{fileDir, 
-					"src/thmp/data/termDocumentMatrixSVD.mx", "src/thmp/data/allThmWordsMap.dat"});			
+					TermDocumentMatrix.DATA_ROOT_DIR_SLASH + TermDocumentMatrix.PROJECTION_MX_FILE_NAME,
+					Searcher.SearchMetaData.wordDocFreqMapPath()
+					//"src/thmp/data/termDocumentMatrixSVD.mx", "src/thmp/data/allThmWordsMap.dat"
+					});			
 			System.out.println("Done generating search data for files in " + fileDir);			
 		}
 		

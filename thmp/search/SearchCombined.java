@@ -56,7 +56,7 @@ public class SearchCombined {
 	/**
 	 * Thm and hyp pair, used to display on web separately.
 	 */
-	public static class ThmHypPair implements Serializable{
+	public static class ThmHypPair implements Serializable, TheoremContainer{
 		
 		private static final long serialVersionUID = -6913500705834907026L;
 		private String thmStr;
@@ -97,6 +97,11 @@ public class SearchCombined {
 		
 		public static ThmHypPair PLACEHOLDER_PAIR(){
 			return PLACEHOLDER_PAIR;
+		}
+
+		@Override
+		public String getEntireThmStr() {
+			return this.hypStr + " " + this.thmStr;
 		}
 	}
 	

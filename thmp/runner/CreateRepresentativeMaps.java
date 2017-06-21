@@ -19,6 +19,7 @@ import thmp.utils.FileUtils;
 /**
  * Build maps that are comprehensive and representative,
  * by calling eg methods in ThmWordsMaps, NGramMaps, etc.
+ * 
  * @author yihed
  *
  */
@@ -37,6 +38,8 @@ public class CreateRepresentativeMaps {
 		buildAndSerializeNGramMaps(thmList);
 		buildAndSerializeTrueFluffWordsSet(thmList);
 	}
+	
+	
 	
 	private static List<String> extractThmListFromPEList(String peFilePath){
 		List<String> thmList = new ArrayList<String>();

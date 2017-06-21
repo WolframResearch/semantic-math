@@ -88,12 +88,12 @@ public class ParseToWLTree{
 	 * @param headParseStruct
 	 * @param numSpaces
 	 */
-	public static void buildCommandsDfs(Struct struct, StringBuilder parsedSB, //ParseStruct headParseStruct, 
-			int numSpaces, boolean printTiers, ParseState parseState) {
+	public static void buildCommandsDfs(Struct struct, StringBuilder parsedSB,
+			int numSpaces, ParseState parseState) {
 		structDeque = new ArrayList<Struct>();
 		WLCommandList = new ArrayList<WLCommand>();
 		
-		buildWLCommandTreeDfs(struct, parsedSB, numSpaces, structDeque, WLCommandList, printTiers, parseState);
+		buildWLCommandTreeDfs(struct, parsedSB, numSpaces, structDeque, WLCommandList, parseState);
 	}
 	
 	/**
@@ -336,7 +336,7 @@ public class ParseToWLTree{
 	 * parents are visited first before any child.
 	 */
 	private static void buildWLCommandTreeDfs(Struct struct, StringBuilder parsedSB, //ParseStruct headParseStruct, 
-			int numSpaces, List<Struct> structList, List<WLCommand> WLCommandList, boolean printTiers,
+			int numSpaces, List<Struct> structList, List<WLCommand> WLCommandList,// boolean printTiers,
 			ParseState parseState) {
 		//index used to keep track of where in Deque this stuct is
 		//to pop off at correct index later
@@ -460,7 +460,7 @@ public class ParseToWLTree{
 		}
 		
 		//if trigger a WLCommand, 
-		boolean isTrigger = false;
+		//boolean isTrigger = false;
 		Collection<ImmutableWLCommand> triggeredCol = get_triggerCol(triggerKeyWord, structType, struct);
 		//System.out.println("keyWord: "+ triggerKeyWord +"****************triggerCol: " + triggeredCol);
 		//use getSingular
@@ -552,16 +552,11 @@ public class ParseToWLTree{
 						}
 					}
 			}
-			isTrigger = true;	
+			//isTrigger = true;	
 			structList.add(struct);		
 		if (struct.isStructA()) {
 			
-			if(printTiers){
-				System.out.print(struct.type());			
-			}
 			parsedSB.append(struct.type());
-			
-			if(printTiers) System.out.print("[");
 			parsedSB.append("[");
 			
 			if (struct.prev1NodeType().isTypeStruct()) {
@@ -577,27 +572,23 @@ public class ParseToWLTree{
 					String space = "";
 					for(int i = 0; i < numSpaces; i++) space += " ";
 					
-					if(printTiers){ 
-						System.out.print("\n " + space + prev1Type + ":>");					
-					}
-					parsedSB.append("\n " + space + prev1Type + ":>");
+					parsedSB.append("\n ").append(space).append(prev1Type).append(":>");
 				}
 				//set parent for this DFS path. The parent can change on each path!
 				((Struct) struct.prev1()).set_parentStruct(struct);				
 				//pass along headStruct, unless created new one here				
-				buildWLCommandTreeDfs((Struct) struct.prev1(), parsedSB, numSpaces, structList, WLCommandList, printTiers,
+				buildWLCommandTreeDfs((Struct) struct.prev1(), parsedSB, numSpaces, structList, WLCommandList,
 						parseState);
 				
-				if(printTiers && checkParseStructType){
+				/*if(printTiers && checkParseStructType){
 					String space = "";
 					for(int i = 0; i < numSpaces; i++) space += " ";
 					System.out.println(space);
-				}
+				}*/
 			}
 			
 			if (struct.prev2NodeType().isTypeStruct()) {
 				
-				if(printTiers) System.out.print(", ");
 				parsedSB.append(", ");
 				
 				// avoid printing is[is], ie case when parent has same type as
@@ -617,41 +608,26 @@ public class ParseToWLTree{
 					numSpaces++;
 					String space = "";
 					for(int i = 0; i < numSpaces; i++) space += " ";
-					if(printTiers) System.out.print("\n " + space + prev2Type + ":>");
-					parsedSB.append("\n" + space + prev2Type + ":>");	
+					parsedSB.append("\n ").append(space).append(prev2Type).append(":>");
 				}
 				
 				((Struct) struct.prev2()).set_parentStruct(struct);	
 
 				buildWLCommandTreeDfs((Struct) struct.prev2(), parsedSB, numSpaces, structList, 
-						WLCommandList, printTiers, parseState);
-				if(printTiers && checkParseStructType){
-					//setting to "" is necessary to not append duplicate messages, 
-					//duplicate meaning appears in both a struct and a parsedStruct.
-					//should set a flag on Struct, rather than modifying original basic 
-					//struct structures.
-					//struct.set_prev2("");
-					String space = "";
-					for(int i = 0; i < numSpaces; i++) space += " ";
-					System.out.println(space);
-				}
+						WLCommandList, parseState);
 			}
 
 			if (struct.prev1NodeType().equals(NodeType.STR)) {
-				if(printTiers) System.out.print(struct.prev1());
 				parsedSB.append(struct.prev1());
 			}
 			
 			if (struct.prev2NodeType().equals(NodeType.STR)) {
 				if (!struct.prev2().equals("")){
-					if(printTiers) System.out.print(", ");
 					parsedSB.append(", ");
 				}
-				if(printTiers) System.out.print(struct.prev2());
 				parsedSB.append(struct.prev2());
 			}
 
-			if(printTiers) System.out.print("]");
 			parsedSB.append("]");
 			
 			/*if(checkParseStructType0){
@@ -663,20 +639,16 @@ public class ParseToWLTree{
 			//if Struct (leaf) and not ParseStruct (overall head), done with subtree and return				
 		} else {		
 			//if StructH 
-			if(printTiers) System.out.print(struct.toString());
 			parsedSB.append(struct.toString());
 
 			List<Struct> children = struct.children();
 			List<ChildRelation> childRelation = struct.childRelationList();
 
 			if (children != null && children.size() != 0){
-				
-				if(printTiers) System.out.print("[");
 				parsedSB.append("[");
 
 			for (int i = 0; i < children.size(); i++) {
-				if(printTiers) System.out.print(childRelation.get(i) + " ");
-				parsedSB.append(childRelation.get(i) + " ");
+				parsedSB.append(childRelation.get(i)).append(" ");
 				Struct ithChild = children.get(i);
 				
 				Struct childRelationStruct = new StructA<String, String>(childRelation.get(i).childRelationStr(), 
@@ -714,7 +686,6 @@ public class ParseToWLTree{
 						if(curCommand.getDefaultOptionalTermsCount() == 0 || !hasOptionalTermsLeft){
 							//need to remove from WLCommandList
 							ChildWLCommandListIter.remove();
-							//System.out.println("\n***COMMAND REMOVED from child: " + struct);
 						}
 					}else if(commandSat.isDisqualified()){
 						ChildWLCommandListIter.remove();
@@ -722,47 +693,14 @@ public class ParseToWLTree{
 					}				
 				}				
 				ithChild.set_parentStruct(struct);
-				buildWLCommandTreeDfs(ithChild, parsedSB, numSpaces, structList, WLCommandList, printTiers, parseState);
+				buildWLCommandTreeDfs(ithChild, parsedSB, numSpaces, structList, WLCommandList, parseState);
 			}
-			if(printTiers) System.out.print("]");
 			parsedSB.append("]");
 			}
 		}
 		
 		//build the commands now after dfs into subtree
 		for(WLCommand curCommand : satisfiedCommandsList){
-			
-			//set WLCommandStr in this Struct
-			//need to find first Struct in posTermList
-			/*List<PosTerm> posTermList = WLCommand.posTermList(curCommand);
-			//to get the parent Struct of the first non-WL Struct
-			
-			int i = 0;
-			while(posTermList.get(i).commandComponent().nameStr().matches("WL|AUX")) i++;
-			
-			PosTerm firstPosTerm = posTermList.get(i);
-			//Struct posTermStruct = posTermList.get(0).posTermStruct(); 
-			List<Struct> posTermStructList = WLCommand.getStructList(curCommand, firstPosTerm.commandComponent());
-			//System.out.println("Satisfied command: " + curCommand);
-			//System.out.println("First PosTerm" + firstPosTerm);
-			
-			
-			//currently just get the first Struct in list, not canonical at all.			
-			//firstPosTerm should have some Struct, as the command is satisfied.
-			Struct posTermStruct = posTermStructList.get(0); */
-			///////////
-			/*Struct structToAppendCommandStr = posTermStruct;
-			
-			Struct parentStruct = posTermStruct.parentStruct();
-			
-			//go one level higher if parent exists
-			Struct grandparentStruct = null;
-			if(parentStruct != null) grandparentStruct = parentStruct.parentStruct();
-			
-			//set grandparent to parent if grandparent is a StructH
-			structToAppendCommandStr = (grandparentStruct == null ? 
-					(parentStruct == null ? structToAppendCommandStr : parentStruct) : 
-						(grandparentStruct instanceof StructH ? parentStruct : grandparentStruct)); */
 			
 			try{
 				WLCommand.build(curCommand, parseState);
@@ -773,9 +711,6 @@ public class ParseToWLTree{
 			}			
 			//now append Str to wrapper inside build()
 			//structToAppendCommandStr.append_WLCommandStr(curCommandString);
-			
-			//parentStruct.append_WLCommandStr(curCommandString);
-			//System.out.println(curCommandString);
 		}		
 	}
 	

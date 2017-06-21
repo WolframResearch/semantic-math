@@ -45,7 +45,7 @@ public class ProjectFullTDMatrixToSubspace {
 				if(lineLen > 3 && line.substring(lineLen-3).equals(".mx")){
 					line = FileUtils.findFilePathDirectory(line);
 				}
-				projectFullTDMatrix(line);			
+				projectFullTDMatrix(line);
 			}
 		}finally{
 			bReader.close();
