@@ -525,21 +525,14 @@ public class DetectHypothesis {
 			List<ThmHypPair> thmHypPairList, Stats stats, String fileName) {
 
 		ParseStateBuilder parseStateBuilder = new ParseStateBuilder();		
-		ParseState parseState = parseStateBuilder.build();
-		
+		ParseState parseState = parseStateBuilder.build();		
 		try{
 			readAndParseThm(inputBF, parseState, defThmList, thmHypPairList, stats, fileName);		
 		}catch(IOException e){
 			e.printStackTrace();
 			logger.error(e.getStackTrace());
-		}
-		//System.out.println("DefinitionListWithThm list: " + defThmList);
-		
+		}		
 		DefinitionListWithThmStrList.add(defThmList.toString()+ "\n");
-		//why do I need this??
-		/*for(DefinitionListWithThm def : defThmList){
-			DefinitionList.add(def.getDefinitionList().toString());
-		}*/		
 		//return stats;
 	}
 

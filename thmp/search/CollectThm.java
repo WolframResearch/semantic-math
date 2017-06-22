@@ -96,8 +96,8 @@ public class CollectThm {
 	 * Only singletons here. N-grams should be placed in N-gram files.
 	 */
 	private static final String[] SCORE_AVG_MATH_WORDS = new String[]{"ring", "field", "ideal", "finite", "series",
-			"complex", "combination", "regular", "domain", "local", "smooth", "map", "definition", "standard", "prime", "every",
-			"injective", "surjective", "suppose", "any", "commut"};
+			"complex", "combination", "regular", "domain", "local", "smooth", "definition", "map", "standard", "prime", "every",
+			"injective", "surjective", "suppose", "any", "commut", "word"};
 	//could be included, if already included, adjust the score to 1. If not, don't add.
 	private static final String[] SCORE1MATH_WORDS = new String[]{"show","have"
 	};
@@ -958,7 +958,9 @@ public class CollectThm {
 			//addWordScoresFromMap(wordsScorePreMap, twoGramsMap);
 			
 			//put 1 for math words that occur more frequently than the cutoff, but should still be counted, like "ring"	
-			avgScore = avgScore == 0 ? 1 : avgScore;
+			//right now (June 2017) avg still high, around 18.
+			avgScore = (int)(avgScore * 2./3);
+			avgScore = avgScore == 0 ? 2 : avgScore;
 			for(String word : SCORE_AVG_MATH_WORDS){ 
 				wordsScorePreMap.put(word, avgScore);
 			}

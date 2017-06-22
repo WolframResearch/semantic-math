@@ -494,7 +494,8 @@ public class ThmSearch {
 		//private static final String PATH_TO_MX = "FileNameJoin[{Directory[], \"termDocumentMatrixSVD.mx\"}]";		
 		private static final String PATH_TO_MX = getSystemProjectionMxFilePath();
 		private static final String PROJECTION_MX_CONTEXT_NAME = "TermDocumentMatrix`";
-		public static final String PROJECTION_MX_FILE_NAME = "termDocumentMatrixSVD";
+		//need the 
+		public static final String PROJECTION_MX_FILE_NAME = "termDocumentMatrixSVD.mx";
 		//protected static final String PROJECTED_MX_CONTEXT_NAME = "ProjectedTDMatrixContext`";
 		protected static final String FULL_TERM_DOCUMENT_MX_CONTEXT_NAME = "FullTDMatrix`";
 		//projected full term-document matrix, so "v^T" in SVD.

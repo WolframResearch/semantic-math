@@ -25,13 +25,12 @@ import thmp.utils.WordForms;
 public class ProjectFullTDMatrixToSubspace {
 	
 	public static void main(String[] args) throws IOException{
-		//enter file containing list of of paths or files that are FullTDMatrix's
-		
+		//enter file containing list of of paths or files that are FullTDMatrix's		
 		if(args.length < 1){
 			System.out.println("Enter a file containing root paths to directories containing "
 					+ "full-dim matrices! E.g. 0208_001Untarred/0208");
 			return;
-		}		
+		}	
 		String fileName = args[0];
 		InputStreamReader inputStreamReader = new InputStreamReader(new FileInputStream(fileName));
 		BufferedReader bReader = new BufferedReader( inputStreamReader);
@@ -65,7 +64,7 @@ public class ProjectFullTDMatrixToSubspace {
 		if(!Files.isRegularFile(Paths.get(fullTermDocumentMxPath))){
 			return;
 		}
-		String projectionMxPath = TermDocumentMatrix.DATA_ROOT_DIR_SLASH + TermDocumentMatrix.PROJECTION_MX_FILE_NAME + ".mx"; 
+		String projectionMxPath = TermDocumentMatrix.DATA_ROOT_DIR_SLASH + TermDocumentMatrix.PROJECTION_MX_FILE_NAME; 
 		String projectedTermDocumentMxPath = texFilesDirPath + TermDocumentMatrix.PROJECTED_MX_NAME + ".mx";
 		//"0208_001/0208/FullTDMatrix.mx". "0208_001/0208/ProjectedTDMatrix.mx". "src/thmp/data/termDocumentMatrixSVD.mx"
 		//signature: (String fullTermDocumentMxPath, String projectionMxPath, 

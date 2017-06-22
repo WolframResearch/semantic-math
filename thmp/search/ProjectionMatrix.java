@@ -43,7 +43,7 @@ public class ProjectionMatrix {
 	//without the trailing extension ".mx".
 	private static final String combinedMxRootPath = "src/thmp/data/mx/" 
 			+ TermDocumentMatrix.COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME; //+ ".mx";
-	private static final int TAR_COUNT_PER_BUNDLE = 15;
+	private static final int TAR_COUNT_PER_BUNDLE = 5;//<--5 for testing for now, usually 15;
 	
 	/**
 	 * args is list of paths. 
@@ -103,22 +103,22 @@ public class ProjectionMatrix {
 					if(!(new File(fileName)).exists()){
 						continue;
 					}
-					String path_i = FileUtils.addIfAbsentTrailingSlashToPath(fileName);
-					projectedMxFilePathList.add(path_i + ThmSearch.TermDocumentMatrix.PROJECTED_MX_NAME + ".mx");	
-					String peFilePath = path_i + ThmSearch.TermDocumentMatrix.PARSEDEXPRESSION_LIST_FILE_NAME_ROOT;
+					String path_j = FileUtils.addIfAbsentTrailingSlashToPath(fileName);
+					projectedMxFilePathList.add(path_j + ThmSearch.TermDocumentMatrix.PROJECTED_MX_NAME + ".mx");	
+					String peFilePath = path_j + ThmSearch.TermDocumentMatrix.PARSEDEXPRESSION_LIST_FILE_NAME_ROOT;
 					///temporary adjustment to accomodate some nonuniformized data during experimentation - June 2017.
-					if(!Files.exists(Paths.get(peFilePath))){
+					/*if(!Files.exists(Paths.get(peFilePath))){
 						peFilePath += ".dat";
-					}
-					
-					String vecsFilePath = path_i + "vecs/" + ThmSearch.TermDocumentMatrix.CONTEXT_VEC_PAIR_LIST_FILE_NAME;
-					String wordThmIndexMMapPath = path_i + SearchMetaData.wordThmIndexMMapSerialFileName();
+					}*/					
+					String vecsFilePath = path_j + "vecs/" + ThmSearch.TermDocumentMatrix.CONTEXT_VEC_PAIR_LIST_FILE_NAME;
+					String wordThmIndexMMapPath = path_j + SearchMetaData.wordThmIndexMMapSerialFileName();
 					thmCounter = addExprsToLists(peFilePath, combinedPEList, vecsFilePath, combinedVecsList, wordThmIndexMMapPath,
-							combinedWordThmIndexMMap, thmCounter
-							);
+							combinedWordThmIndexMMap, thmCounter);
 				}				
 				bundleStartThmIndexList.add(thmCounter);
 				//thmCounter += combinedPEList.size();
+				System.out.println("Serializing combinedPEList size: " + combinedPEList.size() + "   index: " +i);
+				System.out.println("Serializing combinedVecsList size: " + combinedVecsList.size() + "   index: " +i);
 				
 				serializeListsToFile(combinedPEList, i);
 				combinedPEList = new ArrayList<ThmHypPair>();
@@ -224,13 +224,13 @@ public class ProjectionMatrix {
 			}
 			FileUtils.serializeObjToFile(curList, path);
 		}
-		/*Serialize the remainder*/
+		/*Add the remainder to combinedVecsList, to be serialized with subsequent thms*/
 		//String path = baseFileStr + String.valueOf(vecsFileNameCounter);
 		List<ContextRelationVecPair> curList = new ArrayList<ContextRelationVecPair>();
 		for(int i = numBundle * numThmsInBundle; i < combinedVecsListSz; i++){
 				curList.add(combinedVecsList.get(i));
 		}
-		combinedVecsList = new ArrayList<ContextRelationVecPair>();
+		combinedVecsList.clear();
 		if(!curList.isEmpty()){
 			combinedVecsList.addAll(curList);
 			//FileUtils.serializeObjToFile(curList, path);
@@ -261,15 +261,16 @@ public class ProjectionMatrix {
 			int startingThmIndex) {
 		//**correct version: List<ThmHypPair> thmHypPairList = (List<ThmHypPair>)FileUtils.deserializeListFromFile(peFilePath);
 		//HACK. (for search, when data was nonuniformized. June 2017)
-		Object obj = ((List<? extends Object>)FileUtils.deserializeListFromFile(peFilePath)).get(0);
-		//List<? > thmHypPairList = (List<? >)FileUtils.deserializeListFromFile(peFilePath);
+		/*****Object obj = ((List<? extends Object>)FileUtils.deserializeListFromFile(peFilePath)).get(0);
 		List<ThmHypPair> thmHypPairList;
 		if(obj instanceof ThmHypPair){
 			thmHypPairList = (List<ThmHypPair>)FileUtils.deserializeListFromFile(peFilePath);
 		}else{
 			thmHypPairList = convertPEToThmHypPairTEMP((List<ParsedExpression>)FileUtils.deserializeListFromFile(peFilePath));			
-		}
+		}*/
 		//**Hack ends
+		
+		List<ThmHypPair> thmHypPairList = (List<ThmHypPair>)FileUtils.deserializeListFromFile(peFilePath);
 		int thmHypPairListSz = thmHypPairList.size();
 		combinedPEList.addAll(thmHypPairList);	
 		combinedVecsList.addAll((List<ContextRelationVecPair>)FileUtils.deserializeListFromFile(vecsFilePath));

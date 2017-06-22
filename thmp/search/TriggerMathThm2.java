@@ -264,7 +264,7 @@ public class TriggerMathThm2 {
 	 */
 	private static StringBuilder constructSparseArrayInputString(List<int[]> coordinatesList, List<Double> weightsList){
 		//should pack these!
-		StringBuilder sparseArraySB = new StringBuilder(20000);
+		StringBuilder sparseArraySB = new StringBuilder(80000);
 		sparseArraySB.append('{');
 		//append coordinates
 		for(int[] coordinatePair : coordinatesList){
@@ -327,9 +327,6 @@ public class TriggerMathThm2 {
 			//get collection of words.
 			//String[] curMathObjCol = WordForms.splitThmIntoSearchWords(thm.toLowerCase());
 			String[] thmAr = WordForms.splitThmIntoSearchWords(thm.toLowerCase());
-			
-			List<String> gatheredWordsList = new ArrayList<String>();
-			////
 			
 			int queryVecLen = ThmSearch.ThmSearchQuery.getQUERY_VEC_LENGTH();
 			logger.info("TriggerMathThm - queryVecLen: " + queryVecLen);

@@ -186,7 +186,12 @@ public class ThmHypPairGet{
 		}
 		return ThmHypPairBundle.PLACEHOLDER_BUNDLE;
 	}
-	
+
+	/**
+	 * Return the ThmHypPair with index thmIndex
+	 * @param thmIndex
+	 * @return
+	 */
 	public static ThmHypPair retrieveThmHypPairWithThm(int thmIndex){
 		int bundleStartThmIndexListIndex = findBundleBeginIndex(thmIndex);
 		try {
