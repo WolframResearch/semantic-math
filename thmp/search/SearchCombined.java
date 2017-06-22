@@ -326,8 +326,9 @@ public class SearchCombined {
 		//eventually move this towards end, only do SVD if no good intersection matches!!
 		List<Integer> nearestVecList = ThmSearch.ThmSearchQuery.findNearestThmsInTermDocMx(input, NUM_NEAREST_SVD);
 		if(nearestVecList.isEmpty()){
-			System.out.println("I've got nothing for you yet. Try again.");
-			return Collections.<ThmHypPair>emptyList();
+			//System.out.println("I've got nothing for you yet. Try again.");
+			System.out.println("SVD search returns empty list!");
+			//return Collections.<ThmHypPair>emptyList();
 		}
 		
 		SearchState searchState = SearchIntersection.intersectionSearch(input, searchWordsSet, searchContextBool, NUM_NEAREST);

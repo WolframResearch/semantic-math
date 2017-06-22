@@ -455,7 +455,7 @@ public class TriggerMathThm2 {
 		//should eliminate unnecessary words first, then send to get wrapped.
 		//<--can only do that if leave the hyp words in, eg if.
 		
-		String priorityWords = ConstantsInSearch.get_priorityWords();
+		//***String priorityWords = ConstantsInSearch.get_priorityWords();
 		//keywordDict is annotated with "hyp"/"stm"
 		//int dictSz = keywordIndexDict.keySet().size();
 		int queryVecLen = ThmSearch.ThmSearchQuery.getQUERY_VEC_LENGTH();
@@ -465,7 +465,7 @@ public class TriggerMathThm2 {
 		double norm = 0;
 		//highest weight amongst the single words
 		double highestWeight = 0;
-		List<Integer> priorityWordsIndexList = new ArrayList<Integer>();
+		//***List<Integer> priorityWordsIndexList = new ArrayList<Integer>();
 		List<IndexScorePair> indexScorePairList = new ArrayList<IndexScorePair>();
 		//get norm first, form unnormalized vector, then divide terms by log of norm
 		for (int i = 0; i < thmAr.length; i++) {

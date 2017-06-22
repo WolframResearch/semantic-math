@@ -557,6 +557,8 @@ public class DetectHypothesis {
 		String allThmWordsMapStringFileStr = inputParams.allThmWordsMapStringFileStr;
 		String parsedExpressionStringFileStr = inputParams.parsedExpressionStringFileStr;
 		String allThmsStringFileStr = inputParams.allThmsStringFileStr;
+		//texFilesDirPath already contains trailing file separator
+		String curTexFilesDirPath = inputParams.texFilesDirPath;
 		//inputParams.allThmWordsStringFileStr;
 		
 		boolean projectionPathsNotNull = (null != pathToProjectionMx && null != pathToWordFreqMap);		
@@ -603,11 +605,23 @@ public class DetectHypothesis {
 		}
 		logger.info("Done serializing parsedExpressionList & co to files! Beginning to compute SVD for parsedExpressionList thms.");
 		
+		//delete previous timestamp files first
+		Runtime rt = Runtime.getRuntime();
+		try {
+			rt.exec("rm " + curTexFilesDirPath + "*timestamp");
+		} catch (IOException e) {
+			String msg = "IOException while trying to remove previous timestamp file: " + e;
+			//print since running locally
+			System.out.println(msg);
+			logger.error(msg);
+		}			
+		//don't need to wait
+		
 		//e.g. Wed Jun 21 12:14:15 CDT 2017
 		String[] dateAr = WordForms.splitThmIntoSearchWords((new java.util.Date()).toString());
 		int dateArLen = dateAr.length;
 		//texFilesDirPath already contains trailing file separator
-		StringBuilder dateSB = new StringBuilder(inputParams.texFilesDirPath);
+		StringBuilder dateSB = new StringBuilder(curTexFilesDirPath);
 		for(int i = 1; i < 3 && i < dateArLen; i++){
 			dateSB.append(dateAr[i]);
 		}

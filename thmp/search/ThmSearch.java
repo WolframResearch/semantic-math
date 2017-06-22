@@ -90,7 +90,7 @@ public class ThmSearch {
 		int vector_vec_length = -1;
 		
 		//try{
-			ServletContext servletContext = CollectThm.getServletContext();
+			ServletContext servletContext = FileUtils.getServletContext();
 			//String pathToMx = "src/thmp/data/termDocumentMatrixSVD.mx";
 			/*Need to load both projection matrices, and the matrix of combined 
 			  projected thm vectors */
@@ -111,8 +111,8 @@ public class ThmSearch {
 				pathToProjectionMx = servletContext.getRealPath(pathToProjectionMx);
 				//combinedProjectedMxFilePath = servletContext.getRealPath(combinedProjectedMxFilePath);
 				fullMxPath = servletContext.getRealPath(fullMxPath);
-			}
-			
+			}			
+			logger.info("Static initializer ThmSearchQuery - pathToProjectionMx " + pathToProjectionMx);
 			//V_MX should be superceeded by cache!
 			if(!USE_FULL_MX){
 				V_MX = TermDocumentMatrix.COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME;
@@ -155,14 +155,15 @@ public class ThmSearch {
 			}*/
 			//ml.evaluate("Nearest["+vMx+"->Range[Dimensions["+vMx+"][[1]]]
 			//should uncompress using this code here.
-			
-			//ml.evaluate("Length[corMx[[1]]]");
 			Expr vecLengthExpr = evaluateWLCommand(ml, "Length[" + TermDocumentMatrix.PROJECTION_MX_CONTEXT_NAME +"corMx]", true, true);
 			//ml.evaluate("Length[" + TermDocumentMatrix.PROJECTION_MX_CONTEXT_NAME +"corMx]");
-			//ml.waitForAnswer();			
+			//ml.waitForAnswer();	
+			logger.info("Names[\"TermDocumentMatrix`*\"] " +evaluateWLCommand(ml, "Names[\"TermDocumentMatrix`*\"]", true, true));
+			
+			logger.info("Length[corMx] " +evaluateWLCommand(ml, "Length[corMx]", true, true));
 			try{
 				vector_vec_length = vecLengthExpr.asInt();
-				String msg1 = "ThmSearch - mx row dimension (num of words): " + vector_vec_length;
+				String msg1 = "ThmSearch - mx row dimension (num of words): " + vector_vec_length + " vecLengthExpr: " + vecLengthExpr;
 				System.out.println(msg1);
 				logger.info(msg1);
 			}catch(ExprFormatException e){
