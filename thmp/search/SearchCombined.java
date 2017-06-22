@@ -429,7 +429,7 @@ public class SearchCombined {
 		
 		while(sc.hasNextLine()){
 			String thm = sc.nextLine();
-			
+			System.out.println(" ~~~~~~~ ");
 			//String[] thmAr = WordForms.getWhiteNonEmptySpacePattern().split(thm);
 			boolean searchContextBool = false;
 			boolean searchRelationalBool = false;
@@ -465,8 +465,9 @@ public class SearchCombined {
 					thm, searchContextBool);
 			*/
 			
-			for(ThmHypPair thmStr : bestCommonThmHypPairList){
-				System.out.println(thmStr);
+			System.out.println("~ SEARCH RESULTS ~");
+			for(ThmHypPair thmHypPair : bestCommonThmHypPairList){
+				System.out.println(thmHypPair);
 			}
 		}
 		

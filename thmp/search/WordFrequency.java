@@ -43,7 +43,7 @@ import thmp.utils.WordForms;
 public class WordFrequency {
 
 	// map of every word in thmList and their frequencies
-	private static final Map<String, Integer> corpusWordFreqMap = new HashMap<String, Integer>();
+	//**June 2017 private static final Map<String, Integer> corpusWordFreqMap = new HashMap<String, Integer>();
 	private static final Logger logger = LogManager.getLogger(WordFrequency.class);
 	
 	//private static final int TOTAL_CORPUS_WORD_COUNT;
@@ -110,7 +110,6 @@ public class WordFrequency {
 		// map of common words and freq as read in from wordFrequency.txt
 		private static final Map<String, Integer> stockFreqMap = new HashMap<String, Integer>();
 		
-		
 		//subset of words and their pos from the stock file that only stores word and its pos of true fluff words
 		//***private static ListMultimap<String, String> trueFluffWordsPosMap;
 		
@@ -159,6 +158,14 @@ public class WordFrequency {
 			//buildTrueFluffWordsSet(totalCorpusWordCount, stockFreqMap, wordPosMap, corpusWordFreqMap);
 		}
 		
+		/**
+		 * Common English words and their absolute frequencies in an 
+		 * externally obtained table.
+		 * @return
+		 */
+		public static Map<String, Integer> englishStockFreqMap(){
+			return stockFreqMap;
+		}
 		// computes list of "true" fluff words, ie the ones where
 		// whose freq in math texts are not higher than their freq in English text.
 		// have to be careful for words such as "let", "say"
@@ -226,12 +233,10 @@ public class WordFrequency {
 					trueFluffWordsSet.add(word);
 					//trueFluffWordsPosMap.put(word, wordPos);
 				}
-			}
-			
+			}			
 			for(String fluffWord : ADDITIONAL_FLUFF_WORDS){
 				trueFluffWordsSet.add(fluffWord);
-			}
-			
+			}			
 		}
 
 		/**
@@ -398,9 +403,9 @@ public class WordFrequency {
 	 * 
 	 * @return
 	 */
-	public static Map<String, Integer> corpusWordFreqMap() {
+	/*public static Map<String, Integer> corpusWordFreqMap() {
 		return corpusWordFreqMap;
-	}
+	}*/
 
 	public static void main(String[] args) {
 		//System.out.println(trueFluffWordsSet.size());

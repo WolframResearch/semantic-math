@@ -66,6 +66,7 @@ public class ProjectFullTDMatrixToSubspace {
 		}
 		String projectionMxPath = TermDocumentMatrix.DATA_ROOT_DIR_SLASH + TermDocumentMatrix.PROJECTION_MX_FILE_NAME; 
 		String projectedTermDocumentMxPath = texFilesDirPath + TermDocumentMatrix.PROJECTED_MX_NAME + ".mx";
+		//System.out.println(fullTermDocumentMxPath + "  "+projectionMxPath + "   "+projectedTermDocumentMxPath);
 		//"0208_001/0208/FullTDMatrix.mx". "0208_001/0208/ProjectedTDMatrix.mx". "src/thmp/data/termDocumentMatrixSVD.mx"
 		//signature: (String fullTermDocumentMxPath, String projectionMxPath, 
 		//	String projectedTermDocumentMxPath)		

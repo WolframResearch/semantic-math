@@ -42,7 +42,8 @@ public class ThmHypPairGet{
 	static{
 		//deserialize the list set during preprocessing,  
 		SearchConfiguration searchConfig = deserializeSearchConfiguration();
-		bundleStartThmIndexList = searchConfig.bundleStartThmIndexList();
+		bundleStartThmIndexList = searchConfig.bundleStartThmIndexList();		
+		System.out.println("ThmHypPairGet - bundleStartThmIndexList:  "+bundleStartThmIndexList );
 		totalThmsCount = searchConfig.totalThmsCount();
 		totalBundleNum = bundleStartThmIndexList.size();
 		thmBundleCache = CacheBuilder.newBuilder()
@@ -193,10 +194,14 @@ public class ThmHypPairGet{
 	 * @return
 	 */
 	public static ThmHypPair retrieveThmHypPairWithThm(int thmIndex){
+		
+		//index inside the bundleStartThmIndexList, to get the index of the starting thm in bundle.
 		int bundleStartThmIndexListIndex = findBundleBeginIndex(thmIndex);
+		//System.out.println("ThmHypPairGet thmIndex: "+thmIndex);
+		//System.out.println("ThmHypPairGet bundleStartThmIndexListIndex: "+bundleStartThmIndexListIndex);
 		try {
 			return thmBundleCache.get(bundleStartThmIndexListIndex)
-					.thmPairList.get(thmIndex - bundleStartThmIndexListIndex);
+					.thmPairList.get(thmIndex - bundleStartThmIndexList.get(bundleStartThmIndexListIndex));
 		} catch (ExecutionException e) {
 			String msg = "ExecutionException when retrieving from cache! " + e;
 			//print for now so visible to local debugging

@@ -19,7 +19,6 @@ import java.util.Set;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ListMultimap;
@@ -416,9 +415,10 @@ public class SearchIntersection {
 				highestThmList.add(thmIndex);
 				counter--;
 				if (DEBUG) {
+					ThmHypPair thmHypPair = ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex);
 					System.out.println(
 							"thm Score " + entry.getKey() + " thmIndex " + thmIndex + " thm " 
-									+ ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex).thmStr());
+									+ thmHypPair.thmStr() + " HYP " + thmHypPair.hypStr());
 				}
 			}
 		}
@@ -573,9 +573,11 @@ public class SearchIntersection {
 				scoreThmMMap.put(newThmScore, thmIndex);
 				thmScoreMap.put(thmIndex, newThmScore);
 				if (DEBUG) {
-					String thm = ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex).thmStr();
+					ThmHypPair thmHypPair = ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex);
+					String thm = thmHypPair.thmStr();
+					String hyp = thmHypPair.hypStr();
 					System.out.println("Adding bonus " + bonusScore + ". num words hit: " + entry.getKey()
-							+ ". newThmScore: " + newThmScore + ". thm: " + thm);
+							+ ". newThmScore: " + newThmScore + ". thm: " + thm + " HYP "+ hyp);
 					// System.out.println("PREV SCORE " + prevScore + " NEW
 					// SCORE " + newThmScore + thm);
 				}

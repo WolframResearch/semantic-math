@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.TreeMap;
 
 import javax.servlet.ServletContext;
 
@@ -194,6 +195,20 @@ public class ThmSearch {
 		DISTANCE_THRESHOLD = computeDistanceThreshold(ml);
 	}
 	
+	private static class IndexDistancePair implements Comparable<IndexDistancePair>{
+		int thmIndex;
+		double distance;
+		
+		IndexDistancePair(int index, double dist){
+			this.thmIndex = index;
+			this.distance = dist;
+		}
+		
+		public int compareTo(IndexDistancePair other){
+			return this.distance > other.distance ? 1 : (this.distance < other.distance ? -1 : 0);
+		}
+	}
+	
 	public static int getQUERY_VEC_LENGTH(){
 		return QUERY_VEC_LENGTH;
 	}
@@ -205,7 +220,7 @@ public class ThmSearch {
 	 */
 	private static double computeDistanceThreshold(WLEvaluationMedium medium){
 		//**June 19, debugging for now, skip this step, since slows down startup.
-		if(true) return 0.1;//0.06;// 0.02360689779;
+		if(true) return 0.08;//0.06;// 0.02360689779;
 		//first String is thm, second is query
 		String thm0 = "$\\lambda$ run over all pairs of partitions which are complementary with respect to $R$";
 		String thm1 = "The interchange of two distant critical points of the surface diagram does not change the induced map on homology";
@@ -290,21 +305,14 @@ public class ThmSearch {
 				//	+ "q0 = queryVecStrTranspose + 0.08*corMx.queryVecStrTranspose;");
 			if(getResult){				
 				logger.info("ThmSearch - transposed queryVecStr: " + qVec);				
-			}
-			
+			}			
 			//ml.evaluate("corMx");
 			//System.out.println("corMx:" +ml.getExpr());
 			//ml.waitForAnswer();
 			//Expr qVec = ml.getExpr();
-			//System.out.println("ThmSearch - qVec: " + qVec);
-			//System.out.println("QUERY " + ml.getExpr().part(1));
 			msg = "Applied correlation matrix to querty vec, about to Inverse[d].Transpose[u].(q/.{0.0->mxMeanValue}) ";
 			System.out.println(msg);
 			logger.info(msg);
-			
-			//ml.evaluate("Length[q]");
-			//Expr qVecDim = ml.getExpr();
-			//System.out.println("ThmSearch - queryStr: " + queryVecStr);
 			
 			//ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"];");
 			//ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"/.{0.0->mxMeanValue}];");
@@ -339,11 +347,6 @@ public class ThmSearch {
 				System.out.println("Values at Pos: " + evaluateWLCommand(medium, 
 						"Map[Part[q1, #]&, pos]", true, true));
 			}			
-			//ml.waitForAnswer();
-			//System.out.println("ThmSearch - q after inverse of transpose: " + ml.getExpr());
-			/*ml.evaluate("q = q + vMeanValue;");
-			ml.discardAnswer();*/
-			//System.out.println("q + vMeanValue: " + ml.getExpr());
 		/*}catch(MathLinkException e){
 			throw new IllegalStateException(e);
 		}*/
@@ -355,11 +358,8 @@ public class ThmSearch {
 		}else{
 			numNearest = num[0];
 		}
-		//ml.evaluate("v[[1]]");
-		//ml.getExpr();
-		//System.out.println("DIMENSIONS " +ml.getExpr());
-		List<Integer> nearestVecList = new ArrayList<Integer>();
-		int[] nearestVecArray;
+		//int[] nearestVecArray;
+		Map<Double, Integer> distanceIndexMap = new TreeMap<Double, Integer>();
 		try{
 			msg = "Applying Nearest[]...";
 			System.out.println(msg);
@@ -397,15 +397,23 @@ public class ThmSearch {
 						+numNearest/2 +"]", true, true);
 				//System.out.println("ThmSearch-DISTANCES: "+(double[])nearestVec.part(2).asArray(Expr.REAL, 1));
 				System.out.println("ThmSearch-DISTANCES: "+nearestVec.part(2));
-
 				//first sublist is indices, second distances
-				nearestVec = nearestVec.part(1);
+				
+				int[] thmIndexAr = (int[])nearestVec.part(1).asArray(Expr.INTEGER, 1);
+				int thmIndexArLen = thmIndexAr.length;
+				thmsFoundCount += thmIndexArLen;				
+				double[] thmDistAr = (double[])nearestVec.part(2).asArray(Expr.REAL, 1);
+				
+				for(int i = 0; i < thmIndexArLen; i++){
+					distanceIndexMap.put(thmDistAr[i], thmIndexAr[i]);
+				}
+				
 				//***Expr nearestVec = evaluateWLCommand(medium, "Nearest["+V_MX_RULE_NAME +", First@Transpose[q],"+numNearest+", Method->\"Scan\"] - " 
 						//+ LIST_INDEX_SHIFT, true, false);
 				//ml.evaluate("Nearest["+V_MX+"->"+ combinedTDMatrixRangeListName +", First@Transpose[q],"+numNearest+", Method->\"Scan\"] - " 
 					//	+ LIST_INDEX_SHIFT);
 				
-				msg = "SVD returned nearestVec! "+ nearestVec;
+				msg = "SVD returned nearestVec! "+ nearestVec.part(1);
 				System.out.println(msg);
 				logger.info(msg);
 				//use this when using Nearest
@@ -413,11 +421,9 @@ public class ThmSearch {
 				 //<--this line generates exprFormatException if sucessive entries are quickly entered.
 				//System.out.println("resulting Expr nearestVec: " + nearestVec);
 				//logger.info("ThmSearch - nearestVec: " + nearestVec);
-				nearestVecArray = (int[])nearestVec.asArray(Expr.INTEGER, 1);
-				
-				thmsFoundCount += nearestVecArray.length;
+				/***nearestVecArray = (int[])nearestVec.asArray(Expr.INTEGER, 1);
 				Integer[] nearestVecArrayBoxed = ArrayUtils.toObject(nearestVecArray);
-				nearestVecList.addAll(Arrays.asList(nearestVecArrayBoxed));				
+				nearestVecList.addAll(Arrays.asList(nearestVecArrayBoxed));*/		
 				//process distances , keep indices of high ranking ones. if sufficiently close and many, break
 				//need to implement caching on WL side!				
 			}
@@ -427,17 +433,20 @@ public class ThmSearch {
 			//return Collections.emptyList();
 		}finally{
 			FileUtils.releaseWLEvaluationMedium(medium);
-		}		
-		
-		//for(int i = nearestVecList.size()-1; i > -1; i--){
+		}
 		System.out.println("Thms with hyp: ");
-		for(int i = 0; i < nearestVecList.size(); i++){
+		List<Integer> nearestVecList = new ArrayList<Integer>();
+		for(Map.Entry<Double, Integer> entry : distanceIndexMap.entrySet()){
+			int thmIndex = entry.getValue();
+			System.out.print("Dist: " + entry.getKey() + " thmIndex: " + thmIndex + "  ");
+			System.out.println(ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex));
+			nearestVecList.add(thmIndex);
+		}
+		/*for(int i = 0; i < nearestVecList.size(); i++){
 			int thmIndex = nearestVecList.get(i);
 			System.out.println(ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex));
-			//System.out.println("thm vec: " + TriggerMathThm2.createQuery(TriggerMathThm2.getThm(d)));
-		}
+		}*/
 		System.out.println("~~~~~");
-		//System.out.println("nearestVecList from within ThmSearch.java: " + nearestVecList);
 		
 		return nearestVecList;
 	}
@@ -512,7 +521,7 @@ public class ThmSearch {
 		/*Name deliberately does not include .dat*/
 		public static final String COMBINED_PARSEDEXPRESSION_LIST_FILE_NAME_ROOT = "combinedParsedExpressionList";
 		private static final int NUM_SINGULAR_VAL_TO_KEEP = 30;
-		protected static final double COR_MX_SCALING_FACTOR = 0.08;
+		protected static final double COR_MX_SCALING_FACTOR = 0.04;
 		public static final String DATA_ROOT_DIR_SLASH = "src/thmp/data/";
 		
 		private static KernelLink ml;
@@ -578,15 +587,17 @@ public class ThmSearch {
 			logger.info(msg);
 			WLEvaluationMedium medium = FileUtils.acquireWLEvaluationMedium();
 			evaluateWLCommand(medium, "<<"+projectionMxPath + "; AppendTo[$ContextPath, \"" + PROJECTION_MX_CONTEXT_NAME + "\"]", false, true);
-			//full mx that was DumpSave'd from one tar file.
-			//may not be using context!
-			evaluateWLCommand(medium, "<<"+fullTermDocumentMxPath// + "; AppendTo[$ContextPath," + PROJECTED_MX_CONTEXT_NAME + "]"
-					, false, true);	
-			//evaluateWLCommand(PROJECTED_MX_CONTEXT_NAME , true, false);
 			String fullTDMxName = FULL_TERM_DOCUMENT_MX_NAME;
 			String dInverseName = D_INVERSE_NAME;
 			String uTransposeName = U_TRANSPOSE_NAME;
-			String corMxName = COR_MX_NAME;
+			String corMxName = COR_MX_NAME;			
+			//full mx that was DumpSave'd from one tar file.
+			//may not be using context! 
+			//some FullTDMatrix's could be empty! In case no theorem was gathered.
+			evaluateWLCommand(medium, "Clear["+ fullTDMxName+"]; <<"+fullTermDocumentMxPath// + "; AppendTo[$ContextPath," + PROJECTED_MX_CONTEXT_NAME + "]"
+					, false, true);	
+			//evaluateWLCommand(PROJECTED_MX_CONTEXT_NAME , true, false);
+			
 			ProjectionMatrix.applyProjectionMatrix(fullTDMxName, dInverseName, uTransposeName, 
 					corMxName, PROJECTED_MX_NAME);
 			evaluateWLCommand(medium, "DumpSave[\"" + projectedTermDocumentMxPath + "\", "+ PROJECTED_MX_NAME+ "]", false, true);

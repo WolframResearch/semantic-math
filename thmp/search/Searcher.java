@@ -47,7 +47,7 @@ public interface Searcher<S> {
 		
 		private static final long serialVersionUID = 1408487446908500897L;
 		//Where an instance of this class should be serialized.
-		private static final String searchConfigurationSerialPath = "thmp/src/data/searchConfiguration.dat";
+		private static final String searchConfigurationSerialPath = "src/thmp/data/searchConfiguration.dat";
 		//used in ThmHypPairGet. Containing indices of thms that are the first in a bundle. 
 		private List<Integer> bundleStartThmIndexList;
 		private int totalThmsCount;

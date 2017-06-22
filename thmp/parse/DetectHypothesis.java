@@ -567,7 +567,7 @@ public class DetectHypothesis {
 			Multimap<String, Integer> wordThmIndexMMap = ArrayListMultimap.create();
 			//actually turn ParsedExpression's into ThmHypPair's. To facilitate deserialization
 			//into cache at runtime with minimal processing.
-			convertPEToThmHypPairAndProcessThms(thmHypPairList, wordThmIndexMMap);
+			createWordThmIndexMMap(thmHypPairList, wordThmIndexMMap);
 			List<Multimap<String, Integer>> wordThmIndexMMapList = new ArrayList<Multimap<String, Integer>>();
 			wordThmIndexMMapList.add(wordThmIndexMMap);
 			FileUtils.serializeObjToFile(wordThmIndexMMapList, wordThmIndexMMapSerialFileStr);
@@ -637,7 +637,7 @@ public class DetectHypothesis {
 	 * @param wordThmIndexMMap map used for intersection 
 	 * @return
 	 */
-	private static void convertPEToThmHypPairAndProcessThms(List<? extends TheoremContainer> peList,
+	private static void createWordThmIndexMMap(List<? extends TheoremContainer> peList,
 			Multimap<String, Integer> wordThmIndexMMap){
 		//List<ThmHypPair> thmHypPairList = new ArrayList<ThmHypPair>();
 		int thmIndex = 0;

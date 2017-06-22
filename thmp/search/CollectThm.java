@@ -96,10 +96,10 @@ public class CollectThm {
 	 * Only singletons here. N-grams should be placed in N-gram files.
 	 */
 	private static final String[] SCORE_AVG_MATH_WORDS = new String[]{"ring", "field", "ideal", "finite", "series",
-			"complex", "combination", "regular", "domain", "local", "smooth", "definition", "map", "standard", "prime", "every",
-			"injective", "surjective", "suppose", "any", "commut", "word"};
+			"complex", "combination", "regular", "domain", "local", "smooth", "definition", "map", "standard", "prime",
+			"injective", "surjective", "suppose", "commut", "word"};
 	//could be included, if already included, adjust the score to 1. If not, don't add.
-	private static final String[] SCORE1MATH_WORDS = new String[]{"show","have"
+	private static final String[] SCORE1MATH_WORDS = new String[]{"show","have","any","every", "many"
 	};
 	private static final String[] SCORE0MATH_WORDS = new String[]{"such","say","will", "following","goodwillie","send", "iii",
 			"ii","i", "is"
@@ -435,14 +435,19 @@ public class CollectThm {
 		/**
 		 * Use stemToWordsMMap to re-adjust frequency of word stems that came from multiple forms, 
 			as these are much more likely to be math words, so don't want to scale down too much.
+		 *	E.g. annihil is the stem for both annihilator and annihilate, don't want to score annihil
+		 *	based on the combined frequency of annihilator and annihilate.
 		 * @param docWordsFreqPreMapNoAnno
 		 * @param stemtowordsmmap2
 		 */
 		private static void adjustWordFreqMapWithStemMultiplicity(Map<String, Integer> docWordsFreqPreMapNoAnno,
 				ImmutableMultimap<String, String> stemToWordsMMap_) {
 			double freqAdjustmentFactor = 3.0/4;
-			Map<String, Integer> modifiedWordFreqMap = new HashMap<String, Integer>();			
-			for(Map.Entry<String, Integer> entry : docWordsFreqPreMapNoAnno.entrySet()){
+			Map<String, Integer> stockFrequencyMap = WordFrequency.ComputeFrequencyData.englishStockFreqMap();
+			Map<String, Integer> modifiedWordFreqMap = new HashMap<String, Integer>();
+			Iterator<Map.Entry<String, Integer>> freqMapIter = docWordsFreqPreMapNoAnno.entrySet().iterator();
+			while(freqMapIter.hasNext()){
+				Map.Entry<String, Integer> entry = freqMapIter.next();				
 				String wordStem = entry.getKey();
 				if(stemToWordsMMap_.containsKey(wordStem)){
 					int formsCount = (int)(stemToWordsMMap_.get(wordStem).size()*freqAdjustmentFactor);
@@ -451,6 +456,19 @@ public class CollectThm {
 					int adjustedFreq = entry.getValue()/formsCount;
 					adjustedFreq = adjustedFreq > 0 ? adjustedFreq : 1;
 					modifiedWordFreqMap.put(wordStem, adjustedFreq);
+				}
+				//eliminate duplicates, if a word and its singleton forms are both included,
+				//e.g graph, graphs
+				if(stockFrequencyMap.containsKey(wordStem)){
+					//valid word, don't need singularize
+					continue;
+				}
+				String wordSingular = WordForms.getSingularForm(wordStem);
+				Integer singularWordFreq = docWordsFreqPreMapNoAnno.get(wordSingular);
+				if(null != singularWordFreq && !wordStem.equals(wordSingular)){
+					modifiedWordFreqMap.put(wordSingular, (int)((singularWordFreq + entry.getValue())*3./4));
+					freqMapIter.remove();
+					logger.info(wordStem + " removed in favor of " + wordSingular);
 				}
 			}
 			docWordsFreqPreMapNoAnno.putAll(modifiedWordFreqMap);

@@ -97,6 +97,7 @@ public class ProjectionMatrix {
 			int end = nextIndex < argsLen ? nextIndex : argsLen;
 			//int end = i < loopTotal-1 ? (i+1)*TAR_COUNT_PER_BUNDLE : argsLen;
 			if(end > start){
+				bundleStartThmIndexList.add(thmCounter);
 				for(int j = start; j < end; j++){
 					//be sure to check it's valid path to valid .mx
 					String fileName = args[j];
@@ -114,8 +115,7 @@ public class ProjectionMatrix {
 					String wordThmIndexMMapPath = path_j + SearchMetaData.wordThmIndexMMapSerialFileName();
 					thmCounter = addExprsToLists(peFilePath, combinedPEList, vecsFilePath, combinedVecsList, wordThmIndexMMapPath,
 							combinedWordThmIndexMMap, thmCounter);
-				}				
-				bundleStartThmIndexList.add(thmCounter);
+				}
 				//thmCounter += combinedPEList.size();
 				System.out.println("Serializing combinedPEList size: " + combinedPEList.size() + "   index: " +i);
 				System.out.println("Serializing combinedVecsList size: " + combinedVecsList.size() + "   index: " +i);
@@ -131,7 +131,7 @@ public class ProjectionMatrix {
 				projectedMxFilePathList = new ArrayList<String>();
 			}
 		}
-		//serialize the remaining vecs. //add to thmCounter??
+		//serialize the remaining thm vecs (must be less than the number of thms per vecsBundle).
 		if(!combinedVecsList.isEmpty()){
 			//Name deliberately does not contain ".dat" at end.
 			String path = TheoremGet.ContextRelationVecBundle.BASE_FILE_STR 
@@ -228,8 +228,9 @@ public class ProjectionMatrix {
 		//String path = baseFileStr + String.valueOf(vecsFileNameCounter);
 		List<ContextRelationVecPair> curList = new ArrayList<ContextRelationVecPair>();
 		for(int i = numBundle * numThmsInBundle; i < combinedVecsListSz; i++){
-				curList.add(combinedVecsList.get(i));
+			curList.add(combinedVecsList.get(i));
 		}
+		//System.out.println("splitAndUpdateCombinedVecsList - curList.size() " + curList.size() + " numBundle: "+ numBundle); 
 		combinedVecsList.clear();
 		if(!curList.isEmpty()){
 			combinedVecsList.addAll(curList);
@@ -268,8 +269,7 @@ public class ProjectionMatrix {
 		}else{
 			thmHypPairList = convertPEToThmHypPairTEMP((List<ParsedExpression>)FileUtils.deserializeListFromFile(peFilePath));			
 		}*/
-		//**Hack ends
-		
+		//**Hack ends		
 		List<ThmHypPair> thmHypPairList = (List<ThmHypPair>)FileUtils.deserializeListFromFile(peFilePath);
 		int thmHypPairListSz = thmHypPairList.size();
 		combinedPEList.addAll(thmHypPairList);	
@@ -335,14 +335,23 @@ public class ProjectionMatrix {
 		queryMxStrTransposeName = queryMxStrName;
 		//try {
 			//process query first with corMx. Convert to column vectors, so rows represent words.
-			evaluateWLCommand(medium, "q0 =" + queryMxStrTransposeName + "+ "+
-					TermDocumentMatrix.COR_MX_SCALING_FACTOR+"*" + corMxName + "."+ queryMxStrTransposeName, false, true);
+		////////////
+		/*applies projection mx. Need to Transpose from column vectors, so rows represent thms.*/		
+		evaluateWLCommand(medium, 
+				"If[Length["+queryMxStrName+"] > 0,"
+				+ "q0 =" + queryMxStrTransposeName + "+ "+
+				TermDocumentMatrix.COR_MX_SCALING_FACTOR+"*" + corMxName + "."+ queryMxStrTransposeName 
+				+ ";" + projectedMxName + "= Transpose[" + dInverseName + "." + uTransposeName + ".q0] ,"
+				+ projectedMxName + "={}]"
+				, false, true);
+			/*evaluateWLCommand(medium, "q0 =" + queryMxStrTransposeName + "+ "+
+					TermDocumentMatrix.COR_MX_SCALING_FACTOR+"*" + corMxName + "."+ queryMxStrTransposeName, false, true);*/
 			//ml.evaluate("q0 = " + queryMxStrTransposeName + "+ 0.08*" + corMxName + "."+ queryMxStrTransposeName +";");
 			//ml.discardAnswer();
 			//System.out.println("ProjectionMatrix.applyProjectionMatrix, "
 				//	+evaluateWLCommand("(" + corMxName + "."+ queryMxStrTransposeName+")[[1]]", true, false));
 			/*applies projection mx. Need to Transpose from column vectors, so rows represent thms.*/
-			evaluateWLCommand(medium, projectedMxName + "= Transpose[" + dInverseName + "." + uTransposeName + ".q0]", false, true);
+			//******evaluateWLCommand(medium, projectedMxName + "= Transpose[" + dInverseName + "." + uTransposeName + ".q0]", false, true);
 			//ml.evaluate(projectedMxName + "= Transpose[" + dInverseName + "." + uTransposeName + ".q0];");
 			//ml.discardAnswer();
 		/*} catch (MathLinkException e) {
