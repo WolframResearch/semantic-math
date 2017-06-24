@@ -603,10 +603,9 @@ public class WordForms {
 			}
 			emptyPair.set_word(sb.toString());
 			emptyPair.set_pos(QUANTITY_POS);
-			System.out.println("wordIndex " + wordIndex+ "  nextTokenStartIndex " + nextTokenStartIndex);
+			//System.out.println("wordIndex " + wordIndex+ "  nextTokenStartIndex " + nextTokenStartIndex);
 			return nextTokenStartIndex;
-		}		
-		
+		}				
 		return nextTokenStartIndex;		
 	}
 	

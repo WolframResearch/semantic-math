@@ -5,11 +5,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import thmp.parse.ParseState;
+
 /**
  * Information on the state of the current query. E.g. list
  * of relevant tokens, including 2/3-grams, 
  * Useful for e.g. combined search ranking in CombinedSearch.
- * One instance per query.
+ * One SearchState instance per query.
  * 
  * @author yihed
  *
@@ -31,21 +33,18 @@ public class SearchState {
 	//map of thmIndex and their word-weight scores
 	private Map<Integer, Integer> thmScoreMap;
 	
+	private ParseState parseState;
+	
 	//the keyset of which is intersectionVecList
 	//make thread-safe!
-	Map<String, Integer> map = new LinkedHashMap<>();
+	//Map<String, Integer> map = new LinkedHashMap<>();
 	
 	public SearchState(){
 		
 		this.tokenScoreMap = new HashMap<String, Integer>();
 		this.thmSpanMap = new HashMap<Integer, Integer>();
 	}
-	
-	/*public SearchState( List<Integer> intersectionVecList){	
-		this.intersectionVecList = intersectionVecList;
-		this.tokenScoreMap = new HashMap<String, Integer>();
-	}*/
-	
+		
 	/**
 	 * Adds token and its score to tokenScoreMap. 
 	 * @param token
@@ -60,10 +59,9 @@ public class SearchState {
 		this.thmScoreMap = scoreMap;
 	}
 	
-	//should be consistent with set/add!
-		public Map<Integer, Integer> thmScoreMap(){
-			return this.thmScoreMap;
-		}
+	public Map<Integer, Integer> thmScoreMap(){
+		return this.thmScoreMap;
+	}
 		
 	/**
 	 * Adds token and its score to tokenScoreMap. 
@@ -96,5 +94,13 @@ public class SearchState {
 
 	public void set_intersectionVecList(List<Integer> intersectionVecList){
 		this.intersectionVecList = intersectionVecList;
+	}
+
+	public ParseState getParseState() {
+		return parseState;
+	}
+
+	public void setParseState(ParseState parseState) {
+		this.parseState = parseState;
 	}
 }

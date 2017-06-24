@@ -331,12 +331,16 @@ public class SearchCombined {
 			//return Collections.<ThmHypPair>emptyList();
 		}
 		
-		SearchState searchState = SearchIntersection.intersectionSearch(input, searchWordsSet, searchContextBool, NUM_NEAREST);
-
+		// create searchState to record the intersectionVecList, and map of
+		// tokens and their span scores. And communicate parseState
+		//among different searchers.
+		SearchState searchState = new SearchState();
+		SearchIntersection.intersectionSearch(input, searchWordsSet, searchState, searchContextBool, NUM_NEAREST);
+		
 		String[] inputAr = WordForms.getWhiteNonEmptySpacePattern().split(input);		
 		//context search doesn't do anything if only one token.
-		if(inputAr.length < 3){
-			searchContextBool = false;
+		if(inputAr.length < 2){
+			//searchContextBool = false;
 			searchRelationalBool = false;
 		}
 		
@@ -348,7 +352,7 @@ public class SearchCombined {
 		if(searchRelationalBool){
 			int tupleSz = 5;
 			Searcher<BigInteger> searcher = new RelationalSearch();
-			bestCommonVecs = searchVecWithTuple(input, bestCommonVecs, tupleSz, searcher);			
+			bestCommonVecs = searchVecWithTuple(input, bestCommonVecs, tupleSz, searcher, searchState);			
 		}
 
 		List<ThmHypPair> bestCommonThmHypPairList = thmListIndexToThmHypPair(bestCommonVecs);
@@ -394,7 +398,7 @@ public class SearchCombined {
 	 * @param searcher new search object to be used for searching.
 	 */
 	public static <T> List<Integer> searchVecWithTuple(String queryStr, List<Integer> thmCandidateList, int tupleSz,
-			Searcher<T> searcher) {
+			Searcher<T> searcher, SearchState searchState) {
 		
 		int commonVecsLen = thmCandidateList.size();
 		int numTupleSzInCommonVecsLen = commonVecsLen/tupleSz;
@@ -411,7 +415,7 @@ public class SearchCombined {
 			//using .subList() avoids creating numTupleSzInCommonVecsLen 
 			//number of new short lists as iterating through the list would.
 			List<Integer> sublist = thmCandidateList.subList(startingIndex, endingIndex);
-			List<Integer> reorderedSublist = searcher.search(queryStr, sublist);
+			List<Integer> reorderedSublist = searcher.search(queryStr, sublist, searchState);
 			reorderedList.addAll(reorderedSublist);
 		}
 		
@@ -466,9 +470,10 @@ public class SearchCombined {
 					thm, searchContextBool);
 			*/
 			
+			int counter = 0;
 			System.out.println("~ SEARCH RESULTS ~");
 			for(ThmHypPair thmHypPair : bestCommonThmHypPairList){
-				System.out.println(thmHypPair);
+				System.out.println(counter++ + " ++ " + thmHypPair);
 			}
 		}
 		

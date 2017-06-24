@@ -18,7 +18,7 @@ import thmp.parse.ParseState;
 import thmp.parse.RelationVec;
 import thmp.parse.ParseState.ParseStateBuilder;
 import thmp.search.SearchCombined.ThmHypPair;
-import thmp.search.Searcher.SearcherState;
+import thmp.search.Searcher.QueryVecContainer;
 import thmp.search.TheoremGet.ContextRelationVecPair;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
@@ -36,7 +36,7 @@ public class RelationalSearch implements Searcher<BigInteger>{
 
 	//private static final List<BigInteger> relationVecList;
 	private static final Logger logger = LogManager.getLogger(RelationalSearch.class);
-	private SearcherState<BigInteger> searcherState;
+	private QueryVecContainer<BigInteger> searcherState;
 	
 	static{
 		//should get vectors from deserialized ParsedExpression's List
@@ -44,12 +44,12 @@ public class RelationalSearch implements Searcher<BigInteger>{
 	}
 	
 	@Override
-	public void setSearcherState(SearcherState<BigInteger> searcherState_){
+	public void setSearcherState(QueryVecContainer<BigInteger> searcherState_){
 		searcherState = searcherState_;
 	}
 	
 	@Override
-	public SearcherState<BigInteger> getSearcherState(){
+	public QueryVecContainer<BigInteger> getSearcherState(){
 		return this.searcherState;
 	}
 	
@@ -75,8 +75,9 @@ public class RelationalSearch implements Searcher<BigInteger>{
 			if(nearestVecList.isEmpty()){
 				System.out.println("I've got nothing for you yet. Try again.");
 				continue;
-			}			
-			List<Integer> bestCommonVecs = relationalSearch(thm, nearestVecList, null);			
+			}	
+			SearchState searchState = new SearchState();
+			List<Integer> bestCommonVecs = relationalSearch(thm, nearestVecList, null, searchState);			
 			
 			if(null == bestCommonVecs){
 				System.out.println("No nontrivial relation found. Results from SVD displayed above.");
@@ -98,8 +99,9 @@ public class RelationalSearch implements Searcher<BigInteger>{
 	/**
 	 * Needed to implement Searcher.
 	 */
-	public List<Integer> search(String queryStr, List<Integer> nearestThmIndexList){
-		return relationalSearch(queryStr, nearestThmIndexList, this);
+	@Override
+	public List<Integer> search(String queryStr, List<Integer> nearestThmIndexList, SearchState searchState){
+		return relationalSearch(queryStr, nearestThmIndexList, this, searchState);
 	}
 	
 	/**
@@ -108,8 +110,9 @@ public class RelationalSearch implements Searcher<BigInteger>{
 	 * @param nearestThmIndexList
 	 * @return
 	 */
-	public static List<ThmHypPair> getHighestThmStringList(String queryStr, List<Integer> nearestThmIndexList){
-		return SearchCombined.thmListIndexToThmHypPair(relationalSearch(queryStr, nearestThmIndexList, null));
+	public static List<ThmHypPair> getHighestThmStringList(String queryStr, List<Integer> nearestThmIndexList, 
+			SearchState searchState){
+		return SearchCombined.thmListIndexToThmHypPair(relationalSearch(queryStr, nearestThmIndexList, null, searchState));
 	}
 	
 	/**
@@ -119,26 +122,24 @@ public class RelationalSearch implements Searcher<BigInteger>{
 	 * @return
 	 */
 	public static List<Integer> relationalSearch(String queryStr, List<Integer> nearestThmIndexList, 
-			Searcher<BigInteger> searcher){
+			Searcher<BigInteger> searcher, SearchState searchState){
 		//short-circuit if query contains fewer than 3 words, so context doesn't make much sense	
 		
 		//short-circuit if context vec not meaningful (insignificant entries created)
 		
-		ParseStateBuilder parseStateBuilder = new ParseStateBuilder();
-		ParseState parseState = parseStateBuilder.build();
 		//form context vector of query
 		BigInteger queryRelationVec;		
 		
 		if(null == searcher){
-			queryRelationVec = thmp.parse.GenerateRelationVec.generateRelationVec(queryStr, parseState);
+			queryRelationVec = thmp.parse.GenerateRelationVec.generateRelationVec(queryStr, searchState);
 		}else{
 			//optimization to store vec in searcherState, 
 			//to avoid repeatedly parsing the same query string.
-			SearcherState<BigInteger> searcherState;
+			QueryVecContainer<BigInteger> searcherState;
 			
 			if(null == (searcherState = searcher.getSearcherState())){
-				queryRelationVec = thmp.parse.GenerateRelationVec.generateRelationVec(queryStr, parseState);
-				searcher.setSearcherState(new SearcherState<BigInteger>(queryRelationVec));
+				queryRelationVec = thmp.parse.GenerateRelationVec.generateRelationVec(queryStr, searchState);
+				searcher.setSearcherState(new QueryVecContainer<BigInteger>(queryRelationVec));
 			}else{
 				queryRelationVec = searcherState.getQueryVec();
 				if(null == queryRelationVec){

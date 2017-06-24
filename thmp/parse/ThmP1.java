@@ -1385,7 +1385,7 @@ public class ThmP1 {
 		if((containsOnlySymbEnt && pairs_sz > 1) /*<--so single-token $x>1$ can still get parsed*/
 				//extract these constants after experimentation! June 2017.
 				//Need to be careful, e.g. in enumerate, those could have high tex percentages, but still meaningful.
-				|| ( ((double)texCharCount)/totalCharCount > 0.8 && texCharCount > 50 || texCharCount > 90 )
+				|| ( ((double)texCharCount)/totalCharCount > 0.8 && texCharCount > 50 || texCharCount > 98 )
 				|| (((double)texEntCount)/pairs_sz > MAX_ALLOWED_ENT_PERCENTAGE && pairs_sz > MIN_PAIRS_SIZE_THRESHOLD_FOR_FLUFF)
 				|| texEntCount > 12){
 			//set trivial structlist, so that previous structlist doesn't get parsed again.
@@ -2235,7 +2235,10 @@ public class ThmP1 {
 		//this is cumulative, should be cleared per parse! Move this back
 		//to initializer after debugging!
 		//parseContextVector = new int[parseContextVectorSz];		
-		List<Struct> inputStructList = parseState.getTokenList();		
+		List<Struct> inputStructList = parseState.getTokenList();	
+		if(null == inputStructList){
+			return parseState;
+		}
 		int inputStructListSize = inputStructList.size();
 		
 		if(null == inputStructList || 0 == inputStructListSize){
@@ -2244,7 +2247,8 @@ public class ThmP1 {
 		
 		//If contains nothing other than symbols and ents, probably spurious latex expression,
 		//skip in that case.
-		boolean containsOnlySymbEnt = true;
+		/* This is taken care of in the tokenizer
+		 * boolean containsOnlySymbEnt = true;
 		for(Struct struct : inputStructList){
 			if(!struct.type().equals("ent") && !struct.type().equals("symb")){
 				containsOnlySymbEnt = false;
@@ -2253,7 +2257,7 @@ public class ThmP1 {
 		}
 		if(containsOnlySymbEnt){ 
 			return parseState;
-		}
+		}*/
 		
 		Struct recentEnt = parseState.getRecentEnt();	
 		// shouldn't be 0 to start with?!
@@ -2365,7 +2369,6 @@ public class ThmP1 {
 						continue;
 					}
 					//System.out.println("=====++++ i, j pairs " + (i) + " " + k + ", " + " col " + (k+1) + " " +j );
-					//if(j==7) System.out.println(structList2);
 					// need to refactor to make methods more modular!
 
 					Iterator<Struct> structList1Iter = structList1.structList().iterator();
@@ -2721,13 +2724,10 @@ public class ThmP1 {
 			//List of headParseStruct's, each entry corresponds to the entry of same index in parsedPairMMapList.
 			List<ParseStruct> headParseStructList = new ArrayList<ParseStruct>();
 			//list of ParsedPairs used to store long forms, same order of pairs as in parsedPairMMapList
-			List<ParsedPair> longFormParsedPairList = new ArrayList<ParsedPair>();
-			
+			List<ParsedPair> longFormParsedPairList = new ArrayList<ParsedPair>();			
 			//to compare with headStructListSz.
 			int actualCommandsIteratedCount = 0;
-			//should just sort headStructList, but that costs time.
-			//boolean someParseCounted = false;
-			
+
 			for (int u = 0; u < headStructListSz; u++) {
 				Struct uHeadStruct = structList.get(u);
 				if(PLOT_DEBUG) PlotUtils.plotTree(uHeadStruct);
@@ -2743,11 +2743,9 @@ public class ThmP1 {
 						&& actualCommandsIteratedCount > MIN_PARSE_ITERATED_COUNT){					
 					break;
 				}
-				actualCommandsIteratedCount++;
-				
+				actualCommandsIteratedCount++;				
 				uHeadStruct.set_dfsDepth(0);
 				
-				//int[] curStructContextvec = new int[parseContextVectorSz];
 				Map<Integer, Integer> curStructContextVecMap = new HashMap<Integer, Integer>();
 				//keep track of span of longForm, used as commandNumUnits in case
 				//no WLCommand parse. The bigger the better.
@@ -2762,18 +2760,12 @@ public class ThmP1 {
 				//out to "if $R$ is a field and if $R$ has a zero", this makes command-triggering
 				//much more feasible.
 				if(conjDisjVerbphrase.isHasConjDisjVerbphrase() && conjDisjVerbphrase.assertTypeFound()){
-					ConjDisjVerbphrase.reorganizeConjDisjVerbphraseTree(
-							conjDisjVerbphrase);
-					//no use, since parsedSB has been built already
-					//headStructList.set(u, uHeadStruct);
-					//throw new IllegalStateException();
+					ConjDisjVerbphrase.reorganizeConjDisjVerbphraseTree(conjDisjVerbphrase);
 				}				
-				//ParseStruct headParseStruct = new ParseStruct();
 				/* Get the WL form build from WLCommand's. Compute span scores. */
 				wlCommandTreeTraversal(uHeadStruct, headParseStructList, parsedPairMMapList,// curStructContextvec, 
 						curStructContextVecMap, span, parseState);
-				//headParseStructList.add(headParseStruct);
-				//contextVecList.add(curStructContextvec);
+				
 				thmContextVecMapList.add(curStructContextVecMap);
 				
 				if(DEBUG) System.out.println("+++Previous long parse: " + parsedSB);				
@@ -2789,8 +2781,7 @@ public class ThmP1 {
 				if(u > LONG_FORM_MAX_PARSE_LOOP_THRESHOLD){
 					break;
 				}
-			}
-			
+			}			
 			//order maps from parsedPairMMapList and put into parseStructMapList and parsedExpr.
 			//Also add context vector of highest scores
 			
@@ -2811,16 +2802,16 @@ public class ThmP1 {
 						.containsKey("define") || triggerWordsMap.containsKey("let"))
 				)
 		{
-			if(DEBUG) System.out.println("No full parse!");
-			
+			if(DEBUG) System.out.println("No full parse!");			
 			//See if desired trigger words are present.
 			//Since trigger words determine which conditional parse to use
 			//(should have an enum for conditionalParseType once more conditional parse
-			//methods are introduced). List to be extended.
-			
+			//methods are introduced). List to be extended.			
 			isReparse = true;
 			//negative side effects to parseState that should be discarded? <--side effects yes, 
 			//but don't think they are negative
+			//System.out.println("parseState.getPrevTokenList(), parseState.getTokenList() "+ConditionalParse.superimposeStructList(parseState.getPrevTokenList(), 
+					//parseState.getTokenList()));
 			parseState.setTokenList(ConditionalParse.superimposeStructList(parseState.getPrevTokenList(), 
 					parseState.getTokenList()));
 			parseState = parse(parseState, isReparse);
@@ -2881,15 +2872,12 @@ public class ThmP1 {
 			//list of long forms, with flattened tree structure.
 			List<ParsedPair> longFormParsedPairList = new ArrayList<ParsedPair>();
 			
-			//int[] curStructContextvec = new int[parseContextVectorSz];	
 			Map<Integer, Integer> curStructContextVecMap = new HashMap<Integer, Integer>();
 			StringBuilder longFormSb = new StringBuilder();
 			double combinedScore = 1;
-			
+			//iterate over each partial parse component
 			for (int k = 0; k < parsedStructListSize; k++) {
-				//Map<Integer, Integer> curStructContextVecMap = new HashMap<Integer, Integer>();
 				StringBuilder parsedSB = new StringBuilder();
-				// int highestScoreIndex = ArrayDFS(parsedStructList.get(k));
 				int highestScoreIndex = 0;
 				Struct kHeadStruct = structListList.get(k).structList().get(highestScoreIndex);
 				//measures span of longForm (how many leaf nodes reached), use in place of 
@@ -2927,7 +2915,7 @@ public class ThmP1 {
 						span, parseState);
 				
 				combinedScore *= totalScore;
-				longFormSb.append(parsedSB + " ");
+				longFormSb.append(parsedSB).append(" ");
 				//longFormParsedPairList.add(new ParsedPair(parsedSB.toString(), totalScore, 
 						//"long"));	//combine into one list!!					
 			}	
@@ -2978,10 +2966,11 @@ public class ThmP1 {
 			List<ParseStruct> combinedHeadParseStructList = new ArrayList<ParseStruct>();
 			combinedHeadParseStructList.add(combinedParseStruct);
 			orderPairsAndPutToLists(parsedPairMMapList2, combinedHeadParseStructList, parseState, longFormParsedPairList, thmContextVecMapList);
-			//System.out.println("THmP1- headParseStructList" + headParseStructList);
+			
 			//if commandNumUnitsWithHeadNoneSum sufficiently low: so sufficiently few parses
 			//with NONE, don't parse again. Half is a good threshold
-			if(commandNumUnitsWithHeadNoneSum > inputStructList.size()/2){
+			final int REPARSE_DIVISION_FACTOR = 2;
+			if(commandNumUnitsWithHeadNoneSum > inputStructList.size()/REPARSE_DIVISION_FACTOR){
 				//parse again.
 				//form new structList, so don't temper with original one.
 				List<Struct> newStructList = new ArrayList<Struct>();				
@@ -3515,6 +3504,7 @@ public class ThmP1 {
 		//build relation vector for the highest-ranked parse, set relation vector to parseState.
 		Multimap<ParseStructType, ParsedPair> topParsedPairMMap = sortedParsedPairMMapList.get(0);
 		BigInteger relationVec = RelationVec.buildRelationVec(topParsedPairMMap);
+		//if(true) throw new IllegalStateException("ThmP1 - topParsedPairMMap "+topParsedPairMMap);
 		parseState.setRelationalContextVec(relationVec);
 		//System.out.println("-+++++++++++best head!!! " + headParseStructList);
 		//set head for this run of current part that triggered the command.
@@ -3631,7 +3621,7 @@ public class ThmP1 {
 		//System.out.println(">>>>>>>>>>uHeadStruct.WLCommandWrapperList()" + uHeadStruct.WLCommandWrapperList()); //DEBUG
 	 	
 		if(!contextVecConstructed){
-			ParseTreeToVec.tree2vec(uHeadStruct, curStructContextVecMap);
+			ParseTreeToContextVec.tree2vec(uHeadStruct, curStructContextVecMap);
 		}
 		
 		if(DEBUG){

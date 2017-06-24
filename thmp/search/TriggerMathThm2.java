@@ -289,7 +289,7 @@ public class TriggerMathThm2 {
 		return sparseArraySB;
 	}
 	
-	private static void gatherTermDocumentMxEntries(ImmutableList<TheoremContainer> defThmList,
+	private static void gatherTermDocumentMxEntries(List<? extends TheoremContainer> defThmList,
 			List<int[]> coordinatesList, List<Double> weightsList) {
 		//map of annotated words and their scores. Previous run's scores
 		Map<String, Integer> wordsScoreMap = CollectThm.ThmWordsMaps.get_wordsScoreMapNoAnno();
@@ -309,10 +309,10 @@ public class TriggerMathThm2 {
 	 * added, for each thm.
 	 * @param wordsScoreMap
 	 */
-	private static void gatherTermDocumentMxEntries(ImmutableList<TheoremContainer> defThmList,
+	private static void gatherTermDocumentMxEntries(List<? extends TheoremContainer> defThmList,
 			List<int[]> coordinatesList, List<Double> weightsList, Map<String, Integer> wordsScoreMap) {
 		
-		Iterator<TheoremContainer> defThmListIter = defThmList.iterator();
+		Iterator<? extends TheoremContainer> defThmListIter = defThmList.iterator();
 		
 		//list of coordinate pairs containing non zero, used to construct sparse array.
 		//each array has size 2.
@@ -329,7 +329,7 @@ public class TriggerMathThm2 {
 			String[] thmAr = WordForms.splitThmIntoSearchWords(thm.toLowerCase());
 			
 			int queryVecLen = ThmSearch.ThmSearchQuery.getQUERY_VEC_LENGTH();
-			logger.info("TriggerMathThm - queryVecLen: " + queryVecLen);
+			//logger.info("TriggerMathThm - queryVecLen: " + queryVecLen);
 			//System.out.println("TriggerMathThm2 - query vector length: " + queryVecLen);
 			//double[] queryVec = new double[queryVecLen];
 			double norm = 0;
@@ -686,7 +686,7 @@ public class TriggerMathThm2 {
 		return sparseArrayInputSB;
 	}
 	
-	public static StringBuilder sparseArrayInputSB(ImmutableList<TheoremContainer> thmList){
+	public static StringBuilder sparseArrayInputSB(List<? extends TheoremContainer> thmList){
 		
 		List<int[]> coordinatesList = new ArrayList<int[]>();
 		List<Double> weightsList = new ArrayList<Double>();		
@@ -700,7 +700,7 @@ public class TriggerMathThm2 {
 	 * @param docWordsFreqMap Use specified frequency map to re-create scores.
 	 * @return
 	 */
-	public static StringBuilder sparseArrayInputSB(ImmutableList<TheoremContainer> thmList,
+	public static StringBuilder sparseArrayInputSB(List<? extends TheoremContainer> thmList,
 			Map<String, Integer> docWordsFreqMap){
 		
 		List<int[]> coordinatesList = new ArrayList<int[]>();

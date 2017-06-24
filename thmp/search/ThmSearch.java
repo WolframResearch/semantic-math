@@ -122,9 +122,14 @@ public class ThmSearch {
 			//if kernel pool acquisition were working, this should be done in initialization code, right now 
 			//initialization code doesn't seem to be running??
 			//***evaluateWLCommand(ml, "<<"+combinedProjectedMxFilePath, false, true);*/
+			logger.info("$ProcessID when loading mx: " + evaluateWLCommand(ml, "$ProcessID", true, true));
 			evaluateWLCommand(ml, "<<"+pathToProjectionMx, false, true);
 			evaluateWLCommand(ml, "AppendTo[$ContextPath, \""+ TermDocumentMatrix.PROJECTION_MX_CONTEXT_NAME +"\"]", false, true);	
 			
+			
+			logger.info("dInverse "+evaluateWLCommand(ml, TermDocumentMatrix.PROJECTION_MX_CONTEXT_NAME +"dInverse", true, true));
+			logger.info("uTranspose "+evaluateWLCommand(ml, "Length[" +TermDocumentMatrix.PROJECTION_MX_CONTEXT_NAME +"uTranspose]", true, true));
+
 			/*if(!USE_FULL_MX){
 				evaluateWLCommand(ml, combinedTDMatrixRangeListName + "= Range[Length["+V_MX+"]]", false, true);
 			}*/
@@ -154,11 +159,12 @@ public class ThmSearch {
 				vMx = TermDocumentMatrix.COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME;
 			}*/
 			//ml.evaluate("Nearest["+vMx+"->Range[Dimensions["+vMx+"][[1]]]
+			logger.info("Names[\"TermDocumentMatrix`*\"] " +evaluateWLCommand(ml, "Names[\"TermDocumentMatrix`*\"]", true, true));			
 			//should uncompress using this code here.
 			Expr vecLengthExpr = evaluateWLCommand(ml, "Length[" + TermDocumentMatrix.PROJECTION_MX_CONTEXT_NAME +"corMx]", true, true);
 			//ml.evaluate("Length[" + TermDocumentMatrix.PROJECTION_MX_CONTEXT_NAME +"corMx]");
 			//ml.waitForAnswer();	
-			logger.info("Names[\"TermDocumentMatrix`*\"] " +evaluateWLCommand(ml, "Names[\"TermDocumentMatrix`*\"]", true, true));
+			logger.info("$ProcessID after: " + evaluateWLCommand(ml, "$ProcessID", true, true));
 			
 			logger.info("Length[corMx] " +evaluateWLCommand(ml, "Length[corMx]", true, true));
 			try{
@@ -532,7 +538,7 @@ public class ThmSearch {
 		 * @param HighDimTDMatrix presented as *Sparse*Array's.
 		 * fullTermDocumentMxPath such as "0208_001/0208/FullTDMatrix.mx".
 		 */
-		public static void serializeHighDimensionalTDMx(ImmutableList<TheoremContainer> defThmList,
+		public static void serializeHighDimensionalTDMx(List<? extends TheoremContainer> defThmList,
 				String fullTermDocumentMxPath, Map<String, Integer> thmWordsFreqMap){			
 			//String HighDimTDSparseMatrix, 
 			/*ml = MathLinkFactory.createKernelLink(ARGV);
@@ -612,7 +618,7 @@ public class ThmSearch {
 		 * Create term document matrix for the set of theorems as given.
 		 * @param defThmList Theorem container for set of theorems.
 		 */
-		public static void createTermDocumentMatrixSVD(ImmutableList<TheoremContainer> defThmList) {			
+		public static void createTermDocumentMatrixSVD(List<? extends TheoremContainer> defThmList) {			
 			//docMx = TriggerMathThm2.mathThmMx();			
 			//mx to keep track of correlations between terms, mx.mx^T
 			//List<List<Integer>> corMxList = new ArrayList<List<Integer>>();

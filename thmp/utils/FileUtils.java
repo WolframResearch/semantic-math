@@ -177,7 +177,7 @@ public class FileUtils {
 				outPrintWriter.println(obj);
 				
 			} catch (IOException e) {
-			   logger.error("IOException while writing to unknown words file!");			   
+			   logger.error("appendObjToFile() - IOException while appending to file!");			   
 			}		
 	}
 	/**
@@ -473,11 +473,15 @@ public class FileUtils {
 			String OS_version = System.getProperty("os.version");
 			ARGV = new String[] { "-linkmode", "launch", "-linkname", "math -mathlink" };
 			if(OS_version.equals("2.6.32-696.3.1.el6.x86_64")){ //this only works on byblis68! Others don't have the 11.1.1 executable
-			ARGV = new String[]{"-linkmode", "launch", "-linkname",
+				ARGV = new String[]{"-linkmode", "launch", "-linkname",
 					"\"/Developer/Layouts/11.1.1/Executables/MathKernel\" -mathlink"};
+			}else if("3.10.0-514.16.1.el7.x86_64".equals(OS_version)){
+				//on puremath VM, right now this is used for debugging kernel aquisition
+				ARGV = new String[]{"-linkmode", "launch", "-linkname",
+					"\"/usr/local/Wolfram/Mathematica/11.1/Executables/MathKernel\" -mathlink"};
 			}
 			///Developer/Layouts/11.1.1/Executables
-			
+			logger.info("Launching kernel with path: " +Arrays.toString(ARGV));
 		} 
 		try {
 			ml = MathLinkFactory.createKernelLink(ARGV);

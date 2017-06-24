@@ -66,7 +66,7 @@ public class Maps {
 	//private static ServletContext servletContext;
 	
 	private static final Pattern LEXICON_LINE_PATTERN = Pattern.compile("\"([^\"]+)\" ([^\\s]+)");
-	private static String POS_TAGGER_PATH_STR;
+	private static final String POS_TAGGER_PATH_STR;
 	
 	// replace string with a break, usully a comma
 	//protected static List<String> breakList;
@@ -75,6 +75,10 @@ public class Maps {
 	protected static List<String> posList;	
 	//initialize with resource
 	
+	static{
+		String pathToPosTagger = "src/thmp/data/models/english-bidirectional-distsim.tagger";
+		POS_TAGGER_PATH_STR = FileUtils.getServletPath(pathToPosTagger);		
+	}
 	/**
 	 * Sets buffered readers.
 	 * @param fixedPhraseBuf
@@ -92,10 +96,9 @@ public class Maps {
 		servletContext = servletContext_;
 	}*/
 	
-	//should have commoin init class
-	public static void setServerPosTaggerPathStr(String path){
+	/*public static void setServerPosTaggerPathStr(String path){
 		POS_TAGGER_PATH_STR = path;
-	}
+	}*/
 	
 	public static String getServerPosTaggerPathStr(){
 		return POS_TAGGER_PATH_STR;

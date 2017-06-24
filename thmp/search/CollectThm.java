@@ -102,7 +102,7 @@ public class CollectThm {
 	private static final String[] SCORE1MATH_WORDS = new String[]{"show","have","any","every", "many"
 	};
 	private static final String[] SCORE0MATH_WORDS = new String[]{"such","say","will", "following","goodwillie","send", "iii",
-			"ii","i", "is"
+			"ii","i", "is","both"
 	};
 	//additional fluff words to add, that weren't listed previously
 	private static final String[] ADDITIONAL_FLUFF_WORDS = new String[]{"tex", "is", "are", "an"};

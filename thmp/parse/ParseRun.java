@@ -104,8 +104,8 @@ public class ParseRun {
 			try {
 				parseState = ThmP1.tokenize(curStrTrimmed, parseState);
 			} catch (IllegalSyntaxException e) {
-				System.out.println("Input contains illegal syntax!");
-				e.printStackTrace();
+				System.out.println("ParseRun - Input contains illegal syntax!");
+				//e.printStackTrace();
 				continue;
 			}
 			

@@ -23,6 +23,7 @@ import com.wolfram.jlink.MathLinkException;
 import thmp.exceptions.ParseRuntimeException.IllegalSyntaxException;
 import thmp.parse.ParseState.ParseStateBuilder;
 import thmp.search.CollectThm;
+import thmp.search.SearchState;
 
 /**
  * Parses thms and generate context vecs, write context vecs to file.
@@ -52,10 +53,6 @@ public class GenerateContextVector {
 		contextVecFilePath = path;
 	}
 	
-	/*public static void set_contextVecOutputURL(URL url){
-		outputStreamURL = url;
-	}*/
-	
 	/**
 	 * Encapsulate subclass, so can set resources such as contextVecFileStr.
 	 * And can call combineContextVectors() in outer class without initializing everything here.
@@ -63,10 +60,8 @@ public class GenerateContextVector {
 	 */
 	@Deprecated
 	public static class GetContextVec{
-		// bare thm list, without latex \label's or \index's, or \ref's, etc
-		//private static final List<String> bareThmList;
 		// matrix, same dimension of term-document matrix in search. 
-		private static final List<Map<Integer, Integer>> contextVecMapList = new ArrayList<Map<Integer, Integer>>();
+		//private static final List<Map<Integer, Integer>> contextVecMapList = new ArrayList<Map<Integer, Integer>>();
 		//list of strings
 		private static final List<String> contextVecStringList = new ArrayList<String>();		
 		//private static final KernelLink ml = thmp.utils.FileUtils.getKernelLink();
@@ -141,20 +136,7 @@ public class GenerateContextVector {
 			e.printStackTrace();
 		}		
 	}*/
-	
-	/**
-	 * Generates the context vectors.
-	 * @param bareThmList
-	 * @param contextVecList
-	 */
-	private static void generateContextVec(List<String> bareThmList, List<Map<Integer, Integer>> contextVecMapList
-			//, List<String> contextVecStringList1 <--shouldn't need this now.
-			){
-		for(String thm : bareThmList){			
-			Map<Integer, Integer> contextVecMap = createContextVector(contextVecMapList, thm);
-			//contextVecStringList1.add(contextVecStr);
-		}
-	}	
+		
 	}
 	
 	/**
@@ -162,39 +144,45 @@ public class GenerateContextVector {
 	 * @param input User's input string.
 	 * @return
 	 */
-	public static Map<Integer, Integer> createContextVector(String input) {
-		return createContextVector(null, input);
+	public static Map<Integer, Integer> createContextVector(String input, SearchState searchState) {
+		return createContextVector(null, input, searchState);
 	}
 	
 	/**
+	 * One searchState instance per query, so parseState is carrying data
+	 * for thm's parse.
 	 * @param contextVecMapList List of context vecs to be added to. <--why needed??
 	 * Don't create new list if null.
 	 * @param thm User's input string.
 	 * @return
 	 */
-	private static Map<Integer, Integer> createContextVector(List<Map<Integer, Integer>> contextVecMapList, String thm) {
+	private static Map<Integer, Integer> createContextVector(List<Map<Integer, Integer>> contextVecMapList, String thm,
+			SearchState searchState) {
 		
-		String[] strAr = ThmP1.preprocess(thm);
-		//System.out.println("****length " + strAr.length + " " + thm);
+		ParseState parseState = searchState.getParseState();
 		
-		ParseStateBuilder parseStateBuilder = new ParseStateBuilder();
-		parseStateBuilder.setWriteUnknownWordsToFile(WRITE_UNKNOWNWORDS);
-		ParseState parseState = parseStateBuilder.build();
-		
-		for(int i = 0; i < strAr.length; i++){
-			//alternate commented out line to enable tex converter
-			//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim()) ));
+		if(null == parseState){
+			ParseStateBuilder parseStateBuilder = new ParseStateBuilder();
+			parseStateBuilder.setWriteUnknownWordsToFile(WRITE_UNKNOWNWORDS);
+			parseState = parseStateBuilder.build();
+			boolean isVerbose = true;
+			ParseRun.parseInput(thm, parseState, isVerbose);	
 			
-			try {
-				parseState = ThmP1.tokenize(strAr[i].trim(), parseState);
-			} catch (IllegalSyntaxException e) {
-				e.printStackTrace();
-				continue;
-			}
-			parseState = ThmP1.parse(parseState);
-			//parseContextVecList.add(parseState.getContextVec());	
+			/*String[] strAr = ThmP1.preprocess(thm);			
+			for(int i = 0; i < strAr.length; i++){
+				//alternate commented out line to enable tex converter
+				//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim()) ));			
+				try {
+					parseState = ThmP1.tokenize(strAr[i].trim(), parseState);
+				} catch (IllegalSyntaxException e) {
+					e.printStackTrace();
+					continue;
+				}
+				parseState = ThmP1.parse(parseState);
+				//parseContextVecList.add(parseState.getContextVec());	
+			}*/
 		}
-		
+		searchState.setParseState(parseState);
 		Map<Integer, Integer> contextVecMap = parseState.getCurThmCombinedContextVecMap();
 		
 		//get context vector and add to contextVecMx

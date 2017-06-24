@@ -121,6 +121,8 @@ public class DetectHypothesis {
 	private static final Pattern NEW_DOCUMENT_PATTERN = Pattern.compile(".*\\\\documentclass.*");
 	private static final int NUM_NON_TEX_TOKEN_THRESHOLD = 4;
 	private static final int THM_MAX_CHAR_SIZE = 1800;
+	//this path is only used in this class, for inspection, so not in SearchMetadata
+	private static final String parserErrorLogPath = "src/thmp/data/parserErrorLog.txt";
 	
 	static{
 		FileUtils.set_dataGenerationMode();	
@@ -129,7 +131,7 @@ public class DetectHypothesis {
 		ALL_THM_WORDS_FREQ_MAP = CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno();//.get_contextVecWordsNextTimeMap();
 		//this SHOULD be done at the end! So keep in sync with the others .dat, so don't need to parse everything twice.
 		//Then use current list, but wordsList's from previous runs.
-		//ThmSearch.TermDocumentMatrix.createTermDocumentMatrixSVD();
+		//ThmSearch.TermDocumentMatrix.createTermDocumentMatrixSVD();		
 	}
 	
 	public static class Runner{
@@ -433,7 +435,7 @@ public class DetectHypothesis {
 				//inputBF = new BufferedReader(new FileReader("src/thmp/data/samplePaper1.txt"));
 				inputFile = new File("src/thmp/data/Total.txt");
 				inputFile = new File("src/thmp/data/math0210227");
-				inputFile = new File("/Users/yihed/Downloads/math0404441");
+				inputFile = new File("/Users/yihed/Downloads/math0011136");
 				//inputFile = new File("src/thmp/data/thmsFeb26.txt");
 				//inputBF = new BufferedReader(new FileReader("src/thmp/data/Total.txt"));
 				//inputBF = new BufferedReader(new FileReader("src/thmp/data/fieldsThms2.txt"));
@@ -467,8 +469,11 @@ public class DetectHypothesis {
 					try{
 						extractThmsFromFiles(inputBF, defThmList, thmHypPairList, stats, tarFileName);
 					}catch(Throwable e){
-						System.out.println("File being processed: " + fileName);
-						throw e;
+						String msg = "File being processed: " + fileName + " with trace " + e;
+						FileUtils.appendObjToFile(msg, parserErrorLogPath);
+						logger.error(msg);
+						System.out.println(msg);
+						if(true)throw e;
 					}
 					FileUtils.silentClose(inputBF);
 				}
@@ -605,8 +610,33 @@ public class DetectHypothesis {
 		}
 		logger.info("Done serializing parsedExpressionList & co to files! Beginning to compute SVD for parsedExpressionList thms.");
 		
+		createTimeStamp(curTexFilesDirPath);
+		
+		/* Creates the term document matrix, and serializes to .mx file.
+		 * If this step fails, need to re-run to produce matrix. This should run at end of this method,
+		 * so others have already serialized in case this fails.*/
+		ImmutableList<TheoremContainer> immutableThmHypPairList = ImmutableList.copyOf(thmHypPairList);
+		if(projectionPathsNotNull){
+			Map<String, Integer> wordFreqMap = getWordFreqMap(pathToWordFreqMap);
+			//first serialize full dimensional TD mx, then project using provided projection mx.
+			ThmSearch.TermDocumentMatrix.serializeHighDimensionalTDMx(immutableThmHypPairList, fullTermDocumentMxPath, wordFreqMap);
+			//replace the last bit of the path with the name of the projected(reduced) mx.
+			String pathToReducedDimTDMx = replaceFullTDMxName(fullTermDocumentMxPath, ThmSearch.TermDocumentMatrix.PROJECTED_MX_NAME);
+			ThmSearch.TermDocumentMatrix.projectTermDocumentMatrix(fullTermDocumentMxPath, pathToProjectionMx, 
+					pathToReducedDimTDMx);
+		}else{
+			ThmSearch.TermDocumentMatrix.createTermDocumentMatrixSVD(immutableThmHypPairList);
+		}
+	}
+
+	/**
+	 * Create timestamp in the current processing directory
+	 * @param curTexFilesDirPath
+	 */
+	private static void createTimeStamp(String curTexFilesDirPath) {
 		//delete previous timestamp files first
 		Runtime rt = Runtime.getRuntime();
+		////if(true) return;
 		try {
 			rt.exec("rm " + curTexFilesDirPath + "*timestamp");
 		} catch (IOException e) {
@@ -627,22 +657,6 @@ public class DetectHypothesis {
 		}
 		dateSB.append("timestamp");
 		FileUtils.writeToFile("", dateSB.toString());
-		
-		/* Creates the term document matrix, and serializes to .mx file.
-		 * If this step fails, need to re-run to produce matrix. This should run at end of this method,
-		 * so others have already serialized in case this fails.*/
-		ImmutableList<TheoremContainer> immutableThmHypPairList = ImmutableList.copyOf(thmHypPairList);
-		if(projectionPathsNotNull){
-			Map<String, Integer> wordFreqMap = getWordFreqMap(pathToWordFreqMap);
-			//first serialize full dimensional TD mx, then project using provided projection mx.
-			ThmSearch.TermDocumentMatrix.serializeHighDimensionalTDMx(immutableThmHypPairList, fullTermDocumentMxPath, wordFreqMap);
-			//replace the last bit of the path with the name of the projected(reduced) mx.
-			String pathToReducedDimTDMx = replaceFullTDMxName(fullTermDocumentMxPath, ThmSearch.TermDocumentMatrix.PROJECTED_MX_NAME);
-			ThmSearch.TermDocumentMatrix.projectTermDocumentMatrix(fullTermDocumentMxPath, pathToProjectionMx, 
-					pathToReducedDimTDMx);
-		}else{
-			ThmSearch.TermDocumentMatrix.createTermDocumentMatrixSVD(immutableThmHypPairList);
-		}
 	}
 	
 	/**
@@ -1062,10 +1076,8 @@ public class DetectHypothesis {
 			String msg = "Error when parsing thm: " + thmStr;
 			System.out.println(msg);
 			logger.error(msg);
-			throw e;
-		}
-		//System.out.println("~~~~~~Done parsing~~~~~~~");		
-		
+			////throw e;
+		}		
 		if(parseState.numNonTexTokens() < NUM_NON_TEX_TOKEN_THRESHOLD || parseState.curParseExcessiveLatex()){
 			//set parseState flag, not strictly necessary, since cleanup will happen soon,
 			//but set for safe practice.
@@ -1074,8 +1086,7 @@ public class DetectHypothesis {
 		}
 		
 		//filter through text and try to pick up definitions.
-		for(int i = 0; i < thmStrLen; i++){
-			
+		for(int i = 0; i < thmStrLen; i++){			
 			char curChar = thmStr.charAt(i);			
 			//go through thm, get the variables that need to be defined
 			//once inside Latex, use delimiters, should also take into account
@@ -1124,6 +1135,7 @@ public class DetectHypothesis {
 		//parsedExpressionList.add(parsedExpression);
 		ThmHypPair thmHypPair = new ThmHypPair(thmStr, definitionStr, srcFileName);
 		thmHypPairList.add(thmHypPair);
+		//if(true) throw new IllegalStateException("thmHypPair.getEntireThmStr() :"+thmHypPair.getEntireThmStr());
 		ContextRelationVecPair vecsPair = new ContextRelationVecPair(combinedContextVecMap, relationalContextVec);
 		contextRelationVecPairList.add(vecsPair);
 		parsedExpressionStrList.add(thmHypPair.toString());

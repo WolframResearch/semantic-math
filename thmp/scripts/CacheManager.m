@@ -25,7 +25,7 @@ selected=Select[indexDistAr,#[[2]]<threshold&];If[{}=!=selected,validIndices=fil
 
 
 (*filter out vecs that are close to the zero vec, without much content, e.g. those that contain a lot of tex*)
-filterNonSense[candidateVecs_?MatrixQ]:=Module[{list},list=Reap[Map[If[EuclideanDistance[$ZeroVec,candidateVecs[[#]]]>0.004,Sow[#]]&,
+filterNonSense[candidateVecs_?MatrixQ]:=Module[{list},list=Reap[Map[If[EuclideanDistance[$ZeroVec,candidateVecs[[#]]]>0.0035,Sow[#]]&,
 Range[Length[candidateVecs]]]];If[list[[2]]=!={},list[[2,1]],{}]]
 
 

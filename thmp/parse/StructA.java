@@ -800,7 +800,7 @@ public class StructA<A, B> extends Struct{
 	 */
 	@Override
 	public void setContextVecEntry(int structParentIndex, Map<Integer, Integer> contextVecMap, boolean adjustVecFromCommand){
-		ParseTreeToVec.setStructAContextVecEntry(this, structParentIndex, contextVecMap, adjustVecFromCommand);
+		ParseTreeToContextVec.setStructAContextVecEntry(this, structParentIndex, contextVecMap, adjustVecFromCommand);
 	}
 	
 	/**

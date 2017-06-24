@@ -31,7 +31,7 @@ public class ContextSearch implements Searcher<Map<Integer, Integer>>{
 	private static final boolean DEBUG = false;
 	private static final Logger logger = LogManager.getLogger(SearchIntersection.class);
 	
-	private SearcherState<Map<Integer, Integer>> searcherState;
+	private QueryVecContainer<Map<Integer, Integer>> searcherState;
 	
 	static{
 		//get the deserialized vectors from CollectThm instead of from thm vec file!
@@ -40,18 +40,21 @@ public class ContextSearch implements Searcher<Map<Integer, Integer>>{
 	}
 
 	@Override
-	public void setSearcherState(SearcherState<Map<Integer, Integer>> searcherState_){
+	public void setSearcherState(QueryVecContainer<Map<Integer, Integer>> searcherState_){
 		searcherState = searcherState_;
 	}
 	
 	@Override
-	public SearcherState<Map<Integer, Integer>> getSearcherState(){
+	public QueryVecContainer<Map<Integer, Integer>> getSearcherState(){
 		return this.searcherState;
 	}
 	
+	/**
+	 * @param query In English.
+	 */
 	@Override
-	public List<Integer> search(String query, List<Integer> nearestThmIndexList){		
-		return contextSearchMap(query, nearestThmIndexList, this);		
+	public List<Integer> search(String query, List<Integer> nearestThmIndexList, SearchState searchState){		
+		return contextSearchMap(query, nearestThmIndexList, this, searchState);		
 	}
 	
 	/**
@@ -64,7 +67,7 @@ public class ContextSearch implements Searcher<Map<Integer, Integer>>{
 	 * @return Gives an ordered list of vectors based on context.
 	 */
 	public static List<Integer> contextSearchMap(String query, List<Integer> nearestThmIndexList, 
-			Searcher<Map<Integer, Integer>> searcher){
+			Searcher<Map<Integer, Integer>> searcher, SearchState searchState){
 		//short-circuit if query contains only 1 word		
 		
 		logger.info("Starting context search...");
@@ -78,15 +81,15 @@ public class ContextSearch implements Searcher<Map<Integer, Integer>>{
 		//String queryContextVec;
 		Map<Integer, Integer> queryContextVecMap;
 		if(null == searcher){
-			queryContextVecMap = thmp.parse.GenerateContextVector.createContextVector(query);
+			queryContextVecMap = thmp.parse.GenerateContextVector.createContextVector(query, searchState);
 		}else{
 			//optimization that stores vec in searcherState, 
 			//to avoid repeatedly parsing the same query string.
-			SearcherState<Map<Integer, Integer>> searcherState;
+			QueryVecContainer<Map<Integer, Integer>> searcherState;
 			
 			if(null == (searcherState = searcher.getSearcherState())){
-				queryContextVecMap = thmp.parse.GenerateContextVector.createContextVector(query);
-				searcher.setSearcherState(new SearcherState<Map<Integer, Integer>>(queryContextVecMap));
+				queryContextVecMap = thmp.parse.GenerateContextVector.createContextVector(query, searchState);
+				searcher.setSearcherState(new QueryVecContainer<Map<Integer, Integer>>(queryContextVecMap));
 			}else{
 				queryContextVecMap = searcherState.getQueryVec();
 				if(null == queryContextVecMap){
@@ -120,8 +123,14 @@ public class ContextSearch implements Searcher<Map<Integer, Integer>>{
 				Integer curThmVecMapEntryVal = curThmVecMap.get(wordIndex);
 				//System.out.println("query vec key/val: " + wordIndex + ",  " +queryVecEntry.getValue() 
 					//	+ ". curThmVecMapEntryVal " + curThmVecMapEntryVal + " equals: " +(queryVecEntry.getValue().equals(curThmVecMapEntryVal)));
+				final int contextCoincidingAddition = 2;
 				if(queryVecEntry.getValue().equals(curThmVecMapEntryVal)){
-					numCoinciding++;
+					if(curThmVecMapEntryVal < 0){
+						//if only agree up to being the same universal or existential qualifier
+						numCoinciding++;					
+					}else{
+						numCoinciding += contextCoincidingAddition;
+					}
 				}				
 			}
 			//System.out.println("ContextSearch - curThmVecMap "+ curThmVecMap);
@@ -386,8 +395,8 @@ public class ContextSearch implements Searcher<Map<Integer, Integer>>{
 			
 			//find best intersection of these two lists. nearestVecList is 1-based, but intersectionVecList is 0-based! 
 			//now both are 0-based.
-			
-			List<Integer> bestCommonVecs = contextSearchMap(thm, nearestVecList, null);
+			SearchState searchState = new SearchState();
+			List<Integer> bestCommonVecs = contextSearchMap(thm, nearestVecList, null, searchState);
 			
 			/*for(int d : bestCommonVecs){
 				System.out.println(TriggerMathThm2.getThm(d));

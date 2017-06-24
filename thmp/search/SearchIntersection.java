@@ -128,10 +128,11 @@ public class SearchIntersection {
 	 * @return List of thm Strings.
 	 */
 	public static List<ThmHypPair> getHighestThmStringList(String input, Set<String> searchWordsSet,
-			boolean contextSearchBool) {
-		SearchState searchState = intersectionSearch(input, searchWordsSet, contextSearchBool);
-		if (null == searchState)
+			SearchState searchState, boolean contextSearchBool) {
+		intersectionSearch(input, searchWordsSet, searchState, contextSearchBool);
+		if (null == searchState){
 			return Collections.<ThmHypPair>emptyList();
+		}
 		List<Integer> highestThmsList = searchState.intersectionVecList();
 		if (null == highestThmsList){
 			return Collections.<ThmHypPair>emptyList();
@@ -146,11 +147,13 @@ public class SearchIntersection {
 	 * @param num
 	 * @return
 	 */
-	public static List<Integer> getHighestThmList(String input, Set<String> searchWordsSet, boolean contextSearchBool,
+	public static List<Integer> getHighestThmList(String input, Set<String> searchWordsSet, SearchState searchState,
+			boolean contextSearchBool,
 			int... num) {
-		SearchState searchState = intersectionSearch(input, searchWordsSet, contextSearchBool, num);
-		if (null == searchState)
+		intersectionSearch(input, searchWordsSet, searchState, contextSearchBool, num);
+		if (null == searchState){
 			return Collections.emptyList();
+		}
 		return searchState.intersectionVecList();
 	}
 
@@ -223,7 +226,8 @@ public class SearchIntersection {
 	 * @return SearchState containing list of indices of highest-scored thms.
 	 *         Sorted in ascending order, best first. List is 0-based.
 	 */
-	public static SearchState intersectionSearch(String input, Set<String> searchWordsSet, boolean contextSearchBool,
+	public static SearchState intersectionSearch(String input, Set<String> searchWordsSet, 
+			SearchState searchState, boolean contextSearchBool,
 			//ListMultimap<String, Integer> wordThmsIndexMMap,
 			int... num) {
 
@@ -241,10 +245,7 @@ public class SearchIntersection {
 		SetMultimap<Integer, Integer> thmWordSpanMMap = HashMultimap.create();
 
 		String[] inputWordsAr = WordForms.splitThmIntoSearchWords(input.toLowerCase());
-		// create searchState to record the intersectionVecList, and map of
-		// tokens and their span scores.
-		SearchState searchState = new SearchState();
-
+		
 		// determine if first token is integer, if yes, use it as the number of
 		// closest thms. Else use NUM_NEAREST_VECS as default value.
 		int numHighest = NUM_NEAREST_VECS;
@@ -424,13 +425,9 @@ public class SearchIntersection {
 		}
 		// re-order top entries based on context search, if enabled
 		if (contextSearchBool) {
-			// List<Integer> list = ContextSearch.contextSearch(input,
-			// highestThmList);
-			// if(null != list){
 			Searcher<Map<Integer, Integer>> searcher = new ContextSearch();
 			int tupleSz = CONTEXT_SEARCH_TUPLE_SIZE;
-			highestThmList = SearchCombined.searchVecWithTuple(input, highestThmList, tupleSz, searcher);
-			// }
+			highestThmList = SearchCombined.searchVecWithTuple(input, highestThmList, tupleSz, searcher, searchState);
 		}
 		logger.info("Highest thm list obtained, intersection search done!");
 		searchState.set_intersectionVecList(highestThmList);
@@ -819,8 +816,9 @@ public class SearchIntersection {
 				// highestThms = ContextSearch.contextSearch(thm, highestThms);
 			}
 
+			SearchState searchState = new SearchState();
 			// searchWordsSet is null.
-			List<Integer> highestThms = getHighestThmList(thm, null, contextSearchBool, NUM_NEAREST_VECS);
+			List<Integer> highestThms = getHighestThmList(thm, null, searchState, contextSearchBool, NUM_NEAREST_VECS);
 
 			if (highestThms == null){
 				continue;
@@ -830,9 +828,10 @@ public class SearchIntersection {
 			 * thmAr[0].equals("context")){ highestThms =
 			 * ContextSearch.contextSearch(thm, highestThms); }
 			 */
+			int counter = 0;
 			System.out.println("~ SEARCH RESULTS ~");
 			for (Integer thmIndex : highestThms) {
-				System.out.println(ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex).thmStr());
+				System.out.println(counter++ + " ++ " + ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex));
 			}
 		}
 		sc.close();

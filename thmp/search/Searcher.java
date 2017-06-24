@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 
-import thmp.search.Searcher.SearcherState;
+import thmp.search.Searcher.QueryVecContainer;
 
 /**
  * Search interface to be implemented by various search methods.
@@ -14,10 +14,10 @@ import thmp.search.Searcher.SearcherState;
  */
 public interface Searcher<S> {
 
-	List<Integer> search(String thm, List<Integer> list);
+	List<Integer> search(String thm, List<Integer> list, SearchState searchState);
 	
-	void setSearcherState(SearcherState<S> searcherState_);
-	SearcherState<S> getSearcherState();
+	void setSearcherState(QueryVecContainer<S> searcherState_);
+	QueryVecContainer<S> getSearcherState();
 	
 	/**
 	 * Searcher state for storing any already-computed vectors,
@@ -25,10 +25,10 @@ public interface Searcher<S> {
 	 * T is the type of the vector, e.g. BigInteger for relational vecs,
 	 * and Map<Integer, Integer> for context vec.
 	 */
-	public static class SearcherState<T>{
-		T queryVector;
+	public static class QueryVecContainer<T>{
+		private T queryVector;
 		
-		public SearcherState(T vec){
+		public QueryVecContainer(T vec){
 			queryVector = vec;
 		}
 		

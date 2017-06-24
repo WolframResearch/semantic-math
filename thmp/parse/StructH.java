@@ -925,7 +925,7 @@ public class StructH<H> extends Struct{
 	 */
 	@Override
 	public void setContextVecEntry(int structParentIndex, Map<Integer, Integer> contextVecMap, boolean adjustVecFromCommand){
-		ParseTreeToVec.setStructHContextVecEntry(this, structParentIndex, contextVecMap, adjustVecFromCommand);
+		ParseTreeToContextVec.setStructHContextVecEntry(this, structParentIndex, contextVecMap, adjustVecFromCommand);
 	}
 	
 }
