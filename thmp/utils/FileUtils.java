@@ -471,14 +471,22 @@ public class FileUtils {
 			// "\"/usr/local/Wolfram/Mathematica/11.0/Executables/MathKernel\"
 			// -mathlink"};
 			String OS_version = System.getProperty("os.version");
-			ARGV = new String[] { "-linkmode", "launch", "-linkname", "math -mathlink" };
-			if(OS_version.equals("2.6.32-696.3.1.el6.x86_64")){ //this only works on byblis68! Others don't have the 11.1.1 executable
+			
+			Path kernelPath = Paths.get("/Developer/Layouts/11.1.1/Executables/MathKernel");
+			if(Files.exists(kernelPath)){ //e.g. on byblis68
+				ARGV = new String[]{"-linkmode", "launch", "-linkname",
+				"\"/Developer/Layouts/11.1.1/Executables/MathKernel\" -mathlink"};	
+			}
+			/*if(OS_version.equals("2.6.32-696.3.1.el6.x86_64")){
 				ARGV = new String[]{"-linkmode", "launch", "-linkname",
 					"\"/Developer/Layouts/11.1.1/Executables/MathKernel\" -mathlink"};
-			}else if("3.10.0-514.16.1.el7.x86_64".equals(OS_version)){
+			}*/
+			else if("3.10.0-514.16.1.el7.x86_64".equals(OS_version)){
 				//on puremath VM, right now this is used for debugging kernel aquisition
 				ARGV = new String[]{"-linkmode", "launch", "-linkname",
 					"\"/usr/local/Wolfram/Mathematica/11.1/Executables/MathKernel\" -mathlink"};
+			}else{
+				ARGV = new String[] { "-linkmode", "launch", "-linkname", "math -mathlink" };
 			}
 			///Developer/Layouts/11.1.1/Executables
 			logger.info("Launching kernel with path: " +Arrays.toString(ARGV));

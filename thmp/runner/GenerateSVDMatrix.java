@@ -32,7 +32,7 @@ public class GenerateSVDMatrix{
 		
 		@SuppressWarnings("unchecked")
 		List<ParsedExpression> parsedExpressionList = (List<ParsedExpression>)FileUtils.deserializeListFromFile(fileStr);
-		thmp.utils.ResourceDeposit.setParsedExpressionList(parsedExpressionList);
+		//thmp.utils.ResourceDeposit.setParsedExpressionList(parsedExpressionList);
 		
 		/*Do *NOT* set gatheringDataBoolToTrue()! Since need to use word maps gathered from last time.*/
 		//Searcher.SearchMetaData.set_gatheringDataBoolToTrue();

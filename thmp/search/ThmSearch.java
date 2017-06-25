@@ -65,7 +65,7 @@ public class ThmSearch {
 		private static final boolean DEBUG = false;
 		private static final String CACHE_BAG_NAME = "cacheBag";
 		private static final String TIME_BAG_NAME = "timeBag";
-		//distance threshold for Nearest. To be converted programmatically using samples!!
+		//distance threshold for Nearest. To be computed programmatically using samples.
 		private static final double DISTANCE_THRESHOLD;
 		//total number of mx files
 		private static final int TOTAL_MX_COUNT = ThmHypPairGet.totalBundleNum();
@@ -227,7 +227,7 @@ public class ThmSearch {
 	 */
 	private static double computeDistanceThreshold(WLEvaluationMedium medium){
 		//**June 19, debugging for now, skip this step, since slows down startup.
-		if(true) return 0.08;//0.06;// 0.02360689779;
+		if(true) return 0.08;//0.06;// 0.02360689779; 0.08 is already quite high
 		//first String is thm, second is query
 		String thm0 = "$\\lambda$ run over all pairs of partitions which are complementary with respect to $R$";
 		String thm1 = "The interchange of two distant critical points of the surface diagram does not change the induced map on homology";
@@ -323,8 +323,7 @@ public class ThmSearch {
 			
 			//ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"];");
 			//ml.evaluate("q = Inverse[d].Transpose[u].Transpose["+queryStr+"/.{0.0->mxMeanValue}];");
-			//this step is costly! Don't compute inverse each time!
-			//ml.evaluate("q = dInverse.uTranspose.q;");
+			
 			//q no longer has 0.0 entries cause 0.1*corMx has been added. <--could still have 0.0 entries
 			//ml.evaluate("q = dInverse.uTranspose.(q/.{0.0->mxMeanValue});");
 			//ml.evaluate("q = Inverse[d].Transpose[u].(q/.{0.0->mxMeanValue});");
@@ -336,7 +335,7 @@ public class ThmSearch {
 			if(!USE_FULL_MX){
 				/*q is column vector*/
 				getResult = false;
-				qVec = evaluateWLCommand(medium, "q = dInverse.uTranspose.q0", getResult, true);
+				qVec = evaluateWLCommand(medium, "q = dInverse.uTranspose.(q0/.{0.0->mxMeanValue})", getResult, true);
 				//ml.evaluate("q = dInverse.uTranspose.q0;");
 				//ml.discardAnswer();
 				if(getResult){
@@ -528,8 +527,9 @@ public class ThmSearch {
 		/*Name deliberately does not include .dat*/
 		public static final String COMBINED_PARSEDEXPRESSION_LIST_FILE_NAME_ROOT = "combinedParsedExpressionList";
 		private static final int NUM_SINGULAR_VAL_TO_KEEP = 30;
-		protected static final double COR_MX_SCALING_FACTOR = 0.04;
+		protected static final double COR_MX_SCALING_FACTOR = 0.05;
 		public static final String DATA_ROOT_DIR_SLASH = "src/thmp/data/";
+		private static final double COR_CLIP_THRESHOLD = 0.5;
 		
 		private static KernelLink ml;
 		/**
@@ -699,7 +699,7 @@ public class ThmSearch {
 				  not theorems. */
 				//subtract IdentityMatrix to avoid self-compounding
 				ml.evaluate("corMx = Clip[Correlation[Transpose[m]]-IdentityMatrix[" + rowDimension 
-						+ "], {.6, Infinity}, {0, 0}]/.Indeterminate->0.0;");
+						+ "], {"+ COR_CLIP_THRESHOLD +", Infinity}, {0, 0}]/.Indeterminate->0.0;");
 				
 				//ml.waitForAnswer();
 				//System.out.println("clipped corr mx: " + ml.getExpr());
@@ -717,9 +717,13 @@ public class ThmSearch {
 				logger.info(msg);
 				System.out.println(msg);
 				
-				//the entries in corMx.m can range from 0 to ~6 //This should be the same percentage as 
-				//when forming query vecs!
-				ml.evaluate("mx = m + .08*corMx.m;");
+				//ml.evaluate("mxMeanValue = Mean[Flatten[mx]]; ReplaceAll[mx, 0.->mxMeanValue];");
+				
+				//This should be the same percentage as 
+				//when forming query vecs! 
+				//Note that this will unsparsify! Since corMx is not sparse.
+				ml.evaluate("mx = m + "+TermDocumentMatrix.COR_MX_SCALING_FACTOR+"*corMx.m;"
+						+ "mxMeanValue = Mean[Flatten[mx]]; ReplaceAll[mx, 0.->mxMeanValue];");
 				if(getCorMx){
 					ml.waitForAnswer();
 					Expr expr = ml.getExpr();
@@ -744,10 +748,9 @@ public class ThmSearch {
 				//write matrix to file, so no need to form it each time
 				
 				//System.out.println(nearestVec.length() + "  " + Arrays.toString((int[])nearestVec.part(1).asArray(Expr.INTEGER, 1)));
-				String dimMsg = "Dimensions of docMx: " + rowDimension + " " +mxColDim + ". Starting SVD...";
+				String dimMsg = "Added corMx! Dimensions of docMx: " + rowDimension + " " +mxColDim + ". Starting SVD...";
 				System.out.print(dimMsg);
 				logger.info(dimMsg);
-				//System.out.println(mx);
 				
 				/*ml.evaluate("Mean[Mean[0.2*Transpose[ Covariance[Transpose[mx]].mx ]]]");
 				//ml.evaluate("mx");
@@ -791,9 +794,9 @@ public class ThmSearch {
 				//randomly select column vectors to approximate mean
 				//adjust these!
 				int numRandomVecs = mxColDim < 500 ? 60 : (mxColDim < 5000 ? 100 : 150);
-				ml.evaluate("mxMeanValue = Mean[Flatten[mx[[All, #]]& /@ RandomInteger[{1,"+ mxColDim +"}," + numRandomVecs + "]]];"
-						+ "dInverse=Inverse[d]; uTranspose=Transpose[u];"
-						);				
+				ml.evaluate(//"mxMeanValue = Mean[Flatten[mx[[All, #]]& /@ RandomInteger[{1,"+ mxColDim +"}," + numRandomVecs + "]]];"+
+						 "dInverse=Inverse[d]; uTranspose=Transpose[u];"
+						);			
 				//ml.evaluate("mxMeanValue = Mean[Flatten[v]];");
 				ml.discardAnswer();
 				//System.out.println("mxMeanValue " + ml.getExpr());

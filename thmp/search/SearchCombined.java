@@ -417,8 +417,7 @@ public class SearchCombined {
 			List<Integer> sublist = thmCandidateList.subList(startingIndex, endingIndex);
 			List<Integer> reorderedSublist = searcher.search(queryStr, sublist, searchState);
 			reorderedList.addAll(reorderedSublist);
-		}
-		
+		}		
 		return reorderedList;
 	}
 

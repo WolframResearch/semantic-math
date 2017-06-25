@@ -631,7 +631,8 @@ public class DetectHypothesis {
 
 	/**
 	 * Create timestamp in the current processing directory
-	 * @param curTexFilesDirPath
+	 * 
+	 * @param curTexFilesDirPath Already includes slash
 	 */
 	private static void createTimeStamp(String curTexFilesDirPath) {
 		//delete previous timestamp files first

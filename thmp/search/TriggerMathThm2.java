@@ -328,14 +328,15 @@ public class TriggerMathThm2 {
 			//String[] curMathObjCol = WordForms.splitThmIntoSearchWords(thm.toLowerCase());
 			String[] thmAr = WordForms.splitThmIntoSearchWords(thm.toLowerCase());
 			
-			int queryVecLen = ThmSearch.ThmSearchQuery.getQUERY_VEC_LENGTH();
+			//int queryVecLen = ThmSearch.ThmSearchQuery.getQUERY_VEC_LENGTH();
+			int queryVecLen = TriggerMathThm2.mathThmMxRowDim();
 			//logger.info("TriggerMathThm - queryVecLen: " + queryVecLen);
 			//System.out.println("TriggerMathThm2 - query vector length: " + queryVecLen);
 			//double[] queryVec = new double[queryVecLen];
 			double norm = 0;
 			//highest weight amongst the single words
 			double highestWeight = 0;
-			List<Integer> priorityWordsIndexList = new ArrayList<Integer>();
+			//List<Integer> priorityWordsIndexList = new ArrayList<Integer>();
 			List<IndexScorePair> indexScorePairList = new ArrayList<IndexScorePair>();
 			//get norm first, form unnormalized vector, then divide terms by log of norm
 			for (int i = 0; i < thmAr.length; i++) {
@@ -389,10 +390,10 @@ public class TriggerMathThm2 {
 			
 			//Sqrt is usually too large, so take log instead of sqrt.
 			//norm = norm < 3 ? 1 : (int)Math.sqrt(norm);
-			norm = Math.sqrt(Math.sqrt(norm)); //<--needs to be consistent with querying!!!
-			//divide by log of norm
-			norm = norm == 0 ? 1 : norm;
-				
+			//This *must* be consistent with forming query vectors.
+			/**Experiment June 26, 2017 norm = Math.sqrt(Math.sqrt(norm)); 
+			norm = norm == 0 ? 1 : norm;*/
+			norm  = 1;
 			for(IndexScorePair pair : indexScorePairList){
 				int keyWordIndex = pair.index;
 				double keyWordScore = pair.score;
@@ -514,8 +515,10 @@ public class TriggerMathThm2 {
 		//avoid division by 0 apocalypse, when it was log
 		
 		//norm = norm < 3 ? 1 : (int)Math.log(norm);
-		norm = Math.sqrt(Math.sqrt(norm));
-		norm = norm == 0 ? 1 : norm;
+		/**Experiment June 2017 norm = Math.sqrt(Math.sqrt(norm));
+		norm = norm == 0 ? 1 : norm;*/
+		
+		norm  = 1;
 		//divide entries of triggerTermsVec by norm
 		for(int i = 0; i < queryVec.length; i++){
 			double prevScore = queryVec[i]; 
