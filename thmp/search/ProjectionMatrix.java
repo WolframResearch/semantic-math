@@ -18,6 +18,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
 import thmp.parse.ParsedExpression;
+import thmp.parse.DetectHypothesis;
 import thmp.parse.DetectHypothesis.DefinitionListWithThm;
 import thmp.search.SearchCombined.ThmHypPair;
 import thmp.search.Searcher.SearchConfiguration;
@@ -83,6 +84,9 @@ public class ProjectionMatrix {
 		List<ContextRelationVecPair> combinedVecsList = new ArrayList<ContextRelationVecPair>();
 		List<Integer> bundleStartThmIndexList = new ArrayList<Integer>();
 		
+		String thmsStringListDestPath = TermDocumentMatrix.DATA_ROOT_DIR_SLASH + TermDocumentMatrix.ALL_THM_STRING_FILE_NAME;
+		FileUtils.runtimeExec("rm " + thmsStringListDestPath);
+		
 		int loopTotal = argsLen / TAR_COUNT_PER_BUNDLE + 1;
 		int vecsFileNameCounter = 0;
 		//will go up to O(10^6) when all tars are included.
@@ -99,22 +103,22 @@ public class ProjectionMatrix {
 			if(end > start){
 				bundleStartThmIndexList.add(thmCounter);
 				for(int j = start; j < end; j++){
-					//be sure to check it's valid path to valid .mx
-					String fileName = args[j];
-					if(!(new File(fileName)).exists()){
+					String dirName = args[j];
+					if(!(new File(dirName)).exists()){
 						continue;
 					}
-					String path_j = FileUtils.addIfAbsentTrailingSlashToPath(fileName);
+					String path_j = FileUtils.addIfAbsentTrailingSlashToPath(dirName);
 					projectedMxFilePathList.add(path_j + ThmSearch.TermDocumentMatrix.PROJECTED_MX_NAME + ".mx");	
 					String peFilePath = path_j + ThmSearch.TermDocumentMatrix.PARSEDEXPRESSION_LIST_FILE_NAME_ROOT;
-					///temporary adjustment to accomodate some nonuniformized data during experimentation - June 2017.
-					/*if(!Files.exists(Paths.get(peFilePath))){
-						peFilePath += ".dat";
-					}*/					
+									
 					String vecsFilePath = path_j + "vecs/" + ThmSearch.TermDocumentMatrix.CONTEXT_VEC_PAIR_LIST_FILE_NAME;
 					String wordThmIndexMMapPath = path_j + SearchMetaData.wordThmIndexMMapSerialFileName();
 					thmCounter = addExprsToLists(peFilePath, combinedPEList, vecsFilePath, combinedVecsList, wordThmIndexMMapPath,
 							combinedWordThmIndexMMap, thmCounter);
+					
+					//append lists of ThmHypPair's to one file					
+					String thmsListOriginPath = path_j + TermDocumentMatrix.ALL_THM_STRING_FILE_NAME;
+					FileUtils.runtimeExec("cat " + thmsListOriginPath + " >> " + thmsStringListDestPath);
 				}
 				//thmCounter += combinedPEList.size();
 				System.out.println("Serializing combinedPEList size: " + combinedPEList.size() + "   index: " +i);

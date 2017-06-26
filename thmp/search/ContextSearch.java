@@ -158,7 +158,7 @@ public class ContextSearch implements Searcher<Map<Integer, Integer>>{
 			System.out.println(ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex));
 		}
 		
-		if(null != nearestVecList){
+		if(!nearestVecList.isEmpty()){
 			return nearestVecList;
 		}else{
 			return nearestThmIndexList;

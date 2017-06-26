@@ -504,6 +504,21 @@ public class FileUtils {
 		return ml;
 	}
 
+	/**
+	 * Execute the given command.
+	 * @param cmd
+	 */
+	public static void runtimeExec(String cmd){
+		Runtime rt = Runtime.getRuntime();
+		try {
+			rt.exec(cmd);
+		} catch (IOException e) {
+			String msg = "Execution failed for command " + cmd;
+			System.out.println(msg);
+			logger.error(msg);
+		}
+	}
+	
 	public static String getRELATED_WORDS_MAP_SERIAL_FILE_STR(){
 		return RELATED_WORDS_MAP_SERIAL_FILE_STR;
 	}

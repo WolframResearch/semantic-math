@@ -30,6 +30,9 @@ public class SearchState {
 	//map of thmIndex and their span scores
 	private Map<Integer, Integer> thmSpanMap;
 	
+	//The largest span of current query word set amongst any 
+	// theorem that are in the keyset of thmSpanMap.
+	private int largestWordSpan;
 	//map of thmIndex and their word-weight scores
 	private Map<Integer, Integer> thmScoreMap;
 	
@@ -66,7 +69,12 @@ public class SearchState {
 	/**
 	 * Adds token and its score to tokenScoreMap. 
 	 * @param thmIndex
-	 * @param span Span of the current query for thmIndex as derived in SearchIntersection.
+	 * @param span Span, as in width, in the current query of 
+	 * thmIndex as derived in SearchIntersection. How many words
+	 * in the query does the thm cover.
+	 * This is derived as the size of an entry for thmWordSpanMMap,
+	 * which is a Multimap of thmIndex, and the (index of) set of words in query 
+		 that appear in the thm
 	 */
 	public void addThmSpan(Integer thmIndex, Integer span){
 		thmSpanMap.put(thmIndex, span);
@@ -74,6 +82,19 @@ public class SearchState {
 	
 	public void addThmSpan(Map<Integer, Integer> spanMap){
 		thmSpanMap.putAll(spanMap);
+	}
+	/**
+	 * The largest span of current query word set amongst any 
+	 * theorem that are in the keyset of thmSpanMap.
+	 */
+	public void setLargestWordSpan(int span){
+		if(span > this.largestWordSpan){
+			this.largestWordSpan = span;
+		}
+	}
+	
+	public int largestWordSpan(){
+		return this.largestWordSpan;
 	}
 	
 	public void set_totalWordAdded(int totalWordAdded){
@@ -84,6 +105,13 @@ public class SearchState {
 		return totalWordAdded;
 	}
 	
+	/**
+	 * Map of How many words in the query does the thm cover.
+	 * This is derived as the size of an entry for thmWordSpanMMap,
+	 * which is a Multimap of thmIndex, and the (index of) set of words in query 
+	 * that appear in the thm
+	 * @return
+	 */
 	public Map<Integer, Integer> thmSpanMap(){
 		return thmSpanMap;
 	}

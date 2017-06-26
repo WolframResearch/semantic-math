@@ -132,7 +132,7 @@ public class ThmP1 {
 	//will be cleared every time this list is retrieved, which should be once per 
 	//parse. Default values of context vec entry is the average val over all context vecs.
 	//For Nearest[] to work. *Not* final because need reassignment.
-	private static final int parseContextVectorSz;
+	///private static final int parseContextVectorSz;
 	//this is cumulative, should be cleared per parse!
 	//private static Map<Integer, Integer> parseContextVectorMap; 
 	/*Array of strings that should not be fused with neighboring ent's. As
@@ -215,7 +215,7 @@ public class ThmP1 {
 			MIN_PARSE_ITERATED_COUNT = 6;
 			LONG_FORM_MAX_PARSE_LOOP_THRESHOLD = 8;
 		}
-		parseContextVectorSz = CollectThm.ThmWordsMaps.get_CONTEXT_VEC_SIZE();
+		//parseContextVectorSz = CollectThm.ThmWordsMaps.get_CONTEXT_VEC_SIZE();
 		//System.out.println("*****+++++ThmP1--parseContextVectorSz: " + parseContextVectorSz);
 		//parseContextVector = new int[parseContextVectorSz];
 		
@@ -1385,7 +1385,7 @@ public class ThmP1 {
 		if((containsOnlySymbEnt && pairs_sz > 1) /*<--so single-token $x>1$ can still get parsed*/
 				//extract these constants after experimentation! June 2017.
 				//Need to be careful, e.g. in enumerate, those could have high tex percentages, but still meaningful.
-				|| ( ((double)texCharCount)/totalCharCount > 0.8 && texCharCount > 50 || texCharCount > 98 )
+				|| ( ((double)texCharCount)/totalCharCount > 0.8 && texCharCount > 55 || texCharCount > 102 )
 				|| (((double)texEntCount)/pairs_sz > MAX_ALLOWED_ENT_PERCENTAGE && pairs_sz > MIN_PAIRS_SIZE_THRESHOLD_FOR_FLUFF)
 				|| texEntCount > 12){
 			//set trivial structlist, so that previous structlist doesn't get parsed again.
@@ -2910,7 +2910,6 @@ public class ThmP1 {
 					parsedSB.append("; ");
 				}
 				
-				//StringBuilder wlSB = 
 				wlCommandTreeTraversal(kHeadStruct, headParseStructList, parsedPairMMapList, curStructContextVecMap, 
 						span, parseState);
 				
@@ -3606,7 +3605,7 @@ public class ThmP1 {
 		/*builds the parse tree by matching triggered commands. In particular, build WLCommand
 	     * parse tree by building triggered WLCommand's.*/
 		ParseToWLTree.buildCommandsDfs(uHeadStruct, parseStructSB, 0, parseState);
-		if(DEBUG) System.out.println("\n DONE ParseStruct DFS  + parseStructSB:" + parseStructSB + "  \n");
+		if(DEBUG) System.out.println("\n DONE ParseStruct DFS!");
 		StringBuilder wlSB = new StringBuilder();
 		
 		/* Map of parts used to build up a theorem/def etc, for a single WLCommand/longform. 
@@ -4699,9 +4698,7 @@ public class ThmP1 {
 		
 		int structDepth = struct.dfsDepth();
 		String structType = struct.type();
-		/*if(struct.nameStr().equals("probability")){
-			System.out.print("");
-		}*/
+		
 		if (struct.isStructA()) {
 			
 			if(structType.equals("hyp") || structType.equals("if")){
@@ -4718,10 +4715,10 @@ public class ThmP1 {
 				//throw new IllegalStateException(isRightChild+"");
 			}
 			
-			System.out.print(struct.type());
+			//System.out.print(struct.type());
 			parsedLongFormSB.append(struct.type());
 			
-			System.out.print("[");
+			//System.out.print("[");
 			parsedLongFormSB.append("[");
 			
 			if (struct.prev1NodeType().isTypeStruct()) {
@@ -4737,7 +4734,7 @@ public class ThmP1 {
 			}			
 
 			if (struct.prev1NodeType().equals(NodeType.STR)) {
-				System.out.print(struct.prev1());
+				//System.out.print(struct.prev1());
 				parsedLongFormSB.append(struct.prev1());
 				//don't include prepositions for spanning purposes, since prepositions are almost 
 				//always counted if its subsequent entity is, but counting it gives false high span
@@ -4753,7 +4750,7 @@ public class ThmP1 {
 			if (struct.prev2NodeType().isTypeStruct()) {
 				// avoid printing is[is], ie case when parent has same type as
 				// child
-				System.out.print(", ");
+				//System.out.print(", ");
 				parsedLongFormSB.append(", ");
 				Struct prev2Struct = (Struct) struct.prev2();
 				prev2Struct.set_dfsDepth(structDepth + 1);
@@ -4767,13 +4764,13 @@ public class ThmP1 {
 			
 			if (struct.prev2NodeType().equals(NodeType.STR)) {
 				if (!struct.prev2().equals("")){
-					System.out.print(", ");
+					//System.out.print(", ");
 					parsedLongFormSB.append(", ");	
 					if(!struct.type().equals("pre")){
 						span++;
 					}
 				}				
-				System.out.print(struct.prev2());
+				//System.out.print(struct.prev2());
 				parsedLongFormSB.append(struct.prev2());
 			}
 			
@@ -4783,11 +4780,11 @@ public class ThmP1 {
 				span = appendChildrenStringToLongForm(struct, parsedLongFormSB, span, conjDisjVerbphrase, isRightChild,
 						structDepth, children);
 			}
-			System.out.print("]");
+			//System.out.print("]");
 			parsedLongFormSB.append("]");
 		} else {
 			String structStr = struct.toString();
-			System.out.print(structStr);
+			//System.out.print(structStr);
 			parsedLongFormSB.append(structStr);
 			span++;
 
@@ -4816,7 +4813,7 @@ public class ThmP1 {
 			ConjDisjVerbphrase conjDisjVerbphrase, boolean isRightChild, int structDepth, List<Struct> children) {
 		List<ChildRelation> childRelation = struct.childRelationList();
 		
-		System.out.print("[");
+		//System.out.print("[");
 		parsedLongFormSB.append("[");
 		
 		StringBuilder childrenSB = new StringBuilder(40);
@@ -4842,7 +4839,7 @@ public class ThmP1 {
 		//already printed out in dfs! System.out.print(childrenStr);
 		parsedLongFormSB.append(childrenStr);
 		
-		System.out.print("]");
+		//System.out.print("]");
 		parsedLongFormSB.append("]");
 		return span;
 	}

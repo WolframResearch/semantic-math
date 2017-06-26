@@ -524,6 +524,7 @@ public class ThmSearch {
 		public static final String PARSEDEXPRESSION_LIST_FILE_NAME_ROOT = "parsedExpressionList";
 		//Do not attach .dat at end of this file name.
 		public static final String CONTEXT_VEC_PAIR_LIST_FILE_NAME = "contextRelationVecPairList";
+		public static final String ALL_THM_STRING_FILE_NAME = "allThmsList.txt";
 		/*Name deliberately does not include .dat*/
 		public static final String COMBINED_PARSEDEXPRESSION_LIST_FILE_NAME_ROOT = "combinedParsedExpressionList";
 		private static final int NUM_SINGULAR_VAL_TO_KEEP = 30;

@@ -810,7 +810,7 @@ public class ParseToWLTree{
 				
 				//form the int[] contex vector by going down struct				
 				// curCommand's type determines the num attached to head of structH,
-				// e.g. "Exists[structH]" writes enum ParseRelation -2 at the index of structH	
+				// e.g. "Exists[structH]" writes enum ParseRelation -2 at the index of structH
 				if(!contextVecConstructed){
 					ParseTreeToContextVec.tree2vec(struct, contextVecMap, curWrapper);
 					//System.out.println("ParseToWLTree - contextVecMap " + contextVecMap);

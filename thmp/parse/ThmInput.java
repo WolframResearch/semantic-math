@@ -74,7 +74,7 @@ public class ThmInput {
 	private static final Pattern LABEL_PATTERN = Pattern.compile("(.*?)\\\\label\\{(?:[^}]*)\\}\\s*(.*?)");
 	//private static final Pattern DIGIT_PATTERN = Pattern.compile(".*\\d+.*");
 
-	/* Boldface typesetting. \cat{} refers to category. MUST *Update* DF_EMPH_PATTERN_REPLACEMENT when updating this!
+	/* Boldface typesetting. \cat{} refers to category. *MUST Update* DF_EMPH_PATTERN_REPLACEMENT when updating this!
 	   e.g. {\em lll\/} */
 	private static final Pattern DF_EMPH_PATTERN = Pattern
 			.compile("\\\\df\\{([^\\}]*)\\}|\\\\emph\\{([^\\}]*)\\}|\\{\\\\em\\s+([^\\}]+)[\\\\/]*\\}|\\\\cat\\{([^}]*)\\}|\\{\\\\it\\s*([^}]*)\\}"
@@ -91,8 +91,8 @@ public class ThmInput {
 	// pattern for eliminating the command completely for web display. E.g. \fml. How about \begin or \end everything?
 	private static final Pattern ELIMINATE_PATTERN = Pattern
 			.compile("\\\\fml|\\\\ofml|\\\\begin\\{enumerate\\}|\\\\end\\{enumerate\\}"					
-					+ "|\\\\begin\\{slogan\\}|\\\\end\\{slogan\\}|\\\\sbsb|\\\\cat|\\\\bs"
-					+ "|\\\\section\\{(?:[^}]*)\\}\\s*|\\\\noindent|\\\\begin\\{abstract\\}|\\\\cite\\{[^}]+\\}|\\\\cite\\[[^\\]]+\\]",
+					+ "|\\\\begin\\{slogan\\}|\\\\end\\{slogan\\}|\\\\sbsb|\\\\cat|\\\\bs|\\\\maketitle"
+					+ "|\\\\section\\**\\{(?:[^}]*)\\}\\s*|\\\\noindent|\\\\begin\\{abstract\\}|\\\\cite\\{[^}]+\\}|\\\\cite\\[[^\\]]+\\]",
 					Pattern.CASE_INSENSITIVE);
 	static final String ELIMINATE_BEGIN_END_THM_STR = "\\\\begin\\{def(?:[^}]*)\\}\\s*|\\\\begin\\{lem(?:[^}]*)\\}\\s*|\\\\begin\\{th(?:[^}]*)\\}\\s*"
 					+ "|\\\\begin\\{pr(?:[^}]*)\\}\\s*|\\\\begin\\{proclaim(?:[^}]*)\\}\\s*|\\\\begin\\{co(?:[^}]*)\\}\\s*"

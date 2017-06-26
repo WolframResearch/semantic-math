@@ -71,16 +71,6 @@ public class GenerateFullTDMatrix {
 		@SuppressWarnings("unchecked")
 		List<? extends TheoremContainer> thmContainerList = (List<? extends TheoremContainer>)FileUtils.deserializeListFromFile(thmListPath);
 		
-		if(thmContainerList.size() > 0){
-			Object thm = thmContainerList.get(0);
-			//could only be either parsed expres
-			//"HACK" here for searching, revise after data uniformized. 
-			/*//*if(thm instanceof ParsedExpression){
-				
-			}else{
-				
-			}*/		
-		}
 		ImmutableList<TheoremContainer> immutableThmContainerList = ImmutableList.copyOf(thmContainerList);
 		String pathToWordFreqMap = Searcher.SearchMetaData.wordDocFreqMapPath();
 		Map<String, Integer> wordFreqMap = getWordFreqMap(pathToWordFreqMap);

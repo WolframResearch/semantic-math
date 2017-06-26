@@ -26,6 +26,7 @@ import com.wolfram.jlink.MathLinkException;
 import thmp.parse.ProcessInput;
 import thmp.parse.TheoremContainer;
 import thmp.utils.DataUtility;
+import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 
 /**
@@ -43,15 +44,10 @@ public class SearchCombined {
 	//private static ServletContext servletContext;
 	//should update at the very beginning!
 	//private static final int LIST_INDEX_SHIFT = 1;
-	private static ImmutableList<String> thmList;
 	
 	private static final Pattern INPUT_PATTERN = Pattern.compile("(\\d+)\\s+(.*)");
 	private static final Pattern CONTEXT_INPUT_PATTERN = Pattern.compile("(context|relation)\\s+(.*)");
-	
-	/*public static void initializeSearchWithResource(BufferedReader freqWordsFileBuffer, BufferedReader texSourceFileBuffer){		
-		CollectThm.setWordFrequencyBR(freqWordsFileBuffer);
-		CollectThm.setResources(texSourceFileBuffer);		
-	}*/
+	protected static final int CONTEXT_SEARCH_TUPLE_SIZE = 10;
 	
 	/**
 	 * Thm and hyp pair, used to display on web separately.
@@ -165,10 +161,6 @@ public class SearchCombined {
 		//CollectThm.setResources(texSourceFileBufferList, macrosReader, parsedExpressionListInputStream, allThmWordsSerialInputStream);	
 		
 		ProcessInput.setServletContext(servletContext_);
-		//TheoremGet.setServletContext(servletContext_);
-		//ThmHypPairGet.setServletContext(servletContext_);
-		//ProcessInput.setResources(macrosReader);		
-		//servletContext = servletContext_;
 	}
 	
 	/**
@@ -180,8 +172,10 @@ public class SearchCombined {
 	 * @param numVectors is the total number of vectors to get 
 	 * @return
 	 */
-	private static List<Integer> findListsIntersection(List<Integer> nearestVecList, SearchState searchState, 
-			int numVectors, String input, boolean searchContextBool){
+	private static List<Integer> findListsIntersection(List<Integer> nearestVecList,// List<Integer> intersectionVecList,
+			SearchState searchState, 
+			int numVectors, String input//, boolean searchContextBool
+			){
 		
 		List<Integer> intersectionVecList = searchState.intersectionVecList();
 		//short-circuit
@@ -282,9 +276,6 @@ public class SearchCombined {
 			counter--;
 		}
 		
-		/*if(searchContextBool){
-			bestCommonVecList = ContextSearch.contextSearch(input, bestCommonVecList);
-		}*/
 		return bestCommonVecList;
 	}
 	
@@ -323,14 +314,6 @@ public class SearchCombined {
 		int numCommonVecs = getNumCommonVecs(inputSB, input);
 		input = inputSB.toString();
 		
-		//eventually move this towards end, only do SVD if no good intersection matches!!
-		List<Integer> nearestVecList = ThmSearch.ThmSearchQuery.findNearestThmsInTermDocMx(input, NUM_NEAREST_SVD);
-		if(nearestVecList.isEmpty()){
-			//System.out.println("I've got nothing for you yet. Try again.");
-			System.out.println("SVD search returns empty list!");
-			//return Collections.<ThmHypPair>emptyList();
-		}
-		
 		// create searchState to record the intersectionVecList, and map of
 		// tokens and their span scores. And communicate parseState
 		//among different searchers.
@@ -344,18 +327,33 @@ public class SearchCombined {
 			searchRelationalBool = false;
 		}
 		
-		//find best intersection of these two lists. nearestVecList is 1-based, but intersectionVecList is 0-based! 
-		List<Integer> bestCommonVecs = findListsIntersection(nearestVecList, searchState, 
-				numCommonVecs, input, searchContextBool);
+		List<Integer> bestCommonVecsList = searchState.intersectionVecList();
+		///webMathematica currently does not work with 11.1.1, so only do this if run locally
+		if(null == FileUtils.getServletContext()){			
+			//experiment with this constant!
+			if(searchState.largestWordSpan() < searchWordsSet.size()*3./4){
+				//Only do SVD if no good intersection matches, determine if good match based on span scores.
+				List<Integer> nearestVecList = ThmSearch.ThmSearchQuery.findNearestThmsInTermDocMx(input, NUM_NEAREST_SVD);
+				if(nearestVecList.isEmpty()){
+					//System.out.println("I've got nothing for you yet. Try again.");
+					System.out.println("SVD search returns empty list!");
+					//return Collections.<ThmHypPair>emptyList();
+				}				
+				//find best intersection of these two lists. nearestVecList is 1-based, but intersectionVecList is 0-based! 
+				bestCommonVecsList = findListsIntersection(nearestVecList, searchState, 
+					numCommonVecs, input);
+			}
+		}
+		
 		//combine with ranking from relational search, reorganize within each tuple
 		//of fixed size.
 		if(searchRelationalBool){
-			int tupleSz = 5;
+			int tupleSz = CONTEXT_SEARCH_TUPLE_SIZE;
 			Searcher<BigInteger> searcher = new RelationalSearch();
-			bestCommonVecs = searchVecWithTuple(input, bestCommonVecs, tupleSz, searcher, searchState);			
+			bestCommonVecsList = searchVecWithTuple(input, bestCommonVecsList, tupleSz, searcher, searchState);			
 		}
 
-		List<ThmHypPair> bestCommonThmHypPairList = thmListIndexToThmHypPair(bestCommonVecs);
+		List<ThmHypPair> bestCommonThmHypPairList = thmListIndexToThmHypPair(bestCommonVecsList);
 			
 		/*for(int d : bestCommonVecs){
 			String thm = TriggerMathThm2.getWebDisplayThm(d);

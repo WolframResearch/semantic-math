@@ -773,10 +773,10 @@ public class ThmP1TestRun {
 			st = "if $x>0$";
 			st = "if $A$, then $B$";
 			st = "If $ \\|D(\\ Phi^k\\ varphi)(\\ Phi^k\\ varphi)^{-1}\\|_{L^1}= \\|D \\ varphi (\\ varphi)^{-1}\\|_{L^1}$ for all natural $k$, then \\[D \\ varphi(x)(\\ varphi(x))^{-1}=\\ alpha \\,\\ mboxAd_ {\\ varphi(x)} [D \\ varphi(Tx)(\\ varphi(Tx))^{-1}]\\] for every $x \\ in [-\\alpha^2,0)$. $\\ blacksquare$";
-			
 			st ="Let $H \\ in{\\ cal H}_u$ and $g \\ in N(H,u)$. ";
 			//check this! Should get more accurate tex char out!
 			st ="Then  \\[ g \\ in N^\\ast(H,u)\\ iff \\ overline{\\ langle u \\ rangle \\ pi(g)}=g \\ pi (H). \\]";
+			st = "we associate to the global field $K$";
 			st = "algebraic group";
 			//st = " \\[ \\ begin{array}{l}  \\ frac{1}{\\ eta_ 1(R^1_T)}  \\ int_{R^1_T} \\ left(\\ int_{H_ 1/H_1\\ cap \\ Gamma_ 1} f(gh \\ Gamma_ 1)\\; d \\ nu_ 1(\\ dot{h})\\ right) \\,d \\ eta_ 1(\\ dot{g}) \\ \\[7pt] \\ qquad \\ \\ qquad =  (1/2)\\ int_{{\\ rm O}(n)} dk \\ cdot \\ int_{H_ 1/H_1\\ cap \\ Gamma_ 1}  d \\ nu_ 1(\\ dot{h})\\; {\\ scriptstyle \\ times} \\ \\[3pt] \\ qquad \\ \\ qquad \\ \\ qquad {\\ scriptstyle \\ times}\\;   \\ left (\\ frac{1}{\\ ell(D^1_T)} \\ int_{(\\ mbox{\\ boldmath{$ \\ scriptstyle t$}},\\ mbox{\\ boldmath{$ \\ scriptstyle x$}})\\ in D^1_T}  f(k \\ Psi(\\ mbox{\\ boldmath{$t$}},\\ mbox{\\ boldmath{$x$}})\\ Gamma_ 1)\\; d \\ mbox{\\ boldmath{$t$}}\\, d \\ mbox{\\ boldmath{$x$}} \\ right).  \\end{array} \\]";
 			//st = "Let $p_1,\\dots,p_r$ be the preimages under $w$"; 			

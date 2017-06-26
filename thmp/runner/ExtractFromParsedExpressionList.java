@@ -15,7 +15,7 @@ public class ExtractFromParsedExpressionList {
 	public static void main(String[] args){
 		
 		if(false) writePEThmsToFile();	
-		getThmListSize();
+		if(false) getThmListSize();
 		
 	}
 

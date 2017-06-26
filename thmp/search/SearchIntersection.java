@@ -70,11 +70,7 @@ public class SearchIntersection {
 
 	// debug flag for development. Prints out the words used and their scores.
 	private static final boolean DEBUG = true;
-	// priority words that should be weighed higher, eg "define"
-	// private static final String PRIORITY_WORDS =
-	// ConstantsInSearch.get_priorityWords();
-	private static final int CONTEXT_SEARCH_TUPLE_SIZE = 8;
-
+	
 	/**
 	 * Static initializer, retrieves maps from CollectThm.java.
 	 */
@@ -219,7 +215,8 @@ public class SearchIntersection {
 	 * @param contextSearchBool
 	 *            whether to context search.
 	 * @param searchWordsSet
-	 *            set of words used in search.
+	 *            set of words used in search. Will accurately reflect the words used in search,
+	 *            as per the standard way thms are split into words.
 	 * @param numHighest
 	 *            number of highest-scored thms to retrieve.
 	 * @param wordThmsIndexMMap
@@ -242,6 +239,8 @@ public class SearchIntersection {
 		// if 2/3-grams added, add indices of all words in 2/3-gram to set for
 		// that thm.
 		logger.info("Starting intersection search...");
+		/*Multimap of thmIndex, and the (index of) set of words in query 
+		 that appear in the thm*/
 		SetMultimap<Integer, Integer> thmWordSpanMMap = HashMultimap.create();
 
 		String[] inputWordsAr = WordForms.splitThmIntoSearchWords(input.toLowerCase());
@@ -277,7 +276,6 @@ public class SearchIntersection {
 		// and lowering
 		// scores of n-grams if to dominant. Approximate, for instance does not
 		// de-singularize.
-		// int approxTotalWordsScore = 0;
 		int totalWordsScore = 0;
 		int numWordsAdded = 0;
 
@@ -376,7 +374,7 @@ public class SearchIntersection {
 		// add bonus points to thms with most number of query words, judging
 		// from size of value set
 		// in thmWordSpanMMap
-		addWordSpanBonus(thmScoreMap, scoreThmMMap, thmWordSpanMMap, thmSpanMap, numHighest,
+		addWordSpanBonus(searchState, thmScoreMap, scoreThmMMap, thmWordSpanMMap, thmSpanMap, numHighest,
 				((double) totalWordsScore) / numWordsAdded);
 		// System.out.println("AFTER " + g.equals(scoreThmMMap));
 		searchState.addThmSpan(thmSpanMap);
@@ -426,7 +424,7 @@ public class SearchIntersection {
 		// re-order top entries based on context search, if enabled
 		if (contextSearchBool) {
 			Searcher<Map<Integer, Integer>> searcher = new ContextSearch();
-			int tupleSz = CONTEXT_SEARCH_TUPLE_SIZE;
+			int tupleSz = SearchCombined.CONTEXT_SEARCH_TUPLE_SIZE;
 			highestThmList = SearchCombined.searchVecWithTuple(input, highestThmList, tupleSz, searcher, searchState);
 		}
 		logger.info("Highest thm list obtained, intersection search done!");
@@ -537,31 +535,38 @@ public class SearchIntersection {
 	 * @param thmSpanMap
 	 *            map of theorem indices and their spans
 	 */
-	private static void addWordSpanBonus(Map<Integer, Integer> thmScoreMap, TreeMultimap<Integer, Integer> scoreThmMMap,
+	private static void addWordSpanBonus(SearchState searchState, Map<Integer, Integer> thmScoreMap, 
+			TreeMultimap<Integer, Integer> scoreThmMMap,
 			SetMultimap<Integer, Integer> thmWordSpanMMap, Map<Integer, Integer> thmSpanMap, int numHighest,
 			double avgWordScore) {
 		// add according to score
 		// gather the sizes of the value maps for thmWordSpanMMap, and keep
 		// track of order based on scores using a TreeMultimap
 		TreeMultimap<Integer, Integer> spanScoreThmMMap = TreeMultimap.create();
-
+		int largestWordSpan = 0;
 		for (int thmIndex : thmWordSpanMMap.keySet()) {
 			// System.out.println(thmWordSpanMMap.get(thmIndex));
 			int thmWordsSetSize = thmWordSpanMMap.get(thmIndex).size();
 			thmSpanMap.put(thmIndex, thmWordsSetSize);
+			if(thmWordsSetSize > largestWordSpan){
+				largestWordSpan = thmWordsSetSize;
+			}
 			spanScoreThmMMap.put(thmWordsSetSize, thmIndex);
 		}
+		searchState.setLargestWordSpan(largestWordSpan);
+		
 		// add bonus proportional to the avg word score (not span score)
-		NavigableMap<Integer, Collection<Integer>> r = spanScoreThmMMap.asMap().descendingMap();
+		NavigableMap<Integer, Collection<Integer>> orderedSpanScoreMMap = spanScoreThmMMap.asMap().descendingMap();
 
 		int counter = numHighest;
 		// counts which span level is being iterated over currently
 		int spanCounter = 1;
-		for (Entry<Integer, Collection<Integer>> entry : r.entrySet()) {
+		for (Entry<Integer, Collection<Integer>> entry : orderedSpanScoreMMap.entrySet()) {
 
 			for (int thmIndex : entry.getValue()) {
-				if (counter == 0)
-					break;
+				if (counter == 0){
+					break;	
+				}
 				int prevScore = thmScoreMap.get(thmIndex);
 				// use average score; be more clever!
 				int bonusScore = (int) (avgWordScore / ((double) spanCounter * 2));
@@ -598,6 +603,8 @@ public class SearchIntersection {
 	 *            Array of scores for singleton words
 	 * @param set
 	 *            of words, separated into singletons, used during search
+	 * @param thmWordSpanMMap Multimap of thmIndex, and the (index of) set of words in query 
+	 * that appear in the thm.
 	 * @param wordThmIndexAddedMMap Thms that have already been added for the input.
 	 * @param wordThmIndexMMap MMap created from tars used to look up thms containing words.
 	 * @return scoreAdded

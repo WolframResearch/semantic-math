@@ -603,6 +603,7 @@ public class DetectHypothesis {
 			FileUtils.writeToFile(allThmsStrWithSpaceList, allThmsStringFileStr);
 			//append to stats file!
 			FileUtils.appendObjToFile(stats, statsFileStr);
+			
 			//FileUtils.writeToFile(ALL_THM_WORDS_LIST, allThmWordsStringFileStr);
 		}catch(Throwable e){
 			logger.error("Error occurred when writing and serializing to file! " + e.getMessage());
@@ -932,7 +933,7 @@ public class DetectHypothesis {
 		
 		if(thmDef != DefinitionListWithThm.PLACEHOLDER_DEF_LIST_WITH_THM){
 			definitionListWithThmList.add(thmDef);
-			allThmsStrWithSpaceList.add(thm + "\n\n");
+			
 		}
 		
 		//System.out.println("___-------++++++++++++++" + thmDef);
@@ -1139,7 +1140,9 @@ public class DetectHypothesis {
 		//if(true) throw new IllegalStateException("thmHypPair.getEntireThmStr() :"+thmHypPair.getEntireThmStr());
 		ContextRelationVecPair vecsPair = new ContextRelationVecPair(combinedContextVecMap, relationalContextVec);
 		contextRelationVecPairList.add(vecsPair);
-		parsedExpressionStrList.add(thmHypPair.toString());
+		String thmHypPairString = thmHypPair.toString();
+		parsedExpressionStrList.add(thmHypPairString);
+		allThmsStrWithSpaceList.add(thmHypPairString + "\n");
 		//return this to supply to search later
 		return defListWithThm;
 	}

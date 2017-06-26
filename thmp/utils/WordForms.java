@@ -362,6 +362,63 @@ public class WordForms {
 		return word;
 	}
 	
+	public static class WordMapIndexPair{
+		private static final int DEFAULT_MAP_INDEX = -1;
+		//singleton placeholder instance.
+		private static final WordMapIndexPair PLACEHOLDER_WORDMAPINDEXPAIR
+			= new WordMapIndexPair("", DEFAULT_MAP_INDEX, false);
+		private String word;
+		private int mapIndex = DEFAULT_MAP_INDEX;
+		private boolean wordChanged;
+		
+		public WordMapIndexPair(String word_, int index_, boolean changed_){
+			this.word = word_;
+			this.mapIndex = index_;
+			this.wordChanged = changed_;
+		}		
+		public String word(){
+			return this.word;
+		}
+		public int mapIndex(){
+			return this.mapIndex;
+		}
+		public boolean wordChanged(){
+			return this.wordChanged;
+		}
+		public static WordMapIndexPair placeholderWordMapIndexPair(){
+			return PLACEHOLDER_WORDMAPINDEXPAIR;
+		}
+	}
+	/**
+	 * Singularize and normalize word, if necessary, and return its
+	 * index in provided map.
+	 * @param word
+	 * @param map
+	 * @return WordMapIndexPair
+	 */
+	public static WordMapIndexPair uniformizeWordAndGetIndex(String word, Map<String, Integer> map){
+		Integer index = map.get(word);
+		if(null != index){
+			return new WordMapIndexPair(word, index, false);
+		}
+		String wordSingular = getSingularForm(word);
+		index = map.get(wordSingular);
+		if(null != index){
+			return new WordMapIndexPair(wordSingular, index, true);
+		}
+		String wordNormalized = normalizeWordForm(word);
+		index = map.get(wordNormalized);
+		if(null != index){
+			return new WordMapIndexPair(wordNormalized, index, true);
+		}
+		String singularNormalized = normalizeWordForm(wordSingular);
+		index = map.get(singularNormalized);
+		if(null != index){
+			return new WordMapIndexPair(singularNormalized, index, true);
+		}
+		return WordMapIndexPair.PLACEHOLDER_WORDMAPINDEXPAIR;
+	}
+	
 	/**
 	 * Returns words that should be excluded from search.
 	 */
