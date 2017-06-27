@@ -37,6 +37,7 @@ import thmp.parse.WLCommand.PosTerm.PosTermConnotation;
 import thmp.utils.Buggy;
 import thmp.utils.ExprUtils;
 import thmp.utils.FileUtils;
+import thmp.utils.WordForms;
 
 /**
  * WL command, containing the components that need to be hashed. 
@@ -1734,8 +1735,11 @@ public class WLCommand implements Serializable{
 				&& connotationMap.containsKey(PosTermConnotation.DEFINING)){
 			Struct definingStruct = connotationMap.get(PosTermConnotation.DEFINING);
 			String variableName = connotationMap.get(PosTermConnotation.DEFINED).nameStr();
-			if(!variableName.equals("")){
+			if(!WordForms.getWhiteEmptySpacePattern().matcher(variableName).matches()){
+				//System.out.println("variableName  "+variableName);
+				variableName = WordForms.stripSurroundingWhiteSpace(variableName);
 				parseState.addLocalVariableStructPair(variableName, definingStruct);
+				//if(true) throw new IllegalStateException(parseState.getGlobalVariableNamesMMap().toString());
 				//System.out.println("variableName: " + variableName);
 			}
 		}		

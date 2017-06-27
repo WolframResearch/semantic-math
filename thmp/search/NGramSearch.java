@@ -56,12 +56,13 @@ public class NGramSearch {
 	private static final Pattern WHITESPACE_PATTERN = WordForms.getWhiteEmptySpacePattern();
 	private static final Pattern INVALID_WORD_PATTERN = Pattern.compile("\\s*|.*[\\\\|$].*"); 
 	//words to be taken off of two-gram map
-	private static final String[] NOT_TWO_GRAMS = new String[]{"field is", "more generally"};
+	private static final String[] NOT_TWO_GRAMS = new String[]{"field is", "more generally", "polynomial $a$", 
+			"polynomial $f$"};
 	
 	//should use this to detect fluff in first word.
 	private static final Set<String> fluffWordsSet = WordForms.getFluffSet();
 	static{
-		logger.info("Finished initializing NGramSearch.java");
+		logger.info("Finished initializing NGramSearch");
 	}
 	/**
 	 * Set the BufferedReader for scraped two grams.

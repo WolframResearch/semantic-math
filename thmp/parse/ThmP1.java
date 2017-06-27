@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -169,7 +170,8 @@ public class ThmP1 {
 	private static final String ALIGN_PATTERN_REPLACEMENT_STR = "";//"$1$2$3";
 	//don't print when running on byblis 
 	private static final boolean DEBUG = FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : false;
-	private static final boolean PLOT_DEBUG = false;
+	//can be turned on when run locally by making the first slot "true"
+	private static final boolean PLOT_DEBUG = FileUtils.isOSX() ? false : false;
 	//Pattern used to check if word is valid.
 	//Don't put \', could be in valid word
 	private static final Pattern BACKSLASH_CONTAINMENT_PATTERN = 
@@ -544,13 +546,13 @@ public class ThmP1 {
 	private static String computeNGramPos(String nGram, TokenType tokenType, ParseState parseState){
 		
 		int nGramLen = nGram.length();
-		String[] nGramAr = nGram.split("\\s+");
+		String[] nGramAr = WordForms.getWhiteNonEmptySpaceNotAllPattern().split(nGram);
 		String pos = "";
 		String firstWord = nGramAr[0];
 		int firstWordLen = firstWord.length();
+		List<String> posList = posMMap.get(firstWord);
 		
-		if(tokenType.equals(TokenType.TWOGRAM)){					
-			List<String> posList = posMMap.get(firstWord);
+		if(tokenType.equals(TokenType.TWOGRAM)){			
 			boolean isFirstWordAdverb = !posList.isEmpty() ? posList.get(0).equals("adverb") : 
 				(firstWord.substring(firstWordLen-2, firstWordLen).equals("ly") ? true : false);
 			//adverb past-participle pair, e.g "finitely generated"
@@ -558,6 +560,7 @@ public class ThmP1 {
 				pos = "adj";				
 			}
 		}
+			
 		if("".equals(pos)){
 			if(POSSIBLE_ADJ_PATTERN.matcher(nGram).matches()){
 				//Try to guess part of speech based on endings 
@@ -567,6 +570,9 @@ public class ThmP1 {
 				pos = "ent";
 				addUnknownWordToSet(parseState, nGram);
 			} 
+		}
+		if("".equals(pos) && !posList.isEmpty()){
+			pos = posList.get(0);
 		}
 		return pos;
 	}
@@ -673,7 +679,8 @@ public class ThmP1 {
 		boolean containsOnlySymbEnt = true;
 		strloop: for (int i = 0; i < strAr.length; i++) {
 
-			String curWord = strAr[i];			
+			String curWord = strAr[i];
+			
 			//sometimes some blank space falls through, in which case just skip.
 			if(WordForms.getWhiteEmptySpacePattern().matcher(curWord).matches()){
 				continue;
@@ -822,7 +829,6 @@ public class ThmP1 {
 					//Ugly solution, but this avoids creating a whole new class
 					//with just an in and a Pair as members.
 					Pair emptyPair = new Pair(null, null);
-					//if(true) throw new IllegalStateException(potentialTrigger);
 					int numWordsDown = findFixedPhrase(potentialTrigger, i, strAr, emptyPair);					
 					if(numWordsDown > 1){
 						/*null if word phrase is fluff*/
@@ -859,6 +865,7 @@ public class ThmP1 {
 					noTexSB.append(nGramSB);
 					//noTexSB.append(pairs.get(pairs.size()-1).word()).append(" ");
 					lastNoTexTokenIndex = i;
+					//continue strloop
 					continue;				
 				}
 			}
@@ -974,7 +981,6 @@ public class ThmP1 {
 				int pairsSize = pairs.size();
 				anchorList.add(pairsSize - 1);
 			}else if((futureWordIndexAfterCardinal=WordForms.isCardinality(curWord, strAr, i, emptyPair0)) > i){
-				//if(true) throw new IllegalStateException();
 				pairs.add(emptyPair0);
 				i = futureWordIndexAfterCardinal-1;
 			}
@@ -1035,14 +1041,7 @@ public class ThmP1 {
 				pair = fuseAdverbAdj(pairs, pair);	
 				//System.out.println("ThmP1 - after fusing adverb-adj pair: " + pair);
 				eliminateUnlikelyPosPairs(pair, pairs);
-				pairs.add(pair);
-				
-				/*if(null != emptyPair.pos()){
-					emptyPair = fuseAdverbAdj(pairs, curWord, emptyPair);	
-					pairs.add(emptyPair);
-					if(emptyPair.pos().equals("ent")) mathIndexList.add(pairs.size() - 1);
-				}*/	
-				//System.out.println("(((((((pair: " + pair);
+				pairs.add(pair);				
 			}
 			// if plural form
 			else if (posMMap.containsKey(singular)){
@@ -1194,7 +1193,6 @@ public class ThmP1 {
 							//<--but can't really distinguish from "is called".
 							else if(nextPos.equals("if_COMP") || nextPos.equals("if")){
 								curPos = "adj";
-								//throw new IllegalStateException(nextPos);
 							}
 						}else if(i == strAr.length - 1){
 							curPos = "adj";
@@ -1319,7 +1317,6 @@ public class ThmP1 {
 			else if (!WordForms.getWhiteNonEmptySpaceNotAllPattern().matcher(curWord).matches()) { // try to minimize this case.				
 				if(DEBUG) System.out.println("word not in dictionary: " + curWord);
 				pairs.add(new Pair(curWord, ""));
-				//if(true) throw new IllegalStateException("curWord" + curWord);
 				addUnknownWordToSet(parseState, curWord);
 			} 
 			else { 
@@ -1356,7 +1353,6 @@ public class ThmP1 {
 			curPair.setNoTexTokenListIndex(i);
 		}/*End of strloop.*/
 		if(DEBUG) System.out.println("ThmP1-noTexSB" +noTexSB);
-		//if(true) throw new IllegalStateException(noTexSB.toString());
 		parseState.setCurrentInputSansTex(noTexSB.toString());
 		parseState.addToNumNonTexTokens(numNonTexTokens);
 		
@@ -1391,7 +1387,6 @@ public class ThmP1 {
 			//set trivial structlist, so that previous structlist doesn't get parsed again.
 			parseState.setTokenList(new ArrayList<Struct>());
 			parseState.setCurParseExcessiveLatex(true);
-			//if(true) throw new IllegalStateException("Excessive tex!");
 			return parseState;
 		}
 		//System.out.println("((double)texCharCount)/totalCharCount: "+((double)texCharCount)/totalCharCount +"  " +totalCharCount);
@@ -1503,7 +1498,6 @@ public class ThmP1 {
 				if(-1 == wordStartIndex && logger.getLevel().equals(Level.INFO)){
 					String msg = "wordToTag: " + wordToTag + ", not found in taggedSentence: "
 							+ taggedSentence;
-					//throw new IllegalStateException();
 					logger.info(msg);					
 				}else{				
 					int posIndex = wordStartIndex + wordToTag.length();
@@ -1522,7 +1516,7 @@ public class ThmP1 {
 			String pos = curpair.pos();
 			if(unknownWordPos && !pos.equals("")){
 				parseState.addUnknownWordPosToMap(curWord, pos);
-				System.out.println("Added " + curWord + " to posmap with pos: " + pos);
+				if(DEBUG) System.out.println("Added " + curWord + " to posmap with pos: " + pos);
 			}
 		}
 		
@@ -1586,8 +1580,10 @@ public class ThmP1 {
 				//if(true) throw new IllegalStateException();
 				String name = nextPair.word();
 				boolean entFused = false;
+				
 				// if next pair is also ent, and is latex expression
 				if (name.contains("$")) {
+					
 					/*but don't absorb ent if token after name is conj/disj*/
 					String secondNextPairName;
 					if(index < pairs.size()-3 && ((secondNextPairName=pairs.get(index + 2).word()).equals("and")
@@ -2288,11 +2284,6 @@ public class ThmP1 {
 				tempList.add(new StructList());
 			}
 			mx.add(tempList);
-			/*
-			 * mx.add(new ArrayList<Struct>(len));
-			 * for (int i = 0; i < len; i++) { // add len number of null's
-			 * mx.get(l).get(i) .add(null); }
-			 */
 		}
 		//only call syntaxnet if prepositionCount is above certain threshold
 		int prepositionCount = 0;
@@ -2573,8 +2564,7 @@ public class ThmP1 {
 									StructA<Struct, String> parentStruct = 
 											new StructA<Struct, String>(firstEnt, NodeType.STRUCTH, 
 													called, NodeType.STR, "def", mx.get(0).get(inputStructListSize - 1));
-									firstEnt.set_parentStruct(parentStruct);
-									
+									firstEnt.set_parentStruct(parentStruct);									
 									mx.get(0).get(inputStructListSize - 1).add(parentStruct);
 									
 									// recentEnt is defined to be "called"
@@ -3024,15 +3014,6 @@ public class ThmP1 {
 		}
 		if(PLOT_DEBUG) PlotUtils.plotMx(mx);
 		
-		// print out scores
-		/*
-		 * StructList headStructList = mx.get(0).get(len-1); int
-		 * headStructListSz = headStructList.size(); System.out.println(
-		 * "headStructListSz " + headStructListSz ); for(int u = 0; u <
-		 * headStructListSz; u++){
-		 * System.out.println(headStructList.structList().get(u) ); }
-		 */
-
 		/*
 		 * Don't delete this part! System.out.println("\nWL: "); StructList
 		 * headStructList = mx.get(len - 1).get(len - 1); //should pick out best
@@ -3784,7 +3765,6 @@ public class ThmP1 {
 				StructA<?, ?> hypStruct = (StructA<?, ?>)struct2.prev1();
 				if(hypStruct.type().equals("hyp")){
 					childRelation = extractHypChildRelation(hypStruct);
-					//throw new IllegalStateException();
 				}
 				
 				//sometimes hypStruct does not have type "hyp" despite struct2 having
@@ -3841,11 +3821,8 @@ public class ThmP1 {
 				childToAdd = (Struct)struct2.prev2();
 			}
 			
-			
 			if(structToAppendChild.isStructA()){
 				//e.g. "independent of $n$"	
-				//if(struct2.type().equals("adverb"))
-					//if(true) throw new IllegalStateException("childToAdd " + childToAdd + " relation " + childRelation+ " combinedPos "+combinedPos);
 				newStruct.set_maxDownPathScore(newDownPathScore);
 				structToAppendChild.set_maxDownPathScore(newDownPathScore);
 				
@@ -4712,7 +4689,6 @@ public class ThmP1 {
 					conjDisjVerbphrase.setAssertStruct(parentStruct);
 				}
 				conjDisjVerbphrase.setConjDisjType(ConjDisjType.findConjDisjType(structType));
-				//throw new IllegalStateException(isRightChild+"");
 			}
 			
 			//System.out.print(struct.type());
@@ -4960,11 +4936,9 @@ public class ThmP1 {
 				int j = i;
 				// potentially a fluff phrase <--improve defluffing!
 				if (posAr[posAr.length - 1].equals("comp") && j < wordsArrayLen - 1) {
-					//if("in".equals(curWord)) throw new IllegalStateException("comp word: " + posAr);
 					// keep reading in string characters, until there is no
 					// match.
 					tempWord += " " + wordsArray[++j];
-					//if(posMMap.containsKey("in the")) throw new IllegalStateException("posMMap contains in the");
 					while (posMMap.containsKey(tempWord.toLowerCase()) && j < wordsArrayLen - 1) {
 						tempWord += " " + wordsArray[++j];
 					}
@@ -5019,7 +4993,6 @@ public class ThmP1 {
 							if(WordForms.areTexExprSimilar(lastWordAdded, texExpr)){
 								//substitute the comma with "and"
 								sentenceBuilder.append(" and ");
-								//if(true) throw new IllegalStateException();
 								continue;
 							}
 						}
@@ -5081,7 +5054,6 @@ public class ThmP1 {
 						sentenceBuilder.setLength(0);
 					}
 				}
-				//throw new IllegalStateException("punctuation: " + curWord);
 			}
 			else if(i == wordsArrayLen - 1){ 
 				sentenceList.add(sentenceBuilder.toString());

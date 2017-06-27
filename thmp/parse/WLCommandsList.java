@@ -95,21 +95,24 @@ public class WLCommandsList {
 		triggerWordLookupMapBuilder.put("take", "for");
 		triggerWordLookupMapBuilder.put("fix", "for");
 		
-		triggerWordLookupMapBuilder.put("letbe", "if");
-		triggerWordLookupMapBuilder.put("let", "if");
-		triggerWordLookupMapBuilder.put("suppose", "if");
+		triggerWordLookupMapBuilder.put("letbe", "let"); 
+		//triggerWordLookupMapBuilder.put("let", "if"); June 28
+		//triggerWordLookupMapBuilder.put("suppose", "if"); June 28
+		triggerWordLookupMapBuilder.put("suppose", "let");
 		triggerWordLookupMapBuilder.put("suppose that", "if");
+		triggerWordLookupMapBuilder.put("suppose that", "let");
 		triggerWordLookupMapBuilder.put("where", "if");
 		triggerWordLookupMapBuilder.put("for any", "for every");
 		triggerWordLookupMapBuilder.put("for all", "for every");
 		//triggerWordLookupMapBuilder.put("if and only if", "let");
 		triggerWordLookupMapBuilder.put("assume", "if");
+		triggerWordLookupMapBuilder.put("assume", "let");
 		triggerWordLookupMapBuilder.put("is included", "is contained");
 		triggerWordLookupMapBuilder.put("are included", "is contained");
 		triggerWordLookupMapBuilder.put("are contained", "is contained");
-		triggerWordLookupMapBuilder.put("is said", "is called");
-		// triggerWordLookupMapBuilder.put("radius", "is");
-
+		triggerWordLookupMapBuilder.put("is said to be", "is called");
+		
+		
 		triggerWordLookupMap = triggerWordLookupMapBuilder.build();
 
 		// builder for WLComamndMap,
@@ -343,19 +346,21 @@ public class WLCommandsList {
 		
 		//if_assert. As well as " if  ", etc
 		//putToWLCommandMapBuilder(wLCommandMapBuilder, "if", addCommand(new String[] { "if|If|let, , trigger", "assert, , true" }));
-		putToWLCommandMapBuilder(wLCommandMapBuilder, "if", new PBuilder("if|If|let|hyp", null, false, true, false), 
+		putToWLCommandMapBuilder(wLCommandMapBuilder, "if", new PBuilder("if|If|hyp", null, false, true, false), 
 				new PBuilder("assert|texAssert", null, true));
 		
 		//putToWLCommandMapBuilder(wLCommandMapBuilder, "then", new PBuilder("then|Then", null, false, true, false), 
 			//	new PBuilder("assert|texAssert", null, true) );
 		
 		//"let A be B"; "suppose A is B"
-		putToWLCommandMapBuilder(wLCommandMapBuilder, "let", new PBuilder("let|suppose", null, false, true, false), 
+		putToWLCommandMapBuilder(wLCommandMapBuilder, "let", new PBuilder("let|hyp", null, false, true, false), 
 				new PBuilder("symb|ent|pro|noun", null, true, false, false, PosTermConnotation.DEFINED,
 						RelationType._IS), 
-				new PBuilder("verb|vbs|be", "is|are|be", false, true, false), new PBuilder("\\["), 
+				new PBuilder("verb|vbs|be", "is|are|be", false, false, false), new PBuilder("\\["), 
 				new PBuilder("Element").makeExprHead(), new PBuilder("]"),
-				new PBuilder("symb|ent|phrase", null, true, false, true, PosTermConnotation.DEFINING, RelationType.IS_));
+				new PBuilder("symb|ent|phrase", null, true, false, true, PosTermConnotation.DEFINING, RelationType.IS_),
+				new PBuilder("prep", null, false, false, "OPT")
+				);
 		
 		//putToWLCommandMapBuilder(wLCommandMapBuilder, "equal to", addCommand(new String[] { "symb|ent, , true",
 		//"==", "equal to, , trigger", "symb|ent|phrase, , true, TriggerMathObj" }));
@@ -398,10 +403,10 @@ public class WLCommandsList {
 		//putToWLCommandMapBuilder(wLCommandMapBuilder, "is called", addCommand(new String[] { "symb|ent|pro, , true", "auxpass, is called, trigger",
 				//"\\[Element]", "symb|ent|adj|phrase, , true, TriggerMathObj" }));
 		putToWLCommandMapBuilder(wLCommandMapBuilder, "is called", new PBuilder("symb|ent|pro", null, true, false, false,
-				PosTermConnotation.DEFINING), 
-				new PBuilder("auxpass", "is called", false, true, false), new PBuilder(" \\["),
+				PosTermConnotation.DEFINED), 
+				new PBuilder("auxpass", null, false, true, false), new PBuilder(" \\["),
 				new PBuilder("Element").makeExprHead(), new PBuilder("] "),
-				new PBuilder("symb|ent|adj|phrase", null, true, false, false, PosTermConnotation.DEFINED,
+				new PBuilder("symb|ent|adj|phrase", null, true, false, false, PosTermConnotation.DEFINING,
 						RelationType._IS) );
 		
 		// ***Hypothesis commands***

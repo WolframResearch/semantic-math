@@ -123,7 +123,8 @@ public class DetectHypothesis {
 	private static final int THM_MAX_CHAR_SIZE = 1800;
 	//this path is only used in this class, for inspection, so not in SearchMetadata
 	private static final String parserErrorLogPath = "src/thmp/data/parserErrorLog.txt";
-	
+	private static final boolean DEBUG = FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : false;
+
 	static{
 		FileUtils.set_dataGenerationMode();	
 		/*The "next time" form previous time refers to current run in this static initializer.*/
@@ -434,8 +435,10 @@ public class DetectHypothesis {
 				//inputBF = new BufferedReader(new FileReader("src/thmp/data/fieldsRawTex.txt"));
 				//inputBF = new BufferedReader(new FileReader("src/thmp/data/samplePaper1.txt"));
 				inputFile = new File("src/thmp/data/Total.txt");
-				inputFile = new File("src/thmp/data/math0210227");
 				inputFile = new File("/Users/yihed/Downloads/math0011136");
+				inputFile = new File("src/thmp/data/math0210227");
+				inputFile = new File("src/thmp/data/test1.txt");
+				
 				//inputFile = new File("src/thmp/data/thmsFeb26.txt");
 				//inputBF = new BufferedReader(new FileReader("src/thmp/data/Total.txt"));
 				//inputBF = new BufferedReader(new FileReader("src/thmp/data/fieldsThms2.txt"));
@@ -479,7 +482,10 @@ public class DetectHypothesis {
 				}
 			//finally{
 				//serialize, so don't discard the items already parsed.
-				serializeDataToFile(stats, thmHypPairList, inputParams);			
+				//serialization only applicable when running on byblis
+				if(!FileUtils.isOSX()){
+				serializeDataToFile(stats, thmHypPairList, inputParams);		
+				}
 			//}
 		}else{
 			BufferedReader inputBF = null;
@@ -497,7 +503,9 @@ public class DetectHypothesis {
 				throw e;
 			}//finally{
 				//serialize, so don't discard the items already parsed.
-				serializeDataToFile(stats, thmHypPairList, inputParams);			
+			if(!FileUtils.isOSX()){
+				serializeDataToFile(stats, thmHypPairList, inputParams);	
+			}
 			//}
 		}
 		System.out.println("STATS -- percentage of non-trivial ParseStruct heads: " + stats.getNonNullPercentage() 
@@ -609,7 +617,7 @@ public class DetectHypothesis {
 			logger.error("Error occurred when writing and serializing to file! " + e.getMessage());
 			throw e;
 		}
-		logger.info("Done serializing parsedExpressionList & co to files! Beginning to compute SVD for parsedExpressionList thms.");
+		logger.info("Done serializing parsedExpressionList & co to files! Beginning to compute SVD for parsedExpressionList thms.");		
 		
 		createTimeStamp(curTexFilesDirPath);
 		
@@ -1055,8 +1063,6 @@ public class DetectHypothesis {
 	private static DefinitionListWithThm appendHypothesesAndParseThm(String thmStr, ParseState parseState, 
 			List<ThmHypPair> thmHypPairList, Stats stats, String srcFileName){
 		
-		//ListMultimap<VariableName, VariableDefinition> variableNamesMMap = parseState.getGlobalVariableNamesMMap();
-		//String thmStr = thmSB.toString();
 		StringBuilder definitionSB = new StringBuilder();		
 		StringBuilder latexExpr = new StringBuilder();
 		
@@ -1104,7 +1110,11 @@ public class DetectHypothesis {
 					//variables that are not defined within the same thm.				
 					List<VariableDefinition> varDefList = pickOutVariables(latexExpr.toString(), //variableNamesMMap,
 							parseState, varDefSet, definitionSB);
-					
+					if(DEBUG) {
+						System.out.println("DetectHypothesis - varDefList " + varDefList);
+						System.out.println("DetectHypothesis - parseState.getGlobalVariableNamesMMap " + parseState.getGlobalVariableNamesMMap()
+						+ " localVariableNamesMMap:  " + parseState.localVariableNamesMMap);
+					}
 					variableDefinitionList.addAll(varDefList);
 					latexExpr.setLength(0);
 				}			
@@ -1137,6 +1147,7 @@ public class DetectHypothesis {
 		//parsedExpressionList.add(parsedExpression);
 		ThmHypPair thmHypPair = new ThmHypPair(thmStr, definitionStr, srcFileName);
 		thmHypPairList.add(thmHypPair);
+		if(DEBUG) System.out.println("DetectHypothesis - thmHypPair "+ thmHypPair);
 		//if(true) throw new IllegalStateException("thmHypPair.getEntireThmStr() :"+thmHypPair.getEntireThmStr());
 		ContextRelationVecPair vecsPair = new ContextRelationVecPair(combinedContextVecMap, relationalContextVec);
 		contextRelationVecPairList.add(vecsPair);
@@ -1170,11 +1181,12 @@ public class DetectHypothesis {
 		for(int i = 0; i < latexExprAr.length; i++){
 			
 			String possibleVar = latexExprAr[i];
-			//System.out.println("^^^$^%%% &^^^ possibleVar: "+ possibleVar);
+			//System.out.println("^^^$^%%% &^^^ DetectHypothesis - possibleVar: "+ possibleVar);
 			
 			//Get a variableName and check if a variable has been defined.
 			VariableName possibleVariableName = ParseState.createVariableName(possibleVar);
 			VariableDefinition possibleVarDef = new VariableDefinition(possibleVariableName, null, null);
+			System.out.println("^^^$^%%% &^^^ DetectHypothesis - possibleVarDef: "+ possibleVarDef);
 			
 			boolean isLocalVar = parseState.getVariableDefinitionFromName(possibleVarDef);
 			//whether the variable definition was defined locally in the theorem, used to determine whether
@@ -1182,6 +1194,7 @@ public class DetectHypothesis {
 			
 			//System.out.println("^^^ variableNamesMMap: "+ variableNamesMMap);
 			//System.out.println("^^^^^^^PossibleVar: " + possibleVar);
+			
 			//get the latest definition
 			//int possibleVarDefListLen = possibleVarDefList.size();
 			//if empty, check to see if bracket pattern, if so, check just the name without the brackets.

@@ -808,6 +808,20 @@ public class WordForms {
 	}
 	
 	/**
+	 * Strip spaces around input.
+	 * @param input
+	 * @return
+	 */
+	public static String stripSurroundingWhiteSpace(String input){
+		Matcher matcher = SPACES_AROUND_TEXT_PATTERN.matcher(input);
+		if(matcher.matches()){
+			return matcher.group(1);
+		}else{
+			return input;
+		}
+	}
+	
+	/**
 	 * Get the part of speech corresponding to the pos tag/symbol.
 	 * E.g. i -> "pre". Placed here instead of in subclass, so it can
 	 * be used by WordFrequency.java as well.

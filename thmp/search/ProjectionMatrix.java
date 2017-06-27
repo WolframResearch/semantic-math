@@ -116,7 +116,7 @@ public class ProjectionMatrix {
 					thmCounter = addExprsToLists(peFilePath, combinedPEList, vecsFilePath, combinedVecsList, wordThmIndexMMapPath,
 							combinedWordThmIndexMMap, thmCounter);
 					
-					//append lists of ThmHypPair's to one file					
+					//append lists of ThmHypPair's to one file
 					String thmsListOriginPath = path_j + TermDocumentMatrix.ALL_THM_STRING_FILE_NAME;
 					FileUtils.runtimeExec("cat " + thmsListOriginPath + " >> " + thmsStringListDestPath);
 				}

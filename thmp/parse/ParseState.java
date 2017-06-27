@@ -15,6 +15,8 @@ import com.google.common.collect.ListMultimap;
 
 import thmp.parse.ThmP1.ParsedPair;
 import thmp.search.CollectThm;
+import thmp.utils.FileUtils;
+import thmp.utils.WordForms;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -100,6 +102,8 @@ public class ParseState {
 	//Only make first part disposable if it's within certain length; e.g. K-algebra
 	private static final Pattern VARIABLE_NAME_DASH_PATTERN = Pattern.compile("([^-]+){1,2}[-].*");
 	
+	private static final boolean DEBUG = FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : false;
+
 	/* 
 	 * Multimap of what each symbol stands for in the text so far.
 	 * Make clear it's ListMultimap, since symbol order matters.
@@ -114,7 +118,7 @@ public class ParseState {
 	 * first to match with variables when in thm, since this contains the local 
 	 * definitions.
 	 */
-	private ListMultimap<VariableName, VariableDefinition> localVariableNamesMMap;
+	public ListMultimap<VariableName, VariableDefinition> localVariableNamesMMap; //public for debugging June 29
 	
 	//parsedExpr to record parsed pairs during parsing. Eliminate copy in ThmP1.java!
 	//<--This should be superceded by ParseStruct's, Jan 2017.
@@ -141,12 +145,13 @@ public class ParseState {
 	public static class VariableName implements Serializable{
 		
 		private static final long serialVersionUID = 1L;
-		
+		//name of variable.
 		private String head;
 		private VariableNameType variableNameType;
 		
 		/**
-		 * Enum to represent different types of variables.
+		 * Enum to represent different types of variables. E.g.
+		 * $f(x)$, f is attached to parentheses, so is of type PAREN.
 		 */
 		static enum VariableNameType{
 			PAREN("("), BRACKET("["), BRACE("{"), DASH("-"), NONE("");
@@ -176,6 +181,7 @@ public class ParseState {
 				case "{":
 					return BRACE;
 				case "-":
+					//"A-module"
 					return DASH;
 				default:
 					return NONE;
@@ -218,13 +224,13 @@ public class ParseState {
 				return true;
 			}
 			
-			//don't need null == other, because null is not instanceof anything.
 			if(!(other instanceof VariableName)){
 				return false;
 			}
 			
 			VariableName otherName = (VariableName)other;
-			if(otherName.head() == null && null != this.head){
+			if(otherName.head() == null && null != this.head
+					|| otherName.head() != null && null == this.head){
 				return false;
 			}
 			
@@ -564,7 +570,7 @@ public class ParseState {
 		}else if(inThmFlag){
 			isLocalVar = true;
 		}
-		
+		System.out.println("ParseState - " +varName + "  " + this.globalVariableNamesMMap + "  "+this.globalVariableNamesMMap.containsKey(varName));
 		return isLocalVar;
 	}
 	
@@ -577,20 +583,18 @@ public class ParseState {
 	 */
 	public boolean getVariableDefinitionFromName(VariableDefinition variableDefinition){
 		
-		VariableName varName = variableDefinition.getVariableName();
-		
+		VariableName varName = variableDefinition.getVariableName();		
 		List<VariableDefinition> variableDefList = new ArrayList<VariableDefinition>();
 		boolean isLocalVar = getVariableDefinitionListFromName(varName, variableDefList);
+		if(DEBUG) System.out.println("ParseState - getVariableDefinitionListFromName " + varName + "  " + variableDefList);
 		
-		int defListSize = variableDefList.size();
-		
+		int defListSize = variableDefList.size();		
 		//get last-added one.
-		if(0 != defListSize){
+		if(0 < defListSize){
 			VariableDefinition retrievedVarDef = variableDefList.get(defListSize-1);
 			variableDefinition.setDefiningStruct(retrievedVarDef.getDefiningStruct());
 			variableDefinition.setOriginalDefinitionSentence(retrievedVarDef.getOriginalDefinitionSentence());
-		}
-		
+		}		
 		return isLocalVar;	
 	}
 	
@@ -609,6 +613,7 @@ public class ParseState {
 		
 		if(latexContentMatcher.find()){
 			name = latexContentMatcher.group(1);
+			name = WordForms.stripSurroundingWhiteSpace(name);
 			//if colon/equal sign present, record
 			//the expression before colon or equal. E.g. "f(x) = x", as well 
 			//as the entire expression
@@ -619,9 +624,9 @@ public class ParseState {
 				//define a VariableName of the right type. 
 				VariableName latexVariableName = createVariableName(latexName);
 				VariableDefinition latexDef = new VariableDefinition(latexVariableName, entStruct, this.currentInputStr);
-				//!variableMMapToAddTo.containsKey(latexVariableName) || 
+				//must check entry, not just key 
 				if(!variableMMapToAddTo.containsEntry(latexVariableName, latexDef)){				
-					System.out.println("....********latexVariableName: " + latexVariableName);
+					if(DEBUG) System.out.println("....********latexVariableName: " + latexVariableName);
 					variableMMapToAddTo.put(latexVariableName, latexDef);
 					
 					//if variableNameType is paren/brace/bracket, also include name without 
@@ -642,8 +647,7 @@ public class ParseState {
 			VariableName latexVariableName = createVariableName(latexName);
 			VariableDefinition latexDef = new VariableDefinition(latexVariableName, entStruct, this.currentInputStr);
 			
-			if(!variableMMapToAddTo.containsEntry(latexVariableName, latexDef)){
-				
+			if(!variableMMapToAddTo.containsEntry(latexVariableName, latexDef)){				
 				variableMMapToAddTo.put(latexVariableName, latexDef);
 			}
 		}
@@ -672,20 +676,17 @@ public class ParseState {
 		Matcher parenMatcher = VARIABLE_NAME_PATTERN.matcher(name);
 		Matcher dashMatcher;
 		
-		if(parenMatcher.matches())
-		{			
+		if(parenMatcher.matches()){			
 			name = parenMatcher.group(1);
 			variableNameType = VariableName.VariableNameType
 					.getVariableNameTypeFromString(parenMatcher.group(2));
 			//throw new IllegalStateException(variableNameType + " " + name);
 		}
-		else if((dashMatcher = VARIABLE_NAME_DASH_PATTERN.matcher(name)).matches())
-		{	
+		else if((dashMatcher = VARIABLE_NAME_DASH_PATTERN.matcher(name)).matches()){	
 			name = dashMatcher.group(1);
 			variableNameType = VariableName.VariableNameType
 					.getVariableNameTypeFromString("-");
-		}
-		
+		}		
 		return new VariableName(name, variableNameType);
 	}
 	
@@ -858,13 +859,6 @@ public class ParseState {
 	public List<ParseStruct> getHeadParseStructList() {
 		return this.headParseStructList;
 	}	
-	
-	/**
-	 * @return the tokenList
-	 */
-	/*public void addToHeadParseStructList(ParseStruct headParseStruct) {
-		this.headParseStructList.add(headParseStruct);
-	}*/
 	
 	/**
 	 * @return the tokenList

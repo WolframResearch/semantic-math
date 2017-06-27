@@ -75,6 +75,7 @@ public class PlotUtils {
 	 * @param mx
 	 */
 	public static void plotMx(List<List<StructList>> mx){
+		System.out.println("Plot of matrix mx: ");
 		int mxSz = mx.size();
 		for(int i = 0; i < mxSz; i++){
 			List<StructList> list = mx.get(i);
