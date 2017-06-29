@@ -85,7 +85,7 @@ public class ThmP1 {
 	private static final Pattern LATEX_END_PATTER = Pattern.compile("[^$]*\\$.*");
 	private static final Pattern LATEX_BEGIN_PATTERN = Pattern.compile("[^$]*\\${1,2}.*");
 	private static final Pattern POSSIBLE_ADJ_PATTERN = Pattern.compile(".+(?:tive|wise|ary|ble|ous|ent|like|nal|lar|nian)$");
-	private static final Pattern POSSIBLE_ENT_PATTERN = Pattern.compile(".+(?:tion|son|ace|ty)$");
+	private static final Pattern POSSIBLE_ENT_PATTERN = Pattern.compile(".+(?:tion|son|ace|ty|sor|ser)$");
 	private static final Pattern ESSENTIAL_POS_PATTERN = Pattern.compile("ent|conj_ent|verb|vbs|if|symb|pro");
 	private static final Pattern VERB_POS_PATTERN = Pattern.compile("verb|vbs|verbAlone");	
 	private static final Pattern SINGLE_WORD_TEX_PATTERN = Pattern.compile("\\$[^$]+\\$[^\\s]*"); 
@@ -1867,7 +1867,7 @@ public class ThmP1 {
 			if (curPos == null){
 				continue;
 			}
-			//if has pos "ent"
+			//if struct is an entity
 			if (DIGITS_PATTERN.matcher(curPos).matches()) {
 				
 				StructH<HashMap<String, String>> curStruct = mathEntList.get(Integer.valueOf(curPos));			
@@ -1915,11 +1915,14 @@ public class ThmP1 {
 							 curStruct.addExtraPos(pos);
 						}
 					}
-					/*int noTexTokenListIndex = curPair.noTexTokenListIndex();					
-					noTexTokenStructAr[noTexTokenListIndex] = curStruct;
-					curStruct.setNoTexTokenListIndex(noTexTokenListIndex);*/
-					
 					structList.add(curStruct);
+					//add local variable names
+					Map<String, String> structMap = curStruct.struct();
+					String called = structMap.get("called");
+					called = null != called ? called : (structMap.get("tex"));
+					if(null != called){
+						parseState.addLocalVariableStructPair(called, curStruct);
+					}
 				}
 				prevPos = curPos;				
 			} else {
@@ -3504,8 +3507,7 @@ public class ThmP1 {
 		String punctuation = parseState.getAndClearCurPunctuation();
 		if(punctuation != null){
 			setParseStateFromPunctuation(punctuation, parseState);
-		}
-				
+		}				
 	}
 
 	/**
@@ -3564,7 +3566,6 @@ public class ThmP1 {
 		ParseStruct curParseStruct = new ParseStruct();
 		//set current parse struct for this run of the parse segment (delimited
 		//by punctuations).
-		//parseState.setCurParseStruct(curParseStruct);		
 		headParseStructList.add(curParseStruct);
 		
 		/*if(0 == uHeadStructIndex){

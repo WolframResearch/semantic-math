@@ -11,7 +11,8 @@ import thmp.parse.ParseState;
  * Information on the state of the current query. E.g. list
  * of relevant tokens, including 2/3-grams, 
  * Useful for e.g. combined search ranking in CombinedSearch.
- * One SearchState instance per query.
+ * One SearchState instance per query, therefore intentionally
+ * not meant to be used by multiple threads.
  * 
  * @author yihed
  *

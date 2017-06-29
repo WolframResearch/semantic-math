@@ -46,7 +46,7 @@ public class WordForms {
 	private static final Pattern ALL_WHITE_NONEMPTY_SPACE_PATTERN = Pattern.compile("^\\s+$");
 	private static final Pattern WHITE_NONEMPTY_SPACE_PATTERN = Pattern.compile("\\s+");
 	private static final Pattern BRACES_PATTERN = Pattern.compile("(\\{|\\}|\\[|\\])");
-	public static final Pattern SPECIAL_CHARS_PATTERN = Pattern.compile(".*[-\\{\\[\\(\\}\\]\\)$\\\\%\\.\\;\\,:_~!\']+.*");
+	public static final Pattern SPECIAL_CHARS_PATTERN = Pattern.compile(".*[-\\{\\[\\(\\}\\]\\)$\\\\%\\.\\;\\,:_~!+\"\']+.*");
 	public static final Pattern ALPHABET_PATTERN = Pattern.compile("[A-Za-z]");
 	/*Used to remove specical characters from words*/
 	private static final Pattern SPECIAL_CHARS_AROUND_WORD_PATTERN 
@@ -92,8 +92,8 @@ public class WordForms {
 	
 	//pattern matching is faster than calling str.contains() repeatedly 
 	//which is O(mn) time.
-	private static final Pattern HYP_PATTERN = Pattern.compile(".*assume.*|.*denote.*|.*define.*|.*let.*|.*is said.*|.*suppose.*"
-			+ "|.*where.*|.*is called.*|.*if.*|.*If.*") ;
+	private static final Pattern HYP_PATTERN = Pattern.compile(".*(?:assume|denote|define|let|is said|suppose"
+			+ "|where|is called|if|given).+") ;
 	private static final Pattern SPLIT_DELIM_PATTERN = Pattern.compile(SPLIT_DELIM);
 	
 	static{		

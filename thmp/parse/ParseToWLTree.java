@@ -113,13 +113,16 @@ public class ParseToWLTree{
 		for(WLCommand command : triggeredList){
 			triggeredWordsSet.add(command.getTriggerWord());
 		}
+		/////////
 		
+		///////////
 		//if(triggeredCol.isEmpty()){
 		//add words from triggerWords redirects in case there's an entry there.
 		//trigger word redirects: eg are -> is, since they are functionally equivalent
 		Collection<String> triggerWordLookupCol = triggerWordLookupMap.get(triggerKeyWord);
 		if(!triggerWordLookupCol.isEmpty()
 				//Allow type to trigger entries in triggerWordLookupMap, e.g. type is "be"
+				
 				//|| triggerWordLookupMap.containsKey(triggerType)
 				){
 			for(String s : triggerWordLookupCol){
@@ -459,15 +462,14 @@ public class ParseToWLTree{
 			structType = m.group(1);
 		}
 		
-		//if trigger a WLCommand, 
-		//boolean isTrigger = false;
 		Collection<ImmutableWLCommand> triggeredCol = get_triggerCol(triggerKeyWord, structType, struct);
-		//System.out.println("keyWord: "+ triggerKeyWord +"****************triggerCol: " + triggeredCol);
+		//System.out.println("ParseToWLTree - keyWord: "+ triggerKeyWord +"****************triggerCol: " + triggeredCol);
+		
 		//use getSingular
 		if(triggeredCol.isEmpty() && triggerKeyWord.length() > 2 
 				&& triggerKeyWord.charAt(triggerKeyWord.length() - 1) == 's'){
-			//need to write out all other cases, like ending in "es"
-			String triggerWordSingular = triggerKeyWord.substring(0, triggerKeyWord.length() - 1);
+			String triggerWordSingular = WordForms.getSingularForm(triggerKeyWord);
+					//triggerKeyWord.substring(0, triggerKeyWord.length() - 1);
 			triggeredCol = get_triggerCol(triggerWordSingular, structType, struct);				
 		}
 		
@@ -840,7 +842,6 @@ public class ParseToWLTree{
 						struct.numUnits(), WLCommand.commandNumUnits(curCommand), curCommand);
 				pair.setNumCoincidingRelationIndex(struct.numCoincidingRelationIndex());
 				
-				//partsMap.put(type, curWrapper.WLCommandStr);	
 				partsMap.put(parseStructType, pair);
 				noClashCommandFound = true;
 				//determine whether to create new child ParseStruct, or add to current

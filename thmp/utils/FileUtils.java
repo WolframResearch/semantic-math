@@ -21,7 +21,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.servlet.ServletContext;
@@ -36,12 +35,10 @@ import com.wolfram.kernelserver.KernelPool;
 import com.wolfram.kernelserver.KernelPoolException;
 import com.wolfram.msp.servlet.MSPManager;
 import com.wolfram.msp.servlet.MSPStatics;
-import com.wolfram.webkernel.EvaluationException;
 import com.wolfram.webkernel.IKernel;
 
 import thmp.utils.MathLinkUtils.WLEvaluationMedium;
 import thmp.utils.MathLinkUtils.WLEvaluationMedium.EvaluationMediumType;
-
 
 /**
  * Utility functions pertaining to files.

@@ -93,7 +93,11 @@ public class ParseState {
 	
 	//contains both text and latex e.g. "winding number $W_{ii'} (y)$"
 	//private static final Pattern COLON_PATTERN = Pattern.compile("([^:=\\s]+)\\s*[:=].*|(?([.]+)(\\subset)).*");
-	private static final Pattern COLON_PATTERN = Pattern.compile("([^:=\\s]+)\\s*[:=].*");
+	//In latex expressions such as = or : , the variable before : or = should be recorded as well.
+	private static final Pattern COLON_EQUAL_PATTERN = Pattern.compile("([^:=\\s]+)\\s*[:=].*");
+	//same here, if \\subset is part of Tex expression.
+	//need to encode all relation operators: https://oeis.org/wiki/List_of_LaTeX_mathematical_symbols
+	private static final Pattern SUBSET_PATTERN = Pattern.compile("(.+?)\\s*(?:(?:\\\\not)*\\\\subset).+");
 	
 	//private static final Pattern COLON_PATTERN = Pattern.compile("([.]+)\\s*[:=].*");	
 	//first group captures name, second the parenthesis/bracket/brace. E.g. "f[x]"
@@ -617,10 +621,12 @@ public class ParseState {
 			//if colon/equal sign present, record
 			//the expression before colon or equal. E.g. "f(x) = x", as well 
 			//as the entire expression
-			Matcher colonMatcher = COLON_PATTERN.matcher(name);
+			Matcher colonMatcher = COLON_EQUAL_PATTERN.matcher(name);
+			Matcher subsetMatcher = SUBSET_PATTERN.matcher(name);
 			
-			if(colonMatcher.find()){
-				String latexName = colonMatcher.group(1);
+			String latexName = colonMatcher.find() ? colonMatcher.group(1) : (subsetMatcher.find() ? subsetMatcher.group(1) : "");
+			if(!"".equals(latexName)){
+				//String latexName = colonMatcher.group(1);
 				//define a VariableName of the right type. 
 				VariableName latexVariableName = createVariableName(latexName);
 				VariableDefinition latexDef = new VariableDefinition(latexVariableName, entStruct, this.currentInputStr);
@@ -637,8 +643,7 @@ public class ParseState {
 						variableMMapToAddTo.put(latexVariableName, latexDef);						
 					}
 				}				
-			}
-			
+			}			
 		}//if name contains text and latex, e.g. "winding number $W_{ii'} (y)$"
 		//create a separate entry with just the latex part.
 		else if( (textLatexMatcher = TEXT_LATEX_PATTERN.matcher(name)).find() ){

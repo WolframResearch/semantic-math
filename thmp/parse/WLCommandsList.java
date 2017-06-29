@@ -95,9 +95,12 @@ public class WLCommandsList {
 		triggerWordLookupMapBuilder.put("take", "for");
 		triggerWordLookupMapBuilder.put("fix", "for");
 		
+		triggerWordLookupMapBuilder.put("take", "let");
+		
 		triggerWordLookupMapBuilder.put("letbe", "let"); 
 		//triggerWordLookupMapBuilder.put("let", "if"); June 28
 		//triggerWordLookupMapBuilder.put("suppose", "if"); June 28
+		//triggerWordLookupMapBuilder.put("if", "let");//don't need this, there's dedicated command
 		triggerWordLookupMapBuilder.put("suppose", "let");
 		triggerWordLookupMapBuilder.put("suppose that", "if");
 		triggerWordLookupMapBuilder.put("suppose that", "let");
@@ -351,7 +354,15 @@ public class WLCommandsList {
 		
 		//putToWLCommandMapBuilder(wLCommandMapBuilder, "then", new PBuilder("then|Then", null, false, true, false), 
 			//	new PBuilder("assert|texAssert", null, true) );
-		
+		//e.g. "if $D$ is a divisor".
+		putToWLCommandMapBuilder(wLCommandMapBuilder, "if", new PBuilder("if|hyp", null, false, true, false), 
+				new PBuilder("symb|ent|noun", null, true, false, false, PosTermConnotation.DEFINED,
+						RelationType._IS), 
+				new PBuilder("verb|vbs", "is|are", false, false, false), new PBuilder("\\["), 
+				new PBuilder("Element").makeExprHead(), new PBuilder("]"),
+				new PBuilder("symb|ent|phrase", null, true, false, false, PosTermConnotation.DEFINING, RelationType.IS_),
+				new PBuilder("prep", null, false, false, "OPT")
+				);
 		//"let A be B"; "suppose A is B"
 		putToWLCommandMapBuilder(wLCommandMapBuilder, "let", new PBuilder("let|hyp", null, false, true, false), 
 				new PBuilder("symb|ent|pro|noun", null, true, false, false, PosTermConnotation.DEFINED,

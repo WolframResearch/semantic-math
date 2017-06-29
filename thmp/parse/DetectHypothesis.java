@@ -10,6 +10,7 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -36,6 +37,7 @@ import thmp.search.TheoremGet.ContextRelationVecPair;
 import thmp.search.ThmSearch;
 import thmp.utils.FileUtils;
 import thmp.utils.MacrosTrie;
+import thmp.utils.TexToTree;
 import thmp.utils.WordForms;
 import thmp.utils.MacrosTrie.MacrosTrieBuilder;
 
@@ -932,6 +934,7 @@ public class DetectHypothesis {
 		
 		//first gather hypotheses in the theorem. <--Note that this will cause the hypothetical
 		//sentences to be parsed twice, unless these sentences are marked so they don't get parsed again.
+		//<--really?! June 2017
 		detectAndParseHypothesis(thm, parseState, stats);
 		//if(true) throw new IllegalStateException(parseState.toString());
 		//if contained in local map, should be careful about when to append map.
@@ -1176,11 +1179,12 @@ public class DetectHypothesis {
 		List<VariableDefinition> varDefList = new ArrayList<VariableDefinition>();
 		
 		//split the latexExpr with delimiters
-		String[] latexExprAr = SYMBOL_SEPARATOR_PATTERN.split(latexExpr);
-		//System.out.println("=++++++++========= latexExpr " + latexExpr);
-		for(int i = 0; i < latexExprAr.length; i++){
+		//String[] latexExprAr = SYMBOL_SEPARATOR_PATTERN.split(latexExpr);
+		List<String> varsList = TexToTree.texToTree(latexExpr);
+		System.out.println("DetectHypothesis - varsList " + varsList);
+		for(int i = 0; i < varsList.size(); i++){
 			
-			String possibleVar = latexExprAr[i];
+			String possibleVar = varsList.get(i);
 			//System.out.println("^^^$^%%% &^^^ DetectHypothesis - possibleVar: "+ possibleVar);
 			
 			//Get a variableName and check if a variable has been defined.

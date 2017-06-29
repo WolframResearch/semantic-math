@@ -218,6 +218,7 @@ one adj_comp
 "one has" then
 zero num
 zero adj
+divisor ent
 zerodivisor ent
 nonzerodivisor ent
 non-zerodivisor ent
