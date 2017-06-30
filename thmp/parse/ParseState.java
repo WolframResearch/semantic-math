@@ -16,6 +16,7 @@ import com.google.common.collect.ListMultimap;
 import thmp.parse.ThmP1.ParsedPair;
 import thmp.search.CollectThm;
 import thmp.utils.FileUtils;
+import thmp.utils.TexToTree;
 import thmp.utils.WordForms;
 
 import java.io.BufferedWriter;
@@ -99,7 +100,6 @@ public class ParseState {
 	//need to encode all relation operators: https://oeis.org/wiki/List_of_LaTeX_mathematical_symbols
 	private static final Pattern SUBSET_PATTERN = Pattern.compile("(.+?)\\s*(?:(?:\\\\not)*\\\\subset).+");
 	
-	//private static final Pattern COLON_PATTERN = Pattern.compile("([.]+)\\s*[:=].*");	
 	//first group captures name, second the parenthesis/bracket/brace. E.g. "f[x]"
 	private static final Pattern VARIABLE_NAME_PATTERN = Pattern.compile("([^\\[\\{\\(]+)([\\[\\{\\(]).*");
 	
@@ -150,7 +150,7 @@ public class ParseState {
 		
 		private static final long serialVersionUID = 1L;
 		//name of variable.
-		private String head;
+		private String nameStr;
 		private VariableNameType variableNameType;
 		
 		/**
@@ -195,17 +195,17 @@ public class ParseState {
 		
 		@Override
 		public String toString(){
-			return (new StringBuilder(this.head)).append(": ")
+			return (new StringBuilder(this.nameStr)).append(": ")
 					.append(this.variableNameType).toString();
 		}
 		
 		public VariableName(String head, VariableNameType type){
-			this.head = head;
+			this.nameStr = head;
 			this.variableNameType = type;
 		}
 
-		public String head(){
-			return this.head;
+		public String nameStr(){
+			return this.nameStr;
 		}
 		
 		public VariableNameType variableType(){
@@ -216,7 +216,7 @@ public class ParseState {
 		public int hashCode() {
 			final int prime = 31;
 			int result = 1;
-			result = prime * result + ((head == null) ? 0 : head.hashCode());
+			result = prime * result + ((nameStr == null) ? 0 : nameStr.hashCode());
 			result = prime * result + ((variableNameType == null) ? 0 : variableNameType.hashCode());
 			return result;
 		}
@@ -233,13 +233,13 @@ public class ParseState {
 			}
 			
 			VariableName otherName = (VariableName)other;
-			if(otherName.head() == null && null != this.head
-					|| otherName.head() != null && null == this.head){
+			if(otherName.nameStr() == null && null != this.nameStr
+					|| otherName.nameStr() != null && null == this.nameStr){
 				return false;
 			}
 			
 			if(otherName.variableNameType != this.variableNameType
-					|| !otherName.head.equals(this.head)){
+					|| !otherName.nameStr.equals(this.nameStr)){
 				return false;
 			}
 			return true;
@@ -604,17 +604,22 @@ public class ParseState {
 	
 	/**
 	 * Adds to either local or global var map depending on the inThm flag.
-	 * @param name Name of entStruct.
+	 * May find multiple names, but all are defined with the same Struct
+	 * supplied in input.
+	 * @param name Name of entStruct. Usually small snippets of tex, not e.g.
+	 * elaborate equations.
 	 * @param entStruct Entity to be added with name entStruct.
 	 */
 	public void addLocalVariableStructPair(String name, Struct entStruct){
+		//if(true)throw new RuntimeException(name + " " + entStruct);
+		if(WordForms.getWhiteEmptySpacePattern().matcher(name).matches()) return;
 		
 		Matcher latexContentMatcher = LATEX_DOLLARS_PATTERN.matcher(name);
 		Matcher textLatexMatcher;
 		//System.out.println("adding name: " +name +Arrays.toString(Thread.currentThread().getStackTrace()));
 		ListMultimap<VariableName, VariableDefinition> variableMMapToAddTo = inThmFlag 
 				? localVariableNamesMMap : globalVariableNamesMMap;
-		
+		boolean varAdded = false;
 		if(latexContentMatcher.find()){
 			name = latexContentMatcher.group(1);
 			name = WordForms.stripSurroundingWhiteSpace(name);
@@ -623,9 +628,9 @@ public class ParseState {
 			//as the entire expression
 			Matcher colonMatcher = COLON_EQUAL_PATTERN.matcher(name);
 			Matcher subsetMatcher = SUBSET_PATTERN.matcher(name);
-			//make this more systematic, also add greek alpha parser!
-			
+			//make this more systematic!
 			String latexName = colonMatcher.find() ? colonMatcher.group(1) : (subsetMatcher.find() ? subsetMatcher.group(1) : "");
+			//findTexName(name);
 			if(!"".equals(latexName)){
 				//String latexName = colonMatcher.group(1);
 				//define a VariableName of the right type. 
@@ -637,14 +642,15 @@ public class ParseState {
 					variableMMapToAddTo.put(latexVariableName, latexDef);
 					
 					//if variableNameType is paren/brace/bracket, also include name without 
-					//the paren/brace/bracket in the map, e.g. $f(x) = x$, $f$ is smooth.
+					//the paren/brace/bracket in the map, e.g. "$f(x) = x$", include "f", so can pick up "$f$ is smooth".
 					//nest inside so not to check for containment again.
 					if(latexVariableName.variableType().isParenBracketBrace()){
-						latexVariableName = new VariableName(latexVariableName.head, VariableName.VariableNameType.NONE);
+						latexVariableName = new VariableName(latexVariableName.nameStr, VariableName.VariableNameType.NONE);
 						variableMMapToAddTo.put(latexVariableName, latexDef);						
 					}
+					varAdded = true;
 				}				
-			}			
+			}
 		}//if name contains text and latex, e.g. "winding number $W_{ii'} (y)$"
 		//create a separate entry with just the latex part.
 		else if( (textLatexMatcher = TEXT_LATEX_PATTERN.matcher(name)).find() ){
@@ -656,39 +662,106 @@ public class ParseState {
 			if(!variableMMapToAddTo.containsEntry(latexVariableName, latexDef)){				
 				variableMMapToAddTo.put(latexVariableName, latexDef);
 			}
+			varAdded = true;
 		}
-		
-		VariableName variableName = createVariableName(name);
-		//should check if contains entry.
-		VariableDefinition def = new VariableDefinition(variableName, entStruct, this.currentInputStr);	
-		//!variableMMapToAddTo.containsKey(variableName)
-		if(!variableMMapToAddTo.containsEntry(variableName, def)){
-			//System.out.println(variableName + "-++-" + variableNamesMMap + " ===== "  +Arrays.toString(Thread.currentThread().getStackTrace()));						
-			variableMMapToAddTo.put(variableName, def);	
-			//System.out.println("!++++++++++++entStruct: " + entStruct);
-		}		
+		if(!varAdded){
+			//get the name before the first special character, could be \\, (, etc.
+			//so don't get all of "let $p > 0$ be an integer"
+			int i = 0;
+			String iCharStr = "";
+			int nameLen = name.length();			
+			while(i < nameLen && iCharStr.equals(" ")){
+				iCharStr = String.valueOf(name.charAt(i++));
+			}
+			StringBuilder varSB = new StringBuilder();
+			while(i < nameLen && (!WordForms.SPECIAL_CHARS_PATTERN.matcher((iCharStr=String.valueOf(name.charAt(i++)))).matches())){
+				varSB.append(iCharStr);
+			}
+			///if(true ) System.out.println("varSB.toString() "+varSB.toString());
+			name = varSB.length() == 0 ? name : varSB.toString();
+			// e.g. $\\alpha$
+			if(varSB.length() == 0 && WordForms.getTexCommandBeginPattern().matcher(iCharStr).matches()){
+				StringBuilder nextCommandSB = new StringBuilder(10);
+				while(i < nameLen && (!WordForms.getTexCommandEndPattern().matcher((iCharStr=String.valueOf(name.charAt(i)))).matches()
+						//|| iCharStr.equals(" ")
+						)){
+					nextCommandSB.append(iCharStr);
+					i++;
+				}
+				/*while(++i < nameLen && iCharStr.equals(" ")){
+					iCharStr = String.valueOf(name.charAt(i));
+				}*/
+				//if(true) System.out.println("TexToTree nextCommandSB - "+nextCommandSB.toString());
+				String nextCommand = nextCommandSB.toString();
+				//look for Greek alphabets, which could be variables
+				if(WordForms.isGreekAlpha(nextCommand)){
+					name = nextCommand;
+				}else if(nextCommand.equals("mathbb")){
+					//e.g. \mathbb{ }
+					name = nextCommandSB.append(getNextParenthesizedToken(name, i)).toString();	
+				}
+			}			
+			//include the entire string
+			VariableName variableName = createVariableName(name);
+			//should check if contains entry.
+			VariableDefinition def = new VariableDefinition(variableName, entStruct, this.currentInputStr);	
+			if(!variableMMapToAddTo.containsEntry(variableName, def)){
+				variableMMapToAddTo.put(variableName, def);	
+			}	
+		}
 	}
-	
+	/**
+	 * For fishing out token contained in parenthses, e.g. \\mathbb{Z}
+	 * @param name
+	 * @param i
+	 * @return
+	 */
+	public static String getNextParenthesizedToken(String name, int i){
+		StringBuilder sb = new StringBuilder();
+		int nameLen = name.length();
+		String curStr = String.valueOf(name.charAt(0));
+		//while(i < nameLen && !TexToTree.DESCEND_STRING().contains(String.valueOf(name.charAt(i++))));
+		
+		while(i < nameLen && !TexToTree.ASCEND_STRING().contains((curStr=String.valueOf(name.charAt(i))))){
+			sb.append(curStr);
+			i++;
+		}	
+		if(i < nameLen //&& TexToTree.ASCEND_STRING().contains((curStr=String.valueOf(name.charAt(i))))
+				){
+			sb.append(curStr);
+		}
+		//System.out.println("sb  "+sb);
+		return sb.toString();
+	}
 	/**
 	 * Creates a VariableName instance of the appropriate type,
-	 * based on name.
+	 * based on name. 
 	 * @param name Should not contain $ $ around it.
 	 * @return
 	 */
 	public static VariableName createVariableName(String name){
-		
+		Matcher spaceM;
+		if((spaceM=WordForms.SPACES_AROUND_TEXT_PATTERN().matcher(name)).matches()){
+			name = spaceM.group(1);
+		}
 		VariableName.VariableNameType variableNameType = VariableName.VariableNameType.NONE;
 		//figure out the VariableNameType
+		//e.g. Brace for f(x), bracket for f[x]
 		Matcher parenMatcher = VARIABLE_NAME_PATTERN.matcher(name);
 		Matcher dashMatcher;
 		
-		if(parenMatcher.matches()){			
-			name = parenMatcher.group(1);
-			variableNameType = VariableName.VariableNameType
-					.getVariableNameTypeFromString(parenMatcher.group(2));
+		if(parenMatcher.matches()){		
+			//E.g. f(\alpha) = \alpha^2 should not include \alpha as variable name.
+			String nameOutsideParen = parenMatcher.group(1);
+			if(!"mathbb".equals(nameOutsideParen)){
+				name = parenMatcher.group(1);
+				variableNameType = VariableName.VariableNameType
+						.getVariableNameTypeFromString(parenMatcher.group(2));				
+			}
 			//throw new IllegalStateException(variableNameType + " " + name);
 		}
 		else if((dashMatcher = VARIABLE_NAME_DASH_PATTERN.matcher(name)).matches()){	
+			//e.g. K-algebra 
 			name = dashMatcher.group(1);
 			variableNameType = VariableName.VariableNameType
 					.getVariableNameTypeFromString("-");

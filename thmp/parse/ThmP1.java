@@ -172,7 +172,7 @@ public class ThmP1 {
 	//don't print when running on byblis 
 	private static final boolean DEBUG = FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : false;
 	//can be turned on when run locally by making the first slot "true"
-	private static final boolean PLOT_DEBUG = FileUtils.isOSX() ? true : false;
+	private static final boolean PLOT_DEBUG = FileUtils.isOSX() ? false : false;
 	//Pattern used to check if word is valid.
 	//Don't put \', could be in valid word
 	private static final Pattern BACKSLASH_CONTAINMENT_PATTERN = 

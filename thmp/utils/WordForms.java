@@ -46,7 +46,8 @@ public class WordForms {
 	private static final Pattern ALL_WHITE_NONEMPTY_SPACE_PATTERN = Pattern.compile("^\\s+$");
 	private static final Pattern WHITE_NONEMPTY_SPACE_PATTERN = Pattern.compile("\\s+");
 	private static final Pattern BRACES_PATTERN = Pattern.compile("(\\{|\\}|\\[|\\])");
-	public static final Pattern SPECIAL_CHARS_PATTERN = Pattern.compile(".*[-\\{\\[\\(\\}\\]\\)$\\\\%.;,:_~!+^&\"\']+.*");
+	//delibera
+	public static final Pattern SPECIAL_CHARS_PATTERN = Pattern.compile(".*[-\\{\\[\\(\\}\\]\\)$\\\\%.;,:_~!+^&\"\'+<>=#].*");
 	public static final Pattern ALPHABET_PATTERN = Pattern.compile("[A-Za-z]");
 	/*Used to remove specical characters from words*/
 	private static final Pattern SPECIAL_CHARS_AROUND_WORD_PATTERN 
@@ -62,7 +63,10 @@ public class WordForms {
 	//pattern for Latex expressions being possible assert's, i.e. starting/ending with $ and 
 	//containing operators such as ">, ="
 	private static final Pattern LATEX_ASSERT_PATTERN = Pattern.compile("\\$(?:[^$]+)\\$");
-		
+	private static final Pattern COMMAND_BEGIN_PATTERN = Pattern.compile("\\\\");
+	//indicates termination of a Latex command
+	private static final Pattern COMMAND_END_PATTERN = Pattern.compile("[\\$(\\[{\\])}_;,:!'`~%.\\-\"\\s]");
+	
 	public static final String QUANTITY_POS = "quant";
 	
 	private static final String synonymsFileStr = "src/thmp/data/synonyms.txt";
@@ -96,6 +100,8 @@ public class WordForms {
 			+ "|where|is called|if|given).+") ;
 	private static final Pattern SPLIT_DELIM_PATTERN = Pattern.compile(SPLIT_DELIM);
 	
+	private static final Set<String> GREEK_ALPHA_SET;
+
 	static{		
 		FLUFF_WORDS_SMALL_SET = new HashSet<String>();
 		String[] fluffAr = FLUFF_WORDS_SMALL.split("\\|");
@@ -127,8 +133,14 @@ public class WordForms {
 		synonymRepMap = ImmutableMap.copyOf(synonymsPreMap);
 		//create "inverse" Multimap for the different forms for each word stem.
 		stemToWordsMMap = ImmutableMultimap.copyOf(createStemToWordsMMap(stemWordsMap));
-		
+				
 		FileUtils.silentClose(synonymsBF);
+		
+		GREEK_ALPHA_SET = new HashSet<String>();
+		String[] GREEK_ALPHA = new String[]{"alpha","beta","gamma"};
+		for(String s : GREEK_ALPHA){
+			GREEK_ALPHA_SET.add(s);
+		}		
 	}
 	
 	private static Multimap<String, String> createStemToWordsMMap(Map<String, String> stemWordsMap){
@@ -888,6 +900,41 @@ public class WordForms {
 			// defaultList.add(lineAr[2]);
 		}
 		return pos;
+	}
+	
+	public static Pattern getTexCommandBeginPattern() {
+		return COMMAND_BEGIN_PATTERN;
+	}
+
+	public static Pattern getTexCommandEndPattern() {
+		return COMMAND_END_PATTERN;
+	}
+	
+	/**
+	 * Word may start with escape char (slash).
+	 * @param word
+	 * @return
+	 */
+	public static boolean isGreekAlpha(String word){
+		int wordLen = word.length();
+		if(wordLen < 1) {
+			return false;
+		}
+		if(word.charAt(0) == '\\'){
+			word = word.substring(1);
+		}
+		if(GREEK_ALPHA_SET.contains(word)){
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Set of Greek alphabets. No slash at beginning.
+	 * @return
+	 */
+	public static Set<String> GREEK_ALPHA_SET_NoSlash(){
+		return GREEK_ALPHA_SET;
 	}
 	
 	/**

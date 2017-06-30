@@ -60,4 +60,11 @@ public class TestTexToTree {
 		String[] desiredSetAr = new String[]{"x", "y"};
 		assert(testTexToTree(tex, desiredSetAr));		
 	}
+
+	@Test
+	public void test5(){
+		String tex = "f[\\alpha] = y";
+		String[] desiredSetAr = new String[]{"f", "\\alpha", "y"};
+		assert(testTexToTree(tex, desiredSetAr));		
+	}
 }

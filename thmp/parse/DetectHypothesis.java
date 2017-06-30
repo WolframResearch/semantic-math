@@ -531,10 +531,11 @@ public class DetectHypothesis {
 	}
 
 	/**
-	 * @param parseState
 	 * @param inputBF
+	 * @param defThmList empty list.
+	 * @param thmHypPairList Emoty list.
+	 * @param stats
 	 * @param fileName name of file, to append to parsed thms.
-	 * @throws Throwable
 	 */
 	private static void extractThmsFromFiles(BufferedReader inputBF, List<DefinitionListWithThm> defThmList, 
 			List<ThmHypPair> thmHypPairList, Stats stats, String fileName) {
@@ -762,15 +763,13 @@ public class DetectHypothesis {
 	 * @param thmWebDisplayList
 	 *            List to contain theorems to display for the web. without
 	 *            \labels, \index, etc. Can be null, for callers who don't need it.
-	 * @param bareThmList
-	 * 				bareThmList for parsing, without label content. Can be null.
 	 * @param macros author-defined macros using \newtheorem
 	 * @return List of unprocessed theorems read in from srcFileReader, for bag
-	 *         of words search.
+	 *         of words search. Empty at input.
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
-	private static void readAndParseThm(BufferedReader srcFileReader, 
+	public static void readAndParseThm(BufferedReader srcFileReader, 
 			ParseState parseState, List<DefinitionListWithThm> definitionListWithThmList,
 			List<ThmHypPair> thmHypPairList,
 			Stats stats, String fileName) throws IOException{
