@@ -338,12 +338,19 @@ public class StructA<A, B> extends Struct{
 			//wrapperListSz should be > 0, since list is created when first wrapper is added
 			
 			WLCommandWrapper curWrapper = WLCommandWrapperList.get(wrapperListSz - 1);
-			WLCommand composedCommand = curWrapper.WLCommand(); 
+			WLCommand composedCommand = curWrapper.WLCommand();  
+			/*if(curCommand.getTriggerWord().equals("if") && this.type.equals("assert")){
+				//System.out.println("( composedCommand.structHeadWithOtherHead() "+ composedCommand.structHeadWithOtherHead());
+				//System.out.println("structHeadWithOtherHead.dfsDepth() "+composedCommand.structHeadWithOtherHead().dfsDepth());
+				//throw new IllegalStateException("WLCommand.structsWithOtherHeadCount(composedCommand) "+WLCommand.structsWithOtherHeadCount(composedCommand));			
+			}*/
 			Struct structHeadWithOtherHead = null;
 			if(WLCommand.structsWithOtherHeadCount(composedCommand) == 0 || 
-					null != (structHeadWithOtherHead = composedCommand.structHeadWithOtherHead())
-					//should more precisely check for .equals, but dfsDepth suffices here.
-					&& this.dfsDepth() == structHeadWithOtherHead.dfsDepth()){//HERE
+					(null != (structHeadWithOtherHead = composedCommand.structHeadWithOtherHead())
+					//dfsDepth suffices here, ie same level in the parse tree.
+					&& this.dfsDepth() == structHeadWithOtherHead.dfsDepth())
+					|| null == structHeadWithOtherHead){
+				
 				//if(WLCommand.structsWithOtherHeadCount(composedCommand) > 0){
 					//System.out.println("structA WLCommand.structsWithOtherHeadCount(composedCommand) " + WLCommand.structsWithOtherHeadCount(composedCommand));
 				//}
@@ -781,7 +788,30 @@ public class StructA<A, B> extends Struct{
 		}		
 		return contentStrList;
 	}
-	
+	/**
+	 * Content string list of the current level, without descendants' content.
+	 * @return
+	 */
+	public List<String> contentStrCurLevelList(){		
+		List<String> contentStrList = new ArrayList<String>();
+		if(PREV1_TYPE != null){
+			if(PREV1_TYPE.equals(NodeType.STR)){
+				String prev1Str = (String)prev1;
+				if(!WordForms.getWhiteEmptySpacePattern().matcher(prev1Str).matches()){
+					contentStrList.add(prev1Str);	
+				}				
+			}
+		}
+		if(PREV2_TYPE != null){
+			if(PREV2_TYPE.equals(NodeType.STR)){
+				String prev2Str = (String)prev2;
+				if(!WordForms.getWhiteEmptySpacePattern().matcher(prev2Str).matches()){
+					contentStrList.add(prev2Str);		
+				}				
+			}
+		}		
+		return contentStrList;
+	}
 	/**
 	 * @return will not be null.
 	 */

@@ -18,6 +18,7 @@ import thmp.search.CollectThm;
 import thmp.search.Searcher;
 import thmp.search.TriggerMathThm2;
 import thmp.utils.GatherRelatedWords.RelatedWords;
+import thmp.utils.WordForms.WordMapIndexPair;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 
@@ -44,7 +45,6 @@ public class RelationVec implements Serializable{
 
 	//map of words and their indices.
 	private static final Map<String, Integer> contextKeywordIndexThmsDataDict = CollectThm.ThmWordsMaps.get_CONTEXT_VEC_WORDS_INDEX_MAP();
-	//.get_contextVecWordsIndexNextTimeMap();
 	
 	//used for forming query vecs, as these are words used when the thm source vecs were formed, words and their indices
 	//Ordered according to frequency.
@@ -59,7 +59,7 @@ public class RelationVec implements Serializable{
 	
 	private static final int parseContextVectorSz;	
 	private static final int NUM_BITS_PER_BYTE = 8;
-	private static final Pattern SPLIT_DELIM_PATTERN = Pattern.compile(WordForms.splitDelim());
+	private static final Pattern SPLIT_DELIM_PATTERN = WordForms.splitDelimPattern();
 	private static final BigInteger PLACEHOLDER_RELATION_VEC = new BigInteger(new byte[]{0});
 	
 	private static final boolean DEBUG = FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : false;
@@ -111,15 +111,7 @@ public class RelationVec implements Serializable{
 			return this.vectorOffsetArray;
 		}		
 	}
-	
-	/**
-	 * Sets the dictionary to the mode for producing context vecs from data source to be searched.
-	 * e.g. in DetectHypothesis.java.
-	 */
-	/*public static void set_keywordDictToDataMode(){
-		keywordDict = contextKeywordThmsDataDict;
-	}*/
-	
+
 	/**
 	 * Builds relation vec from ParsedPair's in parsedPairMMap, 
 	 * @param parsedPairMMap
@@ -182,13 +174,13 @@ public class RelationVec implements Serializable{
 
 		List<PosTerm> posList = WLCommand.posTermList(wlCommand);
 		
-		for(PosTerm posTerm : posList)
-		{
+		for(PosTerm posTerm : posList){
 			Struct posTermStruct = posTerm.posTermStruct();			
 			if(null == posTermStruct //&& posTerm.isOptionalTerm()
 					){
 				continue;
-			}			
+			}	
+			//contentStrList contains contents of descendants as well.
 			List<String> contentStrList = posTermStruct.contentStrList();
 			//System.out.println("***********RelationVec - contentStrList: " + contentStrList + " posTerm: " + posTerm);
 			
@@ -263,6 +255,7 @@ public class RelationVec implements Serializable{
 	
 		/**
 		 * Auxilliary method for buildRelationVec() to set bits in BitSet.
+		 * termStr should already been singularized, since it comes from parse.
 		 * @param termStr The input string. 
 		 * @param modulus Which segment of the index the current RelationType corresponds to, e.g. _IS.
 		 * @return max position this run in the new bit positions added.
@@ -281,6 +274,7 @@ public class RelationVec implements Serializable{
 				//e.g. "... is regular local", sets "is regular, *and* "is local"
 				for(int i = 0; i < termStrArLen; i++){				
 					String word = termStrAr[i];
+					
 					List<String> relatedWordsList = null;
 					RelatedWords relatedWords;
 					if(!GATHERING_DATA_BOOL){
@@ -290,24 +284,30 @@ public class RelationVec implements Serializable{
 							relatedWordsList = relatedWords.getCombinedList();
 						}
 					}
-					//System.out.println("RelationVec.java - trying to add word " + word);
-					Integer residue = keywordIndexDict.get(word);
-					if(null == residue){
-						String normalizedWord = WordForms.normalizeWordForm(word);
-						residue = keywordIndexDict.get(normalizedWord);
-						if(!GATHERING_DATA_BOOL && null == relatedWordsList){
-							relatedWords = relatedWordsMap.get(word);
-							if(null != relatedWords){
-								relatedWordsList = relatedWords.getCombinedList();
+					
+					//System.out.println("RelationVec.java - trying to add word " + word);					
+					WordMapIndexPair pair = WordForms.uniformizeWordAndGetIndex(word, keywordIndexDict);	
+					Integer residue = pair.mapIndex();// = keywordIndexDict.get(word);
+					if(WordMapIndexPair.placeholderWordMapIndexPair() != pair){
+						//String normalizedWord = WordForms.normalizeWordForm(word);
+						//residue = keywordIndexDict.get(normalizedWord);
+						if(!GATHERING_DATA_BOOL){
+							if(null == relatedWordsList){
+								relatedWords = relatedWordsMap.get(pair.word());
+								if(null != relatedWords){
+									relatedWordsList = relatedWords.getCombinedList();
+								}
 							}
+							//add the residues for related words first
+							maxBitPos = addRelatedWordsResidue(bitPosList, modulus, posTermRelationType, isParseStructTypeHyp,
+									maxBitPos, relatedWordsList);
 						}
-					}
-					if(!GATHERING_DATA_BOOL){
-					//add the residues for related words first
-						maxBitPos = addRelatedWordsResidue(bitPosList, modulus, posTermRelationType, isParseStructTypeHyp,
-								maxBitPos, relatedWordsList);
-					}
-					if(null == residue){						
+					}else{
+						if(!GATHERING_DATA_BOOL){
+							//add the residues for related words first
+							maxBitPos = addRelatedWordsResidue(bitPosList, modulus, posTermRelationType, isParseStructTypeHyp,
+									maxBitPos, relatedWordsList);
+						}
 						continue;
 					}
 					if(DEBUG){

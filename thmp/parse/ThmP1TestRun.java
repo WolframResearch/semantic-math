@@ -783,6 +783,20 @@ public class ThmP1TestRun {
 			st = "assume $k$ is a field";
 			st = "$K$ is said to be a field";
 			st = "take $F$ to be a field"; //if F is a field
+			st = "if F is a field";
+			st = "$R/\\mathfrak p$ is catenary for every minimal prime $ \\ mathfrak p$";
+			st = "take $x \\ elem R$.";
+			st = "There are fields in the class $ \\ mathcal{X}$ that are not finite modifications of rings.";
+			st = "If $ \\ sum a_k$ converges conditionally, ";
+			st = "$ \\ lambda$ run over all pairs of partitions which are complementary with respect to $R$";
+			st = "The interchange of two distant critical points of the surface diagram does not change the induced map on homology";
+			st = "fix a rectangular Young diagram $R$ over a field"; //bad two-gram data .
+			//improve context vector
+			st = "curve $C$ covers field ";
+			st = "field is global ring over group";
+			st = "if this group consists of nilpotents"; 
+			st = "let $H$ be a connected locally compact abelian group";
+			st = "let $H$ be a simply connected group";
 			//st = " \\[ \\ begin{array}{l}  \\ frac{1}{\\ eta_ 1(R^1_T)}  \\ int_{R^1_T} \\ left(\\ int_{H_ 1/H_1\\ cap \\ Gamma_ 1} f(gh \\ Gamma_ 1)\\; d \\ nu_ 1(\\ dot{h})\\ right) \\,d \\ eta_ 1(\\ dot{g}) \\ \\[7pt] \\ qquad \\ \\ qquad =  (1/2)\\ int_{{\\ rm O}(n)} dk \\ cdot \\ int_{H_ 1/H_1\\ cap \\ Gamma_ 1}  d \\ nu_ 1(\\ dot{h})\\; {\\ scriptstyle \\ times} \\ \\[3pt] \\ qquad \\ \\ qquad \\ \\ qquad {\\ scriptstyle \\ times}\\;   \\ left (\\ frac{1}{\\ ell(D^1_T)} \\ int_{(\\ mbox{\\ boldmath{$ \\ scriptstyle t$}},\\ mbox{\\ boldmath{$ \\ scriptstyle x$}})\\ in D^1_T}  f(k \\ Psi(\\ mbox{\\ boldmath{$t$}},\\ mbox{\\ boldmath{$x$}})\\ Gamma_ 1)\\; d \\ mbox{\\ boldmath{$t$}}\\, d \\ mbox{\\ boldmath{$x$}} \\ right).  \\end{array} \\]";
 			//st = "Let $p_1,\\dots,p_r$ be the preimages under $w$"; 			
 			//st = "$p_1,\\dots,p_r$ is the preimage under $w$ of $c^\\ast_0$";			

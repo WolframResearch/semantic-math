@@ -37,6 +37,7 @@ public class RelationalSearch implements Searcher<BigInteger>{
 	//private static final List<BigInteger> relationVecList;
 	private static final Logger logger = LogManager.getLogger(RelationalSearch.class);
 	private QueryVecContainer<BigInteger> searcherState;
+	private static final int RELATION_SEARCH_NUM_NEAREST = 10;
 	
 	static{
 		//should get vectors from deserialized ParsedExpression's List
@@ -68,7 +69,7 @@ public class RelationalSearch implements Searcher<BigInteger>{
 			if(WordForms.getWhiteEmptySpacePattern().matcher(thm).matches()) continue;
 			
 			thm = thm.toLowerCase();
-			int NUM_NEAREST = 6;
+			int NUM_NEAREST = RELATION_SEARCH_NUM_NEAREST;
 			String queryVecStr = TriggerMathThm2.createQueryNoAnno(thm);
 			List<Integer> nearestVecList = ThmSearch.ThmSearchQuery.findNearestVecs(queryVecStr, NUM_NEAREST);
 			
@@ -105,7 +106,8 @@ public class RelationalSearch implements Searcher<BigInteger>{
 	}
 	
 	/**
-	 * Return list of string's as opposed to indices.
+	 * Return list of string's as opposed to indices. 
+	 * Method used on servlet - June 2017.
 	 * @param queryStr
 	 * @param nearestThmIndexList
 	 * @return
@@ -134,9 +136,9 @@ public class RelationalSearch implements Searcher<BigInteger>{
 			queryRelationVec = thmp.parse.GenerateRelationVec.generateRelationVec(queryStr, searchState);
 		}else{
 			//optimization to store vec in searcherState, 
-			//to avoid repeatedly parsing the same query string.
-			QueryVecContainer<BigInteger> searcherState;
-			
+			//to avoid repeatedly parsing the same query string, 
+			//in case some other search algorithm is used for same query.
+			QueryVecContainer<BigInteger> searcherState;			
 			if(null == (searcherState = searcher.getSearcherState())){
 				queryRelationVec = thmp.parse.GenerateRelationVec.generateRelationVec(queryStr, searchState);
 				searcher.setSearcherState(new QueryVecContainer<BigInteger>(queryRelationVec));
@@ -149,7 +151,7 @@ public class RelationalSearch implements Searcher<BigInteger>{
 			}
 		}
 		
-		System.out.println("--++++++queryRelationVec " + queryRelationVec);
+		//System.out.println("--++++++queryRelationVec " + queryRelationVec);
 		//skip relation search if no nontrivial relation found, i.e. no bit set.
 		if(null == queryRelationVec || queryRelationVec.bitCount() == 0){
 			return nearestThmIndexList;
@@ -168,10 +170,8 @@ public class RelationalSearch implements Searcher<BigInteger>{
 			//if(true) throw new IllegalStateException();
 			int hammingDistance_i = RelationVec.hammingDistance2(queryRelationVec, relationVec_i);
 			nearestThmTreeMMap.put(hammingDistance_i, thmIndex);
-		}
-		
-		return new ArrayList<Integer>(nearestThmTreeMMap.values());
-		
+		}		
+		return new ArrayList<Integer>(nearestThmTreeMMap.values());		
 	}
 	
 	//this should be inside RelationVec!!

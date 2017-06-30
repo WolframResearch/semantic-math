@@ -134,17 +134,6 @@ public class SearchCombined {
 		return bestCommonThmHypPairList;
 	}
 	
-	/*private static List<String> getThmList(){
-		if(null == thmList){
-			synchronized(SearchCombined.class){
-				if(null == thmList){
-					thmList = CollectThm.ThmList.allThmsWithHypList();
-				}
-			}
-		}
-		return thmList;
-	}*/
-	
 	/**
 	 * Set resources for list of resource files.
 	 * @param freqWordsFileBuffer
@@ -154,12 +143,7 @@ public class SearchCombined {
 	 * @param allThmWordsSerialBReader BufferedReader to file containing words from previous run's theorem data.
 	 */
 	public static void initializeSearchWithResource(ServletContext servletContext_){
-		//CollectFreqWords.setResources(freqWordsFileBuffer);
 		CollectThm.setServletContext(servletContext_);
-		
-		//CollectThm.setWordFrequencyBR(freqWordsFileBuffer);
-		//CollectThm.setResources(texSourceFileBufferList, macrosReader, parsedExpressionListInputStream, allThmWordsSerialInputStream);	
-		
 		ProcessInput.setServletContext(servletContext_);
 	}
 	
@@ -200,7 +184,7 @@ public class SearchCombined {
 		}
 		
 		int totalWordAdded = searchState.totalWordAdded();
-		//avoid magic numbers
+		//avoid magic numbers!
 		int threshold = totalWordAdded < 3 ? totalWordAdded : (totalWordAdded < 6 ? totalWordAdded-1 
 				: totalWordAdded - totalWordAdded/3);
 		int maxScore = 0;
@@ -253,9 +237,6 @@ public class SearchCombined {
 		int topIntersectionThmScore = thmScoreMap.get(topIntersectionThmIndex);
 		int topQueryIndex;
 		//intersectionVecList guranteed not empty at this point. Remove magic numbers.
-		//thmSpanMap.get(topThmIndex) < thmSpanMap.get(topIntersectionThmIndex)*4.0/5
-		//System.out.println("topThmIndex: " + topThmIndex + " thmScoreMap: " + thmScoreMap);
-		
 		//adjust top search result
 		if( (!intersectionVecList.contains(topThmIndex)
 				//make the 4.0/5 into constant after done with tinkering
@@ -308,8 +289,7 @@ public class SearchCombined {
 					input = matcher.group(2);
 				}
 			}
-		}
-		
+		}		
 		StringBuilder inputSB = new StringBuilder();
 		int numCommonVecs = getNumCommonVecs(inputSB, input);
 		input = inputSB.toString();
@@ -318,7 +298,8 @@ public class SearchCombined {
 		// tokens and their span scores. And communicate parseState
 		//among different searchers.
 		SearchState searchState = new SearchState();
-		SearchIntersection.intersectionSearch(input, searchWordsSet, searchState, searchContextBool, NUM_NEAREST);
+		SearchIntersection.intersectionSearch(input, searchWordsSet, searchState, searchContextBool, 
+				searchRelationalBool, NUM_NEAREST);
 		
 		String[] inputAr = WordForms.getWhiteNonEmptySpacePattern().split(input);		
 		//context search doesn't do anything if only one token.
@@ -338,20 +319,14 @@ public class SearchCombined {
 					//System.out.println("I've got nothing for you yet. Try again.");
 					System.out.println("SVD search returns empty list!");
 					//return Collections.<ThmHypPair>emptyList();
-				}				
+				}
+				
 				//find best intersection of these two lists. nearestVecList is 1-based, but intersectionVecList is 0-based! 
 				bestCommonVecsList = findListsIntersection(nearestVecList, searchState, 
 					numCommonVecs, input);
 			}
 		}
 		
-		//combine with ranking from relational search, reorganize within each tuple
-		//of fixed size.
-		if(searchRelationalBool){
-			int tupleSz = CONTEXT_SEARCH_TUPLE_SIZE;
-			Searcher<BigInteger> searcher = new RelationalSearch();
-			bestCommonVecsList = searchVecWithTuple(input, bestCommonVecsList, tupleSz, searcher, searchState);			
-		}
 
 		List<ThmHypPair> bestCommonThmHypPairList = thmListIndexToThmHypPair(bestCommonVecsList);
 			

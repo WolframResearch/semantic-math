@@ -84,8 +84,8 @@ public class ThmP1 {
 	//end part of latex expression word, e.g. " B)$-module"
 	private static final Pattern LATEX_END_PATTER = Pattern.compile("[^$]*\\$.*");
 	private static final Pattern LATEX_BEGIN_PATTERN = Pattern.compile("[^$]*\\${1,2}.*");
-	private static final Pattern POSSIBLE_ADJ_PATTERN = Pattern.compile(".+(?:tive|wise|ary|ble|ous|ent|like|nal|lar|nian)$");
-	private static final Pattern POSSIBLE_ENT_PATTERN = Pattern.compile(".+(?:tion|son|ace|ty|sor|ser)$");
+	private static final Pattern POSSIBLE_ADJ_PATTERN = Pattern.compile(".+(?:tive|wise|ary|ble|ous|ent|like|nal|lar|nian|cal)$");
+	private static final Pattern POSSIBLE_ENT_PATTERN = Pattern.compile(".+(?:tion|son|ace|ty|sor|ser|ty)$");
 	private static final Pattern ESSENTIAL_POS_PATTERN = Pattern.compile("ent|conj_ent|verb|vbs|if|symb|pro");
 	private static final Pattern VERB_POS_PATTERN = Pattern.compile("verb|vbs|verbAlone");	
 	private static final Pattern SINGLE_WORD_TEX_PATTERN = Pattern.compile("\\$[^$]+\\$[^\\s]*"); 
@@ -156,6 +156,7 @@ public class ThmP1 {
 	private static final Pattern DASH_ENT_PATTERN = Pattern.compile("\\$[^$]+\\$[^-\\s]*-[^\\s]*");
 	private static final Pattern DASH_PATTERN = Pattern.compile("^[^-\\s]+-[^\\s]+$");
 	private static final Pattern DASH_P = Pattern.compile("-");
+	private static final Pattern UNDERSCORE_PATTERN = Pattern.compile("(.+)_.+");
 	//if no full parse, try again with the previous parse segment's structure
 	//substituted with this segment's Structs.
 	private static final int REPARSE_UPPER_SIZE_LIMIT = 6;
@@ -171,7 +172,7 @@ public class ThmP1 {
 	//don't print when running on byblis 
 	private static final boolean DEBUG = FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : false;
 	//can be turned on when run locally by making the first slot "true"
-	private static final boolean PLOT_DEBUG = FileUtils.isOSX() ? false : false;
+	private static final boolean PLOT_DEBUG = FileUtils.isOSX() ? true : false;
 	//Pattern used to check if word is valid.
 	//Don't put \', could be in valid word
 	private static final Pattern BACKSLASH_CONTAINMENT_PATTERN = 
@@ -524,6 +525,10 @@ public class ThmP1 {
 			/*try to find part of speech algorithmically*/
 			pos = computeNGramPos(nGram, tokenType, parseState);
 		}
+		
+		Matcher underScoreMatcher;
+		pos = (underScoreMatcher=UNDERSCORE_PATTERN.matcher(pos)).matches() ? underScoreMatcher.group(1) : pos;
+		
 		/*Being part of an n-gram indicates that any noun is likely an ent. */
 		if("noun".equals(pos)){
 			pos = "ent";
@@ -574,6 +579,7 @@ public class ThmP1 {
 		if("".equals(pos) && !posList.isEmpty()){
 			pos = posList.get(0);
 		}
+		
 		return pos;
 	}
 	
@@ -1387,6 +1393,7 @@ public class ThmP1 {
 			//set trivial structlist, so that previous structlist doesn't get parsed again.
 			parseState.setTokenList(new ArrayList<Struct>());
 			parseState.setCurParseExcessiveLatex(true);
+			//if(true) throw new IllegalStateException((containsOnlySymbEnt )+"" );
 			return parseState;
 		}
 		//System.out.println("((double)texCharCount)/totalCharCount: "+((double)texCharCount)/totalCharCount +"  " +totalCharCount);
@@ -2686,6 +2693,7 @@ public class ThmP1 {
 			
 			//only get the most likely ones according to syntaxnet query , then attach scores to head
 			//only walk through the most likely ones. 
+			int structListSz = structList.size();
 			if(//false && 
 					FileUtils.isOSX() && prepositionCount > SYNTAXNET_PREP_THRESHOLD && headStructListSz > SYNTAXNET_PARSE_THRESHOLD){
 				//Sort according to number of relations that coincide with syntaxnet parse.
@@ -2700,11 +2708,12 @@ public class ThmP1 {
 				Collections.sort(structList, new ThmP1AuxiliaryClass.StructTreeComparator(tokenList, noTexTokenStructAr));
 				//take the top Structs, to cut down on time spent building WLCommands.
 				List<Struct> structList2 = new ArrayList<Struct>();
-				for(int p = 0; p < PARSE_NUM_MAX; p++){
+				int max = PARSE_NUM_MAX > structListSz ? structListSz : PARSE_NUM_MAX;
+				for(int p = 0; p < max; p++){
 					structList2.add(structList.get(p));
 				}
 				structList = structList2;
-				headStructListSz = PARSE_NUM_MAX;
+				headStructListSz = max;
 			}
 			
 			StringBuilder parsedSB = new StringBuilder();			

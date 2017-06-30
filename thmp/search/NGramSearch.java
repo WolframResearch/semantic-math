@@ -25,7 +25,6 @@ import org.apache.logging.log4j.Logger;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ListMultimap;
 
-import thmp.search.SearchCombined.ThmHypPair;
 import thmp.search.Searcher.SearchMetaData;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
@@ -57,7 +56,7 @@ public class NGramSearch {
 	private static final Pattern INVALID_WORD_PATTERN = Pattern.compile("\\s*|.*[\\\\|$].*"); 
 	//words to be taken off of two-gram map
 	private static final String[] NOT_TWO_GRAMS = new String[]{"field is", "more generally", "polynomial $a$", 
-			"polynomial $f$"};
+			"polynomial $f$", "over ring", "exist integer"};
 	
 	//should use this to detect fluff in first word.
 	private static final Set<String> fluffWordsSet = WordForms.getFluffSet();
@@ -115,13 +114,6 @@ public class NGramSearch {
 		// name of two gram data file containing additional 2-grams that should be included. These don't have
 		// frequencies associated with them. Load these into maps first and accumulate their frequencies.
 		private static final String TWO_GRAM_DATA_FILESTR = "src/thmp/data/twoGramData.txt";		
-		//****private static int averageTwoGramFreqCount;
-		//private static final String twoGramsMapPath = "src/thmp/data/twoGramsMap.dat";
-		
-		//nGramMap Map of maps. Keys are words in text, and entries are maps whose keys are 2nd terms
-		// in 2 grams, and entries are frequency counts.
-		//this field will be exposed to build 3-grams, and so far only for that purpose.
-		//private static final Map<String, Map<String, Integer>> twoGramTotalOccurenceMap;
 		
 		//set that contains the first word of each n-grams.
 		private static final Set<String> twoGramFirstWordsSet;
@@ -167,9 +159,14 @@ public class NGramSearch {
 			
 			@SuppressWarnings("unchecked")
 			Map<String, Integer> m = ((List<Map<String, Integer>>)FileUtils.deserializeListFromFile(twoGramsSerialPath)).get(0);
-			twoGramsMap = ImmutableMap.copyOf(m);
-			
+			//remove false positives
+			for(String falseTwoGram : NOT_TWO_GRAMS){
+				m.remove(falseTwoGram);
+			}
+			twoGramsMap = ImmutableMap.copyOf(m);			
 			twoGramFirstWordsSet = WordForms.gatherKeyFirstWordSetFromMap(twoGramsMap);
+			/*String temp = "src/thmp/data/TwoGramsCheck.txt";
+				FileUtils.writeToFile(twoGramsMap, temp);*/
 			
 			//twoGramsMap = compile2grams(twoGramTotalOccurenceMap, averageWordCounts, nGramFirstWordsSet, initialTwoGramsSet);
 			//****
@@ -184,9 +181,12 @@ public class NGramSearch {
 		
 		/**
 		 * Gather and build two-gram map from given (comprehensive) list of theorems. To be used
-		 * to serialize the map later. averageTwoGramFreqCount
+		 * to serialize the map later. averageTwoGramFreqCount.
 		 * @param thmList
-		 * @return nGram
+		 * @param twoGramTotalOccurenceMap A map of maps. Keys are words in text, and entries are maps whose keys are 2nd terms
+			in 2 grams, and entries are frequency counts.
+			twoGramTotalOccurenceMap is used to build 3-grams, and so far only for that purpose.
+		 * @return
 		 */
 		public static Map<String, Integer> gatherAndBuild2GramsMaps(List<String> thmList, 
 				Map<String, Map<String, Integer>> twoGramTotalOccurenceMap){

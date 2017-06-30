@@ -156,7 +156,7 @@ public class WLCommand implements Serializable{
 	private Map<Integer, Integer> optionalTermsGroupCountMap = new HashMap<Integer, Integer>();
 	private static final String DEFAULT_AUX_NAME_STR = "AUX";
 	private static final Pattern CONJ_DISJ_PATTERN = Pattern.compile("conj_.+|disj_.+");
-	private static final Pattern DISQUALIFY_PATTERN = Pattern.compile("(if|If|iff|Iff)");
+	//private static final Pattern DISQUALIFY_PATTERN = Pattern.compile("(if|If|iff|Iff)");
 	private static final String[] DISQUALIFY_STR_ARRAY = new String[]{"if", "If", "if", "Iff"};
 	
 	private static final boolean DEBUG = FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : false;
@@ -1938,17 +1938,13 @@ public class WLCommand implements Serializable{
 	 * If the name could be several optional ones, eg "in" or "of", so use regex .match("in|of")
 	 */
 	public static CommandSat addComponent(WLCommand curCommand, Struct newStruct, boolean before){
-		
 		/*Short circuit if command already satisfied, so newStruct is intended to be added for an optional term,
 		 * but newStruct has already been used in a non-optional term in the same command. */
 		if(curCommand.componentCounter < 1 && newStruct.usedInOtherCommandComponent(curCommand)){
 			//if(true) throw new IllegalStateException();
 			boolean hasOptionalTermsLeft = (curCommand.optionalTermsCount > 0);
 			return new CommandSat(true, hasOptionalTermsLeft, false);
-		}
-		/*if(curCommand.triggerWord.equals("if")){
-			System.out.println("WLCommand ~"+ curCommand);
-		}*/		
+		}		
 		//Get appropriate type if could be conj_ or disj_.
 		String structPreType = newStruct.type();
 		String structType = CONJ_DISJ_PATTERN.matcher(structPreType).find() ?
@@ -1961,11 +1957,10 @@ public class WLCommand implements Serializable{
 			//System.out.println("disqualifying command. ###curCommand.commandsCountMap " + curCommand.commandsCountMap);
 			return new CommandSat(disqualified);
 		}
-
+		//if(curCommand.triggerWord.equals("if")) throw new RuntimeException("lastAddedComponentIndex: ");
 		Multimap<WLCommandComponent, Struct> commandsMap = curCommand.commandsMap;
 		
 		//System.out.println("WLCommand - newStruct " + newStruct);
-		//System.out.println("newStruct.prev1() " + newStruct.prev1());
 		String structName = !newStruct.isStructA() ? newStruct.struct().get("name") : 
 			newStruct.prev1NodeType().equals(NodeType.STR) ? (String)newStruct.prev1() : "";
 		//whether component has been added. Useful to avoid rebuilding commands 		
@@ -1989,7 +1984,7 @@ public class WLCommand implements Serializable{
 		int posTermListSz =  posTermList.size();
 		int i = lastAddedComponentIndex;
 		//short-circuit if trigger is the first nontrivial term.
-		if(before && onlyTrivialTermsBefore(posTermList, i-1)){
+		if(before && onlyTrivialTermsBefore(posTermList, i-1)){			
 			return new CommandSat(false, curCommand.optionalTermsCount > 0, false, true);
 		}
 		
@@ -2383,25 +2378,20 @@ public class WLCommand implements Serializable{
 			Map<WLCommandComponent, Integer> commandsCountMap) {
 		
 		//if structPosStr is of a type that likely disqualifies a command, e.g. "if".
+		//since "if" is often used to connected different phrases.
 		//Need to be smarter about "and". But only if these commands don't 
 		//appear as commandComponents down the road.
 		//the disqualify word triggered
 		String disqualifyPos = null;
-		//Set<String> disqualifyTriggerSet = new HashSet<String>();
-		for(String pos : DISQUALIFY_STR_ARRAY){
+		/*for(String pos : DISQUALIFY_STR_ARRAY){
 			if(pos.equals(structPosStr)){
 				disqualifyPos = pos;
 				break;
 			}
-		}
-		
-		Matcher disqualifyMatcher = DISQUALIFY_PATTERN.matcher(structPosStr);
-		if(disqualifyMatcher.matches()){			
-			disqualifyPos = disqualifyMatcher.group(1);
-		}
+		}*/	
 		
 		//Or, need to iterate over commandsCountMap, discard command if nontrivial parts
-		//e.g. "verb" have already been satisfied. Not worth making a separate 
+		//e.g. "verb" have already been satisfied. 
 		for(Map.Entry<WLCommandComponent, Integer> entry : commandsCountMap.entrySet()){
 			
 			WLCommandComponent component = entry.getKey();
@@ -2414,7 +2404,7 @@ public class WLCommand implements Serializable{
 				//additionally encountered terms such as prepositions. Only disqualify
 				//based on extraneous terms such as "if" or verbs.
 				//System.out.println(Pattern.compile("verb$").matcher("verbphrase").find());
-				if(posPattern.matcher("verb").find() && !isPosWildCard){
+				if(posPattern.matcher("verb|if|iff").find() && !isPosWildCard){
 					return true;					
 				}
 			}
@@ -2423,7 +2413,6 @@ public class WLCommand implements Serializable{
 			}
 		}
 		
-		//disqualified 
 		if(null != disqualifyPos){
 			return true;
 		}

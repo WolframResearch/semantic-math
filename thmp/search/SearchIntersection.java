@@ -1,5 +1,6 @@
 package thmp.search;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -124,8 +125,8 @@ public class SearchIntersection {
 	 * @return List of thm Strings.
 	 */
 	public static List<ThmHypPair> getHighestThmStringList(String input, Set<String> searchWordsSet,
-			SearchState searchState, boolean contextSearchBool) {
-		intersectionSearch(input, searchWordsSet, searchState, contextSearchBool);
+			SearchState searchState, boolean contextSearchBool, boolean searchRelationalBool) {
+		intersectionSearch(input, searchWordsSet, searchState, contextSearchBool, searchRelationalBool);
 		if (null == searchState){
 			return Collections.<ThmHypPair>emptyList();
 		}
@@ -144,9 +145,9 @@ public class SearchIntersection {
 	 * @return
 	 */
 	public static List<Integer> getHighestThmList(String input, Set<String> searchWordsSet, SearchState searchState,
-			boolean contextSearchBool,
+			boolean contextSearchBool, boolean searchRelationalBool,
 			int... num) {
-		intersectionSearch(input, searchWordsSet, searchState, contextSearchBool, num);
+		intersectionSearch(input, searchWordsSet, searchState, contextSearchBool, searchRelationalBool, num);
 		if (null == searchState){
 			return Collections.emptyList();
 		}
@@ -224,7 +225,7 @@ public class SearchIntersection {
 	 *         Sorted in ascending order, best first. List is 0-based.
 	 */
 	public static SearchState intersectionSearch(String input, Set<String> searchWordsSet, 
-			SearchState searchState, boolean contextSearchBool,
+			SearchState searchState, boolean contextSearchBool, boolean searchRelationalBool,
 			//ListMultimap<String, Integer> wordThmsIndexMMap,
 			int... num) {
 
@@ -304,22 +305,18 @@ public class SearchIntersection {
 		// array of words to indicate frequencies that this word was included in
 		// either a singleton or n-gram
 		int[] wordCountArray = new int[inputWordsArSz];
-
 		for (int i = firstIndex; i < inputWordsArSz; i++) {
 			String word = inputWordsAr[i];
 			// elicit higher score if wordLong fits
 			// also turn into singular form if applicable			
 			int scoreAdded = 0;
-
 			// check for 2 grams
 			if (i < inputWordsArSz - 1) {
 				String nextWord = inputWordsAr[i + 1];
-				//String nextWordCombined = wordLong + " " + nextWord;
 				String twoGram = word + " " + nextWord;
 				// check for 3 grams.
 				if (i < inputWordsArSz - 2) {
 					String thirdWord = inputWordsAr[i + 2];
-					//String threeWordsCombined = wordLong + " " + thirdWord;
 					String threeGram = twoGram + " " + thirdWord;
 					if (threeGramsMap.containsKey(threeGram)) {
 						scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, wordThmIndexAddedMMap,
@@ -421,10 +418,19 @@ public class SearchIntersection {
 				}
 			}
 		}
+		
+		int tupleSz = SearchCombined.CONTEXT_SEARCH_TUPLE_SIZE;
+		//combine with ranking from relational search, reorganize within each tuple
+		//of fixed size. Try relation search first, then context search.
+		if(searchRelationalBool){
+			Searcher<BigInteger> searcher = new RelationalSearch();
+			//bestCommonVecsList = searchVecWithTuple(input, bestCommonVecsList, tupleSz, searcher, searchState);
+			highestThmList = SearchCombined.searchVecWithTuple(input, highestThmList, tupleSz, searcher, searchState);					
+		}
+		
 		// re-order top entries based on context search, if enabled
 		if (contextSearchBool) {
-			Searcher<Map<Integer, Integer>> searcher = new ContextSearch();
-			int tupleSz = SearchCombined.CONTEXT_SEARCH_TUPLE_SIZE;
+			Searcher<Map<Integer, Integer>> searcher = new ContextSearch();			
 			highestThmList = SearchCombined.searchVecWithTuple(input, highestThmList, tupleSz, searcher, searchState);
 		}
 		logger.info("Highest thm list obtained, intersection search done!");
@@ -815,18 +821,26 @@ public class SearchIntersection {
 		while (sc.hasNextLine()) {
 			String thm = sc.nextLine();
 
+			boolean searchRelationalBool = false;
 			boolean contextSearchBool = false;
 			String[] thmAr = thm.split("\\s+");
-			if (thmAr.length > 2 && thmAr[0].equals("context")) {
-				contextSearchBool = true;
-				thm = thm.substring(8);
+			if (thmAr.length > 2 ) {
+				if(thmAr[0].equals("context")){
+					contextSearchBool = true;
+					//skip space after first word
+					thm = thm.substring(8);
+				}else if(thmAr[0].equals("relation")){
+					searchRelationalBool = true;
+					thm = thm.substring(9);
+				}
 				// highestThms = ContextSearch.contextSearch(thm, highestThms);
 			}
 
 			SearchState searchState = new SearchState();
 			// searchWordsSet is null.
-			List<Integer> highestThms = getHighestThmList(thm, null, searchState, contextSearchBool, NUM_NEAREST_VECS);
-
+			List<Integer> highestThms = getHighestThmList(thm, null, searchState, contextSearchBool, 
+					searchRelationalBool, NUM_NEAREST_VECS);
+			
 			if (highestThms == null){
 				continue;
 			}

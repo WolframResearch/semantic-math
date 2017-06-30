@@ -1,7 +1,9 @@
 package thmp.utils;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.apache.logging.log4j.LogManager;
@@ -25,6 +27,16 @@ public class TexToTree {
 	private static final Pattern COMMAND_BEGIN_PATTERN = Pattern.compile("\\\\");
 	//indicates termination of a Latex command
 	private static final Pattern COMMAND_END_PATTERN = Pattern.compile("[\\$(\\[{\\])}_;,:!'`~%.\\-\"\\s]");
+	private static final Set<String> GREEK_ALPHA_SET;
+	
+	static{
+		GREEK_ALPHA_SET = new HashSet<String>();
+		String[] GREEK_ALPHA = new String[]{"\\alpha"};
+		for(String s : GREEK_ALPHA){
+			GREEK_ALPHA_SET.add(s);
+		}
+		
+	}
 	
 	public static class TexNode{
 		
@@ -85,9 +97,18 @@ public class TexToTree {
 				continue;
 			}
 			if(COMMAND_BEGIN_PATTERN.matcher(iCharStr).matches()){
+				StringBuilder varSB = new StringBuilder(10);
 				while(++i < texLen && (!COMMAND_END_PATTERN.matcher((iCharStr=String.valueOf(tex.charAt(i)))).matches()
-						|| iCharStr.equals(" ")));
-				
+						|| iCharStr.equals(" "))){
+					varSB.append(iCharStr);
+				}
+				//process first
+				f
+				//look for Greek alphabets, which could be variables
+				String varStr = varSB.toString();
+				if(GREEK_ALPHA_SET.contains(varStr)){
+					varsList.add(varStr);
+				}
 				//iCharStr = String.valueOf(tex.charAt(i));
 			}
 			if(!WordForms.SPECIAL_CHARS_PATTERN.matcher(iCharStr).matches()){
@@ -148,10 +169,19 @@ public class TexToTree {
 		return i;
 	}
 	
+	/**
+	 * Set of Greek alphabets
+	 * @return
+	 */
+	public static Set<String> GREEK_ALPHA_SET(){
+		return GREEK_ALPHA_SET;
+	}
+	
 	public static void main(String[] args){
 		String tex = "f(x \\Hom_+\" X() \\mathbb{y}) a";
 		tex = "S_{A}";
 		tex = "x \\oplus y";
+		
 		System.out.println(texToTree(tex));
 	}
 	

@@ -7,10 +7,12 @@ morphism ent
 problem ent
 complex ent
 complex adj
+locally adj
 logarithmic adj
 CW complex ent
 homology ent
 serre ent
+cover verb
 log ent
 value ent
 separate verb

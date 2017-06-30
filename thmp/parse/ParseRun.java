@@ -135,9 +135,12 @@ public class ParseRun {
 			}else{
 				System.out.println("@@@");
 			}
-			if(DEBUG) System.out.println("ParseRun - For str: " + st);
-			BigInteger relationVec = parseState.getRelationalContextVec();
-			if(DEBUG) System.out.println("Relational Vector num of bits set: " + (relationVec == null ? "vec null." : relationVec.bitCount()));
+			if(DEBUG){ 
+				System.out.println("ParseRun - For str: " + st);
+				BigInteger relationVec = parseState.getRelationalContextVec();
+				System.out.println("Relational Vector num of bits set: " + (relationVec == null ? "vec null." : relationVec.bitCount()));
+				System.out.println("~++++~ CurThmCombinedContextVecMap: " +parseState.getCurThmCombinedContextVecMap());
+			}
 		}
 		if(DEBUG){
 			parseState.logState();

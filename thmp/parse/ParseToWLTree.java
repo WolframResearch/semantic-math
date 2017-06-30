@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -113,9 +114,6 @@ public class ParseToWLTree{
 		for(WLCommand command : triggeredList){
 			triggeredWordsSet.add(command.getTriggerWord());
 		}
-		/////////
-		
-		///////////
 		//if(triggeredCol.isEmpty()){
 		//add words from triggerWords redirects in case there's an entry there.
 		//trigger word redirects: eg are -> is, since they are functionally equivalent
@@ -143,7 +141,6 @@ public class ParseToWLTree{
 		if(triggerTypeBool){
 			Collection<ImmutableWLCommand> sCommandsCol = WLCommandMMap.get(triggerType);
 			addTriggeredCollectionToList(triggeredList, triggeredWordsSet, triggeredCommandSet, sCommandsCol);
-		
 		
 		int triggerKeyWordLen = triggerKeyWord.length();
 		if(triggeredList.isEmpty() && triggerKeyWordLen > 2 && triggerKeyWord.charAt(triggerKeyWordLen-1) == 's'){
@@ -512,7 +509,9 @@ public class ParseToWLTree{
 					for(int i = structList.size()-1; i > -1; i--){
 						
 						Struct curStruct = structList.get(i);
-						
+						if(curCommand.getTriggerWord().equals("if")){
+							System.out.println("ParseToWLTree - if");
+						}
 						//see if the whole command is satisfied, not just the part before trigger word
 						//namely the trigger word is last word
 						boolean beforeTrigger = true;
@@ -533,12 +532,14 @@ public class ParseToWLTree{
 							//System.out.println("Before command satisfied!");
 							break;
 						}
-					}	
+					}
+					//if(curCommand.getTriggerWord().equals("if")) throw new IllegalStateException("ParseToWLTree");
 					//System.out.println("commandsMap: " + curCommand.commandsCountMap());
 					//System.out.print("\n*********COMMAND parts before trigger satisfied "+ beforeTriggerSat+ " " + curCommand);
 					//System.out.println();
 					//if(commandSat != null){						
 					if(beforeTriggerSat){
+						
 						//System.out.println("***-----------*got BEFORE as TRUE for command " + curCommand); 
 						if(curCommandSatWhole && isComponentAdded){							
 							satisfiedCommandsList.add(curCommand);

@@ -623,6 +623,7 @@ public class ParseState {
 			//as the entire expression
 			Matcher colonMatcher = COLON_EQUAL_PATTERN.matcher(name);
 			Matcher subsetMatcher = SUBSET_PATTERN.matcher(name);
+			//make this more systematic, also add greek alpha parser!
 			
 			String latexName = colonMatcher.find() ? colonMatcher.group(1) : (subsetMatcher.find() ? subsetMatcher.group(1) : "");
 			if(!"".equals(latexName)){

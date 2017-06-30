@@ -609,15 +609,7 @@ public class StructH<H> extends Struct{
 		
 		if(this.article() != Article.NONE){
 			String articleStr = this.article().toString();
-			/*if(pptAppended){
-				sb.append("\"").append(articleStr).append("\", ");
-			}else{
-				if(prependCommaBool){
-					sb.append(", ");
-				}
-				sb.append("\"Property\"->{\"").append(articleStr).append("\"");				
-				pptAppended = true;
-			}*/
+			
 			cardSB.append("\"").append(articleStr).append("\", ");
 			//sb.append("\"Cardinality\"->{\"").append(articleStr).append("\"");	
 			cardExprList.add(new Expr(articleStr));
@@ -633,9 +625,7 @@ public class StructH<H> extends Struct{
 			}
 		}
 		if(!pptExprList.isEmpty()){
-			/*if(prependCommaBool){
-				sb.append(", ");
-			}*/
+			
 			prependCommaBool = true;
 			//increment once, this covers all ppt's.
 			WLCommand.increment_commandNumUnits(curCommand, this);
@@ -654,13 +644,10 @@ public class StructH<H> extends Struct{
 		if(null != quantityStr){
 			cardSB.append("\"").append(quantityStr).append("\", ");
 			cardExprList.add(new Expr(quantityStr));
-			//prependCommaBool = true;		
 		}		
 		//append cardinality list
 		if(!cardExprList.isEmpty()){
-			/*if(prependCommaBool){
-				sb.append(", ");
-			}*/
+			
 			prependCommaBool = true;
 			String cardStr = cardSB.toString();
 			int cardSBLen = cardSB.length();

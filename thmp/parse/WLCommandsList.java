@@ -94,9 +94,12 @@ public class WLCommandsList {
 		//for "hyp ent" sentences
 		triggerWordLookupMapBuilder.put("take", "for");
 		triggerWordLookupMapBuilder.put("fix", "for");
-		
+		triggerWordLookupMapBuilder.put("fix", "let");		
+		//keep this map entry, relevant for picking up definitions
+		//and detecting hypothesis
 		triggerWordLookupMapBuilder.put("take", "let");
-		
+		//for patterns such as "let $x > 1$"
+		triggerWordLookupMapBuilder.put("let", "if");
 		triggerWordLookupMapBuilder.put("letbe", "let"); 
 		//triggerWordLookupMapBuilder.put("let", "if"); June 28
 		//triggerWordLookupMapBuilder.put("suppose", "if"); June 28
@@ -172,11 +175,12 @@ public class WLCommandsList {
 				new PBuilder("prep|qualifier", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}}", "OPT")
 				);*/
 		//for verbphrases whose verbs don't fall under "is", "has", etc
-		putToWLCommandMapBuilder(wLCommandMapBuilder, "verbphrase", new PBuilder("det|symb|ent|pro|noun", null, true), 
+		putToWLCommandMapBuilder(wLCommandMapBuilder, "verbphrase", new PBuilder("det|symb|ent|pro|noun", null, true)
+				.addRelationType(RelationType._IS), 
 				//new PBuilder("pro", "we", WLCommand.PosTermType.NEGATIVE),
 				new PBuilder(" ~"), new PBuilder("HasProperty").makeExprHead(), new PBuilder("~ "),
 				new PBuilder("is|are", null, WLCommand.PosTermType.NEGATIVE),
-				new PBuilder("verbphrase", null, true, true, false), 
+				new PBuilder("verbphrase", null, true, true, false).addRelationType(RelationType.IS_), 
 				new PBuilder(" {", "OPT"),
 				//new PBuilder("symb|ent|noun|adj|prep|phrase|qualifier", null, true, false, false).addRelationType(RelationType._IS),
 				new PBuilder(", {", "OPT"), new PBuilder("Qualifiers", "OPT").makeOptionalTermHead(), new PBuilder("->", "OPT"),
@@ -349,42 +353,44 @@ public class WLCommandsList {
 		
 		//if_assert. As well as " if  ", etc
 		//putToWLCommandMapBuilder(wLCommandMapBuilder, "if", addCommand(new String[] { "if|If|let, , trigger", "assert, , true" }));
-		putToWLCommandMapBuilder(wLCommandMapBuilder, "if", new PBuilder("if|If|hyp", null, false, true, false), 
-				new PBuilder("assert|texAssert", null, true));
+		//June 29 
+		putToWLCommandMapBuilder(wLCommandMapBuilder, "if", new PBuilder("if|If|hyp|let", null, false, true, false), 
+				new PBuilder("assert|texAssert", null, true).addRelationType(RelationType.IF));
 		
 		//putToWLCommandMapBuilder(wLCommandMapBuilder, "then", new PBuilder("then|Then", null, false, true, false), 
 			//	new PBuilder("assert|texAssert", null, true) );
 		//e.g. "if $D$ is a divisor".
 		putToWLCommandMapBuilder(wLCommandMapBuilder, "if", new PBuilder("if|hyp", null, false, true, false), 
 				new PBuilder("symb|ent|noun", null, true, false, false, PosTermConnotation.DEFINED,
-						RelationType._IS), 
+						RelationType._IS).addRelationType(RelationType.IF), 
 				new PBuilder("verb|vbs", "is|are", false, false, false), new PBuilder("\\["), 
 				new PBuilder("Element").makeExprHead(), new PBuilder("]"),
-				new PBuilder("symb|ent|phrase", null, true, false, false, PosTermConnotation.DEFINING, RelationType.IS_),
+				new PBuilder("symb|ent|phrase", null, true, false, false, PosTermConnotation.DEFINING, RelationType.IS_)
+				.addRelationType(RelationType.IF),
 				new PBuilder("prep", null, false, false, "OPT")
 				);
 		//"let A be B"; "suppose A is B"
 		putToWLCommandMapBuilder(wLCommandMapBuilder, "let", new PBuilder("let|hyp", null, false, true, false), 
 				new PBuilder("symb|ent|pro|noun", null, true, false, false, PosTermConnotation.DEFINED,
-						RelationType._IS), 
-				new PBuilder("verb|vbs|be", "is|are|be", false, false, false), new PBuilder("\\["), 
+						RelationType._IS).addRelationType(RelationType.IF), 
+				new PBuilder("verb|vbs|be", "is|are|be|to be", false, false, false), new PBuilder("\\["), 
 				new PBuilder("Element").makeExprHead(), new PBuilder("]"),
-				new PBuilder("symb|ent|phrase", null, true, false, true, PosTermConnotation.DEFINING, RelationType.IS_),
-				new PBuilder("prep", null, false, false, "OPT")
+				new PBuilder("symb|ent|phrase", null, true, false, true, PosTermConnotation.DEFINING, RelationType.IS_)
+				.addRelationType(RelationType.IF), new PBuilder("prep", null, false, false, "OPT")
 				);
 		
 		//putToWLCommandMapBuilder(wLCommandMapBuilder, "equal to", addCommand(new String[] { "symb|ent, , true",
 		//"==", "equal to, , trigger", "symb|ent|phrase, , true, TriggerMathObj" }));
-		putToWLCommandMapBuilder(wLCommandMapBuilder, "equal to", new PBuilder("symb|ent", null, true, RelationType._IS), 
+		putToWLCommandMapBuilder(wLCommandMapBuilder, "equal to", new PBuilder("symb|ent", null, true, RelationType._IS_), 
 				new PBuilder("==").makeExprHead(), new PBuilder("equal to", null, false, true, false), 
-				new PBuilder("symb|ent|phrase", null, true, false, true, RelationType._IS) );
+				new PBuilder("symb|ent|phrase", null, true, false, true, RelationType._IS_) );
 		
 		//putToWLCommandMapBuilder(wLCommandMapBuilder, "auxpass", addCommand(new String[] { "ent, , true",
 			//	"auxpass, , trigger_true", "ent|csubj, , true" }));
 		putToWLCommandMapBuilder(wLCommandMapBuilder, "auxpass", new PBuilder("ent|symb", null, true), new PBuilder(" ~"),
 				new PBuilder("Connective").makeExprHead(), new PBuilder("["),
 				new PBuilder("auxpass", null, true, true, false).makeExprHeadArg(), new PBuilder("]~ "),
-				new PBuilder("ent|csubj|prep", null, true) );
+				new PBuilder("ent|csubj|prep", null, true).addRelationType(RelationType._IS));
 		
 		//definitions: e.g. "denote by $F$ a field", but note that "call this field $F$" should have different order as to which
 		//is the variable and which is being named. The integers indicate their relative order (order in relation to each other)
@@ -405,7 +411,7 @@ public class WLCommandsList {
 		
 		//"define $F$ to be a field";
 		putToWLCommandMapBuilder(wLCommandMapBuilder, "define", new PBuilder("verb", null, false, true, false),
-				new PBuilder("ent|symb", null, true, false, false, PosTermConnotation.DEFINED), 
+				new PBuilder("ent|symb", null, true, false, false, PosTermConnotation.DEFINED).addRelationType(RelationType._IS), 
 				new PBuilder(null, "as|to be|by", false), new PBuilder("~"), new PBuilder("DefinedBy").makeExprHead(), new PBuilder("~"), 
 				new PBuilder("ent|symb", null, true, false, false, PosTermConnotation.DEFINING)
 				.addRelationType(RelationType.IS_));
@@ -414,7 +420,7 @@ public class WLCommandsList {
 		//putToWLCommandMapBuilder(wLCommandMapBuilder, "is called", addCommand(new String[] { "symb|ent|pro, , true", "auxpass, is called, trigger",
 				//"\\[Element]", "symb|ent|adj|phrase, , true, TriggerMathObj" }));
 		putToWLCommandMapBuilder(wLCommandMapBuilder, "is called", new PBuilder("symb|ent|pro", null, true, false, false,
-				PosTermConnotation.DEFINED), 
+				PosTermConnotation.DEFINED).addRelationType(RelationType._IS), 
 				new PBuilder("auxpass", null, false, true, false), new PBuilder(" \\["),
 				new PBuilder("Element").makeExprHead(), new PBuilder("] "),
 				new PBuilder("symb|ent|adj|phrase", null, true, false, false, PosTermConnotation.DEFINING,
@@ -429,7 +435,7 @@ public class WLCommandsList {
 				new PBuilder("["), new PBuilder("ent|symb|texAssert", null, true, RelationType._IS).addRelationType(RelationType.IF), 
 				new PBuilder("]") );
 		//head struct?! // parsing "verb ent", for general verb, "take a ..."
-		putToWLCommandMapBuilder(wLCommandMapBuilder, "for", new PBuilder(null, null, WLCommand.PosTermType.NEGATIVE),
+		putToWLCommandMapBuilder(wLCommandMapBuilder, "for",
 				new PBuilder("hyp", null, false, true, false).setPositionInStructTree(PositionInStructTree.FIRST), 
 				new PBuilder("ent|symb", null, true, RelationType.IF).setPositionInStructTree(PositionInStructTree.LAST));
 		
@@ -437,7 +443,7 @@ public class WLCommandsList {
 			//"assert, , true" })); 
 		//note that "hyp" also includes "which is...", which can occur in statements, and not just hypotheses!
 		putToWLCommandMapBuilder(wLCommandMapBuilder, "if and only if", new PBuilder("hyp|iff|Iff", null, false, true, false), 
-				new PBuilder("assert", null, true) );
+				new PBuilder("assert", null, true).addRelationType(RelationType.IF) );
 		//putToWLCommandMapBuilder(wLCommandMapBuilder, "if and only if", addCommand(new PBuilder("hyp|iff|Iff", null, false, true, false), 
 			//	new PBuilder("assert", null, true) ));
 		//head struct?! HERE
