@@ -165,6 +165,7 @@ public class Maps {
 		protected static final Map<String, Double> probMap;
 
 		protected static final Map<String, String> anchorMap;
+		private static final boolean FOOD = true;
 
 		static{
 			
@@ -399,6 +400,25 @@ public class Maps {
 			
 			for (int i = 0; i < pList.size(); i++) {
 				posPreMMap.put(pList.get(i)[0], pList.get(i)[1]);
+			}
+			
+			
+			if(FOOD){
+				posPreMMap.put("warm", "adj");
+				posPreMMap.put("oven", "ent");
+				posPreMMap.put("flour", "ent");
+				posPreMMap.put("salt", "ent");
+				posPreMMap.put("baking", "ent_COMP");
+				posPreMMap.put("baking soda", "ent");
+				posPreMMap.put("soda", "ent");
+				posPreMMap.put("oil", "ent");
+				posPreMMap.put("skillet", "ent");
+				posPreMMap.put("medium", "adj");
+				//posPreMMap.put("heat", "ent");
+				posPreMMap.put("verb", "ent");
+				posPreMMap.put("transparent", "adj");
+				//posPreMMap.put("oven", "ent");
+				
 			}
 			
 			posPreMMap.put("disjoint", "adj");

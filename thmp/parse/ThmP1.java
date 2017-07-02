@@ -84,8 +84,8 @@ public class ThmP1 {
 	//end part of latex expression word, e.g. " B)$-module"
 	private static final Pattern LATEX_END_PATTER = Pattern.compile("[^$]*\\$.*");
 	private static final Pattern LATEX_BEGIN_PATTERN = Pattern.compile("[^$]*\\${1,2}.*");
-	private static final Pattern POSSIBLE_ADJ_PATTERN = Pattern.compile(".+(?:tive|wise|ary|ble|ous|ent|like|nal|lar|nian|cal)$");
-	private static final Pattern POSSIBLE_ENT_PATTERN = Pattern.compile(".+(?:tion|son|ace|ty|sor|ser|ty)$");
+	private static final Pattern POSSIBLE_ADJ_PATTERN = Pattern.compile(".+(?:tive|wise|ary|ble|ous|ent|like|nal|lar|nian|cal|ed)$");
+	private static final Pattern POSSIBLE_ENT_PATTERN = Pattern.compile(".+(?:tion|son|ace|ty|sor|ser|ty|ture)$");
 	private static final Pattern ESSENTIAL_POS_PATTERN = Pattern.compile("ent|conj_ent|verb|vbs|if|symb|pro");
 	private static final Pattern VERB_POS_PATTERN = Pattern.compile("verb|vbs|verbAlone");	
 	private static final Pattern SINGLE_WORD_TEX_PATTERN = Pattern.compile("\\$[^$]+\\$[^\\s]*"); 

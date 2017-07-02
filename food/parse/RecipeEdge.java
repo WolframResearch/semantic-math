@@ -1,5 +1,6 @@
 package food.parse;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.wolfram.jlink.Expr;
@@ -21,7 +22,7 @@ public class RecipeEdge {
 	private Expr actionExpr;
 	private Struct actionStruct;
 	//e.g. bake ... in the oven
-	private List<Struct> qualifierStructList;
+	private List<Struct> qualifierStructList = new ArrayList<Struct>();
 	
 	public RecipeEdge( Struct actionStruct_, List<Struct> qualifiers_){
 		//this.actionExpr = action;
@@ -44,7 +45,10 @@ public class RecipeEdge {
 	@Override
 	public String toString(){
 		StringBuilder sb = new StringBuilder();
-		sb.append(actionStruct).append(" qualifiers: ").append(qualifierStructList);
+		sb.append(actionStruct.nameStr());
+		if(!qualifierStructList.isEmpty()){
+			sb.append(" {").append(qualifierStructList).append("} ");
+		}
 		return sb.toString();
 	}
 }

@@ -442,6 +442,10 @@ public abstract class Struct implements Serializable{
 	//to be overridden
 	public abstract String type();
 	
+	public boolean isFoodStruct(){
+		return false;
+	}
+	
 	public boolean containsPos(String pos){
 		return (null != this.type() && this.type().equals(pos)) 
 				|| (null != this.extraPosSet() && this.extraPosSet().contains(pos));

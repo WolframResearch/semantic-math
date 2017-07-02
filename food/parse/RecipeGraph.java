@@ -16,6 +16,7 @@ import com.wolfram.jlink.ExprFormatException;
 import thmp.parse.ParseStruct;
 import thmp.parse.ParseStructType;
 import thmp.parse.Struct;
+import thmp.parse.Struct.ChildRelation;
 import thmp.parse.StructH;
 import thmp.parse.ParseToWLTree.WLCommandWrapper;
 import thmp.parse.WLCommand.PosTerm;
@@ -79,7 +80,7 @@ public class RecipeGraph {
 		
 		//winning wrapper map on the top level
 		Multimap<ParseStructType, WLCommandWrapper> wrapperMMap = headParseStruct.getWLCommandWrapperMMap();
-		
+		System.out.println("wrapperMMap.values().size "+ wrapperMMap.values().size());
 		for(WLCommandWrapper wrapper : wrapperMMap.values()){
 			WLCommand wlCommand = wrapper.WLCommand();
 			handlePosTermList(wlCommand);
@@ -97,10 +98,7 @@ public class RecipeGraph {
 		if(headExprArgs.length > 1){
 			actionStr = headExprArgs[1].toString();
 		}		
-		if(exprArgs ){
-			
-		}	*/	
-		//get "filter out of Math["filter"]	
+		*/	
 	}
 	
 	/**
@@ -108,7 +106,7 @@ public class RecipeGraph {
 	 * @param posList
 	 */
 	private void handlePosTermList(WLCommand wlCommand){
-		//here assume it's Action
+		//here assume it's Action. Refine
 		List<PosTerm> posList = WLCommand.posTermList(wlCommand);
 		int triggerTermIndex = WLCommand.triggerWordIndex(wlCommand);
 		//List<Struct> knownStructList = new ArrayList<Struct>();
@@ -118,7 +116,9 @@ public class RecipeGraph {
 		//Or e.g. "in the bowl", or "into a ball"
 		List<Struct> unknownStructList = new ArrayList<Struct>();
 		Iterator<FoodState> statesListIter = currentStateList.iterator();
-		
+		/*if(posList.get(triggerTermIndex).posTermStruct().nameStr().equals("combine")){
+			System.out.println("RecipeGraph combine");
+		}*/
 		int posListSz = posList.size();
 		for(int i = 0; i < posListSz; i++){
 			PosTerm term = posList.get(i);			
@@ -132,11 +132,13 @@ public class RecipeGraph {
 			if(null == termStruct){
 				continue;
 			}
+			if(termStruct.nameStr().equals("baking soda")){
+				System.out.println("");
+			}
 			addStructFoodState(unknownStructList, knownStateList, statesListIter, termStruct);
 			
 		}
-		//need curated utentils & appliance terms!
-		
+		//need curated utentils & appliance terms!		
 		Struct actionStruct;
 		//need to check if -1, or some default value!		
 		if( triggerTermIndex < 0){
@@ -164,11 +166,11 @@ public class RecipeGraph {
 			}else{
 				notKnownStructList.add(struct);
 			}
-		}		
-		
+		}			
 		//add not known for now, refine
 		//need at least one product, or else should use substitute list, rather than 
 		//the actual currentStateList
+		//in oven should be appliacen, but form rice mixture should go to product, be smarter
 		if(productStructList.isEmpty()){
 			productStructList.addAll(notKnownStructList);
 		}else{
@@ -179,7 +181,7 @@ public class RecipeGraph {
 			parentState.setChildEdge(recipeEdge);
 		}
 		if(productStructList.isEmpty()){
-			//improve!
+			//improve! Create some placeholder to represent state
 			Map<String, String> map = new HashMap<String, String>();
 			map.put("name", "");
 			productStructList.add(new StructH<Map<String, String>>(map, ""));
@@ -221,18 +223,19 @@ public class RecipeGraph {
 	private void addStructFoodState(List<Struct> unknownStructList, 
 			List<FoodState> knownStateList, Iterator<FoodState> statesListIter, Struct termStruct) {
 		
-		String structType = termStruct.type();
 		if(!termStruct.isStructA()){
 			addStructFoodState2(unknownStructList, knownStateList, statesListIter, termStruct);
 			//consider cases to look into prev1/prev2!? Need to handle e.g. prep!
 		}else{
+			String structType = termStruct.type();
 			//conj
 			if(structType.matches("(?:conj|disj)_.+")){
+				//if(true)throw new RuntimeException(((Struct)(Struct)termStruct.prev2()).nameStr());
 				if(termStruct.prev1NodeType().isTypeStruct()){
-					addStructFoodState2(unknownStructList, knownStateList, statesListIter, (Struct)termStruct.prev1());
+					addStructFoodState(unknownStructList, knownStateList, statesListIter, (Struct)termStruct.prev1());
 				}
-				if(termStruct.prev1NodeType().isTypeStruct()){
-					addStructFoodState2(unknownStructList, knownStateList, statesListIter, (Struct)termStruct.prev1());
+				if(termStruct.prev2NodeType().isTypeStruct()){
+					addStructFoodState(unknownStructList, knownStateList, statesListIter, (Struct)termStruct.prev2());
 				}
 			}
 			
@@ -252,17 +255,21 @@ public class RecipeGraph {
 		//seek out the foodState this Struct is ascribed to
 		String structName = termStruct.nameStr();
 		//look amongst ingredients first
-		if(ingredientsMap.containsKey(structName)){
+		Boolean ingredientUsed = ingredientsMap.get(structName);
+		//System.out.println("ingredientUsed "+structName);
+		//if(structName.equals("baking soda")) throw new RuntimeException("ingredientUsed "+ingredientUsed);
+		if(null != ingredientUsed && !ingredientUsed){
 			//**maybe should check if used or not, but shouldn't be used if match on nose
 			FoodState foodState = new FoodState(structName, termStruct);
 			//add entry to currentStateList
-			//currentStateList.add(foodState);			
+			//currentStateList.add(foodState);
+			boolean used = true;
+			ingredientsMap.put(structName, used);
 			knownStateList.add(foodState);
 		}else{
 			//look for other food states termStruct could be referring to
 			//e.g. rice mixture could refer to something formed earlier.
-			boolean knownStateFound = findPreviousFoodState(knownStateList, statesIter, termStruct); 
-			
+			boolean knownStateFound = findPreviousFoodState(knownStateList, statesIter, termStruct); 			
 			if(!knownStateFound){
 				unknownStructList.add(termStruct);
 			}
@@ -282,15 +289,22 @@ public class RecipeGraph {
 		String name = termStruct.nameStr();
 		String[] foodNameAr = WordForms.splitThmIntoSearchWords(name);
 		Set<String> nameSet = new HashSet<String>(Arrays.asList(foodNameAr));
-		while(stateIter.hasNext()){
-			FoodState foodState = stateIter.next();
+		Iterator<FoodState> currentStateListIter = currentStateList.iterator();
+		while(currentStateListIter.hasNext()){
+			FoodState foodState = currentStateListIter.next();
 			boolean ancestorMatched = stateAncestorMatchStruct(foodState, nameSet);
 			if(ancestorMatched){
+				//update name if none already, e.g. "flour mixture"
+				String newFoodName = foodState.foodName() + " " + name;
+				foodState.setFoodName(newFoodName);
+				/*if("".equals(foodState.foodName())){
+					foodState.setFoodName(name);
+				}*/
 				knownStateList.add(foodState);
-				stateIter.remove();
+				currentStateListIter.remove();
 				return true;
 			}			
-		}		
+		}	
 		return false;
 	}
 	
@@ -303,14 +317,9 @@ public class RecipeGraph {
 	 */
 	private boolean stateAncestorMatchStruct(FoodState foodState, Set<String> structNameSet){
 
-		List<FoodState> parentsList = foodState.parentFoodStateList();
-		if(parentsList.isEmpty()){
-			//must be an ingredient FoodState, which has already been checked
-			return false;
-		}
-		
 		String foodStateName = foodState.foodName();
 		String[] foodNameAr = WordForms.splitThmIntoSearchWords(foodStateName) ;
+		System.out.println("foodNameAr - " +Arrays.toString(foodNameAr) + " structNameSet "+structNameSet);
 		//Set<String> foodNameSet = new HashSet<String>(Arrays.asList(foodNameAr));
 		for(String foodName : foodNameAr){
 			//for now, only need one term to agree, e.g. rice and "rice mixture"
@@ -318,32 +327,42 @@ public class RecipeGraph {
 				return true;
 			}
 		}
+		List<FoodState> parentsList = foodState.parentFoodStateList();
 		for(FoodState parentState : parentsList){
-			return stateAncestorMatchStruct(parentState, structNameSet);
+			if(stateAncestorMatchStruct(parentState, structNameSet)){
+				return true;
+			}
 		}
 		return false;
 	}
 	
 	/**
 	 * Process struct's children, either with more ingredients,
-	 * or 
+	 * or appliances, e.g. "bake in oven"
 	 * @param termStruct
 	 */
 	private void addStructChildren(List<Struct> unknownStructList, List<FoodState> knownStateList,
 			Iterator<FoodState> stateIter, Struct struct){
 		List<Struct> children = struct.children();
-		for(Struct childStruct : children){
-			addStructFoodState2(unknownStructList, knownStateList, stateIter, childStruct);
+		List<ChildRelation> childRelationList = struct.childRelationList();
+		for(int i = 0; i < children.size(); i++){
+			Struct childStruct = children.get(i);
+			String childRelationStr = childRelationList.get(i).childRelationStr();
+			Struct childFoodStruct = new FoodStruct(childStruct, childRelationStr);
+			addStructFoodState2(unknownStructList, knownStateList, stateIter, childFoodStruct);
 		}
 	}
 	
 	@Override
 	public String toString(){
 		StringBuilder sb = new StringBuilder();
-		sb.append("currentStateList: ");
+		sb.append("currentStateList: \n");
+		int counter = 0;
 		for(FoodState state : currentStateList){
-			sb.append(" State: "+ state);
-			sb.append(" Edge " + state.getParentEdge());
+			sb.append(counter++).append(": ").append(state).append("\n");
+			sb.append("EXPR:\n").append(state.toExpr());
+			//sb.append(" ParentEdge " + state.getParentEdge());
+			//sb.append(" ChildEdge " + state.getChildEdge()).append(" ** ");
 		}
 		return sb.toString();
 	}
