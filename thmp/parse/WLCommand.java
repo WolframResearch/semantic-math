@@ -1465,8 +1465,7 @@ public class WLCommand implements Serializable{
 		Map<WLCommandComponent, Integer> commandsCountMap = curCommand.commandsCountMap;
 		List<PosTerm> posTermList = curCommand.posTermList;
 		int posTermListSz = posTermList.size();
-		//use StringBuilder!
-		//StringBuilder commandSB = new StringBuilder();
+		
 		List<String> commandStrList = new ArrayList<String>();
 		int commandStrListTriggerIndex = -1;
 		int commandStrListCounter = 0;
@@ -1509,32 +1508,19 @@ public class WLCommand implements Serializable{
 				curArgNumCount = 1;
 			}
 			if(term.isOptionalTermHead()){
-				//if(true) throw new RuntimeException("");
 				optTermsHeadStringMap.put(term.optionalGroupNum(), termComponentPosStr);
 			}
 			if(!term.includeInBuiltString){	
 				//set its head Struct to structToAppendCommandStr,
 				// ***This should always be null, because haven't set it yet.
 				Struct nextStruct = term.posTermStruct;				
-				//System.out.println("&&&posTermStruct " + nextStruct);
 				//get WLCommandWrapperList
 				if(nextStruct != null){
 					updateHeadStruct(nextStruct, structToAppendCommandStr, curCommand);
 					
 					/*Update commandNumUnits, which for terms that are included in built string would be updated 
 					  via simpleToString() */
-					increment_commandNumUnits(curCommand, nextStruct);
-				//if(nextStruct != null){
-				//if != null, some Wrappers have been added, so already associated to some commands.
-				/*if(nextStructWrapperList != null){						
-					if(nextStruct.structToAppendCommandStr() == null){
-						nextStruct.set_structToAppendCommandStr(structToAppendCommandStr);					
-					}else{
-						//already been assigned to a different head
-						nextStruct.structToAppendCommandStr().WLCommand().structsWithOtherHeadCount--;
-						nextStruct.set_structToAppendCommandStr(structToAppendCommandStr);
-					}
-				} */								
+					increment_commandNumUnits(curCommand, nextStruct);							
 				}
 				continue;
 			}
@@ -1564,7 +1550,6 @@ public class WLCommand implements Serializable{
 					//****don't need to set to null here, but 
 					// set to null altogether after entire dfs iteration
 					nextStruct.set_previousBuiltStruct(null);						
-					//continue;	
 				}
 				
 				//connotation such as .DEFINING, .DEFINED, etc.
@@ -1576,22 +1561,6 @@ public class WLCommand implements Serializable{
 					connotationMap.put(curConnotation, nextStruct);
 				}
 				
-				//check if need to trigger triggerMathObj
-				/*if(term.triggerMathObj){
-					//should check first if contains WLCommandStr, i.e. has been converted to some 
-					//commands already
-					//nextWord = TriggerMathObj3.get_mathObjFromStruct(nextStruct, curCommand);
-					
-					//if(nextWord.equals("")){
-						//already added numUnits to Struct above, don't do it again.
-						//nextWord = nextStruct.simpleToString(true, null);	
-					//}
-					nextWord = nextStruct.simpleToString(true, curCommand);
-				}else{
-					//takes into account pro, and the ent it should refer to
-					nextWord = nextStruct.simpleToString(true, curCommand);
-				}*/
-				//	System.out.println("WLCommand triggerPosTer: " + triggerPosTerm.isPropertyTerm + " " + triggerPosTerm);
 				nextWord = nextStruct.simpleToString(true, curCommand, triggerPosTerm, term, termExprList);
 				//System.out.println("WLCommand - term/termExprList " + term + " / " + termExprList);
 				//System.out.println("WLCommand - nextWord: " + nextWord + " for struct: " + nextStruct);
@@ -1600,16 +1569,7 @@ public class WLCommand implements Serializable{
 				nextStruct.set_previousBuiltStruct(structToAppendCommandStr);
 				structToAppendCommandStr.set_posteriorBuiltStruct(nextStruct);				
 				//check if been assigned to a different head
-				//prevStructHeaded = updateWrapper(nextStruct, structToAppendCommandStr);
-				updateHeadStruct(nextStruct, structToAppendCommandStr, curCommand);
-				
-				/*if(nextStruct.structToAppendCommandStr() == null){						
-					prevStructHeaded = false;
-				}else{
-					//already been assigned to a different head
-					nextStruct.structToAppendCommandStr().WLCommand().structsWithOtherHeadCount--;									
-				}
-				nextStruct.set_structToAppendCommandStr(structToAppendCommandStr); */				
+				updateHeadStruct(nextStruct, structToAppendCommandStr, curCommand);							
 			}
 			else if(positionInMap == WLCommandsList.WL_DIRECTIVE_INDEX){
 				//index indicating this is a WL directive
@@ -1628,18 +1588,10 @@ public class WLCommand implements Serializable{
 					nextStruct.set_previousBuiltStruct(structToAppendCommandStr);
 					structToAppendCommandStr.set_posteriorBuiltStruct(nextStruct);
 					
-					/*if(nextStruct.structToAppendCommandStr() == null){
-						nextStruct.set_structToAppendCommandStr(structToAppendCommandStr);					
-					}else{
-						//already been assigned to a different head
-						nextStruct.structToAppendCommandStr().WLCommand().structsWithOtherHeadCount--;
-						nextStruct.set_structToAppendCommandStr(structToAppendCommandStr);
-					} */
 				}				
 			} else {
 				//auxilliary Strings inside a WLCommand, eg "[", "~".	
 				nextWord = term.commandComponent.posStr;
-				//System.out.print("nextWord : " + nextWord + "prevStruct: " + prevStructHeaded);
 				if(commandNegatedBool){
 					String negativeDirective = negativeTriggerCommandsMap.get(nextWord);
 					if(null != negativeDirective){
@@ -1647,7 +1599,6 @@ public class WLCommand implements Serializable{
 						//update trigger word to remove the negative term, e.g. "does not"
 						triggerTermNegated = true;
 					}
-					//System.out.println("WLCommand - negativeDirective " + negativeDirective + " nextWord: " + nextWord);					
 				}
 			}
 			
@@ -1655,7 +1606,6 @@ public class WLCommand implements Serializable{
 				int optionalGroupNum = term.optionalGroupNum();				
 				//check all optional terms are satisfied.
 				if(0 == optionalTermsGroupCountMap.get(optionalGroupNum)){
-					//commandSB.append(nextWord);//.append(" ");
 					commandStrList.add(nextWord);
 					/*if(term.isTrigger){
 						commandStrListTriggerIndex = commandStrListCounter;
@@ -1663,8 +1613,7 @@ public class WLCommand implements Serializable{
 					commandStrListCounter++;
 					if(term.isOptionalTermHead() || !optTermsArgNumPairMap.containsKey(optionalGroupNum)){
 						OptTermsArgNumPair argNumPair = new OptTermsArgNumPair(curArgNumCount, exprArgsListTMap);
-						optTermsArgNumPairMap.put(optionalGroupNum, argNumPair) ;	
-						
+						optTermsArgNumPairMap.put(optionalGroupNum, argNumPair) ;
 					}
 					if(term.positionInMap != WLCommandsList.AUXINDEX
 							&& term.positionInMap != WLCommandsList.WL_DIRECTIVE_INDEX){						
@@ -1673,7 +1622,6 @@ public class WLCommand implements Serializable{
 					/////addTermExprToTMap(exprArgsListTMap, curArgNumCount, term, termExprList);					
 				}
 			}else{
-				//commandSB.append(nextWord);//.append(" ");
 				commandStrList.add(nextWord);
 				if(term.isTrigger){
 					commandStrListTriggerIndex = commandStrListCounter;
@@ -1717,7 +1665,6 @@ public class WLCommand implements Serializable{
 				}
 				termExprList = new ArrayList<Expr>();
 				termExprList.add(curOptExpr);
-				//if(termExprList.isEmpty()) throw new RuntimeException(term+ " ....." +termExprList.toString());
 				exprArgsListTMap.put(curArgNumInTMap, termExprList);
 			}else{
 				if(posInTermExprList > termExprList.size()){
@@ -1727,7 +1674,6 @@ public class WLCommand implements Serializable{
 			}			
 		}		
 		
-		//"****%###structToAppendCommandStr " +structToAppendCommandStr	
 		WLCommandWrapper curCommandWrapper = structToAppendCommandStr.add_WLCommandWrapper(curCommand);
 		
 		//add local variable to parseState.
@@ -1736,11 +1682,8 @@ public class WLCommand implements Serializable{
 			Struct definingStruct = connotationMap.get(PosTermConnotation.DEFINING);
 			String variableName = connotationMap.get(PosTermConnotation.DEFINED).nameStr();
 			if(!WordForms.getWhiteEmptySpacePattern().matcher(variableName).matches()){
-				//System.out.println("variableName  "+variableName);
 				variableName = WordForms.stripSurroundingWhiteSpace(variableName);
 				parseState.addLocalVariableStructPair(variableName, definingStruct);
-				//if(true) throw new IllegalStateException(parseState.getGlobalVariableNamesMMap().toString());
-				//System.out.println("variableName: " + variableName);
 			}
 		}		
 		//gather together the WLCommand Expr
@@ -1789,7 +1732,6 @@ public class WLCommand implements Serializable{
 			commandSB2.append(strToAppend);
 		}
 		
-		//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
 		if(DEBUG){
 			System.out.println("\n CUR COMMAND: triggerWord " +curCommand.getTriggerWord() + ". " + curCommand + " ");
 			System.out.print("BUILT COMMAND: " + commandSB2);

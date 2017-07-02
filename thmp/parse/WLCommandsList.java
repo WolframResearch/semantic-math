@@ -191,7 +191,8 @@ public class WLCommandsList {
 		/* e.g. "Fix a prime $p$"*/
 		putToWLCommandMapBuilder(wLCommandMapBuilder, "verb", new PBuilder("{"),
 				new PBuilder("^(?!hyp)verb$", null, true, true, false).setPositionInStructTree(PositionInStructTree.FIRST),
-				new PBuilder(", "), new PBuilder(" {", "OPT"), 
+				new PBuilder(" ~"), new PBuilder("Action").makeExprHead(), new PBuilder("~ "), //new PBuilder(", "), 
+				new PBuilder(" {", "OPT"), 
 				new PBuilder("symb|ent|noun", null, true, false, false).addRelationType(RelationType._IS),
 				//new PBuilder(", {\"Qualifiers\"->", "OPT"), //new PBuilder("Qualifiers", "OPT").makeOptionalTermHead(),
 				new PBuilder(", {", "OPT"),

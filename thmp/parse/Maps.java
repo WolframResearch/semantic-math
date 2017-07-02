@@ -701,6 +701,8 @@ public class Maps {
 			structMap.put("pre_np", new Rule("prep", 1));
 			structMap.put("pre_expr", new Rule("prep", 1));
 			structMap.put("pre_pobj", new Rule("prep", 1));
+			//"combine flour and water to form dough"
+			structMap.put("pre_verbphrase", new Rule("prep", 1));//FOOD
 			structMap.put("csubj_prep", new Rule("csubj", 1));
 			structMap.put("noun_prep", new Rule("np", 1));
 			structMap.put("noun_verbphrase", new Rule("assert", 1));
@@ -919,6 +921,7 @@ public class Maps {
 			structMap.put("not_verbAlone", new Rule("verbAlone", .85));
 			structMap.put("verbAlone_prep", new Rule("newchild", "verbAlone", .85));
 			structMap.put("verbAlone_adverb", new Rule("newchild", "verbAlone", .85));
+			structMap.put("verb_adverb", new Rule("newchild", "verb", .85));//FOOD
 			structMap.put("ent_symb", new Rule("absorb2", 1));
 			
 			// eg "property that a is b"

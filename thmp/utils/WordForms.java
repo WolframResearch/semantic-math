@@ -137,7 +137,7 @@ public class WordForms {
 		FileUtils.silentClose(synonymsBF);
 		
 		GREEK_ALPHA_SET = new HashSet<String>();
-		String[] GREEK_ALPHA = new String[]{"alpha","beta","gamma"};
+		String[] GREEK_ALPHA = new String[]{"alpha","beta","gamma","delta","epsilon"};
 		for(String s : GREEK_ALPHA){
 			GREEK_ALPHA_SET.add(s);
 		}		

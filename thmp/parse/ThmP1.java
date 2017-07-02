@@ -3496,7 +3496,7 @@ public class ThmP1 {
 		//build relation vector for the highest-ranked parse, set relation vector to parseState.
 		Multimap<ParseStructType, ParsedPair> topParsedPairMMap = sortedParsedPairMMapList.get(0);
 		BigInteger relationVec = RelationVec.buildRelationVec(topParsedPairMMap);
-		//if(true) throw new IllegalStateException("ThmP1 - topParsedPairMMap "+topParsedPairMMap);
+		//if(true) throw new IllegalStateException("ThmP1 - bestParseStruct "+bestParseStruct.getWLCommandWrapperMMap());
 		parseState.setRelationalContextVec(relationVec);
 		//System.out.println("-+++++++++++best head!!! " + headParseStructList);
 		//set head for this run of current part that triggered the command.

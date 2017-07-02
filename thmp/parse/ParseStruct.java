@@ -29,10 +29,8 @@ public class ParseStruct implements Serializable{
 	//map of structures such as qualifying object, quantifying variables. 
 	//The keys are enums. Should preserve keys as well!
 	private List<ParseStruct> childrenParseStructList;
-	//map of Structs, i.e. heads of statements. 
-	//pointer to head Struct that leads this ParseStruct
-	//private Struct headStruct;
-	//structs on this layer of the tree.
+
+	//structs on this layer of the tree. Consists of non-conflicting (non-overalapping) WLCommmands
 	private Multimap<ParseStructType, WLCommandWrapper> wrapperMMap;
 	
 	//keep track of the trigger words that appear in WLCommands 
