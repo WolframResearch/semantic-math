@@ -556,7 +556,7 @@ public class FileUtils {
 	 * @param path
 	 * @return
 	 */
-	public static String getServletPath(String path){
+	public static String getPathIfOnServlet(String path){
 		if(null != servletContext){
 			return servletContext.getRealPath(path);
 		}else{

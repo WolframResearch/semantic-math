@@ -29,17 +29,16 @@ public class CreateRepresentativeMaps {
 		//read thms from parsed expressions serialized file
 		if(args.length == 0){
 			System.out.println("Enter a serialized file of parsed expressions!");
-			return;
+			//return;
 		}
 		//e.g. "combinedParsedExpressionsList.dat"
-		String peFilePath = args[0];
-		
+		//String peFilePath = args[0];
+		String peFilePath = "src/thmp/data/parsedExpressionList.dat";
 		List<String> thmList = extractThmListFromPEList(peFilePath);
-		buildAndSerializeNGramMaps(thmList);
-		buildAndSerializeTrueFluffWordsSet(thmList);
-	}
-	
-	
+		System.out.println("thmLIst "+thmList);
+		buildAndSerialize2GramMaps(thmList);
+		if(false) buildAndSerializeTrueFluffWordsSet(thmList);
+	}	
 	
 	private static List<String> extractThmListFromPEList(String peFilePath){
 		List<String> thmList = new ArrayList<String>();
@@ -80,7 +79,7 @@ public class CreateRepresentativeMaps {
 		WordFrequency.ComputeFrequencyData.buildTrueFluffWordsSet(trueFluffWordsSet, 
 				corpusWordFreqMap, TOTAL_CORPUS_WORD_COUNT);
 		
-		String trueFluffWordsSetPath = FileUtils.getServletPath(SearchMetaData.trueFluffWordsSetPath());
+		String trueFluffWordsSetPath = FileUtils.getPathIfOnServlet(SearchMetaData.trueFluffWordsSetPath());
 		List<Set<String>> trueFluffWordsSetList = new ArrayList<Set<String>>();
 		trueFluffWordsSetList.add(trueFluffWordsSet);
 		
@@ -91,10 +90,10 @@ public class CreateRepresentativeMaps {
 	}
 	
 	/**
-	 * Build and serialize two and three Gram maps.
+	 * Build and serialize two Gram maps.
 	 * @return
 	 */
-	public static void buildAndSerializeNGramMaps(List<String> thmList){
+	public static void buildAndSerialize2GramMaps(List<String> thmList){
 		//nGramMap Map of maps. Keys are words in text, and entries are maps whose keys are 2nd terms
 		// in 2 grams, and entries are frequency counts.
 		//this field will be exposed to build 3-grams, and so far only for that purpose.
@@ -102,17 +101,40 @@ public class CreateRepresentativeMaps {
 			= new HashMap<String, Map<String, Integer>>();
 		Map<String, Integer> twoGramFreqMap = NGramSearch.TwoGramSearch
 				.gatherAndBuild2GramsMaps(thmList, twoGramTotalOccurenceMap);
-		String twoGramsSerialPath = FileUtils.getServletPath(SearchMetaData.twoGramsFreqMapPath());
+		String twoGramsSerialPath = FileUtils.getPathIfOnServlet(SearchMetaData.twoGramsFreqMapPath());
 		List<Map<String, Integer>> twoGramFreqMapList = new ArrayList<Map<String, Integer>>();
 		twoGramFreqMapList.add(twoGramFreqMap);
 		FileUtils.serializeObjToFile(twoGramFreqMapList, twoGramsSerialPath);
 		//for inspection
 		String twoGramsTxtPath = twoGramsSerialPath.substring(0, twoGramsSerialPath.length()-3) + "txt";
-		FileUtils.writeToFile(twoGramFreqMap, twoGramsTxtPath);
+		FileUtils.writeToFile(twoGramFreqMap, twoGramsTxtPath);		
+	}
+	
+	/**
+	 * Build and serialize two and three Gram maps.
+	 * Two and three grams combined, since three gram building requires frequency data
+	 * generated when building two grams.
+	 * @return
+	 */
+	public static void buildAndSerialize3GramMaps(List<String> thmList){
+		//nGramMap Map of maps. Keys are words in text, and entries are maps whose keys are 2nd terms
+		// in 2 grams, and entries are frequency counts.
+		//this field will be exposed to build 3-grams, and so far only for that purpose.
+		Map<String, Map<String, Integer>> twoGramTotalOccurenceMap 
+			= new HashMap<String, Map<String, Integer>>();
+		Map<String, Integer> twoGramFreqMap = NGramSearch.TwoGramSearch
+				.gatherAndBuild2GramsMaps(thmList, twoGramTotalOccurenceMap);
+		/*String twoGramsSerialPath = FileUtils.getPathIfOnServlet(SearchMetaData.twoGramsFreqMapPath());
+		List<Map<String, Integer>> twoGramFreqMapList = new ArrayList<Map<String, Integer>>();
+		twoGramFreqMapList.add(twoGramFreqMap);
+		FileUtils.serializeObjToFile(twoGramFreqMapList, twoGramsSerialPath);
+		//for inspection
+		String twoGramsTxtPath = twoGramsSerialPath.substring(0, twoGramsSerialPath.length()-3) + "txt";
+		FileUtils.writeToFile(twoGramFreqMap, twoGramsTxtPath);*/
 				
 		Map<String, Integer> threeGramFreqMap = ThreeGramSearch
 				.gatherAndBuild3GramsMap(thmList, twoGramTotalOccurenceMap);
-		String threeGramsSerialPath = FileUtils.getServletPath(SearchMetaData.threeGramsFreqMapPath());		
+		String threeGramsSerialPath = FileUtils.getPathIfOnServlet(SearchMetaData.threeGramsFreqMapPath());		
 		List<Map<String, Integer>> threeGramFreqMapList = new ArrayList<Map<String, Integer>>();
 		threeGramFreqMapList.add(threeGramFreqMap);
 		FileUtils.serializeObjToFile(threeGramFreqMapList, threeGramsSerialPath);		

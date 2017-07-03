@@ -149,7 +149,7 @@ public class WordFrequency {
 			}			
 			wordPosMap = ImmutableMap.copyOf(wordPosPreMap);
 			
-			String trueFluffWordsSetPath = FileUtils.getServletPath(SearchMetaData.trueFluffWordsSetPath());
+			String trueFluffWordsSetPath = FileUtils.getPathIfOnServlet(SearchMetaData.trueFluffWordsSetPath());
 			@SuppressWarnings("unchecked")
 			Set<String> set = ((List<Set<String>>)FileUtils.deserializeListFromFile(trueFluffWordsSetPath)).get(0);
 			trueFluffWordsSet = set;

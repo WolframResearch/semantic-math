@@ -931,7 +931,7 @@ public class ThmSearch {
 	private static String getSystemCacheManagerPath(){
 		String pathToMx = "src/thmp/scripts/" + TermDocumentMatrix
 				.CACHE_MANAGER_PACKAGE_NAME + ".m";
-		return FileUtils.getServletPath(pathToMx);
+		return FileUtils.getPathIfOnServlet(pathToMx);
 	}
 	
 	/**

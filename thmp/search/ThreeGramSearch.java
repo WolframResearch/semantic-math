@@ -120,7 +120,7 @@ public class ThreeGramSearch {
 		//keep the ones from initialThreeGramsSet
 
 		//read threeGramMap from serialized file
-		String threeGramsFreqMapPath = FileUtils.getServletPath(SearchMetaData.threeGramsFreqMapPath());
+		String threeGramsFreqMapPath = FileUtils.getPathIfOnServlet(SearchMetaData.threeGramsFreqMapPath());
 		@SuppressWarnings("unchecked")
 		Map<String, Integer> m = ((List<Map<String, Integer>>)FileUtils.deserializeListFromFile(threeGramsFreqMapPath)).get(0);
 		threeGramFreqMap = ImmutableMap.copyOf(m);

@@ -276,13 +276,13 @@ public class CollectThm {
 				//should not build if not searching
 				//These all contain the *same* set of words.
 				
-				String wordThmIndexMMapPath = FileUtils.getServletPath(SearchMetaData.wordThmIndexMMapSerialFilePath());
+				String wordThmIndexMMapPath = FileUtils.getPathIfOnServlet(SearchMetaData.wordThmIndexMMapSerialFilePath());
 				@SuppressWarnings("unchecked")
 				Multimap<String, Integer> wordThmsIndexMultimap = ((List<Multimap<String, Integer>>)
 						FileUtils.deserializeListFromFile(wordThmIndexMMapPath)).get(0);
 				 wordThmsIndexMMapNoAnno = ImmutableMultimap.copyOf(wordThmsIndexMultimap);
 				 
-				String docWordsFreqMapNoAnnoPath = FileUtils.getServletPath(SearchMetaData.wordDocFreqMapPath());
+				String docWordsFreqMapNoAnnoPath = FileUtils.getPathIfOnServlet(SearchMetaData.wordDocFreqMapPath());
 				@SuppressWarnings("unchecked")
 				Map<String, Integer> docWordsFreqPreMap = ((List<Map<String, Integer>>)
 						FileUtils.deserializeListFromFile(docWordsFreqMapNoAnnoPath)).get(0);

@@ -77,7 +77,7 @@ public class Maps {
 	
 	static{
 		String pathToPosTagger = "src/thmp/data/models/english-bidirectional-distsim.tagger";
-		POS_TAGGER_PATH_STR = FileUtils.getServletPath(pathToPosTagger);		
+		POS_TAGGER_PATH_STR = FileUtils.getPathIfOnServlet(pathToPosTagger);		
 	}
 	/**
 	 * Sets buffered readers.
@@ -400,8 +400,7 @@ public class Maps {
 			
 			for (int i = 0; i < pList.size(); i++) {
 				posPreMMap.put(pList.get(i)[0], pList.get(i)[1]);
-			}
-			
+			}		
 			
 			if(FOOD){
 				posPreMMap.put("warm", "adj");

@@ -155,7 +155,7 @@ public class NGramSearch {
 			//build this set from twoGramsMap by taking first words at initialization.
 			
 			//get list of 2 grams that show up frequently. Read from serialized version.
-			String twoGramsSerialPath = FileUtils.getServletPath(SearchMetaData.twoGramsFreqMapPath());
+			String twoGramsSerialPath = FileUtils.getPathIfOnServlet(SearchMetaData.twoGramsFreqMapPath());
 			
 			@SuppressWarnings("unchecked")
 			Map<String, Integer> m = ((List<Map<String, Integer>>)FileUtils.deserializeListFromFile(twoGramsSerialPath)).get(0);
@@ -193,7 +193,7 @@ public class NGramSearch {
 			//total word counts of all 2 grams
 			Map<String, Integer> totalWordCountsMap = new HashMap<String, Integer>();
 			//build nGram map, 
-			buildNGramMap(thmList, twoGramTotalOccurenceMap, totalWordCountsMap);
+			build2GramMap(thmList, twoGramTotalOccurenceMap, totalWordCountsMap);
 	
 			//computes the average frequencies of words that follow the first word in all 2-grams
 			Map<String, Integer> averageWordCountsMap = computeAverageFreq(twoGramTotalOccurenceMap, totalWordCountsMap);
@@ -246,10 +246,8 @@ public class NGramSearch {
 			if(!wordPosList.isEmpty()){
 				//get the top one only
 				firstWordPos = wordPosList.get(0);
-			}
-			
-			Map<String, Integer> nextWordsMap = wordMapEntry.getValue();
-			
+			}			
+			Map<String, Integer> nextWordsMap = wordMapEntry.getValue();			
 			for(Map.Entry<String, Integer> nextWordsMapEntry : nextWordsMap.entrySet()){
 				int nextWordCount = nextWordsMapEntry.getValue();
 				String nextWord = nextWordsMapEntry.getKey();
@@ -337,19 +335,19 @@ public class NGramSearch {
 	 * @param totalWordCounts
 	 * @param thmList
 	 */
-	private static void buildNGramMap2(Map<String, Map<String, Integer>> nGramMap, Map<String, Integer> totalWordCounts,
+	private static void build2GramMap2(Map<String, Map<String, Integer>> nGramMap, Map<String, Integer> totalWordCounts,
 			List<String> thmList) {
 		//skip nonMathFluffWords, collapse list
 		for(String thm : thmList){
 			//split into words
 			String[] thmAr = WordForms.splitThmIntoSearchWords(thm.toLowerCase());
+			
 			String curWord;
 			String nextWord;
 			
 			for(int i = 0; i < thmAr.length-1; i++){
 				curWord = thmAr[i];
-				nextWord = thmAr[i+1];
-				
+				nextWord = thmAr[i+1];				
 				//this is a rather large set, should not include so many cases.
 				//words such as "purely inseparable" might be filtered out.
 				//maybe first word could be the small fluff words list from ThreeGramSearch?
@@ -398,8 +396,7 @@ public class NGramSearch {
 					totalWordCounts.put(curWord, curWordCount+1);
 				}else{
 					totalWordCounts.put(curWord, 1);
-				}
-				
+				}				
 			}
 		}
 	}
@@ -413,9 +410,9 @@ public class NGramSearch {
 	 * in 2 grams, and entries are frequency counts. I.e. map of words that show up, and the words that 
 	 * immediately follow and their counts.
 	 */
-	public static void buildNGramMap(List<String> thmList,
+	public static void build2GramMap(List<String> thmList,
 			Map<String, Map<String, Integer>> nGramMap, Map<String, Integer> totalWordCounts){		
-		buildNGramMap2(nGramMap, totalWordCounts, thmList);
+		build2GramMap2(nGramMap, totalWordCounts, thmList);
 	}
 	
 	/**

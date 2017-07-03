@@ -149,7 +149,7 @@ public class ProjectionMatrix {
 		
 		//serialize map into one file, to be loaded at once in memory at runtime.
 		//should be ~240 MB.
-	 	String wordThmIndexMMapPath = FileUtils.getServletPath(SearchMetaData.wordThmIndexMMapSerialFilePath());
+	 	String wordThmIndexMMapPath = FileUtils.getPathIfOnServlet(SearchMetaData.wordThmIndexMMapSerialFilePath());
 	 	List<Multimap<String, Integer>> combinedWordThmIndexMMapList = new ArrayList<Multimap<String, Integer>>();
 	 	combinedWordThmIndexMMapList.add(combinedWordThmIndexMMap);	 	
 	 	FileUtils.serializeObjToFile(combinedWordThmIndexMMapList, wordThmIndexMMapPath);
