@@ -915,7 +915,8 @@ public class DetectHypothesis {
 			List<DefinitionListWithThm> definitionListWithThmList, List<ThmHypPair> thmHypPairList,
 			String srcFileName, MacrosTrie macrosTrie,
 			Pattern eliminateBeginEndThmPattern){
-		
+		//print to indicate progress, since all other outputs are suppressed during processing.
+		System.out.print(".");
 		// process here, return two versions, one for bag of words, one
 		// for display
 		// strip \df, \empf. Index followed by % strip, not percent
@@ -935,24 +936,17 @@ public class DetectHypothesis {
 		//sentences to be parsed twice, unless these sentences are marked so they don't get parsed again.
 		//<--really?! June 2017
 		detectAndParseHypothesis(thm, parseState, stats);
-		//if(true) throw new IllegalStateException(parseState.toString());
-		//if contained in local map, should be careful about when to append map.
-		
+		//if contained in local map, should be careful about when to append map.		
 		//append to newThmSB additional hypotheses that are applicable to the theorem.				
 		DefinitionListWithThm thmDef = appendHypothesesAndParseThm(thm, parseState, thmHypPairList, stats, srcFileName);
 		
 		if(thmDef != DefinitionListWithThm.PLACEHOLDER_DEF_LIST_WITH_THM){
-			definitionListWithThmList.add(thmDef);
-			
+			definitionListWithThmList.add(thmDef);			
 		}
 		
-		//System.out.println("___-------++++++++++++++" + thmDef);
 		//should parse the theorem.
 		//serialize the full parse, i.e. parsedExpression object, along with original input.				
 		
-		/*if (!WordForms.getWhitespacePattern().matcher(thm).find()) {
-			thms.add(thm);
-		}*/
 		//local clean up, after done with a theorem, but still within same document.
 		parseState.parseRunLocalCleanUp();
 		newThmSB.setLength(0);		
@@ -1180,7 +1174,7 @@ public class DetectHypothesis {
 		//split the latexExpr with delimiters
 		//String[] latexExprAr = SYMBOL_SEPARATOR_PATTERN.split(latexExpr);
 		List<String> varsList = TexToTree.texToTree(latexExpr);
-		System.out.println("DetectHypothesis - varsList " + varsList);
+		//System.out.println("DetectHypothesis - varsList " + varsList);
 		for(int i = 0; i < varsList.size(); i++){
 			
 			String possibleVar = varsList.get(i);
@@ -1189,7 +1183,7 @@ public class DetectHypothesis {
 			//Get a variableName and check if a variable has been defined.
 			VariableName possibleVariableName = ParseState.createVariableName(possibleVar);
 			VariableDefinition possibleVarDef = new VariableDefinition(possibleVariableName, null, null);
-			System.out.println("^^^$^%%% &^^^ DetectHypothesis - possibleVarDef: "+ possibleVarDef);
+			//System.out.println("^^^$^%%% &^^^ DetectHypothesis - possibleVarDef: "+ possibleVarDef);
 			
 			boolean isLocalVar = parseState.getVariableDefinitionFromName(possibleVarDef);
 			//whether the variable definition was defined locally in the theorem, used to determine whether

@@ -509,9 +509,7 @@ public class ParseToWLTree{
 					for(int i = structList.size()-1; i > -1; i--){
 						
 						Struct curStruct = structList.get(i);
-						if(curCommand.getTriggerWord().equals("if")){
-							System.out.println("ParseToWLTree - if");
-						}
+						
 						//see if the whole command is satisfied, not just the part before trigger word
 						//namely the trigger word is last word
 						boolean beforeTrigger = true;

@@ -20,13 +20,9 @@ import thmp.test.ParseEqualityCheck.ParseResult;
  */
 public class SerializeParseResult {
 
-	public static String parseResultSerialFile = "src/thmp/parseResultSerialFile.dat";
+	public static String parseResultSerialFile = "src/thmp/data/parseResultSerialFile.dat";
 	//previous version of the file, in case gets overwritten.
-	private static String parseResultSerialFileLastTime = "src/thmp/parseResultSerialFileLastTime.dat";
-	
-	public static void f(){
-		
-	}
+	private static String parseResultSerialFileLastTime = "src/thmp/data/parseResultSerialFileLastTime.dat";
 	
 	public static void main(String args[]) throws IOException{
 		List<String> inputStrList = new ArrayList<String>();

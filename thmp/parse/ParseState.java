@@ -574,7 +574,7 @@ public class ParseState {
 		}else if(inThmFlag){
 			isLocalVar = true;
 		}
-		System.out.println("ParseState - " +varName + "  " + this.globalVariableNamesMMap + "  "+this.globalVariableNamesMMap.containsKey(varName));
+		//System.out.println("ParseState - " +varName + "  " + this.globalVariableNamesMMap + "  "+this.globalVariableNamesMMap.containsKey(varName));
 		return isLocalVar;
 	}
 	

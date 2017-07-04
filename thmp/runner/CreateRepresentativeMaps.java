@@ -29,14 +29,14 @@ public class CreateRepresentativeMaps {
 		//read thms from parsed expressions serialized file
 		if(args.length == 0){
 			System.out.println("Enter a serialized file of parsed expressions!");
-			//return;
+			return;
 		}
 		//e.g. "combinedParsedExpressionsList.dat"
-		//String peFilePath = args[0];
-		String peFilePath = "src/thmp/data/parsedExpressionList.dat";
+		String peFilePath = args[0];
+		//String peFilePath = "src/thmp/data/parsedExpressionList.dat";
 		List<String> thmList = extractThmListFromPEList(peFilePath);
-		System.out.println("thmLIst "+thmList);
-		buildAndSerialize2GramMaps(thmList);
+		//System.out.println("thmLIst "+thmList);
+		buildAndSerialize23GramMaps(thmList);
 		if(false) buildAndSerializeTrueFluffWordsSet(thmList);
 	}	
 	
@@ -44,8 +44,10 @@ public class CreateRepresentativeMaps {
 		List<String> thmList = new ArrayList<String>();
 		@SuppressWarnings("unchecked")
 		List<ParsedExpression> peList = (List<ParsedExpression>)FileUtils.deserializeListFromFile(peFilePath);
+		System.out.println("CreateRepresentativeMaps - peList.size() " +peList.size());
 		for(ParsedExpression pe : peList){
 			DefinitionListWithThm defListWithThm = pe.getDefListWithThm();
+			//System.out.println("defListWithThm "+defListWithThm);
 			thmList.add(defListWithThm.getDefinitionStr() + " " + defListWithThm.getThmStr());
 		}
 		return thmList;
@@ -143,4 +145,34 @@ public class CreateRepresentativeMaps {
 		FileUtils.writeToFile(threeGramFreqMap, threeGramsTxtPath);
 	}
 
+	/**
+	 * Builds both two and three grams maps.
+	 * @param thmList
+	 */
+	public static void buildAndSerialize23GramMaps(List<String> thmList){
+		//nGramMap Map of maps. Keys are words in text, and entries are maps whose keys are 2nd terms
+		// in 2 grams, and entries are frequency counts.
+		//this field will be exposed to build 3-grams, and so far only for that purpose.
+		Map<String, Map<String, Integer>> twoGramTotalOccurenceMap 
+			= new HashMap<String, Map<String, Integer>>();
+		Map<String, Integer> twoGramFreqMap = NGramSearch.TwoGramSearch
+				.gatherAndBuild2GramsMaps(thmList, twoGramTotalOccurenceMap);
+		String twoGramsSerialPath = FileUtils.getPathIfOnServlet(SearchMetaData.twoGramsFreqMapPath());
+		List<Map<String, Integer>> twoGramFreqMapList = new ArrayList<Map<String, Integer>>();
+		twoGramFreqMapList.add(twoGramFreqMap);
+		FileUtils.serializeObjToFile(twoGramFreqMapList, twoGramsSerialPath);
+		//for inspection
+		String twoGramsTxtPath = twoGramsSerialPath.substring(0, twoGramsSerialPath.length()-3) + "txt";
+		FileUtils.writeToFile(twoGramFreqMap, twoGramsTxtPath);
+				
+		Map<String, Integer> threeGramFreqMap = ThreeGramSearch
+				.gatherAndBuild3GramsMap(thmList, twoGramTotalOccurenceMap);
+		String threeGramsSerialPath = FileUtils.getPathIfOnServlet(SearchMetaData.threeGramsFreqMapPath());		
+		List<Map<String, Integer>> threeGramFreqMapList = new ArrayList<Map<String, Integer>>();
+		threeGramFreqMapList.add(threeGramFreqMap);
+		FileUtils.serializeObjToFile(threeGramFreqMapList, threeGramsSerialPath);		
+		//for inspection
+		String threeGramsTxtPath = threeGramsSerialPath.substring(0, threeGramsSerialPath.length()-3) + "txt";
+		FileUtils.writeToFile(threeGramFreqMap, threeGramsTxtPath);
+	}
 }

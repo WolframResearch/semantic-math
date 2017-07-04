@@ -125,11 +125,9 @@ public class TexToTree {
 						i++;
 					}
 					int newIndex = extractSubNodes(tex, varsList, i);
-					System.out.println("newIndex " + includeParen);
 					if(newIndex == texLen && !ASCEND_STRING.contains(tex.substring(texLen-1)) && !includeParen){
 						//add 1 back if end of string encountered, but no parentheses when descending down. e.g. "S_A"
 						newIndex++;
-						if(true) throw new RuntimeException();
 					}
 					newIndex = includeParen ? newIndex : newIndex-1;
 					//int startIndex = includeParen ? i+1 : i;

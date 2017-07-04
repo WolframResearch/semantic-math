@@ -46,8 +46,8 @@ public class WordForms {
 	private static final Pattern ALL_WHITE_NONEMPTY_SPACE_PATTERN = Pattern.compile("^\\s+$");
 	private static final Pattern WHITE_NONEMPTY_SPACE_PATTERN = Pattern.compile("\\s+");
 	private static final Pattern BRACES_PATTERN = Pattern.compile("(\\{|\\}|\\[|\\])");
-	//delibera
-	public static final Pattern SPECIAL_CHARS_PATTERN = Pattern.compile(".*[-\\{\\[\\(\\}\\]\\)$\\\\%.;,:_~!+^&\"\'+<>=#].*");
+	
+	public static final Pattern SPECIAL_CHARS_PATTERN = Pattern.compile(".*[-\\{\\[\\)\\(\\}\\]$\\\\%/|*.;,:_~!+^&\"\'+<>=#].*");
 	public static final Pattern ALPHABET_PATTERN = Pattern.compile("[A-Za-z]");
 	/*Used to remove specical characters from words*/
 	private static final Pattern SPECIAL_CHARS_AROUND_WORD_PATTERN 
@@ -85,7 +85,7 @@ public class WordForms {
 	//*don't* put "of" here, will interfere with 3 gram collection
 	private static final String FLUFF_WORDS_SMALL = "a|the|tex|of|and|on|let|lemma|for|to|that|with|is|be|are|there|by"
 			+ "|any|as|if|we|suppose|then|which|in|from|this|assume|this|have|just|may|an|every|it|between|given|itself|has"
-			+ "|more|where";
+			+ "|more|where|but";
 	private static final Set<String> FLUFF_WORDS_SMALL_SET;
 	
 	private static final Set<String> freqWordsSet; 
@@ -220,8 +220,15 @@ public class WordForms {
 	public static String getSingularForm(String word){
 		//if word in dictionary, should not be processed. Eg "continuous"
 		//System.out.println("WordForms- word "+word);
-		if(getFreqWordsSet().contains(word) || word.length() < 4) return word;
-		
+		if(getFreqWordsSet().contains(word) || word.length() < 4){ 
+			return word;		
+		}
+		int wordLen0 = word.length();
+		String lastTwoChars = word.substring(wordLen0-2);
+		//radius, class, iris, basis, calculus, torus
+		if(lastTwoChars.equals("is") || lastTwoChars.equals("us") || lastTwoChars.equals("ss")){
+			return word;
+		}
 		String[] singFormsAr = getSingularForms(word);
 		//singFormsAr successively replaces words ending in "s", "es", "ies"
 		int k = 2;
@@ -436,6 +443,21 @@ public class WordForms {
 			return new WordMapIndexPair(singularNormalized, index, true);
 		}
 		return WordMapIndexPair.PLACEHOLDER_WORDMAPINDEXPAIR;
+	}
+	
+	/**
+	 * Centralized method to normalize two grams. Right now
+	 * only desingularize second word, without normalizing to word stem
+	 * -July 2017.
+	 * @param twoGram
+	 */
+	public static String normalizeTwoGram(String twoGram){
+		String[] wordAr = WordForms.WHITE_NONEMPTY_SPACE_PATTERN.split(twoGram);		
+		if(wordAr.length < 2){
+			return twoGram;
+		}
+		String secondWord = getSingularForm(wordAr[1]);		
+		return wordAr[0] + " " + secondWord;
 	}
 	
 	/**

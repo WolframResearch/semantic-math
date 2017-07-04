@@ -314,6 +314,7 @@ public class SearchIntersection {
 			if (i < inputWordsArSz - 1) {
 				String nextWord = inputWordsAr[i + 1];
 				String twoGram = word + " " + nextWord;
+				twoGram = WordForms.normalizeTwoGram(twoGram);
 				// check for 3 grams.
 				if (i < inputWordsArSz - 2) {
 					String thirdWord = inputWordsAr[i + 2];

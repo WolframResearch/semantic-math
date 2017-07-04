@@ -194,7 +194,13 @@ public class FileUtils {
 	 * @param outputFileStr
 	 */
 	public static void serializeObjToFile(List<? extends Object> list, String outputFileStr){
-		//serialize parsedExpressionList to persistent storage
+		File outputFile = new File(outputFileStr);
+		//atomic checking and creating file.
+		try {
+			outputFile.createNewFile();
+		} catch (IOException e1) {
+			e1.printStackTrace(); ///handle!
+		}
 		FileOutputStream fileOuputStream = null;
 		ObjectOutputStream objectOutputStream = null;
 		try{

@@ -350,6 +350,7 @@ public class TriggerMathThm2 {
 				//search 2 & 3-grams
 				if(i < thmAr.length-1){
 					String nextTermCombined = term + " " + thmAr[i+1];
+					nextTermCombined = WordForms.normalizeTwoGram(nextTermCombined);
 					newNorm = addToNorm(wordsScoreMap, indexScorePairList, newNorm, i, nextTermCombined, queryVecLen);	
 					//System.out.println("combined word: " + nextTermCombined + ". norm: " + newNorm);
 					
@@ -480,6 +481,7 @@ public class TriggerMathThm2 {
 			//search 2 & 3-grams
 			if(i < thmAr.length-1){
 				String nextTermCombined = term + " " + thmAr[i+1];
+				nextTermCombined = WordForms.normalizeTwoGram(nextTermCombined);
 				newNorm = addToNorm(wordsScoreMap, indexScorePairList, newNorm, i, nextTermCombined, queryVecLen);	
 				//System.out.println("combined word: " + nextTermCombined + ". norm: " + newNorm);
 				
@@ -487,10 +489,7 @@ public class TriggerMathThm2 {
 					String threeTermsCombined = nextTermCombined + " " + thmAr[i+2];
 					newNorm = addToNorm(wordsScoreMap, indexScorePairList, newNorm, i, threeTermsCombined, queryVecLen);
 				}
-			}
-			/*//if(term.matches(priorityWords)){
-				priorityWordsIndexList.add(i);
-			}*/						
+			}						
 			norm = newNorm;
 		}
 		//short-circuit if no relevant term was detected in input thm

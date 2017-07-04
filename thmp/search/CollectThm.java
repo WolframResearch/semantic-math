@@ -648,10 +648,7 @@ public class CollectThm {
 				//words and their frequencies.
 				//Map<String, Integer> thmWordsFreqMap = new HashMap<String, Integer>();				
 				
-			for(int j = 0; j < thmAr.length; j++){					
-				String singletonWordAdded = null;
-				String twoGramAdded = null;
-				String threeGramAdded = null;					
+			for(int j = 0; j < thmAr.length; j++){
 				String word = thmAr[j];	
 					//only keep words with lengths > 2
 					//System.out.println(word);
@@ -659,8 +656,7 @@ public class CollectThm {
 					//word length could change, so no assignment to variable.
 					if(word.length() < lengthCap){
 						continue;
-					}
-					
+					}					
 					//get singular forms if plural, put singular form in map
 					//Should be more careful on some words that shouldn't be singular-ized!					
 					word = WordForms.getSingularForm(word);						
@@ -674,6 +670,7 @@ public class CollectThm {
 					//check the following word
 					if(j < thmAr.length-1){
 						String nextWordCombined = word + " " + thmAr[j+1];
+						nextWordCombined = WordForms.normalizeTwoGram(nextWordCombined);
 						Integer twoGramFreq = twoGramsMap.get(nextWordCombined);
 						if(twoGramFreq != null){
 							if(!SPECIAL_CHARACTER_PATTERN.matcher(nextWordCombined).find()){
@@ -755,6 +752,7 @@ public class CollectThm {
 					//check the following word
 					if(j < thmAr.length-1){
 						String nextWordCombined = word + " " + thmAr[j+1];
+						nextWordCombined = WordForms.normalizeTwoGram(nextWordCombined);
 						Integer twoGramFreq = twoGramsMap.get(nextWordCombined);
 						if(twoGramFreq != null){
 							int freq = (int)(twoGramFreq*TWO_GRAM_FREQ_REDUCTION_FACTOR);
@@ -859,6 +857,7 @@ public class CollectThm {
 					//check the following word
 					if(j < thmAr.length-1){
 						String nextWordCombined = word + " " + thmAr[j+1];
+						nextWordCombined = WordForms.normalizeTwoGram(nextWordCombined);
 						Integer twoGramFreq = twoGramsMap.get(nextWordCombined);
 						if(twoGramFreq != null){
 							int freq = (int)(twoGramFreq*TWO_GRAM_FREQ_REDUCTION_FACTOR);

@@ -5,7 +5,7 @@ import java.util.ArrayList;
 /**
  * Transforms parse tree to WL
  * @author yihed
- *
+ * @deprecated
  */
 
 public class ParseToWL2 {
