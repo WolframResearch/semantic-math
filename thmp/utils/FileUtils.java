@@ -52,6 +52,8 @@ public class FileUtils {
 	private static volatile KernelLink ml;
 	private static final Logger logger = LogManager.getLogger();
 	private static final boolean IS_OS_X = "Mac OS X".equals(System.getProperty("os.name"));
+	//whether parsing recipes.
+	private static final boolean FOOD_PARSE;
 	/*random number used to keep track of version of serialized data, new random number 
 	//is generated each time this class is loaded,
 	//so oeffectively once per JVM session.
@@ -71,6 +73,13 @@ public class FileUtils {
 	private static MSPManager mspManager; //(MSPManager)servletContext.getAttribute(MSPStatics.MSP_MANAGER_ATTR);
 	private static KernelPool kernelPool;	        
     
+	/* Do not introduce dependencies on other classes in static initializer. Since many classes
+	 * count on this class as the lowest common denominator */
+	static{
+		boolean foodDefaultBool = false;
+		//change first one to adjust
+		FOOD_PARSE = IS_OS_X ? true : foodDefaultBool;
+	}
 	/**
 	 * Write content to file at absolute path.
 	 * @param contentList
@@ -576,5 +585,13 @@ public class FileUtils {
 	 */
 	public static boolean isOSX(){
 		return IS_OS_X;
+	}
+	
+	/**
+	 * Whether currently parsing recipes. Affects tokenization, etc.
+	 * @return
+	 */
+	public static boolean isFoodParse(){
+		return FOOD_PARSE;
 	}
 }

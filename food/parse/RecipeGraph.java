@@ -7,12 +7,14 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 import com.google.common.collect.Multimap;
 import com.wolfram.jlink.Expr;
 import com.wolfram.jlink.ExprFormatException;
 
+import food.utils.FoodLexicon;
 import thmp.parse.ParseStruct;
 import thmp.parse.ParseStructType;
 import thmp.parse.Struct;
@@ -39,6 +41,9 @@ public class RecipeGraph {
 	//private List<FoodState> ingredientStateList;
 	//List of current FoodState's. 
 	private List<FoodState> currentStateList;
+	//immediate prior FoodState, to be used in next parse, 
+	//if next parse makes implicit reference to lastFoodState.
+	private FoodState lastFoodState = FoodState.foodStateSingletonInstance();
 	
 	private RecipeGraph(//List<FoodState> ingredientStateList_, 
 			Map<String, Boolean> ingredientsMap_){
@@ -135,13 +140,14 @@ public class RecipeGraph {
 			if(termStruct.nameStr().equals("baking soda")){
 				System.out.println("");
 			}
-			addStructFoodState(unknownStructList, knownStateList, statesListIter, termStruct);
-			
+			addStructFoodState(unknownStructList, knownStateList, statesListIter, termStruct);			
 		}
-		//need curated utentils & appliance terms!		
+		
+		//to go along with edge, could be e.g. "until warm", "in oven"
+				List<Struct> edgeQualifierStructList = new ArrayList<Struct>();
 		Struct actionStruct;
 		//need to check if -1, or some default value!		
-		if( triggerTermIndex < 0){
+		if(triggerTermIndex < 0){
 			// improve!
 			Map<String, String> map = new HashMap<String, String>();
 			map.put("name", "");
@@ -149,10 +155,19 @@ public class RecipeGraph {
 		}else{
 			PosTerm triggerTerm = posList.get(triggerTermIndex);
 			actionStruct = triggerTerm.posTermStruct();
+			//if actionStruct has child, e.g. "stir in", "combine with",
+			//means subject refers to immediately prior product.
+			
+			if(actionStruct.has_child()){
+				//purge previous known states? Since they probably don't refer to prior food states?
+				knownStateList.add(lastFoodState);
+				for(Struct childStruct : actionStruct.children()){
+					edgeQualifierStructList.add(childStruct);
+				}
+			}
 		}
 		
-		//to go along with edge, could be e.g. "until warm"
-		List<Struct> applianceStructList = new ArrayList<Struct>();
+		
 		List<Struct> productStructList = new ArrayList<Struct>();
 		List<Struct> notKnownStructList = new ArrayList<Struct>();
 		//construct edge from trigger term and unknown structs
@@ -160,9 +175,10 @@ public class RecipeGraph {
 			//decide whether utensil, or appliance!
 			String structName = struct.nameStr();
 			if(isAppliance(structName)){
-				applianceStructList.add(struct);
+				edgeQualifierStructList.add(struct);
 			}else if(isFood(structName)){
 				productStructList.add(struct);
+				
 			}else{
 				notKnownStructList.add(struct);
 			}
@@ -174,16 +190,19 @@ public class RecipeGraph {
 		if(productStructList.isEmpty()){
 			productStructList.addAll(notKnownStructList);
 		}else{
-			applianceStructList.addAll(notKnownStructList);			
+			edgeQualifierStructList.addAll(notKnownStructList);			
 		}
-		RecipeEdge recipeEdge = new RecipeEdge(actionStruct, applianceStructList);
+		RecipeEdge recipeEdge = new RecipeEdge(actionStruct, edgeQualifierStructList);
 		for(FoodState parentState : knownStateList){
 			parentState.setChildEdge(recipeEdge);
 		}
 		if(productStructList.isEmpty()){
 			//improve! Create some placeholder to represent state
 			Map<String, String> map = new HashMap<String, String>();
-			map.put("name", "");
+			Random r = new Random();			
+			map.put("name", String.valueOf(r.nextInt(1000))); //graph thinks same vertex, if same as previous!! need unique identifier!
+
+			//map.put("name", ""); //graph thinks same vertex, if same as previous!! need unique identifier!
 			productStructList.add(new StructH<Map<String, String>>(map, ""));
 		}
 		//need to be careful! Should not allow multiple parents and multiple children at same time!
@@ -195,25 +214,19 @@ public class RecipeGraph {
 				parentState.addChildFoodState(productState);
 			}
 			currentStateList.add(productState);
+			//try to pick out the most likely state?
+			lastFoodState = productState;
 		}
 		
 	}
 
 	private boolean isFood(String structName){
-		if("yolk".equals(structName)){
-			return true;
-		}else if("white".equals(structName)){
-			return true;
-		}
-		return false;
+		return FoodLexicon.foodMap().containsKey(structName);
 	}
 	
 	private boolean isAppliance(String structName){
-		//////
-		if("oven".equals(structName)){
-			return true;
-		}
-		return false;
+		
+		return FoodLexicon.equipmentMap().containsKey(structName);
 	}
 	/**
 	 * @param unknownStructList
@@ -287,12 +300,12 @@ public class RecipeGraph {
 	private boolean findPreviousFoodState(List<FoodState> knownStateList, Iterator<FoodState> stateIter,
 			Struct termStruct){
 		String name = termStruct.nameStr();
-		String[] foodNameAr = WordForms.splitThmIntoSearchWords(name);
-		Set<String> nameSet = new HashSet<String>(Arrays.asList(foodNameAr));
+		//String[] foodNameAr = WordForms.splitThmIntoSearchWords(name);
+		//Set<String> nameSet = new HashSet<String>(Arrays.asList(foodNameAr));
 		Iterator<FoodState> currentStateListIter = currentStateList.iterator();
 		while(currentStateListIter.hasNext()){
 			FoodState foodState = currentStateListIter.next();
-			boolean ancestorMatched = stateAncestorMatchStruct(foodState, nameSet);
+			boolean ancestorMatched = stateAncestorMatchStruct(foodState, name);
 			if(ancestorMatched){
 				//update name if none already, e.g. "flour mixture"
 				String newFoodName = foodState.foodName() + " " + name;
@@ -311,25 +324,29 @@ public class RecipeGraph {
 	/**
 	 * Looks through ancestors, to see if any their names possibly matches
 	 * struct's name.
-	 * @param foodState
-	 * @param struct
+	 * @param foodState Current state under consideration.
+	 * @param sourceFoodName name of the food we are trying to find match for
 	 * @return
 	 */
-	private boolean stateAncestorMatchStruct(FoodState foodState, Set<String> structNameSet){
-
+	private boolean stateAncestorMatchStruct(FoodState foodState, String sourceFoodName //, Set<String> structNameSet
+			){
 		String foodStateName = foodState.foodName();
-		String[] foodNameAr = WordForms.splitThmIntoSearchWords(foodStateName) ;
-		System.out.println("foodNameAr - " +Arrays.toString(foodNameAr) + " structNameSet "+structNameSet);
+		//String[] foodNameAr = WordForms.splitThmIntoSearchWords(foodStateName) ;
+		//System.out.println("foodNameAr - " +Arrays.toString(foodNameAr) + " structNameSet "+structNameSet);
 		//Set<String> foodNameSet = new HashSet<String>(Arrays.asList(foodNameAr));
-		for(String foodName : foodNameAr){
+		/*for(String foodName : foodNameAr){
 			//for now, only need one term to agree, e.g. rice and "rice mixture"
 			if(structNameSet.contains(foodName)){
 				return true;
 			}
+		}*/
+		if(!WordForms.getWhiteEmptySpacePattern().matcher(foodStateName).matches() && sourceFoodName.contains(foodStateName)){
+			//"rice mixture" contains "rice", but hot sauce doesn't match soy sauce
+			return true;
 		}
 		List<FoodState> parentsList = foodState.parentFoodStateList();
 		for(FoodState parentState : parentsList){
-			if(stateAncestorMatchStruct(parentState, structNameSet)){
+			if(stateAncestorMatchStruct(parentState, sourceFoodName)){
 				return true;
 			}
 		}
@@ -360,9 +377,7 @@ public class RecipeGraph {
 		int counter = 0;
 		for(FoodState state : currentStateList){
 			sb.append(counter++).append(": ").append(state).append("\n");
-			sb.append("EXPR:\n").append(state.toExpr());
-			//sb.append(" ParentEdge " + state.getParentEdge());
-			//sb.append(" ChildEdge " + state.getChildEdge()).append(" ** ");
+			sb.append("EXPR:\n").append(state.toExpr()).append("\n");
 		}
 		return sb.toString();
 	}

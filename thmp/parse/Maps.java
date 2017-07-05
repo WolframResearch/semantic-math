@@ -27,6 +27,8 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 
+import food.utils.FoodLexicon;
+import food.utils.FoodLexicon.FoodMapNode;
 import thmp.search.WordFrequency;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
@@ -62,11 +64,10 @@ public class Maps {
 	// implmented via ImmutableMultimap. String is trigger word.
 	//private static final ImmutableListMultimap<String, FixedPhrase> fixedPhraseMMap;
 	private static ImmutableListMultimap<String, FixedPhrase> fixedPhraseMMap;
-	
-	//private static ServletContext servletContext;
-	
+		
 	private static final Pattern LEXICON_LINE_PATTERN = Pattern.compile("\"([^\"]+)\" ([^\\s]+)");
 	private static final String POS_TAGGER_PATH_STR;
+	private final boolean FOOD_PARSE = FileUtils.isFoodParse();
 	
 	// replace string with a break, usully a comma
 	//protected static List<String> breakList;
@@ -144,6 +145,27 @@ public class Maps {
 	public static Multimap<String, Rule> structMap(){
 		return BuildMaps.structMap;
 	}	
+	/**
+	 * Check to see if food token. If food token, returns int > 0. Else not 
+	 * a food token.
+	 * @param inputAr
+	 * @param curIndex
+	 * @param inputArLen
+	 * @return
+	 */
+	public static int checkFoodToken(String[] inputAr, int curIndex, int inputArLen){
+		return BuildMaps.FOOD_TRIE.getTokenCount(inputAr, curIndex, inputArLen);
+	}
+	/**
+	 * 
+	 * @param inputAr
+	 * @param curIndex
+	 * @param inputArLen
+	 * @return
+	 */
+	public static int checkCookingActionToken(String[] inputAr, int curIndex, int inputArLen){
+		return BuildMaps.COOKING_ACTION_TRIE.getTokenCount(inputAr, curIndex, inputArLen);		
+	}		
 	
 	//subclass, to allow for setting resource in parent class.
 	public static class BuildMaps{
@@ -166,6 +188,9 @@ public class Maps {
 
 		protected static final Map<String, String> anchorMap;
 		private static final boolean FOOD = true;
+		//deliberately not final
+		private static FoodMapNode FOOD_TRIE ;
+		private static FoodMapNode COOKING_ACTION_TRIE ;
 
 		static{
 			
@@ -232,11 +257,16 @@ public class Maps {
 				posPreMMap.remove(entry.getKey(), entry.getValue());	
 			}
 			posMMap = ArrayListMultimap.create(posPreMMap);
+			if(FOOD){
+				FOOD_TRIE = FoodLexicon.foodTrie();
+				COOKING_ACTION_TRIE = FoodLexicon.cookingActionTrie();
+			}
 		}
 		
 		//used to initialize BuildMaps class
 		public static void initialize(){			
 		}
+		
 		
 		/**
 		 * Can be used to fend off some parse combinatorial explosion.
@@ -251,6 +281,7 @@ public class Maps {
 			negativePosMMap.put("let", "verb");
 			negativePosMMap.put("let", "hyp");
 			negativePosMMap.put("be", "verb");
+			
 		}
 
 		/**
@@ -416,7 +447,8 @@ public class Maps {
 				//posPreMMap.put("heat", "ent");
 				posPreMMap.put("verb", "ent");
 				posPreMMap.put("transparent", "adj");
-				//posPreMMap.put("oven", "ent");
+				posPreMMap.put("speed", "ent");
+				posPreMMap.put("high", "adj");
 				
 			}
 			
@@ -516,7 +548,7 @@ public class Maps {
 			posPreMMap.put("between", "pre");
 			// between... -> between, and...->and, between_and->between_and
 
-			posPreMMap.put("in", "pre_comp");
+			posPreMMap.put("in", "pre_comp");			
 			posPreMMap.put("from", "pre");
 			posPreMMap.put("to", "pre_comp");
 			posPreMMap.put("to be", "be");

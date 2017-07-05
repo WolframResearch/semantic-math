@@ -44,11 +44,23 @@ public class RecipeEdge {
 	
 	@Override
 	public String toString(){
-		StringBuilder sb = new StringBuilder();
-		sb.append(actionStruct.nameStr());
+		StringBuilder sb = new StringBuilder();		
 		if(!qualifierStructList.isEmpty()){
-			sb.append(" {").append(qualifierStructList).append("} ");
+			for(Struct struct : qualifierStructList){
+				sb.append(" ");
+				if(struct.isFoodStruct()){
+					sb.append(((FoodStruct)struct).qualifier() ).append(" ").append(struct.nameStr()).append(", "); 
+				}else{
+					sb.append(struct.nameStr()).append(", ");
+				}
+			}
+			if(sb.length() > 2){
+				sb = sb.delete(sb.length()-2, sb.length());				
+				sb.insert(0, "{").append("}");
+			}	
+			//sb.append(" {").append(qualifierStructList).append("} ");
 		}
+		sb.insert(0, actionStruct.nameStr());
 		return sb.toString();
 	}
 }

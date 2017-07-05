@@ -31,16 +31,20 @@ public class RecipeParse {
 		inputAr = new String[]{"combine flour and salt", "Stir in eggs and mashed bananas until blended","Combine banana mixture and flour mixture"};
 		inputAr = new String[]{"Heat oil in a skillet over medium heat", "cook and stir onion in the hot oil until softened and transparent"};
 		inputAr = new String[]{"cook and stir onion in the hot oil until soft"};
+		inputAr = new String[]{"age the blue cheese"};
+		inputAr = new String[]{"place soy sauce, lemon juice, and basil in blender"};
+		inputAr = new String[]{"place soy sauce, lemon juice, and basil in blender", "stir in hot pepper sauce and garlic", 
+				"blend on high speed for 30 seconds"};//"Pour marinade over desired type of meat"
 		//inputAr = new String[]{"combine flour and salt", "combine flour mixture"};
 		
 		boolean isVerbose = true;
 		Stats stats = null;
 		List<String> ingredientsList = new ArrayList<String>();
 		//ingredientsList.add("flag");
-		String[] ingredientsAr = new String[]{"flour","soda", "salt", "egg","banana", "oil","onion"};
+		String[] ingredientsAr = new String[]{"flour","soda", "salt", "egg","banana", "oil","onion", "blue cheese",
+				"soy sauce", "lemon juice", "basil", "garlic", "hot pepper sauce"};
 		
-		ingredientsList = Arrays.asList(ingredientsAr);
-		
+		ingredientsList = Arrays.asList(ingredientsAr);		
 		//initialize recipe graph with list of ingredients
 		RecipeGraph recipeGraph = RecipeGraph.initializeRecipeGraph(ingredientsList);
 		
@@ -48,11 +52,19 @@ public class RecipeParse {
 			//refine
 			//input = WordForms.splitDelimPattern().matcher(input).replaceAll(" and ");
 			StringBuilder inputSb = new StringBuilder();
-			for(int i = 0; i < input.length(); i++){
-				String cStr = String.valueOf(input.charAt(i));
+			int inputLen = input.length();
+			for(int i = 0; i < inputLen; i++){
+				//String cStr = String.valueOf(input.charAt(i));
 				char c = input.charAt(i);
 				if(',' == c){
-					inputSb.append(" and");
+					if(i+5 < inputLen){
+						String nextChars = input.substring(i+1, i+5);
+						if(!nextChars.contains("and")){
+							inputSb.append(" and");							
+						}
+					}else{
+						inputSb.append(" and");
+					}
 				}else{
 					inputSb.append(c);
 				}

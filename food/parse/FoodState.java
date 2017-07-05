@@ -1,12 +1,15 @@
 package food.parse;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 import com.wolfram.jlink.Expr;
 
 import thmp.parse.Struct;
 import thmp.utils.ExprUtils;
+import thmp.utils.WordForms;
 
 /**
  * State of food items. Create new state every time
@@ -16,6 +19,7 @@ import thmp.utils.ExprUtils;
  */
 public class FoodState {
 
+	private static final FoodState FOODSTATE_SINGLETON = new FoodState("");
 	private List<FoodState> parentFoodStateList = new ArrayList<FoodState>();
 	//could be multiple, e.g. separating egg white and yolk.
 	private List<FoodState> childFoodStateList = new ArrayList<FoodState>();
@@ -27,9 +31,10 @@ public class FoodState {
 	private RecipeEdge parentEdge;
 	private RecipeEdge childEdge;
 	
-	public FoodState(String foodName_, List<FoodState> parentFoodStateList_){
+	public FoodState(String foodName_//, List<FoodState> parentFoodStateList_
+			){
 		this.foodName = foodName_;
-		this.parentFoodStateList = parentFoodStateList_;		
+		//this.parentFoodStateList = parentFoodStateList_;		
 	}
 	
 	public FoodState(String foodName_, Expr foodExpr_, List<FoodState> parentFoodStateList_){
@@ -50,6 +55,11 @@ public class FoodState {
 		this.foodStruct = foodStruct_;
 		this.parentEdge = parentEdge_;
 	}
+	
+	public static FoodState foodStateSingletonInstance(){
+		return FOODSTATE_SINGLETON;
+	}
+	
 	public void addChildFoodState(FoodState childState){
 		this.childFoodStateList.add(childState);
 	}
@@ -102,7 +112,12 @@ public class FoodState {
 			qualifier = ((FoodStruct)foodStruct).qualifier();			
 		}
 		//nameSb.append("Name[\""+foodState.foodName).append("\"] ");
-		Expr foodNameExpr = new Expr(new Expr(Expr.SYMBOL, "Name"), new Expr[]{new Expr(foodState.foodName)});
+		String foodName = foodState.foodName;
+		/*if(WordForms.getWhiteEmptySpacePattern().matcher(foodName).matches()){
+			Random r = new Random();
+			foodName = String.valueOf(r.nextInt(300));
+		}*/
+		Expr foodNameExpr = new Expr(new Expr(Expr.SYMBOL, "Name"), new Expr[]{new Expr(foodName)});
 		
 		if(!"".equals(qualifier)){
 			//nameSb.insert(0, "\""+qualifier+"\", ").insert(0,"{").append("}");

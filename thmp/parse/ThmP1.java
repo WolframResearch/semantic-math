@@ -173,6 +173,7 @@ public class ThmP1 {
 	private static final boolean DEBUG = FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : false;
 	//can be turned on when run locally by making the first slot "true"
 	private static final boolean PLOT_DEBUG = FileUtils.isOSX() ? false : false;
+	private static final boolean FOOD_PARSE = FileUtils.isFoodParse();
 	//Pattern used to check if word is valid.
 	//Don't put \', could be in valid word
 	private static final Pattern BACKSLASH_CONTAINMENT_PATTERN = 
@@ -681,16 +682,53 @@ public class ThmP1 {
 		int lastNoTexTokenIndex = 0;
 		//if contains nothing other than symbols and ents, probably spurious latex expression,
 		//don't parse in that case. 
-		//strAr length could change.
+		//strAr length could change. <--really? July 2017.
 		boolean containsOnlySymbEnt = true;
 		strloop: for (int i = 0; i < strAr.length; i++) {
 
 			String curWord = strAr[i];
-			
+			if(curWord.equals("in")){
+				System.out.println("in");
+				//throw new IllegalStateException("in");
+			}
 			//sometimes some blank space falls through, in which case just skip.
 			if(WordForms.getWhiteEmptySpacePattern().matcher(curWord).matches()){
 				continue;
-			}			
+			}
+			//use additional lexicon to tokenize if parsing recipes
+			if(FOOD_PARSE){
+				int strArLen = strAr.length;
+				//check cooking action first, since fewer cooking actions, should take
+				//precedence in case of clash.
+				int foodTokenCount = Maps.checkCookingActionToken(strAr, i, strArLen);
+				int tokenCount = 0;
+				String pos = null;
+				//if(true) throw new RuntimeException("foodTokenCount "+ foodTokenCount );
+				if(0 == foodTokenCount){
+					int cookingActionTokenCount = Maps.checkFoodToken(strAr, i, strArLen);
+					if(cookingActionTokenCount > 0){
+						tokenCount = cookingActionTokenCount;
+						pos = "ent";						
+					}
+				}else{
+					tokenCount = foodTokenCount;
+					pos = "verb";
+				}
+				if(null != pos){					
+					StringBuilder tokenSb = new StringBuilder(20);
+					for(int j = 0; j < tokenCount; j++){
+						tokenSb.append(strAr[i+j]).append(" ");
+					}
+					String tokenStr = tokenSb.substring(0, tokenSb.length()-1);
+					i += tokenCount-1;
+					Pair foodPair = new Pair(tokenStr, pos);
+					if(pos.equals("ent")){
+						mathIndexList.add(pairs.size());
+					}
+					pairs.add(foodPair);					
+					continue;
+				}				
+			}
 			Matcher negativeAdjMatcher;	
 			String type = "ent"; 
 			int wordlen = strAr[i].length();
@@ -959,17 +997,16 @@ public class ThmP1 {
 					//e.g. "f maps prime ideals to prime ideals"
 					if(noFuseEntSet.contains(curWord) || noFuseEntSet.contains(prevWord)){
 						fuseEnt = false;
-						//check for next word, if pre such as "of", then do fuse.
-						//e.g. "ring map of finite type."
+						//check for next word, 
+						//if next char starts a latx expression
 						if(i < strAr.length - 1){
 							String nextWord = strAr[i+1];
-							List<String> nextWordPosList = posMMap.get(nextWord);
-							if(!nextWordPosList.isEmpty() && nextWordPosList.get(0).equals("pre")
-									//or a latx symbol name
-									|| nextWord.charAt(0) == '$'){
+							//List<String> nextWordPosList = posMMap.get(nextWord);
+							if(//!nextWordPosList.isEmpty() && nextWordPosList.get(0).equals("pre") || 
+									nextWord.charAt(0) == '$'){
 								fuseEnt = true;
 							}
-						}						
+						}				
 					}										
 					if(fuseEnt){
 						pairs.get(pairsSize - 1).set_word(pairs.get(pairsSize - 1).word() + " " + curWord);
@@ -1231,7 +1268,6 @@ public class ThmP1 {
 			}
 			else if (WordForms.isGerundForm(curWord)) {				
 				String curType = "gerund";
-				//if(true) throw new IllegalStateException("curWord "+ curWord+" " + (strAr[i+1]));
 				if (i < strAr.length - 1 && posMMap.containsKey(strAr[i + 1]) && posMMap.get(strAr[i + 1]).contains("pre")) {
 					// eg "consisting of" functions as pre
 					curWord = curWord + " " + strAr[++i];
@@ -1361,6 +1397,20 @@ public class ThmP1 {
 		if(DEBUG) System.out.println("ThmP1-noTexSB" +noTexSB);
 		parseState.setCurrentInputSansTex(noTexSB.toString());
 		parseState.addToNumNonTexTokens(numNonTexTokens);
+		
+		if(FOOD_PARSE){
+			//e.g. for "blend in kale ..." 
+			//add to, blend in, combine with ...
+			int pairsSz = pairs.size();
+			if(pairsSz > 2){
+				Pair firstPair = pairs.get(0);
+				Pair secondPair = pairs.get(1);
+				if("verb".equals(firstPair.pos()) && "pre".equals(secondPair.pos())){
+					//because adverb can be used to modify verb, but pre can't
+					secondPair.addExtraPos("adverb");
+				}
+			}
+		}
 		
 		/*Used for defluffing, in case the sentence is just sequence of many special characters*/
 		int texEntCount = 0;
@@ -4871,7 +4921,8 @@ public class ThmP1 {
 		
 		wordsArrayLoop: for (int i = 0; i < wordsArrayLen; i++) {
 
-			curWord = wordsArray[i];			
+			curWord = wordsArray[i];	
+			
 			//Skips parenthesized and bracketed items.
 			//compile these!
 			if (!inTex) {
@@ -4921,12 +4972,10 @@ public class ThmP1 {
 					curWord = wordsArray[i];
 					sentenceBuilder.append(" ").append(curWord);
 					i++;
-				}
-				
+				}				
 				if(curWord.equals("\\end{enumerate}")){
 					sentenceBuilder.append(" ").append(curWord);
-				}
-				
+				}				
 				sentenceList.add(sentenceBuilder.toString().trim());
 				sentenceBuilder.setLength(0);
 				
@@ -4952,10 +5001,6 @@ public class ThmP1 {
 					while (posMMap.containsKey(tempWord.toLowerCase()) && j < wordsArrayLen - 1) {
 						tempWord += " " + wordsArray[++j];
 					}
-					
-					//**tempWord sometimes invokes too many strings!***** <--when?
-					//System.out.println("tempWord: " + tempWord);				
-					
 					String replacement = fluffMap.get(tempWord.toLowerCase());
 					if (replacement != null) {
 						sentenceBuilder.append(" ").append(replacement);
