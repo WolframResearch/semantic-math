@@ -1,0 +1,1107 @@
+abalone
+abiyuch
+acai berry
+acerola
+acid
+acini di pepe
+acorn
+agave
+alcohol
+alfalfa seed
+algae
+allspice
+almond
+almondmilk
+aloe vera
+amaranth
+amaranth grain
+ancho chile
+anchovy
+andouille
+angel hair
+animal fat
+animal product
+anise
+annatto
+antelope
+antifoaming agent
+apple
+applesauce
+apricot
+arrowhead
+arrowroot
+artichoke
+arugula
+ascidian
+asparagus
+avocado
+babassu
+baby food
+bacon
+bacon bits
+bacon strip
+bagel
+bagel chip
+bake
+baking powder
+baking soda
+balsam pear
+bamboo shoot
+banana
+barbecue sauce
+barley
+basil
+batter
+bay laurel
+bay leaf
+bean
+bear
+beaver
+beech tree
+beef
+beefalo
+beef stock
+beef tallow
+beer
+beerwurst
+beet
+belgian endive
+berliner
+berry
+beverage
+big frank
+big mac sauce
+biscotti
+biscuit
+bison
+bisque
+bitter melon
+black bean
+blackberry
+blackfish
+blt
+blueberry
+blue corn
+blue cornmeal
+bluefin
+bluefish
+boar
+bockwurst
+bologna
+borage
+bouillon
+boysenberry
+bran
+bratwurst
+braunschweiger
+brazil nut
+brazil nut tree
+bread
+breadcrumb
+breadcrumb
+breadfruit
+breadfruit seed
+breading
+breadnut
+breadnut tree
+breadstick
+breakfast bar
+breakfast steak
+brittle
+broad bean
+broccoflower
+broccoli
+broccoli raab
+broth
+brownie
+brown sugar
+bruschetta
+brussels sprout
+bubblegum
+bubble gum
+buckwheat
+bulgur
+bun
+burbot fish
+burdock
+burger
+burrito
+butter
+butterbur
+buttercream
+butterfish
+butter margarine blend
+buttermilk
+butternut
+butternut nut
+butter replacement
+butterscotch
+cabbage
+cake
+cake mix
+calamari
+calcium
+campanelle
+candy
+candy cane
+canola
+caper
+cappuccino
+caramel
+caraway
+carbohydrate
+carbonated beverage
+cardamom
+cardoon
+caribou
+carob
+carp
+carrot
+cashew
+cassava
+casserole
+catfish
+cattail
+cauliflower
+cauliflower onion mustard
+cavatelli
+caviar
+celeriac
+celery
+celtuce
+cereal
+cervelat
+chai
+challah
+champagne
+chayote
+cheddar
+cheese
+cheeseburger
+cheesecake
+cheese cracker
+cheese filling
+cheesefurter
+cheese sauce
+cheese substitute
+cheez whiz
+cherimoya
+cherry
+chervil
+chestnut
+chewing gum
+chia
+chicken
+chicken liver
+chickett
+chickpea
+chicory
+chik
+chikn
+chili
+chili pepper
+chimichanga
+chip
+chipotle
+chiton
+chive
+chocolate
+chocolate chip
+chokecherry
+choplet
+chorizo
+chowchow pickle
+chowder
+chow mein
+chrysanthemum
+chutney
+cinnamon
+cisco fish
+clam
+clam chowder
+clear fry
+clementine
+cloudberry
+clove
+cobbler
+cockle
+cocktail
+cocktail mix
+cocoa
+cocoa mix
+coconut
+coconut palm
+coconut water
+cod fish
+cod liver
+coffee
+coffeecake
+coffee creamer
+coffee substitute
+cold cut meat
+coleslaw
+collards
+concentrate
+conch
+condiment
+confection fat
+consomme
+cookie
+cookie piece
+coriander
+corn
+corn bran
+corndog
+corned beef
+corn flour
+corn grits
+cornish game hen
+cornmeal
+corn oil
+corn salad
+cornstarch
+cottage cheese
+cottonseed
+couscous
+cow
+cowpea
+crab
+crabapple
+cracker
+craisin
+cranberry
+cream
+cream cheese
+creamer
+cream puff shell
+cream style corn
+cream substitute
+creme
+creme brulee
+creme de menthe
+crepe
+cress
+crisp
+croaker fish
+croissant
+crouton
+crust
+crustaceans
+cucumber
+cumin
+cupcake
+cupu assu
+curd
+curl
+currant
+curry
+cusk fish
+custard
+custard apple
+cutlet
+cuttlefish
+dairy product
+dal
+dandelion
+dandelion green
+danish pastry
+dark chocolate
+date
+deer
+dessert
+devil dog
+devilfish
+dextrose
+diced chik
+dill weed
+dinner mix
+dinner roast
+dip
+ditalini
+dock
+dolichos
+dolphinfish
+double noodle
+dough
+doughnut
+dressing
+drink
+drink mix
+drink powder
+drumstick tree
+dry mix
+duck
+dulce de leche
+dumpling
+durian
+edamame
+eel
+egg
+eggnog
+eggplant
+egg roll
+egg substitute
+elderberry
+elk
+empanada
+emu
+enchilada
+endive
+energy drink
+energy shot
+enhancer
+enriched flour
+entree
+entrees
+epazote
+eppaw
+espresso
+european elder
+extract
+extra heavy syrup
+falafel
+farfalle
+farrotto
+fast food
+fat
+feijoa
+fennel
+fennel seed
+fettuccine
+fiddlehead fern
+fig
+fillet
+fireweed
+fish
+fish oil
+flatbread
+flatfish
+flavoring
+flax
+flax seed
+flounder
+flour
+fluid replacement
+fondant
+food source not known
+formula
+formulated bar
+fractionated palm
+frankfurter
+french fry
+french toast
+fri chik
+FriPat
+frog
+frosting
+frozen concentrate
+frozen novelty
+frozen yogurt
+fruit
+fruit butter
+fruit flavored drink
+preserves
+fruit punch drink
+fruit salad
+frybread
+fudge
+fungus
+fusilli
+fusillini
+game meat
+garden cress
+garden vegetable
+garlic
+gel
+gelatin
+gelato
+gemelli
+germ
+giant kelp
+giardiniera
+gin
+ginger
+gingerbread
+ginkgo tree
+glaze
+gnocchi
+goose
+gooseberry
+goose liver
+gourd
+graham
+graham cracker
+grain
+granola
+grape
+grapefruit
+grapeseed
+gravy
+grillers
+ground cherry
+grouper
+grouse
+guacamole
+guanabana
+guanabana nectar
+guarana
+guava
+guava nectar
+guinea hen
+haddock
+half and half
+halibut
+ham
+hamburger
+hash brown
+hazelnut
+heart of palm
+heavy syrup
+hemp
+hen
+herb
+hibiscus
+high oleic
+high stability
+hominy
+honey
+honey os
+hopi piki bread
+horchata
+horseradish
+hotcake
+hot pockets
+huckleberry
+hummus
+hushpuppy
+hydrolyzed vegetable protein
+ice
+ice cream
+ice cream cone
+ice pop
+icing
+imitation ham bit
+incaparina
+intermediate grade product
+jackfruit
+jalapeno pepper
+jam
+jambalaya
+java plum
+jelly
+jellybean
+jellyfish
+jerky
+jerusalem artichoke
+jicama
+juice
+juice smoothie
+jujube
+juniper ash
+jute
+kai-lan
+kale
+kandy kake
+kanpyo
+kefir
+ketchup
+kettle corn
+kielbasa
+kimchi
+kiwi
+knackwurst
+kohlrabi
+korma
+kraut
+krimpet
+kumquat
+lactic acid
+lamb
+lambs lettuce
+lambs quarter
+lard
+lasagne
+lauric acid oil
+lavash
+leanie
+leavening agent
+lebanon bologna
+lecithin
+leek
+legume
+lemon
+lemonade
+lemongrass
+lemon grass
+lemon peel
+lentil
+lettuce
+licorice
+light syrup
+lima bean
+lime
+limeade
+ling fish
+lingonberry
+linguine
+linkett
+liqueur
+liquid
+little link
+liver cheese
+liverwurst
+loaf
+lobster
+loganberry
+lollipop
+lo mein
+longan
+loquat
+lotus
+low calorie sweetener
+lox
+luncheon slice
+lupin
+lupin bean
+lychee
+macadamia tree
+macaroni
+macaroon
+macchiato
+mace
+mackerel
+malt
+malt beverage
+mamey sapote
+mammy apple
+m and ms candy
+mango
+mangosteen
+manicotti
+maple syrup
+margarine
+marinade
+marjoram
+marmalade
+marshmallow
+mashu root
+matar paneer
+matzo
+mayonnaise
+mc flurry
+meal kit
+meal supplement drink
+meat
+meatball
+meat dripping
+meat extender
+meatless
+meatloaf
+meat sauce
+mega noodle
+melba toast
+melon
+menhaden
+milk
+milk chocolate
+milkfish
+milkshake
+milk substitute
+millet
+mineral product
+mint
+miso
+mix
+modified starch
+molasses
+mollusks
+monkfish
+moose
+morro
+mortadella
+mostaccioli
+moth bean
+moth bean seed
+mouse nuts
+mousse
+mozzarella
+muffin
+muffin mix
+muktuk
+mulberry
+mullet
+mung bean seed
+mush
+mushroom
+mushroom lovers hamburger
+mussel
+mustard
+mustard green
+mutton
+nacho
+nance
+naranjilla
+natal plum
+natreon
+natto
+nectar
+nectarine
+nelma
+nitrogen
+noodle
+nopal
+nougat
+novelty
+nugget
+nut
+nutmeg
+nutri grain
+nutritional supplement
+nutty bar
+oak
+oat
+oat bran
+oatmeal
+ocean perch
+octopus
+Ohelo berry
+oil
+okara
+okra
+olive
+olive loaf
+olive oil
+omelet
+onion
+orange
+orange juice
+orange peel
+orecchiette
+oregano
+organic soy
+ostrich
+owl
+oyster
+pad thai
+palak paneer
+palm
+palm kernel
+palm oil
+pancake
+pancetta
+pan dulce
+paneer
+papad
+papaya
+pappardelle
+paprika
+parfait
+parmesan
+parsley
+parsnip
+passion fruit
+pasta
+paste
+pastrami
+pastry
+pate
+pate de foie gras
+patty
+pea
+peach
+peanut
+peanut butter
+peanut free
+pear
+pecan
+pectin
+penne
+pepeano
+pepeao
+peperoncino
+pepper
+peppercorn
+peppermint
+pepperoni
+pepperpot
+perch
+peri peri
+persimmon
+pesto
+pheasant
+phyllo dough
+pickle
+pickle relish
+picnic loaf
+pico de gallo
+pie
+pie crust
+pie filling
+pie mix
+pierogi
+pigeon pea
+pigeon pea seed
+pike
+pilaf
+pilinut
+pili tree
+pimento
+pineapple
+pinto bean
+pipette
+pistachio nut
+pita
+pitanga
+pizza
+plant
+plantain
+plantain chip
+plant sterol
+plum
+poblano
+pod
+poi
+pokeberry
+pokeweed
+polenta
+pollock
+pomegranate
+pompano
+popcorn
+popper
+popping corn
+poppyseed
+poppyseed
+popsicle
+pork
+pork skin
+portabella
+potassium acid
+potato
+pot pie
+potsticker
+poultry
+pout fish
+prairie turnip
+praline
+preserve
+pretzel
+prickly pear
+processed cheese
+prosage
+prosciutto
+protein supplement
+provolone
+prune
+pudding
+pulp
+pummelo
+pumpkin
+pumpkin flower
+pumpkin leaf
+puree
+purslane
+quail
+quequito
+quesadilla
+quiche
+quince
+quinoa
+rabbit
+radicchio
+radish
+raisin
+rambutan
+ranch dressing
+raspberry
+ravioli
+redi burger
+refrigerated dough
+relish
+rennin
+rhubarb
+ribbon
+riblet
+riccette
+rice
+rice bran
+rice cake
+rice flour
+ricotta
+rigatoni
+risotto
+rocchetti
+rockfish
+roll
+rose apple
+rose hip
+roselle
+rosemary
+rotelle
+alphabet shaped pasta
+roughy
+rowal
+rum
+rusk
+rutabaga
+rye
+sablefish
+safflower
+safflower
+sage
+salad
+salame
+salmon
+salmonberry
+salsa
+salsify
+salt
+salt substitute
+sandwich
+sangria
+sap
+sapodilla
+sardine
+sauce
+saucette
+sauerkraut
+sausage
+sausage patty
+savory
+sazon seasoning
+scallop
+scampi
+scotch
+scramble
+scrapple
+scup fish
+sea cucumber
+seal
+sea lion
+sea salt
+seasoning
+seatrout
+seaweed
+seed
+seeds
+semolina
+sesame
+sesbania flower
+shad fish
+shallot
+shark
+shea nut
+sheep
+sheepshead fish
+sherbet
+shortcake
+shortening
+shortening bread
+shortening cake mix
+shrimp
+skallop
+skim
+nonfat milk
+smart dog
+smelt
+smoothie
+snack
+snack food
+snail
+snap bean
+snapper
+sole
+sopressata
+sorbet
+sorbetto
+sorghum
+sorrel
+souffle
+soup
+sour cream
+sourdock
+sourdough
+soursop
+soy
+soy bean
+soy bean
+soy burger
+soy flour
+soymeal
+soymilk
+soynut
+soy protein
+soy protein concentrate
+soy protein isolate
+soy yogurt
+spaghetti
+spearmint
+spelt
+spice
+spice rub
+spinach
+split pea
+sports drink
+spray oil
+spread
+squab
+squash
+squid
+squirrel
+stake
+stakelet
+starch
+starfruit
+star
+steak
+stevia
+stew
+stinging nettle
+stock
+stone pine
+strangozzi
+strascinati
+strawberry
+stripple
+stromboli
+strudel
+stuffing
+sturgeon
+succotash
+sugar
+sugar apple
+sugar product
+sugar syrup product
+summer sausage
+sundae
+sunfish
+sunflower
+sunflower seed
+super link
+surimi
+sushi
+sweet and sour sauce
+sweetener
+sweet potato
+swiss chard
+swiss cheese
+swiss stake
+swisswurst
+swordfish
+syrup
+taco
+tagliatelle
+tallow
+tamale
+tamarind
+tamarind nectar
+tangerine
+tapioca
+tapioca pearl
+taquito
+taro
+tart
+tartaric acid
+tartar sauce
+tea
+tea biscuit
+tea seed
+teff
+tempeh
+tender bit
+tender round
+teriyaki
+thuringer
+thyme
+tilapia
+tilefish
+tiramisu
+toast
+toaster
+tofu
+tomatillo
+tomato
+tomato product
+tomato sauce
+tomato seed
+topping
+tortellini
+tortelloni
+tortilla
+tostada
+tostada shell
+towel gourd
+trail mix
+treat
+tree fern
+trim fat
+triticale
+trofie
+trout
+tuna
+tunicate
+turbot
+turkey
+turkey ham
+turnip
+turnover
+turtle
+vanilla
+veal
+vegetable
+vegetable oil
+vegetable product
+vegetable protein product
+vegetarian hamburger
+vegetarian hot dog
+veja links
+venison
+vermicelli
+vinaigrette
+vinegar
+vinespinach
+vodka
+wafer
+waffle
+walleye
+walnut
+walrus
+wasabi
+water
+water chestnut
+watercress
+water enhancer
+watermelon
+waxgourd
+whale
+wham
+wheat
+wheat bran
+wheat flour
+wheat germ
+wheat gluten
+wheat protein
+whelk
+whey
+whiskey
+whiting
+whole grain
+whole milk
+whole wheat
+willow
+wine
+wocas seed
+wolffish
+wonton
+wrapper
+yachtwurst
+yam
+yautia
+yeast
+yellowtail
+yerba mate
+yogurt
+yokan
+yolk
+ziti
+zucchini
