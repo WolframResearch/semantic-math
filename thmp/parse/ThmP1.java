@@ -172,7 +172,8 @@ public class ThmP1 {
 	//don't print when running on byblis 
 	private static final boolean DEBUG = FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : false;
 	//can be turned on when run locally by making the first slot "true"
-	private static final boolean PLOT_DEBUG = FileUtils.isOSX() ? false : false;
+	private static final boolean plotDebug = true;
+	private static final boolean PLOT_DEBUG = FileUtils.isOSX() ? plotDebug : false;
 	private static final boolean FOOD_PARSE = FileUtils.isFoodParse();
 	//Pattern used to check if word is valid.
 	//Don't put \', could be in valid word
@@ -197,6 +198,8 @@ public class ThmP1 {
 	private static final int PARSE_NUM_MAX = 8;//6
 	private static final int SYNTAXNET_PARSE_THRESHOLD = 5;//8
 	private static final int SYNTAXNET_PREP_THRESHOLD = 1;
+	private static final double SCORE_EPSILON = 0.001;
+	private static final double SCORE_BONUS = 0.05;
 	
 	static{
 		fluffMap = Maps.BuildMaps.fluffMap;
@@ -2442,13 +2445,20 @@ public class ThmP1 {
 							// in_ent
 							String type1 = struct1.type();
 							String type2 = struct2.type();
-							
+							/*if(type1.equals("conj_ent") && type2.equals("prep")){
+								//throw new IllegalStateException(struct1.toString());
+								System.out.println("t   .equals(  mx.get(i).get(j).size() "+mx.get(i).get(j).size());
+								StructList s = mx.get(i).get(j);
+							}*/
+							/*if(type1.equals("") && type2.equals("prep")){
+								throw new IllegalStateException(struct1.toString());
+								//System.out.println("");
+							}*/
 							// for types such as conj_verbphrase
 							String[] split1 = type1.split("_");
 							/* This causes conj_ent to be counted as ent, so should
-							 * *not* use "ent" type to determine whether StructH or not!*/
-							
-							if (split1.length > 1 && CONJ_DISJ_PATTERN1.matcher(split1[0]).find()) {
+							 * *not* use "ent" type to determine whether StructH or not!*/							
+							if (split1.length > 1 && CONJ_DISJ_PATTERN1.matcher(split1[0]).matches()) {
 								type1 = split1[1];
 							}
 
@@ -2689,7 +2699,7 @@ public class ThmP1 {
 								Iterator<Rule> ruleColIter = ruleCol.iterator();
 								while (ruleColIter.hasNext()) {
 									Rule ruleColNext = ruleColIter.next();
-									EntityBundle entityBundle = reduce(mx, ruleColNext, struct1, struct2, firstEnt, recentEnt, recentEntIndex, i, j,
+									EntityBundle entityBundle = grammarReduce(mx, ruleColNext, struct1, struct2, firstEnt, recentEnt, recentEntIndex, i, j,
 											k, type1, type2, parseState);
 									//if nothing was updated
 									if(null == entityBundle){
@@ -3774,7 +3784,7 @@ public class ThmP1 {
 	 * @return @Nullable EntityBundle containing entities such as recentEnt, etc.  
 	 * null if not changed, so no wasting resources creating new objects.
 	 */
-	public static EntityBundle reduce(List<List<StructList>> mx, Rule newRule, Struct struct1, Struct struct2,
+	public static EntityBundle grammarReduce(List<List<StructList>> mx, Rule newRule, Struct struct1, Struct struct2,
 			Struct firstEnt, Struct recentEnt, int recentEntIndex, int i, int j, int k, String type1, String type2,
 			ParseState parseState) {
 		
@@ -3803,17 +3813,15 @@ public class ThmP1 {
 			//could be struct1, or prev2 of struct1
 			Struct structToAppendChild = newStruct;
 			// If struct1 has type "conj_ent" or "disj_ent", then use 
-			// the latter element in the conjunction/disjunction.			
-			if(CONJ_DISJ_PATTERN1.matcher(struct1.type()).matches()
+			// the latter element in the conjunction/disjunction.
+			// <--nope, can now add child to StructA. Need good similarity measure! 
+			/*if(CONJ_DISJ_PATTERN1.matcher(struct1.type()).matches()
 					&& struct1.prev2NodeType().equals(NodeType.STRUCTH)){
-				structToAppendChild = ((Struct)struct1.prev2()).copy();
-				newStruct.set_prev2(structToAppendChild);
-			}
+				//structToAppendChild = ((Struct)struct1.prev2()).copy();
+				//newStruct.set_prev2(structToAppendChild);
+			}*/
 			ChildRelation childRelation = null;
 			Struct childToAdd = struct2;
-			/*if(struct2.type().equals("prep")){
-				System.out.println("ThmP1 - struct2 " + struct2);
-			}*/
 			
 			if(struct2.type().equals("hypo")){				
 				//prev1 has type Struct
@@ -3852,7 +3860,7 @@ public class ThmP1 {
 					childRelation = extractHypChildRelation(hypStruct);
 				}
 				childToAdd = (Struct)struct2.prev2();				
-			}else{			//HERE
+			}else{
 				// Add to child relation, usually a preposition, 
 				// e.g. "from", "over". Could also be verb, "consist", "lies"			
 				List<Struct> kPlus1StructArrayList = mx.get(k + 1).get(k + 1).structList();					
@@ -3868,7 +3876,7 @@ public class ThmP1 {
 			if(null == childRelation){
 				//should throw checked exception, and let the program keep running, rather than
 				//runtime exception 				
-				logger.info("ThmP1.reduce() - childRelation is null for structlist: " + parseState.getTokenList());
+				//logger.info("ThmP1.reduce() - childRelation is null for structlist: " + parseState.getTokenList());
 				childRelation = new ChildRelation("");
 			}			
 			//if struct2 is e.g. a prep, only want the ent in the prep
@@ -3882,15 +3890,21 @@ public class ThmP1 {
 			}
 			
 			if(structToAppendChild.isStructA()){
-				//e.g. "independent of $n$"	
+				//reward attaching children to conjunctions, rather than just one
+				//component of the conjunction.
+				if(CONJ_DISJ_PATTERN1.matcher(struct1.type()).matches()){
+					newDownPathScore += SCORE_EPSILON;
+				}
+				//e.g. "independent of $n$"	, or "put A and B in blender"
 				newStruct.set_maxDownPathScore(newDownPathScore);
 				structToAppendChild.set_maxDownPathScore(newDownPathScore);
 				
 				childToAdd.set_childRelationType(childRelation.childRelationType());				
 				structToAppendChild.add_child(childToAdd, childRelation);
-				
-				newStruct.set_type(null == combinedPos ? "" : combinedPos);
-				mx.get(i).get(j).add(newStruct);
+				//e.g. "A and B over C"
+				newStruct.set_type(null == combinedPos ? struct1.type() : combinedPos);
+				mx.get(i).get(j).add(newStruct);				
+				childToAdd.set_parentStruct(structToAppendChild); 
 				
 				return new EntityBundle(firstEnt, recentEnt, recentEntIndex);
 			}
@@ -3906,7 +3920,7 @@ public class ThmP1 {
 					return new EntityBundle(firstEnt, recentEnt, recentEntIndex);					
 				}else{
 					//bonus for tighter combination, e.g. "$A$ of $B$"
-					newDownPathScore += 0.05;//HERE
+					newDownPathScore += SCORE_BONUS;//HERE
 				}
 			}
 			

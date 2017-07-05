@@ -77,6 +77,17 @@ public class PlotUtils {
 	public static void plotMx(List<List<StructList>> mx){
 		System.out.println("Plot of matrix mx: ");
 		int mxSz = mx.size();
+		int counter = 0;
+		StringBuilder spaceSb = new StringBuilder(STRUCTLIST_WIDTH-1);
+		//align most correctly when counter is 1-digit, which is most cases.
+		for(int i = 0; i < STRUCTLIST_WIDTH-1; i++){
+			spaceSb.append(" ");
+		}
+		for(int i = 0; i < mxSz; i++){
+			System.out.print(counter++);			
+			System.out.print(spaceSb);
+		}
+		System.out.println();
 		for(int i = 0; i < mxSz; i++){
 			List<StructList> list = mx.get(i);
 			for(StructList structList : list){
@@ -99,6 +110,7 @@ public class PlotUtils {
 		}
 		int widthPerStruct = STRUCTLIST_WIDTH/listSz;
 		widthPerStruct = widthPerStruct == 0 ? 1 : widthPerStruct;
+		
 		for(int i = 0; i < listSz; i++){
 			//sb.append("[");
 			Struct struct = list.get(i);
@@ -106,7 +118,7 @@ public class PlotUtils {
 			
 			if("".equals(str)){
 				str = struct.type();
-			}			
+			}	
 			int strLen = str.length();
 			if(strLen < widthPerStruct){
 				sb.append(str);

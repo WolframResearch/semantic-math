@@ -165,9 +165,9 @@ public class StructA<A, B> extends Struct{
 	}
 	
 	/**
-	 * Shallow copy. In particular, does not copy children objects, children
-	 * point to the same children of this StructA. 
+	 * Replicating struct. Does copy children.
 	 */
+	@Override
 	public StructA<A, B> copy(){
 		//shallow copy of structlist
 		StructA<A, B> newStruct;
@@ -187,7 +187,6 @@ public class StructA<A, B> extends Struct{
 		newStruct.setNoTexTokenListIndex(this.noTexTokenListIndex());
 		newStruct.setNumCoincidingRelationIndex(this.numCoincidingRelationIndex());
 		this.copyChildrenToStruct(newStruct);
-		//newStruct.WLCommandStr = this.WLCommandStr;
 		return newStruct;
 	}
 	
