@@ -1,9 +1,7 @@
 package food.parse;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 
 import com.wolfram.jlink.Expr;
 
@@ -108,7 +106,7 @@ public class FoodState {
 		Struct foodStruct = foodState.foodStruct;
 		//"{\"until\", Name[\"blended banana mixture\"] }"
 		String qualifier = "";
-		if(foodStruct.isFoodStruct()){
+		if(null != foodStruct && foodStruct.isFoodStruct()){
 			qualifier = ((FoodStruct)foodStruct).qualifier();			
 		}
 		//nameSb.append("Name[\""+foodState.foodName).append("\"] ");
@@ -167,7 +165,7 @@ public class FoodState {
 	@Override
 	public String toString(){
 		StringBuilder sb = new StringBuilder();
-		if(foodStruct.isFoodStruct()){
+		if(null != foodStruct && foodStruct.isFoodStruct()){
 			sb.append(" (").append(((FoodStruct)foodStruct).qualifier()).append(") ");
 		}
 		sb.append(" name["+foodName).append("] ");

@@ -172,7 +172,7 @@ public class ThmP1 {
 	//don't print when running on byblis 
 	private static final boolean DEBUG = FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : false;
 	//can be turned on when run locally by making the first slot "true"
-	private static final boolean plotDebug = true;
+	private static final boolean plotDebug = false;
 	private static final boolean PLOT_DEBUG = FileUtils.isOSX() ? plotDebug : false;
 	private static final boolean FOOD_PARSE = FileUtils.isFoodParse();
 	//Pattern used to check if word is valid.
@@ -689,11 +689,7 @@ public class ThmP1 {
 		boolean containsOnlySymbEnt = true;
 		strloop: for (int i = 0; i < strAr.length; i++) {
 
-			String curWord = strAr[i];
-			if(curWord.equals("in")){
-				System.out.println("in");
-				//throw new IllegalStateException("in");
-			}
+			String curWord = strAr[i];		
 			//sometimes some blank space falls through, in which case just skip.
 			if(WordForms.getWhiteEmptySpacePattern().matcher(curWord).matches()){
 				continue;
@@ -701,30 +697,43 @@ public class ThmP1 {
 			//use additional lexicon to tokenize if parsing recipes
 			if(FOOD_PARSE){
 				int strArLen = strAr.length;
+				List<String> posList = new ArrayList<String>();
 				//check cooking action first, since fewer cooking actions, should take
 				//precedence in case of clash.
-				int foodTokenCount = Maps.checkCookingActionToken(strAr, i, strArLen);
 				int tokenCount = 0;
 				String pos = null;
-				//if(true) throw new RuntimeException("foodTokenCount "+ foodTokenCount );
-				if(0 == foodTokenCount){
-					int cookingActionTokenCount = Maps.checkFoodToken(strAr, i, strArLen);
-					if(cookingActionTokenCount > 0){
-						tokenCount = cookingActionTokenCount;
-						pos = "ent";						
-					}
-				}else{
-					tokenCount = foodTokenCount;
+				int foodTokenCount = Maps.checkCookingActionToken(strAr, i, strArLen);
+				if(foodTokenCount > 0){
 					pos = "verb";
+					tokenCount = foodTokenCount;
 				}
-				if(null != pos){					
+				int cookingActionTokenCount = Maps.checkFoodToken(strAr, i, strArLen);
+				if(cookingActionTokenCount > 0){
+					if(cookingActionTokenCount > foodTokenCount){
+						tokenCount = cookingActionTokenCount;
+						posList.add("ent");
+						pos = "ent";
+					}else if(cookingActionTokenCount == foodTokenCount){
+						posList.add(pos);
+						posList.add("ent");
+					}else{
+						posList.add(pos);
+					}					
+				}else if(null != pos){
+					posList.add(pos);
+				}				
+				
+				if(!posList.isEmpty()){					
 					StringBuilder tokenSb = new StringBuilder(20);
 					for(int j = 0; j < tokenCount; j++){
 						tokenSb.append(strAr[i+j]).append(" ");
 					}
 					String tokenStr = tokenSb.substring(0, tokenSb.length()-1);
 					i += tokenCount-1;
-					Pair foodPair = new Pair(tokenStr, pos);
+					Pair foodPair = new Pair(tokenStr, posList.get(0));
+					for(int k = 1; k < posList.size(); k++){
+						foodPair.addExtraPos(posList.get(k));
+					}
 					if(pos.equals("ent")){
 						mathIndexList.add(pairs.size());
 					}
@@ -2793,7 +2802,6 @@ public class ThmP1 {
 			for (int u = 0; u < headStructListSz; u++) {
 				Struct uHeadStruct = structList.get(u);
 				if(PLOT_DEBUG) PlotUtils.plotTree(uHeadStruct);
-				//if(true) throw new IllegalStateException();
 				
 				double uHeadStructScore = uHeadStruct.maxDownPathScore();//uHeadStruct.score(); //uHeadStruct.maxDownPathScore();
 				//System.out.println("*&&*#*&%%%##### ");

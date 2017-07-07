@@ -122,10 +122,6 @@ public class ThmInput {
 		List<String> thmList = readThm(srcFileBReader, thmWebDisplayList, bareThmList);
 		System.out.println("ThmInput - thmList after processing: " + thmList);
 		if (writeToFile) {
-			// Path fileTo = Paths.get("src/thmp/data/thmFile5.txt");
-			// Path fileTo =
-			// Paths.get("src/thmp/data/multilinearAlgebraThms2.txt");
-			//Path fileTo = Paths.get("src/thmp/data/functionalAnalysisThms2.txt");
 			// Path fileTo = Paths.get("src/thmp/data/test1Thms.txt");
 			Path fileTo = Paths.get("src/thmp/data/fieldsThms2.txt");
 			Files.write(fileTo, thmList, Charset.forName("UTF-8"));
@@ -297,10 +293,10 @@ public class ThmInput {
 		// eliminate symbols such as \fml
 		matcher = ELIMINATE_PATTERN.matcher(thmStr);
 		thmStr = matcher.replaceAll("");
-		
+		//System.out.println("ThmInput - eliminateBeginEndThmPattern "+eliminateBeginEndThmPattern );
 		/*comment out this line if want to retain "\begin{theorem}", etc*/
-		thmStr = eliminateBeginEndThmPattern.matcher(thmStr).replaceAll("");
-		
+		thmStr = eliminateBeginEndThmPattern.matcher(thmStr).replaceAll("");//taking forever, inf loop?!?
+		//System.out.println("Think inf loop is matching right before this, shouldn't get to this point");
 		matcher = ITEM_PATTERN.matcher(thmStr);
 		//replace \item with bullet points (*)
 		thmStr = matcher.replaceAll(" (*)");

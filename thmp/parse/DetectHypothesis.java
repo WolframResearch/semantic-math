@@ -126,6 +126,7 @@ public class DetectHypothesis {
 	//this path is only used in this class, for inspection, so not in SearchMetadata
 	private static final String parserErrorLogPath = "src/thmp/data/parserErrorLog.txt";
 	private static final boolean DEBUG = FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : false;
+	private static final int CONTEXT_SB_LENGTH_THRESHOLD = 10000;
 
 	static{
 		FileUtils.set_dataGenerationMode();	
@@ -440,6 +441,8 @@ public class DetectHypothesis {
 				inputFile = new File("/Users/yihed/Downloads/math0011136");
 				inputFile = new File("src/thmp/data/math0210227");
 				inputFile = new File("src/thmp/data/test1.txt");
+				inputFile = new File("/Users/yihed/Downloads/0704.2030");
+				inputFile = new File("src/thmp/data/0704.2030");
 				
 				//inputFile = new File("src/thmp/data/thmsFeb26.txt");
 				//inputBF = new BufferedReader(new FileReader("src/thmp/data/Total.txt"));
@@ -774,6 +777,8 @@ public class DetectHypothesis {
 			List<ThmHypPair> thmHypPairList,
 			Stats stats, String fileName) throws IOException{
 		
+		//print to indicate progress, since all other outputs are suppressed during processing.
+		System.out.print("...Processing "+fileName);
 		//Pattern thmStartPattern = ThmInput.THM_START_PATTERN;
 		//Pattern thmEndPattern = ThmInput.THM_END_PATTERN;
 		List<String> customBeginThmList = new ArrayList<String>();
@@ -784,11 +789,11 @@ public class DetectHypothesis {
 		StringBuilder contextSB = new StringBuilder();
 		
 		//List<DefinitionListWithThm> definitionListWithThmList = new ArrayList<DefinitionListWithThm>();		
-		String line = extractMacros(srcFileReader, customBeginThmList, macrosTrieBuilder);
-		MacrosTrie macrosTrie = macrosTrieBuilder.build();
+		String line = extractMacros(srcFileReader, customBeginThmList, macrosTrieBuilder);//ok
+		MacrosTrie macrosTrie = macrosTrieBuilder.build();//ok
 		
 		//append list of macros to THM_START_STR and THM_END_STR
-		Pattern[] customPatternAr = addMacrosToThmBeginEndPatterns(customBeginThmList);
+		Pattern[] customPatternAr = addMacrosToThmBeginEndPatterns(customBeginThmList);//ok
 		
 		Pattern thmStartPattern = customPatternAr[0];
 		Pattern thmEndPattern = customPatternAr[1];	
@@ -833,9 +838,22 @@ public class DetectHypothesis {
 				// don't strip.
 				// replace enumerate and \item with *
 				//thmWebDisplayList, and bareThmList should both be null
-				String contextStr = ThmInput.removeTexMarkup(contextSB.toString(), null, null, macrosTrie,
+				//HERE
+				String contextStr;
+				int contextSBLen = contextSB.length();
+				if(contextSBLen > CONTEXT_SB_LENGTH_THRESHOLD){
+					//if length exceeds certain threshold, the pattern replacements below can choke,
+					//e.g. observed with length that's greater than 200,000.
+					int strStart = contextSBLen - CONTEXT_SB_LENGTH_THRESHOLD;
+					//grab the most recent substring
+					contextStr = contextSB.substring(strStart);
+				}else{
+					contextStr = contextSB.toString();					
+				}				
+				//System.out.println("ThmInput - contextStr length "+contextStr.length() );
+				contextStr = ThmInput.removeTexMarkup(contextStr, null, null, macrosTrie,
 						eliminateBeginEndThmPattern);
-				
+				//System.out.println("DetectHypothesis - contextStr "+contextStr);
 				//scan contextSB for assumptions and definitions
 				//and parse the definitions
 				detectAndParseHypothesis(contextStr, parseState, stats);	
@@ -915,8 +933,7 @@ public class DetectHypothesis {
 			List<DefinitionListWithThm> definitionListWithThmList, List<ThmHypPair> thmHypPairList,
 			String srcFileName, MacrosTrie macrosTrie,
 			Pattern eliminateBeginEndThmPattern){
-		//print to indicate progress, since all other outputs are suppressed during processing.
-		System.out.print(".");
+		
 		// process here, return two versions, one for bag of words, one
 		// for display
 		// strip \df, \empf. Index followed by % strip, not percent

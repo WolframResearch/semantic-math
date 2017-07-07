@@ -67,7 +67,6 @@ public class Maps {
 		
 	private static final Pattern LEXICON_LINE_PATTERN = Pattern.compile("\"([^\"]+)\" ([^\\s]+)");
 	private static final String POS_TAGGER_PATH_STR;
-	private final boolean FOOD_PARSE = FileUtils.isFoodParse();
 	
 	// replace string with a break, usully a comma
 	//protected static List<String> breakList;
@@ -187,7 +186,7 @@ public class Maps {
 		protected static final Map<String, Double> probMap;
 
 		protected static final Map<String, String> anchorMap;
-		private static final boolean FOOD = true;
+		private static final boolean FOOD = FileUtils.isFoodParse();
 		//deliberately not final
 		private static FoodMapNode FOOD_TRIE ;
 		private static FoodMapNode COOKING_ACTION_TRIE ;

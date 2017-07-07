@@ -22,7 +22,7 @@ public class TexParseUtils {
 	 * and \item's. Should also end in \end{enumerate}, as built in preprocess().
 	 */
 	public static void parseEnumerate(String[] inputAr, ParseState parseState){
-		System.out.println(Arrays.toString(inputAr));
+		//System.out.println(Arrays.toString(inputAr));
 		
 		StringBuilder itemSb = new StringBuilder();
 		//coarse splitting, since only need to sieve out \item, etc.

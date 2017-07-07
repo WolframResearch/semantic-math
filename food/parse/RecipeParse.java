@@ -35,7 +35,7 @@ public class RecipeParse {
 		inputAr = new String[]{"place soy sauce, lemon juice, and basil in blender"};
 		inputAr = new String[]{"place soy sauce, lemon juice, and basil in blender", "stir in hot pepper sauce and garlic", 
 				"blend on high speed for 30 seconds"};//"Pour marinade over desired type of meat"
-		//inputAr = new String[]{"combine flour and salt", "combine flour mixture"};
+		inputAr = new String[]{"combine flour and salt", "add banana"};
 		
 		boolean isVerbose = true;
 		Stats stats = null;

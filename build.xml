@@ -6,6 +6,7 @@
 
 	<property name="builddir" value="${basedir}/build/" />
 	<property name="srcdir" value="${basedir}/src/thmp/" />
+	<property name="fooddir" value="${basedir}/src/food/" />
 	<property name="search_srcdir" value="${basedir}/src/thmp/search" />
 	<property name="utils_srcdir" value="${basedir}/src/thmp/utils" />
 	<property name="datadir" value="${basedir}/src/thmp/data" />
@@ -84,11 +85,14 @@
 			</classpath>
 		</javac>
 	</target>
-
+	
 	<target name="compileThmp" description="compile Java sources">
 		<delete dir="${builddir}"/>
 		<mkdir dir="${builddir}" />
-		<javac srcdir="${srcdir}" destdir="${builddir}" debug="true">
+		<javac destdir="${builddir}" debug="true">
+			<src path="${srcdir}"/>
+			<src path="${fooddir}"/>
+			
 			<classpath>
 				<!--Should not use these classes!!!-->
 				<!--<fileset dir="${thmplibdir}">
@@ -104,7 +108,8 @@
 
 	<target name="compileRunner" description="compile Java sources">
 		<mkdir dir="${builddir}" />
-		<javac srcdir="${srcdir}/runner" destdir="${builddir}" debug="true">
+		<javac srcdir="${srcdir}/runner" destdir="${builddir}" debug="true"
+			includeantruntime="false">
 			<classpath>
 				<fileset dir="${thmplibdir}">
 					<include name="**/*.class" />

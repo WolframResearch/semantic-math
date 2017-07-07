@@ -35,6 +35,12 @@ import thmp.utils.WordForms;
  */
 public class RecipeGraph {
 	
+	//set of verbs that can represent action to prior FoodState, e.g. "add".
+	private static final Set<String> VERB_PRIOR_SET;
+	//prepositions denoting source of actions
+	private static final Set<String> ACTION_SOURCE_SET;
+	//prepositions denoting target of actions
+	private static final Set<String> ACTION_TARGET_SET;		
 	//ingredients, and whether used or not
 	private Map<String, Boolean> ingredientsMap;
 	//beginning nodes in 
@@ -44,6 +50,15 @@ public class RecipeGraph {
 	//immediate prior FoodState, to be used in next parse, 
 	//if next parse makes implicit reference to lastFoodState.
 	private FoodState lastFoodState = FoodState.foodStateSingletonInstance();
+	
+	static{
+		String[] verbPriorAr = new String[]{"add"};
+		VERB_PRIOR_SET = new HashSet<String>(Arrays.asList(verbPriorAr));
+		String[] actionSourceAr = new String[]{"from"};
+		String[] actionTargetAr = new String[]{"to"};
+		ACTION_SOURCE_SET = new HashSet<String>(Arrays.asList(actionSourceAr));
+		ACTION_TARGET_SET = new HashSet<String>(Arrays.asList(actionTargetAr));
+	}
 	
 	private RecipeGraph(//List<FoodState> ingredientStateList_, 
 			Map<String, Boolean> ingredientsMap_){
@@ -85,7 +100,7 @@ public class RecipeGraph {
 		
 		//winning wrapper map on the top level
 		Multimap<ParseStructType, WLCommandWrapper> wrapperMMap = headParseStruct.getWLCommandWrapperMMap();
-		System.out.println("wrapperMMap.values().size "+ wrapperMMap.values().size());
+		//System.out.println("wrapperMMap.values().size "+ wrapperMMap.values().size());
 		for(WLCommandWrapper wrapper : wrapperMMap.values()){
 			WLCommand wlCommand = wrapper.WLCommand();
 			handlePosTermList(wlCommand);
@@ -120,6 +135,8 @@ public class RecipeGraph {
 		//Could be multiple, e.g. separate egg into whites and yolk.
 		//Or e.g. "in the bowl", or "into a ball"
 		List<Struct> unknownStructList = new ArrayList<Struct>();
+		List<FoodStruct> actionSourceList = new ArrayList<FoodStruct>(); 
+		List<FoodStruct> actionTargetList = new ArrayList<FoodStruct>();
 		Iterator<FoodState> statesListIter = currentStateList.iterator();
 		/*if(posList.get(triggerTermIndex).posTermStruct().nameStr().equals("combine")){
 			System.out.println("RecipeGraph combine");
@@ -136,15 +153,12 @@ public class RecipeGraph {
 			Struct termStruct = term.posTermStruct();
 			if(null == termStruct){
 				continue;
-			}
-			if(termStruct.nameStr().equals("baking soda")){
-				System.out.println("");
-			}
-			addStructFoodState(unknownStructList, knownStateList, statesListIter, termStruct);			
-		}
-		
+			}			
+			addStructFoodState(unknownStructList, knownStateList, actionSourceList, actionTargetList,
+					statesListIter, termStruct);			
+		}		
 		//to go along with edge, could be e.g. "until warm", "in oven"
-				List<Struct> edgeQualifierStructList = new ArrayList<Struct>();
+		List<Struct> edgeQualifierStructList = new ArrayList<Struct>();				
 		Struct actionStruct;
 		//need to check if -1, or some default value!		
 		if(triggerTermIndex < 0){
@@ -155,19 +169,20 @@ public class RecipeGraph {
 		}else{
 			PosTerm triggerTerm = posList.get(triggerTermIndex);
 			actionStruct = triggerTerm.posTermStruct();
+			String actionStructName = actionStruct.nameStr();
 			//if actionStruct has child, e.g. "stir in", "combine with",
 			//means subject refers to immediately prior product.
-			
-			if(actionStruct.has_child()){
+			//Or verb alone represents action to prior FoodState, e.g. "add".
+			//but only if not explicit "add .. to .." <--check more explicit than 
+			//notKnownStructList empty?
+			if(actionStruct.has_child() || VERB_PRIOR_SET.contains(actionStructName) && actionTargetList.isEmpty()){
 				//purge previous known states? Since they probably don't refer to prior food states?
 				knownStateList.add(lastFoodState);
 				for(Struct childStruct : actionStruct.children()){
 					edgeQualifierStructList.add(childStruct);
 				}
 			}
-		}
-		
-		
+		}		
 		List<Struct> productStructList = new ArrayList<Struct>();
 		List<Struct> notKnownStructList = new ArrayList<Struct>();
 		//construct edge from trigger term and unknown structs
@@ -177,12 +192,11 @@ public class RecipeGraph {
 			if(isAppliance(structName)){
 				edgeQualifierStructList.add(struct);
 			}else if(isFood(structName)){
-				productStructList.add(struct);
-				
+				productStructList.add(struct);				
 			}else{
 				notKnownStructList.add(struct);
 			}
-		}			
+		}
 		//add not known for now, refine
 		//need at least one product, or else should use substitute list, rather than 
 		//the actual currentStateList
@@ -201,12 +215,10 @@ public class RecipeGraph {
 			Map<String, String> map = new HashMap<String, String>();
 			Random r = new Random();			
 			map.put("name", String.valueOf(r.nextInt(1000))); //graph thinks same vertex, if same as previous!! need unique identifier!
-
 			//map.put("name", ""); //graph thinks same vertex, if same as previous!! need unique identifier!
 			productStructList.add(new StructH<Map<String, String>>(map, ""));
 		}
-		//need to be careful! Should not allow multiple parents and multiple children at same time!
-		
+		//need to be careful! Should not allow multiple parents and multiple children at same time!		
 		for(Struct product : productStructList){
 			FoodState productState = new FoodState(product, knownStateList, recipeEdge);
 			//add parents
@@ -216,8 +228,7 @@ public class RecipeGraph {
 			currentStateList.add(productState);
 			//try to pick out the most likely state?
 			lastFoodState = productState;
-		}
-		
+		}		
 	}
 
 	private boolean isFood(String structName){
@@ -234,10 +245,13 @@ public class RecipeGraph {
 	 * @return
 	 */
 	private void addStructFoodState(List<Struct> unknownStructList, 
-			List<FoodState> knownStateList, Iterator<FoodState> statesListIter, Struct termStruct) {
+			List<FoodState> knownStateList, 
+			List<FoodStruct> actionSourceList, List<FoodStruct> actionTargetList,
+			Iterator<FoodState> statesListIter, 
+			Struct termStruct) {
 		
 		if(!termStruct.isStructA()){
-			addStructFoodState2(unknownStructList, knownStateList, statesListIter, termStruct);
+			addStructFoodState2(unknownStructList, knownStateList, actionSourceList, actionTargetList, statesListIter, termStruct);
 			//consider cases to look into prev1/prev2!? Need to handle e.g. prep!
 		}else{
 			String structType = termStruct.type();
@@ -245,10 +259,12 @@ public class RecipeGraph {
 			if(structType.matches("(?:conj|disj)_.+")){
 				//if(true)throw new RuntimeException(((Struct)(Struct)termStruct.prev2()).nameStr());
 				if(termStruct.prev1NodeType().isTypeStruct()){
-					addStructFoodState(unknownStructList, knownStateList, statesListIter, (Struct)termStruct.prev1());
+					addStructFoodState(unknownStructList, knownStateList, actionSourceList, actionTargetList,
+							statesListIter, (Struct)termStruct.prev1());
 				}
 				if(termStruct.prev2NodeType().isTypeStruct()){
-					addStructFoodState(unknownStructList, knownStateList, statesListIter, (Struct)termStruct.prev2());
+					addStructFoodState(unknownStructList, knownStateList, actionSourceList, actionTargetList,
+							statesListIter, (Struct)termStruct.prev2());
 				}
 			}
 			
@@ -264,6 +280,7 @@ public class RecipeGraph {
 	 * @param termStruct
 	 */
 	private void addStructFoodState2(List<Struct> unknownStructList, List<FoodState> knownStateList,
+			List<FoodStruct> actionSourceList, List<FoodStruct> actionTargetList,
 			Iterator<FoodState> statesIter, Struct termStruct) {
 		//seek out the foodState this Struct is ascribed to
 		String structName = termStruct.nameStr();
@@ -289,7 +306,8 @@ public class RecipeGraph {
 			//unknownStructList.add(termStruct);
 		}
 		//add children
-		addStructChildren(unknownStructList, knownStateList, statesIter, termStruct);
+		addStructChildren(unknownStructList, knownStateList, actionSourceList, actionTargetList, statesIter,
+				termStruct);
 	}
 	
 	/**
@@ -357,16 +375,25 @@ public class RecipeGraph {
 	 * Process struct's children, either with more ingredients,
 	 * or appliances, e.g. "bake in oven"
 	 * @param termStruct
+	 * @param List<FoodState> sourceFoodStateList, source of action 
+	 * @param actionTargetList, target of action. E.g. "to soup" in "add basil to soup"
 	 */
 	private void addStructChildren(List<Struct> unknownStructList, List<FoodState> knownStateList,
-			Iterator<FoodState> stateIter, Struct struct){
+			List<FoodStruct> actionSourceList, List<FoodStruct> actionTargetList, Iterator<FoodState> stateIter, 
+			Struct struct){
 		List<Struct> children = struct.children();
 		List<ChildRelation> childRelationList = struct.childRelationList();
 		for(int i = 0; i < children.size(); i++){
 			Struct childStruct = children.get(i);
 			String childRelationStr = childRelationList.get(i).childRelationStr();
-			Struct childFoodStruct = new FoodStruct(childStruct, childRelationStr);
-			addStructFoodState2(unknownStructList, knownStateList, stateIter, childFoodStruct);
+			FoodStruct childFoodStruct = new FoodStruct(childStruct, childRelationStr);
+			
+			if(ACTION_SOURCE_SET.contains(childRelationStr)){
+				actionSourceList.add(childFoodStruct);
+			}else if(ACTION_TARGET_SET.contains(childRelationStr)){
+				actionTargetList.add(childFoodStruct);
+			}			
+			addStructFoodState2(unknownStructList, knownStateList, actionSourceList, actionTargetList, stateIter, childFoodStruct);
 		}
 	}
 	

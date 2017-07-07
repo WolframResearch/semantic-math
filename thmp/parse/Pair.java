@@ -16,7 +16,7 @@ public class Pair {
 	private String pos; 
 	//Set of additional parts of speech, set instead of list, 
 	//to avoid accidental duplicates, which contribute to parse explosions.
-	private Set<String> extraPosSet;
+	private Set<String> extraPosSet = new HashSet<String>();
 	//index in the token list without TeX, for syntaxnet.
 	private int noTexTokenListIndex;
 	
@@ -64,14 +64,15 @@ public class Pair {
 	 * @return Additional parts of speech
 	 */
 	public void addExtraPos(String pos){
-		//lazy initialization with double locking
-		if(extraPosSet == null){
+		//lazy initialization with double locking.
+		//This should never be called by two different threads though.
+		/*if(extraPosSet == null){
 			synchronized(this){
 				if(extraPosSet == null){
 					extraPosSet = new HashSet<String>();
 				}
 			}
-		}
+		}*/
 		if(!pos.equals(this.pos)){
 			this.extraPosSet.add(pos);
 		}
