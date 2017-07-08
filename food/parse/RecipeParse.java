@@ -35,7 +35,9 @@ public class RecipeParse {
 		inputAr = new String[]{"place soy sauce, lemon juice, and basil in blender"};
 		inputAr = new String[]{"place soy sauce, lemon juice, and basil in blender", "stir in hot pepper sauce and garlic", 
 				"blend on high speed for 30 seconds"};//"Pour marinade over desired type of meat"
-		inputAr = new String[]{"combine flour and salt", "add banana"};
+		inputAr = new String[]{"combine flour and salt", "pour batter in bowl"}; //batter should be made to refer to previous mixture
+		inputAr = new String[]{"combine flour and salt", "add banana", "pour batter in bowl"}; 
+		inputAr = new String[]{"combine flour and salt", "add banana", "pour batter in bowl","Combine banana mixture and egg"}; 
 		
 		boolean isVerbose = true;
 		Stats stats = null;
@@ -45,9 +47,22 @@ public class RecipeParse {
 				"soy sauce", "lemon juice", "basil", "garlic", "hot pepper sauce"};
 		
 		ingredientsList = Arrays.asList(ingredientsAr);		
+		
+		RecipeGraph recipeGraph = buildRecipeGraph(inputAr, isVerbose, stats, ingredientsList);
+		
+		System.out.println("RecipeParse - recipeGraph \n" + recipeGraph);
+		
+	}
+
+	/**
+	 * @param inputAr
+	 * @param isVerbose
+	 * @param stats
+	 * @param recipeGraph
+	 */
+	public static RecipeGraph buildRecipeGraph(String[] inputAr, boolean isVerbose, Stats stats, List<String> ingredientsList) {
 		//initialize recipe graph with list of ingredients
 		RecipeGraph recipeGraph = RecipeGraph.initializeRecipeGraph(ingredientsList);
-		
 		for(String input : inputAr){
 			//refine
 			//input = WordForms.splitDelimPattern().matcher(input).replaceAll(" and ");
@@ -87,10 +102,9 @@ public class RecipeParse {
 					System.out.println("~+++~ EXPR: \n" + recipeExpr);
 				}
 			}
-			recipeGraph.updateFoodStates(headParseStruct);
-			System.out.println("RecipeParse - recipeGraph \n" + recipeGraph);
+			recipeGraph.updateFoodStates(headParseStruct);			
 		}
-		
+		return recipeGraph;
 	}
 	
 	

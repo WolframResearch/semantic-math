@@ -58,6 +58,10 @@ public class FoodState {
 		return FOODSTATE_SINGLETON;
 	}
 	
+	public void setFoodStruct(Struct struct){
+		this.foodStruct = struct;
+	}
+	
 	public void addChildFoodState(FoodState childState){
 		this.childFoodStateList.add(childState);
 	}

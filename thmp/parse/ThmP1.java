@@ -563,9 +563,9 @@ public class ThmP1 {
 		
 		if(tokenType.equals(TokenType.TWOGRAM)){			
 			boolean isFirstWordAdverb = !posList.isEmpty() ? posList.get(0).equals("adverb") : 
-				(firstWord.substring(firstWordLen-2, firstWordLen).equals("ly") ? true : false);
+				( (firstWordLen > 2 && firstWord.substring(firstWordLen-2, firstWordLen).equals("ly")) ? true : false);
 			//adverb past-participle pair, e.g "finitely generated"
-			if (isFirstWordAdverb && nGram.substring(nGramLen - 2, nGramLen).equals("ed")) {
+			if (isFirstWordAdverb && nGramLen > 2 && nGram.substring(nGramLen - 2, nGramLen).equals("ed")) {
 				pos = "adj";				
 			}
 		}

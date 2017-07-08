@@ -9,8 +9,10 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.math.BigInteger;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -477,11 +479,12 @@ public class DetectHypothesis {
 					try{
 						extractThmsFromFiles(inputBF, defThmList, thmHypPairList, stats, tarFileName);
 					}catch(Throwable e){
-						String msg = "File being processed: " + fileName + " with trace " + e;
+						String timeStr = new SimpleDateFormat("yyyy_MM_dd_HH:mm").format(Calendar.getInstance().getTime());
+						String msg = timeStr + " File being processed: " + fileName + " with trace " + Arrays.toString(e.getStackTrace());						
 						FileUtils.appendObjToFile(msg, parserErrorLogPath);
 						logger.error(msg);
 						System.out.println(msg);
-						if(true)throw e;
+						//if(true)throw e;
 					}
 					FileUtils.silentClose(inputBF);
 				}

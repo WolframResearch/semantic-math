@@ -573,6 +573,8 @@ vertices ent
 vertex ent
 permute verb
 monodromy ent
+into pre
+onto pre
 singularity ent
 splice verb
 puiseux ent

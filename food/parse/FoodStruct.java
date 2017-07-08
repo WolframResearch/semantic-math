@@ -17,11 +17,41 @@ public class FoodStruct extends thmp.parse.Struct {
 
 	private static final long serialVersionUID = 6622947999934429378L;
 	private Struct struct;
-	private String qualifier;
+	private String qualifier = "";
+	private FoodStructType foodStructType = FoodStructType.NONE;
+
+	/**
+	 * Types of FoodStruct's, such as action source, target, subject, etc.
+	 */
+	public static enum FoodStructType{
+		// e.g. "A" is action source and B is action target 
+		// in "add A to B".
+ 		ACTION_SOURCE, ACTION_TARGET, 
+ 		//In "add A to B". A is subject, "subjected" to action.
+ 		//"vegetables" in "drain vegetables in colander"
+ 		SUBJECT, 
+ 		NONE;
+	}
 	
 	public FoodStruct(Struct struct_, String qualifier_){
 		this.struct = struct_;
 		this.qualifier = qualifier_;
+	}
+	
+	public FoodStruct(Struct struct_, String qualifier_, FoodStructType foodStructType_){
+		this(struct_, qualifier_);
+		this.foodStructType = foodStructType_;
+	}
+	public FoodStruct(Struct struct_, FoodStructType foodStructType_){
+		this.struct = struct_;
+		this.foodStructType = foodStructType_;
+	}
+	
+	/**
+	 * Types of FoodStruct's, such as action source, target, subject, etc.
+	 */
+	public FoodStructType foodStructType(){
+		return this.foodStructType;
 	}
 	
 	@Override
@@ -35,14 +65,12 @@ public class FoodStruct extends thmp.parse.Struct {
 	}
 
 	@Override
-	public Struct posteriorBuiltStruct() {
-		
-		return struct;
+	public Struct posteriorBuiltStruct() {		
+		return struct.posteriorBuiltStruct();
 	}
 
 	@Override
 	public void set_previousBuiltStruct(Struct previousBuiltStruct) {
-		
 		
 	}
 
@@ -55,7 +83,7 @@ public class FoodStruct extends thmp.parse.Struct {
 	@Override
 	public Struct structToAppendCommandStr() {
 		
-		return struct;
+		return struct.structToAppendCommandStr();
 	}
 
 	@Override
@@ -67,7 +95,7 @@ public class FoodStruct extends thmp.parse.Struct {
 	@Override
 	public int WLCommandStrVisitedCount() {
 		
-		return 0;
+		return struct.WLCommandStrVisitedCount();
 	}
 
 	@Override
@@ -78,38 +106,35 @@ public class FoodStruct extends thmp.parse.Struct {
 
 	@Override
 	public void clear_commandBuilt() {
-		
+		struct.clear_commandBuilt();
 		
 	}
 
 	@Override
 	public void set_structList(StructList structList) {
-		
-		
+		struct.set_structList(structList);		
 	}
 
 	@Override
 	public void set_parentStruct(Struct parent) {
-		
-		
+		struct.set_parentStruct(parent);		
 	}
 
 	@Override
 	public Struct parentStruct() {
 		
-		return struct;
+		return struct.parentStruct();
 	}
 
 	@Override
 	public void set_possessivePrev(Struct prev) {
-		
-		
+		struct.set_possessivePrev(prev);		
 	}
 
 	@Override
 	public Struct possessivePrev() {
 		
-		return struct;
+		return struct.possessivePrev();
 	}
 
 	@Override
@@ -138,87 +163,73 @@ public class FoodStruct extends thmp.parse.Struct {
 
 	@Override
 	public String simpleToString(boolean includeType, WLCommand curCommand, PosTerm triggerPosTerm, PosTerm curPosTerm,
-			List<Expr> exprList) {
-		
+			List<Expr> exprList) {		
 		return struct.simpleToString(includeType, curCommand, triggerPosTerm, curPosTerm, exprList);
 	}
 
 	@Override
-	public String simpleToString(boolean includeType, WLCommand curCommand) {
-		
+	public String simpleToString(boolean includeType, WLCommand curCommand) {		
 		return struct.simpleToString(includeType, curCommand);
 	}
 
 	@Override
-	public String simpleToString(boolean includeType, WLCommand curCommand, List<Expr> exprList) {
-		
+	public String simpleToString(boolean includeType, WLCommand curCommand, List<Expr> exprList) {		
 		return struct.simpleToString(includeType, curCommand, exprList);
 	}
 
 	@Override
 	public void setContextVecEntry(int structParentIndex, Map<Integer, Integer> contextVecMap,
 			boolean adjustVecFromCommand) {
-		struct.setContextVecEntry(structParentIndex, contextVecMap, adjustVecFromCommand);
-		
+		struct.setContextVecEntry(structParentIndex, contextVecMap, adjustVecFromCommand);		
 	}
 
 	@Override
-	public WLCommandWrapper add_WLCommandWrapper(WLCommand newCommand) {
-		
+	public WLCommandWrapper add_WLCommandWrapper(WLCommand newCommand) {		
 		return struct.add_WLCommandWrapper(newCommand);
 	}
 
 	@Override
-	public List<WLCommandWrapper> WLCommandWrapperList() {
-		
+	public List<WLCommandWrapper> WLCommandWrapperList() {		
 		return struct.WLCommandWrapperList();
 	}
 
 	@Override
 	public void clear_WLCommandWrapperList() {
-		
-		
+		struct.clear_WLCommandWrapperList();;
 	}
 
 	@Override
-	public int numUnits() {
-		
-		return 0;
+	public int numUnits() {		
+		return struct.numUnits();
 	}
 
 	@Override
-	public double maxDownPathScore() {
-		
-		return 0;
+	public double maxDownPathScore() {		
+		return struct.maxDownPathScore();
 	}
 
 	@Override
 	public void set_maxDownPathScore(double pathScore) {
-		
-		
+		struct.set_maxDownPathScore(pathScore);		
 	}
 
 	@Override
-	public Set<String> extraPosSet() {
-		
+	public Set<String> extraPosSet() {		
 		return struct.extraPosSet();
 	}
 
 	@Override
 	public void addExtraPos(String pos) {
-		
-		
+		struct.addExtraPos(pos);
 	}
 
 	@Override
-	public List<String> contentStrList() {
-		
+	public List<String> contentStrList() {		
 		return struct.contentStrList();
 	}
 
 	@Override
-	public String nameStr() {
-		
+	public String nameStr() {		
 		return struct.nameStr();
 	}
 
@@ -272,7 +283,7 @@ public class FoodStruct extends thmp.parse.Struct {
 
 	@Override
 	protected void setHasChildToTrue() {
-		
+		//deliberately left not implemented.
 	}
 
 	@Override
@@ -301,8 +312,7 @@ public class FoodStruct extends thmp.parse.Struct {
 
 	@Override
 	public void set_prev1(String str) {
-		
-		
+		struct.set_prev1(str);		
 	}
 
 	@Override
@@ -312,26 +322,22 @@ public class FoodStruct extends thmp.parse.Struct {
 	}
 
 	@Override
-	public Object prev2() {
-		
+	public Object prev2() {		
 		return struct.prev2();
 	}
 
 	@Override
-	public String present(String str) {
-		
+	public String present(String str) {		
 		return struct.present(str);
 	}
 
 	@Override
-	public NodeType prev1NodeType() {
-		
+	public NodeType prev1NodeType() {		
 		return struct.prev1NodeType();
 	}
 
 	@Override
-	public NodeType prev2NodeType() {
-		
+	public NodeType prev2NodeType() {		
 		return struct.prev2NodeType();
 	}
 

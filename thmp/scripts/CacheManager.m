@@ -48,7 +48,7 @@ Range[Length[candidateVecs]]]];If[list[[2]]=!={},list[[2,1]],{}]]
 (*mxRowDimension, is number of words*)
 initializeCache[totalMxCount_Integer,mxCountCap_Integer,tdMxRowDim_Integer]:=Module[{cacheBag,timeBag},cacheBag=Internal`Bag[];
 Table[Internal`StuffBag[cacheBag,0],totalMxCount];timeBag=Internal`Bag[];Table[Internal`StuffBag[timeBag,0],totalMxCount];
-$TotalMxCount=totalMxCount; $MxCountCap=mxCountCap;$HistoryLength=0;$ZeroVec=Table[0,tdMxRowDim];{cacheBag,timeBag}]
+$TotalMxCount=totalMxCount; $MxCountCap=mxCountCap;$HistoryLength=0;$ZeroVec=Table[0.0,tdMxRowDim];{cacheBag,timeBag}]
 
 
 (* ::Item:: *)
