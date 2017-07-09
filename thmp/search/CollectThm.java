@@ -97,9 +97,9 @@ public class CollectThm {
 	 */
 	private static final String[] SCORE_AVG_MATH_WORDS = new String[]{"ring", "field", "ideal", "finite", "series",
 			"complex", "combination", "regular", "domain", "local", "smooth", "definition", "map", "standard", "prime",
-			"injective", "surjective", "commut", "word", "act", "second"};
+			"injective", "surjective", "commut", "word", "act", "second", "every"};
 	//could be included, if already included, adjust the score to 1. If not, don't add.
-	private static final String[] SCORE1MATH_WORDS = new String[]{"show","have","any","every", "many", "suppose","end","psl",
+	private static final String[] SCORE1MATH_WORDS = new String[]{"show","have","any", "many", "suppose","end","psl",
 			"is"
 	};
 	//don't use this to affect building words map, since need entry for vital terms such as "is" (despite its insignificance

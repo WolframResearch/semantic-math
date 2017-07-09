@@ -62,7 +62,7 @@ public class NGramSearch {
 	
 	//words to be taken off of two-gram map
 	private static final String[] NOT_TWO_GRAMS = new String[]{"field is", "more generally", "polynomial $a$", 
-			"polynomial $f$", "over ring", "exist integer"};
+			"polynomial $f$", "over ring", "exist integer", "over field"};
 	
 	//should use this to detect fluff in first word.
 	private static final Set<String> fluffWordsSet = WordForms.getFluffSet();
@@ -125,7 +125,7 @@ public class NGramSearch {
 		private static final Set<String> twoGramFirstWordsSet;
 		static{			
 			UNDESIRABLE_POS_COMBO_SET = new HashSet<String>();
-			String[] undesirablePosAr = new String[]{"ent_verb", "ent_vbs", "ent_verbAlone"};
+			String[] undesirablePosAr = new String[]{"ent_verb", "ent_vbs", "pre_ent", "poss_ent", "pre_adj", "ent_verbAlone"};
 			UNDESIRABLE_POS_COMBO_SET.addAll(Arrays.asList(undesirablePosAr));
 			
 			//*****start method here

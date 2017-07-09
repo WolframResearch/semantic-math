@@ -2345,7 +2345,6 @@ public class WLCommand implements Serializable{
 				//additional restriction on pos so we don't abandon commands based on trivial
 				//additionally encountered terms such as prepositions. Only disqualify
 				//based on extraneous terms such as "if" or verbs.
-				//System.out.println(Pattern.compile("verb$").matcher("verbphrase").find());
 				if(posPattern.matcher("verb|if|iff").find() && !isPosWildCard){
 					return true;					
 				}

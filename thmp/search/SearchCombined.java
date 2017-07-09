@@ -37,15 +37,15 @@ import thmp.utils.WordForms;
 public class SearchCombined {
 
 	private static final int NUM_NEAREST_SVD = 100;
-	private static final int NUM_NEAREST = 15;
+	protected static final int NUM_NEAREST = 15;
 	//combined number of vectors to take from search results of
 	//svd/nearest and intersection
-	protected static final int NUM_COMMON_VECS = 4;
+	//protected static final int NUM_COMMON_VECS = 4;
 	//private static ServletContext servletContext;
 	//should update at the very beginning!
 	//private static final int LIST_INDEX_SHIFT = 1;
 	
-	private static final Pattern INPUT_PATTERN = Pattern.compile("(\\d+)\\s+(.*)");
+	private static final Pattern INPUT_PATTERN = Pattern.compile("(\\d+)\\s+(.+)");
 	private static final Pattern CONTEXT_INPUT_PATTERN = Pattern.compile("(context|relation)\\s+(.*)");
 	protected static final int CONTEXT_SEARCH_TUPLE_SIZE = 10;
 	
@@ -299,7 +299,7 @@ public class SearchCombined {
 		//among different searchers.
 		SearchState searchState = new SearchState();
 		SearchIntersection.intersectionSearch(input, searchWordsSet, searchState, searchContextBool, 
-				searchRelationalBool, NUM_NEAREST);
+				searchRelationalBool, numCommonVecs);
 		
 		String[] inputAr = WordForms.getWhiteNonEmptySpacePattern().split(input);		
 		//context search doesn't do anything if only one token.
@@ -325,8 +325,7 @@ public class SearchCombined {
 				bestCommonVecsList = findListsIntersection(nearestVecList, searchState, 
 					numCommonVecs, input);
 			}
-		}
-		
+		}		
 
 		List<ThmHypPair> bestCommonThmHypPairList = thmListIndexToThmHypPair(bestCommonVecsList);
 			
@@ -350,9 +349,9 @@ public class SearchCombined {
 	 */
 	public static int getNumCommonVecs(StringBuilder inputSB, String input) {
 		
-		int numCommonVecs = NUM_COMMON_VECS;
+		int numCommonVecs = NUM_NEAREST;
 		Matcher matcher = INPUT_PATTERN.matcher(input);
-		inputSB.setLength(0);
+		//inputSB.setLength(0);
 		if(matcher.matches()){
 			numCommonVecs = Integer.parseInt(matcher.group(1));			
 			inputSB.append(matcher.group(2));

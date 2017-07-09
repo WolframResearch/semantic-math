@@ -1,6 +1,7 @@
 package thmp.search;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -21,23 +22,19 @@ import static thmp.utils.MathLinkUtils.evaluateWLCommand;
  *
  */
 public class ContextSearch implements Searcher<Map<Integer, Integer>>{
-
-	//bare thm list, without latex \label's or \index's, or refs, etc
-	//private static final List<String> bareThmList = CollectThm.ThmList.get_bareThmList();
-	//private static final KernelLink ml = FileUtils.getKernelLinkInstance();
 	
 	//private static final int LIST_INDEX_SHIFT = 1;
-	private static final Pattern BRACKETS_PATTERN = WordForms.BRACKETS_PATTERN();
+	//private static final Pattern BRACKETS_PATTERN = WordForms.BRACKETS_PATTERN();
 	private static final boolean DEBUG = false;
-	private static final Logger logger = LogManager.getLogger(SearchIntersection.class);
+	private static final Logger logger = LogManager.getLogger(ContextSearch.class);
 	
 	private QueryVecContainer<Map<Integer, Integer>> searcherState;
 	
-	static{
+	/*static{
 		//get the deserialized vectors from CollectThm instead of from thm vec file!
 		//need string form!
 		//allThmsContextVecStrList = CollectThm.ThmList.allThmsContextVecList();		
-	}
+	}*/
 
 	@Override
 	public void setSearcherState(QueryVecContainer<Map<Integer, Integer>> searcherState_){
@@ -70,7 +67,7 @@ public class ContextSearch implements Searcher<Map<Integer, Integer>>{
 			Searcher<Map<Integer, Integer>> searcher, SearchState searchState){
 		//short-circuit if query contains only 1 word		
 		
-		logger.info("Starting context search...");
+		logger.info("Starting context search... BackTrace: "+ Arrays.toString(Thread.currentThread().getStackTrace()));
 		int nearestThmIndexListSz = nearestThmIndexList.size();
 		//could be 0 if, for instance, the words searched are all unknown to the word maps. 
 		if(0 == nearestThmIndexListSz){ 
@@ -143,8 +140,7 @@ public class ContextSearch implements Searcher<Map<Integer, Integer>>{
 				curList.add(thmIndex);
 				thmVecsTMap.put(numCoinciding, curList);
 			}
-		}
-		
+		}		
 		//coalesce map entries into one list
 		List<Integer> nearestVecList = new ArrayList<Integer>();
 		for(Map.Entry<Integer, List<Integer>> entry : thmVecsTMap.entrySet()){

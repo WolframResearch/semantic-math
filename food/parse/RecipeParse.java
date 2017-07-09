@@ -38,6 +38,8 @@ public class RecipeParse {
 		inputAr = new String[]{"combine flour and salt", "pour batter in bowl"}; //batter should be made to refer to previous mixture
 		inputAr = new String[]{"combine flour and salt", "add banana", "pour batter in bowl"}; 
 		inputAr = new String[]{"combine flour and salt", "add banana", "pour batter in bowl","Combine banana mixture and egg"}; 
+		inputAr = new String[]{"Tear off a small piece of dough, flatten into a disc"};
+		inputAr = new String[]{"Sprinkle yeast over warm water in a large bowl"};
 		
 		boolean isVerbose = true;
 		Stats stats = null;

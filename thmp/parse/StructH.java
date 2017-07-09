@@ -524,10 +524,24 @@ public class StructH<H> extends Struct{
 			//wrapperListSz should be > 0, since list is created when first wrapper is added
 			WLCommandWrapper curWrapper = WLCommandWrapperList.get(wrapperListSz - 1);
 			WLCommand composedCommand = curWrapper.WLCommand();
-			Struct structHeadWithOtherHead;
+			/*if(this.type.equals("yeast")){
+				throw new RuntimeException("StructA "+this);
+			}*/
+			/*
+			 * if(WLCommand.structsWithOtherHeadCount(composedCommand) == 0 || 
+					(null != (structHeadWithOtherHead = composedCommand.structHeadWithOtherHead())
+					//dfsDepth suffices here, ie same level in the parse tree.
+					&& this.dfsDepth() == structHeadWithOtherHead.dfsDepth())
+					|| null == structHeadWithOtherHead){
+			 */
+			Struct structHeadWithOtherHead = null;
 			if(WLCommand.structsWithOtherHeadCount(composedCommand) == 0 || 
-					null != (structHeadWithOtherHead = composedCommand.structHeadWithOtherHead())
-					&& this.dfsDepth() == structHeadWithOtherHead.dfsDepth()){//HERE
+					(null != (structHeadWithOtherHead = composedCommand.structHeadWithOtherHead())
+					&& this.dfsDepth() == structHeadWithOtherHead.dfsDepth()
+					|| null == structHeadWithOtherHead)){
+				
+			//System.out.println("StructA - this.dfsDepth() == structHeadWithOtherHead.dfsDepth() "+this.dfsDepth() == structHeadWithOtherHead.dfsDepth() + this.toString());
+
 			if(curCommand != null){
 				int commandNumUnits = WLCommand.commandNumUnits(composedCommand);
 			 	WLCommand.increment_commandNumUnits(curCommand, commandNumUnits);
@@ -538,7 +552,9 @@ public class StructH<H> extends Struct{
 			if(null == this.commandBuilt){
 				this.commandBuilt = curCommand;
 				this.WLCommandStrVisitedCount++;
-			}else if(!curCommand.equals(this.commandBuilt)){
+			}else if(curCommand != this.commandBuilt
+					/*!curCommand.equals(this.commandBuilt) July 2017*/
+					){
 				this.WLCommandStrVisitedCount++;				
 			}
 			//this.WLCommandStrVisitedCount++;

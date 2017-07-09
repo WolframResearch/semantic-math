@@ -768,11 +768,7 @@ public class ParseToWLTree{
 	private static boolean appendWLCommandStr2(Struct struct, ParseStruct curParseStruct, StringBuilder parsedSB,
 			Multimap<ParseStructType, ParsedPair> partsMap, Map<Integer, Integer> contextVecMap, boolean contextVecConstructed,
 			List<WLCommandWrapper> structWrapperList, int structWrapperListSz, int structWithOtherHeadThreshold) {
-		/*if(structWrapperListSz>1){
-			throw new IllegalStateException(structWrapperListSz+"");
-		}*/
-		//System.out.println("ParseToWLTree - wrapperList Size" + structWrapperListSz);
-		//System.out.println("wrapperList" + structWrapperList);
+
 		boolean noClashCommandFound = false;
 		//Iterate backwards, since the ones that are built later should have wider scope, i.e. cover more of the tree
 		for(int i = structWrapperListSz - 1; i > -1; i--){	
@@ -796,12 +792,7 @@ public class ParseToWLTree{
 					shouldAppendCommandStr = false;
 				}
 			}
-			/*if(true || struct.type().equals("If")){
-				System.out.println("ParseToWLTree - appendWLCommandStr "+ struct);
-				System.out.println("ParseToWLTree - curCommand "+ curCommand);
-				System.out.println("WLCommand.structsWithOtherHeadCount(curCommand) " + WLCommand.structsWithOtherHeadCount(curCommand));
-				//throw new RuntimeException("WLCommandWrapperList " +this.WLCommandWrapperList);
-			}*/
+			
 			if(WLCommand.structsWithOtherHeadCount(curCommand) <= structWithOtherHeadThreshold
 					&& shouldAppendCommandStr
 					//&& struct.WLCommandStrVisitedCount() == 0
@@ -814,7 +805,6 @@ public class ParseToWLTree{
 				// e.g. "Exists[structH]" writes enum ParseRelation -2 at the index of structH
 				if(!contextVecConstructed){
 					ParseTreeToContextVec.tree2vec(struct, contextVecMap, curWrapper);
-					//System.out.println("ParseToWLTree - contextVecMap " + contextVecMap);
 					contextVecConstructed = true;
 				}
 				//get the ParseStruct based on type
@@ -932,11 +922,6 @@ public class ParseToWLTree{
 			//that already contains sub nested commands' WLCommandStr.
 			//return;
 		} 
-		
-		/*if(!contextVecConstructed){
-			ParseTreeToVec.tree2vec(struct, curStructContextVec, "");
-		}*/
-		
 		if (struct.isStructA()) {
 			
 			if(shouldPrint) parsedSB.append(struct.type());					

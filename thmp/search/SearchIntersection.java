@@ -42,7 +42,7 @@ public class SearchIntersection {
 	// bonus points for matching context better, eg hyp or stm
 	// disable bonus now, since not using annotated words
 	private static final int CONTEXT_WORD_BONUS = 0;
-	private static final int NUM_NEAREST_VECS = SearchCombined.NUM_COMMON_VECS;
+	private static final int NUM_NEAREST_VECS = SearchCombined.NUM_NEAREST;
 
 	private static final Logger logger = LogManager.getLogger(SearchIntersection.class);
 
@@ -227,7 +227,7 @@ public class SearchIntersection {
 	public static SearchState intersectionSearch(String input, Set<String> searchWordsSet, 
 			SearchState searchState, boolean contextSearchBool, boolean searchRelationalBool,
 			//ListMultimap<String, Integer> wordThmsIndexMMap,
-			int... num) {
+			int... numNearestVecs) {
 
 		if (WordForms.getWhiteEmptySpacePattern().matcher(input).matches()){
 			return null;
@@ -251,13 +251,8 @@ public class SearchIntersection {
 		int numHighest = NUM_NEAREST_VECS;
 		// whether to skip first token
 		int firstIndex = 0;
-		if (num.length > 0) {
-			numHighest = num[0];
-		} else {
-			// user's input overrides default num
-			StringBuilder inputSB = new StringBuilder();
-			numHighest = SearchCombined.getNumCommonVecs(inputSB, input);
-			input = inputSB.toString();
+		if (numNearestVecs.length > 0) {
+			numHighest = numNearestVecs[0];
 		}
 		/*
 		 * Map of theorems, in particular their indices in thmList, and the
@@ -397,7 +392,8 @@ public class SearchIntersection {
 		Set<Integer> pickedThmSet = new HashSet<Integer>();
 
 		// list to track the top entries
-		int counter = numHighest * 2;
+		//int counter = numHighest * 2;
+		int counter = numHighest;
 		for (Entry<Integer, Collection<ThmSpanPair>> entry : thmMap.entrySet()) {
 			for (ThmSpanPair pair : entry.getValue()) {
 				Integer thmIndex = pair.thmIndex;
@@ -418,8 +414,7 @@ public class SearchIntersection {
 									+ thmHypPair.thmStr() + " HYP " + thmHypPair.hypStr());
 				}
 			}
-		}
-		
+		}		
 		int tupleSz = SearchCombined.CONTEXT_SEARCH_TUPLE_SIZE;
 		//combine with ranking from relational search, reorganize within each tuple
 		//of fixed size. Try relation search first, then context search.
@@ -575,7 +570,7 @@ public class SearchIntersection {
 					break;	
 				}
 				int prevScore = thmScoreMap.get(thmIndex);
-				// use average score; be more clever!
+				
 				int bonusScore = (int) (avgWordScore / ((double) spanCounter * 2));
 				bonusScore = bonusScore == 0 ? 1 : bonusScore;
 				int newThmScore = prevScore + bonusScore;
@@ -838,9 +833,15 @@ public class SearchIntersection {
 			}
 
 			SearchState searchState = new SearchState();
+			
+			// user's input overrides default num
+			StringBuilder inputSB = new StringBuilder();
+			int numHighest = SearchCombined.getNumCommonVecs(inputSB, thm);
+			thm = inputSB.toString();
+			
 			// searchWordsSet is null.
 			List<Integer> highestThms = getHighestThmList(thm, null, searchState, contextSearchBool, 
-					searchRelationalBool, NUM_NEAREST_VECS);
+					searchRelationalBool, numHighest);
 			
 			if (highestThms == null){
 				continue;

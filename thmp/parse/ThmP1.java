@@ -175,6 +175,7 @@ public class ThmP1 {
 	private static final boolean plotDebug = false;
 	private static final boolean PLOT_DEBUG = FileUtils.isOSX() ? plotDebug : false;
 	private static final boolean FOOD_PARSE = FileUtils.isFoodParse();
+	//=false;
 	//Pattern used to check if word is valid.
 	//Don't put \', could be in valid word
 	private static final Pattern BACKSLASH_CONTAINMENT_PATTERN = 
@@ -694,52 +695,15 @@ public class ThmP1 {
 			if(WordForms.getWhiteEmptySpacePattern().matcher(curWord).matches()){
 				continue;
 			}
+			int iPrev = i;
 			//use additional lexicon to tokenize if parsing recipes
-			if(FOOD_PARSE){
-				int strArLen = strAr.length;
-				List<String> posList = new ArrayList<String>();
-				//check cooking action first, since fewer cooking actions, should take
-				//precedence in case of clash.
-				int tokenCount = 0;
-				String pos = null;
-				int foodTokenCount = Maps.checkCookingActionToken(strAr, i, strArLen);
-				if(foodTokenCount > 0){
-					pos = "verb";
-					tokenCount = foodTokenCount;
-				}
-				int cookingActionTokenCount = Maps.checkFoodToken(strAr, i, strArLen);
-				if(cookingActionTokenCount > 0){
-					if(cookingActionTokenCount > foodTokenCount){
-						tokenCount = cookingActionTokenCount;
-						posList.add("ent");
-						pos = "ent";
-					}else if(cookingActionTokenCount == foodTokenCount){
-						posList.add(pos);
-						posList.add("ent");
-					}else{
-						posList.add(pos);
-					}					
-				}else if(null != pos){
-					posList.add(pos);
-				}				
-				
-				if(!posList.isEmpty()){					
-					StringBuilder tokenSb = new StringBuilder(20);
-					for(int j = 0; j < tokenCount; j++){
-						tokenSb.append(strAr[i+j]).append(" ");
-					}
-					String tokenStr = tokenSb.substring(0, tokenSb.length()-1);
-					i += tokenCount-1;
-					Pair foodPair = new Pair(tokenStr, posList.get(0));
-					for(int k = 1; k < posList.size(); k++){
-						foodPair.addExtraPos(posList.get(k));
-					}
-					if(pos.equals("ent")){
-						mathIndexList.add(pairs.size());
-					}
-					pairs.add(foodPair);					
-					continue;
-				}				
+			if(FOOD_PARSE){				
+				i = tokenizeFoodWords(mathIndexList, pairs, strAr, i);				
+			}			
+			if(iPrev < i){
+				//i-- because the loop itself increments i.
+				i--;
+				continue;
 			}
 			Matcher negativeAdjMatcher;	
 			String type = "ent"; 
@@ -2096,6 +2060,76 @@ public class ThmP1 {
 	}
 
 	/**
+	 * @param mathIndexList
+	 * @param pairs
+	 * @param strAr
+	 * @param i
+	 * @return
+	 */
+	private static int tokenizeFoodWords(List<Integer> mathIndexList, List<Pair> pairs, String[] strAr, int i) {
+		int strArLen = strAr.length;
+		List<String> posList = new ArrayList<String>();
+		//check cooking action first, since fewer cooking actions, should take
+		//precedence in case of clash.
+		int tokenCount = 0;
+		String pos = null;
+		int foodTokenCount = Maps.checkCookingActionToken(strAr, i, strArLen);
+		if(foodTokenCount > 0){
+			pos = "verb";
+			tokenCount = foodTokenCount;
+		}
+		int cookingActionTokenCount = Maps.checkFoodToken(strAr, i, strArLen);
+		if(cookingActionTokenCount > 0){
+			if(cookingActionTokenCount > foodTokenCount){
+				tokenCount = cookingActionTokenCount;
+				posList.add("ent");
+				pos = "ent";
+			}else if(cookingActionTokenCount == foodTokenCount){
+				posList.add(pos);
+				posList.add("ent");
+			}else{
+				posList.add(pos);
+			}					
+		}else if(null != pos){
+			posList.add(pos);
+		}				
+		
+		if(!posList.isEmpty()){					
+			StringBuilder tokenSb = new StringBuilder(20);
+			for(int j = 0; j < tokenCount; j++){
+				tokenSb.append(strAr[i+j]).append(" ");
+			}
+			String tokenStr = tokenSb.substring(0, tokenSb.length()-1);
+			//i += tokenCount-1;
+			i += tokenCount;
+			int posListSz = posList.size();
+			List<String> posMMapList = posMMap.get(tokenStr);
+			int posMMapListSz = posMMapList.size();
+			posMMapListLoop: for(int p = 0; p < posMMapListSz; p++){
+				String mapPos = posMMapList.get(p);
+				for(int t = 0; t < posListSz; t++){
+					if(posList.get(t).equals(mapPos)){
+						continue posMMapListLoop;
+					}
+				}
+				posList.add(mapPos);
+			}
+			Pair foodPair = new Pair(tokenStr, posList.get(0));
+			posListSz = posList.size();
+			for(int k = 1; k < posList.size(); k++){
+				foodPair.addExtraPos(posList.get(k));
+			}
+			if(pos.equals("ent")){
+				mathIndexList.add(pairs.size());
+			}
+			pairs.add(foodPair);	
+			//foodAdded = true;
+			//continue;
+		}
+		return i;
+	}
+
+	/**
 	 * @param parseState
 	 * @param curWord
 	 */
@@ -2764,6 +2798,7 @@ public class ThmP1 {
 			//only walk through the most likely ones. 
 			int structListSz = structList.size();
 			if(//false && 
+					!FOOD_PARSE &&
 					FileUtils.isOSX() && prepositionCount > SYNTAXNET_PREP_THRESHOLD && headStructListSz > SYNTAXNET_PARSE_THRESHOLD){
 				//Sort according to number of relations that coincide with syntaxnet parse.
 				//original token aren't processed! eg stripped of "s"

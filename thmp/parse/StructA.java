@@ -343,28 +343,29 @@ public class StructA<A, B> extends Struct{
 				//System.out.println("structHeadWithOtherHead.dfsDepth() "+composedCommand.structHeadWithOtherHead().dfsDepth());
 				//throw new IllegalStateException("WLCommand.structsWithOtherHeadCount(composedCommand) "+WLCommand.structsWithOtherHeadCount(composedCommand));			
 			}*/
+			
 			Struct structHeadWithOtherHead = null;
 			if(WLCommand.structsWithOtherHeadCount(composedCommand) == 0 || 
-					(null != (structHeadWithOtherHead = composedCommand.structHeadWithOtherHead())
+					((null != (structHeadWithOtherHead = composedCommand.structHeadWithOtherHead())
 					//dfsDepth suffices here, ie same level in the parse tree.
 					&& this.dfsDepth() == structHeadWithOtherHead.dfsDepth())
-					|| null == structHeadWithOtherHead){
-				
+					|| null == structHeadWithOtherHead)){
+				//System.out.println("StructA - this.dfsDepth() == structHeadWithOtherHead.dfsDepth() "+this.dfsDepth() == structHeadWithOtherHead.dfsDepth() + this.toString());
 				//if(WLCommand.structsWithOtherHeadCount(composedCommand) > 0){
 					//System.out.println("structA WLCommand.structsWithOtherHeadCount(composedCommand) " + WLCommand.structsWithOtherHeadCount(composedCommand));
-				//}
-			
+				//}			
 				int commandNumUnits = WLCommand.commandNumUnits(composedCommand);
 				//System.out.println("StructA - commandNumUnits composed " + commandNumUnits);
-				WLCommand.increment_commandNumUnits(curCommand, commandNumUnits);
-				
+				WLCommand.increment_commandNumUnits(curCommand, commandNumUnits);				
 				//System.out.println("increment_commandNumUnits : numUnits " + commandNumUnits + " composedCommand: " + composedCommand); 				
 			
 			//if has been built into another command already
 			if(null == this.commandBuilt){
 				this.commandBuilt = curCommand;
 				this.WLCommandStrVisitedCount++;
-			}else if(!curCommand.equals(this.commandBuilt)){
+			}else if(curCommand != this.commandBuilt
+					/*!curCommand.equals(this.commandBuilt) leave here July 2017*/
+					){
 				this.WLCommandStrVisitedCount++;				
 			}			
 			//System.out.println("WLCommandStrVisitedCount" + this.WLCommandStrVisitedCount);
