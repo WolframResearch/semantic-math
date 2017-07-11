@@ -89,7 +89,7 @@
 	<target name="compileThmp" description="compile Java sources">
 		<delete dir="${builddir}"/>
 		<mkdir dir="${builddir}" />
-		<javac destdir="${builddir}" debug="true">
+		<javac destdir="${builddir}" debug="true" includeantruntime="false"> 
 			<src path="${srcdir}"/>
 			<src path="${fooddir}"/>
 			

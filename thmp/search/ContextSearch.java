@@ -11,7 +11,9 @@ import java.util.regex.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import thmp.parse.InitParseWithResources;
 import thmp.search.TheoremGet.ContextRelationVecPair;
+import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 import static thmp.utils.MathLinkUtils.evaluateWLCommand;
 
@@ -25,8 +27,9 @@ public class ContextSearch implements Searcher<Map<Integer, Integer>>{
 	
 	//private static final int LIST_INDEX_SHIFT = 1;
 	//private static final Pattern BRACKETS_PATTERN = WordForms.BRACKETS_PATTERN();
-	private static final boolean DEBUG = false;
+	private static final boolean DEBUG = FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : true;
 	private static final Logger logger = LogManager.getLogger(ContextSearch.class);
+	private static final int CONTEXT_MATCH_DEFAULT = 2;
 	
 	private QueryVecContainer<Map<Integer, Integer>> searcherState;
 	
@@ -102,36 +105,49 @@ public class ContextSearch implements Searcher<Map<Integer, Integer>>{
 			return nearestThmIndexList;
 		}
 		System.out.println("ContextSearch-selected thm indices: " + nearestThmIndexList);
-		
+		if(DEBUG) {
+			System.out.println("ContextSearch - queryContextVecMap " +queryContextVecMap);
+		}
 		Map<Integer, List<Integer>> thmVecsTMap = new TreeMap<Integer, List<Integer>>(new thmp.utils.DataUtility.ReverseIntComparator());
-		List<Map<Integer, Integer>> nearestThmVecMapList = new ArrayList<Map<Integer, Integer>>();
+		//List<Map<Integer, Integer>> nearestThmVecMapList = new ArrayList<Map<Integer, Integer>>();
 		//extract context vec maps for each thm
 		for(int i = 0; i < nearestThmIndexListSz; i++){
 			int thmIndex = nearestThmIndexList.get(i);
 			ContextRelationVecPair vecPair = TheoremGet.getContextRelationVecFromIndex(thmIndex);
 			Map<Integer, Integer> curThmVecMap = vecPair.contextVecMap();
-			
-			nearestThmVecMapList.add(curThmVecMap);
+			if(DEBUG) System.out.println("ContextSearch - index/curThmVecMap " +thmIndex + " " +curThmVecMap);
+			//nearestThmVecMapList.add(curThmVecMap);
 			//look for entries that coincide with queryContextVecMap, the ordering in nearestThmVecMapList
 			//should be same as the ordering returned by other search methods
 			int numCoinciding = 0;
 			for(Map.Entry<Integer, Integer> queryVecEntry : queryContextVecMap.entrySet()){
-				int wordIndex = queryVecEntry.getKey();
+				int wordIndex = queryVecEntry.getKey();				
 				Integer curThmVecMapEntryVal = curThmVecMap.get(wordIndex);
+				Integer queryVecMapVal = queryVecEntry.getValue();
 				//System.out.println("query vec key/val: " + wordIndex + ",  " +queryVecEntry.getValue() 
 					//	+ ". curThmVecMapEntryVal " + curThmVecMapEntryVal + " equals: " +(queryVecEntry.getValue().equals(curThmVecMapEntryVal)));
-				final int contextCoincidingAddition = 2;
-				if(queryVecEntry.getValue().equals(curThmVecMapEntryVal)){
+				//final int contextCoincidingAddition = ;
+				//use .equals(), and not simple reference equality.
+				if(queryVecMapVal.equals(curThmVecMapEntryVal)){
 					if(curThmVecMapEntryVal < 0){
-						//if only agree up to being the same universal or existential qualifier
+						//if only agree up to being the same universal or existential qualifier,
+						//which is the case if < 0. Move to global constant!
 						numCoinciding++;					
 					}else{
-						numCoinciding += contextCoincidingAddition;
+						numCoinciding += CONTEXT_MATCH_DEFAULT;
 					}
-				}				
+				}else{
+					//modifies some other word, e.g. unbounded operator, vs unbounded resolution.
+					if(queryVecMapVal >= 0 && null != curThmVecMapEntryVal && curThmVecMapEntryVal > 0){
+						//numCoinciding -= CONTEXT_MATCH_DEFAULT;
+						numCoinciding--;
+					}
+				}
 			}
-			//System.out.println("ContextSearch - curThmVecMap "+ curThmVecMap);
-			System.out.println("ContextSearch - numCoinciding " + numCoinciding);
+			System.out.println("ContextSearch - index / numCoinciding " + thmIndex + " " + numCoinciding);
+			if(numCoinciding < 0){
+				continue;
+			}
 			List<Integer> curList = thmVecsTMap.get(numCoinciding);
 			if(null != curList){
 				curList.add(thmIndex);
@@ -141,7 +157,7 @@ public class ContextSearch implements Searcher<Map<Integer, Integer>>{
 				thmVecsTMap.put(numCoinciding, curList);
 			}
 		}		
-		//coalesce map entries into one list
+		//coalesce map entries into one list. Iterator respects order.
 		List<Integer> nearestVecList = new ArrayList<Integer>();
 		for(Map.Entry<Integer, List<Integer>> entry : thmVecsTMap.entrySet()){
 			nearestVecList.addAll(entry.getValue());			
@@ -151,7 +167,7 @@ public class ContextSearch implements Searcher<Map<Integer, Integer>>{
 		
 		for(int i = 0; i < nearestVecList.size(); i++){
 			int thmIndex = nearestVecList.get(i);
-			System.out.println(ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex));
+			System.out.println(thmIndex + " " + ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex));
 		}
 		
 		if(!nearestVecList.isEmpty()){

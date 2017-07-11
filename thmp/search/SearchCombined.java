@@ -37,7 +37,7 @@ import thmp.utils.WordForms;
 public class SearchCombined {
 
 	private static final int NUM_NEAREST_SVD = 100;
-	protected static final int NUM_NEAREST = 15;
+	protected static final int NUM_NEAREST = 30;
 	//combined number of vectors to take from search results of
 	//svd/nearest and intersection
 	//protected static final int NUM_COMMON_VECS = 4;
@@ -371,7 +371,9 @@ public class SearchCombined {
 	 */
 	public static <T> List<Integer> searchVecWithTuple(String queryStr, List<Integer> thmCandidateList, int tupleSz,
 			Searcher<T> searcher, SearchState searchState) {
-		
+		if(0 == tupleSz){
+			return thmCandidateList;
+		}
 		int commonVecsLen = thmCandidateList.size();
 		int numTupleSzInCommonVecsLen = commonVecsLen/tupleSz;
 		List<Integer> reorderedList = new ArrayList<Integer>();

@@ -108,13 +108,39 @@ public class SearchIntersection {
 			return spanScore;
 		}
 
+		@Override
 		public int compareTo(ThmSpanPair other) {
-			// return this.spanScore > other.spanScore ? 1 : (this.spanScore <
-			// other.spanScore ? -1 : 0);
 			// reverse because treemap naturally has ascending order
 			return this.spanScore > other.spanScore ? -1
-					: (this.spanScore < other.spanScore ? 1 : (this == other ? 0 : -1));
+					//: (this.spanScore < other.spanScore ? 1 : (this == other ? 0 : -1));
+					//need explicit equals, so not all instances are recognized to be the same in map.
+					: (this.spanScore < other.spanScore ? 1 : (this.equals(other) ? 0 : -1));
 		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + spanScore;
+			result = prime * result + thmIndex;
+			return result;
+		}
+		
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (!(obj instanceof ThmSpanPair)){
+				return false;
+			}
+			ThmSpanPair other = (ThmSpanPair) obj;
+			if (spanScore != other.spanScore)
+				return false;
+			if (thmIndex != other.thmIndex)
+				return false;
+			return true;
+		}
+		
 	}
 	
 	/**
@@ -372,51 +398,90 @@ public class SearchIntersection {
 		// System.out.println("AFTER " + g.equals(scoreThmMMap));
 		searchState.addThmSpan(thmSpanMap);
 		searchState.setThmScoreMap(thmScoreMap);
-
+		
 		// new map to record of the final scores (this obliterates scoreThmMMap)
 		// make values into pairs of thms with their span scores
+		int counter = numHighest;
 		TreeMultimap<Integer, ThmSpanPair> scoreThmMMap2 = TreeMultimap.create();
-		for (Map.Entry<Integer, Integer> thmScoreEntry : thmScoreMap.entrySet()) {
+		Set<Integer> descendingKeySet = scoreThmMMap.asMap().descendingKeySet();
+		Iterator<Integer> descendingKeySetIter = descendingKeySet.iterator();
+		while(descendingKeySetIter.hasNext()){
+			int curScore = descendingKeySetIter.next();
+			Collection<Integer> thmIndices = scoreThmMMap.get(curScore);
+			for(int thmIndex : thmIndices){
+				if(counter-- < 1){
+					break;
+				}
+				//int thmIndex = thmScoreEntry.getKey();
+				//int thmScore = thmScoreEntry.getValue();
+				int spanScore = thmSpanMap.get(thmIndex);
+				scoreThmMMap2.put(curScore, new ThmSpanPair(thmIndex, spanScore));
+			}
+		}		
+		/*for (Map.Entry<Integer, Integer> thmScoreEntry : thmScoreMap.entrySet()) {
+			if(counter-- < 1){
+				break;
+			}
 			int thmIndex = thmScoreEntry.getKey();
 			int thmScore = thmScoreEntry.getValue();
 			int spanScore = thmSpanMap.get(thmIndex);
 			scoreThmMMap2.put(thmScore, new ThmSpanPair(thmIndex, spanScore));
-		}
+		}*/
+		System.out.println("SearchIntersection - scoreThmMMap: "+scoreThmMMap2);
+		
 		List<Integer> highestThmList = new ArrayList<Integer>();
-		// get the thms having the highest k scores. Keys are scores.
-		// ****** does this order the value set accordingly as well? <--it
-		// should
-		NavigableMap<Integer, Collection<ThmSpanPair>> thmMap = scoreThmMMap2.asMap().descendingMap();
-
+		// get the thms having the highest k scores. Keys are scores.		
+		NavigableMap<Integer, Collection<ThmSpanPair>> scoreThmDescMMap = scoreThmMMap2.asMap().descendingMap();
+		
 		// pick up numHighest number of unique thms
 		Set<Integer> pickedThmSet = new HashSet<Integer>();
-
 		// list to track the top entries
 		//int counter = numHighest * 2;
-		int counter = numHighest;
-		for (Entry<Integer, Collection<ThmSpanPair>> entry : thmMap.entrySet()) {
+		counter = numHighest;
+		Searcher<BigInteger> relationSearcher = new RelationalSearch();
+		Searcher<Map<Integer, Integer>> contextSearcher = new ContextSearch();	
+		for (Entry<Integer, Collection<ThmSpanPair>> entry : scoreThmDescMMap.entrySet()) {			
+			List<Integer> tempHighestThmList = new ArrayList<Integer>();
 			for (ThmSpanPair pair : entry.getValue()) {
 				Integer thmIndex = pair.thmIndex;
-				if (counter == 0)
+				if (counter-- < 1){
 					break;
+				}
 				// avoid duplicates, since the scoreThmMMap leaves outdated
 				// score-thm pair in map, rather than deleting them, after
 				// updating score
-				if (pickedThmSet.contains(thmIndex))
+				if (pickedThmSet.contains(thmIndex)){
 					continue;
+				}
 				pickedThmSet.add(thmIndex);
-				highestThmList.add(thmIndex);
-				counter--;
+				///highestThmList.add(thmIndex);
+				tempHighestThmList.add(thmIndex);
+				//counter--;
 				if (DEBUG) {
 					ThmHypPair thmHypPair = ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex);
 					System.out.println(
-							"thm Score " + entry.getKey() + " thmIndex " + thmIndex + " thm " 
+							"ThmScore " + entry.getKey() + " Span: "+pair.spanScore + " thmIndex " + thmIndex + " thm " 
 									+ thmHypPair.thmStr() + " HYP " + thmHypPair.hypStr());
 				}
 			}
+			int tupleSz = tempHighestThmList.size();	
+			if(0 == tupleSz){
+				continue;
+			}
+			//combine with ranking from relational search, reorganize within each tuple
+			//of fixed size. Try relation search first, then context search.
+			if(searchRelationalBool){				
+				//bestCommonVecsList = searchVecWithTuple(input, bestCommonVecsList, tupleSz, searcher, searchState);
+				tempHighestThmList = SearchCombined.searchVecWithTuple(input, tempHighestThmList, tupleSz, relationSearcher, searchState);					
+			}			
+			// re-order top entries based on context search, if enabled
+			if (contextSearchBool) {						
+				tempHighestThmList = SearchCombined.searchVecWithTuple(input, tempHighestThmList, tupleSz, contextSearcher, searchState);
+			}
+			highestThmList.addAll(tempHighestThmList);
 		}		
-		int tupleSz = SearchCombined.CONTEXT_SEARCH_TUPLE_SIZE;
-		//combine with ranking from relational search, reorganize within each tuple
+		/*int tupleSz = SearchCombined.CONTEXT_SEARCH_TUPLE_SIZE;
+		 //combine with ranking from relational search, reorganize within each tuple
 		//of fixed size. Try relation search first, then context search.
 		if(searchRelationalBool){
 			Searcher<BigInteger> searcher = new RelationalSearch();
@@ -428,7 +493,7 @@ public class SearchIntersection {
 		if (contextSearchBool) {
 			Searcher<Map<Integer, Integer>> searcher = new ContextSearch();			
 			highestThmList = SearchCombined.searchVecWithTuple(input, highestThmList, tupleSz, searcher, searchState);
-		}
+		}*/
 		logger.info("Highest thm list obtained, intersection search done!");
 		searchState.set_intersectionVecList(highestThmList);
 		return searchState;
@@ -556,11 +621,44 @@ public class SearchIntersection {
 			spanScoreThmMMap.put(thmWordsSetSize, thmIndex);
 		}
 		searchState.setLargestWordSpan(largestWordSpan);
+		TreeMultimap<Integer,Integer> tempScoreThmMMap = TreeMultimap.create();
 		
-		// add bonus proportional to the avg word score (not span score)
-		NavigableMap<Integer, Collection<Integer>> orderedSpanScoreMMap = spanScoreThmMMap.asMap().descendingMap();
-
+		Set<Integer> scoreThmMMapKeySet = scoreThmMMap.asMap().descendingKeySet();
+		Iterator<Integer> scoreThmMMapKeySetIter = scoreThmMMapKeySet.iterator();
 		int counter = numHighest;
+		whileLoop: while(scoreThmMMapKeySetIter.hasNext()){
+			int curScore = scoreThmMMapKeySetIter.next();
+			Set<Integer> thmIndexSet = scoreThmMMap.get(curScore);
+			for(int thmIndex : thmIndexSet){				
+				if(counter-- < 1){
+					break whileLoop;
+				}
+				int thmSpanScore = thmSpanMap.get(thmIndex);
+				//int prevScore = thmScoreMap.get(thmIndex);
+				
+				//int bonusScore = (int) (avgWordScore / ((double) spanCounter * 2));
+				int bonusScore = thmSpanScore*2;
+				//bonusScore = bonusScore == 0 ? 1 : bonusScore;
+				int newThmScore = curScore + bonusScore;
+				
+				tempScoreThmMMap.put(newThmScore, thmIndex);
+				thmScoreMap.put(thmIndex, newThmScore);
+				if (DEBUG) {
+					ThmHypPair thmHypPair = ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex);
+					String thm = thmHypPair.thmStr();
+					String hyp = thmHypPair.hypStr();
+					System.out.println("Adding bonus " + bonusScore + ". num words hit: " + thmSpanScore
+							+ ". newThmScore: " + newThmScore + ". thm: " + thm + " HYP "+ hyp);
+					// System.out.println("PREV SCORE " + prevScore + " NEW
+					// SCORE " + newThmScore + thm);
+				}
+			}
+			
+		}		
+		scoreThmMMap.putAll(tempScoreThmMMap);
+		//System.out.println("SearchIntersection - tempScoreThmMMap "+tempScoreThmMMap);
+		// add bonus proportional to the avg word score (not span score)
+		/*NavigableMap<Integer, Collection<Integer>> orderedSpanScoreMMap = spanScoreThmMMap.asMap().descendingMap();		
 		// counts which span level is being iterated over currently
 		int spanCounter = 1;
 		for (Entry<Integer, Collection<Integer>> entry : orderedSpanScoreMMap.entrySet()) {
@@ -588,7 +686,7 @@ public class SearchIntersection {
 				counter--;
 			}
 			spanCounter++;
-		}
+		}*/
 	}
 
 	/**
@@ -725,7 +823,6 @@ public class SearchIntersection {
 		}		
 		addRelatedWordsThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, wordIndexInThm, tokenType, scoreAdded,
 				relatedWordsList);
-
 		return scoreAdded;
 	}
 
@@ -832,8 +929,7 @@ public class SearchIntersection {
 				// highestThms = ContextSearch.contextSearch(thm, highestThms);
 			}
 
-			SearchState searchState = new SearchState();
-			
+			SearchState searchState = new SearchState();		
 			// user's input overrides default num
 			StringBuilder inputSB = new StringBuilder();
 			int numHighest = SearchCombined.getNumCommonVecs(inputSB, thm);
@@ -854,7 +950,7 @@ public class SearchIntersection {
 			int counter = 0;
 			System.out.println("~ SEARCH RESULTS ~");
 			for (Integer thmIndex : highestThms) {
-				System.out.println(counter++ + " ++ " + ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex));
+				System.out.println(counter++ + " ++ " + thmIndex + " " + ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex));
 			}
 		}
 		sc.close();
