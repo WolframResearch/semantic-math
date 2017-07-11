@@ -19,6 +19,10 @@ import thmp.utils.FileUtils;
 /**
  * Build maps that are comprehensive and representative,
  * by calling eg methods in ThmWordsMaps, NGramMaps, etc.
+ * NOTE: some methods are commented out at certain times,
+ * not because they are never used, but because they are 
+ * not invoked in a particular run. Could change to arg
+ * supplied to main().
  * 
  * @author yihed
  *
@@ -36,7 +40,8 @@ public class CreateRepresentativeMaps {
 		//String peFilePath = "src/thmp/data/parsedExpressionList.dat";
 		List<String> thmList = extractThmListFromPEList(peFilePath);
 		//System.out.println("thmLIst "+thmList);
-		buildAndSerialize23GramMaps(thmList);
+		buildAndSerialize2GramMaps(thmList);
+		if(false) buildAndSerialize23GramMaps(thmList);
 		if(false) buildAndSerializeTrueFluffWordsSet(thmList);
 	}	
 	
@@ -62,7 +67,6 @@ public class CreateRepresentativeMaps {
 	 * with respect to frequency.
 	 */
 	private static Map<String, Integer> createDocWordFreqMap(List<String> thmList){
-		//
 		return CollectThm.ThmWordsMaps.buildDocWordsFreqMap(thmList);
 	}
 	

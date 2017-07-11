@@ -47,7 +47,7 @@ public class WordForms {
 	private static final Pattern WHITE_NONEMPTY_SPACE_PATTERN = Pattern.compile("\\s+");
 	private static final Pattern BRACES_PATTERN = Pattern.compile("(\\{|\\}|\\[|\\])");
 	
-	public static final Pattern SPECIAL_CHARS_PATTERN = Pattern.compile(".*[-\\{\\[\\)\\(\\}\\]$\\\\%/|*.;,:_~!+^&\"\'+<>=#].*");
+	public static final Pattern SPECIAL_CHARS_PATTERN = Pattern.compile(".*[-\\{\\[\\)\\(\\}\\]$\\\\%/|@*.;,:_~!+^&\"\'`+<>=#].*");
 	public static final Pattern ALPHABET_PATTERN = Pattern.compile("[A-Za-z]");
 	/*Used to remove specical characters from words*/
 	private static final Pattern SPECIAL_CHARS_AROUND_WORD_PATTERN 
@@ -85,7 +85,8 @@ public class WordForms {
 	//*don't* put "of" here, will interfere with 3 gram collection
 	private static final String FLUFF_WORDS_SMALL = "a|the|tex|of|and|on|let|lemma|for|to|that|with|is|be|are|there|by"
 			+ "|any|as|if|we|suppose|then|which|in|from|this|assume|this|have|just|may|an|every|it|between|given|itself|has"
-			+ "|more|where|but";
+			+ "|more|where|but|each|some|et|these|no|all|its|such|can|one|que|de|thus|via|une|only|also|whenever|other|equal|last|"
+			+ "under|both|even|non|always|over|not|so|two|or|le|another|obvious|after|same|est|whose|which|thm|following";
 	private static final Set<String> FLUFF_WORDS_SMALL_SET;
 	
 	private static final Set<String> freqWordsSet; 
