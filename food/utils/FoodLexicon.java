@@ -11,8 +11,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+
 import food.parse.FoodParseMetadata;
 import thmp.utils.FileUtils;
+import thmp.utils.WordForms;
 
 /**
  * Process raw data, and build lexicons for words and N grams,
@@ -21,7 +25,8 @@ import thmp.utils.FileUtils;
  *
  */
 public class FoodLexicon {
-
+	
+	/***These are from curated lists****/
 	private static final Map<String, String> FOOD_MAP;
 	private static final Map<String, String> COOKING_ACTION_MAP;
 	private static final Map<String, String> EQUIPMENT_MAP;
@@ -30,7 +35,11 @@ public class FoodLexicon {
 	//All children originate from one Node.
 	private static final FoodMapNode FOOD_TRIE;
 	private static final FoodMapNode COOKING_ACTION_TRIE;	
+	/*************/
 	
+	//additional food that don't appear in curated lists.
+	private static final Multimap<String, String> EXTRA_FOOD_LEXICON_MMAP;
+		
 	static{
 		//deserialize into immutable maps.
 		//Paths need to be stored in some meta file. Deserialize from file.
@@ -43,6 +52,9 @@ public class FoodLexicon {
 		FOOD_MAP = mapList.get(0);
 		COOKING_ACTION_MAP = mapList.get(1);	
 		EQUIPMENT_MAP = mapList.get(2);
+		
+		String mapInputPath = "src/thmp/data/extraFoodLexicon.txt";
+		EXTRA_FOOD_LEXICON_MMAP = deserializeAdditionalFoodLexiconMap(mapInputPath);
 	}
 	
 	/**
@@ -131,7 +143,12 @@ public class FoodLexicon {
 			boolean isValidEnding = curNode.isValid;
 			for(int i = curIndex; i < inputArLen; i++){
 				String curWord = inputAr[i];				
-				curNode = curNode.getChildNode(curWord) ;
+				FoodMapNode tempNode = curNode.getChildNode(curWord);				
+				if(null == tempNode){
+					curNode = curNode.getChildNode(WordForms.getSingularForm(curWord));	
+				}else{
+					curNode = tempNode;
+				}
 				if(null == curNode){
 					if(!isValidEnding){
 						return 0;
@@ -209,6 +226,36 @@ public class FoodLexicon {
 		return mapList;		
 	}
 	
+	/**
+	 * Read additional food lexicon map. 
+	 * @return
+	 */
+	private static Multimap<String, String> deserializeAdditionalFoodLexiconMap(String mapInputPath){
+		Multimap<String, String> additionalFoodMMap = ArrayListMultimap.create();
+		try{
+			FileReader fileReader = new FileReader(new File(mapInputPath));
+			BufferedReader bReader = new BufferedReader(fileReader);
+			try{
+				//fileReader = new FileReader(new File(mapInputPath));
+				//bReader = new BufferedReader(fileReader);
+				String line;
+				while((line=bReader.readLine()) != null){
+					String[] lineAr = WordForms.getWhiteNonEmptySpaceNotAllPattern().split(line);
+					if(lineAr.length < 2){
+						continue;
+					}			
+					additionalFoodMMap.put(lineAr[0], lineAr[1]);			
+				}
+			}finally{
+				bReader.close();
+				fileReader.close();
+			}
+		}catch(IOException e){
+			throw new IllegalStateException(e);
+		}
+		return additionalFoodMMap;
+	}
+	
 	public static FoodMapNode foodTrie(){
 		return FOOD_TRIE;
 	}
@@ -232,6 +279,14 @@ public class FoodLexicon {
 		return EQUIPMENT_MAP;
 	}
 
+	/**
+	 * 
+	 * @return
+	 */
+	public static Multimap<String, String> additionalFoodLexiconMMap(){
+		return EXTRA_FOOD_LEXICON_MMAP;
+	}
+	
 	public static void main(String[] args) throws IOException{
 		
 		boolean build = false;

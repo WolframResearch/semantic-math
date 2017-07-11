@@ -873,7 +873,7 @@ public class ParseToWLTree{
 	 */
 	public static boolean collectCommandsDfs(Multimap<ParseStructType, ParsedPair> partsMMap, ParseStruct curParseStruct,
 			Struct struct, StringBuilder parsedSB, 
-			Map<Integer, Integer> curStructContextVecMap, boolean shouldPrint, boolean contextVecConstructed,
+			Map<Integer, Integer> curStructContextVecMap, boolean contextVecConstructed,
 			ParseState parseState) {
 		//don't append if already incorporated into a higher command
 		//System.out.print(struct.WLCommandStrVisitedCount());
@@ -913,7 +913,7 @@ public class ParseToWLTree{
 			//collects the built WLCommand strings.
 			contextVecConstructed = appendWLCommandStr(struct, curParseStruct, parsedSB, partsMMap, curStructContextVecMap,
 					contextVecConstructed, parseState);
-			shouldPrint = false;			
+			//shouldPrint = false;			
 			//reset WLCommandStr back to null, so next 
 			//dfs path can create it from scratch
 			//no need to do so as wrapper instances are created anew each dfs run
@@ -924,12 +924,12 @@ public class ParseToWLTree{
 		} 
 		if (struct.isStructA()) {
 			
-			if(shouldPrint) parsedSB.append(struct.type());					
-			if(shouldPrint) parsedSB.append("[");
+			/*if(shouldPrint) parsedSB.append(struct.type());					
+			if(shouldPrint) parsedSB.append("[");*/
 			
 			if (struct.prev1NodeType().isTypeStruct()) {
 				contextVecConstructed = collectCommandsDfs(partsMMap, curParseStruct,
-						(Struct) struct.prev1(), parsedSB, curStructContextVecMap, shouldPrint,
+						(Struct) struct.prev1(), parsedSB, curStructContextVecMap,
 						contextVecConstructed, parseState);
 			}
 
@@ -938,13 +938,13 @@ public class ParseToWLTree{
 			if (((StructA<?, ?>) struct).prev2NodeType().isTypeStruct()) {
 				// avoid printing is[is], ie case when parent has same type as
 				// child
-				if(shouldPrint) parsedSB.append(", ");
+				//if(shouldPrint) parsedSB.append(", ");
 				contextVecConstructed = collectCommandsDfs(partsMMap, curParseStruct, 
-						(Struct) struct.prev2(), parsedSB, curStructContextVecMap, shouldPrint,
+						(Struct) struct.prev2(), parsedSB, curStructContextVecMap,
 						contextVecConstructed, parseState);
 			}
 
-			if (struct.prev1NodeType().equals(NodeType.STR)) {
+			/*if (struct.prev1NodeType().equals(NodeType.STR)) {
 				if(shouldPrint) parsedSB.append(struct.prev1());
 			}
 			if (struct.prev2NodeType().equals(NodeType.STR)) {
@@ -953,11 +953,10 @@ public class ParseToWLTree{
 				}
 				if(shouldPrint) parsedSB.append(struct.prev2());
 			}
-
-			if(shouldPrint) parsedSB.append("]");
+			if(shouldPrint) parsedSB.append("]");*/
 		} else {/*StructH in this case*/
 
-			if(shouldPrint) parsedSB.append(struct.toString());
+			//if(shouldPrint) parsedSB.append(struct.toString());
 
 			List<Struct> children = struct.children();
 			List<ChildRelation> childRelation = struct.childRelationList();
@@ -966,16 +965,15 @@ public class ParseToWLTree{
 				return contextVecConstructed;
 			}
 			
-			if(shouldPrint) parsedSB.append("[");
+			//if(shouldPrint) parsedSB.append("[");
 
 			for (int i = 0; i < children.size(); i++) {
-				if(shouldPrint) parsedSB.append(childRelation.get(i) + " ");
-
+				//if(shouldPrint) parsedSB.append(childRelation.get(i) + " ");
 				contextVecConstructed = collectCommandsDfs(partsMMap, curParseStruct,
-						children.get(i), parsedSB, curStructContextVecMap, shouldPrint,
+						children.get(i), parsedSB, curStructContextVecMap,
 						contextVecConstructed, parseState);
 			}
-			if(shouldPrint) parsedSB.append("]");
+			//if(shouldPrint) parsedSB.append("]");
 		}
 		return contextVecConstructed;
 	}

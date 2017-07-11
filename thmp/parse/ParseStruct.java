@@ -31,6 +31,7 @@ public class ParseStruct implements Serializable{
 	private List<ParseStruct> childrenParseStructList;
 
 	//structs on this layer of the tree. Consists of non-conflicting (non-overalapping) WLCommmands
+	//keys are e.g. "STM", "HYP", values are objects that encapsulate the fulfilled command.
 	private Multimap<ParseStructType, WLCommandWrapper> wrapperMMap;
 	
 	//keep track of the trigger words that appear in WLCommands 
@@ -47,6 +48,8 @@ public class ParseStruct implements Serializable{
 	String WLCommandStr;
 	
 	/**
+	 * Fulfilled commands on this layer of the tree. Consists of non-conflicting (non-overalapping) WLCommmands
+	 *	keys are e.g. "STM", "HYP", values are objects that encapsulate the fulfilled command.
 	 * @return the structList, list of structs associated with this 
 	 * layer.
 	 */

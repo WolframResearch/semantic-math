@@ -1,0 +1,3 @@
+strip ent
+slice ent
+about adj

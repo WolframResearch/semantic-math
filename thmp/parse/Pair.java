@@ -81,11 +81,11 @@ public class Pair {
 	@Override
 	public String toString(){
 		StringBuilder sb = new StringBuilder(30);
-		sb.append("[").append(this.word).append(", ").append(this.pos).append(", ").append(noTexTokenListIndex);
-		
+		sb.append("[").append(this.word).append(", ").append(this.pos);		
 		if(null != extraPosSet){
 			sb.append(extraPosSet);
-		}
+		}		
+		sb.append(", ").append(noTexTokenListIndex);
 		sb.append("]");
 		return sb.toString();
 		

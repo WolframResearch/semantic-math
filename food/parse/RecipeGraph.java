@@ -139,10 +139,6 @@ public class RecipeGraph {
 		List<Struct> unknownStructList = new ArrayList<Struct>();
 		List<FoodStruct> actionSourceList = new ArrayList<FoodStruct>(); 
 		List<FoodStruct> actionTargetList = new ArrayList<FoodStruct>();
-		//tokens to sort through various struct's.
-		//List<FoodToken> foodTokenList = new ArrayList<FoodToken>();
-		
-		//Iterator<FoodState> statesListIter = currentStateList.iterator();
 		/*if(posList.get(triggerTermIndex).posTermStruct().nameStr().equals("combine")){
 			System.out.println("RecipeGraph combine");
 		}*/
@@ -171,6 +167,8 @@ public class RecipeGraph {
 		//to go along with edge, could be e.g. "until warm", "in oven"
 		List<Struct> edgeQualifierStructList = new ArrayList<Struct>();				
 		Struct actionStruct;
+		//whether lastFoodState has been added to knownStateList.
+		boolean lastStateUsed = false;
 		//need to check if -1, or some default value!		
 		if(triggerTermIndex < 0){
 			// improve!
@@ -196,6 +194,7 @@ public class RecipeGraph {
 					//need to update if that's no longer true.
 					currentStateList.remove(currentStateListSz-1);
 				}
+				lastStateUsed = true;
 				for(Struct childStruct : actionStruct.children()){
 					edgeQualifierStructList.add(childStruct);
 				}
@@ -204,17 +203,19 @@ public class RecipeGraph {
 		List<Struct> productStructList = new ArrayList<Struct>();
 		List<Struct> notKnownStructList = new ArrayList<Struct>();
 		//construct edge from trigger term and unknown structs
+		//System.out.println("unknownStructList "+unknownStructList);
 		for(Struct struct : unknownStructList){
 			//decide whether utensil, or appliance!
 			String structName = struct.nameStr();
 			if(isAppliance(structName)){				
 				edgeQualifierStructList.add(struct);
 			}else if(isFood(structName)){
-				addStructToList(knownStateList, productStructList, struct);
+				addStructToList(knownStateList, productStructList, struct, lastStateUsed);
 			}else{
-				addStructToList(knownStateList, notKnownStructList, struct);
+				addStructToList(knownStateList, notKnownStructList, struct, lastStateUsed);
 			}
 		}
+		//System.out.println("RecipeGraph - knownStateList "+knownStateList);
 		//add not known for now, refine
 		//need at least one product, or else should use substitute list, rather than 
 		//the actual currentStateList
@@ -253,15 +254,17 @@ public class RecipeGraph {
 	 * @param knownStateList
 	 * @param productStructList
 	 * @param struct
+	 * @param lastStateUsed Whether lastFoodState has been added in building this edge step.
 	 */
-	private void addStructToList(List<FoodState> knownStateList, List<Struct> productStructList, Struct struct) {
+	private void addStructToList(List<FoodState> knownStateList, List<Struct> productStructList, Struct struct,
+			boolean lastStateUsed) {
 		boolean structAdded = false;
 		//if(true) throw new RuntimeException();
 		if(struct.isFoodStruct()){
 			FoodStruct foodStruct = (FoodStruct)struct;
 			//e.g. "wash veggies", "bake batter'
-			if(foodStruct.foodStructType() == FoodStructType.SUBJECT
-					|| knownStateList.isEmpty()){		
+			if(!lastStateUsed && (foodStruct.foodStructType() == FoodStructType.SUBJECT
+					|| knownStateList.isEmpty())){	
 				//can't set struct, as will affect edge formation.<--not if haven't formed Expr's.
 				//need to avoid name clashes, in case struct has same name as some previous one.
 				lastFoodState.setFoodStruct(foodStruct);
@@ -271,7 +274,7 @@ public class RecipeGraph {
 					//need to update if that's no longer true.
 					currentStateList.remove(currentStateListSz-1);
 				}
-				knownStateList.add(lastFoodState);
+				knownStateList.add(lastFoodState);				
 				structAdded = true;
 			}
 		}

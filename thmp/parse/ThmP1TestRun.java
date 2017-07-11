@@ -822,6 +822,12 @@ public class ThmP1TestRun {
 			st = "If $h \\in H^1$ is outer then as an unbounded operator $h$ has dense range and trivial kernel";
 			st = "Let $A$ be a maximal subdiagonal algebra. If $h \\ in H^1$ is outer then as an unbounded operator $h$ has dense range and trivial kernel. Thus  $h = u |h|$ for a unitary $u \\ in M$.   Also, $ \\ Phi(h)$ has dense range and trivial kernel.";
 			st = "Suppose that the sequence~\\eqref{unbd-1} is an admissible unbounded resolution of length $n>1$ of the projection $P_ 0$. Then the following assertions hold.";
+			st = "spread chily in single layer in baking dish "; //spread chilly in single layer in baking dish
+			st = "trim all fat from meat and cut into pencil-thing strips";
+			st = "assemble tacos around the outer rim of the pizza"; //use
+			st = "fill the middle of the pizza with guacomole";
+			st = "top on green cilantro";
+			st = "cut into eight slices";
 			
 			//st = " \\[ \\ begin{array}{l}  \\ frac{1}{\\ eta_ 1(R^1_T)}  \\ int_{R^1_T} \\ left(\\ int_{H_ 1/H_1\\ cap \\ Gamma_ 1} f(gh \\ Gamma_ 1)\\; d \\ nu_ 1(\\ dot{h})\\ right) \\,d \\ eta_ 1(\\ dot{g}) \\ \\[7pt] \\ qquad \\ \\ qquad =  (1/2)\\ int_{{\\ rm O}(n)} dk \\ cdot \\ int_{H_ 1/H_1\\ cap \\ Gamma_ 1}  d \\ nu_ 1(\\ dot{h})\\; {\\ scriptstyle \\ times} \\ \\[3pt] \\ qquad \\ \\ qquad \\ \\ qquad {\\ scriptstyle \\ times}\\;   \\ left (\\ frac{1}{\\ ell(D^1_T)} \\ int_{(\\ mbox{\\ boldmath{$ \\ scriptstyle t$}},\\ mbox{\\ boldmath{$ \\ scriptstyle x$}})\\ in D^1_T}  f(k \\ Psi(\\ mbox{\\ boldmath{$t$}},\\ mbox{\\ boldmath{$x$}})\\ Gamma_ 1)\\; d \\ mbox{\\ boldmath{$t$}}\\, d \\ mbox{\\ boldmath{$x$}} \\ right).  \\end{array} \\]";
 			//st = "Let $p_1,\\dots,p_r$ be the preimages under $w$"; 			

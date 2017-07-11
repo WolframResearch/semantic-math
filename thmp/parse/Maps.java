@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -52,10 +53,6 @@ import java.util.Map.Entry;
 
 public class Maps {
 
-	// structMap for the second run, grammars that shouldn't be
-	// used in first run, like ent_verb: there exists
-	protected static Map<String, String> structMap2;
-	
 	private static final Logger logger = LogManager.getLogger(Maps.class);
 	// map for composite adjectives, eg positive semidefinite
 	// value is regex string to be matched
@@ -189,7 +186,8 @@ public class Maps {
 		private static final boolean FOOD = FileUtils.isFoodParse();
 		//deliberately not final
 		private static FoodMapNode FOOD_TRIE ;
-		private static FoodMapNode COOKING_ACTION_TRIE ;
+		private static FoodMapNode COOKING_ACTION_TRIE;
+		private static Multimap<String, String> extraFoodLexiconMMap;
 
 		static{
 			
@@ -259,6 +257,7 @@ public class Maps {
 			if(FOOD){
 				FOOD_TRIE = FoodLexicon.foodTrie();
 				COOKING_ACTION_TRIE = FoodLexicon.cookingActionTrie();
+				extraFoodLexiconMMap = FoodLexicon.additionalFoodLexiconMMap();
 			}
 		}
 		
@@ -266,6 +265,17 @@ public class Maps {
 		public static void initialize(){			
 		}
 		
+		/**
+		 * Update posList with additional food pos.
+		 * @param posList
+		 */
+		public static Collection<String> updateWithAdditionalFoodPos(String word){
+			Collection<String> col = extraFoodLexiconMMap.get(word);
+			if(col.isEmpty()){
+				col = extraFoodLexiconMMap.get(WordForms.getSingularForm(word));
+			}
+			return col;		
+		}
 		
 		/**
 		 * Can be used to fend off some parse combinatorial explosion.
@@ -279,8 +289,7 @@ public class Maps {
 			negativePosMMap.put("under", "adverb");
 			negativePosMMap.put("let", "verb");
 			negativePosMMap.put("let", "hyp");
-			negativePosMMap.put("be", "verb");
-			
+			negativePosMMap.put("be", "verb");			
 		}
 
 		/**
@@ -989,11 +998,7 @@ public class Maps {
 			//structMap.put("adverb_adj", new Rule("adj", .7)); /// *******
 			structMap.put("adverb_verbphrase", new Rule("assert", 1));
 			 structMap.put("qualifier_prep", new Rule("newchild", "qualifier", .8)); //could also be adverb //HERE
-			
-			// grammar rules for 2nd run <-- not used!
-			structMap2 = new HashMap<String, String>();
-			structMap2.put("ent_verb", "assert");
-			structMap2.put("ent_verb", "assert");
+		
 
 			// probability map for pair constructs.
 			// need to gather/compute prob from labeled data

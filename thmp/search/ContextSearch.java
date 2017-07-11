@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.TreeMap;
-import java.util.regex.Pattern;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -14,8 +13,6 @@ import org.apache.logging.log4j.Logger;
 import thmp.parse.InitParseWithResources;
 import thmp.search.TheoremGet.ContextRelationVecPair;
 import thmp.utils.FileUtils;
-import thmp.utils.WordForms;
-import static thmp.utils.MathLinkUtils.evaluateWLCommand;
 
 /**
  * Search results based on context vectors produced during parsing.
@@ -69,15 +66,14 @@ public class ContextSearch implements Searcher<Map<Integer, Integer>>{
 	public static List<Integer> contextSearchMap(String query, List<Integer> nearestThmIndexList, 
 			Searcher<Map<Integer, Integer>> searcher, SearchState searchState){
 		//short-circuit if query contains only 1 word		
-		
-		logger.info("Starting context search... BackTrace: "+ Arrays.toString(Thread.currentThread().getStackTrace()));
+		// Arrays.toString(Thread.currentThread().getStackTrace())
+		logger.info("Starting context search... BackTrace: ");
 		int nearestThmIndexListSz = nearestThmIndexList.size();
 		//could be 0 if, for instance, the words searched are all unknown to the word maps. 
 		if(0 == nearestThmIndexListSz){ 
 			System.out.println("contextSearch parameter nearestThmIndexList is empty!");
 			return nearestThmIndexList;		
-		}
-		
+		}		
 		//String queryContextVec;
 		Map<Integer, Integer> queryContextVecMap;
 		if(null == searcher){

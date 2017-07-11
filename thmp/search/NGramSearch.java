@@ -178,7 +178,7 @@ public class NGramSearch {
 			//****
 			System.out.println("NGramSearch - Done with deserializing 2-grams!");
 		}
-	
+		
 		public static Map<String, Integer> gatherAndBuild2GramsMaps(List<String> thmList){
 			Map<String, Map<String, Integer>> twoGramTotalOccurenceMap 
 				= new HashMap<String, Map<String, Integer>>();

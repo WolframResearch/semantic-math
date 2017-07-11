@@ -63,6 +63,7 @@ generalization noun
 field ent
 dual ent
 closed adj
+around pre
 boundary ent
 bound ent
 bound verb

@@ -40,13 +40,15 @@ public class RecipeParse {
 		inputAr = new String[]{"combine flour and salt", "add banana", "pour batter in bowl","Combine banana mixture and egg"}; 
 		inputAr = new String[]{"Tear off a small piece of dough, flatten into a disc"};
 		inputAr = new String[]{"Sprinkle yeast over warm water in a large bowl"};
+		inputAr = new String[]{"take banana","top on cilantro"};
+		inputAr = new String[]{"take banana","top on cilantro"};
 		
 		boolean isVerbose = true;
 		Stats stats = null;
 		List<String> ingredientsList = new ArrayList<String>();
 		//ingredientsList.add("flag");
 		String[] ingredientsAr = new String[]{"flour","soda", "salt", "egg","banana", "oil","onion", "blue cheese",
-				"soy sauce", "lemon juice", "basil", "garlic", "hot pepper sauce"};
+				"soy sauce", "lemon juice", "basil", "garlic", "hot pepper sauce", "cilantro"};
 		
 		ingredientsList = Arrays.asList(ingredientsAr);		
 		
@@ -97,7 +99,7 @@ public class RecipeParse {
 			StringBuilder sb = new StringBuilder(100);
 			Expr recipeExpr = null;
 			if(null != headParseStruct){
-				String headParseStructStr = headParseStruct.createStringAndRetrieveExpr(sb, exprList);
+				headParseStruct.createStringAndRetrieveExpr(sb, exprList);
 				//System.out.println("@@@" + headParseStructStr);
 				if(!exprList.isEmpty()){
 					recipeExpr = exprList.get(0);

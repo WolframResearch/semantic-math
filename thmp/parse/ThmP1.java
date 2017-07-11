@@ -201,6 +201,7 @@ public class ThmP1 {
 	private static final int SYNTAXNET_PREP_THRESHOLD = 1;
 	private static final double SCORE_EPSILON = 0.001;
 	private static final double SCORE_BONUS = 0.05;
+	private static final String DEFAULT_POS_STR = "-1";
 	
 	static{
 		fluffMap = Maps.BuildMaps.fluffMap;
@@ -208,7 +209,7 @@ public class ThmP1 {
 		fixedPhraseMMap = Maps.fixedPhraseMap();
 		structMap = Maps.structMap();
 		anchorMap = Maps.anchorMap();
-		posMMap = Maps.posMMap();		
+		posMMap = Maps.posMMap();	
 		//adjMap = Maps.adjMap;
 		probMap = Maps.probMap();
 		posList = Maps.posList;
@@ -303,6 +304,7 @@ public class ThmP1 {
 			this(parsedStr, score, form, true);
 			this.totalCommandExprStr = totalCommandExprString_;
 		}
+		
 		/**
 		 * @param parsedStr
 		 * @param score
@@ -699,7 +701,7 @@ public class ThmP1 {
 			//use additional lexicon to tokenize if parsing recipes
 			if(FOOD_PARSE){				
 				i = tokenizeFoodWords(mathIndexList, pairs, strAr, i);				
-			}			
+			}
 			if(iPrev < i){
 				//i-- because the loop itself increments i.
 				i--;
@@ -1565,8 +1567,12 @@ public class ThmP1 {
 			Pair mathPair = pairs.get(index);
 			String mathObjName = mathPair.word();
 			String entPosStr = String.valueOf(j);
+			String mathPairPos = mathPair.pos();
 			mathPair.set_pos(entPosStr);
-			
+			if(!"ent".equals(mathPairPos)){
+				mathPair.extraPosSet().remove("ent");
+				mathPair.extraPosSet().add(mathPairPos);				
+			}			
 			StructH<HashMap<String, String>> tempStructH = new StructH<HashMap<String, String>>("ent");
 			//if(true) throw new IllegalStateException(mathObjName);
 			if(WordForms.LATEX_ASSERT_PATTERN().matcher(mathObjName).matches()){
@@ -1886,7 +1892,7 @@ public class ThmP1 {
 		// list of structs to return
 		List<Struct> structList = new ArrayList<Struct>();
 
-		String prevPos = "-1";
+		String prevPos = DEFAULT_POS_STR;
 		// use anchors ("of") to gather terms together into entities
 		int pairsSz = pairs.size();
 		
@@ -2042,11 +2048,11 @@ public class ThmP1 {
 				nextStruct = noTexTokenStructAr[i];
 			}
 		}
-		if(DEBUG){
+		/*if(DEBUG){
 			for(int j = 0; j < noTexTokenStructAr.length; j++){
 				System.out.println("noTexTokenStructAr[j] --" +j+" "+ noTexTokenStructAr[j]);
 			}
-		}
+		}*/
 		//if(true) throw new IllegalStateException();
 		parseState.setNoTexTokenStructAr(noTexTokenStructAr);
 		ThmP1AuxiliaryClass.convertStructToTexAssert(structList);
@@ -2068,6 +2074,7 @@ public class ThmP1 {
 	 */
 	private static int tokenizeFoodWords(List<Integer> mathIndexList, List<Pair> pairs, String[] strAr, int i) {
 		int strArLen = strAr.length;
+		String iWord = strAr[i];
 		List<String> posList = new ArrayList<String>();
 		//check cooking action first, since fewer cooking actions, should take
 		//precedence in case of clash.
@@ -2092,8 +2099,27 @@ public class ThmP1 {
 			}					
 		}else if(null != pos){
 			posList.add(pos);
-		}				
-		
+		}
+		//currently only add additional terms for singleton words. Hence tokenCount == 1.
+		if(posList.isEmpty() || tokenCount == 1){
+			Collection<String> posCol = Maps.BuildMaps.updateWithAdditionalFoodPos(iWord);
+			//System.out.println("ThmP1 - iWord / posCol "+ iWord + "  " + posCol);
+			if(!posCol.isEmpty()){
+				for(String p : posCol){
+					//posList is 0 or 1 term long, for vast majority 
+					if(!posList.contains(p)){
+						posList.add(p);
+					}
+				}	
+				if(tokenCount == 0){
+					//currently only add additional terms for singleton words.
+					tokenCount = 1;
+				}
+			}
+		}
+		/*if(iWord.equals("cut")){
+			System.out.println("ThmP1 - posList "+posList);			
+		}*/
 		if(!posList.isEmpty()){					
 			StringBuilder tokenSb = new StringBuilder(20);
 			for(int j = 0; j < tokenCount; j++){
@@ -2117,15 +2143,17 @@ public class ThmP1 {
 			Pair foodPair = new Pair(tokenStr, posList.get(0));
 			posListSz = posList.size();
 			for(int k = 1; k < posList.size(); k++){
-				foodPair.addExtraPos(posList.get(k));
+				String curPos = posList.get(k);
+				foodPair.addExtraPos(curPos);				
+				if("ent".equals(curPos)){
+					mathIndexList.add(pairs.size());
+				}
 			}
-			if(pos.equals("ent")){
+			if("ent".equals(posList.get(0))){
 				mathIndexList.add(pairs.size());
 			}
-			pairs.add(foodPair);	
-			//foodAdded = true;
-			//continue;
-		}
+			pairs.add(foodPair);
+		}	
 		return i;
 	}
 
@@ -3598,7 +3626,13 @@ public class ThmP1 {
 		
 		//build relation vector for the highest-ranked parse, set relation vector to parseState.
 		Multimap<ParseStructType, ParsedPair> topParsedPairMMap = sortedParsedPairMMapList.get(0);
-		BigInteger relationVec = RelationVec.buildRelationVec(topParsedPairMMap);
+		BigInteger relationVec;
+		if(FOOD_PARSE){
+			//doing temporarily on local machine, so parsing does not take forever because of map initializations.
+			relationVec = new BigInteger("0");
+		}else{
+			relationVec = RelationVec.buildRelationVec(topParsedPairMMap);
+		}
 		//if(true) throw new IllegalStateException("ThmP1 - bestParseStruct "+bestParseStruct.getWLCommandWrapperMMap());
 		parseState.setRelationalContextVec(relationVec);
 		//System.out.println("-+++++++++++best head!!! " + headParseStructList);
@@ -3708,9 +3742,12 @@ public class ThmP1 {
 		//List<Multimap<ParseStructType, ParsedPair>> parseStructMMapList = new ArrayList<Multimap<ParseStructType, ParsedPair>>();
 		/* Fills the parseStructMap and produces String representation, collect commands built above.*/
 		boolean contextVecConstructed = false;
-		
+		if(FOOD_PARSE){
+			//enabling temporarily on local machine, so parsing does not take forever because of map initializations.
+			contextVecConstructed = true;
+		}
 		contextVecConstructed = ParseToWLTree.collectCommandsDfs(parseStructMMap, curParseStruct, uHeadStruct, wlSB, 
-				curStructContextVecMap, true, contextVecConstructed, parseState);
+				curStructContextVecMap, contextVecConstructed, parseState);
 		//System.out.println(">>>>>>>>>>uHeadStruct.WLCommandWrapperList()" + uHeadStruct.WLCommandWrapperList()); //DEBUG
 	 	
 		if(!contextVecConstructed){

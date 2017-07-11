@@ -2551,7 +2551,8 @@ public class WLCommand implements Serializable{
 		//don't add for insignificant tokens, that would only be counted when occuring as StructA
 		//and not StructH.
 		String newStructType = newStruct.type();
-		if(newStructType.equals("pre")){
+		if(newStructType.equals("pre") //| newStructType.equals("adverb")//comment-back-in
+				){
 			return false;
 		}
 		if(!newStruct.isStructA() 
