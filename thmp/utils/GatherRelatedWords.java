@@ -159,7 +159,6 @@ public class GatherRelatedWords {
 				combinedList.addAll(relatedWordsList_);
 			}
 		}
-
 		
 		public RelatedWords normalizeFromValidWordSet(Set<String> validWordSet){
 			normalizeFromValidWordSet(synonymsList, validWordSet);

@@ -23,8 +23,10 @@ import javax.servlet.ServletContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Multiset;
 
 import thmp.search.Searcher.SearchMetaData;
 import thmp.utils.FileUtils;
@@ -58,7 +60,7 @@ public class NGramSearch {
 	
 	private static final Pattern WHITESPACE_PATTERN = WordForms.getWhiteEmptySpacePattern();
 	//last is Replacement Character �
-	private static final Pattern INVALID_WORD_PATTERN = Pattern.compile("(?:\\s*|.*[\\|$].*|.*\\d+.*|.*\\uFFFD.*)"); 
+	protected static final Pattern INVALID_WORD_PATTERN = Pattern.compile("(?:\\s*|.*[\\|$].*|.*\\d+.*|.*\\uFFFD.*)"); 
 	private static final Pattern SENTENCE_SPACE_PATTERN = Pattern.compile("[-.;:,]");
 	private static final Pattern SENTENCE_SPLIT_PATTERN = Pattern.compile("(?:[A-Za-z]*[-\\{\\[\\)\\(\\}\\]$\\\\/*|%.;,:_~!+^&\"\'+<>=#][A-Za-z]*|\\s+)");
 	
@@ -68,7 +70,16 @@ public class NGramSearch {
 	
 	//should use this to detect fluff in first word.
 	private static final Set<String> fluffWordsSet = WordForms.getFluffSet();
+	private static final Set<String> VALID_ING_WORD_ENDING_SET;
 	static{
+		String[] ingEndingAr = new String[]{"ring","mapping","embedding","ordering","branching","programming",
+				"ending","mixing","covering","pairing","subring","tilting","string","thickening","matching",
+				"crossing","encoding","annealing","splitting","linking","nonvanishing","alternating","filling",
+				"vanishing","preserving","stabilizing","smoothing","bounding","packing"};
+		VALID_ING_WORD_ENDING_SET = new HashSet<String>();
+		for(String word : ingEndingAr){
+			VALID_ING_WORD_ENDING_SET.add(word);
+		}
 		logger.info("Finished initializing NGramSearch");
 	}
 	/**
@@ -108,7 +119,7 @@ public class NGramSearch {
 	}*/
 	
 	public static class TwoGramSearch{
-		//private static final File twoGramsFile = new File("src/thmp/data/twoGrams.txt");
+
 		//list of 2 grams that show up with above-average frequency, with their frequencies
 		private static final Map<String, Integer> twoGramsMap;
 		
@@ -125,6 +136,9 @@ public class NGramSearch {
 		
 		//set that contains the first word of each n-grams.
 		private static final Set<String> twoGramFirstWordsSet;
+		//factor used when the second word occurs with probability higher than 
+		private static final Double SECOND_WORD_PROBA_MULT_FACTOR = 2.5;
+		
 		static{			
 			UNDESIRABLE_POS_COMBO_SET = new HashSet<String>();
 			String[] undesirablePosAr = new String[]{"ent_verb", "ent_vbs", "pre_ent", "poss_ent", "pre_adj", "ent_verbAlone"};
@@ -200,9 +214,10 @@ public class NGramSearch {
 				Map<String, Map<String, Integer>> twoGramTotalOccurenceMap){
 			//total word counts of all 2 grams
 			Map<String, Integer> totalWordCountsMap = new HashMap<String, Integer>();
-			//build nGram map, 
+			
+			Multiset<String> allWordsMSet = HashMultiset.create();
 			//build2GramMap(thmList, twoGramTotalOccurenceMap, totalWordCountsMap);	
-			build2GramMap2(twoGramTotalOccurenceMap, totalWordCountsMap, thmList);		
+			build2GramMap2(twoGramTotalOccurenceMap, totalWordCountsMap, thmList, allWordsMSet);		
 			//computes the average frequencies of words that follow the first word in all 2-grams
 			Map<String, Integer> averageWordCountsMap = computeAverageFreq(twoGramTotalOccurenceMap, totalWordCountsMap);
 			//System.out.println("averageWordCountsMap "+averageWordCountsMap);
@@ -224,7 +239,7 @@ public class NGramSearch {
 			}			
 			Set<String> nGramFirstWordsSet = new HashSet<String>();
 			//get list of 2 grams that show up frequently
-			return compile2grams(twoGramTotalOccurenceMap, averageWordCountsMap, nGramFirstWordsSet, initialTwoGramsSet);
+			return compile2grams(twoGramTotalOccurenceMap, averageWordCountsMap, nGramFirstWordsSet, initialTwoGramsSet, allWordsMSet);
 		}
 		
 		private static class TwoGramFreqPair implements Comparable<TwoGramFreqPair>{
@@ -250,15 +265,26 @@ public class NGramSearch {
 	 * @param averageWordCounts
 	 * @param nGramFirstWordsSet
 	 * @param initialTwoGramsSet
+	 * @param allWordsMSet
 	 * @return
 	 */
 	private static Map<String, Integer> compile2grams(Map<String, Map<String, Integer>> twoGramTotalOccurenceMap, 
-			Map<String, Integer> averageWordCounts, Set<String> nGramFirstWordsSet, Set<String> initialTwoGramsSet			
+			Map<String, Integer> averageWordCounts, Set<String> nGramFirstWordsSet, Set<String> initialTwoGramsSet,
+			Multiset<String> allWordsMSet
 			//int averageTwoGramFreqCount
 			){		
 		ListMultimap<String, String> posMMap = thmp.parse.Maps.posMMap();
 		//one-off, for building two grams that haven't been filtered
-		Set<TwoGramFreqPair> rawTwoGramSet = new TreeSet<TwoGramFreqPair>();		
+		//probability of singleton words, use data in allWordsMSet.
+		Map<String, Double> allWordsProbMap = new HashMap<String, Double>();
+		int totalNumWords = allWordsMSet.size();
+		for(String singletonWord : allWordsMSet.elementSet()){
+			allWordsProbMap.put(singletonWord, ((double)allWordsMSet.count(singletonWord))/totalNumWords);
+		}
+		Set<TwoGramFreqPair> rawTwoGramSet = new TreeSet<TwoGramFreqPair>();
+		Set<TwoGramFreqPair> firstWordSet = new TreeSet<TwoGramFreqPair>();
+		//Set<TwoGramFreqPair> secondWordSet = new TreeSet<TwoGramFreqPair>();
+		/*end one-off*/
 		Map<String, Integer> twoGramMap = new HashMap<String, Integer>();		
 		int totalFreqCount = 0;	
 		int totalTwoGrams = 0;
@@ -276,12 +302,15 @@ public class NGramSearch {
 			//leaving it here after experimentation.			
 			double freqThreshold = 8/7;
 			double avgWordCountWeighted = averageWordCount*freqThreshold;
-			Map<String, Integer> nextWordsMap = wordMapEntry.getValue();			
-			for(Map.Entry<String, Integer> nextWordsMapEntry : nextWordsMap.entrySet()){
-				
+			Map<String, Integer> nextWordsMap = wordMapEntry.getValue();
+			int firstWordUsedCount = 0;
+			for(Map.Entry<String, Integer> nextWordsMapEntry : nextWordsMap.entrySet()){				
 				int nextWordCount = nextWordsMapEntry.getValue();
-				String nextWord = nextWordsMapEntry.getKey();				
-				//////nextWord = WordForms.getSingularForm(nextWord);
+				String nextWord = nextWordsMapEntry.getKey();	
+				if(isInvalid2ndWordEnding(nextWord)){
+					continue;
+				}
+				nextWord = WordForms.getSingularForm(nextWord);
 				//first check if undesired part of speech combination, for instance ent_verb. This is used
 				//to eliminate faulty two-grams such as "field split"				
 				List<String> nextWordPosList = posMMap.get(nextWord);
@@ -290,9 +319,19 @@ public class NGramSearch {
 						continue;
 					}
 				}
-				String twoGram = word + " " + nextWord;	
+				//call common method, to ensure uniformity in future.
+				String twoGram = WordForms.normalizeTwoGram2(word, nextWord);	
 				rawTwoGramSet.add(new TwoGramFreqPair(twoGram, nextWordCount));
-				if(nextWordCount > avgWordCountWeighted || initialTwoGramsSet.contains(twoGram)){							
+				firstWordUsedCount++;				
+				boolean addTwoGram = false;
+				if(nextWordCount > avgWordCountWeighted || initialTwoGramsSet.contains(twoGram)){
+					addTwoGram = true;
+				}else if(allWordsMSet.contains(word) && allWordsProbMap.containsKey(nextWord)){
+					if((((double)nextWordCount)/allWordsMSet.count(word)) > SECOND_WORD_PROBA_MULT_FACTOR*allWordsProbMap.get(nextWord)){
+						addTwoGram = true;
+					}
+				}				
+				if(addTwoGram){					
 					twoGramMap.put(twoGram, nextWordCount);
 					initialTwoGramsSet.remove(twoGram);
 					nGramFirstWordsSet.add(word);
@@ -301,7 +340,9 @@ public class NGramSearch {
 					//System.out.println("new twoGram "+twoGram + " " + nextWordCount);
 				}
 			}
+			firstWordSet.add(new TwoGramFreqPair(word, firstWordUsedCount));
 		}
+		
 		int averageTwoGramFreqCount;
 		//totalTwoGrams should not be 0, unless really tiny source text set.
 		if(totalTwoGrams != 0){ 
@@ -323,11 +364,14 @@ public class NGramSearch {
 		for(String token : NOT_TWO_GRAMS){
 			twoGramMap.remove(token);
 		}
+		/*StringBuilder rawTwoGramSb = new StringBuilder(100000);
+		for(String twoGram : rawTwoGramSet){			
+		}*/	
 		FileUtils.writeToFile(rawTwoGramSet, "src/thmp/data/rawTwoGramSet.txt");
+		FileUtils.writeToFile(firstWordSet, "src/thmp/data/twoGramFirstWordSet.txt");
 		//System.out.println("averageFreqCount " + averageFreqCount);
 		return twoGramMap;
 	}
-
 
 	}
 	/**
@@ -356,9 +400,11 @@ public class NGramSearch {
 	 * @param nGramMap Expected to be empty at input
 	 * @param totalWordCountsMap
 	 * @param thmList
+	 * @param allWordsMSet Multiset of all singleton-words. Used for computing probability (redundant with totalWordCountsMap!?)
+	 * of any given word.
 	 */
 	private static void build2GramMap2(Map<String, Map<String, Integer>> nGramMap, Map<String, Integer> totalWordCountsMap,
-			List<String> thmList) {
+			List<String> thmList, Multiset<String> allWordsMSet) {
 		//skip nonMathFluffWords, collapse list
 		for(String thm : thmList){
 			//split into words
@@ -376,7 +422,7 @@ public class NGramSearch {
 				//this is a rather large set, should not include so many cases.
 				//words such as "purely inseparable" might be filtered out.
 				//maybe first word could be the small fluff words list from ThreeGramSearch?
-				if(fluffWordsSet.contains(curWord) || curWord.length() < 2 
+				if(fluffWordsSet.contains(curWord) || curWord.length() < 3 
 						|| WordForms.SPECIAL_CHARS_PATTERN.matcher(curWord).matches()
 						|| INVALID_WORD_PATTERN.matcher(curWord).matches()){	
 					//if(nonMathFluffWordsSet.contains(curWord) || curWord.length() < 2 
@@ -384,13 +430,14 @@ public class NGramSearch {
 					continue;
 				}
 				//screen off 2nd word more discriminantly.
-				if(nextWord.length() < 2 || WordForms.SPECIAL_CHARS_PATTERN.matcher(nextWord).matches()
+				if(nextWord.length() < 3 || WordForms.SPECIAL_CHARS_PATTERN.matcher(nextWord).matches()
 						|| INVALID_WORD_PATTERN.matcher(nextWord).matches()
-						||fluffWordsSet.contains(nextWord) || nonMathFluffWordsSet.contains(nextWord) ){					
+						//|| isInvalid2ndWordEnding(nextWord)
+						|| fluffWordsSet.contains(nextWord) || nonMathFluffWordsSet.contains(nextWord) 
+						){					
 					i++;
 					continue;
 				}
-
 				//take singular forms
 				//curWord = WordForms.getSingularForm(curWord);
 				nextWord = WordForms.getSingularForm(nextWord);	
@@ -401,7 +448,8 @@ public class NGramSearch {
 				if(fluffWordsSet.contains(nextWord)){
 					i++;
 					continue;
-				}
+				}				
+				allWordsMSet.add(WordForms.getSingularForm(curWord));
 				//add to nGramMap
 				Map<String, Integer> wordMap = nGramMap.get(curWord);
 				if(wordMap != null){
@@ -423,9 +471,24 @@ public class NGramSearch {
 					totalWordCountsMap.put(curWord, 1);
 				}				
 			}
-		}
+		}		
 	}
 	
+	/**
+	 * Invalid -ing ending, such as "number dividing", but not 
+	 * "sobolev embedding", or "associative ring", "... mapping"
+	 * @param nextWord
+	 * @return
+	 */
+	protected static boolean isInvalid2ndWordEnding(String nextWord) {
+		int nextWordLen = nextWord.length();
+		if(nextWordLen < 5 || !"ing".equals(nextWord.substring(nextWordLen-3)) 
+				|| VALID_ING_WORD_ENDING_SET.contains(nextWord)){
+			return false;
+		}
+		return true;
+	}
+
 	/**
 	 * Iterate through all the words. Record the frequency counts.
 	 * Skip if a frequent word as recorded in English frequent words list.
@@ -436,14 +499,15 @@ public class NGramSearch {
 	 * immediately follow and their counts.
 	 */
 	public static void build2GramMap(List<String> thmList,
-			Map<String, Map<String, Integer>> nGramMap, Map<String, Integer> totalWordCounts){		
-		build2GramMap2(nGramMap, totalWordCounts, thmList);
+			Map<String, Map<String, Integer>> nGramMap, Map<String, Integer> totalWordCounts){	
+		Multiset<String> allWordsMSet = HashMultiset.create();
+		build2GramMap2(nGramMap, totalWordCounts, thmList, allWordsMSet);
 	}
 	
 	/**
 	 * Computes the average frequency counts following each word from the given maps.
 	 * @param nGramMap
-	 * @param totalWordCounts
+	 * @param totalWordCounts Number of times the word shows up in corpus (and followed by valid word).
 	 * @return map 
 	 */
 	private static Map<String, Integer> computeAverageFreq(Map<String, Map<String, Integer>> nGramMap, Map<String, Integer> totalWordCounts){

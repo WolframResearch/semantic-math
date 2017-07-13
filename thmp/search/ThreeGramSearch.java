@@ -62,6 +62,9 @@ public class ThreeGramSearch {
 	//map of maps containing first words of 2 grams as keys, and maps of 2nd words and their counts as values
 	//private static final Map<String, Map<String, Integer>> twoGramFreqMap = NGramSearch.twoGramTotalOccurenceMap();
 	private static int averageThreeGramFreqCount;
+	private static final Set<String> nonMathFluffWordsSet = WordFrequency.ComputeFrequencyData.trueFluffWordsSet();	
+	private static final Pattern INVALID_THIRD_WORD_PATTERN = Pattern.compile("(?:.+ed)");
+	private static final Set<String> INVALID_MIDDLE_WORD_SET;
 	private static final int DEFAULT_THREE_GRAM_FREQ_COUNT = 5;
 	//should put these in map
 	//private static final String FLUFF_WORDS = "a|the|tex|of|and|on|let|lemma|for|to|that|with|is|be|are|there|by"
@@ -78,7 +81,11 @@ public class ThreeGramSearch {
 		//get thmList from CollectThm
 		//List<String> thmList = ProcessInput.processInput(CollectThm.ThmList.allThmsWithHypList(), true);
 		////List<String> thmList = CollectThm.ThmList.allThmsWithHypList();
-		
+		INVALID_MIDDLE_WORD_SET = new HashSet<String>();
+		String[] invalidMiddleWordSet = new String[]{"is"};
+		for(String word : invalidMiddleWordSet){
+			INVALID_MIDDLE_WORD_SET.add(word);
+		}
 		fluffWordsSet = WordForms.getFluffSet();
 		//*****
 		/* Commented out June 2017.
@@ -201,44 +208,47 @@ public class ThreeGramSearch {
 				word0 = thmAr[i];
 				//shouldn't happen because the way thm is split
 				//was word0.matches("\\s*"), instead of \\s+
-				if(WHITESPACE_PATTERN.matcher(word0).matches()
-						|| WordForms.SPECIAL_CHARS_PATTERN.matcher(word0).matches()){
-					//if(word0.matches("(?:\\s+)|(?:(?:[^\\]*)(?:\\\\)(?:[.]*))")){
+				if(WHITESPACE_PATTERN.matcher(word0).matches() || word0.length() < 3
+						|| WordForms.SPECIAL_CHARS_PATTERN.matcher(word0).matches()
+						|| NGramSearch.INVALID_WORD_PATTERN.matcher(word0).matches()
+						|| fluffWordsSet.contains(word0) || nonMathFluffWordsSet.contains(word0)
+						){
 					continue;
 				}
 				word1 = thmAr[i+1];
-				//int j = i;
 				
-				while((WHITESPACE_PATTERN.matcher(word1).matches() 
-						|| WordForms.SPECIAL_CHARS_PATTERN.matcher(word1).matches()) 
-						&& i < thmAr.length-2){
-					word1 = thmAr[i+1];
+				if(WHITESPACE_PATTERN.matcher(word1).matches() || word1.length() < 2
+						|| INVALID_MIDDLE_WORD_SET.contains(word1)
+						|| WordForms.SPECIAL_CHARS_PATTERN.matcher(word1).matches()
+						|| NGramSearch.INVALID_WORD_PATTERN.matcher(word1).matches()
+						|| nonMathFluffWordsSet.contains(word1)
+						){
 					i++;
+					continue;
+				}				
+				word2 = thmAr[i+2];				
+				if(WHITESPACE_PATTERN.matcher(word2).matches() || word2.length() < 4
+						|| WordForms.SPECIAL_CHARS_PATTERN.matcher(word2).matches()
+						|| NGramSearch.INVALID_WORD_PATTERN.matcher(word2).matches()
+						|| fluffWordsSet.contains(word2) || nonMathFluffWordsSet.contains(word2)
+						|| NGramSearch.isInvalid2ndWordEnding(word2)
+						|| INVALID_THIRD_WORD_PATTERN.matcher(word2).matches()
+						){
+					i += 2;
+					continue;
 				}
 				
-				if(i == thmAr.length - 2){
-					break;
-				}
-				
-				word2 = thmAr[i+2];
-				
-				while((WHITESPACE_PATTERN.matcher(word2).matches() 
-						|| WordForms.SPECIAL_CHARS_PATTERN.matcher(word2).matches()) 
-						&& i < thmAr.length-2){
-					word1 = thmAr[i+2];
-					i++;
-				}
-				
-				word0 = WordForms.getSingularForm(word0);
-				word1 = WordForms.getSingularForm(word1);
+				//only get singularized form for last word.
+				//word0 = WordForms.getSingularForm(word0);
+				//word1 = WordForms.getSingularForm(word1);
 				word2 = WordForms.getSingularForm(word2);
 				
 				//if(FLUFF_WORDS.contains(word2) || FLUFF_WORDS.contains(word0)){
 				//first and last words are not allowed to be fluff words.
-				if(fluffWordsSet.contains(word0) || fluffWordsSet.contains(word2)){
+				/*if(fluffWordsSet.contains(word0) || fluffWordsSet.contains(word2)){
 					//if(nonMathFluffWordsSet.contains(word0) || nonMathFluffWordsSet.contains(word2)){
 					continue;
-				}				
+				}*/				
 				String threeGram = word0 + " " + word1 + " " + word2;
 				
 				//update the counts frequency count of this 3 gram, for equals
@@ -248,10 +258,8 @@ public class ThreeGramSearch {
 				}else{
 					threeGramCountsMap.put(threeGram, 1);
 				}
-			}
-			
-		}
-		
+			}			
+		}		
 	}
 	
 	/**
@@ -317,7 +325,7 @@ public class ThreeGramSearch {
 			//pick the rest according to pairs frequencies gathered in twoGramFreqMap
 			while(threeGramSetIter.hasNext()){
 				String threeGram = threeGramSetIter.next();
-				String[] threeGramAr = threeGram.split("\\s+");
+				String[] threeGramAr = WordForms.getWhiteNonEmptySpaceNotAllPattern().split(threeGram);
 				
 				//shouldn't happen at this point
 				if(threeGramAr.length < 3) continue;
@@ -444,8 +452,7 @@ public class ThreeGramSearch {
 	 */
 	private static class ThreeGramComparator implements Comparator<String>{
 		
-		Map<String, Integer> threeGramCountsMap;
-		
+		Map<String, Integer> threeGramCountsMap;		
 		public ThreeGramComparator(Map<String, Integer> threeGramCountsMap_){
 			this.threeGramCountsMap = threeGramCountsMap_;
 		}

@@ -41,14 +41,15 @@ public class RecipeParse {
 		inputAr = new String[]{"Tear off a small piece of dough, flatten into a disc"};
 		inputAr = new String[]{"Sprinkle yeast over warm water in a large bowl"};
 		inputAr = new String[]{"take banana","top on cilantro"};
-		inputAr = new String[]{"take banana","top on cilantro"};
+		inputAr = new String[]{"soak cashew overnight","place potato and carrot in steamer for 20 minutes", 
+				"combine soaked cashew and steamed vegetable"};
 		
 		boolean isVerbose = true;
 		Stats stats = null;
 		List<String> ingredientsList = new ArrayList<String>();
 		//ingredientsList.add("flag");
-		String[] ingredientsAr = new String[]{"flour","soda", "salt", "egg","banana", "oil","onion", "blue cheese",
-				"soy sauce", "lemon juice", "basil", "garlic", "hot pepper sauce", "cilantro"};
+		String[] ingredientsAr = new String[]{"flour","soda", "cashew","salt", "egg","banana", "oil","onion", "blue cheese",
+				"soy sauce", "lemon juice", "basil", "garlic", "hot pepper sauce", "cilantro","potato","carrot"};
 		
 		ingredientsList = Arrays.asList(ingredientsAr);		
 		

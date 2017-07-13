@@ -252,6 +252,32 @@ public class WordStemsWordTrie {
 	}
 
 	/**
+	 * 
+	 * @param wordFreqMap Also includes N grams, don't use those in normalization for now.
+	 * @param wordTrie
+	 * @param wordSet To insert all words that are used to build wordTrie.
+	 * @return
+	 */
+	private static int createStemWordsMapFromFreqMap(Map<String, Integer> wordFreqMap, WordStemsWordTrie wordTrie,
+			Set<String> wordSet) {
+		int totalInsertedWordsWithMultiplicity = 0;
+		for(Map.Entry<String, Integer> entry : wordFreqMap.entrySet()){
+			String word = entry.getKey();
+			//only use singleton words to normalize
+			if(WordForms.getWhiteNonEmptySpaceNotAllPattern().split(word).length > 1){
+				continue;
+			}
+			int wordFreq = entry.getValue();
+			for(int i = 0; i < wordFreq; i++){
+				wordTrie.insertWord(word);
+			}
+			totalInsertedWordsWithMultiplicity += wordFreq;
+			wordSet.add(word);
+		}		
+		return totalInsertedWordsWithMultiplicity;
+	}
+
+	/**
 	 * Generate a map with long forms of words as keys, and their abbreviations
 	 * as values. Serializes map.
 	 */
@@ -303,6 +329,18 @@ public class WordStemsWordTrie {
 		}finally{
 			FileUtils.silentClose(br);
 		}
+		serializeDataToFiles(serializationFileStr, serializationStrFileStr, wordTrie, wordSet, totalInsertedWords);
+	}
+
+	/**
+	 * @param serializationFileStr
+	 * @param serializationStrFileStr
+	 * @param wordTrie
+	 * @param wordSet
+	 * @param totalInsertedWords
+	 */
+	private static void serializeDataToFiles(String serializationFileStr, String serializationStrFileStr,
+			WordStemsWordTrie wordTrie, Set<String> wordSet, int totalInsertedWords) {
 		Map<String, String> longShortFormsMap = new HashMap<String, String>();
 		int avgInsertedWordsCount = (int)(totalInsertedWords/wordSet.size());
 		System.out.println("avgInsertedWordsCount: " + avgInsertedWordsCount);
@@ -319,12 +357,22 @@ public class WordStemsWordTrie {
 		
 		boolean serializeBool = true;
 		if(serializeBool){
-			String serializationFileStr = "src/thmp/data/stemWordsMap.dat";
-			String serializationStrFileStr = "src/thmp/data/stemWordsMap.txt";
-			serializeStemWordsMap(serializationFileStr, serializationStrFileStr);
-		}
-		
+			String serializationFileStr = "src/thmp/data/stemWordsMap1.dat";
+			String serializationStrFileStr = "src/thmp/data/stemWordsMap1.txt";
+			if(false){				
+				serializeStemWordsMap(serializationFileStr, serializationStrFileStr);
+			}			
+			String freqMapPath = "src/thmp/data/bigWordFreqMap.dat";
+			@SuppressWarnings("unchecked")
+			Map<String, Integer> wordFreqMap = ((List<Map<String, Integer>>)FileUtils.deserializeListFromFile(freqMapPath)).get(0);
+			WordStemsWordTrie wordTrie = new WordStemsWordTrie();
+			Set<String> wordSet = new HashSet<String>();
+			int totalInsertedWords = createStemWordsMapFromFreqMap(wordFreqMap, wordTrie, wordSet);
+			serializeDataToFiles(serializationFileStr, serializationStrFileStr, wordTrie, wordSet, totalInsertedWords);
+		}		
 		//System.out.println();
 		//System.out.println("WordTrie - " + longShortFormsMap);		
 	}
+
+
 }

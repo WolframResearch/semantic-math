@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Serializable;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -69,7 +70,6 @@ public class WordForms {
 	
 	public static final String QUANTITY_POS = "quant";
 	
-	private static final String synonymsFileStr = "src/thmp/data/synonyms.txt";
 	private static final ImmutableMap<String, String> synonymRepMap;
 	private static final ImmutableMultimap<String, String> stemToWordsMMap;
 	
@@ -86,7 +86,9 @@ public class WordForms {
 	private static final String FLUFF_WORDS_SMALL = "a|the|tex|of|and|on|let|lemma|for|to|that|with|is|be|are|there|by"
 			+ "|any|as|if|we|suppose|then|which|in|from|this|assume|this|have|just|may|an|every|it|between|given|itself|has"
 			+ "|more|where|but|each|some|et|these|no|all|its|such|can|one|que|de|thus|via|une|only|also|whenever|other|equal|last|"
-			+ "under|both|even|non|always|over|not|so|two|or|le|another|obvious|after|same|est|whose|which|thm|following";
+			+ "under|both|even|non|always|over|not|so|two|or|le|another|obvious|after|same|est|whose|which|thm|following|defined"
+			+ "|corresponding|furthermore|satisfy|moreover|satisfying|iff|along|hold|above|called|la|three|th|their|des|un|les|new"
+			+ "|exist|at|being|four|was|lem|lax|give|obtained|depending|containing|denote";
 	private static final Set<String> FLUFF_WORDS_SMALL_SET;
 	
 	private static final Set<String> freqWordsSet; 
@@ -94,6 +96,8 @@ public class WordForms {
 	private static final Pattern BRACKETS_PATTERN = Pattern.compile("\\[([^\\]]*)\\]");	
 	private static final Pattern LATEX_PATTERN = Pattern.compile("\\$([^$]+)\\$");
 	private static final Pattern NONSINGULAR_ENDING_PATTERN = Pattern.compile(".*(?:us$?|is$?|ness|has)");
+	//private static final Set<String> IRREGULAR_ENDING_WORD_SET;
+	private static final Map<String, String> IRREGULAR_ENDING_WORD_MAP;
 	
 	//pattern matching is faster than calling str.contains() repeatedly 
 	//which is O(mn) time.
@@ -114,6 +118,7 @@ public class WordForms {
 		BufferedReader synonymsBF = null;
 		//create synonym map from file	
 		ServletContext servletContext = FileUtils.getServletContext();
+		final String synonymsFileStr = "src/thmp/data/synonyms.txt";
 		if(null != servletContext){
 			synonymsBF = new BufferedReader(new InputStreamReader(servletContext.getResourceAsStream(synonymsFileStr)));			
 		}else{
@@ -134,16 +139,29 @@ public class WordForms {
 		synonymRepMap = ImmutableMap.copyOf(synonymsPreMap);
 		//create "inverse" Multimap for the different forms for each word stem.
 		stemToWordsMMap = ImmutableMultimap.copyOf(createStemToWordsMMap(stemWordsMap));
-				
+		
 		FileUtils.silentClose(synonymsBF);
 		
 		GREEK_ALPHA_SET = new HashSet<String>();
-		String[] GREEK_ALPHA = new String[]{"alpha","beta","gamma","delta","epsilon"};
+		String[] GREEK_ALPHA = new String[]{"alpha","beta","gamma","delta","epsilon","omega"};
 		for(String s : GREEK_ALPHA){
 			GREEK_ALPHA_SET.add(s);
-		}		
+		}	
+		/*String[] irregularWordAr = new String[]{"series"};
+		IRREGULAR_ENDING_WORD_SET = new HashSet<String>();
+		for(String word : irregularWordAr){
+			IRREGULAR_ENDING_WORD_SET.add(word);
+		}*/
+		Map<String, String> irregularWordMap = new HashMap<String, String>();
+		irregularWordMap.put("matrices", "matrix");
+		irregularWordMap.put("series", "series");
+		IRREGULAR_ENDING_WORD_MAP = ImmutableMap.copyOf(irregularWordMap);
 	}
-	
+	/**
+	 * Invert the key and value for each pair in stemWordsMap.
+	 * @param stemWordsMap
+	 * @return
+	 */
 	private static Multimap<String, String> createStemToWordsMMap(Map<String, String> stemWordsMap){
 		Multimap<String, String> stemToWordsMMap = ArrayListMultimap.create();		
 		for(Map.Entry<String, String> entry: stemWordsMap.entrySet()){
@@ -166,7 +184,6 @@ public class WordForms {
 	
 	@SuppressWarnings("unchecked")
 	private static Map<String, String> deserializeStemWordsMap(ServletContext servletContext) {
-
 		String stemWordsMapFileStr = "src/thmp/data/stemWordsMap.dat";
 		Map<String, String> stemWordsMap;
 		if(null != servletContext){
@@ -178,7 +195,7 @@ public class WordForms {
 		}
 		return stemWordsMap;
 	}
-
+	
 	/**
 	 * Populate synonymsMMap_ with synonyms read in from synonymsBF.
 	 * @param synonymsmmap2
@@ -230,6 +247,11 @@ public class WordForms {
 		if(lastTwoChars.equals("is") || lastTwoChars.equals("us") || lastTwoChars.equals("ss")){
 			return word;
 		}
+		String tempWord = IRREGULAR_ENDING_WORD_MAP.get(word);
+		if(null != tempWord){
+			return tempWord;
+		}
+		
 		String[] singFormsAr = getSingularForms(word);
 		//singFormsAr successively replaces words ending in "s", "es", "ies"
 		int k = 2;
@@ -361,7 +383,7 @@ public class WordForms {
 	/**
 	 * Canonicalize word. Used by all algorithms to pre-process words.
 	 * Deliberately not combined with singularization, as sometimes need
-	 * to be used separately.
+	 * to be used separately. Reduce word to its stem, if stem found.
 	 * Does *NOT* check if the input word is already valid or not. Due to 
 	 * initialization dependencies (would be cyclic).
 	 * @param word
@@ -457,8 +479,18 @@ public class WordForms {
 		if(wordAr.length < 2){
 			return twoGram;
 		}
-		String secondWord = getSingularForm(wordAr[1]);		
-		return wordAr[0] + " " + secondWord;
+		return normalizeTwoGram2(wordAr[0], wordAr[1]);
+	}
+	
+	/**
+	 * Centralized method to normalize two grams. Right now
+	 * only desingularize second word, without normalizing to word stem
+	 * -July 2017.
+	 * @param twoGram
+	 */
+	public static String normalizeTwoGram2(String firstWord, String secondWord){
+		secondWord = getSingularForm(secondWord);		
+		return firstWord + " " + secondWord;
 	}
 	
 	/**
@@ -964,7 +996,9 @@ public class WordForms {
 	 * Comparator for words based on their frequencies in text corpus.
 	 * 
 	 */
-	public static class WordFreqComparator implements Comparator<String>{
+	public static class WordFreqComparator implements Comparator<String>, Serializable{
+		
+		private static final long serialVersionUID = -2812247562698028679L;
 		
 		Map<String, Integer> wordFreqMap;
 		public WordFreqComparator(Map<String, Integer> map){

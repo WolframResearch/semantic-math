@@ -2074,7 +2074,7 @@ public class ThmP1 {
 	 */
 	private static int tokenizeFoodWords(List<Integer> mathIndexList, List<Pair> pairs, String[] strAr, int i) {
 		int strArLen = strAr.length;
-		String iWord = strAr[i];
+		String iWord = WordForms.getSingularForm(strAr[i]);
 		List<String> posList = new ArrayList<String>();
 		//check cooking action first, since fewer cooking actions, should take
 		//precedence in case of clash.

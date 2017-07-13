@@ -148,11 +148,12 @@ public class FileUtils {
 		
 	/**
 	 * Write content to file at absolute path.
-	 * 
+	 * Creates file with given name, if no such file exists.
 	 * @param obj
 	 * @param fileToStr
 	 */
 	public static void writeToFile(Object obj, String fileToStr) {
+		createFileIfAbsent(fileToStr);
 		List<String> contentList = new ArrayList<String>();
 		contentList.add(obj.toString());
 		Path toPath = Paths.get(fileToStr);
@@ -186,14 +187,6 @@ public class FileUtils {
 			   logger.error("appendObjToFile() - IOException while appending to file!");			   
 			}		
 	}
-	/**
-	 * Puts obj in a list, and serilialize.
-	 * @param obj
-	 * @param outputFileStr
-	 */
-	/*public static void serializeObjAsListToFile(Object obj, String outputFileStr){
-		
-	}*/
 	
 	/**
 	 * Writes objects in iterable to the file specified by outputFileStr.
@@ -203,13 +196,7 @@ public class FileUtils {
 	 * @param outputFileStr
 	 */
 	public static void serializeObjToFile(List<? extends Object> list, String outputFileStr){
-		File outputFile = new File(outputFileStr);
-		//atomic checking and creating file.
-		try {
-			outputFile.createNewFile();
-		} catch (IOException e1) {
-			e1.printStackTrace(); ///handle!
-		}
+		createFileIfAbsent(outputFileStr);
 		FileOutputStream fileOuputStream = null;
 		ObjectOutputStream objectOutputStream = null;
 		try{
@@ -241,12 +228,25 @@ public class FileUtils {
 	}
 
 	/**
+	 * Atomic checking and file creation.
+	 * @param outputFileStr
+	 */
+	private static void createFileIfAbsent(String outputFileStr) {
+		File outputFile = new File(outputFileStr);
+		try {
+			outputFile.createNewFile();
+		} catch (IOException e1) {
+			//e1.printStackTrace();
+			throw new IllegalStateException(e1);
+		}
+	}
+
+	/**
 	 * Deserialize objects from file supplied by serialFileStr.
 	 * Note that this requires the DESERIAL_VERSION_NUM to equal that of previous 
-	 * files deserialized in this JVM session. Don't call this if don't want to check
-	 * for DESERIAL_VERSION_NUM.
+	 * files deserialized in this JVM session (if enabled).
 	 * @param serialFileStr
-	 * @return *List* of objects
+	 * @return *List* of objects from the file.
 	 */	
 	public static Object deserializeListFromFile(String serialFileStr){
 		
