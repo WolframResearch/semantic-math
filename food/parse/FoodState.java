@@ -2,6 +2,7 @@ package food.parse;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import com.wolfram.jlink.Expr;
 
@@ -60,6 +61,8 @@ public class FoodState {
 	
 	public void setFoodStruct(Struct struct){
 		this.foodStruct = struct;
+		String newName = "".equals(this.foodName) ? struct.nameStr() : " " + struct.nameStr();
+		this.foodName = this.foodName + newName;
 	}
 	
 	public void addChildFoodState(FoodState childState){
@@ -119,7 +122,18 @@ public class FoodState {
 			Random r = new Random();
 			foodName = String.valueOf(r.nextInt(300));
 		}*/
-		Expr foodNameExpr = new Expr(new Expr(Expr.SYMBOL, "Name"), new Expr[]{new Expr(foodName)});
+		Expr[] argExprAr;
+		Set<String> pptSet = foodStruct.getPropertySet();
+		if(!pptSet.isEmpty()){
+			List<Expr> pptExprList = new ArrayList<Expr>();
+			for(String pptStr : pptSet){
+				pptExprList.add(new Expr(pptStr));
+			}
+			argExprAr = new Expr[]{new Expr(foodName), ExprUtils.listExpr(pptExprList)};
+		}else{
+			argExprAr = new Expr[]{new Expr(foodName)};
+		}
+		Expr foodNameExpr = new Expr(new Expr(Expr.SYMBOL, "Name"), argExprAr);
 		
 		if(!"".equals(qualifier)){
 			//nameSb.insert(0, "\""+qualifier+"\", ").insert(0,"{").append("}");
@@ -151,12 +165,11 @@ public class FoodState {
 		Expr productExpr = describe(this);		
 		if(!parentFoodStateList.isEmpty()){
 			//sb.append("P{");
-			for(FoodState parentState : parentFoodStateList){
-				
+			for(FoodState parentState : parentFoodStateList){				
 				Expr ruleExpr = ExprUtils.ruleExpr(describe(parentState), productExpr);				
 				if(null != parentEdge){		
 					//e.g. Labeled["banana" -> "pudding", "blend"]
-					Expr edgeNameExpr = new Expr(new Expr(Expr.SYMBOL, "Action"), new Expr[]{new Expr(parentEdge.toString())});
+					Expr edgeNameExpr = parentEdge.toExpr();
 					Expr labelHead = new Expr(Expr.SYMBOL, "Labeled");
 					ruleExpr = new Expr(labelHead, new Expr[]{ruleExpr, edgeNameExpr});					
 				}

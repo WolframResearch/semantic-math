@@ -287,8 +287,7 @@ public class FoodStruct extends thmp.parse.Struct {
 	}
 
 	@Override
-	public Set<String> getPropertySet() {
-		
+	public Set<String> getPropertySet() {		
 		return struct.getPropertySet();
 	}
 

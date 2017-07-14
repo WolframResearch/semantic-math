@@ -6,6 +6,7 @@ import java.util.List;
 import com.wolfram.jlink.Expr;
 
 import thmp.parse.Struct;
+import thmp.utils.ExprUtils;
 
 /**
  * Describes food processing step .
@@ -40,6 +41,32 @@ public class RecipeEdge {
 	
 	public Expr actionExpr(){
 		return actionExpr;
+	}
+	
+	public Expr toExpr(){
+		List<Expr> qList = new ArrayList<Expr>();		
+		if(!qualifierStructList.isEmpty()){			
+			for(Struct struct : qualifierStructList){				
+				if(struct.isFoodStruct() ){
+					String qualifierStr = ((FoodStruct)struct).qualifier();
+					if("".equals(qualifierStr)){
+						qList.add(new Expr(struct.nameStr()));
+					}else{
+						List<Expr> structExprList = new ArrayList<Expr>();						
+						structExprList.add(new Expr(qualifierStr));
+						structExprList.add(new Expr(struct.nameStr()));
+						qList.add(ExprUtils.listExpr(structExprList));
+					}					
+				}else{
+					qList.add(new Expr(struct.nameStr()));
+				}
+			}
+		}
+		if(!qList.isEmpty()){	
+			return new Expr(new Expr(Expr.SYMBOL, "Action"), new Expr[]{new Expr(actionStruct.nameStr()), ExprUtils.listExpr(qList)});
+		}else{
+			return new Expr(new Expr(Expr.SYMBOL, "Action"), new Expr[]{new Expr(actionStruct.nameStr())});
+		}
 	}
 	
 	@Override

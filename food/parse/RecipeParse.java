@@ -36,13 +36,20 @@ public class RecipeParse {
 		inputAr = new String[]{"place soy sauce, lemon juice, and basil in blender", "stir in hot pepper sauce and garlic", 
 				"blend on high speed for 30 seconds"};//"Pour marinade over desired type of meat"
 		inputAr = new String[]{"combine flour and salt", "pour batter in bowl"}; //batter should be made to refer to previous mixture
-		inputAr = new String[]{"combine flour and salt", "add banana", "pour batter in bowl"}; 
+		
 		inputAr = new String[]{"combine flour and salt", "add banana", "pour batter in bowl","Combine banana mixture and egg"}; 
 		inputAr = new String[]{"Tear off a small piece of dough, flatten into a disc"};
 		inputAr = new String[]{"Sprinkle yeast over warm water in a large bowl"};
 		inputAr = new String[]{"take banana","top on cilantro"};
 		inputAr = new String[]{"soak cashew overnight","place potato and carrot in steamer for 20 minutes", 
 				"combine soaked cashew and steamed vegetable"};
+		//inputAr = new String[]{"soak cashew overnight","place potato and carrot in steamer for 20 minutes","combine cashew and vegetable"};
+		//inputAr = new String[]{"place potato and carrot in steamer"};
+		inputAr = new String[]{"combine flour and salt", "add banana", "pour batter in bowl"}; 
+		inputAr = new String[]{"combine flour and salt", "wait 10 minutes"};
+		inputAr = new String[]{"combine flour and salt", "bake in oven"};
+		inputAr = new String[]{"take potato", "combine cashew and steamed vegetable"};
+		inputAr = new String[]{"warm tortillas on a pan"};
 		
 		boolean isVerbose = true;
 		Stats stats = null;

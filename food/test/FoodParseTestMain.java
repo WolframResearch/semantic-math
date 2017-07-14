@@ -82,4 +82,32 @@ public class FoodParseTestMain {
 		
 	}
 	
+	@Test
+	public void test2(){
+		/*
+		 * Graph[{Labeled[Rule[Name["356"], Name["3664"]], Action["wait{  10 minute}"]], Labeled[Rule[Name["flour"], Name["356"]], Action["combine"]], 
+		 * Labeled[Rule[Name["salt"], Name["356"]], Action["combine"]]}, Rule[VertexLabels, "Name"]]
+		 */
+		String[] inputAr = new String[]{"combine flour and salt", "wait 10 minutes"};
+		String[] ingredientsAr = new String[]{"flour","soda", "salt"};
+		String[] desiredSnippets = new String[]{"wait", "10 minute", "combine", "flour", "salt"};
+		int desiredEdgeNum = 3;
+		assertTrue(testFoodParse(inputAr, ingredientsAr, desiredSnippets, desiredEdgeNum));
+	}
+	
+	@Test
+	public void test3(){
+		/*
+		 * Graph[{Labeled[Rule[Name["356"], Name["3664"]], Action["wait{  10 minute}"]], Labeled[Rule[Name["flour"], Name["356"]], Action["combine"]], 
+		 * Labeled[Rule[Name["salt"], Name["356"]], Action["combine"]]}, Rule[VertexLabels, "Name"]]
+		 */
+		String[] inputAr = new String[]{"soak cashew overnight","place potato and carrot in steamer for 20 minutes", 
+		"combine soaked cashew and steamed vegetable"};
+		String[] ingredientsAr = new String[]{"potato","cashew", "carrot"};
+		String[] desiredSnippets = new String[]{"soak", "cashew", "place", "potato", "carrot", "steamer", "20 minutes", "vegetable"};
+		int desiredEdgeNum = 5;
+		assertTrue(testFoodParse(inputAr, ingredientsAr, desiredSnippets, desiredEdgeNum));
+	}
+	
+	
 }
