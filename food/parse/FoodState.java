@@ -123,8 +123,8 @@ public class FoodState {
 			foodName = String.valueOf(r.nextInt(300));
 		}*/
 		Expr[] argExprAr;
-		Set<String> pptSet = foodStruct.getPropertySet();
-		if(!pptSet.isEmpty()){
+		Set<String> pptSet;
+		if(null != foodStruct && !(pptSet = foodStruct.getPropertySet()).isEmpty()){
 			List<Expr> pptExprList = new ArrayList<Expr>();
 			for(String pptStr : pptSet){
 				pptExprList.add(new Expr(pptStr));

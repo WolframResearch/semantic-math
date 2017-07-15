@@ -70,33 +70,12 @@ public class Maps {
 	
 	// list of parts of speech, ent, verb etc
 	protected static List<String> posList;	
-	//initialize with resource
 	
 	static{
 		String pathToPosTagger = "src/thmp/data/models/english-bidirectional-distsim.tagger";
 		POS_TAGGER_PATH_STR = FileUtils.getPathIfOnServlet(pathToPosTagger);		
 	}
-	/**
-	 * Sets buffered readers.
-	 * @param fixedPhraseBuf
-	 * @param lexiconBuf
-	 */
-	/*public static void setBufferedReaders(BufferedReader fixedPhraseBuf, BufferedReader lexiconBuf){
-		fixedPhraseBuffer = fixedPhraseBuf;
-		lexiconBuffer = lexiconBuf;
-	}*/
-	
-	/**
-	 * Sets servletContext.
-	 */
-	/*public static void setServletContext(ServletContext servletContext_){
-		servletContext = servletContext_;
-	}*/
-	
-	/*public static void setServerPosTaggerPathStr(String path){
-		POS_TAGGER_PATH_STR = path;
-	}*/
-	
+
 	public static String getServerPosTaggerPathStr(){
 		return POS_TAGGER_PATH_STR;
 	}
@@ -141,6 +120,7 @@ public class Maps {
 	public static Multimap<String, Rule> structMap(){
 		return BuildMaps.structMap;
 	}	
+	
 	/**
 	 * Check to see if food token. If food token, returns int > 0. Else not 
 	 * a food token.
@@ -152,8 +132,8 @@ public class Maps {
 	public static int checkFoodToken(String[] inputAr, int curIndex, int inputArLen){
 		return BuildMaps.FOOD_TRIE.getTokenCount(inputAr, curIndex, inputArLen);
 	}
+	
 	/**
-	 * 
 	 * @param inputAr
 	 * @param curIndex
 	 * @param inputArLen
@@ -271,9 +251,10 @@ public class Maps {
 		 */
 		public static Collection<String> updateWithAdditionalFoodPos(String word){
 			Collection<String> col = extraFoodLexiconMMap.get(word);
-			if(col.isEmpty()){
+			//col.addAll(posMMap.get(word)); //add later
+			/*if(col.isEmpty()){
 				col = extraFoodLexiconMMap.get(WordForms.getSingularForm(word));
-			}
+			}*/
 			return col;		
 		}
 		
@@ -287,9 +268,11 @@ public class Maps {
 			negativePosMMap.put("run", "ent");
 			negativePosMMap.put("the", "adj");
 			negativePosMMap.put("under", "adverb");
-			negativePosMMap.put("let", "verb");
 			negativePosMMap.put("let", "hyp");
-			negativePosMMap.put("be", "verb");			
+			negativePosMMap.put("be", "verb");
+			if(!FOOD){
+				negativePosMMap.put("let", "verb");				
+			}
 		}
 
 		/**
@@ -402,7 +385,6 @@ public class Maps {
 
 			while (posArraysMapIter.hasNext()) {
 				Entry<String, String[]> curEntry = posArraysMapIter.next();
-
 				String curPos = curEntry.getKey();
 				String[] curArray = curEntry.getValue();
 				String tempPos = curPos;
@@ -443,9 +425,9 @@ public class Maps {
 			
 			if(FOOD){
 				posPreMMap.put("warm", "adj");
-				posPreMMap.put("oven", "ent");
+				/*posPreMMap.put("oven", "ent");
 				posPreMMap.put("flour", "ent");
-				posPreMMap.put("salt", "ent");
+				posPreMMap.put("salt", "ent");*/
 				posPreMMap.put("baking", "ent_COMP");
 				posPreMMap.put("baking soda", "ent");
 				posPreMMap.put("soda", "ent");
@@ -453,11 +435,15 @@ public class Maps {
 				posPreMMap.put("skillet", "ent");
 				posPreMMap.put("medium", "adj");
 				//posPreMMap.put("heat", "ent");
-				posPreMMap.put("verb", "ent");
+				//posPreMMap.put("verb", "ent");
 				posPreMMap.put("transparent", "adj");
 				posPreMMap.put("speed", "ent");
 				posPreMMap.put("high", "adj");
+				posPreMMap.put("heat", "ent");
+				posPreMMap.put("once", "hyp");
+				posPreMMap.put("once", "adj");
 				
+				posPreMMap.put("let", "verb");
 			}
 			
 			posPreMMap.put("disjoint", "adj");
@@ -1073,14 +1059,7 @@ public class Maps {
 			
 			return posPreMMap;
 		}
-	}
-	
-	
-	/*public static void initializeWithResource(BufferedReader fixedPhraseBuffer, BufferedReader lexiconBuffer) throws IOException{
-		readFixedPhrases(fixedPhraseBuffer);
-		//
-    	readLexicon(lexiconBuffer, );	 
-	}*/
+	}	
 	
 	/*
 	// build fixedPhraseMap

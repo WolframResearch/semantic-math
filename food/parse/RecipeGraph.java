@@ -105,7 +105,11 @@ public class RecipeGraph {
 		//winning wrapper map on the top level
 		Multimap<ParseStructType, WLCommandWrapper> wrapperMMap = headParseStruct.getWLCommandWrapperMMap();
 		//System.out.println("wrapperMMap.values().size "+ wrapperMMap.values().size());
-		for(WLCommandWrapper wrapper : wrapperMMap.values()){
+		for(Map.Entry<ParseStructType, WLCommandWrapper> entry : wrapperMMap.entries()){
+			if(entry.getKey() == ParseStructType.NONE){
+				continue;
+			}
+			WLCommandWrapper wrapper = entry.getValue();
 			WLCommand wlCommand = wrapper.WLCommand();
 			handlePosTermList(wlCommand);
 		}		
@@ -132,6 +136,7 @@ public class RecipeGraph {
 	private void handlePosTermList(WLCommand wlCommand){
 		//here assume it's Action. Refine
 		List<PosTerm> posList = WLCommand.posTermList(wlCommand);
+		//System.out.println("RG posList "+ posList);
 		int triggerTermIndex = WLCommand.triggerWordIndex(wlCommand);
 		//List<Struct> knownStructList = new ArrayList<Struct>();
 		List<FoodState> knownStateList = new ArrayList<FoodState>();
@@ -238,6 +243,7 @@ public class RecipeGraph {
 			removeLastFoodStateFromCurrentList();
 		}
 		RecipeEdge recipeEdge = new RecipeEdge(actionStruct, edgeQualifierStructList);
+
 		for(FoodState parentState : knownStateList){
 			parentState.setChildEdge(recipeEdge);
 		}

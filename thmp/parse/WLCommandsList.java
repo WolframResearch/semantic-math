@@ -24,6 +24,7 @@ import thmp.parse.WLCommand.ImmutableWLCommand.Builder;
 import thmp.parse.WLCommand.PosTerm.PBuilder;
 import thmp.parse.WLCommand.PosTerm.PosTermConnotation;
 import thmp.parse.WLCommand.PosTerm.PositionInStructTree;
+import thmp.utils.FileUtils;
 
 /**
  * list of WLCommand's. Creates WLCommands using data here and stores them in an
@@ -57,6 +58,7 @@ public class WLCommandsList {
 	/* e.g. "[", "~" */
 	public static final int AUXINDEX = -2;
 	private static final int DEFAULT_POSITION_IN_MAP = Integer.MIN_VALUE;
+	private static final boolean FOOD_PARSE = FileUtils.isFoodParse();
 	
 	/**
 	 * @return the defaultPositionInMap
@@ -190,6 +192,7 @@ public class WLCommandsList {
 				);
 		/* e.g. "Fix a prime $p$"*/
 		putToWLCommandMapBuilder(wLCommandMapBuilder, "verb", new PBuilder("{"),
+				//new PBuilder(null, "then", false, false, "OPT"),
 				new PBuilder("^(?!hyp)verb$", null, true, true, false).setPositionInStructTree(PositionInStructTree.FIRST),
 				new PBuilder(" ~"), new PBuilder("Action").makeExprHead(), new PBuilder("~ "), //new PBuilder(", "), 
 				new PBuilder(" {", "OPT"), 
@@ -202,6 +205,22 @@ public class WLCommandsList {
 				new PBuilder("}")
 				);
 		
+		if(FOOD_PARSE){
+			//e.g. "cook until fragrant"
+			putToWLCommandMapBuilder(wLCommandMapBuilder, "verb", new PBuilder("{"),
+					//new PBuilder(null, "then", false, false, "OPT"),
+					new PBuilder("^(?!hyp)verb$", null, true, true, false).setPositionInStructTree(PositionInStructTree.FIRST),
+					new PBuilder(" ~"), new PBuilder("Action").makeExprHead(), new PBuilder("~ "), //new PBuilder(", "), 
+					//new PBuilder(" {", "OPT"), 
+					new PBuilder("adj", null, true, false, false).addRelationType(RelationType._IS).setPositionInStructTree(PositionInStructTree.LAST),
+					//new PBuilder(", {\"Qualifiers\"->", "OPT"), //new PBuilder("Qualifiers", "OPT").makeOptionalTermHead(),
+					/*new PBuilder(", {", "OPT"),
+					new PBuilder("Qualifiers", "OPT").makeOptionalTermHead(), new PBuilder("->", "OPT"),
+					//the relation should incorporate several types. 
+					new PBuilder("prep|qualifier", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}}", "OPT"),*/
+					new PBuilder("}")
+					);
+		}
 		/*putToWLCommandMapBuilder(wLCommandMapBuilder, "fix", new PBuilder("{"), //test rule!!
 				new PBuilder("verb", null, true, true, false).setPositionInStructTree(PositionInStructTree.FIRST),
 				new PBuilder(", "), new PBuilder(" {", "OPT"), 

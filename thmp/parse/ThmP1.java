@@ -2103,6 +2103,7 @@ public class ThmP1 {
 		//currently only add additional terms for singleton words. Hence tokenCount == 1.
 		if(posList.isEmpty() || tokenCount == 1){
 			Collection<String> posCol = Maps.BuildMaps.updateWithAdditionalFoodPos(iWord);
+			
 			//System.out.println("ThmP1 - iWord / posCol "+ iWord + "  " + posCol);
 			if(!posCol.isEmpty()){
 				for(String p : posCol){
@@ -2115,34 +2116,26 @@ public class ThmP1 {
 					//currently only add additional terms for singleton words.
 					tokenCount = 1;
 				}
-			}
+			}			
 		}
+		//int posListSz;		
 		/*if(iWord.equals("cut")){
 			System.out.println("ThmP1 - posList "+posList);			
 		}*/
-		if(!posList.isEmpty()){					
+		if(!posList.isEmpty()){				
 			StringBuilder tokenSb = new StringBuilder(20);
 			for(int j = 0; j < tokenCount; j++){
 				tokenSb.append(strAr[i+j]).append(" ");
 			}
-			String tokenStr = tokenSb.substring(0, tokenSb.length()-1);
-			//i += tokenCount-1;
-			i += tokenCount;
+			String tokenStr = tokenSb.substring(0, tokenSb.length()-1);			
 			int posListSz = posList.size();
-			List<String> posMMapList = posMMap.get(tokenStr);
-			int posMMapListSz = posMMapList.size();
-			posMMapListLoop: for(int p = 0; p < posMMapListSz; p++){
-				String mapPos = posMMapList.get(p);
-				for(int t = 0; t < posListSz; t++){
-					if(posList.get(t).equals(mapPos)){
-						continue posMMapListLoop;
-					}
-				}
-				posList.add(mapPos);
-			}
+			//add pos from ordinary lexicon
+			addLexiconPos(posList, tokenStr, posListSz);
+			checkFirstWordPos(i, posList);
+			i += tokenCount;
 			Pair foodPair = new Pair(tokenStr, posList.get(0));
 			posListSz = posList.size();
-			for(int k = 1; k < posList.size(); k++){
+			for(int k = 1; k < posListSz; k++){
 				String curPos = posList.get(k);
 				foodPair.addExtraPos(curPos);				
 				if("ent".equals(curPos)){
@@ -2155,6 +2148,49 @@ public class ThmP1 {
 			pairs.add(foodPair);
 		}	
 		return i;
+	}
+
+	/**
+	 * @param posList
+	 * @param tokenStr
+	 * @param posListSz
+	 */
+	private static void addLexiconPos(List<String> posList, String tokenStr, int posListSz) {
+		List<String> posMMapList = posMMap.get(tokenStr);
+		int posMMapListSz = posMMapList.size();
+		posMMapListLoop: for(int p = 0; p < posMMapListSz; p++){
+			String mapPos = posMMapList.get(p);
+			for(int t = 0; t < posListSz; t++){
+				if(posList.get(t).equals(mapPos)){
+					continue posMMapListLoop;
+				}
+			}
+			posList.add(mapPos);
+		}
+	}
+
+	/**
+	 * When first word is both verb and ent, e.g. cook potatoes, heat the oven
+	 * @param i
+	 * @param posList
+	 */
+	private static void checkFirstWordPos(int i, List<String> posList) {
+		int posListSz = posList.size();
+		if((0 == i || 1 == i) && posListSz > 1){
+			int verbIndex = -1;
+			int entIndex = -1;
+			for(int t = 0; t < posListSz; t++){
+				if(posList.get(t).equals("ent")){
+					entIndex = t;
+				}else if(posList.get(t).equals("verb")){
+					verbIndex = t;
+				}
+			}
+			if(verbIndex != -1 && entIndex != -1){
+				posList.remove(entIndex);
+			}
+		}
+		//if(true) throw new IllegalStateException("posList "+posList + " " +i);
 	}
 
 	/**
