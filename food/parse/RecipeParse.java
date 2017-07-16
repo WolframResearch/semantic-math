@@ -8,6 +8,8 @@ import java.util.regex.Pattern;
 
 import com.wolfram.jlink.Expr;
 
+import food.utils.FoodLexicon;
+import food.utils.FoodLexicon.FoodMapNode;
 import thmp.parse.ParseRun;
 import thmp.parse.ParseState;
 import thmp.parse.ParseStruct;
@@ -23,7 +25,44 @@ import thmp.parse.ParseState.ParseStateBuilder;
  */
 public class RecipeParse {
 
-	private static final Pattern THEN_PATTERN = Pattern.compile("(?:then)(.+)");
+	//private static final Pattern THEN_PATTERN = Pattern.compile("(?:then)(.+)");
+	private static final Pattern PUNCTUATION_PATTERN = Pattern.compile("([^\\.,!:;]*)([\\.,:!;]{1})([^\\.,!:;]*)");
+	private static final Pattern PUNCT_PATTERN = Pattern.compile("[.,!:;]");
+	private static final Pattern COMMA_PATTERN = Pattern.compile(",");
+	private static final FoodMapNode FOOD_TRIE = FoodLexicon.foodTrie();
+	
+	/**
+	 * A punctuation-separated sentence, along with the punctuation.
+	 */
+	private static class RecipeSentence{
+		String sentence;
+		PunctuationType punctuationType;
+		
+		RecipeSentence(String sentence_, PunctuationType type_){
+			this.sentence = sentence_;
+			this.punctuationType = type_;
+		}
+		
+		void setSentence(String sentenceStr){
+			this.sentence = sentenceStr;
+		}
+	}
+	
+	/**
+	 * Broadly speaking, type of punctuation. Period
+	 * and exclamation point can be grouped together.
+	 */
+	private enum PunctuationType{
+		COMMA, PERIOD;		
+		static PunctuationType getType(String punct){
+			switch(punct){
+			case ",":
+				return COMMA;
+			default:
+				return PERIOD;	
+			}
+		}		
+	}
 	
 	public static void main(String[] args){
 		
@@ -57,6 +96,14 @@ public class RecipeParse {
 		inputAr = new String[]{"in a large pan over medium heat", "combine water, onion, and garlic",
 				"cook until translucent and fragrant"};
 		//"cook until translucent and fragrant" "add more liquid if needed"
+		inputAr = new String[]{"warm tortillas on pan or directly over fire", "add garlic and mix until smooth"};
+		String inputStr = "add tomato, and onion";
+		inputStr = "make pizza, fill the middle of the pizza with guacomole";
+		inputStr = "combine flour and salt, add banana, pour batter in bowl, Combine banana mixture and egg";
+		inputStr = "combine flour and salt, wait 10 minutes";
+		inputStr = "warm tortillas on pan or directly over fire, add garlic and mix until smooth";
+		inputStr = "cook until translucent and fragrant";
+		inputStr = "wash potato, drain and set aside";
 		
 		boolean isVerbose = true;
 		Stats stats = null;
@@ -66,7 +113,7 @@ public class RecipeParse {
 				"soy sauce", "lemon juice", "basil", "garlic", "hot pepper sauce", "cilantro","potato","carrot","onion","water"};		
 		ingredientsList = Arrays.asList(ingredientsAr);		
 		
-		RecipeGraph recipeGraph = buildRecipeGraph(inputAr, isVerbose, stats, ingredientsList);
+		RecipeGraph recipeGraph = buildRecipeGraph(inputStr, isVerbose, stats, ingredientsList);
 		
 		System.out.println("RecipeParse - recipeGraph \n" + recipeGraph);		
 	}
@@ -77,26 +124,28 @@ public class RecipeParse {
 	 * @param stats
 	 * @param recipeGraph
 	 */
-	public static RecipeGraph buildRecipeGraph(String[] inputAr, boolean isVerbose, Stats stats, List<String> ingredientsList) {
+	public static RecipeGraph buildRecipeGraph(String inputStr, boolean isVerbose, Stats stats, List<String> ingredientsList) {
 		//initialize recipe graph with list of ingredients
 		RecipeGraph recipeGraph = RecipeGraph.initializeRecipeGraph(ingredientsList);
-
 		//List<ParseStruct> parseStructList = new ArrayList<ParseStruct>();
+		List<RecipeSentence> inputList = recipePreprocess(inputStr);		
+		boolean doPreprocess = false;
 		
-		int inputArLen = inputAr.length;
+		int inputArLen = inputList.size();
 		for(int j = 0; j < inputArLen; j++){
-			String input = inputAr[j];
+			RecipeSentence sentence = inputList.get(j);
+			String curSentenceStr = sentence.sentence; 
 			//refine
 			//input = WordForms.splitDelimPattern().matcher(input).replaceAll(" and ");
-			StringBuilder inputSb = new StringBuilder();
+			//StringBuilder inputSb = new StringBuilder();
 			ParseStateBuilder pBuilder = new ParseStateBuilder();
 			ParseState parseState = pBuilder.build();
 			
-			int inputLen = input.length();
-			input = processInput(input, inputSb, inputLen);
+			//int inputLen = input.length();
+			//input = processInput(input, inputSb, inputLen); //combine wih preprocess earlier!
 			
 			//parseInput(String st, ParseState parseState, boolean isVerbose, Stats stats){
-			ParseRun.parseInput(input, parseState, isVerbose, stats);
+			ParseRun.parseInput(curSentenceStr, parseState, isVerbose, stats, doPreprocess);
 			
 			ParseStruct headParseStruct = parseState.getHeadParseStruct();
 			List<Expr> exprList = new ArrayList<Expr>();
@@ -116,12 +165,14 @@ public class RecipeParse {
 				//if first word is a preposition, e.g. "in pan, cook potatoes"
 				//Better if also check for punctuation.
 				List<Struct> structList = parseState.getTokenList();
-				System.out.println("structList "+structList);
+				//System.out.println("structList "+structList);
 				if(structList.size() > 0){
 					Struct firstStruct = structList.get(0);
-					if("pre".equals(firstStruct.type())){
-						String nextInput = inputAr[j+1] + " " + input;
-						inputAr[j+1] = nextInput;
+					if("pre".equals(firstStruct.type()) && sentence.punctuationType == PunctuationType.COMMA){
+						RecipeSentence nextSentence = inputList.get(j+1);
+						nextSentence.setSentence(nextSentence.sentence + " " + curSentenceStr);
+						//String nextInput = inputAr[j+1] + " " + input;
+						//inputAr[j+1] = nextInput;
 						/*if(!parseStructList.isEmpty()){
 							parseStructList.remove(parseStructList.size()-1);
 						}*/
@@ -136,17 +187,74 @@ public class RecipeParse {
 	}
 
 	/**
+	 * Tokenize recipe.
+	 * @param string
+	 * @return
+	 */
+	private static List<RecipeSentence> recipePreprocess(String recipeStr) {
+		if(WordForms.getWhiteEmptySpacePattern().matcher(recipeStr).matches()){
+			return new ArrayList<RecipeSentence>();
+		}
+		List<RecipeSentence> sentenceList = new ArrayList<RecipeSentence>();
+		recipeStr = recipeStr.toLowerCase();
+		//distancing the words
+		String[] wordsArray = WordForms.getWhiteNonEmptySpaceNotAllPattern().split(PUNCTUATION_PATTERN.matcher(recipeStr).replaceAll("$1 $2 $3"));
+		int wordsArrayLen = wordsArray.length;
+		StringBuilder sentenceSB = new StringBuilder(30);
+		
+		for(int i = 0; i < wordsArrayLen; i++){
+			String word = wordsArray[i];
+			if(PUNCT_PATTERN.matcher(word).matches()){
+				if(sentenceSB.length() < 2){
+					continue;
+				}
+				//boolean sentenceAdded = false;
+				if(COMMA_PATTERN.matcher(word).matches()){
+					//check for and in next term
+					//check for "and"
+					if(i < wordsArrayLen-1){
+						//if(true) throw new IllegalStateException(Arrays.toString(wordsArray));
+						//next word is food, remove comma
+						if(FOOD_TRIE.getTokenCount(wordsArray, i+1, wordsArrayLen) > 0
+								){
+							sentenceSB.append("and ");							
+							continue;
+						}else if("and".equals(wordsArray[i+1])){
+							continue;
+						}
+					}					
+				}
+				//remove trailing space
+				String sentenceStr = sentenceSB.substring(0, sentenceSB.length()-1);				
+				sentenceList.add(new RecipeSentence(sentenceStr, PunctuationType.getType(word)));
+				sentenceSB = new StringBuilder(30);				
+				if(i < wordsArrayLen-1 && "then".equals(wordsArray[i+1])){
+					//don't want to affect math parser, so remove "then" here instead of in main parser.
+					i++;
+				}
+				continue;
+			}
+			sentenceSB.append(word).append(" ");			
+		}
+		if(sentenceSB.length() > 0){
+			sentenceList.add(new RecipeSentence(sentenceSB.toString(), PunctuationType.PERIOD));
+		}
+		return sentenceList;
+	}
+
+	/**
 	 * @param input
 	 * @param inputSb
 	 * @param inputLen
+	 * @deprecated July 2017
 	 * @return
 	 */
 	private static String processInput(String input, StringBuilder inputSb, int inputLen) {
-		Matcher thenMatcher;
+		/*Matcher thenMatcher;
 		if((thenMatcher=THEN_PATTERN.matcher(input)).matches()){
 			//don't want to affect math parser, so pre-process here
 			input = thenMatcher.group(1);
-		}		
+		}*/
 		for(int i = 0; i < inputLen; i++){
 			//String cStr = String.valueOf(input.charAt(i));
 			char c = input.charAt(i);

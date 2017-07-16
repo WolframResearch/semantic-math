@@ -67,6 +67,7 @@ public class WordForms {
 	private static final Pattern COMMAND_BEGIN_PATTERN = Pattern.compile("\\\\");
 	//indicates termination of a Latex command
 	private static final Pattern COMMAND_END_PATTERN = Pattern.compile("[\\$(\\[{\\])}_;,:!'`~%.\\-\"\\s]");
+	private static final Pattern FRACTION_PATTERN = Pattern.compile("\\d+/\\d+");
 	
 	public static final String QUANTITY_POS = "quant";
 	
@@ -668,6 +669,18 @@ public class WordForms {
 	}
 	
 	/**
+	 * Determine if input word is a fraction, e.g. five-thirty-eight, 1/2. 
+	 * (Tokens such as 100 are already parsed earlier in ThmP1.tokenize).
+	 * Not combined with isCardinality(), since that's recursive
+	 * @param word
+	 * @return
+	 */
+	public static boolean isFraction(String word){
+		//check if match 1/2, useful in recipe parsing
+		return FRACTION_PATTERN.matcher(word).matches();			
+	}
+	
+	/**
 	 * Determine if input word is a cardinality, e.g. five-thirty-eight.
 	 * @param word Word to determine if numeric quantity.
 	 * @param inputStrAr Array of strings, whose members constitute the original input string.
@@ -680,11 +693,8 @@ public class WordForms {
 		int nextTokenStartIndex = wordIndex;
 		StringBuilder sb = new StringBuilder(25);
 		String[] ar = DASH_PATTERN.split(word);
-		//	boolean dashBool = ar.length > 1;
 		if(ar.length > 1){
-			//String[] inputStrAr1 = word.split("-");
 			int wordIndex1 = 0; 
-			///Pair emptyPair1 = new Pair(null, null);
 			int temp = isCardinality(ar[0], ar, wordIndex1, emptyPair);
 			if(temp > wordIndex1){
 				sb.append(word).append(" ");

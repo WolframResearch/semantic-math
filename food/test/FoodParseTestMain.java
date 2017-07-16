@@ -30,16 +30,16 @@ public class FoodParseTestMain {
 	 * @param desiredSnippets Desired string snippets to check for presence.
 	 * @return
 	 */
-	public static boolean testFoodParse(String[] inputAr, String[] ingredientsAr, String[] desiredSnippets, int desiredEdgeNum){
+	public static boolean testFoodParse(String input, String[] ingredientsAr, String[] desiredSnippets, int desiredEdgeNum){
 		List<String> ingredientsList = Arrays.asList(ingredientsAr);
 		
 		boolean isVerbose = true;
 		Stats stats = null;		
-		RecipeGraph recipeGraph = RecipeParse.buildRecipeGraph(inputAr, isVerbose, stats, ingredientsList);
+		RecipeGraph recipeGraph = RecipeParse.buildRecipeGraph(input, isVerbose, stats, ingredientsList);
 		
 		List<FoodState> currentStateList = recipeGraph.currentStateList();		
 		if(currentStateList.size() != 1){
-			System.out.println("ERROR: currentStateList.size() != 1 for " + Arrays.toString(inputAr));
+			System.out.println("ERROR: currentStateList.size() " + currentStateList.size() + " != 1 for " + input);
 			return false;
 		}
 		FoodState productState = currentStateList.get(0);		
@@ -51,7 +51,7 @@ public class FoodParseTestMain {
 		//args don't include Head Symbol. graphExpr.args()[0] is the List of edges supplied to Graph.
 		int numEdges = graphExpr.args()[0].args().length;
 		if(numEdges != desiredEdgeNum){
-			System.out.println("numEdges: "+ numEdges + " desiredEdgeNum: "+ desiredEdgeNum);
+			System.out.println("ERROR: numEdges != desiredEdgeNum! numEdges: "+ numEdges + " desiredEdgeNum: "+ desiredEdgeNum);
 			return false;
 		}
 		String graphStr = graphExpr.toString();
@@ -66,7 +66,8 @@ public class FoodParseTestMain {
 	
 	@Test
 	public void test1(){
-		String[] inputAr = new String[]{"combine flour and salt", "add banana", "pour batter in bowl","Combine banana mixture and egg"}; 
+		//String[] inputAr = new String[]{"combine flour and salt", "add banana", "pour batter in bowl","Combine banana mixture and egg"}; 
+		String input = "combine flour and salt, add banana, pour batter in bowl, Combine banana mixture and egg";
 		String[] ingredientsAr = new String[]{"flour","soda", "salt", "egg","banana", "oil","onion", "blue cheese",
 				"soy sauce", "lemon juice", "basil", "garlic", "hot pepper sauce"};
 		/*
@@ -78,8 +79,7 @@ public class FoodParseTestMain {
 		 */
 		String[] desiredSnippets = new String[]{"banana mixture", "combine", "pour", "bowl", "add", "flour", "salt", "egg"};
 		int desiredEdgeNum = 7;
-		assertTrue(testFoodParse(inputAr, ingredientsAr, desiredSnippets, desiredEdgeNum));
-		
+		assertTrue(testFoodParse(input, ingredientsAr, desiredSnippets, desiredEdgeNum));		
 	}
 	
 	@Test
@@ -88,11 +88,12 @@ public class FoodParseTestMain {
 		 * Graph[{Labeled[Rule[Name["356"], Name["3664"]], Action["wait{  10 minute}"]], Labeled[Rule[Name["flour"], Name["356"]], Action["combine"]], 
 		 * Labeled[Rule[Name["salt"], Name["356"]], Action["combine"]]}, Rule[VertexLabels, "Name"]]
 		 */
-		String[] inputAr = new String[]{"combine flour and salt", "wait 10 minutes"};
+		//String[] inputAr = new String[]{"combine flour and salt", "wait 10 minutes"};
+		String input = "combine flour and salt, wait 10 minutes";
 		String[] ingredientsAr = new String[]{"flour","soda", "salt"};
 		String[] desiredSnippets = new String[]{"wait", "10 minute", "combine", "flour", "salt"};
 		int desiredEdgeNum = 3;
-		assertTrue(testFoodParse(inputAr, ingredientsAr, desiredSnippets, desiredEdgeNum));
+		assertTrue(testFoodParse(input, ingredientsAr, desiredSnippets, desiredEdgeNum));
 	}
 	
 	@Test
@@ -101,13 +102,22 @@ public class FoodParseTestMain {
 		 * Graph[{Labeled[Rule[Name["356"], Name["3664"]], Action["wait{  10 minute}"]], Labeled[Rule[Name["flour"], Name["356"]], Action["combine"]], 
 		 * Labeled[Rule[Name["salt"], Name["356"]], Action["combine"]]}, Rule[VertexLabels, "Name"]]
 		 */
-		String[] inputAr = new String[]{"soak cashew overnight","place potato and carrot in steamer for 20 minutes", 
-		"combine soaked cashew and steamed vegetable"};
+		//String[] inputAr = new String[]{"soak cashew overnight","place potato and carrot in steamer for 20 minutes", 
+		//"combine soaked cashew and steamed vegetable"};
+		String input = "soak cashew overnight, place potato and carrot in steamer for 20 minutes, combine soaked cashew and steamed vegetable";
 		String[] ingredientsAr = new String[]{"potato","cashew", "carrot"};
-		String[] desiredSnippets = new String[]{"soak", "cashew", "place", "potato", "carrot", "steamer", "20 minutes", "vegetable"};
+		String[] desiredSnippets = new String[]{"soak", "cashew", "place", "potato", "carrot", "steamer", "20 minute", "vegetable"};
 		int desiredEdgeNum = 5;
-		assertTrue(testFoodParse(inputAr, ingredientsAr, desiredSnippets, desiredEdgeNum));
+		assertTrue(testFoodParse(input, ingredientsAr, desiredSnippets, desiredEdgeNum));
 	}
 	
-	
+	@Test
+	public void test4(){
+		String inputStr = "warm tortillas on pan or directly over fire, add garlic and mix until smooth";
+		String[] ingredientsAr = new String[]{"tortillas","garlic"};
+		String[] desiredSnippets = new String[]{"until", "smooth", "garlic", "mix", "add", "warm", "tortillas"};
+		int desiredEdgeNum = 3;
+		assertTrue(testFoodParse(inputStr, ingredientsAr, desiredSnippets, desiredEdgeNum));
+	}
+
 }

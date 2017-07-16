@@ -220,6 +220,14 @@ public class WLCommandsList {
 					new PBuilder("prep|qualifier", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}}", "OPT"),*/
 					new PBuilder("}")
 					);
+			//e.g. "drain and set aside"
+			putToWLCommandMapBuilder(wLCommandMapBuilder, "verb", 
+					//new PBuilder(null, "then", false, false, "OPT"),
+					new PBuilder("^(?!hyp)verb$", null, true, true, false).setPositionInStructTree(PositionInStructTree.FIRST)
+					.setPositionInStructTree(PositionInStructTree.LAST)
+					//new PBuilder(" ~"), new PBuilder("Action").makeExprHead(), new PBuilder("~ "), //new PBuilder(", "), 
+					//new PBuilder("adj", null, true, false, false).addRelationType(RelationType._IS)					
+					);
 		}
 		/*putToWLCommandMapBuilder(wLCommandMapBuilder, "fix", new PBuilder("{"), //test rule!!
 				new PBuilder("verb", null, true, true, false).setPositionInStructTree(PositionInStructTree.FIRST),

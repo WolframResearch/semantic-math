@@ -33,8 +33,7 @@ public class ParseRun {
 		StringBuilder sb = new StringBuilder(50);
 		for(int i = 0; i < argsLen; i++){
 			sb.append(args[i]).append(" ");
-		}
-		
+		}		
 		Expr expr = parseInput(sb.toString());
 		//don't hardcode address!
 		List<Expr> exprList = new ArrayList<Expr>();
@@ -86,13 +85,19 @@ public class ParseRun {
 	 * @param st
 	 * @param parseState
 	 * @param isVerbose whether to be verbose and print results to stdout.
+	 * @param doPreprocess whether to run preprocess() step. E.g. don't run if parsing recipes.
 	 */
-	public static void parseInput(String st, ParseState parseState, boolean isVerbose, Stats stats){
+	public static void parseInput(String st, ParseState parseState, boolean isVerbose, Stats stats, boolean...doPreprocess){
 		
 		List<BigInteger> relationalContextVecList = new ArrayList<BigInteger>();			
 		parseState.resetNumNonTexTokens();
 		
-		String[] strAr = ThmP1.preprocess(st);			
+		String[] strAr;	
+		if(doPreprocess.length > 0 && !doPreprocess[0]){
+			strAr = new String[]{st};
+		}else{
+			strAr = ThmP1.preprocess(st);
+		}
 		
 		for(int i = 0; i < strAr.length; i++){
 			if(WordForms.getWhiteEmptySpacePattern().matcher(strAr[i]).find()){

@@ -149,6 +149,9 @@ public class RecipeGraph {
 		/*if(posList.get(triggerTermIndex).posTermStruct().nameStr().equals("combine")){
 			System.out.println("RecipeGraph combine");
 		}*/
+
+		//to go along with edge, could be e.g. "until warm", "in oven"
+		List<Struct> edgeQualifierStructList = new ArrayList<Struct>();	
 		//triggerSubject, subject of the trigger term, e.g. "potatoes" in "smash potatoes"
 		boolean prevTermIsTrigger = false;
 		int posListSz = posList.size();
@@ -168,11 +171,9 @@ public class RecipeGraph {
 				continue;
 			}			
 			addStructFoodState(unknownStructList, knownStateList, actionSourceList, actionTargetList,
-					prevTermIsTrigger, termStruct);	
+					edgeQualifierStructList, prevTermIsTrigger, termStruct);	
 			prevTermIsTrigger = false;
-		}		
-		//to go along with edge, could be e.g. "until warm", "in oven"
-		List<Struct> edgeQualifierStructList = new ArrayList<Struct>();				
+		}				
 		Struct actionStruct;
 		//whether lastFoodState has been added to knownStateList.
 		boolean lastStateUsed = false;
@@ -345,8 +346,8 @@ public class RecipeGraph {
 	 * @return
 	 */
 	private void addStructFoodState(List<Struct> unknownStructList, 
-			List<FoodState> knownStateList, 
-			List<FoodStruct> actionSourceList, List<FoodStruct> actionTargetList,
+			List<FoodState> knownStateList, List<FoodStruct> actionSourceList, List<FoodStruct> actionTargetList,
+			List<Struct> edgeQualifierStructList,
 			boolean prevTermIsTrigger, Struct termStruct) {
 		
 		if(!termStruct.isStructA()){
@@ -360,16 +361,21 @@ public class RecipeGraph {
 				//if(true)throw new RuntimeException(((Struct)(Struct)termStruct.prev2()).nameStr());
 				if(termStruct.prev1NodeType().isTypeStruct()){
 					addStructFoodState(unknownStructList, knownStateList, actionSourceList, actionTargetList,
-							prevTermIsTrigger, (Struct)termStruct.prev1());
+							edgeQualifierStructList, prevTermIsTrigger, (Struct)termStruct.prev1());
 				}
 				if(termStruct.prev2NodeType().isTypeStruct()){
 					addStructFoodState(unknownStructList, knownStateList, actionSourceList, actionTargetList,
-							prevTermIsTrigger, (Struct)termStruct.prev2());
+							edgeQualifierStructList, prevTermIsTrigger, (Struct)termStruct.prev2());
 				}
 				//conj can have children nodes, e.g. "bake A and B in oven"
 				addStructChildren(unknownStructList, knownStateList, actionSourceList, actionTargetList, 
 						termStruct);
-			}			
+			}else{
+				if("adj".equals(structType)){
+					//e.g. "translucent" in "cook until translucent"
+					edgeQualifierStructList.add(termStruct);
+				}
+			}
 		}
 		//return structType;
 	}

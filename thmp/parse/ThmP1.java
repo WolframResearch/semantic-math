@@ -1004,6 +1004,8 @@ public class ThmP1 {
 			}else if((futureWordIndexAfterCardinal=WordForms.isCardinality(curWord, strAr, i, emptyPair0)) > i){
 				pairs.add(emptyPair0);
 				i = futureWordIndexAfterCardinal-1;
+			}else if(WordForms.isFraction(curWord)){
+				pairs.add(new Pair(curWord, WordForms.QUANTITY_POS));
 			}
 			// check part of speech (pos)
 			else if (posMMap.containsKey(curWord)){ //|| posMMap.containsKey(curWord.toLowerCase())) {
@@ -2176,7 +2178,9 @@ public class ThmP1 {
 	 */
 	private static void checkFirstWordPos(int i, List<String> posList) {
 		int posListSz = posList.size();
-		if((0 == i || 1 == i) && posListSz > 1){
+		//could also have pos 1, if for instance "and heat up ..." 
+		//<--now preprocessing will take care of this
+		if((0 == i) && posListSz > 1){
 			int verbIndex = -1;
 			int entIndex = -1;
 			for(int t = 0; t < posListSz; t++){

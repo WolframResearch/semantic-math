@@ -137,7 +137,9 @@ public class FoodLexicon {
 		 * @return
 		 */
 		public int getTokenCount(String[] inputAr, int curIndex, int inputArLen){
-			
+			if(curIndex > inputArLen - 1){
+				return 0;
+			}
 			int tokenCounter = 0;
 			FoodMapNode curNode = this;
 			boolean isValidEnding = curNode.isValid;
