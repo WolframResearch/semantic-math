@@ -70,16 +70,39 @@ public class NGramSearch {
 	
 	//should use this to detect fluff in first word.
 	private static final Set<String> fluffWordsSet = WordForms.getFluffSet();
+	//invalid ending for 2nd word
 	private static final Set<String> VALID_ING_WORD_ENDING_SET;
+	//invalid if 2nd word
+	private static final Set<String> INVALID_FIRST_WORD_SET;
+	//invalid if 1st word
+	private static final Set<String> INVALID_SECOND_WORD_SET;
+	
+	public static final Pattern ALPHA_PATTERN = Pattern.compile("[a-z\\s]+"); //"(?:[a-z]+\\s*[a-z]*\\s*)+"
+	
 	static{
 		String[] ingEndingAr = new String[]{"ring","mapping","embedding","ordering","branching","programming",
 				"ending","mixing","covering","pairing","subring","tilting","string","thickening","matching",
 				"crossing","encoding","annealing","splitting","linking","nonvanishing","alternating","filling",
-				"vanishing","preserving","stabilizing","smoothing","bounding","packing"};
+				"vanishing","preserving","stabilizing","smoothing","bounding","packing", "plus"};
 		VALID_ING_WORD_ENDING_SET = new HashSet<String>();
 		for(String word : ingEndingAr){
 			VALID_ING_WORD_ENDING_SET.add(word);
 		}
+		
+		String[] invalidFirstWordAr = new String[]{"satisfying","forthcoming", "fascinating", "resulting",
+				"neither", "either", "carried", "def", "nous", "respectively", "suite"};		
+		INVALID_FIRST_WORD_SET = new HashSet<String>();
+		for(String word : invalidFirstWordAr){
+			INVALID_FIRST_WORD_SET.add(word);
+		}
+		
+		String[] invalidSecondWordAr = new String[]{"neither", "either", "carried", "def", "nous", "suite", "respectively",
+				"absolutely"};		
+		INVALID_SECOND_WORD_SET = new HashSet<String>();
+		for(String word : invalidSecondWordAr){
+			INVALID_SECOND_WORD_SET.add(word);
+		}
+		//INVALID_SECOND_WORD_SET.add( );
 		logger.info("Finished initializing NGramSearch");
 	}
 	/**
@@ -133,7 +156,6 @@ public class NGramSearch {
 		// name of two gram data file containing additional 2-grams that should be included. These don't have
 		// frequencies associated with them. Load these into maps first and accumulate their frequencies.
 		private static final String TWO_GRAM_DATA_FILESTR = "src/thmp/data/twoGramData.txt";		
-		
 		//set that contains the first word of each n-grams.
 		private static final Set<String> twoGramFirstWordsSet;
 		//factor used when the second word occurs with probability higher than 
@@ -236,7 +258,7 @@ public class NGramSearch {
 				InputStream twoGramInputStream = servletContext.getResourceAsStream(TWO_GRAM_DATA_FILESTR);
 				BufferedReader twoGramBF = new BufferedReader(new InputStreamReader(twoGramInputStream));				
 				readAdditionalTwoGrams(twoGramBF, initialTwoGramsSet);
-			}			
+			}		
 			Set<String> nGramFirstWordsSet = new HashSet<String>();
 			//get list of 2 grams that show up frequently
 			return compile2grams(twoGramTotalOccurenceMap, averageWordCountsMap, nGramFirstWordsSet, initialTwoGramsSet, allWordsMSet);
@@ -324,7 +346,8 @@ public class NGramSearch {
 				rawTwoGramSet.add(new TwoGramFreqPair(twoGram, nextWordCount));
 				firstWordUsedCount++;				
 				boolean addTwoGram = false;
-				if(nextWordCount > avgWordCountWeighted || initialTwoGramsSet.contains(twoGram)){
+				if(nextWordCount > avgWordCountWeighted //|| initialTwoGramsSet.contains(twoGram)
+						){
 					addTwoGram = true;
 				}else if(allWordsMSet.contains(word) && allWordsProbMap.containsKey(nextWord)){
 					if((((double)nextWordCount)/allWordsMSet.count(word)) > SECOND_WORD_PROBA_MULT_FACTOR*allWordsProbMap.get(nextWord)){
@@ -333,7 +356,7 @@ public class NGramSearch {
 				}				
 				if(addTwoGram){					
 					twoGramMap.put(twoGram, nextWordCount);
-					initialTwoGramsSet.remove(twoGram);
+					//initialTwoGramsSet.remove(twoGram);
 					nGramFirstWordsSet.add(word);
 					totalFreqCount += nextWordCount;
 					totalTwoGrams++;
@@ -341,8 +364,7 @@ public class NGramSearch {
 				}
 			}
 			firstWordSet.add(new TwoGramFreqPair(word, firstWordUsedCount));
-		}
-		
+		}		
 		int averageTwoGramFreqCount;
 		//totalTwoGrams should not be 0, unless really tiny source text set.
 		if(totalTwoGrams != 0){ 
@@ -350,6 +372,8 @@ public class NGramSearch {
 		}else{
 			averageTwoGramFreqCount = ADDITIONAL_TWO_GRAM_DEFAULT_COUNT;
 		}	
+		System.out.println("NGramSearch - averageTwoGramFreqCount: "+ averageTwoGramFreqCount);
+		averageTwoGramFreqCount = averageTwoGramFreqCount < 2 ? 2 : averageTwoGramFreqCount;
 		//add additional two grams that were not programmatically selected
 		for(String twoGram : ADDITIONAL_TWO_GRAMS){
 			if(!twoGramMap.containsKey(twoGram)){
@@ -372,7 +396,6 @@ public class NGramSearch {
 		//System.out.println("averageFreqCount " + averageFreqCount);
 		return twoGramMap;
 	}
-
 	}
 	/**
 	 * Adds additional words scraped from resources.
@@ -385,8 +408,10 @@ public class NGramSearch {
 		try{
 			while((word = twoGramBR.readLine()) != null){
 				//this should have been done when sorting the words into maps
-				//word = word.toLowerCase();						
-				initialTwoGramsSet.add(word);				
+				//word = word.toLowerCase();
+				if(ALPHA_PATTERN.matcher(word).matches()){
+					initialTwoGramsSet.add(word);				
+				}
 			}
 		}catch(IOException e){
 			String msg = "IOException in readAdditionalTwoGrams: " +e.getMessage();
@@ -423,6 +448,8 @@ public class NGramSearch {
 				//words such as "purely inseparable" might be filtered out.
 				//maybe first word could be the small fluff words list from ThreeGramSearch?
 				if(fluffWordsSet.contains(curWord) || curWord.length() < 3 
+						|| !ALPHA_PATTERN.matcher(curWord).matches()
+						|| isInvalid1stWord(curWord)
 						|| WordForms.SPECIAL_CHARS_PATTERN.matcher(curWord).matches()
 						|| INVALID_WORD_PATTERN.matcher(curWord).matches()){	
 					//if(nonMathFluffWordsSet.contains(curWord) || curWord.length() < 2 
@@ -431,6 +458,8 @@ public class NGramSearch {
 				}
 				//screen off 2nd word more discriminantly.
 				if(nextWord.length() < 3 || WordForms.SPECIAL_CHARS_PATTERN.matcher(nextWord).matches()
+						|| !ALPHA_PATTERN.matcher(curWord).matches()
+						|| isInvalid2ndWord(nextWord)
 						|| INVALID_WORD_PATTERN.matcher(nextWord).matches()
 						//|| isInvalid2ndWordEnding(nextWord)
 						|| fluffWordsSet.contains(nextWord) || nonMathFluffWordsSet.contains(nextWord) 
@@ -475,7 +504,7 @@ public class NGramSearch {
 	}
 	
 	/**
-	 * Invalid -ing ending, such as "number dividing", but not 
+	 * Invalid -ing ending of 2nd word, such as "number dividing", but not 
 	 * "sobolev embedding", or "associative ring", "... mapping"
 	 * @param nextWord
 	 * @return
@@ -489,6 +518,20 @@ public class NGramSearch {
 		return true;
 	}
 
+	/**
+	 * Invalid -ing ending of first word, such as "satisfying", but not 
+	 * "embedding dimension", "mapping group", etc
+	 * @param nextWord
+	 * @return
+	 */
+	protected static boolean isInvalid1stWord(String nextWord) {		
+		return INVALID_FIRST_WORD_SET.contains(nextWord);		
+	}
+	
+	protected static boolean isInvalid2ndWord(String nextWord) {		
+		return INVALID_SECOND_WORD_SET.contains(nextWord);		
+	}
+	
 	/**
 	 * Iterate through all the words. Record the frequency counts.
 	 * Skip if a frequent word as recorded in English frequent words list.

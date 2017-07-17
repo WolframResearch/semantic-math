@@ -110,7 +110,9 @@ public class RecipeParse {
 		inputStr = "place into the oven and bake for 12 minutes";
 		inputStr = "bring a large pot of water to boil, add corn, cook until tender. Drain. Cook corn on preheated grill.";
 		//inputStr = "bring a large pot of water to boil, add corn. cook until tender. drain. Cook corn on preheated grill.";
-		inputStr = "combine flour and yeast";
+		inputStr = "cut kernels off the cob with a sharp knife.";
+		inputStr = "warm tortillas on pan or directly over fire, add garlic and mix until smooth"; //mix!
+		inputStr = "Beat together cream cheese and confectioners sugar";
 		
 		boolean isVerbose = true;
 		Stats stats = null;

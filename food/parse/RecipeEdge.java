@@ -2,6 +2,7 @@ package food.parse;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import com.wolfram.jlink.Expr;
 
@@ -46,20 +47,25 @@ public class RecipeEdge {
 	public Expr toExpr(){
 		List<Expr> qList = new ArrayList<Expr>();		
 		if(!qualifierStructList.isEmpty()){			
-			for(Struct struct : qualifierStructList){				
+			for(Struct struct : qualifierStructList){	
+				Expr structExpr;
 				if(struct.isFoodStruct() ){
 					String qualifierStr = ((FoodStruct)struct).qualifier();
 					if("".equals(qualifierStr)){
-						qList.add(new Expr(struct.nameStr()));
+						//qList.add(new Expr(struct.nameStr()));
+						structExpr = ExprUtils.listExpr(gatherStructPptExpr(struct));						
+						//structExpr = new Expr(struct.nameStr());
 					}else{
-						List<Expr> structExprList = new ArrayList<Expr>();						
-						structExprList.add(new Expr(qualifierStr));
-						structExprList.add(new Expr(struct.nameStr()));
-						qList.add(ExprUtils.listExpr(structExprList));
+						//List<Expr> structExprList = new ArrayList<Expr>();	
+						List<Expr> structExprList = gatherStructPptExpr(struct);
+						structExprList.add(0, new Expr(qualifierStr));						
+						structExpr = ExprUtils.listExpr(structExprList);
 					}					
 				}else{
-					qList.add(new Expr(struct.nameStr()));
+					//qList.add(new Expr(struct.nameStr()));
+					structExpr = ExprUtils.listExpr(gatherStructPptExpr(struct));
 				}
+				qList.add(structExpr);
 			}
 		}
 		if(!qList.isEmpty()){	
@@ -69,6 +75,24 @@ public class RecipeEdge {
 		}
 	}
 	
+	/**
+	 * Collects struct's name and properties as a list of Expr's.
+	 * @param struct
+	 * @return
+	 */
+	private List<Expr> gatherStructPptExpr(Struct struct) {
+
+		List<Expr> structExprList = new ArrayList<Expr>();		
+		Set<String> pptSet = struct.getPropertySet();
+		if(!pptSet.isEmpty()){
+			for(String pptStr : pptSet){
+				structExprList.add(new Expr(pptStr));				
+			}
+		}
+		structExprList.add(new Expr(struct.nameStr()));
+		return structExprList;
+	}
+
 	@Override
 	public String toString(){
 		StringBuilder sb = new StringBuilder();		

@@ -56,7 +56,7 @@ public class RecipeGraph {
 	private List<FoodState> currentStateList;
 	//immediate prior FoodState, to be used in next parse, 
 	//if next parse makes implicit reference to lastFoodState.
-	private FoodState lastFoodState = FoodState.foodStateSingletonInstance();
+	private FoodState lastFoodState = FoodState.createBlankFoodState();
 	//list of recipe parsed expressions created used to create this RecipeGraph.
 	private List<String> parsedExpressionList;
 	
@@ -334,7 +334,7 @@ public class RecipeGraph {
 				edgeQualifierStructList.add(struct);
 				structAdded = true;
 			}else if(!lastStateUsed && (foodStruct.foodStructType() == FoodStructType.SUBJECT
-					//e.g. "wash veggies", "bake batter'
+					//e.g. subject e.g. "wash veggies", "bake batter'
 					|| knownStateList.isEmpty())){	
 				//can't set struct, as will affect edge formation.<--not if haven't formed Expr's.
 				//need to avoid name clashes, in case struct has same name as some previous one.
@@ -412,6 +412,7 @@ public class RecipeGraph {
 		//look amongst ingredients first
 		Boolean ingredientUsed = ingredientsMap.get(structName);
 		Struct structToAdd;
+		//System.out.println("RecipeGraph termStruct " + termStruct + " " +prevTermIsTrigger);
 		//remember relation to parent, if applicable.
 		if(prevTermIsTrigger){
 			structToAdd = new FoodStruct(termStruct, FoodStructType.SUBJECT);

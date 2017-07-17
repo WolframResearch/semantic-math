@@ -161,10 +161,10 @@ public class CreateRepresentativeMaps {
 		Map<String, Integer> tempThreeGramFreqMap = new HashMap<String, Integer>();
 		for(Map.Entry<String, Integer> threeGramEntry : threeGramFreqMap.entrySet()){
 			String singularForm = WordForms.getSingularForm(threeGramEntry.getKey());
-			/*int singularFormLen = singularForm.length();
+			int singularFormLen = singularForm.length();
 			if(singularFormLen > 4 && singularForm.substring(singularFormLen-4).equals("sery")){
 				singularForm = singularForm.substring(0, singularFormLen-4) + "series";
-			}*/
+			}
 			tempThreeGramFreqMap.put(singularForm, threeGramEntry.getValue());
 		}
 		threeGramFreqMap = tempThreeGramFreqMap;
@@ -193,10 +193,12 @@ public class CreateRepresentativeMaps {
 		Map<String, Integer> tempTwoGramFreqMap = new HashMap<String, Integer>();
 		for(Map.Entry<String, Integer> twoGram : twoGramFreqMap.entrySet()){
 			String singularForm = WordForms.getSingularForm(twoGram.getKey());
-			/*int singularFormLen = singularForm.length();
+			// /*
+			int singularFormLen = singularForm.length();
 			if(singularFormLen > 4 && singularForm.substring(singularFormLen-4).equals("sery")){
 				singularForm = singularForm.substring(0, singularFormLen-4) + "series";
-			}*/
+			}
+			//*/
 			tempTwoGramFreqMap.put(singularForm, twoGram.getValue());
 		}
 		twoGramFreqMap = tempTwoGramFreqMap;

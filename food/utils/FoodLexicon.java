@@ -22,6 +22,8 @@ import thmp.utils.WordForms;
 /**
  * Process raw data, and build lexicons for words and N grams,
  * for food and cooking appliance.
+ * The "buildMapsAndSerialize()" method in this class creates the respective maps
+ * from word data gathered over time.
  * @author yihed
  *
  */

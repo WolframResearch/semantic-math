@@ -114,7 +114,7 @@ public class FoodParseTestMain {
 	@Test
 	public void test4(){
 		String inputStr = "warm tortillas on pan or directly over fire, add garlic and mix until smooth";
-		String[] ingredientsAr = new String[]{"tortillas","garlic"};
+		String[] ingredientsAr = new String[]{"tortilla","garlic"};
 		String[] desiredSnippets = new String[]{"until", "smooth", "garlic", "mix", "add", "warm", "tortillas"};
 		int desiredEdgeNum = 3;
 		assertTrue(testFoodParse(inputStr, ingredientsAr, desiredSnippets, desiredEdgeNum));
@@ -128,5 +128,13 @@ public class FoodParseTestMain {
 		int desiredEdgeNum = 5;
 		assertTrue(testFoodParse(inputStr, ingredientsAr, desiredSnippets, desiredEdgeNum));
 	}
-	//inputStr = "bring a large pot of water to boil, add corn, cook until tender";
+	
+	@Test
+	public void test6(){
+		String inputStr = "cut kernels off the cob with a sharp knife.";
+		String[] ingredientsAr = new String[]{"kernel"};
+		String[] desiredSnippets = new String[]{"kernel", "cut", "off", "cob", "with", "sharp", "knife"};
+		int desiredEdgeNum = 1;
+		assertTrue(testFoodParse(inputStr, ingredientsAr, desiredSnippets, desiredEdgeNum));
+	}
 }

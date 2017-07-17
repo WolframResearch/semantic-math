@@ -18,7 +18,7 @@ import thmp.utils.WordForms;
  */
 public class FoodState {
 
-	private static final FoodState FOODSTATE_SINGLETON = new FoodState("");
+	//private static final FoodState FOODSTATE_SINGLETON = new FoodState("");
 	private List<FoodState> parentFoodStateList = new ArrayList<FoodState>();
 	//could be multiple, e.g. separating egg white and yolk.
 	private List<FoodState> childFoodStateList = new ArrayList<FoodState>();
@@ -55,12 +55,16 @@ public class FoodState {
 		this.parentEdge = parentEdge_;
 	}
 	
-	public static FoodState foodStateSingletonInstance(){
-		return FOODSTATE_SINGLETON;
+	/**
+	 * Create new blank food state, with empty string as name and no struct.
+	 * @return
+	 */
+	public static FoodState createBlankFoodState(){		
+		return new FoodState("");
 	}
 	
 	public void setFoodStruct(Struct struct){
-		if(this == FOODSTATE_SINGLETON) return;
+		//if(this == FOODSTATE_SINGLETON) return;
 		this.foodStruct = struct;
 		String newName = "".equals(this.foodName) ? struct.nameStr() : " " + struct.nameStr();
 		this.foodName = this.foodName + newName;
@@ -125,10 +129,13 @@ public class FoodState {
 		}*/
 		Expr[] argExprAr;
 		Set<String> pptSet;
+		//if(foodName.equals("knife")) throw new IllegalStateException(foodStruct.getPropertySet().toString());
+		//System.out.println("FoodState - foodStruct " +foodStruct);
 		if(null != foodStruct && !(pptSet = foodStruct.getPropertySet()).isEmpty()){
 			List<Expr> pptExprList = new ArrayList<Expr>();
 			for(String pptStr : pptSet){
 				pptExprList.add(new Expr(pptStr));
+				
 			}
 			argExprAr = new Expr[]{new Expr(foodName), ExprUtils.listExpr(pptExprList)};
 		}else{

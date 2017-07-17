@@ -251,8 +251,8 @@ public class FileUtils {
 	 * @return *List* of objects from the file.
 	 */	
 	public static Object deserializeListFromFile(String serialFileStr){
-		//idempotent operation
-		serialFileStr = getPathIfOnServlet(serialFileStr);
+		//idempotent operation <--apparently not
+		////serialFileStr = getPathIfOnServlet(serialFileStr);
 		FileInputStream fileInputStream = null;
 		try{
 			fileInputStream = new FileInputStream(serialFileStr);

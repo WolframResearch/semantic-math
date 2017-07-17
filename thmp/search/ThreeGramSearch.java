@@ -51,7 +51,7 @@ public class ThreeGramSearch {
 	//
 	private static final Set<String> threeGramFirstWordsSet;
 	
-	private static final Path threeGramsFilePath = Paths.get("src/thmp/data/threeGramData.txt");
+	//private static final Path threeGramsFilePath = Paths.get("src/thmp/data/threeGramData.txt");
 	//additional three grams to be intetionally added. 
 	private static final String[] ADDITIONAL_THREE_GRAMS = new String[]{"formal power series", "one to one"};
 	// name of two gram data file containing additional 2-grams that should be included. These don't have
@@ -82,7 +82,7 @@ public class ThreeGramSearch {
 		//List<String> thmList = ProcessInput.processInput(CollectThm.ThmList.allThmsWithHypList(), true);
 		////List<String> thmList = CollectThm.ThmList.allThmsWithHypList();
 		INVALID_MIDDLE_WORD_SET = new HashSet<String>();
-		String[] invalidMiddleWordSet = new String[]{"is"};
+		String[] invalidMiddleWordSet = new String[]{"is", "and", "with"};
 		for(String word : invalidMiddleWordSet){
 			INVALID_MIDDLE_WORD_SET.add(word);
 		}
@@ -209,8 +209,10 @@ public class ThreeGramSearch {
 				//shouldn't happen because the way thm is split
 				//was word0.matches("\\s*"), instead of \\s+
 				if(WHITESPACE_PATTERN.matcher(word0).matches() || word0.length() < 3
+						|| !NGramSearch.ALPHA_PATTERN.matcher(word0).matches()
 						|| WordForms.SPECIAL_CHARS_PATTERN.matcher(word0).matches()
 						|| NGramSearch.INVALID_WORD_PATTERN.matcher(word0).matches()
+						|| NGramSearch.isInvalid1stWord(word0)
 						|| fluffWordsSet.contains(word0) || nonMathFluffWordsSet.contains(word0)
 						){
 					continue;
@@ -218,9 +220,11 @@ public class ThreeGramSearch {
 				word1 = thmAr[i+1];
 				
 				if(WHITESPACE_PATTERN.matcher(word1).matches() || word1.length() < 2
+						|| !NGramSearch.ALPHA_PATTERN.matcher(word1).matches()
 						|| INVALID_MIDDLE_WORD_SET.contains(word1)
 						|| WordForms.SPECIAL_CHARS_PATTERN.matcher(word1).matches()
 						|| NGramSearch.INVALID_WORD_PATTERN.matcher(word1).matches()
+						|| NGramSearch.isInvalid2ndWord(word1)
 						|| nonMathFluffWordsSet.contains(word1)
 						){
 					i++;
@@ -228,10 +232,12 @@ public class ThreeGramSearch {
 				}				
 				word2 = thmAr[i+2];				
 				if(WHITESPACE_PATTERN.matcher(word2).matches() || word2.length() < 4
+						|| !NGramSearch.ALPHA_PATTERN.matcher(word2).matches()
 						|| WordForms.SPECIAL_CHARS_PATTERN.matcher(word2).matches()
 						|| NGramSearch.INVALID_WORD_PATTERN.matcher(word2).matches()
 						|| fluffWordsSet.contains(word2) || nonMathFluffWordsSet.contains(word2)
 						|| NGramSearch.isInvalid2ndWordEnding(word2)
+						|| NGramSearch.isInvalid2ndWord(word2)
 						|| INVALID_THIRD_WORD_PATTERN.matcher(word2).matches()
 						){
 					i += 2;
@@ -439,8 +445,10 @@ public class ThreeGramSearch {
 		try{
 			while((word = threeGramBR.readLine()) != null){
 				//this should have been done when sorting the words into maps
-				//word = word.toLowerCase();						
-				initialThreeGramsSet.add(word);				
+				//word = word.toLowerCase();	
+				if(NGramSearch.ALPHA_PATTERN.matcher(word).matches()){
+					initialThreeGramsSet.add(word);						
+				}
 			}
 		}catch(IOException e){
 			e.printStackTrace();

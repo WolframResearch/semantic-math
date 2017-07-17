@@ -220,8 +220,8 @@ public class CollectThm {
 		//private static final int NUM_FREQ_WORDS = 500;
 		//multiplication factors to deflate the frequencies of 2-grams and 3-grams to weigh
 		//them more
-		private static final double THREE_GRAM_FREQ_REDUCTION_FACTOR = 3.5/5;
-		private static final double TWO_GRAM_FREQ_REDUCTION_FACTOR = 2.0/3;
+		private static final double THREE_GRAM_FREQ_REDUCTION_FACTOR = 3.8/5;
+		private static final double TWO_GRAM_FREQ_REDUCTION_FACTOR = 2.3/3;
 		
 		private static final Pattern SPECIAL_CHARACTER_PATTERN = 
 				Pattern.compile(".*[\\\\=$\\{\\}\\[\\]()^_+%&\\./,\"\\d\\/@><*|`�].*");
@@ -363,6 +363,7 @@ public class CollectThm {
 			
 			//first compute the average word frequencies for singleton words
 			int avgSingletonWordFreq = computeSingletonWordsFrequency(docWordsFreqPreMap);	
+			
 			for(String word : twoGramComponentWordsSingularSet){
 				//singleton words are all normalized
 				word = WordForms.normalizeWordForm(word);
@@ -377,6 +378,8 @@ public class CollectThm {
 			 as these are much more likely to be math words, so don't want to scale down too much */
 			adjustWordFreqMapWithStemMultiplicity(docWordsFreqPreMap, stemToWordsMMap);		
 			
+			removeLowFreqWords(docWordsFreqPreMap);			
+
 			//ReorderDocWordsFreqMap uses a TreeMap to reorder. Used to optimize 
 			//forming relation search vecs, which are BigInteger's.
 			return reorderDocWordsFreqMap(docWordsFreqPreMap);			
@@ -587,6 +590,22 @@ public class CollectThm {
 		}
 		
 		/**
+		 * Remove the low-freq words, to reduce number of words
+		 * @param docWordsFreqPreMapNoAnno
+		 */
+		private static void removeLowFreqWords(Map<String, Integer> docWordsFreqPreMapNoAnno) {
+			Iterator<Entry<String, Integer>> entrySetIter = docWordsFreqPreMapNoAnno.entrySet().iterator() ;
+			while(entrySetIter.hasNext()){
+				int freq = entrySetIter.next().getValue();
+				//remove the low-freq words, to reduce number of words
+				if(freq < 2){
+					entrySetIter.remove();
+					//continue;
+				}
+			}
+		}
+		
+		/**
 		 * Computes the averageSingletonWordFrequency.
 		 * @param docWordsFreqPreMapNoAnno
 		 * @return
@@ -594,10 +613,22 @@ public class CollectThm {
 		private static int computeSingletonWordsFrequency(Map<String, Integer> docWordsFreqPreMapNoAnno) {
 			int freqSum = 0;
 			int count = 0;
-			for(int freq : docWordsFreqPreMapNoAnno.values()){
+			
+			Iterator<Entry<String, Integer>> entrySetIter = docWordsFreqPreMapNoAnno.entrySet().iterator() ;
+			while(entrySetIter.hasNext()){
+				int freq = entrySetIter.next().getValue();
+				//don't count the low-freq words, they will be removed to reduce number of words
+				if(freq < 2){
+					continue;
+				}
 				freqSum += freq;
 				count++;
 			}
+			
+			/*for(int freq : docWordsFreqPreMapNoAnno.values()){
+				freqSum += freq;
+				count++;
+			}*/
 			if (0 == count) return 1;
 			return freqSum/count;
 		}
@@ -713,12 +744,19 @@ public class CollectThm {
 			Map<String, Integer> threeGramsMap = NGramsMap.get_threeGramsMap();	
 			
 			//add all N-grams at once, instead of based on current theorem set.
-			docWordsFreqPreMap.putAll(twoGramsMap);
+			////docWordsFreqPreMap.putAll(twoGramsMap);
+			//gather individual word tokens that are part of two grams.
 			for(Map.Entry<String, Integer> twoGramEntry : twoGramsMap.entrySet()){
 				String twoGram = WordForms.normalizeTwoGram(twoGramEntry.getKey());
 				int freq = (int)(twoGramEntry.getValue()*TWO_GRAM_FREQ_REDUCTION_FACTOR);
-				freq = freq == 0 ? 1 : freq;
+				if(freq < 2){
+					//now skip word, since these are unlikely to be valid n-grams due to 
+					//their low frequency (observation-based).
+					continue;
+				}
+				/////don't delete yet freq = freq == 0 ? 1 : freq;				
 				docWordsFreqPreMap.put(twoGram, freq);
+				
 				String[] twoGramAr = WordForms.getWhiteNonEmptySpaceNotAllPattern().split(twoGram);
 				twoGramComponentWordsSingularSet.add(WordForms.getSingularForm(twoGramAr[0]));
 				//second word should have been singularized already.
@@ -726,7 +764,12 @@ public class CollectThm {
 			}
 			for(Map.Entry<String, Integer> threeGramEntry : threeGramsMap.entrySet()){
 				int freq = (int)(threeGramEntry.getValue()*THREE_GRAM_FREQ_REDUCTION_FACTOR);
-				freq = freq == 0 ? 1 : freq;
+				if(freq < 2){
+					//now skip word, since these are unlikely to be valid n-grams due to 
+					//their low frequency (observation-based).
+					continue;
+				}
+				/////freq = freq == 0 ? 1 : freq;
 				docWordsFreqPreMap.put(threeGramEntry.getKey(), freq);
 			}			
 			for(int i = 0; i < thmList.size(); i++){
@@ -739,6 +782,10 @@ public class CollectThm {
 					String twoGramAdded = null;
 					String threeGramAdded = null;*/				
 					String word = thmAr[j];	
+					//only want lower alphabetical words for now, to reduce num of words - July 2017
+					if(!NGramSearch.ALPHA_PATTERN.matcher(word).matches()){
+						continue;
+					}
 					//skip words that contain special characters
 					if(WordForms.SPECIAL_CHARS_PATTERN.matcher(word).matches()){
 						continue;
