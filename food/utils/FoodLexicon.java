@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
@@ -28,8 +29,12 @@ public class FoodLexicon {
 	
 	/***These are from curated lists****/
 	private static final Map<String, String> FOOD_MAP;
+	//the keys of food type map can be used as starting ingredients list.
+	private static final Map<String, String> FOOD_TYPES_MAP;
 	private static final Map<String, String> COOKING_ACTION_MAP;
 	private static final Map<String, String> EQUIPMENT_MAP;
+	
+	private static final Set<String> ingredientFoodTypesSet;
 	
 	//used during food tokenization. 
 	//All children originate from one Node.
@@ -43,18 +48,21 @@ public class FoodLexicon {
 	static{
 		//deserialize into immutable maps.
 		//Paths need to be stored in some meta file. Deserialize from file.
-		//These orders coincide with the order used when serializing data.
+		//These orders *must* coincide with the order used when serializing data.
 		List<FoodMapNode> trieList = deserializeFoodTrieList();
 		FOOD_TRIE = trieList.get(0);
 		COOKING_ACTION_TRIE = trieList.get(1);
 		
 		List<Map<String, String>> mapList = deserializeFoodMapList();
 		FOOD_MAP = mapList.get(0);
-		COOKING_ACTION_MAP = mapList.get(1);	
-		EQUIPMENT_MAP = mapList.get(2);
+		FOOD_TYPES_MAP = mapList.get(1);
+		COOKING_ACTION_MAP = mapList.get(2);	
+		EQUIPMENT_MAP = mapList.get(3);
+		
+		ingredientFoodTypesSet = FOOD_TYPES_MAP.keySet();
 		
 		String mapInputPath = "src/thmp/data/extraFoodLexicon.txt";
-		EXTRA_FOOD_LEXICON_MMAP = deserializeAdditionalFoodLexiconMap(mapInputPath);
+		EXTRA_FOOD_LEXICON_MMAP = deserializeAdditionalFoodLexiconMap(FileUtils.getPathIfOnServlet(mapInputPath));
 	}
 	
 	/**
@@ -178,7 +186,6 @@ public class FoodLexicon {
 	{
 		
 		Map<String, String> foodLexicon = new HashMap<String, String>();
-		//Map<String, FoodMapNode> foodTrie = new HashMap<String, FoodMapNode>();
 		
 		File lexiconSrcFile = new File(foodLexiconPath);
 		try{
@@ -238,8 +245,6 @@ public class FoodLexicon {
 			FileReader fileReader = new FileReader(new File(mapInputPath));
 			BufferedReader bReader = new BufferedReader(fileReader);
 			try{
-				//fileReader = new FileReader(new File(mapInputPath));
-				//bReader = new BufferedReader(fileReader);
 				String line;
 				while((line=bReader.readLine()) != null){
 					String[] lineAr = WordForms.getWhiteNonEmptySpaceNotAllPattern().split(line);
@@ -270,6 +275,10 @@ public class FoodLexicon {
 		return FOOD_MAP;
 	}
 	
+	public static Set<String> ingredientFoodTypesSet(){
+		return ingredientFoodTypesSet;
+	}
+	
 	public static Map<String, String> cookingActionMap(){
 		return COOKING_ACTION_MAP;
 	}
@@ -282,7 +291,7 @@ public class FoodLexicon {
 	}
 
 	/**
-	 * 
+	 * Additional food lexicon beyond the curated lists.
 	 * @return
 	 */
 	public static Multimap<String, String> additionalFoodLexiconMMap(){
@@ -316,7 +325,8 @@ public class FoodLexicon {
 		Map<String, String> foodPosMap = buildFoodLexicon(foodRootNode, pos, foodLexiconPath);
 		
 		String foodTypesPath = "src/thmp/data/foodLexicon/foodTypes.txt";
-		foodPosMap.putAll(buildFoodLexicon(foodRootNode, pos, foodTypesPath));
+		Map<String, String> foodTypesMap = buildFoodLexicon(foodRootNode, pos, foodTypesPath);
+		foodPosMap.putAll(foodTypesMap);
 		
 		String foodIngredientsPath = "src/thmp/data/foodLexicon/foodIngredients.txt";
 		foodPosMap.putAll(buildFoodLexicon(foodRootNode, pos, foodIngredientsPath));
@@ -328,6 +338,7 @@ public class FoodLexicon {
 		foodPosMap.putAll(equipmentMap);
 		
 		foodMapList.add(foodPosMap);
+		foodMapList.add(foodTypesMap);
 		foodTrieList.add(foodRootNode);
 		
 		String foodActionPath = "src/thmp/data/foodLexicon/cookingAction.txt";

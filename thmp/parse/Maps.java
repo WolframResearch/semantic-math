@@ -252,9 +252,9 @@ public class Maps {
 		public static Collection<String> updateWithAdditionalFoodPos(String word){
 			Collection<String> col = extraFoodLexiconMMap.get(word);
 			//col.addAll(posMMap.get(word)); //add later
-			/*if(col.isEmpty()){
+			if(col.isEmpty()){
 				col = extraFoodLexiconMMap.get(WordForms.getSingularForm(word));
-			}*/
+			}
 			return col;		
 		}
 		
@@ -444,6 +444,9 @@ public class Maps {
 				posPreMMap.put("once", "adj");
 				
 				posPreMMap.put("let", "verb");
+				
+				//e.g. "bring water to boil"
+				structMap.put("pre_verbAlone", new Rule("prep", 0.85));//FOOD
 			}
 			
 			posPreMMap.put("disjoint", "adj");
@@ -747,7 +750,7 @@ public class Maps {
 			structMap.put("pre_expr", new Rule("prep", 1));
 			structMap.put("pre_pobj", new Rule("prep", 1));
 			//"combine flour and water to form dough"
-			structMap.put("pre_verbphrase", new Rule("prep", 1));//FOOD
+			structMap.put("pre_verbphrase", new Rule("prep", 0.9));//FOOD
 			structMap.put("csubj_prep", new Rule("csubj", 1));
 			structMap.put("noun_prep", new Rule("np", 1));
 			structMap.put("noun_verbphrase", new Rule("assert", 1));

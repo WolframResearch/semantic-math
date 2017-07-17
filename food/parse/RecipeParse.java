@@ -2,7 +2,9 @@ package food.parse;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -104,31 +106,38 @@ public class RecipeParse {
 		inputStr = "warm tortillas on pan or directly over fire, add garlic and mix until smooth";
 		inputStr = "cook until translucent and fragrant";
 		inputStr = "wash potato, drain and set aside";
+		inputStr = "in a large pan over medium heat, add 1/4 cup of the water, onions, and garlic";
+		inputStr = "place into the oven and bake for 12 minutes";
+		inputStr = "bring a large pot of water to boil, add corn, cook until tender. Drain. Cook corn on preheated grill.";
+		//inputStr = "bring a large pot of water to boil, add corn. cook until tender. drain. Cook corn on preheated grill.";
+		inputStr = "combine flour and yeast";
 		
 		boolean isVerbose = true;
 		Stats stats = null;
 		List<String> ingredientsList = new ArrayList<String>();
 		//ingredientsList.add("flag");
 		String[] ingredientsAr = new String[]{"flour","soda", "cashew","salt", "egg","banana", "oil","onion", "blue cheese",
-				"soy sauce", "lemon juice", "basil", "garlic", "hot pepper sauce", "cilantro","potato","carrot","onion","water"};		
+				"soy sauce", "lemon juice", "basil", "garlic", "hot pepper sauce", "cilantro","potato","carrot","water","corn"};		
 		ingredientsList = Arrays.asList(ingredientsAr);		
-		
-		RecipeGraph recipeGraph = buildRecipeGraph(inputStr, isVerbose, stats, ingredientsList);
+		Set<String> ingredientsSet = FoodLexicon.ingredientFoodTypesSet();
+		RecipeGraph recipeGraph = buildRecipeGraph(inputStr, isVerbose, stats, //ingredientsList
+				ingredientsSet);
 		
 		System.out.println("RecipeParse - recipeGraph \n" + recipeGraph);		
 	}
 
 	/**
+	 * Creates Graph based on input list of ingredients and recipe instructions.
 	 * @param inputAr
 	 * @param isVerbose
 	 * @param stats
 	 * @param recipeGraph
 	 */
-	public static RecipeGraph buildRecipeGraph(String inputStr, boolean isVerbose, Stats stats, List<String> ingredientsList) {
+	public static RecipeGraph buildRecipeGraph(String recipeStr, boolean isVerbose, Stats stats, Collection<String> ingredientsList) {
 		//initialize recipe graph with list of ingredients
 		RecipeGraph recipeGraph = RecipeGraph.initializeRecipeGraph(ingredientsList);
 		//List<ParseStruct> parseStructList = new ArrayList<ParseStruct>();
-		List<RecipeSentence> inputList = recipePreprocess(inputStr);		
+		List<RecipeSentence> inputList = recipePreprocess(recipeStr);		
 		boolean doPreprocess = false;
 		
 		int inputArLen = inputList.size();
@@ -148,17 +157,9 @@ public class RecipeParse {
 			ParseRun.parseInput(curSentenceStr, parseState, isVerbose, stats, doPreprocess);
 			
 			ParseStruct headParseStruct = parseState.getHeadParseStruct();
-			List<Expr> exprList = new ArrayList<Expr>();
-			StringBuilder sb = new StringBuilder(100);
-			Expr recipeExpr = null;
+			
 			//System.out.println("headParseStruct "+headParseStruct);
-			if(null != headParseStruct && !headParseStruct.getWLCommandWrapperMMap().isEmpty()){
-				headParseStruct.createStringAndRetrieveExpr(sb, exprList);
-				//System.out.println("@@@" + headParseStructStr);
-				if(!exprList.isEmpty()){
-					recipeExpr = exprList.get(0);
-					System.out.println("~+++~ EXPR: \n" + recipeExpr);
-				}
+			if(null != headParseStruct && !headParseStruct.getWLCommandWrapperMMap().isEmpty()){				
 				//parseStructList.add(headParseStruct);
 				recipeGraph.updateFoodStates(headParseStruct);	
 			}else if(j < inputArLen-1){

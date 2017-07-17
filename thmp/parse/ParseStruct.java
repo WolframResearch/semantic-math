@@ -128,7 +128,7 @@ public class ParseStruct implements Serializable{
 	/**
 	 * Fills exprList with commandExpr's collected during DFS.
 	 * To be used in servlet, etc, to get the entire Expr structure.
-	 * Creates a single Expr and add to exprList.
+	 * Creates a *single* Expr and add to exprList.
 	 * @param sb
 	 * @param exprList
 	 * @return

@@ -53,7 +53,8 @@ public class WordForms {
 	/*Used to remove specical characters from words*/
 	private static final Pattern SPECIAL_CHARS_AROUND_WORD_PATTERN 
 		= Pattern.compile("[\\{\\[\\(]+(.+?)[\\}\\]\\)]*|[\\{\\[\\(]*(.+?)[\\}\\]\\)]+");
-	private static final Pattern IRREG_PLURAL_ENDINGS_PATTERN = Pattern.compile("s|h|x");
+	//but words such as "toes" should be recorded in separate non-regular plural words set
+	private static final Pattern IRREG_PLURAL_ENDINGS_PATTERN = Pattern.compile("s|h|x|o");
 	/*Don't include numerical quantities such as "one", "five" etc here, which should be determined from algorithm */
 	public static final Pattern CARDINALITY_PPT_PATTERN = Pattern.compile("some|a|an|the|unique|infinite|infinitely many");
 	private static final Pattern NUMBER_PATTERN = Pattern.compile("one|two|three|four|five|six|seven|eight|nine|ten|twenty|"
@@ -251,8 +252,7 @@ public class WordForms {
 		String tempWord = IRREGULAR_ENDING_WORD_MAP.get(word);
 		if(null != tempWord){
 			return tempWord;
-		}
-		
+		}		
 		String[] singFormsAr = getSingularForms(word);
 		//singFormsAr successively replaces words ending in "s", "es", "ies"
 		int k = 2;

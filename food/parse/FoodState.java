@@ -60,6 +60,7 @@ public class FoodState {
 	}
 	
 	public void setFoodStruct(Struct struct){
+		if(this == FOODSTATE_SINGLETON) return;
 		this.foodStruct = struct;
 		String newName = "".equals(this.foodName) ? struct.nameStr() : " " + struct.nameStr();
 		this.foodName = this.foodName + newName;

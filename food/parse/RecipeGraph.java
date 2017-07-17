@@ -2,6 +2,7 @@ package food.parse;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -44,6 +45,9 @@ public class RecipeGraph {
 	//prepositions denoting target of actions
 	private static final Set<String> ACTION_TARGET_SET;		
 	private static final Pattern TIME_PATTERN = Pattern.compile(".*(?:second|minute|hour|day|overnight)s*.*");
+	private static final Pattern CONJ_DISJ_TYPE_PATTERN = Pattern.compile("(?:conj|disj)_.+");
+	private static final Random randomNumGenerator = new Random();
+	
 	//ingredients, and whether used or not
 	private Map<String, Boolean> ingredientsMap;
 	//beginning nodes in 
@@ -53,10 +57,11 @@ public class RecipeGraph {
 	//immediate prior FoodState, to be used in next parse, 
 	//if next parse makes implicit reference to lastFoodState.
 	private FoodState lastFoodState = FoodState.foodStateSingletonInstance();
-	private Random randomNumGenerator = new Random();	
+	//list of recipe parsed expressions created used to create this RecipeGraph.
+	private List<String> parsedExpressionList;
 	
 	static{
-		String[] verbPriorAr = new String[]{"add"};
+		String[] verbPriorAr = new String[]{"add", "drain"};
 		VERB_PRIOR_SET = new HashSet<String>(Arrays.asList(verbPriorAr));
 		String[] actionSourceAr = new String[]{"from"};
 		String[] actionTargetAr = new String[]{"to", "into", "onto"};
@@ -64,14 +69,16 @@ public class RecipeGraph {
 		ACTION_TARGET_SET = new HashSet<String>(Arrays.asList(actionTargetAr));
 	}
 	
+	/**
+	 * Static factory. Private constructor. 
+	 * @param ingredientsMap_
+	 */
 	private RecipeGraph(//List<FoodState> ingredientStateList_, 
 			Map<String, Boolean> ingredientsMap_){
 		//this.currentStateList = ingredientStateList_;
 		this.currentStateList = new ArrayList<FoodState>();
-		this.ingredientsMap = ingredientsMap_;
-		
-		//this.ingredientsSet = new HashSet<String>();
-		///ingredientsSet.addAll(ingredientStateList_);
+		this.ingredientsMap = ingredientsMap_;		
+		this.parsedExpressionList = new ArrayList<String>();
 	}
 	
 	/**
@@ -80,11 +87,9 @@ public class RecipeGraph {
 	 * @param ingredientsList
 	 * @return
 	 */
-	public static RecipeGraph initializeRecipeGraph(List<String> ingredientsList){
-		//
+	public static RecipeGraph initializeRecipeGraph(Collection<String> ingredientsList){
 		//List<FoodState> ingredientsStateList = new ArrayList<FoodState>();
-		Map<String, Boolean> ingredientsMap = new HashMap<String, Boolean>();
-		
+		Map<String, Boolean> ingredientsMap = new HashMap<String, Boolean>();	
 		for(String ingredient : ingredientsList){
 			//FoodState foodState = new FoodState(ingredient);
 			//ingredientsStateList.add(foodState);
@@ -102,6 +107,16 @@ public class RecipeGraph {
 	 */
 	public void updateFoodStates(ParseStruct headParseStruct){
 		
+		List<Expr> exprList = new ArrayList<Expr>();
+		StringBuilder sb = new StringBuilder(100);
+		Expr recipeExpr = null;
+		headParseStruct.createStringAndRetrieveExpr(sb, exprList);
+		//System.out.println("@@@" + headParseStructStr);
+		if(!exprList.isEmpty()){
+			parsedExpressionList.add(exprList.get(0).toString());
+			recipeExpr = exprList.get(0);
+			System.out.println("~+++~ EXPR: \n" + recipeExpr);
+		}
 		//winning wrapper map on the top level
 		Multimap<ParseStructType, WLCommandWrapper> wrapperMMap = headParseStruct.getWLCommandWrapperMMap();
 		//System.out.println("wrapperMMap.values().size "+ wrapperMMap.values().size());
@@ -112,6 +127,7 @@ public class RecipeGraph {
 			WLCommandWrapper wrapper = entry.getValue();
 			WLCommand wlCommand = wrapper.WLCommand();
 			handlePosTermList(wlCommand);
+			
 		}		
 		//first is head, 2nd and 3rd should be food items
 		/*Expr[] exprArgs = recipeExpr.args();
@@ -357,7 +373,7 @@ public class RecipeGraph {
 		}else{
 			String structType = termStruct.type();
 			//conj
-			if(structType.matches("(?:conj|disj)_.+")){
+			if(CONJ_DISJ_TYPE_PATTERN.matcher(structType).matches()){
 				//if(true)throw new RuntimeException(((Struct)(Struct)termStruct.prev2()).nameStr());
 				if(termStruct.prev1NodeType().isTypeStruct()){
 					addStructFoodState(unknownStructList, knownStateList, actionSourceList, actionTargetList,
@@ -381,7 +397,6 @@ public class RecipeGraph {
 	}
 
 	/**
-	 * 
 	 * @param unknownStructList
 	 * @param knownStateList
 	 * @param statesIter  Delete from iter, if previous FoodState corresponding to struct is found.
@@ -532,6 +547,28 @@ public class RecipeGraph {
 		return this.currentStateList;
 	}
 	
+	/**
+	 * create Graph Expr's based on the current list of 
+	 * FoodState's. Currently used by Gson in web servlet.
+	 * @return
+	 */
+	public List<String> createGraphExprs(){
+		List<String> graphExprList = new ArrayList<String>();
+		for(FoodState state : currentStateList){
+			graphExprList.add(state.toExpr().toString());
+		}
+		return graphExprList;
+	}
+	
+	/**
+	 * Currently used by Gson in web servlet.
+	 * @return List of recipe parsed expressions created used to create 
+	 * this RecipeGraph.
+	 */
+	public List<String> parsedExpressionList(){
+		return this.parsedExpressionList;
+	}
+	
 	@Override
 	public String toString(){
 		StringBuilder sb = new StringBuilder();
@@ -539,7 +576,7 @@ public class RecipeGraph {
 		int counter = 0;
 		for(FoodState state : currentStateList){
 			sb.append(counter++).append(": ").append(state).append("\n");
-			sb.append("EXPR:\n").append(state.toExpr()).append("\n");
+			sb.append("EXPR:\n").append(state.toExpr());
 		}
 		return sb.toString();
 	}

@@ -245,11 +245,14 @@ public class FileUtils {
 	 * Deserialize objects from file supplied by serialFileStr.
 	 * Note that this requires the DESERIAL_VERSION_NUM to equal that of previous 
 	 * files deserialized in this JVM session (if enabled).
+	 * Don't forget to call FileUtils.getPathIfOnServlet(serialFileStr);
+	 * if potentially on servlet!
 	 * @param serialFileStr
 	 * @return *List* of objects from the file.
 	 */	
 	public static Object deserializeListFromFile(String serialFileStr){
-		
+		//idempotent operation
+		serialFileStr = getPathIfOnServlet(serialFileStr);
 		FileInputStream fileInputStream = null;
 		try{
 			fileInputStream = new FileInputStream(serialFileStr);
@@ -568,6 +571,7 @@ public class FileUtils {
 	 * Retrieves path to resource pointed to by path, 
 	 * taking into account whether 
 	 * currently running in servlet environment.
+	 * Idempotent operation.
 	 * @param path
 	 * @return
 	 */

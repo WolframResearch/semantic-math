@@ -402,6 +402,11 @@ public class ThmP1 {
 			return commandNumUnits;
 		}
 
+		/**
+		 * Used by gson in servlet.
+		 * @return long form or WL-like expr. Useful for "under the hood"
+		 * can be "long" or "wl".
+		 */
 		public String form(){
 			return this.form;
 		}
@@ -962,8 +967,7 @@ public class ThmP1 {
 					//tempWord = strAr[i - k] + " " + tempWord;
 					//curWord = strAr[i - k] + " " + curWord;
 					k++;					
-				}
-				
+				}				
 				// if previous Pair is also an ent, fuse them, but only if current ent
 				// does not belong to noFuseEntSet e.g. "map"			
 				pairsSize = pairs.size();
@@ -2104,8 +2108,7 @@ public class ThmP1 {
 		}
 		//currently only add additional terms for singleton words. Hence tokenCount == 1.
 		if(posList.isEmpty() || tokenCount == 1){
-			Collection<String> posCol = Maps.BuildMaps.updateWithAdditionalFoodPos(iWord);
-			
+			Collection<String> posCol = Maps.BuildMaps.updateWithAdditionalFoodPos(iWord);			
 			//System.out.println("ThmP1 - iWord / posCol "+ iWord + "  " + posCol);
 			if(!posCol.isEmpty()){
 				for(String p : posCol){
@@ -2125,11 +2128,13 @@ public class ThmP1 {
 			System.out.println("ThmP1 - posList "+posList);			
 		}*/
 		if(!posList.isEmpty()){				
-			StringBuilder tokenSb = new StringBuilder(20);
-			for(int j = 0; j < tokenCount; j++){
-				tokenSb.append(strAr[i+j]).append(" ");
+			StringBuilder tokenSb = new StringBuilder(iWord);
+			for(int j = 1; j < tokenCount; j++){
+				String wordSingular = WordForms.getSingularForm(strAr[i+j]) ;
+				tokenSb.append(" ").append(wordSingular);
 			}
-			String tokenStr = tokenSb.substring(0, tokenSb.length()-1);			
+			//String tokenStr = tokenSb.substring(0, tokenSb.length()-1);		
+			String tokenStr = tokenSb.toString();
 			int posListSz = posList.size();
 			//add pos from ordinary lexicon
 			addLexiconPos(posList, tokenStr, posListSz);
