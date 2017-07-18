@@ -70,6 +70,7 @@ public class CreateRepresentativeMaps {
 	 */
 	private static void createDocWordFreqMap(List<String> thmList){
 		Map<String, Integer> wordFreqMap = CollectThm.ThmWordsMaps.buildDocWordsFreqMap(thmList);
+		
 		/*for(Map.Entry<String, Integer> entry : wordFreqMap.entrySet()){
 			String normalizedForm = WordForms.normalizeWordForm(entry.getKey());
 			wordFreqMap.put(normalizedForm, entry.getValue());
@@ -162,9 +163,13 @@ public class CreateRepresentativeMaps {
 		for(Map.Entry<String, Integer> threeGramEntry : threeGramFreqMap.entrySet()){
 			String singularForm = WordForms.getSingularForm(threeGramEntry.getKey());
 			int singularFormLen = singularForm.length();
+			//pretty horrible to do this here. But there should only be termporary, as the 
+			//changes are propagated through different maps.
 			if(singularFormLen > 4 && singularForm.substring(singularFormLen-4).equals("sery")){
 				singularForm = singularForm.substring(0, singularFormLen-4) + "series";
-			}
+			}else if(singularFormLen > 7 && singularForm.substring(singularFormLen-7).equals("matrice")){
+				singularForm = singularForm.substring(0, singularFormLen-7) + "matrix";
+			}			
 			tempThreeGramFreqMap.put(singularForm, threeGramEntry.getValue());
 		}
 		threeGramFreqMap = tempThreeGramFreqMap;
@@ -197,6 +202,8 @@ public class CreateRepresentativeMaps {
 			int singularFormLen = singularForm.length();
 			if(singularFormLen > 4 && singularForm.substring(singularFormLen-4).equals("sery")){
 				singularForm = singularForm.substring(0, singularFormLen-4) + "series";
+			}else if(singularFormLen > 7 && singularForm.substring(singularFormLen-7).equals("matrice")){
+				singularForm = singularForm.substring(0, singularFormLen-7) + "matrix";
 			}
 			//*/
 			tempTwoGramFreqMap.put(singularForm, twoGram.getValue());

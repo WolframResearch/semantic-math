@@ -41,7 +41,7 @@ public class WordForms {
 
 	private static final Logger logger = LogManager.getLogger(WordForms.class);
 	//delimiters to split on when making words out of input
-	private static final String SPLIT_DELIM = "\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:|-|_|~|!";
+	private static final String SPLIT_DELIM = "\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:|-|_|~|!|\\+";
 	private static final Pattern BACKSLASH_PATTERN = Pattern.compile("(?<!\\\\)\\\\(?!\\\\)");
 	private static final Pattern ALL_WHITE_EMPTY_SPACE_PATTERN = Pattern.compile("^\\s*$");
 	private static final Pattern ALL_WHITE_NONEMPTY_SPACE_PATTERN = Pattern.compile("^\\s+$");
@@ -105,9 +105,9 @@ public class WordForms {
 	//which is O(mn) time.
 	private static final Pattern HYP_PATTERN = Pattern.compile(".*(?:assume|denote|define|let|is said|suppose"
 			+ "|where|is called|if|given).+") ;
-	private static final Pattern SPLIT_DELIM_PATTERN = Pattern.compile(SPLIT_DELIM);
-	
+	private static final Pattern SPLIT_DELIM_PATTERN = Pattern.compile(SPLIT_DELIM);	
 	private static final Set<String> GREEK_ALPHA_SET;
+	private static final Map<Character, Character> DIACRITICS_MAP;
 
 	static{		
 		FLUFF_WORDS_SMALL_SET = new HashSet<String>();
@@ -145,7 +145,7 @@ public class WordForms {
 		FileUtils.silentClose(synonymsBF);
 		
 		GREEK_ALPHA_SET = new HashSet<String>();
-		String[] GREEK_ALPHA = new String[]{"alpha","beta","gamma","delta","epsilon","omega"};
+		String[] GREEK_ALPHA = new String[]{"alpha","beta","gamma","delta","epsilon","omega","iota","theta","phi"};
 		for(String s : GREEK_ALPHA){
 			GREEK_ALPHA_SET.add(s);
 		}	
@@ -158,6 +158,15 @@ public class WordForms {
 		irregularWordMap.put("matrices", "matrix");
 		irregularWordMap.put("series", "series");
 		IRREGULAR_ENDING_WORD_MAP = ImmutableMap.copyOf(irregularWordMap);
+		//Unicode table e.g. on http://jrgraphix.net/r/Unicode/0100-017F
+		char[][] diacriticsMapAr = new char[][]{{'\u00e1', 'a'}, {'\u00e9', 'e'},
+			{'\u00ed', 'i'}, {'\u00f3', 'o'}, {'\u00f6', 'o'}, {'\u0151', 'o'},
+			{'\u00fa', 'u'}, {'\u00fc', 'u'}, {'\u0171', 'u'}, {'\u0177', 'y'},
+			{'\u015B', 's'}, {'\u00f8', 'o'}, {'\u011b', 'e'}, {'\u00e8', 'e'}};
+		DIACRITICS_MAP = new HashMap<Character, Character>();
+		for(char[] p : diacriticsMapAr){
+			DIACRITICS_MAP.put(p[0], p[1]);
+		}
 	}
 	/**
 	 * Invert the key and value for each pair in stemWordsMap.
@@ -241,6 +250,7 @@ public class WordForms {
 		//if word in dictionary, should not be processed. Eg "continuous"
 		//System.out.println("WordForms- word "+word);
 		if(getFreqWordsSet().contains(word) || word.length() < 4){ 
+			
 			return word;		
 		}
 		int wordLen0 = word.length();
@@ -251,6 +261,7 @@ public class WordForms {
 		}
 		String tempWord = IRREGULAR_ENDING_WORD_MAP.get(word);
 		if(null != tempWord){
+			
 			return tempWord;
 		}		
 		String[] singFormsAr = getSingularForms(word);
@@ -666,6 +677,28 @@ public class WordForms {
 			}
 		}
 		return false;
+	}
+	
+	/**
+	 * Substitute letters with diacritics with the ones that 
+	 * don't.
+	 * @param str Only has table for lower-case for now.
+	 * @return
+	 */
+	public static String removeDiacritics(String str){
+		if(null == str) return null;
+		int strLen = str.length();
+		StringBuilder sb = new StringBuilder(strLen);
+		for(int i = 0; i < strLen; i++){
+			char iChar = str.charAt(i);
+			Character substituteChar = DIACRITICS_MAP.get(iChar);
+			if(null != substituteChar){
+				sb.append(substituteChar);
+			}else{
+				sb.append(iChar);
+			}
+		}
+		return sb.toString();
 	}
 	
 	/**

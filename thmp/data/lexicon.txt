@@ -485,7 +485,6 @@ regularity ent
 numerical adj
 supremum ent
 proposition ent
-matrices ent
 truncation ent
 permutation ent
 jacobson ent

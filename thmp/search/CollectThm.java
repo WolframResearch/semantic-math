@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.servlet.ServletContext;
@@ -19,6 +20,7 @@ import org.apache.logging.log4j.Logger;
 import java.util.Set;
 import java.util.TreeMap;
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -191,6 +193,7 @@ public class CollectThm {
 		//this size depends on whether currently gathering data or performing search.
 		private static final int CONTEXT_VEC_SIZE;
 		
+		private static final String NAMED_THMS_FILE_STR = "src/thmp/data/thmNames.txt";
 		private static final Set<String> FLUFF_WORDS_SET = WordForms.getFluffSet();
 		private static final Map<String, Integer> twoGramsMap = NGramsMap.get_twoGramsMap();
 		private static final Map<String, Integer> threeGramsMap = NGramsMap.get_threeGramsMap();	
@@ -199,6 +202,9 @@ public class CollectThm {
 		//so the n-grams have a chance of being called.
 		private static final Set<String> nGramFirstWordsSet = new HashSet<String>();
 		private static final int averageSingletonWordFrequency;
+		//strip "theorem" away from words, to further reduce number of words
+		private static final Pattern THEOREM_END_PATTERN = Pattern.compile("(.+) theorem");
+		public static final Pattern THEORY_END_PATTERN = Pattern.compile("(.+) theory");
 		
 		/* Words and their indices.
 		 * Deserialize the words used to form context and relation vectors. Note that this is a 
@@ -352,7 +358,7 @@ public class CollectThm {
 		 * @param docWordsFreqPreMapNoAnno
 		 * @param wordThmsMMapBuilderNoAnno
 		 * @param wordsScorePreMap Ordered w.r.t. frequency, so to optimize 
-			forming relation search vecs, which are BigInteger's.
+		 * forming relation search vecs, which are BigInteger's.
 		 */
 		public static Map<String, Integer> buildDocWordsFreqMap(List<String> thmList) {
 			
@@ -363,6 +369,9 @@ public class CollectThm {
 			
 			//first compute the average word frequencies for singleton words
 			int avgSingletonWordFreq = computeSingletonWordsFrequency(docWordsFreqPreMap);	
+			
+			//add the singleton words in named theorems, e.g. Ax-Grothendieck , mostly mathematicians' names
+			addNamedThmsToMap(docWordsFreqPreMap, avgSingletonWordFreq);
 			
 			for(String word : twoGramComponentWordsSingularSet){
 				//singleton words are all normalized
@@ -384,6 +393,44 @@ public class CollectThm {
 			//forming relation search vecs, which are BigInteger's.
 			return reorderDocWordsFreqMap(docWordsFreqPreMap);			
 		}
+		
+		/**
+		 * Add the singleton words in named theorems, e.g. Ax-Grothendieck , mostly mathematicians' names
+		 * @param docWordsFreqPreMap
+		 */
+		private static void addNamedThmsToMap(Map<String, Integer> docWordsFreqPreMap,
+				int avgSingletonWordFreq) {
+			String namedThmsFileStr = FileUtils.getPathIfOnServlet(NAMED_THMS_FILE_STR);
+			try{
+				BufferedReader bReader = new BufferedReader(new FileReader(namedThmsFileStr));
+				try{
+					String line;
+					while((line = bReader.readLine()) != null){
+						//split line into tokens
+						String lineNoDiacritics = WordForms.removeDiacritics(line.toLowerCase());
+						String[] lineAr = WordForms.splitThmIntoSearchWords(lineNoDiacritics);
+						for(String word : lineAr){
+							if(word.length() < 3){
+								//e.g. "of", but include e.g. "lie"
+								continue;
+							}
+							//System.out.println("CollectThm word - " + word);
+							if(!docWordsFreqPreMap.containsKey(word)){
+								docWordsFreqPreMap.put(word, avgSingletonWordFreq);															
+							}
+						}
+					}
+				}finally{
+					FileUtils.silentClose(bReader);
+				}
+			}catch(FileNotFoundException e){
+				//same treatment as IOException for now
+				throw new IllegalStateException("FileNotFoundException when adding Named theorems!", e);
+			}catch(IOException e){
+				throw new IllegalStateException("IOException when adding Named theorems!", e);
+			}
+		}
+		
 		/**
 		 * Deserializes and processes, normalize the words. Related words are only used
 		 * to process queries, not the corpus; applied to all search algorithms.
@@ -476,7 +523,18 @@ public class CollectThm {
 				if(null != singularWordFreq && !wordStem.equals(wordSingular)){
 					modifiedWordFreqMap.put(wordSingular, (int)((singularWordFreq + entry.getValue())*3./4));
 					freqMapIter.remove();
-					logger.info(wordStem + " removed in favor of " + wordSingular);
+					//logger.info(wordStem + " removed in favor of " + wordSingular);
+				}
+				//if(FreqWordsSet.commonEnglishNonMathWordsSet.contains(word)
+				Matcher m;
+				
+				if((m=THEOREM_END_PATTERN.matcher(wordStem)).matches()){
+					freqMapIter.remove();
+					String word = m.group(1);
+					//eliminate e.g. "main".
+					if(!FreqWordsSet.commonEnglishNonMathWordsSet.contains(word)){						
+						modifiedWordFreqMap.put(word, entry.getValue());						
+					}
 				}
 			}
 			docWordsFreqPreMapNoAnno.putAll(modifiedWordFreqMap);
@@ -590,7 +648,8 @@ public class CollectThm {
 		}
 		
 		/**
-		 * Remove the low-freq words, to reduce number of words
+		 * Remove the low-freq words, to reduce number of words.
+		 * Right now remove words with freq 1 and 2.
 		 * @param docWordsFreqPreMapNoAnno
 		 */
 		private static void removeLowFreqWords(Map<String, Integer> docWordsFreqPreMapNoAnno) {
@@ -598,7 +657,7 @@ public class CollectThm {
 			while(entrySetIter.hasNext()){
 				int freq = entrySetIter.next().getValue();
 				//remove the low-freq words, to reduce number of words
-				if(freq < 2){
+				if(freq < 3){
 					entrySetIter.remove();
 					//continue;
 				}
