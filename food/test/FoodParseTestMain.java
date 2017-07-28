@@ -137,4 +137,6 @@ public class FoodParseTestMain {
 		int desiredEdgeNum = 1;
 		assertTrue(testFoodParse(inputStr, ingredientsAr, desiredSnippets, desiredEdgeNum));
 	}
+	
+	//TO ADD: inputStr = "Cover, and refrigerate for about 2 hours";
 }

@@ -197,6 +197,9 @@ public class FoodLexicon {
 				String line;
 				//build the trie
 				while((line=bReader.readLine()) != null){
+					//singularize words, since many words in curated lists are plural,
+					//without the singular version
+					line = WordForms.getSingularForm(line);
 					String lineAr[] = line.split(" ");
 					int lineArLen = lineAr.length;
 					if(lineArLen < 1){
@@ -312,6 +315,7 @@ public class FoodLexicon {
 	}
 
 	/**
+	 * Create lexicon maps from curated lists.
 	 * @return
 	 */
 	private static FoodMapNode buildMapsAndSerialize() {

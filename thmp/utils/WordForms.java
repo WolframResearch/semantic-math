@@ -69,6 +69,7 @@ public class WordForms {
 	//indicates termination of a Latex command
 	private static final Pattern COMMAND_END_PATTERN = Pattern.compile("[\\$(\\[{\\])}_;,:!'`~%.\\-\"\\s]");
 	private static final Pattern FRACTION_PATTERN = Pattern.compile("\\d+/\\d+");
+	public static final Pattern CONJ_DISJ_PATTERN = Pattern.compile("conj_.+|disj_.+");
 	
 	public static final String QUANTITY_POS = "quant";
 	

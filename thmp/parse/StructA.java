@@ -819,7 +819,11 @@ public class StructA<A, B> extends Struct{
 	public String nameStr(){		
 		String nameStr = "";
 		if(PREV1_TYPE != null && PREV1_TYPE.equals(NodeType.STR)){
-			nameStr = (String) prev1;			
+			nameStr = (String) prev1;
+		}else if(WordForms.CONJ_DISJ_PATTERN.matcher(this.type).matches()
+				&& this.prev1NodeType().isTypeStruct() 
+				&& this.prev2NodeType().isTypeStruct()){
+			nameStr = ((Struct)this.prev1).nameStr() + ", " + ((Struct)this.prev2).nameStr(); 
 		}
 		return nameStr;
 	}

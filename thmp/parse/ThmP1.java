@@ -2930,9 +2930,11 @@ public class ThmP1 {
 				int span = 0;
 				ConjDisjVerbphrase conjDisjVerbphrase = new ConjDisjVerbphrase();
 				boolean isRightChild = true; 
-				if(DEBUG) System.out.println("ThmP1-longform: ");
+				
 				//get the "long" form, not WL form, with this dfs()
 				span = buildLongFormParseDFS(uHeadStruct, parsedSB, span, conjDisjVerbphrase, isRightChild);
+				if(DEBUG) System.out.println("ThmP1-longform: " + parsedSB);
+				
 				//if conj_verbphrase or disj_verbphrase encountered, and these conclude the 
 				//sentence, e.g. "if $R$ is a field and has a zero.", separate the conj_verbphrase
 				//out to "if $R$ is a field and if $R$ has a zero", this makes command-triggering
@@ -3311,12 +3313,14 @@ public class ThmP1 {
 							// this // case){do_something}
 							Struct nextStruct = j + 1 < inputStructListSize ? inputStructList.get(j + 1) : null;
 							/*conj/disj handling*/
-							if (nextStruct != null && type1.equals("and")
+							if (false && nextStruct != null && type1.equals("and")
 									&& nextStruct.prev1NodeType().equals(NodeType.STR)
 									&& isSingularVerb((String) nextStruct.prev1())) {
 								/* Intentionally left blank, for improved clarity. */
 								//In case of conj, only proceed if next
 								// word is not a singular verb.
+								//i.e. if the expression after "and" should be an independent verbphrase
+								//put in "false" Aug 2017, clean up in five weeks.
 							} else {
 								// type is expression, eg "a
 								// and

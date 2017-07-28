@@ -3,6 +3,7 @@ package food.parse;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -113,15 +114,23 @@ public class RecipeParse {
 		inputStr = "cut kernels off the cob with a sharp knife.";
 		inputStr = "warm tortillas on pan or directly over fire, add garlic and mix until smooth"; //mix!
 		inputStr = "Beat together cream cheese and confectioners sugar";
+		inputStr = "stir together the garbanzo beans, kidney beans, lemon juice and salt";
+		inputStr = "Cover, and refrigerate for about 2 hours";
+		inputStr = "lightly dust the dough with flour";
+		inputStr = "make crust, Place thin slices of mozzarella over the crust"; //multiple edges for crust?!
+		
 		
 		boolean isVerbose = true;
 		Stats stats = null;
 		List<String> ingredientsList = new ArrayList<String>();
-		//ingredientsList.add("flag");
 		String[] ingredientsAr = new String[]{"flour","soda", "cashew","salt", "egg","banana", "oil","onion", "blue cheese",
-				"soy sauce", "lemon juice", "basil", "garlic", "hot pepper sauce", "cilantro","potato","carrot","water","corn"};		
-		ingredientsList = Arrays.asList(ingredientsAr);		
-		Set<String> ingredientsSet = FoodLexicon.ingredientFoodTypesSet();
+				"soy sauce", "lemon juice", "basil", "kidney bean","lemon juice","garlic", "hot pepper sauce", 
+				"cilantro","potato","carrot","water","crust","corn"//,"garbanzo bean"
+				};		
+		ingredientsList = Arrays.asList(ingredientsAr);	
+		Set<String> ingredientsSet = new HashSet<String>();
+		ingredientsSet.addAll(FoodLexicon.ingredientFoodTypesSet());
+		ingredientsSet.addAll(ingredientsList);
 		RecipeGraph recipeGraph = buildRecipeGraph(inputStr, isVerbose, stats, //ingredientsList
 				ingredientsSet);
 		

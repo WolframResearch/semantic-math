@@ -67,7 +67,7 @@ public class ParseToWLTree{
 	private static final Logger logger = LogManager.getLogger(ParseToWLTree.class);
 	private static final Pattern PLURAL_PATTERN = Pattern.compile("(.+)s");
 	private static final Pattern CONJ_DISJ_PATTERN = Pattern.compile("conj_.+|disj_.+");
-	private static final Pattern CONJ_DISJ_PATTERN2 = Pattern.compile("(?:conj|disj)(.*)");
+	private static final Pattern CONJ_DISJ_PATTERN2 = Pattern.compile("(?:conj|disj)_(.+)");
 	//map of whitelisted verbs that should not trigger command with trigger term "verbphrase".
 	private static final Set<String> WHITELIST_VERB_SET;
 	
@@ -344,14 +344,15 @@ public class ParseToWLTree{
 		
 		//list of commands satisfied at this level
 		List<WLCommand> satisfiedCommandsList = new ArrayList<WLCommand>();
-		//System.out.println("ADDING STRUCT in buildWLCommandTreeDfs " + struct);
+		//System.out.println("ParseToWLTree - ADDING STRUCT in buildWLCommandTreeDfs " + struct);
 		//add struct to all WLCommands in WLCommandList (triggered commands so far.)
-		//check if satisfied. "is" is not added?!
-		//Skip if immediate parents are conj or disj, i.e. already been added <--re-examine!!
+		//check if satisfied.
+		//Skip if immediate parents are conj or disj, i.e. already been added. Since parents
+		//are added first.
 		if (struct.parentStruct() == null 
 				//struct.parentStruct() can't be null now. 
 				|| !CONJ_DISJ_PATTERN.matcher(struct.parentStruct().type()).matches()) {
-			//System.out.println("!!!!!WLCommandList: " + WLCommandList);
+			
 			int WLCommandListSz = WLCommandList.size();
 			List<WLCommand> reverseWLCommandList = new ArrayList<WLCommand>(WLCommandListSz);
 			
@@ -414,10 +415,8 @@ public class ParseToWLTree{
 					   incrementing compoenentWithOtherHeadCount does not affect the new copy. Treating the new
 					   copy as if its optional terms were not optional, so it's not done yet */
 					if(commandSat.hasOptionalTermsLeft() && commandRemoved){
-						//System.out.println("++++++++++add to wlCommandWithOptionalTermsList " + curCommand);
 						WLCommand shallowCopy = WLCommand.shallowWLCommandCopy(curCommand);
 						wlCommandWithOptionalTermsList.add(0, shallowCopy);
-						//System.out.println("********SSHHHHHALOOOOOOW COPY " + shallowCopy);
 					}					
 					/* DON'T delete this part yet! Feb/2017
 					 * if(curCommand.getDefaultOptionalTermsCount() == 0
