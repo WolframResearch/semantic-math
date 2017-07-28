@@ -1,0 +1,7 @@
+strip ent
+slice ent
+about adj
+smash verb
+fragrant adj
+fire ent
+cob ent

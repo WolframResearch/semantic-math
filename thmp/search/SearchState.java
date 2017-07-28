@@ -5,11 +5,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import thmp.parse.ParseState;
+
 /**
  * Information on the state of the current query. E.g. list
  * of relevant tokens, including 2/3-grams, 
  * Useful for e.g. combined search ranking in CombinedSearch.
- * One instance per query.
+ * One SearchState instance per query, therefore intentionally
+ * not meant to be used by multiple threads.
  * 
  * @author yihed
  *
@@ -28,24 +31,24 @@ public class SearchState {
 	//map of thmIndex and their span scores
 	private Map<Integer, Integer> thmSpanMap;
 	
+	//The largest span of current query word set amongst any 
+	// theorem that are in the keyset of thmSpanMap.
+	private int largestWordSpan;
 	//map of thmIndex and their word-weight scores
 	private Map<Integer, Integer> thmScoreMap;
 	
+	private ParseState parseState;
+	
 	//the keyset of which is intersectionVecList
 	//make thread-safe!
-	Map<String, Integer> map = new LinkedHashMap<>();
+	//Map<String, Integer> map = new LinkedHashMap<>();
 	
 	public SearchState(){
 		
 		this.tokenScoreMap = new HashMap<String, Integer>();
 		this.thmSpanMap = new HashMap<Integer, Integer>();
 	}
-	
-	/*public SearchState( List<Integer> intersectionVecList){	
-		this.intersectionVecList = intersectionVecList;
-		this.tokenScoreMap = new HashMap<String, Integer>();
-	}*/
-	
+		
 	/**
 	 * Adds token and its score to tokenScoreMap. 
 	 * @param token
@@ -60,15 +63,19 @@ public class SearchState {
 		this.thmScoreMap = scoreMap;
 	}
 	
-	//should be consistent with set/add!
-		public Map<Integer, Integer> thmScoreMap(){
-			return this.thmScoreMap;
-		}
+	public Map<Integer, Integer> thmScoreMap(){
+		return this.thmScoreMap;
+	}
 		
 	/**
 	 * Adds token and its score to tokenScoreMap. 
 	 * @param thmIndex
-	 * @param span Span of the current query for thmIndex as derived in SearchIntersection.
+	 * @param span Span, as in width, in the current query of 
+	 * thmIndex as derived in SearchIntersection. How many words
+	 * in the query does the thm cover.
+	 * This is derived as the size of an entry for thmWordSpanMMap,
+	 * which is a Multimap of thmIndex, and the (index of) set of words in query 
+		 that appear in the thm
 	 */
 	public void addThmSpan(Integer thmIndex, Integer span){
 		thmSpanMap.put(thmIndex, span);
@@ -76,6 +83,19 @@ public class SearchState {
 	
 	public void addThmSpan(Map<Integer, Integer> spanMap){
 		thmSpanMap.putAll(spanMap);
+	}
+	/**
+	 * The largest span of current query word set amongst any 
+	 * theorem that are in the keyset of thmSpanMap.
+	 */
+	public void setLargestWordSpan(int span){
+		if(span > this.largestWordSpan){
+			this.largestWordSpan = span;
+		}
+	}
+	
+	public int largestWordSpan(){
+		return this.largestWordSpan;
 	}
 	
 	public void set_totalWordAdded(int totalWordAdded){
@@ -86,6 +106,13 @@ public class SearchState {
 		return totalWordAdded;
 	}
 	
+	/**
+	 * Map of How many words in the query does the thm cover.
+	 * This is derived as the size of an entry for thmWordSpanMMap,
+	 * which is a Multimap of thmIndex, and the (index of) set of words in query 
+	 * that appear in the thm
+	 * @return
+	 */
 	public Map<Integer, Integer> thmSpanMap(){
 		return thmSpanMap;
 	}
@@ -96,5 +123,13 @@ public class SearchState {
 
 	public void set_intersectionVecList(List<Integer> intersectionVecList){
 		this.intersectionVecList = intersectionVecList;
+	}
+
+	public ParseState getParseState() {
+		return parseState;
+	}
+
+	public void setParseState(ParseState parseState) {
+		this.parseState = parseState;
 	}
 }

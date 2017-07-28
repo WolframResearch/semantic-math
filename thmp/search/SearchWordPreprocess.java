@@ -13,7 +13,7 @@ import thmp.utils.WordForms;
  * Preprocesses keywords before incorportating them into the termDocMx.
  * E.g. label word as part of hypothesis or conclusion.
  * @author yihed
- *
+ * @deprecated This should no longer be used in intersection search!!
  */
 public class SearchWordPreprocess {
 
@@ -85,14 +85,14 @@ public class SearchWordPreprocess {
 			if(numSteps != null && inputAr.length > i+1){
 				//should use for loop, + numSteps
 				String tempWord = word + " " + inputAr[i+1];
-				if(thmp.Maps.getPos(tempWord) != null){					
+				if(thmp.parse.Maps.getPos(tempWord) != null){					
 					word = tempWord;
 					i++;
 				}
 			}			
 			
 			if(!word.matches(HYP_WORDS)){
-				wordPos = thmp.Maps.getPos(word);
+				wordPos = thmp.parse.Maps.getPos(word);
 				if(wordPos != null && wordPos.equals(HYP)){
 					inHyp = true;
 					hypTriggerWord = word;
@@ -147,6 +147,7 @@ public class SearchWordPreprocess {
 	/**
 	 * 	Class for representing words with a context.
 	 *	Represent context, 
+	 *@deprecated
 	 */
 	public static class WordWrapper{
 		//part of speech, primarily hyp or stm

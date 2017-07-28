@@ -1,0 +1,256 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 11.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[      7453,        248]
+NotebookOptionsPosition[      6102,        196]
+NotebookOutlinePosition[      6456,        212]
+CellTagsIndexPosition[      6413,        209]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"stream", "=", 
+   RowBox[{"OpenWrite", "[", "]"}]}], ";", 
+  RowBox[{"WriteString", "[", 
+   RowBox[{"stream", ",", 
+    RowBox[{"ExportString", "[", 
+     RowBox[{
+      RowBox[{"foodNames", "[", 
+       RowBox[{"[", 
+        RowBox[{"1", ";;", "10"}], "]"}], "]"}], ",", "\"\<Text\>\""}], 
+     "]"}]}], "]"}]}]], "Input",
+ CellChangeTimes->{{3.708108614839876*^9, 3.70810868626728*^9}}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"foodNames", "=", 
+   RowBox[{"GeneralData", "[", 
+    RowBox[{"FoodData", ",", 
+     RowBox[{"DataList", "@@", 
+      RowBox[{"FoodData", "[", "]"}]}], ",", "\"\<Name\>\""}], "]"}]}], 
+  ";"}]], "Input",
+ CellChangeTimes->{{3.7081089951964197`*^9, 3.708108997930648*^9}}],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"file", "=", 
+  RowBox[{"Close", "[", "stream", "]"}]}]], "Input",
+ CellChangeTimes->{{3.708108697567189*^9, 3.708108710044364*^9}}],
+
+Cell[BoxData["\<\"/var/folders/17/p5s9pyc50t390m5sd22s02q4000_33/T/\
+m000051240391\"\>"], "Output",
+ CellChangeTimes->{3.708108714839733*^9}]
+}, Open  ]],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"writeFoodNamesToFile", "[", "names_List", "]"}], ":=", 
+  RowBox[{"Module", "[", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"stream", ",", "file", ",", "validList"}], "}"}], ",", 
+    RowBox[{
+     RowBox[{"stream", "=", 
+      RowBox[{"OpenWrite", "[", "]"}]}], ";", 
+     RowBox[{"validList", "=", 
+      RowBox[{"Select", "[", 
+       RowBox[{"names", ",", 
+        RowBox[{
+         RowBox[{"(", 
+          RowBox[{
+           RowBox[{"Head", "[", "#", "]"}], "=!=", "Missing"}], ")"}], 
+         "&"}]}], "]"}]}], ";", 
+     RowBox[{"WriteString", "[", 
+      RowBox[{"stream", ",", 
+       RowBox[{"ExportString", "[", 
+        RowBox[{"validList", ",", "\"\<Text\>\""}], "]"}]}], "]"}], ";", 
+     RowBox[{"file", "=", 
+      RowBox[{"Close", "[", "stream", "]"}]}]}]}], "]"}]}]], "Input",
+ CellChangeTimes->{{3.7081089584040422`*^9, 3.708108972948063*^9}, {
+  3.7081090113082457`*^9, 3.70810910256101*^9}, {3.708182978587246*^9, 
+  3.708183025633142*^9}, {3.708183238707821*^9, 3.708183257484799*^9}}],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"writeFoodNamesToFile", "[", "foodNames", "]"}]], "Input",
+ CellChangeTimes->{{3.7081091343518877`*^9, 3.708109167581835*^9}}],
+
+Cell[BoxData["\<\"/var/folders/17/p5s9pyc50t390m5sd22s02q4000_33/T/\
+m000053240391\"\>"], "Output",
+ CellChangeTimes->{3.7081091692770443`*^9, 3.708109480816132*^9}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"writeFoodNamesToFile", "[", "foodTypeData", "]"}]], "Input",
+ CellChangeTimes->{{3.708109883006888*^9, 3.708109888460084*^9}, 
+   3.708182660555048*^9}],
+
+Cell[BoxData["\<\"/var/folders/17/p5s9pyc50t390m5sd22s02q4000_33/T/\
+m000064240391\"\>"], "Output",
+ CellChangeTimes->{3.708182662024169*^9, 3.708183044159027*^9, 
+  3.708183263433633*^9}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"writeFoodNamesToFile", "[", "foodIngredients", "]"}]], "Input",
+ CellChangeTimes->{{3.7081101629715023`*^9, 3.708110166394433*^9}}],
+
+Cell[BoxData["\<\"/var/folders/17/p5s9pyc50t390m5sd22s02q4000_33/T/\
+m000066240391\"\>"], "Output",
+ CellChangeTimes->{3.708110166799728*^9, 3.708183521628186*^9}]
+}, Open  ]],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"cookingActionData", "=", 
+   RowBox[{"GeneralData", "[", 
+    RowBox[{"CookingActionData", ",", 
+     RowBox[{"DataList", "@@", 
+      RowBox[{"CookingActionData", "[", "]"}]}], ",", "\"\<Name\>\""}], 
+    "]"}]}], ";"}]], "Input",
+ CellChangeTimes->{3.70811077361975*^9}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"writeFoodNamesToFile", "[", "cookingActionData", "]"}], 
+  ";"}]], "Input",
+ CellChangeTimes->{{3.708110764428953*^9, 3.708110765242502*^9}}],
+
+Cell[CellGroupData[{
+
+Cell[BoxData["%170"], "Input",
+ CellChangeTimes->{{3.7081098920776577`*^9, 3.708109894298304*^9}, 
+   3.708110777875062*^9}],
+
+Cell[BoxData["\<\"/var/folders/17/p5s9pyc50t390m5sd22s02q4000_33/T/\
+m000056240391\"\>"], "Output",
+ CellChangeTimes->{3.708109894615623*^9, 3.708110790447919*^9}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"writeFoodNamesToFile", "[", "cookingEquipmentType", "]"}]], "Input",\
+
+ CellChangeTimes->{{3.708110893823165*^9, 3.708110903120823*^9}}],
+
+Cell[BoxData["\<\"/var/folders/17/p5s9pyc50t390m5sd22s02q4000_33/T/\
+m000065240391\"\>"], "Output",
+ CellChangeTimes->{3.708110903785684*^9, 3.708182570972848*^9, 
+  3.708183398102929*^9}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"writeFoodNamesToFile", "[", "cookingEquipment", "]"}]], "Input",
+ CellChangeTimes->{{3.708110929358734*^9, 3.708110935230892*^9}}],
+
+Cell[BoxData["\<\"/var/folders/17/p5s9pyc50t390m5sd22s02q4000_33/T/\
+m000060240391\"\>"], "Output",
+ CellChangeTimes->{3.708110935650427*^9, 3.708119526166544*^9}]
+}, Open  ]],
+
+Cell[BoxData[
+ RowBox[{"foodNames", "=", 
+  RowBox[{"Select", "[", 
+   RowBox[{"foodNames", ",", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Head", "[", "#", "]"}], "=!=", "Missing"}], ")"}], "&"}]}], 
+   "]"}]}]], "Input",
+ CellChangeTimes->{{3.708109073970875*^9, 3.7081090766236143`*^9}, {
+  3.708109400393139*^9, 3.708109430470869*^9}, {3.708109464438884*^9, 
+  3.7081094705578938`*^9}}],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Length", "[", "%", "]"}]], "Input",
+ CellChangeTimes->{{3.708109438807715*^9, 3.708109445816258*^9}}],
+
+Cell[BoxData["352"], "Output",
+ CellChangeTimes->{3.708109446187183*^9}]
+}, Open  ]],
+
+Cell[BoxData[""], "Input",
+ CellChangeTimes->{{3.708109247280388*^9, 3.708109250753358*^9}}]
+},
+WindowSize->{808, 870},
+WindowMargins->{{67, Automatic}, {15, Automatic}},
+FrontEndVersion->"11.0 for Mac OS X x86 (32-bit, 64-bit Kernel) (July 28, \
+2016)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[558, 20, 424, 12, 54, "Input"],
+Cell[985, 34, 306, 8, 32, "Input"],
+Cell[CellGroupData[{
+Cell[1316, 46, 155, 3, 32, "Input"],
+Cell[1474, 51, 141, 2, 32, "Output"]
+}, Open  ]],
+Cell[1630, 56, 1045, 26, 96, "Input"],
+Cell[CellGroupData[{
+Cell[2700, 86, 149, 2, 32, "Input"],
+Cell[2852, 90, 165, 2, 32, "Output"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[3054, 97, 176, 3, 32, "Input"],
+Cell[3233, 102, 188, 3, 32, "Output"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[3458, 110, 155, 2, 32, "Input"],
+Cell[3616, 114, 163, 2, 32, "Output"]
+}, Open  ]],
+Cell[3794, 119, 307, 8, 32, "Input"],
+Cell[4104, 129, 176, 4, 32, "Input"],
+Cell[CellGroupData[{
+Cell[4305, 137, 124, 2, 32, "Input"],
+Cell[4432, 141, 163, 2, 32, "Output"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[4632, 148, 160, 3, 32, "Input"],
+Cell[4795, 153, 188, 3, 32, "Output"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[5020, 161, 154, 2, 32, "Input"],
+Cell[5177, 165, 163, 2, 32, "Output"]
+}, Open  ]],
+Cell[5355, 170, 411, 11, 32, "Input"],
+Cell[CellGroupData[{
+Cell[5791, 185, 125, 2, 32, "Input"],
+Cell[5919, 189, 72, 1, 32, "Output"]
+}, Open  ]],
+Cell[6006, 193, 92, 1, 32, "Input"]
+}
+]
+*)
+

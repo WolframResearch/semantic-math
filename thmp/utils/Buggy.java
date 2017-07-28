@@ -10,9 +10,5 @@ import org.apache.logging.log4j.*;
  */
 public class Buggy {
 
-	private static final Logger logger = LogManager.getLogger();
 	
-	public static Logger getLogger(){
-		return logger;
-	}
 }

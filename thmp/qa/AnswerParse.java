@@ -16,7 +16,6 @@ import com.wolfram.jlink.KernelLink;
 import com.wolfram.jlink.MathLinkException;
 import com.wolfram.jlink.MathLinkFactory;
 
-import thmp.search.TermDocMatrix;
 import thmp.search.TriggerMathThm2;
 import thmp.qa.AnswerParse.AnswerState;
 import thmp.qa.QuestionAcquire.Formula;

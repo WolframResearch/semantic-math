@@ -1,20 +1,33 @@
 package thmp.search;
 
 import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.Serializable;
+import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import javax.servlet.ServletContext;
+
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.TreeMultimap;
 import com.wolfram.jlink.Expr;
 import com.wolfram.jlink.MathLinkException;
 
-import thmp.ProcessInput;
+import thmp.parse.ProcessInput;
+import thmp.parse.TheoremContainer;
+import thmp.utils.DataUtility;
+import thmp.utils.FileUtils;
+import thmp.utils.WordForms;
 
 /**
  * Search that combines svd/nearest and intersection.
@@ -23,30 +36,115 @@ import thmp.ProcessInput;
  */
 public class SearchCombined {
 
-	private static final int NUM_NEAREST = 10;
+	private static final int NUM_NEAREST_SVD = 100;
+	protected static final int NUM_NEAREST = 30;
 	//combined number of vectors to take from search results of
 	//svd/nearest and intersection
-	private static final int NUM_COMMON_VECS = 4;
+	//protected static final int NUM_COMMON_VECS = 4;
+	//private static ServletContext servletContext;
 	//should update at the very beginning!
 	//private static final int LIST_INDEX_SHIFT = 1;
 	
-	/*public static void initializeSearchWithResource(BufferedReader freqWordsFileBuffer, BufferedReader texSourceFileBuffer){		
-		CollectThm.setWordFrequencyBR(freqWordsFileBuffer);
-		CollectThm.setResources(texSourceFileBuffer);		
-	}*/
+	private static final Pattern INPUT_PATTERN = Pattern.compile("(\\d+)\\s+(.+)");
+	private static final Pattern CONTEXT_INPUT_PATTERN = Pattern.compile("(context|relation)\\s+(.*)");
+	protected static final int CONTEXT_SEARCH_TUPLE_SIZE = 10;
+	
+	/**
+	 * Thm and hyp pair, used to display on web separately.
+	 */
+	public static class ThmHypPair implements Serializable, TheoremContainer{
+		
+		private static final long serialVersionUID = -6913500705834907026L;
+		private String thmStr;
+		private String hypStr;
+		private String srcFileName;
+		private String arxivURL;
+		private static final ThmHypPair PLACEHOLDER_PAIR = new ThmHypPair("", "", "");
+		
+		public ThmHypPair(String thmStr_, String hypStr_, String srcFileName_){
+			this.thmStr = thmStr_;
+			this.hypStr = hypStr_;
+			this.srcFileName = srcFileName_;
+			this.arxivURL = DataUtility.createArxivURLFromFileName(srcFileName_);
+		}
+		
+		@Override
+		public String toString(){
+			StringBuilder sb = new StringBuilder(thmStr);
+			sb.append(" [").append(srcFileName).append("]");
+			if(!WordForms.getWhiteEmptySpacePattern().matcher(hypStr).matches()){
+				sb.append("\nHYP: ").append(hypStr);
+			}
+			return sb.toString();
+		}
+		
+		public String thmStr(){
+			return this.thmStr;
+		}
+		public String hypStr(){
+			return this.hypStr;
+		}
+		public String srcFileName(){
+			return this.srcFileName;
+		}
+		public String arxivURL(){
+			return this.arxivURL;
+		}
+		
+		public static ThmHypPair PLACEHOLDER_PAIR(){
+			return PLACEHOLDER_PAIR;
+		}
+
+		@Override
+		public String getEntireThmStr() {
+			return this.hypStr + " " + this.thmStr;
+		}
+	}
+	
+	/**
+	 * Turn list of indices of thms into list of String's.
+	 * Does *NOT* include hyp in returned results!
+	 * @param highestThms
+	 * @return
+	 */
+	public static List<String> thmListIndexToString(List<Integer> highestThms){
+		List<String> foundThmList = new ArrayList<String>();
+		for(Integer thmIndex : highestThms){
+					//the list thmList as good for web display as the original webDisplayThmList,
+					//because removeTexMarkup() has been applied.
+			//foundThmList.add(getThmList().get(thmIndex));
+			foundThmList.add(ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex).thmStr());			
+		}
+		return foundThmList;
+	}
+	
+	/**
+	 * Turn list of indices of thms into list of ThmHypPair's.
+	 * @param highestThms
+	 * @return
+	 */
+	public static List<ThmHypPair> thmListIndexToThmHypPair(List<Integer> highestThms){
+		List<ThmHypPair> bestCommonThmHypPairList = new ArrayList<ThmHypPair>();
+		for(Integer thmIndex : highestThms){
+			//ThmHypPair thmHypPair = TriggerMathThm2.getWedDisplayThmHypPair(thmIndex);
+			//Looks for thm with thmIndex in bundle. Load bundle in not already in memory.
+			ThmHypPair thmHypPair = ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex);
+			bestCommonThmHypPairList.add(thmHypPair);			
+		}
+		return bestCommonThmHypPairList;
+	}
 	
 	/**
 	 * Set resources for list of resource files.
 	 * @param freqWordsFileBuffer
 	 * @param texSourceFileBufferList
 	 * @param macrosReader
+	 * @param parsedExpressionListInputStream InputStream containing serialized ParsedExpressions.
+	 * @param allThmWordsSerialBReader BufferedReader to file containing words from previous run's theorem data.
 	 */
-	public static void initializeSearchWithResource(BufferedReader freqWordsFileBuffer, List<BufferedReader> texSourceFileBufferList,
-			BufferedReader macrosReader){
-		//CollectFreqWords.setResources(freqWordsFileBuffer);
-		CollectThm.setWordFrequencyBR(freqWordsFileBuffer);
-		CollectThm.setResources(texSourceFileBufferList, macrosReader);	
-		ProcessInput.setResources(macrosReader);
+	public static void initializeSearchWithResource(ServletContext servletContext_){
+		CollectThm.setServletContext(servletContext_);
+		ProcessInput.setServletContext(servletContext_);
 	}
 	
 	/**
@@ -58,8 +156,10 @@ public class SearchCombined {
 	 * @param numVectors is the total number of vectors to get 
 	 * @return
 	 */
-	private static List<Integer> findListsIntersection(List<Integer> nearestVecList, SearchState searchState, 
-			int numVectors, String input, boolean searchContextBool){
+	private static List<Integer> findListsIntersection(List<Integer> nearestVecList,// List<Integer> intersectionVecList,
+			SearchState searchState, 
+			int numVectors, String input//, boolean searchContextBool
+			){
 		
 		List<Integer> intersectionVecList = searchState.intersectionVecList();
 		//short-circuit
@@ -84,7 +184,7 @@ public class SearchCombined {
 		}
 		
 		int totalWordAdded = searchState.totalWordAdded();
-		//avoid magic numbers
+		//avoid magic numbers!
 		int threshold = totalWordAdded < 3 ? totalWordAdded : (totalWordAdded < 6 ? totalWordAdded-1 
 				: totalWordAdded - totalWordAdded/3);
 		int maxScore = 0;
@@ -137,9 +237,6 @@ public class SearchCombined {
 		int topIntersectionThmScore = thmScoreMap.get(topIntersectionThmIndex);
 		int topQueryIndex;
 		//intersectionVecList guranteed not empty at this point. Remove magic numbers.
-		//thmSpanMap.get(topThmIndex) < thmSpanMap.get(topIntersectionThmIndex)*4.0/5
-		//System.out.println("topThmIndex: " + topThmIndex + " thmScoreMap: " + thmScoreMap);
-		
 		//adjust top search result
 		if( (!intersectionVecList.contains(topThmIndex)
 				//make the 4.0/5 into constant after done with tinkering
@@ -160,13 +257,10 @@ public class SearchCombined {
 			counter--;
 		}
 		
-		/*if(searchContextBool){
-			bestCommonVecList = ContextSearch.contextSearch(input, bestCommonVecList);
-		}*/
 		return bestCommonVecList;
 	}
 	
-	public static List<String> searchCombined(String input, Set<String> searchWordsSet, boolean searchContextBool){
+	public static List<ThmHypPair> searchCombined(String input, Set<String> searchWordsSet, boolean searchContextBool){
 		return searchCombined(input, searchWordsSet, searchContextBool, false);
 	}
 	
@@ -175,96 +269,129 @@ public class SearchCombined {
 	 * Resources should have been set prior to this if called externally.
 	 * @param inputStr search input
 	 */
-	public static List<String> searchCombined(String input, Set<String> searchWordsSet, boolean searchContextBool,
+	public static List<ThmHypPair> searchCombined(String input, Set<String> searchWordsSet, boolean searchContextBool,
 			boolean searchRelationalBool){
 		
-		if(input.matches("\\s*")) return null;
-		
+		if(WordForms.getWhiteEmptySpacePattern().matcher(input).matches()) return Collections.<ThmHypPair>emptyList();
 		input = input.toLowerCase();
 		
-		List<Integer> nearestVecList = ThmSearch.readThmInput(input, NUM_NEAREST);
-		if(nearestVecList.isEmpty()){
-			System.out.println("I've got nothing for you yet. Try again.");
-			return null;
-		}
-		
-		SearchState searchState = SearchIntersection.getHighestThms(input, searchWordsSet, searchContextBool, NUM_NEAREST);
-		//List<Integer> intersectionVecList;
-		int numCommonVecs = NUM_COMMON_VECS;
-		
-		String[] inputAr = input.split("\\s+");
-		String firstWord = inputAr[0];
-		if(firstWord.matches("\\d+")){
-			numCommonVecs = Integer.parseInt(firstWord);			
+		//String[] thmAr = WordForms.getWhiteNonEmptySpacePattern().split(input);
+		Matcher matcher;
+		if(!searchContextBool || !searchRelationalBool){
+			if((matcher = CONTEXT_INPUT_PATTERN.matcher(input)).matches()){
+				String prefix = matcher.group(1);
+				if(prefix.equals("context")){
+					searchContextBool = true;
+					//removes first word
+					input = matcher.group(2);					
+				}else if(prefix.equals("relation")){
+					searchRelationalBool = true;
+					input = matcher.group(2);
+				}
+			}
 		}		
+		StringBuilder inputSB = new StringBuilder();
+		int numCommonVecs = getNumCommonVecs(inputSB, input);
+		input = inputSB.toString();
 		
+		// create searchState to record the intersectionVecList, and map of
+		// tokens and their span scores. And communicate parseState
+		//among different searchers.
+		SearchState searchState = new SearchState();
+		SearchIntersection.intersectionSearch(input, searchWordsSet, searchState, searchContextBool, 
+				searchRelationalBool, numCommonVecs);
+		
+		String[] inputAr = WordForms.getWhiteNonEmptySpacePattern().split(input);		
 		//context search doesn't do anything if only one token.
-		if(inputAr.length == 1){
-			searchContextBool = false;
+		if(inputAr.length < 2){
+			//searchContextBool = false;
+			searchRelationalBool = false;
 		}
 		
-		//find best intersection of these two lists. nearestVecList is 1-based, but intersectionVecList is 0-based! 
-		List<Integer> bestCommonVecs = findListsIntersection(nearestVecList, searchState, 
-				numCommonVecs, input, searchContextBool);
-		//combine with ranking from relational search, reorganize within each tuple
-		//of fixed size.
-		if(searchRelationalBool){
-			int tupleSz = 3;
-			Searcher searcher = new RelationalSearch();
-			bestCommonVecs = searchVecWithTuple(input, bestCommonVecs, tupleSz, searcher);			
-		}
-		
-		List<String> bestCommonThms = new ArrayList<String>();
-		
-		for(int d : bestCommonVecs){
-			//String thm = TriggerMathThm2.getThm(d);
+		List<Integer> bestCommonVecsList = searchState.intersectionVecList();
+		///webMathematica currently does not work with 11.1.1, so only do this if run locally
+		if(null == FileUtils.getServletContext()){			
+			//experiment with this constant!
+			if(searchState.largestWordSpan() < searchWordsSet.size()*3./4){
+				//Only do SVD if no good intersection matches, determine if good match based on span scores.
+				List<Integer> nearestVecList = ThmSearch.ThmSearchQuery.findNearestThmsInTermDocMx(input, NUM_NEAREST_SVD);
+				if(nearestVecList.isEmpty()){
+					//System.out.println("I've got nothing for you yet. Try again.");
+					System.out.println("SVD search returns empty list!");
+					//return Collections.<ThmHypPair>emptyList();
+				}
+				
+				//find best intersection of these two lists. nearestVecList is 1-based, but intersectionVecList is 0-based! 
+				bestCommonVecsList = findListsIntersection(nearestVecList, searchState, 
+					numCommonVecs, input);
+			}
+		}		
+
+		List<ThmHypPair> bestCommonThmHypPairList = thmListIndexToThmHypPair(bestCommonVecsList);
+			
+		/*for(int d : bestCommonVecs){
 			String thm = TriggerMathThm2.getWebDisplayThm(d);
-			System.out.println(thm);
-			bestCommonThms.add(thm);
-		}
-		return bestCommonThms;
+			System.out.println( thm);
+		}*/	
+		//this exists just for printing, should not use on PRD
+		/*for(ThmHypPair thmHypPair : bestCommonThmHypPairList){
+			System.out.println(thmHypPair);
+		}*/		
+		
+		return bestCommonThmHypPairList;
 	}
 	
 	/**
-	 * Nested class for Gson processing.
-	 * Contains thm, and keywords for highlighting.
+	 * Finds the number of output vectors as specified by user.
+	 * @param inputSB empty StringBuilder to be filled with theorem content.
+	 * @param input
+	 * @return number of common vecs
 	 */
-	/*public static class SoughtPair{
-		private String thm;
-		private List<String> keywords;
+	public static int getNumCommonVecs(StringBuilder inputSB, String input) {
 		
-		public SoughtPair(){
-			
+		int numCommonVecs = NUM_NEAREST;
+		Matcher matcher = INPUT_PATTERN.matcher(input);
+		//inputSB.setLength(0);
+		if(matcher.matches()){
+			numCommonVecs = Integer.parseInt(matcher.group(1));			
+			inputSB.append(matcher.group(2));
+		}else{
+			inputSB.append(input);
 		}
-	}*/
-	
+		return numCommonVecs;
+	}
+
 	/**
-	 * Searches using relational search, in chunks of size tupleSz from 0
+	 * Searches using search as specified by searcher, e.g. relational search, in chunks of size tupleSz from index 0
 	 * through the entire list. 
-	 * @param bestCommonVecs
+	 * @param queryStr The English sentence to be searched.
+	 * @param thmCandidateList List produced by previous methods, to be processed through by searcher.
 	 * @param tupleSz
+	 * @param searcher new search object to be used for searching.
 	 */
-	private static List<Integer> searchVecWithTuple(String queryStr, List<Integer> bestCommonVecs, int tupleSz,
-			Searcher searcher) {
-		
-		int commonVecsLen = bestCommonVecs.size();
+	public static <T> List<Integer> searchVecWithTuple(String queryStr, List<Integer> thmCandidateList, int tupleSz,
+			Searcher<T> searcher, SearchState searchState) {
+		if(0 == tupleSz){
+			return thmCandidateList;
+		}
+		int commonVecsLen = thmCandidateList.size();
 		int numTupleSzInCommonVecsLen = commonVecsLen/tupleSz;
 		List<Integer> reorderedList = new ArrayList<Integer>();
 		
 		//call relational search for one tuple at a time.
 		for(int i = 0; i <= numTupleSzInCommonVecsLen; i++){
 			
-			int startingIndex = numTupleSzInCommonVecsLen*tupleSz;
-			int startingIndexPlusTupleSz = startingIndex + tupleSz ; 
+			int startingIndex = i*tupleSz;
+			if(commonVecsLen == startingIndex) break;
+			int startingIndexPlusTupleSz = startingIndex + tupleSz; 
 			int endingIndex = startingIndexPlusTupleSz > commonVecsLen 
 					? commonVecsLen : startingIndexPlusTupleSz;
 			//using .subList() avoids creating numTupleSzInCommonVecsLen 
 			//number of new short lists as iterating through the list would.
-			List<Integer> sublist = bestCommonVecs.subList(startingIndex, endingIndex);
-			List<Integer> reorderedSublist = searcher.search(queryStr, sublist);
+			List<Integer> sublist = thmCandidateList.subList(startingIndex, endingIndex);
+			List<Integer> reorderedSublist = searcher.search(queryStr, sublist, searchState);
 			reorderedList.addAll(reorderedSublist);
-		}
-		
+		}		
 		return reorderedList;
 	}
 
@@ -280,20 +407,13 @@ public class SearchCombined {
 		
 		while(sc.hasNextLine()){
 			String thm = sc.nextLine();
-			
-			String[] thmAr = thm.split("\\s+");
+			System.out.println(" ~~~~~~~ ");
+			//String[] thmAr = WordForms.getWhiteNonEmptySpacePattern().split(thm);
 			boolean searchContextBool = false;
-			if(thmAr.length > 1 && thmAr[0].equals("context")){				
-				searchContextBool = true;
-			}
-			
 			boolean searchRelationalBool = false;
-			if(thmAr.length > 1 && thmAr[0].equals("relation")){				
-				searchRelationalBool = true;
-			}
 			
 			//this gives the web-displayed versions. 
-			List<String> bestCommonVecs = searchCombined(thm, null, searchContextBool, searchRelationalBool);
+			List<ThmHypPair> bestCommonThmHypPairList = searchCombined(thm, null, searchContextBool, searchRelationalBool);
 			
 			/*if(thm.matches("\\s*")) continue;
 			thm = thm.toLowerCase();
@@ -322,8 +442,11 @@ public class SearchCombined {
 			List<Integer> bestCommonVecs = findListsIntersection(nearestVecList, searchState, numCommonVecs,
 					thm, searchContextBool);
 			*/
-			for(String thmStr : bestCommonVecs){
-				System.out.println(thmStr);
+			
+			int counter = 0;
+			System.out.println("~ SEARCH RESULTS ~");
+			for(ThmHypPair thmHypPair : bestCommonThmHypPairList){
+				System.out.println(counter++ + " ++ " + thmHypPair);
 			}
 		}
 		
