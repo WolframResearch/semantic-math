@@ -3,6 +3,7 @@ package thmp.runner;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -70,6 +71,24 @@ public class CreateRepresentativeMaps {
 	 */
 	private static void createDocWordFreqMap(List<String> thmList){
 		Map<String, Integer> wordFreqMap = CollectThm.ThmWordsMaps.buildDocWordsFreqMap(thmList);
+		//split into different files for cursory human inspection
+		int totalNumWords = wordFreqMap.size();
+		Iterator<String> iter = wordFreqMap.keySet().iterator();
+		int numWordsPerFile = 5000;
+		int numRounds = totalNumWords/numWordsPerFile+1;
+		String vocabFileBaseStr = "src/thmp/data/vocab/vocab";
+		for(int j = 0; j < numRounds; j++){
+			int startIndex = j*numWordsPerFile;
+			int endIndex = Math.min((j+1)*numWordsPerFile, totalNumWords);
+			String fileStr = vocabFileBaseStr + j +".txt";
+			StringBuilder sb = new StringBuilder(5000);
+			for(int i = startIndex; i < endIndex; i++){
+				//carriage return instead of newline, for windows people
+				//sb.append(iter.next()).append("\r\n");
+				sb.append(iter.next()).append("\n");
+			}
+			FileUtils.writeToFile(sb, fileStr);
+		}
 		
 		/*for(Map.Entry<String, Integer> entry : wordFreqMap.entrySet()){
 			String normalizedForm = WordForms.normalizeWordForm(entry.getKey());
@@ -198,7 +217,8 @@ public class CreateRepresentativeMaps {
 		Map<String, Integer> tempTwoGramFreqMap = new HashMap<String, Integer>();
 		for(Map.Entry<String, Integer> twoGram : twoGramFreqMap.entrySet()){
 			String singularForm = WordForms.getSingularForm(twoGram.getKey());
-			// /*
+			// /*one-off, But only termporary, as the 
+			//changes are propagated through different maps.
 			int singularFormLen = singularForm.length();
 			if(singularFormLen > 4 && singularForm.substring(singularFormLen-4).equals("sery")){
 				singularForm = singularForm.substring(0, singularFormLen-4) + "series";

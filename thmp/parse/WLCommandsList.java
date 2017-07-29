@@ -228,6 +228,19 @@ public class WLCommandsList {
 					//new PBuilder(" ~"), new PBuilder("Action").makeExprHead(), new PBuilder("~ "), //new PBuilder(", "), 
 					//new PBuilder("adj", null, true, false, false).addRelationType(RelationType._IS)					
 					);
+			//e.g. "lightly dust with flour"
+			putToWLCommandMapBuilder(wLCommandMapBuilder, "verb", new PBuilder("{"),
+					new PBuilder("adj|adverb", null, true, true, false).setPositionInStructTree(PositionInStructTree.FIRST),
+					new PBuilder("^(?!hyp)verb$", null, true, true, false),
+					new PBuilder(" ~"), new PBuilder("Action").makeExprHead(), new PBuilder("~ "),
+					new PBuilder(" {", "OPT"), 
+					new PBuilder("symb|ent|noun", null, true, false, false).addRelationType(RelationType._IS),
+					new PBuilder(", {", "OPT"),
+					new PBuilder("Qualifiers", "OPT").makeOptionalTermHead(), new PBuilder("->", "OPT"),
+					//the relation should incorporate several types. 
+					new PBuilder("prep|qualifier", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}}", "OPT"),
+					new PBuilder("}")
+					);
 		}
 		/*putToWLCommandMapBuilder(wLCommandMapBuilder, "fix", new PBuilder("{"), //test rule!!
 				new PBuilder("verb", null, true, true, false).setPositionInStructTree(PositionInStructTree.FIRST),

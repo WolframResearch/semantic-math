@@ -228,9 +228,9 @@ public class RecipeGraph {
 			if(isAppliance(structName)){		
 				edgeQualifierStructList.add(struct);
 			}else if(isFood(structName)){
-				addStructToList(knownStateList, productStructList, edgeQualifierStructList, struct, lastStateUsed);
+				lastStateUsed = addStructToList(knownStateList, productStructList, edgeQualifierStructList, struct, lastStateUsed);
 			}else{
-				addStructToList(knownStateList, notKnownStructList, edgeQualifierStructList, struct, lastStateUsed);
+				lastStateUsed = addStructToList(knownStateList, notKnownStructList, edgeQualifierStructList, struct, lastStateUsed);
 			}
 		}
 		//System.out.println("RecipeGraph - knownStateList "+knownStateList);
@@ -323,7 +323,7 @@ public class RecipeGraph {
 	 * @param struct
 	 * @param lastStateUsed Whether lastFoodState has been added in building this edge step.
 	 */
-	private void addStructToList(List<FoodState> knownStateList, List<Struct> addToStructList, 
+	private boolean addStructToList(List<FoodState> knownStateList, List<Struct> addToStructList, 
 			List<Struct> edgeQualifierStructList, Struct struct, boolean lastStateUsed) {
 		boolean structAdded = false;
 		//if(true) throw new RuntimeException();
@@ -338,15 +338,17 @@ public class RecipeGraph {
 					|| knownStateList.isEmpty())){	
 				//can't set struct, as will affect edge formation.<--not if haven't formed Expr's.
 				//need to avoid name clashes, in case struct has same name as some previous one.
-				lastFoodState.setFoodStruct(foodStruct);
+				lastFoodState.setFoodStruct(foodStruct);//HERE
 				removeLastFoodStateFromCurrentList();
 				knownStateList.add(lastFoodState);			
 				structAdded = true;
+				lastStateUsed = true;
 			}
 		}
 		if(!structAdded){
 			addToStructList.add(struct);					
 		}
+		return lastStateUsed;
 	}
 
 	private boolean isFood(String structName){
