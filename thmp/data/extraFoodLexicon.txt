@@ -5,3 +5,4 @@ smash verb
 fragrant adj
 fire ent
 cob ent
+tortilla ent

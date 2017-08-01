@@ -3,6 +3,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.wolfram.jlink.Expr;
 
@@ -42,7 +43,8 @@ public abstract class Struct implements Serializable{
 	*/
 	
 	private static final long serialVersionUID = 1L;
-
+	protected static final Pattern CONJ_DISJ_PATTERN = Pattern.compile("(?:conj|disj)_(.+)");
+	
 	/* Set of commands in which this Struct has already been used. */
 	private transient Set<WLCommand> usedInCommandsSet = new HashSet<WLCommand>();
 	//whether this struct has been used in another component
@@ -441,6 +443,19 @@ public abstract class Struct implements Serializable{
 	
 	//to be overridden
 	public abstract String type();
+	
+	/**
+	 * Retrieves type without conjunction or disjunction.
+	 * @return
+	 */
+	public String typeWithNoConjDisj(){
+		Matcher matcher;
+		if((matcher=CONJ_DISJ_PATTERN.matcher(this.type())).matches()){
+			return matcher.group(1);
+		}else{
+			return this.type();
+		}
+	}
 	
 	public boolean isFoodStruct(){
 		return false;

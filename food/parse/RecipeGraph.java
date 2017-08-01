@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.google.common.collect.Multimap;
@@ -170,6 +171,8 @@ public class RecipeGraph {
 		List<Struct> edgeQualifierStructList = new ArrayList<Struct>();	
 		//triggerSubject, subject of the trigger term, e.g. "potatoes" in "smash potatoes"
 		boolean prevTermIsTrigger = false;
+		//whether lastFoodState has been added to knownStateList.
+		boolean lastStateUsed = false;
 		int posListSz = posList.size();
 		for(int i = 0; i < posListSz; i++){
 			PosTerm term = posList.get(i);			
@@ -186,13 +189,11 @@ public class RecipeGraph {
 			if(null == termStruct){
 				continue;
 			}			
-			addStructFoodState(unknownStructList, knownStateList, actionSourceList, actionTargetList,
+			lastStateUsed = addStructFoodState(unknownStructList, knownStateList, actionSourceList, actionTargetList,
 					edgeQualifierStructList, prevTermIsTrigger, termStruct);	
 			prevTermIsTrigger = false;
 		}				
 		Struct actionStruct;
-		//whether lastFoodState has been added to knownStateList.
-		boolean lastStateUsed = false;
 		//need to check if -1, or some default value!		
 		if(triggerTermIndex < 0){
 			// improve!
@@ -215,23 +216,28 @@ public class RecipeGraph {
 				lastStateUsed = true;
 				for(Struct childStruct : actionStruct.children()){
 					edgeQualifierStructList.add(childStruct);
+					//System.out.println("RecipeGraph childStruct "+childStruct );
 				}
 			}
 		}		
 		List<Struct> productStructList = new ArrayList<Struct>();
 		List<Struct> notKnownStructList = new ArrayList<Struct>();
 		//construct edge from trigger term and unknown structs
-		//System.out.println("unknownStructList "+unknownStructList);
+		System.out.println("RecipeGraph - unknownStructList "+unknownStructList);
 		for(Struct struct : unknownStructList){
 			//decide whether utensil, or appliance!
 			String structName = struct.nameStr();
-			if(isAppliance(structName)){		
+			/*if(isAppliance(structName)){	
 				edgeQualifierStructList.add(struct);
-			}else if(isFood(structName)){
-				lastStateUsed = addStructToList(knownStateList, productStructList, edgeQualifierStructList, struct, lastStateUsed);
-			}else{
-				lastStateUsed = addStructToList(knownStateList, notKnownStructList, edgeQualifierStructList, struct, lastStateUsed);
-			}
+			}*/
+			boolean structAdded = addIfApplianceStruct(struct, edgeQualifierStructList);
+			if(!structAdded){
+				if(isFood(structName)){
+					lastStateUsed = lastStateUsed || addStructToList(knownStateList, productStructList, edgeQualifierStructList, struct, lastStateUsed);
+				}else{
+					lastStateUsed = lastStateUsed || addStructToList(knownStateList, notKnownStructList, edgeQualifierStructList, struct, lastStateUsed);
+				}
+			}			
 		}
 		//System.out.println("RecipeGraph - knownStateList "+knownStateList);
 		//add not known for now, refine
@@ -335,7 +341,8 @@ public class RecipeGraph {
 				structAdded = true;
 			}else if(!lastStateUsed && (foodStruct.foodStructType() == FoodStructType.SUBJECT
 					//e.g. subject e.g. "wash veggies", "bake batter'
-					|| knownStateList.isEmpty())){	
+					|| knownStateList.isEmpty())){
+				System.out.println("RecipeGraph - foodStruct "+foodStruct);
 				//can't set struct, as will affect edge formation.<--not if haven't formed Expr's.
 				//need to avoid name clashes, in case struct has same name as some previous one.
 				lastFoodState.setFoodStruct(foodStruct);//HERE
@@ -355,21 +362,48 @@ public class RecipeGraph {
 		return FoodLexicon.foodMap().containsKey(structName);
 	}
 	
-	private boolean isAppliance(String structName){		
-		return FoodLexicon.equipmentMap().containsKey(structName);
+	/**
+	 * Add struct to edge qualifier list if e.g. appliance.
+	 * @param struct
+	 * @param edgeQualifierStructList
+	 * @return Whether struct was added to the edge qualifier list.
+	 */
+	private boolean addIfApplianceStruct(Struct struct, List<Struct> edgeQualifierStructList){	
+		//System.out.println("adding struct "+struct);
+		//if(true) throw new IllegalStateException();
+		String structName = struct.nameStr();
+		if(FoodLexicon.equipmentMap().containsKey(structName)){
+			edgeQualifierStructList.add(struct);
+			return true;
+		}
+		boolean structAdded = false;
+		String structType = struct.type();
+		if(WordForms.CONJ_DISJ_PATTERN.matcher(structType).matches()){
+			structAdded = structAdded || addIfApplianceStruct((Struct)struct.prev1(), edgeQualifierStructList);
+			structAdded = addIfApplianceStruct((Struct)struct.prev2(), edgeQualifierStructList) ;
+		}else if("prep".equals(structType)){
+			//discussed with others, "prep" should usually indicate edge qualifier
+			edgeQualifierStructList.add(struct);
+			structAdded = true;
+		}
+		//return FoodLexicon.equipmentMap().containsKey(structName);
+		return structAdded;
 	}
+	
 	/**
 	 * @param unknownStructList
 	 * @param termStruct
 	 * @return
 	 */
-	private void addStructFoodState(List<Struct> unknownStructList, 
+	private boolean addStructFoodState(List<Struct> unknownStructList, 
 			List<FoodState> knownStateList, List<FoodStruct> actionSourceList, List<FoodStruct> actionTargetList,
 			List<Struct> edgeQualifierStructList,
 			boolean prevTermIsTrigger, Struct termStruct) {
 		
+		boolean lastStateUsed = false;
+		
 		if(!termStruct.isStructA()){
-			addStructFoodState2(unknownStructList, knownStateList, actionSourceList, actionTargetList, 
+			lastStateUsed = lastStateUsed || addStructFoodState2(unknownStructList, knownStateList, actionSourceList, actionTargetList, 
 					prevTermIsTrigger, termStruct);
 			//consider cases to look into prev1/prev2!? Need to handle e.g. prep!
 		}else{
@@ -378,15 +412,15 @@ public class RecipeGraph {
 			if(CONJ_DISJ_TYPE_PATTERN.matcher(structType).matches()){
 				//if(true)throw new RuntimeException(((Struct)(Struct)termStruct.prev2()).nameStr());
 				if(termStruct.prev1NodeType().isTypeStruct()){
-					addStructFoodState(unknownStructList, knownStateList, actionSourceList, actionTargetList,
+					lastStateUsed = lastStateUsed || addStructFoodState(unknownStructList, knownStateList, actionSourceList, actionTargetList,
 							edgeQualifierStructList, prevTermIsTrigger, (Struct)termStruct.prev1());
 				}
 				if(termStruct.prev2NodeType().isTypeStruct()){
-					addStructFoodState(unknownStructList, knownStateList, actionSourceList, actionTargetList,
+					lastStateUsed = lastStateUsed || addStructFoodState(unknownStructList, knownStateList, actionSourceList, actionTargetList,
 							edgeQualifierStructList, prevTermIsTrigger, (Struct)termStruct.prev2());
 				}
 				//conj can have children nodes, e.g. "bake A and B in oven"
-				addStructChildren(unknownStructList, knownStateList, actionSourceList, actionTargetList, 
+				lastStateUsed = lastStateUsed || addStructChildren(unknownStructList, knownStateList, actionSourceList, actionTargetList, 
 						termStruct);
 			}else{
 				if("adj".equals(structType)){
@@ -395,6 +429,7 @@ public class RecipeGraph {
 				}
 			}
 		}
+		return lastStateUsed;
 		//return structType;
 	}
 
@@ -404,8 +439,9 @@ public class RecipeGraph {
 	 * @param statesIter  Delete from iter, if previous FoodState corresponding to struct is found.
 	 * @param termStruct
 	 * @param structQualifier qualifier to struct, e.g. "over" in "over pan"
+	 * @return lastStateUsed
 	 */
-	private void addStructFoodState2(List<Struct> unknownStructList, List<FoodState> knownStateList,
+	private boolean addStructFoodState2(List<Struct> unknownStructList, List<FoodState> knownStateList,
 			List<FoodStruct> actionSourceList, List<FoodStruct> actionTargetList, 
 			//List<FoodToken> foodTokenList, 
 			boolean prevTermIsTrigger, Struct termStruct, String...structQualifier) {
@@ -414,6 +450,7 @@ public class RecipeGraph {
 		//look amongst ingredients first
 		Boolean ingredientUsed = ingredientsMap.get(structName);
 		Struct structToAdd;
+		boolean lastStateUsed = false;
 		//System.out.println("RecipeGraph termStruct " + termStruct + " " +prevTermIsTrigger);
 		//remember relation to parent, if applicable.
 		if(prevTermIsTrigger){
@@ -437,30 +474,37 @@ public class RecipeGraph {
 		}else{
 			//look for other food states termStruct could be referring to
 			//e.g. rice mixture could refer to something formed earlier.
-			boolean knownStateFound = findPreviousFoodState(knownStateList, termStruct); 			
-			if(!knownStateFound){
+			lastStateUsed = lastStateUsed || findPreviousFoodState(knownStateList, termStruct, unknownStructList,
+					structToAdd); 		
+			
+			/*if(!knownStateFound){
 				//unless is action subject, e.g. "pour batter ..." in which case make 
 				//it refer to the last state added to currentStateList.
 				unknownStructList.add(structToAdd);				
 				//if(true) throw new RuntimeException("structToAdd "+structToAdd.isFoodStruct());
-			}
+			}*/
 		}
 		//add children
-		addStructChildren(unknownStructList, knownStateList, actionSourceList, actionTargetList, 
+		lastStateUsed = lastStateUsed || addStructChildren(unknownStructList, knownStateList, actionSourceList, actionTargetList, 
 				termStruct);
+		return lastStateUsed;
 	}
 	
 	/**
 	 * Look for other food states termStruct could be referring to
 	 * e.g. rice mixture could refer to something formed earlier
-	 * @return
+	 * @param structToAdd is the struct to add to unknownStructList, if applicable
+	 * @return lastStateUsed whether the lastFoodState had been used
+	 * for a node in this instruction.
 	 */
 	private boolean findPreviousFoodState(List<FoodState> knownStateList,// Iterator<FoodState> stateIter,
-			Struct termStruct){
+			Struct termStruct, List<Struct> unknownStructList, Struct structToAdd){
 		String name = termStruct.nameStr();
 		//String[] foodNameAr = WordForms.splitThmIntoSearchWords(name);
 		//Set<String> nameSet = new HashSet<String>(Arrays.asList(foodNameAr));
 		Iterator<FoodState> currentStateListIter = currentStateList.iterator();
+		boolean lastStateUsed = false;
+		boolean structAdded = false;
 		while(currentStateListIter.hasNext()){
 			FoodState foodState = currentStateListIter.next();
 			boolean ancestorMatched = stateAncestorMatchStruct(foodState, name);
@@ -471,12 +515,24 @@ public class RecipeGraph {
 				/*if("".equals(foodState.foodName())){
 					foodState.setFoodName(name);
 				}*/
+				if(foodState == lastFoodState){
+					lastStateUsed = true;
+					//System.out.println("RecipeGraph - using lastFoodState ");
+					//throw new RuntimeException();
+				}
 				knownStateList.add(foodState);
 				currentStateListIter.remove();
-				return true;
+				//return true;
+				structAdded = true;
+				break;
 			}			
-		}	
-		return false;
+		}
+		if(!structAdded){
+			//unless is action subject, e.g. "pour batter ..." in which case make 
+			//it refer to the last state added to currentStateList.
+			unknownStructList.add(structToAdd);			
+		}
+		return lastStateUsed;
 	}
 	
 	/**
@@ -518,12 +574,13 @@ public class RecipeGraph {
 	 * @param List<FoodState> sourceFoodStateList, source of action 
 	 * @param actionTargetList, target of action. E.g. "to soup" in "add basil to soup"
 	 */
-	private void addStructChildren(List<Struct> unknownStructList, List<FoodState> knownStateList,
+	private boolean addStructChildren(List<Struct> unknownStructList, List<FoodState> knownStateList,
 			List<FoodStruct> actionSourceList, List<FoodStruct> actionTargetList, //List<FoodToken> foodTokenList,
 			Struct struct){
 		List<Struct> children = struct.children();
 		List<ChildRelation> childRelationList = struct.childRelationList();
 		boolean isPrevTermTrigger = false;
+		boolean lastStateUsed = false;
 		for(int i = 0; i < children.size(); i++){
 			Struct childStruct = children.get(i);
 			String childRelationStr = childRelationList.get(i).childRelationStr();
@@ -533,13 +590,12 @@ public class RecipeGraph {
 				actionSourceList.add(childFoodStruct);
 				//foodTokenList.add(new FoodToken(childFoodStruct, FoodTokenType.ACTION_SOURCE));
 			}else if(ACTION_TARGET_SET.contains(childRelationStr)){
-				//only keep one of these lines! Keep first for now.
 				actionTargetList.add(childFoodStruct);
-				//foodTokenList.add(new FoodToken(childFoodStruct, FoodTokenType.ACTION_TARGET));
 			}
-			addStructFoodState2(unknownStructList, knownStateList, actionSourceList, actionTargetList, 
+			lastStateUsed = lastStateUsed || addStructFoodState2(unknownStructList, knownStateList, actionSourceList, actionTargetList, 
 					isPrevTermTrigger, childFoodStruct, childRelationStr);
 		}
+		return lastStateUsed;
 	}
 	
 	/**

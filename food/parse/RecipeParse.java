@@ -117,14 +117,17 @@ public class RecipeParse {
 		inputStr = "stir together the garbanzo beans, kidney beans, lemon juice and salt";
 		inputStr = "Cover, and refrigerate for about 2 hours";
 		inputStr = "lightly dust the dough with flour";
-		inputStr = "make crust, Place thin slices of mozzarella over the crust"; //multiple edges for crust?!
-		
+		inputStr = "make crust, Place thin slices of mozzarella over the crust"; //multiple edges for crust?!		
+		inputStr = "make crust, place slices of mozzarella over crust";
+		inputStr = "warm tortillas on pan or directly over fire, add garlic and mix until smooth";
+		inputStr = "warm tortillas on pan or over fire";//or directly over fire
+		//inputStr = "warm tortillas on pan";
 		
 		boolean isVerbose = true;
 		Stats stats = null;
 		List<String> ingredientsList = new ArrayList<String>();
-		String[] ingredientsAr = new String[]{"flour","soda", "cashew","salt", "egg","banana", "oil","onion", "blue cheese",
-				"soy sauce", "lemon juice", "basil", "kidney bean","lemon juice","garlic", "hot pepper sauce", 
+		String[] ingredientsAr = new String[]{"flour","mozzarella", "soda", "cashew","salt", "egg","banana", "oil","onion", "blue cheese",
+				"soy sauce", "lemon juice", "tortilla","basil", "kidney bean","lemon juice","garlic", "hot pepper sauce", 
 				"cilantro","potato","carrot","water","crust","corn"//,"garbanzo bean"
 				};		
 		ingredientsList = Arrays.asList(ingredientsAr);	

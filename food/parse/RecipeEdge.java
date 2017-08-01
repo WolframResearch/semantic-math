@@ -45,8 +45,9 @@ public class RecipeEdge {
 	}
 	
 	public Expr toExpr(){
-		List<Expr> qList = new ArrayList<Expr>();		
-		if(!qualifierStructList.isEmpty()){			
+		List<Expr> qList = new ArrayList<Expr>();	
+		if(!qualifierStructList.isEmpty()){		
+			System.out.println("qualifierStructList "+qualifierStructList);
 			for(Struct struct : qualifierStructList){	
 				Expr structExpr;
 				if(struct.isFoodStruct() ){
@@ -82,12 +83,16 @@ public class RecipeEdge {
 	 */
 	private List<Expr> gatherStructPptExpr(Struct struct) {
 
-		List<Expr> structExprList = new ArrayList<Expr>();		
-		Set<String> pptSet = struct.getPropertySet();
-		if(!pptSet.isEmpty()){
-			for(String pptStr : pptSet){
-				structExprList.add(new Expr(pptStr));				
-			}
+		List<Expr> structExprList = new ArrayList<Expr>();
+		if(!struct.isStructA()){
+			Set<String> pptSet = struct.getPropertySet();
+			if(!pptSet.isEmpty()){
+				for(String pptStr : pptSet){
+					structExprList.add(new Expr(pptStr));				
+				}
+			}			
+		}else if("prep".equals(struct.type()) && struct.prev2NodeType().isTypeStruct()){			
+			structExprList.add(new Expr(((Struct)struct.prev2()).nameStr()));			
 		}
 		structExprList.add(new Expr(struct.nameStr()));
 		return structExprList;

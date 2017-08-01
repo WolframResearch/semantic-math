@@ -4,7 +4,9 @@ import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.Test;
 
@@ -13,6 +15,7 @@ import com.wolfram.jlink.Expr;
 import food.parse.FoodState;
 import food.parse.RecipeGraph;
 import food.parse.RecipeParse;
+import food.utils.FoodLexicon;
 import thmp.parse.DetectHypothesis.Stats;
 
 /**
@@ -33,9 +36,13 @@ public class FoodParseTestMain {
 	public static boolean testFoodParse(String input, String[] ingredientsAr, String[] desiredSnippets, int desiredEdgeNum){
 		List<String> ingredientsList = Arrays.asList(ingredientsAr);
 		
+		Set<String> ingredientsSet = new HashSet<String>();
+		ingredientsSet.addAll(FoodLexicon.ingredientFoodTypesSet());
+		ingredientsSet.addAll(ingredientsList);
+		
 		boolean isVerbose = true;
 		Stats stats = null;		
-		RecipeGraph recipeGraph = RecipeParse.buildRecipeGraph(input, isVerbose, stats, ingredientsList);
+		RecipeGraph recipeGraph = RecipeParse.buildRecipeGraph(input, isVerbose, stats, ingredientsSet);
 		
 		List<FoodState> currentStateList = recipeGraph.currentStateList();		
 		if(currentStateList.size() != 1){
