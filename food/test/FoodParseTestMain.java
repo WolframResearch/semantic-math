@@ -145,5 +145,25 @@ public class FoodParseTestMain {
 		assertTrue(testFoodParse(inputStr, ingredientsAr, desiredSnippets, desiredEdgeNum));
 	}
 	
+	@Test
+	public void test7(){
+		String inputStr = "cook sausage, ground beef, onion, and garlic over medium heat until well browned.";
+		//Graph[{Labeled[Rule[Name["sausage"], Name["973"]], Action["cook", {{"until", "browned", "well"}}]], Labeled[Rule[Name["onion"], Name["973"]], Action["cook", {{"until", "browned", "well"}}]], Labeled[Rule[Name["garlic"], Name["973"]], Action["cook", {{"until", "browned", "well"}}]], Labeled[Rule[Name["ground beef"], Name["973"]], Action["cook", {{"until", "browned", "well"}}]]}, Rule[VertexLabels, "Name"]]
+		String[] ingredientsAr = new String[]{};
+		String[] desiredSnippets = new String[]{"sausage", "cook", "until", "browned", "well", "onion", "ground beef", "garlic"};
+		int desiredEdgeNum = 4;
+		assertTrue(testFoodParse(inputStr, ingredientsAr, desiredSnippets, desiredEdgeNum));
+	}
+	
+	@Test
+	public void test8(){
+		String inputStr = "Spread with one half of the ricotta cheese mixture. Top with a third of mozzarella cheese slices.";
+		//Graph[{Labeled[Rule[Name["sausage"], Name["973"]], Action["cook", {{"until", "browned", "well"}}]], Labeled[Rule[Name["onion"], Name["973"]], Action["cook", {{"until", "browned", "well"}}]], Labeled[Rule[Name["garlic"], Name["973"]], Action["cook", {{"until", "browned", "well"}}]], Labeled[Rule[Name["ground beef"], Name["973"]], Action["cook", {{"until", "browned", "well"}}]]}, Rule[VertexLabels, "Name"]]
+		String[] ingredientsAr = new String[]{};
+		String[] desiredSnippets = new String[]{"third", "top", "of", "mozzarella cheese slice", "half", "spread", "ricotta cheese mixture"};
+		int desiredEdgeNum = 2;
+		assertTrue(testFoodParse(inputStr, ingredientsAr, desiredSnippets, desiredEdgeNum));
+	}
+	//"Spread with one half of the ricotta cheese mixture. Top with a third of mozzarella cheese slices."
 	//TO ADD: inputStr = "Cover, and refrigerate for about 2 hours";
 }

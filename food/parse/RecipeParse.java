@@ -6,10 +6,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import com.wolfram.jlink.Expr;
 
 import food.utils.FoodLexicon;
 import food.utils.FoodLexicon.FoodMapNode;
@@ -33,6 +30,15 @@ public class RecipeParse {
 	private static final Pattern PUNCT_PATTERN = Pattern.compile("[.,!:;]");
 	private static final Pattern COMMA_PATTERN = Pattern.compile(",");
 	private static final FoodMapNode FOOD_TRIE = FoodLexicon.foodTrie();
+	public static final Set<String> NOT_INGREDIENTS_SET;
+	
+	static{
+		String[] nonIngredientsArr = new String[]{"mix"};
+		NOT_INGREDIENTS_SET = new HashSet<String>();
+		for(String s : nonIngredientsArr){
+			NOT_INGREDIENTS_SET.add(s);
+		}
+	}
 	
 	/**
 	 * A punctuation-separated sentence, along with the punctuation.
@@ -120,8 +126,14 @@ public class RecipeParse {
 		inputStr = "make crust, Place thin slices of mozzarella over the crust"; //multiple edges for crust?!		
 		inputStr = "make crust, place slices of mozzarella over crust";
 		inputStr = "warm tortillas on pan or directly over fire, add garlic and mix until smooth";
-		inputStr = "warm tortillas on pan or over fire";//or directly over fire
-		//inputStr = "warm tortillas on pan";
+		inputStr = "warm tortillas on pan or over fire, add garlic and mix until smooth";//or directly over fire
+		inputStr = "add garlic and mix until smooth";
+		inputStr = "cook sausage, ground beef, onion, and garlic over medium heat until well browned. "
+				+ "Season with sugar, basil, fennel seeds, Italian seasoning";
+		inputStr = "Cook lasagna noodles in boiling water for 8 to 10 minutes. Drain noodles, rinse with cold water";
+		inputStr = "cook lasagna noodles. Drain noodles. Arrange 6 noodles lengthwise over meat sauce";
+		inputStr = "cook noodles. Arrange noodles lengthwise over meat sauce";
+		inputStr = "Spread with one half of the ricotta cheese mixture. Top with a third of mozzarella cheese slices.";
 		
 		boolean isVerbose = true;
 		Stats stats = null;
@@ -134,6 +146,9 @@ public class RecipeParse {
 		Set<String> ingredientsSet = new HashSet<String>();
 		ingredientsSet.addAll(FoodLexicon.ingredientFoodTypesSet());
 		ingredientsSet.addAll(ingredientsList);
+		for(String s : NOT_INGREDIENTS_SET){
+			ingredientsSet.remove(s);
+		}
 		RecipeGraph recipeGraph = buildRecipeGraph(inputStr, isVerbose, stats, //ingredientsList
 				ingredientsSet);
 		

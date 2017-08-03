@@ -46,8 +46,8 @@ public class RecipeEdge {
 	
 	public Expr toExpr(){
 		List<Expr> qList = new ArrayList<Expr>();	
+		//System.out.println("RecipeEdge qualifierStructList "+qualifierStructList);
 		if(!qualifierStructList.isEmpty()){		
-			System.out.println("qualifierStructList "+qualifierStructList);
 			for(Struct struct : qualifierStructList){	
 				Expr structExpr;
 				if(struct.isFoodStruct() ){

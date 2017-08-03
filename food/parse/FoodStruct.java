@@ -264,14 +264,12 @@ public class FoodStruct extends thmp.parse.Struct {
 	}
 
 	@Override
-	public boolean isLeafNodeCouldHaveChildren() {
-		
+	public boolean isLeafNodeCouldHaveChildren() {		
 		return false;
 	}
 
 	@Override
-	public List<Struct> children() {
-		
+	public List<Struct> children() {		
 		return struct.children();
 	}
 

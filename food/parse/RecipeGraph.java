@@ -223,7 +223,7 @@ public class RecipeGraph {
 		List<Struct> productStructList = new ArrayList<Struct>();
 		List<Struct> notKnownStructList = new ArrayList<Struct>();
 		//construct edge from trigger term and unknown structs
-		System.out.println("RecipeGraph - unknownStructList "+unknownStructList);
+		//System.out.println("RecipeGraph - unknownStructList "+unknownStructList);
 		for(Struct struct : unknownStructList){
 			//decide whether utensil, or appliance!
 			String structName = struct.nameStr();
@@ -233,9 +233,9 @@ public class RecipeGraph {
 			boolean structAdded = addIfApplianceStruct(struct, edgeQualifierStructList);
 			if(!structAdded){
 				if(isFood(structName)){
-					lastStateUsed = lastStateUsed || addStructToList(knownStateList, productStructList, edgeQualifierStructList, struct, lastStateUsed);
+					lastStateUsed = addStructToList(knownStateList, productStructList, edgeQualifierStructList, struct, lastStateUsed) || lastStateUsed;
 				}else{
-					lastStateUsed = lastStateUsed || addStructToList(knownStateList, notKnownStructList, edgeQualifierStructList, struct, lastStateUsed);
+					lastStateUsed = addStructToList(knownStateList, notKnownStructList, edgeQualifierStructList, struct, lastStateUsed) || lastStateUsed;
 				}
 			}			
 		}
@@ -342,7 +342,7 @@ public class RecipeGraph {
 			}else if(!lastStateUsed && (foodStruct.foodStructType() == FoodStructType.SUBJECT
 					//e.g. subject e.g. "wash veggies", "bake batter'
 					|| knownStateList.isEmpty())){
-				System.out.println("RecipeGraph - foodStruct "+foodStruct);
+				//System.out.println("RecipeGraph - foodStruct "+foodStruct);
 				//can't set struct, as will affect edge formation.<--not if haven't formed Expr's.
 				//need to avoid name clashes, in case struct has same name as some previous one.
 				lastFoodState.setFoodStruct(foodStruct);//HERE
@@ -403,25 +403,25 @@ public class RecipeGraph {
 		boolean lastStateUsed = false;
 		
 		if(!termStruct.isStructA()){
-			lastStateUsed = lastStateUsed || addStructFoodState2(unknownStructList, knownStateList, actionSourceList, actionTargetList, 
-					prevTermIsTrigger, termStruct);
+			lastStateUsed = addStructFoodState2(unknownStructList, knownStateList, actionSourceList, actionTargetList, 
+					prevTermIsTrigger, termStruct) || lastStateUsed;
 			//consider cases to look into prev1/prev2!? Need to handle e.g. prep!
 		}else{
 			String structType = termStruct.type();
-			//conj
+			
 			if(CONJ_DISJ_TYPE_PATTERN.matcher(structType).matches()){
 				//if(true)throw new RuntimeException(((Struct)(Struct)termStruct.prev2()).nameStr());
 				if(termStruct.prev1NodeType().isTypeStruct()){
-					lastStateUsed = lastStateUsed || addStructFoodState(unknownStructList, knownStateList, actionSourceList, actionTargetList,
-							edgeQualifierStructList, prevTermIsTrigger, (Struct)termStruct.prev1());
+					lastStateUsed = addStructFoodState(unknownStructList, knownStateList, actionSourceList, actionTargetList,
+							edgeQualifierStructList, prevTermIsTrigger, (Struct)termStruct.prev1()) || lastStateUsed;
 				}
 				if(termStruct.prev2NodeType().isTypeStruct()){
-					lastStateUsed = lastStateUsed || addStructFoodState(unknownStructList, knownStateList, actionSourceList, actionTargetList,
-							edgeQualifierStructList, prevTermIsTrigger, (Struct)termStruct.prev2());
+					lastStateUsed = addStructFoodState(unknownStructList, knownStateList, actionSourceList, actionTargetList,
+							edgeQualifierStructList, prevTermIsTrigger, (Struct)termStruct.prev2()) || lastStateUsed;
 				}
 				//conj can have children nodes, e.g. "bake A and B in oven"
-				lastStateUsed = lastStateUsed || addStructChildren(unknownStructList, knownStateList, actionSourceList, actionTargetList, 
-						termStruct);
+				lastStateUsed = addStructChildren(unknownStructList, knownStateList, actionSourceList, actionTargetList, 
+						termStruct) || lastStateUsed;
 			}else{
 				if("adj".equals(structType)){
 					//e.g. "translucent" in "cook until translucent"
@@ -474,8 +474,8 @@ public class RecipeGraph {
 		}else{
 			//look for other food states termStruct could be referring to
 			//e.g. rice mixture could refer to something formed earlier.
-			lastStateUsed = lastStateUsed || findPreviousFoodState(knownStateList, termStruct, unknownStructList,
-					structToAdd); 		
+			lastStateUsed = findPreviousFoodState(knownStateList, termStruct, unknownStructList,
+					structToAdd) || lastStateUsed; 		
 			
 			/*if(!knownStateFound){
 				//unless is action subject, e.g. "pour batter ..." in which case make 
@@ -485,8 +485,8 @@ public class RecipeGraph {
 			}*/
 		}
 		//add children
-		lastStateUsed = lastStateUsed || addStructChildren(unknownStructList, knownStateList, actionSourceList, actionTargetList, 
-				termStruct);
+		lastStateUsed = addStructChildren(unknownStructList, knownStateList, actionSourceList, actionTargetList, 
+				termStruct) || lastStateUsed;
 		return lastStateUsed;
 	}
 	
@@ -554,8 +554,10 @@ public class RecipeGraph {
 				return true;
 			}
 		}*/
-		if(!WordForms.getWhiteEmptySpacePattern().matcher(foodStateName).matches() && sourceFoodName.contains(foodStateName)){
-			//"rice mixture" contains "rice", but hot sauce doesn't match soy sauce
+		//System.out.println("foodStateName "+foodStateName + " sourceFoodName "+sourceFoodName);
+		if(!WordForms.getWhiteEmptySpacePattern().matcher(foodStateName).matches() 
+				&& (sourceFoodName.contains(foodStateName) || foodStateName.contains(sourceFoodName))){
+			//"rice mixture" contains "rice", but hot sauce shouldn't match soy sauce
 			return true;
 		}
 		List<FoodState> parentsList = foodState.parentFoodStateList();
@@ -592,8 +594,8 @@ public class RecipeGraph {
 			}else if(ACTION_TARGET_SET.contains(childRelationStr)){
 				actionTargetList.add(childFoodStruct);
 			}
-			lastStateUsed = lastStateUsed || addStructFoodState2(unknownStructList, knownStateList, actionSourceList, actionTargetList, 
-					isPrevTermTrigger, childFoodStruct, childRelationStr);
+			lastStateUsed = addStructFoodState2(unknownStructList, knownStateList, actionSourceList, actionTargetList, 
+					isPrevTermTrigger, childFoodStruct, childRelationStr) || lastStateUsed;
 		}
 		return lastStateUsed;
 	}
