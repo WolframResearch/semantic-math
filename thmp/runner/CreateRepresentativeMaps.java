@@ -1,12 +1,15 @@
 package thmp.runner;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import thmp.parse.DetectHypothesis.DefinitionListWithThm;
 import thmp.parse.ParsedExpression;
@@ -31,6 +34,8 @@ import thmp.utils.WordForms;
  */
 public class CreateRepresentativeMaps {
 
+	private static final Pattern NEWLINE_PATTERN = Pattern.compile("(.+)(?:\r\n|\n)$");
+	
 	public static void main(String[] args){
 		//read thms from parsed expressions serialized file
 		if(args.length == 0){
@@ -40,19 +45,23 @@ public class CreateRepresentativeMaps {
 		//e.g. "combinedParsedExpressionsList.dat"
 		String peFilePath = args[0];
 		//String peFilePath = "src/thmp/data/parsedExpressionList.dat";
-		List<String> thmList = extractThmListFromPEList(peFilePath);
-		//System.out.println("thmLIst "+thmList);		
-		if(false) buildAndSerialize2GramMaps(thmList);
-		if(true) buildAndSerialize23GramMaps(thmList);
-		if(true) createDocWordFreqMap(thmList);
-		if(false) buildAndSerializeTrueFluffWordsSet(thmList);
+		boolean process = true;
+		if(process){
+			List<String> thmList = extractThmListFromPEList(peFilePath);
+			//System.out.println("thmLIst "+thmList);		
+			if(false) buildAndSerialize2GramMaps(thmList);
+			if(false) buildAndSerialize23GramMaps(thmList);
+			if(true) createDocWordFreqMap(thmList);
+			if(false) buildAndSerializeTrueFluffWordsSet(thmList);
+		}
+		if(true) harnessCuratedWords();
 	}	
 	
 	private static List<String> extractThmListFromPEList(String peFilePath){
 		List<String> thmList = new ArrayList<String>();
 		@SuppressWarnings("unchecked")
 		List<ParsedExpression> peList = (List<ParsedExpression>)FileUtils.deserializeListFromFile(peFilePath);
-		System.out.println("CreateRepresentativeMaps - peList.size() " +peList.size());
+		System.out.println("CreateRepresentativeMaps - peList.size() " + peList.size());
 		for(ParsedExpression pe : peList){
 			DefinitionListWithThm defListWithThm = pe.getDefListWithThm();
 			//System.out.println("defListWithThm "+defListWithThm);
@@ -84,7 +93,7 @@ public class CreateRepresentativeMaps {
 			StringBuilder sb = new StringBuilder(5000);
 			for(int i = startIndex; i < endIndex; i++){
 				//carriage return instead of newline, for windows people
-				//sb.append(iter.next()).append("\r\n");
+				/*sb.append(iter.next()).append("\r\n");*/
 				sb.append(iter.next()).append("\n");
 			}
 			FileUtils.writeToFile(sb, fileStr);
@@ -100,6 +109,85 @@ public class CreateRepresentativeMaps {
 		wordFreqMapList.add(wordFreqMap);
 		FileUtils.serializeObjToFile(wordFreqMapList, "src/thmp/data/bigWordFreqMap.dat");
 		System.out.println("wordFreqMap.size " + wordFreqMap.size());
+	}	
+	
+	/**
+	 * Combine, process, and serialize curated words.
+	 */
+	private static void harnessCuratedWords(){
+		//list of filenames
+		String[] srcFileNameAr = new String[]{"vocab0_edited.txt","vocab1_edited.txt",
+				"vocab2_edited.txt","vocab3_edited.txt","vocab4_edited.txt",
+				"vocab5_edited.txt","vocab6_edited.txt"};
+		for(int i = 0; i < srcFileNameAr.length; i++){
+			srcFileNameAr[i] = "src/thmp/data/vocab/" + srcFileNameAr[i];
+		}
+		List<String> curatedWordsList = FileUtils.readLinesFromFiles(Arrays.asList(srcFileNameAr));
+		System.out.println("curatedWordsList.size "+curatedWordsList.size());
+		@SuppressWarnings("unchecked")
+		Map<String, Integer> bigWordFreqMap 
+			= ((List<Map<String,Integer>>)FileUtils.deserializeListFromFile("src/thmp/data/bigWordFreqMap.dat")).get(0);
+		
+		Map<String, Integer> prunedBigWordFreqMap = pruneWords(curatedWordsList, bigWordFreqMap);
+		List<Map<String,Integer>> prunedBigWordFreqMapList = new ArrayList<>();
+		prunedBigWordFreqMapList.add(prunedBigWordFreqMap);
+		FileUtils.serializeObjToFile(prunedBigWordFreqMapList, "src/thmp/data/bigWordFreqPrunedMap.dat");
+	}
+	
+	/**
+	 * remove duplicates, process words, match hand-selected words with
+	 * their frequency in freqMap given, serialize resulting map.
+	 * @param srcFileStrList
+	 * @param bigWordFreqMap frequency map from which the curated words are derived.
+	 */
+	private static Map<String, Integer> pruneWords(List<String> curatedWordsList, Map<String, Integer> bigWordFreqMap){
+		Map<String, Integer> prunedBigWordFreqMap = new HashMap<String, Integer>();
+		//words not present. I.e. created in curation process.
+		Set<String> wordsNotPresentSet = new HashSet<String>();
+		int sum = 0;
+		int count = 0;
+		//System.out.println("curatedWordsList.size() "+curatedWordsList.size() + " first word "+ curatedWordsList.get(0));
+		/*for(int i = 0; i < 100; i++){
+			String word = curatedWordsList.get(i);
+			System.out.println("\""+word+"\"");
+			System.out.println(word.length());
+		}*/
+		System.out.println("bigWordFreqMap.size() "+bigWordFreqMap.size());
+		
+		System.out.println("keys to bigWordFreqMap:");
+		int counter = 0;
+		for(String key : bigWordFreqMap.keySet()){
+			counter++;
+			if(counter == 10) break;
+			System.out.println("\""+key+"\"  " + bigWordFreqMap.get(key));
+		}
+		for(String word : curatedWordsList){
+			if(WordForms.getWhiteEmptySpacePattern().matcher(word).matches()){
+				continue;
+			}
+			Matcher m;
+			if((m=NEWLINE_PATTERN.matcher(word)).matches()){
+				word = m.group(1);
+			}
+			word = WordForms.stripSurroundingWhiteSpace(word);
+			Integer freq = bigWordFreqMap.get(word);
+			if(null != freq){
+				prunedBigWordFreqMap.put(word, freq);
+				sum += freq;
+				count++;
+			}else{
+				wordsNotPresentSet.add(word);				
+			}
+		}
+		if(count > 0){
+			int avgFreq = sum/count;
+			avgFreq = avgFreq == 0 ? 2 : avgFreq;
+			for(String absentWord : wordsNotPresentSet){
+				prunedBigWordFreqMap.put(absentWord, avgFreq);
+			}		
+		}
+		System.out.println("CreateRepresentativeMaps - recognized word count "+count);
+		return prunedBigWordFreqMap;		
 	}
 	
 	/**

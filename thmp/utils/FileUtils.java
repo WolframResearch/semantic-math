@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -93,7 +94,45 @@ public class FileUtils {
 			logger.error(e.getStackTrace());
 		}
 	}
-
+	
+	/**
+	 * Read lines from source files.
+	 * Now uses UTF-16 encoding
+	 * @param fileName
+	 * @return list of lines read from src's
+	 */
+	public static List<String> readLinesFromFiles(List<String> fileNameList){
+		List<String> lines = new ArrayList<String>();
+		for(String fileName : fileNameList){
+			try {
+				FileInputStream fileIS = null;
+				FileReader fileReader = null;
+				BufferedReader bReader = null;
+				try{
+					fileIS = new FileInputStream(fileName);
+					InputStreamReader inputStreamReader = new InputStreamReader(fileIS,Charset.forName("UTF-16"));
+					bReader = new BufferedReader(inputStreamReader);
+					
+					//fileReader = new FileReader(fileName);
+					//bReader = new BufferedReader(fileReader);
+					String line;
+					while((line = bReader.readLine()) != null){
+						lines.add(line);
+					}					
+				}finally{
+					silentClose(fileIS);
+					silentClose(bReader);
+					silentClose(fileReader);
+				}
+			} catch (FileNotFoundException e) {
+				throw new IllegalStateException("FileNotFoundException while reading lines from file", e);
+			} catch (IOException e) {
+				throw new IllegalStateException("IOException while reading lines from file", e);
+			}			
+		}
+		return lines;
+	}
+	
 	public static void setServletContext(ServletContext servletContext_){
 		servletContext = servletContext_;
 		mspManager = (MSPManager)servletContext.getAttribute(MSPStatics.MSP_MANAGER_ATTR);
@@ -196,7 +235,7 @@ public class FileUtils {
 	 * @param outputFileStr
 	 */
 	public static void serializeObjToFile(List<? extends Object> list, String outputFileStr){
-		createFileIfAbsent(outputFileStr);
+		/*createFileIfAbsent(outputFileStr);*/
 		FileOutputStream fileOuputStream = null;
 		ObjectOutputStream objectOutputStream = null;
 		try{
@@ -234,9 +273,9 @@ public class FileUtils {
 	private static void createFileIfAbsent(String outputFileStr) {
 		File outputFile = new File(outputFileStr);
 		try {
+			//nothing is done if file already exists
 			outputFile.createNewFile();
 		} catch (IOException e1) {
-			//e1.printStackTrace();
 			throw new IllegalStateException(e1);
 		}
 	}
@@ -245,8 +284,8 @@ public class FileUtils {
 	 * Deserialize objects from file supplied by serialFileStr.
 	 * Note that this requires the DESERIAL_VERSION_NUM to equal that of previous 
 	 * files deserialized in this JVM session (if enabled).
-	 * Don't forget to call FileUtils.getPathIfOnServlet(serialFileStr);
-	 * if potentially on servlet!
+	 * Don't forget to call FileUtils.getPathIfOnServlet(serialFileStr) on
+	 * the input file String, if potentially on servlet!
 	 * @param serialFileStr
 	 * @return *List* of objects from the file.
 	 */	

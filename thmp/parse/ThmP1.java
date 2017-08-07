@@ -3320,7 +3320,7 @@ public class ThmP1 {
 								//In case of conj, only proceed if next
 								// word is not a singular verb.
 								//i.e. if the expression after "and" should be an independent verbphrase
-								//put in "false" Aug 2017, clean up in five weeks.
+								//put in "false" Aug 2017, clean up in few weeks.
 							} else {
 								// type is expression, eg "a
 								// and
