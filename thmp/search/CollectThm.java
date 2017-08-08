@@ -229,8 +229,9 @@ public class CollectThm {
 		private static final double THREE_GRAM_FREQ_REDUCTION_FACTOR = 3.8/5;
 		private static final double TWO_GRAM_FREQ_REDUCTION_FACTOR = 2.3/3;
 		
+		// \ufffd is unicode representation for the replacement char.
 		private static final Pattern SPECIAL_CHARACTER_PATTERN = 
-				Pattern.compile(".*[\\\\=$\\{\\}\\[\\]()^_+%&\\./,\"\\d\\/@><*|`�].*");
+				Pattern.compile(".*[\\\\=$\\{\\}\\[\\]()^_+%&\\./,\"\\d\\/@><*|`�\ufffd].*");
 				
 		private static final boolean GATHER_SKIP_GRAM_WORDS = ThmList.gather_skip_gram_words();
 		//private static final boolean GATHER_SKIP_GRAM_WORDS = true;
@@ -391,7 +392,8 @@ public class CollectThm {
 
 			//ReorderDocWordsFreqMap uses a TreeMap to reorder. Used to optimize 
 			//forming relation search vecs, which are BigInteger's.
-			return reorderDocWordsFreqMap(docWordsFreqPreMap);			
+			//Wrap in HashMap, since the comparator for the TreeMap depends on a frequency map, which can be fragile.
+			return new HashMap<String, Integer>(reorderDocWordsFreqMap(docWordsFreqPreMap));			
 		}
 		
 		/**
@@ -575,14 +577,11 @@ public class CollectThm {
 		public static Map<String, Integer> createContextKeywordIndexDict(Map<String, Integer> docWordsFreqPreMapNoAnno){
 			Map<String, Integer> contextKeywordIndexDict = new HashMap<String, Integer>();
 			//these are ordered based on frequency, more frequent words occur earlier.
-			//List<String> wordsList = CollectThm.ThmWordsMaps.getCONTEXT_VEC_WORDS_LIST();	
 			//Should already been ordered from previous run! 
-			//Map<String, Integer> keyWordFreqTreeMap = reorderDocWordsFreqMap(docWordsFreqPreMapNoAnno);			
 			int counter = 0;
 			for(Map.Entry<String, Integer> entry : docWordsFreqPreMapNoAnno.entrySet()){				
 				contextKeywordIndexDict.put(entry.getKey(), counter++);
 			}
-			//System.out.println("********CollectThm - contextKeywordIndexDict : " + contextKeywordIndexDict);
 			return contextKeywordIndexDict;
 		}
 

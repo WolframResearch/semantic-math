@@ -1044,7 +1044,7 @@ public class WordForms {
 		
 		private static final long serialVersionUID = -2812247562698028679L;
 		
-		Map<String, Integer> wordFreqMap;
+		private final Map<String, Integer> wordFreqMap;
 		public WordFreqComparator(Map<String, Integer> map){
 			this.wordFreqMap = map;
 		}
@@ -1054,6 +1054,9 @@ public class WordForms {
 		 */
 		@Override
 		public int compare(String s1, String s2){
+			if(s1.equals(s2)){
+				return 0;
+			}
 			Integer freq1 = wordFreqMap.get(s1);
 			Integer freq2 = wordFreqMap.get(s2);
 			

@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -20,6 +21,7 @@ import thmp.search.WordFrequency;
 import thmp.search.Searcher.SearchMetaData;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
+import thmp.utils.WordForms.WordFreqComparator;
 
 /**
  * Build maps that are comprehensive and representative,
@@ -45,7 +47,7 @@ public class CreateRepresentativeMaps {
 		//e.g. "combinedParsedExpressionsList.dat"
 		String peFilePath = args[0];
 		//String peFilePath = "src/thmp/data/parsedExpressionList.dat";
-		boolean process = true;
+		boolean process = false;
 		if(process){
 			List<String> thmList = extractThmListFromPEList(peFilePath);
 			//System.out.println("thmLIst "+thmList);		
@@ -80,24 +82,6 @@ public class CreateRepresentativeMaps {
 	 */
 	private static void createDocWordFreqMap(List<String> thmList){
 		Map<String, Integer> wordFreqMap = CollectThm.ThmWordsMaps.buildDocWordsFreqMap(thmList);
-		//split into different files for cursory human inspection
-		int totalNumWords = wordFreqMap.size();
-		Iterator<String> iter = wordFreqMap.keySet().iterator();
-		int numWordsPerFile = 5000;
-		int numRounds = totalNumWords/numWordsPerFile+1;
-		String vocabFileBaseStr = "src/thmp/data/vocab/vocab";
-		for(int j = 0; j < numRounds; j++){
-			int startIndex = j*numWordsPerFile;
-			int endIndex = Math.min((j+1)*numWordsPerFile, totalNumWords);
-			String fileStr = vocabFileBaseStr + j +".txt";
-			StringBuilder sb = new StringBuilder(5000);
-			for(int i = startIndex; i < endIndex; i++){
-				//carriage return instead of newline, for windows people
-				/*sb.append(iter.next()).append("\r\n");*/
-				sb.append(iter.next()).append("\n");
-			}
-			FileUtils.writeToFile(sb, fileStr);
-		}
 		
 		/*for(Map.Entry<String, Integer> entry : wordFreqMap.entrySet()){
 			String normalizedForm = WordForms.normalizeWordForm(entry.getKey());
@@ -109,6 +93,26 @@ public class CreateRepresentativeMaps {
 		wordFreqMapList.add(wordFreqMap);
 		FileUtils.serializeObjToFile(wordFreqMapList, "src/thmp/data/bigWordFreqMap.dat");
 		System.out.println("wordFreqMap.size " + wordFreqMap.size());
+		
+		//split into different files for cursory human inspection
+				int totalNumWords = wordFreqMap.size();
+				Iterator<String> iter = wordFreqMap.keySet().iterator();
+				int numWordsPerFile = 5000;
+				int numRounds = totalNumWords/numWordsPerFile+1;
+				String vocabFileBaseStr = "src/thmp/data/vocab/vocab";
+				for(int j = 0; j < numRounds; j++){
+					int startIndex = j*numWordsPerFile;
+					int endIndex = Math.min((j+1)*numWordsPerFile, totalNumWords);
+					String fileStr = vocabFileBaseStr + j +".txt";
+					StringBuilder sb = new StringBuilder(5000);
+					for(int i = startIndex; i < endIndex; i++){
+						//carriage return instead of newline, for windows people
+						/*sb.append(iter.next()).append("\r\n");*/
+						sb.append(iter.next()).append("\n");
+					}
+					FileUtils.writeToFile(sb, fileStr);
+				}
+				
 	}	
 	
 	/**
@@ -127,6 +131,12 @@ public class CreateRepresentativeMaps {
 		@SuppressWarnings("unchecked")
 		Map<String, Integer> bigWordFreqMap 
 			= ((List<Map<String,Integer>>)FileUtils.deserializeListFromFile("src/thmp/data/bigWordFreqMap.dat")).get(0);
+		
+		bigWordFreqMap = new HashMap<String, Integer>(bigWordFreqMap);
+		///		
+		//TreeMap<String, Integer> tMap = (TreeMap<String, Integer>)bigWordFreqMap;
+		//System.out.println("tMap.comparator()).wordFreqMap" + ((WordFreqComparator)tMap.comparator()).wordFreqMap );
+		///
 		
 		Map<String, Integer> prunedBigWordFreqMap = pruneWords(curatedWordsList, bigWordFreqMap);
 		List<Map<String,Integer>> prunedBigWordFreqMapList = new ArrayList<>();
@@ -154,13 +164,19 @@ public class CreateRepresentativeMaps {
 		}*/
 		System.out.println("bigWordFreqMap.size() "+bigWordFreqMap.size());
 		
-		System.out.println("keys to bigWordFreqMap:");
+		/*System.out.println("entries to bigWordFreqMap:");
 		int counter = 0;
-		for(String key : bigWordFreqMap.keySet()){
+		for(Map.Entry<String, Integer> entry : bigWordFreqMap.entrySet()){
 			counter++;
 			if(counter == 10) break;
-			System.out.println("\""+key+"\"  " + bigWordFreqMap.get(key));
+			System.out.println("\""+entry.getKey()+"\"  " + entry.getValue());
 		}
+		System.out.println("Get with keys:");
+		for(String key : bigWordFreqMap.keySet()){
+			counter++;
+			if(counter == 20) break;
+			System.out.println("\""+key+"\"  " + bigWordFreqMap.get(key));
+		}*/
 		for(String word : curatedWordsList){
 			if(WordForms.getWhiteEmptySpacePattern().matcher(word).matches()){
 				continue;
