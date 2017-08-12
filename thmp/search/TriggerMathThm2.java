@@ -623,8 +623,8 @@ public class TriggerMathThm2 {
 			//keywordDict starts indexing from 0!
 			//****triggerTermsVec[rowIndex] = termScore;
 			indexScorePairList.add(new IndexScorePair(rowIndex, termScore));
-			System.out.println("TriggerMathThm2.java: term just added: " + term + ". " + rowIndex 
-					+ ". termScore: " + termScore);
+			//System.out.println("TriggerMathThm2.java: term just added: " + term + ". " + rowIndex 
+				//	+ ". termScore: " + termScore);
 		}
 		//add vector entries for related words
 		if(null != termRelatedWordsList){

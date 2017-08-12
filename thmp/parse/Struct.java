@@ -444,6 +444,9 @@ public abstract class Struct implements Serializable{
 	//to be overridden
 	public abstract String type();
 	
+	//For measuring spans of posterm lists.
+	public abstract int getPosTermListSpan();
+	
 	/**
 	 * Retrieves type without conjunction or disjunction.
 	 * @return

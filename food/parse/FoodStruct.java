@@ -354,4 +354,9 @@ public class FoodStruct extends thmp.parse.Struct {
 		this.qualifier = qualifier;
 	}
 
+	@Override
+	public int getPosTermListSpan() {
+		return this.struct.getPosTermListSpan();
+	}
+
 }

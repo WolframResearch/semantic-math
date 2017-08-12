@@ -201,6 +201,13 @@ public class StructH<H> extends Struct{
 		this.struct = struct;
 	}
 
+	/**
+	 * Double dispatch for measuring spans of methods.
+	 */
+	public int getPosTermListSpan(){
+		return WLCommand.getPosTermListSpan(this);
+	}
+	
 	@Override
 	public void set_structList(StructList structList){
 		this.structList = structList;

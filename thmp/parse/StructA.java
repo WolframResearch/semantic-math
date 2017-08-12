@@ -884,6 +884,12 @@ public class StructA<A, B> extends Struct{
 		this.structToAppendCommandStr = structToAppendCommandStr;
 	}
 
+	/**
+	 * Double dispatch for measuring spans of methods.
+	 */
+	public int getPosTermListSpan(){
+		return WLCommand.getPosTermListSpan(this);
+	}
 	
 	@Override
 	public void set_structList(StructList structList){

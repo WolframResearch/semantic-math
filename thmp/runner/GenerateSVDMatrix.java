@@ -1,5 +1,6 @@
 package thmp.runner;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
@@ -7,14 +8,12 @@ import com.google.common.collect.ImmutableList;
 import thmp.parse.ParsedExpression;
 import thmp.parse.TheoremContainer;
 import thmp.search.ThmSearch;
-import thmp.search.TriggerMathThm2;
 import thmp.utils.FileUtils;
 
 /**
  * Generate SVD matrix in the form of sparse array. 
  * Useful when e.g. matrix generation in DetectHypothesis 
  * did not complete. This gives the decomposition.
- * To run: 
  * 
  * @author yihed
  */
@@ -37,8 +36,21 @@ public class GenerateSVDMatrix{
 		/*Do *NOT* set gatheringDataBoolToTrue()! Since need to use word maps gathered from last time.*/
 		//Searcher.SearchMetaData.set_gatheringDataBoolToTrue();
 		//FileUtils.set_dataGenerationMode();	
+		List<ParsedExpression> selectedParsedExpressionList = new ArrayList<ParsedExpression>();
 		
-		ThmSearch.TermDocumentMatrix.createTermDocumentMatrixSVD(ImmutableList.<TheoremContainer>copyOf(parsedExpressionList));
+		//frequently used source: number of theorems: 69295. Cut this number so SVD is actually possible:
+		//for 23000 words, half an hour to process and generate corr mx.
+		boolean pickBool = true;
+		for(ParsedExpression thm : parsedExpressionList){
+			//take every other thm right now 
+			if(pickBool){
+				selectedParsedExpressionList.add(thm);
+			}
+			pickBool = pickBool ^ true;
+		}
+		
+		ThmSearch.TermDocumentMatrix.createTermDocumentMatrixSVD(
+				ImmutableList.<TheoremContainer>copyOf(selectedParsedExpressionList));
 		FileUtils.closeKernelLinkInstance();
 	}
 }

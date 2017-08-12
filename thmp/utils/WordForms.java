@@ -195,7 +195,7 @@ public class WordForms {
 	}
 	
 	@SuppressWarnings("unchecked")
-	private static Map<String, String> deserializeStemWordsMap(ServletContext servletContext) {
+	public static Map<String, String> deserializeStemWordsMap(ServletContext servletContext) {
 		String stemWordsMapFileStr = "src/thmp/data/stemWordsMap.dat";
 		Map<String, String> stemWordsMap;
 		if(null != servletContext){
@@ -301,7 +301,10 @@ public class WordForms {
 		if("ly".equals(word.substring(wordlen-2)) && freqWordsSet.contains((tempWord = word.substring(0, wordlen-2)))){
 			word = tempWord;
 			//System.out.println("**********************ly removed from " + word);
-		}
+		}else if("ness".equals(word.substring(wordlen-4))){
+			//remove "-ness"
+			word = word.substring(0, wordlen-4);
+		}		
 		return word;
 	}
 	
@@ -403,7 +406,7 @@ public class WordForms {
 	 * @return
 	 */
 	public static String normalizeWordForm(String word){
-		//remove ending such as "ly".  <--remove this or not??
+		//remove ending such as "ly", "ness".  <--remove this or not??
 		word = WordForms.removeWordEnding(word);
 		
 		//also remove -ing, 

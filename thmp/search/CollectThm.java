@@ -277,8 +277,6 @@ public class CollectThm {
 			//this orders the list as well. INDEX map. Can rely on order as map is immutable.
 			
 			//System.out.println("------++++++++-------CONTEXT_VEC_WORDS_MAP.size " + CONTEXT_VEC_WORDS_MAP.size());
-			//try to uniformize these approaches! Should generate maps separately, and use pre-generated set of maps!!!
-			//if(Searcher.SearchMetaData.gatheringDataBool() && null == Searcher.SearchMetaData.previousWordDocFreqMapsPath()){	
 				
 				//should not build if not searching
 				String wordThmIndexMMapPath = FileUtils.getPathIfOnServlet(SearchMetaData.wordThmIndexMMapSerialFilePath());
@@ -292,8 +290,6 @@ public class CollectThm {
 				Map<String, Integer> docWordsFreqPreMap = ((List<Map<String, Integer>>)
 						FileUtils.deserializeListFromFile(docWordsFreqMapNoAnnoPath)).get(0);
 				docWordsFreqMapNoAnno = ImmutableMap.copyOf(docWordsFreqPreMap);
-				//buildMapsNoAnno(docWordsFreqPreMapNoAnno, wordThmsMMapBuilderNoAnno, 
-					//		processedThmList, skipGramWordsList);		
 				
 				//compute the average word frequencies for singleton words
 				averageSingletonWordFrequency = computeSingletonWordsFrequency(docWordsFreqPreMap);			
@@ -305,11 +301,7 @@ public class CollectThm {
 				//***adjustWordFreqMapWithStemMultiplicity(docWordsFreqPreMap, stemToWordsMMap);				
 				
 				buildScoreMapNoAnno(wordsScorePreMap, docWordsFreqMapNoAnno);	
-				//used to optimize forming relation search vecs, which are BigInteger's.
-				//Map<String, Integer> keyWordFreqTreeMap = reorderDocWordsFreqMap(docWordsFreqPreMap);	
-				
-				//docWordsFreqMapNoAnno = ImmutableMap.copyOf(docWordsFreqPreMap);
-				
+
 				//***docWordsFreqMapNoAnno = ImmutableMap.copyOf(keyWordFreqTreeMap); //<--previous one
 				/* RelatedWordsMap is only used during search, not data gathering! 
 				 * Keys to relatedWordsMap are not necessarily normalized, only normalized if key not 

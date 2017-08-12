@@ -447,6 +447,7 @@ public class Maps {
 				
 				//e.g. "bring water to boil"
 				structMap.put("pre_verbAlone", new Rule("prep", 0.85));//FOOD
+				/////just verb, can't trigger structMap.put("verb_prep", new Rule("newchild", "verb", .8));
 			}
 			
 			posPreMMap.put("disjoint", "adj");
@@ -818,7 +819,6 @@ public class Maps {
 			structMap.put("verb_pro", new Rule("verbphrase", 1));
 			structMap.put("verb_symb", new Rule("verbphrase", 1));
 			structMap.put("verb_np", new Rule("verbphrase", 1));
-			//structMap.put("verb_prep", new Rule("verbphrase", .7));
 			structMap.put("verb_num", new Rule("verbphrase", 1));
 			structMap.put("verb_np", new Rule("verbphrase", 1));
 			structMap.put("verb_pre", new Rule("verbphrase", .6));
@@ -959,7 +959,6 @@ public class Maps {
 			structMap.put("not_adj", new Rule("absorb1", "adj", 1));
 			
 			structMap.put("adj_qualifier", new Rule("newchild", "adj", .8));
-			//structMap.put("verb_prep", new Rule("newchild", "verbphrase", .85));
 			structMap.put("verb_prep", new Rule("verbphrase", .9));
 			/*Leave these comments.
 			 * structMap.put("verb_not", new Rule("newchild", "verb", .9));

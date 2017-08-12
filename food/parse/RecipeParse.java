@@ -134,11 +134,14 @@ public class RecipeParse {
 		inputStr = "cook lasagna noodles. Drain noodles. Arrange 6 noodles lengthwise over meat sauce";
 		inputStr = "cook noodles. Arrange noodles lengthwise over meat sauce";
 		inputStr = "Spread with one half of the ricotta cheese mixture. Top with a third of mozzarella cheese slices.";
+		inputStr = "Spread with one plate of the ricotta cheese";
+		inputStr = "cook over fire";
+		//inputStr = "Beat eggs into 1 1/2 cups milk, then stir in 2 tablespoons melted cooled butter, if using it. Gently stir this mixture into dry ingredients, mixing only enough to moisten flour; don't worry about a few lumps";
 		
 		boolean isVerbose = true;
 		Stats stats = null;
 		List<String> ingredientsList = new ArrayList<String>();
-		String[] ingredientsAr = new String[]{"flour","mozzarella", "soda", "cashew","salt", "egg","banana", "oil","onion", "blue cheese",
+		String[] ingredientsAr = new String[]{"flour","mozzarella", "ricotta cheese","soda", "cashew","salt", "egg","banana", "oil","onion", "blue cheese",
 				"soy sauce", "lemon juice", "tortilla","basil", "kidney bean","lemon juice","garlic", "hot pepper sauce", 
 				"cilantro","potato","carrot","water","crust","corn"//,"garbanzo bean"
 				};		

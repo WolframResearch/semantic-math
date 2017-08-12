@@ -238,19 +238,15 @@ public class ParseToWLTree{
 				}
 				
 				String curStructInDequeType = CONJ_DISJ_PATTERN.matcher(curStructInDeque.type()).find() ?
-						//curStructInDeque.type().matches("conj_.+|disj_.+") ?
 						curStructInDeque.type().split("_")[1] : curStructInDeque.type();
 
 						if(WLCommand.disqualifyCommand(curStructInDequeType, curCommand.commandsCountMap())
 								){
-								//|| curStructInDequeType.equals("verbphrase")){
 							return false;
 						}
 						
-				if(//curStructInDequeType.matches(curCommandComponent.posStr())						
-						curCommandComponent.getPosPattern().matcher(curStructInDequeType).find()
+				if(curCommandComponent.getPosPattern().matcher(curStructInDequeType).find()
 						&& curCommandComponent.getNamePattern().matcher(nameStr).find()
-						//&& nameStr.matches(curCommandComponent.nameStr())
 						&& !usedStructsBool[k] ){
 					//see if name matches, if match, move on, continue outer loop
 					
@@ -260,7 +256,6 @@ public class ParseToWLTree{
 					while(curStructInDequeParent != null){
 						
 						String parentType = CONJ_DISJ_PATTERN.matcher(curStructInDeque.type()).find() ?
-								//curStructInDequeParent.type().matches("conj_.+|disj_.+") ?
 								curStructInDequeParent.type().split("_")[1] : curStructInDequeParent.type();
 								
 						String componentType = curCommandComponent.posStr();
@@ -273,8 +268,6 @@ public class ParseToWLTree{
 						//should match both type and term. Get parent of struct, e.g. "log of f is g" should get all of
 						//"log of f", instead of just "f". I.e. get all of StructH.
 						
-						//System.out.println("\n^^^^^^^^" + ".name(): " + curCommandComponent.name() + " parentStr: " + parentNameStr+" type " +
-						//componentType + " parentType " + parentType);						
 						if(curCommandComponent.getNamePattern().matcher(parentNameStr).find()								
 								//parentNameStr.matches(curCommandComponent.nameStr()) 
 								&& parentType.matches(componentType)){
@@ -292,12 +285,6 @@ public class ParseToWLTree{
 					//System.out.println("-----ADDING struct " + structToAdd + " for command " + curCommand);
 					waitingStructList.add(structToAdd);
 					
-					//set headStruct to structToAdd if it is closer to root
-					/*if(WLCommand.headStruct(curCommand).dfsDepth() > structToAdd.dfsDepth()){
-						WLCommand.set_headStruct(curCommand, structToAdd);
-					}*/
-					
-					//usedStructsBool[dequeIterCounter] = true;
 					usedStructsBool[k] = true;
 					//is earlier than k-1 if parent added instead. Need to know parent's index
 					structDequeStartIndex = k - 1;
@@ -987,9 +974,9 @@ public class ParseToWLTree{
 		struct.set_previousBuiltStruct(null);
 		/*don't delete comment below! March 2017.
 		 * Should not set structToAppendCommandStr to null, as another command will need to know if struct 
-		 * already has a headStruct, to resolve clashes. <--But shouldn't between different longforms!*/
-		//struct.set_structToAppendCommandStr(null);
-		//struct.clear_WLCommandWrapperList();
+		 * already has a headStruct, to resolve clashes. <--But shouldn't be between different longforms! Aug 2017*/
+		struct.set_structToAppendCommandStr(null);
+		struct.clear_WLCommandWrapperList();
 		
 		//clearUsedInCommandsSet() causes Structs to be added multiple times! 2/2017.
 		//struct.clearUsedInCommandsSet();

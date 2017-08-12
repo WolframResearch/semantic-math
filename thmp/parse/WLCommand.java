@@ -29,6 +29,7 @@ import com.wolfram.jlink.Expr;
 import thmp.exceptions.IllegalWLCommandStateException;
 import thmp.parse.ParseToWLTree.WLCommandWrapper;
 import thmp.parse.RelationVec.RelationType;
+import thmp.parse.Struct.ChildRelation;
 import thmp.parse.Struct.ChildRelationType;
 import thmp.parse.Struct.NodeType;
 import thmp.parse.WLCommand.PosTerm;
@@ -1290,37 +1291,33 @@ public class WLCommand implements Serializable{
 					structToAppendCommandStrDfsDepth <= prevHeadStructDfsDepth){
 				// in this case structToAppendCommandStr should not be
 				// null either					
-				//int wrapperListSz = prevHeadStructWrapperList.size();	
-				//boolean leavePrevHeadInPlace = false;
 				//get the last-added command. <--should iterate and add count to all previous commands
 				//with this wrapper? <--command building goes inside-out
 				/*Update all wrapper in prevHeadStructWrapperList since commands in all wrappers touch this struct*/
-				if(prevHeadStructWrapperList != null){					
+				if(prevHeadStructWrapperList != null){			
+					
+					int curCommandPosListSpan = getPosTermListSpan(curCommand.posTermList);
 					// increment the structsWithOtherHeadCount of the last wrapper object for every wrapper.
 					for(WLCommandWrapper wrapper : prevHeadStructWrapperList){
 						WLCommand lastWrapperCommand = wrapper.WLCommand();
-						
-						if(!curCommand.equals(lastWrapperCommand)){							
-							lastWrapperCommand.structsWithOtherHeadCount++; //HERE
-							if(prevHeadStruct.dfsDepth() == nextStruct.dfsDepth()){
-								lastWrapperCommand.structHeadWithOtherHead = prevHeadStruct;								
+						//check spanning
+						int wrapperCommandPosListSpan = getPosTermListSpan(lastWrapperCommand.posTermList);
+						if(curCommandPosListSpan >= wrapperCommandPosListSpan){
+							if(!curCommand.equals(lastWrapperCommand)){	
+								incrementCurCommandStructHeadCount(nextStruct, prevHeadStruct, lastWrapperCommand);
 							}
+						}else{
+							incrementCurCommandStructHeadCount(nextStruct, structToAppendCommandStr, curCommand);
 						}
 					}
 				}else if(structToAppendCommandStrDfsDepth == prevHeadStructDfsDepth){
-					curCommand.structsWithOtherHeadCount++;
-					if(structToAppendCommandStr.dfsDepth() == nextStruct.dfsDepth()){
-						curCommand.structHeadWithOtherHead = structToAppendCommandStr;								
-					}
+					incrementCurCommandStructHeadCount(nextStruct, structToAppendCommandStr, curCommand);
 				}
 				nextStruct.set_structToAppendCommandStr(structToAppendCommandStr);
 				structToAppendCommandStr.set_structToAppendCommandStr(structToAppendCommandStr);
 				setAncestorStructToAppendCommandStr(nextStruct, structToAppendCommandStr, curCommand);							
 			}else{
-				curCommand.structsWithOtherHeadCount++;
-				if(structToAppendCommandStr.dfsDepth() == nextStruct.dfsDepth()){
-					curCommand.structHeadWithOtherHead = structToAppendCommandStr;								
-				}				
+				incrementCurCommandStructHeadCount(nextStruct, structToAppendCommandStr, curCommand);				
 			}			
 			prevStructHeaded = true;			
 		}else{
@@ -1333,6 +1330,19 @@ public class WLCommand implements Serializable{
 		//structToAppendCommandStr.set_structToAppendCommandStr(structToAppendCommandStr);
 		//nextStruct.set_structToAppendCommandStr(structToAppendCommandStr);
 		return prevStructHeaded;
+	}
+
+	/**
+	 * @param nextStruct
+	 * @param structToAppendCommandStr
+	 * @param curCommand
+	 */
+	private static void incrementCurCommandStructHeadCount(Struct nextStruct, Struct structToAppendCommandStr,
+			WLCommand curCommand) {
+		curCommand.structsWithOtherHeadCount++;
+		if(structToAppendCommandStr.dfsDepth() == nextStruct.dfsDepth()){
+			curCommand.structHeadWithOtherHead = structToAppendCommandStr;								
+		}
 	}
 
 	/**
@@ -1713,7 +1723,7 @@ public class WLCommand implements Serializable{
 				entryExpr = ExprUtils.listExpr(singleArgList);
 			}else{
 				if(DEBUG){
-					System.out.println("WLCommand - curCommand " + curCommand);
+					System.out.println("WLCommand.build() - curCommand " + curCommand);
 				}
 				entryExpr = singleArgList.get(0);
 			}
@@ -2297,12 +2307,12 @@ public class WLCommand implements Serializable{
 			if(null == newBaseStruct){
 				newBaseStruct = structParent;
 			}
-			Struct newParentStruct = newBaseStruct.parentStruct();
+			/*Struct newParentStruct = newBaseStruct.parentStruct();
 			if(null != newParentStruct && componentPosPattern.matcher(newParentStruct.type()).matches()){
 				//structToAdd = newParentStruct;//HERE
 				//newBaseStruct.add_usedInCommand(curCommand);
 				//System.out.println("WLCommand - structToAdd.children " + structToAdd.children());
-			}		
+			}*/		
 		}
 		/*if(print){
 			System.out.println("**************************** after: " + structToAdd);
@@ -2554,6 +2564,72 @@ public class WLCommand implements Serializable{
 	}
 	
 	/**
+	 * Check the span of posList's from different commands.
+	 * @return -1 if first list has lesser span, 1 if greater, 0 if same.
+	 */
+	private static int comparePosListSpan(List<PosTerm> posTermList1, List<PosTerm> posTermList2){
+		
+		int posListSpan1 = getPosTermListSpan(posTermList1);
+		int posListSpan2 = getPosTermListSpan(posTermList2);		
+		return posListSpan1 > posListSpan2 ? 1 : (posListSpan1 < posListSpan2 ? -1 : 0);
+	}
+	
+	/**
+	 * Get the struct span of the PosTerm lists.
+	 * @param posTermList
+	 * @return
+	 */
+	private static int getPosTermListSpan(List<PosTerm> posTermList){
+		
+		int posListSpan = 0;
+		for(PosTerm term : posTermList){
+			Struct termStruct = term.posTermStruct;
+			if(null != termStruct){
+				posListSpan += termStruct.getPosTermListSpan();				
+			}
+		}
+		return posListSpan;
+	}
+	
+	public static int getPosTermListSpan(StructA<?,?> struct){
+		
+		int posListSpan = 0;		
+		if(struct.prev1NodeType().isTypeStruct()){
+			posListSpan += ((Struct)struct.prev1()).getPosTermListSpan();
+		}else if(!"".equals(struct.prev1())){
+			posListSpan++;
+		}
+		
+		if(struct.prev2NodeType().isTypeStruct()){
+			posListSpan += ((Struct)struct.prev2()).getPosTermListSpan();
+		}else if(!"".equals(struct.prev2())){
+			posListSpan++;
+		}
+		return posListSpan;
+	}
+
+	/**
+	 * Counting prepositions.
+	 * @param struct
+	 * @return
+	 */
+	public static int getPosTermListSpan(StructH<?> struct){
+		
+		int posListSpan = 1;		
+		List<ChildRelation> childRelationList = struct.childRelationList();
+		for(ChildRelation childRelation : childRelationList){	
+			if(null != childRelation && !"".equals(childRelation.childRelationStr)){
+				posListSpan++;			
+			}
+		}		
+		List<Struct> structChildren = struct.children();
+		for(Struct child : structChildren){	
+			posListSpan += child.getPosTermListSpan();
+		}
+		return posListSpan;
+	}
+
+	/**
 	 * Increment the commandNumUnits by 1, only if newStruct is a leaf node, to avoid double counting
 	 * per Struct. In particular it's not recursive.
 	 * @param curCommand
@@ -2562,8 +2638,11 @@ public class WLCommand implements Serializable{
 		//don't add for insignificant tokens, that would only be counted when occuring as StructA
 		//and not StructH.
 		String newStructType = newStruct.type();
-		if(newStructType.equals("pre") //| newStructType.equals("adverb")//comment-back-in
+		if(newStructType.equals("pre")
 				){
+			return false;
+		}
+		if(newStructType.equals("adverb") && !newStruct.has_child()){
 			return false;
 		}
 		if(!newStruct.isStructA() 

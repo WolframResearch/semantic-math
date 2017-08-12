@@ -2,6 +2,7 @@ package thmp.runner;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -95,24 +96,23 @@ public class CreateRepresentativeMaps {
 		System.out.println("wordFreqMap.size " + wordFreqMap.size());
 		
 		//split into different files for cursory human inspection
-				int totalNumWords = wordFreqMap.size();
-				Iterator<String> iter = wordFreqMap.keySet().iterator();
-				int numWordsPerFile = 5000;
-				int numRounds = totalNumWords/numWordsPerFile+1;
-				String vocabFileBaseStr = "src/thmp/data/vocab/vocab";
-				for(int j = 0; j < numRounds; j++){
-					int startIndex = j*numWordsPerFile;
-					int endIndex = Math.min((j+1)*numWordsPerFile, totalNumWords);
-					String fileStr = vocabFileBaseStr + j +".txt";
-					StringBuilder sb = new StringBuilder(5000);
-					for(int i = startIndex; i < endIndex; i++){
-						//carriage return instead of newline, for windows people
+		int totalNumWords = wordFreqMap.size();
+		Iterator<String> iter = wordFreqMap.keySet().iterator();
+		int numWordsPerFile = 5000;
+		int numRounds = totalNumWords/numWordsPerFile+1;
+		String vocabFileBaseStr = "src/thmp/data/vocab/vocab";
+		for(int j = 0; j < numRounds; j++){
+			int startIndex = j*numWordsPerFile;
+			int endIndex = Math.min((j+1)*numWordsPerFile, totalNumWords);
+			String fileStr = vocabFileBaseStr + j +".txt";
+			StringBuilder sb = new StringBuilder(5000);
+			for(int i = startIndex; i < endIndex; i++){
+				//carriage return instead of newline, for windows people
 						/*sb.append(iter.next()).append("\r\n");*/
-						sb.append(iter.next()).append("\n");
-					}
-					FileUtils.writeToFile(sb, fileStr);
-				}
-				
+				sb.append(iter.next()).append("\n");
+			}
+			FileUtils.writeToFile(sb, fileStr);
+		}				
 	}	
 	
 	/**
@@ -138,10 +138,12 @@ public class CreateRepresentativeMaps {
 		//System.out.println("tMap.comparator()).wordFreqMap" + ((WordFreqComparator)tMap.comparator()).wordFreqMap );
 		///
 		
+		///////////////////////////
 		Map<String, Integer> prunedBigWordFreqMap = pruneWords(curatedWordsList, bigWordFreqMap);
 		List<Map<String,Integer>> prunedBigWordFreqMapList = new ArrayList<>();
 		prunedBigWordFreqMapList.add(prunedBigWordFreqMap);
 		FileUtils.serializeObjToFile(prunedBigWordFreqMapList, "src/thmp/data/bigWordFreqPrunedMap.dat");
+		FileUtils.writeToFile(prunedBigWordFreqMap, "src/thmp/data/bigWordFreqPrunedMap.txt");
 	}
 	
 	/**
@@ -186,6 +188,7 @@ public class CreateRepresentativeMaps {
 				word = m.group(1);
 			}
 			word = WordForms.stripSurroundingWhiteSpace(word);
+			word = WordForms.normalizeWordForm(word);
 			Integer freq = bigWordFreqMap.get(word);
 			if(null != freq){
 				prunedBigWordFreqMap.put(word, freq);
@@ -200,8 +203,14 @@ public class CreateRepresentativeMaps {
 			avgFreq = avgFreq == 0 ? 2 : avgFreq;
 			for(String absentWord : wordsNotPresentSet){
 				prunedBigWordFreqMap.put(absentWord, avgFreq);
-			}		
-		}
+			}	
+			Collection<String> stemWordsMapVals = WordForms.deserializeStemWordsMap(null).values();
+			for(String shortenedWord : stemWordsMapVals){
+				if(!prunedBigWordFreqMap.containsKey(shortenedWord)){
+					prunedBigWordFreqMap.put(shortenedWord, avgFreq);
+				}
+			}			
+		}		
 		System.out.println("CreateRepresentativeMaps - recognized word count "+count);
 		return prunedBigWordFreqMap;		
 	}

@@ -188,7 +188,10 @@ public class RecipeGraph {
 			Struct termStruct = term.posTermStruct();
 			if(null == termStruct){
 				continue;
-			}			
+			}
+			if("prep".equals(termStruct.type())){
+				System.out.println("recipeGraph prep!!");
+			}
 			lastStateUsed = addStructFoodState(unknownStructList, knownStateList, actionSourceList, actionTargetList,
 					edgeQualifierStructList, prevTermIsTrigger, termStruct);	
 			prevTermIsTrigger = false;
@@ -379,11 +382,12 @@ public class RecipeGraph {
 		boolean structAdded = false;
 		String structType = struct.type();
 		if(WordForms.CONJ_DISJ_PATTERN.matcher(structType).matches()){
-			structAdded = structAdded || addIfApplianceStruct((Struct)struct.prev1(), edgeQualifierStructList);
-			structAdded = addIfApplianceStruct((Struct)struct.prev2(), edgeQualifierStructList) ;
+			structAdded = addIfApplianceStruct((Struct)struct.prev1(), edgeQualifierStructList) || structAdded;
+			structAdded = addIfApplianceStruct((Struct)struct.prev2(), edgeQualifierStructList) || structAdded;
 		}else if("prep".equals(structType)){
 			//discussed with others, "prep" should usually indicate edge qualifier
 			edgeQualifierStructList.add(struct);
+			System.out.println("recipeGraph adding prep "+struct);
 			structAdded = true;
 		}
 		//return FoodLexicon.equipmentMap().containsKey(structName);
@@ -423,7 +427,7 @@ public class RecipeGraph {
 				lastStateUsed = addStructChildren(unknownStructList, knownStateList, actionSourceList, actionTargetList, 
 						termStruct) || lastStateUsed;
 			}else{
-				if("adj".equals(structType)){
+				if("adj".equals(structType) || "prep".equals(structType)){
 					//e.g. "translucent" in "cook until translucent"
 					edgeQualifierStructList.add(termStruct);
 				}

@@ -49,7 +49,7 @@ public class RecipeEdge {
 		//System.out.println("RecipeEdge qualifierStructList "+qualifierStructList);
 		if(!qualifierStructList.isEmpty()){		
 			for(Struct struct : qualifierStructList){	
-				Expr structExpr;
+				Expr structExpr;				
 				if(struct.isFoodStruct() ){
 					String qualifierStr = ((FoodStruct)struct).qualifier();
 					if("".equals(qualifierStr)){
@@ -91,10 +91,16 @@ public class RecipeEdge {
 					structExprList.add(new Expr(pptStr));				
 				}
 			}			
-		}else if("prep".equals(struct.type()) && struct.prev2NodeType().isTypeStruct()){			
+		}else if("prep".equals(struct.type()) && struct.prev2NodeType().isTypeStruct()){
+			if(struct.prev1NodeType().isTypeStruct()){
+				structExprList.add(new Expr(((Struct)struct.prev1()).prev1().toString()));				
+			}
 			structExprList.add(new Expr(((Struct)struct.prev2()).nameStr()));			
 		}
-		structExprList.add(new Expr(struct.nameStr()));
+		String structName = struct.nameStr();
+		if(!"".equals(structName)){
+			structExprList.add(new Expr(structName));			
+		}
 		return structExprList;
 	}
 

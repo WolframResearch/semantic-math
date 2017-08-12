@@ -620,28 +620,17 @@ public class ThmSearch {
 		 * @param defThmList Theorem container for set of theorems.
 		 */
 		public static void createTermDocumentMatrixSVD(List<? extends TheoremContainer> defThmList) {			
-			//docMx = TriggerMathThm2.mathThmMx();			
-			//mx to keep track of correlations between terms, mx.mx^T
-			//List<List<Integer>> corMxList = new ArrayList<List<Integer>>();
 			try{			
-				/*ml = MathLinkFactory.createKernelLink(ARGV);
-				System.out.println("MathLink created! "+ ml);
-				//discard initial pakets the kernel sends over.
-				ml.discardAnswer();*/
 				ml = FileUtils.getKernelLinkInstance();
 				String msg = "Kernel instance acquired in createTermDocumentMatrixSVD...";
 				logger.info(msg);
-				//int rowDimension = docMx.length;
 				int rowDimension = TriggerMathThm2.mathThmMxRowDim();
-				//int mxColDim = docMx[0].length;
 				int mxColDim = defThmList.size();
 				System.out.println("ThmSearch-TermDocumentMatrix - number of keywords: " + rowDimension);
 				System.out.println("ThmSearch-TermDocumentMatrix - number of theorems: " + mxColDim);
 				//set up the matrix corresponding to docMx, to be SVD'd. 
 				//adjust mx entries based on correlation first	
-				//StringBuilder mxSB = new StringBuilder("m = Developer`ToPackedArray@");
-				//mxSB.append(toNestedList(docMx)).append("//N;");
-				/* *Need* to specify dimension! Since the Automatic dimension might be less than 
+				/* *Must* specify dimension! Since the Automatic dimension might be less than 
 				 * or equal to the size of the keywordList, if some words are not hit by the current thm corpus. */
 				StringBuilder mxSB = TriggerMathThm2.sparseArrayInputSB(defThmList)
 						.insert(0, "m=SparseArray[1+").append(",{"+rowDimension).append(",").append(mxColDim+"}];");

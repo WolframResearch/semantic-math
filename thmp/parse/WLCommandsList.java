@@ -206,18 +206,11 @@ public class WLCommandsList {
 				);
 		
 		if(FOOD_PARSE){
-			//e.g. "cook until fragrant"
+			//e.g. "cook until fragrant", or  "cook over fire"
 			putToWLCommandMapBuilder(wLCommandMapBuilder, "verb", new PBuilder("{"),
-					//new PBuilder(null, "then", false, false, "OPT"),
 					new PBuilder("^(?!hyp)verb$", null, true, true, false).setPositionInStructTree(PositionInStructTree.FIRST),
 					new PBuilder(" ~"), new PBuilder("Action").makeExprHead(), new PBuilder("~ "), //new PBuilder(", "), 
-					//new PBuilder(" {", "OPT"), 
-					new PBuilder("adj", null, true, false, false).addRelationType(RelationType._IS).setPositionInStructTree(PositionInStructTree.LAST),
-					//new PBuilder(", {\"Qualifiers\"->", "OPT"), //new PBuilder("Qualifiers", "OPT").makeOptionalTermHead(),
-					/*new PBuilder(", {", "OPT"),
-					new PBuilder("Qualifiers", "OPT").makeOptionalTermHead(), new PBuilder("->", "OPT"),
-					//the relation should incorporate several types. 
-					new PBuilder("prep|qualifier", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}}", "OPT"),*/
+					new PBuilder("adj|prep", null, true, false, false).addRelationType(RelationType._IS).setPositionInStructTree(PositionInStructTree.LAST),
 					new PBuilder("}")
 					);
 			//e.g. "drain and set aside"
@@ -241,6 +234,7 @@ public class WLCommandsList {
 					new PBuilder("prep|qualifier", null, true, false, "OPT").addRelationType(RelationType.IS_), new PBuilder("}}", "OPT"),
 					new PBuilder("}")
 					);
+		
 		}
 		/*putToWLCommandMapBuilder(wLCommandMapBuilder, "fix", new PBuilder("{"), //test rule!!
 				new PBuilder("verb", null, true, true, false).setPositionInStructTree(PositionInStructTree.FIRST),
