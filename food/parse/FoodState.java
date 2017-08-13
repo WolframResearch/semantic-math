@@ -111,7 +111,7 @@ public class FoodState {
 	 * @return Either a List Expr, or a singleton Name Expr.
 	 * E.g. "{\"until\", Name[\"blended banana mixture\"] }"
 	 */
-	private static Expr describe(FoodState foodState){
+	private static Expr describeAsExpr(FoodState foodState){
 		List<Expr> nameExprList = new ArrayList<Expr>();
 		//StringBuilder nameSb = new StringBuilder();
 		
@@ -129,13 +129,13 @@ public class FoodState {
 		}*/
 		Expr[] argExprAr;
 		Set<String> pptSet;
+		
 		//if(foodName.equals("knife")) throw new IllegalStateException(foodStruct.getPropertySet().toString());
 		//System.out.println("FoodState - foodStruct " +foodStruct);
 		if(null != foodStruct && !(pptSet = foodStruct.getPropertySet()).isEmpty()){
 			List<Expr> pptExprList = new ArrayList<Expr>();
 			for(String pptStr : pptSet){
-				pptExprList.add(new Expr(pptStr));
-				
+				pptExprList.add(new Expr(pptStr));				
 			}
 			argExprAr = new Expr[]{new Expr(foodName), ExprUtils.listExpr(pptExprList)};
 		}else{
@@ -143,6 +143,20 @@ public class FoodState {
 		}
 		Expr foodNameExpr = new Expr(new Expr(Expr.SYMBOL, "Name"), argExprAr);
 		
+		if(null != foodStruct){
+			//if("tablespoon".equals(foodStruct.nameStr())) throw new RuntimeException(foodStruct.children().toString());
+			for(Struct childStruct : foodStruct.children()){
+				//figure out adequate string!!!
+				String childStr = childStruct                  .toString();
+				nameExprList.add(new Expr(childStr));	
+				/*List<String> contentList = childStruct.toString();
+				if(null != contentList){
+					for(String s : contentList){
+						nameExprList.add(new Expr(s));				
+					}				
+				}*/
+			}			
+		}
 		if(!"".equals(qualifier)){
 			//nameSb.insert(0, "\""+qualifier+"\", ").insert(0,"{").append("}");
 			nameExprList.add(new Expr(qualifier));
@@ -160,7 +174,7 @@ public class FoodState {
 	public Expr toExpr(){
 		List<Expr> curLevelRules = new ArrayList<Expr>();		
 		this.getExprList(curLevelRules);
-		//Graph[{"apple" -> "pudding", Labeled["banana" -> "pudding", "blend"]}, VertexLabels -> "Name"]
+		//e.g. Graph[{"apple" -> "pudding", Labeled["banana" -> "pudding", "blend"]}, VertexLabels -> "Name"]
 		Expr graphHead = new Expr(Expr.SYMBOL, "Graph");
 		Expr edgeListExpr = ExprUtils.listExpr(curLevelRules);
 		Expr vertexOptionExpr = ExprUtils.ruleExpr(new Expr(Expr.SYMBOL, "VertexLabels"), new Expr("Name"));
@@ -170,11 +184,11 @@ public class FoodState {
 	
 	private void getExprList(List<Expr> curLevelRules){
 		//List<Expr> curLevelRules = new ArrayList<Expr>();		
-		Expr productExpr = describe(this);		
+		Expr productExpr = describeAsExpr(this);		
 		if(!parentFoodStateList.isEmpty()){
 			//sb.append("P{");
 			for(FoodState parentState : parentFoodStateList){				
-				Expr ruleExpr = ExprUtils.ruleExpr(describe(parentState), productExpr);				
+				Expr ruleExpr = ExprUtils.ruleExpr(describeAsExpr(parentState), productExpr);				
 				if(null != parentEdge){		
 					//e.g. Labeled["banana" -> "pudding", "blend"]
 					Expr edgeNameExpr = parentEdge.toExpr();

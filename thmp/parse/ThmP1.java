@@ -1304,14 +1304,7 @@ public class ThmP1 {
 				Pair pair = new Pair(strAr[i], "symb");
 				pairs.add(pair);
 			}
-			
-			// Get numbers. Incorporate written-out numbers, eg "two"
-			else if (curWord.matches("\\d+")) {
-				///Use "ent" for now instead of "num", because more rules for ent-combos.
-				Pair pair = new Pair(strAr[i], "ent");
-				pairs.add(pair);
-				mathIndexList.add(pairs.size() - 1);
-			}//negative adjective word, not that unusual.
+			//negative adjective word, not that unusual.
 			else if((negativeAdjMatcher = NEGATIVE_ADJECTIVE_PATTERN.matcher(curWord)).find()){
 				
 				String curAdjWord = null == negativeAdjMatcher.group(1)

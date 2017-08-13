@@ -8,6 +8,7 @@ import com.wolfram.jlink.Expr;
 
 import thmp.parse.Struct;
 import thmp.utils.ExprUtils;
+import thmp.utils.WordForms;
 
 /**
  * Describes food processing step .
@@ -90,7 +91,11 @@ public class RecipeEdge {
 				for(String pptStr : pptSet){
 					structExprList.add(new Expr(pptStr));				
 				}
-			}			
+			}
+			String quantStr = struct.struct().get(WordForms.QUANTITY_POS);
+			if(null != quantStr){
+				structExprList.add(new Expr(quantStr));				
+			}
 		}else if("prep".equals(struct.type()) && struct.prev2NodeType().isTypeStruct()){
 			if(struct.prev1NodeType().isTypeStruct()){
 				structExprList.add(new Expr(((Struct)struct.prev1()).prev1().toString()));				

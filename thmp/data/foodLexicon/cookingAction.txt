@@ -465,6 +465,7 @@ sterilize
 stew
 stick to
 stir
+stir in
 stirfry
 stone-grind
 stop

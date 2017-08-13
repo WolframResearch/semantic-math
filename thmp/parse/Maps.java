@@ -238,6 +238,10 @@ public class Maps {
 				FOOD_TRIE = FoodLexicon.foodTrie();
 				COOKING_ACTION_TRIE = FoodLexicon.cookingActionTrie();
 				extraFoodLexiconMMap = FoodLexicon.additionalFoodLexiconMMap();
+				String[][] extraPosAr = new String[][]{{"stir","verb_COMP"}, {"stir in","verb"}};
+				for(String[] extraPos : extraPosAr){
+					extraFoodLexiconMMap.put(extraPos[0], extraPos[1]);
+				}
 			}
 		}
 		
@@ -444,6 +448,8 @@ public class Maps {
 				posPreMMap.put("once", "adj");
 				
 				posPreMMap.put("let", "verb");
+				/*posPreMMap.put("stir", "verb_COMP");
+				posPreMMap.put("stir in", "verb");*/
 				
 				//e.g. "bring water to boil"
 				structMap.put("pre_verbAlone", new Rule("prep", 0.85));//FOOD

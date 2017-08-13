@@ -71,6 +71,7 @@ public class WordForms {
 	private static final Pattern FRACTION_PATTERN = Pattern.compile("\\d+/\\d+");
 	public static final Pattern CONJ_DISJ_PATTERN = Pattern.compile("conj_.+|disj_.+");
 	
+	public static final Pattern QUANT_DIGIT_PATTERN = Pattern.compile("\\d+/*\\d*");
 	public static final String QUANTITY_POS = "quant";
 	
 	private static final ImmutableMap<String, String> synonymRepMap;
@@ -728,7 +729,20 @@ public class WordForms {
 		
 		int inputStrArLen = inputStrAr.length;
 		int nextTokenStartIndex = wordIndex;
+		
 		StringBuilder sb = new StringBuilder(25);
+		if(QUANT_DIGIT_PATTERN.matcher(inputStrAr[wordIndex]).matches()){
+			nextTokenStartIndex++;
+			sb.append(inputStrAr[wordIndex]);
+			while(nextTokenStartIndex < inputStrArLen && QUANT_DIGIT_PATTERN.matcher(inputStrAr[nextTokenStartIndex]).matches()){
+				sb.append(" ").append(inputStrAr[nextTokenStartIndex]);
+				nextTokenStartIndex++;
+			}
+			emptyPair.set_word(sb.toString());
+			emptyPair.set_pos(QUANTITY_POS);			
+			return nextTokenStartIndex;
+		}
+		
 		String[] ar = DASH_PATTERN.split(word);
 		if(ar.length > 1){
 			int wordIndex1 = 0; 
