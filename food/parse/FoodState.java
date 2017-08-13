@@ -142,12 +142,14 @@ public class FoodState {
 			argExprAr = new Expr[]{new Expr(foodName)};
 		}
 		Expr foodNameExpr = new Expr(new Expr(Expr.SYMBOL, "Name"), argExprAr);
+		nameExprList.add(foodNameExpr);
 		
 		if(null != foodStruct){
 			//if("tablespoon".equals(foodStruct.nameStr())) throw new RuntimeException(foodStruct.children().toString());
 			for(Struct childStruct : foodStruct.children()){
 				//figure out adequate string!!!
 				String childStr = childStruct                  .toString();
+				//if("tablespoon".equals(foodStruct.nameStr())) throw new RuntimeException(childStr);				
 				nameExprList.add(new Expr(childStr));	
 				/*List<String> contentList = childStruct.toString();
 				if(null != contentList){
@@ -159,11 +161,11 @@ public class FoodState {
 		}
 		if(!"".equals(qualifier)){
 			//nameSb.insert(0, "\""+qualifier+"\", ").insert(0,"{").append("}");
-			nameExprList.add(new Expr(qualifier));
-			nameExprList.add(foodNameExpr);
+			nameExprList.add(0, new Expr(qualifier));
+			//nameExprList.add(foodNameExpr);
 			return ExprUtils.listExpr(nameExprList);
 		}		
-		return foodNameExpr;
+		return ExprUtils.listExpr(nameExprList);
 	}
 	
 	/**

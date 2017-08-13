@@ -439,6 +439,10 @@ public abstract class Struct implements Serializable{
 	//to be overridden
 	public abstract void set_type(String type);
 	
+	/**
+	 * Makes deep copy, including children.
+	 * @return
+	 */
 	public abstract Struct copy();
 	
 	//to be overridden

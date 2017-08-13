@@ -71,6 +71,7 @@ public class WordForms {
 	private static final Pattern FRACTION_PATTERN = Pattern.compile("\\d+/\\d+");
 	public static final Pattern CONJ_DISJ_PATTERN = Pattern.compile("conj_.+|disj_.+");
 	
+	public static final Pattern QUANT_UNIT_PATTERN = Pattern.compile("(?:teaspoon|tablespoon|cup)");
 	public static final Pattern QUANT_DIGIT_PATTERN = Pattern.compile("\\d+/*\\d*");
 	public static final String QUANTITY_POS = "quant";
 	
@@ -78,11 +79,11 @@ public class WordForms {
 	private static final ImmutableMultimap<String, String> stemToWordsMMap;
 	
 	//pattern for lines to skip any kind of parsing, even hypothesis-detection.
-		//skip examples and bibliographies  
+	//skip examples and bibliographies  
 	private static final Pattern SKIP_PATTERN = Pattern.compile("\\\\begin\\{proof\\}.*|\\\\begin\\{exam.*|\\\\begin\\{thebib.*");
 	private static final Pattern END_SKIP_PATTERN = Pattern.compile("\\\\end\\{proof\\}.*|\\\\end\\{exam.*|\\\\end\\{thebib.*");
 		
-		//single lines to skip. Such as comments
+	//single lines to skip. Such as comments
 	private static final Pattern SINGLE_LINE_SKIP_PATTERN = Pattern.compile("^%.*|\\\\begin\\{bib.*|.*FFFFFF.*|.*fffff.*|\\/.*");
 	
 	//small lists of fluff words, used in, e.g., n gram extraction.
@@ -734,8 +735,12 @@ public class WordForms {
 		if(QUANT_DIGIT_PATTERN.matcher(inputStrAr[wordIndex]).matches()){
 			nextTokenStartIndex++;
 			sb.append(inputStrAr[wordIndex]);
-			while(nextTokenStartIndex < inputStrArLen && QUANT_DIGIT_PATTERN.matcher(inputStrAr[nextTokenStartIndex]).matches()){
-				sb.append(" ").append(inputStrAr[nextTokenStartIndex]);
+			String nextToken;
+			while(nextTokenStartIndex < inputStrArLen && (QUANT_DIGIT_PATTERN.matcher(
+					nextToken=inputStrAr[nextTokenStartIndex]).matches() 
+					//|| QUANT_UNIT_PATTERN.matcher(nextToken).matches()
+					)){
+				sb.append(" ").append(nextToken);
 				nextTokenStartIndex++;
 			}
 			emptyPair.set_word(sb.toString());

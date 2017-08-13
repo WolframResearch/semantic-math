@@ -16,6 +16,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
 import food.parse.FoodParseMetadata;
+import thmp.parse.Struct;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 
@@ -111,7 +112,6 @@ public class FoodLexicon {
 		}
 		
 		/**
-		 * 
 		 * @param childStr
 		 * @return Can be null
 		 */
@@ -138,13 +138,12 @@ public class FoodLexicon {
 		/**
 		 * Retrieves token count of given word, ie how far
 		 * down the line of .
-		 * Returns 0 if term is not in lexicon, even if the token matches part
+		 * @return Returns 0 if term is not in lexicon, even if the token matches part
 		 * of some valid lexicon word.
 		 * Throws ArrayIndexOutOfBoundsException if inputArLen <= curIndex.
 		 * @param inputAr
 		 * @param curIndex
 		 * @param inputArLen
-		 * @return
 		 */
 		public int getTokenCount(String[] inputAr, int curIndex, int inputArLen){
 			if(curIndex > inputArLen - 1){
@@ -175,6 +174,16 @@ public class FoodLexicon {
 			}
 			return tokenCounter;
 		}
+	}//end of FoodNode class
+	
+	/**
+	 * @param struct
+	 * @return Whether the input struct is a food struct, doesn't check children.
+	 */
+	public static boolean isFoodStruct(Struct struct){
+		String structName = struct.nameStr();
+		String[] structNameAr = WordForms.getWhiteNonEmptySpaceNotAllPattern().split(structName);
+		return FOOD_TRIE.getTokenCount(structNameAr, 0, structNameAr.length) > 0;
 	}
 	
 	/**

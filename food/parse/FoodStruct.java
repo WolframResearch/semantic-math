@@ -247,14 +247,14 @@ public class FoodStruct extends thmp.parse.Struct {
 
 	@Override
 	public void set_type(String type) {
-		
-		
+		this.struct.set_type(type);
 	}
 
 	@Override
 	public Struct copy() {
-		
-		return struct;//////////////////
+		FoodStruct foodStruct = new FoodStruct(this.struct.copy(), this.foodStructType);
+		foodStruct.qualifier = this.qualifier;
+		return foodStruct;
 	}
 
 	@Override

@@ -139,9 +139,10 @@ public class RecipeParse {
 		//inputStr = "Beat eggs into 1 1/2 cups milk, then stir in 2 tablespoons melted cooled butter, if using it. Gently stir this mixture into dry ingredients, mixing only enough to moisten flour; don't worry about a few lumps";
 		inputStr = "Beat eggs into 1 1/2 cups milk, then stir in 2 tablespoons melted cooled butter";
 		inputStr = "Beat eggs into 1 1/2 cups milk, then stir in 2 tablespoons melted cooled butter, Gently stir this mixture into dry ingredients";
-		inputStr = "stir in 2 tablespoons melted cooled butter";
+		
 		inputStr = "melt butter in bowl ";
 		inputStr = "melt one teaspoon of butter in bowl ";
+		inputStr = "stir in 2 tablespoons of cooled butter";
 		
 		boolean isVerbose = true;
 		Stats stats = null;

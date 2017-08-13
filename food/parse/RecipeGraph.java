@@ -52,8 +52,6 @@ public class RecipeGraph {
 	
 	//ingredients, and whether used or not
 	private Map<String, Boolean> ingredientsMap;
-	//beginning nodes in 
-	//private List<FoodState> ingredientStateList;
 	//List of current FoodState's. 
 	private List<FoodState> currentStateList;
 	//immediate prior FoodState, to be used in next parse, 
@@ -537,23 +535,44 @@ public class RecipeGraph {
 			structAdded = foodStateAdded.structAdded;
 			if(!structAdded && QUANTITY_MAP.contains(structName)){
 				//check for quantities, e.g. "tablespoon"
-				FoodState foodState = new FoodState(structName, structToAdd);	
+				FoodState foodState = new FoodState(structName, structToAdd);
+				structToAdd = findQuantityChildren(structToAdd);
+				
 				//if(true) throw new RuntimeException(structToAdd.toString());
 				knownStateList.add(foodState);
 				structAdded = true;
-				//but need to make sure children those grandchildren don't get displayed!!
-				if(structToAdd.has_child()){
-					structToAdd = structToAdd.children().get(0);
-				}
-				//addChildren = false;
 			}
 		}
-		//add children
-		//if(addChildren){
-			lastStateUsed = addStructChildren(unknownStructList, knownStateList, actionSourceList, actionTargetList, 
-					edgeQualifierStructList, structToAdd) || lastStateUsed;
-		//}
+		lastStateUsed = addStructChildren(unknownStructList, knownStateList, actionSourceList, actionTargetList, 
+				edgeQualifierStructList, structToAdd) || lastStateUsed;
 		return new FoodStateAdded(structAdded, lastStateUsed);
+	}
+	
+	/**
+	 * Adjusts the struct to select the relevant children of a quantity, e.g.
+	 * "teaspoon". Returns updated Struct.
+	 */
+	private static Struct findQuantityChildren(Struct quantityStruct){
+		
+		Struct newStruct = quantityStruct.copy();
+		List<Struct> children = newStruct.children();
+		List<ChildRelation> childRelationList = newStruct.childRelationList();
+		int childrenSz = children.size();
+		int indexRemoved = 0;
+		for(int i = 0; i < childrenSz; i++){			
+			if(FoodLexicon.isFoodStruct(children.get(i))){
+				indexRemoved = i;
+				quantityStruct.children().clear();
+				quantityStruct.children().add(children.get(indexRemoved));		
+				quantityStruct.childRelationList().clear();
+				quantityStruct.childRelationList().add(childRelationList.get(indexRemoved));
+				
+				children.remove(indexRemoved);
+				childRelationList.remove(indexRemoved);				
+				break;
+			}
+		}
+		return newStruct;
 	}
 	
 	/**

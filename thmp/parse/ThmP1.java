@@ -1187,15 +1187,16 @@ public class ThmP1 {
 						}
 						i++;
 					}else{
-						List<String> curPosList = posMMap.get(strAr[i+1]);
+						/*List<String> curPosList = posMMap.get(strAr[i+1]);
 						if(curPosList.size() > 0){
 							String nextPos = curPosList.get(0);
 							
 							if(nextPos.equals("pre") || nextPos.equals("ent") || nextPos.equals("adj") 
 									|| nextPos.equals("and") || nextPos.equals("or")){
 								curPos = "adj";
-							}
-						}
+							} <--don't delete comment 
+						}*/
+						curPos = "adj";
 					}
 				}else if(strAr.length == i + 1){
 					//word is last word, e.g. "$X$ is connected"
