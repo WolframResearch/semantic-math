@@ -122,7 +122,7 @@ public class ThmSearch {
 			//if kernel pool acquisition were working, this should be done in initialization code, right now 
 			//initialization code doesn't seem to be running??
 			//***evaluateWLCommand(ml, "<<"+combinedProjectedMxFilePath, false, true);*/
-			logger.info("$ProcessID when loading mx: " + evaluateWLCommand(ml, "$ProcessID", true, true));
+			//logger.info("$ProcessID when loading mx: " + evaluateWLCommand(ml, "$ProcessID", true, true));
 			evaluateWLCommand(ml, "<<"+pathToProjectionMx, false, true);
 			evaluateWLCommand(ml, "AppendTo[$ContextPath, \""+ TermDocumentMatrix.PROJECTION_MX_CONTEXT_NAME +"\"]", false, true);	
 			
@@ -195,7 +195,7 @@ public class ThmSearch {
 		/*System.out.println("Initializer: STUFFBAG: " +evaluateWLCommand(ml, "bag=Internal`Bag[];Internal`StuffBag[bag,1]",true, true));
 		System.out.println("Initializer: STUFFBAG: " +evaluateWLCommand(ml, "Internal`StuffBag[bag,2];bag",true, true));*/
 		
-		System.out.println("Initializer: $VersionNumber: " +evaluateWLCommand(ml, "$VersionNumber",true, true));
+		System.out.println("Initializer: $VersionNumber (need 11.1+): " +evaluateWLCommand(ml, "$VersionNumber",true, true));
 		evaluateWLCommand(ml, "AppendTo[$ContextPath,\"Internal`\"]", false, true);
 		
 		//needs to happen after computing QUERY_VEC_LENGTH
@@ -227,7 +227,7 @@ public class ThmSearch {
 	 */
 	private static double computeDistanceThreshold(WLEvaluationMedium medium){
 		//**June 19, debugging for now, skip this step, since slows down startup.
-		if(true) return 0.08;//0.06;// 0.02360689779; 0.08 is already quite high
+		if(true) return 0.05;//0.08;//0.06;// 0.02360689779; 0.08 is already quite high
 		//first String is thm, second is query
 		String thm0 = "$\\lambda$ run over all pairs of partitions which are complementary with respect to $R$";
 		String thm1 = "The interchange of two distant critical points of the surface diagram does not change the induced map on homology";
@@ -298,9 +298,6 @@ public class ThmSearch {
 	 */
 	public static List<Integer> findNearestVecs(String queryVecStr, int ... num){
 		WLEvaluationMedium medium = FileUtils.acquireWLEvaluationMedium();
-		//try{
-			//ml.evaluate("corMx");
-			//System.out.println("thmsearch - corMx : " + ml.getExpr());
 			String msg = "Transposing and applying corMx...";
 			logger.info(msg);
 			//process query first with corMx. Convert to column vec.
@@ -311,13 +308,9 @@ public class ThmSearch {
 			//ml.evaluate("queryVecStrTranspose= Transpose[" + queryVecStr + "]; "
 				//	+ "q0 = queryVecStrTranspose + 0.08*corMx.queryVecStrTranspose;");
 			if(getResult){				
-				logger.info("ThmSearch - transposed queryVecStr: " + qVec);				
+				System.out.println("ThmSearch - transposed queryVecStr: " + qVec);				
 			}			
-			//ml.evaluate("corMx");
-			//System.out.println("corMx:" +ml.getExpr());
-			//ml.waitForAnswer();
-			//Expr qVec = ml.getExpr();
-			msg = "Applied correlation matrix to querty vec, about to Inverse[d].Transpose[u].(q/.{0.0->mxMeanValue}) ";
+			msg = "Applied correlation matrix to querty vec, about to Inverse[d].Transpose[u]";
 			System.out.println(msg);
 			logger.info(msg);
 			
@@ -339,8 +332,8 @@ public class ThmSearch {
 				//ml.evaluate("q = dInverse.uTranspose.q0;");
 				//ml.discardAnswer();
 				if(getResult){
-					logger.info("ThmSearch - dInverse.uTranspose.q0): " + qVec);
-					//System.out.println("qVec: " + qVec);
+					//logger.info("ThmSearch - q = dInverse.uTranspose.q0): " + qVec);
+					System.out.println("qVec: " + qVec);
 				}				
 				if(DEBUG){					
 					System.out.println("The Nontrivial Values in query vec: " + evaluateWLCommand(medium, 
@@ -353,10 +346,7 @@ public class ThmSearch {
 				System.out.println("Values at Pos: " + evaluateWLCommand(medium, 
 						"Map[Part[q1, #]&, pos]", true, true));
 			}			
-		/*}catch(MathLinkException e){
-			throw new IllegalStateException(e);
-		}*/
-		//vMeanValue
+		
 		//use Nearest to get numNearest number of nearest vectors, 
 		int numNearest;
 		if(num.length == 0){
@@ -364,7 +354,7 @@ public class ThmSearch {
 		}else{
 			numNearest = num[0];
 		}
-		//int[] nearestVecArray;
+		
 		Map<Double, Integer> distanceIndexMap = new TreeMap<Double, Integer>();
 		try{
 			msg = "Applying Nearest[]...";
@@ -384,8 +374,9 @@ public class ThmSearch {
 			while(thmsFoundCount <= numNearest && mxCacheIter.hasNext()){
 				int nextMxKey = mxCacheIter.next();
 				String nextMxName = TermDocumentMatrix.COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME + nextMxKey;//make this into method!
+				System.out.println("ThmSearch - nextMxName "+nextMxName);
 				//load the mx first, if not already in memory. This does not load if mx already loaded in cache.
-				//loadMx[mxIndex_Integer, cacheBag_, timeBag_]
+				//Now evaluate loadMx[mxIndex_Integer, cacheBag_, timeBag_]
 				evaluateWLCommand(medium, "loadMx["+nextMxKey + ","+ CACHE_BAG_NAME + "," + TIME_BAG_NAME +"]", false, true);
 				
 				/*System.out.println("Length[nextMxName]: " +evaluateWLCommand(medium, "Length["+nextMxName+"]",true, true));
@@ -399,6 +390,7 @@ public class ThmSearch {
 				/**June 19 Expr nearestVec = evaluateWLCommand(medium, "findNearest[" + nextMxName + ",First@Transpose[q],"+ DISTANCE_THRESHOLD +","
 						+numNearest/2 +"] - " 
 						+ LIST_INDEX_SHIFT, true, true);*/
+				/*Note that this relies on distance option introduced in 11.1*/
 				Expr nearestVec = evaluateWLCommand(medium, "findNearestDist[" + nextMxName + ",First@Transpose[q],"+ DISTANCE_THRESHOLD +","
 						+numNearest/2 +"]", true, true);
 				//System.out.println("ThmSearch-DISTANCES: "+(double[])nearestVec.part(2).asArray(Expr.REAL, 1));

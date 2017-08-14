@@ -18,14 +18,14 @@ findNearest[combinedTDMx_,queryVec_,threshold_Real,numNearest_Integer]:=Module[{
 Select[indexDistAr,#[[2]]<threshold&][[All,1]]-1]
 
 
-(*For debugging for now, returns list with two sublists, first is indices, second distances*)
+(*Use this, returns list with two sublists, first is indices, second distances*)
 findNearestDist[combinedTDMx_,queryVec_,threshold_Real,numNearest_Integer]:=Module[{indexDistAr,selected,validIndices}, indexDistAr=Nearest[combinedTDMx->{"Index","Distance"},queryVec,numNearest];
 selected=Select[indexDistAr,#[[2]]<threshold&];If[{}=!=selected,validIndices=filterNonSense[combinedTDMx[[selected[[All,1]]]]];
 {selected[[validIndices,1]]-1,selected[[validIndices,2]]},{{},{}}]]
 
 
-(*filter out vecs that are close to the zero vec, without much content, e.g. those that contain a lot of tex*)
-filterNonSense[candidateVecs_?MatrixQ]:=Module[{list},list=Reap[Map[If[EuclideanDistance[$ZeroVec,candidateVecs[[#]]]>0.0035,Sow[#]]&,
+(*filter out vecs that are close to the zero vec, without much content, e.g. those that contain a lot of tex. Treshold 0.0035 for 5337 words, 0.0001 for 23000 words*)
+filterNonSense[candidateVecs_?MatrixQ]:=Module[{list},list=Reap[Map[If[EuclideanDistance[$ZeroVec,candidateVecs[[#]]]>0.0001,Sow[#]]&,
 Range[Length[candidateVecs]]]];If[list[[2]]=!={},list[[2,1]],{}]]
 
 
