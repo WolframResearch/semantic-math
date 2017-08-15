@@ -57,6 +57,7 @@ public class SearchCombined {
 		private static final long serialVersionUID = -6913500705834907026L;
 		private String thmStr;
 		private String hypStr;
+		//srcFileName two possible forms, e.g. math0211002, or 4387.86213.
 		private String srcFileName;
 		private String arxivURL;
 		private static final ThmHypPair PLACEHOLDER_PAIR = new ThmHypPair("", "", "");

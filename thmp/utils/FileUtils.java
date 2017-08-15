@@ -97,12 +97,14 @@ public class FileUtils {
 	
 	/**
 	 * Read lines from source files.
-	 * Now uses UTF-16 encoding
+	 * Defaults to UTF-16 encoding, unless specified otherwise.
 	 * @param fileName
+	 * @param charset_
 	 * @return list of lines read from src's
 	 */
-	public static List<String> readLinesFromFiles(List<String> fileNameList){
+	public static List<String> readLinesFromFiles(List<String> fileNameList, Charset... charset_){
 		List<String> lines = new ArrayList<String>();
+		Charset charset = charset_.length > 0 ? charset_[0] : Charset.forName("UTF-16");
 		for(String fileName : fileNameList){
 			try {
 				FileInputStream fileIS = null;
@@ -110,7 +112,7 @@ public class FileUtils {
 				BufferedReader bReader = null;
 				try{
 					fileIS = new FileInputStream(fileName);
-					InputStreamReader inputStreamReader = new InputStreamReader(fileIS,Charset.forName("UTF-16"));
+					InputStreamReader inputStreamReader = new InputStreamReader(fileIS, charset);
 					bReader = new BufferedReader(inputStreamReader);
 					
 					//fileReader = new FileReader(fileName);
