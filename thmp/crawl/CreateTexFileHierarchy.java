@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,7 @@ import org.apache.logging.log4j.Logger;
 
 import thmp.parse.WLCommand;
 import thmp.utils.FileUtils;
+import thmp.utils.WordForms;
 
 /**
  * Create appropriate tex files hierarchy, extracting tar files 
@@ -48,13 +50,17 @@ public class CreateTexFileHierarchy {
 		Map<String, String> texFileNamesMap = new HashMap<String, String>();
 		//check file type. don't need to untar if not tar ball
 		File dir = new File(srcDirAbsPath);
+		//System.out.println("createFileHierarchy - srcDirAbsPath: "+srcDirAbsPath);
 		File[] files = dir.listFiles();	
+		//System.out.println("createFileHierarchy - files in dir: "+Arrays.toString(files));
 		fileLoop: for(File file : files){
 			//System.out.println("CreateTexFileHiearchy - processing file "+ file);
 			String fileName = file.getName();
 			Process pr = null;
 			String fileAbsolutePath = file.getAbsolutePath();
-			pr = executeShellCommand("file \"" + fileAbsolutePath + "\"");
+			fileAbsolutePath = WordForms.escapeWhiteSpace(fileAbsolutePath);
+			pr = executeShellCommand("file " + fileAbsolutePath);
+			//System.out.println("executed command: "+"file \"" + fileAbsolutePath + "\"");
 			if(null == pr){
 				continue;
 			}
@@ -83,27 +89,25 @@ public class CreateTexFileHierarchy {
 						String renamedTarFileName = tarDirName + FILE_RENAME_PREFIX;
 						Path renamedTarFilePath = Paths.get(renamedTarFileName);
 						renamedTarFilePath = Files.move(curTarFilePath, renamedTarFilePath);
-						//System.out.println("old file exists? " + Files.exists(curTarFilePath) +  " CreateTexFileHierarchy - renamed path: " + s);
 						
 						Files.createDirectory(curTarFilePath);
 						
 						pr = executeShellCommand("tar xf " + renamedTarFileName + " -C "+ tarDirName);
-						//System.out.println("executing command: "+"tar xf " + renamedTarFileName + " -C "+ tarDirName );
 						//flush the subprocess output stream.
 						getCommandOutput(pr);
-						//System.out.println( "commandOutput: " +getCommandOutput(pr));
+						//System.out.println("CreteTexFileHiearchy - deleting file because tar file");
 						Files.delete(renamedTarFilePath);
 						if(null == pr){
-							System.out.println("CreteTexFileHiearchy - createFileHierarchy - pr is null!");
+							System.out.println("CreteTexFileHiearchy - createFileHierarchy - process is null!");
 							continue fileLoop;
 						}
 						findTexFilesInTarDir(tarDirName, fileName, texFileNamesMap);
 						continue fileLoop;
 					}
 					//is neither tex file nor tarball, delete file
+					//System.out.println("CreteTexFileHiearchy - deleting file with data "+line);
 					file.delete();
-				}
-				
+				}				
 			}catch(IOException e){
 				String msg = "IOException in createFileHierarchy!";
 				System.out.println(msg);
@@ -126,21 +130,21 @@ public class CreateTexFileHierarchy {
 		File tarDirFile = new File(tarDirAbsPath);
 		assert(tarDirFile.isDirectory());		
 		File[] tarDirFiles = tarDirFile.listFiles();
-		//System.out.println("findTexFilesInTarDir: tarDirFiles: " + Arrays.toString(tarDirFiles));
 		//System.out.println("CreateTexFileHiearchy - tarDirFiles.length "+tarDirFiles.length);
 		for(File file : tarDirFiles){
 			String fileName = file.getName();
 			String fileAbsolutePathName = tarDirAbsPath + File.separator + fileName;
+			fileAbsolutePathName = WordForms.escapeWhiteSpace(fileAbsolutePathName);
 			//get all tex files inside dir, move them to parent dir
-			Process pr = executeShellCommand("file \"" + fileAbsolutePathName + "\"");			
-			System.out.println("executing command: "+ "file " + fileAbsolutePathName);
+			Process pr = executeShellCommand("file " + fileAbsolutePathName);			
+			//System.out.println("executing command: "+ "file " + fileAbsolutePathName);
 			if(null == pr){
-				System.out.println("CreteTexFileHiearchy - findTexFilesInTarDir - pr is null!");
+				System.out.println("CreteTexFileHiearchy - findTexFilesInTarDir - process is null!");
 				continue;
 			}
 			
 			String output = getCommandOutput(pr);
-			System.out.println("findTexFilesInTarDir: getCommandOutput: " + output);
+			//System.out.println("findTexFilesInTarDir: getCommandOutput: " + output);
 			//add to map if Tex file,
 			if(UnzipFile2.TEX_PATTERN.matcher(output).matches() && !UnzipFile2.NONTEX_EXTENSION_PATTERN.matcher(output).matches()){
 				texFileNamesMap.put(fileAbsolutePathName, tarFileName);

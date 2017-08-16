@@ -92,26 +92,40 @@ public class FoodLexicon {
 		}
 		
 		/**
-		 * Adds and retrieves child node with corresponding name.
+		 * Retrieves child node with given name. Adds if absent.
+		 * Child must be only one token (word) longer.
 		 * @param childStr
+		 * @param isChildValidEndingIfUnset Does *not* change validity
+		 * to false if currently true.
 		 * @return
 		 */
-		public FoodMapNode addIfAbsent(String childStr){
+		public FoodMapNode addIfAbsent(String childStr, boolean isChildValidEndingIfUnset){
 			FoodMapNode childNode = this.childrenMap.get(childStr);
 			if(null == childNode){
 				childNode = new FoodMapNode(this.tokenCount+1);
 				this.childrenMap.put(childStr, childNode);
-			}else if(isValid){
+			}
+			if(isChildValidEndingIfUnset){
 				childNode.setValidTokenEnd();
 			}
 			return childNode;
 		}
 		
-		private void setValidTokenEnd(){
+		public void setValidTokenEnd(){
 			this.isValid = true;
 		}
 		
 		/**
+		 * Removes the subnode with name the given childStr.
+		 * @param childStr
+		 */
+		public void removeIfPresent(String childStr){
+			this.childrenMap.remove(childStr);			
+		}
+		
+		/**
+		 * Retrives childNode with given childStr. 
+		 * null if no such child present.
 		 * @param childStr
 		 * @return Can be null
 		 */
@@ -120,7 +134,7 @@ public class FoodLexicon {
 			return childNode;
 		}
 		/**
-		 * Whether the combination of tokens up to (including) current node
+		 * Whether the combination of tokens (words) up to (including) current node
 		 * form a valid term. E.g. just "a" in "a blend of peanut oil" is not valid food term.
 		 * @return
 		 */
@@ -137,11 +151,11 @@ public class FoodLexicon {
 		
 		/**
 		 * Retrieves token count of given word, ie how far
-		 * down the line of .
+		 * down the line with respect to current node.
 		 * @return Returns 0 if term is not in lexicon, even if the token matches part
 		 * of some valid lexicon word.
 		 * Throws ArrayIndexOutOfBoundsException if inputArLen <= curIndex.
-		 * @param inputAr
+		 * @param inputAr array of words, corresponding to words in sentence.
 		 * @param curIndex
 		 * @param inputArLen
 		 */
@@ -174,7 +188,7 @@ public class FoodLexicon {
 			}
 			return tokenCounter;
 		}
-	}//end of FoodNode class
+	}/*end of FoodNode class*/
 	
 	/**
 	 * @param struct
@@ -215,11 +229,11 @@ public class FoodLexicon {
 						continue;
 					}
 					String firstWord = lineAr[0];
-					FoodMapNode firstWordNode = rootNode.addIfAbsent(firstWord);
+					FoodMapNode firstWordNode = rootNode.addIfAbsent(firstWord, false);
 					FoodMapNode curNode = firstWordNode;
 					for(int i = 1; i < lineArLen; i++){
 						String curWord = lineAr[i];
-						curNode = curNode.addIfAbsent(curWord);
+						curNode = curNode.addIfAbsent(curWord, false);
 					}	
 					curNode.setValidTokenEnd();
 					foodLexicon.put(line, pos);
@@ -333,6 +347,7 @@ public class FoodLexicon {
 		List<FoodMapNode> foodTrieList = new ArrayList<FoodMapNode>();
 		List<Map<String, String>> foodMapList = new ArrayList<Map<String, String>>();
 		
+		/*Deliberately *not* immutable, since need modification beyond curated data before usage*/
 		final int initialNodeTokenCount = 0;
 		String pos = "ent";
 		String foodLexiconPath = "src/thmp/data/foodLexicon/foodNames.txt";		

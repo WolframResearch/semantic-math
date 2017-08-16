@@ -33,7 +33,7 @@ public class RecipeParse {
 	public static final Set<String> NOT_INGREDIENTS_SET;
 	
 	static{
-		String[] nonIngredientsArr = new String[]{"mix"};
+		String[] nonIngredientsArr = new String[]{"mix","egg and"};
 		NOT_INGREDIENTS_SET = new HashSet<String>();
 		for(String s : nonIngredientsArr){
 			NOT_INGREDIENTS_SET.add(s);
@@ -145,6 +145,9 @@ public class RecipeParse {
 		inputStr = "soak cashew overnight, place potato and carrot in steamer for 20 minutes, combine soaked cashew and steamed vegetable";
 		inputStr = "soak cashew overnight, place potato and carrot in steamer for 20 minutes, combine with soaked cashew";
 		inputStr = "combine flour and salt. Stir in eggs and mashed bananas until blended. Combine banana mixture and flour mixture";
+		inputStr = "combine flour and salt. Stir egg and banana until blended. Combine banana mixture and flour mixture"; // and bananas until blended.
+		inputStr = "soak cashew overnight, place potato and carrot in steamer for 20 minutes, combine with soaked cashew";
+		inputStr = "bring a large pot of water to boil, add corn. cook until tender. Cook corn on preheated grill";
 		
 		boolean isVerbose = true;
 		Stats stats = null;

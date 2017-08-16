@@ -98,7 +98,7 @@ public class FoodParseTestMain {
 		//String[] inputAr = new String[]{"combine flour and salt", "wait 10 minutes"};
 		String input = "combine flour and salt, wait 10 minutes";
 		String[] ingredientsAr = new String[]{"flour","soda", "salt"};
-		String[] desiredSnippets = new String[]{"wait", "10 minute", "combine", "flour", "salt"};
+		String[] desiredSnippets = new String[]{"wait", "10","minute", "combine", "flour", "salt"};
 		int desiredEdgeNum = 3;
 		assertTrue(testFoodParse(input, ingredientsAr, desiredSnippets, desiredEdgeNum));
 	}
@@ -131,8 +131,9 @@ public class FoodParseTestMain {
 	public void test5(){
 		String inputStr = "bring a large pot of water to boil, add corn. cook until tender. Cook corn on preheated grill.";
 		String[] ingredientsAr = new String[]{"water","corn"};
-		String[] desiredSnippets = new String[]{"until", "cook", "tender", "corn", "add", "water", "bring","pot","to","boil", "on","grill"};
-		int desiredEdgeNum = 5;
+		String[] desiredSnippets = new String[]{"until", "cook", "tender", "corn", "add", "water", "bring","pot","to","boil", "on",
+				"grill","preheated","large"};
+		int desiredEdgeNum = 6;
 		assertTrue(testFoodParse(inputStr, ingredientsAr, desiredSnippets, desiredEdgeNum));
 	}
 	
@@ -164,6 +165,17 @@ public class FoodParseTestMain {
 		int desiredEdgeNum = 2;
 		assertTrue(testFoodParse(inputStr, ingredientsAr, desiredSnippets, desiredEdgeNum));
 	}
+	
+	@Test
+	public void test9(){
+		String inputStr = "soak cashew overnight, place potato and carrot in steamer for 20 minutes, combine with soaked cashew";
+		//Graph[{Labeled[Rule[Name["sausage"], Name["973"]], Action["cook", {{"until", "browned", "well"}}]], Labeled[Rule[Name["onion"], Name["973"]], Action["cook", {{"until", "browned", "well"}}]], Labeled[Rule[Name["garlic"], Name["973"]], Action["cook", {{"until", "browned", "well"}}]], Labeled[Rule[Name["ground beef"], Name["973"]], Action["cook", {{"until", "browned", "well"}}]]}, Rule[VertexLabels, "Name"]]
+		String[] ingredientsAr = new String[]{};
+		String[] desiredSnippets = new String[]{"cashew", "combine with", "soak", "potato", "place", "in", "steamer", "for", "20", "minute", "carrot"};
+		int desiredEdgeNum = 5;
+		assertTrue(testFoodParse(inputStr, ingredientsAr, desiredSnippets, desiredEdgeNum));
+	}
+	
 	//TO ADD: inputStr = "Cover, and refrigerate for about 2 hours";
 	
 	//inputStr = "stir in 2 tablespoons of cooled butter";

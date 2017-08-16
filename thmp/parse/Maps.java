@@ -130,6 +130,9 @@ public class Maps {
 	 * @return
 	 */
 	public static int checkFoodToken(String[] inputAr, int curIndex, int inputArLen){
+		/*if("eggs".equals(inputAr[curIndex])){
+			System.out.println("Maps -egg");
+		}*/
 		return BuildMaps.FOOD_TRIE.getTokenCount(inputAr, curIndex, inputArLen);
 	}
 	
@@ -140,6 +143,10 @@ public class Maps {
 	 * @return
 	 */
 	public static int checkCookingActionToken(String[] inputAr, int curIndex, int inputArLen){
+		/*if("combine".equals(inputAr[curIndex])){
+			System.out.println("Maps - combine");
+			//throw new IllegalStateException("combine");
+		}*/
 		return BuildMaps.COOKING_ACTION_TRIE.getTokenCount(inputAr, curIndex, inputArLen);		
 	}		
 	
@@ -237,12 +244,19 @@ public class Maps {
 			if(FOOD){
 				FOOD_TRIE = FoodLexicon.foodTrie();
 				COOKING_ACTION_TRIE = FoodLexicon.cookingActionTrie();
-				extraFoodLexiconMMap = FoodLexicon.additionalFoodLexiconMMap();
-				String[][] extraPosAr = new String[][]{{"stir","verb_COMP"}, {"stir in","verb"},
-					{"combine","verb_COMP"}, {"combine with","verb"}};
-				for(String[] extraPos : extraPosAr){
-					posPreMMap.put(extraPos[0], extraPos[1]);
+				//String[][] extraPosAr = new String[][]{{"stir","verb_COMP"}, {"stir in","verb"},
+					//{"combine","verb_COMP"}, {"combine with","verb"}};
+				String[][] extraFoodActionPosAr = new String[][]{{"stir","in"}, {"combine", "with"}};	
+				for(String[] extraPos : extraFoodActionPosAr){
+					int extraPosLen = extraPos.length;
+					FoodMapNode curFoodMapNode = COOKING_ACTION_TRIE.addIfAbsent(extraPos[0], false);
+					for(int i = 1; i < extraPosLen; i++){
+						curFoodMapNode = curFoodMapNode.addIfAbsent(extraPos[1], false);
+					}
+					curFoodMapNode.setValidTokenEnd();
+					//FoodMapNode firstFoodMapNode = COOKING_ACTION_TRIE.addIfAbsent(extraPos[0]);					
 				}
+				extraFoodLexiconMMap = FoodLexicon.additionalFoodLexiconMMap();				
 			}
 			posMMap = ArrayListMultimap.create(posPreMMap);
 		}

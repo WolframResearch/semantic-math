@@ -1901,7 +1901,10 @@ public class ThmP1 {
 			Pair curPair = pairs.get(i);
 			String curPos = curPair.pos();
 			String curWord = curPair.word();
-			
+			/*if("egg".equals(curWord)){
+				System.out.println("ThmP1 - banana");
+				//throw new RuntimeException();
+			}*/
 			//can pos ever be null? <--could be set to null prior
 			if (curPos == null){
 				continue;

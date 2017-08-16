@@ -46,6 +46,7 @@ public class WordForms {
 	private static final Pattern ALL_WHITE_EMPTY_SPACE_PATTERN = Pattern.compile("^\\s*$");
 	private static final Pattern ALL_WHITE_NONEMPTY_SPACE_PATTERN = Pattern.compile("^\\s+$");
 	private static final Pattern WHITE_NONEMPTY_SPACE_PATTERN = Pattern.compile("\\s+");
+	private static final Pattern WHITE_NONEMPTY_SPACE_TAB_PATTERN = Pattern.compile("(\\s|\\t)");
 	private static final Pattern BRACES_PATTERN = Pattern.compile("(\\{|\\}|\\[|\\])");
 	//used for e.g. gathering words and n-grams
 	public static final Pattern SPECIAL_CHARS_PATTERN = Pattern.compile(".*[-\\{\\[\\)\\(\\}\\]$\\\\%/|@*.;,:_~!+^&\"\'`+<>=#].*");
@@ -149,9 +150,17 @@ public class WordForms {
 		
 		GREEK_ALPHA_SET = new HashSet<String>();
 		String[] GREEK_ALPHA = new String[]{"alpha","beta","gamma","delta","epsilon","omega","iota","theta","phi"};
+		
 		for(String s : GREEK_ALPHA){
 			GREEK_ALPHA_SET.add(s);
 		}	
+		//for future use (typed elsewhere):
+		char[] greekCharsAr = new char[]{'\u03b1', '\u03b2','\u03b3',
+				'\u03b4','\u03b5','\u03b6','\u03b7','\u03b8',
+				'\u03b9','\u03ba','\u03bb','\u03bc','\u03bd',
+				'\u03be','\u03bf','\u03c0','\u03c1','\u03c2',
+				'\u03c3','\u03c4','\u03c5','\u03c7','\u03c8',
+				'\u03c9'};
 		/*String[] irregularWordAr = new String[]{"series"};
 		IRREGULAR_ENDING_WORD_SET = new HashSet<String>();
 		for(String word : irregularWordAr){
@@ -705,6 +714,20 @@ public class WordForms {
 			}
 		}
 		return sb.toString();
+	}
+	
+	/**
+	 * Escapes all whitespaces, including tabs, inside inputStr. Useful for e.g.
+	 * filenames with spaces.
+	 * @param inputStr
+	 * @return
+	 */
+	public static String escapeWhiteSpace(String inputStr){
+		Matcher m;
+		if((m=WordForms.WHITE_NONEMPTY_SPACE_TAB_PATTERN.matcher(inputStr)).find()){
+			inputStr = m.replaceAll("\\\\$1");
+		}		
+		return inputStr;
 	}
 	
 	/**
