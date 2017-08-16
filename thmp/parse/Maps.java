@@ -233,16 +233,18 @@ public class Maps {
 			for(Map.Entry<String, String> entry : negativePosMMap.entries()){
 				posPreMMap.remove(entry.getKey(), entry.getValue());	
 			}
-			posMMap = ArrayListMultimap.create(posPreMMap);
+			
 			if(FOOD){
 				FOOD_TRIE = FoodLexicon.foodTrie();
 				COOKING_ACTION_TRIE = FoodLexicon.cookingActionTrie();
 				extraFoodLexiconMMap = FoodLexicon.additionalFoodLexiconMMap();
-				String[][] extraPosAr = new String[][]{{"stir","verb_COMP"}, {"stir in","verb"}};
+				String[][] extraPosAr = new String[][]{{"stir","verb_COMP"}, {"stir in","verb"},
+					{"combine","verb_COMP"}, {"combine with","verb"}};
 				for(String[] extraPos : extraPosAr){
-					extraFoodLexiconMMap.put(extraPos[0], extraPos[1]);
+					posPreMMap.put(extraPos[0], extraPos[1]);
 				}
 			}
+			posMMap = ArrayListMultimap.create(posPreMMap);
 		}
 		
 		//used to initialize BuildMaps class

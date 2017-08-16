@@ -61,7 +61,7 @@ public class RecipeGraph {
 	private List<String> parsedExpressionList;
 	
 	static{
-		String[] verbPriorAr = new String[]{"add", "drain", "stir in"};
+		String[] verbPriorAr = new String[]{"add", "drain", "stir in", "combine with"};
 		VERB_PRIOR_SET = new HashSet<String>(Arrays.asList(verbPriorAr));
 		String[] actionSourceAr = new String[]{"from"};
 		String[] actionTargetAr = new String[]{"to", "into", "onto"};
@@ -730,7 +730,7 @@ public class RecipeGraph {
 		int counter = 0;
 		for(FoodState state : currentStateList){
 			sb.append(counter++).append(": ").append(state).append("\n");
-			sb.append("EXPR:\n").append(state.toExpr());
+			sb.append("EXPR:\n").append(state.toExpr()).append("\n");
 		}
 		return sb.toString();
 	}

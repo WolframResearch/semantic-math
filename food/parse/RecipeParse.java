@@ -138,11 +138,13 @@ public class RecipeParse {
 		inputStr = "cook over fire";
 		//inputStr = "Beat eggs into 1 1/2 cups milk, then stir in 2 tablespoons melted cooled butter, if using it. Gently stir this mixture into dry ingredients, mixing only enough to moisten flour; don't worry about a few lumps";
 		inputStr = "Beat eggs into 1 1/2 cups milk, then stir in 2 tablespoons melted cooled butter";
-		inputStr = "Beat eggs into 1 1/2 cups milk, then stir in 2 tablespoons melted cooled butter, Gently stir this mixture into dry ingredients";
-		
+		inputStr = "Beat eggs into 1 1/2 cups milk, then stir in 2 tablespoons melted cooled butter, Gently stir this mixture into dry ingredients";		
 		inputStr = "melt butter in bowl ";
 		inputStr = "melt one teaspoon of butter in bowl ";
 		inputStr = "stir in 2 tablespoons of cooled butter";
+		inputStr = "soak cashew overnight, place potato and carrot in steamer for 20 minutes, combine soaked cashew and steamed vegetable";
+		inputStr = "soak cashew overnight, place potato and carrot in steamer for 20 minutes, combine with soaked cashew";
+		inputStr = "combine flour and salt. Stir in eggs and mashed bananas until blended. Combine banana mixture and flour mixture";
 		
 		boolean isVerbose = true;
 		Stats stats = null;

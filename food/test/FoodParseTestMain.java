@@ -164,6 +164,8 @@ public class FoodParseTestMain {
 		int desiredEdgeNum = 2;
 		assertTrue(testFoodParse(inputStr, ingredientsAr, desiredSnippets, desiredEdgeNum));
 	}
-	//"Spread with one half of the ricotta cheese mixture. Top with a third of mozzarella cheese slices."
 	//TO ADD: inputStr = "Cover, and refrigerate for about 2 hours";
+	
+	//inputStr = "stir in 2 tablespoons of cooled butter";
+	
 }

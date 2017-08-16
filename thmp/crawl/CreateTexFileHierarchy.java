@@ -8,13 +8,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.logging.log4j.LogManager;
@@ -54,29 +50,26 @@ public class CreateTexFileHierarchy {
 		File dir = new File(srcDirAbsPath);
 		File[] files = dir.listFiles();	
 		fileLoop: for(File file : files){
-			
+			//System.out.println("CreateTexFileHiearchy - processing file "+ file);
 			String fileName = file.getName();
 			Process pr = null;
 			String fileAbsolutePath = file.getAbsolutePath();
-			pr = executeShellCommand("file " + fileAbsolutePath);
+			pr = executeShellCommand("file \"" + fileAbsolutePath + "\"");
 			if(null == pr){
 				continue;
-			}			
+			}
 			BufferedReader br = new BufferedReader(new InputStreamReader(pr.getInputStream()));
 			//Matcher matcher;
 			try{
 				String line;
-				while(null != (line = br.readLine())){
-					//System.out.println("file info for file " + file.getName() + ": " + line);
+				while(null != (line = br.readLine())){					
+					//System.out.println("CreateTexFileHiearchy - file info for file " + file.getName() + ": " + line);
 					if(UnzipFile2.TEX_PATTERN.matcher(line).matches() && !UnzipFile2.NONTEX_EXTENSION_PATTERN.matcher(line).matches()){
-						//is tex file, e.g. math0209381, so leave alone.
-						//put into parent directory for thm extraction
-						//executeShellCommand("    ");
+						//is tex *file*, e.g. math0209381, so don't delte.
 						texFileNamesMap.put(fileAbsolutePath, fileName);
 						continue fileLoop;
 					}
-					//if(!TEX_PATTERN.matcher(line).matches() || NONTEX_EXTENSION_PATTERN.matcher(line).matches()){
-					//if tar file, 
+					//process if if tar file, 
 					if(TAR_FILE_PATTERN.matcher(line).matches() ){
 						//if tar file of directory, untar into directory of same name, so not to create tarball explosion. 
 						//make directory
@@ -95,11 +88,13 @@ public class CreateTexFileHierarchy {
 						Files.createDirectory(curTarFilePath);
 						
 						pr = executeShellCommand("tar xf " + renamedTarFileName + " -C "+ tarDirName);
+						//System.out.println("executing command: "+"tar xf " + renamedTarFileName + " -C "+ tarDirName );
 						//flush the subprocess output stream.
 						getCommandOutput(pr);
 						//System.out.println( "commandOutput: " +getCommandOutput(pr));
 						Files.delete(renamedTarFilePath);
 						if(null == pr){
+							System.out.println("CreteTexFileHiearchy - createFileHierarchy - pr is null!");
 							continue fileLoop;
 						}
 						findTexFilesInTarDir(tarDirName, fileName, texFileNamesMap);
@@ -132,18 +127,20 @@ public class CreateTexFileHierarchy {
 		assert(tarDirFile.isDirectory());		
 		File[] tarDirFiles = tarDirFile.listFiles();
 		//System.out.println("findTexFilesInTarDir: tarDirFiles: " + Arrays.toString(tarDirFiles));
-		
+		//System.out.println("CreateTexFileHiearchy - tarDirFiles.length "+tarDirFiles.length);
 		for(File file : tarDirFiles){
 			String fileName = file.getName();
 			String fileAbsolutePathName = tarDirAbsPath + File.separator + fileName;
 			//get all tex files inside dir, move them to parent dir
-			Process pr = executeShellCommand("file " + fileAbsolutePathName);			
-			
+			Process pr = executeShellCommand("file \"" + fileAbsolutePathName + "\"");			
+			System.out.println("executing command: "+ "file " + fileAbsolutePathName);
 			if(null == pr){
+				System.out.println("CreteTexFileHiearchy - findTexFilesInTarDir - pr is null!");
 				continue;
 			}
+			
 			String output = getCommandOutput(pr);
-			//System.out.println("findTexFilesInTarDir: file output: " + output);
+			System.out.println("findTexFilesInTarDir: getCommandOutput: " + output);
 			//add to map if Tex file,
 			if(UnzipFile2.TEX_PATTERN.matcher(output).matches() && !UnzipFile2.NONTEX_EXTENSION_PATTERN.matcher(output).matches()){
 				texFileNamesMap.put(fileAbsolutePathName, tarFileName);
@@ -177,9 +174,11 @@ public class CreateTexFileHierarchy {
 		StringBuffer sb = new StringBuffer(30);
 		BufferedReader br = new BufferedReader(new InputStreamReader(pr.getInputStream()));		
 		try{
+			//System.out.println("br.readLine() "+br.readLine());
 			String line;
 			while(null != (line = br.readLine())){				
 				sb.append(line).append("\n");
+				//System.out.println("getCommandOutput - next line: " + line);
 			}
 			int sbLen = sb.length();
 			if(sbLen > 1){

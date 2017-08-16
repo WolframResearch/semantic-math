@@ -78,8 +78,6 @@ public class GenerateSearchDataRunner {
 				System.out.println("Done unpacking file " + fileName + ". Starting to generate search data");
 			}
 			
-			//pr = rt.exec("/home/usr0/yihed/thm/generateSearchData.sh " + fileDir);			
-			//waitAndPrintProcess(pr);
 			DetectHypothesis.Runner.generateSearchData(new String[]{fileDir, 
 					TermDocumentMatrix.DATA_ROOT_DIR_SLASH + TermDocumentMatrix.PROJECTION_MX_FILE_NAME,
 					Searcher.SearchMetaData.wordDocFreqMapPath()
