@@ -82,7 +82,11 @@ public class GenerateSearchDataRunner {
 					TermDocumentMatrix.DATA_ROOT_DIR_SLASH + TermDocumentMatrix.PROJECTION_MX_FILE_NAME,
 					Searcher.SearchMetaData.wordDocFreqMapPath()
 					//"src/thmp/data/termDocumentMatrixSVD.mx", "src/thmp/data/allThmWordsMap.dat"
-					});			
+					});	
+			/*Runtime rt = Runtime.getRuntime();
+			Process pr = rt.exec("/home/usr0/yihed/thm/unpack2.sh " + fileName);			
+			FileUtils.waitAndPrintProcess(pr);			
+			FileUtils.findFilePathDirectory(fileDir);*/
 			System.out.println("Done generating search data for files in " + fileDir);			
 		}
 		

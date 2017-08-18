@@ -603,8 +603,6 @@ public class FileUtils {
 			//System.out.println(new String(byteAr, Charset.forName("UTF-8")));
 			System.out.println(line);
 		}
-		//byte[] byteAr = new byte[1024];
-		//while(-1 != inputStream.read(byteAr) ){
 		while(null != (line = errorReader.readLine())){
 			//System.out.println(new String(byteAr, Charset.forName("UTF-8")));
 			System.out.println(line);
