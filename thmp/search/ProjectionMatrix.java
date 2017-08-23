@@ -117,8 +117,10 @@ public class ProjectionMatrix {
 							combinedWordThmIndexMMap, thmCounter);
 					
 					//append lists of ThmHypPair's to one file
+					/* don't do this for now, cause memory overflow on allowed space on byblis67 - Aug 21, 2017
 					String thmsListOriginPath = path_j + TermDocumentMatrix.ALL_THM_STRING_FILE_NAME;
-					FileUtils.runtimeExec("cat " + thmsListOriginPath + " >> " + thmsStringListDestPath);
+					FileUtils.runtimeExec("cat " + thmsListOriginPath + " >> " + thmsStringListDestPath);*
+					*/
 				}
 				//thmCounter += combinedPEList.size();
 				System.out.println("Serializing combinedPEList size: " + combinedPEList.size() + "   index: " +i);
