@@ -1,7 +1,6 @@
 package thmp.parse;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -10,11 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -78,27 +73,29 @@ public class ThmInput {
 	   e.g. {\em lll\/} */
 	private static final Pattern DF_EMPH_PATTERN = Pattern
 			.compile("\\\\df\\{([^\\}]*)\\}|\\\\emph\\{([^\\}]*)\\}|\\{\\\\em\\s+([^\\}]+)[\\\\/]*\\}|\\\\cat\\{([^}]*)\\}|\\{\\\\it\\s*([^}]*)\\}"
-					+ "|\\\\ref\\{([^}]*)\\}|\\\\subsection\\{([^}]*)\\}|\\\\section\\{([^}]*)\\}");
+					+ "|\\\\ref\\{([^}]*)\\}|\\\\subsection\\{([^}]*)\\}|\\\\section\\{([^}]*)\\}|\\\\bf\\{([^}]*)\\}"
+					+ "|\\\\ensuremath\\{([^}]+)\\}|\\\\(?:textbf|textsl)\\{([^}]+)\\}");
 	/* Replacement for DF_EMPH_PATTERN, should have same number of groups as
 	   number of patterns in DF_EMPH_PATTERN. */
-	private static final String DF_EMPH_PATTERN_REPLACEMENT = "$1$2$3$4$5$6$7$8";
+	private static final String DF_EMPH_PATTERN_REPLACEMENT = "$1$2$3$4$5$6$7$8$9$10$11";
 
 	/*private static Pattern[] GROUP1_PATTERN_ARRAY = new Pattern[] { Pattern.compile("\\\\df\\{([^\\}]*)\\}"),
 			Pattern.compile("\\\\emph\\{([^}]*)\\}"), Pattern.compile("\\\\cat\\{([^}]*)\\}"),
 			Pattern.compile("\\{\\\\it\\s*([^}]*)\\}") // \\{\\\\it([^}]*)\\}
 	};*/
-	private static final Pattern INDEX_PATTERN = Pattern.compile("\\\\index\\{([^\\}]*)\\}%*");
+	private static final Pattern INDEX_PATTERN = Pattern.compile(".*\\\\index\\{([^\\}]*)\\}%*.*");
 	// pattern for eliminating the command completely for web display. E.g. \fml. How about \begin or \end everything?
 	private static final Pattern ELIMINATE_PATTERN = Pattern
 			.compile("\\\\fml|\\\\ofml|\\\\begin\\{enumerate\\}|\\\\end\\{enumerate\\}"					
 					+ "|\\\\begin\\{slogan\\}|\\\\end\\{slogan\\}|\\\\sbsb|\\\\cat|\\\\bs|\\\\maketitle"
-					+ "|\\\\section\\**\\{(?:[^}]*)\\}\\s*|\\\\noindent|\\\\begin\\{abstract\\}|\\\\cite\\{[^}]+\\}|\\\\cite\\[[^\\]]+\\]",
+					+ "|\\\\section\\**\\{(?:[^}]*)\\}\\s*|\\\\noindent|\\\\begin\\{a(?:[^}]*)\\}|\\\\end\\{a(?:[^}]*)\\}\\s*"
+					+ "|\\\\cite\\{[^}]+\\}|\\\\cite\\[[^\\]]+\\]",
 					Pattern.CASE_INSENSITIVE);
 	static final String ELIMINATE_BEGIN_END_THM_STR = "\\\\begin\\{def(?:[^}]*)\\}\\s*|\\\\begin\\{lem(?:[^}]*)\\}\\s*|\\\\begin\\{th(?:[^}]*)\\}\\s*"
 					+ "|\\\\begin\\{pr(?:[^}]*)\\}\\s*|\\\\begin\\{proclaim(?:[^}]*)\\}\\s*|\\\\begin\\{co(?:[^}]*)\\}\\s*"
 					+ "|\\\\end\\{def(?:[^}]*)\\}\\s*|\\\\end\\{lem(?:[^}]*)\\}\\s*|\\\\end\\{th(?:[^}]*)\\}\\s*"
 					+ "|\\\\end\\{pr(?:[^}]*)\\}\\s*|\\\\end\\{proclaim(?:[^}]*)\\}\\s*|\\\\end\\{co(?:[^}]*)\\}\\s*"
-					+ "|\\\\end\\{pr(?:[^}]*)\\}\\s*";
+					+ "|\\\\(?:begin|end)\\{re(?:[^}]*)\\}\\s*";
 	static final Pattern ELIMINATE_BEGIN_END_THM_PATTERN = Pattern
 			.compile(ELIMINATE_BEGIN_END_THM_STR, Pattern.CASE_INSENSITIVE);
 	

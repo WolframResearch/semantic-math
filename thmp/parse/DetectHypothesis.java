@@ -129,6 +129,8 @@ public class DetectHypothesis {
 	private static final String parserErrorLogPath = "src/thmp/data/parserErrorLog.txt";
 	private static final boolean DEBUG = FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : false;
 	private static final int CONTEXT_SB_LENGTH_THRESHOLD = 10000;
+	private static final Pattern ENUMERATE_PATTERN = Pattern.compile("\\\\(?:begin|end)\\{enumerate\\}"
+			+ "|\\\\\\\\(?:begin|end)\\\\{itemize\\\\}");
 
 	static{
 		FileUtils.set_dataGenerationMode();	
@@ -1141,6 +1143,8 @@ public class DetectHypothesis {
 
 		//System.out.println("Adding " + thmWithDefSB + " to theorem " + thmStr);
 		String definitionStr = definitionSB.toString();
+		//postprocess thm string, to better display on web
+		thmStr = postProcessThmForSearch(thmStr);
 		DefinitionListWithThm defListWithThm = 
 				new DefinitionListWithThm(thmStr, variableDefinitionList, definitionStr, srcFileName);
 		
@@ -1164,7 +1168,7 @@ public class DetectHypothesis {
 		ThmHypPair thmHypPair = new ThmHypPair(thmStr, definitionStr, srcFileName);
 		thmHypPairList.add(thmHypPair);
 		if(DEBUG) System.out.println("DetectHypothesis - thmHypPair "+ thmHypPair);
-		//if(true) throw new IllegalStateException("thmHypPair.getEntireThmStr() :"+thmHypPair.getEntireThmStr());
+		
 		ContextRelationVecPair vecsPair = new ContextRelationVecPair(combinedContextVecMap, relationalContextVec);
 		contextRelationVecPairList.add(vecsPair);
 		String thmHypPairString = thmHypPair.toString();
@@ -1173,7 +1177,19 @@ public class DetectHypothesis {
 		//return this to supply to search later
 		return defListWithThm;
 	}
-	
+	/**
+	 * Post process thm string for search.
+	 * @param thmStr
+	 * @return
+	 */
+	private static String postProcessThmForSearch(String thmStr) {
+		Matcher enumMatcher = ENUMERATE_PATTERN.matcher(thmStr);
+		if(enumMatcher.find()){
+			thmStr = enumMatcher.replaceAll("");
+		}
+		return thmStr;
+	}
+
 	/**
 	 * Picks out variables to be defined, and try to match them with prior definitions.
 	 * Picks up variable definitions.
