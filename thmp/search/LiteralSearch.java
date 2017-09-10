@@ -2,11 +2,7 @@ package thmp.search;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -60,12 +56,15 @@ public class LiteralSearch {
 		 * @param wordIndexList_ IllegalArgumentException is not sorted.
 		 */
 		public LiteralSearchIndex(int thmIndex_, List<Number> wordIndexList_) {
+
+			//System.out.println("wordIndexList_.get(0).getClass() "+ (wordIndexList_.get(0).getClass()));
 			
 			int wordIndexListSz = wordIndexList_.size();
 			if(wordIndexListSz > 1) {
-				short prior = (Short)wordIndexList_.get(0);
+				//System.out.println("wordIndexList_.get(0).getClass() "+ (wordIndexList_.get(0).getClass()));
+				short prior = wordIndexList_.get(0).shortValue();
 				for(int i = 1; i < wordIndexListSz; i++) {
-					short current = (Short)wordIndexList_.get(i);
+					short current = wordIndexList_.get(i).shortValue();
 					if(current < prior) {
 						throw new IllegalArgumentException("Input word index list must be sorted in "
 								+ "ascending order.");
@@ -106,24 +105,38 @@ public class LiteralSearch {
 		List<String> thmWordsList = WordForms.splitThmIntoSearchWords(thm.toLowerCase());
 		int thmWordsListSz = thmWordsList.size();
 		//space optimization
-		Number num;
+		int num = 0;
+		Number counter;
 		if(thmWordsListSz > 127) {
 			short i = 0;
-			num = i;
+			counter = i;
 		}else {
 			byte i = 0;
-			num = i;
+			counter = i;
 		}
-		while(num.shortValue() < thmWordsListSz) {
-			String word = thmWordsList.get(num.shortValue());
+		final byte increment = 1;
+		
+		while(num < thmWordsListSz) {
+			String word = thmWordsList.get(num);
 			if(trueFluffWordsSet.contains(word)) {
+				num++;
 				continue;
 			}
 			word = processLiteralSearchWord(word);
-			wordsIndexMMap.put(word, num);
-			num = thmWordsListSz > 127 ? num.shortValue()+1 : num.byteValue()+1;
+			wordsIndexMMap.put(word, counter);
+			num++;
+			//System.out.println("counter.getClass() "+counter.getClass());			
+			
+			if(thmWordsListSz > 127) {
+				short base = counter.shortValue();
+				counter = (short)(base + increment);
+			}else {
+				byte base = counter.byteValue();
+				counter = (byte)(base + increment);
+			}			
 		}
-		
+		//System.out.println("LiteralSearch - done with while loop over thmWordsList!");
+
 		for(String word : wordsIndexMMap.keys()) {
 			//must wrap in ArrayList, since the List from .get() is a RandomAccessWrappedList, 
 			//which is not serializable
@@ -289,7 +302,12 @@ public class LiteralSearch {
 	
 	public static void main(String[] args) {
 		//check out the "real fluff words"
-				
+		ListMultimap<String, LiteralSearchIndex> literalSearchIndexMap 
+			= ArrayListMultimap.create();
+		
+		addThmLiteralSearchIndexToMap ("quadratic field extension", 1, 
+				literalSearchIndexMap);
+		
 		//System.out.println(WordFrequency.ComputeFrequencyData.trueFluffWordsSet());
 		//System.out.println(Arrays.toString(WordForms.splitThmIntoSearchWords("this r(8e3 se . 4")));
 	}

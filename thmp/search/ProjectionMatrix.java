@@ -302,11 +302,15 @@ public class ProjectionMatrix {
 		List<ThmHypPair> thmHypPairList = (List<ThmHypPair>)FileUtils.deserializeListFromFile(peFilePath);
 		int thmHypPairListSz = thmHypPairList.size();
 		combinedPEList.addAll(thmHypPairList);
+
+		//System.out.println("ProjectionMatrix - addExprsToLists, starting to add to thmLiteralIndexMap");
+
 		//this step can be created when the previous lists are created, to avoid this iteration.
 		for(int i = 0; i < thmHypPairListSz; i++) {
 			String thmStr = thmHypPairList.get(i).getEntireThmStr();
 			LiteralSearch.addThmLiteralSearchIndexToMap(thmStr, startingThmIndex+i, searchIndexMap);
 		}
+		//System.out.println("ProjectionMatrix - addExprsToLists, done adding to thmLiteralIndexMap");
 		
 		combinedVecsList.addAll((List<ContextRelationVecPair>)FileUtils.deserializeListFromFile(vecsFilePath));
 		Multimap<String, Integer> wordThmIndexMMap = ((List<Multimap<String, Integer>>)
