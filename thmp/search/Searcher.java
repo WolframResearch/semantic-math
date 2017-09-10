@@ -14,6 +14,13 @@ import thmp.search.Searcher.QueryVecContainer;
  */
 public interface Searcher<S> {
 
+	/**
+	 * 
+	 * @param thm
+	 * @param list List of top candidates already found
+	 * @param searchState
+	 * @return
+	 */
 	List<Integer> search(String thm, List<Integer> list, SearchState searchState);
 	
 	void setSearcherState(QueryVecContainer<S> searcherState_);
@@ -85,6 +92,7 @@ public interface Searcher<S> {
 		private static final String threeGramsFreqMapPath = "src/thmp/data/threeGramsMap.dat";
 		private static final String twoGramsFreqMapPath = "src/thmp/data/twoGramsMap.dat";
 		private static final String trueFluffWordsSetPath = "src/thmp/data/trueFluffWordsSet.dat";
+		private static final String literalSearchIndexMapPath = "src/thmp/data/literalSearchIndexMap.dat";
 		
 		public static void set_gatheringDataBoolToTrue(){
 			//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
@@ -118,6 +126,11 @@ public interface Searcher<S> {
 		public static String trueFluffWordsSetPath(){
 			return trueFluffWordsSetPath;
 		}
+		
+		public static String literalSearchIndexMapPath() {
+			return literalSearchIndexMapPath;
+		}
+		
 		/** Used to separate the case when gatheringDataBool, where in fact want maps collected
 		 * in previous runs, e.g. when using a pre-computed projection matrix for SVD.*/
 		public static String previousWordDocFreqMapsPath() {

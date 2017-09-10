@@ -36,21 +36,15 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 
 import thmp.parse.Maps;
-import thmp.parse.ParseStruct;
 import thmp.parse.ParsedExpression;
-import thmp.parse.ProcessInput;
-import thmp.parse.ThmInput;
 import thmp.parse.DetectHypothesis.DefinitionListWithThm;
-import thmp.parse.ParseState.VariableDefinition;
 import thmp.search.SearchCombined.ThmHypPair;
-import thmp.search.SearchWordPreprocess.WordWrapper;
 import thmp.search.Searcher.SearchMetaData;
 import thmp.utils.WordForms.WordFreqComparator;
 import thmp.utils.FileUtils;
 import thmp.utils.GatherRelatedWords;
 import thmp.utils.WordForms;
 import thmp.utils.GatherRelatedWords.RelatedWords;
-import thmp.utils.ResourceDeposit;
 
 /**
  * Collects thms by reading in thms from Latex files. Gather
@@ -402,7 +396,7 @@ public class CollectThm {
 					while((line = bReader.readLine()) != null){
 						//split line into tokens
 						String lineNoDiacritics = WordForms.removeDiacritics(line.toLowerCase());
-						String[] lineAr = WordForms.splitThmIntoSearchWords(lineNoDiacritics);
+						List<String> lineAr = WordForms.splitThmIntoSearchWords(lineNoDiacritics);
 						for(String word : lineAr){
 							if(word.length() < 3){
 								//e.g. "of", but include e.g. "lie"
@@ -727,12 +721,12 @@ public class CollectThm {
 				//number of words to skip if an n gram has been added.
 			//int numFutureWordsToSkip = 0;
 				//split along e.g. "\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:"
-			String[] thmAr = WordForms.splitThmIntoSearchWords(thm.toLowerCase());				
+			List<String> thmAr = WordForms.splitThmIntoSearchWords(thm.toLowerCase());				
 				//words and their frequencies.
 				//Map<String, Integer> thmWordsFreqMap = new HashMap<String, Integer>();				
-				
-			for(int j = 0; j < thmAr.length; j++){
-				String word = thmAr[j];	
+			int thmArSz = thmAr.size();
+			for(int j = 0; j < thmArSz; j++){
+				String word = thmAr.get(j);	
 					//only keep words with lengths > 2
 					//System.out.println(word);
 					int lengthCap = 3;
@@ -751,8 +745,8 @@ public class CollectThm {
 						continue;					
 					}
 					//check the following word
-					if(j < thmAr.length-1){
-						String nextWordCombined = word + " " + thmAr[j+1];
+					if(j < thmArSz-1){
+						String nextWordCombined = word + " " + thmAr.get(j+1);
 						nextWordCombined = WordForms.normalizeTwoGram(nextWordCombined);
 						Integer twoGramFreq = twoGramsMap.get(nextWordCombined);
 						if(twoGramFreq != null){
@@ -761,8 +755,8 @@ public class CollectThm {
 							}
 						}
 						//try to see if these three words form a valid 3-gram
-						if(j < thmAr.length-2){
-							String threeWordsCombined = nextWordCombined + " " + thmAr[j+2];
+						if(j < thmArSz-2){
+							String threeWordsCombined = nextWordCombined + " " + thmAr.get(j+2);
 							Integer threeGramFreq = threeGramsMap.get(threeWordsCombined);
 							if(threeGramFreq != null){
 								if(!SPECIAL_CHARACTER_PATTERN.matcher(threeWordsCombined).find()){
@@ -826,12 +820,13 @@ public class CollectThm {
 				//System.out.println(counter++);
 				String thm = thmList.get(i);				
 				//split along e.g. "\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:"
-				String[] thmAr = WordForms.splitThmIntoSearchWords(thm.toLowerCase());				
-				for(int j = 0; j < thmAr.length; j++){					
+				List<String> thmAr = WordForms.splitThmIntoSearchWords(thm.toLowerCase());
+				int thmArSz = thmAr.size();
+				for(int j = 0; j < thmArSz; j++){					
 					/*String singletonWordAdded = null;
 					String twoGramAdded = null;
 					String threeGramAdded = null;*/				
-					String word = thmAr[j];	
+					String word = thmAr.get(j);	
 					//only want lower alphabetical words for now, to reduce num of words - July 2017
 					if(!NGramSearch.ALPHA_PATTERN.matcher(word).matches()){
 						continue;
@@ -938,17 +933,17 @@ public class CollectThm {
 				//number of words to skip if an n gram has been added.
 				int numFutureWordsToSkip = 0;
 				//split along e.g. "\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:"
-				String[] thmAr = WordForms.splitThmIntoSearchWords(thm.toLowerCase());
+				List<String> thmAr = WordForms.splitThmIntoSearchWords(thm.toLowerCase());
 				
 				//words and their frequencies.
 			//	Map<String, Integer> wordsFreqMap = new HashMap<String, Integer>();				
-				
-				for(int j = 0; j < thmAr.length; j++){
+				int thmArSz = thmAr.size();
+				for(int j = 0; j < thmArSz; j++){
 					
 					String singletonWordAdded = null;
 					String twoGramAdded = null;
 					String threeGramAdded = null;					
-					String word = thmAr[j];	
+					String word = thmAr.get(j);	
 					//only keep words with lengths > 2
 					//System.out.println(word);
 					int lengthCap = GATHER_SKIP_GRAM_WORDS ? 3 : 3;
@@ -981,8 +976,8 @@ public class CollectThm {
 						continue;					
 					}
 					//check the following word
-					if(j < thmAr.length-1){
-						String nextWordCombined = word + " " + thmAr[j+1];
+					if(j < thmArSz-1){
+						String nextWordCombined = word + " " + thmAr.get(j+1);
 						nextWordCombined = WordForms.normalizeTwoGram(nextWordCombined);
 						Integer twoGramFreq = twoGramsMap.get(nextWordCombined);
 						if(twoGramFreq != null){
@@ -992,8 +987,8 @@ public class CollectThm {
 									docWordsFreqPreMap, twoGramFreq);
 						}
 						//try to see if these three words form a valid 3-gram
-						if(j < thmAr.length-2){
-							String threeWordsCombined = nextWordCombined + " " + thmAr[j+2];
+						if(j < thmArSz-2){
+							String threeWordsCombined = nextWordCombined + " " + thmAr.get(j+2);
 							Integer threeGramFreq = threeGramsMap.get(threeWordsCombined);
 							if(threeGramFreq != null){
 								//reduce frequency so 3-grams weigh more 

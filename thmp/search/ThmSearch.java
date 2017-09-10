@@ -1,7 +1,6 @@
 package thmp.search;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -11,11 +10,9 @@ import java.util.TreeMap;
 
 import javax.servlet.ServletContext;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.google.common.collect.ImmutableList;
 import com.wolfram.jlink.*;
 
 import thmp.parse.TheoremContainer;
@@ -35,7 +32,7 @@ public class ThmSearch {
 	 * Matrix of documents. Columns are documents.
 	 * Rows are terms.
 	 */
-	private static double[][] docMx;
+	//private static double[][] docMx;
 	private static final Logger logger = LogManager.getLogger(ThmSearch.class);
 	
 	//public static final String[] ARGV = new String[]{"-linkmode", "launch", "-linkname", 
@@ -47,6 +44,7 @@ public class ThmSearch {
 	private static final int NUM_NEAREST = 50;
 	//private static final int NUM_SINGULAR_VAL_TO_KEEP = 20;
 	//cutoff for a correlated term to be considered
+	/*don't delete these yet, Aug 2017*/
 	private static final int COR_THRESHOLD = 3;
 	private static final int LIST_INDEX_SHIFT = 1;
 	private static final String combinedTDMatrixRangeListName = "combinedRangeList";

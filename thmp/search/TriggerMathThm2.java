@@ -326,7 +326,7 @@ public class TriggerMathThm2 {
 			String thm = defThmListIter.next().getEntireThmStr();
 			//get collection of words.
 			//String[] curMathObjCol = WordForms.splitThmIntoSearchWords(thm.toLowerCase());
-			String[] thmAr = WordForms.splitThmIntoSearchWords(thm.toLowerCase());
+			List<String> thmAr = WordForms.splitThmIntoSearchWords(thm.toLowerCase());
 			
 			//int queryVecLen = ThmSearch.ThmSearchQuery.getQUERY_VEC_LENGTH();
 			int queryVecLen = TriggerMathThm2.mathThmMxRowDim();
@@ -339,8 +339,9 @@ public class TriggerMathThm2 {
 			//List<Integer> priorityWordsIndexList = new ArrayList<Integer>();
 			List<IndexScorePair> indexScorePairList = new ArrayList<IndexScorePair>();
 			//get norm first, form unnormalized vector, then divide terms by log of norm
-			for (int i = 0; i < thmAr.length; i++) {
-				String term = thmAr[i];
+			int thmArSz = thmAr.size();
+			for (int i = 0; i < thmArSz; i++) {
+				String term = thmAr.get(i);
 				double newNorm;
 				//this also normalizes the word
 				newNorm = addToNorm(wordsScoreMap, indexScorePairList, norm, i, term, queryVecLen);
@@ -348,14 +349,14 @@ public class TriggerMathThm2 {
 					highestWeight = newNorm - norm;
 				}
 				//search 2 & 3-grams
-				if(i < thmAr.length-1){
-					String nextTermCombined = term + " " + thmAr[i+1];
+				if(i < thmArSz-1){
+					String nextTermCombined = term + " " + thmAr.get(i+1);
 					nextTermCombined = WordForms.normalizeTwoGram(nextTermCombined);
 					newNorm = addToNorm(wordsScoreMap, indexScorePairList, newNorm, i, nextTermCombined, queryVecLen);	
 					//System.out.println("combined word: " + nextTermCombined + ". norm: " + newNorm);
 					
-					if(i < thmAr.length-2){
-						String threeTermsCombined = nextTermCombined + " " + thmAr[i+2];
+					if(i < thmArSz-2){
+						String threeTermsCombined = nextTermCombined + " " + thmAr.get(i+2);
 						newNorm = addToNorm(wordsScoreMap, indexScorePairList, newNorm, i, threeTermsCombined, queryVecLen);
 					}
 				}
@@ -448,7 +449,7 @@ public class TriggerMathThm2 {
 		//System.out.println("TriggerMathThm - keywordIndexDict map: " + keywordIndexDict);
 		//String[] thmAr = thm.split("\\s+|,|;|\\.");
 		//***String[] thmAr = thm.split(WordForms.splitDelim());
-		String[] thmAr = WordForms.splitThmIntoSearchWords(thm);
+		List<String> thmAr = WordForms.splitThmIntoSearchWords(thm);
 		////////////////
 		//map of non-annotated words and their scores. Use get_wordsScoreMapNoAnno 
 		//and not CONTEXT_VEC_WORDS_MAP.
@@ -470,8 +471,9 @@ public class TriggerMathThm2 {
 		//***List<Integer> priorityWordsIndexList = new ArrayList<Integer>();
 		List<IndexScorePair> indexScorePairList = new ArrayList<IndexScorePair>();
 		//get norm first, form unnormalized vector, then divide terms by log of norm
-		for (int i = 0; i < thmAr.length; i++) {
-			String term = thmAr[i];
+		int thmArSz = thmAr.size();
+		for (int i = 0; i < thmArSz; i++) {
+			String term = thmAr.get(i);
 			double newNorm;
 			//this also normalizes the word
 			newNorm = addToNorm(wordsScoreMap, indexScorePairList, norm, i, term, queryVecLen);
@@ -479,14 +481,14 @@ public class TriggerMathThm2 {
 				highestWeight = newNorm - norm;
 			}
 			//search 2 & 3-grams
-			if(i < thmAr.length-1){
-				String nextTermCombined = term + " " + thmAr[i+1];
+			if(i < thmArSz-1){
+				String nextTermCombined = term + " " + thmAr.get(i+1);
 				nextTermCombined = WordForms.normalizeTwoGram(nextTermCombined);
 				newNorm = addToNorm(wordsScoreMap, indexScorePairList, newNorm, i, nextTermCombined, queryVecLen);	
 				//System.out.println("combined word: " + nextTermCombined + ". norm: " + newNorm);
 				
-				if(i < thmAr.length-2){
-					String threeTermsCombined = nextTermCombined + " " + thmAr[i+2];
+				if(i < thmArSz-2){
+					String threeTermsCombined = nextTermCombined + " " + thmAr.get(i+2);
 					newNorm = addToNorm(wordsScoreMap, indexScorePairList, newNorm, i, threeTermsCombined, queryVecLen);
 				}
 			}						

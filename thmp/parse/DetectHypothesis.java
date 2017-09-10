@@ -129,8 +129,8 @@ public class DetectHypothesis {
 	private static final String parserErrorLogPath = "src/thmp/data/parserErrorLog.txt";
 	private static final boolean DEBUG = FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : false;
 	private static final int CONTEXT_SB_LENGTH_THRESHOLD = 10000;
-	private static final Pattern ENUMERATE_PATTERN = Pattern.compile("\\\\(?:begin|end)\\{enumerate\\}"
-			+ "|\\\\\\\\(?:begin|end)\\\\{itemize\\\\}");
+	private static final Pattern ENUMERATE_PATTERN = Pattern.compile("(?:\\\\(?:begin|end)\\{enumerate\\}"
+			+ "|\\\\(?:begin|end)\\{itemize\\})");
 
 	static{
 		FileUtils.set_dataGenerationMode();	
@@ -657,7 +657,7 @@ public class DetectHypothesis {
 	private static void createTimeStamp(String curTexFilesDirPath) {
 		//delete previous timestamp files first
 		Runtime rt = Runtime.getRuntime();
-		////if(true) return;
+		
 		try {
 			rt.exec("rm " + curTexFilesDirPath + "*timestamp");
 		} catch (IOException e) {
@@ -669,12 +669,12 @@ public class DetectHypothesis {
 		//don't need to wait
 		
 		//e.g. Wed Jun 21 12:14:15 CDT 2017
-		String[] dateAr = WordForms.splitThmIntoSearchWords((new java.util.Date()).toString());
-		int dateArLen = dateAr.length;
+		List<String> dateAr = WordForms.splitThmIntoSearchWords((new java.util.Date()).toString());
+		int dateArLen = dateAr.size();
 		//texFilesDirPath already contains trailing file separator
 		StringBuilder dateSB = new StringBuilder(curTexFilesDirPath);
 		for(int i = 1; i < 3 && i < dateArLen; i++){
-			dateSB.append(dateAr[i]);
+			dateSB.append(dateAr.get(i));
 		}
 		dateSB.append("timestamp");
 		FileUtils.writeToFile("", dateSB.toString());

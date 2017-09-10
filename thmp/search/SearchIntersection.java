@@ -29,6 +29,7 @@ import com.google.common.collect.TreeMultimap;
 
 import thmp.search.SearchCombined.ThmHypPair;
 import thmp.search.ThmHypPairGet.ThmHypPairBundle;
+import thmp.utils.FileUtils;
 import thmp.utils.GatherRelatedWords.RelatedWords;
 import thmp.utils.WordForms;
 
@@ -70,7 +71,7 @@ public class SearchIntersection {
 	private static final Map<String, Integer> threeGramsMap = ThreeGramSearch.get3GramsMap();
 
 	// debug flag for development. Prints out the words used and their scores.
-	private static final boolean DEBUG = true;
+	private static final boolean DEBUG = FileUtils.isOSX();
 	
 	/**
 	 * Static initializer, retrieves maps from CollectThm.java.
@@ -187,12 +188,12 @@ public class SearchIntersection {
 	 * @param singletonScoresAr
 	 * @return
 	 */
-	private static int computeSingletonScores(String[] inputWordsAr, int[] singletonScoresAr,
+	private static int computeSingletonScores(List<String> inputWordsAr, int[] singletonScoresAr,
 			String[] inputWordsArUpdated) {
-		int inputWordsArSz = inputWordsAr.length;
+		int inputWordsArSz = inputWordsAr.size();
 		int totalSingletonAdded = 0;
 		for (int i = 0; i < inputWordsArSz; i++) {
-			String word = inputWordsAr[i];			
+			String word = inputWordsAr.get(i);			
 			Integer score = wordsScoreMap.get(word);
 			if (null == score) {
 				word = WordForms.getSingularForm(word);
@@ -252,7 +253,6 @@ public class SearchIntersection {
 	 */
 	public static SearchState intersectionSearch(String input, Set<String> searchWordsSet, 
 			SearchState searchState, boolean contextSearchBool, boolean searchRelationalBool,
-			//ListMultimap<String, Integer> wordThmsIndexMMap,
 			int... numNearestVecs) {
 
 		if (WordForms.getWhiteEmptySpacePattern().matcher(input).matches()){
@@ -265,12 +265,12 @@ public class SearchIntersection {
 		// the more number of words. Actually just use SetMultimap.
 		// if 2/3-grams added, add indices of all words in 2/3-gram to set for
 		// that thm.
-		logger.info("Starting intersection search...");
+		//logger.info("Starting intersection search...");
 		/*Multimap of thmIndex, and the (index of) set of words in query 
 		 that appear in the thm*/
 		SetMultimap<Integer, Integer> thmWordSpanMMap = HashMultimap.create();
 
-		String[] inputWordsAr = WordForms.splitThmIntoSearchWords(input.toLowerCase());
+		List<String> inputWordsAr = WordForms.splitThmIntoSearchWords(input.toLowerCase());
 		
 		// determine if first token is integer, if yes, use it as the number of
 		// closest thms. Else use NUM_NEAREST_VECS as default value.
@@ -286,7 +286,7 @@ public class SearchIntersection {
 		 * keyword is in the doc, the higher its score is.
 		 */
 		Map<Integer, Integer> thmScoreMap = new HashMap<Integer, Integer>();
-		// theorem span map, theorem index and their span scores.
+		/* theorem span map, theorem index and their span scores.*/
 		Map<Integer, Integer> thmSpanMap = new HashMap<Integer, Integer>();
 
 		/* Multimap of ints and ints, where key is score, and the value Integers
@@ -315,7 +315,7 @@ public class SearchIntersection {
 		// index
 		Multimap<Integer, String> indexStartingWordsMMap = ArrayListMultimap.create();
 
-		int inputWordsArSz = inputWordsAr.length;
+		int inputWordsArSz = inputWordsAr.size();
 		// array instead of list for lower overhead.
 		int[] singletonScoresAr = new int[inputWordsArSz];
 		String[] inputWordsArUpdated = new String[inputWordsArSz];
@@ -327,18 +327,18 @@ public class SearchIntersection {
 		// either a singleton or n-gram
 		int[] wordCountArray = new int[inputWordsArSz];
 		for (int i = firstIndex; i < inputWordsArSz; i++) {
-			String word = inputWordsAr[i];
+			String word = inputWordsAr.get(i);
 			// elicit higher score if wordLong fits
 			// also turn into singular form if applicable			
 			int scoreAdded = 0;
 			// check for 2 grams
 			if (i < inputWordsArSz - 1) {
-				String nextWord = inputWordsAr[i + 1];
+				String nextWord = inputWordsAr.get(i+1);
 				String twoGram = word + " " + nextWord;
 				twoGram = WordForms.normalizeTwoGram(twoGram);
 				// check for 3 grams.
 				if (i < inputWordsArSz - 2) {
-					String thirdWord = inputWordsAr[i + 2];
+					String thirdWord = inputWordsAr.get(i+2);
 					String threeGram = twoGram + " " + thirdWord;
 					if (threeGramsMap.containsKey(threeGram)) {
 						scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, wordThmIndexAddedMMap,
@@ -394,10 +394,16 @@ public class SearchIntersection {
 		// from size of value set
 		// in thmWordSpanMMap
 		addWordSpanBonus(searchState, thmScoreMap, scoreThmMMap, thmWordSpanMMap, thmSpanMap, numHighest,
-				((double) totalWordsScore) / numWordsAdded);
-		// System.out.println("AFTER " + g.equals(scoreThmMMap));
-		searchState.addThmSpan(thmSpanMap);
+				((double) totalWordsScore) / numWordsAdded, inputWordsArSz);
+		
+		searchState.addThmSpan(thmSpanMap);		
 		searchState.setThmScoreMap(thmScoreMap);
+		/**short circuit if number of token below threshold*/
+		if(LiteralSearch.spanBelowThreshold(searchState.largestWordSpan(), inputWordsArSz)) {
+			List<Integer> highestThmList = LiteralSearch.literalSearch(input, numHighest);
+			searchState.set_intersectionVecList(highestThmList);
+			return searchState;
+		}
 		
 		// new map to record of the final scores (this obliterates scoreThmMMap)
 		// make values into pairs of thms with their span scores
@@ -427,7 +433,7 @@ public class SearchIntersection {
 			int spanScore = thmSpanMap.get(thmIndex);
 			scoreThmMMap2.put(thmScore, new ThmSpanPair(thmIndex, spanScore));
 		}*/
-		System.out.println("SearchIntersection - scoreThmMMap: "+scoreThmMMap2);
+		//System.out.println("SearchIntersection - scoreThmMMap: "+scoreThmMMap2);
 		
 		List<Integer> highestThmList = new ArrayList<Integer>();
 		// get the thms having the highest k scores. Keys are scores.		
@@ -454,7 +460,6 @@ public class SearchIntersection {
 					continue;
 				}
 				pickedThmSet.add(thmIndex);
-				///highestThmList.add(thmIndex);
 				tempHighestThmList.add(thmIndex);
 				//counter--;
 				if (DEBUG) {
@@ -594,18 +599,20 @@ public class SearchIntersection {
 
 	/**
 	 * Auxiliary method to add bonus points to theorems containing more words.
-	 * Bonus is proportional to the highest thm score,
+	 * Bonus is proportional to the highest thm score.
+	 * If the max span is below certain threshold, short-circuit, and don't update spans.
 	 * 
 	 * @param thmScoreMap
 	 * @param scoreThmMMap
 	 * @param thmWordSpanMMap
 	 * @param thmSpanMap
 	 *            map of theorem indices and their spans
+	 * @param inputWordsArSz the total number of singleton tokens in query, i.e. max achievable span.
 	 */
 	private static void addWordSpanBonus(SearchState searchState, Map<Integer, Integer> thmScoreMap, 
 			TreeMultimap<Integer, Integer> scoreThmMMap,
 			SetMultimap<Integer, Integer> thmWordSpanMMap, Map<Integer, Integer> thmSpanMap, int numHighest,
-			double avgWordScore) {
+			double avgWordScore, int inputWordsArSz) {
 		// add according to score
 		// gather the sizes of the value maps for thmWordSpanMMap, and keep
 		// track of order based on scores using a TreeMultimap
@@ -621,6 +628,10 @@ public class SearchIntersection {
 			spanScoreThmMMap.put(thmWordsSetSize, thmIndex);
 		}
 		searchState.setLargestWordSpan(largestWordSpan);
+		if(LiteralSearch.spanBelowThreshold(largestWordSpan, inputWordsArSz)) {
+			return;
+		}
+		
 		TreeMultimap<Integer,Integer> tempScoreThmMMap = TreeMultimap.create();
 		
 		Set<Integer> scoreThmMMapKeySet = scoreThmMMap.asMap().descendingKeySet();

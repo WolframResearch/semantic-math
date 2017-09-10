@@ -148,6 +148,8 @@ public class RecipeParse {
 		inputStr = "combine flour and salt. Stir egg and banana until blended. Combine banana mixture and flour mixture"; // and bananas until blended.
 		inputStr = "soak cashew overnight, place potato and carrot in steamer for 20 minutes, combine with soaked cashew";
 		inputStr = "bring a large pot of water to boil, add corn. cook until tender. Cook corn on preheated grill";
+		inputStr = "rinse tomatoes";
+		
 		
 		boolean isVerbose = true;
 		Stats stats = null;

@@ -74,7 +74,7 @@ public class ThmInput {
 	private static final Pattern DF_EMPH_PATTERN = Pattern
 			.compile("\\\\df\\{([^\\}]*)\\}|\\\\emph\\{([^\\}]*)\\}|\\{\\\\em\\s+([^\\}]+)[\\\\/]*\\}|\\\\cat\\{([^}]*)\\}|\\{\\\\it\\s*([^}]*)\\}"
 					+ "|\\\\ref\\{([^}]*)\\}|\\\\subsection\\{([^}]*)\\}|\\\\section\\{([^}]*)\\}|\\\\bf\\{([^}]*)\\}"
-					+ "|\\\\ensuremath\\{([^}]+)\\}|\\\\(?:textbf|textsl)\\{([^}]+)\\}");
+					+ "|\\\\ensuremath\\{([^}]+)\\}|\\\\(?:textbf|textsl|textsc)\\{([^}]+)\\}");
 	/* Replacement for DF_EMPH_PATTERN, should have same number of groups as
 	   number of patterns in DF_EMPH_PATTERN. */
 	private static final String DF_EMPH_PATTERN_REPLACEMENT = "$1$2$3$4$5$6$7$8$9$10$11";
@@ -86,10 +86,10 @@ public class ThmInput {
 	private static final Pattern INDEX_PATTERN = Pattern.compile(".*\\\\index\\{([^\\}]*)\\}%*.*");
 	// pattern for eliminating the command completely for web display. E.g. \fml. How about \begin or \end everything?
 	private static final Pattern ELIMINATE_PATTERN = Pattern
-			.compile("\\\\fml|\\\\ofml|\\\\begin\\{enumerate\\}|\\\\end\\{enumerate\\}"					
+			.compile("\\\\fml|\\\\ofml|\\\\(?:begin|end)\\{enumerate\\}|\\\\(?:begin|end)\\{(?:sub)*section\\**\\}"					
 					+ "|\\\\begin\\{slogan\\}|\\\\end\\{slogan\\}|\\\\sbsb|\\\\cat|\\\\bs|\\\\maketitle"
 					+ "|\\\\section\\**\\{(?:[^}]*)\\}\\s*|\\\\noindent|\\\\begin\\{a(?:[^}]*)\\}|\\\\end\\{a(?:[^}]*)\\}\\s*"
-					+ "|\\\\cite\\{[^}]+\\}|\\\\cite\\[[^\\]]+\\]",
+					+ "|\\\\cite\\{[^}]+\\}|\\\\cite\\[[^\\]]+\\]|\\\\par\\s",
 					Pattern.CASE_INSENSITIVE);
 	static final String ELIMINATE_BEGIN_END_THM_STR = "\\\\begin\\{def(?:[^}]*)\\}\\s*|\\\\begin\\{lem(?:[^}]*)\\}\\s*|\\\\begin\\{th(?:[^}]*)\\}\\s*"
 					+ "|\\\\begin\\{pr(?:[^}]*)\\}\\s*|\\\\begin\\{proclaim(?:[^}]*)\\}\\s*|\\\\begin\\{co(?:[^}]*)\\}\\s*"

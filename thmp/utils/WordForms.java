@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -41,7 +42,7 @@ public class WordForms {
 
 	private static final Logger logger = LogManager.getLogger(WordForms.class);
 	//delimiters to split on when making words out of input
-	private static final String SPLIT_DELIM = "\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:|-|_|~|!|\\+";
+	private static final String SPLIT_DELIM = "\\s+|\'|\"|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:|-|_|~|!|\\+";
 	private static final Pattern BACKSLASH_PATTERN = Pattern.compile("(?<!\\\\)\\\\(?!\\\\)");
 	private static final Pattern ALL_WHITE_EMPTY_SPACE_PATTERN = Pattern.compile("^\\s*$");
 	private static final Pattern ALL_WHITE_NONEMPTY_SPACE_PATTERN = Pattern.compile("^\\s+$");
@@ -547,8 +548,15 @@ public class WordForms {
 	 * @param thm
 	 * @return
 	 */
-	public static String[] splitThmIntoSearchWords(String thm){		
-		return SPLIT_DELIM_PATTERN.split(thm);
+	public static List<String> splitThmIntoSearchWords(String thm){
+		String[] thmAr = SPLIT_DELIM_PATTERN.split(thm);
+		List<String> wordsList = new ArrayList<String>();
+		for(String word : thmAr) {
+			if(!ALL_WHITE_EMPTY_SPACE_PATTERN.matcher(word).matches()) {
+				wordsList.add(word);
+			}			
+		}
+		return wordsList;
 	}
 	
 	/**

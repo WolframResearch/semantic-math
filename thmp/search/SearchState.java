@@ -22,17 +22,22 @@ public class SearchState {
 	//map of relevant tokens and their scores
 	private Map<String, Integer> tokenScoreMap;
 	
-	//total number of words added, including overlapping 2/3 grams
+	//total number of words added, including overlapping 2 or 3 grams
 	private int totalWordAdded;
 	
 	//list of indices of thms of returned by intersection search.
 	private List<Integer> intersectionVecList;
 	
-	//map of thmIndex and their span scores
+	//map of thmIndex and their span scores, meaning how many singleton
+	//tokens in query are covered.
 	private Map<Integer, Integer> thmSpanMap;
+	
+	//private int intersectionSearchThmMaxSpan;
 	
 	//The largest span of current query word set amongst any 
 	// theorem that are in the keyset of thmSpanMap.
+	/**the max span of any theorem produced by intersection search,
+	 * used to determine if perform literal word search.*/
 	private int largestWordSpan;
 	//map of thmIndex and their word-weight scores
 	private Map<Integer, Integer> thmScoreMap;
@@ -81,9 +86,14 @@ public class SearchState {
 		thmSpanMap.put(thmIndex, span);
 	}
 	
+	/*public void setIntersectionSearchThmMaxSpan(int maxSpan) {
+		this.intersectionSearchThmMaxSpan = maxSpan;
+	}*/
+	
 	public void addThmSpan(Map<Integer, Integer> spanMap){
 		thmSpanMap.putAll(spanMap);
 	}
+	
 	/**
 	 * The largest span of current query word set amongst any 
 	 * theorem that are in the keyset of thmSpanMap.
@@ -94,6 +104,8 @@ public class SearchState {
 		}
 	}
 	
+	/**the max span of any theorem produced by intersection search,
+	 * used to determine if perform literal word search.*/
 	public int largestWordSpan(){
 		return this.largestWordSpan;
 	}

@@ -72,11 +72,11 @@ public class WordFrequency {
 		for (int i = 0; i < thmList.size(); i++) {
 			String thm = thmList.get(i);
 			//String[] thmAr = thm.toLowerCase().split(WordForms.splitDelim());
-			String[] thmAr = WordForms.splitThmIntoSearchWords(thm.toLowerCase());
-			
-			for (int j = 0; j < thmAr.length; j++) {
+			List<String> thmAr = WordForms.splitThmIntoSearchWords(thm.toLowerCase());
+			int thmArSz = thmAr.size();
+			for (int j = 0; j < thmArSz; j++) {
 				
-				String word = thmAr[j];
+				String word = thmAr.get(j);
 				// only keep words with lengths > 2
 				if (word.length() < 3 || WordForms.SPECIAL_CHARS_PATTERN.matcher(word).matches()){
 					continue;
@@ -116,7 +116,8 @@ public class WordFrequency {
 		private static final Set<String> trueFluffWordsSet;
 
 		//words that should be included in trueFluffWordsSet, but were left out by algorithm.
-		private static final String[] ADDITIONAL_FLUFF_WORDS = new String[]{"an", "are", "has", "tex", "between"};
+		private static final String[] ADDITIONAL_FLUFF_WORDS = new String[]{"an", "are", "has", "tex", "between",
+				"call", "does", "do"};
 		
 		static{
 			Map<String, String> wordPosPreMap = new HashMap<String, String>();

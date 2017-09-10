@@ -197,15 +197,16 @@ public class ThreeGramSearch {
 			
 			//if(thm.matches("\\s*")) continue;
 			
-			String[] thmAr = WordForms.splitThmIntoSearchWords(thm.toLowerCase());
+			List<String> thmAr = WordForms.splitThmIntoSearchWords(thm.toLowerCase());
 			String word0;
 			String word1;
 			String word2;
+			int thmArSz = thmAr.size();
 			
 			//get the next three words, if they don't start or end with fluff words
-			for(int i = 0; i < thmAr.length-2; i++){
+			for(int i = 0; i < thmArSz-2; i++){
 				
-				word0 = thmAr[i];
+				word0 = thmAr.get(i);
 				//shouldn't happen because the way thm is split
 				//was word0.matches("\\s*"), instead of \\s+
 				if(WHITESPACE_PATTERN.matcher(word0).matches() || word0.length() < 3
@@ -217,7 +218,7 @@ public class ThreeGramSearch {
 						){
 					continue;
 				}
-				word1 = thmAr[i+1];
+				word1 = thmAr.get(i+1);
 				
 				if(WHITESPACE_PATTERN.matcher(word1).matches() || word1.length() < 2
 						|| !NGramSearch.ALPHA_PATTERN.matcher(word1).matches()
@@ -230,7 +231,7 @@ public class ThreeGramSearch {
 					i++;
 					continue;
 				}				
-				word2 = thmAr[i+2];				
+				word2 = thmAr.get(i+2);				
 				if(WHITESPACE_PATTERN.matcher(word2).matches() || word2.length() < 4
 						|| !NGramSearch.ALPHA_PATTERN.matcher(word2).matches()
 						|| WordForms.SPECIAL_CHARS_PATTERN.matcher(word2).matches()

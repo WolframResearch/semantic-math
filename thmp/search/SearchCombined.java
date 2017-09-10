@@ -157,9 +157,8 @@ public class SearchCombined {
 	 * @param numVectors is the total number of vectors to get 
 	 * @return
 	 */
-	private static List<Integer> findListsIntersection(List<Integer> nearestVecList,// List<Integer> intersectionVecList,
-			SearchState searchState, 
-			int numVectors, String input//, boolean searchContextBool
+	private static List<Integer> findListsIntersection(List<Integer> nearestVecList,
+			SearchState searchState, int numVectors, String input
 			){
 		
 		List<Integer> intersectionVecList = searchState.intersectionVecList();
@@ -319,7 +318,6 @@ public class SearchCombined {
 				if(nearestVecList.isEmpty()){
 					//System.out.println("I've got nothing for you yet. Try again.");
 					System.out.println("SVD search returns empty list!");
-					//return Collections.<ThmHypPair>emptyList();
 				}
 				
 				//find best intersection of these two lists. nearestVecList is 1-based, but intersectionVecList is 0-based! 
