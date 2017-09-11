@@ -34,8 +34,8 @@ public class LiteralSearch {
 	private static final double literalSearchTriggerThreshold = 0.5;
 	
 	static {		
-		//literalSearchIndexMap = deserializeIndexMap();
-		literalSearchIndexMap = null;
+		literalSearchIndexMap = deserializeIndexMap();
+		//literalSearchIndexMap = null;
 	}
 	
 	/**
@@ -48,23 +48,23 @@ public class LiteralSearch {
 		/**thm index in total corpus*/
 		private int thmIndex;
 		/**list of word indices in thm*/
-		private List<Number> wordIndexList;
+		private short[] wordIndexAr;
 		
 		/**
 		 * Input list must be sorted in increasing order.
 		 * @param thmIndex_
-		 * @param wordIndexList_ IllegalArgumentException is not sorted.
+		 * @param wordIndexAr_ IllegalArgumentException is not sorted.
 		 */
-		public LiteralSearchIndex(int thmIndex_, List<Number> wordIndexList_) {
+		public LiteralSearchIndex(int thmIndex_, short[] wordIndexAr_) {
 
 			//System.out.println("wordIndexList_.get(0).getClass() "+ (wordIndexList_.get(0).getClass()));
 			
-			int wordIndexListSz = wordIndexList_.size();
+			int wordIndexListSz = wordIndexAr_.length;
 			if(wordIndexListSz > 1) {
 				//System.out.println("wordIndexList_.get(0).getClass() "+ (wordIndexList_.get(0).getClass()));
-				short prior = wordIndexList_.get(0).shortValue();
+				short prior = wordIndexAr_[0];
 				for(int i = 1; i < wordIndexListSz; i++) {
-					short current = wordIndexList_.get(i).shortValue();
+					short current = wordIndexAr_[i];
 					if(current < prior) {
 						throw new IllegalArgumentException("Input word index list must be sorted in "
 								+ "ascending order.");
@@ -74,15 +74,15 @@ public class LiteralSearch {
 			}
 			
 			this.thmIndex = thmIndex_;			
-			this.wordIndexList = wordIndexList_;
+			this.wordIndexAr = wordIndexAr_;
 		}
 		
 		public int thmIndex() {
 			return this.thmIndex;
 		}
 		
-		public List<Number> wordIndexList() {
-			return this.wordIndexList;
+		public short[] wordIndexAr() {
+			return this.wordIndexAr;
 		}
 	}
 	
@@ -100,21 +100,21 @@ public class LiteralSearch {
 			ListMultimap<String, LiteralSearchIndex> searchIndexMap) {
 		//don't count English fluff words, e.g. "how", "the"
 		//Set<String> thmWordsSet = new HashSet<String>();
-		ListMultimap<String, Number> wordsIndexMMap = ArrayListMultimap.create();
+		ListMultimap<String, Short> wordsIndexMMap = ArrayListMultimap.create();
 		
 		List<String> thmWordsList = WordForms.splitThmIntoSearchWords(thm.toLowerCase());
 		int thmWordsListSz = thmWordsList.size();
 		//space optimization
 		int num = 0;
-		Number counter;
-		if(thmWordsListSz > 127) {
+		short counter = 0;
+		/*if(thmWordsListSz > 127) {
 			short i = 0;
 			counter = i;
 		}else {
 			byte i = 0;
 			counter = i;
-		}
-		final byte increment = 1;
+		}*/
+		//final byte increment = 1;
 		
 		while(num < thmWordsListSz) {
 			String word = thmWordsList.get(num);
@@ -126,21 +126,29 @@ public class LiteralSearch {
 			wordsIndexMMap.put(word, counter);
 			num++;
 			//System.out.println("counter.getClass() "+counter.getClass());			
-			
-			if(thmWordsListSz > 127) {
+			counter++;
+			/*if(thmWordsListSz > 127) {
 				short base = counter.shortValue();
 				counter = (short)(base + increment);
 			}else {
 				byte base = counter.byteValue();
 				counter = (byte)(base + increment);
-			}			
+			}*/			
 		}
 		//System.out.println("LiteralSearch - done with while loop over thmWordsList!");
 
 		for(String word : wordsIndexMMap.keys()) {
 			//must wrap in ArrayList, since the List from .get() is a RandomAccessWrappedList, 
 			//which is not serializable
-			searchIndexMap.put(word, new LiteralSearchIndex(thmIndex, new ArrayList<Number>(wordsIndexMMap.get(word))));
+			List<Short> wordIndexList = wordsIndexMMap.get(word);
+			int wordIndexListSz = wordIndexList.size();
+			short[] wordIndexAr = new short[wordIndexListSz];
+			
+			for(int i = 0; i < wordIndexListSz; i++) {
+				wordIndexAr[i] = wordIndexList.get(i);
+			}
+			
+			searchIndexMap.put(word, new LiteralSearchIndex(thmIndex, wordIndexAr));
 		}		
 	}
 	
@@ -186,7 +194,7 @@ public class LiteralSearch {
 			for(LiteralSearchIndex searchIndex : thmIndexList) {
 				int thmIndex = searchIndex.thmIndex;
 				TreeMap<Number, String> indexWordMap = new TreeMap<Number, String>();
-				for(Number wordIndex : searchIndex.wordIndexList) {
+				for(Number wordIndex : searchIndex.wordIndexAr) { 
 					indexWordMap.put(wordIndex, word);
 				}
 				
