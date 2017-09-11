@@ -2,11 +2,14 @@ package thmp.search;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.regex.Pattern;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -32,10 +35,20 @@ public class LiteralSearch {
 	private static final int WORD_DIST_2_3_POINT = 1;
 	/**threshold after which to perform literal word search*/
 	private static final double literalSearchTriggerThreshold = 0.5;
+	private static final Set<String> INVALID_SEARCH_WORD_SET;
+	private static final Pattern DIGIT_PATTERN = Pattern.compile(".*\\d+.*");
 	
 	static {		
-		literalSearchIndexMap = deserializeIndexMap();
-		//literalSearchIndexMap = null;
+		//literalSearchIndexMap = deserializeIndexMap();
+		literalSearchIndexMap = ArrayListMultimap.create();
+		
+		INVALID_SEARCH_WORD_SET = new HashSet<String>();
+		//fluff words that not in trueFluffWordsSet
+		String[] invalidSearchWordAr = new String[] {"with","then","those","there","their",
+				"let","for"};
+		for(String fluffWord : invalidSearchWordAr) {
+			INVALID_SEARCH_WORD_SET.add(fluffWord);
+		}
 	}
 	
 	/**
@@ -48,24 +61,25 @@ public class LiteralSearch {
 		/**thm index in total corpus*/
 		private int thmIndex;
 		/**list of word indices in thm*/
-		private short[] wordIndexAr;
+		private byte[] wordIndexAr;
 		
 		/**
 		 * Input list must be sorted in increasing order.
 		 * @param thmIndex_
 		 * @param wordIndexAr_ IllegalArgumentException is not sorted.
 		 */
-		public LiteralSearchIndex(int thmIndex_, short[] wordIndexAr_) {
+		public LiteralSearchIndex(int thmIndex_, byte[] wordIndexAr_) {
 
 			//System.out.println("wordIndexList_.get(0).getClass() "+ (wordIndexList_.get(0).getClass()));
 			
 			int wordIndexListSz = wordIndexAr_.length;
 			if(wordIndexListSz > 1) {
 				//System.out.println("wordIndexList_.get(0).getClass() "+ (wordIndexList_.get(0).getClass()));
-				short prior = wordIndexAr_[0];
+				byte prior = wordIndexAr_[0];
 				for(int i = 1; i < wordIndexListSz; i++) {
-					short current = wordIndexAr_[i];
+					byte current = wordIndexAr_[i];
 					if(current < prior) {
+						System.out.println("current, prior: "+ current+ " " +prior);
 						throw new IllegalArgumentException("Input word index list must be sorted in "
 								+ "ascending order.");
 					}
@@ -81,7 +95,7 @@ public class LiteralSearch {
 			return this.thmIndex;
 		}
 		
-		public short[] wordIndexAr() {
+		public byte[] wordIndexAr() {
 			return this.wordIndexAr;
 		}
 	}
@@ -100,13 +114,13 @@ public class LiteralSearch {
 			ListMultimap<String, LiteralSearchIndex> searchIndexMap) {
 		//don't count English fluff words, e.g. "how", "the"
 		//Set<String> thmWordsSet = new HashSet<String>();
-		ListMultimap<String, Short> wordsIndexMMap = ArrayListMultimap.create();
+		ListMultimap<String, Byte> wordsIndexMMap = ArrayListMultimap.create();
 		
 		List<String> thmWordsList = WordForms.splitThmIntoSearchWords(thm.toLowerCase());
 		int thmWordsListSz = thmWordsList.size();
 		//space optimization
 		int num = 0;
-		short counter = 0;
+		byte counter = Byte.MIN_VALUE;
 		/*if(thmWordsListSz > 127) {
 			short i = 0;
 			counter = i;
@@ -118,15 +132,22 @@ public class LiteralSearch {
 		
 		while(num < thmWordsListSz) {
 			String word = thmWordsList.get(num);
-			if(trueFluffWordsSet.contains(word)) {
+			
+			if(isValidLiteralWord(word)) {
 				num++;
 				continue;
 			}
 			word = processLiteralSearchWord(word);
+			//System.out.print("word, counter " + word+ "  "+counter + ".\t");
 			wordsIndexMMap.put(word, counter);
 			num++;
 			//System.out.println("counter.getClass() "+counter.getClass());			
+			if(counter == Byte.MAX_VALUE) {
+				//don't exceed max byte value, so every index can be stored in a byte.
+				break;
+			}
 			counter++;
+			
 			/*if(thmWordsListSz > 127) {
 				short base = counter.shortValue();
 				counter = (short)(base + increment);
@@ -136,18 +157,18 @@ public class LiteralSearch {
 			}*/			
 		}
 		//System.out.println("LiteralSearch - done with while loop over thmWordsList!");
-
+		
 		for(String word : wordsIndexMMap.keys()) {
 			//must wrap in ArrayList, since the List from .get() is a RandomAccessWrappedList, 
 			//which is not serializable
-			List<Short> wordIndexList = wordsIndexMMap.get(word);
+			List<Byte> wordIndexList = wordsIndexMMap.get(word);
 			int wordIndexListSz = wordIndexList.size();
-			short[] wordIndexAr = new short[wordIndexListSz];
+			byte[] wordIndexAr = new byte[wordIndexListSz];
 			
 			for(int i = 0; i < wordIndexListSz; i++) {
-				wordIndexAr[i] = wordIndexList.get(i);
+				wordIndexAr[i] = wordIndexList.get(i).byteValue();
 			}
-			
+			//System.out.print("wordIndexAr "+Arrays.toString(wordIndexAr)+"\t");
 			searchIndexMap.put(word, new LiteralSearchIndex(thmIndex, wordIndexAr));
 		}		
 	}
@@ -183,7 +204,7 @@ public class LiteralSearch {
 		Map<Integer, TreeMap<Number, String>> thmIndexWordMap = new HashMap<Integer, TreeMap<Number, String>>();
 		
 		for(String word : queryWordList) {
-			if(trueFluffWordsSet.contains(word)) {
+			if(isValidLiteralWord(word)) {
 				continue;
 			}
 			word = processLiteralSearchWord(word);
@@ -228,10 +249,32 @@ public class LiteralSearch {
 	}
 	
 	/**
+	 * Determines if word should be added as valid literal search word,
+	 * non-valid words include those containing special chars, $, \, etc.
+	 * @param word
+	 * @return
+	 */
+	private static boolean isValidLiteralWord (String word) {
+		if(WordForms.SPECIAL_CHARS_PATTERN.matcher(word).matches()
+				|| DIGIT_PATTERN.matcher(word).matches()){
+			return true;
+		}
+		if(trueFluffWordsSet.contains(word) || INVALID_SEARCH_WORD_SET.contains(word)) {
+			return true;
+		}
+		
+		if(word.length() < 3) {
+			return true;
+		}
+		return false;		
+	}
+
+	/**
 	 * Creates thm score map based on distances between words in a thm.
 	 * A word next to another earns 2 points, dist 1 or 2 apart 1 pt, else no point.
 	 * Base point total is number of distinct words. 
 	 * @param thmIndexWordMap Map where keys are thm index, and value are map of word index and word.
+	 * Word indices are relative, i.e. an index can be negative! Add Byte.MAX_VALUE to get absolute index.
 	 * @return
 	 */
 	private static Map<Integer, Integer> createThmScoreMap(Map<Integer, TreeMap<Number, String>> thmIndexWordMap) {
