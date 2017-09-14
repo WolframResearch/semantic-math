@@ -17,6 +17,9 @@ import java.util.regex.Pattern;
 
 import javax.servlet.ServletContext;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.TreeMultimap;
@@ -25,6 +28,7 @@ import com.wolfram.jlink.MathLinkException;
 
 import thmp.parse.ProcessInput;
 import thmp.parse.TheoremContainer;
+import thmp.parse.WLCommand;
 import thmp.utils.DataUtility;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
@@ -48,6 +52,7 @@ public class SearchCombined {
 	private static final Pattern INPUT_PATTERN = Pattern.compile("(\\d+)\\s+(.+)");
 	private static final Pattern CONTEXT_INPUT_PATTERN = Pattern.compile("(context|relation)\\s+(.*)");
 	protected static final int CONTEXT_SEARCH_TUPLE_SIZE = 10;
+	private static final Logger logger = LogManager.getLogger(SearchCombined.class);
 	
 	/**
 	 * Thm and hyp pair, used to display on web separately.
@@ -261,6 +266,7 @@ public class SearchCombined {
 	}
 	
 	public static List<ThmHypPair> searchCombined(String input, Set<String> searchWordsSet, boolean searchContextBool){
+		
 		return searchCombined(input, searchWordsSet, searchContextBool, false);
 	}
 	

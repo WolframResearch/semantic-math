@@ -14,6 +14,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.ObjectStreamClass;
 import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -36,7 +37,6 @@ import com.wolfram.kernelserver.KernelPool;
 import com.wolfram.kernelserver.KernelPoolException;
 import com.wolfram.msp.servlet.MSPManager;
 import com.wolfram.msp.servlet.MSPStatics;
-import com.wolfram.webkernel.IKernel;
 
 import thmp.utils.MathLinkUtils.WLEvaluationMedium;
 import thmp.utils.MathLinkUtils.WLEvaluationMedium.EvaluationMediumType;
@@ -51,7 +51,7 @@ public class FileUtils {
 
 	//singleton, only one instance should exist
 	private static volatile KernelLink ml;
-	private static final Logger logger = LogManager.getLogger();
+	private static final Logger logger = LogManager.getLogger(FileUtils.class);
 	private static final boolean IS_OS_X = "Mac OS X".equals(System.getProperty("os.name"));
 	//whether parsing recipes.
 	private static final boolean FOOD_PARSE;
@@ -308,7 +308,7 @@ public class FileUtils {
 			logger.error(msg);
 			throw new IllegalStateException(msg);
 		}
-		return deserializeListFromInputStream(fileInputStream, false);
+		return deserializeListFromInputStream(fileInputStream, false, serialFileStr);
 	}
 
 	public static Object deserializeListFromInputStream(InputStream inputStream) {
@@ -317,25 +317,61 @@ public class FileUtils {
 	
 	/**
 	 * Returns the first object read from inputStream.
-	 * @param deserializedList
 	 * @param fileInputStream
 	 * @param checkVersion whether to check for DESERIAL_VERSION_NUM 
+	 * @param serialFileStr optional parameter for trying with a custom objectInputStream,
+	 * in case reading from the default one gives Exceptions, which will be thrown if serialFileStr 
+	 * is not supplied.
 	 * @return A *List* of items from the file.
 	 */
-	public static Object deserializeListFromInputStream(InputStream inputStream, boolean checkVersion) {
+	public static Object deserializeListFromInputStream(InputStream inputStream, boolean checkVersion,
+			String... serialFileStr) {
 		
 		Object deserializedObj = null;	
 		ObjectInputStream objectInputStream = null;		
 		try{
 			objectInputStream = new ObjectInputStream(inputStream);
+					
 		}catch(IOException e){
 			silentClose(inputStream);
 			e.printStackTrace();
 			throw new IllegalStateException("IOException while opening ObjectOutputStream.");
 		}		
 		try{
+			////logger.info("objectInputStream.class.getClassLoader(): "+objectInputStream.getClass().getClassLoader());
 			//read first object in list
-			deserializedObj = objectInputStream.readObject();
+			try {
+				deserializedObj = objectInputStream.readObject();
+			}catch(ClassNotFoundException e){
+				objectInputStream.close();				
+				if(serialFileStr.length > 0) {
+					
+					objectInputStream = new ObjectInputStream(new FileInputStream(serialFileStr[0])) {					
+						@Override
+		                protected Class resolveClass(ObjectStreamClass objectStreamClass)
+		                        throws IOException, ClassNotFoundException {
+							return Class.forName(objectStreamClass.getName(), true, FileUtils.class.getClassLoader());	                    
+		                }
+		            };
+					
+		            try {
+						deserializedObj = objectInputStream.readObject();						
+		            }catch(ClassNotFoundException e2){
+		            		objectInputStream.close();
+		            		objectInputStream = new ObjectInputStream(new FileInputStream(serialFileStr[0])) {
+			                @Override
+			                protected Class resolveClass(ObjectStreamClass objectStreamClass)
+			                        throws IOException, ClassNotFoundException {
+			                		return Class.forName(objectStreamClass.getName(), true, objectStreamClass.forClass().getClassLoader());
+			                }
+			            };
+			            deserializedObj = objectInputStream.readObject();	
+		            }
+				}else {
+					throw e;
+				}				
+			}
+			
 			if(checkVersion){
 				int serialVersionInt = (int)objectInputStream.readObject();
 				if(!dataGenerationModeBool && !DESERIAL_VERSION_NUM.compareAndSet(DESERIAL_VERSION_NUM_DEFAULT, serialVersionInt)){
@@ -353,12 +389,11 @@ public class FileUtils {
 			//deserializedList = (List<? extends Object>)o;
 			//System.out.println("object read: " + ((ParsedExpression)((List<?>)o).get(0)).getOriginalThmStr());			
 		}catch(IOException e){
-			e.printStackTrace();
 			logger.info(e.getMessage());
-			throw new IllegalStateException("IOException while reading deserialized data!");
+			throw new IllegalStateException("IOException while reading deserialized data!", e);
 		}catch(ClassNotFoundException e){
-			e.printStackTrace();
-			throw new IllegalStateException("ClassNotFoundException while writing to file or closing resources.");
+			throw new IllegalStateException("ClassNotFoundException while writing to file or closing resources. ClassLoader: "
+					+ objectInputStream.getClass().getClassLoader(), e);
 		}finally{
 			silentClose(objectInputStream);
 			silentClose(inputStream);

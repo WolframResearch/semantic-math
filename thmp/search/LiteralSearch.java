@@ -11,10 +11,14 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.TreeMultimap;
 
+import thmp.search.LiteralSearch.LiteralSearchIndex;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 
@@ -37,10 +41,13 @@ public class LiteralSearch {
 	private static final double literalSearchTriggerThreshold = 0.5;
 	private static final Set<String> INVALID_SEARCH_WORD_SET;
 	private static final Pattern DIGIT_PATTERN = Pattern.compile(".*\\d+.*");
+	private static final Logger logger = LogManager.getLogger(LiteralSearch.class);
 	
 	static {		
-		//literalSearchIndexMap = deserializeIndexMap();
-		literalSearchIndexMap = ArrayListMultimap.create();
+		logger.info("LiteralSearchIndex.class.getClassLoader(): "+LiteralSearchIndex.class.getClassLoader());
+		
+		literalSearchIndexMap = deserializeIndexMap();
+		///literalSearchIndexMap = ArrayListMultimap.create();
 		
 		INVALID_SEARCH_WORD_SET = new HashSet<String>();
 		//fluff words that not in trueFluffWordsSet
@@ -175,6 +182,7 @@ public class LiteralSearch {
 	
 	private static ListMultimap<String, LiteralSearchIndex> deserializeIndexMap() {
 		String path = FileUtils.getPathIfOnServlet(Searcher.SearchMetaData.literalSearchIndexMapPath());
+		//String path = FileUtils.getPathIfOnServlet("src/thmp/data/testIndexMap.dat");
 		
 		@SuppressWarnings("unchecked")
 		ListMultimap<String, LiteralSearchIndex> indexMap = ((List<ListMultimap<String, LiteralSearchIndex>>)FileUtils
@@ -353,14 +361,23 @@ public class LiteralSearch {
 	
 	public static void main(String[] args) {
 		//check out the "real fluff words"
-		ListMultimap<String, LiteralSearchIndex> literalSearchIndexMap 
+		/*ListMultimap<String, LiteralSearchIndex> literalSearchIndexMap 
 			= ArrayListMultimap.create();
 		
 		addThmLiteralSearchIndexToMap ("quadratic field extension", 1, 
-				literalSearchIndexMap);
+				literalSearchIndexMap);***********/
+		
+		//g();
 		
 		//System.out.println(WordFrequency.ComputeFrequencyData.trueFluffWordsSet());
 		//System.out.println(Arrays.toString(WordForms.splitThmIntoSearchWords("this r(8e3 se . 4")));
 	}
-	
+	private static void g() {
+		ListMultimap<String, LiteralSearchIndex> mmap = ArrayListMultimap.create();
+		LiteralSearchIndex searchIndex = new LiteralSearchIndex(4, new byte[] {1});
+		mmap.put("hi", searchIndex);
+		List<ListMultimap<String, LiteralSearchIndex>> list = new ArrayList<ListMultimap<String, LiteralSearchIndex>>();
+		list.add(mmap);
+		FileUtils.serializeObjToFile(list, "src/thmp/data/testIndexMap.dat");
+	}
 }
