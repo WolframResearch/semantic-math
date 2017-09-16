@@ -74,6 +74,8 @@ public class FileUtils {
 	private static MSPManager mspManager; //(MSPManager)servletContext.getAttribute(MSPStatics.MSP_MANAGER_ATTR);
 	private static KernelPool kernelPool;	        
     
+	public static final boolean SCRAPE_THM_NAME_Q = true;
+	
 	/* Do not introduce dependencies on other classes in static initializer. Since many classes
 	 * count on this class as the lowest common denominator */
 	static{

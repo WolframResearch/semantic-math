@@ -471,7 +471,7 @@ public class DetectHypothesis {
 			//if(true) throw new IllegalStateException("input is directory! texFileNamesMap: " + texFileNamesMap);
 			//get all filenames from dir. Get tex file names from serialized file data.
 			//File[] files = inputFile.listFiles();			
-				final boolean scrapeThmNames = true;
+				final boolean scrapeThmNames = FileUtils.SCRAPE_THM_NAME_Q;
 				List<String> thmNameList = new ArrayList<String>();
 				
 				for(Map.Entry<String, String> fileNameEntry : texFileNamesMap.entrySet()){

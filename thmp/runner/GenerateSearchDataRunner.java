@@ -79,14 +79,24 @@ public class GenerateSearchDataRunner {
 			//pb.start();
 			
 			//first argument to generateSearchData takes form e.g. 0208_001Untarred/0208
+			//a fileName takes the form e.g. /prospectus/crawling/_arxiv/src/arXiv_src_1412_017.tar.
 			int fileNameLen = fileName.length();
 			if(fileNameLen < 12){
 				logger.error("filename length should not be smaller than 12.");
 				continue;
 			}
 			String dirNameRoot = fileName.substring(fileNameLen-12, fileNameLen-4);
-			String fileDir = dirNameRoot + "Untarred" + File.separator 
-					+ fileName.substring(fileNameLen-12, fileNameLen-8);
+			/*the script name must coincide with that in both bash scripts.	*/	
+			String fileDir;
+			final boolean scrapeThmName = FileUtils.SCRAPE_THM_NAME_Q;
+			if(scrapeThmName) {
+				fileDir = dirNameRoot + "Untarred1" + File.separator 
+						+ fileName.substring(fileNameLen-12, fileNameLen-8);
+			}else {
+				fileDir = dirNameRoot + "Untarred" + File.separator 
+						+ fileName.substring(fileNameLen-12, fileNameLen-8);
+			}
+			
 			//skip untar'ing if directory already exists
 			if(!(new File(fileDir)).exists()){
 				Runtime rt = Runtime.getRuntime();
