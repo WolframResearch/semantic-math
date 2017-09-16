@@ -90,6 +90,7 @@ public class ThmP1 {
 	private static final Pattern VERB_POS_PATTERN = Pattern.compile("verb|vbs|verbAlone");	
 	private static final Pattern SINGLE_WORD_TEX_PATTERN = Pattern.compile("\\$[^$]+\\$[^\\s]*"); 
 	private static final Pattern ARTICLE_PATTERN = Pattern.compile("a|the|an");
+	private static final Pattern PREPROCESS_PUNCTUATION_PATTERN = Pattern.compile("([^\\.,!:;]*)([\\.,:!;]{1})([^\\.,!:;]*)");
 	
 	// list of parts of speech, ent, verb etc <--should make immutable
 	private static final List<String> posList;
@@ -5039,7 +5040,10 @@ public class ThmP1 {
 		//separate out punctuations, separate out words away from punctuations.
 		//compile this!		
 		//Note this also changes the tex, be more careful!
-		String[] wordsArray = inputStr.replaceAll("([^\\.,!:;]*)([\\.,:!;]{1})([^\\.,!:;]*)", "$1 $2 $3").split("\\s+");
+		String[] wordsArray = WordForms.getWhiteNonEmptySpaceNotAllPattern()
+				.split(PREPROCESS_PUNCTUATION_PATTERN.matcher(inputStr).replaceAll("$1 $2 $3"));
+		
+				//inputStr.replaceAll(  , "$1 $2 $3").split("\\s+");
 		//String[] wordsArray = inputStr.replaceAll("([^\\.,!:;]*)([\\.,:!;]{1})", "$1 $2").split("\\s+");
 		
 		//System.out.println("wordsArray " + Arrays.toString(wordsArray));

@@ -25,8 +25,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Multiset;
 
 import thmp.parse.ParseState.ParseStateBuilder;
 import thmp.parse.ParseState.VariableDefinition;
@@ -71,6 +73,15 @@ public class DetectHypothesis {
 	
 	private static final Pattern BRACKET_SEPARATOR_PATTERN = Pattern.compile("([^\\(\\[\\{]+)[\\(\\[\\{].*");
 	
+	//used for thm scraping.
+	private static final Pattern THM_SCRAPE_PATTERN = Pattern.compile("(?i)(?:theorem|theory|proposition|lemma|conjecture)");
+	//revise this!!
+	private static final Pattern THM_SCRAPE_PUNCTUATION_PATTERN = Pattern.compile("(?:(?=[;.\\s])|(?<=[;.\\\\s]))");
+	//punctuation pattern to eliminate
+	//almost all special patterns but no - or ', which can occur in thm names
+	private static final Pattern THM_SCRAPE_ELIM_PUNCTUATION_PATTERN = Pattern
+			.compile("[\\{\\[\\)\\(\\}\\]$\\\\%/|@*.;,:_~!+^&\"`+<>=#]");
+	
 	//contains ParsedExpressions, to be serialized to persistent storage
 	//***private static final List<ParsedExpression> parsedExpressionList = new ArrayList<ParsedExpression>();
 	//for inspection
@@ -99,6 +110,8 @@ public class DetectHypothesis {
 	//private static final String allThmWordsStringFileStr = "src/thmp/data/allThmWordsList.txt";
 	
 	private static final String statsFileStr = "src/thmp/data/parseStats.txt";
+	
+	private static final String THM_SCRAPE_SER_FILENAME = "thmNameScrape.dat";
 	
 	//serialize the words as well, to bootstrap up after iterations of processing. The math words are going to 
 	//stabilize.
@@ -426,9 +439,7 @@ public class DetectHypothesis {
 		if(texFileNamesSerialFileStr != null){
 			//String argsSrcStr = args[0];
 			String texFilesDirPath = inputParams.texFilesDirPath;
-			inputFile = new File(texFilesDirPath);			
-			//String texFileNamesSerialFileStr = inputParams.serializedTexFileNamesFileStr;
-			
+			inputFile = new File(texFilesDirPath);
 			//set of *absolute* path names.
 			texFileNamesMap = deserializeTexFileNames(texFileNamesSerialFileStr);
 			if(null == texFileNamesMap){
@@ -438,9 +449,6 @@ public class DetectHypothesis {
 		//resort to default file if no arg supplied
 		else{
 			//try{
-				//inputBF = new BufferedReader(new FileReader("src/thmp/data/CommAlg5.txt"));
-				//inputBF = new BufferedReader(new FileReader("src/thmp/data/fieldsRawTex.txt"));
-				//inputBF = new BufferedReader(new FileReader("src/thmp/data/samplePaper1.txt"));
 				inputFile = new File("src/thmp/data/Total.txt");
 				inputFile = new File("/Users/yihed/Downloads/math0011136");
 				inputFile = new File("src/thmp/data/math0210227");
@@ -463,7 +471,9 @@ public class DetectHypothesis {
 			//if(true) throw new IllegalStateException("input is directory! texFileNamesMap: " + texFileNamesMap);
 			//get all filenames from dir. Get tex file names from serialized file data.
 			//File[] files = inputFile.listFiles();			
-			
+				final boolean scrapeThmNames = true;
+				List<String> thmNameList = new ArrayList<String>();
+				
 				for(Map.Entry<String, String> fileNameEntry : texFileNamesMap.entrySet()){
 					//this is absolute file path
 					String fileName = fileNameEntry.getKey();
@@ -477,9 +487,15 @@ public class DetectHypothesis {
 						logger.error(msg);
 						continue;
 					}
-					String tarFileName = fileNameEntry.getValue();
+					//file name needed as metadata for search.
+					String texFileName = fileNameEntry.getValue();
 					try{
-						extractThmsFromFiles(inputBF, defThmList, thmHypPairList, stats, tarFileName);
+						
+						if(scrapeThmNames) {
+							scrapeThmNames(inputBF, thmNameList);
+						} else {
+							extractThmsFromFiles(inputBF, defThmList, thmHypPairList, stats, texFileName);							
+						}
 					}catch(Throwable e){
 						String timeStr = new SimpleDateFormat("yyyy_MM_dd_HH:mm").format(Calendar.getInstance().getTime());
 						String msg = timeStr + " File being processed: " + fileName + " with trace " + Arrays.toString(e.getStackTrace());						
@@ -490,13 +506,19 @@ public class DetectHypothesis {
 					}
 					FileUtils.silentClose(inputBF);
 				}
-			//finally{
-				//serialize, so don't discard the items already parsed.
-				//serialization only applicable when running on byblis
-				if(!FileUtils.isOSX()){
-				serializeDataToFile(stats, thmHypPairList, inputParams);		
+				//serialize
+				if(scrapeThmNames) {
+					//List<List<String>> thmNameSerList = new ArrayList<List<String>>();
+					//thmNameSerList.add(thmNameList);
+								
+					FileUtils.serializeObjToFile(thmNameList, inputParams.texFilesDirPath + THM_SCRAPE_SER_FILENAME);
+				}else {
+					//serialize, so don't discard the items already parsed.
+					//serialization only applicable when running on byblis
+					if(!FileUtils.isOSX()){
+						serializeDataToFile(stats, thmHypPairList, inputParams);		
+					}					
 				}
-			//}
 		}else{
 			BufferedReader inputBF = null;
 			try{
@@ -533,12 +555,76 @@ public class DetectHypothesis {
 		FileUtils.cleanupJVMSession();
 	}
 
+	/**
+	 * Add thm names scraped from inputBF to thmNameMSet.
+	 * *Only* used for theorem name scraping.
+	 * @param inputBF
+	 * @param thmNameMSet
+	 */
+	private static void scrapeThmNames(BufferedReader inputBF, List<String> thmNameList) {
+		
+		String line;
+		try {
+			//Matcher m;
+			while((line = inputBF.readLine()) != null) {
+				//analyze line, get thms
+				
+				List<String> lineList = Arrays.asList(THM_SCRAPE_PUNCTUATION_PATTERN.split(line));
+				int lineListSz = lineList.size();
+				for(int i = 0; i < lineListSz; i++) {
+					String word = lineList.get(i);
+					if(THM_SCRAPE_PATTERN.matcher(word).matches()) {
+						String thmWords = collectThmWordsBeforeAfter(lineList, i);
+						thmNameList.add(thmWords);
+					}
+				}
+			}
+		} catch (IOException e) {			
+			throw new IllegalStateException("IOException while scraping thm names", e);
+		}
+	}
+
+	/**
+	 * 
+	 * @param thmList
+	 * @param index index to look before or after
+	 * @return
+	 */
+	private static String collectThmWordsBeforeAfter(List<String> thmList, int index) {
+		final int indexBoundToCollect = 4;
+		StringBuilder sb = new StringBuilder(40);
+		int thmListSz = thmList.size();
+		int i = 1;
+		while(i < indexBoundToCollect && index - i > -1) {
+			String curWord = thmList.get(index-i);
+			if(THM_SCRAPE_ELIM_PUNCTUATION_PATTERN.matcher(curWord).find()) {
+				break;
+			}
+			sb.insert(0, curWord + " ");
+			i++;
+		}
+		i = 1;
+		while(i < indexBoundToCollect && index + i < thmListSz) {
+			String curWord = thmList.get(index+i);
+			if(THM_SCRAPE_ELIM_PUNCTUATION_PATTERN.matcher(curWord).find()) {
+				break;
+			}
+			sb.append(curWord).append(" ");
+			i++;
+		}
+		if(sb.length() > 1) {
+			sb.deleteCharAt(sb.length()-1);
+		}
+		return sb.toString();
+	}
+	
 	@SuppressWarnings("unchecked")
 	private static Map<String, String> deserializeTexFileNames(String texFileNamesSerialFileStr) {
 		return ((List<Map<String, String>>)FileUtils.deserializeListFromFile(texFileNamesSerialFileStr)).get(0);
 	}
 
 	/**
+	 * Entry point to extract thms given a file.
 	 * @param inputBF
 	 * @param defThmList empty list.
 	 * @param thmHypPairList Emoty list.

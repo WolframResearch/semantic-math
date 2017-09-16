@@ -1,9 +1,6 @@
 package thmp.search;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
 import java.io.Serializable;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -20,15 +17,11 @@ import javax.servlet.ServletContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.TreeMultimap;
-import com.wolfram.jlink.Expr;
-import com.wolfram.jlink.MathLinkException;
 
 import thmp.parse.ProcessInput;
 import thmp.parse.TheoremContainer;
-import thmp.parse.WLCommand;
 import thmp.utils.DataUtility;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
