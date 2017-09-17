@@ -42,7 +42,7 @@ public class SearchIntersection {
 
 	// bonus points for matching context better, eg hyp or stm
 	// disable bonus now, since not using annotated words
-	private static final int CONTEXT_WORD_BONUS = 0;
+	//private static final int CONTEXT_WORD_BONUS = 0;
 	private static final int NUM_NEAREST_VECS = SearchCombined.NUM_NEAREST;
 
 	private static final Logger logger = LogManager.getLogger(SearchIntersection.class);
@@ -400,7 +400,8 @@ public class SearchIntersection {
 		searchState.setThmScoreMap(thmScoreMap);
 		/**short circuit if number of token below threshold*/
 		if(LiteralSearch.spanBelowThreshold(searchState.largestWordSpan(), inputWordsArSz)) {
-			List<Integer> highestThmList = LiteralSearch.literalSearch(input, numHighest);
+			System.out.println("Initiating literal search...");
+			List<Integer> highestThmList = LiteralSearch.literalSearch(input, searchWordsSet, numHighest);
 			searchState.set_intersectionVecList(highestThmList);
 			return searchState;
 		}
@@ -473,15 +474,18 @@ public class SearchIntersection {
 			if(0 == tupleSz){
 				continue;
 			}
-			//combine with ranking from relational search, reorganize within each tuple
-			//of fixed size. Try relation search first, then context search.
-			if(searchRelationalBool){				
-				//bestCommonVecsList = searchVecWithTuple(input, bestCommonVecsList, tupleSz, searcher, searchState);
-				tempHighestThmList = SearchCombined.searchVecWithTuple(input, tempHighestThmList, tupleSz, relationSearcher, searchState);					
-			}			
-			// re-order top entries based on context search, if enabled
-			if (contextSearchBool) {						
-				tempHighestThmList = SearchCombined.searchVecWithTuple(input, tempHighestThmList, tupleSz, contextSearcher, searchState);
+			
+			if(searchState.largestWordSpan() > 1) {
+				//combine with ranking from relational search, reorganize within each tuple
+				//of fixed size. Try relation search first, then context search.
+				if(searchRelationalBool){				
+					//bestCommonVecsList = searchVecWithTuple(input, bestCommonVecsList, tupleSz, searcher, searchState);
+					tempHighestThmList = SearchCombined.searchVecWithTuple(input, tempHighestThmList, tupleSz, relationSearcher, searchState);					
+				}			
+				// re-order top entries based on context search, if enabled
+				if (contextSearchBool) {						
+					tempHighestThmList = SearchCombined.searchVecWithTuple(input, tempHighestThmList, tupleSz, contextSearcher, searchState);
+				}
 			}
 			highestThmList.addAll(tempHighestThmList);
 		}		
@@ -744,7 +748,7 @@ public class SearchIntersection {
 		if (!wordThms.isEmpty()) {
 			wordScore = wordsScoreMap.get(word);
 			wordScore = wordScore == null ? 0 : wordScore;
-			curScoreToAdd = wordScore + CONTEXT_WORD_BONUS;
+			curScoreToAdd = wordScore;
 		} else {
 			wordSingForm = WordForms.getSingularForm(word);
 			Integer wordSingFormScore = wordsScoreMap.get(wordSingForm);
@@ -754,7 +758,7 @@ public class SearchIntersection {
 				wordThms = wordThmsIndexMMap1.get(wordSingForm);				
 				// wordScore = wordsScoreMap.get(singFormLong);
 				wordScore = wordSingFormScore;
-				curScoreToAdd = wordScore + CONTEXT_WORD_BONUS;
+				curScoreToAdd = wordScore;
 				word = wordSingForm;
 				if (null == relatedWordsList) {
 					relatedWords = relatedWordsMap.get(word);
@@ -779,7 +783,7 @@ public class SearchIntersection {
 				// wordScore = wordsScoreMap.get(word);
 				// wordScore = wordScore == null ? 0 : wordScore;
 				wordScore = tempWordScore;
-				curScoreToAdd = wordScore + CONTEXT_WORD_BONUS;
+				curScoreToAdd = wordScore;
 				word = normalizedWord;
 				// try to get related words,
 				if (null == relatedWordsList) {
@@ -947,7 +951,8 @@ public class SearchIntersection {
 			thm = inputSB.toString();
 			
 			// searchWordsSet is null.
-			List<Integer> highestThms = getHighestThmList(thm, null, searchState, contextSearchBool, 
+			Set<String> searchWordsSet = new HashSet<String>();
+			List<Integer> highestThms = getHighestThmList(thm, searchWordsSet, searchState, contextSearchBool, 
 					searchRelationalBool, numHighest);
 			
 			if (highestThms == null){

@@ -27,6 +27,7 @@ public class ContextSearch implements Searcher<Map<Integer, Integer>>{
 	private static final boolean DEBUG = FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : true;
 	private static final Logger logger = LogManager.getLogger(ContextSearch.class);
 	private static final int CONTEXT_MATCH_DEFAULT = 2;
+	private static final int SEARCH_SPAN_THRESHOLD = 2;
 	
 	private QueryVecContainer<Map<Integer, Integer>> searcherState;
 	
@@ -71,9 +72,16 @@ public class ContextSearch implements Searcher<Map<Integer, Integer>>{
 		int nearestThmIndexListSz = nearestThmIndexList.size();
 		//could be 0 if, for instance, the words searched are all unknown to the word maps. 
 		if(0 == nearestThmIndexListSz){ 
-			System.out.println("contextSearch parameter nearestThmIndexList is empty!");
+			//System.out.println("contextSearch parameter nearestThmIndexList is empty!");
 			return nearestThmIndexList;		
-		}		
+		}	
+		
+		Map<Integer, Integer> thmSpanMap = searchState.thmSpanMap();
+		Integer firstThmSpan = thmSpanMap.get(nearestThmIndexList.get(0));
+		if(null != firstThmSpan && firstThmSpan < SEARCH_SPAN_THRESHOLD ) {
+			return nearestThmIndexList;
+		}
+		
 		//String queryContextVec;
 		Map<Integer, Integer> queryContextVecMap;
 		if(null == searcher){

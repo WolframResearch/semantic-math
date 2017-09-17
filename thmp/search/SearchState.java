@@ -105,7 +105,11 @@ public class SearchState {
 	}
 	
 	/**the max span of any theorem produced by intersection search,
-	 * used to determine if perform literal word search.*/
+	 * used to determine if perform literal word search, and whether
+	 * to perform relation and context searches. So "a" and "a b" span
+	 * two, not three, words, even if "a b" is a valid bigram whose scores
+	 * are countered differently.
+	 */
 	public int largestWordSpan(){
 		return this.largestWordSpan;
 	}
@@ -122,7 +126,7 @@ public class SearchState {
 	 * Map of How many words in the query does the thm cover.
 	 * This is derived as the size of an entry for thmWordSpanMMap,
 	 * which is a Multimap of thmIndex, and the (index of) set of words in query 
-	 * that appear in the thm
+	 * that appear in the thm.
 	 * @return
 	 */
 	public Map<Integer, Integer> thmSpanMap(){

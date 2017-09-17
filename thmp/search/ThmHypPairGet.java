@@ -46,8 +46,9 @@ public class ThmHypPairGet{
 		System.out.println("ThmHypPairGet - bundleStartThmIndexList:  "+bundleStartThmIndexList );
 		totalThmsCount = searchConfig.totalThmsCount();
 		totalBundleNum = bundleStartThmIndexList.size();
+		//318 total as of Sept 16
 		thmBundleCache = CacheBuilder.newBuilder()
-				.maximumSize(500) //~1.5mb x 50 = 750 mb
+				.maximumSize(500) //~2mb x 500 = 1050 mb
 				//.removalListener( null)
 				.build(
 						new CacheLoader<Integer, ThmHypPairBundle>() {

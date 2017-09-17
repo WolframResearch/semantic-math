@@ -34,7 +34,8 @@ import thmp.utils.WordForms;
 public class SearchCombined {
 
 	private static final int NUM_NEAREST_SVD = 100;
-	protected static final int NUM_NEAREST = 30;
+	//return 60 now, but the FE should only display all when "show more" is clicked.
+	protected static final int NUM_NEAREST = 60;
 	//combined number of vectors to take from search results of
 	//svd/nearest and intersection
 	//protected static final int NUM_COMMON_VECS = 4;
@@ -99,6 +100,8 @@ public class SearchCombined {
 			return this.hypStr + " " + this.thmStr;
 		}
 	}
+
+	private static final boolean DEBUG = FileUtils.isOSX();
 	
 	/**
 	 * Turn list of indices of thms into list of String's.
@@ -308,13 +311,13 @@ public class SearchCombined {
 		}
 		
 		List<Integer> bestCommonVecsList = searchState.intersectionVecList();
-		///webMathematica currently does not work with 11.1.1, so only do this if run locally
+		
 		if(null == FileUtils.getServletContext()){			
 			//experiment with this constant!
-			if(searchState.largestWordSpan() < searchWordsSet.size()*3./4){
+			if(searchState.largestWordSpan() < searchWordsSet.size()*2./3){
 				//Only do SVD if no good intersection matches, determine if good match based on span scores.
 				List<Integer> nearestVecList = ThmSearch.ThmSearchQuery.findNearestThmsInTermDocMx(input, NUM_NEAREST_SVD);
-				if(nearestVecList.isEmpty()){
+				if(DEBUG  && nearestVecList.isEmpty()){
 					//System.out.println("I've got nothing for you yet. Try again.");
 					System.out.println("SVD search returns empty list!");
 				}

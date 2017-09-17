@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 
@@ -36,6 +37,7 @@ public class RelationalSearch implements Searcher<BigInteger>{
 
 	//private static final List<BigInteger> relationVecList;
 	private static final Logger logger = LogManager.getLogger(RelationalSearch.class);
+	private static final int SEARCH_SPAN_THRESHOLD = 3;
 	private QueryVecContainer<BigInteger> searcherState;
 	private static final int RELATION_SEARCH_NUM_NEAREST = 10;
 	
@@ -120,12 +122,20 @@ public class RelationalSearch implements Searcher<BigInteger>{
 	/**
 	 * Search based on relational vectors.
 	 * @param queryStr
-	 * @param nearestThmIndexList
+	 * @param nearestThmIndexList Ordered according to intersection search
 	 * @return
 	 */
 	public static List<Integer> relationalSearch(String queryStr, List<Integer> nearestThmIndexList, 
 			Searcher<BigInteger> searcher, SearchState searchState){
-		//short-circuit if query contains fewer than 3 words, so context doesn't make much sense	
+		
+		if(nearestThmIndexList.isEmpty()) {
+			return nearestThmIndexList;
+		}
+		Map<Integer, Integer> thmSpanMap = searchState.thmSpanMap();
+		Integer firstThmSpan = thmSpanMap.get(nearestThmIndexList.get(0));
+		if(null != firstThmSpan && firstThmSpan < SEARCH_SPAN_THRESHOLD ) {
+			return nearestThmIndexList;
+		}
 		
 		//short-circuit if context vec not meaningful (insignificant entries created)
 		

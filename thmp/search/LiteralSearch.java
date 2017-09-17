@@ -201,10 +201,11 @@ public class LiteralSearch {
 	 * Pass in original query string instead of set of words, 
 	 * since could use word ordering in query later on.
 	 * @param query
+	 * @param searchWordsSet set of words to be used for highlighting on the web FE.
 	 * @param maxThmCount the max number of thms that should be returned, optional param.
 	 * @return
 	 */
-	public static List<Integer> literalSearch(String query, int...maxThmCountAr){
+	public static List<Integer> literalSearch(String query, Set<String> searchWordsSet, int...maxThmCountAr){
 		
 		List<String> queryWordList = WordForms.splitThmIntoSearchWords(query);
 		//System.out.println("in literalSearch query words: "+ queryWordList);
@@ -216,6 +217,7 @@ public class LiteralSearch {
 				continue;
 			}
 			word = processLiteralSearchWord(word);
+			searchWordsSet.add(word);
 			
 			List<LiteralSearchIndex> thmIndexList = literalSearchIndexMap.get(word);
 			//System.out.println("LiteralSearch - thmIndexList "+thmIndexList);

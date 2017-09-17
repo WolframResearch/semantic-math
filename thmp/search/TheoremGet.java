@@ -33,7 +33,8 @@ public class TheoremGet {
 	static{
 		vecBundleCache = CacheBuilder.newBuilder()
 				//.maximumSize(400) //number of entries
-				.maximumSize(40) //65mb x 40 = 2600mb
+				//56 files total on Sept 15, but will increase.
+				.maximumSize(60) //65mb x 60 = 3900mb //was 40 as of Sept 15
 				.build(
 						new CacheLoader<Integer, ContextRelationVecBundle>() {
 							public ContextRelationVecBundle load(Integer bundleKey){
