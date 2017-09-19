@@ -75,6 +75,7 @@ public class WordForms {
 	
 	public static final Pattern QUANT_UNIT_PATTERN = Pattern.compile("(?:teaspoon|tablespoon|cup)");
 	public static final Pattern QUANT_DIGIT_PATTERN = Pattern.compile("\\d+/*\\d*");
+	public static final Pattern DIGIT_PATTERN = Pattern.compile("\\d+");
 	public static final String QUANTITY_POS = "quant";
 	
 	private static final ImmutableMap<String, String> synonymRepMap;

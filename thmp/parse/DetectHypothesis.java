@@ -8,7 +8,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
-import java.math.BigInteger;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,10 +24,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Multiset;
 
 import thmp.parse.ParseState.ParseStateBuilder;
 import thmp.parse.ParseState.VariableDefinition;
@@ -74,7 +71,7 @@ public class DetectHypothesis {
 	private static final Pattern BRACKET_SEPARATOR_PATTERN = Pattern.compile("([^\\(\\[\\{]+)[\\(\\[\\{].*");
 	
 	//used for thm scraping.
-	private static final Pattern THM_SCRAPE_PATTERN = Pattern.compile("(?i)(?:theorem|theory|proposition|lemma|conjecture)");
+	private static final Pattern THM_SCRAPE_PATTERN = Pattern.compile("(?i)(?:theorem|lemma|conjecture)");
 	//revise this!!
 	private static final Pattern THM_SCRAPE_PUNCTUATION_PATTERN = Pattern.compile("(?:(?=[,!:;.\\s])|(?<=[,!:;.\\s]))");
 	//punctuation pattern to eliminate
@@ -117,6 +114,7 @@ public class DetectHypothesis {
 	private static final String THM_SCRAPE_TXT_FILENAME = "thmNameScrape.txt";
 	//stop words that come after the stirng "theorem", to stop scraping before, the word immediately before.
 	private static final Set<String> SCRAPE_STOP_WORDS_BEFORE_SET = new HashSet<String>();
+	private static final Pattern THM_SCRAPE_ELIM_PATTERN = Pattern.compile("(?:from|proof|proves*|next)");
 	/****/
 	
 	//serialize the words as well, to bootstrap up after iterations of processing. The math words are going to 
@@ -160,7 +158,7 @@ public class DetectHypothesis {
 		//Then use current list, but wordsList's from previous runs.
 		//ThmSearch.TermDocumentMatrix.createTermDocumentMatrixSVD();	
 		//
-		String[] beforeStopWordsAR = new String[]{"by"};
+		String[] beforeStopWordsAR = new String[]{"by", "of"};
 		for(String w : beforeStopWordsAR) {
 			SCRAPE_STOP_WORDS_BEFORE_SET.add(w);
 		}
@@ -640,6 +638,12 @@ public class DetectHypothesis {
 			if(THM_SCRAPE_ELIM_PUNCTUATION_PATTERN.matcher(curWord).find()) {
 				break;
 			}
+			if(THM_SCRAPE_ELIM_PATTERN.matcher(curWord).matches()) {
+				return "";
+			}
+			if(i==1 && SCRAPE_STOP_WORDS_BEFORE_SET.contains(curWord)) {
+				break;
+			}
 			sb.insert(0, curWord + " ");
 			i++;
 			count++;
@@ -654,9 +658,15 @@ public class DetectHypothesis {
 			if(WordForms.getWhiteEmptySpacePattern().matcher(curWord).matches()) {
 				i++;
 				continue;
-			}
+			}	
 			if(THM_SCRAPE_ELIM_PUNCTUATION_PATTERN.matcher(curWord).find()) {
 				break;
+			}
+			if(i==1 && WordForms.DIGIT_PATTERN.matcher(curWord).matches()) {
+				break;
+			}
+			if(THM_SCRAPE_ELIM_PATTERN.matcher(curWord).matches()) {
+				return "";
 			}
 			sb.append(curWord).append(" ");
 			i++;
