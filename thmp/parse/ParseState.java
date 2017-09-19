@@ -2,6 +2,7 @@ package thmp.parse;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -28,6 +29,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 
 /**
  * Captures state of the parse, such as recent entities used (recentEnt).
@@ -68,7 +70,7 @@ public class ParseState {
 	private ParseStruct curParseStruct;	
 	//context vector that takes into account structure of parse tree, i.e.
 	//the relations between different Structs.
-	private BigInteger relationalVec;
+	private Set<Integer> relationalVec;
 	//number of non-tex tokens, used during search, so can discard theorems that
 	//are almost all latex expressions.
 	private int numNonTexTokens;
@@ -443,7 +445,7 @@ public class ParseState {
 	/**
 	 * @return the relationalContextVec
 	 */
-	public BigInteger getRelationalContextVec() {
+	public Set<Integer> getRelationalContextVec() {
 		return relationalVec;
 	}
 
@@ -452,7 +454,7 @@ public class ParseState {
 	 * Don't like this getting/setting vectors, bug-prone, should just have 
 	 * an atomic structure that can't leak across parses.
 	 */
-	public void setRelationalContextVec(BigInteger relationalContextVec) {
+	public void setRelationalContextVec(Set<Integer> relationalContextVec) {
 		this.relationalVec = relationalContextVec;
 	}
 
@@ -462,26 +464,27 @@ public class ParseState {
 	 * components for one theorem, but we only want one relational vec for the theorem. 
 	 * @param relationalContextVecList the relationalContextVec to combine and set.
 	 */
-	public void setRelationalContextVec(List<BigInteger> relationalContextVecList) {
+	public void setRelationalContextVec(List<Set<Integer>> relationalContextVecList) {
 		//combine the relational vecs
-		BigInteger completeRelationalVec = new BigInteger(1, new byte[1]);
+		Set<Integer> combinedRelVec = new HashSet<Integer>();
+		
+		/*BigInteger completeRelationalVec = new BigInteger(1, new byte[1]);
 		for(BigInteger bi : relationalContextVecList){
 			if(null == bi) continue;
 			completeRelationalVec = completeRelationalVec.or(bi);
+		}*/
+		for(Set<Integer> relVec : relationalContextVecList) {
+			combinedRelVec.addAll(relVec);
 		}
-		this.relationalVec = completeRelationalVec;
+		this.relationalVec = combinedRelVec;
 	}
 	
 	/**
-	 * Combines the context vec for each component into a single thm context vec.
+	 * Combines the context vec for each component into a single thm context vec map.
 	 * Computes the combined vector each time. Caller should only call once and store
 	 * result.
-	 * @return the relationalContextVec
+	 * @return the relationalContextVec map
 	 */
-	public int[] getCurThmCombinedContextVec() {		
-		return GenerateContextVector.combineContextVectors(thmContextVecList);
-	}
-	
 	public Map<Integer, Integer> getCurThmCombinedContextVecMap() {		
 		return GenerateContextVector.combineContextVectorMaps(thmContextVecMapList);
 	}

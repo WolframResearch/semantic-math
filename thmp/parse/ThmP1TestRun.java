@@ -2,10 +2,15 @@ package thmp.parse;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 import thmp.parse.ParseState.ParseStateBuilder;
 import thmp.search.Searcher;
+import thmp.search.TheoremGet.ContextRelationVecPair;
 import thmp.utils.FileUtils;
 
 /*
@@ -846,6 +851,10 @@ public class ThmP1TestRun {
 			st = "There are fields in the class $\\mathcal {X} $ that are not finite modifications of rings";
 			st = "combine with carrot";
 			st = "stir eggs and banana";
+			st = "laabel{thm:rig} Let h0:MomegaNh0:MomegaN be a harmonic mappings, where MM is compact and NN of nonpositive sectional curvature . Suppose that there exists a point pp in MM such that the followings hold: {rm (a)} at h0(p)h0(p) the Ricci tensor of NN is negative definite, {rm (b)} the differential map dh0(p)dh0(p) of h0h0 at pp is surjective. Then h0h0 is the only harmonic mapping in its homotopy class.\n" + 
+					"if a finite group FF acts effectively and continuously on a closed aspherical manifold MM with centerless fundamental group π1(M)π1(M) , lawson and yau showed that the isometry group I(N)I(N) of a closed riemannian manifold NN of non-positive curvature has dimension equal to the rank of center π1(N)π1(N) ,";
+			st = "Let $p\\equiv 1\\pmod 8$ be a rational prime and let $e\\geq 2$. We have $p\\in V(e)$ if and only if the equation \\begin{equation}x^2+p\\,y^2=(1+i)z^{2^{e-2}}  \\end{equation} has a solution $x,y,z\\in\\mathbb{Q}(i)$ with \\[(x-i\\,y)\\mathbb{Z}[i]+2\\,y\\mathbb{Z}[i]=\\mathbb{Z}[i].\\] "
+					 +"suppose $d\\in R$ is a non-square . if one assumes that elliptic curves of rank $2$ are extremely rare ";
 			
 			//st = " \\[ \\ begin{array}{l}  \\ frac{1}{\\ eta_ 1(R^1_T)}  \\ int_{R^1_T} \\ left(\\ int_{H_ 1/H_1\\ cap \\ Gamma_ 1} f(gh \\ Gamma_ 1)\\; d \\ nu_ 1(\\ dot{h})\\ right) \\,d \\ eta_ 1(\\ dot{g}) \\ \\[7pt] \\ qquad \\ \\ qquad =  (1/2)\\ int_{{\\ rm O}(n)} dk \\ cdot \\ int_{H_ 1/H_1\\ cap \\ Gamma_ 1}  d \\ nu_ 1(\\ dot{h})\\; {\\ scriptstyle \\ times} \\ \\[3pt] \\ qquad \\ \\ qquad \\ \\ qquad {\\ scriptstyle \\ times}\\;   \\ left (\\ frac{1}{\\ ell(D^1_T)} \\ int_{(\\ mbox{\\ boldmath{$ \\ scriptstyle t$}},\\ mbox{\\ boldmath{$ \\ scriptstyle x$}})\\ in D^1_T}  f(k \\ Psi(\\ mbox{\\ boldmath{$t$}},\\ mbox{\\ boldmath{$x$}})\\ Gamma_ 1)\\; d \\ mbox{\\ boldmath{$t$}}\\, d \\ mbox{\\ boldmath{$x$}} \\ right).  \\end{array} \\]";
 			//st = "Let $p_1,\\dots,p_r$ be the preimages under $w$"; 			
@@ -957,6 +966,38 @@ public class ThmP1TestRun {
 				boolean isVerbose = true;
 				try{
 					ParseRun.parseInput(st, parseState, isVerbose);
+					
+					//BigInteger relVec = parseState.getRelationalContextVec();
+					//Map<Integer,Integer> contextVec = parseState.getCurThmCombinedContextVecMap();
+					
+					/*List<Map<Integer,Integer>> contVecList = new ArrayList<Map<Integer,Integer>>();
+					contVecList.add(contextVec);
+					FileUtils.serializeObjToFile(contVecList, "src/thmp/data/sampleContextVec.dat");
+					
+					List<BigInteger> relVecList = new ArrayList<BigInteger>();
+					relVecList.add(relVec);
+					FileUtils.serializeObjToFile(relVecList, "src/thmp/data/sampleRelVec.dat");*/
+					
+					/*@SuppressWarnings("unchecked")
+					List<ContextRelationVecPair> vecsList = (List<ContextRelationVecPair>)
+							FileUtils.deserializeListFromFile("/Users/yihed/Documents/workspace/SemanticMath/src/thmp/data/vecs/contextRelationVecPairList49");
+					List<ContextRelationVecPair> shortVecsList = new ArrayList<ContextRelationVecPair>();
+					List<Map<Integer,Integer>> mapsList = new ArrayList<Map<Integer,Integer>>();
+					List<BigInteger> relVecsList = new ArrayList<BigInteger>();
+					int vecsListSz = vecsList.size();
+					for(int i = vecsListSz-50; i < vecsListSz; i++) {
+						shortVecsList.add(vecsList.get(i));
+						mapsList.add(vecsList.get(i).contextVecMap());
+						relVecsList.add(vecsList.get(i).relationVec());
+					}
+					
+					FileUtils.serializeObjToFile(shortVecsList, "src/thmp/data/shortVecsList.dat");
+					
+					FileUtils.serializeObjToFile(mapsList, "src/thmp/data/shortContextMapList.dat");
+					FileUtils.serializeObjToFile(relVecsList, "src/thmp/data/shortRelVecList.dat");
+					
+					System.out.println("vecsList.size(): "+vecsList.size());*/
+					
 				}catch(StackOverflowError e){
 					System.out.println("ERRRRRROOORRRRRRRR SOF!");
 				}

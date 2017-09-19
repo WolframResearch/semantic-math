@@ -5,6 +5,7 @@ import java.math.BigInteger;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 import javax.servlet.ServletContext;
@@ -183,16 +184,17 @@ public class TheoremGet {
 		private Map<Integer, Integer> contextVecMap;
 		
 		//relational vector, see RelationVec.java.
-		private BigInteger relationVec;
+		private Set<Integer> relationVec;
+		
 		private static final ContextRelationVecPair PLACEHOLDER_CONTEXT_RELATION_VEC;
 		
 		static{
-			BigInteger relationVector = thmp.parse.RelationVec.getPlaceholderRelationVec();
+			Set<Integer> relationVector = thmp.parse.RelationVec.getPlaceholderRelationVec();
 			//int[] contextVecString = ParseState.PLACEHOLDER_CONTEXT_VEC();
 			PLACEHOLDER_CONTEXT_RELATION_VEC = new ContextRelationVecPair(Collections.<Integer, Integer>emptyMap(), relationVector);
 		}
 		
-		public ContextRelationVecPair(Map<Integer, Integer> contextVecMap_, BigInteger relationVec_){			
+		public ContextRelationVecPair(Map<Integer, Integer> contextVecMap_, Set<Integer> relationVec_){			
 			//this.contextVecStr = GenerateContextVector.contextVecIntArrayToString(combinedContextVec);
 			this.contextVecMap = contextVecMap_;
 			this.relationVec = relationVec_;
@@ -201,9 +203,11 @@ public class TheoremGet {
 		public Map<Integer, Integer> contextVecMap(){
 			return this.contextVecMap;
 		}
-		public BigInteger relationVec(){
+		
+		public Set<Integer> relationVec(){
 			return this.relationVec;
 		}
+		
 		public static ContextRelationVecPair PlaceholderContextRelationVecs(){
 			return PLACEHOLDER_CONTEXT_RELATION_VEC;
 		}		

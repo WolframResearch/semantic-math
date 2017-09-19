@@ -445,7 +445,7 @@ public class SearchIntersection {
 		// list to track the top entries
 		//int counter = numHighest * 2;
 		counter = numHighest;
-		Searcher<BigInteger> relationSearcher = new RelationalSearch();
+		Searcher<Set<Integer>> relationSearcher = new RelationalSearch();
 		Searcher<Map<Integer, Integer>> contextSearcher = new ContextSearch();	
 		for (Entry<Integer, Collection<ThmSpanPair>> entry : scoreThmDescMMap.entrySet()) {			
 			List<Integer> tempHighestThmList = new ArrayList<Integer>();

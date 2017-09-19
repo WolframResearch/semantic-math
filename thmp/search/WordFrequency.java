@@ -117,7 +117,9 @@ public class WordFrequency {
 
 		//words that should be included in trueFluffWordsSet, but were left out by algorithm.
 		private static final String[] ADDITIONAL_FLUFF_WORDS = new String[]{"an", "are", "has", "tex", "between",
-				"call", "does", "do"};
+				"call", "does", "do", "equation"/*equation because we don't strip \begin{equation} during preprocessing
+				which inflates this word, and incorrectly displays it in the web frontend*/
+				};
 		
 		static{
 			Map<String, String> wordPosPreMap = new HashMap<String, String>();

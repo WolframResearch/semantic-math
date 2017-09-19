@@ -1235,11 +1235,11 @@ public class DetectHypothesis {
 				new DefinitionListWithThm(thmStr, variableDefinitionList, definitionStr, srcFileName);
 		
 		//relational and context vecs can't be null, since ImmutableList cannot contain null elements
-		BigInteger relationalContextVec = parseState.getRelationalContextVec();
+		Set<Integer> relationalContextVec = parseState.getRelationalContextVec();
 		
 		if(null == relationalContextVec){
 			//write placeholder
-			relationalContextVec = new BigInteger(1, new byte[1]);
+			relationalContextVec = new HashSet<Integer>();//new BigInteger(1, new byte[1]);
 		}
 		Map<Integer, Integer> combinedContextVecMap = parseState.getCurThmCombinedContextVecMap();
 		if(null == combinedContextVecMap){

@@ -9,7 +9,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -91,6 +90,7 @@ public class ThmP1 {
 	private static final Pattern SINGLE_WORD_TEX_PATTERN = Pattern.compile("\\$[^$]+\\$[^\\s]*"); 
 	private static final Pattern ARTICLE_PATTERN = Pattern.compile("a|the|an");
 	private static final Pattern PREPROCESS_PUNCTUATION_PATTERN = Pattern.compile("([^\\.,!:;]*)([\\.,:!;]{1})([^\\.,!:;]*)");
+	//private static final String localPathToTagger = "lib/stanford-postagger-2015-12-09/models/english-bidirectional-distsim.tagger";
 	
 	// list of parts of speech, ent, verb etc <--should make immutable
 	private static final List<String> posList;
@@ -241,14 +241,14 @@ public class ThmP1 {
 	}
 	
 	private static void setUpPosTagger(){
-		String localPathToTagger = "lib/stanford-postagger-2015-12-09/models/english-bidirectional-distsim.tagger";
-		String serverPathToTagger = Maps.getServerPosTaggerPathStr();
+		String pathToTagger = Maps.getServerPosTaggerPathStr();
 		
-		if(null != serverPathToTagger){
+		posTagger = new MaxentTagger(pathToTagger);
+		/*if(null != serverPathToTagger){
 			posTagger = new MaxentTagger(serverPathToTagger);
 		}else{
 			posTagger = new MaxentTagger(localPathToTagger);
-		}
+		}*/
 	}
 	
 	/**
@@ -3673,10 +3673,10 @@ public class ThmP1 {
 		
 		//build relation vector for the highest-ranked parse, set relation vector to parseState.
 		Multimap<ParseStructType, ParsedPair> topParsedPairMMap = sortedParsedPairMMapList.get(0);
-		BigInteger relationVec;
+		Set<Integer> relationVec;
 		if(FOOD_PARSE){
 			//doing temporarily on local machine, so parsing does not take forever because of map initializations.
-			relationVec = new BigInteger("0");
+			relationVec = new HashSet<Integer>();//new BigInteger("0");
 		}else{
 			relationVec = RelationVec.buildRelationVec(topParsedPairMMap);
 		}

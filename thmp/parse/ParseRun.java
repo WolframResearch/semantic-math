@@ -4,6 +4,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import com.wolfram.jlink.Expr;
 
@@ -89,7 +90,7 @@ public class ParseRun {
 	 */
 	public static void parseInput(String st, ParseState parseState, boolean isVerbose, Stats stats, boolean...doPreprocess){
 		
-		List<BigInteger> relationalContextVecList = new ArrayList<BigInteger>();			
+		List<Set<Integer>> relationalContextVecList = new ArrayList<Set<Integer>>();			
 		parseState.resetNumNonTexTokens();
 		
 		String[] strAr;	
@@ -117,7 +118,7 @@ public class ParseRun {
 			
 			parseState = ThmP1.parse(parseState);
 			
-			BigInteger curContextVec = parseState.getRelationalContextVec();
+			Set<Integer> curContextVec = parseState.getRelationalContextVec();
 			relationalContextVecList.add(curContextVec);
 			//get context vector
 			//if(isVerbose) System.out.println("cur vec: " + Arrays.toString(curContextVec));			
@@ -142,8 +143,8 @@ public class ParseRun {
 			}
 			if(DEBUG){ 
 				System.out.println("ParseRun - For str: " + st);
-				BigInteger relationVec = parseState.getRelationalContextVec();
-				System.out.println("Relational Vector num of bits set: " + (relationVec == null ? "vec null." : relationVec.bitCount()));
+				Set<Integer> relationVec = parseState.getRelationalContextVec();
+				System.out.println("Relational Vector Set size: " + (relationVec == null ? "vec null." : relationVec.size()));
 				System.out.println("~++++~ CurThmCombinedContextVecMap: " +parseState.getCurThmCombinedContextVecMap());
 			}
 		}

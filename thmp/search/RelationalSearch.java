@@ -3,23 +3,18 @@ package thmp.search;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.BitSet;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
-import java.util.regex.Matcher;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.TreeMultimap;
 
-import thmp.parse.GenerateRelationVec;
-import thmp.parse.ParseState;
 import thmp.parse.RelationVec;
-import thmp.parse.ParseState.ParseStateBuilder;
 import thmp.search.SearchCombined.ThmHypPair;
-import thmp.search.Searcher.QueryVecContainer;
 import thmp.search.TheoremGet.ContextRelationVecPair;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
@@ -33,26 +28,26 @@ import thmp.utils.WordForms;
  * @see RelationVec.java. 
  * @author yihed
  */
-public class RelationalSearch implements Searcher<BigInteger>{
+public class RelationalSearch implements Searcher<Set<Integer>>{
 
 	//private static final List<BigInteger> relationVecList;
 	private static final Logger logger = LogManager.getLogger(RelationalSearch.class);
 	private static final int SEARCH_SPAN_THRESHOLD = 3;
-	private QueryVecContainer<BigInteger> searcherState;
+	private QueryVecContainer<Set<Integer>> searcherState;
 	private static final int RELATION_SEARCH_NUM_NEAREST = 10;
 	
-	static{
+	/*static{
 		//should get vectors from deserialized ParsedExpression's List
 		//relationVecList = CollectThm.ThmList.allThmsRelationVecList();		
-	}
+	}*/
 	
 	@Override
-	public void setSearcherState(QueryVecContainer<BigInteger> searcherState_){
+	public void setSearcherState(QueryVecContainer<Set<Integer>> searcherState_){
 		searcherState = searcherState_;
 	}
 	
 	@Override
-	public QueryVecContainer<BigInteger> getSearcherState(){
+	public QueryVecContainer<Set<Integer>> getSearcherState(){
 		return this.searcherState;
 	}
 	
@@ -126,7 +121,7 @@ public class RelationalSearch implements Searcher<BigInteger>{
 	 * @return
 	 */
 	public static List<Integer> relationalSearch(String queryStr, List<Integer> nearestThmIndexList, 
-			Searcher<BigInteger> searcher, SearchState searchState){
+			Searcher<Set<Integer>> searcher, SearchState searchState){
 		
 		if(nearestThmIndexList.isEmpty()) {
 			return nearestThmIndexList;
@@ -137,10 +132,8 @@ public class RelationalSearch implements Searcher<BigInteger>{
 			return nearestThmIndexList;
 		}
 		
-		//short-circuit if context vec not meaningful (insignificant entries created)
-		
 		//form context vector of query
-		BigInteger queryRelationVec;		
+		Set<Integer> queryRelationVec;		
 		
 		if(null == searcher){
 			queryRelationVec = thmp.parse.GenerateRelationVec.generateRelationVec(queryStr, searchState);
@@ -148,10 +141,10 @@ public class RelationalSearch implements Searcher<BigInteger>{
 			//optimization to store vec in searcherState, 
 			//to avoid repeatedly parsing the same query string, 
 			//in case some other search algorithm is used for same query.
-			QueryVecContainer<BigInteger> searcherState;			
+			QueryVecContainer<Set<Integer>> searcherState;			
 			if(null == (searcherState = searcher.getSearcherState())){
 				queryRelationVec = thmp.parse.GenerateRelationVec.generateRelationVec(queryStr, searchState);
-				searcher.setSearcherState(new QueryVecContainer<BigInteger>(queryRelationVec));
+				searcher.setSearcherState(new QueryVecContainer<Set<Integer>>(queryRelationVec));
 			}else{
 				queryRelationVec = searcherState.getQueryVec();
 				if(null == queryRelationVec){
@@ -163,7 +156,7 @@ public class RelationalSearch implements Searcher<BigInteger>{
 		
 		//System.out.println("--++++++queryRelationVec " + queryRelationVec);
 		//skip relation search if no nontrivial relation found, i.e. no bit set.
-		if(null == queryRelationVec || queryRelationVec.bitCount() == 0){
+		if(null == queryRelationVec || queryRelationVec.size() == 0){
 			return nearestThmIndexList;
 		}
 		
@@ -175,10 +168,10 @@ public class RelationalSearch implements Searcher<BigInteger>{
 		for(int i = 0; i < nearestThmIndexListSz; i++){
 			int thmIndex = nearestThmIndexList.get(i);
 			ContextRelationVecPair vecPair = TheoremGet.getContextRelationVecFromIndex(thmIndex);
-			BigInteger relationVec_i = vecPair.relationVec();
+			Set<Integer> relationVec_i = vecPair.relationVec();
 			//relationVecList.add(relationVec_i);
 			//if(true) throw new IllegalStateException();
-			int hammingDistance_i = RelationVec.hammingDistance2(queryRelationVec, relationVec_i);
+			int hammingDistance_i = RelationVec.hammingDistanceForSets(queryRelationVec, relationVec_i);
 			nearestThmTreeMMap.put(hammingDistance_i, thmIndex);
 		}		
 		return new ArrayList<Integer>(nearestThmTreeMMap.values());		

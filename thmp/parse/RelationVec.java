@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -59,8 +61,7 @@ public class RelationVec implements Serializable{
 	
 	private static final int parseContextVectorSz;	
 	private static final int NUM_BITS_PER_BYTE = 8;
-	private static final Pattern SPLIT_DELIM_PATTERN = WordForms.splitDelimPattern();
-	private static final BigInteger PLACEHOLDER_RELATION_VEC = new BigInteger(new byte[]{0});
+	private static final Set<Integer> PLACEHOLDER_RELATION_VEC = Collections.<Integer>emptySet();//new BigInteger(new byte[]{0});
 	
 	private static final boolean DEBUG = FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : false;
 	
@@ -115,14 +116,14 @@ public class RelationVec implements Serializable{
 	/**
 	 * Builds relation vec from ParsedPair's in parsedPairMMap, 
 	 * @param parsedPairMMap
-	 * @return a BigInteger with the bits set.
+	 * @return a set containing the bits set.
 	 */
-	public static BigInteger buildRelationVec(Multimap<ParseStructType, ParsedPair> parsedPairMMap){
+	public static Set<Integer> buildRelationVec(Multimap<ParseStructType, ParsedPair> parsedPairMMap){
 		
 		//bit vector whose set bits at particular words indicate the relations 
 		//these words play in context. bitPosList lists the bits to be set.
 		int maxBitPos = 0;
-		List<Integer> bitPosList = new ArrayList<Integer>();
+		Set<Integer> bitPosCol = new HashSet<Integer>();
 		
 		for(Map.Entry<ParseStructType, ParsedPair> pairEntry : parsedPairMMap.entries()){
 			
@@ -136,14 +137,14 @@ public class RelationVec implements Serializable{
 			
 			boolean isParseStructTypeHyp = (parseStructType == ParseStructType.HYP
 					|| parseStructType == ParseStructType.HYP_iff);
-
+			
 			maxBitPos = fillByteArrayFromCommand(wlCommand, isParseStructTypeHyp,
-					maxBitPos, bitPosList);			
+					maxBitPos, bitPosCol);			
 			
 			//go through the composited commands, as they contain relational data as well.
 			for(WLCommand compositedWLCommand : wlCommand.composedWLCommandsList()){
 				maxBitPos = fillByteArrayFromCommand(compositedWLCommand, isParseStructTypeHyp,
-						maxBitPos, bitPosList);			
+						maxBitPos, bitPosCol);			
 			}
 		}
 		
@@ -153,12 +154,10 @@ public class RelationVec implements Serializable{
 		//left after division by 8.
 		byte[] byteArray = new byte[byteArrayLength + 1];
 		
-		//System.out.println("*&&&&&&& RelationVec.java - positions of bits to be set: " + bitPosList);
 		//fill in byteArray given the list of positions of bits to set
-		fillByteArray(byteArray, bitPosList);
-		BigInteger indexBitBigInt = new BigInteger(1, byteArray);
-		//System.out.println("*&&&&&&& RelationVec.java - indexBitBigInt: " + indexBitBigInt);
-		return indexBitBigInt;		
+		/**fillByteArray(byteArray, bitPosCol);
+		BigInteger indexBitBigInt = new BigInteger(1, byteArray); don't delete yet, Sept 18 2017*/
+		return bitPosCol;		
 	}
 	
 	/**
@@ -166,11 +165,11 @@ public class RelationVec implements Serializable{
 	 * @param wlCommand
 	 * @param isParseStructTypeHyp
 	 * @param maxBitPos
-	 * @param bitPosList
+	 * @param bitPosSet
 	 * @return
 	 */
 	private static int fillByteArrayFromCommand(WLCommand wlCommand, boolean isParseStructTypeHyp,
-			int maxBitPos, List<Integer> bitPosList){
+			int maxBitPos, Collection<Integer> bitPosSet){
 
 		List<PosTerm> posList = WLCommand.posTermList(wlCommand);
 		
@@ -195,12 +194,12 @@ public class RelationVec implements Serializable{
 					//MultiplicityAr gives the locations a term goes into all the slots 
 					//used in the relation vector. 
 					//e.g. "A" in "If A is B" has the offset for both "_IS" and "IF", 
-					//so the array is e.g. [0, 2]
+					//so the multiplicityAr is e.g. [0, 2]
 					int[] multiplicityAr = posTermRelationType.vectorOffsetArray();
 					
 					//add new indices to bitPosList
 					for(int multiplicity : multiplicityAr){
-						int curBitPos = setBitPosList(contentStrList, bitPosList, multiplicity, 
+						int curBitPos = setBitPosList(contentStrList, bitPosSet, multiplicity, 
 								posTermRelationType, isParseStructTypeHyp);						
 						if(curBitPos > maxBitPos){
 							maxBitPos = curBitPos;
@@ -216,14 +215,14 @@ public class RelationVec implements Serializable{
 	 * Fill in byteArray given the list of positions of bits to set. 
 	 * Auxiliary method to buildRelationVec().
 	 * @param byteArray
-	 * @param bitPosList
+	 * @param bitPosSet
 	 */
-	private static void fillByteArray(byte[] byteArray, List<Integer> bitPosList) {
+	private static void fillByteArray(byte[] byteArray, Collection<Integer> bitPosSet) {
 		
 		//compute each byte and the position to place it.
 		int byteArrayLen = byteArray.length;
 		
-		for(int bitPos : bitPosList){
+		for(int bitPos : bitPosSet){
 			int modulus = bitPos/NUM_BITS_PER_BYTE;
 			int residue = bitPos - modulus*NUM_BITS_PER_BYTE;
 			byte curByte = (byte)(1<<residue);
@@ -237,17 +236,17 @@ public class RelationVec implements Serializable{
 	 * @param modulus Which segment of the index the current RelationType corresponds to.
 	 * @param termStrList List of Strings to be added to context vector, in which each String
 	 * will be decomposed into pieces as well.
-	 * @param bitPosList
+	 * @param bitPosCol
 	 * @param posTermRelationType
 	 * @param isParseStructTypeHyp
 	 * @return  max position this run in the new bit positions added.
 	 */
-	private static int setBitPosList(List<String> termStrList, List<Integer> bitPosList, int modulus, 
+	private static int setBitPosList(List<String> termStrList, Collection<Integer> bitPosCol, int modulus, 
 			RelationType posTermRelationType, boolean isParseStructTypeHyp){
 		
 		int maxBitPos = 0;
 		for(String termStr : termStrList){
-			int curMax = setBitPosList(termStr, bitPosList, modulus, posTermRelationType, isParseStructTypeHyp);
+			int curMax = setBitPosList(termStr, bitPosCol, modulus, posTermRelationType, isParseStructTypeHyp);
 			if(curMax > maxBitPos) maxBitPos = curMax;
 		}
 		return maxBitPos;
@@ -260,20 +259,20 @@ public class RelationVec implements Serializable{
 		 * @param modulus Which segment of the index the current RelationType corresponds to, e.g. _IS.
 		 * @return max position this run in the new bit positions added.
 		 */
-		private static int setBitPosList(String termStr, List<Integer> bitPosList, int modulus, 
+		private static int setBitPosList(String termStr, Collection<Integer> bitPosSet, int modulus, 
 				RelationType posTermRelationType, boolean isParseStructTypeHyp){
 			
 			if("".equals(termStr)) return 0;
 			
 			int maxBitPos = 0;
-			String[] termStrAr = SPLIT_DELIM_PATTERN.split(termStr);
-			int termStrArLen = termStrAr.length;
+			List<String> termStrList = WordForms.splitThmIntoSearchWords(termStr);
+			int termStrArLen = termStrList.size();
 			
 			if(termStrArLen > 1){
 				//set indices for all terms in compound words, 
 				//e.g. "... is regular local", sets "is regular, *and* "is local"
-				for(int i = 0; i < termStrArLen; i++){				
-					String word = termStrAr[i];
+				for(int i = 0; i < termStrArLen; i++){			
+					String word = termStrList.get(i);
 					
 					List<String> relatedWordsList = null;
 					RelatedWords relatedWords;
@@ -299,13 +298,13 @@ public class RelationVec implements Serializable{
 								}
 							}
 							//add the residues for related words first
-							maxBitPos = addRelatedWordsResidue(bitPosList, modulus, posTermRelationType, isParseStructTypeHyp,
+							maxBitPos = addRelatedWordsResidue(bitPosSet, modulus, posTermRelationType, isParseStructTypeHyp,
 									maxBitPos, relatedWordsList);
 						}
 					}else{
 						if(!GATHERING_DATA_BOOL){
 							//add the residues for related words first
-							maxBitPos = addRelatedWordsResidue(bitPosList, modulus, posTermRelationType, isParseStructTypeHyp,
+							maxBitPos = addRelatedWordsResidue(bitPosSet, modulus, posTermRelationType, isParseStructTypeHyp,
 									maxBitPos, relatedWordsList);
 						}
 						continue;
@@ -314,11 +313,11 @@ public class RelationVec implements Serializable{
 						System.out.println("RelationVec - adding word " + word);
 					}
 					int bitPos = parseContextVectorSz*modulus + residue;					
-					maxBitPos = addToPosList(bitPosList, maxBitPos, bitPos);					
+					maxBitPos = addToPosList(bitPosSet, maxBitPos, bitPos);					
 					//if parseStructType is HYP, also add to the "IF" segment.
 					//e.g. "if $f$ is a surjection", should add to "if" segment
 					//besides "IS_" and "_IS" segments.
-					maxBitPos = addHypRelationType(residue, bitPosList, maxBitPos,
+					maxBitPos = addHypRelationType(residue, bitPosSet, maxBitPos,
 							posTermRelationType, isParseStructTypeHyp);
 				}
 			}
@@ -347,7 +346,7 @@ public class RelationVec implements Serializable{
 				}
 			}			
 			if(!GATHERING_DATA_BOOL){
-				maxBitPos = addRelatedWordsResidue(bitPosList, modulus, posTermRelationType, isParseStructTypeHyp,
+				maxBitPos = addRelatedWordsResidue(bitPosSet, modulus, posTermRelationType, isParseStructTypeHyp,
 						maxBitPos, relatedWordsList);
 			}
 			if(null != residue){
@@ -355,18 +354,18 @@ public class RelationVec implements Serializable{
 					System.out.println("RelationVec - adding word " + termStr);
 				}
 				int bitPos = parseContextVectorSz*modulus + residue;
-				maxBitPos = addToPosList(bitPosList, maxBitPos, bitPos);
+				maxBitPos = addToPosList(bitPosSet, maxBitPos, bitPos);
 				//if parseStructType is HYP, also add to the "IF" segment.
 				//e.g. "if $f$ is a surjection", should add to "if" segment
 				//besides "IS_" and "_IS" segments.
-				maxBitPos = addHypRelationType(residue, bitPosList, maxBitPos,
+				maxBitPos = addHypRelationType(residue, bitPosSet, maxBitPos,
 						posTermRelationType, isParseStructTypeHyp);
 			}
 			return maxBitPos;
 		}
 
 		/**
-		 * @param bitPosList
+		 * @param bitPosSet
 		 * @param modulus
 		 * @param posTermRelationType
 		 * @param isParseStructTypeHyp
@@ -374,7 +373,7 @@ public class RelationVec implements Serializable{
 		 * @param relatedWordsList
 		 * @return
 		 */
-		public static int addRelatedWordsResidue(List<Integer> bitPosList, int modulus,
+		public static int addRelatedWordsResidue(Collection<Integer> bitPosSet, int modulus,
 				RelationType posTermRelationType, boolean isParseStructTypeHyp, int maxBitPos,
 				List<String> relatedWordsList) {
 			if(null != relatedWordsList){
@@ -382,8 +381,8 @@ public class RelationVec implements Serializable{
 					Integer relatedWordResidue = keywordIndexDict.get(relatedWord);
 					if(null != relatedWordResidue){
 						int bitPos = parseContextVectorSz*modulus + relatedWordResidue;					
-						maxBitPos = addToPosList(bitPosList, maxBitPos, bitPos);
-						maxBitPos = addHypRelationType(relatedWordResidue, bitPosList, maxBitPos,
+						maxBitPos = addToPosList(bitPosSet, maxBitPos, bitPos);
+						maxBitPos = addHypRelationType(relatedWordResidue, bitPosSet, maxBitPos,
 								posTermRelationType, isParseStructTypeHyp);
 					}
 				}						
@@ -394,32 +393,32 @@ public class RelationVec implements Serializable{
 		/**
 		 * Adds residues at corresponding places for "if" RelationType's, besides e.g. _IS.
 		 * @param residue
-		 * @param bitPosList
+		 * @param bitPosCol
 		 * @param maxBitPos
 		 * @param posTermRelationType
 		 * @param isParseStructTypeHyp
 		 * @return
 		 */
-		private static int addHypRelationType(int residue, List<Integer> bitPosList, int maxBitPos,
+		private static int addHypRelationType(int residue, Collection<Integer> bitPosCol, int maxBitPos,
 				RelationType posTermRelationType, boolean isParseStructTypeHyp){
 			if(RelationType.IF != posTermRelationType && isParseStructTypeHyp){
 				int[] multiplicityAr = RelationType.IF.vectorOffsetArray();
 				for(int multiplicity : multiplicityAr){
 					int bitPos = multiplicity*parseContextVectorSz + residue;
-					maxBitPos = addToPosList(bitPosList, maxBitPos, bitPos);
+					maxBitPos = addToPosList(bitPosCol, maxBitPos, bitPos);
 				}
 			}
 			return maxBitPos;
 		}
 		
 		/**
-		 * @param bitPosList
+		 * @param bitPosCol
 		 * @param maxBitPos
 		 * @param bitPos
 		 * @return
 		 */
-		private static int addToPosList(List<Integer> bitPosList, int maxBitPos, int bitPos) {
-			bitPosList.add(bitPos);					
+		private static int addToPosList(Collection<Integer> bitPosCol, int maxBitPos, int bitPos) {
+			bitPosCol.add(bitPos);					
 			if(bitPos > maxBitPos){
 				maxBitPos = bitPos;
 			}
@@ -443,7 +442,27 @@ public class RelationVec implements Serializable{
 			return bi.xor(bi1).bitCount();
 		}
 
-		public static BigInteger getPlaceholderRelationVec() {
+		/**
+		 * Gives the number of set bits in bi2 that differ from the set bits
+		 * in bi1, where we only consider bit positions that are set in bi1.
+		 * @param bi1 The base vector. Should correspond to query vector.
+		 * @param bi2
+		 * @return
+		 */
+		public static int hammingDistanceForSets(Set<Integer> querySet, Set<Integer> thmSet){
+			//first only restrict to bit positions in bi2 that are also set in bi1.
+			int dist = 0;
+			for(int queryBit : querySet) {
+				if(!thmSet.contains(queryBit)) {
+					dist++;
+				}
+			}			
+			//this gives the number of set bits in bi2 that differ from the set bits
+			//in bi1, where we only consider bit positions that are set in bi1.
+			return dist;
+		}
+		
+		public static Set<Integer> getPlaceholderRelationVec() {
 			return PLACEHOLDER_RELATION_VEC;
 		}
 	
