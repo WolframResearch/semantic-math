@@ -50,7 +50,7 @@ public class WordForms {
 	private static final Pattern WHITE_NONEMPTY_SPACE_TAB_PATTERN = Pattern.compile("(\\s|\\t)");
 	private static final Pattern BRACES_PATTERN = Pattern.compile("(\\{|\\}|\\[|\\])");
 	/**used for e.g. gathering words and n-grams. Matches any string containing those special chars.*/
-	public static final Pattern SPECIAL_CHARS_PATTERN = Pattern.compile(".*[-\\{\\[\\)\\(\\}\\]$\\\\%/|@*.;,:_~!+^&\"\'`+<>=#].*");
+	public static final Pattern SPECIAL_CHARS_PATTERN = Pattern.compile(".*[-\\{\\[\\)\\(\\}\\]$\\%/|@*.;,:_~!+^&\"\'`+<>=#].*");
 	public static final Pattern ALPHABET_PATTERN = Pattern.compile("[A-Za-z]");
 	/*Used to remove specical characters from words*/
 	private static final Pattern SPECIAL_CHARS_AROUND_WORD_PATTERN 

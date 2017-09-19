@@ -80,7 +80,7 @@ public class DetectHypothesis {
 	//punctuation pattern to eliminate
 	//almost all special patterns but no -, ', ^, *, which can occur in thm names
 	private static final Pattern THM_SCRAPE_ELIM_PUNCTUATION_PATTERN = Pattern
-			.compile("[\\{\\[\\)\\(\\}\\]$\\\\%/|@.;,:_~!&\"`+<>=#]");
+			.compile("[\\{\\[\\)\\(\\}\\]$\\%/|#@.;,:_~!&\"`+<>=#]");
 	
 	//contains ParsedExpressions, to be serialized to persistent storage
 	//***private static final List<ParsedExpression> parsedExpressionList = new ArrayList<ParsedExpression>();
@@ -105,14 +105,19 @@ public class DetectHypothesis {
 	private static final String allThmWordsMapStringFileStr = "src/thmp/data/allThmWordsMap.txt";
 	public static final String allThmWordsMapSerialFileNameStr = "allThmWordsMap.dat";
 	private static final String allThmWordsMapStringFileNameStr = "allThmWordsMap.txt";
+	
 	//not used by next runs, but nice to have the list for inspection.
 	//private static final String allThmWordsSerialFileStr = "src/thmp/data/allThmWordsList.dat";
 	//private static final String allThmWordsStringFileStr = "src/thmp/data/allThmWordsList.txt";
 	
 	private static final String statsFileStr = "src/thmp/data/parseStats.txt";
 	
+	/**used for scraping names**/	
 	private static final String THM_SCRAPE_SER_FILENAME = "thmNameScrape.dat";
 	private static final String THM_SCRAPE_TXT_FILENAME = "thmNameScrape.txt";
+	//stop words that come after the stirng "theorem", to stop scraping before, the word immediately before.
+	private static final Set<String> SCRAPE_STOP_WORDS_BEFORE_SET = new HashSet<String>();
+	/****/
 	
 	//serialize the words as well, to bootstrap up after iterations of processing. The math words are going to 
 	//stabilize.
@@ -153,7 +158,13 @@ public class DetectHypothesis {
 		ALL_THM_WORDS_FREQ_MAP = CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno();//.get_contextVecWordsNextTimeMap();
 		//this SHOULD be done at the end! So keep in sync with the others .dat, so don't need to parse everything twice.
 		//Then use current list, but wordsList's from previous runs.
-		//ThmSearch.TermDocumentMatrix.createTermDocumentMatrixSVD();		
+		//ThmSearch.TermDocumentMatrix.createTermDocumentMatrixSVD();	
+		//
+		String[] beforeStopWordsAR = new String[]{"by"};
+		for(String w : beforeStopWordsAR) {
+			SCRAPE_STOP_WORDS_BEFORE_SET.add(w);
+		}
+		
 	}
 	
 	public static class Runner{
@@ -509,8 +520,10 @@ public class DetectHypothesis {
 				}
 				//serialize
 				if(!thmNameList.isEmpty()) {
-					FileUtils.serializeObjToFile(thmNameList, inputParams.texFilesDirPath + THM_SCRAPE_SER_FILENAME);
-					FileUtils.serializeObjToFile(thmNameList, inputParams.texFilesDirPath + THM_SCRAPE_TXT_FILENAME);
+					List<String> serThmList = new ArrayList<String>();
+					serThmList.add(thmNameList.toString());
+					//FileUtils.serializeObjToFile(thmNameList, inputParams.texFilesDirPath + THM_SCRAPE_SER_FILENAME);
+					FileUtils.serializeObjToFile(serThmList, inputParams.texFilesDirPath + THM_SCRAPE_TXT_FILENAME);
 				}
 					//serialize, so don't discard the items already parsed.
 				//serialization only applicable when running on byblis
@@ -574,7 +587,10 @@ public class DetectHypothesis {
 					String word = lineList.get(i);
 					if(THM_SCRAPE_PATTERN.matcher(word).matches()) {
 						String thmWords = collectThmWordsBeforeAfter(lineList, i);
-						thmNameList.add(thmWords);
+						if(!"".equals(thmWords)) {
+							thmNameList.add(thmWords);							
+						}
+						//thmNameList.add("\n");
 					}
 				}
 			}
@@ -593,7 +609,6 @@ public class DetectHypothesis {
 		
 		List<String> lineList = Arrays.asList(THM_SCRAPE_PUNCTUATION_PATTERN.split(line));
 		int lineListSz = lineList.size();
-		System.out.println(lineList);
 		for(int i = 0; i < lineListSz; i++) {
 			String word = lineList.get(i);
 			if(THM_SCRAPE_PATTERN.matcher(word).matches()) {
@@ -610,11 +625,12 @@ public class DetectHypothesis {
 	 * @return
 	 */
 	private static String collectThmWordsBeforeAfter(List<String> thmList, int index) {
-		final int indexBoundToCollect = 3;
+		int indexBoundToCollect = 3;
 		StringBuilder sb = new StringBuilder(40);
 		int thmListSz = thmList.size();
 		int i = 1;
 		int count = 0;
+		boolean gathered = false;
 		while(count < indexBoundToCollect && index - i > -1) {
 			String curWord = thmList.get(index-i);
 			if(WordForms.getWhiteEmptySpacePattern().matcher(curWord).matches()) {
@@ -627,8 +643,11 @@ public class DetectHypothesis {
 			sb.insert(0, curWord + " ");
 			i++;
 			count++;
+			gathered = true;
 		}
-		i = 0;
+		sb.append(thmList.get(index)).append(" ");
+		indexBoundToCollect = 4;
+		i = 1;
 		count = 0;
 		while(count < indexBoundToCollect && index + i < thmListSz) {
 			String curWord = thmList.get(index+i);
@@ -642,11 +661,16 @@ public class DetectHypothesis {
 			sb.append(curWord).append(" ");
 			i++;
 			count++;
+			gathered = true;
 		}
 		if(sb.length() > 1) {
 			sb.deleteCharAt(sb.length()-1);
 		}
-		return sb.toString();
+		if(gathered) {
+			return sb.toString();
+		}else {
+			return "";
+		}		
 	}
 	
 	@SuppressWarnings("unchecked")

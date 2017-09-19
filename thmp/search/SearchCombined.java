@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -413,8 +414,9 @@ public class SearchCombined {
 			boolean searchContextBool = false;
 			boolean searchRelationalBool = false;
 			
+			Set<String> wordsSet = new HashSet<String>();
 			//this gives the web-displayed versions. 
-			List<ThmHypPair> bestCommonThmHypPairList = searchCombined(thm, null, searchContextBool, searchRelationalBool);
+			List<ThmHypPair> bestCommonThmHypPairList = searchCombined(thm, wordsSet, searchContextBool, searchRelationalBool);
 			
 			/*if(thm.matches("\\s*")) continue;
 			thm = thm.toLowerCase();
