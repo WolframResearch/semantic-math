@@ -67,8 +67,9 @@ public class ThmSearch {
 		private static final double DISTANCE_THRESHOLD;
 		//total number of mx files
 		private static final int TOTAL_MX_COUNT = ThmHypPairGet.totalBundleNum();
-		//cap of mx count in cache. Each mx is about 1.3 mb. Make cap small initially for testing
-		private static final int CACHE_MX_COUNT_CAP = 20;
+		//cap of mx count in cache. Each mx is about 1.3 mb. 
+		//314 mx files as of Sept 19.
+		private static final int CACHE_MX_COUNT_CAP = 400;
 		
 	static{		
 		//use OS system variable to tell whether on VM or local machine, and set InstallDirectory 

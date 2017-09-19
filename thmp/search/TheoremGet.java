@@ -71,7 +71,7 @@ public class TheoremGet {
 		
 		private static final long serialVersionUID = 760047710418503324L;
 		//Need to re-partition serialized data, if this number changes!
-		private static final int NUM_THMS_IN_BUNDLE = 10000;//10000;
+		private static final int NUM_THMS_IN_BUNDLE = 100000;//10000;
 		protected static final String BASE_FILE_STR = "src/thmp/data/vecs/" + ThmSearch.TermDocumentMatrix.CONTEXT_VEC_PAIR_LIST_FILE_NAME;
 		//private static final String BASE_FILE_EXT_STR = ".dat";
 		//Name of serialized file. 

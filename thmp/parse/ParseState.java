@@ -70,7 +70,7 @@ public class ParseState {
 	private ParseStruct curParseStruct;	
 	//context vector that takes into account structure of parse tree, i.e.
 	//the relations between different Structs.
-	private Set<Integer> relationalVec;
+	private Set<Integer> relationalVec = Collections.<Integer>emptySet();
 	//number of non-tex tokens, used during search, so can discard theorems that
 	//are almost all latex expressions.
 	private int numNonTexTokens;

@@ -76,11 +76,11 @@ public class DetectHypothesis {
 	//used for thm scraping.
 	private static final Pattern THM_SCRAPE_PATTERN = Pattern.compile("(?i)(?:theorem|theory|proposition|lemma|conjecture)");
 	//revise this!!
-	private static final Pattern THM_SCRAPE_PUNCTUATION_PATTERN = Pattern.compile("(?:(?=[;.\\s])|(?<=[;.\\\\s]))");
+	private static final Pattern THM_SCRAPE_PUNCTUATION_PATTERN = Pattern.compile("(?:(?=[,!:;.\\s])|(?<=[,!:;.\\s]))");
 	//punctuation pattern to eliminate
-	//almost all special patterns but no - or ', which can occur in thm names
+	//almost all special patterns but no -, ', ^, *, which can occur in thm names
 	private static final Pattern THM_SCRAPE_ELIM_PUNCTUATION_PATTERN = Pattern
-			.compile("[\\{\\[\\)\\(\\}\\]$\\\\%/|@*.;,:_~!+^&\"`+<>=#]");
+			.compile("[\\{\\[\\)\\(\\}\\]$\\\\%/|@.;,:_~!&\"`+<>=#]");
 	
 	//contains ParsedExpressions, to be serialized to persistent storage
 	//***private static final List<ParsedExpression> parsedExpressionList = new ArrayList<ParsedExpression>();
@@ -112,6 +112,7 @@ public class DetectHypothesis {
 	private static final String statsFileStr = "src/thmp/data/parseStats.txt";
 	
 	private static final String THM_SCRAPE_SER_FILENAME = "thmNameScrape.dat";
+	private static final String THM_SCRAPE_TXT_FILENAME = "thmNameScrape.txt";
 	
 	//serialize the words as well, to bootstrap up after iterations of processing. The math words are going to 
 	//stabilize.
@@ -494,11 +495,11 @@ public class DetectHypothesis {
 						if(scrapeThmNames) {
 							scrapeThmNames(inputBF, thmNameList);
 						} else {
-							extractThmsFromFiles(inputBF, defThmList, thmHypPairList, stats, texFileName);							
+							extractThmsFromFiles(inputBF, defThmList, thmHypPairList, stats, texFileName, thmNameList);							
 						}
 					}catch(Throwable e){
 						String timeStr = new SimpleDateFormat("yyyy_MM_dd_HH:mm").format(Calendar.getInstance().getTime());
-						String msg = timeStr + " File being processed: " + fileName + " with trace " + Arrays.toString(e.getStackTrace());						
+						String msg = "\n"+timeStr + " Exception when processing: " + fileName + e+"\nwith trace " + Arrays.toString(e.getStackTrace());						
 						FileUtils.appendObjToFile(msg, parserErrorLogPath);
 						logger.error(msg);
 						System.out.println(msg);
@@ -507,18 +508,16 @@ public class DetectHypothesis {
 					FileUtils.silentClose(inputBF);
 				}
 				//serialize
-				if(scrapeThmNames) {
-					//List<List<String>> thmNameSerList = new ArrayList<List<String>>();
-					//thmNameSerList.add(thmNameList);
-								
+				if(!thmNameList.isEmpty()) {
 					FileUtils.serializeObjToFile(thmNameList, inputParams.texFilesDirPath + THM_SCRAPE_SER_FILENAME);
-				}else {
-					//serialize, so don't discard the items already parsed.
-					//serialization only applicable when running on byblis
-					if(!FileUtils.isOSX()){
-						serializeDataToFile(stats, thmHypPairList, inputParams);		
-					}					
+					FileUtils.serializeObjToFile(thmNameList, inputParams.texFilesDirPath + THM_SCRAPE_TXT_FILENAME);
 				}
+					//serialize, so don't discard the items already parsed.
+				//serialization only applicable when running on byblis
+				if(!FileUtils.isOSX()){
+					serializeDataToFile(stats, thmHypPairList, inputParams);		
+				}					
+				
 		}else{
 			BufferedReader inputBF = null;
 			try{
@@ -583,34 +582,66 @@ public class DetectHypothesis {
 			throw new IllegalStateException("IOException while scraping thm names", e);
 		}
 	}
-
+	
 	/**
-	 * 
+	 * Add thm names scraped from line to thmNameMSet.
+	 * *Only* used for theorem name scraping.
+	 * @param line line to process from.
+	 * @param thmNameMSet
+	 */
+	private static void scrapeThmNames(String line, List<String> thmNameList) {
+		
+		List<String> lineList = Arrays.asList(THM_SCRAPE_PUNCTUATION_PATTERN.split(line));
+		int lineListSz = lineList.size();
+		System.out.println(lineList);
+		for(int i = 0; i < lineListSz; i++) {
+			String word = lineList.get(i);
+			if(THM_SCRAPE_PATTERN.matcher(word).matches()) {
+				String thmWords = collectThmWordsBeforeAfter(lineList, i);
+				thmNameList.add(thmWords);
+			}
+		}			
+	}
+	
+	/**
+	 * Collect certain number of words before and after thm
 	 * @param thmList
 	 * @param index index to look before or after
 	 * @return
 	 */
 	private static String collectThmWordsBeforeAfter(List<String> thmList, int index) {
-		final int indexBoundToCollect = 4;
+		final int indexBoundToCollect = 3;
 		StringBuilder sb = new StringBuilder(40);
 		int thmListSz = thmList.size();
 		int i = 1;
-		while(i < indexBoundToCollect && index - i > -1) {
+		int count = 0;
+		while(count < indexBoundToCollect && index - i > -1) {
 			String curWord = thmList.get(index-i);
+			if(WordForms.getWhiteEmptySpacePattern().matcher(curWord).matches()) {
+				i++;
+				continue;
+			}
 			if(THM_SCRAPE_ELIM_PUNCTUATION_PATTERN.matcher(curWord).find()) {
 				break;
 			}
 			sb.insert(0, curWord + " ");
 			i++;
+			count++;
 		}
-		i = 1;
-		while(i < indexBoundToCollect && index + i < thmListSz) {
+		i = 0;
+		count = 0;
+		while(count < indexBoundToCollect && index + i < thmListSz) {
 			String curWord = thmList.get(index+i);
+			if(WordForms.getWhiteEmptySpacePattern().matcher(curWord).matches()) {
+				i++;
+				continue;
+			}
 			if(THM_SCRAPE_ELIM_PUNCTUATION_PATTERN.matcher(curWord).find()) {
 				break;
 			}
 			sb.append(curWord).append(" ");
 			i++;
+			count++;
 		}
 		if(sb.length() > 1) {
 			sb.deleteCharAt(sb.length()-1);
@@ -630,14 +661,16 @@ public class DetectHypothesis {
 	 * @param thmHypPairList Emoty list.
 	 * @param stats
 	 * @param fileName name of file, to append to parsed thms.
+	 * @param scraped thm name list.
 	 */
+	@SafeVarargs
 	private static void extractThmsFromFiles(BufferedReader inputBF, List<DefinitionListWithThm> defThmList, 
-			List<ThmHypPair> thmHypPairList, Stats stats, String fileName) {
+			List<ThmHypPair> thmHypPairList, Stats stats, String fileName, List<String>...scrapedThmNameList) {
 
 		ParseStateBuilder parseStateBuilder = new ParseStateBuilder();		
 		ParseState parseState = parseStateBuilder.build();		
 		try{
-			readAndParseThm(inputBF, parseState, defThmList, thmHypPairList, stats, fileName);		
+			readAndParseThm(inputBF, parseState, defThmList, thmHypPairList, stats, fileName, scrapedThmNameList);		
 		}catch(IOException e){
 			e.printStackTrace();
 			logger.error(e.getStackTrace());
@@ -863,10 +896,11 @@ public class DetectHypothesis {
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
+	@SafeVarargs
 	public static void readAndParseThm(BufferedReader srcFileReader, 
 			ParseState parseState, List<DefinitionListWithThm> definitionListWithThmList,
 			List<ThmHypPair> thmHypPairList,
-			Stats stats, String fileName) throws IOException{
+			Stats stats, String fileName, List<String>...scrapedThmNameList) throws IOException{
 		
 		//print to indicate progress, since all other outputs are suppressed during processing.
 		System.out.print("...Processing "+fileName);
@@ -905,10 +939,16 @@ public class DetectHypothesis {
 		while ((line = srcFileReader.readLine()) != null) {
 			if (WordForms.getWhiteEmptySpacePattern().matcher(line).matches()){
 				continue;
-			}			
+			}
+			//single lines to skip. Such as comments
 			if(SINGLE_LINE_SKIP_PATTERN.matcher(line).matches()){
 				continue;
 			}
+			//scrape theorem names. - temporary Sept 19.
+			if(scrapedThmNameList.length > 0) {
+				scrapeThmNames(line, scrapedThmNameList[0]);
+			}			
+			
 			//should skip certain sections, e.g. \begin{proof}
 			Matcher skipMatcher = SKIP_PATTERN.matcher(line);
 			if(skipMatcher.find()){
