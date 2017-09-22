@@ -114,7 +114,7 @@ public class DetectHypothesis {
 	private static final String THM_SCRAPE_TXT_FILENAME = "thmNameScrape.txt";
 	//stop words that come after the stirng "theorem", to stop scraping before, the word immediately before.
 	private static final Set<String> SCRAPE_STOP_WORDS_BEFORE_SET = new HashSet<String>();
-	private static final Pattern THM_SCRAPE_ELIM_PATTERN = Pattern.compile("(?:from|proof|proves*|next)");
+	private static final Pattern THM_SCRAPE_ELIM_PATTERN = Pattern.compile("(?:from|proof|prove[sd]*|next)");
 	/****/
 	
 	//serialize the words as well, to bootstrap up after iterations of processing. The math words are going to 
@@ -158,7 +158,7 @@ public class DetectHypothesis {
 		//Then use current list, but wordsList's from previous runs.
 		//ThmSearch.TermDocumentMatrix.createTermDocumentMatrixSVD();	
 		//
-		String[] beforeStopWordsAR = new String[]{"by", "of"};
+		String[] beforeStopWordsAR = new String[]{"by", "of","to","above","in"};
 		for(String w : beforeStopWordsAR) {
 			SCRAPE_STOP_WORDS_BEFORE_SET.add(w);
 		}
@@ -585,7 +585,7 @@ public class DetectHypothesis {
 					String word = lineList.get(i);
 					if(THM_SCRAPE_PATTERN.matcher(word).matches()) {
 						String thmWords = collectThmWordsBeforeAfter(lineList, i);
-						if(!"".equals(thmWords)) {
+						if(!WordForms.getWhiteEmptySpacePattern().matcher(thmWords).matches()) {
 							thmNameList.add(thmWords);							
 						}
 						//thmNameList.add("\n");
@@ -662,7 +662,7 @@ public class DetectHypothesis {
 			if(THM_SCRAPE_ELIM_PUNCTUATION_PATTERN.matcher(curWord).find()) {
 				break;
 			}
-			if(i==1 && WordForms.DIGIT_PATTERN.matcher(curWord).matches()) {
+			if(i==1 && WordForms.DIGIT_PATTERN.matcher(curWord).find()) {
 				break;
 			}
 			if(THM_SCRAPE_ELIM_PATTERN.matcher(curWord).matches()) {

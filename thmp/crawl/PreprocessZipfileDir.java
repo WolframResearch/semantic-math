@@ -37,8 +37,8 @@ public class PreprocessZipfileDir {
 		createMathGzFileSet(mathGzFileSet);
 	}
 	/**
-	 * Fille mathGzFileSet with list of math filenames of the form 1234.5678 
-	 * (without concluding .gz).
+	 * Fille mathGzFileSet with list of math filenames of the form e.g. 1234.5678 
+	 * (without concluding .gz). These are for files that don't have the "math" prefix.
 	 * @param fileSet
 	 */
 	private static void createMathGzFileSet(Set<String> fileSet){
@@ -116,10 +116,12 @@ public class PreprocessZipfileDir {
 		}else{
 			//e.g. .pdf file.
 			return true;
-		}
-		
+		}		
 		if(Pattern.compile("math.+").matcher(fileNameRoot).matches() 
-				|| (DIGITS_FILENAME_PATTERN.matcher(fileNameRoot).matches() && mathGzFileSet.contains(fileNameRoot))){
+				|| //(DIGITS_FILENAME_PATTERN.matcher(fileNameRoot).matches() && some files don't have only 4-4 digits!
+						mathGzFileSet.contains(fileNameRoot)
+						//)
+				){
 			return false;
 		}
 		return true;
