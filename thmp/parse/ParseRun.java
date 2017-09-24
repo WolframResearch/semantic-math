@@ -1,8 +1,6 @@
 package thmp.parse;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -17,9 +15,9 @@ import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 
 /**
+ * Collection of methods to run the parser.
  * Contains methods to parse verbosely or minimally without much output.
  * @author yihed
- *
  */
 public class ParseRun {
 

@@ -98,13 +98,14 @@ public class GenerateSearchDataRunner {
 			}
 			
 			//skip untar'ing if directory already exists
-			if(!(new File(fileDir)).exists()){
+			//don't skip! in case the files had been deleted
+			//if(!(new File(fileDir)).exists()){
 				Runtime rt = Runtime.getRuntime();
 				Process pr = rt.exec(UNPACK_SCRIPT_FILE_PATH + fileName);			
 				FileUtils.waitAndPrintProcess(pr);
 				/*the script name must coincide with that in both bash scripts.	*/	
 				System.out.println("Done unpacking file " + fileName + ". Starting to generate search data");
-			}
+			//}
 			
 			DetectHypothesis.Runner.generateSearchData(new String[]{fileDir, 
 					TermDocumentMatrix.DATA_ROOT_DIR_SLASH + TermDocumentMatrix.PROJECTION_MX_FILE_NAME,
