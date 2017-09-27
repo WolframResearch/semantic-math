@@ -59,7 +59,9 @@ public class GenerateSearchDataRunner {
 		//filenames should be absolute paths
 		List<String> fileNamesList = extractNamesFromFile(args[0]);
 		System.out.println("GenerateSearchDataRunner-fileNamesList: " + fileNamesList);
-		runScripts(fileNamesList);
+		
+		runScripts(fileNamesList);			
+		
 	}
 	
 	/**
@@ -112,6 +114,7 @@ public class GenerateSearchDataRunner {
 					Searcher.SearchMetaData.wordDocFreqMapPath()
 					//"src/thmp/data/termDocumentMatrixSVD.mx", "src/thmp/data/allThmWordsMap.dat"
 					});
+			try {
 			//delete files to save disk space, but that would remove data that can be useful later <--
 			//just need to untar again if needed.
 			File[] fileDirFileAr = new File(fileDir).listFiles();
@@ -128,7 +131,10 @@ public class GenerateSearchDataRunner {
 					}					
 				}
 			}
-			
+			}catch(Exception e) {
+				//catch exception, so to not interrupt data processing.
+				logger.error("Exception while deleting files for " + fileName + e.getMessage());				
+			}
 			/*Runtime rt = Runtime.getRuntime();
 			Process pr = rt.exec("/home/usr0/yihed/thm/unpack2.sh " + fileName);			
 			FileUtils.waitAndPrintProcess(pr);			

@@ -91,6 +91,9 @@ public class DetectHypothesis {
 	private static final String parsedExpressionSerialFileNameStr = "parsedExpressionList";
 	private static final String parsedExpressionStringFileNameStr = "parsedExpressionList.txt";
 	private static final String contextRelationPairSerialFileNameStr = ThmSearch.TermDocumentMatrix.CONTEXT_VEC_PAIR_LIST_FILE_NAME;
+	public static final String allThmNameScrapeSerStr = "src/thmp/data/allThmNameScrape.dat";
+	public static final String allThmNameScrapeTxtStr = "src/thmp/data/allThmNameScrape.txt";
+	public static final String thmNameScrapeNameRoot = "thmNameScrape";
 	
 	private static final String allThmsStringFileStr = "src/thmp/data/allThmsList.txt";
 	private static final String allThmsStringFileNameStr = "allThmsList.txt";
@@ -370,6 +373,7 @@ public class DetectHypothesis {
 		String allThmWordsMapStringFileStr = DetectHypothesis.allThmWordsMapStringFileStr;
 		String parsedExpressionStringFileStr = DetectHypothesis.parsedExpressionStringFileStr; //parsedExpressionStrList
 		String allThmsStringFileStr = DetectHypothesis.allThmsStringFileStr; //allThmsStrWithSpaceList
+		
 		static final String texFilesSerializedListFileName = "texFileNamesSetList.dat";
 		
 		//where to put the full dim TD matrix
@@ -464,6 +468,7 @@ public class DetectHypothesis {
 				inputFile = new File("src/thmp/data/test1.txt");
 				inputFile = new File("/Users/yihed/Downloads/0704.2030");
 				inputFile = new File("src/thmp/data/0704.2030");
+				inputFile = new File("/Users/yihed/Downloads/test/1605.01240");
 				
 				//inputFile = new File("src/thmp/data/thmsFeb26.txt");
 				//inputBF = new BufferedReader(new FileReader("src/thmp/data/Total.txt"));
@@ -937,12 +942,11 @@ public class DetectHypothesis {
 		//definitions, and parse those definitions. Reset between theorems.
 		StringBuilder contextSB = new StringBuilder();
 		
-		//List<DefinitionListWithThm> definitionListWithThmList = new ArrayList<DefinitionListWithThm>();		
-		String line = extractMacros(srcFileReader, customBeginThmList, macrosTrieBuilder);//ok
-		MacrosTrie macrosTrie = macrosTrieBuilder.build();//ok
+		String line = extractMacros(srcFileReader, customBeginThmList, macrosTrieBuilder);
+		MacrosTrie macrosTrie = macrosTrieBuilder.build();
 		
 		//append list of macros to THM_START_STR and THM_END_STR
-		Pattern[] customPatternAr = addMacrosToThmBeginEndPatterns(customBeginThmList);//ok
+		Pattern[] customPatternAr = addMacrosToThmBeginEndPatterns(customBeginThmList);
 		
 		Pattern thmStartPattern = customPatternAr[0];
 		Pattern thmEndPattern = customPatternAr[1];	
@@ -1005,10 +1009,10 @@ public class DetectHypothesis {
 				}else{
 					contextStr = contextSB.toString();					
 				}				
-				//System.out.println("ThmInput - contextStr length "+contextStr.length() );
-				contextStr = ThmInput.removeTexMarkup(contextStr, null, null, macrosTrie,
-						eliminateBeginEndThmPattern);
-				//System.out.println("DetectHypothesis - contextStr "+contextStr);
+				//don't need to remove Tex Markup and expand macros here, later after setence has been picked
+				//contextStr = ThmInput.removeTexMarkup(contextStr, null, null, macrosTrie,
+				//		eliminateBeginEndThmPattern);
+				
 				//scan contextSB for assumptions and definitions
 				//and parse the definitions
 				detectAndParseHypothesis(contextStr, parseState, stats);	
@@ -1038,7 +1042,7 @@ public class DetectHypothesis {
 					logger.error("thm length exceeds maximum allowable size: " + newThmSB);
 					continue;
 				}
-				//parse hyp and thm. BE SURE TO ONLY RE-ORDER WORDS based on word freuqency at last run, before serializing!
+				//parse hyp and thm.
 				processParseHypThm(newThmSB, parseState, stats, definitionListWithThmList, thmHypPairList, fileName, macrosTrie,
 						eliminateBeginEndThmPattern);
 				
@@ -1110,7 +1114,8 @@ public class DetectHypothesis {
 		detectAndParseHypothesis(thm, parseState, stats);
 		//if contained in local map, should be careful about when to append map.		
 		//append to newThmSB additional hypotheses that are applicable to the theorem.				
-		DefinitionListWithThm thmDef = appendHypothesesAndParseThm(thm, parseState, thmHypPairList, stats, srcFileName);
+		DefinitionListWithThm thmDef = appendHypothesesAndParseThm(thm, parseState, thmHypPairList, stats, srcFileName,
+				macrosTrie, eliminateBeginEndThmPattern);
 		
 		if(thmDef != DefinitionListWithThm.PLACEHOLDER_DEF_LIST_WITH_THM){
 			definitionListWithThmList.add(thmDef);			
@@ -1180,7 +1185,7 @@ public class DetectHypothesis {
 				break;
 			}else if((newThmMatcher = ThmInput.NEW_THM_PATTERN.matcher(line)).matches()){
 				//should be a proposition, hypothesis, etc. E.g. don't look through proofs.
-				if(ThmInput.THM_TERMS_PATTERN.matcher(newThmMatcher.group(2)).matches()){
+				if(ThmInput.THM_TERMS_PATTERN.matcher(newThmMatcher.group(2)).find()){
 					thmMacrosList.add(newThmMatcher.group(1));	
 				}
 			}else if((newThmMatcher = ThmInput.NEW_THM_PATTERN2.matcher(line)).matches()){
@@ -1229,7 +1234,8 @@ public class DetectHypothesis {
 	 * @param parseState
 	 */
 	private static DefinitionListWithThm appendHypothesesAndParseThm(String thmStr, ParseState parseState, 
-			List<ThmHypPair> thmHypPairList, Stats stats, String srcFileName){
+			List<ThmHypPair> thmHypPairList, Stats stats, String srcFileName,
+			MacrosTrie macrosTrie, Pattern eliminateBeginEndThmPattern){
 		
 		StringBuilder definitionSB = new StringBuilder();		
 		StringBuilder latexExpr = new StringBuilder();
@@ -1277,7 +1283,7 @@ public class DetectHypothesis {
 					//definition strings to thmWithDefSB. Should only append
 					//variables that are not defined within the same thm.				
 					List<VariableDefinition> varDefList = pickOutVariables(latexExpr.toString(), //variableNamesMMap,
-							parseState, varDefSet, definitionSB);
+							parseState, varDefSet, definitionSB, macrosTrie, eliminateBeginEndThmPattern);
 					if(DEBUG) {
 						System.out.println("DetectHypothesis - varDefList " + varDefList);
 						System.out.println("DetectHypothesis - parseState.getGlobalVariableNamesMMap " + parseState.getGlobalVariableNamesMMap()
@@ -1341,7 +1347,8 @@ public class DetectHypothesis {
 	}
 
 	/**
-	 * Picks out variables to be defined, and try to match them with prior definitions.
+	 * Picks out variables to be defined, and try to match them with prior definitions
+	 * as stored in parseState, stored when the chunk of text prior to thm was parsed.
 	 * Picks up variable definitions.
 	 * @param latexExpr 
 	 * @param thmDefSB StringBuilder that's the original input string appended
@@ -1352,7 +1359,7 @@ public class DetectHypothesis {
 	private static List<VariableDefinition> pickOutVariables(String latexExpr, 
 			//ListMultimap<VariableName, VariableDefinition> variableNamesMMap,
 			ParseState parseState, Set<VariableDefinition> varDefSet,
-			StringBuilder thmDefSB){
+			StringBuilder thmDefSB, MacrosTrie macrosTrie, Pattern eliminateBeginEndThmPattern){
 		
 		//list of definitions needed in this latexExpr
 		List<VariableDefinition> varDefList = new ArrayList<VariableDefinition>();
@@ -1364,20 +1371,19 @@ public class DetectHypothesis {
 		for(int i = 0; i < varsList.size(); i++){
 			
 			String possibleVar = varsList.get(i);
-			//System.out.println("^^^$^%%% &^^^ DetectHypothesis - possibleVar: "+ possibleVar);
 			
 			//Get a variableName and check if a variable has been defined.
 			VariableName possibleVariableName = ParseState.createVariableName(possibleVar);
 			VariableDefinition possibleVarDef = new VariableDefinition(possibleVariableName, null, null);
-			//System.out.println("^^^$^%%% &^^^ DetectHypothesis - possibleVarDef: "+ possibleVarDef);
 			
 			boolean isLocalVar = parseState.getVariableDefinitionFromName(possibleVarDef);
 			//whether the variable definition was defined locally in the theorem, used to determine whether
 			//to include originalDefiningSentence.
 			
-			//System.out.println("^^^ variableNamesMMap: "+ variableNamesMMap);
-			//System.out.println("^^^^^^^PossibleVar: " + possibleVar);
-			
+			if(DEBUG) {
+				System.out.println("^^^ local variableNamesMMap: "+ parseState.localVariableNamesMMap);
+				//System.out.println("^^^^^^^PossibleVar: " + possibleVar);
+			}
 			//get the latest definition
 			//int possibleVarDefListLen = possibleVarDefList.size();
 			//if empty, check to see if bracket pattern, if so, check just the name without the brackets.
@@ -1395,12 +1401,13 @@ public class DetectHypothesis {
 				if(!varDefSet.contains(possibleVarDef)){
 					varDefSet.add(possibleVarDef);
 					varDefList.add(possibleVarDef);
-					//System.out.println("latestVarDef.getOriginalDefinitionStr() " + latestVarDef.getOriginalDefinitionStr());
-			 		thmDefSB.append(possibleVarDef.getOriginalDefinitionSentence()).append(" ");
+					
+					String defSentence = ThmInput.removeTexMarkup(possibleVarDef.getOriginalDefinitionSentence(), 
+							null, null, macrosTrie, eliminateBeginEndThmPattern);
+					thmDefSB.append(defSentence).append(" ");
 				}
 			}			
 		}
-		//if(true) throw new IllegalStateException("latexExpr containing var: " + latexExpr + " varDefList " + varDefList);
 		return varDefList;
 	}
 	

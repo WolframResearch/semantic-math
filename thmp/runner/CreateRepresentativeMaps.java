@@ -1,5 +1,6 @@
 package thmp.runner;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -123,10 +124,17 @@ public class CreateRepresentativeMaps {
 		String[] srcFileNameAr = new String[]{"vocab0_edited.txt","vocab1_edited.txt",
 				"vocab2_edited.txt","vocab3_edited.txt","vocab4_edited.txt",
 				"vocab5_edited.txt","vocab6_edited.txt"};
+		List<String> curatedWordsList = new ArrayList<String>();
 		for(int i = 0; i < srcFileNameAr.length; i++){
-			srcFileNameAr[i] = "src/thmp/data/vocab/" + srcFileNameAr[i];
+			//srcFileNameAr[i] = "src/thmp/data/vocab/" + srcFileNameAr[i];
+			if(3 == i) {
+				//third file is from windows machine with UTF8 encoding
+				curatedWordsList.addAll(FileUtils.readLinesFromFiles("src/thmp/data/vocab/" + srcFileNameAr[i], 
+						Charset.forName("UTF-8")));
+			}else {				
+				curatedWordsList.addAll(FileUtils.readLinesFromFiles("src/thmp/data/vocab/" + srcFileNameAr[i]));
+			}
 		}
-		List<String> curatedWordsList = FileUtils.readLinesFromFiles(Arrays.asList(srcFileNameAr));
 		System.out.println("curatedWordsList.size "+curatedWordsList.size());
 		@SuppressWarnings("unchecked")
 		Map<String, Integer> bigWordFreqMap 

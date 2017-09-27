@@ -49,6 +49,7 @@ public class ProcessMetadataScrape {
 	}
 	
 	public static void main(String[] args){
+		//source file containing metadata
 		final String fileStr = "src/thmp/data/metaDataString.txt";
 		//avoid accidentally running this class.
 		boolean buildMap = false;

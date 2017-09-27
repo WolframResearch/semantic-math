@@ -5,8 +5,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -52,7 +50,8 @@ public class ProjectionMatrix {
 	 * args is list of paths. 
 	 * Supply list of paths (vararg) to directories, each contanining a parsedExpressionList and
 	 * the *projected* term document matrices for a tar file.
-	 * e.g. "0208_001Untarred/0208/", or "0304_001Untarred/0304"
+	 * e.g. "0208_001Untarred/0208/", or "0304_001Untarred/0304", OR
+	 * "0304_001Untarred/0304/FullTDMatrix.mx"
 	 * Could also supply file containing such paths, with exact same format.
 	 */
 	public static void main(String[] args){
@@ -85,6 +84,7 @@ public class ProjectionMatrix {
 		List<ThmHypPair> combinedPEList = new ArrayList<ThmHypPair>();
 		List<ContextRelationVecPair> combinedVecsList = new ArrayList<ContextRelationVecPair>();
 		List<Integer> bundleStartThmIndexList = new ArrayList<Integer>();
+		List<String> allThmNameScrapeList = new ArrayList<String>();
 		
 		ListMultimap<String, LiteralSearchIndex> literalSearchIndexMap 
 			= ArrayListMultimap.create();
@@ -118,8 +118,9 @@ public class ProjectionMatrix {
 									
 					String vecsFilePath = path_j + "vecs/" + ThmSearch.TermDocumentMatrix.CONTEXT_VEC_PAIR_LIST_FILE_NAME;
 					String wordThmIndexMMapPath = path_j + SearchMetaData.wordThmIndexMMapSerialFileName();
-					thmCounter = addExprsToLists(peFilePath, combinedPEList, vecsFilePath, combinedVecsList, wordThmIndexMMapPath,
-							combinedWordThmIndexMMap, literalSearchIndexMap, thmCounter);
+					
+					thmCounter = addExprsToLists(path_j, peFilePath, combinedPEList, vecsFilePath, combinedVecsList, wordThmIndexMMapPath,
+							combinedWordThmIndexMMap, literalSearchIndexMap, allThmNameScrapeList, thmCounter);
 					
 					//append lists of ThmHypPair's to one file
 					/* don't do this for now, cause memory overflow on allowed space on byblis67 - Aug 21, 2017
@@ -158,6 +159,10 @@ public class ProjectionMatrix {
 			= new ArrayList<ListMultimap<String, LiteralSearchIndex>>();
 		literalSearchIndexMapList.add(literalSearchIndexMap);
 		FileUtils.serializeObjToFile(literalSearchIndexMapList, SearchMetaData.literalSearchIndexMapPath());
+		
+		//serialize scraped thm names
+		FileUtils.serializeObjToFile(allThmNameScrapeList, DetectHypothesis.allThmNameScrapeSerStr);
+		FileUtils.writeToFile(allThmNameScrapeList, DetectHypothesis.allThmNameScrapeTxtStr);
 		
 		//serialize map into one file, to be loaded at once in memory at runtime.
 		//should be ~240 MB.
@@ -274,6 +279,7 @@ public class ProjectionMatrix {
 	/**
 	 * Add Expr's to various lists combining the different serialized lists
 	 * from individual tars.
+	 * @param dirName name of directory for the files to be placed in. Ending file separator included.
 	 * @param peFilePath
 	 * @param combinedPEList
 	 * @param vecsFilePath
@@ -284,10 +290,10 @@ public class ProjectionMatrix {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	private static int addExprsToLists(String peFilePath, List<ThmHypPair> combinedPEList, String vecsFilePath,
+	private static int addExprsToLists(String dirPathStr, String peFilePath, List<ThmHypPair> combinedPEList, String vecsFilePath,
 			List<ContextRelationVecPair> combinedVecsList, String wordThmIndexMMapPath, 
 			Multimap<String, Integer> combinedWordThmIndexMMap, ListMultimap<String, LiteralSearchIndex> searchIndexMap,
-			int startingThmIndex) {
+			List<String> allThmNameScrapeList, int startingThmIndex) {
 		
 		//**correct version: List<ThmHypPair> thmHypPairList = (List<ThmHypPair>)FileUtils.deserializeListFromFile(peFilePath);
 		//HACK. (for search, when data was nonuniformized. June 2017)
@@ -298,13 +304,21 @@ public class ProjectionMatrix {
 		}else{
 			thmHypPairList = convertPEToThmHypPairTEMP((List<ParsedExpression>)FileUtils.deserializeListFromFile(peFilePath));			
 		}*/
-		//**Hack ends		
+		//**Hack ends
+		
 		List<ThmHypPair> thmHypPairList = (List<ThmHypPair>)FileUtils.deserializeListFromFile(peFilePath);
 		int thmHypPairListSz = thmHypPairList.size();
 		combinedPEList.addAll(thmHypPairList);
 
+		//add scraped thm names.
+		String thmNameScrapeDirPath = dirPathStr + DetectHypothesis.thmNameScrapeNameRoot + ".dat";
+		if((new File(thmNameScrapeDirPath)).exists()) {
+			List<String> thmNameScrapeList = (List<String>)FileUtils.deserializeListFromFile(thmNameScrapeDirPath);
+			allThmNameScrapeList.addAll(thmNameScrapeList);			
+		}
+		
 		//System.out.println("ProjectionMatrix - addExprsToLists, starting to add to thmLiteralIndexMap");
-
+		
 		//this step can be created when the previous lists are created, to avoid this iteration.
 		for(int i = 0; i < thmHypPairListSz; i++) {
 			String thmStr = thmHypPairList.get(i).getEntireThmStr();

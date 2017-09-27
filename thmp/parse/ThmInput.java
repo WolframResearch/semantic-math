@@ -54,17 +54,17 @@ public class ThmInput {
 	static final Pattern BEGIN_PATTERN = Pattern.compile("[^\\\\]*\\\\begin.*");
 	
 	//new theorem pattern. E.g. \newtheorem{corollary}[theorem]{Corollary}
-	static final Pattern NEW_THM_PATTERN = Pattern.compile("\\\\newtheorem\\{([^}]+)\\}(?:[^{]*)\\{([^}]+).*");
+	static final Pattern NEW_THM_PATTERN = Pattern.compile("\\\\newtheorem\\**\\s*\\{([^}]+)\\}(?:[^{]*)\\{([^}]+).*");
 	/*another custom definition specification, \newcommand{\xra}  {\xrightarrow}
 	  Need to be smart about e.g. \newcommand{\\un}[1]{\\underline{#1}} !*/
 	//Should also support \newcommand{cmd}[args][opt]{def} with optional terms
-	static final Pattern NEW_THM_PATTERN2 = Pattern.compile("\\s*\\\\(?:re){0,1}newcommand\\{*([^}{]+)\\}*\\s*(?:\\[(\\d)\\])*\\s*\\{(.+?)\\}\\s*");
+	static final Pattern NEW_THM_PATTERN2 = Pattern.compile("\\s*\\\\(?:re){0,1}newcommand\\{*([^}{\\[]+)\\}*\\s*(?:\\[(\\d)\\])*\\s*\\{(.+?)\\}\\s*");
 	/*e.g. \def\X{{\cal X}};  \def \author {William {\sc Smith}}; 
 	 * Need to support e.g. \def\G{\hbox{\boldmath{}$G$\ unboldmath}}
 	 *Currently not covering: \def <command> <parameter-text>{<replacement-text>} e.g. \def\testonearg[#1]{\typeout{Testing one arg: '#1'}} */
 	static final Pattern NEW_THM_PATTERN3 = Pattern.compile("\\s*\\\\def\\s*([^{]+?)\\s*\\{(.+?)\\}\\s*");
 	
-	static final Pattern THM_TERMS_PATTERN = Pattern.compile("Theorem|Proposition|Lemma|Corollary|Conjecture|Definition");
+	static final Pattern THM_TERMS_PATTERN = Pattern.compile("Theorem|Proposition|Lemma|Corollary|Conjecture|Definition|Claim");
 	
 	private static final Pattern LABEL_PATTERN = Pattern.compile("(.*?)\\\\label\\{(?:[^}]*)\\}\\s*(.*?)");
 	//private static final Pattern DIGIT_PATTERN = Pattern.compile(".*\\d+.*");
@@ -182,7 +182,7 @@ public class ThmInput {
 				String slotCountStr = newThmMatcher.group(2);
 				int slotCount = null == slotCountStr ? 0 : Integer.valueOf(slotCountStr);
 				macrosTrieBuilder.addTrieNode(commandStr, replacementStr, slotCount);
-
+				
 				/*if(newThmMatcher.group(1).equals("\\xra")){
 					System.out.println("*****replacement " + newThmMatcher.group(2));
 					System.out.println(Pattern.compile(Matcher.quoteReplacement(newThmMatcher.group(1))).matcher("\\xra").matches());
