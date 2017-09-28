@@ -159,6 +159,9 @@ public class ProjectionMatrix {
 			= new ArrayList<ListMultimap<String, LiteralSearchIndex>>();
 		literalSearchIndexMapList.add(literalSearchIndexMap);
 		FileUtils.serializeObjToFile(literalSearchIndexMapList, SearchMetaData.literalSearchIndexMapPath());
+		//for human inspection purposes, so put path here.
+		final String literalSearchMapKeysPath = "src/thmp/data/literalSearchIndexMapKeys.txt";
+		FileUtils.writeToFile(literalSearchIndexMap.keySet(), literalSearchMapKeysPath);
 		
 		//serialize scraped thm names
 		FileUtils.serializeObjToFile(allThmNameScrapeList, DetectHypothesis.allThmNameScrapeSerStr);

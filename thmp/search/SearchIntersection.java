@@ -258,6 +258,7 @@ public class SearchIntersection {
 		if (WordForms.getWhiteEmptySpacePattern().matcher(input).matches()){
 			return null;
 		}
+		input = input.toLowerCase();
 		// map containing the indices of theorems added so far, where values are
 		// sets (hashset)
 		// of indices of words that have been added. This is to reward theorems
@@ -270,7 +271,7 @@ public class SearchIntersection {
 		 that appear in the thm*/
 		SetMultimap<Integer, Integer> thmWordSpanMMap = HashMultimap.create();
 
-		List<String> inputWordsAr = WordForms.splitThmIntoSearchWords(input.toLowerCase());
+		List<String> inputWordsAr = WordForms.splitThmIntoSearchWords(input);
 		
 		// determine if first token is integer, if yes, use it as the number of
 		// closest thms. Else use NUM_NEAREST_VECS as default value.
@@ -400,7 +401,7 @@ public class SearchIntersection {
 		searchState.setThmScoreMap(thmScoreMap);
 		/**short circuit if number of token below threshold*/
 		if(LiteralSearch.spanBelowThreshold(searchState.largestWordSpan(), inputWordsArSz)) {
-			System.out.println("Initiating literal search...");
+			System.out.println("Initializing literal search...");
 			List<Integer> highestThmList = LiteralSearch.literalSearch(input, searchWordsSet, numHighest);
 			searchState.set_intersectionVecList(highestThmList);
 			return searchState;
@@ -964,7 +965,7 @@ public class SearchIntersection {
 			 * ContextSearch.contextSearch(thm, highestThms); }
 			 */
 			int counter = 0;
-			System.out.println("~ SEARCH RESULTS ~");
+			System.out.println("~~~~~~~~~~~~~~~~~~~~~~ SEARCH RESULTS ~~~~~~~~~~~~~~~~~~~~~~");
 			for (Integer thmIndex : highestThms) {
 				System.out.println(counter++ + " ++ " + thmIndex + " " + ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex));
 			}

@@ -73,7 +73,8 @@ public class FileUtils {
 	//get kernel pool, then acquire kernel instance from the pool.			
 	private static MSPManager mspManager; //(MSPManager)servletContext.getAttribute(MSPStatics.MSP_MANAGER_ATTR);
 	private static KernelPool kernelPool;	        
-    
+    public static final boolean isByblis67;
+	
 	public static final boolean SCRAPE_THM_NAME_Q = false;
 	
 	/* Do not introduce dependencies on other classes in static initializer. Since many classes
@@ -85,6 +86,9 @@ public class FileUtils {
 			//on byblis, for data processing. Differentiate between that
 			//and Linux VM.
 			foodDefaultBool = false;
+			isByblis67 = true;
+		}else {
+			isByblis67 = false;
 		}
 		//change first one to adjust
 		FOOD_PARSE = IS_OS_X ? true : foodDefaultBool;

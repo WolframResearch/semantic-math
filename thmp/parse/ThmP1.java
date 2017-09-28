@@ -1508,7 +1508,10 @@ public class ThmP1 {
 			//does incur overhead.			
 			//Only try to find pos for words that don't contain "\" 
 			//Don't run on byblis for now, since slows down data processing
-			if(FileUtils.isOSX() && curpair.pos().equals("")){
+			if(//FileUtils.isOSX() && 
+					curpair.pos().equals("") &&
+					!FileUtils.isByblis67 
+					){
 				//tag the whole sentence to find the most accurate tag, since the tagger
 				//uses contextual tags to maximize entropy.
 				if(null == posTagger){

@@ -49,8 +49,9 @@ public class WordForms {
 	private static final Pattern WHITE_NONEMPTY_SPACE_PATTERN = Pattern.compile("\\s+");
 	private static final Pattern WHITE_NONEMPTY_SPACE_TAB_PATTERN = Pattern.compile("(\\s|\\t)");
 	private static final Pattern BRACES_PATTERN = Pattern.compile("(\\{|\\}|\\[|\\])");
-	/**used for e.g. gathering words and n-grams. Matches any string containing those special chars.*/
-	public static final Pattern SPECIAL_CHARS_PATTERN = Pattern.compile(".*[-\\{\\[\\)\\(\\}\\]$\\%/|@*.;,:_~!+^&\"\'`+<>=#].*");
+	/**used for e.g. gathering words and n-grams. Matches any string containing those special chars.
+	 * Deliberately don't contian \\!*/
+	public static final Pattern SPECIAL_CHARS_PATTERN = Pattern.compile(".*[-\\{\\[\\)\\(\\}\\]\\$%/|@*.;,:_~!+^&\"\'`+<>=#].*");
 	public static final Pattern ALPHABET_PATTERN = Pattern.compile("[A-Za-z]");
 	/*Used to remove specical characters from words*/
 	private static final Pattern SPECIAL_CHARS_AROUND_WORD_PATTERN 
@@ -114,7 +115,10 @@ public class WordForms {
 	private static final Pattern SPLIT_DELIM_PATTERN = Pattern.compile(SPLIT_DELIM);	
 	private static final Set<String> GREEK_ALPHA_SET;
 	private static final Map<Character, Character> DIACRITICS_MAP;
-
+	/**set of common words for search to ignore, if only these words are present, ie nonrelevant words*/
+	private static final Set<String> GENERIC_SERACH_TERMS;
+	
+	
 	static{		
 		FLUFF_WORDS_SMALL_SET = new HashSet<String>();
 		String[] fluffAr = FLUFF_WORDS_SMALL.split("\\|");
@@ -181,6 +185,10 @@ public class WordForms {
 		for(char[] p : diacriticsMapAr){
 			DIACRITICS_MAP.put(p[0], p[1]);
 		}
+		
+		//complete this!
+		GENERIC_SERACH_TERMS = new HashSet<String>();
+		
 	}
 	/**
 	 * Invert the key and value for each pair in stemWordsMap.
