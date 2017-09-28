@@ -118,7 +118,6 @@ public class WordForms {
 	/**set of common words for search to ignore, if only these words are present, ie nonrelevant words*/
 	private static final Set<String> GENERIC_SERACH_TERMS;
 	
-	
 	static{		
 		FLUFF_WORDS_SMALL_SET = new HashSet<String>();
 		String[] fluffAr = FLUFF_WORDS_SMALL.split("\\|");
@@ -187,8 +186,12 @@ public class WordForms {
 		}
 		
 		//complete this!
+		String[] genericSearchTermsAr = new String[] {"sum", "equation", "polynomial", "function", "basis",
+				"theorem"};
 		GENERIC_SERACH_TERMS = new HashSet<String>();
-		
+		for(String s : genericSearchTermsAr) {
+			GENERIC_SERACH_TERMS.add(s);
+		}
 	}
 	/**
 	 * Invert the key and value for each pair in stemWordsMap.
@@ -1096,6 +1099,14 @@ public class WordForms {
 	 */
 	public static Set<String> GREEK_ALPHA_SET_NoSlash(){
 		return GREEK_ALPHA_SET;
+	}
+	
+	/**
+	 * Set of common words for search to ignore, if only these words are present, 
+	 * ie nonrelevant words
+	 */
+	public static Set<String> genericSearchTermsSet(){
+		return GENERIC_SERACH_TERMS;
 	}
 	
 	/**

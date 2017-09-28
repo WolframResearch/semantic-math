@@ -302,7 +302,7 @@ public class SearchIntersection {
 		int totalWordsScore = 0;
 		int numWordsAdded = 0;
 
-		// multimap of words, and the list of thm indices that have been added
+		// multimap of words, and the list of thm indices that have been added. Words.
 		ListMultimap<String, Integer> wordThmIndexAddedMMap = ArrayListMultimap.create();
 
 		// map of dominant words and the number of times they've been added,

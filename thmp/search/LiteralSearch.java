@@ -46,6 +46,7 @@ public class LiteralSearch {
 	/*deliberately includes slash \\*/
 	private static final Pattern LITERAL_SPECIAL_CHARS_PATTERN 
 		= Pattern.compile("[-\\{\\[\\)\\(\\}\\]\\\\$%/|@*.;,:_~!+^&\"\'`+<>=#]");
+	private static final int MIN_SCORE = 0;
 
 	static {		
 		//logger.info("LiteralSearchIndex.class.getClassLoader(): "+LiteralSearchIndex.class.getClassLoader());
@@ -247,7 +248,7 @@ public class LiteralSearch {
 		Map<Integer, Integer> thmScoreMap = createThmScoreMap(thmIndexWordMap);
 		TreeMultimap<Integer, Integer> scoreThmMMap = TreeMultimap.create();
 		for(Map.Entry<Integer, Integer> thmScoreEntry : thmScoreMap.entrySet()) {
-			//negative, so higher scores come first.
+			//negate, so higher scores come first.
 			scoreThmMMap.put(-thmScoreEntry.getValue(), thmScoreEntry.getKey());
 		}
 		
@@ -307,7 +308,10 @@ public class LiteralSearch {
 			int thmIndex = thmIndexWordEntry.getKey();
 			//Integer priorScore = thmScoreMap.get(thmIndex);
 			//priorScore = null == priorScore ? 0 : priorScore;
-			thmScoreMap.put(thmIndex, computeThmScore(thmIndexWordEntry.getValue()));
+			int thmScore = computeThmScore(thmIndexWordEntry.getValue());
+			if(thmScore > MIN_SCORE) {
+				thmScoreMap.put(thmIndex, thmScore);				
+			}
 		}
 		
 		return thmScoreMap;
@@ -325,9 +329,16 @@ public class LiteralSearch {
 		List<Number> wordsList = new ArrayList<Number>(indexWordMap.keySet());
 		int wordsListSz = wordsList.size();
 		if(1 == wordsListSz) {
-			return WORD_BASE_POINT;
+			if(WordForms.genericSearchTermsSet().contains(indexWordMap.get(wordsList.get(0))) ) {
+				//if only contain *one* generic word, count result as 0.
+				//In these cases query must be more than one word, since 
+				//else wouldn't be resorting to index search.	
+				return MIN_SCORE;
+			}else {
+				return WORD_BASE_POINT;				
+			}
 		}
-		
+			
 		Number priorWordIndex = wordsList.get(0);
 		String priorWord = indexWordMap.get(priorWordIndex);
 		wordScoreMap.put(priorWord, 0);
@@ -359,8 +370,19 @@ public class LiteralSearch {
 			priorWordIndex = wordIndex;
 			priorWord = word;
 		}
+
+		int wordScoreMapSz = wordScoreMap.size();
+		
+		if(1 == wordScoreMapSz
+				&& WordForms.genericSearchTermsSet().contains(wordScoreMap.keySet().iterator().next())) {
+			//same as above. If only contain *one* generic word, count result as 0.
+			//In these cases query must be more than one word, since 
+			//else wouldn't be resorting to index search.
+			return MIN_SCORE;
+		}
+
 		//fist count base score
-		int totalScore = WORD_BASE_POINT * wordScoreMap.size();
+		int totalScore = WORD_BASE_POINT * wordScoreMapSz;
 		//add points for the total number of words triggered
 		for(int score : wordScoreMap.values()) {
 			totalScore += score;
