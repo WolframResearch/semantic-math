@@ -10,8 +10,8 @@ import java.util.regex.Pattern;
  * @author yihed
  */
 public class DataUtility {
-
-	private static final Pattern FILE_NAME_PATTERN1 = Pattern.compile("([A-Za-z]+)([\\d]+)");
+	//could be math-ph/1315233
+	private static final Pattern FILE_NAME_PATTERN1 = Pattern.compile("([A-Z\\-a-z]+)([\\d]+)");
 	private static final Pattern FILE_NAME_PATTERN2 = Pattern.compile("[\\d]+\\.[\\d]+");
 	
 	/**

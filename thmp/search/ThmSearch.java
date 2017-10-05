@@ -518,7 +518,8 @@ public class ThmSearch {
 		public static final String ALL_THM_STRING_FILE_NAME = "allThmsList.txt";
 		/*Name deliberately does not include .dat*/
 		public static final String COMBINED_PARSEDEXPRESSION_LIST_FILE_NAME_ROOT = "combinedParsedExpressionList";
-		private static final int NUM_SINGULAR_VAL_TO_KEEP = 30;
+		/*Number of singular values to keep*/
+		private static final int NUM_SINGULAR_VAL_TO_KEEP = 35;
 		protected static final double COR_MX_SCALING_FACTOR = 0.05;
 		public static final String DATA_ROOT_DIR_SLASH = "src/thmp/data/";
 		private static final double COR_CLIP_THRESHOLD = 0.5;

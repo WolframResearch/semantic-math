@@ -1,8 +1,6 @@
 package thmp.search;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -20,13 +18,10 @@ import org.apache.logging.log4j.Logger;
 import java.util.Set;
 import java.util.TreeMap;
 import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.math.BigInteger;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

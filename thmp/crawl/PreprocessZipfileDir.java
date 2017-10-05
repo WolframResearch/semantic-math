@@ -9,6 +9,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -17,6 +19,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import thmp.parse.DetectHypothesis;
+import thmp.runner.ProcessMetadataScrape;
+import thmp.runner.ProcessMetadataScrape.PaperMetaData;
 import thmp.utils.FileUtils;
 
 /**
@@ -35,6 +39,11 @@ public class PreprocessZipfileDir {
 
 	static{
 		createMathGzFileSet(mathGzFileSet);
+		//scraped from more complete list from aarone.
+		@SuppressWarnings("unchecked")
+		List<Map<String, PaperMetaData>> metaDataList 
+			= (List<Map<String, PaperMetaData>>)FileUtils.deserializeListFromFile(ProcessMetadataScrape.paperMetaDataMapSerFileStr());
+		mathGzFileSet.addAll(metaDataList.get(0).keySet());
 	}
 	/**
 	 * Fille mathGzFileSet with list of math filenames of the form e.g. 1234.5678 

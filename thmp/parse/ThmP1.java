@@ -1553,7 +1553,7 @@ public class ThmP1 {
 				}
 			}			
 			String pos = curpair.pos();
-			if(unknownWordPos && !pos.equals("")){
+			if(DEBUG && unknownWordPos && !pos.equals("")){
 				parseState.addUnknownWordPosToMap(curWord, pos);
 				if(DEBUG) System.out.println("Added " + curWord + " to posmap with pos: " + pos);
 			}

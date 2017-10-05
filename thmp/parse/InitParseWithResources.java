@@ -8,7 +8,7 @@ package thmp.parse;
  */
 public class InitParseWithResources {
 
-	private static boolean DEBUG = true;
+	private static boolean DEBUG = false;
 		
 	public static void set_DEBUG(boolean debug_){
 		DEBUG = debug_;

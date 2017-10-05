@@ -508,7 +508,9 @@ public class DetectHypothesis {
 						if(scrapeThmNames) {
 							scrapeThmNames(inputBF, thmNameList);
 						} else {
-							extractThmsFromFiles(inputBF, defThmList, thmHypPairList, stats, texFileName, thmNameList);							
+							extractThmsFromFiles(inputBF, defThmList, thmHypPairList, stats, texFileName, thmNameList);
+							//add delimiter to separate thm names per paper
+							thmNameList.add("\n");
 						}
 					}catch(Throwable e){
 						String timeStr = new SimpleDateFormat("yyyy_MM_dd_HH:mm").format(Calendar.getInstance().getTime());
@@ -618,7 +620,7 @@ public class DetectHypothesis {
 	 * @return
 	 */
 	private static String collectThmWordsBeforeAfter(List<String> thmList, int index) {
-		int indexBoundToCollect = 3;
+		int indexBoundToCollect = 6;
 		StringBuilder sb = new StringBuilder(40);
 		int thmListSz = thmList.size();
 		int i = 1;
@@ -645,7 +647,7 @@ public class DetectHypothesis {
 			gathered = true;
 		}
 		sb.append(thmList.get(index)).append(" ");
-		indexBoundToCollect = 4;
+		indexBoundToCollect = 7;
 		i = 1;
 		count = 0;
 		while(count < indexBoundToCollect && index + i < thmListSz) {
@@ -972,7 +974,7 @@ public class DetectHypothesis {
 			if(SINGLE_LINE_SKIP_PATTERN.matcher(line).matches()){
 				continue;
 			}
-			//scrape theorem names. - temporary Sept 19.
+			//scrape theorem names. - temporary for Michael, Sept 19.
 			if(scrapedThmNameList.length > 0) {
 				scrapeThmNames(line, scrapedThmNameList[0]);
 			}			
@@ -1077,7 +1079,9 @@ public class DetectHypothesis {
 				contextSB.append(" ").append(line);
 			}
 		}
-		parseState.writeUnknownWordsToFile();		
+		if(DEBUG) {
+			parseState.writeUnknownWordsToFile();	
+		}
 	}
 
 	/**
