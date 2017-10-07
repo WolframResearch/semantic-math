@@ -489,7 +489,8 @@ public class DetectHypothesis {
 				List<String> thmNameList = new ArrayList<String>();
 				
 				for(Map.Entry<String, String> fileNameEntry : texFileNamesMap.entrySet()){
-					//this is absolute file path
+					//this is absolute file path, e.g. /home/usr0/yihed/thm/
+					//0309_001Untarred/0309/math0309323/cwahl-ch3.tex
 					String fileName = fileNameEntry.getKey();
 					File file = new File(fileName);
 					BufferedReader inputBF = null;
@@ -501,16 +502,18 @@ public class DetectHypothesis {
 						logger.error(msg);
 						continue;
 					}
-					//file name needed as metadata for search.
+					//file name needed as metadata for search. e.g. math0309323
 					String texFileName = fileNameEntry.getValue();
 					try{
 						
 						if(scrapeThmNames) {
 							scrapeThmNames(inputBF, thmNameList);
 						} else {
+							thmNameList.add("\n");
+							thmNameList.add(texFileName);
 							extractThmsFromFiles(inputBF, defThmList, thmHypPairList, stats, texFileName, thmNameList);
 							//add delimiter to separate thm names per paper
-							thmNameList.add("\n");
+							
 						}
 					}catch(Throwable e){
 						String timeStr = new SimpleDateFormat("yyyy_MM_dd_HH:mm").format(Calendar.getInstance().getTime());

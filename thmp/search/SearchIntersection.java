@@ -153,7 +153,14 @@ public class SearchIntersection {
 	 */
 	public static List<ThmHypPair> getHighestThmStringList(String input, Set<String> searchWordsSet,
 			SearchState searchState, boolean contextSearchBool, boolean searchRelationalBool) {
-		intersectionSearch(input, searchWordsSet, searchState, contextSearchBool, searchRelationalBool);
+		
+		//parse here for queries that require search by authors, get list of thm indices, 
+		//pass to intersection search
+		
+		
+		int numSearchResults = NUM_NEAREST_VECS;
+		
+		intersectionSearch(input, searchWordsSet, searchState, contextSearchBool, searchRelationalBool, numSearchResults);
 		if (null == searchState){
 			return Collections.<ThmHypPair>emptyList();
 		}
@@ -174,7 +181,12 @@ public class SearchIntersection {
 	public static List<Integer> getHighestThmList(String input, Set<String> searchWordsSet, SearchState searchState,
 			boolean contextSearchBool, boolean searchRelationalBool,
 			int... num) {
-		intersectionSearch(input, searchWordsSet, searchState, contextSearchBool, searchRelationalBool, num);
+		
+		int numSearchResults = NUM_NEAREST_VECS;
+		if(num.length > 0) {
+			numSearchResults = num[0];
+		}
+		intersectionSearch(input, searchWordsSet, searchState, contextSearchBool, searchRelationalBool, numSearchResults);
 		if (null == searchState){
 			return Collections.emptyList();
 		}
@@ -248,13 +260,15 @@ public class SearchIntersection {
 	 * @param numHighest
 	 *            number of highest-scored thms to retrieve.
 	 * @param wordThmsIndexMMap
+	 * @param dbThmList list from database query. Optional. Only consider intersection search 
+	 * results that are also in this list.
 	 * @return SearchState containing list of indices of highest-scored thms.
 	 *         Sorted in ascending order, best first. List is 0-based.
 	 */
 	public static SearchState intersectionSearch(String input, Set<String> searchWordsSet, 
 			SearchState searchState, boolean contextSearchBool, boolean searchRelationalBool,
-			int... numNearestVecs) {
-
+			int numNearestVecs, List<Integer>... dbThmList) {
+		
 		if (WordForms.getWhiteEmptySpacePattern().matcher(input).matches()){
 			return null;
 		}
@@ -304,14 +318,7 @@ public class SearchIntersection {
 
 		// multimap of words, and the list of thm indices that have been added. Words.
 		ListMultimap<String, Integer> wordThmIndexAddedMMap = ArrayListMultimap.create();
-
-		// map of dominant words and the number of times they've been added,
-		// whose theorem scores might need to be lowered later
-		// the words that have been added multiple times in 1, 2-grams and
-		// 3-grams
-		// values are the number of times they've been added
-		// Map<String, Integer> dominantWordsMap = new HashMap<String,
-		// Integer>();
+		
 		// multimap of indices in wrapper list and the words that start at that
 		// index
 		Multimap<Integer, String> indexStartingWordsMMap = ArrayListMultimap.create();
@@ -729,7 +736,7 @@ public class SearchIntersection {
 			Multimap<Integer, Integer> thmWordSpanMMap, ListMultimap<String, Integer> wordThmIndexAddedMMap,
 			Multimap<String, Integer> wordThmIndexMMap,
 			String word, int wordIndexInThm, WordForms.TokenType tokenType,
-			int[] singletonScoresAr, Set<String> searchWordsSet) {
+			int[] singletonScoresAr, Set<String> searchWordsSet, ) {
 		// update scores map
 		int curScoreToAdd = 0;
 		int scoreAdded = 0;
@@ -801,7 +808,6 @@ public class SearchIntersection {
 		curScoreToAdd = tokenType.adjustNGramScore(curScoreToAdd, singletonScoresAr, wordIndexInThm);
 
 		if (!wordThms.isEmpty() && curScoreToAdd != 0) {
-			// System.out.println("wordThms " + wordThms);
 			wordThmIndexAddedMMap.putAll(word, wordThms);
 			if (DEBUG) {
 				System.out.println("SearchIntersection-Word added: " + word + ". Score: " + curScoreToAdd);

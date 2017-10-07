@@ -3,6 +3,7 @@ package thmp.utils;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.List;
 
 import javax.sql.DataSource;
 
@@ -46,6 +47,16 @@ public class DBUtils {
 			e.printStackTrace();
 		}
 		return -1;
+	}
+	
+	/**
+	 * Functions that use database to refine search results from other algorithms.
+	 * 
+	 */
+	public static void searchByAuthor(List<String> authorList, List<Integer> thmsList) {
+		
+		//take intersection of results with sql query results
+		
 	}
 	
 	/**
