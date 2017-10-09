@@ -88,7 +88,7 @@ public class DetectHypothesis {
 	private static final String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList";
 	private static final String contextRelationPairSerialFileStr = "src/thmp/data/vecs/contextRelationVecPairList0";
 	private static final String parsedExpressionStringFileStr = "src/thmp/data/parsedExpressionList.txt";
-	private static final String parsedExpressionSerialFileNameStr = "parsedExpressionList";
+	public static final String parsedExpressionSerialFileNameStr = "parsedExpressionList";
 	private static final String parsedExpressionStringFileNameStr = "parsedExpressionList.txt";
 	private static final String contextRelationPairSerialFileNameStr = ThmSearch.TermDocumentMatrix.CONTEXT_VEC_PAIR_LIST_FILE_NAME;
 	public static final String allThmNameScrapeSerStr = "src/thmp/data/allThmNameScrape.dat";
@@ -509,13 +509,23 @@ public class DetectHypothesis {
 						if(scrapeThmNames) {
 							scrapeThmNames(inputBF, thmNameList);
 						} else {
-							thmNameList.add("\n");
-							thmNameList.add(texFileName);
+							
 							extractThmsFromFiles(inputBF, defThmList, thmHypPairList, stats, texFileName, thmNameList);
 							//add delimiter to separate thm names per paper
+							if(!thmNameList.isEmpty()) {
+								thmNameList.add(0, "\n");
+								thmNameList.add(texFileName);	
+							}
 							
 						}
-					}catch(Throwable e){
+					}catch(OutOfMemoryError e){
+						String timeStr = new SimpleDateFormat("yyyy_MM_dd_HH:mm").format(Calendar.getInstance().getTime());
+						String msg = "\n"+timeStr + " Exception when processing: " + fileName + e+"\nwith trace " + Arrays.toString(e.getStackTrace());						
+						logger.error(msg);
+						System.out.println(msg);
+						throw e;
+					}
+					catch(Throwable e){
 						String timeStr = new SimpleDateFormat("yyyy_MM_dd_HH:mm").format(Calendar.getInstance().getTime());
 						String msg = "\n"+timeStr + " Exception when processing: " + fileName + e+"\nwith trace " + Arrays.toString(e.getStackTrace());						
 						FileUtils.appendObjToFile(msg, parserErrorLogPath);
@@ -527,10 +537,12 @@ public class DetectHypothesis {
 				}
 				//serialize
 				if(!thmNameList.isEmpty()) {
-					List<String> serThmList = new ArrayList<String>();
-					serThmList.add(thmNameList.toString());
+					
 					FileUtils.serializeObjToFile(thmNameList, inputParams.texFilesDirPath + THM_SCRAPE_SER_FILENAME);
-					FileUtils.serializeObjToFile(serThmList, inputParams.texFilesDirPath + THM_SCRAPE_TXT_FILENAME);
+					
+					//List<String> serThmList = new ArrayList<String>();
+					//serThmList.add(thmNameList.toString());
+					FileUtils.writeToFile(thmNameList, inputParams.texFilesDirPath + THM_SCRAPE_TXT_FILENAME);
 				}
 					//serialize, so don't discard the items already parsed.
 				//serialization only applicable when running on byblis
@@ -1262,9 +1274,9 @@ public class DetectHypothesis {
 		try{
 			ParseRun.parseInput(thmStr, parseState, PARSE_INPUT_VERBOSE, stats);
 		}catch(Throwable e){
-			String msg = "Error when parsing thm: " + thmStr;
+			String msg = "\nThrowable thrown when parsing thm: " + Arrays.toString(e.getStackTrace());
 			System.out.println(msg);
-			logger.error(msg);
+			//logger.error(msg);
 			////throw e;
 		}		
 		if(parseState.numNonTexTokens() < NUM_NON_TEX_TOKEN_THRESHOLD || parseState.curParseExcessiveLatex()){

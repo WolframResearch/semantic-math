@@ -688,7 +688,7 @@ public class ThmP1 {
 			return parseState;
 		}
 		//for syntaxnet
-		Struct[] noTexTokenStructAr = new Struct[strAr.length];
+		Struct[] noTexTokenStructAr = new Struct[2*strAr.length];
 		int numNonTexTokens = 0;
 		//used to keep track of index of tokens in strLoop, for syntaxnet
 		int lastNoTexTokenIndex = 0;
@@ -795,7 +795,9 @@ public class ThmP1 {
 						//reached end but tex expr did not finish.
 						if(texNotClosed){
 							parseState.setParseErrorCode(ParseState.ParseErrorCode.PARSE_ERROR);
-							throw new ParseRuntimeException.IllegalSyntaxException("ThmP1.tokenize(): Unfinished Tex expression.");
+							if(DEBUG) {
+								throw new ParseRuntimeException.IllegalSyntaxException("ThmP1.tokenize(): Unfinished Tex expression.");								
+							}
 						}
 					}
 					//add the end of the latex expression, only if it's the last part (i.e. $)
@@ -1943,7 +1945,13 @@ public class ThmP1 {
 							break;
 						}
 					}
+					try {
 					noTexTokenStructAr[futureTexTokenListIndex] = curStruct;
+					}catch(ArrayIndexOutOfBoundsException e){
+						String msg = "IndexOutOfBoundsException when setting noTexTokenStructAr!" + e.getMessage();
+						//logger.error(msg);
+						System.out.println(msg);
+					}
 					curStruct.setNoTexTokenListIndex(futureTexTokenListIndex);
 					if(DEBUG) System.out.println("ThmP1 *-* noTexTokenListIndex/newStruct: "+futureTexTokenListIndex + " ... "+curStruct);
 				}
@@ -2038,7 +2046,7 @@ public class ThmP1 {
 					noTexTokenStructAr[noTexTokenListIndex] = newStruct;
 				}catch(IndexOutOfBoundsException e){
 					String msg = "IndexOutOfBoundsException when setting noTexTokenStructAr!" + e.getMessage();
-					logger.error(msg);
+					//logger.error(msg);
 					System.out.println(msg);
 				}
 				newStruct.setNoTexTokenListIndex(noTexTokenListIndex);

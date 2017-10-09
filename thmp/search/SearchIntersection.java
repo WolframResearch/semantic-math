@@ -39,10 +39,9 @@ import thmp.utils.WordForms;
  * @author yihed
  */
 public class SearchIntersection {
-
-	// bonus points for matching context better, eg hyp or stm
-	// disable bonus now, since not using annotated words
-	//private static final int CONTEXT_WORD_BONUS = 0;
+	
+	// determine if first token is integer, if yes, use it as the number of
+	// closest thms. Else use NUM_NEAREST_VECS as default value.
 	private static final int NUM_NEAREST_VECS = SearchCombined.NUM_NEAREST;
 
 	private static final Logger logger = LogManager.getLogger(SearchIntersection.class);
@@ -267,7 +266,7 @@ public class SearchIntersection {
 	 */
 	public static SearchState intersectionSearch(String input, Set<String> searchWordsSet, 
 			SearchState searchState, boolean contextSearchBool, boolean searchRelationalBool,
-			int numNearestVecs, List<Integer>... dbThmList) {
+			int numHighest, List<Integer>... dbThmList) {
 		
 		if (WordForms.getWhiteEmptySpacePattern().matcher(input).matches()){
 			return null;
@@ -287,14 +286,11 @@ public class SearchIntersection {
 
 		List<String> inputWordsAr = WordForms.splitThmIntoSearchWords(input);
 		
-		// determine if first token is integer, if yes, use it as the number of
-		// closest thms. Else use NUM_NEAREST_VECS as default value.
-		int numHighest = NUM_NEAREST_VECS;
+		
+		//int numHighest = NUM_NEAREST_VECS;
 		// whether to skip first token
 		int firstIndex = 0;
-		if (numNearestVecs.length > 0) {
-			numHighest = numNearestVecs[0];
-		}
+		
 		/*
 		 * Map of theorems, in particular their indices in thmList, and the
 		 * scores corresponding to the keywords they contain. The rarer a
@@ -736,7 +732,8 @@ public class SearchIntersection {
 			Multimap<Integer, Integer> thmWordSpanMMap, ListMultimap<String, Integer> wordThmIndexAddedMMap,
 			Multimap<String, Integer> wordThmIndexMMap,
 			String word, int wordIndexInThm, WordForms.TokenType tokenType,
-			int[] singletonScoresAr, Set<String> searchWordsSet, ) {
+			int[] singletonScoresAr, Set<String> searchWordsSet //HERE add additional list for db-processed list, 
+			) {
 		// update scores map
 		int curScoreToAdd = 0;
 		int scoreAdded = 0;

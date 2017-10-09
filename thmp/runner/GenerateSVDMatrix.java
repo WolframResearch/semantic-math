@@ -20,7 +20,7 @@ import thmp.utils.FileUtils;
 public class GenerateSVDMatrix{
 
 	public static void main(String[] args){
-		/*Deserialize parsedExpressionList from input */		
+		/*Deserialize parsedExpressionList from input, e.g. combinedParsedExpressionList.dat */		
 		int argsLen = args.length;
 		if(argsLen < 1){
 			System.out.println("Please supply a file to deserialize ParsedExpression's from!");
@@ -40,13 +40,15 @@ public class GenerateSVDMatrix{
 		
 		//frequently used source: number of theorems: 69295. Cut this number so SVD is actually possible:
 		//for 23000 words, half an hour to process and generate corr mx.
-		boolean pickBool = true;
-		for(ParsedExpression thm : parsedExpressionList){
-			//take every other thm right now 
-			if(pickBool){
+		//boolean pickBool = true;
+		int parsedExpressionListSz = parsedExpressionList.size();
+		for(int i = 0; i < parsedExpressionListSz; i++){
+			ParsedExpression thm = parsedExpressionList.get(i);
+			//take every third thm right now. 28162 words, 23099 thms take 1.75 hours on byblis.
+			if(i % 3 == 0){
 				selectedParsedExpressionList.add(thm);
 			}
-			pickBool = pickBool ^ true;
+			//pickBool = pickBool ^ true;
 		}
 		
 		ThmSearch.TermDocumentMatrix.createTermDocumentMatrixSVD(

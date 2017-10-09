@@ -10,7 +10,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -23,7 +22,6 @@ import thmp.search.WordFrequency;
 import thmp.search.Searcher.SearchMetaData;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
-import thmp.utils.WordForms.WordFreqComparator;
 
 /**
  * Build maps that are comprehensive and representative,
@@ -58,7 +56,7 @@ public class CreateRepresentativeMaps {
 			if(true) createDocWordFreqMap(thmList);
 			if(false) buildAndSerializeTrueFluffWordsSet(thmList);
 		}
-		if(true) harnessCuratedWords();
+		if(false) harnessCuratedWords();
 	}	
 	
 	private static List<String> extractThmListFromPEList(String peFilePath){
@@ -78,8 +76,8 @@ public class CreateRepresentativeMaps {
 	 * Just freq map, not scores, so to be able to update scoring scheme later.
 	 * This is the universal map used by context and relation vector creations.
 	 * as well as SVD.
-	 * The map is on the order of O(10^4) (May 2017)
-	 * @return Map of words and their frequencies. Ordered in decreasing order 
+	 * The map is on the order of O(10^4) (May 2017), O(10^5), Aug 2017
+	 * Write to file a Map of words and their frequencies. Ordered in decreasing order 
 	 * with respect to frequency.
 	 */
 	private static void createDocWordFreqMap(List<String> thmList){

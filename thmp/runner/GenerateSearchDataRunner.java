@@ -8,8 +8,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -139,7 +141,8 @@ public class GenerateSearchDataRunner {
 			Process pr = rt.exec("/home/usr0/yihed/thm/unpack2.sh " + fileName);			
 			FileUtils.waitAndPrintProcess(pr);			
 			FileUtils.findFilePathDirectory(fileDir);*/
-			System.out.println("Done generating search data for files in " + fileDir);			
+			String timeStr = new SimpleDateFormat("yyyy_MM_dd_HH:mm").format(Calendar.getInstance().getTime());
+			System.out.println("Done generating search data for files in " + fileDir + " at " + timeStr);		
 		}
 		
 		long afterTime = System.currentTimeMillis();
