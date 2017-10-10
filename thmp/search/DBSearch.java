@@ -23,7 +23,9 @@ public class DBSearch {
 	
 	//should have table name etc in config file!
 	private static final String AUTHOR_TABLE_NAME = "authorTb3";
-	private static final String THM_ID_NAME = "thmId";
+	private static final String THM_ID_COL_NAME = "thmId";
+	private static final String AUTHOR_FIRST_NAME_COL = "author";
+	private static final String AUTHOR_LAST_NAME_COL = "author";
 	
 	/**
 	 * Return list of thms satisfying authorship criteria, by searching 
@@ -42,15 +44,21 @@ public class DBSearch {
 		List<Integer> dbList = new ArrayList<Integer>();
 		
 		String relationStr = conjDisjType.getDbName();
+		//data need to be normalized, e.g. M. L. Mangano
+		
 		//e.g. "SELECT thmId FROM authorTb3 WHERE (author='W. N. Kang' OR author='S. Ivanov');"
 		//make DB call, get default connection
 		Connection conn = DBUtils.getDefaultDSConnection();
-		StringBuilder querySb = new StringBuilder("SELECT ").append(THM_ID_NAME).append(" FROM " + AUTHOR_TABLE_NAME 
+		StringBuilder querySb = new StringBuilder("SELECT ").append(THM_ID_COL_NAME).append(" FROM " + AUTHOR_TABLE_NAME 
 				+ " WHERE (");
+		//decide between first and last author names
+		
+		//first try all of first name, if no result, try initial 
+		//make separate db calls for each author
 		
 		//now assume only last name.
 		for(String author : authorAr) {
-			querySb.append(" author='").append(author).append("' ").append(relationStr);
+			querySb.append(" ").append(AUTHOR_LAST_NAME_COL).append("='").append(author).append("' ").append(relationStr);
 		}
 		querySb.delete(querySb.length() - relationStr.length(), querySb.length() - 1);
 		querySb.append("');");

@@ -78,6 +78,35 @@ public class DBUtils {
 		}
 	}
 	
+	public static class AuthorName{
+		private String firstName;
+		private String lastName;
+		
+		public AuthorName(String firstName_, String lastName_) {
+			this.firstName = firstName_;
+			this.lastName = lastName_;
+		}
+		
+		/**
+		 * First initial. Empty string if no first name in database.
+		 * @return
+		 */
+		public String firstInitial() {
+			if(this.firstName.length() == 0) {
+				return "";
+			}
+			return this.firstName.substring(0, 0);
+		}
+		
+		public String firstName() {
+			return this.firstName;
+		}
+		
+		public String lastName() {
+			return this.lastName;
+		}
+	}
+	
 	/**
 	 * Execute a mySql statement.
 	 * @param stm
