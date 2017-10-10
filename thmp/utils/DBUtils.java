@@ -7,22 +7,77 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
+
+import thmp.search.SearchIntersection;
 
 /**
  * Utility methods for database manipulations, for MySql database.
  * @author yihed
- *
  */
 public class DBUtils {
 	
 	public static final String DEFAULT_USER = "root";
 	public static final String DEFAULT_PW = "wolfram";
 	public static final String DEFAULT_SERVER = "localhost";
-	public static final int DEFAULT_PORT = 3306;
-	
+	public static final int DEFAULT_PORT = 3306;	
 	public static final String DEFAULT_DB_NAME = "thmDB";
+
+	private static final Connection DEFAULT_CONNECTION;
+	private static final DataSource DEFAULT_DATASOURCE;
+	
+	private static final Logger logger = LogManager.getLogger(DBUtils.class);
+	
+	static {
+		DataSource defaultDS = null;
+		Connection defaultConn = null;
 		
+		try {
+			defaultDS = getDataSource(DBUtils.DEFAULT_DB_NAME, DBUtils.DEFAULT_USER, DBUtils.DEFAULT_PW, 
+					DBUtils.DEFAULT_SERVER, DBUtils.DEFAULT_PORT);
+			defaultConn = defaultDS.getConnection();
+		}catch(SQLException e) {
+			String msg = "SQLException when trying to establish default connection " + e.getMessage();
+			System.out.println(msg);
+			logger.error(msg);
+		}
+		DEFAULT_DATASOURCE = defaultDS;
+		DEFAULT_CONNECTION = defaultConn;
+	}
+	
+	/**
+	 * Conjunction or disjunction type.
+	 */
+	public enum ConjDisjType{
+		CONJ("and"),
+		DISJ("or");
+		
+		String typeStr;
+		
+		private ConjDisjType(String s) {
+			this.typeStr = s;
+		}
+		
+		/**
+		 * Gets the type based on the colloquial name.
+		 * @param called the colloquial name, defaults to "or" if string not reognized
+		 * @return
+		 */
+		public static ConjDisjType getType(String called) {
+			return CONJ.typeStr.equals(called) ? CONJ : DISJ;
+		}
+		
+		/**
+		 * @return "AND" or "OR" for CONJ or DISJ, resp.
+		 */
+		public String getDbName() {
+			return typeStr.toUpperCase();
+		}
+	}
+	
 	/**
 	 * Execute a mySql statement.
 	 * @param stm
@@ -52,6 +107,7 @@ public class DBUtils {
 	/**
 	 * Functions that use database to refine search results from other algorithms.
 	 * 
+	 * @deprecated see DBSearch class
 	 */
 	public static void searchByAuthor(List<String> authorList, List<Integer> thmsList) {
 		
@@ -81,6 +137,36 @@ public class DBUtils {
 		
 		ds.setDatabaseName(dbName);		
 		return ds;
+	}
+	
+	/**
+	 * Gets the default DataSource connection.
+	 * @return
+	 * @throws SQLException 
+	 */
+	public static Connection getNewDefaultDSConnection() throws SQLException {
+		return getDataSource(DBUtils.DEFAULT_DB_NAME, DBUtils.DEFAULT_USER, DBUtils.DEFAULT_PW, 
+				DBUtils.DEFAULT_SERVER, DBUtils.DEFAULT_PORT).getConnection();
+	}
+	
+	/**
+	 * Gets the default DataSource connection .
+	 * @return
+	 * @throws SQLException 
+	 */
+	public static Connection getDefaultDSConnection() {
+		//handle if default conn times out!!
+		return DEFAULT_CONNECTION;
+	}
+	
+	/**
+	 * Gets the default DataSource.
+	 * @return
+	 * @throws SQLException 
+	 */
+	public static DataSource getDefaultDS() {
+		//handle if default conn times out!!
+		return DEFAULT_DATASOURCE;
 	}
 	
 	private static void createDatabase() {

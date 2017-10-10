@@ -1,6 +1,7 @@
 package thmp.search;
 
 import java.math.BigInteger;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -10,6 +11,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,6 +32,7 @@ import com.google.common.collect.TreeMultimap;
 
 import thmp.search.SearchCombined.ThmHypPair;
 import thmp.search.ThmHypPairGet.ThmHypPairBundle;
+import thmp.utils.DBUtils.ConjDisjType;
 import thmp.utils.FileUtils;
 import thmp.utils.GatherRelatedWords.RelatedWords;
 import thmp.utils.WordForms;
@@ -44,6 +48,9 @@ public class SearchIntersection {
 	// closest thms. Else use NUM_NEAREST_VECS as default value.
 	private static final int NUM_NEAREST_VECS = SearchCombined.NUM_NEAREST;
 
+	private static final Pattern BY_AUTHORS_PATT = Pattern.compile("(.*)\\s+by authors*\\s+(.*?)\\s*");
+	private static final Pattern AND_OR_PATT = Pattern.compile("\\s+(and|or)\\s+");
+	
 	private static final Logger logger = LogManager.getLogger(SearchIntersection.class);
 
 	/**
@@ -153,13 +160,45 @@ public class SearchIntersection {
 	public static List<ThmHypPair> getHighestThmStringList(String input, Set<String> searchWordsSet,
 			SearchState searchState, boolean contextSearchBool, boolean searchRelationalBool) {
 		
-		//parse here for queries that require search by authors, get list of thm indices, 
-		//pass to intersection search
-		
-		
+		input = input.toLowerCase();
+		//List<Integer> authorThmList = null;
 		int numSearchResults = NUM_NEAREST_VECS;
 		
-		intersectionSearch(input, searchWordsSet, searchState, contextSearchBool, searchRelationalBool, numSearchResults);
+		/*parse here for queries that require search by authors in database table, get list of thm indices, 
+		  pass to intersection search. Triggered by "by author". */
+		Matcher m;
+		if((m=BY_AUTHORS_PATT.matcher(input)).matches()) {
+			input = m.group(1);
+			//parse the authors string 
+			String authorStr = m.group(2);
+			//but and/or could be more complicated with compositions!!
+			
+			ConjDisjType conjDisjType = ConjDisjType.DISJ;
+			String[] authorAr;
+			if((m = AND_OR_PATT.matcher(authorStr)).matches()){
+				conjDisjType = ConjDisjType.getType(m.group(1));
+				authorAr = AND_OR_PATT.split(authorStr);
+			}else {
+				authorAr = new String[] {authorStr};
+			}
+			//by the regexes construction, there should be no spaces around authors
+			boolean hasSearched = false;
+			List<Integer> authorThmList = null;
+			try {
+				authorThmList = DBSearch.searchByAuthor(authorAr, conjDisjType);
+			} catch (SQLException e) {
+				intersectionSearch(input, searchWordsSet, searchState, contextSearchBool, searchRelationalBool, 
+						numSearchResults);
+				hasSearched = true;
+			}
+			if(!hasSearched) {
+				intersectionSearch(input, searchWordsSet, searchState, contextSearchBool, searchRelationalBool, 
+						numSearchResults, authorThmList);
+			}			
+		}else {
+			intersectionSearch(input, searchWordsSet, searchState, contextSearchBool, searchRelationalBool, numSearchResults);			
+		}
+		
 		if (null == searchState){
 			return Collections.<ThmHypPair>emptyList();
 		}
@@ -264,6 +303,7 @@ public class SearchIntersection {
 	 * @return SearchState containing list of indices of highest-scored thms.
 	 *         Sorted in ascending order, best first. List is 0-based.
 	 */
+	@SafeVarargs
 	public static SearchState intersectionSearch(String input, Set<String> searchWordsSet, 
 			SearchState searchState, boolean contextSearchBool, boolean searchRelationalBool,
 			int numHighest, List<Integer>... dbThmList) {

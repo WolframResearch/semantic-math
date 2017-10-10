@@ -161,7 +161,7 @@ public class DetectHypothesis {
 		//ThmSearch.TermDocumentMatrix.createTermDocumentMatrixSVD();	
 		//
 		String[] beforeStopWordsAR = new String[]{"by", "of","to","above","in", "By", "with", "is", "from",
-				"following", "then", "thus"};
+				"following", "then", "thus", "this"};
 		for(String w : beforeStopWordsAR) {
 			SCRAPE_STOP_WORDS_BEFORE_SET.add(w);
 		}		
@@ -509,12 +509,13 @@ public class DetectHypothesis {
 						if(scrapeThmNames) {
 							scrapeThmNames(inputBF, thmNameList);
 						} else {
-							
-							extractThmsFromFiles(inputBF, defThmList, thmHypPairList, stats, texFileName, thmNameList);
+							List<String> curFileThmNameList = new ArrayList<String>();
+							extractThmsFromFiles(inputBF, defThmList, thmHypPairList, stats, texFileName, curFileThmNameList);
 							//add delimiter to separate thm names per paper
-							if(!thmNameList.isEmpty()) {
-								thmNameList.add(0, "\n");
-								thmNameList.add(texFileName);	
+							if(!curFileThmNameList.isEmpty()) {
+								thmNameList.add("\n");
+								thmNameList.add(texFileName);
+								thmNameList.addAll(curFileThmNameList);
 							}
 							
 						}
@@ -1056,7 +1057,7 @@ public class DetectHypothesis {
 				newThmSB.append(" ").append(line);
 				//
 				if(newThmSB.length() > THM_MAX_CHAR_SIZE){
-					logger.error("thm length exceeds maximum allowable size: " + newThmSB);
+					logger.error("thm length exceeds maximum allowable size!");
 					continue;
 				}
 				//parse hyp and thm.
