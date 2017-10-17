@@ -36,6 +36,7 @@ public class DBSearch {
 	 * @throws SQLException 
 	 */
 	public static List<Integer> searchByAuthor(String[] authorAr, DBUtils.ConjDisjType conjDisjType) throws SQLException {
+		//should pass in first name last name instead!
 		
 		if(authorAr.length == 0) {
 			throw new IllegalArgumentException("Array of authors cannot be empty!");

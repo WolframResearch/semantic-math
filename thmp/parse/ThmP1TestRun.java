@@ -856,6 +856,8 @@ public class ThmP1TestRun {
 			st = "Let $p\\equiv 1\\pmod 8$ be a rational prime and let $e\\geq 2$. We have $p\\in V(e)$ if and only if the equation \\begin{equation}x^2+p\\,y^2=(1+i)z^{2^{e-2}}  \\end{equation} has a solution $x,y,z\\in\\mathbb{Q}(i)$ with \\[(x-i\\,y)\\mathbb{Z}[i]+2\\,y\\mathbb{Z}[i]=\\mathbb{Z}[i].\\] "
 					 +"suppose $d\\in R$ is a non-square . if one assumes that elliptic curves of rank $2$ are extremely rare ";
 			st = "Suppose that the sequence $\\eqref{unbd-1}$ is an admissible unbounded resolution of length $n>1$ of the projection $P_ 0$.";
+			st = "there exist infinitely many roots";
+			st = "group decomposes as a free jj";
 			
 			//st = " \\[ \\ begin{array}{l}  \\ frac{1}{\\ eta_ 1(R^1_T)}  \\ int_{R^1_T} \\ left(\\ int_{H_ 1/H_1\\ cap \\ Gamma_ 1} f(gh \\ Gamma_ 1)\\; d \\ nu_ 1(\\ dot{h})\\ right) \\,d \\ eta_ 1(\\ dot{g}) \\ \\[7pt] \\ qquad \\ \\ qquad =  (1/2)\\ int_{{\\ rm O}(n)} dk \\ cdot \\ int_{H_ 1/H_1\\ cap \\ Gamma_ 1}  d \\ nu_ 1(\\ dot{h})\\; {\\ scriptstyle \\ times} \\ \\[3pt] \\ qquad \\ \\ qquad \\ \\ qquad {\\ scriptstyle \\ times}\\;   \\ left (\\ frac{1}{\\ ell(D^1_T)} \\ int_{(\\ mbox{\\ boldmath{$ \\ scriptstyle t$}},\\ mbox{\\ boldmath{$ \\ scriptstyle x$}})\\ in D^1_T}  f(k \\ Psi(\\ mbox{\\ boldmath{$t$}},\\ mbox{\\ boldmath{$x$}})\\ Gamma_ 1)\\; d \\ mbox{\\ boldmath{$t$}}\\, d \\ mbox{\\ boldmath{$x$}} \\ right).  \\end{array} \\]";
 			//st = "Let $p_1,\\dots,p_r$ be the preimages under $w$"; 			

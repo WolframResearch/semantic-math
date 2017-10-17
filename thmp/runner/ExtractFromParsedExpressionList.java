@@ -2,10 +2,12 @@ package thmp.runner;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import thmp.parse.ParsedExpression;
 import thmp.search.SearchCombined.ThmHypPair;
 import thmp.utils.FileUtils;
+import thmp.utils.GatherRelatedWords.RelatedWords;
 
 public class ExtractFromParsedExpressionList {
 
@@ -16,7 +18,7 @@ public class ExtractFromParsedExpressionList {
 		
 		if(false) writePEThmsToFile();	
 		if(false) getThmListSize();
-		
+		writeRelatedWordsToFile();
 	}
 
 	private static void getThmListSize() {
@@ -57,9 +59,6 @@ public class ExtractFromParsedExpressionList {
 		
 	}
 	
-	/**
-	 * 
-	 */
 	private static void writePEThmsToFile() {
 		//String dest = "src/thmp/data/allThmsList1.txt";
 		String fileNamesDest = "src/thmp/data/fileNamesList1.txt";
@@ -82,5 +81,28 @@ public class ExtractFromParsedExpressionList {
 		ParsedExpression pe = peList.get(17);
 		System.out.println("defListWithThm: "+pe.getDefListWithThm());
 		System.out.println("file" +pe.getDefListWithThm().getSrcFileName());
+	}
+	
+	/**
+	 * Related words file
+	 */
+	private static void writeRelatedWordsToFile() {
+		//String dest = "src/thmp/data/allThmsList1.txt";
+		String fileNamesDest = "src/thmp/data/relatedWordsMap.txt";
+		String relatedWordsMapSrc = "src/thmp/data/relatedWordsMap.dat";
+		
+		@SuppressWarnings("unchecked")
+		List<Map<String, RelatedWords>> wordsList = (List<Map<String, RelatedWords>>)(FileUtils.deserializeListFromFile(relatedWordsMapSrc));
+		Map<String, RelatedWords> relatedWordsMap = wordsList.get(0);
+		
+		boolean writeToFile = true;
+		if(writeToFile){
+			/*for(ParsedExpression pe : wordsList){
+				//getOriginalThmStr is now transient! Should access with thmWithDefList
+				thmStrList.add(pe.getOriginalThmStr() + "\n\n");
+				fileNamesList.add(pe.getDefListWithThm().getSrcFileName());
+			}*/
+			FileUtils.writeToFile(relatedWordsMap, fileNamesDest);
+		}		
 	}
 }

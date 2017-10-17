@@ -144,14 +144,22 @@ public class ParseStruct implements Serializable{
 		for(Map.Entry<ParseStructType, WLCommandWrapper> entry : wrapperMMapEntries){
 			WLCommandWrapper wrapper = entry.getValue();
 			Expr commandExpr = wrapper.commandExpr();
-			//e.g. "STM"
-			String entryKeyStr = entry.getKey().toString();
+			//e.g. "STM", or "HYP"
+			String entryKeyStr;// = entry.getKey().toString();
+			ParseStructType parseStructType = entry.getKey();
+			if(parseStructType.isHypType()) {
+				//following suggestion from above
+				entryKeyStr = "Hypothesis";
+			}else {
+				//entryKeyStr = entry.getKey().toString();
+				entryKeyStr = "Statement";
+			}
 			Expr ruleExpr = ExprUtils.ruleExpr(new Expr(entryKeyStr), commandExpr);			
 			curLevelExprList.add(ruleExpr);		
 			if(i > 1 || !hasChild){			
-				sb.append("\"").append(entryKeyStr).append("\" :> ").append(wrapper.WLCommandStr()).append(", ");
+				sb.append("\"").append(entryKeyStr).append("\" -> ").append(wrapper.WLCommandStr()).append(", ");
 			}else{
-				sb.append("\"").append(entryKeyStr).append("\" :> ").append(wrapper.WLCommandStr());
+				sb.append("\"").append(entryKeyStr).append("\" -> ").append(wrapper.WLCommandStr());
 			}
 			i--;
 		}

@@ -66,7 +66,7 @@ public class NGramSearch {
 	
 	//words to be taken off of two-gram map
 	private static final String[] NOT_TWO_GRAMS = new String[]{"field is", "more generally", "polynomial $a$", 
-			"polynomial $f$", "over ring", "exist integer", "over field"};
+			"polynomial $f$", "over ring", "exist integer", "over field", "many zero"};
 	
 	//should use this to detect fluff in first word.
 	private static final Set<String> fluffWordsSet = WordForms.getFluffSet();

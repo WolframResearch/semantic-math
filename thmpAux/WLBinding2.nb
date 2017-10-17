@@ -1,0 +1,1180 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 11.1' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[     44292,       1172]
+NotebookOptionsPosition[     39835,       1093]
+NotebookOutlinePosition[     40191,       1109]
+CellTagsIndexPosition[     40148,       1106]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{"parseThm", "::", "noParse"}], "=", 
+   "\"\<Alas no parse. Let me know if you think this should parse!\>\""}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"parseThm", "::", "noSpan"}], "=", 
+   "\"\<Oops no spanning parse, but here's what I've got:\>\""}], 
+  ";"}]}], "Input",
+ CellChangeTimes->{{3.698181550901478*^9, 3.698181606209298*^9}, {
+  3.698182042823056*^9, 
+  3.698182043080717*^9}},ExpressionUUID->"4ef8a0bd-afa7-44e4-a72d-\
+2313fa43f867"],
+
+Cell[BoxData[
+ RowBox[{"ClearAll", "[", "parseThm", "]"}]], "Input",ExpressionUUID->"13b43aa9-4561-4ee9-9eb7-6d999d37f957"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{"parseThm", "[", "input_", "]"}], ":=", 
+   RowBox[{"Module", "[", 
+    RowBox[{
+     RowBox[{"{", "urlResponse", "}"}], ",", " ", 
+     RowBox[{
+      RowBox[{"urlResponse", "=", 
+       RowBox[{"URLExecute", "[", 
+        RowBox[{
+        "\"\<http://puremath.wolfram.com:8080/theoremSearchTest/thmp1\>\"", 
+         ",", 
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"\"\<inputString\>\"", "\[Rule]", "input"}], ",", 
+           RowBox[{
+           "\"\<ContentType\>\"", "\[Rule]", 
+            "\"\<application/x-www-form-urlencoded;charset=UTF-8\>\""}]}], 
+          "}"}]}], "]"}]}], ";", "\[IndentingNewLine]", 
+      RowBox[{"If", "[", 
+       RowBox[{
+        RowBox[{"0", "==", 
+         RowBox[{"Length", "[", "urlResponse", "]"}]}], ",", 
+        RowBox[{
+         RowBox[{"Message", "[", 
+          RowBox[{"parseThm", "::", "noParse"}], "]"}], ";", 
+         RowBox[{"Return", "[", "]"}]}]}], "]"}], ";", "\[IndentingNewLine]", 
+      
+      RowBox[{"If", "[", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"Values", "[", 
+          RowBox[{"urlResponse", "[", 
+           RowBox[{"[", "1", "]"}], "]"}], "]"}], "\[Equal]", 
+         "\"\<NONE\>\""}], ",", 
+        RowBox[{"Message", "[", 
+         RowBox[{"parseThm", "::", "noSpan"}], "]"}]}], "]"}], ";", 
+      "\[IndentingNewLine]", 
+      RowBox[{"(*", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"urlResponse", "[", 
+          RowBox[{"[", "1", "]"}], "]"}], "[", 
+         RowBox[{"[", "4", "]"}], "]"}], "[", 
+        RowBox[{"[", "2", "]"}], "]"}], "*)"}], "\[IndentingNewLine]", 
+      RowBox[{"(*", 
+       RowBox[{"{", 
+        RowBox[{"StringReplace", "[", 
+         RowBox[{
+          RowBox[{
+           RowBox[{
+            RowBox[{"urlResponse", "[", 
+             RowBox[{"[", "1", "]"}], "]"}], "[", 
+            RowBox[{"[", "2", "]"}], "]"}], "[", 
+           RowBox[{"[", "2", "]"}], "]"}], ",", 
+          RowBox[{"\"\< :> \>\"", "\[RuleDelayed]", "\"\< -> \>\""}]}], "]"}],
+         "}"}], "*)"}], "\[IndentingNewLine]", 
+      RowBox[{"ToExpression", "[", 
+       RowBox[{"\"\<{\>\"", "<>", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"urlResponse", "[", 
+           RowBox[{"[", "1", "]"}], "]"}], "[", 
+          RowBox[{"[", "2", "]"}], "]"}], "[", 
+         RowBox[{"[", "2", "]"}], "]"}], "<>", "\"\<}\>\""}], "]"}]}]}], 
+    "\[IndentingNewLine]", "]"}]}], ";"}]], "Input",ExpressionUUID->"2e509bb5-\
+daa7-49db-b0d6-614ad3f52d3c"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+  "server", "=", 
+   "\"\<http://puremath.wolfram.com:8080/theoremSearchTest/thmp1\>\""}], 
+  ";"}]], "Input",ExpressionUUID->"1085f219-4ad0-43f5-add9-3c0cbd205607"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{"parseThm", "[", "input_String", "]"}], ":=", 
+   RowBox[{"Module", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"httpReq", ",", "urlResponse", ",", 
+       RowBox[{
+       "server", "=", 
+        "\"\<http://puremath.wolfram.com:8080/theoremSearchTest/thmp1\>\""}]}]\
+, "}"}], ",", " ", "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"httpReq", "=", 
+       RowBox[{"HTTPRequest", "[", 
+        RowBox[{"server", ",", 
+         RowBox[{"<|", 
+          RowBox[{
+           RowBox[{"\"\<inputString\>\"", "\[Rule]", "input"}], ",", 
+           "\[IndentingNewLine]", 
+           RowBox[{
+           "\"\<ContentType\>\"", "\[Rule]", "\"\<application/json\>\""}]}], 
+          RowBox[{"(*", 
+           RowBox[{
+           "\"\<ContentType\>\"", "\[Rule]", 
+            "\"\<application/x-www-form-urlencoded;charset=UTF-8\>\""}], 
+           "*)"}], "\[IndentingNewLine]", "|>"}]}], "]"}]}], ";", 
+      "\[IndentingNewLine]", 
+      RowBox[{"(*", 
+       RowBox[{
+        RowBox[{"urlResponse", "=", 
+         RowBox[{"URLExecute", "[", 
+          RowBox[{
+          "\"\<http://puremath.wolfram.com:8080/theoremSearchTest/thmp1\>\"", 
+           ",", 
+           RowBox[{"{", 
+            RowBox[{
+             RowBox[{"\"\<inputString\>\"", "\[Rule]", "input"}], ",", 
+             RowBox[{
+             "\"\<ContentType\>\"", "\[Rule]", "\"\<application/json\>\""}]}],
+             "}"}]}], "]"}]}], ";"}], "*)"}], "\[IndentingNewLine]", 
+      RowBox[{"urlResponse", "=", 
+       RowBox[{"URLRead", "[", "httpReq", "]"}]}], ";", "\[IndentingNewLine]", 
+      RowBox[{"Print", "[", "httpReq", "]"}], ";", "\[IndentingNewLine]", 
+      RowBox[{"urlResponse", "=", 
+       RowBox[{"ImportString", "[", 
+        RowBox[{
+         RowBox[{"FromCharacterCode", "[", 
+          RowBox[{"Normal", "[", 
+           RowBox[{"urlResponse", "[", 
+            RowBox[{"[", "1", "]"}], "]"}], "]"}], "]"}], ",", 
+         "\"\<JSON\>\""}], "]"}]}], ";", "\[IndentingNewLine]", 
+      RowBox[{"If", "[", 
+       RowBox[{
+        RowBox[{"0", "==", 
+         RowBox[{"Length", "[", "urlResponse", "]"}]}], ",", 
+        RowBox[{
+         RowBox[{"Message", "[", 
+          RowBox[{"parseThm", "::", "noParse"}], "]"}], ";", 
+         RowBox[{"Return", "[", "]"}]}]}], "]"}], ";", "\[IndentingNewLine]", 
+      
+      RowBox[{"Print", "[", 
+       RowBox[{"urlResponse", "[", 
+        RowBox[{"[", "1", "]"}], "]"}], "]"}], ";", "\[IndentingNewLine]", 
+      RowBox[{"If", "[", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"Values", "[", 
+          RowBox[{"urlResponse", "[", 
+           RowBox[{"[", "1", "]"}], "]"}], "]"}], "\[Equal]", 
+         "\"\<NONE\>\""}], ",", 
+        RowBox[{"Message", "[", 
+         RowBox[{"parseThm", "::", "noSpan"}], "]"}]}], "]"}], ";", 
+      "\[IndentingNewLine]", 
+      RowBox[{"(*", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"urlResponse", "[", 
+          RowBox[{"[", "1", "]"}], "]"}], "[", 
+         RowBox[{"[", "4", "]"}], "]"}], "[", 
+        RowBox[{"[", "2", "]"}], "]"}], "*)"}], "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"urlResponse", "[", 
+         RowBox[{"[", "1", "]"}], "]"}], "[", 
+        RowBox[{"[", "2", "]"}], "]"}], "[", 
+       RowBox[{"[", "2", "]"}], "]"}]}]}], "\[IndentingNewLine]", "]"}]}], 
+  ";"}]], "Input",ExpressionUUID->"6e3cdcb4-96ae-4502-86e7-4389130ec424"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"HTTPRequest", "[", 
+  RowBox[{"server", ",", 
+   RowBox[{"<|", 
+    RowBox[{
+     RowBox[{"\"\<inputString\>\"", "\[Rule]", "\"\<hi\>\""}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{"\"\<ContentType\>\"", "\[Rule]", "\"\<application/json\>\""}]}], 
+    RowBox[{"(*", 
+     RowBox[{
+     "\"\<ContentType\>\"", "\[Rule]", 
+      "\"\<application/x-www-form-urlencoded;charset=UTF-8\>\""}], "*)"}], 
+    "\[IndentingNewLine]", "|>"}]}], "]"}]], "Input",ExpressionUUID->\
+"0f468b50-ccfd-4fb2-bc9b-75c5340e9f1d"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{
+   TagBox["HTTPRequest",
+    "SummaryHead"], "[", 
+   DynamicModuleBox[{Typeset`open$$ = False, Typeset`embedState$$ = "Ready"}, 
+    
+    TemplateBox[{PaneSelectorBox[{False -> GridBox[{{
+            GraphicsBox[{
+              RGBColor[0, 
+               NCache[
+                Rational[2, 3], 0.6666666666666666], 0], 
+              DiskBox[{0, 0}], 
+              InsetBox[
+               FormBox[
+                StyleBox["\"GET\"", 
+                 Directive[10, 
+                  GrayLevel[1], Bold], StripOnInput -> False], 
+                TraditionalForm], 
+               Scaled[{0.53, 0.48}]]}, ImageSize -> 
+             Dynamic[{
+               Automatic, (3 CurrentValue["FontCapHeight"])/
+                AbsoluteCurrentValue[Magnification]}], Background -> None], 
+            GridBox[{{
+               RowBox[{
+                 TagBox["\"URL: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox[
+                  TemplateBox[{
+                    TagBox[
+                    "\"http://puremath.wolfram.com:8080/theoremSearchTest/\
+thmp1\"", Short], "http://puremath.wolfram.com:8080/theoremSearchTest/thmp1"},
+                    "HyperlinkURL"], "SummaryItem"]}]}, {
+               RowBox[{
+                 TagBox["\"ContentType: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox["\"application/json\"", "SummaryItem"]}]}}, 
+             GridBoxAlignment -> {
+              "Columns" -> {{Left}}, "Rows" -> {{Automatic}}}, AutoDelete -> 
+             False, GridBoxItemSize -> {
+              "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+             GridBoxSpacings -> {"Columns" -> {{2}}, "Rows" -> {{Automatic}}},
+              BaseStyle -> {
+              ShowStringCharacters -> False, NumberMarks -> False, 
+               PrintPrecision -> 3, ShowSyntaxStyles -> False}]}}, 
+          GridBoxAlignment -> {"Rows" -> {{Top}}}, AutoDelete -> False, 
+          GridBoxItemSize -> {
+           "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+          BaselinePosition -> {1, 1}], True -> GridBox[{{
+            GraphicsBox[{
+              RGBColor[0, 
+               NCache[
+                Rational[2, 3], 0.6666666666666666], 0], 
+              DiskBox[{0, 0}], 
+              InsetBox[
+               FormBox[
+                StyleBox["\"GET\"", 
+                 Directive[10, 
+                  GrayLevel[1], Bold], StripOnInput -> False], 
+                TraditionalForm], 
+               Scaled[{0.53, 0.48}]]}, ImageSize -> 
+             Dynamic[{
+               Automatic, (3 CurrentValue["FontCapHeight"])/
+                AbsoluteCurrentValue[Magnification]}], Background -> None], 
+            GridBox[{{
+               RowBox[{
+                 TagBox["\"URL: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox[
+                  TemplateBox[{
+                    TagBox[
+                    "\"http://puremath.wolfram.com:8080/theoremSearchTest/\
+thmp1\"", Short], "http://puremath.wolfram.com:8080/theoremSearchTest/thmp1"},
+                    "HyperlinkURL"], "SummaryItem"]}]}, {
+               RowBox[{
+                 TagBox["\"ContentType: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox["\"application/json\"", "SummaryItem"]}]}}, 
+             GridBoxAlignment -> {
+              "Columns" -> {{Left}}, "Rows" -> {{Automatic}}}, AutoDelete -> 
+             False, GridBoxItemSize -> {
+              "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+             GridBoxSpacings -> {"Columns" -> {{2}}, "Rows" -> {{Automatic}}},
+              BaseStyle -> {
+              ShowStringCharacters -> False, NumberMarks -> False, 
+               PrintPrecision -> 3, ShowSyntaxStyles -> False}]}}, 
+          GridBoxAlignment -> {"Rows" -> {{Top}}}, AutoDelete -> False, 
+          GridBoxItemSize -> {
+           "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+          BaselinePosition -> {1, 1}]}, 
+       Dynamic[Typeset`open$$], ImageSize -> Automatic]},
+     "SummaryPanel",
+     DisplayFunction->(
+      ButtonBox[#, Active -> False, Alignment -> Left, 
+       Appearance -> {
+        "Default" -> 
+         FrontEnd`FileName[{"Typeset", "SummaryBox"}, "Panel.9.png"]}, 
+       FrameMargins -> 7, BaseStyle -> {}, 
+       DefaultBaseStyle -> {"Panel", Background -> None}, BaselinePosition -> 
+       Baseline]& )],
+    DynamicModuleValues:>{}], "]"}],
+  HTTPRequest["http://puremath.wolfram.com:8080/theoremSearchTest/thmp1", 
+   Association["inputString" -> "hi", "ContentType" -> "application/json"]],
+  Editable->False,
+  SelectWithContents->True,
+  Selectable->False]], "Output",ExpressionUUID->"a396435c-7381-46d9-81ab-\
+84098a4b779f"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"URLExecute", "[", 
+  RowBox[{
+  "\"\<http://puremath.wolfram.com:8080/theoremSearchTest/thmp1\>\"", ",", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"\"\<inputString\>\"", "\[Rule]", "\"\<ring\>\""}], ",", 
+     RowBox[{
+     "\"\<ContentType\>\"", "\[Rule]", 
+      "\"\<application/x-www-form-urlencoded;charset=ISO-8859-1\>\""}]}], 
+    "}"}]}], "]"}]], "Input",ExpressionUUID->"cc510210-6183-4d77-8fb7-\
+ec26ddc532b1"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"\<\"form\"\>", "\[Rule]", "\<\"\\\"WL\\\"\"\>"}], ",", 
+     RowBox[{"\<\"parsedStr\"\>", "\[Rule]", "\<\"\"\>"}], ",", 
+     RowBox[{"\<\"parseStructType\"\>", "\[Rule]", "\<\"NONE\"\>"}], ",", 
+     RowBox[{"\<\"stringForm\"\>", 
+      "\[Rule]", "\<\"<|\\\"WL\\\"->NONE :>, \\\"Scores\\\"->{0, 1.0,  1,  \
+1}|>\"\>"}]}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"\<\"form\"\>", "\[Rule]", "\<\"long\"\>"}], ",", 
+     RowBox[{"\<\"parsedStr\"\>", "\[Rule]", "\<\"[ent{name=ring}]\"\>"}], 
+     ",", 
+     RowBox[{"\<\"stringForm\"\>", 
+      "\[Rule]", "\<\"<|LONG->[ent{name=ring}], \\\"Scores\\\"->{0, \
+1.0}|>\"\>"}]}], "}"}]}], "}"}]], "Output",ExpressionUUID->"7c41f739-fd33-\
+47f2-b5dd-e2c0d9f6068b"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"parseThm", "[", 
+  "\"\<Given any function $f$, there are infinitely many roots in \
+$g(zeta(f))$.\>\"", "]"}]], "Input",ExpressionUUID->"86c191a5-57f1-40b7-9442-\
+b2ec1521ebb5"],
+
+Cell[BoxData[
+ RowBox[{"parseThm", 
+  "[", "\<\"Given any function $f$, there are infinitely many roots in \
+$g(zeta(f))$.\"\>", "]"}]], "Output",ExpressionUUID->"edd25806-a7e2-4d9c-8ed3-\
+84e044d6f6cc"]
+}, Open  ]],
+
+Cell[BoxData[
+ RowBox[{"Clear", "[", "myTreeForm", "]"}]], "Input",ExpressionUUID->"36cf30fe-e4ba-42b1-b1db-0530f7bc75b0"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{"myTreeForm", "[", "exp_", "]"}], ":=", 
+   RowBox[{"Module", "[", 
+    RowBox[{
+     RowBox[{"{", "e", "}"}], ",", "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{
+       RowBox[{"keep", " ", "the", " ", "\"\<Label\>\""}], ",", " ", 
+       RowBox[{"make", " ", "them", " ", "different", " ", "color"}]}], 
+      "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{
+       RowBox[{"e", "=", 
+        RowBox[{"exp", "/.", 
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{
+            RowBox[{"Rule", "[", 
+             RowBox[{
+              RowBox[{"Alternatives", "[", 
+               RowBox[{
+               "\"\<Type\>\"", ",", "\"\<Qualifiers\>\"", ",", 
+                "\"\<Label\>\""}], "]"}], ",", "w_"}], "]"}], 
+            "\[RuleDelayed]", "w"}], ",", 
+           RowBox[{
+            RowBox[{"List", "[", "w_", "]"}], "\[RuleDelayed]", "w"}]}], 
+          "}"}]}]}], ";"}], "*)"}], "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"e", "=", 
+       RowBox[{"Replace", "[", 
+        RowBox[{"exp", ",", 
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{
+            RowBox[{"Rule", "[", 
+             RowBox[{
+              RowBox[{"Alternatives", "[", 
+               RowBox[{
+               "\"\<Type\>\"", ",", "\"\<Qualifiers\>\"", ",", 
+                "\"\<Label\>\""}], "]"}], ",", "w_"}], "]"}], 
+            "\[RuleDelayed]", "w"}], ",", 
+           RowBox[{
+            RowBox[{"List", "[", "w_", "]"}], "\[RuleDelayed]", "w"}]}], 
+          "}"}], ",", "All"}], "]"}]}], ";", "\[IndentingNewLine]", 
+      RowBox[{"Magnify", "[", 
+       RowBox[{
+        RowBox[{"TreeForm", "[", "e", "]"}], ",", "1.001"}], "]"}]}]}], 
+    "]"}]}], ";"}]], "Input",ExpressionUUID->"77c76d21-a095-40d1-953c-\
+23917923aa71"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"myTreeForm", "[", 
+  RowBox[{"Math", "[", 
+   RowBox[{
+    RowBox[{"\"\<Qualifiers\>\"", "->", 
+     RowBox[{"{", "\"\<any\>\"", "}"}]}], ",", " ", 
+    RowBox[{"\"\<Type\>\"", "->", "\"\<function\>\""}], ",", " ", 
+    RowBox[{"\"\<Label\>\"", "->", "\"\<$f$\>\""}]}], "]"}], "]"}]], "Input",E\
+xpressionUUID->"d7e334cf-b8e0-44f7-bfd1-1f283b7e1dd5"],
+
+Cell[BoxData[
+ StyleBox[
+  GraphicsBox[
+   TagBox[
+    GraphicsComplexBox[{{0.7745966692414834, 0.7745966692414834}, {0., 0.}, {
+     0.7745966692414834, 0.}, {1.5491933384829668`, 0.}}, {
+      {RGBColor[0.55, 0.45, 0.45], LineBox[{{1, 2}, {1, 3}, {1, 4}}]}, {
+       TagBox[
+        TooltipBox[InsetBox[
+          FrameBox[
+           StyleBox["Math", "StandardForm", "Output",
+            StripOnInput->False,
+            LineColor->GrayLevel[0],
+            FrontFaceColor->GrayLevel[0],
+            BackFaceColor->GrayLevel[0],
+            GraphicsColor->GrayLevel[0],
+            FontSize->Scaled[0.05],
+            FontColor->GrayLevel[0]],
+           Background->RGBColor[1., 1., 0.871],
+           FrameStyle->GrayLevel[0.5],
+           StripOnInput->False], 1],
+         TagBox[
+          RowBox[{"Math", "[", 
+            RowBox[{"\"any\"", ",", "\"function\"", ",", "\"$f$\""}], "]"}], 
+          HoldForm]],
+        Annotation[#, 
+         HoldForm[
+          $CellContext`Math["any", "function", "$f$"]], "Tooltip"]& ], 
+       TagBox[
+        TooltipBox[InsetBox[
+          FrameBox[
+           StyleBox[
+            TagBox["\<\"any\"\>",
+             HoldForm], "StandardForm", "Output",
+            StripOnInput->False,
+            LineColor->GrayLevel[0],
+            FrontFaceColor->GrayLevel[0],
+            BackFaceColor->GrayLevel[0],
+            GraphicsColor->GrayLevel[0],
+            FontSize->Scaled[0.05],
+            FontColor->GrayLevel[0]],
+           Background->RGBColor[1., 1., 0.871],
+           FrameStyle->GrayLevel[0.5],
+           StripOnInput->False], 2],
+         TagBox["\"any\"", HoldForm]],
+        Annotation[#, 
+         HoldForm["any"], "Tooltip"]& ], 
+       TagBox[
+        TooltipBox[InsetBox[
+          FrameBox[
+           StyleBox[
+            TagBox["\<\"function\"\>",
+             HoldForm], "StandardForm", "Output",
+            StripOnInput->False,
+            LineColor->GrayLevel[0],
+            FrontFaceColor->GrayLevel[0],
+            BackFaceColor->GrayLevel[0],
+            GraphicsColor->GrayLevel[0],
+            FontSize->Scaled[0.05],
+            FontColor->GrayLevel[0]],
+           Background->RGBColor[1., 1., 0.871],
+           FrameStyle->GrayLevel[0.5],
+           StripOnInput->False], 3],
+         TagBox["\"function\"", HoldForm]],
+        Annotation[#, 
+         HoldForm["function"], "Tooltip"]& ], 
+       TagBox[
+        TooltipBox[InsetBox[
+          FrameBox[
+           StyleBox[
+            TagBox["\<\"$f$\"\>",
+             HoldForm], "StandardForm", "Output",
+            StripOnInput->False,
+            LineColor->GrayLevel[0],
+            FrontFaceColor->GrayLevel[0],
+            BackFaceColor->GrayLevel[0],
+            GraphicsColor->GrayLevel[0],
+            FontSize->Scaled[0.05],
+            FontColor->GrayLevel[0]],
+           Background->RGBColor[1., 1., 0.871],
+           FrameStyle->GrayLevel[0.5],
+           StripOnInput->False], 4],
+         TagBox["\"$f$\"", HoldForm]],
+        Annotation[#, 
+         HoldForm["$f$"], "Tooltip"]& ]}}],
+    Annotation[#, 
+     VertexCoordinateRules -> {{0.7745966692414834, 0.7745966692414834}, {0., 
+      0.}, {0.7745966692414834, 0.}, {1.5491933384829668`, 0.}}]& ],
+   AspectRatio->NCache[Rational[2, 7]^Rational[1, 2], 0.5345224838248488],
+   FormatType:>StandardForm,
+   FrameTicks->Automatic,
+   PlotRange->All,
+   PlotRangePadding->Scaled[0.1]],
+  StripOnInput->False,
+  Magnification->1.001 Inherited]], "Output",ExpressionUUID->"cd4992fa-4575-\
+43eb-8aa5-5437da869897"]
+}, Open  ]],
+
+Cell[BoxData[
+ RowBox[{"mb", "=", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"MakeBoxes", "[", 
+     RowBox[{"#", ",", " ", "StandardForm"}], "]"}], "&"}], "@", " ", 
+   "%284"}]}]], "Input",ExpressionUUID->"41e0aa3e-2509-4f3d-a8cd-\
+4d5623aa0f38"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"RawBoxes", "[", 
+  RowBox[{"mb", "/.", " ", 
+   RowBox[{
+    RowBox[{"StyleBox", "[", 
+     RowBox[{"\"\<Math\>\"", ",", "rest___"}], "]"}], "\[RuleDelayed]", " ", 
+    RowBox[{"StyleBox", "[", 
+     RowBox[{"\"\<Math\>\"", ",", 
+      RowBox[{"FontColor", "\[RuleDelayed]", " ", 
+       RowBox[{"RGBColor", "[", 
+        RowBox[{"0", ",", "1.", ",", "1."}], "]"}]}]}], "]"}]}]}], 
+  "]"}]], "Input",ExpressionUUID->"66d566a7-1151-4893-a963-16f2845b8ed3"],
+
+Cell[BoxData[
+ StyleBox[
+  GraphicsBox[
+   TagBox[
+    GraphicsComplexBox[{{0.8164965809277261, 1.6329931618554523`}, {0., 
+     0.8164965809277261}, {0., 0.}, {0.8164965809277261, 
+     0.8164965809277261}, {1.6329931618554523`, 0.8164965809277261}}, {
+      {RGBColor[0.55, 0.45, 0.45], 
+       LineBox[{{1, 2}, {1, 4}, {1, 5}, {2, 3}}]}, {
+       TagBox[
+        TooltipBox[InsetBox[
+          FrameBox[
+           StyleBox["Math",
+            FontColor:>RGBColor[0, 1., 0]],
+           Background->RGBColor[1., 1., 0.871],
+           FrameStyle->GrayLevel[0.5],
+           StripOnInput->False], 1],
+         TagBox[
+          RowBox[{"Math", "[", 
+            RowBox[{
+              RowBox[{"{", "\"any\"", "}"}], ",", "\"function\"", ",", 
+              "\"$f$\""}], "]"}], HoldForm]],
+        Annotation[#, 
+         HoldForm[
+          $CellContext`Math[{"any"}, "function", "$f$"]], "Tooltip"]& ], 
+       TagBox[
+        TooltipBox[InsetBox[
+          FrameBox[
+           StyleBox["List", "StandardForm", "Output",
+            StripOnInput->False,
+            LineColor->GrayLevel[0],
+            FrontFaceColor->GrayLevel[0],
+            BackFaceColor->GrayLevel[0],
+            GraphicsColor->GrayLevel[0],
+            FontSize->Scaled[0.05],
+            FontColor->GrayLevel[0]],
+           Background->RGBColor[1., 1., 0.871],
+           FrameStyle->GrayLevel[0.5],
+           StripOnInput->False], 2],
+         TagBox[
+          RowBox[{"{", "\"any\"", "}"}], HoldForm]],
+        Annotation[#, 
+         HoldForm[{"any"}], "Tooltip"]& ], 
+       TagBox[
+        TooltipBox[InsetBox[
+          FrameBox[
+           StyleBox[
+            TagBox["\<\"any\"\>",
+             HoldForm], "StandardForm", "Output",
+            StripOnInput->False,
+            LineColor->GrayLevel[0],
+            FrontFaceColor->GrayLevel[0],
+            BackFaceColor->GrayLevel[0],
+            GraphicsColor->GrayLevel[0],
+            FontSize->Scaled[0.05],
+            FontColor->GrayLevel[0]],
+           Background->RGBColor[1., 1., 0.871],
+           FrameStyle->GrayLevel[0.5],
+           StripOnInput->False], 3],
+         TagBox["\"any\"", HoldForm]],
+        Annotation[#, 
+         HoldForm["any"], "Tooltip"]& ], 
+       TagBox[
+        TooltipBox[InsetBox[
+          FrameBox[
+           StyleBox[
+            TagBox["\<\"function\"\>",
+             HoldForm], "StandardForm", "Output",
+            StripOnInput->False,
+            LineColor->GrayLevel[0],
+            FrontFaceColor->GrayLevel[0],
+            BackFaceColor->GrayLevel[0],
+            GraphicsColor->GrayLevel[0],
+            FontSize->Scaled[0.05],
+            FontColor->GrayLevel[0]],
+           Background->RGBColor[1., 1., 0.871],
+           FrameStyle->GrayLevel[0.5],
+           StripOnInput->False], 4],
+         TagBox["\"function\"", HoldForm]],
+        Annotation[#, 
+         HoldForm["function"], "Tooltip"]& ], 
+       TagBox[
+        TooltipBox[InsetBox[
+          FrameBox[
+           StyleBox[
+            TagBox["\<\"$f$\"\>",
+             HoldForm], "StandardForm", "Output",
+            StripOnInput->False,
+            LineColor->GrayLevel[0],
+            FrontFaceColor->GrayLevel[0],
+            BackFaceColor->GrayLevel[0],
+            GraphicsColor->GrayLevel[0],
+            FontSize->Scaled[0.05],
+            FontColor->GrayLevel[0]],
+           Background->RGBColor[1., 1., 0.871],
+           FrameStyle->GrayLevel[0.5],
+           StripOnInput->False], 5],
+         TagBox["\"$f$\"", HoldForm]],
+        Annotation[#, 
+         HoldForm["$f$"], "Tooltip"]& ]}}],
+    Annotation[#, 
+     VertexCoordinateRules -> {{0.8164965809277261, 1.6329931618554523`}, {0.,
+       0.8164965809277261}, {0., 0.}, {0.8164965809277261, 
+      0.8164965809277261}, {1.6329931618554523`, 0.8164965809277261}}]& ],
+   AspectRatio->NCache[Rational[2, 5]^Rational[1, 2], 0.6324555320336759],
+   FormatType:>StandardForm,
+   FrameTicks->Automatic,
+   PlotRange->All,
+   PlotRangePadding->Scaled[0.1]],
+  StripOnInput->False,
+  Magnification->1.001 Inherited]], "Output",ExpressionUUID->"8e47d5ae-fa22-\
+4dfa-b28e-388feea85fe8"]
+}, Open  ]],
+
+Cell[BoxData[
+ RowBox[{"StyleBox", "[", 
+  RowBox[{"\"\<Math\>\"", ",", 
+   RowBox[{"{", 
+    RowBox[{"\"\<StandardForm\>\"", ",", "\"\<Output\>\"", ",", 
+     InterpretationBox[
+      ButtonBox[
+       TooltipBox[
+        GraphicsBox[{
+          {GrayLevel[0], RectangleBox[{0, 0}]}, 
+          {GrayLevel[0], RectangleBox[{1, -1}]}, 
+          {GrayLevel[0], RectangleBox[{0, -1}, {2, 1}]}},
+         AspectRatio->1,
+         DefaultBaseStyle->"ColorSwatchGraphics",
+         Frame->True,
+         FrameStyle->GrayLevel[0.],
+         FrameTicks->None,
+         ImageSize->
+          Dynamic[{
+           Automatic, 1.35 CurrentValue["FontCapHeight"]/AbsoluteCurrentValue[
+            Magnification]}],
+         PlotRangePadding->None],
+        "GrayLevel[0]"],
+       Appearance->None,
+       BaseStyle->{},
+       BaselinePosition->Baseline,
+       ButtonFunction:>With[{Typeset`box$ = EvaluationBox[]}, 
+         If[
+          Not[
+           AbsoluteCurrentValue["Deployed"]], 
+          SelectionMove[Typeset`box$, All, Expression]; 
+          FrontEnd`Private`$ColorSelectorInitialAlpha = 1; 
+          FrontEnd`Private`$ColorSelectorInitialColor = GrayLevel[0]; 
+          FrontEnd`Private`$ColorSelectorUseMakeBoxes = True; 
+          MathLink`CallFrontEnd[
+            FrontEnd`AttachCell[Typeset`box$, 
+             FrontEndResource["GrayLevelColorValueSelector"], {
+             0, {Left, Bottom}}, {Left, Top}, 
+             "ClosingActions" -> {
+              "SelectionDeparture", "ParentChanged", "EvaluatorQuit"}]]]],
+       DefaultBaseStyle->{},
+       Evaluator->Automatic,
+       Method->"Preemptive"],
+      GrayLevel[0],
+      Editable->False,
+      Selectable->False]}], "}"}], ",", 
+   RowBox[{"FontSize", "\[Rule]", 
+    RowBox[{"Scaled", "[", "0.05`", "]"}]}], ",", 
+   RowBox[{"StripOnInput", "\[Rule]", "False"}]}], "]"}]], "Input",ExpressionU\
+UID->"eb2b1cb7-8e85-4c61-a3d4-115c85bb9594"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"FullForm", "[", "%", "]"}]], "Input",ExpressionUUID->"5ad7023e-28d4-484d-9daf-9ab190cb640f"],
+
+Cell[BoxData[
+ TagBox[
+  StyleBox[
+   RowBox[{"Magnify", "[", 
+    RowBox[{
+     RowBox[{"TreeForm", "[", 
+      RowBox[{"Math", "[", 
+       RowBox[{
+        RowBox[{"List", "[", "\"\<any\>\"", "]"}], ",", "\"\<function\>\"", 
+        ",", "\"\<$f$\>\""}], "]"}], "]"}], ",", "1.001`"}], "]"}],
+   ShowSpecialCharacters->False,
+   ShowStringCharacters->True,
+   NumberMarks->True],
+  FullForm]], "Output",ExpressionUUID->"b4c91771-f116-4124-85b3-d768ffc27f0c"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(*", " ", "Example", " ", "*)"}], "\[IndentingNewLine]", 
+  RowBox[{
+  "parseThm", "[", 
+   "\"\<Given any function $f$, there are infinitely many zeros in \
+$g(zeta(f))$.\>\"", "]"}]}]], "Input",
+ CellChangeTimes->{{3.698184215903157*^9, 
+  3.698184225972658*^9}},ExpressionUUID->"b1c89469-0dca-4620-a6e5-\
+f935dc29d32b"],
+
+Cell[BoxData["\<\"HYP :> Math[\\\"Name\\\"->\\\"function\\\", \
+\\\"Property\\\"->{\\\"any\\\"}, \\\"Called\\\"->\\\"$f$\\\"], STM :> \
+Reference[\\\"there\\\"] ~HasProperty~ Math[\\\"Name\\\"->\\\"zero\\\", \
+\\\"Property\\\"->{\\\"infinitely many\\\"}, \\\"Qualifiers\\\" -> \
+{\\\"in\\\", Math[\\\"Name\\\"->\\\"$g(zeta(f))$\\\"]}]\"\>"], "Output",
+ CellChangeTimes->{
+  3.6981841591103363`*^9},ExpressionUUID->"35984eb7-cd64-4099-9c01-\
+4e4c9cfffe30"]
+}, Open  ]],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"parseThm1", "[", "input_", "]"}], ":=", 
+  RowBox[{"Module", "[", 
+   RowBox[{
+    RowBox[{"{", "urlResponse", "}"}], ",", " ", 
+    RowBox[{
+     RowBox[{"urlResponse", "=", 
+      RowBox[{"URLExecute", "[", 
+       RowBox[{
+       "\"\<http://puremath.wolfram.com:8080/theoremSearchTest2/thmp1\>\"", 
+        ",", 
+        RowBox[{"{", 
+         RowBox[{
+          RowBox[{"\"\<inputString\>\"", "\[Rule]", "input"}], ",", 
+          RowBox[{
+          "\"\<ContentType\>\"", "\[Rule]", "\"\<application/json\>\""}]}], 
+         "}"}]}], "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"If", "[", 
+      RowBox[{
+       RowBox[{"0", "==", 
+        RowBox[{"Length", "[", "urlResponse", "]"}]}], ",", 
+       RowBox[{
+        RowBox[{"Message", "[", 
+         RowBox[{"parseThm", "::", "noParse"}], "]"}], ";", 
+        RowBox[{"Return", "[", "]"}]}]}], "]"}], ";", "\[IndentingNewLine]", 
+     RowBox[{"If", "[", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"Values", "[", 
+         RowBox[{
+          RowBox[{"urlResponse", "[", 
+           RowBox[{"[", "1", "]"}], "]"}], "[", 
+          RowBox[{"[", "6", "]"}], "]"}], "]"}], "\[Equal]", "\"\<NONE\>\""}],
+        ",", 
+       RowBox[{"Message", "[", 
+        RowBox[{"parseThm", "::", "noSpan"}], "]"}]}], "]"}], ";", 
+     "\[IndentingNewLine]", "urlResponse"}]}], "\[IndentingNewLine]", 
+   "]"}]}]], "Input",
+ CellChangeTimes->{{3.702914014624344*^9, 
+  3.702914028493803*^9}},ExpressionUUID->"3356b5ca-80ce-4b4c-85bf-\
+7b9f54f0ab3b"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"parseThm", "[", "input_", "]"}], ":=", 
+  RowBox[{"Module", "[", 
+   RowBox[{
+    RowBox[{"{", "urlResponse", "}"}], ",", " ", 
+    RowBox[{
+     RowBox[{"urlResponse", "=", 
+      RowBox[{"URLExecute", "[", 
+       RowBox[{
+       "\"\<http://puremath.wolfram.com:8080/theoremSearchTest/thmp1\>\"", 
+        ",", 
+        RowBox[{"{", 
+         RowBox[{
+          RowBox[{"\"\<inputString\>\"", "\[Rule]", "input"}], ",", 
+          RowBox[{
+          "\"\<ContentType\>\"", "\[Rule]", "\"\<application/json\>\""}]}], 
+         "}"}]}], "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"ToExpression", "[", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"urlResponse", "[", 
+         RowBox[{"[", "1", "]"}], "]"}], "[", 
+        RowBox[{"[", "4", "]"}], "]"}], "[", 
+       RowBox[{"[", "2", "]"}], "]"}], "]"}]}]}], "\[IndentingNewLine]", 
+   "]"}]}]], "Input",
+ CellChangeTimes->{{3.70385449923188*^9, 
+  3.7038545016477957`*^9}},ExpressionUUID->"d6a45f4e-e296-41b9-9bda-\
+ee980525ecaf"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"parseThm2", "[", "input_", "]"}], ":=", 
+  RowBox[{"Module", "[", 
+   RowBox[{
+    RowBox[{"{", "urlResponse", "}"}], ",", " ", 
+    RowBox[{
+     RowBox[{"urlResponse", "=", 
+      RowBox[{"URLExecute", "[", 
+       RowBox[{
+       "\"\<http://puremath.wolfram.com:8080/theoremSearchTest2/thmp1\>\"", 
+        ",", 
+        RowBox[{"{", 
+         RowBox[{
+          RowBox[{"\"\<inputString\>\"", "\[Rule]", "input"}], ",", 
+          RowBox[{
+          "\"\<ContentType\>\"", "\[Rule]", "\"\<application/json\>\""}]}], 
+         "}"}]}], "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"ToExpression", "[", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"urlResponse", "[", 
+         RowBox[{"[", "1", "]"}], "]"}], "[", 
+        RowBox[{"[", "4", "]"}], "]"}], "[", 
+       RowBox[{"[", "2", "]"}], "]"}], "]"}]}]}], "\[IndentingNewLine]", 
+   "]"}]}]], "Input",
+ CellChangeTimes->{{3.703165166562716*^9, 
+  3.703165169393586*^9}},ExpressionUUID->"191cea11-1f75-4d03-9a7b-\
+01cb2ae0598a"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"parseThm1", "[", "input_", "]"}], ":=", 
+  RowBox[{"Module", "[", 
+   RowBox[{
+    RowBox[{"{", "urlResponse", "}"}], ",", " ", 
+    RowBox[{
+     RowBox[{"urlResponse", "=", 
+      RowBox[{"URLExecute", "[", 
+       RowBox[{
+       "\"\<http://puremath.wolfram.com:8080/theoremSearchTest3/thmp1\>\"", 
+        ",", 
+        RowBox[{"{", 
+         RowBox[{
+          RowBox[{"\"\<inputString\>\"", "\[Rule]", "input"}], ",", 
+          RowBox[{
+          "\"\<ContentType\>\"", "\[Rule]", "\"\<application/json\>\""}]}], 
+         "}"}]}], "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"ToExpression", "[", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"urlResponse", "[", 
+         RowBox[{"[", "1", "]"}], "]"}], "[", 
+        RowBox[{"[", "4", "]"}], "]"}], "[", 
+       RowBox[{"[", "2", "]"}], "]"}], "]"}]}]}], "\[IndentingNewLine]", 
+   "]"}]}]], "Input",
+ CellChangeTimes->{
+  3.702920274669182*^9, {3.702920338840208*^9, 3.702920341007766*^9}, {
+   3.70292251180716*^9, 3.702922576260787*^9}, 3.703165009443062*^9, 
+   3.703165105089076*^9},ExpressionUUID->"b622af6f-5750-45bc-9bdf-\
+abbe4e1e4bcd"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"parseThm1", "[", "\"\< prime is called $p $\>\"", "]"}]], "Input",
+ CellChangeTimes->{{3.7029243625990963`*^9, 3.702924369004489*^9}, 
+   3.703165017324114*^9, {3.703165056654814*^9, 3.703165065197538*^9}, 
+   3.703165118203117*^9},ExpressionUUID->"6ebc2852-9759-4dc8-b5d9-\
+e104ce632da3"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"Math", "[", 
+    RowBox[{"\[LeftAssociation]", 
+     RowBox[{"\<\"Name\"\>", "\[Rule]", "\<\"prime\"\>"}], 
+     "\[RightAssociation]"}], "]"}], "\[Element]", 
+   RowBox[{"Math", "[", 
+    RowBox[{"\[LeftAssociation]", 
+     RowBox[{"\<\"Name\"\>", "\[Rule]", "\<\"$p $\"\>"}], 
+     "\[RightAssociation]"}], "]"}]}], "}"}]], "Output",
+ CellChangeTimes->{{3.7029243630296917`*^9, 3.7029243698235607`*^9}, {
+  3.703165029134573*^9, 3.703165058772974*^9}, {3.70316509957166*^9, 
+  3.703165118926023*^9}},ExpressionUUID->"e4c5bcb2-17e7-410b-942f-\
+3418ec3ecc60"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"parseThm1", "[", "\"\<this prime is called $p $\>\"", 
+  "]"}]], "Input",
+ CellChangeTimes->{{3.702924326662201*^9, 3.702924336317206*^9}, 
+   3.703164994564839*^9},ExpressionUUID->"52e1dd30-4540-4251-b76d-\
+31bbb81b5b83"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"Math", "[", 
+    RowBox[{"\[LeftAssociation]", 
+     RowBox[{
+      RowBox[{"\<\"Name\"\>", "\[Rule]", "\<\"prime\"\>"}], ",", 
+      RowBox[{"\<\"Property\"\>", "\[Rule]", 
+       RowBox[{"{", "\<\"this\"\>", "}"}]}]}], "\[RightAssociation]"}], "]"}],
+    "\[Element]", 
+   RowBox[{"Math", "[", 
+    RowBox[{"\[LeftAssociation]", 
+     RowBox[{"\<\"Name\"\>", "\[Rule]", "\<\"$p $\"\>"}], 
+     "\[RightAssociation]"}], "]"}]}], "}"}]], "Output",
+ CellChangeTimes->{
+  3.702924336971682*^9, {3.7031649909337063`*^9, 
+   3.7031649955289993`*^9}},ExpressionUUID->"55acd9b9-b689-4471-b7c1-\
+13753b2d82b6"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"parseThm1", "[", "\"\<field is ring\>\"", "]"}]], "Input",Expression\
+UUID->"c3a11bd8-5a26-4fe1-8f30-7219766e50e6"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"HasProperty", "[", 
+   RowBox[{
+    RowBox[{"Math", "[", 
+     RowBox[{"\[LeftAssociation]", 
+      RowBox[{"\<\"Name\"\>", "\[Rule]", "\<\"field\"\>"}], 
+      "\[RightAssociation]"}], "]"}], ",", 
+    RowBox[{"Math", "[", 
+     RowBox[{"\[LeftAssociation]", 
+      RowBox[{
+       RowBox[{"\<\"X\"\>", "\[Rule]", "\<\"\\\"is\\\", \"\>"}], ",", 
+       RowBox[{"\<\"Name\"\>", "\[Rule]", "\<\"ring\"\>"}]}], 
+      "\[RightAssociation]"}], "]"}]}], "]"}], "}"}]], "Output",
+ CellChangeTimes->{
+  3.7029203426731253`*^9, 3.702922460332934*^9, {3.702922514804303*^9, 
+   3.7029225780604877`*^9}, 
+   3.703165122344447*^9},ExpressionUUID->"13d77195-2c75-43ae-bec2-\
+0f076374079e"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"parseThm2", "[", "\"\<given a quaternion algebra\>\"", 
+  "]"}]], "Input",
+ CellChangeTimes->{{3.7031651303290462`*^9, 3.703165137753533*^9}, {
+  3.703165173586131*^9, 
+  3.703165173690152*^9}},ExpressionUUID->"15cad7d2-207b-4f8b-a145-\
+0f03f6259c45"],
+
+Cell[BoxData[
+ RowBox[{"\<\"HYP\"\>", "\[RuleDelayed]", 
+  RowBox[{"Math", "[", 
+   RowBox[{"\<\"Name\"\>", "\[Rule]", "\<\"quaternion algebra\"\>"}], 
+   "]"}]}]], "Output",
+ CellChangeTimes->{3.703165139220175*^9, 
+  3.703165174371166*^9},ExpressionUUID->"6511fbfe-4b82-47e2-8896-\
+0dae5273f7e4"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"parseThm2", "[", "\"\<suppose $a=b$\>\"", "]"}]], "Input",
+ CellChangeTimes->{{3.703165207142717*^9, 
+  3.703165209422008*^9}},ExpressionUUID->"7a3a140d-113c-40fd-98de-\
+6939b6d7ae4d"],
+
+Cell[BoxData[
+ RowBox[{"\<\"HYP\"\>", "\[RuleDelayed]", 
+  RowBox[{"Math", "[", "\<\"$a=b$\"\>", "]"}]}]], "Output",
+ CellChangeTimes->{
+  3.703165209935976*^9},ExpressionUUID->"11918715-18e8-4baa-831e-\
+d22f26a6e5ef"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"parseThm1", "[", "\"\<field is ring\>\"", "]"}]], "Input",
+ CellChangeTimes->{{3.70291403078668*^9, 
+  3.7029140364450703`*^9}},ExpressionUUID->"7566db38-9ca8-4005-b836-\
+1f368d359694"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"\<\"commandNumUnits\"\>", "\[Rule]", "0"}], ",", 
+     RowBox[{"\<\"form\"\>", "\[Rule]", "\<\"ONE TREE\"\>"}], ",", 
+     RowBox[{"\<\"numUnits\"\>", "\[Rule]", "0"}], ",", 
+     RowBox[{"\<\"parsedStr\"\>", 
+      "\[Rule]", "\<\"\\\"STM\\\" :> Math[\\\"Name\\\"->\\\"field\\\"] \
+~HasProperty~ Math[\\\"Name\\\"->\\\"ring\\\"]\"\>"}], ",", 
+     RowBox[{"\<\"score\"\>", "\[Rule]", "1.`"}], ",", 
+     RowBox[{"\<\"stringForm\"\>", 
+      "\[Rule]", "\<\"\\\"STM\\\" :> Math[\\\"Name\\\"->\\\"field\\\"] \
+~HasProperty~ Math[\\\"Name\\\"->\\\"ring\\\"]\"\>"}]}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"\<\"commandNumUnits\"\>", "\[Rule]", "3"}], ",", 
+     RowBox[{"\<\"form\"\>", "\[Rule]", "\<\"\\\"WL\\\"\"\>"}], ",", 
+     RowBox[{"\<\"numUnits\"\>", "\[Rule]", "3"}], ",", 
+     RowBox[{"\<\"parsedStr\"\>", 
+      "\[Rule]", "\<\"Math[\\\"Name\\\"->\\\"field\\\"] ~HasProperty~ Math[\\\
+\"Name\\\"->\\\"ring\\\"]\"\>"}], ",", 
+     RowBox[{"\<\"score\"\>", "\[Rule]", "1.`"}], ",", 
+     RowBox[{"\<\"parseStructType\"\>", "\[Rule]", "\<\"STM\"\>"}], ",", 
+     RowBox[{"\<\"stringForm\"\>", 
+      "\[Rule]", "\<\"<|\\\"WL\\\"->STM :>Math[\\\"Name\\\"->\\\"field\\\"] \
+~HasProperty~ Math[\\\"Name\\\"->\\\"ring\\\"], \\\"Scores\\\"->{1.0,  3,  \
+3}|>\"\>"}]}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"\<\"commandNumUnits\"\>", "\[Rule]", "0"}], ",", 
+     RowBox[{"\<\"form\"\>", "\[Rule]", "\<\"long\"\>"}], ",", 
+     RowBox[{"\<\"numUnits\"\>", "\[Rule]", "0"}], ",", 
+     RowBox[{"\<\"parsedStr\"\>", 
+      "\[Rule]", "\<\"assert[[ent{name=field}], verbphrase[vbs[is], \
+[ent{name=ring}]]]\"\>"}], ",", 
+     RowBox[{"\<\"score\"\>", "\[Rule]", "1.`"}], ",", 
+     RowBox[{"\<\"stringForm\"\>", 
+      "\[Rule]", "\<\"<|LONG->assert[[ent{name=field}], verbphrase[vbs[is], \
+[ent{name=ring}]]], \\\"Scores\\\"->{1.0}|>\"\>"}]}], "}"}]}], 
+  "}"}]], "Output",
+ CellChangeTimes->{
+  3.7029140382670517`*^9},ExpressionUUID->"82f6cd89-c682-4ced-8981-\
+72f53cebf410"]
+}, Open  ]],
+
+Cell[BoxData[""], "Input",
+ CellChangeTimes->{{3.70334811364292*^9, 3.703348156253212*^9}, 
+   3.703348246335526*^9},ExpressionUUID->"af6a1c33-749e-452e-be45-\
+90826b703fa8"]
+},
+WindowSize->{808, 687},
+WindowMargins->{{75, Automatic}, {11, Automatic}},
+FrontEndVersion->"11.2 for Mac OS X x86 (32-bit, 64-bit Kernel) (August 30, \
+2017)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[558, 20, 522, 14, 52, "Input",ExpressionUUID->"4ef8a0bd-afa7-44e4-a72d-2313fa43f867"],
+Cell[1083, 36, 123, 1, 30, "Input",ExpressionUUID->"13b43aa9-4561-4ee9-9eb7-6d999d37f957"],
+Cell[1209, 39, 2512, 67, 241, "Input",ExpressionUUID->"2e509bb5-daa7-49db-b0d6-614ad3f52d3c"],
+Cell[3724, 108, 200, 5, 30, "Input",ExpressionUUID->"1085f219-4ad0-43f5-add9-3c0cbd205607"],
+Cell[3927, 115, 3427, 87, 388, "Input",ExpressionUUID->"6e3cdcb4-96ae-4502-86e7-4389130ec424"],
+Cell[CellGroupData[{
+Cell[7379, 206, 538, 13, 94, "Input",ExpressionUUID->"0f468b50-ccfd-4fb2-bc9b-75c5340e9f1d"],
+Cell[7920, 221, 4849, 106, 65, "Output",ExpressionUUID->"a396435c-7381-46d9-81ab-84098a4b779f"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[12806, 332, 446, 11, 73, "Input",ExpressionUUID->"cc510210-6183-4d77-8fb7-ec26ddc532b1"],
+Cell[13255, 345, 808, 19, 98, "Output",ExpressionUUID->"7c41f739-fd33-47f2-b5dd-e2c0d9f6068b"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[14100, 369, 202, 4, 30, "Input",ExpressionUUID->"86c191a5-57f1-40b7-9442-b2ec1521ebb5"],
+Cell[14305, 375, 203, 4, 34, "Output",ExpressionUUID->"edd25806-a7e2-4d9c-8ed3-84e044d6f6cc"]
+}, Open  ]],
+Cell[14523, 382, 122, 1, 30, "Input",ExpressionUUID->"36cf30fe-e4ba-42b1-b1db-0530f7bc75b0"],
+Cell[14648, 385, 1828, 50, 136, "Input",ExpressionUUID->"77c76d21-a095-40d1-953c-23917923aa71"],
+Cell[CellGroupData[{
+Cell[16501, 439, 374, 8, 30, "Input",ExpressionUUID->"d7e334cf-b8e0-44f7-bfd1-1f283b7e1dd5"],
+Cell[16878, 449, 3523, 95, 210, "Output",ExpressionUUID->"cd4992fa-4575-43eb-8aa5-5437da869897"]
+}, Open  ]],
+Cell[20416, 547, 241, 7, 30, "Input",ExpressionUUID->"41e0aa3e-2509-4f3d-a8cd-4d5623aa0f38"],
+Cell[CellGroupData[{
+Cell[20682, 558, 479, 11, 52, "Input",ExpressionUUID->"66d566a7-1151-4893-a963-16f2845b8ed3"],
+Cell[21164, 571, 4108, 111, 245, "Output",ExpressionUUID->"8e47d5ae-fa22-4dfa-b28e-388feea85fe8"]
+}, Open  ]],
+Cell[25287, 685, 1917, 49, 52, "Input",ExpressionUUID->"eb2b1cb7-8e85-4c61-a3d4-115c85bb9594"],
+Cell[CellGroupData[{
+Cell[27229, 738, 116, 1, 30, "Input",ExpressionUUID->"5ad7023e-28d4-484d-9daf-9ab190cb640f"],
+Cell[27348, 741, 461, 13, 45, "Output",ExpressionUUID->"b4c91771-f116-4124-85b3-d768ffc27f0c"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[27846, 759, 357, 9, 52, "Input",ExpressionUUID->"b1c89469-0dca-4620-a6e5-f935dc29d32b"],
+Cell[28206, 770, 455, 7, 77, "Output",ExpressionUUID->"35984eb7-cd64-4099-9c01-4e4c9cfffe30"]
+}, Open  ]],
+Cell[28676, 780, 1534, 41, 178, "Input",ExpressionUUID->"3356b5ca-80ce-4b4c-85bf-7b9f54f0ab3b"],
+Cell[30213, 823, 1029, 28, 136, "Input",ExpressionUUID->"d6a45f4e-e296-41b9-9bda-ee980525ecaf"],
+Cell[31245, 853, 1030, 28, 136, "Input",ExpressionUUID->"191cea11-1f75-4d03-9a7b-01cb2ae0598a"],
+Cell[32278, 883, 1149, 30, 136, "Input",ExpressionUUID->"b622af6f-5750-45bc-9bdf-abbe4e1e4bcd"],
+Cell[CellGroupData[{
+Cell[33452, 917, 313, 5, 30, "Input",ExpressionUUID->"6ebc2852-9759-4dc8-b5d9-e104ce632da3"],
+Cell[33768, 924, 611, 14, 37, "Output",ExpressionUUID->"e4c5bcb2-17e7-410b-942f-3418ec3ecc60"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[34416, 943, 246, 5, 30, "Input",ExpressionUUID->"52e1dd30-4540-4251-b76d-31bbb81b5b83"],
+Cell[34665, 950, 655, 17, 37, "Output",ExpressionUUID->"55acd9b9-b689-4471-b7c1-13753b2d82b6"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[35357, 972, 139, 2, 30, "Input",ExpressionUUID->"c3a11bd8-5a26-4fe1-8f30-7219766e50e6"],
+Cell[35499, 976, 718, 18, 37, "Output",ExpressionUUID->"13d77195-2c75-43ae-bec2-0f076374079e"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[36254, 999, 275, 6, 30, "Input",ExpressionUUID->"15cad7d2-207b-4f8b-a145-0f03f6259c45"],
+Cell[36532, 1007, 298, 7, 34, "Output",ExpressionUUID->"6511fbfe-4b82-47e2-8896-0dae5273f7e4"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[36867, 1019, 208, 4, 30, "Input",ExpressionUUID->"7a3a140d-113c-40fd-98de-6939b6d7ae4d"],
+Cell[37078, 1025, 218, 5, 34, "Output",ExpressionUUID->"11918715-18e8-4baa-831e-d22f26a6e5ef"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[37333, 1035, 209, 4, 30, "Input",ExpressionUUID->"7566db38-9ca8-4005-b836-1f368d359694"],
+Cell[37545, 1041, 2097, 44, 245, "Output",ExpressionUUID->"82f6cd89-c682-4ced-8981-72f53cebf410"]
+}, Open  ]],
+Cell[39657, 1088, 174, 3, 30, "Input",ExpressionUUID->"af6a1c33-749e-452e-be45-90826b703fa8"]
+}
+]
+*)
+

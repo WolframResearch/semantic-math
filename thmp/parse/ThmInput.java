@@ -73,7 +73,7 @@ public class ThmInput {
 	   e.g. {\em lll\/} */
 	private static final Pattern DF_EMPH_PATTERN = Pattern
 			.compile("\\\\df\\{([^\\}]*)\\}|\\\\emph\\{([^\\}]*)\\}|\\{\\\\em\\s+([^\\}]+)[\\\\/]*\\}|\\\\cat\\{([^}]*)\\}|\\{\\\\it\\s*([^}]*)\\}"
-					+ "|\\\\ref\\{([^}]*)\\}|\\\\subsection\\{([^}]*)\\}|\\\\section\\{([^}]*)\\}|\\\\bf\\{([^}]*)\\}"
+					+ "|\\\\(?:eq)*ref\\{([^}]*)\\}|\\\\subsection\\{([^}]*)\\}|\\\\section\\{([^}]*)\\}|\\\\bf\\{([^}]*)\\}"
 					+ "|\\\\ensuremath\\{([^}]+)\\}|\\\\(?:textbf|textsl|textsc)\\{([^}]+)\\}");
 	/* Replacement for DF_EMPH_PATTERN, should have same number of groups as
 	   number of patterns in DF_EMPH_PATTERN. */
@@ -88,7 +88,8 @@ public class ThmInput {
 	private static final Pattern ELIMINATE_PATTERN = Pattern
 			.compile("\\\\fml|\\\\ofml|\\\\(?:begin|end)\\{enumerate\\}|\\\\(?:begin|end)\\{(?:sub)*section\\**\\}"					
 					+ "|\\\\begin\\{slogan\\}|\\\\end\\{slogan\\}|\\\\sbsb|\\\\cat|\\\\bs|\\\\maketitle"
-					+ "|\\\\section\\**\\{(?:[^}]*)\\}\\s*|\\\\noindent|\\\\begin\\{a(?:[^}]*)\\}|\\\\end\\{a(?:[^}]*)\\}\\s*"
+					+ "|\\\\section\\**\\{(?:[^}]*)\\}\\s*|\\\\noindent" 
+					//don't eliminate \begin{aligned}: |\\\\begin\\{a(?:[^}]*)\\}|\\\\end\\{a(?:[^}]*)\\}\\s*"
 					+ "|\\\\cite\\{[^}]+\\}|\\\\cite\\[[^\\]]+\\]|\\\\par\\s|\\\\(?:begin|end)\\{displaymath\\}",
 					Pattern.CASE_INSENSITIVE);
 	static final String ELIMINATE_BEGIN_END_THM_STR = "\\\\begin\\{def(?:[^}]*)\\}\\s*|\\\\begin\\{lem(?:[^}]*)\\}\\s*|\\\\begin\\{th(?:[^}]*)\\}\\s*"
