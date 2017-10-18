@@ -1,5 +1,6 @@
 package thmp.utils;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -20,7 +21,7 @@ public class ExprUtils {
 	private static final Expr ruleHeadExpr = new Expr(Expr.SYMBOL, "Rule");
 	private static final Expr mathHeadExpr = new Expr(Expr.SYMBOL, "Math");
 	private static final Expr mathPptHeadExpr = new Expr(Expr.SYMBOL, "MathProperty");
-	private static final Expr qualifierHeadExpr = new Expr(Expr.SYMBOL, "Qualifiers");
+	private static final Expr qualifierHeadExpr = new Expr(Expr.SYMBOL, "\"Qualifiers\"");
 	private static final Expr FAILED_EXPR = new Expr(Expr.SYMBOL, "$Failed");
 	
 	public enum ExprWrapperType{
@@ -142,6 +143,19 @@ public class ExprUtils {
 	 * @return
 	 */
 	public static Expr mathPptExpr(List<Expr> exprList){	
+		return createExprFromList(mathPptHeadExpr, exprList);
+	}
+	
+	/**
+	 * Creates Expr with MathProperty Head, with a Mode Expr and a math
+	 * Obj Expr, e.g. those for "is" and "complete local ring".
+	 * @param exprList
+	 * @return
+	 */
+	public static Expr mathPptExpr(Expr modeExpr, Expr mathObjExpr){	
+		List<Expr> exprList = new ArrayList<Expr>();
+		exprList.add(modeExpr);
+		exprList.add(mathObjExpr);
 		return createExprFromList(mathPptHeadExpr, exprList);
 	}
 	

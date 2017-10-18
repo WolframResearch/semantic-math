@@ -18,7 +18,7 @@ public class ExtractFromParsedExpressionList {
 		
 		if(false) writePEThmsToFile();	
 		if(false) getThmListSize();
-		writeRelatedWordsToFile();
+		if(false) writeRelatedWordsToFile();
 	}
 
 	private static void getThmListSize() {

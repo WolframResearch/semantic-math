@@ -201,7 +201,7 @@ public class ThmP1 {
 	private static final int SYNTAXNET_PARSE_THRESHOLD = 5;//8
 	private static final int SYNTAXNET_PREP_THRESHOLD = 1;
 	private static final double SCORE_EPSILON = 0.001;
-	private static final double SCORE_BONUS = 0.05;
+	private static final double SCORE_BONUS = 0.045;
 	private static final String DEFAULT_POS_STR = "-1";
 	
 	static{
@@ -288,7 +288,7 @@ public class ThmP1 {
 		private transient WLCommand wlCommand;
 		//Could be null, even when totalCommandExprStr is not null.
 		private transient Expr totalCommandExpr;
-		//used by servlet to display. Could be null, even when totalCommandExprStr is not null.
+		//used by servlet to display. Could be null, even when parsedStr is not null.
 		private String totalCommandExprStr;
 		//the ParseStructType of this parsedStr, eg "STM", "HYP", etc.
 		private ParseStructType parseStructType;		
@@ -376,6 +376,14 @@ public class ThmP1 {
 	
 		public String parsedStr(){
 			return this.parsedStr;
+		}
+		
+		/**
+		 * Used by servlet to display on web
+		 * @return
+		 */
+		public String totalCommandExprStr() {
+			return this.totalCommandExprStr;
 		}
 		
 		public double score(){
@@ -4052,12 +4060,14 @@ public class ThmP1 {
 			ChildRelationType childRelationType = childRelation.childRelationType();
 			String childRelationString = childRelation.childRelationStr;
 			if(childRelationType.equals(ChildRelationType.PREP)){
-				if(!childRelationString.equals("of") && !childRelationString.equals("which") &&
-					//use struct1 and not structToAppendChild.
-					struct1.childRelationType().equals(ChildRelationType.PREP)){
+				if(!childRelationString.equals("of")
+						&& !childRelationString.equals("which")
+						&& !childRelationString.equals("with")
+						//use struct1 and not structToAppendChild.
+						&& struct1.childRelationType().equals(ChildRelationType.PREP)){
 					return new EntityBundle(firstEnt, recentEnt, recentEntIndex);					
 				}else{
-					//bonus for tighter combination, e.g. "$A$ of $B$"
+					//bonus for tighter combination, e.g. "$A$ of/that/with $B$" 
 					newDownPathScore += SCORE_BONUS;//HERE
 				}
 			}

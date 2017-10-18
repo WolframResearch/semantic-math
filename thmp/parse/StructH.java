@@ -79,7 +79,7 @@ public class StructH<H> extends Struct{
 	//Should not have used String "ppt" to record properties in struct!
 	private final Set<String> propertySet = new HashSet<String>();
 	//use this variable to avoid race conditions, since propertySet can be added to by multiple methods.
-	private volatile boolean isPropertySetEmpty = true;
+	private volatile boolean isPropertySetCreated = true;
 	
 	//whether this structH arises from a latex expression, e.g. $x > 0$.
 	//Used to convert ent into assert if necessary. 
@@ -606,13 +606,14 @@ public class StructH<H> extends Struct{
 		}
 		
 		ExprWrapperType headExprWrapperType = ExprWrapperType.OTHER;
+		//String pptCommaStr = "";
 		StringBuilder sb = new StringBuilder();		
 		if(includeType){			
 			if(!"".equals(makePptStr)){
 				String pptCommaStr = "\"" + makePptStr + "\", ";				
-				sb.append(this.type.equals("ent") ? "MathProperty" : this.type).append("[Mode->").append(pptCommaStr);
-				curLevelExprList.add(new Expr(new Expr("Mode"), new Expr[]{new Expr(makePptStr)}));
-				//ruleExprWrapperList.add(new RuleExprWrapper(new Expr("Mode"), new Expr(makePptStr)));
+				sb.append(this.type.equals("ent") ? "MathProperty" : this.type).append("[\"Mode\"->").append(pptCommaStr);
+				//curLevelExprList.add(new Expr(new Expr("\"Mode\""), new Expr[]{new Expr(makePptStr)}));
+				
 				headExprWrapperType = ExprWrapperType.MATHPPT;
 			}else{
 				sb.append(this.type.equals("ent") ? "Math" : this.type).append("[");		
@@ -644,7 +645,7 @@ public class StructH<H> extends Struct{
 				cardExprList.add(new Expr(nextStr));
 			}else{
 				pptSB.append("\"").append(nextStr).append("\", ");
-				pptExprList.add(new Expr(nextStr));				
+				pptExprList.add(new Expr(nextStr));
 			}
 		}
 		if(!pptExprList.isEmpty()){
@@ -662,7 +663,7 @@ public class StructH<H> extends Struct{
 			curLevelExprList.add(ExprUtils.createExprFromList(new Expr("Qualifiers"), pptExprList));
 			//ruleExprWrapperList.add(new RuleExprWrapper(new Expr("Property"), pptListExpr));
 			//curLevelExprList.add(new Expr(new Expr("Qualifiers"), new Expr[]{pptListExpr}));
-		}		
+		}	
 		String quantityStr = struct.get(WordForms.QUANTITY_POS);
 		if(null != quantityStr){
 			cardSB.append("\"").append(quantityStr).append("\", ");
@@ -678,7 +679,12 @@ public class StructH<H> extends Struct{
 				cardStr = cardSB.substring(0, cardSBLen-2); 
 			}
 			sb.append("\"Cardinality\"->{").append(cardStr).append("}");
-			Expr cardListExpr = ExprUtils.listExpr(cardExprList);	
+			Expr cardListExpr;
+			if(cardExprList.size() == 1) {
+				cardListExpr = cardExprList.get(0);
+			}else {
+				cardListExpr = ExprUtils.listExpr(cardExprList);
+			}
 			//ruleExprWrapperList.add(new RuleExprWrapper(new Expr("Cardinality"), cardListExpr));
 			curLevelExprList.add(new Expr(new Expr("Cardinality"), new Expr[]{cardListExpr}));
 		}
@@ -731,8 +737,14 @@ public class StructH<H> extends Struct{
 		//ExprWrapper mathExprWrapper;
 		Expr combinedExpr;
 		if(headExprWrapperType == ExprWrapperType.MATHPPT){
-			//mathExprWrapper = new MathPptExprWrapper(assocExprWrapper);
-			combinedExpr = ExprUtils.mathPptExpr(curLevelExprList);
+			
+			if(!"".equals(makePptStr)) {
+				Expr modeExpr = new Expr(new Expr("Mode"), new Expr[]{new Expr(makePptStr)});
+				Expr mathObjExpr = ExprUtils.mathExpr(curLevelExprList);
+				combinedExpr = ExprUtils.mathPptExpr(modeExpr, mathObjExpr);				
+			}else {
+				combinedExpr = ExprUtils.mathPptExpr(curLevelExprList);
+			}
 		}else{
 			//mathExprWrapper = new MathExprWrapper(assocExprWrapper);
 			combinedExpr = ExprUtils.mathExpr(curLevelExprList);
@@ -769,14 +781,14 @@ public class StructH<H> extends Struct{
 		//seek out the properties in struct
 		//thread-safe with volatile boolean isPropertySetEmpty. But could add to map multiple times
 		//if called by multiple threads, could be little wasteful but no race condition.
-		if(isPropertySetEmpty){
+		if(isPropertySetCreated){
 			for(Map.Entry<String, String> entry : struct.entrySet()){
 				if(entry.getValue().equals("ppt")){
 					propertySet.add(entry.getKey());
 				}
 			}
 		}		
-		isPropertySetEmpty = false;
+		isPropertySetCreated = false;
 		return propertySet;		
 	}
 	
@@ -797,7 +809,7 @@ public class StructH<H> extends Struct{
 			if(entry.getValue().matches("ppt") ){
 				String newPpt = entry.getKey();
 				ppt += newPpt + ", ";
-				if(isPropertySetEmpty){
+				if(isPropertySetCreated){
 					propertySet.add(newPpt);
 				}
 			}
@@ -812,7 +824,7 @@ public class StructH<H> extends Struct{
 			}
 		}		
 		
-		isPropertySetEmpty = false;
+		isPropertySetCreated = false;
 		
 		if(!name.equals("")) namePptStrList.add(name);
 		if(!tex.equals("")) namePptStrList.add(tex);

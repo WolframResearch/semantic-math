@@ -572,12 +572,18 @@ public abstract class Struct implements Serializable{
 						
 						if(childRelationStr.equals("")){
 							//childSb.append("{").append(childStr).append("}");
-							childSb.append(childStr).append(", ");
+							childSb.append(childStr).append(", ");							
 						}else{
 							childSb.append("{\"").append(childRelationStr).append("\", ").append(childStr).append("}, ");
-							childExprList.add(new Expr(childRelationStr));
+							exprList.add(0, new Expr(childRelationStr));
+							//childExprList.add(new Expr(childRelationStr));
 						}
-						childExprList.addAll(exprList);
+						if(exprList.size() == 1) {
+							childExprList.add(exprList.get(0));
+						}else {
+							childExprList.add(ExprUtils.listExpr(exprList));
+						}
+						//childExprList.addAll(exprList);
 						//WLCommand.increment_commandNumUnits(curCommand, this); //HERE
 					}
 				}

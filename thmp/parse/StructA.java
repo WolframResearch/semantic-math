@@ -331,6 +331,9 @@ public class StructA<A, B> extends Struct{
 			System.out.println("this.WLCommandWrapperList " + this.WLCommandWrapperList);
 			//throw new RuntimeException("WLCommandWrapperList " +this.WLCommandWrapperList);
 		}*/
+		/*if(this.type.equals("pre")) {
+			System.out.println("pre encountered!");
+		}*/
 		//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
 		if(this.WLCommandWrapperList != null){
 			int wrapperListSz = WLCommandWrapperList.size();
@@ -386,12 +389,10 @@ public class StructA<A, B> extends Struct{
 			//e.g. "Qualifiers" -> {"with", Math["Name"->"axiom"]}. 
 			//Now it's list with Head Qualifier.
 			
-			//List<RuleExprWrapper> childRuleWrapperList = new ArrayList<RuleExprWrapper>();
 			List<Expr> childExprList = new ArrayList<Expr>();
 			String childStr = appendChildrenQualifierString(includeType, curCommand, childExprList);
 			Expr headExpr;
-			//List<Expr> strExprList = new ArrayList<Expr>();
-			//String prev1Str = (String)this.prev1;
+			
 			if(this.type.equals("det") || this.type.equals("pro")){				
 				if(!prev2.equals("")){
 					fullContentSB.insert(0, "Reference[\"").append("\", \"").append((String)this.prev2)
@@ -416,8 +417,10 @@ public class StructA<A, B> extends Struct{
 				//quotes around prev1 string, construct Expr from children
 				fullContentSB.insert(0, "\"").append("\"");
 				String pptCommaStr = "\"" + makePptStr + "\", ";
-				if(this.type.equals("adj") || this.type.equals("adverb") || this.type.equals("qualifier")){
-					//if(true) throw new IllegalStateException(this.toString());
+				
+				if(this.type.equals("adj") || this.type.equals("adverb") || this.type.equals("qualifier")
+						|| this.type.equals("verbAlone")){
+					
 					if(!"".equals(makePptStr)){
 						appendPptExpr(exprList, fullContentSB, prev1Expr, makePptStr, childExprList, childStr,
 								pptCommaStr);
@@ -443,7 +446,7 @@ public class StructA<A, B> extends Struct{
 							fullContentSB.insert(0, "Math[").append("]");
 						}else{
 							if("pre".equals(this.type)){
-								exprList.add(new Expr(Expr.SYMBOL, (String)this.prev1));	
+								exprList.add(new Expr(Expr.SYMBOL, "\""+(String)this.prev1+"\""));	
 							}else{
 								exprList.add(new Expr(headExpr, new Expr[]{prev1Expr}));	
 								fullContentSB.insert(0, "Math[").append("]");
@@ -614,13 +617,12 @@ public class StructA<A, B> extends Struct{
 		//str += this.type.matches("conj_.*|disj_.*") ? this.type.split("_")[0] +  " " : "";		
 		//also wrap braces around prev1 and prev2 or the conj/disj
 		if(this.type.matches("conj_.*|disj_.*")){
-			String toAppend = this.type.matches("conj_.*") ? "Conjunction" : "Disjunction";
+			//lower-case for now, to not conflict with WL built-in Conjunction and Disjunction
+			String toAppend = this.type.matches("conj_.+") ? "conjunction" : "disjunction";
 			conjDisjHeadExpr = new Expr(Expr.SYMBOL, toAppend);
 			//str += this.type.split("_")[0] + " ";
 			//str += toAppend;
 			inConj = true;
-			//wrapBraces = true;
-			//tempStr += "[";
 			tempSB.append(toAppend).append("[");
 		}
 		
@@ -630,7 +632,7 @@ public class StructA<A, B> extends Struct{
 			//tempStr += "{";
 			tempSB.append("\"Qualifiers\"->{");
 		}		
-		//NEED TO CONSTRUCT EXPR's here, including Conj and Disj Expr's!!!
+		//NEED TO CONSTRUCT EXPR's here, including Conj and Disj Expr's!
 		if(this.prev1 != null){
 			/*if(inConj){ //tempStr += "{";
 				tempSB.append("{");
@@ -704,7 +706,7 @@ public class StructA<A, B> extends Struct{
 					 prev2SB.append(prev2Wrapper.WLCommandStr());
 					 curLevelExprList.add(prev2Wrapper.commandExpr());
 				 }
-			}else if(PREV2_TYPE.equals(NodeType.STR) && !((String)prev2).matches("\\s*")){			
+			}else if(PREV2_TYPE.equals(NodeType.STR) && !WordForms.getWhiteEmptySpacePattern().matcher(((String)prev2)).matches()){//("\\s*")			
 				//prev2String += ", " + prev2;	
 				String prev2Str = prev2.toString();				
 				prev2SB.append(", ").append(prev2Str);
@@ -725,7 +727,7 @@ public class StructA<A, B> extends Struct{
 			combinedLevelExpr = ExprUtils.createExprFromList(conjDisjHeadExpr, curLevelExprList);
 		}else{
 			if(wrapBraces){
-				Expr qualifierHeadExpr = new Expr(Expr.SYMBOL, "Qualifiers");
+				Expr qualifierHeadExpr = new Expr(Expr.SYMBOL, "\"Qualifiers\"");
 				combinedLevelExpr = ExprUtils.createExprFromList(qualifierHeadExpr, curLevelExprList);
 			}else{
 				combinedLevelExpr = ExprUtils.listExpr(curLevelExprList);
