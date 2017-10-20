@@ -127,10 +127,10 @@ public class CreateRepresentativeMaps {
 			//srcFileNameAr[i] = "src/thmp/data/vocab/" + srcFileNameAr[i];
 			if(3 == i) {
 				//third file is from windows machine with UTF8 encoding
-				curatedWordsList.addAll(FileUtils.readLinesFromFiles("src/thmp/data/vocab/" + srcFileNameAr[i], 
+				curatedWordsList.addAll(FileUtils.readLinesFromFile("src/thmp/data/vocab/" + srcFileNameAr[i], 
 						Charset.forName("UTF-8")));
 			}else {				
-				curatedWordsList.addAll(FileUtils.readLinesFromFiles("src/thmp/data/vocab/" + srcFileNameAr[i]));
+				curatedWordsList.addAll(FileUtils.readLinesFromFile("src/thmp/data/vocab/" + srcFileNameAr[i]));
 			}
 		}
 		System.out.println("curatedWordsList.size "+curatedWordsList.size());

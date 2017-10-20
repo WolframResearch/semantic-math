@@ -118,12 +118,12 @@ public class FileUtils {
 		List<String> lines = new ArrayList<String>();
 		Charset charset = charset_.length > 0 ? charset_[0] : Charset.forName("UTF-8");
 		for(String fileName : fileNameList){
-			lines.addAll(readLinesFromFiles(fileName, charset));
+			lines.addAll(readLinesFromFile(fileName, charset));
 		}
 		return lines;
 	}
 	
-	public static List<String> readLinesFromFiles(String fileName, Charset... charset_){
+	public static List<String> readLinesFromFile(String fileName, Charset... charset_){
 		List<String> lines = new ArrayList<String>();
 		Charset charset = charset_.length > 0 ? charset_[0] : Charset.forName("UTF-8");
 		
