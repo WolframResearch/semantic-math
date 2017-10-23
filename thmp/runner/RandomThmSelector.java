@@ -19,14 +19,14 @@ public class RandomThmSelector {
 
 	private static final String thmHypPairFileName = "parsedExpressionList";
 	//includes trailing slash
-	private static final ListMultimap<Integer, String> yearFilePathsMap;
+	private static final ListMultimap<Integer, String> yearFilePathsMMap;
 	private static final Random rand = new Random();
 	
 	static {
 		String tarFileNamesStr = "testAugTo.txt";
 		//FileUtils.deserializeListFromFile(tarFileNamesStr);
 		List<String> dirNamesList = FileUtils.readLinesFromFile(tarFileNamesStr);
-		yearFilePathsMap = buildMap(dirNamesList);
+		yearFilePathsMMap = buildMap(dirNamesList);
 	
 	}
 	
@@ -66,7 +66,13 @@ public class RandomThmSelector {
 				System.out.println("Enter a valid year!");
 				continue;
 			}
-			List<String> list = yearFilePathsMap.get(year);
+			List<String> list = yearFilePathsMMap.get(year);
+			
+			if(list.isEmpty()) {
+				System.out.println("Enter a year between 1992 and 2017.");
+				continue;
+			}
+			
 			int listSz = list.size();
 			int randomInt = rand.nextInt(listSz);
 			String randomDirFilePath = list.get(randomInt) + thmHypPairFileName;

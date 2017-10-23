@@ -16,6 +16,7 @@ import org.apache.logging.log4j.Logger;
 import com.wolfram.jlink.*;
 
 import thmp.parse.TheoremContainer;
+import thmp.search.ThmHypPairGet.MxBundleKeyIterator;
 import thmp.utils.FileUtils;
 import thmp.utils.MathLinkUtils.WLEvaluationMedium;
 import thmp.utils.WordForms;
@@ -346,6 +347,7 @@ public class ThmSearch {
 						"Map[Part[q1, #]&, pos]", true, true));
 			}			
 		
+		evaluateWLCommand(medium,"qT = First@Transpose[q]", true, true);	
 		//use Nearest to get numNearest number of nearest vectors, 
 		int numNearest;
 		if(num.length == 0){
@@ -363,7 +365,7 @@ public class ThmSearch {
 			//Keep trying nearest functions, until sufficiently many below a certain distance threshold is obtained.
 			//Attach bundle iterator to web session. Must iterate over same range as intersection search!!!
 			//Should pass here the range of thms searched for intersection, and just search over these range.
-			Iterator<Integer> mxCacheIter = ThmHypPairGet.createMxBundleKeyIterator();
+			MxBundleKeyIterator mxCacheIter = ThmHypPairGet.createMxBundleKeyIterator();
 			//System.out.println("Dimensions@First@Transpose[q] " + evaluateWLCommand(ml, "Dimensions[First@Transpose[q]]", true, true));
 			//String vMx = TermDocumentMatrix.COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME;
 			//count of thms already found.
@@ -372,7 +374,7 @@ public class ThmSearch {
 			int thmsFoundCount = 0;
 			while(thmsFoundCount <= numNearest && mxCacheIter.hasNext()){
 				int nextMxKey = mxCacheIter.next();
-				String nextMxName = TermDocumentMatrix.COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME + nextMxKey;//make this into method!
+				String nextMxName = TermDocumentMatrix.COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME + nextMxKey;
 				System.out.println("ThmSearch - nextMxName "+nextMxName);
 				//load the mx first, if not already in memory. This does not load if mx already loaded in cache.
 				//Now evaluate loadMx[mxIndex_Integer, cacheBag_, timeBag_]
@@ -385,16 +387,19 @@ public class ThmSearch {
 				
 				//Function signature: findNearest[combinedTDMx_, queryVec_, threshold_Real, numNearest_Integer]
 				//get distance, and only those indices that fall below a distance threshold.
-				//***factor out First@Transpose[q]!// also factor out numNearest/2!
+				//  factor out numNearest/2!
 				/**June 19 Expr nearestVec = evaluateWLCommand(medium, "findNearest[" + nextMxName + ",First@Transpose[q],"+ DISTANCE_THRESHOLD +","
 						+numNearest/2 +"] - " 
 						+ LIST_INDEX_SHIFT, true, true);*/
+				//threshold based rather than numNearest/3 count based?? Oct 2017.
 				/*Note that this relies on distance option introduced in 11.1*/
-				Expr nearestVec = evaluateWLCommand(medium, "findNearestDist[" + nextMxName + ",First@Transpose[q],"+ DISTANCE_THRESHOLD +","
-						+numNearest/2 +"]", true, true);
+				Expr nearestVec = evaluateWLCommand(medium, "findNearestDist[" + nextMxName + ",qT,"+ DISTANCE_THRESHOLD +","
+						+numNearest/3 +"]", true, true);
 				//System.out.println("ThmSearch-DISTANCES: "+(double[])nearestVec.part(2).asArray(Expr.REAL, 1));
-				System.out.println("ThmSearch-DISTANCES: "+nearestVec.part(2));
-				//first sublist is indices, second distances
+				if(DEBUG) {
+					System.out.println("ThmSearch-DISTANCES: "+nearestVec.part(2));
+				}
+				/*first sublist is indices, second distances*/
 				
 				int[] thmIndexAr = (int[])nearestVec.part(1).asArray(Expr.INTEGER, 1);
 				int thmIndexArLen = thmIndexAr.length;
@@ -402,7 +407,8 @@ public class ThmSearch {
 				double[] thmDistAr = (double[])nearestVec.part(2).asArray(Expr.REAL, 1);
 				
 				for(int i = 0; i < thmIndexArLen; i++){
-					distanceIndexMap.put(thmDistAr[i], thmIndexAr[i]);
+					int thmIndexInBundle = mxCacheIter.findOverallThmIndex(thmIndexAr[i]);
+					distanceIndexMap.put(thmDistAr[i], thmIndexInBundle);
 				}
 				
 				//***Expr nearestVec = evaluateWLCommand(medium, "Nearest["+V_MX_RULE_NAME +", First@Transpose[q],"+numNearest+", Method->\"Scan\"] - " 

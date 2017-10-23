@@ -59,6 +59,11 @@ public interface Searcher<S> {
 		private List<Integer> bundleStartThmIndexList;
 		private int totalThmsCount;
 		
+		/**
+		 * @param bundleStartThmIndexList_ used in ThmHypPairGet. Containing indices of thms 
+		 * that are the first in a bundle. 
+		 * @param totalThmsCount_
+		 */
 		public SearchConfiguration(List<Integer> bundleStartThmIndexList_, int totalThmsCount_){
 			this.bundleStartThmIndexList = bundleStartThmIndexList_;
 			this.totalThmsCount = totalThmsCount_;

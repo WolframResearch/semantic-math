@@ -169,9 +169,15 @@ public class WordFrequency {
 		public static Map<String, Integer> englishStockFreqMap(){
 			return stockFreqMap;
 		}
-		// computes list of "true" fluff words, ie the ones where
+		
+		/**
+		 * computes list of "true" fluff words, ie the ones where
 		// whose freq in math texts are not higher than their freq in English text.
 		// have to be careful for words such as "let", "say"
+		 * 
+		 * @param wordsFileBufferedReader
+		 * @param wordPosPreMap
+		 */
 		private static void getStockFreq(BufferedReader wordsFileBufferedReader,
 				Map<String, String> wordPosPreMap) {
 			

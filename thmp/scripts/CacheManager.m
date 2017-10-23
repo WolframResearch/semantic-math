@@ -34,7 +34,7 @@ Range[Length[candidateVecs]]]];If[list[[2]]=!={},list[[2,1]],{}]]
 
 
 (* ::Item:: *)
-(*find the one with least recent time stamp. Keep stuff in bag, fill the bag the number of times as the total number of Mx. ~300 in total as of Sept 2017.*)
+(*find the one with least recent time stamp. Keep stuff in bag, fill the bag the number of times as the total number of Mx. 313 in total as of Oct 2017.*)
 
 
 (* ::Item:: *)

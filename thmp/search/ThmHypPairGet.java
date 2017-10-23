@@ -34,7 +34,7 @@ public class ThmHypPairGet{
 	private static final Logger logger = LogManager.getLogger(ThmHypPairGet.class);
 
 	/*do binary search on this list to find the index of the first thm the bundles
-	  length should be around 100 */
+	  length should be around 313 (as of Oct 2017) */
 	private static final List<Integer> bundleStartThmIndexList;
 	private static final int totalThmsCount;
 	private static final int totalBundleNum;
@@ -71,10 +71,21 @@ public class ThmHypPairGet{
 		@Override
 		public boolean hasNext(){			
 			return this.currentIndex > 0;
-		}		
+		}
+		
 		@Override
 		public Integer next(){
 			return --this.currentIndex;
+		}
+		
+		/**
+		 * finds the overall thm index, given the index within the current
+		//bundle bundleStartThmIndexList
+		 * @param thmIndexInBundle
+		 * @return
+		 */
+		public int findOverallThmIndex(int thmIndexInBundle) {
+			return bundleStartThmIndexList.get(this.currentIndex) + thmIndexInBundle;
 		}
 	}
 	
@@ -168,7 +179,7 @@ public class ThmHypPairGet{
 		return new ThmCacheIterator();
 	}
 	
-	public static Iterator<Integer> createMxBundleKeyIterator(){
+	public static MxBundleKeyIterator createMxBundleKeyIterator(){
 		return new MxBundleKeyIterator();
 	}
 	/**
