@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       158,          7]
-NotebookDataLength[     34560,        825]
-NotebookOptionsPosition[     31303,        765]
-NotebookOutlinePosition[     31658,        781]
-CellTagsIndexPosition[     31615,        778]
+NotebookDataLength[     62280,       1488]
+NotebookOptionsPosition[     56031,       1389]
+NotebookOutlinePosition[     56386,       1405]
+CellTagsIndexPosition[     56343,       1402]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -74,8 +74,9 @@ Cell[BoxData[
 Cell[BoxData[
  RowBox[{
   RowBox[{"(*", 
-   RowBox[{"updated", " ", "for", " ", "Oct", " ", "2017", " ", "file"}], 
-   "*)"}], "\[IndentingNewLine]", 
+   RowBox[{
+   "updated", " ", "for", " ", "Oct", " ", "2017", " ", "scraped", " ", 
+    "file"}], "*)"}], "\[IndentingNewLine]", 
   RowBox[{
    RowBox[{
     RowBox[{"getDataString", "[", "metaData_List", "]"}], ":=", 
@@ -83,9 +84,16 @@ Cell[BoxData[
      RowBox[{
       RowBox[{"{", 
        RowBox[{
-       "dataList", ",", "getNameString1", ",", "stream", ",", "arXivClass"}], 
-       "}"}], ",", 
+       "dataList", ",", "getNameString1", ",", "stream", ",", "arXivClass", 
+        ",", "getDateString"}], "}"}], ",", "\[IndentingNewLine]", 
       RowBox[{
+       RowBox[{"getDateString", "=", 
+        RowBox[{"Function", "[", 
+         RowBox[{"dateList", ",", 
+          RowBox[{"StringRiffle", "[", 
+           RowBox[{
+            RowBox[{"ToString", "/@", "dateList"}], ",", "\"\<-\>\""}], 
+           "]"}]}], "]"}]}], ";", "\[IndentingNewLine]", 
        RowBox[{"getNameString1", "=", 
         RowBox[{"Function", "[", 
          RowBox[{"names", ",", 
@@ -126,11 +134,14 @@ Cell[BoxData[
                    RowBox[{
                     RowBox[{"Join", "[", 
                     RowBox[{
-                    RowBox[{
                     RowBox[{"{", 
-                    RowBox[{
-                    "\"\<ArXivID\>\"", ",", "\"\<Year\>\"", ",", 
-                    "\"\<Title\>\""}], "}"}], "/.", "#"}], ",", 
+                    RowBox[{"\"\<ArXivID\>\"", "/.", "#"}], "}"}], ",", 
+                    RowBox[{"{", 
+                    RowBox[{"getDateString", "[", 
+                    RowBox[{"\"\<Date\>\"", "/.", "#"}], "]"}], "}"}], ",", 
+                    RowBox[{"{", 
+                    RowBox[{"\"\<Title\>\"", "/.", "#"}], "}"}], ",", 
+                    "\[IndentingNewLine]", 
                     RowBox[{"{", 
                     RowBox[{"getNameString1", "[", 
                     RowBox[{"\"\<Authors\>\"", "/.", "#"}], "]"}], "}"}]}], 
@@ -144,7 +155,9 @@ Cell[BoxData[
           RowBox[{"[", "2", "]"}], "]"}], "[", 
          RowBox[{"[", "1", "]"}], "]"}]}], ";", "\[IndentingNewLine]", 
        RowBox[{"stream", "=", 
-        RowBox[{"OpenWrite", "[", "\"\<metaDataString1.txt\>\"", "]"}]}], ";", 
+        RowBox[{
+        "OpenWrite", "[", "\"\<~/test/metaDataString1.txt\>\"", "]"}]}], ";", 
+       
        RowBox[{"WriteString", "[", 
         RowBox[{"stream", ",", 
          RowBox[{"ExportString", "[", 
@@ -154,14 +167,598 @@ Cell[BoxData[
        RowBox[{"Close", "[", "stream", "]"}]}]}], "]"}]}], ";"}]}]], "Input",E\
 xpressionUUID->"f9ccd2de-d7c4-4123-8806-f057ab46d2ff"],
 
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"StringPosition", "[", 
+  RowBox[{"\"\<a.b\>\"", ",", "\"\<.\>\""}], "]"}]], "Input",ExpressionUUID->\
+"f7ffecd6-b206-45f5-bc9b-cf8755d3a237"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"{", 
+   RowBox[{"2", ",", "2"}], "}"}], "}"}]], "Output",ExpressionUUID->"4049cd5c-\
+f7d4-45bb-b58c-abeb32a82b55"]
+}, Open  ]],
+
 Cell[BoxData[
  RowBox[{
   RowBox[{"(*", 
    RowBox[{
-   "get", " ", "msc", " ", "classifications", " ", "to", " ", "train", " ", 
-    "a", " ", 
-    RowBox[{"classifier", ".", " ", "For"}], " ", "SVD", " ", "vectors"}], 
-   " ", "*)"}], "\[IndentingNewLine]", 
+    RowBox[{"get", " ", "data", " ", "for", " ", "database"}], ",", " ", 
+    RowBox[{
+    "where", " ", "authors", " ", "names", " ", "are", " ", "separated", " ", 
+     "into", " ", "first", " ", "and", " ", "last", " ", 
+     RowBox[{"names", ".", " ", "First"}]}], ",", " ", 
+    RowBox[{"last", ";"}], " ", ",", " ", 
+    RowBox[{"and", " ", "names", " ", "are", " ", "separated", " ", "by", " ", 
+     RowBox[{"semicolon", ".", " ", "Two"}], " ", "tables"}], ",", " ", 
+    RowBox[{"one", " ", "for", " ", "metadata", " ", "table"}], ",", " ", 
+    RowBox[{"another", " ", "for", " ", "author", " ", 
+     RowBox[{"table", "."}]}]}], "*)"}], "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"getDataDBString", "[", "metaData_List", "]"}], ":=", 
+    RowBox[{"Module", "[", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{
+       "dataList", ",", "getNameString1", ",", "stream", ",", "arXivClass", 
+        ",", "getDateString"}], "}"}], ",", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"getDateString", "=", 
+        RowBox[{"Function", "[", 
+         RowBox[{"dateList", ",", 
+          RowBox[{"StringRiffle", "[", 
+           RowBox[{
+            RowBox[{"ToString", "/@", "dateList"}], ",", "\"\<-\>\""}], 
+           "]"}]}], "]"}]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"getNameString1", "=", 
+        RowBox[{"Function", "[", 
+         RowBox[{"names", ",", 
+          RowBox[{"StringRiffle", "[", 
+           RowBox[{
+            RowBox[{"Map", "[", 
+             RowBox[{
+              RowBox[{
+               RowBox[{"\"\<Name\>\"", "/.", "#"}], "&"}], ",", "names"}], 
+             "]"}], ",", "\"\<, \>\""}], "]"}]}], "]"}]}], ";", 
+       RowBox[{"dataList", "=", "\[IndentingNewLine]", 
+        RowBox[{"Reap", "[", 
+         RowBox[{
+          RowBox[{"Map", "[", 
+           RowBox[{
+            RowBox[{
+             RowBox[{"(", "\[IndentingNewLine]", 
+              RowBox[{
+               RowBox[{"arXivClass", "=", 
+                RowBox[{"\"\<ArXivClasses\>\"", "/.", "#"}]}], ";", 
+               "\[IndentingNewLine]", 
+               RowBox[{"If", "[", 
+                RowBox[{
+                 RowBox[{
+                  RowBox[{"(", 
+                   RowBox[{
+                    RowBox[{
+                    RowBox[{"{", "}"}], "=!=", "arXivClass"}], " ", "&&", " ", 
+                    RowBox[{"Or", "@@", 
+                    RowBox[{"StringContainsQ", "[", 
+                    RowBox[{"arXivClass", ",", "\"\<math\>\""}], "]"}]}]}], 
+                   ")"}], "\[IndentingNewLine]", "||", 
+                  RowBox[{
+                   RowBox[{"{", "}"}], "===", "arXivClass"}]}], 
+                 "\[IndentingNewLine]", ",", "\[IndentingNewLine]", 
+                 RowBox[{
+                  RowBox[{"Sow", "[", 
+                   RowBox[{
+                    RowBox[{"StringJoin", "[", 
+                    RowBox[{
+                    RowBox[{"{", 
+                    RowBox[{
+                    RowBox[{"\"\<'\>\"", "<>", 
+                    RowBox[{"StringReplace", "[", 
+                    RowBox[{
+                    RowBox[{"\"\<ArXivID\>\"", "/.", "#"}], ",", 
+                    RowBox[{"\"\</\>\"", "\[Rule]", "\"\<\>\""}]}], "]"}]}], 
+                    ",", 
+                    RowBox[{"\"\<','\>\"", "<>", 
+                    RowBox[{"StringReplace", "[", 
+                    RowBox[{
+                    RowBox[{"(", 
+                    RowBox[{"\"\<Title\>\"", "/.", "#"}], ")"}], ",", 
+                    RowBox[{"{", 
+                    RowBox[{
+                    RowBox[{"\"\<,\>\"", "\[Rule]", "\"\<\\\\,\>\""}], ",", 
+                    RowBox[{"\"\<'\>\"", "\[Rule]", "\"\<\\\\'\>\""}]}], 
+                    "}"}]}], "]"}], "<>", "\"\<',\>\""}]}], "}"}], ",", 
+                    RowBox[{"{", 
+                    RowBox[{"getDateString", "[", 
+                    RowBox[{"\"\<Date\>\"", "/.", "#"}], "]"}], "}"}]}], 
+                    "\[IndentingNewLine]", "]"}], ",", "\[IndentingNewLine]", 
+                    "\"\<paper\>\""}], "]"}], ";"}]}], "\[IndentingNewLine]", 
+                "]"}]}], ")"}], "&"}], ",", "\[IndentingNewLine]", 
+            "metaData"}], "]"}], "\[IndentingNewLine]", ",", 
+          "\"\<paper\>\""}], "]"}]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"dataList", "=", 
+        RowBox[{
+         RowBox[{"dataList", "[", 
+          RowBox[{"[", "2", "]"}], "]"}], "[", 
+         RowBox[{"[", "1", "]"}], "]"}]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"stream", "=", 
+        RowBox[{
+        "OpenWrite", "[", "\"\<~/test/metaDataStringDB.txt\>\"", "]"}]}], ";", 
+       RowBox[{"WriteString", "[", 
+        RowBox[{"stream", ",", 
+         RowBox[{"ExportString", "[", 
+          RowBox[{
+           RowBox[{"Flatten", "[", "dataList", "]"}], ",", "\"\<Text\>\""}], 
+          "]"}]}], "]"}], ";", 
+       RowBox[{"Close", "[", "stream", "]"}]}]}], "]"}]}], ";"}]}]], "Input",E\
+xpressionUUID->"ce105780-980d-4e15-addb-807e1a185108"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"getDataDBString", "[", 
+  RowBox[{"{", "list", "}"}], "]"}]], "Input",ExpressionUUID->"62da6001-6b0c-\
+4891-968b-cc7229e94c73"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"{", "\<\"11,'some\\\\, title',date\"\>", "}"}], " "}]], "Print",
+ GeneratedCell->False,
+ CellAutoOverwrite->
+  False,ExpressionUUID->"ee946968-c577-4c82-a7aa-f9947caa65be"],
+
+Cell[BoxData[
+ TemplateBox[{
+  "OpenWrite","noopen",
+   "\"Cannot open \
+\\!\\(\\*RowBox[{\\\"\\\\\\\"/Users/yihed/test/metaDataStringDB.txt\\\\\\\"\\\
+\"}]\\).\"",2,160,38,32232323265125846229,"Local"},
+  "MessageTemplate"]], "Message", \
+"MSG",ExpressionUUID->"cf651bb4-468c-4798-8a78-a74d579de06b"],
+
+Cell[BoxData[
+ TemplateBox[{
+  "WriteString","strml",
+   "\"\\!\\(\\*RowBox[{\\\"$Failed\\\"}]\\) is not a string, stream, or list \
+of strings and streams.\"",2,160,39,32232323265125846229,"Local"},
+  "MessageTemplate"]], "Message", \
+"MSG",ExpressionUUID->"65f6cd73-6752-42d1-96b2-f32e6bdd090d"],
+
+Cell[BoxData[
+ TemplateBox[{
+  "Close","stream",
+   "\"\\!\\(\\*RowBox[{\\\"$Failed\\\"}]\\) is not a string, SocketObject, \
+InputStream[ ], or OutputStream[ ].\"",2,160,40,32232323265125846229,"Local"},
+  
+  "MessageTemplate"]], "Message", \
+"MSG",ExpressionUUID->"24217beb-d664-4ff0-9f7e-6faf716beacd"],
+
+Cell[BoxData[
+ RowBox[{"Close", "[", "$Failed", "]"}]], "Output",ExpressionUUID->"12032ab7-01af-4df7-ada1-150b4930d731"]
+}, Open  ]],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(*", 
+   RowBox[{
+    RowBox[{"each", " ", "row", " ", "is", " ", "comma", " ", "separated"}], 
+    ",", " ", "\"\<id, first, last\>\""}], "*)"}], "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"getNameDBString", "[", "metaData_List", "]"}], ":=", 
+    RowBox[{"Module", "[", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{
+       "dataList", ",", "getNameString2", ",", "stream", ",", "arXivClass", 
+        ",", "getDateString", ",", "idStr", ",", "firstNameStr", ",", 
+        "lastNameStr", ",", "firstNamePos"}], "}"}], ",", 
+      "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"getDateString", "=", 
+        RowBox[{"Function", "[", 
+         RowBox[{"dateList", ",", 
+          RowBox[{"StringRiffle", "[", 
+           RowBox[{
+            RowBox[{"ToString", "/@", "dateList"}], ",", "\"\<-\>\""}], 
+           "]"}]}], "]"}]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"getNameString2", "=", 
+        RowBox[{"Function", "[", 
+         RowBox[{"namesList", ",", "\[IndentingNewLine]", 
+          RowBox[{"Map", "[", "\[IndentingNewLine]", 
+           RowBox[{
+            RowBox[{
+             RowBox[{"(", 
+              RowBox[{
+               RowBox[{"firstNameStr", "=", 
+                RowBox[{"StringReplace", "[", 
+                 RowBox[{
+                  RowBox[{"\"\<FirstName\>\"", "/.", "#"}], ",", 
+                  RowBox[{"\"\<'\>\"", "\[Rule]", "\"\<\\\\'\>\""}]}], 
+                 "]"}]}], ";", "\[IndentingNewLine]", 
+               RowBox[{"lastNameStr", "=", 
+                RowBox[{"StringReplace", "[", 
+                 RowBox[{
+                  RowBox[{"\"\<LastName\>\"", "/.", "#"}], ",", 
+                  RowBox[{"\"\<'\>\"", "\[Rule]", "\"\<\\\\'\>\""}]}], 
+                 "]"}]}], ";", "\[IndentingNewLine]", 
+               RowBox[{"(*", 
+                RowBox[{
+                 RowBox[{
+                 "only", " ", "find", " ", "the", " ", "first", " ", 
+                  "period"}], ",", " ", 
+                 RowBox[{"and", " ", "split", " ", "there"}]}], "*)"}], 
+               "\[IndentingNewLine]", 
+               RowBox[{"firstNamePos", "=", 
+                RowBox[{"StringPosition", "[", 
+                 RowBox[{"firstNameStr", ",", 
+                  RowBox[{
+                  "RegularExpression", "[", "\"\<[.\\\\s+]\>\"", "]"}], ",", 
+                  "1"}], "]"}]}], ";", "\[IndentingNewLine]", 
+               RowBox[{"(*", 
+                RowBox[{
+                 RowBox[{"construct", " ", "first"}], " ", "+", " ", 
+                 RowBox[{"middle", " ", "name", " ", "string"}]}], "*)"}], 
+               "\[IndentingNewLine]", 
+               RowBox[{"firstNameStr", "=", 
+                RowBox[{"If", "[", 
+                 RowBox[{
+                  RowBox[{
+                   RowBox[{"firstNamePos", "===", 
+                    RowBox[{"{", "}"}]}], " ", "||", " ", 
+                   RowBox[{
+                    RowBox[{
+                    RowBox[{"firstNamePos", "[", 
+                    RowBox[{"[", "1", "]"}], "]"}], "[", 
+                    RowBox[{"[", "1", "]"}], "]"}], "===", 
+                    RowBox[{"StringLength", "[", "firstNameStr", "]"}]}]}], 
+                  "\[IndentingNewLine]", ",", 
+                  RowBox[{"(*", 
+                   RowBox[{
+                   "empty", " ", "middle", " ", "name", " ", "string"}], 
+                   "*)"}], "\[IndentingNewLine]", 
+                  RowBox[{
+                  "\"\<'\>\"", "<>", "firstNameStr", "<>", "\"\<',''\>\""}], 
+                  "\[IndentingNewLine]", ",", "\[IndentingNewLine]", 
+                  RowBox[{"\"\<'\>\"", "<>", 
+                   RowBox[{"StringTake", "[", 
+                    RowBox[{"firstNameStr", ",", 
+                    RowBox[{"{", 
+                    RowBox[{"1", ",", 
+                    RowBox[{
+                    RowBox[{
+                    RowBox[{"firstNamePos", "[", 
+                    RowBox[{"[", "1", "]"}], "]"}], "[", 
+                    RowBox[{"[", "1", "]"}], "]"}], "-", "1"}]}], "}"}]}], 
+                    "]"}], "<>", "\"\<','\>\"", "<>", 
+                   RowBox[{"StringTrim", "@", 
+                    RowBox[{"StringTake", "[", 
+                    RowBox[{"firstNameStr", ",", 
+                    RowBox[{"{", 
+                    RowBox[{
+                    RowBox[{
+                    RowBox[{
+                    RowBox[{"firstNamePos", "[", 
+                    RowBox[{"[", "1", "]"}], "]"}], "[", 
+                    RowBox[{"[", "1", "]"}], "]"}], "+", "1"}], ",", 
+                    RowBox[{"StringLength", "[", "firstNameStr", "]"}]}], 
+                    "}"}]}], "]"}]}], "<>", "\"\<'\>\""}]}], 
+                 "\[IndentingNewLine]", "]"}]}], ";", "\[IndentingNewLine]", 
+               RowBox[{"StringReplace", "[", 
+                RowBox[{
+                 RowBox[{
+                 "firstNameStr", "<>", "\"\<,'\>\"", "<>", "lastNameStr", 
+                  "<>", "\"\<'\>\""}], ",", 
+                 RowBox[{"{", 
+                  RowBox[{"\"\<.\>\"", "\[Rule]", "\"\<\>\""}], "}"}]}], 
+                "]"}]}], ")"}], "&"}], "\[IndentingNewLine]", ",", 
+            "\[IndentingNewLine]", "namesList"}], "]"}]}], 
+         "\[IndentingNewLine]", "]"}]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"dataList", "=", "\[IndentingNewLine]", 
+        RowBox[{"Reap", "[", 
+         RowBox[{
+          RowBox[{"Map", "[", 
+           RowBox[{
+            RowBox[{
+             RowBox[{"(", "\[IndentingNewLine]", 
+              RowBox[{
+               RowBox[{"arXivClass", "=", 
+                RowBox[{"\"\<ArXivClasses\>\"", "/.", "#"}]}], ";", 
+               "\[IndentingNewLine]", 
+               RowBox[{"If", "[", 
+                RowBox[{
+                 RowBox[{
+                  RowBox[{"(", 
+                   RowBox[{
+                    RowBox[{
+                    RowBox[{"{", "}"}], "=!=", "arXivClass"}], " ", "&&", " ", 
+                    RowBox[{"Or", "@@", 
+                    RowBox[{"StringContainsQ", "[", 
+                    RowBox[{"arXivClass", ",", "\"\<math\>\""}], "]"}]}]}], 
+                   ")"}], "\[IndentingNewLine]", "||", 
+                  RowBox[{
+                   RowBox[{"{", "}"}], "===", "arXivClass"}]}], 
+                 "\[IndentingNewLine]", ",", "\[IndentingNewLine]", 
+                 RowBox[{
+                  RowBox[{"idStr", "=", 
+                   RowBox[{"StringReplace", "[", 
+                    RowBox[{
+                    RowBox[{"\"\<ArXivID\>\"", "/.", "#"}], ",", 
+                    RowBox[{"\"\</\>\"", "\[Rule]", "\"\<\>\""}]}], "]"}]}], 
+                  ";", "\[IndentingNewLine]", 
+                  RowBox[{"Sow", "[", 
+                   RowBox[{
+                    RowBox[{"Map", "[", 
+                    RowBox[{
+                    RowBox[{
+                    RowBox[{
+                    "\"\<'\>\"", "<>", "idStr", "<>", "\"\<',\>\"", "<>", 
+                    "#"}], "&"}], ",", "\[IndentingNewLine]", 
+                    RowBox[{"getNameString2", "[", 
+                    RowBox[{"\"\<Authors\>\"", "/.", "#"}], "]"}]}], 
+                    "\[IndentingNewLine]", "]"}], ",", "\[IndentingNewLine]", 
+                    "\"\<paper\>\""}], "]"}], ";"}]}], "\[IndentingNewLine]", 
+                "]"}]}], ")"}], "&"}], ",", "\[IndentingNewLine]", 
+            "metaData"}], "]"}], "\[IndentingNewLine]", ",", 
+          "\"\<paper\>\""}], "]"}]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"dataList", "=", 
+        RowBox[{
+         RowBox[{"dataList", "[", 
+          RowBox[{"[", "2", "]"}], "]"}], "[", 
+         RowBox[{"[", "1", "]"}], "]"}]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"(*", 
+        RowBox[{
+         RowBox[{"Print", "[", 
+          RowBox[{"\"\<dataList \>\"", ",", 
+           RowBox[{"ExportString", "[", 
+            RowBox[{
+             RowBox[{"Flatten", "[", "dataList", "]"}], ",", "\"\<Text\>\""}],
+             "]"}]}], "]"}], ";"}], "*)"}], "\[IndentingNewLine]", 
+       RowBox[{"stream", "=", 
+        RowBox[{
+        "OpenWrite", "[", "\"\<~/test/metaDataStringNameDB.txt\>\"", "]"}]}], 
+       ";", 
+       RowBox[{"WriteString", "[", 
+        RowBox[{"stream", ",", 
+         RowBox[{"ExportString", "[", 
+          RowBox[{
+           RowBox[{"Flatten", "[", "dataList", "]"}], ",", "\"\<Text\>\""}], 
+          "]"}]}], "]"}], ";", 
+       RowBox[{"Close", "[", "stream", "]"}]}]}], "\[IndentingNewLine]", 
+     "]"}]}], ";"}]}]], "Input",ExpressionUUID->"d21bb62a-0609-480b-b52a-\
+9a37baa14e54"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"list", "=", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"\"\<ArXivClasses\>\"", "\[Rule]", "\"\<math\>\""}], ",", 
+     RowBox[{"\"\<ArXivID\>\"", "\[Rule]", "\"\<11\>\""}], ",", " ", 
+     RowBox[{"\"\<Title\>\"", "\[Rule]", "\"\<some, title\>\""}], ",", 
+     RowBox[{"\"\<Date\>\"", "\[Rule]", "\"\<date\>\""}], ",", 
+     RowBox[{"\"\<Authors\>\"", "\[Rule]", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{
+          RowBox[{"\"\<Name\>\"", "\[Rule]", "\"\<N. Gisin\>\""}], ",", 
+          RowBox[{"\"\<FirstName\>\"", "\[Rule]", "\"\<N.\>\""}], ",", 
+          RowBox[{"\"\<LastName\>\"", "\[Rule]", "\"\<Gisin\>\""}], ",", 
+          RowBox[{"\"\<Organization\>\"", "\[Rule]", 
+           RowBox[{"Missing", "[", "]"}]}]}], "}"}], ",", 
+        RowBox[{"{", 
+         RowBox[{
+          RowBox[{"\"\<Name\>\"", "\[Rule]", "\"\<V.j. Scarani\>\""}], ",", 
+          RowBox[{"\"\<FirstName\>\"", "\[Rule]", "\"\<V .aj.r\>\""}], ",", 
+          RowBox[{"\"\<LastName\>\"", "\[Rule]", "\"\<Scarani\>\""}], ",", 
+          RowBox[{"\"\<Organization\>\"", "\[Rule]", 
+           RowBox[{"Missing", "[", "]"}]}]}], "}"}]}], "}"}]}]}], "}"}]}], 
+  ";"}]], "Input",ExpressionUUID->"a3ed05a5-4ee3-40f6-a77d-b11a393547f1"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"getNameDBString", "[", 
+  RowBox[{"{", "list", "}"}], "]"}]], "Input",ExpressionUUID->"db0477ba-9e62-\
+477b-96fa-e9d1280b0e2b"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"dataList \"\>", 
+   "\[InvisibleSpace]", "\<\"11,'N','','Gisin'\\n11,'V','ajr','Scarani'\"\>"}],
+  SequenceForm["dataList ", "11,'N','','Gisin'\n11,'V','ajr','Scarani'"],
+  Editable->False]], "Print",ExpressionUUID->"dbcf8d54-7269-49ea-9138-\
+d08601830b50"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"{", 
+   RowBox[{"\<\"11,'N','','Gisin'\"\>", 
+    ",", "\<\"11,'V','ajr','Scarani'\"\>"}], "}"}], "}"}]], "Output",Expressio\
+nUUID->"f253db2d-96f8-4fd8-8056-bf5c73d8a719"]
+}, Open  ]],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"{", 
+   RowBox[{"{", 
+    RowBox[{"\"\<11,'N','Gisin'\>\"", ",", "\"\<11,'V','Scarani'\>\""}], 
+    "}"}], "}"}], " "}]], \
+"Input",ExpressionUUID->"b02a1124-a887-40e1-82f2-9a65ac1d96d6"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"{", 
+   RowBox[{"{", 
+    RowBox[{"\"\<11,'NV','Gisin'\>\"", ",", "\"\<11,'NV','Scarani'\>\""}], 
+    "}"}], "}"}], " "}]], \
+"Input",ExpressionUUID->"8bf57364-7032-442b-bdd4-b14f22e1c1e2"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"{", 
+   RowBox[{"{", 
+    RowBox[{
+    "\"\<11,'NV,'',,'Gisin'\>\"", ",", "\"\<11,'NV,'',,'Scarani'\>\""}], 
+    "}"}], "}"}], " "}]], \
+"Input",ExpressionUUID->"a09a2a3b-b358-47ea-86a9-260fe38c3613"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"getNameString2", "=", 
+   RowBox[{"Function", "[", 
+    RowBox[{"namesList", ",", 
+     RowBox[{"Map", "[", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"StringReplace", "[", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"(", 
+            RowBox[{"\"\<FirstName\>\"", "/.", "#"}], ")"}], "<>", 
+           "\"\<,\>\"", "<>", 
+           RowBox[{"(", 
+            RowBox[{"\"\<LastName\>\"", "/.", "#"}], ")"}]}], ",", 
+          RowBox[{"\"\<'\>\"", "\[Rule]", "\"\<\\\\'\>\""}]}], "]"}], "&"}], 
+       ",", "namesList"}], "]"}]}], "\[IndentingNewLine]", "]"}]}], 
+  ";"}]], "Input",ExpressionUUID->"743671bd-5727-407e-bfd1-d9c5dc9adb58"],
+
+Cell[BoxData[
+ RowBox[{"getNameString2", "[", 
+  RowBox[{"{", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"\"\<Name\>\"", "\[Rule]", "\"\<N. Gisin\>\""}], ",", 
+      RowBox[{"\"\<FirstName\>\"", "\[Rule]", "\"\<N.\>\""}], ",", 
+      RowBox[{"\"\<LastName\>\"", "\[Rule]", "\"\<Gisin\>\""}], ",", 
+      RowBox[{"\"\<Organization\>\"", "\[Rule]", 
+       RowBox[{"Missing", "[", "]"}]}]}], "}"}], ",", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"\"\<Name\>\"", "\[Rule]", "\"\<V. Scarani\>\""}], ",", 
+      RowBox[{"\"\<FirstName\>\"", "\[Rule]", "\"\<V.\>\""}], ",", 
+      RowBox[{"\"\<LastName\>\"", "\[Rule]", "\"\<Scarani\>\""}], ",", 
+      RowBox[{"\"\<Organization\>\"", "\[Rule]", 
+       RowBox[{"Missing", "[", "]"}]}]}], "}"}]}], "}"}], "]"}]], "Input",Expr\
+essionUUID->"1f30ee5d-3f8c-4828-8108-e5ab5d31b5a7"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"{", 
+   RowBox[{"\"\<N.,Gisin\>\"", ",", "\"\<V.,Scarani\>\""}], "}"}], " "}]], \
+"Input",ExpressionUUID->"afda2ab9-332c-403d-b8d2-d44e0eb9b8b4"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(*", 
+   RowBox[{
+    RowBox[{"separate", " ", "first", " ", "and", " ", "last", " ", "name"}], 
+    ",", " ", 
+    RowBox[{"separated", " ", "by", " ", "comma"}], ",", " ", 
+    RowBox[{
+    "where", " ", "each", " ", "author", " ", "is", " ", "separated", " ", 
+     "by", " ", "semicolon"}]}], "*)"}], "\[IndentingNewLine]", 
+  RowBox[{"(*", 
+   RowBox[{
+    RowBox[{"returns", " ", "list"}], ",", " ", 
+    RowBox[{"e", ".", "g", ".", " ", 
+     RowBox[{"{", "\"\<e,s\>\"", "}"}]}]}], "*)"}], "\[IndentingNewLine]", 
+  RowBox[{"getNameString2", "=", 
+   RowBox[{"Function", "[", 
+    RowBox[{"namesList", ",", 
+     RowBox[{"Map", "[", 
+      RowBox[{
+       RowBox[{
+        RowBox[{
+         RowBox[{"(", 
+          RowBox[{"\"\<FirstName\>\"", "/.", "#"}], ")"}], "<>", "\"\<,\>\"", 
+         "<>", 
+         RowBox[{"(", 
+          RowBox[{"\"\<LastName\>\"", "/.", "#"}], ")"}]}], "&"}], ",", 
+       "namesList"}], "]"}]}], "\[IndentingNewLine]", "]"}]}]}]], "Input",Expr\
+essionUUID->"9e09de0e-fccd-45d2-99dc-52055b0bf92d"],
+
+Cell[BoxData[
+ RowBox[{"Function", "[", 
+  RowBox[{"namesList", ",", 
+   RowBox[{
+    RowBox[{"(", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"(", 
+        RowBox[{"\<\"FirstName\"\>", "/.", "\[VeryThinSpace]", "#1"}], ")"}], 
+       "<>", "\<\",\"\>", "<>", 
+       RowBox[{"(", 
+        RowBox[{"\<\"LastName\"\>", "/.", "\[VeryThinSpace]", "#1"}], ")"}]}],
+       "&"}], ")"}], "/@", "namesList"}]}], "]"}]], "Output",ExpressionUUID->\
+"f31149f0-4542-4141-800e-fc25ab44d032"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"%59", "[", 
+  RowBox[{"{", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"\"\<FirstName\>\"", "\[Rule]", "\"\<e\>\""}], ",", 
+     RowBox[{"\"\<LastName\>\"", "\[Rule]", "\"\<s\>\""}]}], "}"}], "}"}], 
+  "]"}]], "Input",ExpressionUUID->"20286dc6-fd99-42b5-8c60-e9be0a069df2"],
+
+Cell[BoxData[
+ RowBox[{"{", "\<\"e,s\"\>", "}"}]], "Output",ExpressionUUID->"688576fb-3c1d-48c6-9a76-a6831229766f"]
+}, Open  ]],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(*", 
+   RowBox[{"datelist", " ", 
+    RowBox[{"e", ".", "g", ".", " ", 
+     RowBox[{"{", 
+      RowBox[{"1193", ",", "2", ",", "31"}], "}"}]}]}], "*)"}], 
+  "\[IndentingNewLine]", 
+  RowBox[{"getDateString", "=", 
+   RowBox[{"Function", "[", 
+    RowBox[{"dateList", ",", 
+     RowBox[{"StringRiffle", "[", 
+      RowBox[{
+       RowBox[{"ToString", "/@", "dateList"}], ",", "\"\<-\>\""}], "]"}]}], 
+    "]"}]}]}]], "Input",ExpressionUUID->"0cff40eb-5cc8-4dfd-a835-\
+1f800bb219a3"],
+
+Cell[BoxData[
+ RowBox[{"StringRiffle", "[", 
+  RowBox[{
+   RowBox[{"ToString", "/@", 
+    RowBox[{"{", 
+     RowBox[{"1193", ",", "2", ",", "31"}], "}"}]}], ",", "\"\<-\>\""}], 
+  "]"}]], "Input",ExpressionUUID->"6373184a-50fb-4dd4-b459-9557d52ba58f"],
+
+Cell[BoxData["\"\<1193-2-31\>\""], "Input",ExpressionUUID->"b6c30c14-da92-4302-9bc9-331013f83a7e"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(*", 
+   RowBox[{
+    RowBox[{
+    "get", " ", "msc", " ", "classifications", " ", "to", " ", "train", " ", 
+     "a", " ", 
+     RowBox[{
+      RowBox[{
+       RowBox[{
+        RowBox[{
+         RowBox[{"classifier", "."}], " ", "/", "prospectus"}], "/", 
+        "crawling"}], "/", "_arxiv"}], "/", "arXiv"}]}], "-", 
+    RowBox[{"arXivXML", "/", 
+     RowBox[{"PaperIDAndClassifications", ".", "m"}]}]}], " ", "*)"}], 
+  "\[IndentingNewLine]", 
   RowBox[{
    RowBox[{
     RowBox[{"getMscString", "[", "metaData_List", "]"}], ":=", 
@@ -180,8 +777,8 @@ Cell[BoxData[
             RowBox[{"Map", "[", 
              RowBox[{
               RowBox[{
-               RowBox[{"\"\<Name\>\"", "/.", "#"}], "&"}], ",", "names"}], 
-             "]"}], ",", "\"\<, \>\""}], "]"}]}], "]"}]}], ";", 
+               RowBox[{"\"\<FirstName\>\"", "/.", "#"}], "&"}], ",", 
+              "names"}], "]"}], ",", "\"\<, \>\""}], "]"}]}], "]"}]}], ";", 
        RowBox[{"dataList", "=", "\[IndentingNewLine]", 
         RowBox[{"Reap", "[", 
          RowBox[{
@@ -709,6 +1306,10 @@ Hanscom AFB.\>\""}]}], "}"}], ",",
 Hanscom AFB.\>\""}]}], "}"}]}], "}"}], ";"}]], "Input",ExpressionUUID->\
 "75ce684e-ef04-4a87-be29-8069056b558d"],
 
+Cell[BoxData["\"\<{\\\"ArXivID\\\" -> \\\"solv-int/9902002\\\", \\\"DOI\\\" \
+-> Missing[], \\\"Year\\\" -> 1999, \n \\\"Date\\\" -> {1999, 1, 31},\>\""], \
+"Input",ExpressionUUID->"469f7cf3-0943-4184-a0a0-4a46ab0f4dc4"],
+
 Cell[CellGroupData[{
 
 Cell[BoxData[
@@ -761,10 +1362,33 @@ Problem\\n\\\"keyname\\\" -> \\\"Abbas\\\"\\n\\\"forenames\\\" -> \\\"Afsar\\\
  CellChangeTimes->{3.711802894745557*^9, 
   3.711802961553187*^9},ExpressionUUID->"7e7e1b92-4645-479b-a8e2-\
 1ca86d8d124f"]
-}, Open  ]]
+}, Open  ]],
+
+Cell[BoxData[
+ RowBox[{"\"\<Authors\>\"", "\[Rule]", 
+  RowBox[{"{", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"\"\<Name\>\"", "\[Rule]", "\"\<Marc-Thierry Jaekel\>\""}], ",", 
+      RowBox[{"\"\<FirstName\>\"", "\[Rule]", "\"\<Marc-Thierry\>\""}], ",", 
+      RowBox[{"\"\<LastName\>\"", "\[Rule]", "\"\<Jaekel\>\""}], ",", 
+      RowBox[{
+      "\"\<Organization\>\"", "\[Rule]", 
+       "\"\<Laboratoire de Physique The'orique de l'Ecole Normale Supe'rieure\
+\>\""}]}], "}"}], ",", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"\"\<Name\>\"", "\[Rule]", "\"\<Serge Reynaud\>\""}], ",", 
+      RowBox[{"\"\<FirstName\>\"", "\[Rule]", "\"\<Serge\>\""}], ",", 
+      RowBox[{"\"\<LastName\>\"", "\[Rule]", "\"\<Reynaud\>\""}], ",", 
+      RowBox[{
+      "\"\<Organization\>\"", "\[Rule]", 
+       "\"\<Laboratoire Kastler Brossel\>\""}]}], "}"}]}], "}"}]}]], "Input",E\
+xpressionUUID->"d5a5f5dc-c78f-49eb-9419-a88196d25d73"]
 },
-WindowSize->{745, 658},
-WindowMargins->{{Automatic, 62}, {Automatic, 0}},
+WindowSize->{773, 788},
+WindowMargins->{{Automatic, 32}, {Automatic, 0}},
 FrontEndVersion->"11.2 for Mac OS X x86 (32-bit, 64-bit Kernel) (August 30, \
 2017)",
 StyleDefinitions->"Default.nb"
@@ -786,47 +1410,86 @@ Cell[741, 27, 842, 23, 73, "Input",ExpressionUUID->"25e9243f-3bb2-4bd3-907d-f261
 Cell[1586, 52, 413, 10, 34, "Output",ExpressionUUID->"d5f6d12a-5ae7-434f-8d36-b35561532eda"]
 }, Open  ]],
 Cell[2014, 65, 238, 6, 30, "Input",ExpressionUUID->"d42020d8-4848-48ce-b9c5-7c57ced5b035"],
-Cell[2255, 73, 3382, 81, 409, "Input",ExpressionUUID->"f9ccd2de-d7c4-4123-8806-f057ab46d2ff"],
-Cell[5640, 156, 3186, 78, 388, "Input",ExpressionUUID->"d5637a50-1743-4493-803e-915371fb328c"],
-Cell[8829, 236, 118, 0, 32, "Item",ExpressionUUID->"b5012e7e-8c87-451c-a41a-0ad4fc221103"],
-Cell[8950, 238, 3017, 74, 325, "Input",ExpressionUUID->"1920f0cb-7b4e-488b-8e6b-2a6036b22cb9"],
-Cell[11970, 314, 721, 16, 115, "Input",ExpressionUUID->"413d60a9-7fab-4228-a8b1-5ace013f5ae8"],
+Cell[2255, 73, 3966, 94, 430, "Input",ExpressionUUID->"f9ccd2de-d7c4-4123-8806-f057ab46d2ff"],
 Cell[CellGroupData[{
-Cell[12716, 334, 231, 6, 30, "Input",ExpressionUUID->"05dae943-9805-42e9-adcc-caf54833a7c2"],
-Cell[12950, 342, 9636, 195, 90, "Output",ExpressionUUID->"b6ed617f-cf98-4d7d-8c01-4a695bf1b776"]
+Cell[6246, 171, 165, 3, 30, "Input",ExpressionUUID->"f7ffecd6-b206-45f5-bc9b-cf8755d3a237"],
+Cell[6414, 176, 154, 4, 34, "Output",ExpressionUUID->"4049cd5c-f7d4-45bb-b58c-abeb32a82b55"]
+}, Open  ]],
+Cell[6583, 183, 5048, 113, 556, "Input",ExpressionUUID->"ce105780-980d-4e15-addb-807e1a185108"],
+Cell[CellGroupData[{
+Cell[11656, 300, 151, 3, 30, "Input",ExpressionUUID->"62da6001-6b0c-4891-968b-cc7229e94c73"],
+Cell[11810, 305, 207, 5, 24, "Print",ExpressionUUID->"ee946968-c577-4c82-a7aa-f9947caa65be"],
+Cell[12020, 312, 301, 7, 24, "Message",ExpressionUUID->"cf651bb4-468c-4798-8a78-a74d579de06b"],
+Cell[12324, 321, 297, 6, 24, "Message",ExpressionUUID->"65f6cd73-6752-42d1-96b2-f32e6bdd090d"],
+Cell[12624, 329, 305, 7, 24, "Message",ExpressionUUID->"24217beb-d664-4ff0-9f7e-6faf716beacd"],
+Cell[12932, 338, 120, 1, 34, "Output",ExpressionUUID->"12032ab7-01af-4df7-ada1-150b4930d731"]
+}, Open  ]],
+Cell[13067, 342, 8578, 189, 997, "Input",ExpressionUUID->"d21bb62a-0609-480b-b52a-9a37baa14e54"],
+Cell[21648, 533, 1281, 26, 136, "Input",ExpressionUUID->"a3ed05a5-4ee3-40f6-a77d-b11a393547f1"],
+Cell[CellGroupData[{
+Cell[22954, 563, 151, 3, 30, "Input",ExpressionUUID->"db0477ba-9e62-477b-96fa-e9d1280b0e2b"],
+Cell[23108, 568, 306, 6, 44, "Print",ExpressionUUID->"dbcf8d54-7269-49ea-9138-d08601830b50"],
+Cell[23417, 576, 212, 5, 34, "Output",ExpressionUUID->"f253db2d-96f8-4fd8-8056-bf5c73d8a719"]
+}, Open  ]],
+Cell[23644, 584, 222, 6, 30, InheritFromParent,ExpressionUUID->"b02a1124-a887-40e1-82f2-9a65ac1d96d6"],
+Cell[23869, 592, 224, 6, 30, InheritFromParent,ExpressionUUID->"8bf57364-7032-442b-bdd4-b14f22e1c1e2"],
+Cell[24096, 600, 235, 7, 30, InheritFromParent,ExpressionUUID->"a09a2a3b-b358-47ea-86a9-260fe38c3613"],
+Cell[24334, 609, 688, 18, 115, "Input",ExpressionUUID->"743671bd-5727-407e-bfd1-d9c5dc9adb58"],
+Cell[25025, 629, 843, 18, 115, "Input",ExpressionUUID->"1f30ee5d-3f8c-4828-8108-e5ab5d31b5a7"],
+Cell[25871, 649, 180, 4, 30, InheritFromParent,ExpressionUUID->"afda2ab9-332c-403d-b8d2-d44e0eb9b8b4"],
+Cell[CellGroupData[{
+Cell[26076, 657, 1069, 28, 136, "Input",ExpressionUUID->"9e09de0e-fccd-45d2-99dc-52055b0bf92d"],
+Cell[27148, 687, 480, 13, 34, "Output",ExpressionUUID->"f31149f0-4542-4141-800e-fc25ab44d032"]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[22623, 542, 302, 7, 30, "Input",ExpressionUUID->"d27d675b-2df5-4fa0-b67a-5bfcf8f8c933"],
-Cell[22928, 551, 120, 1, 34, "Output",ExpressionUUID->"38ca48c7-0cc3-42b9-83f2-05538db3236e"]
+Cell[27665, 705, 297, 7, 30, "Input",ExpressionUUID->"20286dc6-fd99-42b5-8c60-e9be0a069df2"],
+Cell[27965, 714, 115, 1, 34, "Output",ExpressionUUID->"688576fb-3c1d-48c6-9a76-a6831229766f"]
+}, Open  ]],
+Cell[28095, 718, 518, 15, 52, "Input",ExpressionUUID->"0cff40eb-5cc8-4dfd-a835-1f800bb219a3"],
+Cell[28616, 735, 251, 6, 30, "Input",ExpressionUUID->"6373184a-50fb-4dd4-b459-9557d52ba58f"],
+Cell[28870, 743, 98, 0, 30, InheritFromParent,ExpressionUUID->"b6c30c14-da92-4302-9bc9-331013f83a7e"],
+Cell[28971, 745, 3414, 86, 409, "Input",ExpressionUUID->"d5637a50-1743-4493-803e-915371fb328c"],
+Cell[32388, 833, 118, 0, 32, "Item",ExpressionUUID->"b5012e7e-8c87-451c-a41a-0ad4fc221103"],
+Cell[32509, 835, 3017, 74, 325, "Input",ExpressionUUID->"1920f0cb-7b4e-488b-8e6b-2a6036b22cb9"],
+Cell[35529, 911, 721, 16, 94, "Input",ExpressionUUID->"413d60a9-7fab-4228-a8b1-5ace013f5ae8"],
+Cell[CellGroupData[{
+Cell[36275, 931, 231, 6, 30, "Input",ExpressionUUID->"05dae943-9805-42e9-adcc-caf54833a7c2"],
+Cell[36509, 939, 9636, 195, 90, "Output",ExpressionUUID->"b6ed617f-cf98-4d7d-8c01-4a695bf1b776"]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[23085, 557, 273, 7, 30, "Input",ExpressionUUID->"8c8c77c7-251d-4075-8a43-fc4f1cac9d1a"],
-Cell[23361, 566, 149, 3, 34, "Output",ExpressionUUID->"b9c82553-cd56-435c-bc6c-200f4a6136b8"]
+Cell[46182, 1139, 302, 7, 30, "Input",ExpressionUUID->"d27d675b-2df5-4fa0-b67a-5bfcf8f8c933"],
+Cell[46487, 1148, 120, 1, 34, "Output",ExpressionUUID->"38ca48c7-0cc3-42b9-83f2-05538db3236e"]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[23547, 574, 168, 4, 30, "Input",ExpressionUUID->"6ca3c867-9ce7-425b-92f1-12058cca686b"],
-Cell[23718, 580, 149, 3, 34, "Output",ExpressionUUID->"760b7874-dbf1-4c5e-b950-955adddfb45f"]
+Cell[46644, 1154, 273, 7, 30, "Input",ExpressionUUID->"8c8c77c7-251d-4075-8a43-fc4f1cac9d1a"],
+Cell[46920, 1163, 149, 3, 34, "Output",ExpressionUUID->"b9c82553-cd56-435c-bc6c-200f4a6136b8"]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[23904, 588, 119, 1, 30, "Input",ExpressionUUID->"5a9938e5-6105-4e78-8267-12b6e33da3c8"],
-Cell[24026, 591, 178, 3, 34, "Output",ExpressionUUID->"5763bd27-6df5-481d-a5e1-238407bb96ef"]
+Cell[47106, 1171, 168, 4, 30, "Input",ExpressionUUID->"6ca3c867-9ce7-425b-92f1-12058cca686b"],
+Cell[47277, 1177, 149, 3, 34, "Output",ExpressionUUID->"760b7874-dbf1-4c5e-b950-955adddfb45f"]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[24241, 599, 121, 1, 30, "Input",ExpressionUUID->"6d5dc82b-d085-4148-a501-10abb22ccadf"],
-Cell[24365, 602, 227, 5, 34, "Output",ExpressionUUID->"3c514e85-53e8-418c-9839-4689553fa501"]
+Cell[47463, 1185, 119, 1, 30, "Input",ExpressionUUID->"5a9938e5-6105-4e78-8267-12b6e33da3c8"],
+Cell[47585, 1188, 178, 3, 34, "Output",ExpressionUUID->"5763bd27-6df5-481d-a5e1-238407bb96ef"]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[24629, 612, 307, 8, 30, "Input",ExpressionUUID->"577b3d8f-5283-4e92-9e7a-3fe5906f672d"],
-Cell[24939, 622, 149, 3, 34, "Output",ExpressionUUID->"25ff40f2-3d66-4f03-afb9-d8c4b83ba93e"]
+Cell[47800, 1196, 121, 1, 30, "Input",ExpressionUUID->"6d5dc82b-d085-4148-a501-10abb22ccadf"],
+Cell[47924, 1199, 227, 5, 34, "Output",ExpressionUUID->"3c514e85-53e8-418c-9839-4689553fa501"]
 }, Open  ]],
-Cell[25103, 628, 571, 13, 136, "Input",ExpressionUUID->"205848aa-ebe8-4697-b7bc-4ef2ee8621e7"],
-Cell[25677, 643, 842, 20, 73, "Input",ExpressionUUID->"ded1e94a-2205-44a2-9c71-ecf5c71e9fe9"],
-Cell[26522, 665, 613, 18, 73, "Input",ExpressionUUID->"fa339ef5-01d5-4838-ac73-ea34830178d8"],
-Cell[27138, 685, 1010, 24, 199, "Input",ExpressionUUID->"75ce684e-ef04-4a87-be29-8069056b558d"],
 Cell[CellGroupData[{
-Cell[28173, 713, 204, 4, 30, "Input",ExpressionUUID->"8d64b426-0b47-410b-a8fa-4274719d6fca"],
-Cell[28380, 719, 2907, 43, 1526, "Output",ExpressionUUID->"7e7e1b92-4645-479b-a8e2-1ca86d8d124f"]
-}, Open  ]]
+Cell[48188, 1209, 307, 8, 30, "Input",ExpressionUUID->"577b3d8f-5283-4e92-9e7a-3fe5906f672d"],
+Cell[48498, 1219, 149, 3, 34, "Output",ExpressionUUID->"25ff40f2-3d66-4f03-afb9-d8c4b83ba93e"]
+}, Open  ]],
+Cell[48662, 1225, 571, 13, 136, "Input",ExpressionUUID->"205848aa-ebe8-4697-b7bc-4ef2ee8621e7"],
+Cell[49236, 1240, 842, 20, 73, "Input",ExpressionUUID->"ded1e94a-2205-44a2-9c71-ecf5c71e9fe9"],
+Cell[50081, 1262, 613, 18, 73, "Input",ExpressionUUID->"fa339ef5-01d5-4838-ac73-ea34830178d8"],
+Cell[50697, 1282, 1010, 24, 199, "Input",ExpressionUUID->"75ce684e-ef04-4a87-be29-8069056b558d"],
+Cell[51710, 1308, 220, 2, 52, "Input",ExpressionUUID->"469f7cf3-0943-4184-a0a0-4a46ab0f4dc4"],
+Cell[CellGroupData[{
+Cell[51955, 1314, 204, 4, 30, "Input",ExpressionUUID->"8d64b426-0b47-410b-a8fa-4274719d6fca"],
+Cell[52162, 1320, 2907, 43, 1526, "Output",ExpressionUUID->"7e7e1b92-4645-479b-a8e2-1ca86d8d124f"]
+}, Open  ]],
+Cell[55084, 1366, 943, 21, 157, "Input",ExpressionUUID->"d5a5f5dc-c78f-49eb-9419-a88196d25d73"]
 }
 ]
 *)
