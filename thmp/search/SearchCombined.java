@@ -23,6 +23,7 @@ import com.google.common.collect.TreeMultimap;
 
 import thmp.parse.ProcessInput;
 import thmp.parse.TheoremContainer;
+import thmp.utils.DBUtils;
 import thmp.utils.DataUtility;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
@@ -85,6 +86,12 @@ public class SearchCombined {
 		public String hypStr(){
 			return this.hypStr;
 		}
+		/**
+		 * srcFileName of the tex file. Two possible forms, 
+		 * e.g. math0211002, or 4387.86213.
+		 * Names are preprocessed so slashes "/" are removed.
+		 * @return
+		 */
 		public String srcFileName(){
 			return this.srcFileName;
 		}
@@ -148,6 +155,7 @@ public class SearchCombined {
 	public static void initializeSearchWithResource(ServletContext servletContext_){
 		CollectThm.setServletContext(servletContext_);
 		ProcessInput.setServletContext(servletContext_);
+		DBUtils.recompileDatabase();
 	}
 	
 	/**

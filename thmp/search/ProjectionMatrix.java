@@ -1,13 +1,20 @@
 package thmp.search;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -46,6 +53,9 @@ public class ProjectionMatrix {
 			+ TermDocumentMatrix.COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME; //+ ".mx";
 	private static final int TAR_COUNT_PER_BUNDLE = 5;//<--5 for testing for now, usually 15;
 	
+	//regex to match strings of form: "'math0702266','Florent','','Baudier'"
+	private static final Pattern NAME_DATA_LINE_PATT = Pattern.compile("'([^']+)'.+");
+	
 	/**
 	 * args is list of paths. 
 	 * Supply list of paths (vararg) to directories, each contanining a parsedExpressionList and
@@ -71,6 +81,32 @@ public class ProjectionMatrix {
 	}
 
 	/**
+	 * Parses raw names data string to map.
+	 * @return Map, keys are paper ID, values are String data for the names.
+	 * E.g. {"math0702266" : "'math0702266','Florent','','Baudier'"}
+	 */
+	private static Map<String, String> parseRawNameDataFile() {
+		
+		String filePath = SearchMetaData.nameRawDataPath();
+		List<String> nameDataList = FileUtils.readLinesFromFile(filePath);
+		
+		Map<String, String> namesMap = new HashMap<String, String>();
+		
+		Matcher m;
+		//each line has form 'math0702266','Florent','','Baudier'
+		for(String dataStr : nameDataList) {
+			if(!(m=NAME_DATA_LINE_PATT.matcher(dataStr)).matches()) {
+				System.out.println("ProjectionMatrix - name data Pattern doesn't match!");
+				continue;
+			}
+			String paperIdStr = m.group(1);
+			namesMap.put(paperIdStr, dataStr);
+		}
+		
+		return namesMap;
+	}
+	
+	/**
 	 * Combined sources contained in files supplied. Serialize the combined sources.
 	 * Create bundles for given number of files, 
 	 * @param args
@@ -92,6 +128,18 @@ public class ProjectionMatrix {
 		String thmsStringListDestPath = TermDocumentMatrix.DATA_ROOT_DIR_SLASH + TermDocumentMatrix.ALL_THM_STRING_FILE_NAME;
 		FileUtils.runtimeExec("rm " + thmsStringListDestPath);
 		
+		Map<String, String> paperIdNameDataMap = parseRawNameDataFile();
+		
+		FileWriter nameCSVFileWriter = null;
+		try {
+			nameCSVFileWriter = new FileWriter(SearchMetaData.nameCSVDataPath());
+		} catch (IOException e) {			
+			throw new IllegalStateException("IOException while opening FileWriter!");
+		}
+		
+	    BufferedWriter nameCSVBWriter = new BufferedWriter(nameCSVFileWriter);
+	    PrintWriter nameCSVPWriter = new PrintWriter(nameCSVBWriter);
+		
 		int loopTotal = argsLen / TAR_COUNT_PER_BUNDLE + 1;
 		int vecsFileNameCounter = 0;
 		//will go up to O(10^6) when all tars are included.
@@ -101,6 +149,9 @@ public class ProjectionMatrix {
 		//process TAR_COUNT_PER_BUNDLE each time. This loops over tar files.
 		//Loops about 1569/15 ~ 105 times if all tar files supplied.
 		for(int i = 0; i < loopTotal; i++){
+			//stringbuilder for creating name csv file.
+			StringBuilder nameDBSb = new StringBuilder(300000);
+			
 			int start = i * TAR_COUNT_PER_BUNDLE;
 			int nextIndex = (i+1)*TAR_COUNT_PER_BUNDLE;
 			int end = nextIndex < argsLen ? nextIndex : argsLen;
@@ -120,7 +171,8 @@ public class ProjectionMatrix {
 					String wordThmIndexMMapPath = path_j + SearchMetaData.wordThmIndexMMapSerialFileName();
 					
 					thmCounter = addExprsToLists(path_j, peFilePath, combinedPEList, vecsFilePath, combinedVecsList, wordThmIndexMMapPath,
-							combinedWordThmIndexMMap, literalSearchIndexMap, allThmNameScrapeList, thmCounter);
+							combinedWordThmIndexMMap, literalSearchIndexMap, allThmNameScrapeList, thmCounter, nameDBSb,
+							paperIdNameDataMap);
 					
 					//append lists of ThmHypPair's to one file
 					/* don't do this for now, cause memory overflow on allowed space on byblis67 - Aug 21, 2017
@@ -131,6 +183,9 @@ public class ProjectionMatrix {
 				//thmCounter += combinedPEList.size();
 				System.out.println("Serializing combinedPEList size: " + combinedPEList.size() + "   index: " +i);
 				System.out.println("Serializing combinedVecsList size: " + combinedVecsList.size() + "   index: " +i);
+				
+				//write csv file
+				nameCSVPWriter.write(nameDBSb.toString());
 				
 				serializeListsToFile(combinedPEList, i);
 				combinedPEList = new ArrayList<ThmHypPair>();
@@ -173,6 +228,8 @@ public class ProjectionMatrix {
 	 	List<Multimap<String, Integer>> combinedWordThmIndexMMapList = new ArrayList<Multimap<String, Integer>>();
 	 	combinedWordThmIndexMMapList.add(combinedWordThmIndexMMap);	 	
 	 	FileUtils.serializeObjToFile(combinedWordThmIndexMMapList, wordThmIndexMMapPath);
+	 	
+	 	FileUtils.silentClose(nameCSVFileWriter);
 		/* Combine parsedExpressionList's */
 		//combineParsedExpressionList(parsedExpressionFilePathList);
 	}
@@ -296,18 +353,8 @@ public class ProjectionMatrix {
 	private static int addExprsToLists(String dirPathStr, String peFilePath, List<ThmHypPair> combinedPEList, String vecsFilePath,
 			List<ContextRelationVecPair> combinedVecsList, String wordThmIndexMMapPath, 
 			Multimap<String, Integer> combinedWordThmIndexMMap, ListMultimap<String, LiteralSearchIndex> searchIndexMap,
-			List<String> allThmNameScrapeList, int startingThmIndex) {
-		
-		//**correct version: List<ThmHypPair> thmHypPairList = (List<ThmHypPair>)FileUtils.deserializeListFromFile(peFilePath);
-		//HACK. (for search, when data was nonuniformized. June 2017)
-		/*****Object obj = ((List<? extends Object>)FileUtils.deserializeListFromFile(peFilePath)).get(0);
-		List<ThmHypPair> thmHypPairList;
-		if(obj instanceof ThmHypPair){
-			thmHypPairList = (List<ThmHypPair>)FileUtils.deserializeListFromFile(peFilePath);
-		}else{
-			thmHypPairList = convertPEToThmHypPairTEMP((List<ParsedExpression>)FileUtils.deserializeListFromFile(peFilePath));			
-		}*/
-		//**Hack ends
+			List<String> allThmNameScrapeList, int startingThmIndex, StringBuilder nameDBSB,
+			Map<String, String> paperIdNameDataMap) {
 		
 		List<ThmHypPair> thmHypPairList = (List<ThmHypPair>)FileUtils.deserializeListFromFile(peFilePath);
 		int thmHypPairListSz = thmHypPairList.size();
@@ -324,10 +371,18 @@ public class ProjectionMatrix {
 		
 		//this step can be created when the previous lists are created, to avoid this iteration.
 		for(int i = 0; i < thmHypPairListSz; i++) {
-			String thmStr = thmHypPairList.get(i).getEntireThmStr();
-			LiteralSearch.addThmLiteralSearchIndexToMap(thmStr, startingThmIndex+i, searchIndexMap);
+			ThmHypPair curPair = thmHypPairList.get(i);
+			String thmStr = curPair.getEntireThmStr();
+			int curThmIndex = startingThmIndex+i;
+			LiteralSearch.addThmLiteralSearchIndexToMap(thmStr, curThmIndex, searchIndexMap);
+			String curPairPaperId = curPair.srcFileName();
+			String paperNameData = paperIdNameDataMap.get(curPairPaperId);
+			if(null == paperNameData) {
+				System.out.println("ProjectionnMatrix - Raw data file does not contain name data for "+curPairPaperId);
+				continue;
+			}
+			nameDBSB.append(curThmIndex + "," + paperNameData + "\n");
 		}
-		//System.out.println("ProjectionMatrix - addExprsToLists, done adding to thmLiteralIndexMap");
 		
 		combinedVecsList.addAll((List<ContextRelationVecPair>)FileUtils.deserializeListFromFile(vecsFilePath));
 		Multimap<String, Integer> wordThmIndexMMap = ((List<Multimap<String, Integer>>)
@@ -360,17 +415,6 @@ public class ProjectionMatrix {
 		return thmHypPairList;
 	}
 	
-	/*private static void combineParsedExpressionList(List<String> parsedExpressionFilePathList) {
-		List<ParsedExpression> combinedPEList = new ArrayList<ParsedExpression>();
-		for(String path : parsedExpressionFilePathList){
-			@SuppressWarnings("unchecked")
-			List<ParsedExpression> peList = (List<ParsedExpression>)FileUtils.deserializeListFromFile(path);
-			combinedPEList.addAll(peList);
-		}
-		String targetFilePath = ThmSearch.getSystemCombinedParsedExpressionListFilePath();
-		FileUtils.serializeObjToFile(combinedPEList, targetFilePath);
-	}*/
-
 	/**
 	 * Apply projection matrices (dInverse and uTranspose) to given matrix (vectors should be row vecs).
 	 * The relevan variables should already have been loaded in any kernel the EvaluationMedium is retrieved from.

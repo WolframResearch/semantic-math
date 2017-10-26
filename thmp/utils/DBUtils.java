@@ -12,7 +12,8 @@ import org.apache.logging.log4j.Logger;
 
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
 
-import thmp.search.SearchIntersection;
+import thmp.search.DBSearch;
+import thmp.search.Searcher.SearchMetaData;
 
 /**
  * Utility methods for database manipulations, for MySql database.
@@ -21,11 +22,13 @@ import thmp.search.SearchIntersection;
 public class DBUtils {
 	
 	public static final String DEFAULT_USER = "root";
-	public static final String DEFAULT_PW = "wolfram";
+	public static final String DEFAULT_PW = "Wolframwolfram0*";
 	public static final String DEFAULT_SERVER = "localhost";
 	public static final int DEFAULT_PORT = 3306;	
 	public static final String DEFAULT_DB_NAME = "thmDB";
-
+	
+	private static final int STM_EXECUTATION_FAILURE = -1;
+	
 	private static final Connection DEFAULT_CONNECTION;
 	private static final DataSource DEFAULT_DATASOURCE;
 	
@@ -80,11 +83,31 @@ public class DBUtils {
 	
 	public static class AuthorName{
 		private String firstName;
-		private String lastName;
+		private String middleName;
+		private String lastName;	
 		
-		public AuthorName(String firstName_, String lastName_) {
+		public AuthorName(String firstName_, String middleName_, String lastName_) {
 			this.firstName = firstName_;
+			this.middleName = middleName_;
 			this.lastName = lastName_;
+		}
+		
+		public AuthorName(String name) {
+			String[] authorNameAr = WordForms.getWhiteNonEmptySpaceNotAllPattern().split(name);
+			switch(authorNameAr.length) {
+			case 1:
+				this.lastName = authorNameAr[0];
+				break;
+			case 2:
+				this.firstName = authorNameAr[0];
+				this.lastName = authorNameAr[1];
+				break;
+			default:
+				this.firstName = authorNameAr[0];
+				//take care of case when more middle name is provided!
+				this.middleName = authorNameAr[1];
+				this.lastName = authorNameAr[authorNameAr.length - 1];
+			}
 		}
 		
 		/**
@@ -100,18 +123,63 @@ public class DBUtils {
 		
 		public String firstName() {
 			return this.firstName;
+		}		
+		public String middleName() {
+			return this.middleName;
 		}
-		
 		public String lastName() {
 			return this.lastName;
 		}
 	}
 	
 	/**
+	 * Recompile data tables for database.
+	 */
+	public static void recompileDatabase() {
+		reloadAuthorTable(DEFAULT_CONNECTION);
+	}
+	
+	/**
+	 * Repopulates data in author table, with updated data
+	 * on thm indices. 
+	 * Will delete existing author table and everything on it!
+	 */
+	public static void reloadAuthorTable(Connection conn) {
+		
+		//delete existing table
+		executeSqlStatement("DROP TABLE " + DBSearch.AUTHOR_TABLE_NAME, conn);
+		
+		//CREATE TABLE authorTb (thmId INT(20), author VARCHAR(20), content VARCHAR(200))
+		String stm = "CREATE TABLE "
+				+ DBSearch.AUTHOR_TABLE_NAME + "("
+				+ DBSearch.THM_ID_COL + " INT(10), "
+				//e.g. math3243235, or math-ph35399623
+				+ DBSearch.PAPER_ID_COL + " VARCHAR(15), "
+				+ DBSearch.FIRST_NAME_COL + " VARCHAR(15), " 
+				+ DBSearch.MIDDLE_NAME_COL + " VARCHAR(10), "
+				+ DBSearch.LAST_NAME_COL + " VARCHAR(15)"
+				+ ")";
+		
+		executeSqlStatement(stm, conn);
+		
+		/*
+		 * LOAD DATA INFILE "/sqldata/csv1.csv" INTO TABLE csv1 COLUMNS TERMINATED BY ',' ENCLOSED BY "'" ESCAPED BY "\\";
+		 */
+		String csvPath = FileUtils.getPathIfOnServlet(SearchMetaData.nameCSVDataPath());
+		stm = "LOAD DATA INFILE \"" + csvPath +"\" INTO TABLE "
+				+ DBSearch.AUTHOR_TABLE_NAME + " COLUMNS TERMINATED BY ',' "
+				+ "ENCLOSED BY \"'\" ESCAPED BY \"\\\\\" ;";
+		executeSqlStatement(stm, conn);
+		
+	}
+	
+	/**
 	 * Execute a mySql statement.
 	 * @param stm
 	 * @param ds
-	 * @return number of rows changed, or -1 on failure.
+	 * @return number of rows changed.
+	 * either (1) the row count for SQL Data Manipulation Language (DML) statements or 
+	 * (2) 0 for SQL statements that return nothing, or -1 on failure.
 	 */
 	public static int executeSqlStatement(String stmStr, Connection conn) {
 		//Connection conn = null;
@@ -130,7 +198,7 @@ public class DBUtils {
 			
 			e.printStackTrace();
 		}
-		return -1;
+		return STM_EXECUTATION_FAILURE;
 	}
 	
 	/**

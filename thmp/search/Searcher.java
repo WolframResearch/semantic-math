@@ -99,6 +99,13 @@ public interface Searcher<S> {
 		private static final String trueFluffWordsSetPath = "src/thmp/data/trueFluffWordsSet.dat";
 		private static final String literalSearchIndexMapPath = "src/thmp/data/literalSearchIndexMap.dat";
 		
+		/**Path to file containing database names data 
+		 * e.g. '1710.01696','Daniel','','Lemke' Note no thm index*/
+		private static final String nameRawDataPath = "src/thmp/data/metaDataStringNameDB.txt";
+		/**Path to csv file containing database names data 
+		 * e.g. '5523','1710.01696','Daniel','','Lemke'*/
+		private static final String nameCSVDataPath = "src/thmp/data/metaDataNameDB.csv";
+		
 		public static void set_gatheringDataBoolToTrue(){
 			//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
 			gatheringDataBool = true;
@@ -106,6 +113,20 @@ public interface Searcher<S> {
 		
 		public static boolean gatheringDataBool(){
 			return gatheringDataBool;
+		}
+		
+		/**Path to file containing database names data 
+		 * e.g. '1710.01696','Daniel','','Lemke' Note no thm index
+		 * */
+		public static String nameRawDataPath() {
+			return nameRawDataPath;
+		}
+		
+		/**Path to csv file containing database names data 
+		 * e.g. '5523','1710.01696','Daniel','','Lemke'
+		 * Current value: "src/thmp/data/metaDataNameDB.csv"*/
+		public static String nameCSVDataPath() {
+			return nameCSVDataPath;
 		}
 		
 		public static String wordThmIndexMMapSerialFilePath(){

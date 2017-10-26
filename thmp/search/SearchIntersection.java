@@ -32,6 +32,7 @@ import com.google.common.collect.TreeMultimap;
 
 import thmp.search.SearchCombined.ThmHypPair;
 import thmp.search.ThmHypPairGet.ThmHypPairBundle;
+import thmp.utils.DBUtils.AuthorName;
 import thmp.utils.DBUtils.ConjDisjType;
 import thmp.utils.FileUtils;
 import thmp.utils.GatherRelatedWords.RelatedWords;
@@ -174,18 +175,27 @@ public class SearchIntersection {
 			//but and/or could be more complicated with compositions!!
 			
 			ConjDisjType conjDisjType = ConjDisjType.DISJ;
-			String[] authorAr;
+			
+			List<AuthorName> authorList = new ArrayList<AuthorName>();
+			
 			if((m = AND_OR_PATT.matcher(authorStr)).matches()){
 				conjDisjType = ConjDisjType.getType(m.group(1));
+				String[] authorAr;
 				authorAr = AND_OR_PATT.split(authorStr);
+				for(String author : authorAr) {
+					authorList.add(new AuthorName(author));					
+				}				
 			}else {
-				authorAr = new String[] {authorStr};
+				authorList.add(new AuthorName(authorStr));
 			}
 			//by the regexes construction, there should be no spaces around authors
 			boolean hasSearched = false;
 			List<Integer> authorThmList = null;
+			Set<Integer> authorThmSet = null;
+			
 			try {
-				authorThmList = DBSearch.searchByAuthor(authorAr, conjDisjType);
+				authorThmList = DBSearch.searchByAuthor(authorList, conjDisjType);
+				authorThmSet = new HashSet<Integer>(authorThmList);
 			} catch (SQLException e) {
 				intersectionSearch(input, searchWordsSet, searchState, contextSearchBool, searchRelationalBool, 
 						numSearchResults);
@@ -193,8 +203,8 @@ public class SearchIntersection {
 			}
 			if(!hasSearched) {
 				intersectionSearch(input, searchWordsSet, searchState, contextSearchBool, searchRelationalBool, 
-						numSearchResults, authorThmList);
-			}			
+						numSearchResults, authorThmSet);
+			}
 		}else {
 			intersectionSearch(input, searchWordsSet, searchState, contextSearchBool, searchRelationalBool, numSearchResults);			
 		}
@@ -306,7 +316,7 @@ public class SearchIntersection {
 	@SafeVarargs
 	public static SearchState intersectionSearch(String input, Set<String> searchWordsSet, 
 			SearchState searchState, boolean contextSearchBool, boolean searchRelationalBool,
-			int numHighest, List<Integer>... dbThmList) {
+			int numHighest, Set<Integer>... dbThmSet) {
 		
 		if (WordForms.getWhiteEmptySpacePattern().matcher(input).matches()){
 			return null;
@@ -325,7 +335,6 @@ public class SearchIntersection {
 		SetMultimap<Integer, Integer> thmWordSpanMMap = HashMultimap.create();
 
 		List<String> inputWordsAr = WordForms.splitThmIntoSearchWords(input);
-		
 		
 		//int numHighest = NUM_NEAREST_VECS;
 		// whether to skip first token
@@ -388,7 +397,7 @@ public class SearchIntersection {
 						scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, wordThmIndexAddedMMap,
 								wordThmsIndexMMap1, 
 								threeGram, i, WordForms.TokenType.THREEGRAM,
-								singletonScoresAr, searchWordsSet);
+								singletonScoresAr, searchWordsSet, dbThmSet);
 						if (scoreAdded > 0) {
 							wordCountArray[i] += 1;
 							wordCountArray[i + 1] = wordCountArray[i + 1] + 1;
@@ -403,7 +412,7 @@ public class SearchIntersection {
 					scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, wordThmIndexAddedMMap, 
 							wordThmsIndexMMap1, twoGram, //nextWordCombined, 
 							i, WordForms.TokenType.TWOGRAM, singletonScoresAr,
-							searchWordsSet);
+							searchWordsSet, dbThmSet);
 					if (scoreAdded > 0) {
 						wordCountArray[i] += 1;
 						wordCountArray[i + 1] = wordCountArray[i + 1] + 1;
@@ -423,7 +432,7 @@ public class SearchIntersection {
 			// score of all words added.
 			word = inputWordsArUpdated[i];
 			scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, wordThmIndexAddedMMap, 
-					wordThmsIndexMMap1, word, i, WordForms.TokenType.SINGLETON, singletonScoresAr, searchWordsSet);
+					wordThmsIndexMMap1, word, i, WordForms.TokenType.SINGLETON, singletonScoresAr, searchWordsSet, dbThmSet);
 			if (scoreAdded > 0) {
 				wordCountArray[i] += 1;
 				totalWordsScore += scoreAdded;
@@ -773,6 +782,7 @@ public class SearchIntersection {
 			Multimap<String, Integer> wordThmIndexMMap,
 			String word, int wordIndexInThm, WordForms.TokenType tokenType,
 			int[] singletonScoresAr, Set<String> searchWordsSet //HERE add additional list for db-processed list, 
+			, Set<Integer> ...dbThmSet
 			) {
 		// update scores map
 		int curScoreToAdd = 0;
@@ -844,12 +854,19 @@ public class SearchIntersection {
 		// adjust curScoreToAdd, boost 2, 3-gram scores when applicable
 		curScoreToAdd = tokenType.adjustNGramScore(curScoreToAdd, singletonScoresAr, wordIndexInThm);
 
+		int dbThmSetArLen = dbThmSet.length;
+		
 		if (!wordThms.isEmpty() && curScoreToAdd != 0) {
 			wordThmIndexAddedMMap.putAll(word, wordThms);
 			if (DEBUG) {
 				System.out.println("SearchIntersection-Word added: " + word + ". Score: " + curScoreToAdd);
 			}
 			for (Integer thmIndex : wordThms) {
+				
+				if(dbThmSetArLen > 0 && !dbThmSet[0].contains(thmIndex)) {
+					continue;
+				}
+				
 				// skip thm if current word already been covered by previous
 				// 2/3-gram
 				if (tokenType.ifAddedToMap(thmWordSpanMMap, thmIndex, wordIndexInThm)){
@@ -881,7 +898,7 @@ public class SearchIntersection {
 			}
 		}		
 		addRelatedWordsThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, wordIndexInThm, tokenType, scoreAdded,
-				relatedWordsList);
+				relatedWordsList, dbThmSet);
 		return scoreAdded;
 	}
 
@@ -896,10 +913,12 @@ public class SearchIntersection {
 	 */
 	private static void addRelatedWordsThms(Map<Integer, Integer> thmScoreMap,
 			TreeMultimap<Integer, Integer> scoreThmMMap, Multimap<Integer, Integer> thmWordSpanMMap, int wordIndexInThm,
-			WordForms.TokenType tokenType, int scoreAdded, List<String> relatedWordsList) {
+			WordForms.TokenType tokenType, int scoreAdded, List<String> relatedWordsList, Set<Integer> ...dbThmSet) {
 		// add thms for related words found, with some reduction factor;
 		// make global after experimentation.
 		double RELATED_WORD_MULTIPLICATION_FACTOR = 4 / 5.0;
+		int dbThmSetArLen = dbThmSet.length;
+		
 		if (null != relatedWordsList) {
 			// wordScore = wordsScoreMap.get(word);
 			int relatedWordScore = (int) Math.ceil(scoreAdded * RELATED_WORD_MULTIPLICATION_FACTOR);
@@ -915,7 +934,11 @@ public class SearchIntersection {
 					}
 					relatedWordScore = (int) Math.ceil(score * RELATED_WORD_MULTIPLICATION_FACTOR);
 				}
+				
 				for (Integer thmIndex : relatedWordThms) {
+					if(dbThmSetArLen > 0 && !dbThmSet[0].contains(thmIndex)) {
+						continue;
+					}
 					// related words count towards span, only if the original
 					// word not added.
 					if (!tokenType.ifAddedToMap(thmWordSpanMMap, thmIndex, wordIndexInThm)) {
