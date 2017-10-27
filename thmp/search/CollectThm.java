@@ -1149,7 +1149,7 @@ public class CollectThm {
 		 * Retrieves map of scores corresponding to words
 		 * @return
 		 */
-		public static ImmutableMap<String, Integer> get_wordsScoreMapNoAnno(){
+		public static ImmutableMap<String, Integer> get_wordsScoreMap(){
 			return wordsScoreMapNoAnno;
 		}
 		
@@ -1165,7 +1165,7 @@ public class CollectThm {
 		 * Retrieves map of words with their document-wide frequencies.
 		 * @return
 		 */
-		public static ImmutableMap<String, Integer> get_docWordsFreqMapNoAnno(){
+		public static ImmutableMap<String, Integer> get_docWordsFreqMap(){
 			return docWordsFreqMapNoAnno; 
 		}
 

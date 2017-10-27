@@ -309,8 +309,10 @@ public class SearchCombined {
 		// tokens and their span scores. And communicate parseState
 		//among different searchers.
 		SearchState searchState = new SearchState();
-		SearchIntersection.intersectionSearch(input, searchWordsSet, searchState, searchContextBool, 
-				searchRelationalBool, numCommonVecs);
+		/*SearchIntersection.intersectionSearch(input, searchWordsSet, searchState, searchContextBool, 
+				searchRelationalBool, numCommonVecs);*/		
+		SearchIntersection.getHighestThmStringList(input, searchWordsSet,
+				searchState, searchContextBool, searchRelationalBool);
 		
 		String[] inputAr = WordForms.getWhiteNonEmptySpacePattern().split(input);		
 		//context search doesn't do anything if only one token.
@@ -321,7 +323,7 @@ public class SearchCombined {
 		
 		List<Integer> bestCommonVecsList = searchState.intersectionVecList();
 		
-		if(null == FileUtils.getServletContext()){			
+		if(true || null == FileUtils.getServletContext()){			
 			//experiment with this constant!
 			if(searchState.largestWordSpan() < searchWordsSet.size()*2./3){
 				//Only do SVD if no good intersection matches, determine if good match based on span scores.

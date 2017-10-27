@@ -100,7 +100,7 @@ public class ProjectionMatrix {
 				continue;
 			}
 			String paperIdStr = m.group(1);
-			namesMap.put(paperIdStr, dataStr);
+			namesMap.put(paperIdStr, dataStr.toLowerCase());
 		}
 		
 		return namesMap;

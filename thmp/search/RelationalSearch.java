@@ -67,7 +67,7 @@ public class RelationalSearch implements Searcher<Set<Integer>>{
 			
 			thm = thm.toLowerCase();
 			int NUM_NEAREST = RELATION_SEARCH_NUM_NEAREST;
-			String queryVecStr = TriggerMathThm2.createQueryNoAnno(thm);
+			String queryVecStr = TriggerMathThm2.createQueryVec(thm);
 			List<Integer> nearestVecList = ThmSearch.ThmSearchQuery.findNearestVecs(queryVecStr, NUM_NEAREST);
 			
 			if(nearestVecList.isEmpty()){

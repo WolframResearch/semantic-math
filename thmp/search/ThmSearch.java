@@ -151,14 +151,7 @@ public class ThmSearch {
 			//ml.evaluate("AppendTo[$ContextPath, \""+ TermDocumentMatrix.PROJECTION_MX_CONTEXT_NAME +"\"];");
 			//ml.discardAnswer();
 			
-			/*String vMx;
-			if(USE_FULL_MX){
-				vMx = TermDocumentMatrix.FULL_TERM_DOCUMENT_MX_NAME;
-				evaluateWLCommand(ml, vMx + "= Transpose["+ vMx + "]");
-			}else{
-				vMx = TermDocumentMatrix.COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME;
-			}*/
-			//ml.evaluate("Nearest["+vMx+"->Range[Dimensions["+vMx+"][[1]]]
+			
 			logger.info("Names[\"TermDocumentMatrix`*\"] " +evaluateWLCommand(ml, "Names[\"TermDocumentMatrix`*\"]", true, true));			
 			//should uncompress using this code here.
 			Expr vecLengthExpr = evaluateWLCommand(ml, "Length[" + TermDocumentMatrix.PROJECTION_MX_CONTEXT_NAME +"corMx]", true, true);
@@ -247,10 +240,10 @@ public class ThmSearch {
 		for(String[] thmQueryPair : thmAndQueryStringAr){
 			//get distancecs
 			String thm = thmQueryPair[0];
-			String thmVecStr = TriggerMathThm2.createQueryNoAnno(thm);
+			String thmVecStr = TriggerMathThm2.createQueryVec(thm);
 			//System.out.println("thmVecStr : " +thmVecStr);
 			String query = thmQueryPair[1];
-			String queryVecStr = TriggerMathThm2.createQueryNoAnno(query);
+			String queryVecStr = TriggerMathThm2.createQueryVec(query);
 			/*applies projection mx. Need to Transpose, so rows represent thms. queryVecStrTranspose is column vec.
 			 * So are q0 and q.*/
 			evaluateWLCommand(medium, "queryVecStrTranspose= Transpose[" + queryVecStr + "]; "
@@ -461,7 +454,7 @@ public class ThmSearch {
 		
 		while(sc.hasNextLine()){
 			String thm = sc.nextLine();
-			query = TriggerMathThm2.createQueryNoAnno(thm);
+			query = TriggerMathThm2.createQueryVec(thm);
 			if(WordForms.getWhiteEmptySpacePattern().matcher(query).matches()){
 				System.out.println("I've got nothing for you yet. Try again.");
 				continue;
@@ -482,7 +475,7 @@ public class ThmSearch {
 	public static List<Integer> findNearestThmsInTermDocMx(String thm, int numVec){
 		
 		List<Integer> nearestVecList = null;		
-		String query = TriggerMathThm2.createQueryNoAnno(thm);
+		String query = TriggerMathThm2.createQueryVec(thm);
 		//String msg = "ThmSearch - query String formed. ";
 		//logger.info(msg);
 		//System.out.println(msg);
@@ -490,11 +483,10 @@ public class ThmSearch {
 		if(WordForms.getWhiteEmptySpacePattern().matcher(query).matches()){
 			return Collections.emptyList();
 		}
-		System.out.println("ThmSearch.java: about to call findNearestVecs()");
+		//System.out.println("ThmSearch.java: about to call findNearestVecs()");
 		//processes query
 		nearestVecList = findNearestVecs(query, numVec);
 		
-		//System.out.print("Within ThmSearch, nearestVecList: " + nearestVecList);
 		return nearestVecList;
 	}
 	

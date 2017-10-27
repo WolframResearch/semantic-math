@@ -46,7 +46,7 @@ public class DBSearch {
 		//should pass in first name last name instead!
 		
 		if(authorList.size() == 0) {
-			throw new IllegalArgumentException("Array of authors cannot be empty!");
+			throw new IllegalArgumentException("List of authors cannot be empty!");
 		}
 		
 		List<Integer> dbList = new ArrayList<Integer>();
@@ -68,17 +68,21 @@ public class DBSearch {
 		for(AuthorName author : authorList) {
 			String lastName = author.lastName();
 			querySb.append(" ").append(LAST_NAME_COL).append("='").append(lastName).append("' ").append(relationStr);
+			
+			//for first or middle initial: SELECT thmId FROM authorTb WHERE SUBSTR(firstName,1,1)="z";
+			
 		}
-		querySb.delete(querySb.length() - relationStr.length(), querySb.length() - 1);
-		querySb.append("');");
+		querySb.delete(querySb.length() - relationStr.length(), querySb.length());
+		querySb.append(");");
+		logger.info("searching author - query created: "+querySb);
 		
 		PreparedStatement stm = conn.prepareStatement(querySb.toString());
 		ResultSet rs = stm.executeQuery();
-		System.out.println("rs: "+rs);
+		//System.out.println("rs: "+rs);
 		while(rs.next()) {
 			int thmId = rs.getInt(1);
 			//thmId col first column
-			System.out.println("thmId "+thmId);
+			//System.out.println("thmId "+thmId);
 			dbList.add(thmId);
 		}
 		

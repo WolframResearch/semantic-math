@@ -2,6 +2,7 @@ package thmp.utils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -136,7 +137,18 @@ public class DBUtils {
 	 * Recompile data tables for database.
 	 */
 	public static void recompileDatabase() {
-		reloadAuthorTable(DEFAULT_CONNECTION);
+		
+		ResultSet rs = executeSqlStatement("SELECT @@GLOBAL.sql_mode;", DEFAULT_CONNECTION);
+		try {
+		while(rs.next()) {
+			logger.info ("sql_mode results: " + rs.getString(1));
+			
+		}
+		} catch (SQLException e) {
+			logger.error("SQLException when getting GLOABL.sql_mode "+e);
+		}
+		//outsource below to separate shell script!!
+		//reloadAuthorTable(DEFAULT_CONNECTION);
 	}
 	
 	/**
@@ -147,7 +159,7 @@ public class DBUtils {
 	public static void reloadAuthorTable(Connection conn) {
 		
 		//delete existing table
-		executeSqlStatement("DROP TABLE " + DBSearch.AUTHOR_TABLE_NAME, conn);
+		manipulateData("DROP TABLE " + DBSearch.AUTHOR_TABLE_NAME, conn);
 		
 		//CREATE TABLE authorTb (thmId INT(20), author VARCHAR(20), content VARCHAR(200))
 		String stm = "CREATE TABLE "
@@ -155,33 +167,72 @@ public class DBUtils {
 				+ DBSearch.THM_ID_COL + " INT(10), "
 				//e.g. math3243235, or math-ph35399623
 				+ DBSearch.PAPER_ID_COL + " VARCHAR(15), "
-				+ DBSearch.FIRST_NAME_COL + " VARCHAR(15), " 
+				+ DBSearch.FIRST_NAME_COL + " VARCHAR(20), " 
 				+ DBSearch.MIDDLE_NAME_COL + " VARCHAR(10), "
-				+ DBSearch.LAST_NAME_COL + " VARCHAR(15)"
-				+ ")";
+				+ DBSearch.LAST_NAME_COL + " VARCHAR(22)"
+				+ ");";
 		
-		executeSqlStatement(stm, conn);
+		manipulateData(stm, conn);
 		
+		ResultSet rs = executeSqlStatement("SELECT @@GLOBAL.sql_mode;", conn);
+		try {
+		while(rs.next()) {
+			logger.info ("sql_mode results: " + rs.getString(1));
+			
+		}
+		} catch (SQLException e) {
+			logger.error("SQLException when getting GLOABL.sql_mode "+e);
+		}
 		/*
 		 * LOAD DATA INFILE "/sqldata/csv1.csv" INTO TABLE csv1 COLUMNS TERMINATED BY ',' ENCLOSED BY "'" ESCAPED BY "\\";
+		 * 
+		 * LOAD DATA INFILE "/usr/share/tomcat/webapps/theoremSearchTest/src/thmp/data/metaDataNameDB.csv" INTO TABLE authorTb 
+		 * COLUMNS TERMINATED BY "," OPTIONALLY ENCLOSED BY "'" ESCAPED BY "\\";
 		 */
 		String csvPath = FileUtils.getPathIfOnServlet(SearchMetaData.nameCSVDataPath());
 		stm = "LOAD DATA INFILE \"" + csvPath +"\" INTO TABLE "
-				+ DBSearch.AUTHOR_TABLE_NAME + " COLUMNS TERMINATED BY ',' "
-				+ "ENCLOSED BY \"'\" ESCAPED BY \"\\\\\" ;";
-		executeSqlStatement(stm, conn);
+				+ DBSearch.AUTHOR_TABLE_NAME + " COLUMNS TERMINATED BY \",\" "
+				+ "OPTIONALLY ENCLOSED BY \"'\" ESCAPED BY \"\\\\\" ;";
+		manipulateData(stm, conn);
 		
 	}
 	
 	/**
-	 * Execute a mySql statement.
+	 * Execute a mySql statement, for queries that should return a ResultSet,
+	 * e.g. SELECT.
+	 * @param stm
+	 * @param ds
+	 * @return ResultSet of executing the query.
+	 */
+	public static ResultSet executeSqlStatement(String stmStr, Connection conn) {
+		//Connection conn = null;
+		try {
+			//conn = ds.getConnection();
+			//e.g. CREATE TABLE authorTb (thmId INT(20), author VARCHAR(20), content VARCHAR(200))
+			//or INSERT INTO authorTb (thmId, author, content) VALUES (1, 's', 'content')
+			PreparedStatement stm = conn.prepareStatement(stmStr);
+			ResultSet rs = stm.executeQuery();
+			//System.out.println("restultSet "+rs);
+			return rs;
+			//stm = conn.prepareStatement("INSERT INTO authorTb (thmId, author, content)"
+			//		+ "VALUES (1, 's', 'content')");
+			
+		} catch (SQLException e) {
+			
+			logger.error("SQLException while executing " + stmStr + " cause " + e);
+		}		
+		return null;
+	}
+	
+	/**
+	 * Execute a mySql data manipulation statement, e.g. INSERT, CREATE, DELETE, etc.
 	 * @param stm
 	 * @param ds
 	 * @return number of rows changed.
-	 * either (1) the row count for SQL Data Manipulation Language (DML) statements or 
-	 * (2) 0 for SQL statements that return nothing, or -1 on failure.
+			 * either (1) the row count for SQL Data Manipulation Language (DML) statements or 
+			 * (2) 0 for SQL statements that return nothing, or -1 on failure.
 	 */
-	public static int executeSqlStatement(String stmStr, Connection conn) {
+	public static int manipulateData(String stmStr, Connection conn) {
 		//Connection conn = null;
 		try {
 			//conn = ds.getConnection();
@@ -189,27 +240,16 @@ public class DBUtils {
 			//or INSERT INTO authorTb (thmId, author, content) VALUES (1, 's', 'content')
 			PreparedStatement stm = conn.prepareStatement(stmStr);
 			int rs = stm.executeUpdate();
-			System.out.println("restultSet "+rs);
+			//System.out.println("restultSet "+rs);
 			return rs;
 			//stm = conn.prepareStatement("INSERT INTO authorTb (thmId, author, content)"
 			//		+ "VALUES (1, 's', 'content')");
 			
 		} catch (SQLException e) {
 			
-			e.printStackTrace();
-		}
+			logger.error("SQLException while execute " + stmStr + " cause " + e);
+		}		
 		return STM_EXECUTATION_FAILURE;
-	}
-	
-	/**
-	 * Functions that use database to refine search results from other algorithms.
-	 * 
-	 * @deprecated see DBSearch class
-	 */
-	public static void searchByAuthor(List<String> authorList, List<Integer> thmsList) {
-		
-		//take intersection of results with sql query results
-		
 	}
 	
 	/**

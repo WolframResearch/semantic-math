@@ -155,7 +155,7 @@ public class DetectHypothesis {
 		FileUtils.set_dataGenerationMode();	
 		/*The "next time" form previous time refers to current run in this static initializer.*/
 		//ALL_THM_WORDS_LIST = new ArrayList<String>(CollectThm.ThmWordsMaps.get_contextVecWordsNextTimeMap().keySet());
-		ALL_THM_WORDS_FREQ_MAP = CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno();//.get_contextVecWordsNextTimeMap();
+		ALL_THM_WORDS_FREQ_MAP = CollectThm.ThmWordsMaps.get_docWordsFreqMap();//.get_contextVecWordsNextTimeMap();
 		//this SHOULD be done at the end! So keep in sync with the others .dat, so don't need to parse everything twice.
 		//Then use current list, but wordsList's from previous runs.
 		//ThmSearch.TermDocumentMatrix.createTermDocumentMatrixSVD();	

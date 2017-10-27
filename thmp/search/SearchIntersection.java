@@ -1,6 +1,5 @@
 package thmp.search;
 
-import java.math.BigInteger;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -60,9 +59,6 @@ public class SearchIntersection {
 	 */
 	private static final ImmutableMap<String, Integer> wordsScoreMap;
 
-	//**private static final ImmutableList<String> thmList;
-	// private static final ImmutableList<String> webDisplayThmList;
-
 	/**
 	 * Multimap of words, and the theorems (their indices) in thmList, the word
 	 * shows up in.
@@ -85,7 +81,7 @@ public class SearchIntersection {
 	 */
 	static {
 		// System.out.println(thmList);
-		wordsScoreMap = CollectThm.ThmWordsMaps.get_wordsScoreMapNoAnno();
+		wordsScoreMap = CollectThm.ThmWordsMaps.get_wordsScoreMap();
 		// System.out.println(CollectThm.get_wordsScoreMap());
 		//wordThmMMap = CollectThm.ThmWordsMaps.get_wordThmsMMap();//HERE
 		wordThmsIndexMMap1 = CollectThm.ThmWordsMaps.get_wordThmsMMapNoAnno();
@@ -197,6 +193,7 @@ public class SearchIntersection {
 				authorThmList = DBSearch.searchByAuthor(authorList, conjDisjType);
 				authorThmSet = new HashSet<Integer>(authorThmList);
 			} catch (SQLException e) {
+				logger.error("SQLException when searching for author! " + e);
 				intersectionSearch(input, searchWordsSet, searchState, contextSearchBool, searchRelationalBool, 
 						numSearchResults);
 				hasSearched = true;

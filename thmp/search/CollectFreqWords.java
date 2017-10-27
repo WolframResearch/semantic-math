@@ -177,7 +177,7 @@ public class CollectFreqWords {
 		 */
 		private static ImmutableSet<String> get_nonMathFluffWords() {
 			Set<String> nonMathFluffWordsSet = new HashSet<String>();
-			ImmutableMap<String, Integer> docWordsFreqMap = CollectThm.ThmWordsMaps.get_docWordsFreqMapNoAnno();
+			ImmutableMap<String, Integer> docWordsFreqMap = CollectThm.ThmWordsMaps.get_docWordsFreqMap();
 			// System.out.println(docWordsFreqMap);
 			// iterate over the math words, remove from wordPosMap words that
 			// have freq lower than 150
