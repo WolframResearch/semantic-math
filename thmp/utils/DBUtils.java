@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
 
 import javax.sql.DataSource;
 
@@ -271,7 +270,8 @@ public class DBUtils {
 		ds.setPortNumber(portNum);
 		ds.setCreateDatabaseIfNotExist(true);
 		//System.out.println("ds.getCreateDatabaseIfNotExist() "+ds.getCreateDatabaseIfNotExist());
-		
+		//should actually use import org.apache.tomcat.jdbc.pool.DataSource;
+		//and create this on servlet code
 		ds.setDatabaseName(dbName);		
 		return ds;
 	}
