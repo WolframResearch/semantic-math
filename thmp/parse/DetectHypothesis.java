@@ -374,7 +374,7 @@ public class DetectHypothesis {
 		String parsedExpressionStringFileStr = DetectHypothesis.parsedExpressionStringFileStr; //parsedExpressionStrList
 		String allThmsStringFileStr = DetectHypothesis.allThmsStringFileStr; //allThmsStrWithSpaceList
 		
-		static final String texFilesSerializedListFileName = "texFileNamesSetList.dat";
+		static final String texFilesSerializedListFileName = Searcher.SearchMetaData.texFilesSerializedListFileName;
 		
 		//where to put the full dim TD matrix
 		String fullTermDocumentMxPath;
@@ -482,7 +482,6 @@ public class DetectHypothesis {
 		List<ThmHypPair> thmHypPairList = new ArrayList<ThmHypPair>();
 		Stats stats = new Stats();
 		if(inputFile.isDirectory()){
-			//if(true) throw new IllegalStateException("input is directory! texFileNamesMap: " + texFileNamesMap);
 			//get all filenames from dir. Get tex file names from serialized file data.
 			//File[] files = inputFile.listFiles();			
 				final boolean scrapeThmNames = FileUtils.SCRAPE_THM_NAME_Q;

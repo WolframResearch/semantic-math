@@ -5,9 +5,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 import org.apache.logging.log4j.LogManager;
@@ -334,7 +336,7 @@ public class TriggerMathThm2 {
 		int thmCounter = 0;
 		while (defThmListIter.hasNext()) {
 			
-			List<String> termsList = new ArrayList<String>();
+			Set<String> termsSet = new HashSet<String>();
 			String thm = defThmListIter.next().getEntireThmStr();
 			//get collection of words.
 			List<String> thmAr = WordForms.splitThmIntoSearchWords(thm.toLowerCase());
@@ -352,7 +354,7 @@ public class TriggerMathThm2 {
 				String term = thmAr.get(i);
 				double newNorm;
 				//this also normalizes the word
-				newNorm = addToNorm(wordsScoreMap, indexScorePairList, termsList, norm, i, term, queryVecLen);
+				newNorm = addToNorm(wordsScoreMap, indexScorePairList, termsSet, norm, i, term, queryVecLen);
 				if(newNorm - norm > highestWeight){
 					highestWeight = newNorm - norm;
 				}
@@ -360,13 +362,13 @@ public class TriggerMathThm2 {
 				if(i < thmArSz-1){
 					String nextTermCombined = term + " " + thmAr.get(i+1);
 					nextTermCombined = WordForms.normalizeTwoGram(nextTermCombined);
-					newNorm = addToNorm(wordsScoreMap, indexScorePairList, termsList, newNorm, i, 
+					newNorm = addToNorm(wordsScoreMap, indexScorePairList, termsSet, newNorm, i, 
 							nextTermCombined, queryVecLen);	
 					//System.out.println("combined word: " + nextTermCombined + ". norm: " + newNorm);
 					
 					if(i < thmArSz-2){
 						String threeTermsCombined = nextTermCombined + " " + thmAr.get(i+2);
-						newNorm = addToNorm(wordsScoreMap, indexScorePairList, termsList, newNorm, i, 
+						newNorm = addToNorm(wordsScoreMap, indexScorePairList, termsSet, newNorm, i, 
 								threeTermsCombined, queryVecLen);
 					}
 				}
@@ -415,6 +417,8 @@ public class TriggerMathThm2 {
 				coordinatesList.add(new int[]{keyWordIndex, thmCounter}) ;
 				weightsList.add(newScore);
 			}*/
+			List<String> termsList = new ArrayList<String>(termsSet);
+			
 			allTermsList.add(termsList);
 			thmCounter++;
 		}
@@ -534,7 +538,7 @@ public class TriggerMathThm2 {
 	 * @param wordsScoreMap
 	 * @param triggerTermsVec
 	 * @param indexScoreArList List of arrays of two, index, and score.
-	 * @param termList List of uniformized terms gathered for current text.
+	 * @param termCol List of uniformized terms gathered for current text.
 	 * @param norm
 	 * @param i
 	 * @param term
@@ -542,7 +546,7 @@ public class TriggerMathThm2 {
 	 * @return
 	 */
 	private static double addToNorm(Map<String, Integer> wordsScoreMap,
-			List<IndexScorePair> indexScorePairList, List<String> termList,
+			List<IndexScorePair> indexScorePairList, Collection<String> termCol,
 			double norm, int i, String term, int queryVecLen) {
 		Integer termScore = wordsScoreMap.get(term);
 		//get singular forms		
@@ -584,7 +588,7 @@ public class TriggerMathThm2 {
 			
 			//keywordDict starts indexing from 0!
 			indexScorePairList.add(new IndexScorePair(rowIndex, termScore));
-			termList.add(term);
+			termCol.add(term);
 		}
 		//add vector entries for related words
 		if(null != termRelatedWordsList){

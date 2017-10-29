@@ -108,6 +108,42 @@ public class FileUtils {
 	}
 	
 	/**
+	 * Read String from source file.
+	 * Defaults to UTF-8 encoding, unless specified otherwise.
+	 * @param filePath
+	 * @param charset_
+	 * @return
+	 */
+	public static String readStrFromFile(String filePath, Charset... charset_){
+		StringBuilder sb = new StringBuilder(5000);
+		Charset charset = charset_.length > 0 ? charset_[0] : Charset.forName("UTF-8");
+		try {
+			FileInputStream fileIS = null;
+			FileReader fileReader = null;
+			BufferedReader bReader = null;
+			try{
+				fileIS = new FileInputStream(filePath);
+				InputStreamReader inputStreamReader = new InputStreamReader(fileIS, charset);
+				bReader = new BufferedReader(inputStreamReader);
+				
+				String line;
+				while((line = bReader.readLine()) != null){
+					sb.append(line);
+				}					
+			}finally{
+				silentClose(fileIS);
+				silentClose(bReader);
+				silentClose(fileReader);
+			}
+		} catch (FileNotFoundException e) {
+			throw new IllegalStateException("FileNotFoundException while reading lines from file", e);
+		} catch (IOException e) {
+			throw new IllegalStateException("IOException while reading lines from file", e);
+		}	
+		return sb.toString();
+	}
+	
+	/**
 	 * Read lines from source files.
 	 * Defaults to UTF-8 encoding, unless specified otherwise.
 	 * @param fileName
@@ -127,7 +163,7 @@ public class FileUtils {
 		List<String> lines = new ArrayList<String>();
 		Charset charset = charset_.length > 0 ? charset_[0] : Charset.forName("UTF-8");
 		
-			try {
+		try {
 				FileInputStream fileIS = null;
 				FileReader fileReader = null;
 				BufferedReader bReader = null;

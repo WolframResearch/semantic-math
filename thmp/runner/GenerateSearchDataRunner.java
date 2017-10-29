@@ -52,9 +52,18 @@ public class GenerateSearchDataRunner {
 		}
 	}
 	
+	/**
+	 * At least one arg required, for path to tar, optional arg to specify whether to 
+	 * collect msc data, with "msc" option
+	 * @param args
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
 	public static void main(String[] args) throws FileNotFoundException, IOException, InterruptedException{
+		int argsLen = args.length;
 		//read in location of source file
-		if(0 == args.length){
+		if(0 == argsLen){
 			System.out.println("Please supply a file to read data sources from!");
 			return;
 		}
@@ -62,10 +71,13 @@ public class GenerateSearchDataRunner {
 		List<String> fileNamesList = extractNamesFromFile(args[0]);
 		System.out.println("GenerateSearchDataRunner-fileNamesList: " + fileNamesList);
 		
-		runScripts(fileNamesList);			
-		
+		if(2 == argsLen && args[1].toLowerCase().equals("msc")) {
+			runScripts(fileNamesList, true);
+		}else {
+			runScripts(fileNamesList);			
+		}
 	}
-	
+
 	/**
 	 * A fileName refers to name (including path) of tar file, 
 	 * e.g. /prospectus/crawling/_arxiv/src/arXiv_src_0308_001.tar
@@ -74,16 +86,29 @@ public class GenerateSearchDataRunner {
 	 * @throws InterruptedException
 	 */
 	private static void runScripts(List<String> fileNamesList) throws IOException, InterruptedException{
+		runScripts(fileNamesList, false);
+	}
+	
+	/**
+	 * A fileName refers to name (including path) of tar file, 
+	 * e.g. /prospectus/crawling/_arxiv/src/arXiv_src_0308_001.tar
+	 * @param fileNamesList
+	 * @param gatherMscData Whether to gather data for msc classifier.
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
+	private static void runScripts(List<String> fileNamesList, boolean gatherMscData) throws IOException, InterruptedException{
 		
 		long beforeTime = System.currentTimeMillis();
-		for(String fileName : fileNamesList){			
-			//ProcessBuilder pb = new ProcessBuilder("/home/usr0/yihed/thm/unpack2.sh", fileName);
-			//File workingDir = new File("/home/usr0/yihed/thm");
-			//pb.directory(workingDir);
-			//pb.start();
+		
+		if(gatherMscData) {
+			CreateMscVecs.wordsScoreMapToJson();
+		}
+		
+		for(String fileName : fileNamesList){		
 			
-			//first argument to generateSearchData takes form e.g. 0208_001Untarred/0208
-			//a fileName takes the form e.g. /prospectus/crawling/_arxiv/src/arXiv_src_1412_017.tar.
+			//Want to create, first argument to generateSearchData takes form e.g. 0208_001Untarred/0208
+			/* A fileName takes the form e.g. /prospectus/crawling/_arxiv/src/arXiv_src_1412_017.tar.*/
 			int fileNameLen = fileName.length();
 			if(fileNameLen < 12){
 				logger.error("filename length should not be smaller than 12.");
@@ -92,55 +117,58 @@ public class GenerateSearchDataRunner {
 			String dirNameRoot = fileName.substring(fileNameLen-12, fileNameLen-4);
 			/*the script name must coincide with that in both bash scripts.	*/	
 			String fileDir;
-			final boolean scrapeThmName = FileUtils.SCRAPE_THM_NAME_Q;
-			if(scrapeThmName) {
+			//final boolean scrapeThmName = FileUtils.SCRAPE_THM_NAME_Q;
+			/*if(scrapeThmName) {
 				fileDir = dirNameRoot + "Untarred1" + File.separator 
 						+ fileName.substring(fileNameLen-12, fileNameLen-8);
-			}else {
+			}else {*/
 				fileDir = dirNameRoot + "Untarred" + File.separator 
 						+ fileName.substring(fileNameLen-12, fileNameLen-8);
-			}
+			//}
 			
 			//skip untar'ing if directory already exists
 			//don't skip! in case the files had been deleted
 			//if(!(new File(fileDir)).exists()){
 				Runtime rt = Runtime.getRuntime();
+				/*script that unpacks the file, deletes non-tex files, and create map of files that 
+				 * should be processed. */
 				Process pr = rt.exec(UNPACK_SCRIPT_FILE_PATH + fileName);			
 				FileUtils.waitAndPrintProcess(pr);
 				/*the script name must coincide with that in both bash scripts.	*/	
 				System.out.println("Done unpacking file " + fileName + ". Starting to generate search data");
 			//}
-			
-			DetectHypothesis.Runner.generateSearchData(new String[]{fileDir, 
-					TermDocumentMatrix.DATA_ROOT_DIR_SLASH + TermDocumentMatrix.PROJECTION_MX_FILE_NAME,
-					Searcher.SearchMetaData.wordDocFreqMapPath()
-					//"src/thmp/data/termDocumentMatrixSVD.mx", "src/thmp/data/allThmWordsMap.dat"
+			if(!gatherMscData) {
+				DetectHypothesis.Runner.generateSearchData(new String[]{fileDir, 
+						TermDocumentMatrix.DATA_ROOT_DIR_SLASH + TermDocumentMatrix.PROJECTION_MX_FILE_NAME,
+						Searcher.SearchMetaData.wordDocFreqMapPath()
 					});
-			try {
-			//delete files to save disk space, but that would remove data that can be useful later <--
-			//just need to untar again if needed.
-			File[] fileDirFileAr = new File(fileDir).listFiles();
-			if(null != fileDirFileAr) {
-				for(File file : fileDirFileAr) {
-					//delete files except designated file names.
-					if(!FILES_TO_KEEP_REGEX.matcher(file.getName()).matches()) {
-						if(file.isDirectory()) {
-							//specify full path, since have own FileUtils class.
-							org.apache.commons.io.FileUtils.deleteDirectory(file);							
-						}else {
-							file.delete();
-						}
-					}					
-				}
+			}else {
+				//create msc classifier data.
+				CreateMscVecs.processFilesInTar(fileDir);				
 			}
+			
+			try {
+				//delete files to save disk space, but that would remove data that can be useful later <--
+				//just need to untar again if needed.
+				File[] fileDirFileAr = new File(fileDir).listFiles();
+				if(null != fileDirFileAr) {
+					for(File file : fileDirFileAr) {
+						//delete files except designated file names.
+						if(!FILES_TO_KEEP_REGEX.matcher(file.getName()).matches()) {
+							if(file.isDirectory()) {
+								//specify full path, since have own FileUtils class.
+								org.apache.commons.io.FileUtils.deleteDirectory(file);							
+							}else {
+								file.delete();
+							}
+						}					
+					}
+				}
 			}catch(Exception e) {
-				//catch exception, so to not interrupt data processing.
+				//catch exception, so to not interrupt data processing, since this is clean up phase.
 				logger.error("Exception while deleting files for " + fileName + e.getMessage());				
 			}
-			/*Runtime rt = Runtime.getRuntime();
-			Process pr = rt.exec("/home/usr0/yihed/thm/unpack2.sh " + fileName);			
-			FileUtils.waitAndPrintProcess(pr);			
-			FileUtils.findFilePathDirectory(fileDir);*/
+			
 			String timeStr = new SimpleDateFormat("yyyy_MM_dd_HH:mm").format(Calendar.getInstance().getTime());
 			System.out.println("Done generating search data for files in " + fileDir + " at " + timeStr);		
 		}

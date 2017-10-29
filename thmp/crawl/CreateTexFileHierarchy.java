@@ -40,8 +40,8 @@ public class CreateTexFileHierarchy {
 	/**
 	 * Should already be cd'd into directory with files that are *already* gun-zipped.
 	 * Assuming non-math files have been deleted already.
-	 * @param 
-	 * @param contentDirPath path to directory to drop tex files to. 
+	 * @param srcDirAbsPath path to directory to drop tex files to. E.g. 0323_2453Untarred/0323
+	 * ("$newDir""/""${newDir:0:4}")
 	 * Actually should keep track of the names of tex files. 
 	 * @return Set of filenames that are tex files.
 	 */
@@ -71,7 +71,7 @@ public class CreateTexFileHierarchy {
 				while(null != (line = br.readLine())){					
 					//System.out.println("CreateTexFileHiearchy - file info for file " + file.getName() + ": " + line);
 					if(UnzipFile2.TEX_PATTERN.matcher(line).matches() && !UnzipFile2.NONTEX_EXTENSION_PATTERN.matcher(line).matches()){
-						//is tex *file*, e.g. math0209381, or 353263467, so don't delte.
+						//is tex *file*, e.g. math0209381, or 353263467, so don't delete.
 						texFileNamesMap.put(fileAbsolutePath, fileName);
 						continue fileLoop;
 					}

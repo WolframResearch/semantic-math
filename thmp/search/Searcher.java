@@ -98,6 +98,7 @@ public interface Searcher<S> {
 		private static final String twoGramsFreqMapPath = "src/thmp/data/twoGramsMap.dat";
 		private static final String trueFluffWordsSetPath = "src/thmp/data/trueFluffWordsSet.dat";
 		private static final String literalSearchIndexMapPath = "src/thmp/data/literalSearchIndexMap.dat";
+		public static final String texFilesSerializedListFileName = "texFileNamesSetList.dat";
 		
 		/**Path to file containing database names data 
 		 * e.g. '1710.01696','Daniel','','Lemke' Note no thm index*/
