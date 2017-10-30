@@ -29,6 +29,7 @@ import javax.servlet.ServletContext;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.tomcat.jdbc.pool.DataSource;
 
 import com.wolfram.jlink.KernelLink;
 import com.wolfram.jlink.MathLinkException;
@@ -66,8 +67,11 @@ public class FileUtils {
 	private static final AtomicInteger DESERIAL_VERSION_NUM = new AtomicInteger(DESERIAL_VERSION_NUM_DEFAULT);
 	/*Should be set to true if currently generating data, */
 	private static boolean dataGenerationModeBool;	
-	//servletContext used when running from Tomcat
+	/**servletContext used when running from Tomcat. In current web container setting*/
 	private static ServletContext servletContext;
+	/*DataSource for current web container setting*/
+	private static DataSource dataSource;
+	
 	private static final String KERNEL_POOL_NAME = "General";
 	private static final String RELATED_WORDS_MAP_SERIAL_FILE_STR = "src/thmp/data/relatedWordsMap.dat";
 	//get kernel pool, then acquire kernel instance from the pool.			
@@ -192,10 +196,16 @@ public class FileUtils {
 		return lines;
 	}
 	
-	public static void setServletContext(ServletContext servletContext_){
+	/**
+	 * Sets servlet context and datasource for the web container setting.
+	 * @param servletContext_
+	 * @param dataSource
+	 */
+	public static void setServletContext(ServletContext servletContext_, DataSource dataSource_){
 		servletContext = servletContext_;
 		mspManager = (MSPManager)servletContext.getAttribute(MSPStatics.MSP_MANAGER_ATTR);
 		kernelPool = mspManager.getKernelPool(KERNEL_POOL_NAME);
+		dataSource = dataSource_;
 		logger.info("setServletContext - kernelPool.getKernels(): " + kernelPool.getKernels());
 		//IKernel kernel0=null;
 		/*for(Map.Entry<String, IKernel> k : kernelPool.getKernels().entrySet()){
@@ -205,8 +215,7 @@ public class FileUtils {
 		/*kernel0 = kernelPool.createKernel();
 		logger.info("kernel0 created : " + kernel0);
 		//IKernel kernel0 = kernelPool.getKernels().get(0);
-		try {		
-			
+		try {
 			kernel0.initialize();
 			kernelPool.registerKernel(kernel0);
 			logger.info("kernel0.evaluate(1+2) "+kernel0.evaluate("1+2"));
@@ -217,22 +226,18 @@ public class FileUtils {
 			logger.error("troubel registering and initializing");
 			throw new IllegalStateException(e);
 		}*/
-		/*try {
-			IKernel kernel0 = kernelPool.getKernels().get(0);
-			IKernel kernel1 = kernelPool.getKernels().get(1);
-			kernel0.initialize();
-			kernelPool.registerKernel(kernel0);
-			kernel1.initialize();
-			kernelPool.registerKernel(kernel1);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			logger.error("troubel registering and initializing");
-			throw new IllegalStateException(e);
-		}*/ 
 	}
 	
 	public static ServletContext getServletContext(){
 		return servletContext;
+	}
+	
+	/**
+	 * DataSource from web container.
+	 * @return
+	 */
+	public static javax.sql.DataSource getDataSource(){
+		return dataSource;
 	}
 	
 	/**

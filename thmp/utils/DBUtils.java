@@ -252,6 +252,25 @@ public class DBUtils {
 	}
 	
 	/**
+	 * Obtain datasource connection from as provided by web container 
+	 * DataSource pool.
+	 */
+	public static Connection getWebDSConnection() {
+		//MysqlDataSource ds = new MysqlDataSource();
+		DataSource ds = FileUtils.getDataSource();
+		Connection conn = null;
+		try {
+			Connection connWrapper = ds.getConnection();
+			conn = ((javax.sql.PooledConnection)connWrapper).getConnection();
+		} catch (SQLException e) {
+			logger.error("SQLException when getting pooled connection! " + e);
+			//e.printStackTrace();
+		}
+		
+		return conn;
+	}
+	
+	/**
 	 * Obtain datasource with prescribed params, create DB if none exists.
 	 * Default values are as follows:
 	 * @param user "root"
@@ -259,6 +278,7 @@ public class DBUtils {
 	 * @param serverName "localhost"
 	 * @param portNum "3306"
 	 * @return datasource that one can obtain Connections from.
+	 * @deprecated
 	 */
 	public static DataSource getDataSource(String dbName, String user, String pw, String serverName, 
 			int portNum) {
@@ -282,8 +302,9 @@ public class DBUtils {
 	 * @throws SQLException 
 	 */
 	public static Connection getNewDefaultDSConnection() throws SQLException {
-		return getDataSource(DBUtils.DEFAULT_DB_NAME, DBUtils.DEFAULT_USER, DBUtils.DEFAULT_PW, 
-				DBUtils.DEFAULT_SERVER, DBUtils.DEFAULT_PORT).getConnection();
+		return getWebDSConnection();
+		/*return getDataSource(DBUtils.DEFAULT_DB_NAME, DBUtils.DEFAULT_USER, DBUtils.DEFAULT_PW, 
+				DBUtils.DEFAULT_SERVER, DBUtils.DEFAULT_PORT).getConnection();*/
 	}
 	
 	/**
