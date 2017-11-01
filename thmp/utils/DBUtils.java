@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.regex.Pattern;
 
 import javax.sql.DataSource;
 
@@ -29,26 +31,27 @@ public class DBUtils {
 	
 	private static final int STM_EXECUTATION_FAILURE = -1;
 	
-	private static final Connection DEFAULT_CONNECTION;
+	//private static final Connection DEFAULT_CONNECTION;
 	private static final DataSource DEFAULT_DATASOURCE;
 	
 	private static final Logger logger = LogManager.getLogger(DBUtils.class);
 	
 	static {
-		DataSource defaultDS = null;
-		Connection defaultConn = null;
+		DataSource pooledDS = null;
+		//Connection defaultConn = null;
 		
-		try {
-			defaultDS = getDataSource(DBUtils.DEFAULT_DB_NAME, DBUtils.DEFAULT_USER, DBUtils.DEFAULT_PW, 
-					DBUtils.DEFAULT_SERVER, DBUtils.DEFAULT_PORT);
-			defaultConn = defaultDS.getConnection();
-		}catch(SQLException e) {
+		//try {
+			/*pooledDS = getDataSource(DBUtils.DEFAULT_DB_NAME, DBUtils.DEFAULT_USER, DBUtils.DEFAULT_PW, 
+					DBUtils.DEFAULT_SERVER, DBUtils.DEFAULT_PORT);*/
+			pooledDS = FileUtils.getPooledDataSource();
+			
+			//defaultConn = pooledDS.getConnection();
+		/*}catch(SQLException e) {
 			String msg = "SQLException when trying to establish default connection " + e.getMessage();
-			System.out.println(msg);
 			logger.error(msg);
-		}
-		DEFAULT_DATASOURCE = defaultDS;
-		DEFAULT_CONNECTION = defaultConn;
+		}*/
+		DEFAULT_DATASOURCE = pooledDS;
+		//DEFAULT_CONNECTION = defaultConn;
 	}
 	
 	/**
@@ -85,6 +88,8 @@ public class DBUtils {
 		private String firstName;
 		private String middleName;
 		private String lastName;	
+		private static final Pattern POINT_PATT = Pattern.compile("(.+)\\.");
+		private static final Pattern NAME_SPLIT_PATT = Pattern.compile("[.\\s]+");
 		
 		public AuthorName(String firstName_, String middleName_, String lastName_) {
 			this.firstName = firstName_;
@@ -93,7 +98,11 @@ public class DBUtils {
 		}
 		
 		public AuthorName(String name) {
-			String[] authorNameAr = WordForms.getWhiteNonEmptySpaceNotAllPattern().split(name);
+			String[] authorNameAr = NAME_SPLIT_PATT.split(name);
+			
+			this.firstName = "";
+			this.middleName = "";
+			this.lastName = "";
 			switch(authorNameAr.length) {
 			case 1:
 				this.lastName = authorNameAr[0];
@@ -108,17 +117,37 @@ public class DBUtils {
 				this.middleName = authorNameAr[1];
 				this.lastName = authorNameAr[authorNameAr.length - 1];
 			}
+			
 		}
 		
 		/**
-		 * First initial. Empty string if no first name in database.
+		 * Create new AuthorName object where:
+		 * Abbreviate first name to the first initial, remove middle name,
+		 * keep last name intact. 
+		 * Note first name can be empty string.
+		 * @return
+		 */
+		public AuthorName abbreviateName() {			
+			//String firstName = this.firstInitial();			
+			return new AuthorName(this.firstInitial(), "", this.lastName);
+		}
+		
+		/**
+		 * First initial. Empty string if no first name provided.
 		 * @return
 		 */
 		public String firstInitial() {
 			if(this.firstName.length() == 0) {
 				return "";
 			}
-			return this.firstName.substring(0, 0);
+			return this.firstName.substring(0, 1);
+		}
+		
+		public String middleInitial() {
+			if(this.middleName.length() == 0) {
+				return "";
+			}
+			return this.middleName.substring(0, 1);
 		}
 		
 		public String firstName() {
@@ -134,21 +163,21 @@ public class DBUtils {
 	
 	/**
 	 * Recompile data tables for database.
+	 * @deprecated do this in separate DB deployment!
 	 */
-	public static void recompileDatabase() {
+	/*public static void recompileDatabase() {
 		
 		ResultSet rs = executeSqlStatement("SELECT @@GLOBAL.sql_mode;", DEFAULT_CONNECTION);
 		try {
 		while(rs.next()) {
-			logger.info ("sql_mode results: " + rs.getString(1));
-			
+			logger.info ("sql_mode results: " + rs.getString(1));			
 		}
 		} catch (SQLException e) {
 			logger.error("SQLException when getting GLOABL.sql_mode "+e);
 		}
 		//outsource below to separate shell script!!
 		//reloadAuthorTable(DEFAULT_CONNECTION);
-	}
+	}*/
 	
 	/**
 	 * Repopulates data in author table, with updated data
@@ -252,22 +281,32 @@ public class DBUtils {
 	}
 	
 	/**
-	 * Obtain datasource connection from as provided by web container 
-	 * DataSource pool.
+	 * Obtain handle to datasource connection from as provided by web container 
+	 * Connections pool.
 	 */
-	public static Connection getWebDSConnection() {
+	public static Connection getPooledConnection() {
 		//MysqlDataSource ds = new MysqlDataSource();
-		DataSource ds = FileUtils.getDataSource();
-		Connection conn = null;
+		DataSource ds = FileUtils.getPooledDataSource();
+		Connection connHandle = null;
 		try {
-			Connection connWrapper = ds.getConnection();
-			conn = ((javax.sql.PooledConnection)connWrapper).getConnection();
+			Connection conn = ds.getConnection();
+			connHandle = ((javax.sql.PooledConnection)conn).getConnection();
 		} catch (SQLException e) {
 			logger.error("SQLException when getting pooled connection! " + e);
-			//e.printStackTrace();
 		}
-		
-		return conn;
+		return connHandle;
+	}
+	
+	/**
+	 * Closes handle to PooledConnection
+	 * @param conn
+	 */
+	public static void closePooledConnection(Connection conn) {
+		try {
+			conn.close();
+		} catch (SQLException e) {			
+			logger.error("SQLException when closing pooled connection! " + e);
+		}
 	}
 	
 	/**
@@ -302,7 +341,7 @@ public class DBUtils {
 	 * @throws SQLException 
 	 */
 	public static Connection getNewDefaultDSConnection() throws SQLException {
-		return getWebDSConnection();
+		return getPooledConnection();
 		/*return getDataSource(DBUtils.DEFAULT_DB_NAME, DBUtils.DEFAULT_USER, DBUtils.DEFAULT_PW, 
 				DBUtils.DEFAULT_SERVER, DBUtils.DEFAULT_PORT).getConnection();*/
 	}
@@ -312,10 +351,10 @@ public class DBUtils {
 	 * @return
 	 * @throws SQLException 
 	 */
-	public static Connection getDefaultDSConnection() {
+	/*public static Connection getDefaultDSConnection() {
 		//handle if default conn times out!!
 		return DEFAULT_CONNECTION;
-	}
+	}*/
 	
 	/**
 	 * Gets the default DataSource.

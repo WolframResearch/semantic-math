@@ -236,7 +236,7 @@ public class FileUtils {
 	 * DataSource from web container.
 	 * @return
 	 */
-	public static javax.sql.DataSource getDataSource(){
+	public static javax.sql.DataSource getPooledDataSource(){
 		return dataSource;
 	}
 	

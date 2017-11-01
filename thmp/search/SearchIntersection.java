@@ -180,17 +180,18 @@ public class SearchIntersection {
 				authorAr = AND_OR_PATT.split(authorStr);
 				for(String author : authorAr) {
 					authorList.add(new AuthorName(author));					
-				}				
+				}
 			}else {
 				authorList.add(new AuthorName(authorStr));
 			}
+			DBSearch.AuthorRelation authorRelation = new DBSearch.AuthorRelation(authorStr);
 			//by the regexes construction, there should be no spaces around authors
 			boolean hasSearched = false;
 			List<Integer> authorThmList = null;
 			Set<Integer> authorThmSet = null;
 			
 			try {
-				authorThmList = DBSearch.searchByAuthor(authorList, conjDisjType);
+				authorThmList = DBSearch.searchByAuthor(authorRelation, conjDisjType);
 				authorThmSet = new HashSet<Integer>(authorThmList);
 			} catch (SQLException e) {
 				logger.error("SQLException when searching for author! " + e);

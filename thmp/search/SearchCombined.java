@@ -155,7 +155,7 @@ public class SearchCombined {
 	public static void initializeSearchWithResource(ServletContext servletContext_){
 		CollectThm.setServletContext(servletContext_);
 		ProcessInput.setServletContext(servletContext_);
-		DBUtils.recompileDatabase();
+		//DBUtils.recompileDatabase();
 	}
 	
 	/**
@@ -323,7 +323,7 @@ public class SearchCombined {
 		
 		List<Integer> bestCommonVecsList = searchState.intersectionVecList();
 		
-		if(true || null == FileUtils.getServletContext()){			
+		if(null == FileUtils.getServletContext()){			
 			//experiment with this constant!
 			if(searchState.largestWordSpan() < searchWordsSet.size()*2./3){
 				//Only do SVD if no good intersection matches, determine if good match based on span scores.
