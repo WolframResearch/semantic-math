@@ -88,7 +88,6 @@ public class DBUtils {
 		private String firstName;
 		private String middleName;
 		private String lastName;	
-		private static final Pattern POINT_PATT = Pattern.compile("(.+)\\.");
 		private static final Pattern NAME_SPLIT_PATT = Pattern.compile("[.\\s]+");
 		
 		public AuthorName(String firstName_, String middleName_, String lastName_) {
@@ -120,6 +119,10 @@ public class DBUtils {
 			
 		}
 		
+		@Override
+		public String toString() {
+			return this.firstName + " " + this.middleName + " " + this.lastName;
+		}
 		/**
 		 * Create new AuthorName object where:
 		 * Abbreviate first name to the first initial, remove middle name,
@@ -221,8 +224,7 @@ public class DBUtils {
 		stm = "LOAD DATA INFILE \"" + csvPath +"\" INTO TABLE "
 				+ DBSearch.AUTHOR_TABLE_NAME + " COLUMNS TERMINATED BY \",\" "
 				+ "OPTIONALLY ENCLOSED BY \"'\" ESCAPED BY \"\\\\\" ;";
-		manipulateData(stm, conn);
-		
+		manipulateData(stm, conn);		
 	}
 	
 	/**
@@ -290,6 +292,7 @@ public class DBUtils {
 		Connection connHandle = null;
 		try {
 			Connection conn = ds.getConnection();
+			logger.info("conn.getClass(): " + conn.getClass());
 			connHandle = ((javax.sql.PooledConnection)conn).getConnection();
 		} catch (SQLException e) {
 			logger.error("SQLException when getting pooled connection! " + e);

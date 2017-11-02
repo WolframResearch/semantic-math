@@ -6,7 +6,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Pattern;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -14,6 +13,7 @@ import org.apache.logging.log4j.Logger;
 import thmp.utils.DBUtils;
 import thmp.utils.DBUtils.AuthorName;
 import thmp.utils.DBUtils.ConjDisjType;
+import thmp.utils.WordForms;
 /**
  * Search that relies on database, such as search by authors, within a 
  * given timeframe, etc.
@@ -55,18 +55,22 @@ public class DBSearch {
 			
 			this.rootNode = parseAuthorStr(userInput);
 			this.numAuthors = this.rootNode.numAuthors;
-			System.out.println("numAuthors "+this.numAuthors);
+			System.out.println("rootNote "+this.rootNode);
 			
 			int curLevelNameListSz = this.rootNode.childrenList.size();
 			int typeListSz = this.rootNode.childRelationList.size();
 			if(curLevelNameListSz != typeListSz+1) {
-				throw new IllegalArgumentException("Mismatched authors and conj/disj operators");
+				System.out.println("curLevelNameList " +this.rootNode.childrenList);
+				System.out.println("typeList " +this.rootNode.childRelationList);
+				throw new IllegalArgumentException("Mismatched authors and conj/disj operators: curLevelNameListSz, typeListSz+1: "
+						+ curLevelNameListSz + ", " + (typeListSz+1));
 			}
 			
 			//StringBuilder sqlSb = new StringBuilder(300);
 			//SELECT t1.thmId FROM (authorTb AS t1,authorTb AS t2) WHERE t1.author='author2' AND t2.author='author1';
-			StringBuilder querySb = new StringBuilder("SELECT t0.").append(THM_ID_COL).append(" FROM (")
-					;					
+			////SELECT t0.thmId FROM (authorTb AS t0, authorTb AS t1) WHERE ( t0.thmId=t1.thmId AND t0.firstName LIKE 't%'  
+			//AND t0.lastName='tao' AND  t1.firstName LIKE 'y%'  AND t1.lastName='shalom' );
+			StringBuilder querySb = new StringBuilder("SELECT t0.").append(THM_ID_COL).append(" FROM (");		
 			
 			for(int i = 0; i < this.numAuthors; i++) {
 				querySb.append(AUTHOR_TABLE_NAME)
@@ -80,6 +84,20 @@ public class DBSearch {
 			querySb
 			.append(")")
 			.append(" WHERE ");
+			
+			if(this.numAuthors > 1) {
+				for(int i = 0; i < this.numAuthors-1; i++) {
+					querySb.append("t")
+					.append(i)
+					.append(".")
+					.append(THM_ID_COL)
+					.append("=");
+				}
+				querySb.append("t").append(this.numAuthors-1)
+				.append(".")
+				.append(THM_ID_COL)
+				.append(" AND ");
+			}
 			
 			int authorCounter = 0;
 			//build sql query str
@@ -107,16 +125,17 @@ public class DBSearch {
 			
 			for(int i = 0; i < typeListSz; i++) {
 				AuthorRelationNode curNode = childrenList.get(i);
-				ConjDisjType type = typeList.get(i);
+				String typeStr = typeList.get(i).getDbName();
 				
 				if(curNode.hasChild()) {
 					authorCounter = buildSqlStr(curNode, sqlSb, authorCounter);
+					sqlSb.append(" ").append(typeStr).append(" ");
 				}else {
 					/*
 					 createAuthorQuery(String relationStr, StringBuilder querySb, AuthorName author,
 			boolean abbreviateNameBool)
 					 */
-					createAuthorQuery(type.getDbName(), sqlSb, curNode.authorName, authorCounter, true);	
+					createAuthorQuery(typeStr, sqlSb, curNode.authorName, authorCounter, true);	
 					authorCounter++;
 				}
 			}
@@ -141,6 +160,10 @@ public class DBSearch {
 		 * @return rootNode to parse
 		 */
 		private static AuthorRelationNode parseAuthorStr(String str) {
+			
+			/*First sanity check such as ensuring parentheses matching, throw exception otherwise*/
+			checkParenMatch(str);
+			
 			AuthorRelationNode rootNode = new AuthorRelationNode( );
 			int strLen = str.length();
 			int index = 0;
@@ -149,6 +172,30 @@ public class DBSearch {
 			}
 			parseAuthorStr(str, index, rootNode);
 			return rootNode;
+		}
+		
+		/**
+		 * 
+		 * @param str
+		 * @throws IllegalArgumentException if not matching
+		 */
+		private static void checkParenMatch(String str) {
+			
+			int openParenCount = 0; 
+			int closeParenCount = 0; 
+			int strLen = str.length();
+			
+			for(int i = 0; i < strLen; i++) {
+				char curChar = str.charAt(i);
+				if(curChar == '(') {
+					openParenCount++;
+				}else if(curChar == ')') {
+					closeParenCount++;
+				}
+			}
+			if(openParenCount != closeParenCount) {
+				throw new IllegalArgumentException("Parentheses don't match!");
+			}
 		}
 		
 		/**
@@ -163,78 +210,109 @@ public class DBSearch {
 			int strLen = str.length();
 			//one name at a time
 			StringBuilder nameSb = new StringBuilder(30);
-			List<String> curLevelNameList = new ArrayList<String>();
-			List<ConjDisjType> curLevelTypeList = new ArrayList<ConjDisjType>();
+			//List<String> curLevelNameList = new ArrayList<String>();
+			//List<ConjDisjType> curLevelTypeList = new ArrayList<ConjDisjType>();
 			
-			ConjDisjType conjDisjType = null;
-			boolean typeChanged = false;
+			//operator e.g. AND OR expected next
+			boolean opExpected = false;
+			//cannot be operator following this
+			boolean strExpected = false;
 			
 			//append to parent node according to parse
 			while(index < strLen) {
 				char curChar = str.charAt(index);
-				if(index + 5 < strLen) {
+				if(index > 0 && index + 4 < strLen) {
 					boolean nameEnded = false;
-					if((str.substring(index, index+5).equals(" and ") )) {
-						if(conjDisjType == ConjDisjType.DISJ) {
-							typeChanged = true;
-						}
+					if((str.substring(index-1, index+4).equals(" and ") )) {
+						
 						nameEnded = true;
 						//take care of e.g. "and and"
-						curLevelTypeList.add(ConjDisjType.CONJ);
+						//curLevelTypeList.add(ConjDisjType.CONJ);
 						parentNode.addChildConjDisjType(ConjDisjType.CONJ);
-						index += 5;
+						index += 4;
 						//conjDisjType = ConjDisjType.CONJ;
-					}else if (str.substring(index, index+4).equals(" or ")){
-						if(conjDisjType == ConjDisjType.CONJ) {
-							typeChanged = true;
-						}
-						curLevelTypeList.add(ConjDisjType.DISJ);
+					}else if (str.substring(index-1, index+3).equals(" or ")){
+						
+						//curLevelTypeList.add(ConjDisjType.DISJ);
 						parentNode.addChildConjDisjType(ConjDisjType.DISJ);
 						nameEnded = true;
-						index += 4;
+						index += 3;
 						//conjDisjType = ConjDisjType.DISJ;
 					}
-					if(nameEnded) {
-						if(nameSb.length() == 0) {
-							curLevelTypeList.remove(curLevelTypeList.size()-1);
+					if(nameEnded) {						
+						if(//nameSb.length() == 0 || 
+								strExpected /*e.g. "and and" */) {
+							//curLevelTypeList.remove(curLevelTypeList.size()-1);
 							parentNode.childRelationList.remove(parentNode.childRelationList.size()-1);
-						}else {
-							curLevelNameList.add(nameSb.toString());
+						}else if(nameSb.length() > 0)
+						{
+							//curLevelNameList.add(nameSb.toString());
 							parentNode.addChildNode(new AuthorRelationNode(nameSb.toString()));
 							parentNode.numAuthors++;
 						}
 						nameSb = new StringBuilder(30);
+						strExpected = true;
+						opExpected = false;
+						while(index < strLen && str.charAt(index) == ' ') {
+							index++;
+						}
 						continue;
 					}
 				}
+				
 				curChar = str.charAt(index);
 				if(curChar == '(') {
 					//take care if ( doens't follow and/or !!!
+					//e.g. A and ( B and D ) C
+					if(nameSb.length() > 0) {
+						//interpret as OR
+						parentNode.addChildConjDisjType(ConjDisjType.DISJ);
+						parentNode.addChildNode(new AuthorRelationNode(nameSb.toString()));
+						parentNode.numAuthors++;
+						nameSb = new StringBuilder(30);
+					}					
+					//put in more syntax checks when traversing to form string!
 					
 					//parse sb and append children of current level
 					//parseAndAppendChildren(curLevelNameList, curLevelTypeList, parentNode);
-					AuthorRelationNode childNode = new AuthorRelationNode( );
+					AuthorRelationNode childNode = new AuthorRelationNode();
 					index = parseAuthorStr(str, index+1, childNode) + 1;	
+					//returned from level down
+					opExpected = true;
+					
+					while(index < strLen && str.charAt(index) == ' ') {
+						index++;
+					}
 					
 					parentNode.addChildNode(childNode);
 					parentNode.numAuthors += childNode.numAuthors;
 				}//or is switching conj disj type
 				else if(curChar == ')') {
+					//be careful to not always return!
 					//index++;
-					curLevelNameList.add(nameSb.toString());
+					//curLevelNameList.add(nameSb.toString());
 					//note this could cause double nesting if specified in (  )
 					parentNode.addChildNode(new AuthorRelationNode(nameSb.toString()));
 					parentNode.numAuthors++;
 					return ++index;
 				}
 				else {
+					if(opExpected) {
+						//space was already whisked away after operator
+						//assume OR
+						parentNode.addChildConjDisjType(ConjDisjType.DISJ);
+						opExpected = false;
+					}
+					strExpected = false;
 					nameSb.append(curChar);
 					index++;
 				}			
 			}
-			if(nameSb.length() > 0) {
-				curLevelNameList.add(nameSb.toString());
-				parentNode.addChildNode(new AuthorRelationNode(nameSb.toString()));
+			String nameStr;
+			if(nameSb.length() > 0 && 
+					!(WordForms.getWhiteNonEmptySpaceNotAllPattern().matcher((nameStr=nameSb.toString())).matches()) ) {
+				//curLevelNameList.add(nameSb.toString());
+				parentNode.addChildNode(new AuthorRelationNode(nameStr));
 				parentNode.numAuthors++;
 			}
 			return index;
@@ -274,23 +352,12 @@ public class DBSearch {
 		//used for constructing JOINs
 		int numAuthors;
 		
-		/**
-		 * @param childrenStrList List of author name strings for this node.
-		 * @param userInput e.g. (A. Author1 and (B. Author2 or C Author3)). 
-		 */
-		AuthorRelationNode(List<String> childrenStrList, List<ConjDisjType> childRelationList) {
-			
-			assert childRelationList.size() == childrenStrList.size() - 1;
-			//childrenList = new ArrayList<AuthorRelationNode>();
-			for(String str : childrenStrList) {
-				
-			}
-			
-		}
-		
 		AuthorRelationNode() {
 		}
-		
+		@Override
+		public String toString() {
+			return authorName + " " + childrenList + " " + childRelationList;
+		}
 		/**
 		 * For leaf node.
 		 * @param authorName
@@ -298,13 +365,6 @@ public class DBSearch {
 		AuthorRelationNode(String authorName) {
 			this.authorName = new AuthorName(authorName);
 		}
-		
-		/**
-		 * @param userInput e.g. (A. Author1 and (B. Author2 or C Author3)). 
-		 */
-		//AuthorRelationNode(AuthorName authorName, List<AuthorRelationNode> childrenList, ConjDisjType conjDisjType) {
-			
-		//}
 		
 		boolean hasChild() {
 			return !childrenList.isEmpty();
@@ -339,11 +399,12 @@ public class DBSearch {
 			throw new IllegalArgumentException("List of authors cannot be empty!");
 		} *********** */
 		
-		String relationStr = conjDisjType.getDbName();
 		//data need to be normalized, e.g. M. L. Mangano
 		
 		//e.g. "SELECT thmId FROM authorTb3 WHERE (author='W. N. Kang' OR author='S. Ivanov');"
 		//make DB call, get default connection
+		//SELECT t0.thmId FROM (authorTb AS t0, authorTb AS t1) WHERE ( t0.thmId=t1.thmId AND t0.firstName LIKE 't%'  
+		//AND t0.lastName='tao' AND  t1.firstName LIKE 'y%'  AND t1.lastName='shalom' );
 		Connection conn = DBUtils.getPooledConnection();
 		boolean abbreviateName = false;
 		List<Integer> dbList = queryWithAuthors(authorRelation, conn, abbreviateName);
@@ -362,17 +423,8 @@ public class DBSearch {
 		return dbList;
 	}
 
-	/**
-	 * Make db Query 
-	 * @param authorList
-	 * @param dbList
-	 * @param relationStr
-	 * @param conn
-	 * @param 
-	 * @throws SQLException
-	 * @deprecated
-	 */
-	private static List<Integer> queryWithAuthors0(List<AuthorName> authorList,  String relationStr,
+	
+	/*private static List<Integer> queryWithAuthors0(List<AuthorName> authorList,  String relationStr,
 			Connection conn, boolean abbreviateNameBool) throws SQLException {
 		
 		List<Integer> dbList = new ArrayList<Integer>();
@@ -403,7 +455,7 @@ public class DBSearch {
 			dbList.add(thmId);
 		}
 		return dbList;
-	}
+	}*/
 
 	private static List<Integer> queryWithAuthors(AuthorRelation authorRelation,
 			Connection conn, boolean abbreviateNameBool) throws SQLException {
@@ -417,27 +469,21 @@ public class DBSearch {
 		//first try all of first name, if no result, try initial 
 		//make separate db calls for each author
 		
-		//now assume only last name.
-		/*for(AuthorName author : authorList) {
-			createAuthorQuery(relationStr, querySb, author, abbreviateNameBool);
-		}*/
-		//querySb.delete(querySb.length() - relationStr.length(), querySb.length());
-		//querySb.append(");");
-		//querySb.append(authorRelation.sqlQueryStr);
 		String queryStr = authorRelation.sqlQueryStr;
 		
-		//**********querySb.append(";");
 		logger.info("searching author - query created: "+queryStr);
 		
 		PreparedStatement stm = conn.prepareStatement(queryStr);
 		ResultSet rs = stm.executeQuery();
-		//System.out.println("rs: "+rs);
+		
 		while(rs.next()) {
 			int thmId = rs.getInt(1);
 			//thmId col first column
 			//System.out.println("thmId "+thmId);
 			dbList.add(thmId);
 		}
+		//Free up resources. This also closes resultset.
+		stm.close();
 		return dbList;
 	}
 	/**
@@ -461,10 +507,11 @@ public class DBSearch {
 			if(!"".equals(middleInitial) ) {
 				if(nameAppended) {
 					//querySb.append(" AND ").append(MIDDLE_NAME_COL).append("='").append(middleInitial).append("' ");	
-					querySb.append(" AND t").append(authorCounter).append(".").append(MIDDLE_NAME_COL).append(" LIKE '").append(middleInitial).append("%' ");
+					querySb.append(" AND t");
 				}else {
-					querySb.append(" t").append(authorCounter).append(".").append(MIDDLE_NAME_COL).append(" LIKE '").append(middleInitial).append("%' ");				
+					querySb.append(" t");				
 				}
+				querySb.append(authorCounter).append(".").append(MIDDLE_NAME_COL).append(" LIKE '").append(middleInitial).append("%' ");
 				nameAppended = true;
 			}
 		}else {
@@ -480,10 +527,12 @@ public class DBSearch {
 		}
 		String lastName = author.lastName();
 		if(nameAppended) {
-			querySb.append(" AND t").append(authorCounter).append(".").append(LAST_NAME_COL).append("='").append(lastName).append("' ").append(relationStr);	
+			querySb.append(" AND t");	
 		}else {
-			querySb.append(" t").append(authorCounter).append(".").append(LAST_NAME_COL).append("='").append(lastName).append("') ").append(relationStr);			
+			querySb.append(" t");			
 		}
+		
+		querySb.append(authorCounter).append(".").append(LAST_NAME_COL).append("='").append(lastName).append("' ").append(relationStr);
 		querySb.append(" ");
 		//System.out.println("queryL "+querySb);
 	}

@@ -85,12 +85,12 @@ public class ProjectionMatrix {
 	 * @return Map, keys are paper ID, values are String data for the names.
 	 * E.g. {"math0702266" : "'math0702266','Florent','','Baudier'"}
 	 */
-	private static Map<String, String> parseRawNameDataFile() {
+	private static Multimap<String, String> parseRawNameDataFile() {
 		
 		String filePath = SearchMetaData.nameRawDataPath();
 		List<String> nameDataList = FileUtils.readLinesFromFile(filePath);
 		
-		Map<String, String> namesMap = new HashMap<String, String>();
+		Multimap<String, String> namesMMap = ArrayListMultimap.create();
 		
 		Matcher m;
 		//each line has form 'math0702266','Florent','','Baudier'
@@ -100,10 +100,10 @@ public class ProjectionMatrix {
 				continue;
 			}
 			String paperIdStr = m.group(1);
-			namesMap.put(paperIdStr, dataStr.toLowerCase());
+			namesMMap.put(paperIdStr, dataStr.toLowerCase());
 		}
 		
-		return namesMap;
+		return namesMMap;
 	}
 	
 	/**
@@ -128,7 +128,7 @@ public class ProjectionMatrix {
 		String thmsStringListDestPath = TermDocumentMatrix.DATA_ROOT_DIR_SLASH + TermDocumentMatrix.ALL_THM_STRING_FILE_NAME;
 		FileUtils.runtimeExec("rm " + thmsStringListDestPath);
 		
-		Map<String, String> paperIdNameDataMap = parseRawNameDataFile();
+		Multimap<String, String> paperIdNameDataMap = parseRawNameDataFile();
 		
 		FileWriter nameCSVFileWriter = null;
 		try {
@@ -354,7 +354,7 @@ public class ProjectionMatrix {
 			List<ContextRelationVecPair> combinedVecsList, String wordThmIndexMMapPath, 
 			Multimap<String, Integer> combinedWordThmIndexMMap, ListMultimap<String, LiteralSearchIndex> searchIndexMap,
 			List<String> allThmNameScrapeList, int startingThmIndex, StringBuilder nameDBSB,
-			Map<String, String> paperIdNameDataMap) {
+			Multimap<String, String> paperIdNameDataMap) {
 		
 		List<ThmHypPair> thmHypPairList = (List<ThmHypPair>)FileUtils.deserializeListFromFile(peFilePath);
 		int thmHypPairListSz = thmHypPairList.size();
@@ -376,12 +376,15 @@ public class ProjectionMatrix {
 			int curThmIndex = startingThmIndex+i;
 			LiteralSearch.addThmLiteralSearchIndexToMap(thmStr, curThmIndex, searchIndexMap);
 			String curPairPaperId = curPair.srcFileName();
-			String paperNameData = paperIdNameDataMap.get(curPairPaperId);
-			if(null == paperNameData) {
+			//String paperNameData = paperIdNameDataMap.get(curPairPaperId);
+			Collection<String> paperNameDataCol = paperIdNameDataMap.get(curPairPaperId);
+			if(paperNameDataCol.isEmpty()) {
 				System.out.println("ProjectionnMatrix - Raw data file does not contain name data for "+curPairPaperId);
 				continue;
 			}
-			nameDBSB.append(curThmIndex + "," + paperNameData + "\n");
+			for(String paperNameData : paperNameDataCol) {
+				nameDBSB.append(curThmIndex + "," + paperNameData + "\n");
+			}
 		}
 		
 		combinedVecsList.addAll((List<ContextRelationVecPair>)FileUtils.deserializeListFromFile(vecsFilePath));
