@@ -31,7 +31,7 @@ public class GenerateDBTables {
 		
 		//keys are //paper id, e.g. 1234.5678, and values contain info on title, author, etc.
 		Map<String, PaperMetaData> idPaperMetaDataMap = idMapList.get(0);
-		DataSource ds = DBUtils.getDataSource(DBUtils.DEFAULT_DB_NAME, DBUtils.DEFAULT_USER, DBUtils.DEFAULT_PW, 
+		DataSource ds = thmp.test.TestSqlQueryParse.getLocalDataSource(DBUtils.DEFAULT_DB_NAME, DBUtils.DEFAULT_USER, DBUtils.DEFAULT_PW, 
 				DBUtils.DEFAULT_SERVER, DBUtils.DEFAULT_PORT);
 		Connection conn = ds.getConnection();
 		

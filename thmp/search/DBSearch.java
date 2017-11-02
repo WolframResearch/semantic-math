@@ -43,10 +43,12 @@ public class DBSearch {
 	 */
 	public static class AuthorRelation{
 		
-		AuthorRelationNode rootNode;
-		String sqlQueryStr; 
+		private AuthorRelationNode rootNode;
+		private String sqlQueryStr; 
+		//names to set in the prepared statement.
+		private List<String> namesToSet;
 		/**used for constructing JOIN's*/
-		int numAuthors;
+		private int numAuthors;
 		
 		/**
 		 * @param userInput e.g. (A. Author1 and (B. Author2 or C Author3)). 
@@ -100,9 +102,15 @@ public class DBSearch {
 			}
 			
 			int authorCounter = 0;
-			//build sql query str
-			buildSqlStr(this.rootNode, querySb, authorCounter);
+			this.namesToSet = new ArrayList<String>();
+			//build sql query str, e.g. con.prepareStatement("UPDATE EMPLOYEES
+            //SET SALARY = ? WHERE ID = ?");
+			buildSqlStr(this.rootNode, querySb, authorCounter, this.namesToSet);
+			
 			querySb.append(";");
+			//produce list of arguments, to set, e.g. pstmt.setInt(2, 110592)
+			//all Strings.
+			//this.namesToSet = ;
 			this.sqlQueryStr = querySb.toString();
 			logger.info("searching author - query created: "+querySb);
 		}
@@ -112,9 +120,11 @@ public class DBSearch {
 		 * @param rootNode2
 		 * @param sqlSb
 		 * @param authorCounter used for JOIN's
+		 * @param list of names to set.
 		 * @return updated authorCounter
 		 */
-		private int buildSqlStr(AuthorRelationNode node, StringBuilder sqlSb, int authorCounter) {
+		private int buildSqlStr(AuthorRelationNode node, StringBuilder sqlSb, int authorCounter,
+				List<String> namesToSet) {
 			
 			sqlSb.append("(");
 			List<AuthorRelationNode> childrenList = node.childrenList;
@@ -128,23 +138,23 @@ public class DBSearch {
 				String typeStr = typeList.get(i).getDbName();
 				
 				if(curNode.hasChild()) {
-					authorCounter = buildSqlStr(curNode, sqlSb, authorCounter);
+					authorCounter = buildSqlStr(curNode, sqlSb, authorCounter, namesToSet);
 					sqlSb.append(" ").append(typeStr).append(" ");
 				}else {
 					/*
 					 createAuthorQuery(String relationStr, StringBuilder querySb, AuthorName author,
 			boolean abbreviateNameBool)
 					 */
-					createAuthorQuery(typeStr, sqlSb, curNode.authorName, authorCounter, true);	
+					createAuthorQuery(typeStr, sqlSb, curNode.authorName, authorCounter, namesToSet, true);	
 					authorCounter++;
 				}
 			}
 			AuthorRelationNode lastNode = childrenList.get(childrenListSz-1);
 			if(lastNode.hasChild()) {
-				authorCounter = buildSqlStr(lastNode, sqlSb, authorCounter);
+				authorCounter = buildSqlStr(lastNode, sqlSb, authorCounter, namesToSet);
 			}else {
 				//dummy OR
-				createAuthorQuery("OR", sqlSb, lastNode.authorName, authorCounter, true);
+				createAuthorQuery("OR", sqlSb, lastNode.authorName, authorCounter, namesToSet, true);
 				authorCounter++;
 				int sbLen = sqlSb.length();
 				//-3 because of space at end
@@ -161,8 +171,16 @@ public class DBSearch {
 		 */
 		private static AuthorRelationNode parseAuthorStr(String str) {
 			
-			/*First sanity check such as ensuring parentheses matching, throw exception otherwise*/
-			checkParenMatch(str);
+			StringBuilder updatedSb = new StringBuilder(200);
+			/*First sanity check such as ensuring parentheses matching, 
+			 * try to salvage if possible*/
+			boolean modified = matchParentheses(str, updatedSb);
+			if(modified) {
+				//set some flag
+				//communicate it to user!!
+				
+			}
+			str = updatedSb.toString();
 			
 			AuthorRelationNode rootNode = new AuthorRelationNode( );
 			int strLen = str.length();
@@ -175,27 +193,79 @@ public class DBSearch {
 		}
 		
 		/**
+		 * Check parentheses matching, remove extra ')' when detected,
+		 * add matching number of ')' at end if insufficient number of ')'.
 		 * 
-		 * @param str
-		 * @throws IllegalArgumentException if not matching
+		 * @param str input string.
+		 * @param sb StringBuilder to fill with updated string.
+		 * @return whether the input string needs to be modified to produce syntactically correct str.
+		 * @throws IllegalArgumentException if unsalvageable matching.
 		 */
-		private static void checkParenMatch(String str) {
+		private static boolean matchParentheses(String str, StringBuilder sb) {
 			
 			int openParenCount = 0; 
 			int closeParenCount = 0; 
 			int strLen = str.length();
+			//StringBuilder sb = new StringBuilder(50);
+			//whether had to modify string, e.g. patch up parentheses
+			boolean modified = false;
 			
 			for(int i = 0; i < strLen; i++) {
 				char curChar = str.charAt(i);
 				if(curChar == '(') {
 					openParenCount++;
 				}else if(curChar == ')') {
+					if(closeParenCount < openParenCount) {
+						closeParenCount++;
+						sb.append(curChar);
+					}else {
+						//raise some flag to notify user!		
+						modified = true;
+					}					
+				}else {
+					sb.append(curChar);
+				}				
+			}
+			if(closeParenCount < openParenCount) {
+				modified = true;
+				sb.append(')');
+				closeParenCount++;
+				while(closeParenCount < openParenCount) {
+					sb.append(')');
 					closeParenCount++;
 				}
 			}
-			if(openParenCount != closeParenCount) {
+			/*can't happen any more
+			 * if(openParenCount != closeParenCount) {
 				throw new IllegalArgumentException("Parentheses don't match!");
+			}*/
+			return modified;
+		}
+		
+		/**
+		 * Make prepared statement, 
+		 * Sets list of names in the sqlQueryStr.
+		 * @param conn
+		 */
+		public PreparedStatement getPreparedStm(Connection conn) {
+			PreparedStatement pstm = null;
+			try {
+				pstm = conn.prepareStatement(this.sqlQueryStr);
+				int i = 1;
+				for(String s : this.namesToSet) {
+					pstm.setString(i, s);
+					i++;
+				}				
+			} catch (SQLException e) {
+				//..............maybe better to just throw
+				e.printStackTrace();
 			}
+			
+			return pstm;
+		}
+		
+		public String sqlQueryStr() {
+			return this.sqlQueryStr;
 		}
 		
 		/**
@@ -213,10 +283,12 @@ public class DBSearch {
 			//List<String> curLevelNameList = new ArrayList<String>();
 			//List<ConjDisjType> curLevelTypeList = new ArrayList<ConjDisjType>();
 			
+			//Used to determine if operator e.g. AND OR expected next
+			SqlParseState parseState = SqlParseState.STR;
 			//operator e.g. AND OR expected next
-			boolean opExpected = false;
+			//boolean opExpected = false;
 			//cannot be operator following this
-			boolean strExpected = false;
+			//boolean strExpected = false;
 			
 			//append to parent node according to parse
 			while(index < strLen) {
@@ -241,7 +313,8 @@ public class DBSearch {
 					}
 					if(nameEnded) {						
 						if(//nameSb.length() == 0 || 
-								strExpected /*e.g. "and and" */) {
+								parseState == SqlParseState.STR
+								/*strExpected /*e.g. "and and" */) {
 							//curLevelTypeList.remove(curLevelTypeList.size()-1);
 							parentNode.childRelationList.remove(parentNode.childRelationList.size()-1);
 						}else if(nameSb.length() > 0)
@@ -251,8 +324,10 @@ public class DBSearch {
 							parentNode.numAuthors++;
 						}
 						nameSb = new StringBuilder(30);
-						strExpected = true;
-						opExpected = false;
+						//strExpected = true;
+						//opExpected = false;
+						parseState = SqlParseState.STR;
+						
 						while(index < strLen && str.charAt(index) == ' ') {
 							index++;
 						}
@@ -278,7 +353,8 @@ public class DBSearch {
 					AuthorRelationNode childNode = new AuthorRelationNode();
 					index = parseAuthorStr(str, index+1, childNode) + 1;	
 					//returned from level down
-					opExpected = true;
+					//opExpected = true;
+					parseState = SqlParseState.OP;
 					
 					while(index < strLen && str.charAt(index) == ' ') {
 						index++;
@@ -297,13 +373,16 @@ public class DBSearch {
 					return ++index;
 				}
 				else {
-					if(opExpected) {
+					if(parseState == SqlParseState.OP
+							//opExpected
+							) {
 						//space was already whisked away after operator
 						//assume OR
 						parentNode.addChildConjDisjType(ConjDisjType.DISJ);
-						opExpected = false;
+						//opExpected = false;						
 					}
-					strExpected = false;
+					parseState = SqlParseState.EITHER;
+					//strExpected = false;
 					nameSb.append(curChar);
 					index++;
 				}			
@@ -318,6 +397,18 @@ public class DBSearch {
 			return index;
 		}
 		
+	}/*end of AuthorRelation class*/
+	
+	/**
+	 * Current parse state, e.g. whether should expect String or operator next.
+	 */
+	private enum SqlParseState{
+		//operator e.g. AND OR expected next
+		OP,
+		//cannot be operator, need String
+		STR,
+		EITHER;
+				
 	}
 	
 	//parse, no parentheses. Same conj disj type, therefore All same level. 
@@ -469,11 +560,9 @@ public class DBSearch {
 		//first try all of first name, if no result, try initial 
 		//make separate db calls for each author
 		
-		String queryStr = authorRelation.sqlQueryStr;
+		PreparedStatement stm = authorRelation.getPreparedStm(conn);
+		logger.info("searching author - stm created: "+stm);
 		
-		logger.info("searching author - query created: "+queryStr);
-		
-		PreparedStatement stm = conn.prepareStatement(queryStr);
 		ResultSet rs = stm.executeQuery();
 		
 		while(rs.next()) {
@@ -493,14 +582,15 @@ public class DBSearch {
 	 * @param author
 	 */
 	private static void createAuthorQuery(String relationStr, StringBuilder querySb, AuthorName author,
-			int authorCounter, boolean abbreviateNameBool) {
+			int authorCounter, List<String> namesToSet, boolean abbreviateNameBool) {
 		
 		boolean nameAppended = false;
 		String firstName = author.firstName();
 		if(!abbreviateNameBool && firstName.length() > 1) {
 			if(!"".equals(firstName) ) {
 				querySb.append(" (t").append(authorCounter).append(".").append(FIRST_NAME_COL)
-				.append("='").append(firstName).append("' ");
+				.append("= ? ");//.append("?").append("' ");
+				namesToSet.add(firstName);
 				nameAppended = true;
 			}
 			String middleInitial = author.middleInitial();
@@ -511,7 +601,8 @@ public class DBSearch {
 				}else {
 					querySb.append(" t");				
 				}
-				querySb.append(authorCounter).append(".").append(MIDDLE_NAME_COL).append(" LIKE '").append(middleInitial).append("%' ");
+				querySb.append(authorCounter).append(".").append(MIDDLE_NAME_COL).append(" LIKE ? ");//.append(middleInitial).append("%' ");
+				namesToSet.add(middleInitial + "%");
 				nameAppended = true;
 			}
 		}else {
@@ -521,7 +612,8 @@ public class DBSearch {
 			if(!"".equals(firstInitial)) {
 				//querySb.append(" SUBSTR(").append(FIRST_NAME_COL).append(",1,1)='").append(firstInitial).append("' ");
 				//LIKE can tell that starting string is asked, and can take advantage of table indexing
-				querySb.append(" t").append(authorCounter).append(".").append(FIRST_NAME_COL).append(" LIKE '").append(firstInitial).append("%' ");
+				querySb.append(" t").append(authorCounter).append(".").append(FIRST_NAME_COL).append(" LIKE ? ");//.append(firstInitial).append("%' ");
+				namesToSet.add(firstInitial + "%");
 				nameAppended = true;				
 			}
 		}
@@ -532,8 +624,10 @@ public class DBSearch {
 			querySb.append(" t");			
 		}
 		
-		querySb.append(authorCounter).append(".").append(LAST_NAME_COL).append("='").append(lastName).append("' ").append(relationStr);
-		querySb.append(" ");
+		querySb.append(authorCounter).append(".").append(LAST_NAME_COL).append("= ? ");//.append(lastName).append("' ");
+		
+		namesToSet.add(lastName);
+		querySb.append(relationStr).append(" ");
 		//System.out.println("queryL "+querySb);
 	}
 	

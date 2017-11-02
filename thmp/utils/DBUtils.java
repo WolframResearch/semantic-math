@@ -313,32 +313,6 @@ public class DBUtils {
 	}
 	
 	/**
-	 * Obtain datasource with prescribed params, create DB if none exists.
-	 * Default values are as follows:
-	 * @param user "root"
-	 * @param pw "wolfram"
-	 * @param serverName "localhost"
-	 * @param portNum "3306"
-	 * @return datasource that one can obtain Connections from.
-	 * @deprecated
-	 */
-	public static DataSource getDataSource(String dbName, String user, String pw, String serverName, 
-			int portNum) {
-		MysqlDataSource ds = new MysqlDataSource();
-		ds.setUser(user);
-		//ds.setPassword("Lzft+utkk5q2");
-		ds.setPassword(pw);
-		ds.setServerName(serverName);
-		ds.setPortNumber(portNum);
-		ds.setCreateDatabaseIfNotExist(true);
-		//System.out.println("ds.getCreateDatabaseIfNotExist() "+ds.getCreateDatabaseIfNotExist());
-		//should actually use import org.apache.tomcat.jdbc.pool.DataSource;
-		//and create this on servlet code
-		ds.setDatabaseName(dbName);		
-		return ds;
-	}
-	
-	/**
 	 * Gets the default DataSource connection.
 	 * @return
 	 * @throws SQLException 
