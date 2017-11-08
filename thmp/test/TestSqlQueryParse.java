@@ -34,7 +34,12 @@ public class TestSqlQueryParse {
 		String queryStr = rel.sqlQueryStr();
 		boolean pass = targetStr.equals(queryStr);
 		
-		PreparedStatement pstm = rel.getPreparedStm(DEFAULT_CONN);
+		PreparedStatement pstm = null;
+		try {
+			pstm = rel.getPreparedStm(DEFAULT_CONN);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 		
 		pass &= pstmStr.equals(pstm.toString());
 		
@@ -109,5 +114,10 @@ public class TestSqlQueryParse {
 		
 		assert(checkParse(inputStr, pstmStr, targetStr));
 	}
+	
+	//test fault tolerance: "(A1) or A3)"
+	// SELECT t0.thmId FROM (authorTb AS t0) WHERE (( t0.lastName= 'A1' ) OR  t0.lastName= 'A3' );
+	//and nested constructs "((A1) or A3)"
+	//"tao and (A1 d1  j or A2) or G"
 	
 }

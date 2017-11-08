@@ -20,8 +20,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.SetMultimap;
 
 import thmp.parse.ParsedExpression;
 import thmp.parse.DetectHypothesis;
@@ -90,7 +92,8 @@ public class ProjectionMatrix {
 		String filePath = SearchMetaData.nameRawDataPath();
 		List<String> nameDataList = FileUtils.readLinesFromFile(filePath);
 		
-		Multimap<String, String> namesMMap = ArrayListMultimap.create();
+		/*processed sources handed to me contain duplicates*/
+		Multimap<String, String> namesMMap = HashMultimap.create();
 		
 		Matcher m;
 		//each line has form 'math0702266','Florent','','Baudier'
@@ -367,9 +370,6 @@ public class ProjectionMatrix {
 			allThmNameScrapeList.addAll(thmNameScrapeList);			
 		}
 		
-		//System.out.println("ProjectionMatrix - addExprsToLists, starting to add to thmLiteralIndexMap");
-		
-		//this step can be created when the previous lists are created, to avoid this iteration.
 		for(int i = 0; i < thmHypPairListSz; i++) {
 			ThmHypPair curPair = thmHypPairList.get(i);
 			String thmStr = curPair.getEntireThmStr();
@@ -382,6 +382,7 @@ public class ProjectionMatrix {
 				System.out.println("ProjectionnMatrix - Raw data file does not contain name data for "+curPairPaperId);
 				continue;
 			}
+			//paperNameDataCol contains all authors for that paper.
 			for(String paperNameData : paperNameDataCol) {
 				nameDBSB.append(curThmIndex + "," + paperNameData + "\n");
 			}

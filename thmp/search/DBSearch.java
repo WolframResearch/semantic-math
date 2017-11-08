@@ -105,14 +105,20 @@ public class DBSearch {
 			this.namesToSet = new ArrayList<String>();
 			//build sql query str, e.g. con.prepareStatement("UPDATE EMPLOYEES
             //SET SALARY = ? WHERE ID = ?");
-			buildSqlStr(this.rootNode, querySb, authorCounter, this.namesToSet);
+			//+1 because the counter starts at 0 for the first instance, instead of 1.
+			int builtAuthorCounter = buildSqlStr(this.rootNode, querySb, authorCounter, this.namesToSet) + 1;
 			
 			querySb.append(";");
 			//produce list of arguments, to set, e.g. pstmt.setInt(2, 110592)
 			//all Strings.
 			//this.namesToSet = ;
 			this.sqlQueryStr = querySb.toString();
-			logger.info("searching author - query created: "+querySb);
+			 
+			if(builtAuthorCounter != this.rootNode.numAuthors) {
+				System.out.println("Parsing error: inconsistent authorCounters! " + builtAuthorCounter + " "+ this.sqlQueryStr);
+				logger.error("Parsing error: inconsistent authorCounters! Query " + this.sqlQueryStr);
+			}
+			logger.info("searching author - query created: "+this.sqlQueryStr);
 		}
 		
 		/**
@@ -135,17 +141,21 @@ public class DBSearch {
 			
 			for(int i = 0; i < typeListSz; i++) {
 				AuthorRelationNode curNode = childrenList.get(i);
-				String typeStr = typeList.get(i).getDbName();
-				
-				if(curNode.hasChild()) {
+				ConjDisjType type = typeList.get(i);
+				String typeStr = type.getDbName();
+				if(curNode.hasChild()) {					
 					authorCounter = buildSqlStr(curNode, sqlSb, authorCounter, namesToSet);
 					sqlSb.append(" ").append(typeStr).append(" ");
+					
 				}else {
 					/*
 					 createAuthorQuery(String relationStr, StringBuilder querySb, AuthorName author,
 			boolean abbreviateNameBool)
 					 */
-					createAuthorQuery(typeStr, sqlSb, curNode.authorName, authorCounter, namesToSet, true);	
+					createAuthorQuery(typeStr, sqlSb, curNode.authorName, authorCounter, namesToSet, true);					
+				}
+				//increment counter if conj, regardless of whether same level or nested child
+				if(ConjDisjType.CONJ == type) {
 					authorCounter++;
 				}
 			}
@@ -155,7 +165,7 @@ public class DBSearch {
 			}else {
 				//dummy OR
 				createAuthorQuery("OR", sqlSb, lastNode.authorName, authorCounter, namesToSet, true);
-				authorCounter++;
+				//authorCounter++;
 				int sbLen = sqlSb.length();
 				//-3 because of space at end
 				sqlSb.delete(sbLen-3, sbLen);
@@ -176,9 +186,11 @@ public class DBSearch {
 			 * try to salvage if possible*/
 			boolean modified = matchParentheses(str, updatedSb);
 			if(modified) {
-				//set some flag
-				//communicate it to user!!
+				//System.out.println("Input string modified!");
+				//logger.info("Input query string modified by sql query parser!");
 				
+				//set some flag
+				//communicate it to user!!				
 			}
 			str = updatedSb.toString();
 			
@@ -188,6 +200,8 @@ public class DBSearch {
 			while(index < strLen && str.charAt(index) == ' ') {
 				index++;
 			}
+			//add first author
+			rootNode.numAuthors = 1;
 			parseAuthorStr(str, index, rootNode);
 			return rootNode;
 		}
@@ -214,6 +228,7 @@ public class DBSearch {
 				char curChar = str.charAt(i);
 				if(curChar == '(') {
 					openParenCount++;
+					sb.append(curChar);
 				}else if(curChar == ')') {
 					if(closeParenCount < openParenCount) {
 						closeParenCount++;
@@ -246,8 +261,9 @@ public class DBSearch {
 		 * Make prepared statement, 
 		 * Sets list of names in the sqlQueryStr.
 		 * @param conn
+		 * @throws SQLException 
 		 */
-		public PreparedStatement getPreparedStm(Connection conn) {
+		public PreparedStatement getPreparedStm(Connection conn) throws SQLException {
 			PreparedStatement pstm = null;
 			try {
 				pstm = conn.prepareStatement(this.sqlQueryStr);
@@ -257,8 +273,9 @@ public class DBSearch {
 					i++;
 				}				
 			} catch (SQLException e) {
-				//..............maybe better to just throw
-				e.printStackTrace();
+				// better to just throw, catch later, and do usual intersection search.
+				logger.error("SQLException when acquiring prepared statement!");
+				throw e;
 			}
 			
 			return pstm;
@@ -293,17 +310,19 @@ public class DBSearch {
 			//append to parent node according to parse
 			while(index < strLen) {
 				char curChar = str.charAt(index);
-				if(index > 0 && index + 4 < strLen) {
+				if(index > 0) {
 					boolean nameEnded = false;
-					if((str.substring(index-1, index+4).equals(" and ") )) {
+					if(index + 4 < strLen && (str.substring(index-1, index+4).equals(" and ") )) {
 						
 						nameEnded = true;
 						//take care of e.g. "and and"
 						//curLevelTypeList.add(ConjDisjType.CONJ);
 						parentNode.addChildConjDisjType(ConjDisjType.CONJ);
 						index += 4;
+						//only increment author count on AND
+						parentNode.numAuthors++;
 						//conjDisjType = ConjDisjType.CONJ;
-					}else if (str.substring(index-1, index+3).equals(" or ")){
+					}else if (index + 3 < strLen && str.substring(index-1, index+3).equals(" or ")){
 						
 						//curLevelTypeList.add(ConjDisjType.DISJ);
 						parentNode.addChildConjDisjType(ConjDisjType.DISJ);
@@ -321,7 +340,7 @@ public class DBSearch {
 						{
 							//curLevelNameList.add(nameSb.toString());
 							parentNode.addChildNode(new AuthorRelationNode(nameSb.toString()));
-							parentNode.numAuthors++;
+							
 						}
 						nameSb = new StringBuilder(30);
 						//strExpected = true;
@@ -340,13 +359,12 @@ public class DBSearch {
 					//take care if ( doens't follow and/or !!!
 					//e.g. A and ( B and D ) C
 					if(nameSb.length() > 0) {
-						//interpret as OR
+						//interpret as OR, dummy placement
 						parentNode.addChildConjDisjType(ConjDisjType.DISJ);
 						parentNode.addChildNode(new AuthorRelationNode(nameSb.toString()));
-						parentNode.numAuthors++;
+						//parentNode.numAuthors++;
 						nameSb = new StringBuilder(30);
 					}					
-					//put in more syntax checks when traversing to form string!
 					
 					//parse sb and append children of current level
 					//parseAndAppendChildren(curLevelNameList, curLevelTypeList, parentNode);
@@ -369,7 +387,7 @@ public class DBSearch {
 					//curLevelNameList.add(nameSb.toString());
 					//note this could cause double nesting if specified in (  )
 					parentNode.addChildNode(new AuthorRelationNode(nameSb.toString()));
-					parentNode.numAuthors++;
+					//parentNode.numAuthors++;
 					return ++index;
 				}
 				else {
@@ -392,7 +410,7 @@ public class DBSearch {
 					!(WordForms.getWhiteNonEmptySpaceNotAllPattern().matcher((nameStr=nameSb.toString())).matches()) ) {
 				//curLevelNameList.add(nameSb.toString());
 				parentNode.addChildNode(new AuthorRelationNode(nameStr));
-				parentNode.numAuthors++;
+				//parentNode.numAuthors++;
 			}
 			return index;
 		}
@@ -407,8 +425,7 @@ public class DBSearch {
 		OP,
 		//cannot be operator, need String
 		STR,
-		EITHER;
-				
+		EITHER;				
 	}
 	
 	//parse, no parentheses. Same conj disj type, therefore All same level. 
@@ -499,6 +516,7 @@ public class DBSearch {
 		Connection conn = DBUtils.getPooledConnection();
 		boolean abbreviateName = false;
 		List<Integer> dbList = queryWithAuthors(authorRelation, conn, abbreviateName);
+		//If still no hits, gradually reduce down the number of names tried.
 		if(false && dbList.isEmpty()) {
 			//replace author list with just first initials, and query again
 			/*List<AuthorName> authorList2 = new ArrayList<AuthorName>();
@@ -508,7 +526,6 @@ public class DBSearch {
 			abbreviateName = true;
 			dbList = queryWithAuthors(authorRelation, conn, abbreviateName);
 		}
-		//what if still no hits, gradually reduce down the number of names tried?! <--yes
 		
 		DBUtils.closePooledConnection(conn);
 		return dbList;
@@ -571,7 +588,7 @@ public class DBSearch {
 			//System.out.println("thmId "+thmId);
 			dbList.add(thmId);
 		}
-		//Free up resources. This also closes resultset.
+		//Free up resources tied to statement. This also closes resultset.
 		stm.close();
 		return dbList;
 	}

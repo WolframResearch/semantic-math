@@ -31,8 +31,8 @@ public class DBUtils {
 	
 	private static final int STM_EXECUTATION_FAILURE = -1;
 	
-	//private static final Connection DEFAULT_CONNECTION;
 	private static final DataSource DEFAULT_DATASOURCE;
+	private static final String[] globalDBSettings;
 	
 	private static final Logger logger = LogManager.getLogger(DBUtils.class);
 	
@@ -51,6 +51,8 @@ public class DBUtils {
 			logger.error(msg);
 		}*/
 		DEFAULT_DATASOURCE = pooledDS;
+		globalDBSettings = new String[] {"SET GLOBAL MAX_EXECUTION_TIME=1000;"};
+		setGlobalDBSettings();
 		//DEFAULT_CONNECTION = defaultConn;
 	}
 	
@@ -97,7 +99,7 @@ public class DBUtils {
 		}
 		
 		public AuthorName(String name) {
-			String[] authorNameAr = NAME_SPLIT_PATT.split(name);
+			String[] authorNameAr = NAME_SPLIT_PATT.split(name.trim());
 			
 			this.firstName = "";
 			this.middleName = "";
@@ -164,6 +166,14 @@ public class DBUtils {
 		}
 	}
 	
+	public static void setGlobalDBSettings() {
+		
+		Connection conn = getPooledConnection();
+		for(String setting : globalDBSettings) {
+			executeSqlStatement(setting, conn);				
+		}
+		closePooledConnection(conn);
+	}
 	/**
 	 * Recompile data tables for database.
 	 * @deprecated do this in separate DB deployment!

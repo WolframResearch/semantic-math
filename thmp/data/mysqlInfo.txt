@@ -1,0 +1,14 @@
+
+
+LOAD DATA INFILE "/usr/share/tomcat/webapps/theoremSearchTest/src/thmp/data/metaDataNameDB.csv" INTO TABLE authorTb COLUMNS TERMINATED BY "," OPTIONALLY ENCLOSED BY "'" ESCAPED BY "\\";
+
+TRUNCATE authorTb;
+
+ALTER TABLE authorTb ADD PRIMARY KEY(thmId,lastName);
+
+ERROR 1062 (23000): Duplicate entry '61-dylan-thurston' for key 'PRIMARY'
+ALTER TABLE authorTb MODIFY COLUMN lastName VARCHAR(27);
+
+ALTER TABLE `authorTb` ADD INDEX `firstName` (`firstName`);
+
+SHOW INDEXES FROM authorTb;

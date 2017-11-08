@@ -317,7 +317,6 @@ public class SearchCombined {
 		String[] inputAr = WordForms.getWhiteNonEmptySpacePattern().split(input);		
 		//context search doesn't do anything if only one token.
 		if(inputAr.length < 2){
-			//searchContextBool = false;
 			searchRelationalBool = false;
 		}
 		
