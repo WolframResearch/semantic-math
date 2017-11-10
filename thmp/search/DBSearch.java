@@ -67,18 +67,40 @@ public class DBSearch {
 				throw new IllegalArgumentException("Mismatched authors and conj/disj operators: curLevelNameListSz, typeListSz+1: "
 						+ curLevelNameListSz + ", " + (typeListSz+1));
 			}
+			boolean abbreviateNameBool = false;
+			boolean abbreviateLastNameBool = false;
+			this.namesToSet = new ArrayList<String>();
 			
+			StringBuilder querySb = generateQueryStr(this.rootNode, this.namesToSet, abbreviateNameBool, abbreviateLastNameBool);
+			
+			//produce list of arguments, to set, e.g. pstmt.setInt(2, 110592)
+			//all Strings.
+			this.sqlQueryStr = querySb.toString();
+			
+			logger.info("searching author - query created: "+this.sqlQueryStr);
+		}
+
+		/**
+		 * Create query String for given node. 
+		 * @param node
+		 * @param namesToSet
+		 * @param abbreviateNameBool
+		 * @return
+		 */
+		private static StringBuilder generateQueryStr(AuthorRelationNode node, List<String> namesToSet, 
+				boolean abbreviateNameBool, boolean abbreviateLastNameBool) {
 			//StringBuilder sqlSb = new StringBuilder(300);
 			//SELECT t1.thmId FROM (authorTb AS t1,authorTb AS t2) WHERE t1.author='author2' AND t2.author='author1';
 			////SELECT t0.thmId FROM (authorTb AS t0, authorTb AS t1) WHERE ( t0.thmId=t1.thmId AND t0.firstName LIKE 't%'  
 			//AND t0.lastName='tao' AND  t1.firstName LIKE 'y%'  AND t1.lastName='shalom' );
 			StringBuilder querySb = new StringBuilder("SELECT t0.").append(THM_ID_COL).append(" FROM (");		
+			int numAuthors = node.numAuthors;
 			
-			for(int i = 0; i < this.numAuthors; i++) {
+			for(int i = 0; i < numAuthors; i++) {
 				querySb.append(AUTHOR_TABLE_NAME)
 				.append(" AS t")
 				.append(i)
-				.append(", ");				
+				.append(", ");
 			}
 			int sbLen = querySb.length();
 			querySb.delete(sbLen-2, sbLen);
@@ -87,38 +109,37 @@ public class DBSearch {
 			.append(")")
 			.append(" WHERE ");
 			
-			if(this.numAuthors > 1) {
-				for(int i = 0; i < this.numAuthors-1; i++) {
+			if(numAuthors > 1) {
+				for(int i = 0; i < numAuthors-1; i++) {
 					querySb.append("t")
 					.append(i)
 					.append(".")
 					.append(THM_ID_COL)
 					.append("=");
 				}
-				querySb.append("t").append(this.numAuthors-1)
+				querySb.append("t").append(numAuthors-1)
 				.append(".")
 				.append(THM_ID_COL)
 				.append(" AND ");
 			}
 			
 			int authorCounter = 0;
-			this.namesToSet = new ArrayList<String>();
+			
 			//build sql query str, e.g. con.prepareStatement("UPDATE EMPLOYEES
             //SET SALARY = ? WHERE ID = ?");
-			//+1 because the counter starts at 0 for the first instance, instead of 1.
-			int builtAuthorCounter = buildSqlStr(this.rootNode, querySb, authorCounter, this.namesToSet) + 1;
 			
-			querySb.append(";");
-			//produce list of arguments, to set, e.g. pstmt.setInt(2, 110592)
-			//all Strings.
-			//this.namesToSet = ;
-			this.sqlQueryStr = querySb.toString();
+			//+1 because the counter starts at 0 for the first instance, instead of 1.
+			int builtAuthorCounter = buildSqlStr(node, querySb, authorCounter, namesToSet, 
+					abbreviateNameBool, abbreviateLastNameBool) + 1;
+			
+			querySb.append(";");			
 			 
-			if(builtAuthorCounter != this.rootNode.numAuthors) {
-				System.out.println("Parsing error: inconsistent authorCounters! " + builtAuthorCounter + " "+ this.sqlQueryStr);
-				logger.error("Parsing error: inconsistent authorCounters! Query " + this.sqlQueryStr);
+			if(builtAuthorCounter != node.numAuthors) {
+				String queryStr = querySb.toString();
+				System.out.println("Parsing error: inconsistent authorCounters! " + builtAuthorCounter + " "+ queryStr);
+				logger.error("Parsing error: inconsistent authorCounters! Query " + queryStr);
 			}
-			logger.info("searching author - query created: "+this.sqlQueryStr);
+			return querySb;
 		}
 		
 		/**
@@ -127,10 +148,11 @@ public class DBSearch {
 		 * @param sqlSb
 		 * @param authorCounter used for JOIN's
 		 * @param list of names to set.
+		 * @param abbreviateNameBool whether to abbreviate (first/last)name to initials.
 		 * @return updated authorCounter
 		 */
-		private int buildSqlStr(AuthorRelationNode node, StringBuilder sqlSb, int authorCounter,
-				List<String> namesToSet) {
+		private static int buildSqlStr(AuthorRelationNode node, StringBuilder sqlSb, int authorCounter,
+				List<String> namesToSet, boolean abbreviateNameBool, boolean abbreviateLastNameBool) {
 			
 			sqlSb.append("(");
 			List<AuthorRelationNode> childrenList = node.childrenList;
@@ -144,7 +166,8 @@ public class DBSearch {
 				ConjDisjType type = typeList.get(i);
 				String typeStr = type.getDbName();
 				if(curNode.hasChild()) {					
-					authorCounter = buildSqlStr(curNode, sqlSb, authorCounter, namesToSet);
+					authorCounter = buildSqlStr(curNode, sqlSb, authorCounter, namesToSet, abbreviateNameBool,
+							abbreviateLastNameBool);
 					sqlSb.append(" ").append(typeStr).append(" ");
 					
 				}else {
@@ -152,7 +175,8 @@ public class DBSearch {
 					 createAuthorQuery(String relationStr, StringBuilder querySb, AuthorName author,
 			boolean abbreviateNameBool)
 					 */
-					createAuthorQuery(typeStr, sqlSb, curNode.authorName, authorCounter, namesToSet, true);					
+					createAuthorQuery(typeStr, sqlSb, curNode.authorName, authorCounter, namesToSet, 
+							abbreviateNameBool, abbreviateLastNameBool);					
 				}
 				//increment counter if conj, regardless of whether same level or nested child
 				if(ConjDisjType.CONJ == type) {
@@ -161,10 +185,12 @@ public class DBSearch {
 			}
 			AuthorRelationNode lastNode = childrenList.get(childrenListSz-1);
 			if(lastNode.hasChild()) {
-				authorCounter = buildSqlStr(lastNode, sqlSb, authorCounter, namesToSet);
+				authorCounter = buildSqlStr(lastNode, sqlSb, authorCounter, namesToSet, 
+						abbreviateNameBool, abbreviateLastNameBool);
 			}else {
 				//dummy OR
-				createAuthorQuery("OR", sqlSb, lastNode.authorName, authorCounter, namesToSet, true);
+				createAuthorQuery("OR", sqlSb, lastNode.authorName, authorCounter, namesToSet, abbreviateNameBool,
+						abbreviateLastNameBool);
 				//authorCounter++;
 				int sbLen = sqlSb.length();
 				//-3 because of space at end
@@ -258,17 +284,28 @@ public class DBSearch {
 		}
 		
 		/**
-		 * Make prepared statement, 
+		 * Make prepared statement for search-by-author query, 
 		 * Sets list of names in the sqlQueryStr.
 		 * @param conn
 		 * @throws SQLException 
 		 */
-		public PreparedStatement getPreparedStm(Connection conn) throws SQLException {
+		public PreparedStatement getPreparedStm(Connection conn, boolean abbreviateNameBool,
+				boolean abbreviateLastNameBool) throws SQLException {
 			PreparedStatement pstm = null;
+			List<String> names;
 			try {
-				pstm = conn.prepareStatement(this.sqlQueryStr);
+				if(!abbreviateNameBool) {
+					pstm = conn.prepareStatement(this.sqlQueryStr);
+					names = this.namesToSet;
+				}else {
+					//here
+					names = new ArrayList<String>();
+					StringBuilder querySb = generateQueryStr(this.rootNode, names, abbreviateNameBool,
+							abbreviateLastNameBool);
+					pstm = conn.prepareStatement(querySb.toString());
+				}
 				int i = 1;
-				for(String s : this.namesToSet) {
+				for(String s : names) {
 					pstm.setString(i, s);
 					i++;
 				}				
@@ -514,17 +551,25 @@ public class DBSearch {
 		//SELECT t0.thmId FROM (authorTb AS t0, authorTb AS t1) WHERE ( t0.thmId=t1.thmId AND t0.firstName LIKE 't%'  
 		//AND t0.lastName='tao' AND  t1.firstName LIKE 'y%'  AND t1.lastName='shalom' );
 		Connection conn = DBUtils.getPooledConnection();
-		boolean abbreviateName = false;
-		List<Integer> dbList = queryWithAuthors(authorRelation, conn, abbreviateName);
+		boolean abbreviateFirstName = false;
+		boolean abbreviateLastName = false;
+		List<Integer> dbList = queryWithAuthors(authorRelation, conn, abbreviateFirstName, abbreviateLastName);
 		//If still no hits, gradually reduce down the number of names tried.
-		if(false && dbList.isEmpty()) {
+		if(dbList.isEmpty()) {
 			//replace author list with just first initials, and query again
 			/*List<AuthorName> authorList2 = new ArrayList<AuthorName>();
 			for(AuthorName authorName : authorList) {
 				authorList2.add(authorName.abbreviateName());
 			}*/
-			abbreviateName = true;
-			dbList = queryWithAuthors(authorRelation, conn, abbreviateName);
+			abbreviateFirstName = true;
+			dbList = queryWithAuthors(authorRelation, conn, abbreviateFirstName, abbreviateLastName);
+		}
+		//make into constant 
+		if(dbList.isEmpty() && authorRelation.numAuthors < 3) {
+			//in case of typo in last name.
+			abbreviateFirstName = false;
+			abbreviateLastName = true;
+			dbList = queryWithAuthors(authorRelation, conn, abbreviateFirstName, abbreviateLastName);
 		}
 		
 		DBUtils.closePooledConnection(conn);
@@ -566,7 +611,7 @@ public class DBSearch {
 	}*/
 
 	private static List<Integer> queryWithAuthors(AuthorRelation authorRelation,
-			Connection conn, boolean abbreviateNameBool) throws SQLException {
+			Connection conn, boolean abbreviateFirstNameBool, boolean abbreviateLastNameBool) throws SQLException {
 		
 		List<Integer> dbList = new ArrayList<Integer>();
 		//StringBuilder querySb = new StringBuilder(300);
@@ -577,7 +622,7 @@ public class DBSearch {
 		//first try all of first name, if no result, try initial 
 		//make separate db calls for each author
 		
-		PreparedStatement stm = authorRelation.getPreparedStm(conn);
+		PreparedStatement stm = authorRelation.getPreparedStm(conn, abbreviateFirstNameBool, abbreviateLastNameBool);
 		logger.info("searching author - stm created: "+stm);
 		
 		ResultSet rs = stm.executeQuery();
@@ -599,14 +644,14 @@ public class DBSearch {
 	 * @param author
 	 */
 	private static void createAuthorQuery(String relationStr, StringBuilder querySb, AuthorName author,
-			int authorCounter, List<String> namesToSet, boolean abbreviateNameBool) {
+			int authorCounter, List<String> namesToSet, boolean abbreviateNameBool, boolean abbreviateLastNameBool) {
 		
 		boolean nameAppended = false;
 		String firstName = author.firstName();
 		if(!abbreviateNameBool && firstName.length() > 1) {
 			if(!"".equals(firstName) ) {
 				querySb.append(" (t").append(authorCounter).append(".").append(FIRST_NAME_COL)
-				.append("= ? ");//.append("?").append("' ");
+				.append("= ? ");
 				namesToSet.add(firstName);
 				nameAppended = true;
 			}
@@ -618,7 +663,7 @@ public class DBSearch {
 				}else {
 					querySb.append(" t");				
 				}
-				querySb.append(authorCounter).append(".").append(MIDDLE_NAME_COL).append(" LIKE ? ");//.append(middleInitial).append("%' ");
+				querySb.append(authorCounter).append(".").append(MIDDLE_NAME_COL).append(" LIKE ? ");
 				namesToSet.add(middleInitial + "%");
 				nameAppended = true;
 			}
@@ -634,16 +679,23 @@ public class DBSearch {
 				nameAppended = true;				
 			}
 		}
-		String lastName = author.lastName();
+		
 		if(nameAppended) {
-			querySb.append(" AND t");	
+			querySb.append(" AND t");
 		}else {
 			querySb.append(" t");			
 		}
 		
-		querySb.append(authorCounter).append(".").append(LAST_NAME_COL).append("= ? ");//.append(lastName).append("' ");
+		String lastName = author.lastName();
+		if(abbreviateLastNameBool || lastName.length() == 1) {
+			String lastNameInitial = author.lastInitial();	
+			querySb.append(authorCounter).append(".").append(LAST_NAME_COL).append(" LIKE ? ");
+			namesToSet.add(lastNameInitial + "%");
+		}else {
+			querySb.append(authorCounter).append(".").append(LAST_NAME_COL).append("= ? ");//.append(lastName).append("' ");
+			namesToSet.add(lastName);
+		}
 		
-		namesToSet.add(lastName);
 		querySb.append(relationStr).append(" ");
 		//System.out.println("queryL "+querySb);
 	}

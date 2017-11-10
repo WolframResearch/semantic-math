@@ -46,11 +46,11 @@ public class TestDB {
 		
 		Connection conn = thmp.test.TestSqlQueryParse.getLocalConnection();
 		//System.out.println("queryStr: " +rel.sqlQueryStr());
-		System.out.println("stm: " +rel.getPreparedStm(conn));
+		boolean abbreviateName = false;
+		boolean abbreviateLastName = false;
+		System.out.println("stm: " +rel.getPreparedStm(conn, abbreviateName, abbreviateLastName));
 		
-		//searchAuthor();
 	}
-	
 	
 	private static void searchAuthor() {
 		//SELECT thmId FROM authorTb3 WHERE author='W. N. Kang';

@@ -19,7 +19,7 @@ import thmp.utils.DBUtils;
  * @author yihed
  */
 public class TestSqlQueryParse {
-
+	
 	private static final Connection DEFAULT_CONN = getLocalConnection();
 	
 	/**
@@ -35,8 +35,10 @@ public class TestSqlQueryParse {
 		boolean pass = targetStr.equals(queryStr);
 		
 		PreparedStatement pstm = null;
+		boolean abbreviateFirstNameBool = false;
+		boolean abbreviateLastNameBool = false;
 		try {
-			pstm = rel.getPreparedStm(DEFAULT_CONN);
+			pstm = rel.getPreparedStm(DEFAULT_CONN, abbreviateFirstNameBool, abbreviateLastNameBool);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}

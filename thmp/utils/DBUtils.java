@@ -22,9 +22,10 @@ import thmp.search.Searcher.SearchMetaData;
  * @author yihed
  */
 public class DBUtils {
-	
+
 	public static final String DEFAULT_USER = "root";
-	public static final String DEFAULT_PW = "Wolframwolfram0*";
+	//public static final String DEFAULT_PW = "Wolframwolfram0*";
+	public static final String DEFAULT_PW = "wolfram";
 	public static final String DEFAULT_SERVER = "localhost";
 	public static final int DEFAULT_PORT = 3306;	
 	public static final String DEFAULT_DB_NAME = "thmDB";
@@ -153,6 +154,13 @@ public class DBUtils {
 				return "";
 			}
 			return this.middleName.substring(0, 1);
+		}
+		
+		public String lastInitial() {
+			if(this.lastName.length() == 0) {
+				return "";
+			}
+			return this.lastName.substring(0, 1);
 		}
 		
 		public String firstName() {

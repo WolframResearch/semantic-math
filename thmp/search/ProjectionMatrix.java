@@ -104,8 +104,7 @@ public class ProjectionMatrix {
 			}
 			String paperIdStr = m.group(1);
 			namesMMap.put(paperIdStr, dataStr.toLowerCase());
-		}
-		
+		}		
 		return namesMMap;
 	}
 	
