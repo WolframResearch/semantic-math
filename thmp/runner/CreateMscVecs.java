@@ -26,7 +26,7 @@ public class CreateMscVecs {
 
 	private static final String wordsScoreMapPath = "src/thmp/data/wordsScoreMap.json";
 	//put such a file in each tar directory.
-	private static final String termsFileName = "mscTerms.txt";
+	private static final String mscTermsFileName = "mscTerms.txt";
 	//Map of paperId and classifications.
 	private static final Map<String, String> paperIdMscMap = new HashMap<String, String>();
 	private static final Pattern MSC_LINE_PATT = Pattern.compile("([^,]+),(.+)");
@@ -167,8 +167,6 @@ public class CreateMscVecs {
 		List<Double> weightsList = new ArrayList<Double>();
 		
 		//list of papers on one tar.
-		//List<Paper> paperList = new ArrayList<Paper>();
-		//List<String> paperIdList = new ArrayList<String>();
 		
 		//gather set of papers in one tar.		
 		/*for(String paperPath : mscPaperPathList) {
@@ -200,12 +198,13 @@ public class CreateMscVecs {
 				termSb.append(",").append(paperTermsList.get(j));
 			}
 			//lines have form id, terms \n msc class string
-			termSb.append("\n").append(paperIdMscMap.get(paperId)).append("\n");
-			
+			termSb.append("\n").append(paperIdMscMap.get(paperId)).append("\n");			
 		}
+		//remove trailing newline
+		termSb.deleteCharAt(termSb.length()-1);
 		//each tar should have own file in its directory
 		//String termsFileName = "mscTerms.txt";
-		String termsFilePath = tarDirPath + termsFileName;
+		String termsFilePath = tarDirPath + mscTermsFileName;
 		FileUtils.writeToFile(termSb, termsFilePath);
 		
 		//Need to index by paper, keep counter, need final data with paper id, the actual words that occur.
@@ -214,6 +213,7 @@ public class CreateMscVecs {
 		
 		//Can check against map e.g. 0704.0005,42B30,42B35 at runtime to form map.
 		
+		//can cat at the end to combine multiple files: cat file1 file2 ... > mscCombined.txt
 	}
 	
 	/**

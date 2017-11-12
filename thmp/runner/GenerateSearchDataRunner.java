@@ -101,7 +101,8 @@ public class GenerateSearchDataRunner {
 		
 		long beforeTime = System.currentTimeMillis();
 		
-		if(gatherMscData) {
+		//already created, and edited that map. Oct 25 2017
+		if(false && gatherMscData) {
 			CreateMscVecs.wordsScoreMapToJson();
 		}
 		
@@ -115,16 +116,18 @@ public class GenerateSearchDataRunner {
 				continue;
 			}
 			String dirNameRoot = fileName.substring(fileNameLen-12, fileNameLen-4);
-			/*the script name must coincide with that in both bash scripts.	*/	
+			
 			String fileDir;
-			//final boolean scrapeThmName = FileUtils.SCRAPE_THM_NAME_Q;
-			/*if(scrapeThmName) {
-				fileDir = dirNameRoot + "Untarred1" + File.separator 
-						+ fileName.substring(fileNameLen-12, fileNameLen-8);
-			}else {*/
+			
+			/*the script name must coincide with that in both bash scripts. 
+			 * E.g. UNPACK_SCRIPT_FILE_PATH	*/	
+			if(!gatherMscData) {
 				fileDir = dirNameRoot + "Untarred" + File.separator 
 						+ fileName.substring(fileNameLen-12, fileNameLen-8);
-			//}
+			}else {
+				fileDir = dirNameRoot + "mscUntarred" + File.separator 
+						+ fileName.substring(fileNameLen-12, fileNameLen-8);
+			}
 			
 			//skip untar'ing if directory already exists
 			//don't skip! in case the files had been deleted
