@@ -201,11 +201,14 @@ public class CreateMscVecs {
 			termSb.append("\n").append(paperIdMscMap.get(paperId)).append("\n");			
 		}
 		//remove trailing newline
-		termSb.deleteCharAt(termSb.length()-1);
-		//each tar should have own file in its directory
-		//String termsFileName = "mscTerms.txt";
-		String termsFilePath = tarDirPath + mscTermsFileName;
-		FileUtils.writeToFile(termSb, termsFilePath);
+		int termSbLen = termSb.length();
+		if(termSbLen > 0) {
+			termSb.deleteCharAt(termSbLen-1);
+			//each tar should have own file in its directory
+			//String termsFileName = "mscTerms.txt";
+			String termsFilePath = tarDirPath + mscTermsFileName;
+			FileUtils.writeToFile(termSb, termsFilePath);
+		}
 		
 		//Need to index by paper, keep counter, need final data with paper id, the actual words that occur.
 		//Create both, map for paper and words, and map for paper and indices.

@@ -599,8 +599,7 @@ public class DetectHypothesis {
 			//Matcher m;
 			while((line = inputBF.readLine()) != null) {
 				//analyze line, get thms
-				scrapeThmNames(line, thmNameList);
-				
+				scrapeThmNames(line, thmNameList);				
 			}
 		} catch (IOException e) {			
 			throw new IllegalStateException("IOException while scraping thm names", e);
