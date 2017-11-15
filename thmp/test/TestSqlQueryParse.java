@@ -58,7 +58,7 @@ public class TestSqlQueryParse {
 	 * @return datasource that one can obtain Connections from.
 	 * 
 	 */
-	public static DataSource getLocalDataSource(String dbName, String user, String pw, String serverName, 
+	/*public static DataSource getLocalDataSource(String dbName, String user, String pw, String serverName, 
 			int portNum) {
 		MysqlDataSource ds = new MysqlDataSource();
 		ds.setUser(user);
@@ -72,15 +72,15 @@ public class TestSqlQueryParse {
 		//and create this on servlet code
 		ds.setDatabaseName(dbName);		
 		return ds;
-	}
+	}*/
 	
 	/**
 	 * Get connection to local (test-machine) databse. 
 	 * @return
 	 */
 	public static Connection getLocalConnection() {
-		DataSource ds = getLocalDataSource(DBUtils.DEFAULT_DB_NAME, DBUtils.DEFAULT_USER, "wolfram", 
-				DBUtils.DEFAULT_SERVER, DBUtils.DEFAULT_PORT);
+		DataSource ds = com.wolfram.puremath.dbapp.DBUtils.getLocalDataSource(DBUtils.DEFAULT_DB_NAME, 
+				DBUtils.DEFAULT_USER, "wolfram", DBUtils.DEFAULT_SERVER, DBUtils.DEFAULT_PORT);
 		Connection conn = null;
 		try {
 			 conn = ds.getConnection();

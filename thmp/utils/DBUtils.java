@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.regex.Pattern;
 
 import javax.sql.DataSource;
@@ -30,7 +29,6 @@ public class DBUtils {
 	public static final int DEFAULT_PORT = 3306;	
 	public static final String DEFAULT_DB_NAME = "thmDB";
 	
-	private static final int STM_EXECUTATION_FAILURE = -1;
 	
 	private static final DataSource DEFAULT_DATASOURCE;
 	private static final String[] globalDBSettings;
@@ -245,14 +243,7 @@ public class DBUtils {
 		manipulateData(stm, conn);		
 	}
 	
-	/**
-	 * Execute a mySql statement, for queries that should return a ResultSet,
-	 * e.g. SELECT.
-	 * @param stm
-	 * @param ds
-	 * @return ResultSet of executing the query.
-	 */
-	public static ResultSet executeSqlStatement(String stmStr, Connection conn) {
+	/*public static ResultSet executeSqlStatement(String stmStr, Connection conn) {
 		//Connection conn = null;
 		try {
 			//conn = ds.getConnection();
@@ -265,11 +256,21 @@ public class DBUtils {
 			//stm = conn.prepareStatement("INSERT INTO authorTb (thmId, author, content)"
 			//		+ "VALUES (1, 's', 'content')");
 			
-		} catch (SQLException e) {
-			
+		} catch (SQLException e) {			
 			logger.error("SQLException while executing " + stmStr + " cause " + e);
 		}		
 		return null;
+	}*/
+	
+	/**
+	 * Execute a mySql statement, for queries that should return a ResultSet,
+	 * e.g. SELECT.
+	 * @param stm
+	 * @param ds
+	 * @return ResultSet of executing the query.
+	 */
+	public static ResultSet executeSqlStatement(String stmStr, Connection conn) {		
+		return com.wolfram.puremath.dbapp.DBUtils.executeSqlStatement(stmStr, conn);
 	}
 	
 	/**
@@ -281,6 +282,9 @@ public class DBUtils {
 			 * (2) 0 for SQL statements that return nothing, or -1 on failure.
 	 */
 	public static int manipulateData(String stmStr, Connection conn) {
+		return com.wolfram.puremath.dbapp.DBUtils.manipulateData(stmStr, conn);
+	}
+	/*public static int manipulateData(String stmStr, Connection conn) {
 		//Connection conn = null;
 		try {
 			//conn = ds.getConnection();
@@ -298,7 +302,7 @@ public class DBUtils {
 			logger.error("SQLException while execute " + stmStr + " cause " + e);
 		}		
 		return STM_EXECUTATION_FAILURE;
-	}
+	}*/	
 	
 	/**
 	 * Obtain handle to datasource connection from as provided by web container 
