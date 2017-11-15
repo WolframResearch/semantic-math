@@ -17,73 +17,11 @@
 	
 	<!-- main lib containing jar such as JLink, Guava etc -->
 	<property name="libdir" value="${basedir}/lib/" />
-	<!-- lib containing jars such as thmSearch, thmUtils etc-->
-	<property name="thmplibdir" value="${basedir}/bin/" />
 	<property name="thmParse_jarname" value="thmProj.jar" />
-	<property name="thmUtils_jarName" value="thmUtils.jar" />
-	<property name="thmSearch_jarName" value="thmSearch.jar" />
+	<property name="db_jarname" value="dbApp.jar" />
 
 	<target name="clean" description="clean">
 		<delete failonerror="false" file="${basedir}/${thmParse_jarname}" />
-	</target>
-
-	<!-- Copy data such as lexicon.txt into server directory, i.e. WEB-INF. 
-		This is already included in build.xml in building the war file. -->
-	<!--<target name="copydata">
-		<copy todir="${server_datadir}">
-			<fileset dir="${datadir}">
-				<include name="lexicon.txt" />
-				<include name="parsedExpressionList.dat" />
-				<include name="threeGramData.txt" />
-				<include name="twoGramData.txt" />
-				<include name="allThmWordsList.dat" />
-				<include name="NGramData.txt" />
-			</fileset>
-		</copy>
-	</target>-->
-
-	<target name="compileExceptions" description="compile Exceptions sources">
-		<mkdir dir="${builddir}" />
-		<javac srcdir="${srcdir}/exceptions" destdir="${builddir}" debug="true">
-			<classpath>
-				<fileset dir="${thmplibdir}">
-					<include name="**/*.class" />
-				</fileset>
-				<fileset dir="${libdir}">
-					<include name="**/*.jar" />
-				</fileset>
-			</classpath>
-		</javac>
-	</target>
-
-	<target name="compileUtils" description="compile Java sources">
-		<mkdir dir="${builddir}" />
-		<javac srcdir="${srcdir}/utils" destdir="${builddir}" debug="true">
-			<classpath>
-				<fileset dir="${thmplibdir}">
-					<include name="**/*.class" />
-				</fileset>
-				<fileset dir="${libdir}">
-					<include name="**/*.jar" />
-					<!-- <include name="**/SystemFiles/*"/>-->
-				</fileset>
-			</classpath>
-		</javac>
-	</target>
-
-	<target name="compileSearch" description="compile Java sources">
-		<mkdir dir="${builddir}" />
-		<javac srcdir="${srcdir}/search" destdir="${builddir}" debug="true">
-			<classpath>
-				<fileset dir="${thmplibdir}">
-					<include name="**/*.class" />
-				</fileset>
-				<fileset dir="${libdir}">
-					<include name="**/*.jar" />
-					<!-- <include name="**/SystemFiles/*"/>-->
-				</fileset>
-			</classpath>
-		</javac>
 	</target>
 	
 	<target name="compileThmp" description="compile Java sources">
@@ -94,26 +32,6 @@
 			<src path="${fooddir}"/>
 			
 			<classpath>
-				<!--Should not use these classes!!!-->
-				<!--<fileset dir="${thmplibdir}">
-					<include name="**/*.class" />
-				</fileset>-->
-				<fileset dir="${libdir}">
-					<include name="**/*.jar" />
-					<!-- <include name="**/SystemFiles/*"/>-->
-				</fileset>
-			</classpath>
-		</javac>
-	</target>
-
-	<target name="compileRunner" description="compile Java sources">
-		<mkdir dir="${builddir}" />
-		<javac srcdir="${srcdir}/runner" destdir="${builddir}" debug="true"
-			includeantruntime="false">
-			<classpath>
-				<fileset dir="${thmplibdir}">
-					<include name="**/*.class" />
-				</fileset>
 				<fileset dir="${libdir}">
 					<include name="**/*.jar" />
 					<!-- <include name="**/SystemFiles/*"/>-->
@@ -145,7 +63,12 @@
 		</copy>
 		<copy todir="${server_libdir}">				
 			<fileset dir="${basedir}">
-					<include name="${thmParse_jarname}" />
+				<include name="${thmParse_jarname}" />
+			</fileset>
+		</copy>	
+		<copy todir="${server_libdir}">				
+			<fileset dir="${libdir}">
+				<include name="${db_jarname}" />
 			</fileset>
 		</copy>	
 		<copy todir="${server_srcdir}">
