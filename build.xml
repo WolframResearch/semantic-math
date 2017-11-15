@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Build the dbapp project -->
+
+<project name="dbapp" basedir=".">
+	
+	<property name="builddir" value="${basedir}/build/" />
+	<property name="srcdir" value="${basedir}/src/com/wolfram/puremath/dbapp" />
+
+	<property name="datadir" value="${basedir}/src/thmp/data" />
+	
+	<!-- main lib containing jar such as JLink, Guava etc -->
+	<property name="libdir" value="/Users/yihed/Documents/workspace/SemanticMath/lib/" />
+	<!-- lib containing jars such as thmSearch, thmUtils etc-->
+	<property name="db_jarname" value="dbApp.jar" />
+
+	<target name="clean" description="clean">
+		<delete failonerror="false" file="${basedir}/${db_jarname}" />
+	</target>
+
+	<target name="compileThmp" description="compile Java sources">
+		<delete dir="${builddir}"/>
+		<mkdir dir="${builddir}" />
+		<javac destdir="${builddir}" debug="true" includeantruntime="false"> 
+			<src path="${srcdir}"/>
+			<classpath>
+				<fileset dir="${libdir}">
+					<include name="**/*.jar" />
+				</fileset>
+			</classpath>
+		</javac>
+	</target>
+
+	<target name="buildjar" description="build jar file">
+		<jar destfile="${basedir}/${db_jarname}" basedir="${builddir}">
+			<manifest>
+				<attribute name="Main-Class" value="src/com/wolfram/puremath/dbapp/DBDeploy" />
+			</manifest>
+			<exclude name="qa/" />
+			<!--<exclude name="test/" />
+			<exclude name="src/" />
+			<exclude name="lib/" />
+			<exclude name="${basedir}/*.txt" />
+			<exclude name="${basedir}/*.xml" /> -->
+			<exclude name="**/*.jar" />
+		</jar>
+	</target>
+
+	<target name="copyJarToThmp">
+			<copy todir="${libdir}">
+				<fileset dir="${basedir}">
+					<include name="${db_jarname}" />
+				</fileset>
+			</copy>
+	</target>
+	
+	<!--<target name="copyJarsToThmpServlet">
+		<copy todir="${server_datadir}">
+			<fileset dir="${datadir}">
+				<include name="lexicon.txt" />
+			</fileset>
+		</copy>
+		<copy todir="${server_libdir}">				
+			<fileset dir="${basedir}">
+					<include name="${thmParse_jarname}" />
+			</fileset>
+		</copy>	
+		<copy todir="${server_srcdir}">
+			<fileset dir="${basedir}/src">
+				<include name="kernelSearchInitializer.m" />
+			</fileset>
+		</copy>	
+	</target>-->
+
+	<target name="timestamp">
+	  <tstamp>
+	    <format property="current.time" pattern="MM/dd/yyyy hh:mm:ss aa" />
+	  </tstamp>
+	  <echo message="${message} ${current.time}" />      
+	</target>
+	
+	<target name="run" description="run the build process">
+		<antcall target="clean" />
+		<antcall target="compileThmp" />
+		<!--<antcall target="compileExceptions" />
+		<antcall target="compileUtils" />
+		<antcall target="compileSearch" />		
+		<antcall target="compileRunner" />-->
+		<antcall target="buildjar" />
+		<antcall target="copyJarToThmp" />
+		<antcall target="timestamp">
+		    <param name="message" value="Finished building!" />
+		</antcall>
+	</target>
+
+</project>
