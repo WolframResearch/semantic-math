@@ -54,7 +54,7 @@ public class TestDB {
 	
 	private static void searchAuthor() {
 		//SELECT thmId FROM authorTb3 WHERE author='W. N. Kang';
-		DataSource ds = thmp.test.TestSqlQueryParse.getLocalDataSource(DBUtils.DEFAULT_DB_NAME, DBUtils.DEFAULT_USER, "wolfram", 
+		DataSource ds = com.wolfram.puremath.dbapp.DBUtils.getLocalDataSource(DBUtils.DEFAULT_DB_NAME, DBUtils.DEFAULT_USER, "wolfram", 
 				DBUtils.DEFAULT_SERVER, DBUtils.DEFAULT_PORT);
 		try {
 			Connection conn = ds.getConnection();

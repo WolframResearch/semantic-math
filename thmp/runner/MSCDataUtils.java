@@ -77,9 +77,7 @@ public class MSCDataUtils {
 			sb = sb.deleteCharAt(sb.length()-1);
 		}
 		String namesFilePath = dirPath + titleTxtFileName;
-		FileUtils.writeToFile(sb.toString(), namesFilePath);
-		
-	}
-	
+		FileUtils.writeToFile(sb.toString(), namesFilePath);		
+	}	
 	
 }

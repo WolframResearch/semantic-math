@@ -1,6 +1,5 @@
 package thmp.runner;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -115,7 +114,7 @@ public class CreateMscVecs {
 		
 		@SuppressWarnings("unchecked")
 		Map<String, String> texFileNamesMap = 
-				((List<Map<String, String>>)FileUtils.deserializeListFromFile(texFileNamesSerialFileStr)).get(0);
+			((List<Map<String, String>>)FileUtils.deserializeListFromFile(texFileNamesSerialFileStr)).get(0);
 		for(Map.Entry<String, String> fileNameEntry : texFileNamesMap.entrySet()){
 			/*each entry has form e.g. /home/usr0/yihed/thm/0201_001Untarred/0201/math0201320/llncs.cls=math0201320,*/
 			//check against names entry of files 
@@ -126,9 +125,11 @@ public class CreateMscVecs {
 				continue;
 			}
 			//mscPaperPathList.add(fileNameEntry.getKey());
-			paperIdPathMMap.put(paperId, fileNameEntry.getKey());
+			paperIdPathMMap.put(paperId, fileNameEntry.getKey());	
 			
 		}
+		
+		StringBuilder funNameSb = new StringBuilder(500000);
 		
 		for(String paperId : paperIdPathMMap.keySet()) {
 			
@@ -139,10 +140,18 @@ public class CreateMscVecs {
 				//each path is absolute path
 				paperSb.append(FileUtils.readStrFromFile(path)).append("\n");
 			}
-			Paper paper = new Paper(paperSb.toString());
+			String paperStr = paperSb.toString();
+			
+			ScrapeFunctionName.scrapeThmNames(paperStr, funNameSb);
+			
+			Paper paper = new Paper(paperStr);
 			paperList.add(paper);
 			paperIdList.add(paperId);
 		}
+		//create file name
+		String funcFileName = dirName + "funcNames.txt";
+		//write the function names to file
+		FileUtils.writeToFile(funNameSb.toString(), funcFileName);
 		
 		processTarDir(dirName, paperList, paperIdList);
 		//File[] fileDirFileAr = new File(fileDir).listFiles();

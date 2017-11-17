@@ -117,7 +117,6 @@ public class DetectHypothesis {
 	private static final Set<String> SCRAPE_STOP_WORDS_BEFORE_SET = new HashSet<String>();
 	private static final Pattern THM_SCRAPE_ELIM_PATTERN = Pattern.compile("(?:from|proof|prove[sd]*|next)");
 	private static final Pattern WHITE_SPACE_PATTERN = Pattern.compile("\\s*");
-	/****/
 	
 	//serialize the words as well, to bootstrap up after iterations of processing. The math words are going to 
 	//stabilize.
@@ -587,7 +586,7 @@ public class DetectHypothesis {
 	}
 
 	/**
-	 * Add thm names scraped from inputBF to thmNameMSet.
+	 * Add thm names scraped from inputBF to thmNameList.
 	 * *Only* used for theorem name scraping.
 	 * @param inputBF
 	 * @param thmNameMSet
