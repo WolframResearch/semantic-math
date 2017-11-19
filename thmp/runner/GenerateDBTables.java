@@ -17,9 +17,7 @@ import thmp.utils.FileUtils;
  * @author yihed
  *
  */
-public class GenerateDBTables {
-	
-	
+public class GenerateDBTables {	
 	
 	public static void main(String[] args) throws SQLException {
 		@SuppressWarnings("unchecked")

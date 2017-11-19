@@ -68,8 +68,7 @@ public class CreateMscVecs {
 				continue;
 			}
 			paperIdMscMap.put(paperId, mscSb.substring(0, mscSb.length()-1));				
-		}
-		
+		}		
 	}
 	
 	public static class Paper implements TheoremContainer{
@@ -90,14 +89,14 @@ public class CreateMscVecs {
 	 * Create TD vectors for entire documents, then project down to 
 	 * 35 dimensions, serialize in mx. 
 	 */
-	public static void main(String[] args) {
-		
+	public static void main(String[] args) {	
 		
 	}
 	
 	/**
 	 * 
-	 * @param dirName Has form e.g. "0208_001Untarred/0208"
+	 * @param dirName Has form e.g. "0208_001Untarred/0208".
+	 * And for msc directory processing, it's "0208_001mscUntarred/0208"
 	 */
 	public static void processFilesInTar(String dirName) {
 		
@@ -152,6 +151,7 @@ public class CreateMscVecs {
 		String funcFileName = dirName + "funcNames.txt";
 		//write the function names to file
 		FileUtils.writeToFile(funNameSb.toString(), funcFileName);
+		funNameSb = null;
 		
 		processTarDir(dirName, paperList, paperIdList);
 		//File[] fileDirFileAr = new File(fileDir).listFiles();

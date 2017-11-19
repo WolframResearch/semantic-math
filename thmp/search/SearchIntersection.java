@@ -48,7 +48,7 @@ public class SearchIntersection {
 	// closest thms. Else use NUM_NEAREST_VECS as default value.
 	private static final int NUM_NEAREST_VECS = SearchCombined.NUM_NEAREST;
 
-	private static final Pattern BY_AUTHORS_PATT = Pattern.compile("(.*)\\s+by authors*\\s+(.*?)\\s*");
+	private static final Pattern BY_AUTHORS_PATT = Pattern.compile("(.*)\\s*by authors*\\s+(.*?)\\s*");
 	private static final Pattern AND_OR_PATT = Pattern.compile("\\s+(and|or)\\s+");
 	
 	private static final Logger logger = LogManager.getLogger(SearchIntersection.class);
@@ -165,7 +165,9 @@ public class SearchIntersection {
 		  pass to intersection search. Triggered by "by author". */
 		Matcher m;
 		if((m=BY_AUTHORS_PATT.matcher(input)).matches()) {
-			input = m.group(1);
+			input = m.group(1);			
+			boolean searchAuthorOnly = WordForms.getWhiteEmptySpacePattern().matcher(input).matches();
+			logger.info("input:"+input, " searchAuthorOnly ",searchAuthorOnly);
 			//parse the authors string 
 			String authorStr = m.group(2);
 			//but and/or could be more complicated with compositions!!
@@ -193,13 +195,16 @@ public class SearchIntersection {
 			try {
 				authorThmList = DBSearch.searchByAuthor(authorRelation, conjDisjType);
 				authorThmSet = new HashSet<Integer>(authorThmList);
+				if(searchAuthorOnly) {
+					searchState.set_intersectionVecList(authorThmList);
+				}
 			} catch (SQLException e) {
 				logger.error("SQLException when searching for author! " + e);
 				intersectionSearch(input, searchWordsSet, searchState, contextSearchBool, searchRelationalBool, 
 						numSearchResults);
 				hasSearched = true;
 			}
-			if(!hasSearched) {
+			if(!searchAuthorOnly && !hasSearched) {
 				intersectionSearch(input, searchWordsSet, searchState, contextSearchBool, searchRelationalBool, 
 						numSearchResults, authorThmSet);
 			}
