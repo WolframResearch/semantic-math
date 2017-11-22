@@ -40,6 +40,7 @@ public class LiteralSearch {
 	private static final int WORD_DIST_2_3_POINT = 1;
 	/**threshold after which to perform literal word search*/
 	private static final double literalSearchTriggerThreshold = 0.5;
+	private static final double literalSearchTriggerThreshold2 = 0.4;
 	private static final Set<String> INVALID_SEARCH_WORD_SET;
 	private static final Pattern DIGIT_PATTERN = Pattern.compile("\\d+");
 	private static final Logger logger = LogManager.getLogger(LiteralSearch.class);
@@ -394,6 +395,9 @@ public class LiteralSearch {
 		//System.out.println("LiteralSearch - curSpan maxPossibleSpan: " + curSpan + "  " + maxPossibleSpan);
 		if(2 == maxPossibleSpan) {
 			return curSpan < 2;
+		}
+		if(maxPossibleSpan > 7) {
+			return curSpan <= maxPossibleSpan * literalSearchTriggerThreshold2;
 		}
 		return curSpan <= maxPossibleSpan * literalSearchTriggerThreshold;
 	}

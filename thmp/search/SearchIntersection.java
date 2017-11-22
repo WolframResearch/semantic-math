@@ -468,11 +468,13 @@ public class SearchIntersection {
 		TreeMultimap<Integer, ThmSpanPair> scoreThmMMap2 = TreeMultimap.create();
 		Set<Integer> descendingKeySet = scoreThmMMap.asMap().descendingKeySet();
 		Iterator<Integer> descendingKeySetIter = descendingKeySet.iterator();
+		boolean topScorer = true;
+		
 		while(descendingKeySetIter.hasNext()){
 			int curScore = descendingKeySetIter.next();
 			Collection<Integer> thmIndices = scoreThmMMap.get(curScore);
 			for(int thmIndex : thmIndices){
-				if(counter-- < 1){
+				if(counter-- < 1 && !topScorer){
 					break;
 				}
 				//int thmIndex = thmScoreEntry.getKey();
@@ -480,6 +482,7 @@ public class SearchIntersection {
 				int spanScore = thmSpanMap.get(thmIndex);
 				scoreThmMMap2.put(curScore, new ThmSpanPair(thmIndex, spanScore));
 			}
+			topScorer = false;
 		}		
 		/*for (Map.Entry<Integer, Integer> thmScoreEntry : thmScoreMap.entrySet()) {
 			if(counter-- < 1){
@@ -503,11 +506,13 @@ public class SearchIntersection {
 		counter = numHighest;
 		Searcher<Set<Integer>> relationSearcher = new RelationalSearch();
 		Searcher<Map<Integer, Integer>> contextSearcher = new ContextSearch();	
-		for (Entry<Integer, Collection<ThmSpanPair>> entry : scoreThmDescMMap.entrySet()) {			
+		topScorer = true;
+		
+		for (Entry<Integer, Collection<ThmSpanPair>> entry : scoreThmDescMMap.entrySet()) {		
 			List<Integer> tempHighestThmList = new ArrayList<Integer>();
 			for (ThmSpanPair pair : entry.getValue()) {
 				Integer thmIndex = pair.thmIndex;
-				if (counter-- < 1){
+				if (counter-- < 1 && !topScorer){
 					break;
 				}
 				// avoid duplicates, since the scoreThmMMap leaves outdated
@@ -526,6 +531,7 @@ public class SearchIntersection {
 									+ thmHypPair.thmStr() + " HYP " + thmHypPair.hypStr());
 				}
 			}
+			topScorer = false;
 			int tupleSz = tempHighestThmList.size();	
 			if(0 == tupleSz){
 				continue;
@@ -696,12 +702,15 @@ public class SearchIntersection {
 		
 		Set<Integer> scoreThmMMapKeySet = scoreThmMMap.asMap().descendingKeySet();
 		Iterator<Integer> scoreThmMMapKeySetIter = scoreThmMMapKeySet.iterator();
+		boolean topScorer = true;
 		int counter = numHighest;
 		whileLoop: while(scoreThmMMapKeySetIter.hasNext()){
 			int curScore = scoreThmMMapKeySetIter.next();
 			Set<Integer> thmIndexSet = scoreThmMMap.get(curScore);
-			for(int thmIndex : thmIndexSet){				
-				if(counter-- < 1){
+			for(int thmIndex : thmIndexSet){
+				//add everything in top tier, for contextual search to kick in.
+				//Needed for short search terms, e.g. "finitely generated cover".
+				if(counter-- < 1 && !topScorer){
 					break whileLoop;
 				}
 				int thmSpanScore = thmSpanMap.get(thmIndex);
@@ -724,40 +733,10 @@ public class SearchIntersection {
 					// SCORE " + newThmScore + thm);
 				}
 			}
-			
+			topScorer = false;
 		}		
 		scoreThmMMap.putAll(tempScoreThmMMap);
-		//System.out.println("SearchIntersection - tempScoreThmMMap "+tempScoreThmMMap);
-		// add bonus proportional to the avg word score (not span score)
-		/*NavigableMap<Integer, Collection<Integer>> orderedSpanScoreMMap = spanScoreThmMMap.asMap().descendingMap();		
-		// counts which span level is being iterated over currently
-		int spanCounter = 1;
-		for (Entry<Integer, Collection<Integer>> entry : orderedSpanScoreMMap.entrySet()) {
-
-			for (int thmIndex : entry.getValue()) {
-				if (counter == 0){
-					break;	
-				}
-				int prevScore = thmScoreMap.get(thmIndex);
-				
-				int bonusScore = (int) (avgWordScore / ((double) spanCounter * 2));
-				bonusScore = bonusScore == 0 ? 1 : bonusScore;
-				int newThmScore = prevScore + bonusScore;
-				scoreThmMMap.put(newThmScore, thmIndex);
-				thmScoreMap.put(thmIndex, newThmScore);
-				if (DEBUG) {
-					ThmHypPair thmHypPair = ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex);
-					String thm = thmHypPair.thmStr();
-					String hyp = thmHypPair.hypStr();
-					System.out.println("Adding bonus " + bonusScore + ". num words hit: " + entry.getKey()
-							+ ". newThmScore: " + newThmScore + ". thm: " + thm + " HYP "+ hyp);
-					// System.out.println("PREV SCORE " + prevScore + " NEW
-					// SCORE " + newThmScore + thm);
-				}
-				counter--;
-			}
-			spanCounter++;
-		}*/
+		
 	}
 
 	/**

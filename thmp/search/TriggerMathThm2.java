@@ -538,7 +538,8 @@ public class TriggerMathThm2 {
 	 * @param wordsScoreMap
 	 * @param triggerTermsVec
 	 * @param indexScoreArList List of arrays of two, index, and score.
-	 * @param termCol List of uniformized terms gathered for current text.
+	 * @param @Nullable termCol List of uniformized terms gathered for current text, 
+	 * 	to be used for web, e.g. highlight.
 	 * @param norm
 	 * @param i
 	 * @param term
@@ -588,7 +589,9 @@ public class TriggerMathThm2 {
 			
 			//keywordDict starts indexing from 0!
 			indexScorePairList.add(new IndexScorePair(rowIndex, termScore));
-			termCol.add(term);
+			if(null != termCol) {
+				termCol.add(term);
+			}
 		}
 		//add vector entries for related words
 		if(null != termRelatedWordsList){

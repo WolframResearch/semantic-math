@@ -868,7 +868,20 @@ public class ThmP1TestRun {
 			st= "The fundamental group of any fake projective plane decomposes as a free nontrivial product with almagamation";
 			st="avocadoes grow in California and taste good on toast"; //double check this!!
 			st="avocadoes grow in California and mexico"; 
+			st = "fiber of genus one on surface";						
+			st = "F is group cohomology cochain complex";
+			st = "curve is genus one";
+			st = "fiber of genus one on surface";
+			st = "surface $F$ of genus $h$";
+			st = "finitely generated cover";
+			st = "Let $H$ be a finitely generated cover of one of $\\mathfrak G$ (as in Theorem GrHa+i),";
+			st = "polynomial subspace";
+			st = "let $V^n(d , mathbf m)$ be the subspace consisting of polynomials which vanish with the prescribed multiplicities at general points";
+			st = "subspace consisting of polynomials which vanish at zeros";
+			st = "reals extend rationals";
+			st = "be tiled using as a tile the  triangle ";
 			
+			//{28016=14606, 17465=-10, 14606=16206, 16206=14606}
 			//st = " \\[ \\ begin{array}{l}  \\ frac{1}{\\ eta_ 1(R^1_T)}  \\ int_{R^1_T} \\ left(\\ int_{H_ 1/H_1\\ cap \\ Gamma_ 1} f(gh \\ Gamma_ 1)\\; d \\ nu_ 1(\\ dot{h})\\ right) \\,d \\ eta_ 1(\\ dot{g}) \\ \\[7pt] \\ qquad \\ \\ qquad =  (1/2)\\ int_{{\\ rm O}(n)} dk \\ cdot \\ int_{H_ 1/H_1\\ cap \\ Gamma_ 1}  d \\ nu_ 1(\\ dot{h})\\; {\\ scriptstyle \\ times} \\ \\[3pt] \\ qquad \\ \\ qquad \\ \\ qquad {\\ scriptstyle \\ times}\\;   \\ left (\\ frac{1}{\\ ell(D^1_T)} \\ int_{(\\ mbox{\\ boldmath{$ \\ scriptstyle t$}},\\ mbox{\\ boldmath{$ \\ scriptstyle x$}})\\ in D^1_T}  f(k \\ Psi(\\ mbox{\\ boldmath{$t$}},\\ mbox{\\ boldmath{$x$}})\\ Gamma_ 1)\\; d \\ mbox{\\ boldmath{$t$}}\\, d \\ mbox{\\ boldmath{$x$}} \\ right).  \\end{array} \\]";
 			//st = "Let $p_1,\\dots,p_r$ be the preimages under $w$"; 			
 			//st = "$p_1,\\dots,p_r$ is the preimage under $w$ of $c^\\ast_0$";			

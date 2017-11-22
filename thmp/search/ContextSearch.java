@@ -68,7 +68,7 @@ public class ContextSearch implements Searcher<Map<Integer, Integer>>{
 			Searcher<Map<Integer, Integer>> searcher, SearchState searchState){
 		//short-circuit if query contains only 1 word		
 		// Arrays.toString(Thread.currentThread().getStackTrace())
-		logger.info("Starting context search... BackTrace: ");
+		logger.info("Starting context search...  ");
 		int nearestThmIndexListSz = nearestThmIndexList.size();
 		//could be 0 if, for instance, the words searched are all unknown to the word maps. 
 		if(0 == nearestThmIndexListSz){ 
@@ -108,8 +108,9 @@ public class ContextSearch implements Searcher<Map<Integer, Integer>>{
 			logger.warn("No context vector was formed for query: " + query);
 			return nearestThmIndexList;
 		}
-		System.out.println("ContextSearch-selected thm indices: " + nearestThmIndexList);
+		System.out.println("***********ContextSearch -QUERY  queryContextVecMap*** " +queryContextVecMap);
 		if(DEBUG) {
+			System.out.println("ContextSearch-selected thm indices: " + nearestThmIndexList);
 			System.out.println("ContextSearch - queryContextVecMap " +queryContextVecMap);
 		}
 		Map<Integer, List<Integer>> thmVecsTMap = new TreeMap<Integer, List<Integer>>(new thmp.utils.DataUtility.ReverseIntComparator());
@@ -133,20 +134,20 @@ public class ContextSearch implements Searcher<Map<Integer, Integer>>{
 				//final int contextCoincidingAddition = ;
 				//use .equals(), and not simple reference equality.
 				if(queryVecMapVal.equals(curThmVecMapEntryVal)){
-					if(curThmVecMapEntryVal < 0){
+					/**Note: Deliberately don't add if curThmVecMapEntryVal < 0, which cause lower-ranking results to
+					 * bubble up if that result happened to not have a matching relation because it's less complex.*/
+					/*if(curThmVecMapEntryVal < 0){
 						//if only agree up to being the same universal or existential qualifier,
 						//which is the case if < 0. Move to global constant!
+						 * <--this leads
 						numCoinciding++;					
-					}else{
+					}*/
+					if(curThmVecMapEntryVal > 0){
 						numCoinciding += CONTEXT_MATCH_DEFAULT;
 					}
-				}else{
-					//modifies some other word, e.g. unbounded operator, vs unbounded resolution.
-					if(queryVecMapVal >= 0 && null != curThmVecMapEntryVal && curThmVecMapEntryVal > 0){
-						//numCoinciding -= CONTEXT_MATCH_DEFAULT;
-						numCoinciding--;
-					}
-				}
+				} 
+				/**Note: Deliberately don't penalize result if mismatch instead of miss, 
+				 * result could be still be useful, also negative will affect intersection search!*/
 			}
 			System.out.println("ContextSearch - index / numCoinciding " + thmIndex + " " + numCoinciding);
 			if(numCoinciding < 0){

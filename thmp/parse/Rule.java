@@ -39,6 +39,10 @@ public class Rule {
 		return this.combinedPos;
 	}
 	
+	public boolean hasCombinedPos(){
+		return this.combinedPos != null;
+	}
+	
 	public double prob(){
 		return this.probability;
 	}

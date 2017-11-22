@@ -745,9 +745,10 @@ public class Maps {
 			structMap.put("or_is", new Rule("assert", 1));
 			structMap.put("assert_orass", new Rule("or", 1));
 			structMap.put("ent_ppt", new Rule("newchild", 1));
-			//e.g. "integer linear combination"
+			//e.g. "integer linear combination", in particular ones involving conj/disj
 			structMap.put("ent_ent", new Rule("fuse", .7));
-			
+			//"genus one"
+			structMap.put("ent_quant", new Rule("absorb2", .7));
 			// e.g. between A and B.
 			// structMap.put("pre_conj", new Rule("prep", 1));
 			// structMap.put("pre_disj", new Rule("prep", 1));

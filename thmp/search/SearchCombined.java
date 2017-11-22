@@ -23,7 +23,6 @@ import com.google.common.collect.TreeMultimap;
 
 import thmp.parse.ProcessInput;
 import thmp.parse.TheoremContainer;
-import thmp.utils.DBUtils;
 import thmp.utils.DataUtility;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
@@ -37,7 +36,9 @@ public class SearchCombined {
 
 	private static final int NUM_NEAREST_SVD = 100;
 	//return 60 now, but the FE should only display all when "show more" is clicked.
-	protected static final int NUM_NEAREST = 60;
+	//Need to be large, if the top-scoring bracket contains many results, e.g. for short search terms,
+	//so context vector based searches can kick in.
+	protected static final int NUM_NEAREST = 60; //100
 	//combined number of vectors to take from search results of
 	//svd/nearest and intersection
 	//protected static final int NUM_COMMON_VECS = 4;
@@ -321,8 +322,8 @@ public class SearchCombined {
 		}
 		
 		List<Integer> bestCommonVecsList = searchState.intersectionVecList();
-		
-		if(null == FileUtils.getServletContext()){			
+		//need good heuristics for when to trigger this, e.g. very few or no results from previous algorithms.
+		if(false && null == FileUtils.getServletContext()){			
 			//experiment with this constant!
 			if(searchState.largestWordSpan() < searchWordsSet.size()*2./3){
 				//Only do SVD if no good intersection matches, determine if good match based on span scores.

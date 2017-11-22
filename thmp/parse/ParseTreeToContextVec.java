@@ -241,24 +241,40 @@ public class ParseTreeToContextVec {
 		}
 	}
 	
+	/**
+	 * E.g. in "reals extend rationals", "rationals" should have parent "extend"
+	 * @param struct
+	 * @param contextVecMap
+	 * @param structIndex
+	 */
 	private static void collectVPContextVec(Struct struct, Map<Integer, Integer> contextVecMap,
 			int structIndex) {
 		if(structIndex <= INDEX_MEANING_THRESHOLD){
 			return;
 		}
 		Struct parentStruct = struct.parentStruct();
-		if(null != parentStruct){
+		if(null != parentStruct && contextVecMap.get(structIndex) <= INDEX_MEANING_THRESHOLD){
 			String parentStructType = parentStruct.type();
 			if(parentStructType.equals("verbphrase") && struct == parentStruct.prev2()){
 				//e.g. "A covers B", A is the parent of cover, cover is parent of B
 				int verbIndex = getVerbIndexFromVP(parentStruct);
 				if(verbIndex > 0){
 					contextVecMap.put(structIndex, verbIndex);
+					if(DEBUG) {
+						if(true) System.out.println("ParseTreeToContextVec - ### structIndex " + structIndex + " parent index " + verbIndex);
+					}
+					//throw new RuntimeException("verbphrase!"+structIndex + " "+verbIndex);
+					
 				}
 			}
 		}
 	}	
 	
+	/**
+	 * Take verb phrase into account.
+	 * @param vpStruct
+	 * @return
+	 */
 	private static int getVerbIndexFromVP(Struct vpStruct){
 		
 		if(vpStruct.prev1NodeType().isTypeStruct()){
@@ -300,6 +316,7 @@ public class ParseTreeToContextVec {
 		}	
 		return "";
 	}
+	
 	/**
 	 * Adjusts contextVec based on wrapper.
 	 * @param struct
@@ -392,9 +409,11 @@ public class ParseTreeToContextVec {
 			}
 		}		
 		int termRowIndex = addTermStrToVec(struct, termStr, structParentIndex, contextVecMap);	
+		
 		//if termStr was not added, use lastWordRowIndex. Relies on fact that addTermStrToVec()
 		//returns structParentIndex back if termStr not added.
-		termRowIndex = (termRowIndex == structParentIndex && null != lastWordRowIndex) ? lastWordRowIndex : termRowIndex;		
+		termRowIndex = (termRowIndex == structParentIndex && null != lastWordRowIndex) ? lastWordRowIndex : termRowIndex;
+		
 		return termRowIndex;
 	}
 
@@ -477,6 +496,7 @@ public class ParseTreeToContextVec {
 						Integer prevParentIndex = contextVecMap.get(relatedWordRowIndex);
 						if(null == prevParentIndex || prevParentIndex < 0 || forceAdjust){ //contextVec[relatedWordRowIndex] <= 0
 							contextVecMap.put(relatedWordRowIndex, structParentIndex);
+							
 							//contextVec[relatedWordRowIndex] = structParentIndex;
 						}
 					}
@@ -490,8 +510,9 @@ public class ParseTreeToContextVec {
 				contextVecMap.put(termRowIndex, structParentIndex);
 				//contextVec[termRowIndex] = structParentIndex;
 			}
-			if(DEBUG) 
+			if(DEBUG) {
 				if(true) System.out.println("ParseTreeToContextVec - termStr " + termStr + " ### rowIndex " + termRowIndex + " parent index " + structParentIndex);
+			}
 		}else{
 			//pass parentIndex down to children, in case of intermediate StructA that doesn't have a content string.
 			//eg assert[A, B], the assert does not have content string.
@@ -583,7 +604,7 @@ public class ParseTreeToContextVec {
 		}
 		
 		/**
-		 * Sets the context vec to take into account e.g. A\[Element] B.
+		 * Sets the context vec to take into account parses, e.g. A\[Element] B.
 		 */
 		private static void setContextVec(Struct struct, Map<Integer, Integer> contextVecMap, WLCommandWrapper commandWrapper,
 				ParseRelation relation){

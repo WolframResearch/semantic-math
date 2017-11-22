@@ -12,17 +12,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.wolfram.jlink.Expr;
-import com.wolfram.jlink.KernelLink;
-import com.wolfram.jlink.MathLinkException;
-
-import thmp.exceptions.ParseRuntimeException.IllegalSyntaxException;
 import thmp.parse.ParseState.ParseStateBuilder;
-import thmp.search.CollectThm;
 import thmp.search.SearchState;
 
 /**
@@ -277,7 +270,7 @@ public class GenerateContextVector {
 		return combinedMap;
 	}
 	
-	public static void main(String[] args){
+	/*public static void main(String[] args){
 		GetContextVec.initialize();
-	}
+	}*/
 }

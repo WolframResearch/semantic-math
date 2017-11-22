@@ -266,13 +266,17 @@ public class CollectThm {
 			//this orders the list as well. INDEX map. Can rely on order as map is immutable.
 			
 			//System.out.println("------++++++++-------CONTEXT_VEC_WORDS_MAP.size " + CONTEXT_VEC_WORDS_MAP.size());
-				
+			
+			if(!FileUtils.isOSX()) {
 				//should not build if not searching
-				String wordThmIndexMMapPath = FileUtils.getPathIfOnServlet(SearchMetaData.wordThmIndexMMapSerialFilePath());
+				String wordThmIndexMMapPath = FileUtils.getPathIfOnServlet(SearchMetaData.wordThmIndexMMapSerialFilePath());				
 				@SuppressWarnings("unchecked")
 				Multimap<String, Integer> wordThmsIndexMultimap = ((List<Multimap<String, Integer>>)
 						FileUtils.deserializeListFromFile(wordThmIndexMMapPath)).get(0);
 				wordThmsIndexMMapNoAnno = ImmutableMultimap.copyOf(wordThmsIndexMultimap);
+			}else {
+				wordThmsIndexMMapNoAnno = null;
+			}				
 				 
 				String docWordsFreqMapNoAnnoPath = FileUtils.getPathIfOnServlet(SearchMetaData.wordDocFreqMapPath());
 				@SuppressWarnings("unchecked")
@@ -1572,6 +1576,6 @@ public class CollectThm {
 	}
 	
 	public static void main(String[] args){
-		int a = ThmWordsMaps.CONTEXT_VEC_SIZE;
+		//int a = ThmWordsMaps.CONTEXT_VEC_SIZE;
 	}
 }

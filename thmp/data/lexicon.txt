@@ -14,6 +14,7 @@ homology ent
 serre ent
 cover verb
 log ent
+genus ent
 value ent
 separate verb
 sheaf ent
@@ -111,6 +112,7 @@ under pre
 cohen-macaulay adj
 multilinear adj
 multiplication ent
+multiplicity ent
 union ent
 localization ent
 respect verb

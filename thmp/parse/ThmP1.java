@@ -2546,11 +2546,12 @@ public class ThmP1 {
 
 					StructList structList1 = mx.get(i).get(k);
 					StructList structList2 = mx.get(k + 1).get(j);
-					//System.out.println("++++ "+i + " " + k + " structList1: " + structList1);
-					//System.out.println("---- "+(k+1) + " " + j + " structList2: " + structList2);
-					// Struct struct1 = mx.get(i).get(k);
-					// Struct struct2 = mx.get(k + 1).get(j);
-
+					//don't delete below comment
+					/*
+					System.out.println("++++ "+i + " " + k + " structList1: " + structList1);
+					System.out.println("---- "+(k+1) + " " + j + " structList2: " + structList2);
+					*/
+		
 					if (structList1 == null || structList2 == null || structList1.size() == 0
 							|| structList2.size() == 0) {						
 						continue;
@@ -3693,9 +3694,9 @@ public class ThmP1 {
 		//build relation vector for the highest-ranked parse, set relation vector to parseState.
 		Multimap<ParseStructType, ParsedPair> topParsedPairMMap = sortedParsedPairMMapList.get(0);
 		Set<Integer> relationVec;
-		if(FOOD_PARSE){
+		if(!FOOD_PARSE){			
 			//doing temporarily on local machine, so parsing does not take forever because of map initializations.
-			relationVec = new HashSet<Integer>();//new BigInteger("0");
+			relationVec = new HashSet<Integer>();//new BigInteger("0");			
 		}else{
 			relationVec = RelationVec.buildRelationVec(topParsedPairMMap);
 		}
@@ -3808,10 +3809,10 @@ public class ThmP1 {
 		//List<Multimap<ParseStructType, ParsedPair>> parseStructMMapList = new ArrayList<Multimap<ParseStructType, ParsedPair>>();
 		/* Fills the parseStructMap and produces String representation, collect commands built above.*/
 		boolean contextVecConstructed = false;
-		if(FOOD_PARSE){
+		/*if(FOOD_PARSE){
 			//enabling temporarily on local machine, so parsing does not take forever because of map initializations.
 			contextVecConstructed = true;
-		}
+		}*/
 		contextVecConstructed = ParseToWLTree.collectCommandsDfs(parseStructMMap, curParseStruct, uHeadStruct, wlSB, 
 				curStructContextVecMap, contextVecConstructed, parseState);
 		//System.out.println(">>>>>>>>>>uHeadStruct.WLCommandWrapperList()" + uHeadStruct.WLCommandWrapperList()); //DEBUG
@@ -4068,7 +4069,7 @@ public class ThmP1 {
 					return new EntityBundle(firstEnt, recentEnt, recentEntIndex);					
 				}else{
 					//bonus for tighter combination, e.g. "$A$ of/that/with $B$" 
-					newDownPathScore += SCORE_BONUS;//HERE
+					newDownPathScore += SCORE_BONUS;
 				}
 			}
 			
@@ -4178,7 +4179,8 @@ public class ThmP1 {
 				newStruct.set_maxDownPathScore(newDownPathScore);
 				mx.get(i).get(j).add(newStruct);
 			}
-		}else if(newType.equals("fuse")){	
+		}else if(newType.equals("fuse")){
+			
 			if(!struct1.isStructA()){
 				//first struct cannot have collected children for this
 				//rule to be meaningful
@@ -4220,7 +4222,11 @@ public class ThmP1 {
 							struct2.type().substring(0, 4) + "_ent");					
 					newStruct.set_maxDownPathScore(newDownPathScore);					
 					mx.get(i).get(j).add(newStruct);
-				}
+				}/*else if(null != combinedPos && "ent".equals(combinedPos)){
+					//e.g. "ent_quant", i.e. "genus one"
+					
+					mx.get(i).get(j).add(newStruct);
+				}*/
 			}
 			//fuse ent's, e.g. "integer linear combination"
 			else{
@@ -4247,11 +4253,11 @@ public class ThmP1 {
 			}
 			}
 		}
-		//absorb first into second
+		//absorb first into second. //e.g. "ent_quant", i.e. "genus one"
 		else if(newType.equals("absorb1")){
 			
 			assert(struct1.isStructA() && !struct2.isStructA());
-
+			
 			//if(!struct1.isStructA() || struct2.isStructA()){
 			if(!struct1.isStructA() //|| struct2.isStructA()
 					){

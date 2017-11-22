@@ -1,5 +1,7 @@
 package thmp.parse;
 
+import thmp.utils.FileUtils;
+
 /**
  * Initialize parse server with resources, e.g. file paths
  * on server.
@@ -8,7 +10,7 @@ package thmp.parse;
  */
 public class InitParseWithResources {
 
-	private static boolean DEBUG = false;
+	private static boolean DEBUG = FileUtils.isOSX();
 		
 	public static void set_DEBUG(boolean debug_){
 		DEBUG = debug_;

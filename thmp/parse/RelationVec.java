@@ -46,9 +46,9 @@ public class RelationVec implements Serializable{
 	private static final long serialVersionUID = 7990758362732085287L;
 
 	//map of words and their indices.
-	private static final Map<String, Integer> contextKeywordIndexThmsDataDict = CollectThm.ThmWordsMaps.get_CONTEXT_VEC_WORDS_INDEX_MAP();
+	//private static final Map<String, Integer> contextKeywordIndexThmsDataDict = CollectThm.ThmWordsMaps.get_CONTEXT_VEC_WORDS_INDEX_MAP();
 	
-	//used for forming query vecs, as these are words used when the thm source vecs were formed, words and their indices
+	//used for forming query vecs, as these are words used when the thm source vecs were formed, words and their indices.
 	//Ordered according to frequency.
 	private static final Map<String, Integer> contextKeywordIndexQueryDict = CollectThm.ThmWordsMaps.get_CONTEXT_VEC_WORDS_INDEX_MAP();
 	/*Deliberately not final, since not needed, in fact not created, when gathering data instead of searching.
