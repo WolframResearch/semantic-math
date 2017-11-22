@@ -339,7 +339,7 @@ public class TriggerMathThm2 {
 			Set<String> termsSet = new HashSet<String>();
 			String thm = defThmListIter.next().getEntireThmStr();
 			//get collection of words.
-			List<String> thmAr = WordForms.splitThmIntoSearchWords(thm.toLowerCase());
+			List<String> thmAr = WordForms.splitThmIntoSearchWordsList(thm.toLowerCase());
 			
 			int queryVecLen = TriggerMathThm2.mathThmMxRowDim();
 			//logger.info("TriggerMathThm - queryVecLen: " + queryVecLen);
@@ -435,7 +435,7 @@ public class TriggerMathThm2 {
 	 */
 	public static String createQueryVec(String thm){
 		
-		List<String> thmAr = WordForms.splitThmIntoSearchWords(thm);
+		List<String> thmAr = WordForms.splitThmIntoSearchWordsList(thm);
 		//map of non-annotated words and their scores. Use get_wordsScoreMapNoAnno 
 		//and not CONTEXT_VEC_WORDS_MAP.
 		Map<String, Integer> wordsScoreMap = CollectThm.ThmWordsMaps.get_wordsScoreMap();	

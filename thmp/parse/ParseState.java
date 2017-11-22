@@ -124,7 +124,7 @@ public class ParseState {
 	 * first to match with variables when in thm, since this contains the local 
 	 * definitions.
 	 */
-	public ListMultimap<VariableName, VariableDefinition> localVariableNamesMMap; //public for debugging June 29
+	private ListMultimap<VariableName, VariableDefinition> localVariableNamesMMap;
 	
 	//parsedExpr to record parsed pairs during parsing. Eliminate copy in ThmP1.java!
 	//<--This should be superceded by ParseStruct's, Jan 2017.
@@ -542,6 +542,9 @@ public class ParseState {
 	
 	/**
 	 * Map of what each symbol stands for in the text so far.
+	 *  Map to use when in thms/lemmas/etc, local variable definition map is used 
+	 * first to match with variables when in thm, since this contains the local 
+	 * definitions.//here
 	 * Make clear it's ListMultimap, since symbol order matters.
 	 * Returns immutable map, so the original map stays protected and 
 	 * can only be modified through the exposed modification method.
@@ -549,8 +552,21 @@ public class ParseState {
 	 */
 	public ImmutableListMultimap<VariableName, VariableDefinition> getGlobalVariableNamesMMap(){
 		//defensively copy.
-		//ListMultimap<String, VariableDefinition> tempMap = ArrayListMultimap.create(this.variableNamesMMap);
 		ImmutableListMultimap<VariableName, VariableDefinition> tempMap = ImmutableListMultimap.copyOf(this.globalVariableNamesMMap);
+		return tempMap;
+	}	
+	
+	/**
+	 * Multimap of what each symbol stands for in the local text,
+	 * i.e. in current theorems/lemma/etc, not outside.
+	 * Make clear it's ListMultimap, since symbol order matters.
+	 * Keys are variable Strings, and values   that contain
+	 * Structs, and the input sentence that defines it.
+	 * When storing a definition such as "$f: X\to Y$", also store variable
+	 * name before the colon, i.e. "f". 
+	 */
+	public ListMultimap<VariableName, VariableDefinition> getLocalVariableNamesMMap() {
+		ImmutableListMultimap<VariableName, VariableDefinition> tempMap = ImmutableListMultimap.copyOf(this.localVariableNamesMMap);
 		return tempMap;
 	}
 	
@@ -1075,5 +1091,5 @@ public class ParseState {
 	public void addToNumNonTexTokens(int numNonTexTokensToAdd) {
 		this.numNonTexTokens += numNonTexTokensToAdd;
 	}
-	
+
 }

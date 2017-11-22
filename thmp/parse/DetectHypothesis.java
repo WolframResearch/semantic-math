@@ -51,6 +51,9 @@ import thmp.utils.MacrosTrie.MacrosTrieBuilder;
  * The class DetectHypothesis should always be run from the nested class Runner,
  * as it sets the relevant settings.
  * 
+ * To run this locally on developer machine, (without waiting to load all deserialized
+ * files), can specify file to run on inside readAndProcessInputData().
+ * 
  * @author yihed
  *
  */
@@ -152,13 +155,9 @@ public class DetectHypothesis {
 
 	static{
 		FileUtils.set_dataGenerationMode();	
-		/*The "next time" form previous time refers to current run in this static initializer.*/
-		//ALL_THM_WORDS_LIST = new ArrayList<String>(CollectThm.ThmWordsMaps.get_contextVecWordsNextTimeMap().keySet());
 		ALL_THM_WORDS_FREQ_MAP = CollectThm.ThmWordsMaps.get_docWordsFreqMap();//.get_contextVecWordsNextTimeMap();
-		//this SHOULD be done at the end! So keep in sync with the others .dat, so don't need to parse everything twice.
-		//Then use current list, but wordsList's from previous runs.
-		//ThmSearch.TermDocumentMatrix.createTermDocumentMatrixSVD();	
-		//
+		
+		//Stop words used when scraping theorem names.
 		String[] beforeStopWordsAR = new String[]{"by", "of","to","above","in", "By", "with", "is", "from",
 				"following", "then", "thus", "this"};
 		for(String w : beforeStopWordsAR) {
@@ -464,10 +463,11 @@ public class DetectHypothesis {
 				inputFile = new File("src/thmp/data/Total.txt");
 				inputFile = new File("/Users/yihed/Downloads/math0011136");
 				inputFile = new File("src/thmp/data/math0210227");
-				inputFile = new File("src/thmp/data/test1.txt");
+				
 				inputFile = new File("/Users/yihed/Downloads/0704.2030");
 				inputFile = new File("src/thmp/data/0704.2030");
 				inputFile = new File("/Users/yihed/Downloads/test/1605.01240");
+				inputFile = new File("src/thmp/data/test1.txt");
 				
 				//inputFile = new File("src/thmp/data/thmsFeb26.txt");
 				//inputBF = new BufferedReader(new FileReader("src/thmp/data/Total.txt"));
@@ -502,8 +502,7 @@ public class DetectHypothesis {
 					}
 					//file name needed as metadata for search. e.g. math0309323
 					String texFileName = fileNameEntry.getValue();
-					try{
-						
+					try{						
 						if(scrapeThmNames) {
 							scrapeThmNames(inputBF, thmNameList);
 						} else {
@@ -514,8 +513,7 @@ public class DetectHypothesis {
 								thmNameList.add("\n");
 								thmNameList.add(texFileName);
 								thmNameList.addAll(curFileThmNameList);
-							}
-							
+							}							
 						}
 					}catch(OutOfMemoryError e){
 						String timeStr = new SimpleDateFormat("yyyy_MM_dd_HH:mm").format(Calendar.getInstance().getTime());
@@ -523,16 +521,16 @@ public class DetectHypothesis {
 						logger.error(msg);
 						System.out.println(msg);
 						throw e;
-					}
-					catch(Throwable e){
+					}catch(Throwable e){
 						String timeStr = new SimpleDateFormat("yyyy_MM_dd_HH:mm").format(Calendar.getInstance().getTime());
 						String msg = "\n"+timeStr + " Exception when processing: " + fileName + e+"\nwith trace " + Arrays.toString(e.getStackTrace());						
 						FileUtils.appendObjToFile(msg, parserErrorLogPath);
 						logger.error(msg);
 						System.out.println(msg);
 						//if(true)throw e;
+					}finally {
+						FileUtils.silentClose(inputBF);						
 					}
-					FileUtils.silentClose(inputBF);
 				}
 				//serialize
 				if(!thmNameList.isEmpty()) {
@@ -563,12 +561,13 @@ public class DetectHypothesis {
 			}catch(Throwable e){
 				logger.error("Error during thm exptraction and parsing!"+e.getMessage());			
 				throw e;
-			}//finally{
-				//serialize, so don't discard the items already parsed.
+			}finally {
+				FileUtils.silentClose(inputBF);
+			}
+			
 			if(!FileUtils.isOSX()){
 				serializeDataToFile(stats, thmHypPairList, inputParams);	
 			}
-			//}
 		}
 		System.out.println("STATS -- percentage of non-trivial ParseStruct heads: " + stats.getNonNullPercentage() 
 			+ " out of total " + stats.getTotalThmsNum() + "thms");
@@ -832,7 +831,7 @@ public class DetectHypothesis {
 		//don't need to wait
 		
 		//e.g. Wed Jun 21 12:14:15 CDT 2017
-		List<String> dateAr = WordForms.splitThmIntoSearchWords((new java.util.Date()).toString());
+		List<String> dateAr = WordForms.splitThmIntoSearchWordsList((new java.util.Date()).toString());
 		int dateArLen = dateAr.size();
 		//texFilesDirPath already contains trailing file separator
 		StringBuilder dateSB = new StringBuilder(curTexFilesDirPath);
@@ -1054,7 +1053,7 @@ public class DetectHypothesis {
 				newThmSB.append(" ").append(line);
 				//
 				if(newThmSB.length() > THM_MAX_CHAR_SIZE){
-					logger.error("thm length exceeds maximum allowable size!");
+					logger.info("thm length exceeds maximum allowable size!");
 					continue;
 				}
 				//parse hyp and thm.
@@ -1274,9 +1273,11 @@ public class DetectHypothesis {
 		}catch(Throwable e){
 			String msg = "\nThrowable thrown when parsing thm: " + Arrays.toString(e.getStackTrace());
 			System.out.println(msg);
-			//logger.error(msg);
 			////throw e;
-		}		
+		}
+		
+		//remove this after testing!
+		if(false)
 		if(parseState.numNonTexTokens() < NUM_NON_TEX_TOKEN_THRESHOLD || parseState.curParseExcessiveLatex()){
 			//set parseState flag, not strictly necessary, since cleanup will happen soon,
 			//but set for safe practice.
@@ -1301,10 +1302,11 @@ public class DetectHypothesis {
 					//variables that are not defined within the same thm.				
 					List<VariableDefinition> varDefList = pickOutVariables(latexExpr.toString(), //variableNamesMMap,
 							parseState, varDefSet, definitionSB, macrosTrie, eliminateBeginEndThmPattern);
+					//if(true) throw new RuntimeException();
 					if(DEBUG) {
 						System.out.println("DetectHypothesis - varDefList " + varDefList);
 						System.out.println("DetectHypothesis - parseState.getGlobalVariableNamesMMap " + parseState.getGlobalVariableNamesMMap()
-						+ " localVariableNamesMMap:  " + parseState.localVariableNamesMMap);
+						+ " localVariableNamesMMap:  " + parseState.getLocalVariableNamesMMap());
 					}
 					variableDefinitionList.addAll(varDefList);
 					latexExpr.setLength(0);
@@ -1381,11 +1383,10 @@ public class DetectHypothesis {
 		//list of definitions needed in this latexExpr
 		List<VariableDefinition> varDefList = new ArrayList<VariableDefinition>();
 		
-		//split the latexExpr with delimiters
-		//String[] latexExprAr = SYMBOL_SEPARATOR_PATTERN.split(latexExpr);
 		List<String> varsList = TexToTree.texToTree(latexExpr);
-		//System.out.println("DetectHypothesis - varsList " + varsList);
-		for(int i = 0; i < varsList.size(); i++){
+		if(DEBUG) System.out.println("DetectHypothesis - varsList " + varsList);
+		int varsListSz = varsList.size();
+		for(int i = 0; i < varsListSz; i++){
 			
 			String possibleVar = varsList.get(i);
 			
@@ -1398,7 +1399,8 @@ public class DetectHypothesis {
 			//to include originalDefiningSentence.
 			
 			if(DEBUG) {
-				System.out.println("^^^ local variableNamesMMap: "+ parseState.localVariableNamesMMap);
+				System.out.println("^^^ local variableNamesMMap: "+ parseState.getLocalVariableNamesMMap());
+				System.out.println("^^^ global variableNamesMMap: "+ parseState.getGlobalVariableNamesMMap());
 				//System.out.println("^^^^^^^PossibleVar: " + possibleVar);
 			}
 			//get the latest definition

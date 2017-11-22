@@ -72,7 +72,7 @@ public class WordFrequency {
 		for (int i = 0; i < thmList.size(); i++) {
 			String thm = thmList.get(i);
 			//String[] thmAr = thm.toLowerCase().split(WordForms.splitDelim());
-			List<String> thmAr = WordForms.splitThmIntoSearchWords(thm.toLowerCase());
+			List<String> thmAr = WordForms.splitThmIntoSearchWordsList(thm.toLowerCase());
 			int thmArSz = thmAr.size();
 			for (int j = 0; j < thmArSz; j++) {
 				

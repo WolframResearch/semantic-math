@@ -159,7 +159,7 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 			MacrosTrieNode node = this.nodeMap.get(c);
 			if(null != node){
 				if(null != node.commandStr && null != node.replacementStr){
-					logger.error(node.commandStr + " command already exists!");
+					logger.info(node.commandStr + " command already exists!");
 					return;
 				}
 				node.setCommandAndReplacementStr(commandStr_, replacementStr_);				

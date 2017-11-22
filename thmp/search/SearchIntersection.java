@@ -90,6 +90,7 @@ public class SearchIntersection {
 		// thmList = CollectThm.ThmList.get_macroReplacedThmList();
 		//****thmList = CollectThm.ThmList.allThmsWithHypList();
 		// webDisplayThmList = CollectThm.ThmList.get_webDisplayThmList();
+		
 	}
 
 	/**
@@ -336,8 +337,9 @@ public class SearchIntersection {
 		/*Multimap of thmIndex, and the (index of) set of words in query 
 		 that appear in the thm*/
 		SetMultimap<Integer, Integer> thmWordSpanMMap = HashMultimap.create();
-
-		List<String> inputWordsAr = WordForms.splitThmIntoSearchWords(input);
+		/*To use for pruning probably irrelevant results*/
+		SetMultimap<Integer, String> thmWordsMMap = HashMultimap.create();
+		List<String> inputWordsList = WordForms.splitThmIntoSearchWordsList(input);
 		
 		//int numHighest = NUM_NEAREST_VECS;
 		// whether to skip first token
@@ -371,34 +373,34 @@ public class SearchIntersection {
 		// index
 		Multimap<Integer, String> indexStartingWordsMMap = ArrayListMultimap.create();
 
-		int inputWordsArSz = inputWordsAr.size();
+		int inputWordsArSz = inputWordsList.size();
 		// array instead of list for lower overhead.
 		int[] singletonScoresAr = new int[inputWordsArSz];
 		String[] inputWordsArUpdated = new String[inputWordsArSz];
 		// pre-compute the scores for singleton words in query.
-		int totalSingletonAdded = computeSingletonScores(inputWordsAr, singletonScoresAr, inputWordsArUpdated);
+		int totalSingletonAdded = computeSingletonScores(inputWordsList, singletonScoresAr, inputWordsArUpdated);
 		searchState.set_totalWordAdded(totalSingletonAdded);
 		
 		// array of words to indicate frequencies that this word was included in
 		// either a singleton or n-gram
 		int[] wordCountArray = new int[inputWordsArSz];
 		for (int i = firstIndex; i < inputWordsArSz; i++) {
-			String word = inputWordsAr.get(i);
+			String word = inputWordsList.get(i);
 			// elicit higher score if wordLong fits
 			// also turn into singular form if applicable			
 			int scoreAdded = 0;
 			// check for 2 grams
 			if (i < inputWordsArSz - 1) {
-				String nextWord = inputWordsAr.get(i+1);
+				String nextWord = inputWordsList.get(i+1);
 				String twoGram = word + " " + nextWord;
 				twoGram = WordForms.normalizeTwoGram(twoGram);
 				// check for 3 grams.
 				if (i < inputWordsArSz - 2) {
-					String thirdWord = inputWordsAr.get(i+2);
+					String thirdWord = inputWordsList.get(i+2);
 					String threeGram = twoGram + " " + thirdWord;
 					if (threeGramsMap.containsKey(threeGram)) {
-						scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, wordThmIndexAddedMMap,
-								wordThmsIndexMMap1, 
+						scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, thmWordsMMap,
+								wordThmIndexAddedMMap, wordThmsIndexMMap1, 
 								threeGram, i, WordForms.TokenType.THREEGRAM,
 								singletonScoresAr, searchWordsSet, dbThmSet);
 						if (scoreAdded > 0) {
@@ -412,8 +414,8 @@ public class SearchIntersection {
 					}
 				}
 				if (twoGramsMap.containsKey(twoGram)) {
-					scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, wordThmIndexAddedMMap, 
-							wordThmsIndexMMap1, twoGram, //nextWordCombined, 
+					scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, thmWordsMMap,
+							wordThmIndexAddedMMap, wordThmsIndexMMap1, twoGram, //nextWordCombined, 
 							i, WordForms.TokenType.TWOGRAM, singletonScoresAr,
 							searchWordsSet, dbThmSet);
 					if (scoreAdded > 0) {
@@ -434,7 +436,7 @@ public class SearchIntersection {
 			// respect to the average
 			// score of all words added.
 			word = inputWordsArUpdated[i];
-			scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, wordThmIndexAddedMMap, 
+			scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, thmWordsMMap, wordThmIndexAddedMMap, 
 					wordThmsIndexMMap1, word, i, WordForms.TokenType.SINGLETON, singletonScoresAr, searchWordsSet, dbThmSet);
 			if (scoreAdded > 0) {
 				wordCountArray[i] += 1;
@@ -444,20 +446,18 @@ public class SearchIntersection {
 				indexStartingWordsMMap.put(i, word);
 			}
 		}
-		// System.out.println("BEFORE "+scoreThmMMap);
-		// Map<Integer, Integer> g = new HashMap<Integer, Integer>(thmScoreMap);
 		// add bonus points to thms with most number of query words, judging
-		// from size of value set
-		// in thmWordSpanMMap
+		// from size of value set in thmWordSpanMMap
 		addWordSpanBonus(searchState, thmScoreMap, scoreThmMMap, thmWordSpanMMap, thmSpanMap, numHighest,
 				((double) totalWordsScore) / numWordsAdded, inputWordsArSz);
 		
 		searchState.addThmSpan(thmSpanMap);		
 		searchState.setThmScoreMap(thmScoreMap);
+		int resultWordSpan = searchState.largestWordSpan();
 		/**short circuit if number of token below threshold*/
-		if(LiteralSearch.spanBelowThreshold(searchState.largestWordSpan(), inputWordsArSz)) {
+		if(LiteralSearch.spanBelowThreshold(resultWordSpan, inputWordsArSz)) {
 			System.out.println("Initializing literal search...");
-			List<Integer> highestThmList = LiteralSearch.literalSearch(input, searchWordsSet, numHighest);
+			List<Integer> highestThmList = LiteralSearch.literalSearch(input, resultWordSpan, searchWordsSet, numHighest);
 			searchState.set_intersectionVecList(highestThmList);
 			return searchState;
 		}
@@ -470,30 +470,47 @@ public class SearchIntersection {
 		Iterator<Integer> descendingKeySetIter = descendingKeySet.iterator();
 		boolean topScorer = true;
 		
-		while(descendingKeySetIter.hasNext()){
+		outerWhile: while(descendingKeySetIter.hasNext()){
 			int curScore = descendingKeySetIter.next();
 			Collection<Integer> thmIndices = scoreThmMMap.get(curScore);
-			for(int thmIndex : thmIndices){
+			innerFor: for(int thmIndex : thmIndices){
 				if(counter-- < 1 && !topScorer){
-					break;
+					break outerWhile;
 				}
-				//int thmIndex = thmScoreEntry.getKey();
-				//int thmScore = thmScoreEntry.getValue();
-				int spanScore = thmSpanMap.get(thmIndex);
-				scoreThmMMap2.put(curScore, new ThmSpanPair(thmIndex, spanScore));
+				if(!topScorer) {
+					//prune away irelevant results
+					List<String> thmWords = new ArrayList<String>(thmWordsMMap.get(thmIndex));
+					
+					//note low scorers can combine to form , e.g. "vanish" and
+					//"module". 
+					if(inputWordsArSz > 1 && 
+							thmWords.size() == 1 ) {
+						String word = thmWords.get(0);						
+						final int lowScoreThreshold = 3;
+						Integer wordScore = wordsScoreMap.get(word);
+						if(wordScore <= lowScoreThreshold 
+								|| WordForms.genericSearchTermsSet().contains(word)) {
+							continue innerFor;
+						}
+					}
+					if(inputWordsArSz > 2 && thmWords.size() < 3) {
+						boolean allWordsLowScore = true;
+						for(String word : thmWords) {						
+							if(!WordForms.genericSearchTermsSet().contains(word)) {
+								allWordsLowScore = false;
+								break;
+							}
+						}
+						if(allWordsLowScore) {
+							continue innerFor;
+						}
+					}
+				}
+				int thmWordSpan = thmSpanMap.get(thmIndex);
+				scoreThmMMap2.put(curScore, new ThmSpanPair(thmIndex, thmWordSpan));
 			}
 			topScorer = false;
 		}		
-		/*for (Map.Entry<Integer, Integer> thmScoreEntry : thmScoreMap.entrySet()) {
-			if(counter-- < 1){
-				break;
-			}
-			int thmIndex = thmScoreEntry.getKey();
-			int thmScore = thmScoreEntry.getValue();
-			int spanScore = thmSpanMap.get(thmIndex);
-			scoreThmMMap2.put(thmScore, new ThmSpanPair(thmIndex, spanScore));
-		}*/
-		//System.out.println("SearchIntersection - scoreThmMMap: "+scoreThmMMap2);
 		
 		List<Integer> highestThmList = new ArrayList<Integer>();
 		// get the thms having the highest k scores. Keys are scores.		
@@ -502,18 +519,17 @@ public class SearchIntersection {
 		// pick up numHighest number of unique thms
 		Set<Integer> pickedThmSet = new HashSet<Integer>();
 		// list to track the top entries
-		//int counter = numHighest * 2;
 		counter = numHighest;
 		Searcher<Set<Integer>> relationSearcher = new RelationalSearch();
 		Searcher<Map<Integer, Integer>> contextSearcher = new ContextSearch();	
 		topScorer = true;
 		
-		for (Entry<Integer, Collection<ThmSpanPair>> entry : scoreThmDescMMap.entrySet()) {		
+		outerWhile: for (Entry<Integer, Collection<ThmSpanPair>> entry : scoreThmDescMMap.entrySet()) {		
 			List<Integer> tempHighestThmList = new ArrayList<Integer>();
 			for (ThmSpanPair pair : entry.getValue()) {
 				Integer thmIndex = pair.thmIndex;
 				if (counter-- < 1 && !topScorer){
-					break;
+					break outerWhile;
 				}
 				// avoid duplicates, since the scoreThmMMap leaves outdated
 				// score-thm pair in map, rather than deleting them, after
@@ -755,15 +771,16 @@ public class SearchIntersection {
 	 *            of words, separated into singletons, used during search
 	 * @param thmWordSpanMMap Multimap of thmIndex, and the (index of) set of words in query 
 	 * that appear in the thm.
+	 * @param thmWordsScoreMMap Multimap of thm indices, and the set of the words in them.
 	 * @param wordThmIndexAddedMMap Thms that have already been added for the input.
 	 * @param wordThmIndexMMap MMap created from tars used to look up thms containing words.
 	 * @return scoreAdded
 	 */
 	private static int addWordThms(Map<Integer, Integer> thmScoreMap, TreeMultimap<Integer, Integer> scoreThmMMap,
-			Multimap<Integer, Integer> thmWordSpanMMap, ListMultimap<String, Integer> wordThmIndexAddedMMap,
-			Multimap<String, Integer> wordThmIndexMMap,
+			Multimap<Integer, Integer> thmWordSpanMMap, SetMultimap<Integer, String> thmWordsMMap,
+			ListMultimap<String, Integer> wordThmIndexAddedMMap, Multimap<String, Integer> wordThmIndexMMap,
 			String word, int wordIndexInThm, WordForms.TokenType tokenType,
-			int[] singletonScoresAr, Set<String> searchWordsSet //HERE add additional list for db-processed list, 
+			int[] singletonScoresAr, Set<String> searchWordsSet 
 			, Set<Integer> ...dbThmSet
 			) {
 		// update scores map
@@ -865,6 +882,7 @@ public class SearchIntersection {
 				// put in thmIndex, and the index of word in the query, to
 				// thmWordSpanMMap.
 				tokenType.addToMap(thmWordSpanMMap, thmIndex, wordIndexInThm);
+				thmWordsMMap.put(thmIndex, word);
 			}
 			scoreAdded = curScoreToAdd;
 			// add singletons to searchWordsSet, so

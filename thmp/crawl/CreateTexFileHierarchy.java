@@ -8,7 +8,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,7 +63,8 @@ public class CreateTexFileHierarchy {
 			if(null == pr){
 				continue;
 			}
-			BufferedReader br = new BufferedReader(new InputStreamReader(pr.getInputStream()));
+			InputStreamReader inputReader = new InputStreamReader(pr.getInputStream());
+			BufferedReader br = new BufferedReader(inputReader);
 			//Matcher matcher;
 			try{
 				String line;
@@ -111,7 +111,10 @@ public class CreateTexFileHierarchy {
 			}catch(IOException e){
 				String msg = "IOException in createFileHierarchy!";
 				System.out.println(msg);
-				logger.error(msg);
+				logger.error(msg);				
+			}finally {
+				FileUtils.silentClose(br);
+				FileUtils.silentClose(inputReader);
 			}
 		}		
 		return texFileNamesMap; 		
@@ -163,7 +166,7 @@ public class CreateTexFileHierarchy {
 		try{
 			pr = rt.exec(cmd);
 		}catch(IOException e){
-			String msg = "IOExceotion in executeShellCommand while executing " + cmd;
+			String msg = "CreateTexFileHierarchy - IOException in executeShellCommand while executing: " + cmd;
 			System.out.println(msg);
 			logger.error(msg);
 		}
@@ -176,7 +179,8 @@ public class CreateTexFileHierarchy {
 	 */
 	private static String getCommandOutput(Process pr){
 		StringBuffer sb = new StringBuffer(30);
-		BufferedReader br = new BufferedReader(new InputStreamReader(pr.getInputStream()));		
+		InputStreamReader inputReader = new InputStreamReader(pr.getInputStream());
+		BufferedReader br = new BufferedReader(inputReader);		
 		try{
 			//System.out.println("br.readLine() "+br.readLine());
 			String line;
@@ -192,6 +196,9 @@ public class CreateTexFileHierarchy {
 			String msg = "IOException while reading command output!";
 			System.out.println(msg);
 			logger.error(msg);
+		}finally {
+			FileUtils.silentClose(br);
+			FileUtils.silentClose(inputReader);
 		}
 		return sb.toString();
 	}

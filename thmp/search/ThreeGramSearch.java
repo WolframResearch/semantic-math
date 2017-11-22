@@ -197,7 +197,7 @@ public class ThreeGramSearch {
 			
 			//if(thm.matches("\\s*")) continue;
 			
-			List<String> thmAr = WordForms.splitThmIntoSearchWords(thm.toLowerCase());
+			List<String> thmAr = WordForms.splitThmIntoSearchWordsList(thm.toLowerCase());
 			String word0;
 			String word1;
 			String word2;

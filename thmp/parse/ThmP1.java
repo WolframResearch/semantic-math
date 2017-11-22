@@ -90,6 +90,7 @@ public class ThmP1 {
 	private static final Pattern SINGLE_WORD_TEX_PATTERN = Pattern.compile("\\$[^$]+\\$[^\\s]*"); 
 	private static final Pattern ARTICLE_PATTERN = Pattern.compile("a|the|an");
 	private static final Pattern PREPROCESS_PUNCTUATION_PATTERN = Pattern.compile("([^\\.,!:;]*)([\\.,:!;]{1})([^\\.,!:;]*)");
+	private static final Pattern ENT_COMBINE_PATT = Pattern.compile("adj|det|num|quant|and|or");
 	//private static final String localPathToTagger = "lib/stanford-postagger-2015-12-09/models/english-bidirectional-distsim.tagger";
 	
 	// list of parts of speech, ent, verb etc <--should make immutable
@@ -1717,8 +1718,8 @@ public class ThmP1 {
 			// set the pos as the current index in mathEntList
 			// adjectives or determiners
 			boolean adjEncountered = false;
-			String curPos;
-			while (index - k > -1 && (curPos = pairs.get(index - k).pos()).matches("adj|det|num|quant|and|or")) {
+			String curPos;//here
+			while (index - k > -1 && ENT_COMBINE_PATT.matcher(curPos = pairs.get(index - k).pos()).matches()) {
 				Pair curPair = pairs.get(index - k);
 				String curWord = curPair.word();
 				
@@ -1807,102 +1808,7 @@ public class ThmP1 {
 		}
 		
 		if(DEBUG) System.out.println("PAIRS! " + pairs);
-		// combine anchors into entities. Such as "of".
-		/*for (int j = anchorList.size() - 1; j > -1; j--) {
-			int index = anchorList.get(j);
-			String anchor = pairs.get(index).word();
-			//This section should be gradually phased out, replaced by matrix element manipulations. April 2017.
-			 * e.g. "given extension of ring" incomplete pos
-			switch (anchor) {
-			case "of":
-				// the expression before this anchor is an entity
-				if (index > 0 && index + 1 < pairs.size()) {
-
-					Pair nextPair = pairs.get(index + 1);
-					Pair prevPair = pairs.get(index - 1);
-					String nextPos = nextPair.pos();
-					String prevPos = prevPair.pos();
-					// should handle later with grammar rules in mx! commented out 11/14/16.	
-					//<--commented back in on 11/24, makes a difference in e.g.
-					//"I is a formal integer combination of curves". And this gives more customization,
-					//also helps mitigate parse explosions, by associating the token after "of" with 
-					//the token immediately before "of", rather than allowing combinations with any prior token.
-					if (prevPos.matches("\\d+") ) { 
-						// ent of ent
-						int mathObjIndex = Integer.valueOf(prevPair.pos());
-						StructH<HashMap<String, String>> tempStruct = mathEntList.get(mathObjIndex);
-						Struct childStruct = null;
-						
-						//check whether next token is an ent, or an article followed by an ent.
-						//in which case fuse.
-						boolean nextPairEnt = false;
-						String entPos = "";
-						if(nextPos.matches("\\d+")){
-							//don't fuse if e.g. "$A$ of $B$ which is $p$"
-							String nextNextPos;
-							if(index + 3 >= pairs.size() || 
-									!((nextNextPos=pairs.get(index+2).pos()).equals("hyp") || nextNextPos.equals("rpro") ) ){
-								//System.out.println("ThmP1 nextNextPos " + nextNextPos);
-								nextPairEnt = true;
-								childStruct = mathEntList.get(Integer.valueOf(nextPos));
-								entPos = nextPos;
-							}
-						}else if(index + 2 < pairs.size() && nextPos.equals("art")){
-							String nextNextPos = pairs.get(index+2).pos();
-							if(nextNextPos.matches("\\d+")){
-								nextPairEnt = true;
-								entPos = nextNextPos;
-								childStruct = mathEntList.get(Integer.valueOf(nextNextPos));
-							}													
-						}
-						if(nextPairEnt){	
-							//pairs.get(index).set_pos(entPos);													
-							// set to null instead of removing, to keep indices right.
-							if (entPos != prevPair.pos()){
-								mathEntList.set(Integer.valueOf(entPos), null);
-							}							
-							tempStruct.add_child(childStruct, new ChildRelation("of"));
-							pairs.get(index).set_pos(nextPos);
-						}else if(nextPos.equals("symb") || nextPos.equals("noun")){	
-							String nextNextPos;
-							if(index + 3 >= pairs.size() || 
-									!((nextNextPos=pairs.get(index+2).pos()).equals("hyp") || nextNextPos.equals("rpro") ) ){
-							pairs.get(index).set_pos(prevPair.pos());
-							childStruct = new StructA<String, String>(nextPair.word(), NodeType.STR, "", NodeType.STR, nextPos);
-							tempStruct.add_child(childStruct, new ChildRelation("of"));
-							nextPair.set_pos(prevPair.pos());
-						}
-						}
-					} 
-					else if (prevPair.pos().equals("noun") && nextPos.matches("\\d+")) {
-						// "noun of ent".
-						int mathObjIndex = Integer.valueOf(nextPos);
-						// Combine the something into the ent
-						StructH<HashMap<String, String>> tempStruct = mathEntList.get(mathObjIndex);
-
-						String entName = tempStruct.struct().get("name");
-						tempStruct.struct().put("name", prevPair.word() + " of " + entName);
-
-						pairs.get(index).set_pos(nextPos);
-						prevPair.set_pos(nextPos);
-
-					} // special case: "of form"
-					else { 
-						// set anchor to its normal part of speech word, like
-						// "of" to "pre"
-						pairs.get(index).set_pos(posMMap.get(anchor).get(0));
-					}
-				} 
-				//else {
-					// if the previous token is not an ent.
-					// Set anchor to its normal part of speech word, like "of"
-					// to "pre"
-					pairs.get(index).set_pos(posMMap.get(anchor).get(0));
-				//}				
-				break;
-			}
-		}*/
-
+		
 		// list of structs to return
 		List<Struct> structList = new ArrayList<Struct>();
 
@@ -1973,7 +1879,6 @@ public class ThmP1 {
 							 if(pos.equals("noun")){
 								continue;
 							 }
-							 //System.out.println("mathEntList: "+mathEntList);f
 							 curStruct.addExtraPos(pos);
 						}
 					}

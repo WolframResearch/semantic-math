@@ -26,7 +26,7 @@ public class TexToTree {
 	private static final Pattern ASCEND_PATTERN = Pattern.compile("[)\\]}]");
 	private static final String DESCEND_STRING = "([{";
 	private static final String ASCEND_STRING = ")]}";
-	
+	private static final Pattern DIGIT_PATT = Pattern.compile("\\d+");
 	
 	public static class TexNode{
 		
@@ -64,7 +64,14 @@ public class TexToTree {
 		TexNode rootNode = new TexNode();
 		List<String> varsList = new ArrayList<String>();
 		attachSymbols(tex, 0, rootNode, varsList);
-		return varsList;
+		List<String> updatedVarsList = new ArrayList<String>();
+		
+		for(String var : varsList) {
+			if(!DIGIT_PATT.matcher(var).matches()) {
+				updatedVarsList.add(var);
+			}
+		}
+		return updatedVarsList;
 	}
 	
 	/**
@@ -81,7 +88,7 @@ public class TexToTree {
 		int texLen = tex.length();
 		int i;
 		for(i = index; i < texLen; i++){
-			//char iChar = ;
+			
 			String iCharStr = String.valueOf(tex.charAt(i));
 			if(iCharStr.equals(" ")){
 				continue;

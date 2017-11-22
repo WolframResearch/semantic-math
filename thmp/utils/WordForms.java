@@ -185,9 +185,9 @@ public class WordForms {
 			DIACRITICS_MAP.put(p[0], p[1]);
 		}
 		
-		//complete this!
+		//add more!
 		String[] genericSearchTermsAr = new String[] {"sum", "equation", "polynomial", "function", "basis",
-				"theorem"};
+				"theorem", "group", "ring", "field", "module", "theorem", "hypothesis"};
 		GENERIC_SERACH_TERMS = new HashSet<String>();
 		for(String s : genericSearchTermsAr) {
 			GENERIC_SERACH_TERMS.add(s);
@@ -557,10 +557,12 @@ public class WordForms {
 	}
 	
 	/**
+	 * Splits input string into tokens. Uniformized across all algorithms.
+	 * Deliberately returns list and not set, to preserve word ordering.
 	 * @param thm
 	 * @return
 	 */
-	public static List<String> splitThmIntoSearchWords(String thm){
+	public static List<String> splitThmIntoSearchWordsList(String thm){
 		String[] thmAr = SPLIT_DELIM_PATTERN.split(thm);
 		List<String> wordsList = new ArrayList<String>();
 		for(String word : thmAr) {
@@ -569,6 +571,23 @@ public class WordForms {
 			}			
 		}
 		return wordsList;
+	}
+	
+	/**
+	 * Splits input string into tokens. Uniformized across all algorithms.
+	 * Deliberately returns list and not set, to preserve word ordering.
+	 * @param thm
+	 * @return
+	 */
+	public static Set<String> splitThmIntoSearchWordsSet(String thm){
+		String[] thmAr = SPLIT_DELIM_PATTERN.split(thm);
+		Set<String> wordsSet = new HashSet<String>();
+		for(String word : thmAr) {
+			if(!ALL_WHITE_EMPTY_SPACE_PATTERN.matcher(word).matches()) {
+				wordsSet.add(word);
+			}			
+		}
+		return wordsSet;
 	}
 	
 	/**
@@ -598,6 +617,12 @@ public class WordForms {
 			this.indexShift = shift;
 		}
 		
+		/**
+		 * 
+		 * @param thmWordSpanMMap
+		 * @param thmIndex
+		 * @param wordIndex Index of word in thm.
+		 */
 		public void addToMap(Multimap<Integer, Integer> thmWordSpanMMap, int thmIndex, int wordIndex){
 			for(int i = wordIndex; i < wordIndex+indexShift; i++){
 				thmWordSpanMMap.put(thmIndex, i);

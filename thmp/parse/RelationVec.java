@@ -265,7 +265,7 @@ public class RelationVec implements Serializable{
 			if("".equals(termStr)) return 0;
 			
 			int maxBitPos = 0;
-			List<String> termStrList = WordForms.splitThmIntoSearchWords(termStr);
+			List<String> termStrList = WordForms.splitThmIntoSearchWordsList(termStr);
 			int termStrArLen = termStrList.size();
 			
 			if(termStrArLen > 1){

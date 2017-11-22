@@ -3,6 +3,7 @@ package thmp.search;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -131,10 +132,10 @@ public class LiteralSearch {
 		//Set<String> thmWordsSet = new HashSet<String>();
 		ListMultimap<String, Byte> wordsIndexMMap = ArrayListMultimap.create();
 		
-		List<String> thmWordsList = WordForms.splitThmIntoSearchWords(thm.toLowerCase());
-		int thmWordsListSz = thmWordsList.size();
+		List<String> thmWordsSet = WordForms.splitThmIntoSearchWordsList(thm.toLowerCase());
+		//int thmWordsListSz = thmWordsList.size();
 		//space optimization
-		int num = 0;
+		//int num = 0;
 		byte counter = Byte.MIN_VALUE;
 		/*if(thmWordsListSz > 127) {
 			short i = 0;
@@ -145,17 +146,17 @@ public class LiteralSearch {
 		}*/
 		//final byte increment = 1;
 		
-		while(num < thmWordsListSz) {
-			String word = thmWordsList.get(num);
+		for(String word : thmWordsSet) {
+			//String word = thmWordsList.get(num);
 			
 			if(isInValidLiteralWord(word)) {
-				num++;
+				//num++;
 				continue;
 			}
 			word = processLiteralSearchWord(word);
 			//System.out.print("word, counter " + word+ "  "+counter + ".\t");
 			wordsIndexMMap.put(word, counter);
-			num++;
+			//num++;
 			//System.out.println("counter.getClass() "+counter.getClass());			
 			if(counter == Byte.MAX_VALUE) {
 				//don't exceed max byte value, so every index can be stored in a byte.
@@ -209,16 +210,20 @@ public class LiteralSearch {
 	 * Pass in original query string instead of set of words, 
 	 * since could use word ordering in query later on.
 	 * @param query ALl lower-case
+	 * @param resultWordSpan Word span of previous search algorithms wrt user's query words.
 	 * @param searchWordsSet set of words to be used for highlighting on the web FE.
 	 * @param maxThmCount the max number of thms that should be returned, optional param.
 	 * @return
+	 * List from literal search. Empty list if literal search doesn't improve word span,
+	 * for e.g. "klfjk module"
 	 */
-	public static List<Integer> literalSearch(String query, Set<String> searchWordsSet, int...maxThmCountAr){
+	public static List<Integer> literalSearch(String query, int resultWordSpan, Set<String> searchWordsSet, int...maxThmCountAr){
 		
-		List<String> queryWordList = WordForms.splitThmIntoSearchWords(query);
+		List<String> queryWordList = WordForms.splitThmIntoSearchWordsList(query);
 		//System.out.println("in literalSearch query words: "+ queryWordList);
 		//list of thm indices, and the indices of words in the thm, along with the words.
 		Map<Integer, TreeMap<Number, String>> thmIndexWordMap = new HashMap<Integer, TreeMap<Number, String>>();
+		int wordSpan = 0;
 		
 		for(String word : queryWordList) {
 			if(isInValidLiteralWord(word)) {
@@ -243,9 +248,16 @@ public class LiteralSearch {
 				}
 				
 				thmIndexWordMap.put(thmIndex, indexWordMap);
-			}			
+			}	
+			if(!thmIndexList.isEmpty()) {
+				wordSpan++;
+			}
 		}
-		
+		//need upper bound, since some results for long queries are still meaningful despite low span.
+		final int wordSpanUpperBound = 3;
+		if(wordSpan <= resultWordSpan && wordSpan < wordSpanUpperBound) {
+			return Collections.emptyList();
+		}
 		Map<Integer, Integer> thmScoreMap = createThmScoreMap(thmIndexWordMap);
 		TreeMultimap<Integer, Integer> scoreThmMMap = TreeMultimap.create();
 		for(Map.Entry<Integer, Integer> thmScoreEntry : thmScoreMap.entrySet()) {

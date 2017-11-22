@@ -395,7 +395,7 @@ public class CollectThm {
 					while((line = bReader.readLine()) != null){
 						//split line into tokens
 						String lineNoDiacritics = WordForms.removeDiacritics(line.toLowerCase());
-						List<String> lineAr = WordForms.splitThmIntoSearchWords(lineNoDiacritics);
+						List<String> lineAr = WordForms.splitThmIntoSearchWordsList(lineNoDiacritics);
 						for(String word : lineAr){
 							if(word.length() < 3){
 								//e.g. "of", but include e.g. "lie"
@@ -720,7 +720,7 @@ public class CollectThm {
 				//number of words to skip if an n gram has been added.
 			//int numFutureWordsToSkip = 0;
 				//split along e.g. "\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:"
-			List<String> thmAr = WordForms.splitThmIntoSearchWords(thm.toLowerCase());				
+			List<String> thmAr = WordForms.splitThmIntoSearchWordsList(thm.toLowerCase());				
 				//words and their frequencies.
 				//Map<String, Integer> thmWordsFreqMap = new HashMap<String, Integer>();				
 			int thmArSz = thmAr.size();
@@ -819,7 +819,7 @@ public class CollectThm {
 				//System.out.println(counter++);
 				String thm = thmList.get(i);				
 				//split along e.g. "\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:"
-				List<String> thmAr = WordForms.splitThmIntoSearchWords(thm.toLowerCase());
+				List<String> thmAr = WordForms.splitThmIntoSearchWordsList(thm.toLowerCase());
 				int thmArSz = thmAr.size();
 				for(int j = 0; j < thmArSz; j++){					
 					/*String singletonWordAdded = null;
@@ -932,7 +932,7 @@ public class CollectThm {
 				//number of words to skip if an n gram has been added.
 				int numFutureWordsToSkip = 0;
 				//split along e.g. "\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:"
-				List<String> thmAr = WordForms.splitThmIntoSearchWords(thm.toLowerCase());
+				List<String> thmAr = WordForms.splitThmIntoSearchWordsList(thm.toLowerCase());
 				
 				//words and their frequencies.
 			//	Map<String, Integer> wordsFreqMap = new HashMap<String, Integer>();				

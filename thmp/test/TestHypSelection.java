@@ -53,7 +53,7 @@ public class TestHypSelection {
 		ParseState parseState = pBuilder.build();
 		DetectHypothesis.readAndParseThm(srcFileReader, parseState, definitionListWithThmList, thmHypPairList,
 				stats, srcFile.getAbsolutePath());
-		Multimap<ParseState.VariableName, ParseState.VariableDefinition> localVariableNamesMMap = parseState.localVariableNamesMMap;
+		Multimap<ParseState.VariableName, ParseState.VariableDefinition> localVariableNamesMMap = parseState.getLocalVariableNamesMMap();
 		Multimap<ParseState.VariableName, ParseState.VariableDefinition> globalVariableNamesMMap = parseState.getGlobalVariableNamesMMap();		
 		srcFile.delete();
 		
