@@ -150,10 +150,12 @@ public class StructH<H> extends Struct{
 		return this.depth;
 	}
 	
+	@Override
 	public NodeType prev1NodeType(){
 		return NodeType.NONE;
 	}
 	
+	@Override
 	public NodeType prev2NodeType(){
 		return NodeType.NONE;
 	}

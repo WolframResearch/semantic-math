@@ -225,6 +225,7 @@ public class ParseTreeToContextVec {
 	 */
 	private static void collectAssertContextVec(Struct struct, Map<Integer, Integer> contextVecMap,
 			int structIndex) {
+		//e.g. "verbphrase" has index below threshold.
 		if(structIndex <= INDEX_MEANING_THRESHOLD){
 			return;
 		}
@@ -249,25 +250,46 @@ public class ParseTreeToContextVec {
 	 */
 	private static void collectVPContextVec(Struct struct, Map<Integer, Integer> contextVecMap,
 			int structIndex) {
-		if(structIndex <= INDEX_MEANING_THRESHOLD){
-			return;
-		}
+		
+		//if(struct.isStructA()) System.out.println("************** collectVPContextVec struct "+struct);
 		Struct parentStruct = struct.parentStruct();
-		if(null != parentStruct && contextVecMap.get(structIndex) <= INDEX_MEANING_THRESHOLD){
+		if(null != parentStruct) {
+		
 			String parentStructType = parentStruct.type();
-			if(parentStructType.equals("verbphrase") && struct == parentStruct.prev2()){
-				//e.g. "A covers B", A is the parent of cover, cover is parent of B
+			if(parentStructType.equals("verbphrase") ) {
 				int verbIndex = getVerbIndexFromVP(parentStruct);
-				if(verbIndex > 0){
-					contextVecMap.put(structIndex, verbIndex);
-					if(DEBUG) {
-						if(true) System.out.println("ParseTreeToContextVec - ### structIndex " + structIndex + " parent index " + verbIndex);
-					}
-					//throw new RuntimeException("verbphrase!"+structIndex + " "+verbIndex);
+				if(verbIndex > INDEX_MEANING_THRESHOLD) {
+				if(structIndex > INDEX_MEANING_THRESHOLD && contextVecMap.get(structIndex) <= INDEX_MEANING_THRESHOLD
+						&& struct == parentStruct.prev2()){
+					//e.g. "A covers B", A is the parent of cover, cover is parent of B
 					
+					if(verbIndex > 0){
+						contextVecMap.put(structIndex, verbIndex);
+						if(DEBUG) {
+							if(true) System.out.println("ParseTreeToContextVec - ### structIndex " + structIndex + " parent index " + verbIndex);
+						}
+						//throw new RuntimeException("verbphrase!"+structIndex + " "+verbIndex);						
+					}
+				}else if("prep".equals(struct.type())) {
+					
+					//e.g. "operator acts on kernel"
+					Struct prev2Struct;
+					if(struct.prev2NodeType().isTypeStruct() 
+							&& !(prev2Struct = (Struct)struct.prev2()).isStructA() ) {
+						
+						String termStr = prev2Struct.nameStr();
+							
+							//add struct itself, then its children
+							//don't count parent is parent just all latex expressions
+						if(!TEX_PATTERN.matcher(termStr).matches()){
+							structIndex = setContextVecEntry(struct, termStr, verbIndex, contextVecMap);
+						}
+					}
+				}
 				}
 			}
 		}
+	
 	}	
 	
 	/**

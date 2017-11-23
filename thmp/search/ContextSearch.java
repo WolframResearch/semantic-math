@@ -62,6 +62,8 @@ public class ContextSearch implements Searcher<Map<Integer, Integer>>{
 	 * search algorithms such as SVD and/or intersection. Indices are 0-based.
 	 * Gets list of vectors from GenerateContextVectors.java, 
 	 * pick out the nearest structual vectors using Nearest[].
+	 * @param @Nullable searcher Searcher instance containining stateful information,
+	 * e.g. ParseState.
 	 * @return Gives an ordered list of vectors based on context.
 	 */
 	public static List<Integer> contextSearchMap(String query, List<Integer> nearestThmIndexList, 
@@ -78,7 +80,7 @@ public class ContextSearch implements Searcher<Map<Integer, Integer>>{
 		
 		Map<Integer, Integer> thmSpanMap = searchState.thmSpanMap();
 		Integer firstThmSpan = thmSpanMap.get(nearestThmIndexList.get(0));
-		if(null != firstThmSpan && firstThmSpan < SEARCH_SPAN_THRESHOLD ) {
+		if(null != searcher && null != firstThmSpan && firstThmSpan < SEARCH_SPAN_THRESHOLD ) {
 			return nearestThmIndexList;
 		}
 		

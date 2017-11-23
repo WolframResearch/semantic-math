@@ -41,8 +41,8 @@ public class StructA<A, B> extends Struct{
 	private String type; //or, and, adj, pro etc, cannot ent
 	//private String type1; //type of prev1, , al, string etc. Is this used??
 	//private String type2; //type of prev2. Also not used! Commented out Dec 2016.
-	private NodeType PREV1_TYPE;
-	private NodeType PREV2_TYPE;
+	private NodeType PREV1_TYPE = NodeType.NONE;
+	private NodeType PREV2_TYPE = NodeType.NONE;
 	private List<Struct> children = new ArrayList<Struct>(); 
 	//relation to child, eg "of," "which is", "over", 
 	//as in "independent of $n$."
@@ -147,10 +147,12 @@ public class StructA<A, B> extends Struct{
 		this.type = type;
 	}
 
+	@Override
 	public NodeType prev1NodeType(){
 		return PREV1_TYPE;
 	}
 	
+	@Override
 	public NodeType prev2NodeType(){
 		return PREV2_TYPE;
 	}

@@ -645,7 +645,13 @@ public abstract class Struct implements Serializable{
 		
 	public abstract String present(String str);
 	
+	/**
+	 * Guaranteed non-null
+	 */
 	public abstract NodeType prev1NodeType();
+	/**
+	 * Guaranteed non-null
+	 */
 	public abstract NodeType prev2NodeType();
 	
 	/**
