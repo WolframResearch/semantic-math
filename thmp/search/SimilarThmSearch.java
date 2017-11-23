@@ -14,11 +14,11 @@ public class SimilarThmSearch {
 			to get ranking 
 		 */
 		
-		String thmStr = ;
+		/*String thmStr = ;
 		
 		
 		contextSearchMap(String query, List<Integer> nearestThmIndexList, 
-				Searcher<Map<Integer, Integer>> searcher, SearchState searchState);
+				Searcher<Map<Integer, Integer>> searcher, SearchState searchState);*/
 	}
 	
 	public static void main(String[] args) {

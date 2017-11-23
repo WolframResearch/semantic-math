@@ -92,15 +92,18 @@ public class CreateTexFileHierarchy {
 						
 						Files.createDirectory(curTarFilePath);
 						
-						pr = executeShellCommand("tar xf " + renamedTarFileName + " -C "+ tarDirName);
+						Process pr1 = executeShellCommand("tar xf " + renamedTarFileName + " -C "+ tarDirName);
+						
 						//flush the subprocess output stream.
-						getCommandOutput(pr);
+						getOrFlushCommandOutput(pr1);
+						
 						//System.out.println("CreteTexFileHiearchy - deleting file because tar file");
 						Files.delete(renamedTarFilePath);
-						if(null == pr){
+						if(null == pr1){
 							System.out.println("CreteTexFileHiearchy - createFileHierarchy - process is null!");
 							continue fileLoop;
 						}
+						pr1.destroy();
 						findTexFilesInTarDir(tarDirName, fileName, texFileNamesMap);
 						continue fileLoop;
 					}
@@ -115,6 +118,7 @@ public class CreateTexFileHierarchy {
 			}finally {
 				FileUtils.silentClose(br);
 				FileUtils.silentClose(inputReader);
+				pr.destroy();
 			}
 		}		
 		return texFileNamesMap; 		
@@ -146,7 +150,7 @@ public class CreateTexFileHierarchy {
 				continue;
 			}
 			
-			String output = getCommandOutput(pr);
+			String output = getOrFlushCommandOutput(pr);
 			//System.out.println("findTexFilesInTarDir: getCommandOutput: " + output);
 			//add to map if Tex file,
 			if(UnzipFile2.TEX_PATTERN.matcher(output).matches() && !UnzipFile2.NONTEX_EXTENSION_PATTERN.matcher(output).matches()){
@@ -169,6 +173,7 @@ public class CreateTexFileHierarchy {
 			String msg = "CreateTexFileHierarchy - IOException in executeShellCommand while executing: " + cmd;
 			System.out.println(msg);
 			logger.error(msg);
+			throw new IllegalStateException(msg);
 		}
 		return pr;
 	}
@@ -177,7 +182,7 @@ public class CreateTexFileHierarchy {
 	 * Reads the output of the command just executed.
 	 * @return
 	 */
-	private static String getCommandOutput(Process pr){
+	private static String getOrFlushCommandOutput(Process pr){
 		StringBuffer sb = new StringBuffer(30);
 		InputStreamReader inputReader = new InputStreamReader(pr.getInputStream());
 		BufferedReader br = new BufferedReader(inputReader);		
