@@ -381,7 +381,6 @@ public class ParseState {
 		this.globalVariableNamesMMap = ArrayListMultimap.create();
 		this.localVariableNamesMMap = ArrayListMultimap.create();
 		this.writeUnknownWordsToFileBool = builder.writeUnknownWordsToFile;		
-		//this.headParseStructList = new ArrayList<ParseStruct>();
 	}
 	
 	/**

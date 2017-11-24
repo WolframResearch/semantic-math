@@ -30,7 +30,7 @@ public class CreateTexFileHierarchy {
 	//set of file names known to be tex
 	//private static final Set<String> texFileNamesSet = new HashSet<String>();
 	private static final Runtime rt = Runtime.getRuntime();
-	private static final Logger logger = LogManager.getLogger(WLCommand.class);
+	private static final Logger logger = LogManager.getLogger(CreateTexFileHierarchy.class);
 	//math0208056: POSIX tar archive (GNU)
 	private static final Pattern TAR_FILE_PATTERN = Pattern.compile(".+tar archive.+");
 	static final Pattern TEX_PATTERN = Pattern.compile(".*(?:tex|TeX) .*");
@@ -162,6 +162,10 @@ public class CreateTexFileHierarchy {
 	}
 	
 	/**
+	 * Executes the input command in a separate process, created
+	 * by Java runtime. 
+	 * Note: The Caller *must* clean up the returned process by calling
+	 * process.destroy().
 	 * @param cmd
 	 * @return nullable
 	 */
@@ -173,7 +177,7 @@ public class CreateTexFileHierarchy {
 			String msg = "CreateTexFileHierarchy - IOException in executeShellCommand while executing: " + cmd;
 			System.out.println(msg);
 			logger.error(msg);
-			throw new IllegalStateException(msg);
+			throw new IllegalStateException(msg + e);
 		}
 		return pr;
 	}

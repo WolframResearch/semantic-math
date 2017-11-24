@@ -1,7 +1,6 @@
 package thmp.search;
 
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -43,10 +42,27 @@ public class SearchState {
 	private Map<Integer, Integer> thmScoreMap;
 	
 	private ParseState parseState;
+	private boolean allowLiteralSearch = true;
 	
-	//the keyset of which is intersectionVecList
-	//make thread-safe!
-	//Map<String, Integer> map = new LinkedHashMap<>();
+	public static class SearchStateBuilder{
+		
+		private boolean allowLiteralSearch = true;
+		//public SearchStateBuilder() {			
+		//}
+		public void disableLiteralSearch() {
+			this.allowLiteralSearch = false;
+		}
+		
+		public SearchState build() {
+			return new SearchState(this);
+		}
+		
+	}
+	
+	public SearchState(SearchStateBuilder builder){
+		this();		
+		this.allowLiteralSearch = builder.allowLiteralSearch;		
+	}
 	
 	public SearchState(){
 		
@@ -72,6 +88,10 @@ public class SearchState {
 		return this.thmScoreMap;
 	}
 		
+	public boolean allowLiteralSearch() {
+		return allowLiteralSearch;
+	}
+	
 	/**
 	 * Adds token and its score to tokenScoreMap. 
 	 * @param thmIndex

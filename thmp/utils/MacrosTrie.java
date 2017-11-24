@@ -328,7 +328,7 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 				//System.out.println("slotArgNum "+slotArgNum);
 				//should not occur if valid latex syntax.
 				if(slotArgNum >= slotCount || slotArgNum < 0){
-					logger.error("latex syntax error: slotArgNum >= slotCont || slotArgNum < 1 for thm: " + thmStr);
+					logger.info("latex syntax error: slotArgNum >= slotCont || slotArgNum < 1 for thm: " + thmStr);
 					continue;
 				}				
 				replacementSB.append(args[slotArgNum]);

@@ -4954,10 +4954,10 @@ public class ThmP1 {
 	}
 
 	/**
-	 * Preprocess. Remove fluff words. the, a, an.
+	 * Preprocess.
 	 * @param str
-	 *            is string of all input to be processed.
-	 * @return array of sentence Strings
+	 *            is string of all input to be processed, including punctuations.
+	 * @return array of period-separated sentence Strings.
 	 */
 	public static String[] preprocess(String inputStr) {
 		
@@ -4970,15 +4970,10 @@ public class ThmP1 {
 		ArrayList<String> sentenceList = new ArrayList<String>();
 		
 		//separate out punctuations, separate out words away from punctuations.
-		//compile this!		
 		//Note this also changes the tex, be more careful!
 		String[] wordsArray = WordForms.getWhiteNonEmptySpaceNotAllPattern()
 				.split(PREPROCESS_PUNCTUATION_PATTERN.matcher(inputStr).replaceAll("$1 $2 $3"));
 		
-				//inputStr.replaceAll(  , "$1 $2 $3").split("\\s+");
-		//String[] wordsArray = inputStr.replaceAll("([^\\.,!:;]*)([\\.,:!;]{1})", "$1 $2").split("\\s+");
-		
-		//System.out.println("wordsArray " + Arrays.toString(wordsArray));
 		int wordsArrayLen = wordsArray.length;
 
 		StringBuilder sentenceBuilder = new StringBuilder();
@@ -5023,7 +5018,6 @@ public class ThmP1 {
 			if (!inTex && curWord.matches("\\$.*") && !curWord.matches("^\\$[^$]+\\$.*$")) {
 				inTex = true;
 			} else if (inTex && curWord.contains("$")) {
-				// }else if(curWord.matches("[^$]*\\$|\\$[^$]+\\$.*") ){
 				inTex = false;
 				toLowerCase = false;
 			} else if (SINGLE_WORD_TEX_PATTERN.matcher(curWord).matches()) {
@@ -5043,7 +5037,6 @@ public class ThmP1 {
 					sentenceList.add(sentenceBuilder.toString());
 					sentenceBuilder.setLength(0);
 				}
-				//StringBuilder enumerateSb = new StringBuilder();
 				while(i < wordsArrayLen && !curWord.equals("\\end{enumerate}")){
 					curWord = wordsArray[i];
 					sentenceBuilder.append(" ").append(curWord);
@@ -5069,7 +5062,7 @@ public class ThmP1 {
 				String tempWord = curWord;
 
 				int j = i;
-				// potentially a fluff phrase <--improve defluffing!
+				// potentially a fluff phrase 
 				if (posAr[posAr.length - 1].equals("comp") && j < wordsArrayLen - 1) {
 					// keep reading in string characters, until there is no
 					// match.
@@ -5115,7 +5108,6 @@ public class ThmP1 {
 					//if the token before and after the comma 
 					//are not similar enough.
 					if(curWord.equals(",") && i < wordsArrayLen - 1){
-						//get next word
 						String nextWord = wordsArray[i+1].toLowerCase();
 						//get complete latex 
 						if(nextWord.charAt(0) == '$'){
@@ -5155,8 +5147,6 @@ public class ThmP1 {
 							boolean prevSentenceHyp = HYP_PATTERN.matcher(sentenceBuilder.toString()).matches();
 							boolean nextSentenceHyp = HYP_PATTERN.matcher(nextSentenceSB.toString()).matches();
 							
-							//System.out.println("!!prevSentence: " + sentenceBuilder + " nextSentenceSB: " + nextSentenceSB);
-							//System.out.println(!(prevSentenceHyp ^ nextSentenceHyp));
 							//take xor, so only skip comma if structures are the same.
 							if(!(prevSentenceHyp ^ nextSentenceHyp)){
 								continue wordsArrayLoop;

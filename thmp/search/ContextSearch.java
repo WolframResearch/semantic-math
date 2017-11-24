@@ -172,11 +172,12 @@ public class ContextSearch implements Searcher<Map<Integer, Integer>>{
 		System.out.println("ContextSearch - nearestContextVecs: "+nearestVecList 
 				+ " Thms, including hyp: ");
 		
-		for(int i = 0; i < nearestVecList.size(); i++){
-			int thmIndex = nearestVecList.get(i);
-			System.out.println(thmIndex + " " + ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex));
+		if(DEBUG) {
+			for(int i = 0; i < nearestVecList.size(); i++){
+				int thmIndex = nearestVecList.get(i);
+				System.out.println(thmIndex + " " + ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex));
+			}
 		}
-		
 		if(!nearestVecList.isEmpty()){
 			return nearestVecList;
 		}else{

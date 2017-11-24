@@ -299,6 +299,13 @@ public class SearchIntersection {
 		}
 		return null;		
 	}
+	
+	public static SearchState intersectionSearch(String input, Set<String> searchWordsSet, 
+			SearchState searchState, boolean contextSearchBool, boolean searchRelationalBool,
+			int numHighest) {		
+		return intersectionSearch(input, searchWordsSet, searchState, contextSearchBool, 
+				searchRelationalBool, numHighest, null);
+	}
 	/**
 	 * Builds scoreThmMMap. Main intersection search method.
 	 * 
@@ -317,10 +324,9 @@ public class SearchIntersection {
 	 * @return SearchState containing list of indices of highest-scored thms.
 	 *         Sorted in ascending order, best first. List is 0-based.
 	 */
-	@SafeVarargs
 	public static SearchState intersectionSearch(String input, Set<String> searchWordsSet, 
 			SearchState searchState, boolean contextSearchBool, boolean searchRelationalBool,
-			int numHighest, Set<Integer>... dbThmSet) {
+			int numHighest, Set<Integer> dbThmSet) {
 		
 		if (WordForms.getWhiteEmptySpacePattern().matcher(input).matches()){
 			return null;
@@ -455,7 +461,7 @@ public class SearchIntersection {
 		searchState.setThmScoreMap(thmScoreMap);
 		int resultWordSpan = searchState.largestWordSpan();
 		/**short circuit if number of token below threshold*/
-		if(LiteralSearch.spanBelowThreshold(resultWordSpan, inputWordsArSz)) {
+		if(searchState.allowLiteralSearch() && LiteralSearch.spanBelowThreshold(resultWordSpan, inputWordsArSz)) {
 			System.out.println("Initializing literal search...");
 			List<Integer> highestThmList = LiteralSearch.literalSearch(input, resultWordSpan, searchWordsSet, numHighest);
 			searchState.set_intersectionVecList(highestThmList);
@@ -587,99 +593,6 @@ public class SearchIntersection {
 	}
 
 	/**
-	 * Auxiliary method to lower the scores. if the words in a three gram
-	 * collectively (3 gram + 2 gram + individual words) weigh a lot, then scale
-	 * down the overall words proportionally. e.g.
-	 * "linear map with closed range", "closed", "range", "closed range" all
-	 * weigh a lot. Scale proportionally down with respect to the average score.
-	 * Just reduce token initial scores instead!
-	 * @deprecated June 2017. Keep for a few months if the need for improved version arises.
-	 * @param thmScoreMap
-	 * @param scoreThmMMap
-	 * @param thmWordSpanMMap
-	 * @param wordThmMMap
-	 * @param dominantWordsMap
-	 * @param indexStartingWordsMMap
-	 * @param wordCountArray
-	 * @param wordWrapperList
-	 * @param avgWordScore
-	 */
-	private static void lowerThmScores(Map<Integer, Integer> thmScoreMap, TreeMultimap<Integer, Integer> scoreThmMMap,
-			Multimap<Integer, Integer> thmWordSpanMMap, ListMultimap<String, Integer> wordThmIndexMMap,
-			Multimap<Integer, String> indexStartingWordsMMap, int[] wordCountArray, //List<WordWrapper> wordWrapperList,
-			double avgWordScore) {
-
-		// if freq above certain level
-		for (int i = 0; i < wordCountArray.length; i++) {
-
-			// String word = wordWrapperList.get(i).word();
-			// dominant map
-			if (wordCountArray[i] > 1) {
-				// set of words that start at this index
-				Collection<String> indexWordsCol = indexStartingWordsMMap.get(i);
-
-				for (String indexWord : indexWordsCol) {
-					String[] wordAr = indexWord.split(" ");
-					int len = indexWord.split(" ").length;
-					// and score above averg
-					if (len == 1 && wordsScoreMap.get(indexWord) > avgWordScore * 3.0 / 2) {
-						adjustWordClusterScore(thmScoreMap, scoreThmMMap, wordThmIndexMMap, avgWordScore, indexWord);
-					} else if (len == 2) {
-						// 2 tuple, only lower if second word also included
-						// often with high score
-						if (wordsScoreMap.get(wordAr[1]) > avgWordScore * 3.0 / 2 && wordCountArray[i + 1] > 1) {
-							adjustWordClusterScore(thmScoreMap, scoreThmMMap, wordThmIndexMMap, avgWordScore,
-									indexWord);
-						}
-					} else if (len == 3) {
-						// adjust score only if either the second or third word
-						// gets counted multiple times, and weigh
-						// more than 3/2 of the average score.
-						if (wordsScoreMap.get(wordAr[1]) > avgWordScore * 3.0 / 2 && wordCountArray[i + 1] > 1
-								|| wordsScoreMap.get(wordAr[2]) > avgWordScore * 3.0 / 2 && wordCountArray[i + 2] > 1) {
-							adjustWordClusterScore(thmScoreMap, scoreThmMMap, wordThmIndexMMap, avgWordScore,
-									indexWord);
-						}
-					}
-				}
-			}
-		}
-	}
-
-	/**
-	 * Auxiliary method to adjust scores of word clusters.
-	 * 
-	 * @param thmScoreMap
-	 * @param scoreThmMMap
-	 * @param wordThmMMap
-	 * @param avgWordScore
-	 * @param indexWord
-	 *            word whose score is being reduced
-	 */
-	private static void adjustWordClusterScore(Map<Integer, Integer> thmScoreMap,
-			TreeMultimap<Integer, Integer> scoreThmMMap, ListMultimap<String, Integer> wordThmIndexMMap,
-			double avgWordScore, String indexWord) {
-		// get list of theorems
-		List<Integer> thmList = wordThmIndexMMap.get(indexWord);
-		int prevWordScore = wordsScoreMap.get(indexWord);
-		int scoreToDeduct = (int) (prevWordScore - avgWordScore / 3.0);
-		System.out.println("word being deducted: " + indexWord + " score being deducted " + scoreToDeduct);
-
-		// lower their scores
-		for (int thmIndex : thmList) {
-			int prevScore = thmScoreMap.get(thmIndex);
-			// removing the highest might not be enough! There might be other
-			// score entries
-			// for this thm already that's higher than the new score.
-			// scoreThmMMap.remove(prevScore, thmIndex);
-			int newThmScore = prevScore - scoreToDeduct;
-			// customize this score more based on avg score
-			scoreThmMMap.put(newThmScore, thmIndex);
-			thmScoreMap.put(thmIndex, newThmScore);
-		}
-	}
-
-	/**
 	 * Auxiliary method to add bonus points to theorems containing more words.
 	 * Bonus is proportional to the highest thm score.
 	 * If the max span is below certain threshold, short-circuit, and don't update spans.
@@ -710,7 +623,8 @@ public class SearchIntersection {
 			spanScoreThmMMap.put(thmWordsSetSize, thmIndex);
 		}
 		searchState.setLargestWordSpan(largestWordSpan);
-		if(LiteralSearch.spanBelowThreshold(largestWordSpan, inputWordsArSz)) {
+		//short-circuit is span insufficient
+		if(searchState.allowLiteralSearch() && LiteralSearch.spanBelowThreshold(largestWordSpan, inputWordsArSz)) {
 			return;
 		}
 		
@@ -762,13 +676,10 @@ public class SearchIntersection {
 	 * 
 	 * @param thmScoreMap
 	 * @param scoreThmMMap
-	 * @param word
-	 * @param wordIndices
-	 *            array of indices of words in query
-	 * @param singletonScoresAr
-	 *            Array of scores for singleton words
-	 * @param set
-	 *            of words, separated into singletons, used during search
+	 * @param word current word to add thms for
+	 * @param wordIndices  array of indices of words in query
+	 * @param singletonScoresAr  Array of scores for singleton words
+	 * @param set of words, separated into singletons, used during search
 	 * @param thmWordSpanMMap Multimap of thmIndex, and the (index of) set of words in query 
 	 * that appear in the thm.
 	 * @param thmWordsScoreMMap Multimap of thm indices, and the set of the words in them.
@@ -781,7 +692,7 @@ public class SearchIntersection {
 			ListMultimap<String, Integer> wordThmIndexAddedMMap, Multimap<String, Integer> wordThmIndexMMap,
 			String word, int wordIndexInThm, WordForms.TokenType tokenType,
 			int[] singletonScoresAr, Set<String> searchWordsSet 
-			, Set<Integer> ...dbThmSet
+			, Set<Integer> dbThmSet
 			) {
 		// update scores map
 		int curScoreToAdd = 0;
@@ -852,8 +763,6 @@ public class SearchIntersection {
 		
 		// adjust curScoreToAdd, boost 2, 3-gram scores when applicable
 		curScoreToAdd = tokenType.adjustNGramScore(curScoreToAdd, singletonScoresAr, wordIndexInThm);
-
-		int dbThmSetArLen = dbThmSet.length;
 		
 		if (!wordThms.isEmpty() && curScoreToAdd != 0) {
 			wordThmIndexAddedMMap.putAll(word, wordThms);
@@ -862,7 +771,7 @@ public class SearchIntersection {
 			}
 			for (Integer thmIndex : wordThms) {
 				
-				if(dbThmSetArLen > 0 && !dbThmSet[0].contains(thmIndex)) {
+				if(null != dbThmSet && !dbThmSet.contains(thmIndex)) {
 					continue;
 				}
 				
@@ -903,6 +812,7 @@ public class SearchIntersection {
 	}
 
 	/**
+	 * Add thms for related words to to current the thm's actual words.
 	 * @param thmScoreMap
 	 * @param scoreThmMMap
 	 * @param thmWordSpanMMap
@@ -913,11 +823,11 @@ public class SearchIntersection {
 	 */
 	private static void addRelatedWordsThms(Map<Integer, Integer> thmScoreMap,
 			TreeMultimap<Integer, Integer> scoreThmMMap, Multimap<Integer, Integer> thmWordSpanMMap, int wordIndexInThm,
-			WordForms.TokenType tokenType, int scoreAdded, List<String> relatedWordsList, Set<Integer> ...dbThmSet) {
+			WordForms.TokenType tokenType, int scoreAdded, List<String> relatedWordsList, Set<Integer> dbThmSet) {
 		// add thms for related words found, with some reduction factor;
 		// make global after experimentation.
 		double RELATED_WORD_MULTIPLICATION_FACTOR = 4 / 5.0;
-		int dbThmSetArLen = dbThmSet.length;
+		//int dbThmSetArLen = dbThmSet.length;
 		
 		if (null != relatedWordsList) {
 			// wordScore = wordsScoreMap.get(word);
@@ -936,7 +846,7 @@ public class SearchIntersection {
 				}
 				
 				for (Integer thmIndex : relatedWordThms) {
-					if(dbThmSetArLen > 0 && !dbThmSet[0].contains(thmIndex)) {
+					if(null != dbThmSet && !dbThmSet.contains(thmIndex)) {
 						continue;
 					}
 					// related words count towards span, only if the original
@@ -957,32 +867,6 @@ public class SearchIntersection {
 			}
 		}
 	}
-
-	/**
-	 * Searches the theorem base using just the intersection algorithm. Public
-	 * facing, don't call within this class, call getHighestThm directly instead
-	 * (so not to duplicate work).
-	 * 
-	 * @param inputStr
-	 *            Query string.
-	 * @param searchWordsSet
-	 *            set of terms (singletons) used during search. Used later for
-	 *            web display.
-	 * @return
-	 */
-	/*public static List<ThmHypPair> search(String inputStr, Set<String> searchWordsSet) {
-		
-		boolean contextSearchBool = false;
-		List<Integer> highestThms = getHighestThmList(inputStr, searchWordsSet, contextSearchBool);
-
-		if (highestThms == null) {
-			// foundThmList.add("Close, but no cigar. I don't have a theorem on
-			// that yet.");
-			// return thmList;
-			return Collections.<ThmHypPair>emptyList();
-		}
-		return SearchCombined.thmListIndexToThmHypPair(highestThms);
-	}*/
 
 	/**
 	 * Reads in keywords. Gets theorems with highest scores for this.
@@ -1008,7 +892,6 @@ public class SearchIntersection {
 					searchRelationalBool = true;
 					thm = thm.substring(9);
 				}
-				// highestThms = ContextSearch.contextSearch(thm, highestThms);
 			}
 
 			SearchState searchState = new SearchState();		

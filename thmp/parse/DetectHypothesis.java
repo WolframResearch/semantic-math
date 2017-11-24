@@ -1276,8 +1276,8 @@ public class DetectHypothesis {
 			////throw e;
 		}
 		
-		//remove this after testing!
-		if(false)
+		//remove if(false) after testing!
+		//if(false)
 		if(parseState.numNonTexTokens() < NUM_NON_TEX_TOKEN_THRESHOLD || parseState.curParseExcessiveLatex()){
 			//set parseState flag, not strictly necessary, since cleanup will happen soon,
 			//but set for safe practice.
@@ -1290,8 +1290,9 @@ public class DetectHypothesis {
 			char curChar = thmStr.charAt(i);			
 			//go through thm, get the variables that need to be defined
 			//once inside Latex, use delimiters, should also take into account
-			//the case of entering math mode with \[ !
-			if(curChar == '$'){
+			//the case of entering math mode with \[ ! Although mostly interested
+			//in those wrapped in $
+			if(curChar == '$' && !WordForms.isCharEscaped(thmStr, i)){
 				if(!mathMode){
 					mathMode = true;					
 				}else{
@@ -1401,10 +1402,9 @@ public class DetectHypothesis {
 			if(DEBUG) {
 				System.out.println("^^^ local variableNamesMMap: "+ parseState.getLocalVariableNamesMMap());
 				System.out.println("^^^ global variableNamesMMap: "+ parseState.getGlobalVariableNamesMMap());
-				//System.out.println("^^^^^^^PossibleVar: " + possibleVar);
+				
 			}
-			//get the latest definition
-			//int possibleVarDefListLen = possibleVarDefList.size();
+			
 			//if empty, check to see if bracket pattern, if so, check just the name without the brackets.
 			//e.g. x in x(yz)
 			if(null == possibleVarDef.getDefiningStruct()){
@@ -1412,6 +1412,7 @@ public class DetectHypothesis {
 				if(bracketSeparatorMatcher.find()){
 					possibleVariableName = ParseState.createVariableName(bracketSeparatorMatcher.group(1));
 					possibleVarDef.setVariableName(possibleVariableName);
+					//look within current thm, and in context gathered.
 					isLocalVar = parseState.getVariableDefinitionFromName(possibleVarDef);				
 				}
 			}
@@ -1428,6 +1429,120 @@ public class DetectHypothesis {
 			}			
 		}
 		return varDefList;
+	}
+	
+	/**
+	 * Try substituting definitions in, for context 
+	 * searcher to better detect relations. E.g. then $s_i$ converges goes
+	 * to "sequence $s_i$ converges".
+	 * //add defining structures of variable in string for parsing purposes.
+	//Input thmStr is thm to be parsed. Only substitute relatively simply variables,
+	//e.g. $f$, or $H(X, O_X)=...$" on lhs of equals.
+	 * @param thm
+	 * @return
+	 */	
+	public static String replaceSymbols(String thmStr, ParseState parseState){
+		
+		int thmStrLen = thmStr.length();
+		StringBuilder latexExpr = new StringBuilder(10);
+		StringBuilder sb = new StringBuilder(thmStrLen + 40);
+		
+		boolean mathMode = false;
+		//filter through text and try to pick up definitions.
+				for(int i = 0; i < thmStrLen; i++){		
+					char curChar = thmStr.charAt(i);	
+					sb.append(curChar);
+					//go through thm, get the variables that need to be defined
+					//once inside Latex, use delimiters, should also take into account
+					//the case of entering math mode with \[ ! Although mostly interested
+					//in those wrapped in $
+					if(curChar == '$'  && !WordForms.isCharEscaped(thmStr, i)){
+						if(!mathMode){
+							mathMode = true;					
+						}else{
+							mathMode = false;
+							//process the latexExpr, first pick out the variables,
+							//and try to find definitions for them. Appends original
+							//definition strings to thmWithDefSB. Should only append
+							//variables that are not defined within the same thm.				
+							String varDefStr = pickOutVariables(latexExpr.toString(), //variableNamesMMap,
+									parseState);
+							//if(true) throw new RuntimeException();
+							if(DEBUG) {
+								System.out.println("DetectHypothesis - varDefStr " + varDefStr);
+								System.out.println("DetectHypothesis - parseState.getGlobalVariableNamesMMap " + parseState.getGlobalVariableNamesMMap()
+								+ " localVariableNamesMMap:  " + parseState.getLocalVariableNamesMMap());
+							}
+							//variableDefinitionList.addAll(varDefList);
+							latexExpr.setLength(0);
+							sb.append(" ").append(varDefStr).append(" ");
+						}			
+					}else if(mathMode){
+						latexExpr.append(curChar);
+					}			
+				}
+		
+		return sb.toString();
+	}
+	
+	/**
+	 * Find the variable corresponding to input latexExpr, given 
+	 * variable definitions collected when parsing thm. 
+	 * 
+	 * @param latexExpr
+	 * @param parseState
+	 * @param varDefSet
+	 * @param thmDefSB
+	 * @param macrosTrie
+	 * @return
+	 */
+	private static String pickOutVariables(String latexExpr, 
+			ParseState parseState){
+		
+		//list of definitions needed in this latexExpr
+		//List<VariableDefinition> varDefList = new ArrayList<VariableDefinition>();
+		
+		List<String> varsList = TexToTree.texToTree(latexExpr);
+		if(DEBUG) System.out.println("DetectHypothesis - varsList " + varsList);
+		int varsListSz = varsList.size();
+		String structStr = "";
+		//only use first defining struct		
+		if(varsListSz > 0){
+			
+			String possibleVar = varsList.get(0);
+			
+			//Get a variableName and check if a variable has been defined.
+			VariableName possibleVariableName = ParseState.createVariableName(possibleVar);
+			VariableDefinition possibleVarDef = new VariableDefinition(possibleVariableName, null, null);
+			
+			parseState.getVariableDefinitionFromName(possibleVarDef);
+			//whether the variable definition was defined locally in the theorem, used to determine whether
+			//to include originalDefiningSentence.
+			
+			if(DEBUG) {
+				System.out.println("^^^ local variableNamesMMap: "+ parseState.getLocalVariableNamesMMap());
+				System.out.println("^^^ global variableNamesMMap: "+ parseState.getGlobalVariableNamesMMap());				
+			}
+			
+			//if empty, check to see if bracket pattern, if so, check just the name without the brackets.
+			//e.g. x in x(yz)
+			if(null == possibleVarDef.getDefiningStruct()){
+				Matcher bracketSeparatorMatcher = BRACKET_SEPARATOR_PATTERN.matcher(possibleVar);
+				if(bracketSeparatorMatcher.find()){
+					possibleVariableName = ParseState.createVariableName(bracketSeparatorMatcher.group(1));
+					possibleVarDef.setVariableName(possibleVariableName);
+					//look within current thm, and in context gathered.
+					parseState.getVariableDefinitionFromName(possibleVarDef);				
+				}
+			}
+			Struct definingStruct = possibleVarDef.getDefiningStruct();
+			//if some variable found. //!isLocalVar &&
+			if(null != definingStruct){	
+				//possibleVarDef.getOriginalDefinitionSentence();
+				structStr = definingStruct.nameStr();				
+			}			
+		}
+		return structStr;
 	}
 	
 }

@@ -81,6 +81,8 @@ public class ParseRun {
 	/**
 	 * Parse input String. 
 	 * Does *not* clean up parseState, as the caller needs stateful parseState info.
+	 * Therefore caller is responsible to clean up, ie by calling parseState.parseRunLocalCleanUp(),
+	 * or global CleanUp.
 	 * @param st
 	 * @param parseState
 	 * @param isVerbose whether to be verbose and print results to stdout.

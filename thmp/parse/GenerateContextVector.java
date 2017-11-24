@@ -174,8 +174,9 @@ public class GenerateContextVector {
 				parseState = ThmP1.parse(parseState);
 				//parseContextVecList.add(parseState.getContextVec());	
 			}*/
+			searchState.setParseState(parseState);
 		}
-		searchState.setParseState(parseState);
+		
 		Map<Integer, Integer> contextVecMap = parseState.getCurThmCombinedContextVecMap();
 		
 		//get context vector and add to contextVecMx

@@ -580,14 +580,8 @@ public class WordForms {
 	 * @return
 	 */
 	public static Set<String> splitThmIntoSearchWordsSet(String thm){
-		String[] thmAr = SPLIT_DELIM_PATTERN.split(thm);
-		Set<String> wordsSet = new HashSet<String>();
-		for(String word : thmAr) {
-			if(!ALL_WHITE_EMPTY_SPACE_PATTERN.matcher(word).matches()) {
-				wordsSet.add(word);
-			}			
-		}
-		return wordsSet;
+		
+		return new HashSet<String>(splitThmIntoSearchWordsList(thm));
 	}
 	
 	/**
@@ -773,6 +767,22 @@ public class WordForms {
 			inputStr = m.replaceAll("\\\\$1");
 		}		
 		return inputStr;
+	}
+	
+	/**
+	 * Whether the char at pos in str is escaped.
+	 * @param str
+	 * @param pos
+	 * @return
+	 */
+	public static boolean isCharEscaped(String str, int pos) {
+		boolean escaped = false;
+		pos--;
+		while(pos >= 0 && str.charAt(pos) == '\\') {
+			escaped ^= true;
+			pos--;
+		}
+		return escaped;
 	}
 	
 	/**

@@ -109,6 +109,7 @@ radius ent
 convergence ent
 than pre
 under pre
+morse ent
 cohen-macaulay adj
 multilinear adj
 multiplication ent

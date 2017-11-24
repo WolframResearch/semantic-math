@@ -108,6 +108,7 @@ public class SearchCombined {
 		public String getEntireThmStr() {
 			return this.hypStr + " " + this.thmStr;
 		}
+		
 	}
 
 	private static final boolean DEBUG = FileUtils.isOSX();
@@ -295,7 +296,7 @@ public class SearchCombined {
 				if(prefix.equals("context")){
 					searchContextBool = true;
 					//removes first word
-					input = matcher.group(2);					
+					input = matcher.group(2);			
 				}else if(prefix.equals("relation")){
 					searchRelationalBool = true;
 					input = matcher.group(2);
@@ -323,7 +324,8 @@ public class SearchCombined {
 		
 		List<Integer> bestCommonVecsList = searchState.intersectionVecList();
 		//need good heuristics for when to trigger this, e.g. very few or no results from previous algorithms.
-		if(false && null == FileUtils.getServletContext()){			
+		if(null == FileUtils.getServletContext() && bestCommonVecsList.isEmpty()){			
+			System.out.println("SVD triggered!");
 			//experiment with this constant!
 			if(searchState.largestWordSpan() < searchWordsSet.size()*2./3){
 				//Only do SVD if no good intersection matches, determine if good match based on span scores.
@@ -420,41 +422,12 @@ public class SearchCombined {
 		while(sc.hasNextLine()){
 			String thm = sc.nextLine();
 			System.out.println(" ~~~~~~~ ");
-			//String[] thmAr = WordForms.getWhiteNonEmptySpacePattern().split(thm);
 			boolean searchContextBool = false;
 			boolean searchRelationalBool = false;
 			
 			Set<String> wordsSet = new HashSet<String>();
 			//this gives the web-displayed versions. 
-			List<ThmHypPair> bestCommonThmHypPairList = searchCombined(thm, wordsSet, searchContextBool, searchRelationalBool);
-			
-			/*if(thm.matches("\\s*")) continue;
-			thm = thm.toLowerCase();
-			
-			List<Integer> nearestVecList = ThmSearch.readThmInput(thm, NUM_NEAREST);
-			if(nearestVecList.isEmpty()){
-				System.out.println("I've got nothing for you yet. Try again.");
-				continue;
-			}
-			//filter nearestVecList through context search, to re-arrange list output based on context
-			
-			//need to run GenerateContext.java to generate the context vectors during build, but ensure 
-			//context vectors are up to date!
-			
-			//searchWordsSet is null.
-			SearchState searchState = SearchIntersection.getHighestThms(thm, null, searchContextBool, NUM_NEAREST);
-			int numCommonVecs = NUM_COMMON_VECS;
-			
-			String firstWord = thm.split("\\s+")[0];
-			if(firstWord.matches("\\d+")){
-				numCommonVecs = Integer.parseInt(firstWord);
-			}			
-			
-			//find best intersection of these two lists. nearestVecList is 1-based, but intersectionVecList is 0-based! 
-			//now both are 0-based.
-			List<Integer> bestCommonVecs = findListsIntersection(nearestVecList, searchState, numCommonVecs,
-					thm, searchContextBool);
-			*/
+			List<ThmHypPair> bestCommonThmHypPairList = searchCombined(thm, wordsSet, searchContextBool, searchRelationalBool);			
 			
 			int counter = 0;
 			System.out.println("~ SEARCH RESULTS ~");
