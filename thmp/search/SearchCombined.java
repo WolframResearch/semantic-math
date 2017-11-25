@@ -84,9 +84,11 @@ public class SearchCombined {
 		public String thmStr(){
 			return this.thmStr;
 		}
+		
 		public String hypStr(){
 			return this.hypStr;
 		}
+		
 		/**
 		 * srcFileName of the tex file. Two possible forms, 
 		 * e.g. math0211002, or 4387.86213.

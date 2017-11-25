@@ -2,8 +2,11 @@ package thmp.utils;
 
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Class for utility functions for manipulating data.
@@ -44,6 +47,34 @@ public class DataUtility {
 		}
 	}
 	
+	/**
+	 * Compares integers based on a given map.
+	 * Useful for e.g. ranking thm indices, based on some scoring map.
+	 * Bigger values in map rank higher/come first.
+	 */
+	public static class IntMapComparator implements Comparator<Integer>{
+		
+		private Map<Integer, Integer> map;
+		
+		public IntMapComparator(Map<Integer, Integer> map_) {
+			this.map = ImmutableMap.copyOf(map_);
+		}
+		
+		@Override
+		public int compare(Integer a, Integer b){
+			Integer aScore = map.get(a);
+			Integer bScore = map.get(b);
+			if(null == aScore && null == bScore) {
+				return 0;
+			}else if(null == aScore) {
+				return 1;
+			}else if(null == bScore) {
+				return -1;
+			}
+			return aScore < bScore ? 1 : (aScore > bScore ? -1 : 0);
+		}
+	}
+
 	/**
 	 * 
 	 * @param srcFileName, two forms, e.g. math0211002, or 4387.86213

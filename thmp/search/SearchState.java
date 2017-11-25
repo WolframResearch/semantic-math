@@ -3,6 +3,7 @@ package thmp.search;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import thmp.parse.ParseState;
 
@@ -31,7 +32,14 @@ public class SearchState {
 	//tokens in query are covered.
 	private Map<Integer, Integer> thmSpanMap;
 	
-	//private int intersectionSearchThmMaxSpan;
+	/* Score map for context search.
+	 * Keys are thm indices, values are how many relations pairs coincide
+	 * based on context vectors.
+	 */
+	private Map<Integer, Integer> contextSearchNumCoincidingMap;
+	
+	//TreeMap of context vec scores and list of thm indices
+	private TreeMap<Integer, List<Integer>> contextScoreIndexTMap;
 	
 	//The largest span of current query word set amongst any 
 	// theorem that are in the keyset of thmSpanMap.
@@ -47,8 +55,7 @@ public class SearchState {
 	public static class SearchStateBuilder{
 		
 		private boolean allowLiteralSearch = true;
-		//public SearchStateBuilder() {			
-		//}
+		
 		public void disableLiteralSearch() {
 			this.allowLiteralSearch = false;
 		}
@@ -64,8 +71,7 @@ public class SearchState {
 		this.allowLiteralSearch = builder.allowLiteralSearch;		
 	}
 	
-	public SearchState(){
-		
+	public SearchState(){		
 		this.tokenScoreMap = new HashMap<String, Integer>();
 		this.thmSpanMap = new HashMap<Integer, Integer>();
 	}
@@ -84,10 +90,42 @@ public class SearchState {
 		this.thmScoreMap = scoreMap;
 	}
 	
+	/**
+	 * Score map derived from intersection search.
+	 * @return
+	 */
 	public Map<Integer, Integer> thmScoreMap(){
 		return this.thmScoreMap;
 	}
-		
+	
+	public void setContextVecScoreMap(Map<Integer, Integer> scoreMap){
+		this.contextSearchNumCoincidingMap = scoreMap;
+	}
+	
+	/**
+	 * Score map for context search.
+	 * Keys are thm indices, values are how many relations pairs coincide
+	 * based on context vectors.
+	 * @return @Nullable The context vec map. 
+	 */
+	public Map<Integer, Integer> contextVecScoreMap(){
+		return this.contextSearchNumCoincidingMap;
+	}
+	
+	public void setContextScoreIndexTMap(TreeMap<Integer, List<Integer>> scoreMap){
+		this.contextScoreIndexTMap = scoreMap;
+	}
+	
+	/**
+	 * Score map for context search.
+	 * Keys are thm indices, values are how many relations pairs coincide
+	 * based on context vectors.
+	 * @return @Nullable The context vec map. 
+	 */
+	public TreeMap<Integer, List<Integer>> contextScoreIndexTMap(){
+		return this.contextScoreIndexTMap;
+	}
+	
 	public boolean allowLiteralSearch() {
 		return allowLiteralSearch;
 	}
@@ -105,10 +143,6 @@ public class SearchState {
 	public void addThmSpan(Integer thmIndex, Integer span){
 		thmSpanMap.put(thmIndex, span);
 	}
-	
-	/*public void setIntersectionSearchThmMaxSpan(int maxSpan) {
-		this.intersectionSearchThmMaxSpan = maxSpan;
-	}*/
 	
 	public void addThmSpan(Map<Integer, Integer> spanMap){
 		thmSpanMap.putAll(spanMap);
@@ -143,6 +177,7 @@ public class SearchState {
 	}
 	
 	/**
+	 * Keys are indices of thms, and values are span lengths.
 	 * Map of How many words in the query does the thm cover.
 	 * This is derived as the size of an entry for thmWordSpanMMap,
 	 * which is a Multimap of thmIndex, and the (index of) set of words in query 

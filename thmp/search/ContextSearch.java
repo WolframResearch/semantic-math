@@ -2,6 +2,7 @@ package thmp.search;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -68,8 +69,7 @@ public class ContextSearch implements Searcher<Map<Integer, Integer>>{
 	 */
 	public static List<Integer> contextSearchMap(String query, List<Integer> nearestThmIndexList, 
 			Searcher<Map<Integer, Integer>> searcher, SearchState searchState){
-		//short-circuit if query contains only 1 word		
-		// Arrays.toString(Thread.currentThread().getStackTrace())
+		
 		logger.info("Starting context search...  ");
 		int nearestThmIndexListSz = nearestThmIndexList.size();
 		//could be 0 if, for instance, the words searched are all unknown to the word maps. 
@@ -84,7 +84,6 @@ public class ContextSearch implements Searcher<Map<Integer, Integer>>{
 			return nearestThmIndexList;
 		}
 		
-		//String queryContextVec;
 		Map<Integer, Integer> queryContextVecMap;
 		if(null == searcher){
 			queryContextVecMap = thmp.parse.GenerateContextVector.createContextVector(query, searchState);
@@ -105,18 +104,18 @@ public class ContextSearch implements Searcher<Map<Integer, Integer>>{
 			}
 		}
 		//if context vec was not generated in ThmP1.java because the input was unable to get parsed.
-		if(null == queryContextVecMap //|| "null".contentEquals(queryContextVec) //<--really!?
-				|| queryContextVecMap.isEmpty()){			
+		if(null == queryContextVecMap || queryContextVecMap.isEmpty()){			
 			logger.warn("No context vector was formed for query: " + query);
 			return nearestThmIndexList;
 		}
 		System.out.println("***********ContextSearch -QUERY  queryContextVecMap*** " +queryContextVecMap);
 		if(DEBUG) {
-			System.out.println("ContextSearch-selected thm indices: " + nearestThmIndexList);
+			//System.out.println("ContextSearch-selected thm indices: " + nearestThmIndexList);
 			System.out.println("ContextSearch - queryContextVecMap " +queryContextVecMap);
 		}
-		Map<Integer, List<Integer>> thmVecsTMap = new TreeMap<Integer, List<Integer>>(new thmp.utils.DataUtility.ReverseIntComparator());
-		//List<Map<Integer, Integer>> nearestThmVecMapList = new ArrayList<Map<Integer, Integer>>();
+		TreeMap<Integer, List<Integer>> thmVecsTMap = new TreeMap<Integer, List<Integer>>(new thmp.utils.DataUtility.ReverseIntComparator());
+		Map<Integer, Integer> contextVecScoreMap = new HashMap<Integer, Integer>();
+		
 		//extract context vec maps for each thm
 		for(int i = 0; i < nearestThmIndexListSz; i++){
 			int thmIndex = nearestThmIndexList.get(i);
@@ -131,9 +130,7 @@ public class ContextSearch implements Searcher<Map<Integer, Integer>>{
 				int wordIndex = queryVecEntry.getKey();				
 				Integer curThmVecMapEntryVal = curThmVecMap.get(wordIndex);
 				Integer queryVecMapVal = queryVecEntry.getValue();
-				//System.out.println("query vec key/val: " + wordIndex + ",  " +queryVecEntry.getValue() 
-					//	+ ". curThmVecMapEntryVal " + curThmVecMapEntryVal + " equals: " +(queryVecEntry.getValue().equals(curThmVecMapEntryVal)));
-				//final int contextCoincidingAddition = ;
+				
 				//use .equals(), and not simple reference equality.
 				if(queryVecMapVal.equals(curThmVecMapEntryVal)){
 					/**Note: Deliberately don't add if curThmVecMapEntryVal < 0, which cause lower-ranking results to
@@ -163,16 +160,20 @@ public class ContextSearch implements Searcher<Map<Integer, Integer>>{
 				curList.add(thmIndex);
 				thmVecsTMap.put(numCoinciding, curList);
 			}
-		}		
+			contextVecScoreMap.put(thmIndex, numCoinciding);
+		}
+		
+		searchState.setContextVecScoreMap(contextVecScoreMap);
+		searchState.setContextScoreIndexTMap(thmVecsTMap);
 		//coalesce map entries into one list. Iterator respects order.
 		List<Integer> nearestVecList = new ArrayList<Integer>();
 		for(Map.Entry<Integer, List<Integer>> entry : thmVecsTMap.entrySet()){
 			nearestVecList.addAll(entry.getValue());			
 		}
-		System.out.println("ContextSearch - nearestContextVecs: "+nearestVecList 
-				+ " Thms, including hyp: ");
 		
-		if(DEBUG) {
+		if(false && DEBUG) {
+			System.out.println("ContextSearch - nearestContextVecs: " 
+					+ " Thms, including hyp: ");
 			for(int i = 0; i < nearestVecList.size(); i++){
 				int thmIndex = nearestVecList.get(i);
 				System.out.println(thmIndex + " " + ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex));

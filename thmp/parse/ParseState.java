@@ -944,6 +944,8 @@ public class ParseState {
 	}
 
 	/**
+	 * Head parseStruct after layering built WLCommands for
+	 * entire sentence.
 	 * @return 
 	 */
 	public ParseStruct getHeadParseStruct() {
