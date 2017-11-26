@@ -10,6 +10,7 @@
 	
 	<!-- main lib containing jar such as JLink, Guava etc -->
 	<property name="libdir" value="/Users/yihed/Documents/workspace/SemanticMath/lib/" />
+	<property name="semanticMathJarDir" value="/Users/yihed/Documents/workspace/SemanticMath/" />
 	<!-- lib containing jars such as thmSearch, thmUtils etc-->
 	<property name="db_jarname" value="dbApp.jar" />
 
@@ -24,6 +25,9 @@
 			<src path="${srcdir}"/>
 			<classpath>
 				<fileset dir="${libdir}">
+					<include name="**/*.jar" />
+				</fileset>
+				<fileset dir="${semanticMathJarDir}">
 					<include name="**/*.jar" />
 				</fileset>
 			</classpath>
