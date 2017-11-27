@@ -155,7 +155,7 @@ public class SearchIntersection {
 	 * @param num
 	 * @return List of thm Strings.
 	 */
-	public static List<ThmHypPair> getHighestThmStringList(String input, Set<String> searchWordsSet,
+	public static List<Integer> getHighestThmStringList(String input, Set<String> searchWordsSet,
 			SearchState searchState, boolean contextSearchBool, boolean searchRelationalBool) {
 		
 		input = input.toLowerCase();
@@ -214,13 +214,14 @@ public class SearchIntersection {
 		}
 		
 		if (null == searchState){
-			return Collections.<ThmHypPair>emptyList();
+			return Collections.<Integer>emptyList();
 		}
 		List<Integer> highestThmsList = searchState.intersectionVecList();
 		if (null == highestThmsList){
-			return Collections.<ThmHypPair>emptyList();
+			return Collections.<Integer>emptyList();
 		}
-		return SearchCombined.thmListIndexToThmHypPair(highestThmsList);
+		//return SearchCombined.thmListIndexToThmHypPair(highestThmsList);
+		return highestThmsList;
 	}
 
 	/**
@@ -494,7 +495,7 @@ public class SearchIntersection {
 						String word = thmWords.get(0);						
 						final int lowScoreThreshold = 3;
 						Integer wordScore = wordsScoreMap.get(word);
-						if(wordScore <= lowScoreThreshold 
+						if(null == wordScore || wordScore <= lowScoreThreshold 
 								|| WordForms.genericSearchTermsSet().contains(word)) {
 							continue innerFor;
 						}

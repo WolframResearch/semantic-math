@@ -25,7 +25,7 @@ public class ContextSearch implements Searcher<Map<Integer, Integer>>{
 	
 	//private static final int LIST_INDEX_SHIFT = 1;
 	//private static final Pattern BRACKETS_PATTERN = WordForms.BRACKETS_PATTERN();
-	private static final boolean DEBUG = FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : true;
+	private static final boolean DEBUG = FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : false;
 	private static final Logger logger = LogManager.getLogger(ContextSearch.class);
 	private static final int CONTEXT_MATCH_DEFAULT = 2;
 	private static final int SEARCH_SPAN_THRESHOLD = 2;
@@ -108,7 +108,7 @@ public class ContextSearch implements Searcher<Map<Integer, Integer>>{
 			logger.warn("No context vector was formed for query: " + query);
 			return nearestThmIndexList;
 		}
-		System.out.println("***********ContextSearch -QUERY  queryContextVecMap*** " +queryContextVecMap);
+		//System.out.println("***********ContextSearch -QUERY  queryContextVecMap*** " +queryContextVecMap);
 		if(DEBUG) {
 			//System.out.println("ContextSearch-selected thm indices: " + nearestThmIndexList);
 			System.out.println("ContextSearch - queryContextVecMap " +queryContextVecMap);
@@ -148,7 +148,7 @@ public class ContextSearch implements Searcher<Map<Integer, Integer>>{
 				/**Note: Deliberately don't penalize result if mismatch instead of miss, 
 				 * result could be still be useful, also negative will affect intersection search!*/
 			}
-			System.out.println("ContextSearch - index / numCoinciding " + thmIndex + " " + numCoinciding);
+			if(DEBUG) System.out.println("ContextSearch - index / numCoinciding " + thmIndex + " " + numCoinciding);
 			if(numCoinciding < 0){
 				continue;
 			}

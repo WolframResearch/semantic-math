@@ -276,7 +276,9 @@ public class SearchCombined {
 	
 	public static List<ThmHypPair> searchCombined(String input, Set<String> searchWordsSet, boolean searchContextBool){
 		
-		return searchCombined(input, searchWordsSet, searchContextBool, false);
+		List<ThmHypPair> bestCommonThmHypPairList 
+			= thmListIndexToThmHypPair(searchCombined(input, searchWordsSet, searchContextBool, false));
+		return bestCommonThmHypPairList;
 	}
 	
 	/**
@@ -284,10 +286,10 @@ public class SearchCombined {
 	 * Resources should have been set prior to this if called externally.
 	 * @param inputStr search input
 	 */
-	public static List<ThmHypPair> searchCombined(String input, Set<String> searchWordsSet, boolean searchContextBool,
+	public static List<Integer> searchCombined(String input, Set<String> searchWordsSet, boolean searchContextBool,
 			boolean searchRelationalBool){
 		
-		if(WordForms.getWhiteEmptySpacePattern().matcher(input).matches()) return Collections.<ThmHypPair>emptyList();
+		if(WordForms.getWhiteEmptySpacePattern().matcher(input).matches()) return Collections.<Integer>emptyList();
 		input = input.toLowerCase();
 		
 		//String[] thmAr = WordForms.getWhiteNonEmptySpacePattern().split(input);
@@ -343,18 +345,9 @@ public class SearchCombined {
 			}
 		}		
 
-		List<ThmHypPair> bestCommonThmHypPairList = thmListIndexToThmHypPair(bestCommonVecsList);
-			
-		/*for(int d : bestCommonVecs){
-			String thm = TriggerMathThm2.getWebDisplayThm(d);
-			System.out.println( thm);
-		}*/	
-		//this exists just for printing, should not use on PRD
-		/*for(ThmHypPair thmHypPair : bestCommonThmHypPairList){
-			System.out.println(thmHypPair);
-		}*/		
+		//List<ThmHypPair> bestCommonThmHypPairList = thmListIndexToThmHypPair(bestCommonVecsList);
 		
-		return bestCommonThmHypPairList;
+		return bestCommonVecsList;
 	}
 	
 	/**
@@ -429,7 +422,8 @@ public class SearchCombined {
 			
 			Set<String> wordsSet = new HashSet<String>();
 			//this gives the web-displayed versions. 
-			List<ThmHypPair> bestCommonThmHypPairList = searchCombined(thm, wordsSet, searchContextBool, searchRelationalBool);			
+			List<ThmHypPair> bestCommonThmHypPairList 
+				= thmListIndexToThmHypPair(searchCombined(thm, wordsSet, searchContextBool, searchRelationalBool));
 			
 			int counter = 0;
 			System.out.println("~ SEARCH RESULTS ~");

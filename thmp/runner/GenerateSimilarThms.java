@@ -2,7 +2,15 @@ package thmp.runner;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import com.wolfram.puremath.dbapp.DBUtils;
+import com.wolfram.puremath.dbapp.SimilarThmUtils;
+
+import thmp.search.ThmHypPairGet;
 
 /**
  * Generate indices of similar thms. Encodes indices to string,
@@ -22,19 +30,32 @@ public class GenerateSimilarThms {
 	 * @throws InterruptedException
 	 */
 	public static void main(String[] args) throws FileNotFoundException, IOException, InterruptedException{
-		int argsLen = args.length;
+		
+		/*int argsLen = args.length;
 		//read in location of source file
 		if(0 == argsLen){
 			System.out.println("Please supply a file to read data sources from!");
 			return;
-		}
-		//filenames should be absolute paths
-		List<String> fileNamesList = extractNamesFromFile(args[0]);
-		System.out.println("GenerateSimilarThms-fileNamesList: " + fileNamesList);
+		}*/
 		
+		//get all files in thm dir
+		//System.out.println("GenerateSimilarThms-fileNamesList: " + fileNamesList);
+		
+		Map<Integer, String> similarThmsMap = new HashMap<Integer, String>();
+		
+		//StringBuilder sb = new StringBuilder(500000);
 		//run through thm indices
-		
-		thmp.search.SimilarThmSearch.findSimilarThm( thmIndex );		
-		
+		int totalThmCount = ThmHypPairGet.totalThmsCount();
+		for(int i = 0; i < totalThmCount; i++) {
+			
+			List<Integer> similarThmList = thmp.search.SimilarThmSearch.findSimilarThm( i );
+			similarThmsMap.put(i, SimilarThmUtils.indexListToStr(similarThmList));
+			
+		}
+		//make map instead of write to file, to avoid newlines!!
+		//thmp.utils.FileUtils.writeToFile(sb.toString(), DBUtils.similarThmIndexStrPath);
+		List<Map<Integer, String>> similarThmsMapList = new ArrayList<Map<Integer, String>>();
+		similarThmsMapList.add(similarThmsMap);
+		thmp.utils.FileUtils.serializeObjToFile(similarThmsMapList, DBUtils.similarThmIndexStrPath);
 	}
 }

@@ -4,27 +4,36 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeMap;
 
+import com.wolfram.puremath.dbapp.SimilarThmUtils;
+
 import thmp.parse.DetectHypothesis;
+import thmp.parse.InitParseWithResources;
 import thmp.parse.ParseRun;
 import thmp.parse.ParseState;
 import thmp.parse.ThmP1;
 import thmp.parse.ParseState.ParseStateBuilder;
 import thmp.search.SearchCombined.ThmHypPair;
 import thmp.search.SearchState.SearchStateBuilder;
+import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 
 public class SimilarThmSearch {
 
 	private static final int numHighestResults = 50;
+	private static final boolean DEBUG = FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : false;
 	
-	public static void findSimilarThm(int thmIndex) {
+	/**
+	 * Finds list of similar 
+	 * @param thmIndex
+	 * @return
+	 */
+	public static List<Integer> findSimilarThm(int thmIndex) {
 		
 		/*
 		 * Call contextSearchMap(String query, List<Integer> nearestThmIndexList, 
@@ -33,7 +42,7 @@ public class SimilarThmSearch {
 		 */		
 		ThmHypPair thmHypPair = ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex);
 		String thmStr = thmHypPair.getEntireThmStr();
-		System.out.println("QUERY THM: " + thmStr);
+		if(DEBUG) System.out.println("QUERY THM: " + thmStr);
 		
 		//keep a running parse state to collect variable definitions.
 		ParseStateBuilder parseStateBuilder = new ParseStateBuilder();
@@ -45,7 +54,7 @@ public class SimilarThmSearch {
 		/* Divides thm into pieces, i.e. logical components, e.g.
 		 * "if ... ", and "then ..." */
 		String[] thmPieces = ThmP1.preprocess(thmStr);
-		boolean isVerbose = true;
+		boolean isVerbose = DEBUG;
 		for(String str : thmPieces) {
 			//divide thm string into several parts, to target search results specifically
 			str = chopThmStr(str, parseState);
@@ -103,6 +112,7 @@ public class SimilarThmSearch {
 		TreeMap<Integer, List<Integer>> contextScoreThmTMap 
 			= new TreeMap<Integer, List<Integer>>(new thmp.utils.DataUtility.ReverseIntComparator());
 		
+		contextScoreMap.remove(thmIndex);
 		/*Combine maps, prune away ones with low intersection scores */
 		for(Map.Entry<Integer, Integer> entry : contextScoreMap.entrySet()) {			
 			int curIndex = entry.getKey();
@@ -126,28 +136,31 @@ public class SimilarThmSearch {
 		}
 		Collections.sort(intersectionSortedList, new thmp.utils.DataUtility.IntMapComparator(thmScoreMap));
 		
+		List<Integer> combinedList = new ArrayList<Integer>();
+		combinedList.addAll(contextSortedList);
+		combinedList.addAll(intersectionSortedList);
+		
 		//prune away intersectionList ends!!
-		if(intersectionSortedList.size() > numHighestResults) {
+		int maxSimilarThmCount = SimilarThmUtils.maxSimilarThmListLen();
+		if(combinedList.size() > maxSimilarThmCount) {
 			List<Integer> tempList = new ArrayList<Integer>();
-			for(int i = 0; i < numHighestResults; i++) {
-				tempList.add(intersectionSortedList.get(i));
+			for(int i = 0; i < maxSimilarThmCount; i++) {
+				tempList.add(combinedList.get(i));
 			}
-			intersectionSortedList = tempList;
+			combinedList = tempList;
 		}
 		
-		List<ThmHypPair> thmHypPairList = SearchCombined.thmListIndexToThmHypPair(contextSortedList);
-		System.out.println("SIMILAR SEARCH RESULTS: for thm: " + thmStr
-				+ "\n thmHypPairList: ");
-		int counter = 0;
-		for(ThmHypPair thm : thmHypPairList) {
-			System.out.println("Thm "+ counter + ". " + thm);
-			counter++;
+		if(DEBUG) {
+			List<ThmHypPair> thmHypPairList = SearchCombined.thmListIndexToThmHypPair(combinedList);
+			System.out.println("SIMILAR SEARCH RESULTS: for thm: " + thmStr
+					+ "\n thmHypPairList: ");
+			int counter = 0;
+			for(ThmHypPair thm : thmHypPairList) {
+				System.out.println("Thm "+ counter + ". " + thm);
+				counter++;
+			}
 		}
-		thmHypPairList = SearchCombined.thmListIndexToThmHypPair(intersectionSortedList);
-		for(ThmHypPair thm : thmHypPairList) {
-			System.out.println("Thm "+ counter + ". " + thm);
-			counter++;
-		}
+		return combinedList;
 	}
 	
 	private static void pruneLowScoreThms() {

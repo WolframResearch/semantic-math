@@ -36,6 +36,7 @@ public class ThmHypPairGet{
 	/*do binary search on this list to find the index of the first thm the bundles
 	  length should be around 313 (as of Oct 2017) */
 	private static final List<Integer> bundleStartThmIndexList;
+	/**total number of thms*/
 	private static final int totalThmsCount;
 	private static final int totalBundleNum;
 	
