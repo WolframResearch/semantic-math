@@ -309,7 +309,7 @@ public class DBUtils {
 	 * Connections pool.
 	 */
 	public static Connection getPooledConnection() {
-		//MysqlDataSource ds = new MysqlDataSource();
+		
 		DataSource ds = FileUtils.getPooledDataSource();
 		Connection connHandle = null;
 		try {
