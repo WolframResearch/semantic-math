@@ -33,7 +33,9 @@ public class SimilarThmUtils {
 	private static final int NUM_BITS_PER_BYTE = 8;
 	
 	private static final Charset INDEX_STR_CHAR_SET = Charset.forName("ISO-8859-1");
-	private static final boolean DEBUG = thmp.utils.FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : false;
+	//private static final boolean DEBUG = thmp.utils.FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : false;
+	//figure out why above ant script doesn't recognize path!!!
+	private static final boolean DEBUG = false;
 	
 	static {
 		MAX_THM_INDEX_LIST_LEN = 100;
@@ -53,7 +55,7 @@ public class SimilarThmUtils {
 	 * @param indexStr
 	 * @return
 	 */
-	private static List<Integer> strToIndexList(String str) {
+	public static List<Integer> strToIndexList(String str) {
 		
 		//List<Byte> byteList = new ArrayList<Byte>();
 		List<Integer> thmIndexList = new ArrayList<Integer>();
@@ -154,7 +156,7 @@ public class SimilarThmUtils {
 	 * @param thmIndexList
 	 * @return
 	 */
-	private static String indexListToStr(List<Integer> thmIndexList) {
+	public static String indexListToStr(List<Integer> thmIndexList) {
 		
 		int thmIndexListLen = thmIndexList.size();
 		if(thmIndexListLen > MAX_THM_INDEX_LIST_LEN) {
@@ -242,6 +244,11 @@ public class SimilarThmUtils {
 	public static int maxSimilarThmListStrLen() {
 		return MAX_INDEX_STR_LEN;
 	}
+	
+	public static int maxSimilarThmListLen() {
+		return MAX_THM_INDEX_LIST_LEN;
+	}
+	
 	//use ISO-8859-1 encoding
 	
 	public static void main(String[] args) {

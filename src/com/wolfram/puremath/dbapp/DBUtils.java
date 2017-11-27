@@ -34,6 +34,10 @@ public class DBUtils {
 	public static final String AUTHOR_TB_MIDDLENAME_COL = "middleName";
 	public static final String AUTHOR_TB_LASTNAME_COL = "lastName";
 	
+	/**relative (to ~/thm) path to serialization file containing thm index, and string of list of 
+	 * indices of similar thms */
+	public static final String similarThmIndexStrPath = "src/thmp/data/similarThmIndexStr.dat";
+	
 	private static final Logger logger = LogManager.getLogger(DBUtils.class);
 	private static final int STM_EXECUTATION_FAILURE = -1;
 	

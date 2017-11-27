@@ -28,7 +28,7 @@
 					<include name="**/*.jar" />
 				</fileset>
 				<fileset dir="${semanticMathJarDir}">
-					<include name="**/*.jar" />
+					<include name="*.jar" />
 				</fileset>
 			</classpath>
 		</javac>
