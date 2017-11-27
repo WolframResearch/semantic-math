@@ -360,7 +360,7 @@ public class DBUtils {
 	 * @return
 	 * @throws SQLException 
 	 */
-	public static DataSource getDefaultDS() {
+	public static DataSource getDefaultDS1() {
 		//handle if default conn times out!!
 		return DEFAULT_DATASOURCE;
 	}

@@ -1,5 +1,7 @@
 package thmp.search;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -9,6 +11,9 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeMap;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.wolfram.puremath.dbapp.SimilarThmUtils;
 
@@ -20,20 +25,52 @@ import thmp.parse.ThmP1;
 import thmp.parse.ParseState.ParseStateBuilder;
 import thmp.search.SearchCombined.ThmHypPair;
 import thmp.search.SearchState.SearchStateBuilder;
+import thmp.utils.DBUtils;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 
+/**
+ * Methods to precompute indices of similar theorems a priori, 
+ * as well as retrieving similar thms 
+ * 
+ * @author yihed
+ */
 public class SimilarThmSearch {
 
 	private static final int numHighestResults = 50;
 	private static final boolean DEBUG = FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : false;
+	//private static final boolean DEBUG = false;
+	private static final Logger logger = LogManager.getLogger(SimilarThmSearch.class);
 	
 	/**
-	 * Finds list of similar 
+	 * Finds index list of similar theorems by retrieving precomputed
+	 * indices from database. Used at app runtime.
 	 * @param thmIndex
 	 * @return
 	 */
-	public static List<Integer> findSimilarThm(int thmIndex) {
+	public static List<Integer> getSimilarThms(int thmIndex){
+		
+		Connection conn = DBUtils.getPooledConnection();
+		List<Integer> indexList;
+		
+		try {
+			indexList = SimilarThmUtils.getSimilarThmListFromDb(thmIndex, conn);
+		}catch(SQLException e) {
+			logger.error("SQLException while getting similar thms! " + e);
+			return Collections.emptyList();
+		}finally {
+			DBUtils.closePooledConnection(conn);
+		}
+		return indexList;
+	}
+	
+	/**
+	 * Finds index list of similar theorems. Used to precompute indices
+	 * locally, *not* at app runtime, which should use getSimilarThms().
+	 * @param thmIndex
+	 * @return
+	 */
+	public static List<Integer> preComputeSimilarThm(int thmIndex) {
 		
 		/*
 		 * Call contextSearchMap(String query, List<Integer> nearestThmIndexList, 
@@ -232,7 +269,7 @@ public class SimilarThmSearch {
 				System.out.println("Enter an integer index for a thm!");
 				continue;
 			}
-			findSimilarThm(Integer.parseInt(index));
+			preComputeSimilarThm(Integer.parseInt(index));
 			System.out.println("Enter new thm index:");
 		}
 		

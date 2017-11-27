@@ -48,7 +48,7 @@ public class GenerateSimilarThms {
 		int totalThmCount = ThmHypPairGet.totalThmsCount();
 		for(int i = 0; i < totalThmCount; i++) {
 			
-			List<Integer> similarThmList = thmp.search.SimilarThmSearch.findSimilarThm( i );
+			List<Integer> similarThmList = thmp.search.SimilarThmSearch.preComputeSimilarThm( i );
 			similarThmsMap.put(i, SimilarThmUtils.indexListToStr(similarThmList));
 			
 		}
@@ -56,6 +56,6 @@ public class GenerateSimilarThms {
 		//thmp.utils.FileUtils.writeToFile(sb.toString(), DBUtils.similarThmIndexStrPath);
 		List<Map<Integer, String>> similarThmsMapList = new ArrayList<Map<Integer, String>>();
 		similarThmsMapList.add(similarThmsMap);
-		thmp.utils.FileUtils.serializeObjToFile(similarThmsMapList, DBUtils.similarThmIndexStrPath);
+		thmp.utils.FileUtils.serializeObjToFile(similarThmsMapList, DBUtils.SimilarThmsTb.similarThmIndexStrPath);
 	}
 }

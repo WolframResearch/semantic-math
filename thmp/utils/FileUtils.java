@@ -233,7 +233,7 @@ public class FileUtils {
 	}
 	
 	/**
-	 * DataSource from web container.
+	 * DataSource from web container. Get Connections from DBUtils.
 	 * @return
 	 */
 	public static javax.sql.DataSource getPooledDataSource(){
