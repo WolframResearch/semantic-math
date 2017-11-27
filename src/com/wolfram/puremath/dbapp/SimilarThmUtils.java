@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 import com.wolfram.puremath.dbapp.DBUtils.SimilarThmsTb;
 
@@ -39,9 +40,9 @@ public class SimilarThmUtils {
 	private static final int NUM_BITS_PER_BYTE = 8;
 	
 	private static final Charset INDEX_STR_CHAR_SET = Charset.forName("ISO-8859-1");
-	private static final boolean DEBUG = thmp.utils.FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : false;
+	//private static final boolean DEBUG = thmp.utils.FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : false;
 	//figure out why above ant script doesn't recognize path!!!
-	//private static final boolean DEBUG = false;
+	private static final boolean DEBUG = false;
 	
 	static {
 		MAX_THM_INDEX_LIST_LEN = 100;
@@ -103,14 +104,19 @@ public class SimilarThmUtils {
 		return thmIndex;
 	}
 	
-	//get next 20 bits, 
+	/**
+	 * Fill in the next 20 bits of the byteAr.
+	 * @param byteAr
+	 * @param curTupleIndex
+	 * @return
+	 */
 	private static List<Byte> getZeroOneList(byte[] byteAr, int curTupleIndex) {
 		int inArrayShift = curTupleIndex * 20 / 8;
 		if(DEBUG) System.out.println("inArrayShift "+inArrayShift);
 		//the next 20-bit thmIndex starts at index inByteShift in current byte
-		int inByteShift = curTupleIndex * 20 - 8 * inArrayShift;
+		byte inByteShift = (byte)(curTupleIndex * 20 - 8 * inArrayShift);
 		
-		//byte[] zeroOneAr = new byte[20];
+		
 		List<Byte> zeroOneList = new ArrayList<Byte>();
 		int curBitCounter = 0;
 		byte curByte = byteAr[inArrayShift];
@@ -118,14 +124,22 @@ public class SimilarThmUtils {
 		
 		byte remainder = curByte;
 		//!=0 instead of >=0, since 11111111 will be compared as -1 instead 255.
-		while(remainder != 0) {
+		/*while(remainder != 0) {
 			byte power = (byte)(Math.log(remainder) / Math.log(2));			
 			if(power < inByteShift) {
 				break;
 			}	
 			zeroOneList.add((byte)(power - inByteShift));
 			remainder -= Math.pow(2, power);
+		}*/
+		
+		for(byte j = inByteShift; j < 8; j++) {
+			if((remainder >> j & 1) == 1) {
+				byte curBitToSet = (byte)(j - inByteShift);				
+				zeroOneList.add(curBitToSet);
+			}
 		}
+		
 		curBitCounter+=8;
 		
 		/*for( ; curBitCounter < bitDivider ; curBitCounter++) {			
@@ -141,15 +155,25 @@ public class SimilarThmUtils {
 		outerFor: for(int i = 1; i < 4 && curBitCounter < 20; i++) {
 			curByte = byteAr[inArrayShift+i];
 			remainder = curByte;
-			while(remainder != 0) {	
+			
+			for(byte j = 0; j < 8; j++) {
+				if((remainder >> j & 1) == 1) {
+					byte curBitToSet = (byte)(j + bitDivider + 8*(i-1));
+					if(curBitToSet >= 20) {
+						break outerFor;
+					}
+					zeroOneList.add(curBitToSet);
+				}
+			}			
+			/*while(remainder != 0) {
 				byte power = (byte)(Math.log(remainder) / Math.log(2));
-				byte curBitToSet = (byte)(power + bitDivider + 8*(i-1));
+				byte curBitToSet = (byte)(power + bitDivider + 8*(i-1));				
 				if(curBitToSet >= 20) {
 					break outerFor;
 				}
 				zeroOneList.add(curBitToSet);		
 				remainder -= Math.pow(2, power);
-			}	
+			}	*/
 			curBitCounter += 8;
 		}
 		return zeroOneList;
@@ -208,23 +232,19 @@ public class SimilarThmUtils {
 				}
 			}			
 		}
+		
 		int inArrayShift = thmCount * NUM_BITS_PER_INDEX / NUM_BITS_PER_BYTE;
 		/* amount of shift in the byte partially filled from last index.
 		 * 8 means*/
 		int inByteShift = thmCount * NUM_BITS_PER_INDEX - inArrayShift * NUM_BITS_PER_BYTE;
-		//if(inByteShift == 0) {
-			//inArrayShift++; //double check!
-		//}
+		
 		//current bit index between 0 and NUM_BITS_PER_INDEX
 		int curBitIndex = 0;
 		//at most 3 dividers fit within 20 bits, which span at most 4 bytes.
 		//divider indices are starting indices of next byte.
-		//int[] dividerIndexAr = new int[3];
-		//dividerIndexAr[0] = NUM_BITS_PER_BYTE - inByteShift;
+		
 		int firstDivider = NUM_BITS_PER_BYTE - inByteShift;
-		/*for(int i = 1; i < 4; i++) {
-			dividerIndexAr[i] = dividerIndexAr[i-1] + 8;
-		}*/
+		
 		byte curByte = indexByteAr[inArrayShift];
 		
 		for(int i = 0; i < 4; i++) {		
@@ -233,7 +253,7 @@ public class SimilarThmUtils {
 					curByte |= (1 << (curBitIndex + inByteShift - 8*i));
 				}
 			}
-			//System.out.println("curByte "+curByte);
+			
 			indexByteAr[inArrayShift+i] = curByte;
 			if(curBitIndex >= 20) {
 				break;
@@ -243,12 +263,12 @@ public class SimilarThmUtils {
 	}	
 	
 	//find similar indices 
-	//
+	
 	public static List<Integer> getSimilarThmListFromDb(int thmIndex, Connection conn) throws SQLException {
 		
 		StringBuilder sb = new StringBuilder(50);
-		sb.append("SELECT FROM " + SimilarThmsTb.TB_NAME).append(" ")
-		.append(SimilarThmsTb.SIMILAR_THMS_COL)
+		sb.append("SELECT ").append(SimilarThmsTb.SIMILAR_THMS_COL)
+		.append(" FROM ").append(SimilarThmsTb.TB_NAME)
 		.append(" WHERE ").append(SimilarThmsTb.INDEX_COL)
 		.append("=?;");
 		
@@ -281,16 +301,33 @@ public class SimilarThmUtils {
 		
 		List<Integer> thmIndexList = new ArrayList<Integer>();
 		//thmIndexList.add(770000);
-		//thmIndexList.add(400);
+		//40890, 570
+		//[40890, 570, 1180, 821, 1034, 3651, 180]
+		//-> returned index: [2203578, 560, 1180, 821, 1034, 3651, 180]
+		//thmIndexList.add(40890);
+		
+		//thmIndexList.add(570);
+		
 		//thmIndexList.add(4);
-		for(int i= 0; i  < 1; i++) {
-			thmIndexList.add(1000000);
-			
+		
+		Random rand = new Random();
+		
+		for(int i= 0; i  < 10; i++) {
+			//thmIndexList.add(1000000);
+			thmIndexList.add(rand.nextInt(9000));
 		}
+		
+		System.out.println(thmIndexList);
 		String str = indexListToStr(thmIndexList);
 		
 		System.out.println("index str: "+str);
 		List<Integer> returnedIndex = strToIndexList(str);
+		int thmIndexListSz = thmIndexList.size();
+		for(int i = 0; i < thmIndexListSz; i++) {
+			if(thmIndexList.get(i).intValue() != returnedIndex.get(i).intValue()) {
+				System.out.println(thmIndexList.get(i) + " not equal to " + returnedIndex.get(i));
+			}
+		}
 		
 		System.out.println("returned index: "+returnedIndex);
 	}

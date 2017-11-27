@@ -3,7 +3,6 @@ package com.wolfram.puremath.dbapp;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -101,7 +100,7 @@ public class DBDeploy {
 			
 			int thmIndex = entry.getKey();
 			String similarIndexStr = entry.getValue();
-			//INSERT INTO tbl_name (col1,col2) VALUES(15,col1*2);
+			
 			sb = new StringBuilder(50);
 			sb.append("INSERT INTO " + SimilarThmsTb.TB_NAME + " (")
 			.append(SimilarThmsTb.INDEX_COL)
@@ -114,9 +113,6 @@ public class DBDeploy {
 			
 			pstm.executeUpdate();
 		}
-		//String s = SimilarThmsTb.INDEX_COL;
-		//String t = SimilarThmsTb.SIMILAR_THMS_COL;
-		
 	}
 	
 	public static void main(String[] args) throws SQLException {

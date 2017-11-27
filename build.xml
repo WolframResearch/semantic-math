@@ -10,6 +10,8 @@
 	
 	<!-- main lib containing jar such as JLink, Guava etc -->
 	<property name="libdir" value="/Users/yihed/Documents/workspace/SemanticMath/lib/" />
+	<property name="server_libdir" value="/Users/yihed/Documents/workspaceEE/ThmpServlet/WebContent/WEB-INF/lib" />
+	
 	<property name="semanticMathJarDir" value="/Users/yihed/Documents/workspace/SemanticMath/" />
 	<!-- lib containing jars such as thmSearch, thmUtils etc-->
 	<property name="db_jarname" value="dbApp.jar" />
@@ -56,6 +58,11 @@
 					<include name="${db_jarname}" />
 				</fileset>
 			</copy>
+			<copy todir="${server_libdir}">
+				<fileset dir="${basedir}">
+					<include name="${db_jarname}" />
+				</fileset>
+			</copy>		
 	</target>
 	
 	<!--<target name="copyJarsToThmpServlet">
