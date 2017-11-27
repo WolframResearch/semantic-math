@@ -34,12 +34,18 @@ public class DBUtils {
 	public static final String AUTHOR_TB_MIDDLENAME_COL = "middleName";
 	public static final String AUTHOR_TB_LASTNAME_COL = "lastName";
 	
-	/**relative (to ~/thm) path to serialization file containing thm index, and string of list of 
-	 * indices of similar thms */
-	public static final String similarThmIndexStrPath = "src/thmp/data/similarThmIndexStr.dat";
-	
 	private static final Logger logger = LogManager.getLogger(DBUtils.class);
 	private static final int STM_EXECUTATION_FAILURE = -1;
+	
+	public static class SimilarThmsTb{
+		/**relative (to ~/thm) path to serialization file containing thm index, and string of list of 
+		 * indices of similar thms */
+		public static final String similarThmIndexStrPath = "src/thmp/data/similarThmIndexStr.dat";
+		public static final String TB_NAME = "similarThmsTb";
+		/**thm index*/
+		public static final String INDEX_COL = "thmIndex";
+		public static final String SIMILAR_THMS_COL = "similarThms";
+	}
 	
 	/**
 	 * Get list of indexes for authorTb. 
@@ -139,7 +145,7 @@ public class DBUtils {
 	}
 	
 	/**
-	 * Get connection to local (test-machine) databse. 
+	 * Get connection to local (e.g. test-machine) databse. 
 	 * @return
 	 */
 	public static Connection getLocalConnection() {

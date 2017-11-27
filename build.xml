@@ -24,12 +24,14 @@
 		<javac destdir="${builddir}" debug="true" includeantruntime="false"> 
 			<src path="${srcdir}"/>
 			<classpath>
-				<fileset dir="${libdir}">
-					<include name="**/*.jar" />
-				</fileset>
+				<!--ordering of filesets below matters!!-->
 				<fileset dir="${semanticMathJarDir}">
 					<include name="*.jar" />
 				</fileset>
+				<fileset dir="${libdir}">
+					<include name="**/*.jar" />
+				</fileset>
+				
 			</classpath>
 		</javac>
 	</target>
@@ -39,7 +41,6 @@
 			<manifest>
 				<attribute name="Main-Class" value="src/com/wolfram/puremath/dbapp/DBDeploy" />
 			</manifest>
-			<exclude name="qa/" />
 			<!--<exclude name="test/" />
 			<exclude name="src/" />
 			<exclude name="lib/" />

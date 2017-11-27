@@ -1,9 +1,15 @@
 package com.wolfram.puremath.dbapp;
 
 import java.nio.charset.Charset;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import com.wolfram.puremath.dbapp.DBUtils.SimilarThmsTb;
 
 import thmp.parse.InitParseWithResources;
 import thmp.utils.FileUtils;
@@ -33,9 +39,9 @@ public class SimilarThmUtils {
 	private static final int NUM_BITS_PER_BYTE = 8;
 	
 	private static final Charset INDEX_STR_CHAR_SET = Charset.forName("ISO-8859-1");
-	//private static final boolean DEBUG = thmp.utils.FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : false;
+	private static final boolean DEBUG = thmp.utils.FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : false;
 	//figure out why above ant script doesn't recognize path!!!
-	private static final boolean DEBUG = false;
+	//private static final boolean DEBUG = false;
 	
 	static {
 		MAX_THM_INDEX_LIST_LEN = 100;
@@ -234,9 +240,29 @@ public class SimilarThmUtils {
 			}
 			curByte = 0;
 		}
-		
 	}	
 	
+	//find similar indices 
+	//
+	public static List<Integer> getSimilarThmListFromDb(int thmIndex, Connection conn) throws SQLException {
+		
+		StringBuilder sb = new StringBuilder(50);
+		sb.append("SELECT FROM " + SimilarThmsTb.TB_NAME).append(" ")
+		.append(SimilarThmsTb.SIMILAR_THMS_COL)
+		.append(" WHERE ").append(SimilarThmsTb.INDEX_COL)
+		.append("=?;");
+		
+		PreparedStatement pstm = conn.prepareStatement(sb.toString());
+		pstm.setInt(1, thmIndex);
+		
+		ResultSet rs = pstm.executeQuery();
+		String indexStr = "";
+		if(rs.next()) {
+			indexStr = rs.getString(1);
+		}
+		return strToIndexList(indexStr);
+	}
+			
 	/**
 	 * max length for index string used in db. 
 	 * @return
@@ -257,7 +283,7 @@ public class SimilarThmUtils {
 		//thmIndexList.add(770000);
 		//thmIndexList.add(400);
 		//thmIndexList.add(4);
-		for(int i= 0; i  < 10; i++) {
+		for(int i= 0; i  < 1; i++) {
 			thmIndexList.add(1000000);
 			
 		}

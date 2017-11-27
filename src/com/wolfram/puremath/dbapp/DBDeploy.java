@@ -3,10 +3,16 @@ package com.wolfram.puremath.dbapp;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import com.wolfram.puremath.dbapp.DBUtils.SimilarThmsTb;
+
+import thmp.utils.FileUtils;
 
 /**
  * Utilities used for deploying DB.
@@ -22,7 +28,7 @@ public class DBDeploy {
 	 * @param csvFilePath Path to CSV file containing data to populate table with.
 	 * @throws SQLException 
 	 */
-	public static void populateAuthorDB(String csvFilePath, Connection conn) throws SQLException {
+	public static void populateAuthorTb(String csvFilePath, Connection conn) throws SQLException {
 		
 		PreparedStatement pstm;
 		//drop keys, since otherwise insertion sort n^2 vs say quicksort n log(n), if retain old key and indexes, vs sort once at end
@@ -69,20 +75,67 @@ public class DBDeploy {
 			pstm = conn.prepareStatement("CREATE INDEX " + index + " ON " + DBUtils.AUTHOR_TB_NAME 
 					+ " (" + DBUtils.AUTHOR_TB_NAME + ");");	
 			pstm.executeUpdate();
-		}
+		}		
+	}
+	
+	public static void populateSimilarThmsTb(Connection conn) throws SQLException {
+		//populate table from serialized similar thms indices
+		@SuppressWarnings("unchecked")
+		List<Map<Integer, String>> similarThmsMapList 
+			= (List<Map<Integer, String>>)FileUtils.deserializeListFromFile(DBUtils.SimilarThmsTb.similarThmIndexStrPath);
 		
+		Map<Integer, String> similarThmsMap = similarThmsMapList.get(0);
+		//populate thm
+		PreparedStatement pstm;
+		
+		StringBuilder sb = new StringBuilder(50);
+		
+		sb.append("ALTER TABLE ").append(SimilarThmsTb.TB_NAME)
+		.append(" ADD PRIMARY KEY (")
+		.append(SimilarThmsTb.INDEX_COL).append(");");
+		
+		pstm = conn.prepareStatement(sb.toString());
+		pstm.executeUpdate();
+		
+		for(Map.Entry<Integer, String> entry : similarThmsMap.entrySet()) {
+			
+			int thmIndex = entry.getKey();
+			String similarIndexStr = entry.getValue();
+			//INSERT INTO tbl_name (col1,col2) VALUES(15,col1*2);
+			sb = new StringBuilder(50);
+			sb.append("INSERT INTO " + SimilarThmsTb.TB_NAME + " (")
+			.append(SimilarThmsTb.INDEX_COL)
+			.append(",").append(SimilarThmsTb.SIMILAR_THMS_COL)
+			.append(") VALUES(?, ?);");
+			
+			pstm = conn.prepareStatement(sb.toString());
+			pstm.setInt(1, thmIndex);
+			pstm.setString(2, similarIndexStr);
+			
+			pstm.executeUpdate();
+		}
+		//String s = SimilarThmsTb.INDEX_COL;
+		//String t = SimilarThmsTb.SIMILAR_THMS_COL;
 		
 	}
 	
 	public static void main(String[] args) throws SQLException {
 		
-		if(args.length < 1) {
-			System.out.println("Please enter the path to a csv file to populate the database.");
-			return;
-		}
-		String filePath = args[0];
 		Connection conn = DBUtils.getLocalConnection();
-		populateAuthorDB(filePath, conn);
+		
+		populateSimilarThmsTb(conn);
+		
+		boolean b = false;
+		if(b) {
+			if(args.length < 1) {
+				System.out.println("Please enter the path to a csv file to populate the database.");
+				return;
+			}
+			String filePath = args[0];
+			
+			populateAuthorTb(filePath, conn);
+		}
+		
 	}
 	
 }
