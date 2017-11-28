@@ -1,5 +1,6 @@
 package thmp.search;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,8 +75,9 @@ public class SearchState {
 	public SearchState(){		
 		this.tokenScoreMap = new HashMap<String, Integer>();
 		this.thmSpanMap = new HashMap<Integer, Integer>();
+		//this.intersectionVecList = Collections.emptyList();
 	}
-		
+	
 	/**
 	 * Adds token and its score to tokenScoreMap. 
 	 * @param token
@@ -85,14 +87,18 @@ public class SearchState {
 		tokenScoreMap.put(token, score);
 	}
 	
-	//should be consistent with set/add!
+	/**
+	 * map of thmIndex and their word-weight scores.
+	 * @param scoreMap
+	 */
 	public void setThmScoreMap(Map<Integer, Integer> scoreMap){
 		this.thmScoreMap = scoreMap;
 	}
 	
 	/**
 	 * Score map derived from intersection search.
-	 * @return
+	 * Map of thmIndex and their word-weight scores.
+	 * @return @Nullable 
 	 */
 	public Map<Integer, Integer> thmScoreMap(){
 		return this.thmScoreMap;
@@ -188,6 +194,10 @@ public class SearchState {
 		return thmSpanMap;
 	}
 	
+	/**
+	 * Result list produced from intersection search.
+	 * @return @Nullable Intersection search result list. 
+	 */
 	public List<Integer> intersectionVecList(){
 		return intersectionVecList;
 	}

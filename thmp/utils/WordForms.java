@@ -111,7 +111,7 @@ public class WordForms {
 	//pattern matching is faster than calling str.contains() repeatedly 
 	//which is O(mn) time.
 	private static final Pattern HYP_PATTERN = Pattern.compile(".*(?:assume|denote|define|let|is said|suppose"
-			+ "|where|is called|if|given).+") ;
+			+ "|where|is called|if|given).+");
 	private static final Pattern SPLIT_DELIM_PATTERN = Pattern.compile(SPLIT_DELIM);	
 	private static final Set<String> GREEK_ALPHA_SET;
 	private static final Map<Character, Character> DIACRITICS_MAP;

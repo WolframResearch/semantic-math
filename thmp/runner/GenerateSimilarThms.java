@@ -41,21 +41,20 @@ public class GenerateSimilarThms {
 		//get all files in thm dir
 		//System.out.println("GenerateSimilarThms-fileNamesList: " + fileNamesList);
 		
-		Map<Integer, String> similarThmsMap = new HashMap<Integer, String>();
+		Map<Integer, byte[]> similarThmsMap = new HashMap<Integer, byte[]>();
 		
 		//StringBuilder sb = new StringBuilder(500000);
 		//run through thm indices
 		int totalThmCount = ThmHypPairGet.totalThmsCount();
-		for(int i = 0; i < totalThmCount; i++) {
-			
+		
+		for(int i = 0; i < totalThmCount; i++) {			
 			List<Integer> similarThmList = thmp.search.SimilarThmSearch.preComputeSimilarThm( i );
-			similarThmsMap.put(i, SimilarThmUtils.indexListToStr(similarThmList));
-			
+			similarThmsMap.put(i, SimilarThmUtils.indexListToByteArray(similarThmList));			
 		}
 		//make map instead of write to file, to avoid newlines!!
 		//thmp.utils.FileUtils.writeToFile(sb.toString(), DBUtils.similarThmIndexStrPath);
-		List<Map<Integer, String>> similarThmsMapList = new ArrayList<Map<Integer, String>>();
+		List<Map<Integer, byte[]>> similarThmsMapList = new ArrayList<Map<Integer, byte[]>>();
 		similarThmsMapList.add(similarThmsMap);
-		thmp.utils.FileUtils.serializeObjToFile(similarThmsMapList, DBUtils.SimilarThmsTb.similarThmIndexStrPath);
+		thmp.utils.FileUtils.serializeObjToFile(similarThmsMapList, DBUtils.SimilarThmsTb.similarThmIndexByteArrayPath);
 	}
 }

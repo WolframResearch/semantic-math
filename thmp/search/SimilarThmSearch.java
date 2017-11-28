@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.regex.Pattern;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -41,6 +42,9 @@ public class SimilarThmSearch {
 	private static final boolean DEBUG = FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : false;
 	//private static final boolean DEBUG = false;
 	private static final Logger logger = LogManager.getLogger(SimilarThmSearch.class);
+	
+	private static final Pattern HYP_PATTERN = Pattern.compile("(?:assume|denote|define|let|is said|suppose"
+			+ "|is called|if|given)");
 	
 	/**
 	 * Finds index list of similar theorems by retrieving precomputed
@@ -78,20 +82,53 @@ public class SimilarThmSearch {
 			to get ranking.
 		 */		
 		ThmHypPair thmHypPair = ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex);
-		String thmStr = thmHypPair.getEntireThmStr();
-		if(DEBUG) System.out.println("QUERY THM: " + thmStr);
+		//String thmStr = thmHypPair.getEntireThmStr();
 		
+		String thmStr = thmHypPair.thmStr();
+		if(DEBUG) System.out.println("QUERY THM: " + thmHypPair.getEntireThmStr());
+		
+		List<Integer> combinedList = new ArrayList<Integer>();		
+		getSimilarComponent(thmIndex, thmStr, combinedList);
+		
+		thmStr = thmHypPair.hypStr();
+		getSimilarComponent(thmIndex, thmStr, combinedList);
+		
+		//prune away intersectionList ends!!
+		int maxSimilarThmCount = SimilarThmUtils.maxSimilarThmListLen();
+		if(combinedList.size() > maxSimilarThmCount) {
+					List<Integer> tempList = new ArrayList<Integer>();
+					for(int i = 0; i < maxSimilarThmCount; i++) {
+						tempList.add(combinedList.get(i));
+					}
+					combinedList = tempList;
+		}
+		return combinedList;
+	}
+
+	/**
+	 * Similar thms for components, e.g. just statements, or just hypothesis
+	 * @param thmIndex
+	 * @param thmStr
+	 * @return
+	 */
+	private static void getSimilarComponent(int thmIndex, String thmStr,
+			List<Integer> combinedList) {
 		//keep a running parse state to collect variable definitions.
 		ParseStateBuilder parseStateBuilder = new ParseStateBuilder();
 		ParseState parseState = parseStateBuilder.build();
 		/*keep track of thm scores. Key is thmIndex, value is intersection search score*/
 		Map<Integer, Integer> thmScoreMap = new HashMap<Integer, Integer>();
-		Map<Integer, Integer> contextScoreMap = new HashMap<Integer, Integer>();
+		
+		//separate map into two parts, for hyp and conclusions
+		Map<Integer, Integer> stmContextScoreMap = new HashMap<Integer, Integer>();		
+		Map<Integer, Integer> hypContextScoreMap = new HashMap<Integer, Integer>();
 		
 		/* Divides thm into pieces, i.e. logical components, e.g.
 		 * "if ... ", and "then ..." */
 		String[] thmPieces = ThmP1.preprocess(thmStr);
+		
 		boolean isVerbose = DEBUG;
+		
 		for(String str : thmPieces) {
 			//divide thm string into several parts, to target search results specifically
 			str = chopThmStr(str, parseState);
@@ -99,9 +136,13 @@ public class SimilarThmSearch {
 			ParseRun.parseInput(str, parseState, isVerbose);
 			
 			//weigh depending on hyp or stm, prioritize stm
-			//parseState.getHeadParseStruct();
+			//result of intersection search
+			List<Integer> thmIndexList = new ArrayList<Integer>();
+			/*keep track of thm scores. Key is thmIndex, value is its span length*/
+			Map<Integer, Integer> thmSpanMap = new HashMap<Integer, Integer>();
+			//max span amongst any thms amongst returned results.
+			int maxThmSpan = gatherThmFromWords(str, thmIndexList, thmScoreMap, thmSpanMap);	
 			
-			List<Integer> thmIndexList = gatherThmFromWords(str, thmScoreMap);			
 			SearchState searchState = new SearchState();
 			searchState.setParseState(parseState);
 			
@@ -122,25 +163,59 @@ public class SimilarThmSearch {
 				}
 				contextSortedList.addAll(entry.getValue());
 			}*/
+			
+			Map<Integer, Integer> contextScoreMap = ifLowerPriorityMap(str) 
+					? hypContextScoreMap : stmContextScoreMap;
+			
 			//some thms don't parse to produce meaningful context vecs
 			if(null != curContextScoreMap) {
 				for(Map.Entry<Integer, Integer> entry : curContextScoreMap.entrySet()) {
 					int curThmIndex = entry.getKey();
+					Map<Integer, Integer> tempMap = contextScoreMap;
+					//experiment and pull out this constant!
+					if(thmSpanMap.get(curThmIndex) <= maxThmSpan * .34) {
+						tempMap = hypContextScoreMap;
+					}
 					//note this double-counts relations that occur in different pieces
-					Integer curScore = contextScoreMap.get(curThmIndex);
+					Integer curScore = tempMap.get(curThmIndex);
 					if(null == curScore) {
-						contextScoreMap.put(curThmIndex, entry.getValue());
+						tempMap.put(curThmIndex, entry.getValue());
 					}else {
-						contextScoreMap.put(curThmIndex, entry.getValue() + curScore);			
+						tempMap.put(curThmIndex, entry.getValue() + curScore);			
 					}
 				}
 			}
 			//keep the ones with high context vec score, else sort the others according to
 			//intersection scores.			
-			
-			//List<ThmHypPair> thmHypPairList = SearchCombined.thmListIndexToThmHypPair(thmIndexList);
-			//System.out.println("FOR PIECE " + str + ":\n thmHypPairList: "+thmHypPairList);			
+						
 		}
+		//list of holdover thms with lower priority.
+		//List<Integer> holdOverList = new ArrayList<Integer>();
+		
+		addSimilarComponentsToMaps(combinedList, thmIndex, thmScoreMap, stmContextScoreMap);
+		addSimilarComponentsToMaps(combinedList, thmIndex, thmScoreMap, hypContextScoreMap);
+		
+		if(DEBUG) {
+			List<ThmHypPair> thmHypPairList = SearchCombined.thmListIndexToThmHypPair(combinedList);
+			System.out.println("SIMILAR SEARCH RESULTS: for thm: " + thmStr
+					+ "\n thmHypPairList: ");
+			int counter = 0;
+			for(ThmHypPair thm : thmHypPairList) {
+				System.out.println("Thm "+ counter + ". " + thm);
+				counter++;
+			}
+		}
+	}
+
+	/**
+	 * Adds similar thms to each component, eg hyp or conclusion. Adds to supplied combined list.
+	 * @param queryThmIndex
+	 * @param thmScoreMap
+	 * @param contextScoreMap
+	 * @return
+	 */
+	private static void addSimilarComponentsToMaps(List<Integer> combinedList, int queryThmIndex, 
+			Map<Integer, Integer> thmScoreMap, Map<Integer, Integer> contextScoreMap) {
 		//list sorted according to context vecs
 		List<Integer> contextSortedList = new ArrayList<Integer>();
 		//remaining ones sorted according to intersection scores.
@@ -149,7 +224,7 @@ public class SimilarThmSearch {
 		TreeMap<Integer, List<Integer>> contextScoreThmTMap 
 			= new TreeMap<Integer, List<Integer>>(new thmp.utils.DataUtility.ReverseIntComparator());
 		
-		contextScoreMap.remove(thmIndex);
+		contextScoreMap.remove(queryThmIndex);
 		/*Combine maps, prune away ones with low intersection scores */
 		for(Map.Entry<Integer, Integer> entry : contextScoreMap.entrySet()) {			
 			int curIndex = entry.getKey();
@@ -163,7 +238,7 @@ public class SimilarThmSearch {
 			thmIndexList.add(curIndex);			
 		}	
 		
-		for(Map.Entry<Integer, List<Integer>> entry : contextScoreThmTMap.entrySet()) {			
+		for(Map.Entry<Integer, List<Integer>> entry : contextScoreThmTMap.entrySet()) {		
 			int score = entry.getKey();
 			if(score == 0) {
 				intersectionSortedList.addAll(entry.getValue());
@@ -173,31 +248,28 @@ public class SimilarThmSearch {
 		}
 		Collections.sort(intersectionSortedList, new thmp.utils.DataUtility.IntMapComparator(thmScoreMap));
 		
-		List<Integer> combinedList = new ArrayList<Integer>();
 		combinedList.addAll(contextSortedList);
 		combinedList.addAll(intersectionSortedList);
 		
-		//prune away intersectionList ends!!
-		int maxSimilarThmCount = SimilarThmUtils.maxSimilarThmListLen();
-		if(combinedList.size() > maxSimilarThmCount) {
-			List<Integer> tempList = new ArrayList<Integer>();
-			for(int i = 0; i < maxSimilarThmCount; i++) {
-				tempList.add(combinedList.get(i));
-			}
-			combinedList = tempList;
+	}
+	
+	/**
+	 * Whether the inputStr is a hypothesis. By checking whether the input 
+	 * contains any assumption-indicating words.
+	 * @param inputStr
+	 * @return
+	 */
+	private static boolean ifLowerPriorityMap(String inputStr){
+		String inputLower = inputStr.toLowerCase();
+		int strLen = inputStr.length();
+		if( strLen < 30) {
+			return true;
 		}
-		
-		if(DEBUG) {
-			List<ThmHypPair> thmHypPairList = SearchCombined.thmListIndexToThmHypPair(combinedList);
-			System.out.println("SIMILAR SEARCH RESULTS: for thm: " + thmStr
-					+ "\n thmHypPairList: ");
-			int counter = 0;
-			for(ThmHypPair thm : thmHypPairList) {
-				System.out.println("Thm "+ counter + ". " + thm);
-				counter++;
-			}
+		if(strLen < 45 && !inputLower.contains(" then ") 
+				&& HYP_PATTERN.matcher(inputLower).find()){
+			return true;
 		}
-		return combinedList;
+		return false;
 	}
 	
 	private static void pruneLowScoreThms() {
@@ -208,9 +280,12 @@ public class SimilarThmSearch {
 	 * Find theorems that contain the relevant words in input str.
 	 * Return list of ones with good words match.
 	 * @param str Typically a theorem segment.
-	 * @return
+	 * @param intersectionResultsList results of intersection search.
+	 * @param thmSpanMap Span map of indices and their word spans in the theorems.
+	 * @return maximum span amongst search results.
 	 */
-	private static List<Integer> gatherThmFromWords(String str, Map<Integer, Integer> allThmScoreMap) {
+	private static int gatherThmFromWords(String str, List<Integer> intersectionResultsList,
+			Map<Integer, Integer> allThmScoreMap, Map<Integer, Integer> thmSpanMap) {
 		
 		//List<String> thmWordsList = WordForms.splitThmIntoSearchWordsList(str);
 		Set<String> searchWordsSet = new HashSet<String>();
@@ -223,10 +298,17 @@ public class SimilarThmSearch {
 		
 		boolean searchRelationalBool = false;
 		//improve intersection search to return more pertinent results!!
-		searchState = SearchIntersection.intersectionSearch(str, searchWordsSet, searchState, contextSearchBool, 
+		SearchIntersection.intersectionSearch(str, searchWordsSet, searchState, contextSearchBool, 
 				searchRelationalBool, numHighestResults/2);
 		
-		List<Integer> thmList = searchState.intersectionVecList();	
+		List<Integer> intersectionList = searchState.intersectionVecList();
+		
+		if(null == intersectionList) {
+			return 0;
+		}
+		
+		intersectionResultsList.addAll(intersectionList);			
+		thmSpanMap.putAll(searchState.thmSpanMap());
 		
 		Map<Integer, Integer> scoreMap = searchState.thmScoreMap();
 		for(Map.Entry<Integer, Integer> entry : scoreMap.entrySet()) {
@@ -239,7 +321,7 @@ public class SimilarThmSearch {
 			}
 		}
 		
-		return thmList;
+		return searchState.largestWordSpan();
 	}
 	
 	/**

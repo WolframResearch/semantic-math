@@ -348,7 +348,7 @@ public class DetectHypothesis {
 	 * @return
 	 */
 	public static boolean isHypothesis(String inputStr){
-		if(HYP_PATTERN.matcher(inputStr.toLowerCase()).matches()){
+		if(HYP_PATTERN.matcher(inputStr.toLowerCase()).find()){
 			return true;
 		}
 		return false;
