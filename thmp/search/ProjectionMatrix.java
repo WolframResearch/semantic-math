@@ -28,6 +28,7 @@ import com.google.common.collect.SetMultimap;
 import thmp.parse.ParsedExpression;
 import thmp.parse.DetectHypothesis;
 import thmp.parse.DetectHypothesis.DefinitionListWithThm;
+import thmp.search.CollectThm.ThmWordsMaps.IndexPartPair;
 import thmp.search.LiteralSearch.LiteralSearchIndex;
 import thmp.search.SearchCombined.ThmHypPair;
 import thmp.search.Searcher.SearchConfiguration;
@@ -147,7 +148,7 @@ public class ProjectionMatrix {
 		//will go up to O(10^6) when all tars are included.
 		int thmCounter = 0;
 		//combined MMap from multiple tars.
-		Multimap<String, Integer> combinedWordThmIndexMMap = ArrayListMultimap.create();
+		Multimap<String, IndexPartPair> combinedWordThmIndexMMap = ArrayListMultimap.create();
 		//process TAR_COUNT_PER_BUNDLE each time. This loops over tar files.
 		//Loops about 1569/15 ~ 105 times if all tar files supplied.
 		for(int i = 0; i < loopTotal; i++){
@@ -227,13 +228,12 @@ public class ProjectionMatrix {
 		//serialize map into one file, to be loaded at once in memory at runtime.
 		//should be ~240 MB.
 	 	String wordThmIndexMMapPath = FileUtils.getPathIfOnServlet(SearchMetaData.wordThmIndexMMapSerialFilePath());
-	 	List<Multimap<String, Integer>> combinedWordThmIndexMMapList = new ArrayList<Multimap<String, Integer>>();
+	 	List<Multimap<String, IndexPartPair>> combinedWordThmIndexMMapList = new ArrayList<Multimap<String, IndexPartPair>>();
 	 	combinedWordThmIndexMMapList.add(combinedWordThmIndexMMap);	 	
 	 	FileUtils.serializeObjToFile(combinedWordThmIndexMMapList, wordThmIndexMMapPath);
 	 	
 	 	FileUtils.silentClose(nameCSVFileWriter);
-		/* Combine parsedExpressionList's */
-		//combineParsedExpressionList(parsedExpressionFilePathList);
+		
 	}
 
 	/**
@@ -354,7 +354,7 @@ public class ProjectionMatrix {
 	@SuppressWarnings("unchecked")
 	private static int addExprsToLists(String dirPathStr, String peFilePath, List<ThmHypPair> combinedPEList, String vecsFilePath,
 			List<ContextRelationVecPair> combinedVecsList, String wordThmIndexMMapPath, 
-			Multimap<String, Integer> combinedWordThmIndexMMap, ListMultimap<String, LiteralSearchIndex> searchIndexMap,
+			Multimap<String, IndexPartPair> combinedWordThmIndexMMap, ListMultimap<String, LiteralSearchIndex> searchIndexMap,
 			List<String> allThmNameScrapeList, int startingThmIndex, StringBuilder nameDBSB,
 			Multimap<String, String> paperIdNameDataMap) {
 		
@@ -388,14 +388,14 @@ public class ProjectionMatrix {
 		}
 		
 		combinedVecsList.addAll((List<ContextRelationVecPair>)FileUtils.deserializeListFromFile(vecsFilePath));
-		Multimap<String, Integer> wordThmIndexMMap = ((List<Multimap<String, Integer>>)
+		Multimap<String, IndexPartPair> wordThmIndexMMap = ((List<Multimap<String, IndexPartPair>>)
 				FileUtils.deserializeListFromFile(wordThmIndexMMapPath)).get(0);
 		
 		for(String keyWord : wordThmIndexMMap.keySet()){			
 			//update the indices of the thms with respect to the tar's position.
-			Collection<Integer> updatedIndices = new ArrayList<Integer>();
-			for(int index : wordThmIndexMMap.get(keyWord)){
-				updatedIndices.add(index + startingThmIndex);
+			Collection<IndexPartPair> updatedIndices = new ArrayList<IndexPartPair>();
+			for(IndexPartPair indexPair : wordThmIndexMMap.get(keyWord)){				
+				updatedIndices.add(new IndexPartPair(indexPair.thmIndex() + startingThmIndex, indexPair.thmPart()));				
 			}
 			combinedWordThmIndexMMap.putAll(keyWord, updatedIndices);
 		}

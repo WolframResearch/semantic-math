@@ -193,6 +193,18 @@ public class WordForms {
 			GENERIC_SERACH_TERMS.add(s);
 		}
 	}
+	
+	/**
+	 * Whether main statement or hyp.
+	 */
+	public static enum ThmPart{
+		
+		STM, //corresponding to thm main statement 
+		HYP; //contextual hypotheses, shown under "Context" in web
+		
+		
+	}
+	
 	/**
 	 * Invert the key and value for each pair in stemWordsMap.
 	 * @param stemWordsMap

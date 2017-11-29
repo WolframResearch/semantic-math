@@ -23,6 +23,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -35,6 +36,7 @@ import thmp.parse.ParsedExpression;
 import thmp.parse.DetectHypothesis.DefinitionListWithThm;
 import thmp.search.SearchCombined.ThmHypPair;
 import thmp.search.Searcher.SearchMetaData;
+import thmp.utils.WordForms.ThmPart;
 import thmp.utils.WordForms.WordFreqComparator;
 import thmp.utils.FileUtils;
 import thmp.utils.GatherRelatedWords;
@@ -174,7 +176,7 @@ public class CollectThm {
 		e.g. "annihilator", "annihiate" all have the single entry "annihilat" */
 		private static final ImmutableMap<String, Integer> docWordsFreqMapNoAnno;
 		//entries are word and the indices of thms that contain that word.
-		private static final ImmutableMultimap<String, Integer> wordThmsIndexMMapNoAnno;
+		private static final ImmutableMultimap<String, IndexPartPair> wordThmsIndexMMapNoAnno;
 		//map serialized for use during search, contains N-grams. Words and their frequencies.
 		/*private static final ImmutableMap<String, Integer> contextVecWordsNextTimeMap;*/
 		//to be used next time, words and their indices.
@@ -233,7 +235,7 @@ public class CollectThm {
 		 */
 		private static final Map<String, GatherRelatedWords.RelatedWords> relatedWordsMap;
 		
-		static{	
+		static{
 			/*map of words and their representatives, e.g. "annihilate", "annihilator", etc all map to "annihilat"
 			i.e. word of maps to their stems. */
 			//synonymRepMap = WordForms.getSynonymsMap();
@@ -271,7 +273,7 @@ public class CollectThm {
 				//should not build if not searching
 				String wordThmIndexMMapPath = FileUtils.getPathIfOnServlet(SearchMetaData.wordThmIndexMMapSerialFilePath());				
 				@SuppressWarnings("unchecked")
-				Multimap<String, Integer> wordThmsIndexMultimap = ((List<Multimap<String, Integer>>)
+				Multimap<String, IndexPartPair> wordThmsIndexMultimap = ((List<Multimap<String, IndexPartPair>>)
 						FileUtils.deserializeListFromFile(wordThmIndexMMapPath)).get(0);
 				wordThmsIndexMMapNoAnno = ImmutableMultimap.copyOf(wordThmsIndexMultimap);
 			}else {
@@ -335,6 +337,51 @@ public class CollectThm {
 			if(GATHER_SKIP_GRAM_WORDS){
 				String skipGramWordsListFileStr = "src/thmp/data/skipGramWordsList.txt";
 				FileUtils.writeToFile(skipGramWordsList, skipGramWordsListFileStr);
+			}
+		}
+		
+		/**
+		 * Pair of index and component, whether context or main stm
+		 * in thm. To be used to create map of word-thm index, to 
+		 * differentiate scores between hyp and stm.
+		 */
+		public static class IndexPartPair{
+			private ThmPart thmPart;
+			private int thmIndex;
+			
+			public IndexPartPair(int index_, ThmPart thmPart_) {
+				this.thmIndex = index_;
+				this.thmPart = thmPart_;
+			}
+			
+			/**
+			 * If in hypothetical/contextual part, e.g. to determine whether
+			 * to downgrade score.
+			 * @return
+			 */
+			public boolean isContextPart() {
+				return this.thmPart == ThmPart.HYP;
+			}
+			
+			public ThmPart thmPart() {
+				return this.thmPart;
+			}
+			
+			public int thmIndex() {
+				return this.thmIndex;
+			}
+			
+			@Override
+			public boolean equals(Object other) {
+				if(null == other || !(other instanceof IndexPartPair)) {
+					return false;
+				}
+				return this.thmIndex == ((IndexPartPair)other).thmIndex;
+			}
+			
+			@Override
+			public int hashCode() {				
+				return this.thmIndex;
 			}
 		}
 		
@@ -704,12 +751,15 @@ public class CollectThm {
 		/**
 		 * Add words in a given theorem to word-thm-index MMap that will 
 		 * be used for intersection search. 
+		 * @param wordThmsMMap demand to be hashMultimap, need O(1) lookup
+		 * guarantee.
 		 * @param wordThmsMMapBuilder
 		 * @param thm
 		 * @param thmIndex
 		 */
-		public static void addToWordThmIndexMap(Multimap<String, Integer> wordThmsMMap,
-				String thm, int thmIndex){			
+		public static void addToWordThmIndexMap(HashMultimap<String, IndexPartPair> wordThmsMMap,
+				String thm, IndexPartPair indexPartPair){
+			
 			Map<String, Integer> twoGramsMap = NGramsMap.get_twoGramsMap();
 			Map<String, Integer> threeGramsMap = NGramsMap.get_threeGramsMap();			
 			//ListMultimap<String, String> posMMap = Maps.posMMap();
@@ -750,7 +800,11 @@ public class CollectThm {
 						Integer twoGramFreq = twoGramsMap.get(nextWordCombined);
 						if(twoGramFreq != null){
 							if(!SPECIAL_CHARACTER_PATTERN.matcher(nextWordCombined).find()){
-								wordThmsMMap.put(nextWordCombined, thmIndex);
+								//don't add if present, since Hyp added second
+								Set<IndexPartPair> indexPartPairSet = wordThmsMMap.get(nextWordCombined);
+								if(!indexPartPairSet.contains(indexPartPair)) {
+									wordThmsMMap.put(nextWordCombined, indexPartPair);
+								}								
 							}
 						}
 						//try to see if these three words form a valid 3-gram
@@ -759,7 +813,10 @@ public class CollectThm {
 							Integer threeGramFreq = threeGramsMap.get(threeWordsCombined);
 							if(threeGramFreq != null){
 								if(!SPECIAL_CHARACTER_PATTERN.matcher(threeWordsCombined).find()){
-									wordThmsMMap.put(threeWordsCombined, thmIndex);
+									Set<IndexPartPair> indexPartPairSet = wordThmsMMap.get(threeWordsCombined);
+									if(!indexPartPairSet.contains(indexPartPair)) {
+										wordThmsMMap.put(threeWordsCombined, indexPartPair);
+									}
 								}
 							}
 						}
@@ -768,7 +825,7 @@ public class CollectThm {
 					//e.g. "annihilate", "annihilator", etc all map to "annihilat"
 					word = WordForms.normalizeWordForm(word);					
 					if(!SPECIAL_CHARACTER_PATTERN.matcher(word).find()){
-						wordThmsMMap.put(word, thmIndex);
+						wordThmsMMap.put(word, indexPartPair);
 					}
 				}
 		}
@@ -1198,7 +1255,7 @@ public class CollectThm {
 			return wordThmsIndexMMap;
 		}*/
 		
-		public static ImmutableMultimap<String, Integer> get_wordThmsMMapNoAnno(){
+		public static ImmutableMultimap<String, IndexPartPair> get_wordThmsMMapNoAnno(){
 			return wordThmsIndexMMapNoAnno;
 		}
 	}

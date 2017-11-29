@@ -55,6 +55,10 @@ public class SimilarThmSearch {
 	public static List<Integer> getSimilarThms(int thmIndex){
 		
 		Connection conn = DBUtils.getPooledConnection();
+		if(null == conn) {
+			return Collections.emptyList();
+		}
+		
 		List<Integer> indexList;
 		
 		try {

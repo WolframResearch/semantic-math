@@ -24,6 +24,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 
@@ -31,6 +32,7 @@ import thmp.parse.ParseState.ParseStateBuilder;
 import thmp.parse.ParseState.VariableDefinition;
 import thmp.parse.ParseState.VariableName;
 import thmp.search.CollectThm;
+import thmp.search.CollectThm.ThmWordsMaps.IndexPartPair;
 import thmp.search.SearchCombined.ThmHypPair;
 import thmp.search.Searcher;
 import thmp.search.Searcher.SearchMetaData;
@@ -40,6 +42,7 @@ import thmp.utils.FileUtils;
 import thmp.utils.MacrosTrie;
 import thmp.utils.TexToTree;
 import thmp.utils.WordForms;
+import thmp.utils.WordForms.ThmPart;
 import thmp.utils.MacrosTrie.MacrosTrieBuilder;
 
 /**
@@ -750,14 +753,16 @@ public class DetectHypothesis {
 		boolean projectionPathsNotNull = (null != pathToProjectionMx && null != pathToWordFreqMap);		
 		logger.info("Serializing parsedExpressionList, etc, to file...");
 		try{
-			//Multimap of words and the indices of thm's. To be used by intersection search
-			//The indices need to be processed again later when combined into one MMap for multiple tars.
-			Multimap<String, Integer> wordThmIndexMMap = ArrayListMultimap.create();
+			/*Multimap of words and the indices of thm's. To be used by intersection search
+			 *The indices need to be processed again later when combined into one MMap for multiple tars.
+			 * in projectMatrix.java*/
+			HashMultimap<String, IndexPartPair> wordThmIndexMMap = HashMultimap.create();
 			//actually turn ParsedExpression's into ThmHypPair's. To facilitate deserialization
 			//into cache at runtime with minimal processing.
 			createWordThmIndexMMap(thmHypPairList, wordThmIndexMMap);
-			List<Multimap<String, Integer>> wordThmIndexMMapList = new ArrayList<Multimap<String, Integer>>();
+			List<Multimap<String, IndexPartPair>> wordThmIndexMMapList = new ArrayList<Multimap<String, IndexPartPair>>();
 			wordThmIndexMMapList.add(wordThmIndexMMap);
+			
 			FileUtils.serializeObjToFile(wordThmIndexMMapList, wordThmIndexMMapSerialFileStr);
 			String wordThmIndexMMapTxtFileStr = wordThmIndexMMapSerialFileStr
 					.substring(0, wordThmIndexMMapSerialFileStr.length()-3) + "txt";
@@ -848,18 +853,24 @@ public class DetectHypothesis {
 	 * @param wordThmIndexMMap map used for intersection 
 	 * @return
 	 */
-	private static void createWordThmIndexMMap(List<? extends TheoremContainer> peList,
-			Multimap<String, Integer> wordThmIndexMMap){
+	private static void createWordThmIndexMMap(List<ThmHypPair> peList,
+			HashMultimap<String, IndexPartPair> wordThmIndexMMap){
 		//List<ThmHypPair> thmHypPairList = new ArrayList<ThmHypPair>();
 		int thmIndex = 0;
-		for(TheoremContainer pe : peList){
-			String thmWithHyp = pe.getEntireThmStr();
+		for(ThmHypPair pe : peList){
+			IndexPartPair indexPartPair = new IndexPartPair(thmIndex, ThmPart.STM);
+			String stm = pe.thmStr();
 			/*String thm = defListWithThm.thmStr;
 			String def = defListWithThm.definitionStr;
 			String fileName = defListWithThm.srcFileName;
 			ThmHypPair pair = new ThmHypPair(thm, def, fileName);
 			thmHypPairList.add(pair);	*/		
-			CollectThm.ThmWordsMaps.addToWordThmIndexMap(wordThmIndexMMap, thmWithHyp, thmIndex++);
+			CollectThm.ThmWordsMaps.addToWordThmIndexMap(wordThmIndexMMap, stm, indexPartPair);
+			
+			indexPartPair = new IndexPartPair(thmIndex, ThmPart.HYP);
+			String hyp = pe.hypStr();
+			CollectThm.ThmWordsMaps.addToWordThmIndexMap(wordThmIndexMMap, hyp, indexPartPair);
+			thmIndex++;
 		}
 		//return thmHypPairList;
 	}

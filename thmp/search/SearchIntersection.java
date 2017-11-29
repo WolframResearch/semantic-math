@@ -29,6 +29,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.TreeMultimap;
 
+import thmp.search.CollectThm.ThmWordsMaps.IndexPartPair;
 import thmp.search.SearchCombined.ThmHypPair;
 import thmp.search.ThmHypPairGet.ThmHypPairBundle;
 import thmp.utils.DBUtils.AuthorName;
@@ -64,7 +65,7 @@ public class SearchIntersection {
 	 * shows up in.
 	 */
 	//private static final ImmutableMultimap<String, Integer> wordThmMMap;
-	private static final ImmutableMultimap<String, Integer> wordThmsIndexMMap1;
+	private static final ImmutableMultimap<String, IndexPartPair> wordThmsIndexMMap1;
 	/* Keys to relatedWordsMap are not necessarily normalized, only normalized if key not 
 	 * already contained in docWordsFreqMapNoAnno. */
 	private static final Map<String, RelatedWords> relatedWordsMap;
@@ -407,8 +408,7 @@ public class SearchIntersection {
 					String threeGram = twoGram + " " + thirdWord;
 					if (threeGramsMap.containsKey(threeGram)) {
 						scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, thmWordsMMap,
-								wordThmIndexAddedMMap, wordThmsIndexMMap1, 
-								threeGram, i, WordForms.TokenType.THREEGRAM,
+								wordThmIndexAddedMMap, threeGram, i, WordForms.TokenType.THREEGRAM,
 								singletonScoresAr, searchWordsSet, dbThmSet);
 						if (scoreAdded > 0) {
 							wordCountArray[i] += 1;
@@ -422,7 +422,7 @@ public class SearchIntersection {
 				}
 				if (twoGramsMap.containsKey(twoGram)) {
 					scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, thmWordsMMap,
-							wordThmIndexAddedMMap, wordThmsIndexMMap1, twoGram, //nextWordCombined, 
+							wordThmIndexAddedMMap, twoGram, //nextWordCombined, 
 							i, WordForms.TokenType.TWOGRAM, singletonScoresAr,
 							searchWordsSet, dbThmSet);
 					if (scoreAdded > 0) {
@@ -444,7 +444,7 @@ public class SearchIntersection {
 			// score of all words added.
 			word = inputWordsArUpdated[i];
 			scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, thmWordsMMap, wordThmIndexAddedMMap, 
-					wordThmsIndexMMap1, word, i, WordForms.TokenType.SINGLETON, singletonScoresAr, searchWordsSet, dbThmSet);
+					word, i, WordForms.TokenType.SINGLETON, singletonScoresAr, searchWordsSet, dbThmSet);
 			if (scoreAdded > 0) {
 				wordCountArray[i] += 1;
 				totalWordsScore += scoreAdded;
@@ -590,9 +590,10 @@ public class SearchIntersection {
 		}*/
 		logger.info("Highest thm list obtained, intersection search done!");
 		searchState.set_intersectionVecList(highestThmList);
+		
 		return searchState;
 	}
-
+	
 	/**
 	 * Auxiliary method to add bonus points to theorems containing more words.
 	 * Bonus is proportional to the highest thm score.
@@ -690,7 +691,7 @@ public class SearchIntersection {
 	 */
 	private static int addWordThms(Map<Integer, Integer> thmScoreMap, TreeMultimap<Integer, Integer> scoreThmMMap,
 			Multimap<Integer, Integer> thmWordSpanMMap, SetMultimap<Integer, String> thmWordsMMap,
-			ListMultimap<String, Integer> wordThmIndexAddedMMap, Multimap<String, Integer> wordThmIndexMMap,
+			ListMultimap<String, Integer> wordThmIndexAddedMMap, //Multimap<String, IndexPartPair> wordThmIndexMMap,
 			String word, int wordIndexInThm, WordForms.TokenType tokenType,
 			int[] singletonScoresAr, Set<String> searchWordsSet 
 			, Set<Integer> dbThmSet
@@ -701,7 +702,7 @@ public class SearchIntersection {
 		String wordOriginalForm = word;
 		List<String> relatedWordsList = null;
 		// for every word, get list of thms containing this word
-		Collection<Integer> wordThms;
+		Collection<IndexPartPair> wordThms;
 		wordThms = wordThmsIndexMMap1.get(word);
 		
 		// only going through the no annotation path
@@ -766,39 +767,51 @@ public class SearchIntersection {
 		curScoreToAdd = tokenType.adjustNGramScore(curScoreToAdd, singletonScoresAr, wordIndexInThm);
 		
 		if (!wordThms.isEmpty() && curScoreToAdd != 0) {
-			wordThmIndexAddedMMap.putAll(word, wordThms);
+			
+			//wordThmIndexAddedMMap.putAll(word, wordThms);
 			if (DEBUG) {
 				System.out.println("SearchIntersection-Word added: " + word + ". Score: " + curScoreToAdd);
 			}
-			for (Integer thmIndex : wordThms) {
+			for (IndexPartPair thmIndex : wordThms) {
 				
-				if(null != dbThmSet && !dbThmSet.contains(thmIndex)) {
+				int index = thmIndex.thmIndex();
+				
+				if(null != dbThmSet && !dbThmSet.contains(index)) {
 					continue;
 				}
+				
+				wordThmIndexAddedMMap.put(word, index);
 				
 				// skip thm if current word already been covered by previous
 				// 2/3-gram
-				if (tokenType.ifAddedToMap(thmWordSpanMMap, thmIndex, wordIndexInThm)){
+				if (tokenType.ifAddedToMap(thmWordSpanMMap, thmIndex.thmIndex(), wordIndexInThm)){
 					continue;
 				}
-				Integer prevScore = thmScoreMap.get(thmIndex);
+				Integer prevScore = thmScoreMap.get(index);
 				prevScore = prevScore == null ? 0 : prevScore;
+				//lower score if only occurring in context
+				if(thmIndex.isContextPart()) {
+					int penalty = curScoreToAdd > 5 ? curScoreToAdd / 3 : 1;
+					curScoreToAdd -= penalty;
+				}
+				
 				Integer newScore = prevScore + curScoreToAdd;
+				
 				// this mapping is not being used in the end right now,
 				// since the top N are picked, regardless of their scores.
-				thmScoreMap.put(thmIndex, newScore);
+				thmScoreMap.put(thmIndex.thmIndex(), newScore);
 				// System.out.println("*** " + thmScoreMap);
-				scoreThmMMap.put(newScore, thmIndex);
+				scoreThmMMap.put(newScore, thmIndex.thmIndex());
 				// put in thmIndex, and the index of word in the query, to
 				// thmWordSpanMMap.
-				tokenType.addToMap(thmWordSpanMMap, thmIndex, wordIndexInThm);
-				thmWordsMMap.put(thmIndex, word);
+				tokenType.addToMap(thmWordSpanMMap, thmIndex.thmIndex(), wordIndexInThm);
+				thmWordsMMap.put(thmIndex.thmIndex(), word);
 			}
 			scoreAdded = curScoreToAdd;
 			// add singletons to searchWordsSet, so
 			// searchWordsSet could be null if not interested in searchWordsSet.
 			if (scoreAdded > 0 && searchWordsSet != null) {
-				String[] wordAr = word.split("\\s+");
+				String[] wordAr = WordForms.getWhiteNonEmptySpaceNotAllPattern().split(word);
 				for (String w : wordAr) {
 					searchWordsSet.add(w);
 				}
@@ -837,7 +850,8 @@ public class SearchIntersection {
 				// Multimap, so return empty collection rather than null, if no
 				// hit.
 				// relatedWordThmIndices.addAll();
-				Collection<Integer> relatedWordThms = wordThmsIndexMMap1.get(relatedWord);
+				Collection<IndexPartPair> relatedWordThms = wordThmsIndexMMap1.get(relatedWord);
+				
 				if (!relatedWordThms.isEmpty() && relatedWordScore == 0) {
 					Integer score = wordsScoreMap.get(relatedWord);
 					if (null == score){
@@ -846,24 +860,34 @@ public class SearchIntersection {
 					relatedWordScore = (int) Math.ceil(score * RELATED_WORD_MULTIPLICATION_FACTOR);
 				}
 				
-				for (Integer thmIndex : relatedWordThms) {
-					if(null != dbThmSet && !dbThmSet.contains(thmIndex)) {
+				for (IndexPartPair thmIndex : relatedWordThms) {
+					
+					int index = thmIndex.thmIndex();
+					if(null != dbThmSet && !dbThmSet.contains(index)) {
 						continue;
 					}
+					
 					// related words count towards span, only if the original
 					// word not added.
-					if (!tokenType.ifAddedToMap(thmWordSpanMMap, thmIndex, wordIndexInThm)) {
+					if (!tokenType.ifAddedToMap(thmWordSpanMMap, index, wordIndexInThm)) {
 						// put in thmIndex, and the index of word in the query,
 						// to thmWordSpanMMap.
-						tokenType.addToMap(thmWordSpanMMap, thmIndex, wordIndexInThm);
+						tokenType.addToMap(thmWordSpanMMap, index, wordIndexInThm);
 					}
-					Integer prevScore = thmScoreMap.get(thmIndex);
+					Integer prevScore = thmScoreMap.get(index);
 					prevScore = prevScore == null ? 0 : prevScore;
+					
+					if(thmIndex.isContextPart()) {
+						int penalty = relatedWordScore > 5 ? relatedWordScore/3 : 1;
+						relatedWordScore -= penalty;
+					}
+					
 					Integer newScore = prevScore + relatedWordScore;
+					
 					// this mapping is not being used in the end right now,
 					// since the top N are picked, regardless of their scores.
-					thmScoreMap.put(thmIndex, newScore);
-					scoreThmMMap.put(newScore, thmIndex);
+					thmScoreMap.put(index, newScore);
+					scoreThmMMap.put(newScore, index);
 				}
 			}
 		}
