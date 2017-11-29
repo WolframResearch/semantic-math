@@ -180,23 +180,6 @@ public class DBUtils {
 		}
 		closePooledConnection(conn);
 	}
-	/**
-	 * Recompile data tables for database.
-	 * @deprecated do this in separate DB deployment!
-	 */
-	/*public static void recompileDatabase() {
-		
-		ResultSet rs = executeSqlStatement("SELECT @@GLOBAL.sql_mode;", DEFAULT_CONNECTION);
-		try {
-		while(rs.next()) {
-			logger.info ("sql_mode results: " + rs.getString(1));			
-		}
-		} catch (SQLException e) {
-			logger.error("SQLException when getting GLOABL.sql_mode "+e);
-		}
-		//outsource below to separate shell script!!
-		//reloadAuthorTable(DEFAULT_CONNECTION);
-	}*/
 	
 	/**
 	 * Repopulates data in author table, with updated data
@@ -243,28 +226,10 @@ public class DBUtils {
 		manipulateData(stm, conn);		
 	}
 	
-	/*public static ResultSet executeSqlStatement(String stmStr, Connection conn) {
-		//Connection conn = null;
-		try {
-			//conn = ds.getConnection();
-			//e.g. CREATE TABLE authorTb (thmId INT(20), author VARCHAR(20), content VARCHAR(200))
-			//or INSERT INTO authorTb (thmId, author, content) VALUES (1, 's', 'content')
-			PreparedStatement stm = conn.prepareStatement(stmStr);
-			ResultSet rs = stm.executeQuery();
-			//System.out.println("restultSet "+rs);
-			return rs;
-			//stm = conn.prepareStatement("INSERT INTO authorTb (thmId, author, content)"
-			//		+ "VALUES (1, 's', 'content')");
-			
-		} catch (SQLException e) {			
-			logger.error("SQLException while executing " + stmStr + " cause " + e);
-		}		
-		return null;
-	}*/
-	
 	/**
 	 * Execute a mySql statement, for queries that should return a ResultSet,
 	 * e.g. SELECT.
+	 * *Note* caller is responsible for closing resultset and statement!
 	 * @param stm
 	 * @param ds
 	 * @return ResultSet of executing the query.
@@ -307,6 +272,8 @@ public class DBUtils {
 	/**
 	 * Obtain handle to datasource connection from as provided by web container 
 	 * Connections pool.
+	 * @return @Nullable connection from the pool. Null if cannot acquire connection.
+	 * 
 	 */
 	public static Connection getPooledConnection() {
 		
@@ -317,6 +284,7 @@ public class DBUtils {
 			/**Interesting fact: conn here has class
 			 * class com.sun.proxy.$Proxy91, generated at runtime,
 			 * that implements both a PooledConnection and a Connection.
+			 * I.e. a java.sql.Connection/javax.sql.PooledConnection reflection proxy.
 			 */
 			connHandle = ((javax.sql.PooledConnection)conn).getConnection();
 		} catch (SQLException e) {
@@ -326,7 +294,8 @@ public class DBUtils {
 	}
 	
 	/**
-	 * Closes handle to PooledConnection
+	 * Closes handle to PooledConnection, returns underlying connection back
+	 * to datasource Connections pool.
 	 * @param conn
 	 */
 	public static void closePooledConnection(Connection conn) {

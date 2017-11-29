@@ -623,7 +623,7 @@ public class DBSearch {
 		//make separate db calls for each author
 		
 		PreparedStatement stm = authorRelation.getPreparedStm(conn, abbreviateFirstNameBool, abbreviateLastNameBool);
-		logger.info("searching author - stm created: "+stm);
+		//logger.info("searching author - stm created: "+stm);
 		
 		ResultSet rs = stm.executeQuery();
 		
@@ -635,6 +635,7 @@ public class DBSearch {
 		}
 		//Free up resources tied to statement. This also closes resultset.
 		stm.close();
+		rs.close();
 		return dbList;
 	}
 	/**

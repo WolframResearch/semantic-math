@@ -6,6 +6,7 @@ import java.util.Map;
 import javax.sql.DataSource;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import thmp.runner.ProcessMetadataScrape.PaperMetaData;
@@ -33,12 +34,8 @@ public class GenerateDBTables {
 				DBUtils.DEFAULT_SERVER, DBUtils.DEFAULT_PORT);
 		Connection conn = ds.getConnection();
 		
-		//create table with author 
 		//"CREATE TABLE authorTb (thmId INT(20),"
-		//+ "author VARCHAR(20), content VARCHAR(200))"
-		//DBUtils.executeSqlStatement("CREATE TABLE a (thmId INT(20) author VARCHAR(20), content )", conn);
-		//set primary key
-		
+		//"CREATE TABLE a (thmId INT(20) author VARCHAR(20), content )"
 		int counter = 0;
 		//insert these into database
 		for(Map.Entry<String, PaperMetaData> entry : idPaperMetaDataMap.entrySet()) {
@@ -49,7 +46,7 @@ public class GenerateDBTables {
 			
 			String paperId = entry.getKey();
 			
-			DBUtils.executeSqlStatement("INSERT INTO paperTb (thmId, title) VALUES ('"+paperId
+			com.wolfram.puremath.dbapp.DBUtils.manipulateData("INSERT INTO paperTb (thmId, title) VALUES ('"+paperId
 					+"','" + paperMetaData.title()+"')", conn);
 			
 			String authorsStr = paperMetaData.authors();
@@ -58,16 +55,9 @@ public class GenerateDBTables {
 			String[] authorsStrAr = authorsStr.split(", ");
 			//paperTb, authorTb3
 			for(String author : authorsStrAr) {
-				DBUtils.executeSqlStatement("INSERT INTO authorTb3 (thmId, author) VALUES ('"+paperId+"','"+author+"')", conn);
+				com.wolfram.puremath.dbapp.DBUtils.manipulateData("INSERT INTO authorTb3 (thmId, author) VALUES ('"+paperId+"','"+author+"')", conn);
+				
 			}
-			
-			//only get the numeric part of the paper id!
-			
-			//"INSERT INTO authorTb (thmId, author, content)"
-			//+ "VALUES (1, 's', 'content')";
-			//DBUtils.executeSqlStatement("INSERT INTO ", conn);
-			
-			
 			
 		}
 		
