@@ -314,7 +314,10 @@ public class DBUtils {
 		Connection connHandle = null;
 		try {
 			Connection conn = ds.getConnection();
-			logger.info("conn.getClass(): " + conn.getClass());
+			/**Interesting fact: conn here has class
+			 * class com.sun.proxy.$Proxy91, generated at runtime,
+			 * that implements both a PooledConnection and a Connection.
+			 */
 			connHandle = ((javax.sql.PooledConnection)conn).getConnection();
 		} catch (SQLException e) {
 			logger.error("SQLException when getting pooled connection! " + e);
@@ -327,6 +330,7 @@ public class DBUtils {
 	 * @param conn
 	 */
 	public static void closePooledConnection(Connection conn) {
+		if(null == conn) return;
 		try {
 			conn.close();
 		} catch (SQLException e) {			
@@ -338,12 +342,12 @@ public class DBUtils {
 	 * Gets the default DataSource connection.
 	 * @return
 	 * @throws SQLException 
+	 * delete in weeks - Dec 2017.
 	 */
-	public static Connection getNewDefaultDSConnection() throws SQLException {
+	/*public static Connection getNewDefaultDSConnection1() throws SQLException {
 		return getPooledConnection();
-		/*return getDataSource(DBUtils.DEFAULT_DB_NAME, DBUtils.DEFAULT_USER, DBUtils.DEFAULT_PW, 
-				DBUtils.DEFAULT_SERVER, DBUtils.DEFAULT_PORT).getConnection();*/
-	}
+		
+	}*/
 	
 	/**
 	 * Gets the default DataSource connection .
