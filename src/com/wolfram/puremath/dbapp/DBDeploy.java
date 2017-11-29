@@ -30,7 +30,9 @@ public class DBDeploy {
 	public static void populateAuthorTb(String csvFilePath, Connection conn) throws SQLException {
 		
 		PreparedStatement pstm;
-		//drop keys, since otherwise insertion sort n^2 vs say quicksort n log(n), if retain old key and indexes, vs sort once at end
+		
+		pstm = conn.prepareStatement("TRUNCATE " + DBUtils.AUTHOR_TB_NAME + ";");		
+		pstm.executeUpdate();
 		
 		//ALTER TABLE user_customer_permission DROP PRIMARY KEY;
 		pstm = conn.prepareStatement("ALTER TABLE " + DBUtils.AUTHOR_TB_NAME + " DROP PRIMARY KEY;");
@@ -42,9 +44,6 @@ public class DBDeploy {
 			pstm = conn.prepareStatement("DROP INDEX " + index + " ON " + DBUtils.AUTHOR_TB_NAME + ";");		
 			pstm.executeUpdate();
 		}		
-		
-		pstm = conn.prepareStatement("TRUNCATE " + DBUtils.AUTHOR_TB_NAME + ";");		
-		pstm.executeUpdate();
 				
 		/*LOAD DATA INFILE  command
 		 * mysql> LOAD DATA INFILE "/usr/share/tomcat/webapps/theoremSearchTest/src/thmp/data/metaDataNameDB.csv" 
@@ -78,14 +77,23 @@ public class DBDeploy {
 	}
 	
 	public static void populateSimilarThmsTb(Connection conn) throws SQLException {
+		
+		/*If creating table, should be created as CREATE TABLE similarThmsTb (index MEDIUMINT, similarThms VARBINARY(252));*/
+		
+		PreparedStatement pstm;
+		
+		pstm = conn.prepareStatement("TRUNCATE " + SimilarThmsTb.TB_NAME + ";");		
+		pstm.executeUpdate();
+		
+		pstm = conn.prepareStatement("ALTER TABLE " + SimilarThmsTb.TB_NAME + " DROP PRIMARY KEY;");
+		pstm.executeUpdate();
+		
 		//populate table from serialized similar thms indices
 		@SuppressWarnings("unchecked")
-		List<Map<Integer, String>> similarThmsMapList 
-			= (List<Map<Integer, String>>)FileUtils.deserializeListFromFile(DBUtils.SimilarThmsTb.similarThmIndexStrPath);
+		List<Map<Integer, byte[]>> similarThmsMapList 
+			= (List<Map<Integer, byte[]>>)FileUtils.deserializeListFromFile(DBUtils.SimilarThmsTb.similarThmIndexByteArrayPath);
 		
-		Map<Integer, String> similarThmsMap = similarThmsMapList.get(0);
-		//populate thm
-		PreparedStatement pstm;
+		Map<Integer, byte[]> similarThmsMap = similarThmsMapList.get(0);
 		
 		StringBuilder sb = new StringBuilder(50);
 		
@@ -96,10 +104,10 @@ public class DBDeploy {
 		pstm = conn.prepareStatement(sb.toString());
 		pstm.executeUpdate();
 		
-		for(Map.Entry<Integer, String> entry : similarThmsMap.entrySet()) {
+		for(Map.Entry<Integer, byte[]> entry : similarThmsMap.entrySet()) {
 			
 			int thmIndex = entry.getKey();
-			String similarIndexStr = entry.getValue();
+			byte[] similarIndexBytes = entry.getValue();
 			
 			sb = new StringBuilder(50);
 			sb.append("INSERT INTO " + SimilarThmsTb.TB_NAME + " (")
@@ -109,7 +117,7 @@ public class DBDeploy {
 			
 			pstm = conn.prepareStatement(sb.toString());
 			pstm.setInt(1, thmIndex);
-			pstm.setString(2, similarIndexStr);
+			pstm.setBytes(2, similarIndexBytes);
 			
 			pstm.executeUpdate();
 		}

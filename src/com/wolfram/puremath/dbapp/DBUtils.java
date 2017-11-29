@@ -40,7 +40,7 @@ public class DBUtils {
 	public static class SimilarThmsTb{
 		/**relative (to ~/thm) path to serialization file containing thm index, and string of list of 
 		 * indices of similar thms */
-		public static final String similarThmIndexStrPath = "src/thmp/data/similarThmIndexStr.dat";
+		public static final String similarThmIndexByteArrayPath = "src/thmp/data/similarThmIndexByteArray.dat";
 		public static final String TB_NAME = "similarThmsTb";
 		/**thm index*/
 		public static final String INDEX_COL = "thmIndex";

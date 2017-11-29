@@ -7,12 +7,17 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.wolfram.puremath.dbapp.DBUtils.SimilarThmsTb;
 
 import thmp.parse.InitParseWithResources;
+import thmp.search.SimilarThmSearch;
 import thmp.utils.FileUtils;
 
 /**
@@ -43,6 +48,7 @@ public class SimilarThmUtils {
 	//private static final boolean DEBUG = thmp.utils.FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : false;
 	//figure out why above ant script doesn't recognize path!!!
 	private static final boolean DEBUG = false;
+	private static final Logger logger = LogManager.getLogger(SimilarThmUtils.class);
 	
 	static {
 		MAX_THM_INDEX_LIST_LEN = 100;
@@ -65,18 +71,25 @@ public class SimilarThmUtils {
 	public static List<Integer> strToIndexList(String str) {
 		
 		//List<Byte> byteList = new ArrayList<Byte>();
-		List<Integer> thmIndexList = new ArrayList<Integer>();
 		
-		int strLen = str.length();
-		byte[] byteAr = new byte[strLen];
+		int byteArrayLen = str.length();
+		byte[] byteAr = new byte[byteArrayLen];
 		
-		for(int i = 0; i < strLen; i++) {			
+		for(int i = 0; i < byteArrayLen; i++) {			
 			//byteList.add((byte)str.charAt(i));
 			byteAr[i] = (byte)str.charAt(i);
 		}
 		
-		if(DEBUG) System.out.println("strLen "+strLen + " "+str);
-		int totalBitsLen = NUM_BITS_PER_BYTE * strLen;
+		if(DEBUG) System.out.println("strLen "+byteArrayLen + " "+str);
+		
+		return byteArrayToIndexList(byteAr);
+	}
+
+	public static List<Integer> byteArrayToIndexList(byte[] byteAr) {
+	
+		List<Integer> thmIndexList = new ArrayList<Integer>();
+		int byteArrayLen = byteAr.length;
+		int totalBitsLen = NUM_BITS_PER_BYTE * byteArrayLen;
 		
 		int numTotal = totalBitsLen/20;
 		/* Note: must discard remainder in this division, since the bits padding was put in
@@ -188,6 +201,18 @@ public class SimilarThmUtils {
 	 */
 	public static String indexListToStr(List<Integer> thmIndexList) {
 		
+		byte[] indexByteAr = indexListToByteArray(thmIndexList);
+		return new String(indexByteAr, INDEX_STR_CHAR_SET);
+	}
+
+	/**
+	 * Encode list of indices to string.
+	 * Total 770k thms, so each index needs log(2,770k) = 20 bits. For
+	 * say top 100 similar thms, need 100*20/8 = 250 bytes/ISO-8859-encoded chars.
+	 * @param thmIndexList
+	 * @return
+	 */
+	public static byte[] indexListToByteArray(List<Integer> thmIndexList) {
 		int thmIndexListLen = thmIndexList.size();
 		if(thmIndexListLen > MAX_THM_INDEX_LIST_LEN) {
 			List<Integer> tempList = new ArrayList<Integer>();
@@ -206,7 +231,7 @@ public class SimilarThmUtils {
 			fillByteArray(indexByteAr, thmIndexList.get(i), i);
 		}
 		if(DEBUG) System.out.println("indexByteAr "+Arrays.toString(indexByteAr));
-		return new String(indexByteAr, INDEX_STR_CHAR_SET);
+		return indexByteAr;
 	}
 	
 	/**
@@ -276,11 +301,15 @@ public class SimilarThmUtils {
 		pstm.setInt(1, thmIndex);
 		
 		ResultSet rs = pstm.executeQuery();
-		String indexStr = "";
+		byte[] indexBytes;
 		if(rs.next()) {
-			indexStr = rs.getString(1);
+			indexBytes = rs.getBytes(1);
+		}else {
+			pstm.close();
+			return Collections.emptyList();
 		}
-		return strToIndexList(indexStr);
+		pstm.close();
+		return byteArrayToIndexList(indexBytes);
 	}
 			
 	/**
