@@ -191,7 +191,6 @@ public class LiteralSearch {
 	
 	private static ListMultimap<String, LiteralSearchIndex> deserializeIndexMap() {
 		String path = FileUtils.getPathIfOnServlet(Searcher.SearchMetaData.literalSearchIndexMapPath());
-		//String path = FileUtils.getPathIfOnServlet("src/thmp/data/testIndexMap.dat");
 		
 		@SuppressWarnings("unchecked")
 		ListMultimap<String, LiteralSearchIndex> indexMap = ((List<ListMultimap<String, LiteralSearchIndex>>)FileUtils

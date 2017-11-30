@@ -388,6 +388,12 @@ public class ProjectionMatrix {
 		}
 		
 		combinedVecsList.addAll((List<ContextRelationVecPair>)FileUtils.deserializeListFromFile(vecsFilePath));
+		
+		//temporary to account for inconsistency amongst different data files, Nov 29.
+		/*Object obj = FileUtils.deserializeListFromFile(wordThmIndexMMapPath);
+		if(obj instanceof List<Multimap<String, IndexPartPair>>) {
+			
+		}*/
 		Multimap<String, IndexPartPair> wordThmIndexMMap = ((List<Multimap<String, IndexPartPair>>)
 				FileUtils.deserializeListFromFile(wordThmIndexMMapPath)).get(0);
 		

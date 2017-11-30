@@ -48,30 +48,54 @@ public class DataUtility {
 	}
 	
 	/**
-	 * Compares integers based on a given map.
+	 * Compares integers based on two given maps, prioritize map 1.
 	 * Useful for e.g. ranking thm indices, based on some scoring map.
 	 * Bigger values in map rank higher/come first.
 	 */
 	public static class IntMapComparator implements Comparator<Integer>{
 		
-		private Map<Integer, Integer> map;
+		//map to prioritize
+		private Map<Integer, Integer> map1;
+		private Map<Integer, Integer> map2;
 		
-		public IntMapComparator(Map<Integer, Integer> map_) {
-			this.map = ImmutableMap.copyOf(map_);
+		public IntMapComparator(Map<Integer, Integer> map1_, Map<Integer, Integer> map2_) {
+			this.map1 = ImmutableMap.copyOf(map1_);
+			this.map2 = ImmutableMap.copyOf(map2_);
 		}
 		
 		@Override
 		public int compare(Integer a, Integer b){
-			Integer aScore = map.get(a);
-			Integer bScore = map.get(b);
-			if(null == aScore && null == bScore) {
+			Integer aScore1 = map1.get(a);
+			Integer bScore1 = map1.get(b);
+			
+			Integer aScore2 = map2.get(a);
+			Integer bScore2 = map2.get(b);
+			
+			if(null == aScore1 && null == bScore1) {
 				return 0;
-			}else if(null == aScore) {
+			}else if(null == aScore1) {
 				return 1;
-			}else if(null == bScore) {
+			}else if(null == bScore1) {
 				return -1;
 			}
-			return aScore < bScore ? 1 : (aScore > bScore ? -1 : 0);
+			
+			if(aScore1 < bScore1) {
+				//experiment with this!!!
+				if(bScore2 > bScore2*3./2) {
+					return 1;
+				}else {
+					return -1;
+				}
+			}else if(aScore1 > bScore1){
+				if(bScore2 > bScore2*3./2) {
+					return 1;
+				}else {
+					return -1;
+				}
+			}else {
+				return aScore2 < bScore2 ? 1 : (aScore2 > bScore2 ? -1 : 0);
+			}
+			//return aScore1 < bScore1 ? 1 : (aScore1 > bScore1 ? -1 : 0);
 		}
 	}
 

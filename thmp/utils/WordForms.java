@@ -187,7 +187,7 @@ public class WordForms {
 		
 		//add more!
 		String[] genericSearchTermsAr = new String[] {"sum", "equation", "polynomial", "function", "basis",
-				"theorem", "group", "ring", "field", "module", "theorem", "hypothesis"};
+				"theorem", "group", "ring", "field", "module", "hypothesis", "proposition"};
 		GENERIC_SERACH_TERMS = new HashSet<String>();
 		for(String s : genericSearchTermsAr) {
 			GENERIC_SERACH_TERMS.add(s);

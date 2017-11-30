@@ -97,14 +97,14 @@ public class SimilarThmSearch {
 		thmStr = thmHypPair.hypStr();
 		getSimilarComponent(thmIndex, thmStr, combinedList);
 		
-		//prune away intersectionList ends!!
+		//prune away lesser ranked intersectionList elements
 		int maxSimilarThmCount = SimilarThmUtils.maxSimilarThmListLen();
 		if(combinedList.size() > maxSimilarThmCount) {
-					List<Integer> tempList = new ArrayList<Integer>();
-					for(int i = 0; i < maxSimilarThmCount; i++) {
-						tempList.add(combinedList.get(i));
-					}
-					combinedList = tempList;
+			List<Integer> tempList = new ArrayList<Integer>();
+			for(int i = 0; i < maxSimilarThmCount; i++) {
+				tempList.add(combinedList.get(i));
+			}
+			combinedList = tempList;
 		}
 		return combinedList;
 	}
@@ -190,8 +190,7 @@ public class SimilarThmSearch {
 				}
 			}
 			//keep the ones with high context vec score, else sort the others according to
-			//intersection scores.			
-						
+			//intersection scores.							
 		}
 		//list of holdover thms with lower priority.
 		//List<Integer> holdOverList = new ArrayList<Integer>();
@@ -223,13 +222,16 @@ public class SimilarThmSearch {
 		//list sorted according to context vecs
 		List<Integer> contextSortedList = new ArrayList<Integer>();
 		//remaining ones sorted according to intersection scores.
-		List<Integer> intersectionSortedList = new ArrayList<Integer>();
+		//List<Integer> intersectionSortedList = new ArrayList<Integer>();
+
+		contextScoreMap.remove(queryThmIndex);
 		
-		TreeMap<Integer, List<Integer>> contextScoreThmTMap 
+		contextSortedList.addAll(contextScoreMap.keySet());
+		
+		/*TreeMap<Integer, List<Integer>> contextScoreThmTMap 
 			= new TreeMap<Integer, List<Integer>>(new thmp.utils.DataUtility.ReverseIntComparator());
 		
-		contextScoreMap.remove(queryThmIndex);
-		/*Combine maps, prune away ones with low intersection scores */
+		//Combine maps, prune away ones with low intersection scores 
 		for(Map.Entry<Integer, Integer> entry : contextScoreMap.entrySet()) {			
 			int curIndex = entry.getKey();
 			int score = entry.getValue();			
@@ -247,13 +249,16 @@ public class SimilarThmSearch {
 			if(score == 0) {
 				intersectionSortedList.addAll(entry.getValue());
 				break;
-			}
-			contextSortedList.addAll(entry.getValue());
-		}
-		Collections.sort(intersectionSortedList, new thmp.utils.DataUtility.IntMapComparator(thmScoreMap));
+			}			
+			List<Integer> contextList = entry.getValue();			
+			contextSortedList.addAll(contextList);
+		}*/
+		
+		//prioritize context unless the intersection span is not great
+		Collections.sort(contextSortedList, new thmp.utils.DataUtility.IntMapComparator(contextScoreMap, thmScoreMap));
 		
 		combinedList.addAll(contextSortedList);
-		combinedList.addAll(intersectionSortedList);
+		//combinedList.addAll(intersectionSortedList);
 		
 	}
 	
