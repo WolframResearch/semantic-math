@@ -1,6 +1,7 @@
 package thmp.utils;
 
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -54,48 +55,59 @@ public class DataUtility {
 	 */
 	public static class IntMapComparator implements Comparator<Integer>{
 		
-		//map to prioritize
-		private Map<Integer, Integer> map1;
-		private Map<Integer, Integer> map2;
+		//prioritize map1. Combine two maps to form new map used to rank. 
+		//private Map<Integer, Integer> map1;
+		//private Map<Integer, Integer> map2;
+		private Map<Integer, Double> map;
 		
-		public IntMapComparator(Map<Integer, Integer> map1_, Map<Integer, Integer> map2_) {
-			this.map1 = ImmutableMap.copyOf(map1_);
-			this.map2 = ImmutableMap.copyOf(map2_);
+		/**
+		 * 
+		 * @param map1_
+		 * @param map2_
+		 * @param map2Weight, usually <= 1
+		 */
+		public IntMapComparator(Map<Integer, Integer> map1, Map<Integer, Integer> map2,
+				double map2Weight) {
+			//private Map<Integer, Integer> map1 = ImmutableMap.copyOf(map1_);
+			//this.map2 = ImmutableMap.copyOf(map2_);
+			//make new map
+			this.map = new HashMap<Integer, Double>();
+			for(Map.Entry<Integer, Integer> entry : map1.entrySet()) {
+				int key = entry.getKey();
+				Integer map2Val = map2.get(key);
+				map2Val = map2Val == null ? 0 : map2Val;
+				map.put(entry.getKey(), entry.getValue() + map2Weight*map2Val);
+			}
 		}
 		
+		//higher score come in earlier when sorting
 		@Override
 		public int compare(Integer a, Integer b){
-			Integer aScore1 = map1.get(a);
-			Integer bScore1 = map1.get(b);
-			
+			/*Integer aScore1 = map1.get(a);
+			Integer bScore1 = map1.get(b);			
 			Integer aScore2 = map2.get(a);
-			Integer bScore2 = map2.get(b);
+			Integer bScore2 = map2.get(b);*/
+			Double aScore = map.get(a);
+			Double bScore = map.get(b);
 			
-			if(null == aScore1 && null == bScore1) {
+			if(null == aScore && null == bScore || Integer.valueOf(a) == Integer.valueOf(b)) {
 				return 0;
-			}else if(null == aScore1) {
+			}else  {
+				if(null == aScore) {
+					return 1;
+				}
+				if(null == bScore) {
+					return -1;
+				}
+			}			
+			/*if(aScore1 < bScore1) {				
 				return 1;
-			}else if(null == bScore1) {
+			}else if(aScore1 > bScore1){				
 				return -1;
-			}
-			
-			if(aScore1 < bScore1) {
-				//experiment with this!!!
-				if(bScore2 > bScore2*3./2) {
-					return 1;
-				}else {
-					return -1;
-				}
-			}else if(aScore1 > bScore1){
-				if(bScore2 > bScore2*3./2) {
-					return 1;
-				}else {
-					return -1;
-				}
 			}else {
 				return aScore2 < bScore2 ? 1 : (aScore2 > bScore2 ? -1 : 0);
-			}
-			//return aScore1 < bScore1 ? 1 : (aScore1 > bScore1 ? -1 : 0);
+			}*/
+			return aScore < bScore ? 1 : (aScore > bScore ? -1 : 0);
 		}
 	}
 

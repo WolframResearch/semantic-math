@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeMap;
@@ -228,11 +229,12 @@ public class SimilarThmSearch {
 		
 		contextSortedList.addAll(contextScoreMap.keySet());
 		
-		/*TreeMap<Integer, List<Integer>> contextScoreThmTMap 
+		TreeMap<Integer, List<Integer>> contextScoreThmTMap 
 			= new TreeMap<Integer, List<Integer>>(new thmp.utils.DataUtility.ReverseIntComparator());
 		
+		//take out list if 
 		//Combine maps, prune away ones with low intersection scores 
-		for(Map.Entry<Integer, Integer> entry : contextScoreMap.entrySet()) {			
+		/*for(Map.Entry<Integer, Integer> entry : contextScoreMap.entrySet()) {			
 			int curIndex = entry.getKey();
 			int score = entry.getValue();			
 			//note this double-counts relations that occur in different pieces
@@ -254,8 +256,33 @@ public class SimilarThmSearch {
 			contextSortedList.addAll(contextList);
 		}*/
 		
-		//prioritize context unless the intersection span is not great
-		Collections.sort(contextSortedList, new thmp.utils.DataUtility.IntMapComparator(contextScoreMap, thmScoreMap));
+		int contextScoreTotal = 0;
+		int intersectionScoreTotal = 0;
+		
+		for(Map.Entry<Integer, Integer> entry : contextScoreMap.entrySet()) {
+			int index = entry.getKey();
+			int contextScore = entry.getValue();
+			
+			//contextScore can be 0 easily, but intersectionScore is never 0, since the results all contained
+			//some word in query.
+			if(contextScore > 0) {
+				contextScoreTotal += contextScore;
+				Integer intersectionScore = thmScoreMap.get(index);
+				intersectionScoreTotal += null == intersectionScore ? 0 : intersectionScore;
+			}			
+		}
+		
+		final double thmScoreMapWeight;
+		if(intersectionScoreTotal == 0) {
+			thmScoreMapWeight = 1;
+		}else {
+			//0.92 instead of 1 to prioritize context
+			thmScoreMapWeight = 0.95*((double)contextScoreTotal) / intersectionScoreTotal;
+		}
+		
+		//System.out.println("SimilarThmSearch - thmScoreMapWeight: "+thmScoreMapWeight);
+		Collections.sort(contextSortedList, new thmp.utils.DataUtility.IntMapComparator(contextScoreMap, thmScoreMap,
+				thmScoreMapWeight));
 		
 		combinedList.addAll(contextSortedList);
 		//combinedList.addAll(intersectionSortedList);

@@ -1,6 +1,7 @@
 package thmp.search;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -270,11 +271,29 @@ public class CollectThm {
 			//System.out.println("------++++++++-------CONTEXT_VEC_WORDS_MAP.size " + CONTEXT_VEC_WORDS_MAP.size());
 			
 			if(!FileUtils.isOSX()) {
+				//putting in the OS check here, so running locally on OSX does not take forever to load.
+				//
 				//should not build if not searching
 				String wordThmIndexMMapPath = FileUtils.getPathIfOnServlet(SearchMetaData.wordThmIndexMMapSerialFilePath());				
 				@SuppressWarnings("unchecked")
 				Multimap<String, IndexPartPair> wordThmsIndexMultimap = ((List<Multimap<String, IndexPartPair>>)
 						FileUtils.deserializeListFromFile(wordThmIndexMMapPath)).get(0);
+				//temporary ugly conversion code for data migration
+				Collection<IndexPartPair> indexPartPairCol = wordThmsIndexMultimap.get("group");
+				Iterator<IndexPartPair> iter = indexPartPairCol.iterator();
+				try {
+					IndexPartPair p = iter.next();					
+				}catch(java.lang.ClassCastException e) {
+					
+					@SuppressWarnings("unchecked")
+					Multimap<String, Integer> wordThmsIntMultimap = ((List<Multimap<String, Integer>>)
+							FileUtils.deserializeListFromFile(wordThmIndexMMapPath)).get(0);
+					wordThmsIndexMultimap = HashMultimap.create();
+					for(Map.Entry<String, Integer> entry : wordThmsIntMultimap.entries()) {
+						wordThmsIndexMultimap.put(entry.getKey(), new IndexPartPair(entry.getValue(), ThmPart.STM));
+					}					
+				}
+				
 				wordThmsIndexMMapNoAnno = ImmutableMultimap.copyOf(wordThmsIndexMultimap);
 			}else {
 				wordThmsIndexMMapNoAnno = null;

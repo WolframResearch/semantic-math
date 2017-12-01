@@ -11,6 +11,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -37,6 +38,7 @@ import thmp.search.TheoremGet.ContextRelationVecPair;
 import thmp.search.ThmSearch.TermDocumentMatrix;
 import thmp.utils.FileUtils;
 import thmp.utils.MathLinkUtils.WLEvaluationMedium;
+import thmp.utils.WordForms.ThmPart;
 
 import static thmp.utils.MathLinkUtils.evaluateWLCommand;
 
@@ -389,14 +391,25 @@ public class ProjectionMatrix {
 		
 		combinedVecsList.addAll((List<ContextRelationVecPair>)FileUtils.deserializeListFromFile(vecsFilePath));
 		
-		//temporary to account for inconsistency amongst different data files, Nov 29.
-		/*Object obj = FileUtils.deserializeListFromFile(wordThmIndexMMapPath);
-		if(obj instanceof List<Multimap<String, IndexPartPair>>) {
-			
-		}*/
 		Multimap<String, IndexPartPair> wordThmIndexMMap = ((List<Multimap<String, IndexPartPair>>)
 				FileUtils.deserializeListFromFile(wordThmIndexMMapPath)).get(0);
-		
+		/*****/
+		//temporary ugly conversion code for data migration
+		//temporary to account for inconsistency amongst different data files, Nov 29
+		Collection<IndexPartPair> indexPartPairCol = wordThmIndexMMap.get("group");
+		Iterator<IndexPartPair> iter = indexPartPairCol.iterator();
+		try {
+			IndexPartPair p = iter.next();					
+		}catch(java.lang.ClassCastException e) {
+			
+			Multimap<String, Integer> wordThmsIntMultimap = ((List<Multimap<String, Integer>>)
+					FileUtils.deserializeListFromFile(wordThmIndexMMapPath)).get(0);
+			wordThmIndexMMap = HashMultimap.create();
+			for(Map.Entry<String, Integer> entry : wordThmsIntMultimap.entries()) {
+				wordThmIndexMMap.put(entry.getKey(), new IndexPartPair(entry.getValue(), ThmPart.STM));
+			}					
+		}
+		/****/
 		for(String keyWord : wordThmIndexMMap.keySet()){			
 			//update the indices of the thms with respect to the tar's position.
 			Collection<IndexPartPair> updatedIndices = new ArrayList<IndexPartPair>();
