@@ -280,13 +280,10 @@ public class SimilarThmSearch {
 			thmScoreMapWeight = 0.95*((double)contextScoreTotal) / intersectionScoreTotal;
 		}
 		
-		//System.out.println("SimilarThmSearch - thmScoreMapWeight: "+thmScoreMapWeight);
 		Collections.sort(contextSortedList, new thmp.utils.DataUtility.IntMapComparator(contextScoreMap, thmScoreMap,
 				thmScoreMapWeight));
 		
 		combinedList.addAll(contextSortedList);
-		//combinedList.addAll(intersectionSortedList);
-		
 	}
 	
 	/**

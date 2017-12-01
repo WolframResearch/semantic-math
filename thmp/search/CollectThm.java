@@ -23,6 +23,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
@@ -364,7 +365,9 @@ public class CollectThm {
 		 * in thm. To be used to create map of word-thm index, to 
 		 * differentiate scores between hyp and stm.
 		 */
-		public static class IndexPartPair{
+		public static class IndexPartPair implements Serializable{
+			
+			private static final long serialVersionUID = 3243328850026183247L;
 			private ThmPart thmPart;
 			private int thmIndex;
 			

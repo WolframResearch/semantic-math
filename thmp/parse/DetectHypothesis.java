@@ -31,6 +31,7 @@ import com.google.common.collect.Multimap;
 import thmp.parse.ParseState.ParseStateBuilder;
 import thmp.parse.ParseState.VariableDefinition;
 import thmp.parse.ParseState.VariableName;
+import thmp.runner.GenerateSearchDataRunner.SearchDataRunnerConfig;
 import thmp.search.CollectThm;
 import thmp.search.CollectThm.ThmWordsMaps.IndexPartPair;
 import thmp.search.SearchCombined.ThmHypPair;
@@ -171,10 +172,16 @@ public class DetectHypothesis {
 	public static class Runner{
 		
 		public static void main(String[] args){
-			generateSearchData(args);
+			SearchDataRunnerConfig runnerConfig = SearchDataRunnerConfig.DEFAULT_CONFIG;
+			generateSearchData(args, runnerConfig);
 		}
 		
-		public static void generateSearchData(String[] args){
+		/**
+		 * 
+		 * @param args
+		 * @param runnerConfig configuration for generating data
+		 */
+		public static void generateSearchData(String[] args, SearchDataRunnerConfig runnerConfig){
 			InputParams inputParams = new InputParams(args);
 			//need separate runner class to set
 			if(inputParams.usePreviousDocWordsFreqMaps){
@@ -183,7 +190,7 @@ public class DetectHypothesis {
 			/*This line means we must be careful when evoking this class, which will 
 			 * set_gatheringDataBoolToTrue() */
 			Searcher.SearchMetaData.set_gatheringDataBoolToTrue();
-			DetectHypothesis.readAndProcessInputData(inputParams);
+			DetectHypothesis.readAndProcessInputData(inputParams, runnerConfig);
 		}
 	}
 	
@@ -439,7 +446,7 @@ public class DetectHypothesis {
 	 * @param args
 	 */
 	private static void readAndProcessInputData(//String[] args
-			InputParams inputParams) {
+			InputParams inputParams, SearchDataRunnerConfig runnerConfig) {
 		/* read in a directory name, parse all the files individually. */ 		
 		//try to read file path from command line argument first
 		//path should be absolute.
@@ -547,7 +554,7 @@ public class DetectHypothesis {
 					//serialize, so don't discard the items already parsed.
 				//serialization only applicable when running on byblis
 				if(!FileUtils.isOSX()){
-					serializeDataToFile(stats, thmHypPairList, inputParams);		
+					serializeDataToFile(stats, thmHypPairList, inputParams, runnerConfig);		
 				}					
 				
 		}else{
@@ -569,7 +576,7 @@ public class DetectHypothesis {
 			}
 			
 			if(!FileUtils.isOSX()){
-				serializeDataToFile(stats, thmHypPairList, inputParams);	
+				serializeDataToFile(stats, thmHypPairList, inputParams, runnerConfig);	
 			}
 		}
 		System.out.println("STATS -- percentage of non-trivial ParseStruct heads: " + stats.getNonNullPercentage() 
@@ -734,7 +741,7 @@ public class DetectHypothesis {
 	 */
 	private static void serializeDataToFile(Stats stats, //List<DefinitionListWithThm> defThmList,
 			List<ThmHypPair> thmHypPairList,
-			InputParams inputParams) {
+			InputParams inputParams, SearchDataRunnerConfig runnerConfig) {
 		
 		String pathToProjectionMx = inputParams.getPathToProjectionMx();
 		String pathToWordFreqMap = inputParams.pathToWordFreqMap;
@@ -792,7 +799,7 @@ public class DetectHypothesis {
 			
 			//FileUtils.writeToFile(ALL_THM_WORDS_LIST, allThmWordsStringFileStr);
 		}catch(Throwable e){
-			logger.error("Error occurred when writing and serializing to file! " + e.getMessage());
+			logger.error("Error occurred when writing and serializing to file! " + e);
 			throw e;
 		}
 		logger.info("Done serializing parsedExpressionList & co to files! Beginning to compute SVD for parsedExpressionList thms.");		
@@ -802,17 +809,19 @@ public class DetectHypothesis {
 		/* Creates the term document matrix, and serializes to .mx file.
 		 * If this step fails, need to re-run to produce matrix. This should run at end of this method,
 		 * so others have already serialized in case this fails.*/
-		ImmutableList<TheoremContainer> immutableThmHypPairList = ImmutableList.copyOf(thmHypPairList);
-		if(projectionPathsNotNull){
-			Map<String, Integer> wordFreqMap = getWordFreqMap(pathToWordFreqMap);
-			//first serialize full dimensional TD mx, then project using provided projection mx.
-			ThmSearch.TermDocumentMatrix.serializeHighDimensionalTDMx(immutableThmHypPairList, fullTermDocumentMxPath, wordFreqMap);
-			//replace the last bit of the path with the name of the projected(reduced) mx.
-			String pathToReducedDimTDMx = replaceFullTDMxName(fullTermDocumentMxPath, ThmSearch.TermDocumentMatrix.PROJECTED_MX_NAME);
-			ThmSearch.TermDocumentMatrix.projectTermDocumentMatrix(fullTermDocumentMxPath, pathToProjectionMx, 
-					pathToReducedDimTDMx);
-		}else{
-			ThmSearch.TermDocumentMatrix.createTermDocumentMatrixSVD(immutableThmHypPairList);
+		if(runnerConfig.regenerateMx()) {
+			ImmutableList<TheoremContainer> immutableThmHypPairList = ImmutableList.copyOf(thmHypPairList);
+			if(projectionPathsNotNull){
+				Map<String, Integer> wordFreqMap = getWordFreqMap(pathToWordFreqMap);
+				//first serialize full dimensional TD mx, then project using provided projection mx.
+				ThmSearch.TermDocumentMatrix.serializeHighDimensionalTDMx(immutableThmHypPairList, fullTermDocumentMxPath, wordFreqMap);
+				//replace the last bit of the path with the name of the projected(reduced) mx.
+				String pathToReducedDimTDMx = replaceFullTDMxName(fullTermDocumentMxPath, ThmSearch.TermDocumentMatrix.PROJECTED_MX_NAME);
+				ThmSearch.TermDocumentMatrix.projectTermDocumentMatrix(fullTermDocumentMxPath, pathToProjectionMx, 
+						pathToReducedDimTDMx);
+			}else{
+				ThmSearch.TermDocumentMatrix.createTermDocumentMatrixSVD(immutableThmHypPairList);
+			}
 		}
 	}
 

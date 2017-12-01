@@ -37,7 +37,13 @@ public class GenerateSearchDataRunner {
 	private static final double numMiliSecPerHour = 3600000;
 	private static final String UNPACK_SCRIPT_FILE_PATH = "/home/usr0/yihed/thm/unpack2.sh ";
 	private static final Set<String> FILES_TO_KEEP;
-	private static final Pattern FILES_TO_KEEP_REGEX = Pattern.compile(".+(?:\\.mx|ecs|dat|txt|stamp|List)");
+	private static final Pattern FILES_TO_KEEP_REGEX = Pattern.compile(".+\\.(?:mx|ecs|dat|txt|stamp|List)");
+	private static final Pattern CONFIG_COMMENT_PATT = Pattern.compile("^\\s*#.*");
+	//setting e.g. "msc:true"
+	private static final Pattern CONFIG_PATT = Pattern.compile("([^:]+):(.+)");
+	
+	private static final Pattern TRUE_PATT = Pattern.compile("\\s*(?i)true\\s*");
+	private static final Pattern FALSE_PATT = Pattern.compile("\\s*(?i)false\\s*");
 	
 	static {
 		FILES_TO_KEEP = new HashSet<String>();
@@ -46,6 +52,78 @@ public class GenerateSearchDataRunner {
 				};
 		for(String fileName : a) {
 			FILES_TO_KEEP.add(fileName);
+		}
+	}
+	
+	private static class SearchDataRunnerConfigBuilder{
+		//whether currently generating msc words data
+		private boolean msc;
+		//whether to regenerate Mx files, creating TermDocumentMatrix, etc,
+		//anew, or 
+		private boolean regenerateMxFiles;
+		
+		/**
+		 * @param configFilePath Must be guaranteed to be a file path by contract.
+		 */
+		SearchDataRunnerConfigBuilder(String configFilePath){
+			List<String> lines = FileUtils.readLinesFromFile(configFilePath);
+			for(String line : lines) {
+				if(CONFIG_COMMENT_PATT.matcher(line).matches()) {
+					continue;
+				}
+				Matcher m;
+				if((m=CONFIG_PATT.matcher(line)).matches()) {
+					String option = m.group(1);
+					String value = m.group(2);
+					parseConfigStr(option, value);
+				}
+			}
+		}
+		
+		void parseConfigStr(String option, String val) {
+			switch(option) {
+				case "msc":
+					this.msc = getBooleanVal(val);
+				case "regenerateMx":
+					this.regenerateMxFiles = getBooleanVal(val);
+			}
+		}
+		
+		boolean getBooleanVal(String boolStr) {
+			if(TRUE_PATT.matcher(boolStr).matches()) {
+				return true;
+			}
+			return false;
+		}
+		
+		SearchDataRunnerConfig build() {
+			return new SearchDataRunnerConfig(this);
+		}
+		
+	}
+	
+	public static class SearchDataRunnerConfig{
+		//whether currently generating msc words data
+		private boolean msc;
+		//whether to regenerate Mx files, creating TermDocumentMatrix, etc,
+		//anew, or 
+		private boolean regenerateMxFiles;
+		public static final SearchDataRunnerConfig DEFAULT_CONFIG = new SearchDataRunnerConfig();
+		
+		private SearchDataRunnerConfig() {			
+		}
+		
+		private SearchDataRunnerConfig(SearchDataRunnerConfigBuilder builder){
+			this.msc = builder.msc;
+			this.regenerateMxFiles = builder.regenerateMxFiles;
+		}
+
+		public boolean msc(){
+			return this.msc;
+		}
+		
+		public boolean regenerateMx(){
+			return this.regenerateMxFiles;
 		}
 	}
 	
@@ -68,11 +146,28 @@ public class GenerateSearchDataRunner {
 		List<String> fileNamesList = extractNamesFromFile(args[0]);
 		System.out.println("GenerateSearchDataRunner-fileNamesList: " + fileNamesList);
 		
-		if(2 == argsLen && args[1].toLowerCase().equals("msc")) {
+		SearchDataRunnerConfig runnerConfig = SearchDataRunnerConfig.DEFAULT_CONFIG;
+		
+		if(2 == argsLen) {
+			//second arg should be path to config file
+			String configFilePath = args[1];
+			
+			File file = new File(configFilePath);
+			if(!file.isFile()) {
+				System.out.println("If supplied, 2nd argumnet must be path to configuration file!");
+				return;
+			}
+			SearchDataRunnerConfigBuilder builder = new SearchDataRunnerConfigBuilder(configFilePath);
+			runnerConfig = builder.build();		
+		}
+		
+		runScripts(fileNamesList, runnerConfig);
+		
+		/*if(2 == argsLen && args[1].toLowerCase().equals("msc")) {			
 			runScripts(fileNamesList, true);
 		}else {
 			runScripts(fileNamesList);			
-		}
+		}*/
 	}
 
 	/**
@@ -82,9 +177,9 @@ public class GenerateSearchDataRunner {
 	 * @throws IOException
 	 * @throws InterruptedException
 	 */
-	private static void runScripts(List<String> fileNamesList) throws IOException, InterruptedException{
+	/*private static void runScripts(List<String> fileNamesList) throws IOException, InterruptedException{
 		runScripts(fileNamesList, false);
-	}
+	}*/
 	
 	/**
 	 * A fileName refers to name (including path) of tar file, 
@@ -94,10 +189,12 @@ public class GenerateSearchDataRunner {
 	 * @throws IOException
 	 * @throws InterruptedException
 	 */
-	private static void runScripts(List<String> fileNamesList, boolean gatherMscData) throws IOException, InterruptedException{
+	private static void runScripts(List<String> fileNamesList, SearchDataRunnerConfig runnerConfig) 
+			throws IOException, InterruptedException{
 		
 		long beforeTime = System.currentTimeMillis();
 		
+		boolean gatherMscData = runnerConfig.msc;
 		//already created, and edited that map. Oct 25 2017
 		if(false && gatherMscData) {
 			CreateMscVecs.wordsScoreMapToJson();
@@ -141,7 +238,7 @@ public class GenerateSearchDataRunner {
 				DetectHypothesis.Runner.generateSearchData(new String[]{fileDir, 
 						TermDocumentMatrix.DATA_ROOT_DIR_SLASH + TermDocumentMatrix.PROJECTION_MX_FILE_NAME,
 						Searcher.SearchMetaData.wordDocFreqMapPath()
-					});
+					}, runnerConfig);
 			}else {
 				//create msc classifier data.
 				CreateMscVecs.processFilesInTar(fileDir);				

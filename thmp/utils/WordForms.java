@@ -196,12 +196,12 @@ public class WordForms {
 	
 	/**
 	 * Whether main statement or hyp.
+	 * Note that enums are inherently serializable.
 	 */
 	public static enum ThmPart{
 		
 		STM, //corresponding to thm main statement 
 		HYP; //contextual hypotheses, shown under "Context" in web
-		
 		
 	}
 	
