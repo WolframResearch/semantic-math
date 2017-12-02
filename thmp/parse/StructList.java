@@ -51,6 +51,22 @@ public class StructList implements Serializable{
 	}
 
 	/**
+	 * Prunes structList to a reduced size, to avoid grammar
+	 * rules explosions.
+	 * @param newSize
+	 * @return updated list
+	 */
+	public List<Struct> pruneStructList(int newSize){
+		
+		List<Struct> tempList = new ArrayList<Struct>();
+		for(int q = 0; q < newSize; q++) {
+			tempList.add(this.structList.get(q));
+		}
+		this.structList = tempList;
+		return tempList;
+	}
+	
+	/**
 	 *  copy of this.structList, structList is a list
 	 * of pointers to Struct's.
 	 * @return
@@ -58,6 +74,7 @@ public class StructList implements Serializable{
 	public StructList copy(){
 		StructList newStructlist = new StructList();
 		//newStructlist.structList.addAll(this.structList);
+		//System.out.println("this.structList.size( ) " + this.structList.size()); 
 		newStructlist.structList = new ArrayList<Struct>(this.structList);
 		newStructlist.highestDownScoreIndex = this.highestDownScoreIndex;
 		return newStructlist;

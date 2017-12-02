@@ -80,18 +80,10 @@ public class SearchIntersection {
 	/**
 	 * Static initializer, retrieves maps from CollectThm.java.
 	 */
-	static {
-		// System.out.println(thmList);
+	static {		
 		wordsScoreMap = CollectThm.ThmWordsMaps.get_wordsScoreMap();
-		// System.out.println(CollectThm.get_wordsScoreMap());
-		//wordThmMMap = CollectThm.ThmWordsMaps.get_wordThmsMMap();//HERE
 		wordThmsIndexMMap1 = CollectThm.ThmWordsMaps.get_wordThmsMMapNoAnno();
-		relatedWordsMap = CollectThm.ThmWordsMaps.getRelatedWordsMap();
-		// System.out.println(wordsScoreMap);
-		// thmList = CollectThm.ThmList.get_macroReplacedThmList();
-		//****thmList = CollectThm.ThmList.allThmsWithHypList();
-		// webDisplayThmList = CollectThm.ThmList.get_webDisplayThmList();
-		
+		relatedWordsMap = CollectThm.ThmWordsMaps.getRelatedWordsMap();		
 	}
 
 	/**
@@ -347,6 +339,8 @@ public class SearchIntersection {
 		SetMultimap<Integer, Integer> thmWordSpanMMap = HashMultimap.create();
 		/*To use for pruning probably irrelevant results*/
 		SetMultimap<Integer, String> thmWordsMMap = HashMultimap.create();
+		
+		//take tokens in quotes as literal words
 		List<String> inputWordsList = WordForms.splitThmIntoSearchWordsList(input);
 		
 		//int numHighest = NUM_NEAREST_VECS;

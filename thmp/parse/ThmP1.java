@@ -93,6 +93,8 @@ public class ThmP1 {
 	private static final Pattern ENT_COMBINE_PATT = Pattern.compile("adj|det|num|quant|and|or");
 	//private static final String localPathToTagger = "lib/stanford-postagger-2015-12-09/models/english-bidirectional-distsim.tagger";
 	
+	//don't set lower than 100, affects context formations, etc.
+	private static final int MAX_STRUCTLIST_SZ = 100;
 	// list of parts of speech, ent, verb etc <--should make immutable
 	private static final List<String> posList;
 	
@@ -2394,8 +2396,7 @@ public class ThmP1 {
 
 			// fill in diagonal elements
 			// ArrayList<Struct> diagonalStruct = new ArrayList<Struct>();
-
-			// mx.get(j).set(j, diagonalStruct);
+			
 			Struct diagonalStruct = inputStructList.get(j);
 			diagonalStruct.set_structList(mx.get(j).get(j));
 			mx.get(j).get(j).add(diagonalStruct);
@@ -2456,7 +2457,12 @@ public class ThmP1 {
 					System.out.println("++++ "+i + " " + k + " structList1: " + structList1);
 					System.out.println("---- "+(k+1) + " " + j + " structList2: " + structList2);
 					*/
-		
+					//structList1 - size 52075 i k: 3  24
+					/*Dec 2017 if(structList1.size() == 52075 && i == 3) {
+						System.out.println("right before inf loop");
+						System.out.println("structList1 - size "+structList1.size() + " i k: " + i +"  " +k);
+					}*/
+					
 					if (structList1 == null || structList2 == null || structList1.size() == 0
 							|| structList2.size() == 0) {						
 						continue;
@@ -2464,7 +2470,14 @@ public class ThmP1 {
 					//System.out.println("=====++++ i, j pairs " + (i) + " " + k + ", " + " col " + (k+1) + " " +j );
 					// need to refactor to make methods more modular!
 
-					Iterator<Struct> structList1Iter = structList1.structList().iterator();
+					List<Struct> structList1List = structList1.structList();
+					//prune to avoid grammar rules explosion
+					if(structList1List.size() > MAX_STRUCTLIST_SZ) {
+						structList1List = structList1.pruneStructList(MAX_STRUCTLIST_SZ);
+					}
+					////here Iterator<Struct> structList1Iter = structList1.structList().iterator();
+					Iterator<Struct> structList1Iter = structList1List.iterator();
+					
 					List<Struct> struct2List = structList2.structList();
 					
 					//System.out.println("!structList1: " + structList1.structList() + " " + structList1.structList().size());
@@ -2473,12 +2486,14 @@ public class ThmP1 {
 					while (structList1Iter.hasNext()) {
 						
 						Struct struct1 = structList1Iter.next();
-						//System.out.println("STRUCT1 " + struct1);						
+						
+						if(struct2List.size() > MAX_STRUCTLIST_SZ) {
+							struct2List = structList2.pruneStructList(MAX_STRUCTLIST_SZ);
+						}						
 						Iterator<Struct> structList2Iter = struct2List.iterator();
 						int structList2IterCounter = 0;
 						while (structList2Iter.hasNext()) {
 							Struct struct2 = structList2Iter.next();
-							//System.out.println("...with STRUCT2 " + struct2);
 							
 							// combine/reduce types, like or_ppt, for_ent,
 							// in_ent
@@ -2602,7 +2617,7 @@ public class ThmP1 {
 									newPpt += struct1.prev1();
 								}
 								newStruct.struct().put(newPpt, "ppt");
-								// mx.get(i).set(j, newStruct);								
+															
 								mx.get(i).get(j).add(newStruct);
 								continue innerloop;								
 							}
@@ -3157,18 +3172,7 @@ public class ThmP1 {
 		/* iterate through the List at position (i-t, i-1), to handle conjunction and disjunction.
 		 * And and or handling code here.*/
 		if (i > 0 && i + 1 < inputStructListSize) {
-			/*
-			 * // set parent struct in row // above //
-			 * mx.get(i - 1).set(j, // parentStruct);
-			 * mx.get(i - 1).get(j).add(parentStruct); //
-			 * set the next token to "", so // not //
-			 * classified again // with others //
-			 * mx.get(i+1).set(j, null); // already
-			 * classified, no need // to // keep reduce with
-			 * mx // manipulations break; } } } // this case
-			 * can be combined with if // statement //
-			 * above, use single while loop } else
-			 */
+			
 			if (AND_OR_PATTERN.matcher(type1).matches()) {
 				//t tracks how many rows up to go in previous column
 				int t = 1; 
@@ -3860,6 +3864,10 @@ public class ThmP1 {
 			// get used eventually, ie hard to remove children
 			// added during matrix building that do not belong
 			// to the eventual parse. 
+			//i j k 5 22 18
+			//if(i==5 && j==22 && k==18) {
+			//	System.out.println("about to struct1.copy! types: " + type1 + "  " + type2 + " i j k " + i+" " + j +" " +k +" "+ struct1 + struct2);				
+			//}
 			Struct newStruct = struct1.copy();
 			
 			//could be struct1, or prev2 of struct1
@@ -4214,9 +4222,7 @@ public class ThmP1 {
 							parentPrev2, struct2Type, updatedType, newScore, mx.get(i).get(j), parentDownPathScore, parentNumUnits);
 					
 					parentPrev1.set_parentStruct(parentStruct);
-					//struct2.set_parentStruct(parentStruct);
 					
-					// mx.get(i).set(j, parentStruct);
 					mx.get(i).get(j).add(parentStruct);					
 				}				
 			}

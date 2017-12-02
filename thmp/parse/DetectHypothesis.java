@@ -469,7 +469,7 @@ public class DetectHypothesis {
 		}
 		//resort to default file if no arg supplied
 		else{
-			//try{
+				/*put file here if testing locally on developer machine*/
 				inputFile = new File("src/thmp/data/Total.txt");
 				inputFile = new File("/Users/yihed/Downloads/math0011136");
 				inputFile = new File("src/thmp/data/math0210227");
@@ -478,21 +478,15 @@ public class DetectHypothesis {
 				inputFile = new File("src/thmp/data/0704.2030");
 				inputFile = new File("/Users/yihed/Downloads/test/1605.01240");
 				inputFile = new File("src/thmp/data/test1.txt");
-				
-				//inputFile = new File("src/thmp/data/thmsFeb26.txt");
-				//inputBF = new BufferedReader(new FileReader("src/thmp/data/Total.txt"));
-				//inputBF = new BufferedReader(new FileReader("src/thmp/data/fieldsThms2.txt"));
-			/*}catch(FileNotFoundException e){
-				e.printStackTrace();
-				throw new IllegalStateException("Source file not found!");
-			}*/
+				inputFile = new File("/Users/yihed/Downloads/testJavaNov.tex");
+		
 		}		
 		List<DefinitionListWithThm> defThmList = new ArrayList<DefinitionListWithThm>();
 		List<ThmHypPair> thmHypPairList = new ArrayList<ThmHypPair>();
 		Stats stats = new Stats();
 		if(inputFile.isDirectory()){
 			//get all filenames from dir. Get tex file names from serialized file data.
-			//File[] files = inputFile.listFiles();			
+					
 				final boolean scrapeThmNames = FileUtils.SCRAPE_THM_NAME_Q;
 				List<String> thmNameList = new ArrayList<String>();
 				
@@ -547,8 +541,6 @@ public class DetectHypothesis {
 					
 					FileUtils.serializeObjToFile(thmNameList, inputParams.texFilesDirPath + THM_SCRAPE_SER_FILENAME);
 					
-					//List<String> serThmList = new ArrayList<String>();
-					//serThmList.add(thmNameList.toString());
 					FileUtils.writeToFile(thmNameList, inputParams.texFilesDirPath + THM_SCRAPE_TXT_FILENAME);
 				}
 					//serialize, so don't discard the items already parsed.
@@ -565,7 +557,7 @@ public class DetectHypothesis {
 				logger.error(e.getStackTrace());
 				throw new IllegalStateException(e);
 			}
-			//inputBFCreatedBool = true;
+			
 			try{
 				extractThmsFromFiles(inputBF, defThmList, thmHypPairList, stats, inputFile.getName());				
 			}catch(Throwable e){

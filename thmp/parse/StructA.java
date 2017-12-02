@@ -171,7 +171,7 @@ public class StructA<A, B> extends Struct{
 	 */
 	@Override
 	public StructA<A, B> copy(){
-		//shallow copy of structlist
+		
 		StructA<A, B> newStruct;
 		if(null != this.structList){
 			StructList copiedStructlist = this.structList.copy();	
