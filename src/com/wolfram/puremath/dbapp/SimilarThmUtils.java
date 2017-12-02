@@ -309,6 +309,7 @@ public class SimilarThmUtils {
 			return Collections.emptyList();
 		}
 		pstm.close();
+		rs.close();
 		return byteArrayToIndexList(indexBytes);
 	}
 			
@@ -323,8 +324,6 @@ public class SimilarThmUtils {
 	public static int maxSimilarThmListLen() {
 		return MAX_THM_INDEX_LIST_LEN;
 	}
-	
-	//use ISO-8859-1 encoding
 	
 	public static void main(String[] args) {
 		

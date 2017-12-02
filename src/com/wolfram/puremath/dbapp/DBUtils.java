@@ -64,52 +64,49 @@ public class DBUtils {
 	/**
 	 * Execute a mySql statement, for queries that should return a ResultSet,
 	 * e.g. SELECT.
-	 * 
+	 * *Note* caller is responsible for closing resultset and statement!
 	 * @param stm
 	 * @param ds
 	 * @return ResultSet of executing the query.
 	 */
 	public static ResultSet executeSqlStatement(String stmStr, Connection conn) {
-		//Connection conn = null;
+		
 		try {
-			//conn = ds.getConnection();
-			//e.g. CREATE TABLE authorTb (thmId INT(20), author VARCHAR(20), content VARCHAR(200))
-			//or INSERT INTO authorTb (thmId, author, content) VALUES (1, 's', 'content')
-			PreparedStatement stm = conn.prepareStatement(stmStr);
-			ResultSet rs = stm.executeQuery();
-			//System.out.println("restultSet "+rs);
-			return rs;
-			//stm = conn.prepareStatement("INSERT INTO authorTb (thmId, author, content)"
-			//		+ "VALUES (1, 's', 'content')");
-			
+			PreparedStatement stm = null;
+			ResultSet rs = null;
+		
+				//conn = ds.getConnection();
+				//e.g. CREATE TABLE authorTb (thmId INT(20), author VARCHAR(20), content VARCHAR(200))
+				//or INSERT INTO authorTb (thmId, author, content) VALUES (1, 's', 'content')
+				stm = conn.prepareStatement(stmStr);
+				rs = stm.executeQuery();
+				//System.out.println("restultSet "+rs);
+				return rs;
+				
 		} catch (SQLException e) {
 			
 			logger.error("SQLException while executing " + stmStr + " cause " + e);
-		}		
+		}
 		return null;
 	}
 	
 	/**
 	 * Execute a mySql statement, for queries that should return a ResultSet,
 	 * e.g. SELECT.
-	 * 
+	 * *Note* caller is responsible for closing resultset and statement!
 	 * @param stm
 	 * @param ds
 	 * @return ResultSet of executing the query.
 	 */
 	public static ResultSet executeSqlStatement(PreparedStatement pstm, Connection conn) {
-		//Connection conn = null;
+		
 		try {
-			//conn = ds.getConnection();
+			
 			//e.g. CREATE TABLE authorTb (thmId INT(20), author VARCHAR(20), content VARCHAR(200))
 			//or INSERT INTO authorTb (thmId, author, content) VALUES (1, 's', 'content')
 			
 			ResultSet rs = pstm.executeQuery();
-			//System.out.println("restultSet "+rs);
 			return rs;
-			//stm = conn.prepareStatement("INSERT INTO authorTb (thmId, author, content)"
-			//		+ "VALUES (1, 's', 'content')");
-			
 		} catch (SQLException e) {			
 			logger.error("SQLException while executing " + pstm + " cause " + e);
 		}		
@@ -127,18 +124,21 @@ public class DBUtils {
 	public static int manipulateData(String stmStr, Connection conn) {
 		//Connection conn = null;
 		try {
-			//conn = ds.getConnection();
-			//e.g. CREATE TABLE authorTb (thmId INT(20), author VARCHAR(20), content VARCHAR(200))
-			//or INSERT INTO authorTb (thmId, author, content) VALUES (1, 's', 'content')
-			PreparedStatement stm = conn.prepareStatement(stmStr);
-			int rs = stm.executeUpdate();
-			//System.out.println("restultSet "+rs);
-			return rs;
-			//stm = conn.prepareStatement("INSERT INTO authorTb (thmId, author, content)"
-			//		+ "VALUES (1, 's', 'content')");
-			
-		} catch (SQLException e) {
-			
+			PreparedStatement stm = null;			
+			try {
+				//conn = ds.getConnection();
+				//e.g. CREATE TABLE authorTb (thmId INT(20), author VARCHAR(20), content VARCHAR(200))
+				//or INSERT INTO authorTb (thmId, author, content) VALUES (1, 's', 'content')
+				stm = conn.prepareStatement(stmStr);
+				int rs = stm.executeUpdate();
+				//System.out.println("restultSet "+rs);
+				return rs;
+				//stm = conn.prepareStatement("INSERT INTO authorTb (thmId, author, content)"
+				//		+ "VALUES (1, 's', 'content')");
+			}finally {
+				stm.close();
+			}
+		} catch (SQLException e) {			
 			logger.error("SQLException while execute " + stmStr + " cause " + e);
 		}		
 		return STM_EXECUTATION_FAILURE;
