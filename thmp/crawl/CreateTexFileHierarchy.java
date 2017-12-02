@@ -34,6 +34,8 @@ public class CreateTexFileHierarchy {
 	//math0208056: POSIX tar archive (GNU)
 	private static final Pattern TAR_FILE_PATTERN = Pattern.compile(".+tar archive.+");
 	static final Pattern TEX_PATTERN = Pattern.compile(".*(?:tex|TeX) .*");
+	private static final Pattern MX_PATT = Pattern.compile(".+\\.mx");
+	
 	private static final String FILE_RENAME_PREFIX = "1";
 	
 	/**
@@ -51,7 +53,8 @@ public class CreateTexFileHierarchy {
 		File dir = new File(srcDirAbsPath);
 		//System.out.println("createFileHierarchy - srcDirAbsPath: "+srcDirAbsPath);
 		File[] files = dir.listFiles();	
-		//System.out.println("createFileHierarchy - files in dir: "+Arrays.toString(files));
+		
+		//each file corresponds to a paper, or an auxiliary file.
 		fileLoop: for(File file : files){
 			//System.out.println("CreateTexFileHiearchy - processing file "+ file);
 			String fileName = file.getName();
@@ -75,7 +78,7 @@ public class CreateTexFileHierarchy {
 						texFileNamesMap.put(fileAbsolutePath, fileName);
 						continue fileLoop;
 					}
-					//process if if tar file, 
+					//process if tar file, 
 					if(TAR_FILE_PATTERN.matcher(line).matches() ){
 						//if tar file of directory, untar into directory of same name, so not to create tarball explosion. 
 						//make directory
@@ -107,9 +110,13 @@ public class CreateTexFileHierarchy {
 						findTexFilesInTarDir(tarDirName, fileName, texFileNamesMap);
 						continue fileLoop;
 					}
-					//is neither tex file nor tarball, delete file
+					//is neither tex file nor tarball, delete file, unless .mx file, leave alone
+					//if intentionally kept by script, so no need to regenerate files again.
 					//System.out.println("CreteTexFileHiearchy - deleting file with data "+line);
-					file.delete();
+					
+					if(!MX_PATT.matcher(fileName).matches()) {
+						file.delete();
+					}
 				}				
 			}catch(IOException e){
 				String msg = "IOException in createFileHierarchy!";

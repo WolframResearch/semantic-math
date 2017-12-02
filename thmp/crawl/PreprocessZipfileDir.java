@@ -35,6 +35,8 @@ public class PreprocessZipfileDir {
 	private static final Set<String> mathGzFileSet = new HashSet<String>();
 	private static final Pattern GZ_FILE_PATTERN = Pattern.compile("(.+)\\.gz");
 	private static final Pattern DIGITS_FILENAME_PATTERN = Pattern.compile("\\d{4}\\.\\d{4}");
+	private static final Pattern MX_PATT = Pattern.compile(".+\\.mx");
+	
 	private static final Logger logger = LogManager.getLogger(PreprocessZipfileDir.class);
 
 	static{
@@ -122,6 +124,8 @@ public class PreprocessZipfileDir {
 		Matcher matcher;
 		if((matcher=GZ_FILE_PATTERN.matcher(fileName)).matches()){
 			fileNameRoot = matcher.group(1);
+		}else if(MX_PATT.matcher(fileName).matches()) {
+			return false;
 		}else{
 			//e.g. .pdf file.
 			return true;
