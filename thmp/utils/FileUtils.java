@@ -323,11 +323,14 @@ public class FileUtils {
 		try{
 			objectOutputStream.writeObject(list);
 			objectOutputStream.writeObject(SERIAL_VERSION_NUM);
-			objectOutputStream.close();
-			fileOuputStream.close();
+			//objectOutputStream.close();
+			//fileOuputStream.close();
 		}catch(IOException e){
 			e.printStackTrace();
 			throw new IllegalStateException("IOException while writing to file or closing resources");
+		}finally {
+			silentClose(fileOuputStream);
+			silentClose(objectOutputStream);
 		}
 	}
 

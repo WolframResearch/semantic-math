@@ -111,7 +111,7 @@ public class ThmP1 {
 	private static final Path parsedExprFile = Paths.get("src/thmp/data/parsedExpr.txt");
 
 	private static final List<String> unknownWords = new ArrayList<String>();
-	//moving to parseState...
+	
 	private static List<ParsedPair> parsedExpr = new ArrayList<ParsedPair>();
 	
 	private static final ImmutableListMultimap<String, FixedPhrase> fixedPhraseMMap;	
@@ -1387,6 +1387,7 @@ public class ThmP1 {
 			curPair.setNoTexTokenListIndex(i);
 		}/*End of strloop.*/
 		if(DEBUG) System.out.println("ThmP1-noTexSB" +noTexSB);
+		
 		parseState.setCurrentInputSansTex(noTexSB.toString());
 		parseState.addToNumNonTexTokens(numNonTexTokens);
 		

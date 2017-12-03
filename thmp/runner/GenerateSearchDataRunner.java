@@ -37,7 +37,7 @@ public class GenerateSearchDataRunner {
 	private static final double numMiliSecPerHour = 3600000;
 	private static final String UNPACK_SCRIPT_FILE_PATH = "/home/usr0/yihed/thm/unpack2.sh ";
 	private static final Set<String> FILES_TO_KEEP;
-	private static final Pattern FILES_TO_KEEP_REGEX = Pattern.compile(".+\\.(?:mx|ecs|dat|txt|stamp|List)");
+	private static final Pattern FILES_TO_KEEP_REGEX = Pattern.compile(".+(?:mx|ecs|dat|txt|stamp|List)");
 	private static final Pattern CONFIG_COMMENT_PATT = Pattern.compile("^\\s*#.*");
 	//setting e.g. "msc:true"
 	private static final Pattern CONFIG_PATT = Pattern.compile("([^:]+):(.+)");

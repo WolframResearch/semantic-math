@@ -95,8 +95,10 @@ public class DetectHypothesis {
 	private static final String parsedExpressionSerialFileStr = "src/thmp/data/parsedExpressionList";
 	private static final String contextRelationPairSerialFileStr = "src/thmp/data/vecs/contextRelationVecPairList0";
 	private static final String parsedExpressionStringFileStr = "src/thmp/data/parsedExpressionList.txt";
+	
 	public static final String parsedExpressionSerialFileNameStr = "parsedExpressionList";
 	private static final String parsedExpressionStringFileNameStr = "parsedExpressionList.txt";
+	
 	private static final String contextRelationPairSerialFileNameStr = ThmSearch.TermDocumentMatrix.CONTEXT_VEC_PAIR_LIST_FILE_NAME;
 	public static final String allThmNameScrapeSerStr = "src/thmp/data/allThmNameScrape.dat";
 	public static final String allThmNameScrapeTxtStr = "src/thmp/data/allThmNameScrape.txt";
@@ -479,7 +481,7 @@ public class DetectHypothesis {
 				inputFile = new File("/Users/yihed/Downloads/test/1605.01240");
 				inputFile = new File("src/thmp/data/test1.txt");
 				inputFile = new File("/Users/yihed/Downloads/testJavaNov.tex");
-		
+				inputFile = new File("/Users/yihed/Downloads/testJava2.tex");
 		}		
 		List<DefinitionListWithThm> defThmList = new ArrayList<DefinitionListWithThm>();
 		List<ThmHypPair> thmHypPairList = new ArrayList<ThmHypPair>();
@@ -539,8 +541,7 @@ public class DetectHypothesis {
 				//serialize
 				if(!thmNameList.isEmpty()) {
 					
-					FileUtils.serializeObjToFile(thmNameList, inputParams.texFilesDirPath + THM_SCRAPE_SER_FILENAME);
-					
+					FileUtils.serializeObjToFile(thmNameList, inputParams.texFilesDirPath + THM_SCRAPE_SER_FILENAME);					
 					FileUtils.writeToFile(thmNameList, inputParams.texFilesDirPath + THM_SCRAPE_TXT_FILENAME);
 				}
 					//serialize, so don't discard the items already parsed.
@@ -766,8 +767,11 @@ public class DetectHypothesis {
 			String wordThmIndexMMapTxtFileStr = wordThmIndexMMapSerialFileStr
 					.substring(0, wordThmIndexMMapSerialFileStr.length()-3) + "txt";
 			FileUtils.writeToFile(wordThmIndexMMapList, wordThmIndexMMapTxtFileStr);
-			//FileUtils.serializeObjToFile(parsedExpressionList, parsedExpressionSerialFileStr);
+			
 			FileUtils.serializeObjToFile(thmHypPairList, parsedExpressionSerialFileStr);
+			//write parsedExpressionList to file
+			FileUtils.writeToFile(thmHypPairList, parsedExpressionStringFileStr);
+			
 			FileUtils.serializeObjToFile(contextRelationVecPairList, contextRelationPairSerialFileStr);
 			
 			//serialize words used for context vecs
@@ -781,13 +785,10 @@ public class DetectHypothesis {
 			wordMapStringList.add(ALL_THM_WORDS_FREQ_MAP.toString());
 			FileUtils.writeToFile(wordMapStringList, allThmWordsMapStringFileStr);
 			
-			//write parsedExpressionList to file
-			FileUtils.writeToFile(thmHypPairList, parsedExpressionStringFileStr);
-			
 			//write just the thms
 			FileUtils.writeToFile(allThmsStrWithSpaceList, allThmsStringFileStr);
 			//append to stats file!
-			FileUtils.appendObjToFile(stats, statsFileStr);
+			//FileUtils.appendObjToFile(stats, statsFileStr);
 			
 			//FileUtils.writeToFile(ALL_THM_WORDS_LIST, allThmWordsStringFileStr);
 		}catch(Throwable e){

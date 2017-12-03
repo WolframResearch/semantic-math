@@ -341,7 +341,8 @@ public class SearchIntersection {
 		SetMultimap<Integer, String> thmWordsMMap = HashMultimap.create();
 		
 		//take tokens in quotes as literal words
-		List<String> inputWordsList = WordForms.splitThmIntoSearchWordsList(input);
+		
+		List<String> inputWordsList = WordForms.splitThmIntoQuotedSections(input);
 		
 		//int numHighest = NUM_NEAREST_VECS;
 		// whether to skip first token

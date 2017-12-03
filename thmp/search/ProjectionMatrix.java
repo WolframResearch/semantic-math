@@ -396,10 +396,13 @@ public class ProjectionMatrix {
 		/*****/
 		//temporary ugly conversion code for data migration
 		//temporary to account for inconsistency amongst different data files, Nov 29
-		Collection<IndexPartPair> indexPartPairCol = wordThmIndexMMap.get("group");
-		Iterator<IndexPartPair> iter = indexPartPairCol.iterator();
+		//Collection<IndexPartPair> indexPartPairCol = wordThmIndexMMap.get("group");
+		Iterator<Map.Entry<String, IndexPartPair>> iter = wordThmIndexMMap.entries().iterator();
+		//Iterator<IndexPartPair> iter = indexPartPairCol.iterator();
+		if(iter.hasNext()) {
 		try {
-			IndexPartPair p = iter.next();					
+			Map.Entry<String, IndexPartPair> p1 = iter.next();
+			IndexPartPair p = p1.getValue();
 		}catch(java.lang.ClassCastException e) {
 			
 			Multimap<String, Integer> wordThmsIntMultimap = ((List<Multimap<String, Integer>>)
@@ -408,6 +411,7 @@ public class ProjectionMatrix {
 			for(Map.Entry<String, Integer> entry : wordThmsIntMultimap.entries()) {
 				wordThmIndexMMap.put(entry.getKey(), new IndexPartPair(entry.getValue(), ThmPart.STM));
 			}					
+		}
 		}
 		/****/
 		for(String keyWord : wordThmIndexMMap.keySet()){			

@@ -335,7 +335,7 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 				//System.out.println("args[slotArgNum] " + args[slotArgNum]);
 				i++;
 				lastSlotEndIndex = i;
-				//slotCounter++;
+				
 			}else{
 				replacementSB.append(c);				
 			}
@@ -344,7 +344,7 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 			replacementSB.append(templateReplacementString.charAt(templateReplacementStringLen-1));
 		}
 		//System.out.println("replacementSB " + replacementSB + " templateReplacementString "+ templateReplacementString);
-		if(slotCount > 0){
+		if(slotCount > 0 && startingIndex > curIndex){
 			//to counter the i++ in the loop, but only if there is nontrivial parameter to command.
 			startingIndex--;
 		}

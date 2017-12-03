@@ -586,6 +586,42 @@ public class WordForms {
 	}
 	
 	/**
+	 * Splits input into list of tokens, taking any quoted token as a literal
+	 * one-word. E.g. "hi \"apple pie\"" returns ["hi", "apple pie"].
+	 * @param thm
+	 * @return
+	 */
+	public static List<String> splitThmIntoQuotedSections(String thm){
+		
+		int thmLen = thm.length();
+		boolean inQuotes = false;
+		List<String> tokenList = new ArrayList<String>();
+		
+		StringBuilder sb = new StringBuilder(30);
+		
+		for(int i = 0; i < thmLen; i++) {
+			char c = thm.charAt(i);
+			if(c == '"' && !isCharEscaped(thm, i)) {
+				if(inQuotes) {
+					tokenList.add(sb.toString().trim());					
+					inQuotes = false;
+				}else {
+					tokenList.addAll(splitThmIntoSearchWordsList(sb.toString()));					
+					inQuotes = true;
+				}
+				sb = new StringBuilder(30);
+				continue;
+			}
+			sb.append(c);
+		}
+		if(sb.length() > 0) {
+			tokenList.addAll(splitThmIntoSearchWordsList(sb.toString()));
+		}
+		
+		return tokenList;
+	}
+	
+	/**
 	 * Splits input string into tokens. Uniformized across all algorithms.
 	 * Deliberately returns list and not set, to preserve word ordering.
 	 * @param thm

@@ -537,11 +537,8 @@ public class ThmSearch {
 			//discard initial pakets the kernel sends over.
 			ml.discardAnswer();*/
 			WLEvaluationMedium medium = FileUtils.acquireWLEvaluationMedium();
-			//ml = FileUtils.getKernelLinkInstance();
-			
-			//int rowDimension = docMx.length;
+
 			int rowDimension = thmWordsFreqMap.size();
-			//int mxColDim = docMx[0].length;
 			int mxColDim = defThmList.size();
 			
 			//set up the matrix corresponding to docMx, to be SVD'd. 
