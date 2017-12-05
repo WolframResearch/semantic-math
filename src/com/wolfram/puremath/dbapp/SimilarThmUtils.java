@@ -39,8 +39,9 @@ public class SimilarThmUtils {
 	private static final int MAX_THM_INDEX_LIST_LEN;
 	
 	/**This changes as the number of total thms changes,
-	 * 20 if num thms below 1 mil*/
-	private static final int NUM_BITS_PER_INDEX = 20;
+	 * 20 if num thms below 1 mil. 
+	 * Update Dec 4: now at 1.34 million*/
+	private static final int NUM_BITS_PER_INDEX = 21;
 	
 	private static final int NUM_BITS_PER_BYTE = 8;
 	
@@ -91,7 +92,7 @@ public class SimilarThmUtils {
 		int byteArrayLen = byteAr.length;
 		int totalBitsLen = NUM_BITS_PER_BYTE * byteArrayLen;
 		
-		int numTotal = totalBitsLen/20;
+		int numTotal = totalBitsLen/NUM_BITS_PER_INDEX;
 		/* Note: must discard remainder in this division, since the bits padding was put in
 		 * to reach a multiple of 8. 
 		*/
@@ -124,16 +125,20 @@ public class SimilarThmUtils {
 	 * @return
 	 */
 	private static List<Byte> getZeroOneList(byte[] byteAr, int curTupleIndex) {
-		int inArrayShift = curTupleIndex * 20 / 8;
-		if(DEBUG) System.out.println("inArrayShift "+inArrayShift);
-		//the next 20-bit thmIndex starts at index inByteShift in current byte
-		byte inByteShift = (byte)(curTupleIndex * 20 - 8 * inArrayShift);
 		
+		//the next 21-bit thmIndex starts at index inArrayShift in the byte array
+		int inArrayShift = curTupleIndex * NUM_BITS_PER_INDEX / NUM_BITS_PER_BYTE;
+		//the next 21-bit thmIndex starts at index inByteShift in current byte
+		byte inByteShift = (byte)(curTupleIndex * NUM_BITS_PER_INDEX - NUM_BITS_PER_BYTE * inArrayShift);
+		
+		if(DEBUG) {
+			System.out.println("inByteShift "+inByteShift + " inArrayShift "+inArrayShift);
+		}
 		
 		List<Byte> zeroOneList = new ArrayList<Byte>();
 		int curBitCounter = 0;
 		byte curByte = byteAr[inArrayShift];
-		int bitDivider = 8 - inByteShift;
+		int bitDivider = NUM_BITS_PER_BYTE - inByteShift;
 		
 		byte remainder = curByte;
 		//!=0 instead of >=0, since 11111111 will be compared as -1 instead 255.
@@ -146,14 +151,14 @@ public class SimilarThmUtils {
 			remainder -= Math.pow(2, power);
 		}*/
 		
-		for(byte j = inByteShift; j < 8; j++) {
+		for(byte j = inByteShift; j < NUM_BITS_PER_BYTE; j++) {
 			if((remainder >> j & 1) == 1) {
 				byte curBitToSet = (byte)(j - inByteShift);				
 				zeroOneList.add(curBitToSet);
 			}
 		}
 		
-		curBitCounter+=8;
+		curBitCounter += bitDivider;
 		
 		/*for( ; curBitCounter < bitDivider ; curBitCounter++) {			
 			byte tempRem = (byte)(Math.log(curByte) / Math.log(2)); //HERE
@@ -165,14 +170,17 @@ public class SimilarThmUtils {
 				}
 			}
 		}*/
-		outerFor: for(int i = 1; i < 4 && curBitCounter < 20; i++) {
+		final int maxNumBytesSpan = (int)Math.ceil(((double)NUM_BITS_PER_INDEX)/NUM_BITS_PER_BYTE);
+		//4 because 3 is the maximal number of bytes NUM_BITS_PER_INDEX spans
+		outerFor: for(int i = 1; i <= maxNumBytesSpan && curBitCounter < NUM_BITS_PER_INDEX; i++) {
 			curByte = byteAr[inArrayShift+i];
 			remainder = curByte;
 			
-			for(byte j = 0; j < 8; j++) {
+			for(byte j = 0; j < NUM_BITS_PER_BYTE; j++) {
 				if((remainder >> j & 1) == 1) {
-					byte curBitToSet = (byte)(j + bitDivider + 8*(i-1));
-					if(curBitToSet >= 20) {
+					byte curBitToSet = (byte)(j + bitDivider + NUM_BITS_PER_BYTE*(i-1));
+					
+					if(curBitToSet >= NUM_BITS_PER_INDEX) {
 						break outerFor;
 					}
 					zeroOneList.add(curBitToSet);
@@ -187,7 +195,7 @@ public class SimilarThmUtils {
 				zeroOneList.add(curBitToSet);		
 				remainder -= Math.pow(2, power);
 			}	*/
-			curBitCounter += 8;
+			curBitCounter += NUM_BITS_PER_BYTE;
 		}
 		return zeroOneList;
 	}
@@ -224,7 +232,7 @@ public class SimilarThmUtils {
 		}
 		//create byte array, then turn byte array into string
 		
-		byte[] indexByteAr = new byte[thmIndexListLen*20/8+1];
+		byte[] indexByteAr = new byte[thmIndexListLen*NUM_BITS_PER_INDEX/NUM_BITS_PER_BYTE+1];
 		
 		for(int i = 0; i < thmIndexListLen; i++) {
 						
@@ -273,14 +281,14 @@ public class SimilarThmUtils {
 		byte curByte = indexByteAr[inArrayShift];
 		
 		for(int i = 0; i < 4; i++) {		
-			for(; curBitIndex < firstDivider+8*i && curBitIndex < 20; curBitIndex++) {
+			for(; curBitIndex < firstDivider+NUM_BITS_PER_BYTE*i && curBitIndex < NUM_BITS_PER_INDEX; curBitIndex++) {
 				if(zeroOneAr[curBitIndex] == 1) {
-					curByte |= (1 << (curBitIndex + inByteShift - 8*i));
+					curByte |= (1 << (curBitIndex + inByteShift - NUM_BITS_PER_BYTE*i));
 				}
 			}
 			
 			indexByteAr[inArrayShift+i] = curByte;
-			if(curBitIndex >= 20) {
+			if(curBitIndex >= NUM_BITS_PER_INDEX) {
 				break;
 			}
 			curByte = 0;
@@ -345,6 +353,12 @@ public class SimilarThmUtils {
 			thmIndexList.add(rand.nextInt(9000));
 		}
 		
+		//[14785, 269450, 261259, 347843, 131814, 825307, 709281, 608272, 495579, 428534]
+		Integer[] ar = new Integer[] {14785, 269450, 261259, 347843, 131814, 825307, 709281, 608272, 495579, 428534};
+		//ar = new Integer[] {14785, 269450, 261259, 347843};
+		ar = new Integer[] {1, 1, 1, 1978430};
+		//ar = new Integer[] {147850, 347843};
+		thmIndexList = Arrays.asList(ar);
 		System.out.println(thmIndexList);
 		String str = indexListToStr(thmIndexList);
 		
@@ -353,10 +367,9 @@ public class SimilarThmUtils {
 		int thmIndexListSz = thmIndexList.size();
 		for(int i = 0; i < thmIndexListSz; i++) {
 			if(thmIndexList.get(i).intValue() != returnedIndex.get(i).intValue()) {
-				System.out.println(thmIndexList.get(i) + " not equal to " + returnedIndex.get(i));
+				System.out.println(thmIndexList.get(i) + " not equal to " + returnedIndex.get(i) + "!");
 			}
-		}
-		
+		}		
 		System.out.println("returned index: "+returnedIndex);
 	}
 }

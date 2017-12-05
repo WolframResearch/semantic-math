@@ -35,9 +35,10 @@ public class SimilarThmUtilsTest {
 		List<Integer> thmIndexList = new ArrayList<Integer>();
 		//String inputStr = "locally convex space";
 		//testSearch(inputStr);
-		for(int i= 0; i  < 10; i++) {
+		int upperBound = (int)Math.pow(2, 21);
+		for(int i= 0; i  < 100; i++) {
 			//thmIndexList.add(1000000);
-			thmIndexList.add(rand.nextInt(700000));
+			thmIndexList.add(rand.nextInt(upperBound));
 		}
 		checkStringRep(thmIndexList);
 	}
