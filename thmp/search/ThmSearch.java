@@ -556,7 +556,6 @@ public class ThmSearch {
 			
 			//ml.evaluate(mxSB.toString()); //mxSB.append(";") here causes memory bloat?!			
 			evaluateWLCommand(medium, FULL_TERM_DOCUMENT_MX_NAME + "=" + mxSB.toString(), false, true);
-			//System.out.println("ThmSearch.TermDocumentMatrix.SparseArray formed: " + mxSB);
 			
 			msg = "Kernel has the matrix!";
 			logger.info(msg);

@@ -450,10 +450,13 @@ public class SearchIntersection {
 		}
 		// add bonus points to thms with most number of query words, judging
 		// from size of value set in thmWordSpanMMap
-		addWordSpanBonus(searchState, thmScoreMap, scoreThmMMap, thmWordSpanMMap, thmSpanMap, numHighest,
-				((double) totalWordsScore) / numWordsAdded, inputWordsArSz);
-		
-		searchState.addThmSpan(thmSpanMap);		
+		if(searchState.allowLiteralSearch()) {
+			addWordSpanBonus(searchState, thmScoreMap, scoreThmMMap, thmWordSpanMMap, thmSpanMap, numHighest,
+					((double) totalWordsScore) / numWordsAdded, inputWordsArSz);
+		}else {
+			computeLargestSpan(searchState, thmWordSpanMMap, thmSpanMap);
+		}
+		searchState.addThmSpan(thmSpanMap);	
 		searchState.setThmScoreMap(thmScoreMap);
 		int resultWordSpan = searchState.largestWordSpan();
 		/**short circuit if number of token below threshold*/
@@ -479,32 +482,34 @@ public class SearchIntersection {
 				if(counter-- < 1 && !topScorer){
 					break outerWhile;
 				}
-				if(!topScorer) {
-					//prune away irelevant results
-					List<String> thmWords = new ArrayList<String>(thmWordsMMap.get(thmIndex));
-					
-					//note low scorers can combine to form , e.g. "vanish" and
-					//"module". 
-					if(inputWordsArSz > 1 && 
-							thmWords.size() == 1 ) {
-						String word = thmWords.get(0);						
-						final int lowScoreThreshold = 3;
-						Integer wordScore = wordsScoreMap.get(word);
-						if(null == wordScore || wordScore <= lowScoreThreshold 
-								|| WordForms.genericSearchTermsSet().contains(word)) {
-							continue innerFor;
-						}
-					}
-					if(inputWordsArSz > 2 && thmWords.size() < 3) {
-						boolean allWordsLowScore = true;
-						for(String word : thmWords) {						
-							if(!WordForms.genericSearchTermsSet().contains(word)) {
-								allWordsLowScore = false;
-								break;
+				if(searchState.allowLiteralSearch()) {
+					if(!topScorer) {
+						//prune away irelevant results
+						List<String> thmWords = new ArrayList<String>(thmWordsMMap.get(thmIndex));
+						
+						//note low scorers can combine to form , e.g. "vanish" and
+						//"module". 
+						if(inputWordsArSz > 1 && thmWords.size() == 1 ) {
+							
+							String word = thmWords.get(0);						
+							final int lowScoreThreshold = 3;
+							Integer wordScore = wordsScoreMap.get(word);
+							if(null == wordScore || wordScore <= lowScoreThreshold 
+									|| WordForms.genericSearchTermsSet().contains(word)) {
+								continue innerFor;
 							}
 						}
-						if(allWordsLowScore) {
-							continue innerFor;
+						if(inputWordsArSz > 2 && thmWords.size() < 3) {
+							boolean allWordsLowScore = true;
+							for(String word : thmWords) {						
+								if(!WordForms.genericSearchTermsSet().contains(word)) {
+									allWordsLowScore = false;
+									break;
+								}
+							}
+							if(allWordsLowScore) {
+								continue innerFor;
+							}
 						}
 					}
 				}
@@ -606,20 +611,8 @@ public class SearchIntersection {
 			SetMultimap<Integer, Integer> thmWordSpanMMap, Map<Integer, Integer> thmSpanMap, int numHighest,
 			double avgWordScore, int inputWordsArSz) {
 		// add according to score
-		// gather the sizes of the value maps for thmWordSpanMMap, and keep
-		// track of order based on scores using a TreeMultimap
-		TreeMultimap<Integer, Integer> spanScoreThmMMap = TreeMultimap.create();
-		int largestWordSpan = 0;
-		for (int thmIndex : thmWordSpanMMap.keySet()) {
-			// System.out.println(thmWordSpanMMap.get(thmIndex));
-			int thmWordsSetSize = thmWordSpanMMap.get(thmIndex).size();
-			thmSpanMap.put(thmIndex, thmWordsSetSize);
-			if(thmWordsSetSize > largestWordSpan){
-				largestWordSpan = thmWordsSetSize;
-			}
-			spanScoreThmMMap.put(thmWordsSetSize, thmIndex);
-		}
-		searchState.setLargestWordSpan(largestWordSpan);
+		
+		int largestWordSpan = computeLargestSpan(searchState, thmWordSpanMMap, thmSpanMap);
 		//short-circuit is span insufficient
 		if(searchState.allowLiteralSearch() && LiteralSearch.spanBelowThreshold(largestWordSpan, inputWordsArSz)) {
 			return;
@@ -664,6 +657,31 @@ public class SearchIntersection {
 		}		
 		scoreThmMMap.putAll(tempScoreThmMMap);
 		
+	}
+
+	/**
+	 * // gather the sizes of the value maps for thmWordSpanMMap, and keep
+		// track of order based on scores using a TreeMultimap
+	 * @param searchState
+	 * @param thmWordSpanMMap
+	 * @param thmSpanMap
+	 * @return
+	 */
+	private static int computeLargestSpan(SearchState searchState, SetMultimap<Integer, Integer> thmWordSpanMMap,
+			Map<Integer, Integer> thmSpanMap) {
+		int largestWordSpan = 0;
+		TreeMultimap<Integer, Integer> spanScoreThmMMap = TreeMultimap.create();
+		for (int thmIndex : thmWordSpanMMap.keySet()) {
+			// System.out.println(thmWordSpanMMap.get(thmIndex));
+			int thmWordsSetSize = thmWordSpanMMap.get(thmIndex).size();
+			thmSpanMap.put(thmIndex, thmWordsSetSize);
+			if(thmWordsSetSize > largestWordSpan){
+				largestWordSpan = thmWordsSetSize;
+			}
+			spanScoreThmMMap.put(thmWordsSetSize, thmIndex);
+		}
+		searchState.setLargestWordSpan(largestWordSpan);
+		return largestWordSpan;
 	}
 
 	/**

@@ -1,15 +1,17 @@
 package thmp.test;
 
+import org.junit.Test;
+
 import thmp.utils.MacrosTrie;
 import thmp.utils.MacrosTrie.MacrosTrieBuilder;
 
 public class TestMacrosTrie {
 
 	public static void main(String[] args) {
-		f();
+		parseMacros();
 	}
 	
-	private static String f() {
+	private static String parseMacros() {
 		
 		MacrosTrieBuilder macrosTrieBuilder = new MacrosTrieBuilder();
 		/*
@@ -36,6 +38,7 @@ public class TestMacrosTrie {
 		return replacedStr;
 	}
 	
+	@Test
 	public void test1() {
 		String commandStr = "\\wh";
 		String replacementStr = "\\widehat{#1}";

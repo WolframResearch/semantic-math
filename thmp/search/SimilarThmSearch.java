@@ -27,6 +27,7 @@ import thmp.parse.ThmP1;
 import thmp.parse.ParseState.ParseStateBuilder;
 import thmp.search.SearchCombined.ThmHypPair;
 import thmp.search.SearchState.SearchStateBuilder;
+import thmp.search.Searcher.QueryVecContainer;
 import thmp.utils.DBUtils;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
@@ -134,11 +135,21 @@ public class SimilarThmSearch {
 		
 		boolean isVerbose = DEBUG;
 		
+		/*deliberately don't clean up parseState inbetween thmPieces, to preserve state.*/
 		for(String str : thmPieces) {
+			int strLen = str.length();
+			if(strLen < 10) {
+				continue;
+			}
 			//divide thm string into several parts, to target search results specifically
 			str = chopThmStr(str, parseState);
 			//must parse current str *after* symbol replacement, to not replace def in current str.
 			ParseRun.parseInput(str, parseState, isVerbose);
+			
+			if(parseState.curParseExcessiveLatex()) {
+				parseState.setCurParseExcessiveLatex(false);
+				continue;
+			}
 			
 			//weigh depending on hyp or stm, prioritize stm
 			//result of intersection search
@@ -152,42 +163,52 @@ public class SimilarThmSearch {
 			searchState.setParseState(parseState);
 			
 			//intentional null for Searcher<Map<Integer, Integer>> 
-			thmIndexList = ContextSearch.contextSearchMap(str, thmIndexList, 
-					null, searchState);
-			Map<Integer, Integer> curContextScoreMap = searchState.contextVecScoreMap();
+			//but null forces it to parse again!!
+			/*Searcher<Map<Integer, Integer>> searcher;
+			searcher.setSearcherState(new QueryVecContainer<Map<Integer, Integer>>(queryContextVecMap));			
+			ContextSearch.contextSearchMap(str, thmIndexList, 
+					null, searchState);*/
 			
-			//don't need below, Nov 24, delete soon
-			/*TreeMap<Integer, List<Integer>> contextScoreIndexTMap = searchState.contextScoreIndexTMap();
-			Iterator<Map.Entry<Integer, List<Integer>>> contextTMapIter = contextScoreIndexTMap.entrySet().iterator();			
-			while(contextTMapIter.hasNext()) {
-				Map.Entry<Integer, List<Integer>> entry = contextTMapIter.next();
-				int score = entry.getKey();
-				if(score == 0) {
-					intersectionSortedList.addAll(entry.getValue());
-					break;
-				}
-				contextSortedList.addAll(entry.getValue());
-			}*/
-			
-			Map<Integer, Integer> contextScoreMap = ifLowerPriorityMap(str) 
-					? hypContextScoreMap : stmContextScoreMap;
-			
-			//some thms don't parse to produce meaningful context vecs
-			if(null != curContextScoreMap) {
-				for(Map.Entry<Integer, Integer> entry : curContextScoreMap.entrySet()) {
-					int curThmIndex = entry.getKey();
-					Map<Integer, Integer> tempMap = contextScoreMap;
-					//experiment and pull out this constant!
-					if(thmSpanMap.get(curThmIndex) <= maxThmSpan * .34) {
-						tempMap = hypContextScoreMap;
+			Map<Integer, Integer> contextVecMap = parseState.getCurThmCombinedContextVecMap();
+			if(null != contextVecMap) {
+				
+				Map<Integer, Integer> contextVecScoreMap = new HashMap<Integer, Integer>();
+	
+				ContextSearch.computeContextVecScoreMap(thmIndexList,
+						thmIndexList.size(), contextVecMap, contextVecScoreMap);
+				
+				//don't need below, Nov 24, delete soon
+				/*TreeMap<Integer, List<Integer>> contextScoreIndexTMap = searchState.contextScoreIndexTMap();
+				Iterator<Map.Entry<Integer, List<Integer>>> contextTMapIter = contextScoreIndexTMap.entrySet().iterator();			
+				while(contextTMapIter.hasNext()) {
+					Map.Entry<Integer, List<Integer>> entry = contextTMapIter.next();
+					int score = entry.getKey();
+					if(score == 0) {
+						intersectionSortedList.addAll(entry.getValue());
+						break;
 					}
-					//note this double-counts relations that occur in different pieces
-					Integer curScore = tempMap.get(curThmIndex);
-					if(null == curScore) {
-						tempMap.put(curThmIndex, entry.getValue());
-					}else {
-						tempMap.put(curThmIndex, entry.getValue() + curScore);			
-					}
+					contextSortedList.addAll(entry.getValue());
+				}*/
+				
+				Map<Integer, Integer> contextScoreMap = ifLowerPriorityMap(str) 
+						? hypContextScoreMap : stmContextScoreMap;
+				
+				//some thms don't parse to produce meaningful context vecs
+				
+				for(Map.Entry<Integer, Integer> entry : contextVecScoreMap.entrySet()) {
+						int curThmIndex = entry.getKey();
+						Map<Integer, Integer> tempMap = contextScoreMap;
+						//experiment and pull out this constant!
+						if(thmSpanMap.get(curThmIndex) <= maxThmSpan * .34) {
+							tempMap = hypContextScoreMap;
+						}
+						//note this double-counts relations that occur in different pieces
+						Integer curScore = tempMap.get(curThmIndex);
+						if(null == curScore) {
+							tempMap.put(curThmIndex, entry.getValue());
+						}else {
+							tempMap.put(curThmIndex, entry.getValue() + curScore);			
+						}
 				}
 			}
 			//keep the ones with high context vec score, else sort the others according to
@@ -327,8 +348,7 @@ public class SimilarThmSearch {
 		searchStateBuilder.disableLiteralSearch();
 		SearchState searchState = searchStateBuilder.build();
 		
-		boolean contextSearchBool = false; 
-		
+		boolean contextSearchBool = false;		
 		boolean searchRelationalBool = false;
 		//improve intersection search to return more pertinent results!!
 		SearchIntersection.intersectionSearch(str, searchWordsSet, searchState, contextSearchBool, 

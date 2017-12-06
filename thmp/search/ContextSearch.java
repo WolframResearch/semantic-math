@@ -113,8 +113,46 @@ public class ContextSearch implements Searcher<Map<Integer, Integer>>{
 			//System.out.println("ContextSearch-selected thm indices: " + nearestThmIndexList);
 			System.out.println("ContextSearch - queryContextVecMap " +queryContextVecMap);
 		}
-		TreeMap<Integer, List<Integer>> thmVecsTMap = new TreeMap<Integer, List<Integer>>(new thmp.utils.DataUtility.ReverseIntComparator());
 		Map<Integer, Integer> contextVecScoreMap = new HashMap<Integer, Integer>();
+
+		TreeMap<Integer, List<Integer>> thmVecsTMap = computeContextVecScoreMap(nearestThmIndexList,
+				nearestThmIndexListSz, queryContextVecMap, contextVecScoreMap);
+		
+		searchState.setContextVecScoreMap(contextVecScoreMap);
+		searchState.setContextScoreIndexTMap(thmVecsTMap);
+		//coalesce map entries into one list. Iterator respects order.
+		List<Integer> nearestVecList = new ArrayList<Integer>();
+		for(Map.Entry<Integer, List<Integer>> entry : thmVecsTMap.entrySet()){
+			nearestVecList.addAll(entry.getValue());			
+		}
+		
+		if(false && DEBUG) {
+			System.out.println("ContextSearch - nearestContextVecs: " 
+					+ " Thms, including hyp: ");
+			for(int i = 0; i < nearestVecList.size(); i++){
+				int thmIndex = nearestVecList.get(i);
+				System.out.println(thmIndex + " " + ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex));
+			}
+		}
+		if(!nearestVecList.isEmpty()){
+			return nearestVecList;
+		}else{
+			return nearestThmIndexList;
+		}
+	}
+
+	/**
+	 * Computes context vec scores for list of theorems, given the query context vec map.
+	 * @param nearestThmIndexList
+	 * @param nearestThmIndexListSz
+	 * @param queryContextVecMap
+	 * @param contextVecScoreMap
+	 * @return
+	 */
+	public static TreeMap<Integer, List<Integer>> computeContextVecScoreMap(List<Integer> nearestThmIndexList,
+			int nearestThmIndexListSz, Map<Integer, Integer> queryContextVecMap,
+			Map<Integer, Integer> contextVecScoreMap) {
+		TreeMap<Integer, List<Integer>> thmVecsTMap = new TreeMap<Integer, List<Integer>>(new thmp.utils.DataUtility.ReverseIntComparator());
 		
 		//extract context vec maps for each thm
 		for(int i = 0; i < nearestThmIndexListSz; i++){
@@ -162,28 +200,7 @@ public class ContextSearch implements Searcher<Map<Integer, Integer>>{
 			}
 			contextVecScoreMap.put(thmIndex, numCoinciding);
 		}
-		
-		searchState.setContextVecScoreMap(contextVecScoreMap);
-		searchState.setContextScoreIndexTMap(thmVecsTMap);
-		//coalesce map entries into one list. Iterator respects order.
-		List<Integer> nearestVecList = new ArrayList<Integer>();
-		for(Map.Entry<Integer, List<Integer>> entry : thmVecsTMap.entrySet()){
-			nearestVecList.addAll(entry.getValue());			
-		}
-		
-		if(false && DEBUG) {
-			System.out.println("ContextSearch - nearestContextVecs: " 
-					+ " Thms, including hyp: ");
-			for(int i = 0; i < nearestVecList.size(); i++){
-				int thmIndex = nearestVecList.get(i);
-				System.out.println(thmIndex + " " + ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex));
-			}
-		}
-		if(!nearestVecList.isEmpty()){
-			return nearestVecList;
-		}else{
-			return nearestThmIndexList;
-		}
+		return thmVecsTMap;
 	}
 	
 	/**

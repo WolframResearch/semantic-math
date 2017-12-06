@@ -161,7 +161,7 @@ public class DetectHypothesis {
 
 	static{
 		FileUtils.set_dataGenerationMode();	
-		ALL_THM_WORDS_FREQ_MAP = CollectThm.ThmWordsMaps.get_docWordsFreqMap();//.get_contextVecWordsNextTimeMap();
+		ALL_THM_WORDS_FREQ_MAP = CollectThm.ThmWordsMaps.get_docWordsFreqMap();
 		
 		//Stop words used when scraping theorem names.
 		String[] beforeStopWordsAR = new String[]{"by", "of","to","above","in", "By", "with", "is", "from",
@@ -271,9 +271,7 @@ public class DetectHypothesis {
 		static final DefinitionListWithThm PLACEHOLDER_DEF_LIST_WITH_THM 
 			= new DefinitionListWithThm("", Collections.<VariableDefinition>emptyList(), "", "");
 		
-		private String thmStr;		
-		//thmStr, with definition strings prepended.
-		//private transient String thmWithDefStr;
+		private String thmStr;
 		
 		private String definitionStr;
 		//name of source file from which thm is extracted.
@@ -285,7 +283,6 @@ public class DetectHypothesis {
 				String definitionStr_, String srcFileName_){
 			this.thmStr = thmStr;
 			this.definitionList = definitionList;
-			//this.thmWithDefStr = definitionStr_ + " " + thmStr;
 			this.definitionStr = definitionStr_;
 			this.srcFileName = srcFileName_;
 		}
@@ -722,7 +719,6 @@ public class DetectHypothesis {
 			logger.error(e.getStackTrace());
 		}		
 		DefinitionListWithThmStrList.add(defThmList.toString()+ "\n");
-		//return stats;
 	}
 
 	/**
@@ -732,8 +728,7 @@ public class DetectHypothesis {
 	 * the same source with the same settings.
 	 * @param pathToProjectionMx path to  projection mx, if specified.
 	 */
-	private static void serializeDataToFile(Stats stats, //List<DefinitionListWithThm> defThmList,
-			List<ThmHypPair> thmHypPairList,
+	private static void serializeDataToFile(Stats stats, List<ThmHypPair> thmHypPairList,
 			InputParams inputParams, SearchDataRunnerConfig runnerConfig) {
 		
 		String pathToProjectionMx = inputParams.getPathToProjectionMx();
@@ -788,7 +783,7 @@ public class DetectHypothesis {
 			//write just the thms
 			FileUtils.writeToFile(allThmsStrWithSpaceList, allThmsStringFileStr);
 			//append to stats file!
-			//FileUtils.appendObjToFile(stats, statsFileStr);
+			//FileUtils.appendObjToFile(stats, statsFileStr); <--cmmented out Dec 2017
 			
 			//FileUtils.writeToFile(ALL_THM_WORDS_LIST, allThmWordsStringFileStr);
 		}catch(Throwable e){
