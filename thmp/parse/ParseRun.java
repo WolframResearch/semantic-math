@@ -1,6 +1,7 @@
 package thmp.parse;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -99,6 +100,7 @@ public class ParseRun {
 			strAr = new String[]{st};
 		}else{
 			strAr = ThmP1.preprocess(st);
+			//System.out.println("Result of PREPROCESSING " + Arrays.toString(strAr));
 		}
 		
 		for(int i = 0; i < strAr.length; i++){

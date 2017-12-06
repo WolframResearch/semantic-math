@@ -489,6 +489,19 @@ public class ParseState {
 	}
 	
 	/**
+	 * Get the context vec map for the last component processed, *not* combined over 
+	 * all components parsed by this ParseState instance.
+	 * @return the relationalContextVec map
+	 */
+	public Map<Integer, Integer> getLatestThmContextVecMap() {
+		
+		if(this.thmContextVecMapList.isEmpty()) {
+			return Collections.emptyMap();
+		}
+		return this.thmContextVecMapList.get(this.thmContextVecMapList.size() - 1);
+	}
+	
+	/**
 	 * Adds a context vec to the parse of current thm, since each thm likely consists
 	 * of several parts.
 	 * @param contextVec
@@ -1035,7 +1048,6 @@ public class ParseState {
 		this.noTexTokenStructAr = null;
 		this.syntaxnetQuery = null;
 		this.curParseExcessiveLatex = false;
-		logger.info("(cleanup)@@@headParseStruct" + headParseStruct);
 	}	
 	
 	/**

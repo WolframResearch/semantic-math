@@ -40,10 +40,11 @@ import thmp.utils.WordForms;
  */
 public class SimilarThmSearch {
 
-	private static final int numHighestResults = 50;
+	private static final int numHighestResultsPerComponent = 51;
 	private static final boolean DEBUG = FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : false;
 	//private static final boolean DEBUG = false;
 	private static final Logger logger = LogManager.getLogger(SimilarThmSearch.class);
+	private static final int maxSimilarThmCount = SimilarThmUtils.maxSimilarThmListLen();
 	
 	private static final Pattern HYP_PATTERN = Pattern.compile("(?:assume|denote|define|let|is said|suppose"
 			+ "|is called|if|given)");
@@ -88,19 +89,21 @@ public class SimilarThmSearch {
 			to get ranking.
 		 */		
 		ThmHypPair thmHypPair = ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex);
-		//String thmStr = thmHypPair.getEntireThmStr();
 		
 		String thmStr = thmHypPair.thmStr();
 		if(DEBUG) System.out.println("QUERY THM: " + thmHypPair.getEntireThmStr());
-		
+		//prune away lesser ranked intersectionList elements
+		//int maxSimilarThmCount = SimilarThmUtils.maxSimilarThmListLen();
+				
 		List<Integer> combinedList = new ArrayList<Integer>();		
 		getSimilarComponent(thmIndex, thmStr, combinedList);
 		
-		thmStr = thmHypPair.hypStr();
-		getSimilarComponent(thmIndex, thmStr, combinedList);
+		if(combinedList.size() < maxSimilarThmCount) {
+			thmStr = thmHypPair.hypStr();
+			getSimilarComponent(thmIndex, thmStr, combinedList);
+		}
 		
-		//prune away lesser ranked intersectionList elements
-		int maxSimilarThmCount = SimilarThmUtils.maxSimilarThmListLen();
+		System.out.println("SimilarThmSearch - combinedList.size " + combinedList.size());
 		if(combinedList.size() > maxSimilarThmCount) {
 			List<Integer> tempList = new ArrayList<Integer>();
 			for(int i = 0; i < maxSimilarThmCount; i++) {
@@ -117,8 +120,7 @@ public class SimilarThmSearch {
 	 * @param thmStr
 	 * @return
 	 */
-	private static void getSimilarComponent(int thmIndex, String thmStr,
-			List<Integer> combinedList) {
+	private static void getSimilarComponent(int thmIndex, String thmStr, List<Integer> combinedList) {
 		//keep a running parse state to collect variable definitions.
 		ParseStateBuilder parseStateBuilder = new ParseStateBuilder();
 		ParseState parseState = parseStateBuilder.build();
@@ -132,17 +134,30 @@ public class SimilarThmSearch {
 		/* Divides thm into pieces, i.e. logical components, e.g.
 		 * "if ... ", and "then ..." */
 		String[] thmPieces = ThmP1.preprocess(thmStr);
+		List<String> thmPiecesList = new ArrayList<String>();
+		
+		for(String component : thmPieces) {
+			thmPiecesList.add(component);
+		}
+		thmPiecesList.sort(new thmp.utils.DataUtility.StringLenComparator());
+		int listSz = thmPiecesList.size();
 		
 		boolean isVerbose = DEBUG;
 		
 		/*deliberately don't clean up parseState inbetween thmPieces, to preserve state.*/
-		for(String str : thmPieces) {
+		for(int i = 0; i < listSz; i++) {
+			String str = thmPiecesList.get(i);
 			int strLen = str.length();
 			if(strLen < 10) {
 				continue;
 			}
-			//divide thm string into several parts, to target search results specifically
-			str = chopThmStr(str, parseState);
+			if(thmScoreMap.size() > maxSimilarThmCount * 1.5) {
+				break;
+			}
+			
+			//replace variables by their names.
+			//** commented out Dec 6, to decrease processing time str = chopThmStr(str, parseState);
+			
 			//must parse current str *after* symbol replacement, to not replace def in current str.
 			ParseRun.parseInput(str, parseState, isVerbose);
 			
@@ -159,8 +174,8 @@ public class SimilarThmSearch {
 			//max span amongst any thms amongst returned results.
 			int maxThmSpan = gatherThmFromWords(str, thmIndexList, thmScoreMap, thmSpanMap);	
 			
-			SearchState searchState = new SearchState();
-			searchState.setParseState(parseState);
+			/*SearchState searchState = new SearchState();
+			searchState.setParseState(parseState);*/
 			
 			//intentional null for Searcher<Map<Integer, Integer>> 
 			//but null forces it to parse again!!
@@ -169,11 +184,10 @@ public class SimilarThmSearch {
 			ContextSearch.contextSearchMap(str, thmIndexList, 
 					null, searchState);*/
 			
-			Map<Integer, Integer> contextVecMap = parseState.getCurThmCombinedContextVecMap();
-			if(null != contextVecMap) {
-				
-				Map<Integer, Integer> contextVecScoreMap = new HashMap<Integer, Integer>();
-	
+			Map<Integer, Integer> contextVecMap = parseState.getLatestThmContextVecMap();
+			
+			if(!contextVecMap.isEmpty()) {		
+				Map<Integer, Integer> contextVecScoreMap = new HashMap<Integer, Integer>();	
 				ContextSearch.computeContextVecScoreMap(thmIndexList,
 						thmIndexList.size(), contextVecMap, contextVecScoreMap);
 				
@@ -214,11 +228,11 @@ public class SimilarThmSearch {
 			//keep the ones with high context vec score, else sort the others according to
 			//intersection scores.							
 		}
-		//list of holdover thms with lower priority.
-		//List<Integer> holdOverList = new ArrayList<Integer>();
 		
 		addSimilarComponentsToMaps(combinedList, thmIndex, thmScoreMap, stmContextScoreMap);
-		addSimilarComponentsToMaps(combinedList, thmIndex, thmScoreMap, hypContextScoreMap);
+		if(combinedList.size() < maxSimilarThmCount) {
+			addSimilarComponentsToMaps(combinedList, thmIndex, thmScoreMap, hypContextScoreMap);
+		}
 		
 		if(DEBUG) {
 			List<ThmHypPair> thmHypPairList = SearchCombined.thmListIndexToThmHypPair(combinedList);
@@ -250,8 +264,8 @@ public class SimilarThmSearch {
 		
 		contextSortedList.addAll(contextScoreMap.keySet());
 		
-		TreeMap<Integer, List<Integer>> contextScoreThmTMap 
-			= new TreeMap<Integer, List<Integer>>(new thmp.utils.DataUtility.ReverseIntComparator());
+		//TreeMap<Integer, List<Integer>> contextScoreThmTMap 
+		//	= new TreeMap<Integer, List<Integer>>(new thmp.utils.DataUtility.ReverseIntComparator());
 		
 		//take out list if 
 		//Combine maps, prune away ones with low intersection scores 
@@ -316,7 +330,7 @@ public class SimilarThmSearch {
 	private static boolean ifLowerPriorityMap(String inputStr){
 		String inputLower = inputStr.toLowerCase();
 		int strLen = inputStr.length();
-		if( strLen < 30) {
+		if( strLen < 26) {
 			return true;
 		}
 		if(strLen < 45 && !inputLower.contains(" then ") 
@@ -352,7 +366,7 @@ public class SimilarThmSearch {
 		boolean searchRelationalBool = false;
 		//improve intersection search to return more pertinent results!!
 		SearchIntersection.intersectionSearch(str, searchWordsSet, searchState, contextSearchBool, 
-				searchRelationalBool, numHighestResults/2);
+				searchRelationalBool, numHighestResultsPerComponent);
 		
 		List<Integer> intersectionList = searchState.intersectionVecList();
 		
@@ -372,13 +386,11 @@ public class SimilarThmSearch {
 			}else {
 				allThmScoreMap.put(index, curScore + entry.getValue());
 			}
-		}
-		
+		}		
 		return searchState.largestWordSpan();
 	}
 	
 	/**
-	 * 
 	 * 
 	 * Emphasize on conclusions and properties, over defining statements
 	 * e.g. "let A be ...". Try substituting definitions in, for context 

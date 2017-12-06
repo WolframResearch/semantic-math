@@ -326,26 +326,21 @@ public class SearchIntersection {
 			return null;
 		}
 		input = input.toLowerCase();
-		// map containing the indices of theorems added so far, where values are
-		// sets (hashset)
-		// of indices of words that have been added. This is to reward theorems
-		// that cover
-		// the more number of words. Actually just use SetMultimap.
-		// if 2/3-grams added, add indices of all words in 2/3-gram to set for
-		// that thm.
-		//logger.info("Starting intersection search...");
+		
 		/*Multimap of thmIndex, and the (index of) set of words in query 
 		 that appear in the thm*/
 		SetMultimap<Integer, Integer> thmWordSpanMMap = HashMultimap.create();
 		/*To use for pruning probably irrelevant results*/
 		SetMultimap<Integer, String> thmWordsMMap = HashMultimap.create();
 		
+		List<String> inputWordsList;
 		//take tokens in quotes as literal words
-		
-		List<String> inputWordsList = WordForms.splitThmIntoQuotedSections(input);
-		
-		//int numHighest = NUM_NEAREST_VECS;
-		// whether to skip first token
+		if(searchState.allowLiteralSearch()) {
+			inputWordsList = WordForms.splitThmIntoQuotedSections(input);
+		}else {		
+			inputWordsList = WordForms.splitThmIntoSearchWordsList(input);
+		}
+		// determines whether to skip first token
 		int firstIndex = 0;
 		
 		/*
@@ -479,8 +474,10 @@ public class SearchIntersection {
 			int curScore = descendingKeySetIter.next();
 			Collection<Integer> thmIndices = scoreThmMMap.get(curScore);
 			innerFor: for(int thmIndex : thmIndices){
-				if(counter-- < 1 && !topScorer){
-					break outerWhile;
+				if(counter-- < 1 ){
+					if(!topScorer || !searchState.allowLiteralSearch()) {
+						break outerWhile;						
+					}
 				}
 				if(searchState.allowLiteralSearch()) {
 					if(!topScorer) {
@@ -536,7 +533,9 @@ public class SearchIntersection {
 			for (ThmSpanPair pair : entry.getValue()) {
 				Integer thmIndex = pair.thmIndex;
 				if (counter-- < 1 && !topScorer){
-					break outerWhile;
+					if(!topScorer || !searchState.allowLiteralSearch()) {
+						break outerWhile;
+					}
 				}
 				// avoid duplicates, since the scoreThmMMap leaves outdated
 				// score-thm pair in map, rather than deleting them, after
@@ -733,10 +732,8 @@ public class SearchIntersection {
 			wordSingForm = WordForms.getSingularForm(word);
 			Integer wordSingFormScore = wordsScoreMap.get(wordSingForm);
 			
-			if (null != wordSingFormScore) {				
-				//wordThms = wordThmMMap.get(singFormLong);
-				wordThms = wordThmsIndexMMap1.get(wordSingForm);				
-				// wordScore = wordsScoreMap.get(singFormLong);
+			if (null != wordSingFormScore) {
+				wordThms = wordThmsIndexMMap1.get(wordSingForm);	
 				wordScore = wordSingFormScore;
 				curScoreToAdd = wordScore;
 				word = wordSingForm;

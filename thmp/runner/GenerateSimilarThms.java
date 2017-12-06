@@ -48,7 +48,7 @@ public class GenerateSimilarThms {
 		int totalThmCount = ThmHypPairGet.totalThmsCount();
 		int totalBundles = (int)Math.ceil(((double)totalThmCount) / numThmPerBundle);
 		//3 on Dec 5
-		for(int j = 3; j < totalBundles; j++) {
+		for(int j = 12; j < totalBundles; j++) {
 			
 			Map<Integer, byte[]> similarThmsMap = new HashMap<Integer, byte[]>();
 			int endingIndex = Math.min(totalThmCount, (j+1)*numThmPerBundle);

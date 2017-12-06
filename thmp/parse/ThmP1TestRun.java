@@ -884,14 +884,13 @@ public class ThmP1TestRun {
 			st = "eigenvalues are homogeneous elements with valuation equal to the loop index";
 			st = "Riemannian Dirac operator act in kernel of the dirac operator"; //add to test!
 			st = "field extends in ring";
-			st = "let $f$ be a function. $f$ is smooth";
 			st = "it has only Morse critical points";
 			//this causes inf loop: st = "Now we can use fundamental solutions and their properties to define a pair of operators that will allow us to 
 			//obtain the full set of solutions of the homogeneous Cauchy problems with compactly supported initial data starting from the space of compactly supported sections";
 			st = "Cauchy problems with compactly supported initial data starting from the space of compactly supported sections";
 			st = "Now we can use fundamental solutions and their properties to define a pair of operators that will allow us to "
 					+ "obtain the full set of solutions of the homogeneous Cauchy problems with compactly supported initial data starting from the space of compactly supported sections";
-			
+			st = "let $f$ be a : function. $f$ is smooth";
 			
 			//st = "that will allow us to obtain the full set of solutions of the homogeneous Cauchy problems with compactly supported initial";
 //of the homogeneous Cauchy problems with compactly supported initial

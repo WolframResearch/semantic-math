@@ -1,5 +1,6 @@
 package thmp.utils;
 
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -46,6 +47,23 @@ public class DataUtility {
 		}
 	}
 	
+	/**
+	 * Comparator of a Collection of Strings based on lengths of these Strings.
+	 * @author yihed
+	 */
+	public static class StringLenComparator implements Comparator<String>{
+		
+		/**
+		 * Longer lengths get higher priority when using default collection.sort().
+		 */
+		@Override
+		public int compare(String a, String b){
+			int aLen = a.length();
+			int bLen = b.length();
+			return aLen < bLen ? 1 : (aLen > bLen ? -1 : 0);
+		}
+	}
+
 	/**
 	 * Compares integers based on two given maps, prioritize map 1.
 	 * Useful for e.g. ranking thm indices, based on some scoring map.
