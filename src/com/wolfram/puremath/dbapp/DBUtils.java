@@ -41,6 +41,8 @@ public class DBUtils {
 		/**relative (to ~/thm) path to serialization file containing thm index, and string of list of 
 		 * indices of similar thms */
 		public static final String similarThmIndexByteArrayPath = "src/thmp/data/similarThmIndexByteArray.dat";
+		//to be used as root path for serialized maps. change the capitalizatio 
+		public static final String similarThmIndexByteArrayPathNoDat = "src/thmp/data/similarThms/similarThmIndexByteArray";
 		public static final String TB_NAME = "similarThmsTb";
 		/**thm index*/
 		public static final String INDEX_COL = "thmIndex";

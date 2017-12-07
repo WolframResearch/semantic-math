@@ -46,9 +46,10 @@ public class SimilarThmUtils {
 	private static final int NUM_BITS_PER_BYTE = 8;
 	
 	private static final Charset INDEX_STR_CHAR_SET = Charset.forName("ISO-8859-1");
-	//private static final boolean DEBUG = thmp.utils.FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : false;
+	
+	private static final boolean DEBUG = thmp.utils.FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : false;
 	//figure out why above ant script doesn't recognize path!!!
-	private static final boolean DEBUG = false;
+	//private static final boolean DEBUG = false;
 	private static final Logger logger = LogManager.getLogger(SimilarThmUtils.class);
 	
 	static {
@@ -295,8 +296,13 @@ public class SimilarThmUtils {
 		}
 	}	
 	
-	//find similar indices 
-	
+	/**
+	 * Retrieve indices from DB.
+	 * @param thmIndex
+	 * @param conn
+	 * @return
+	 * @throws SQLException
+	 */
 	public static List<Integer> getSimilarThmListFromDb(int thmIndex, Connection conn) throws SQLException {
 		
 		StringBuilder sb = new StringBuilder(50);
