@@ -4,9 +4,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.TreeMap;
 
 import thmp.parse.ParseState;
+import thmp.search.SearchIntersection.ThmScoreSpanPair;
 
 /**
  * Information on the state of the current query. E.g. list
@@ -28,6 +30,8 @@ public class SearchState {
 	
 	//list of indices of thms of returned by intersection search.
 	private List<Integer> intersectionVecList;
+	//priority queue containing thm index, score, and span
+	private List<ThmScoreSpanPair> thmScoreSpanList;
 	
 	//map of thmIndex and their span scores, meaning how many singleton
 	//tokens in query are covered.
@@ -206,6 +210,18 @@ public class SearchState {
 		this.intersectionVecList = intersectionVecList;
 	}
 
+	/**
+	 * priority queue containing thm index, score, and span
+	 * @return
+	 */
+	public List<ThmScoreSpanPair> thmScoreSpanList(){
+		return thmScoreSpanList;
+	}
+
+	public void set_thmScoreSpanList(List<ThmScoreSpanPair> pq){
+		this.thmScoreSpanList = pq;
+	}
+	
 	public ParseState getParseState() {
 		return parseState;
 	}

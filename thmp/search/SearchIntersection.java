@@ -17,6 +17,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.NavigableMap;
+import java.util.PriorityQueue;
 import java.util.Scanner;
 import java.util.Set;
 
@@ -89,13 +90,16 @@ public class SearchIntersection {
 	/**
 	 * Pair of theorem index and its span score.
 	 */
-	private static class ThmSpanPair implements Comparable<ThmSpanPair> {
+	public static class ThmScoreSpanPair implements Comparable<ThmScoreSpanPair> {
 		private int thmIndex;
+		/*score based on words*/
+		private int score;
 		private int spanScore;
 
-		public ThmSpanPair(int index, int spanScore) {
-			this.thmIndex = index;
-			this.spanScore = spanScore;
+		public ThmScoreSpanPair(int index_, int score_, int spanScore_) {
+			this.thmIndex = index_;
+			this.score = score_;
+			this.spanScore = spanScore_;
 		}
 
 		public int thmIndex() {
@@ -105,21 +109,37 @@ public class SearchIntersection {
 		public int spanScore() {
 			return spanScore;
 		}
+		
+		public int score() {
+			return score;
+		}
 
+		/**
+		 * First uses intersection word scores to rank, then use span scores to tiebreak.
+		 */
 		@Override
-		public int compareTo(ThmSpanPair other) {
+		public int compareTo(ThmScoreSpanPair other) {
+			// reverse because treemap naturally has ascending order
+			return this.score > other.score ? -1
+					//: (this.spanScore < other.spanScore ? 1 : (this == other ? 0 : -1));
+					//need explicit equals, so not all instances are recognized to be the same in map.
+					: (this.score < other.score ? 1 : (this.equals(other) ? 0 : tieBreakWithSpan(other)));
+		}
+
+		private int tieBreakWithSpan(ThmScoreSpanPair other) {
 			// reverse because treemap naturally has ascending order
 			return this.spanScore > other.spanScore ? -1
 					//: (this.spanScore < other.spanScore ? 1 : (this == other ? 0 : -1));
 					//need explicit equals, so not all instances are recognized to be the same in map.
 					: (this.spanScore < other.spanScore ? 1 : (this.equals(other) ? 0 : -1));
 		}
-
+		
 		@Override
 		public int hashCode() {
 			final int prime = 31;
 			int result = 1;
 			result = prime * result + spanScore;
+			result = prime * result + score;
 			result = prime * result + thmIndex;
 			return result;
 		}
@@ -128,17 +148,18 @@ public class SearchIntersection {
 		public boolean equals(Object obj) {
 			if (this == obj)
 				return true;
-			if (!(obj instanceof ThmSpanPair)){
+			if (!(obj instanceof ThmScoreSpanPair)){
 				return false;
 			}
-			ThmSpanPair other = (ThmSpanPair) obj;
+			ThmScoreSpanPair other = (ThmScoreSpanPair) obj;
 			if (spanScore != other.spanScore)
+				return false;
+			if (score != other.score)
 				return false;
 			if (thmIndex != other.thmIndex)
 				return false;
 			return true;
-		}
-		
+		}		
 	}
 	
 	/**
@@ -300,6 +321,7 @@ public class SearchIntersection {
 		return intersectionSearch(input, searchWordsSet, searchState, contextSearchBool, 
 				searchRelationalBool, numHighest, null);
 	}
+	
 	/**
 	 * Builds scoreThmMMap. Main intersection search method.
 	 * 
@@ -365,7 +387,7 @@ public class SearchIntersection {
 		int numWordsAdded = 0;
 
 		// multimap of words, and the list of thm indices that have been added. Words.
-		ListMultimap<String, Integer> wordThmIndexAddedMMap = ArrayListMultimap.create();
+		//ListMultimap<String, Integer> wordThmIndexAddedMMap = ArrayListMultimap.create();
 		
 		// multimap of indices in wrapper list and the words that start at that
 		// index
@@ -378,6 +400,8 @@ public class SearchIntersection {
 		// pre-compute the scores for singleton words in query.
 		int totalSingletonAdded = computeSingletonScores(inputWordsList, singletonScoresAr, inputWordsArUpdated);
 		searchState.set_totalWordAdded(totalSingletonAdded);
+		//PQ where words-based score is vacuously 0.
+		PriorityQueue<ThmScoreSpanPair> thmScorePQ = new PriorityQueue<ThmScoreSpanPair>();
 		
 		// array of words to indicate frequencies that this word was included in
 		// either a singleton or n-gram
@@ -397,9 +421,9 @@ public class SearchIntersection {
 					String thirdWord = inputWordsList.get(i+2);
 					String threeGram = twoGram + " " + thirdWord;
 					if (threeGramsMap.containsKey(threeGram)) {
-						scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, thmWordsMMap,
-								wordThmIndexAddedMMap, threeGram, i, WordForms.TokenType.THREEGRAM,
-								singletonScoresAr, searchWordsSet, dbThmSet);
+						scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, thmWordsMMap, thmScorePQ,
+								threeGram, i, WordForms.TokenType.THREEGRAM,
+								singletonScoresAr, searchWordsSet, dbThmSet, searchState);
 						if (scoreAdded > 0) {
 							wordCountArray[i] += 1;
 							wordCountArray[i + 1] = wordCountArray[i + 1] + 1;
@@ -411,10 +435,10 @@ public class SearchIntersection {
 					}
 				}
 				if (twoGramsMap.containsKey(twoGram)) {
-					scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, thmWordsMMap,
-							wordThmIndexAddedMMap, twoGram, //nextWordCombined, 
+					scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, thmWordsMMap, thmScorePQ,
+							twoGram, //nextWordCombined, 
 							i, WordForms.TokenType.TWOGRAM, singletonScoresAr,
-							searchWordsSet, dbThmSet);
+							searchWordsSet, dbThmSet, searchState);
 					if (scoreAdded > 0) {
 						wordCountArray[i] += 1;
 						wordCountArray[i + 1] = wordCountArray[i + 1] + 1;
@@ -429,12 +453,10 @@ public class SearchIntersection {
 			// individual words) weigh a lot,
 			// then scale down the overall words? e.g. "linear map with closed
 			// range", "closed", "range",
-			// "closed range" all weigh a lot. Scale proportionally down with
-			// respect to the average
-			// score of all words added.
+			// "closed range" all weigh a lot. 
 			word = inputWordsArUpdated[i];
-			scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, thmWordsMMap, wordThmIndexAddedMMap, 
-					word, i, WordForms.TokenType.SINGLETON, singletonScoresAr, searchWordsSet, dbThmSet);
+			scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, thmWordsMMap, thmScorePQ,
+					word, i, WordForms.TokenType.SINGLETON, singletonScoresAr, searchWordsSet, dbThmSet, searchState);
 			if (scoreAdded > 0) {
 				wordCountArray[i] += 1;
 				totalWordsScore += scoreAdded;
@@ -464,18 +486,26 @@ public class SearchIntersection {
 		
 		// new map to record of the final scores (this obliterates scoreThmMMap)
 		// make values into pairs of thms with their span scores
-		int counter = numHighest;
-		TreeMultimap<Integer, ThmSpanPair> scoreThmMMap2 = TreeMultimap.create();
-		Set<Integer> descendingKeySet = scoreThmMMap.asMap().descendingKeySet();
-		Iterator<Integer> descendingKeySetIter = descendingKeySet.iterator();
-		boolean topScorer = true;
+		int counter = (int)(numHighest*1.5);
+		//////TreeMultimap<Integer, ThmSpanPair> scoreThmMMap2 = TreeMultimap.create();
+		/***Set<Integer> descendingKeySet = scoreThmMMap.asMap().descendingKeySet();
+		Iterator<Integer> descendingKeySetIter = descendingKeySet.iterator(); */
+		//***boolean topScorer = true;
+		PriorityQueue<ThmScoreSpanPair> thmScoreSpanPQ = new PriorityQueue<ThmScoreSpanPair>();
 		
-		outerWhile: while(descendingKeySetIter.hasNext()){
+		ThmScoreSpanPair pair;
+		while(counter-- > 0 && null != (pair=thmScorePQ.poll())) {
+			int index = pair.thmIndex;
+			int thmWordSpan = thmSpanMap.get(index);
+			thmScoreSpanPQ.add(new ThmScoreSpanPair(index, pair.score, thmWordSpan) );			
+		}
+		
+		/****Dec 6 outerWhile: while(descendingKeySetIter.hasNext()){
 			int curScore = descendingKeySetIter.next();
 			Collection<Integer> thmIndices = scoreThmMMap.get(curScore);
 			innerFor: for(int thmIndex : thmIndices){
 				if(counter-- < 1 ){
-					if(!topScorer || !searchState.allowLiteralSearch()) {
+					if(!searchState.allowLiteralSearch() || !topScorer) {
 						break outerWhile;						
 					}
 				}
@@ -511,24 +541,34 @@ public class SearchIntersection {
 					}
 				}
 				int thmWordSpan = thmSpanMap.get(thmIndex);
-				scoreThmMMap2.put(curScore, new ThmSpanPair(thmIndex, thmWordSpan));
+				////scoreThmMMap2.put(curScore, new ThmSpanPair(thmIndex, thmWordSpan));
+				thmScoreSpanPQ.add(new ThmScoreSpanPair(thmIndex, curScore, thmWordSpan) );
 			}
 			topScorer = false;
-		}		
+		}		*/
+
 		
 		List<Integer> highestThmList = new ArrayList<Integer>();
 		// get the thms having the highest k scores. Keys are scores.		
-		NavigableMap<Integer, Collection<ThmSpanPair>> scoreThmDescMMap = scoreThmMMap2.asMap().descendingMap();
+		////NavigableMap<Integer, Collection<ThmSpanPair>> scoreThmDescMMap = scoreThmMMap2.asMap().descendingMap();
 		
 		// pick up numHighest number of unique thms
-		Set<Integer> pickedThmSet = new HashSet<Integer>();
+		////Set<Integer> pickedThmSet = new HashSet<Integer>();
 		// list to track the top entries
 		counter = numHighest;
-		Searcher<Set<Integer>> relationSearcher = new RelationalSearch();
+		/***Searcher<Set<Integer>> relationSearcher = new RelationalSearch();
 		Searcher<Map<Integer, Integer>> contextSearcher = new ContextSearch();	
-		topScorer = true;
+		topScorer = true;*/
 		
-		outerWhile: for (Entry<Integer, Collection<ThmSpanPair>> entry : scoreThmDescMMap.entrySet()) {		
+		List<ThmScoreSpanPair> thmScoreSpanList = new ArrayList<ThmScoreSpanPair>();
+		ThmScoreSpanPair s;
+		while(counter-- > 0 && null != (s=thmScoreSpanPQ.poll())) {
+			thmScoreSpanList.add(s);
+			highestThmList.add(s.thmIndex);
+		}
+		
+		/******* DON'T delete Dec 6
+		 * outerWhile: for (Entry<Integer, Collection<ThmSpanPair>> entry : scoreThmDescMMap.entrySet()) {		
 			List<Integer> tempHighestThmList = new ArrayList<Integer>();
 			for (ThmSpanPair pair : entry.getValue()) {
 				Integer thmIndex = pair.thmIndex;
@@ -540,12 +580,12 @@ public class SearchIntersection {
 				// avoid duplicates, since the scoreThmMMap leaves outdated
 				// score-thm pair in map, rather than deleting them, after
 				// updating score
-				if (pickedThmSet.contains(thmIndex)){
-					continue;
-				}
-				pickedThmSet.add(thmIndex);
+				//if (pickedThmSet.contains(thmIndex)){
+				//	continue;
+				//} Commented out Dec 6, deleted previous score.
+				//pickedThmSet.add(thmIndex);
 				tempHighestThmList.add(thmIndex);
-				//counter--;
+				
 				if (DEBUG) {
 					ThmHypPair thmHypPair = ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex);
 					System.out.println(
@@ -562,8 +602,7 @@ public class SearchIntersection {
 			if(searchState.largestWordSpan() > 1) {
 				//combine with ranking from relational search, reorganize within each tuple
 				//of fixed size. Try relation search first, then context search.
-				if(searchRelationalBool){				
-					//bestCommonVecsList = searchVecWithTuple(input, bestCommonVecsList, tupleSz, searcher, searchState);
+				if(searchRelationalBool){
 					tempHighestThmList = SearchCombined.searchVecWithTuple(input, tempHighestThmList, tupleSz, relationSearcher, searchState);					
 				}			
 				// re-order top entries based on context search, if enabled
@@ -572,23 +611,10 @@ public class SearchIntersection {
 				}
 			}
 			highestThmList.addAll(tempHighestThmList);
-		}		
-		/*int tupleSz = SearchCombined.CONTEXT_SEARCH_TUPLE_SIZE;
-		 //combine with ranking from relational search, reorganize within each tuple
-		//of fixed size. Try relation search first, then context search.
-		if(searchRelationalBool){
-			Searcher<BigInteger> searcher = new RelationalSearch();
-			//bestCommonVecsList = searchVecWithTuple(input, bestCommonVecsList, tupleSz, searcher, searchState);
-			highestThmList = SearchCombined.searchVecWithTuple(input, highestThmList, tupleSz, searcher, searchState);					
-		}
-		
-		// re-order top entries based on context search, if enabled
-		if (contextSearchBool) {
-			Searcher<Map<Integer, Integer>> searcher = new ContextSearch();			
-			highestThmList = SearchCombined.searchVecWithTuple(input, highestThmList, tupleSz, searcher, searchState);
-		}*/
+		} */
 		logger.info("Highest thm list obtained, intersection search done!");
 		searchState.set_intersectionVecList(highestThmList);
+		searchState.set_thmScoreSpanList(thmScoreSpanList);
 		
 		return searchState;
 	}
@@ -669,15 +695,15 @@ public class SearchIntersection {
 	private static int computeLargestSpan(SearchState searchState, SetMultimap<Integer, Integer> thmWordSpanMMap,
 			Map<Integer, Integer> thmSpanMap) {
 		int largestWordSpan = 0;
-		TreeMultimap<Integer, Integer> spanScoreThmMMap = TreeMultimap.create();
+		//TreeMultimap<Integer, Integer> spanScoreThmMMap = TreeMultimap.create();
 		for (int thmIndex : thmWordSpanMMap.keySet()) {
-			// System.out.println(thmWordSpanMMap.get(thmIndex));
+			
 			int thmWordsSetSize = thmWordSpanMMap.get(thmIndex).size();
 			thmSpanMap.put(thmIndex, thmWordsSetSize);
 			if(thmWordsSetSize > largestWordSpan){
 				largestWordSpan = thmWordsSetSize;
 			}
-			spanScoreThmMMap.put(thmWordsSetSize, thmIndex);
+			//spanScoreThmMMap.put(thmWordsSetSize, thmIndex);
 		}
 		searchState.setLargestWordSpan(largestWordSpan);
 		return largestWordSpan;
@@ -703,10 +729,11 @@ public class SearchIntersection {
 	 */
 	private static int addWordThms(Map<Integer, Integer> thmScoreMap, TreeMultimap<Integer, Integer> scoreThmMMap,
 			Multimap<Integer, Integer> thmWordSpanMMap, SetMultimap<Integer, String> thmWordsMMap,
-			ListMultimap<String, Integer> wordThmIndexAddedMMap, //Multimap<String, IndexPartPair> wordThmIndexMMap,
+			PriorityQueue<ThmScoreSpanPair> thmScorePQ,
+			//ListMultimap<String, Integer> wordThmIndexAddedMMap, //Multimap<String, IndexPartPair> wordThmIndexMMap,
 			String word, int wordIndexInThm, WordForms.TokenType tokenType,
 			int[] singletonScoresAr, Set<String> searchWordsSet 
-			, Set<Integer> dbThmSet
+			, Set<Integer> dbThmSet, SearchState searchState
 			) {
 		// update scores map
 		int curScoreToAdd = 0;
@@ -778,23 +805,22 @@ public class SearchIntersection {
 		
 		if (!wordThms.isEmpty() && curScoreToAdd != 0) {
 			
-			//wordThmIndexAddedMMap.putAll(word, wordThms);
 			if (DEBUG) {
 				System.out.println("SearchIntersection-Word added: " + word + ". Score: " + curScoreToAdd);
 			}
 			for (IndexPartPair thmIndex : wordThms) {
-				
+				//note this list could be long, i.e. in hundreds of thousands
 				int index = thmIndex.thmIndex();
 				
 				if(null != dbThmSet && !dbThmSet.contains(index)) {
 					continue;
 				}
 				
-				wordThmIndexAddedMMap.put(word, index);
+				//wordThmIndexAddedMMap.put(word, index);
 				
 				// skip thm if current word already been covered by previous
 				// 2/3-gram
-				if (tokenType.ifAddedToMap(thmWordSpanMMap, thmIndex.thmIndex(), wordIndexInThm)){
+				if (tokenType.ifAddedToMap(thmWordSpanMMap, index, wordIndexInThm)){
 					continue;
 				}
 				Integer prevScore = thmScoreMap.get(index);
@@ -807,15 +833,15 @@ public class SearchIntersection {
 				
 				Integer newScore = prevScore + curScoreToAdd;
 				
-				// this mapping is not being used in the end right now,
-				// since the top N are picked, regardless of their scores.
-				thmScoreMap.put(thmIndex.thmIndex(), newScore);
-				// System.out.println("*** " + thmScoreMap);
-				scoreThmMMap.put(newScore, thmIndex.thmIndex());
+				thmScoreMap.put(index, newScore);
+				/***Dec 6 scoreThmMMap.remove(prevScore, index);
+				scoreThmMMap.put(newScore, index);*/
+				
+				thmScorePQ.add(new ThmScoreSpanPair(index, newScore, 0));
 				// put in thmIndex, and the index of word in the query, to
 				// thmWordSpanMMap.
-				tokenType.addToMap(thmWordSpanMMap, thmIndex.thmIndex(), wordIndexInThm);
-				thmWordsMMap.put(thmIndex.thmIndex(), word);
+				tokenType.addToMap(thmWordSpanMMap, index, wordIndexInThm);
+				thmWordsMMap.put(index, word);
 			}
 			scoreAdded = curScoreToAdd;
 			// add singletons to searchWordsSet, so
@@ -829,9 +855,11 @@ public class SearchIntersection {
 					searchWordsSet.add(wordOriginalForm);
 				}
 			}
-		}		
-		addRelatedWordsThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, wordIndexInThm, tokenType, scoreAdded,
-				relatedWordsList, dbThmSet);
+		}	
+		if(searchState.allowLiteralSearch()) {
+			addRelatedWordsThms(thmScoreMap, scoreThmMMap, thmScorePQ, thmWordSpanMMap, wordIndexInThm, tokenType, scoreAdded,
+					relatedWordsList, dbThmSet);
+		}
 		return scoreAdded;
 	}
 
@@ -846,7 +874,8 @@ public class SearchIntersection {
 	 * @param relatedWordsList
 	 */
 	private static void addRelatedWordsThms(Map<Integer, Integer> thmScoreMap,
-			TreeMultimap<Integer, Integer> scoreThmMMap, Multimap<Integer, Integer> thmWordSpanMMap, int wordIndexInThm,
+			TreeMultimap<Integer, Integer> scoreThmMMap, PriorityQueue<ThmScoreSpanPair> thmScorePQ,
+			Multimap<Integer, Integer> thmWordSpanMMap, int wordIndexInThm,
 			WordForms.TokenType tokenType, int scoreAdded, List<String> relatedWordsList, Set<Integer> dbThmSet) {
 		// add thms for related words found, with some reduction factor;
 		// make global after experimentation.
@@ -897,7 +926,9 @@ public class SearchIntersection {
 					// this mapping is not being used in the end right now,
 					// since the top N are picked, regardless of their scores.
 					thmScoreMap.put(index, newScore);
-					scoreThmMMap.put(newScore, index);
+					//***Dec 6 scoreThmMMap.put(newScore, index);
+					
+					thmScorePQ.add(new ThmScoreSpanPair(index, newScore, 0));
 				}
 			}
 		}

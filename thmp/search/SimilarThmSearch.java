@@ -26,6 +26,7 @@ import thmp.parse.ParseState;
 import thmp.parse.ThmP1;
 import thmp.parse.ParseState.ParseStateBuilder;
 import thmp.search.SearchCombined.ThmHypPair;
+import thmp.search.SearchIntersection.ThmScoreSpanPair;
 import thmp.search.SearchState.SearchStateBuilder;
 import thmp.search.Searcher.QueryVecContainer;
 import thmp.utils.DBUtils;
@@ -98,13 +99,15 @@ public class SimilarThmSearch {
 		List<Integer> combinedList = new ArrayList<Integer>();		
 		getSimilarComponent(thmIndex, thmStr, combinedList);
 		
-		if(combinedList.size() < maxSimilarThmCount) {
+		int combinedListSz = combinedList.size();
+		
+		if(combinedListSz < maxSimilarThmCount/2) {
 			thmStr = thmHypPair.hypStr();
 			getSimilarComponent(thmIndex, thmStr, combinedList);
 		}
 		
-		System.out.println("SimilarThmSearch - combinedList.size " + combinedList.size());
-		if(combinedList.size() > maxSimilarThmCount) {
+		//System.out.println("SimilarThmSearch - combinedList.size " + combinedList.size());
+		if(combinedListSz > maxSimilarThmCount) {
 			List<Integer> tempList = new ArrayList<Integer>();
 			for(int i = 0; i < maxSimilarThmCount; i++) {
 				tempList.add(combinedList.get(i));
@@ -131,10 +134,15 @@ public class SimilarThmSearch {
 		Map<Integer, Integer> stmContextScoreMap = new HashMap<Integer, Integer>();		
 		Map<Integer, Integer> hypContextScoreMap = new HashMap<Integer, Integer>();
 		
+		long beforeProcess = System.nanoTime();
+		
 		/* Divides thm into pieces, i.e. logical components, e.g.
 		 * "if ... ", and "then ..." */
 		String[] thmPieces = ThmP1.preprocess(thmStr);
 		List<String> thmPiecesList = new ArrayList<String>();
+		
+		long afterProcess = System.nanoTime();
+		System.out.println("Time for preprocessing: " + (afterProcess - beforeProcess));
 		
 		for(String component : thmPieces) {
 			thmPiecesList.add(component);
@@ -160,6 +168,9 @@ public class SimilarThmSearch {
 			
 			//must parse current str *after* symbol replacement, to not replace def in current str.
 			ParseRun.parseInput(str, parseState, isVerbose);
+			long afterParse = System.nanoTime();
+			System.out.println("Time for parsing: " + (afterParse - afterProcess));
+			afterProcess = afterParse;
 			
 			if(parseState.curParseExcessiveLatex()) {
 				parseState.setCurParseExcessiveLatex(false);
@@ -171,8 +182,13 @@ public class SimilarThmSearch {
 			List<Integer> thmIndexList = new ArrayList<Integer>();
 			/*keep track of thm scores. Key is thmIndex, value is its span length*/
 			Map<Integer, Integer> thmSpanMap = new HashMap<Integer, Integer>();
+			
+			afterParse = System.nanoTime();
 			//max span amongst any thms amongst returned results.
 			int maxThmSpan = gatherThmFromWords(str, thmIndexList, thmScoreMap, thmSpanMap);	
+			
+			long afterSearch = System.nanoTime();
+			System.out.println("Time for searching: " + (afterSearch - afterParse));
 			
 			/*SearchState searchState = new SearchState();
 			searchState.setParseState(parseState);*/
@@ -209,6 +225,7 @@ public class SimilarThmSearch {
 				
 				//some thms don't parse to produce meaningful context vecs
 				
+				/**don't iterate over everything here!!!**/
 				for(Map.Entry<Integer, Integer> entry : contextVecScoreMap.entrySet()) {
 						int curThmIndex = entry.getKey();
 						Map<Integer, Integer> tempMap = contextScoreMap;
@@ -229,10 +246,13 @@ public class SimilarThmSearch {
 			//intersection scores.							
 		}
 		
+		long beforeAddingComponent = System.nanoTime();
+		
 		addSimilarComponentsToMaps(combinedList, thmIndex, thmScoreMap, stmContextScoreMap);
 		if(combinedList.size() < maxSimilarThmCount) {
 			addSimilarComponentsToMaps(combinedList, thmIndex, thmScoreMap, hypContextScoreMap);
 		}
+		System.out.println("Time for adding component to maps: " + (System.nanoTime() - beforeAddingComponent));
 		
 		if(DEBUG) {
 			List<ThmHypPair> thmHypPairList = SearchCombined.thmListIndexToThmHypPair(combinedList);
@@ -356,7 +376,7 @@ public class SimilarThmSearch {
 			Map<Integer, Integer> allThmScoreMap, Map<Integer, Integer> thmSpanMap) {
 		
 		//List<String> thmWordsList = WordForms.splitThmIntoSearchWordsList(str);
-		Set<String> searchWordsSet = new HashSet<String>();
+		Set<String> searchWordsSet = null;
 		
 		SearchStateBuilder searchStateBuilder = new SearchStateBuilder();
 		searchStateBuilder.disableLiteralSearch();
@@ -374,10 +394,33 @@ public class SimilarThmSearch {
 			return 0;
 		}
 		
-		intersectionResultsList.addAll(intersectionList);			
-		thmSpanMap.putAll(searchState.thmSpanMap());
+		//intersectionResultsList.addAll(intersectionList);
+		List<ThmScoreSpanPair> list = searchState.thmScoreSpanList();
 		
-		Map<Integer, Integer> scoreMap = searchState.thmScoreMap();
+		for(ThmScoreSpanPair pair : list) {
+			int index = pair.thmIndex();
+			intersectionResultsList.add(index);
+			//thmSpanMap.put(index, value);
+			
+			Integer spanScore = thmSpanMap.get(index);
+			if(null == spanScore) {
+				thmSpanMap.put(index, pair.spanScore());
+			}else {
+				thmSpanMap.put(index, spanScore + pair.spanScore());
+			}
+			
+			Integer curScore = allThmScoreMap.get(index);
+			if(null == curScore) {
+				allThmScoreMap.put(index, pair.score());
+			}else {
+				allThmScoreMap.put(index, curScore + pair.score());
+			}
+			
+		}
+		
+		/////thmSpanMap.putAll(searchState.thmSpanMap());
+		
+		/*Map<Integer, Integer> scoreMap = searchState.thmScoreMap();
 		for(Map.Entry<Integer, Integer> entry : scoreMap.entrySet()) {
 			int index = entry.getKey();
 			Integer curScore = allThmScoreMap.get(index);
@@ -386,7 +429,7 @@ public class SimilarThmSearch {
 			}else {
 				allThmScoreMap.put(index, curScore + entry.getValue());
 			}
-		}		
+		}	*/	
 		return searchState.largestWordSpan();
 	}
 	
