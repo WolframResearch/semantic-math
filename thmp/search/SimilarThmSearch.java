@@ -29,6 +29,7 @@ import thmp.search.SearchCombined.ThmHypPair;
 import thmp.search.SearchIntersection.ThmScoreSpanPair;
 import thmp.search.SearchState.SearchStateBuilder;
 import thmp.search.Searcher.QueryVecContainer;
+import thmp.search.TheoremGet.ContextRelationVecPair;
 import thmp.utils.DBUtils;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
@@ -46,7 +47,8 @@ public class SimilarThmSearch {
 	//private static final boolean DEBUG = false;
 	private static final Logger logger = LogManager.getLogger(SimilarThmSearch.class);
 	private static final int maxSimilarThmCount = SimilarThmUtils.maxSimilarThmListLen();
-	
+	private static final Map<String, Integer> contextWordIndexDict 
+			= CollectThm.ThmWordsMaps.get_CONTEXT_VEC_WORDS_INDEX_MAP();
 	private static final Pattern HYP_PATTERN = Pattern.compile("(?:assume|denote|define|let|is said|suppose"
 			+ "|is called|if|given)");
 	
@@ -84,11 +86,6 @@ public class SimilarThmSearch {
 	 */
 	public static List<Integer> preComputeSimilarThm(int thmIndex) {
 		
-		/*
-		 * Call contextSearchMap(String query, List<Integer> nearestThmIndexList, 
-			Searcher<Map<Integer, Integer>> searcher, SearchState searchState)
-			to get ranking.
-		 */		
 		ThmHypPair thmHypPair = ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex);
 		
 		String thmStr = thmHypPair.thmStr();
@@ -125,8 +122,8 @@ public class SimilarThmSearch {
 	 */
 	private static void getSimilarComponent(int thmIndex, String thmStr, List<Integer> combinedList) {
 		//keep a running parse state to collect variable definitions.
-		ParseStateBuilder parseStateBuilder = new ParseStateBuilder();
-		ParseState parseState = parseStateBuilder.build();
+		///ParseStateBuilder parseStateBuilder = new ParseStateBuilder();
+		//ParseState parseState = parseStateBuilder.build();
 		/*keep track of thm scores. Key is thmIndex, value is intersection search score*/
 		Map<Integer, Integer> thmScoreMap = new HashMap<Integer, Integer>();
 		
@@ -134,48 +131,48 @@ public class SimilarThmSearch {
 		Map<Integer, Integer> stmContextScoreMap = new HashMap<Integer, Integer>();		
 		Map<Integer, Integer> hypContextScoreMap = new HashMap<Integer, Integer>();
 		
-		long beforeProcess = System.nanoTime();
+		long beforeProcess = 0;
+		if(DEBUG) beforeProcess = System.nanoTime();
 		
 		/* Divides thm into pieces, i.e. logical components, e.g.
 		 * "if ... ", and "then ..." */
 		String[] thmPieces = ThmP1.preprocess(thmStr);
 		List<String> thmPiecesList = new ArrayList<String>();
 		
-		long afterProcess = System.nanoTime();
-		System.out.println("Time for preprocessing: " + (afterProcess - beforeProcess));
-		
+		long beforeParse = 0;
+		if(DEBUG) {
+			beforeParse = System.nanoTime();
+			System.out.println("Time for preprocessing: " + (beforeParse - beforeProcess));
+		}
 		for(String component : thmPieces) {
 			thmPiecesList.add(component);
 		}
 		thmPiecesList.sort(new thmp.utils.DataUtility.StringLenComparator());
 		int listSz = thmPiecesList.size();
 		
-		boolean isVerbose = DEBUG;
+		boolean profileTiming = true;
+		
+		long afterParse = 0;
+		long beforeSearch = 0;
+		long beforeAddingComponent = 0;
+		int countCap = (int)(maxSimilarThmCount * 1.5);
 		
 		/*deliberately don't clean up parseState inbetween thmPieces, to preserve state.*/
 		for(int i = 0; i < listSz; i++) {
+			
 			String str = thmPiecesList.get(i);
 			int strLen = str.length();
-			if(strLen < 10) {
+			if(strLen < 9) {
 				continue;
 			}
-			if(thmScoreMap.size() > maxSimilarThmCount * 1.5) {
+			if(thmScoreMap.size() > countCap) {
 				break;
 			}
 			
-			//replace variables by their names.
-			//** commented out Dec 6, to decrease processing time str = chopThmStr(str, parseState);
-			
-			//must parse current str *after* symbol replacement, to not replace def in current str.
-			ParseRun.parseInput(str, parseState, isVerbose);
-			long afterParse = System.nanoTime();
-			System.out.println("Time for parsing: " + (afterParse - afterProcess));
-			afterProcess = afterParse;
-			
-			if(parseState.curParseExcessiveLatex()) {
+			/*if(parseState.curParseExcessiveLatex()) {
 				parseState.setCurParseExcessiveLatex(false);
 				continue;
-			}
+			}*/
 			
 			//weigh depending on hyp or stm, prioritize stm
 			//result of intersection search
@@ -183,12 +180,40 @@ public class SimilarThmSearch {
 			/*keep track of thm scores. Key is thmIndex, value is its span length*/
 			Map<Integer, Integer> thmSpanMap = new HashMap<Integer, Integer>();
 			
-			afterParse = System.nanoTime();
+			if(profileTiming) beforeSearch = System.nanoTime();
+			SearchStateBuilder searchStateBuilder = new SearchStateBuilder();
+			searchStateBuilder.disableLiteralSearch();
+			SearchState searchState = searchStateBuilder.build();
+				
 			//max span amongst any thms amongst returned results.
-			int maxThmSpan = gatherThmFromWords(str, thmIndexList, thmScoreMap, thmSpanMap);	
+			int maxThmSpan = gatherThmFromWords(str, thmIndexList, thmScoreMap, thmSpanMap,
+					searchState);	
+			//long afterSearch = System.nanoTime();
+			//if(DEBUG) System.out.println("Time for searching: " + (afterSearch - afterParse));
+			if(profileTiming) printElapsedTime(beforeSearch, "searching");
 			
-			long afterSearch = System.nanoTime();
-			System.out.println("Time for searching: " + (afterSearch - afterParse));
+			if(maxThmSpan == 0) {
+				continue;
+			}
+			
+			//replace variables by their names.
+			//** commented out Dec 6, to decrease processing time str = chopThmStr(str, parseState);
+			if(profileTiming) beforeParse = System.nanoTime();
+			
+			//get context vec map entries instead of parsing anew.
+			Map<Integer, Integer> contextVecMap = computeContextVecMap(searchState.normalizedTokenSet,
+					thmIndex);
+			if(profileTiming) afterParse = printElapsedTime(beforeParse, "parsing");
+			
+		//////
+					boolean isVerbose = false;
+					ParseStateBuilder parseStateBuilder = new ParseStateBuilder();
+					ParseState parseState = parseStateBuilder.build();
+					
+					//must parse current str *after* symbol replacement, to not replace def in current str.
+					ParseRun.parseInput(str, parseState, isVerbose);
+					System.out.println("Parsed component vec map: " + parseState.getLatestThmContextVecMap());
+					//////
 			
 			/*SearchState searchState = new SearchState();
 			searchState.setParseState(parseState);*/
@@ -200,7 +225,7 @@ public class SimilarThmSearch {
 			ContextSearch.contextSearchMap(str, thmIndexList, 
 					null, searchState);*/
 			
-			Map<Integer, Integer> contextVecMap = parseState.getLatestThmContextVecMap();
+			//Map<Integer, Integer> contextVecMap = parseState.getLatestThmContextVecMap();
 			
 			if(!contextVecMap.isEmpty()) {		
 				Map<Integer, Integer> contextVecScoreMap = new HashMap<Integer, Integer>();	
@@ -246,13 +271,14 @@ public class SimilarThmSearch {
 			//intersection scores.							
 		}
 		
-		long beforeAddingComponent = System.nanoTime();
+		if(profileTiming) beforeAddingComponent = System.nanoTime();
 		
 		addSimilarComponentsToMaps(combinedList, thmIndex, thmScoreMap, stmContextScoreMap);
 		if(combinedList.size() < maxSimilarThmCount) {
 			addSimilarComponentsToMaps(combinedList, thmIndex, thmScoreMap, hypContextScoreMap);
 		}
-		System.out.println("Time for adding component to maps: " + (System.nanoTime() - beforeAddingComponent));
+		//if(DEBUG) System.out.println("Time for adding component to maps: " + (System.nanoTime() - beforeAddingComponent));
+		if(profileTiming) printElapsedTime(beforeAddingComponent, "Adding component to maps");
 		
 		if(DEBUG) {
 			List<ThmHypPair> thmHypPairList = SearchCombined.thmListIndexToThmHypPair(combinedList);
@@ -264,6 +290,57 @@ public class SimilarThmSearch {
 				counter++;
 			}
 		}
+	}
+
+	private static Map<Integer, Integer> computeContextVecMap(Set<String> normalizedTokenSet, int thmIndex) {
+		
+		Map<Integer, Integer> curComponentContextMap = new HashMap<Integer, Integer>();
+		
+		ContextRelationVecPair vecPair = TheoremGet.getContextRelationVecFromIndex(thmIndex);
+		Map<Integer, Integer> curThmVecMap = vecPair.contextVecMap();
+		
+		System.out.println("curThmVecMap "+curThmVecMap);
+		for(String word : normalizedTokenSet) {
+			Integer index = contextWordIndexDict.get(word);
+			
+			if(null != index) {
+				Integer thmVecMapIndex = curThmVecMap.get(index);
+				if(null != thmVecMapIndex) {
+					curComponentContextMap.put(index, thmVecMapIndex);
+				}				
+			}		
+		}
+		
+		System.out.println("curComponentContextMap "+curComponentContextMap);
+		return curComponentContextMap;
+	}
+
+	/**
+	 * Print elaptsed time since the last time point as a profiling tool.
+	 * @param prevTimePoint
+	 * @return current time point (not absolute wall clock time, should only
+	 * be used in relation to some other time point.)
+	 */
+	public static long printElapsedTime(long prevTimePoint, String anno) {
+		long afterParse = System.nanoTime();
+		String timeStr = ((Long)(afterParse-prevTimePoint)).toString();
+		int timeStrLen = timeStr.length();
+		StringBuilder sb = new StringBuilder(15);
+		int bundleSz = (int)Math.ceil(timeStrLen/3.);
+		
+		for(int i = bundleSz-1; i > -1; i--) {
+			int start = Math.min((i+1)*3, timeStrLen);
+			int end = i*3;
+			for(int j = start-1; j >= end; j--) {
+				//insert is O(n)!
+				//sb.append(timeStr.charAt(j));
+				sb.insert(0,timeStr.charAt(j));
+			}
+			sb.append(",");
+		}		
+		System.out.println(anno + " time: " + sb);
+		
+		return afterParse;
 	}
 
 	/**
@@ -373,14 +450,11 @@ public class SimilarThmSearch {
 	 * @return maximum span amongst search results.
 	 */
 	private static int gatherThmFromWords(String str, List<Integer> intersectionResultsList,
-			Map<Integer, Integer> allThmScoreMap, Map<Integer, Integer> thmSpanMap) {
+			Map<Integer, Integer> allThmScoreMap, Map<Integer, Integer> thmSpanMap,
+			SearchState searchState) {
 		
 		//List<String> thmWordsList = WordForms.splitThmIntoSearchWordsList(str);
 		Set<String> searchWordsSet = null;
-		
-		SearchStateBuilder searchStateBuilder = new SearchStateBuilder();
-		searchStateBuilder.disableLiteralSearch();
-		SearchState searchState = searchStateBuilder.build();
 		
 		boolean contextSearchBool = false;		
 		boolean searchRelationalBool = false;

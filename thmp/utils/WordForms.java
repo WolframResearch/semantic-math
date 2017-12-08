@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,6 +38,7 @@ import thmp.parse.ParsedExpression;
 import thmp.parse.Struct;
 import thmp.parse.ThmP1;
 import thmp.search.WordFrequency;
+import thmp.search.SearchIntersection.ThmScoreSpanPair;
 
 public class WordForms {
 
@@ -195,7 +197,7 @@ public class WordForms {
 	}
 	
 	/**
-	 * Whether main statement or hyp.
+	 * Enum: Whether main statement or hyp.
 	 * Note that enums are inherently serializable.
 	 */
 	public static enum ThmPart{
@@ -487,33 +489,33 @@ public class WordForms {
 	 * Singularize and normalize word, if necessary, and return its
 	 * index in provided map.
 	 * @param word
-	 * @param map
+	 * @param wordIndexMap
 	 * @return WordMapIndexPair
 	 */
-	public static WordMapIndexPair uniformizeWordAndGetIndex(String word, Map<String, Integer> map){
+	public static WordMapIndexPair uniformizeWordAndGetIndex(String word, Map<String, Integer> wordIndexMap){
 		String[] wordAr = WordForms.getWhiteEmptySpacePattern().split(word);
 		int wordArLen = wordAr.length;
 		if(wordArLen > 1){
 			word = wordAr[wordArLen - 1];			
 		}
-		Integer index = map.get(word);
+		Integer index = wordIndexMap.get(word);
 		if(null != index){
 			return new WordMapIndexPair(word, index, false);
 		}
 		//this case should be more applicable than desingularization,
 		//since many inputs from parse trees are already desingularized.
 		String wordNormalized = normalizeWordForm(word);
-		index = map.get(wordNormalized);
+		index = wordIndexMap.get(wordNormalized);
 		if(null != index){
 			return new WordMapIndexPair(wordNormalized, index, true);
 		}
 		String wordSingular = getSingularForm(word);
-		index = map.get(wordSingular);
+		index = wordIndexMap.get(wordSingular);
 		if(null != index){
 			return new WordMapIndexPair(wordSingular, index, true);
 		}
 		String singularNormalized = normalizeWordForm(wordSingular);
-		index = map.get(singularNormalized);
+		index = wordIndexMap.get(singularNormalized);
 		if(null != index){
 			return new WordMapIndexPair(singularNormalized, index, true);
 		}
@@ -661,14 +663,36 @@ public class WordForms {
 		
 		/**
 		 * 
-		 * @param thmWordSpanMMap
+		 * @param thmWordSpanMMap Must be HashMultimap
 		 * @param thmIndex
 		 * @param wordIndex Index of word in thm.
+		 * @return boolean whether any slot corresponding to token has been added.
 		 */
-		public void addToMap(Multimap<Integer, Integer> thmWordSpanMMap, int thmIndex, int wordIndex){
+		public boolean addToMap(Multimap<Integer, Integer> thmWordSpanMMap, int thmIndex, int wordIndex, 
+				Set<ThmScoreSpanPair> thmScoreSet, int newScore, int prevScore,
+				Map<Integer, Integer> thmScoreMap){
+			
+			Collection<Integer> thmSpanCol = thmWordSpanMMap.get(thmIndex);
+			int prevColSz = thmSpanCol.size();
+			
 			for(int i = wordIndex; i < wordIndex+indexShift; i++){
-				thmWordSpanMMap.put(thmIndex, i);
+				thmSpanCol.add(i);
+				//thmWordSpanMMap.put(thmIndex, i);
 			}
+			
+			int newSpanScore = thmSpanCol.size();
+			
+			if(newSpanScore > prevColSz) {
+				
+				thmScoreSet.remove(new ThmScoreSpanPair(thmIndex, prevScore, prevColSz));				
+				//int newSpanScore = thmWordSpanMMap.get(thmIndex).size();
+				thmScoreSet.add(new ThmScoreSpanPair(thmIndex, newScore, newSpanScore));		
+				thmScoreMap.put(thmIndex, newScore);
+				return true;
+			}else {				
+				return false;
+			}			
+			
 		}
 		
 		/**

@@ -104,7 +104,7 @@ public interface Searcher<S> {
 		 * e.g. '1710.01696','Daniel','','Lemke' Note no thm index*/
 		private static final String nameRawDataPath = "src/thmp/data/metaDataStringNameDB.txt";
 		/**Path to csv file containing database names data 
-		 * e.g. '5523','1710.01696','Daniel','','Lemke'*/
+		 * e.g. '5523','1710.01696','Tim','','Lemke'*/
 		private static final String nameCSVDataPath = "src/thmp/data/metaDataNameDB.csv";
 		
 		public static void set_gatheringDataBoolToTrue(){

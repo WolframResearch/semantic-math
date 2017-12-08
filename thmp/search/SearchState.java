@@ -2,9 +2,11 @@ package thmp.search;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.Set;
 import java.util.TreeMap;
 
 import thmp.parse.ParseState;
@@ -22,9 +24,16 @@ import thmp.search.SearchIntersection.ThmScoreSpanPair;
  */
 public class SearchState {
 
-	//map of relevant tokens and their scores
+	/**map of relevant tokens and their scores.
+	 * Tokens are *not* normalized, meaning endings not stripped, etc.
+	 */
 	private Map<String, Integer> tokenScoreMap;
 	
+	/**
+	 * Set of *normalized* tokens, i.e. word forms that were actually used
+	 * in search, and have valid entries in wordScoreMap.
+	 */
+	public Set<String> normalizedTokenSet;
 	//total number of words added, including overlapping 2 or 3 grams
 	private int totalWordAdded;
 	
@@ -79,6 +88,7 @@ public class SearchState {
 	public SearchState(){		
 		this.tokenScoreMap = new HashMap<String, Integer>();
 		this.thmSpanMap = new HashMap<Integer, Integer>();
+		this.normalizedTokenSet = new HashSet<String>();
 		//this.intersectionVecList = Collections.emptyList();
 	}
 	
@@ -89,6 +99,10 @@ public class SearchState {
 	 */
 	public void addTokenScore(String token, Integer score){
 		tokenScoreMap.put(token, score);
+	}
+	
+	public void addNormalizedSearchToken(String tok) {
+		this.normalizedTokenSet.add(tok);
 	}
 	
 	/**
@@ -211,7 +225,7 @@ public class SearchState {
 	}
 
 	/**
-	 * priority queue containing thm index, score, and span
+	 * List containing thm index, score, and span
 	 * @return
 	 */
 	public List<ThmScoreSpanPair> thmScoreSpanList(){

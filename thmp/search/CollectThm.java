@@ -301,9 +301,19 @@ public class CollectThm {
 			}				
 				 
 				String docWordsFreqMapNoAnnoPath = FileUtils.getPathIfOnServlet(SearchMetaData.wordDocFreqMapPath());
+				/****@SuppressWarnings("unchecked")
+				Map<String, Integer> docWordsFreqPreMap = ((List<Map<String, Integer>>)
+						FileUtils.deserializeListFromFile(docWordsFreqMapNoAnnoPath)).get(0);*/
+				
 				@SuppressWarnings("unchecked")
 				Map<String, Integer> docWordsFreqPreMap = ((List<Map<String, Integer>>)
 						FileUtils.deserializeListFromFile(docWordsFreqMapNoAnnoPath)).get(0);
+				
+				
+				/**construct map from list, since hashmap iteration does not guarantee ordering,
+				//and we need ordering to create context vec map*/
+				//Map<String, Integer> docWordsFreqPreMap
+				
 				docWordsFreqMapNoAnno = ImmutableMap.copyOf(docWordsFreqPreMap);
 				
 				//compute the average word frequencies for singleton words
@@ -404,6 +414,17 @@ public class CollectThm {
 			@Override
 			public int hashCode() {				
 				return this.thmIndex;
+			}
+
+			/**
+			 * Adds to map, only add if thm part.
+			 * @param thmIndexPairMap
+			 */
+			public void addToMap(Map<Integer, ThmPart> thmIndexPairMap) {
+				ThmPart part = thmIndexPairMap.get(thmIndex);
+				if(ThmPart.STM != part) {
+					thmIndexPairMap.put(thmIndex, this.thmPart);
+				}				
 			}
 		}
 		
