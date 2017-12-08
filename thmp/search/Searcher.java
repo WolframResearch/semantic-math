@@ -101,7 +101,7 @@ public interface Searcher<S> {
 		public static final String texFilesSerializedListFileName = "texFileNamesSetList.dat";
 		
 		/**Path to file containing database names data 
-		 * e.g. '1710.01696','Daniel','','Lemke' Note no thm index*/
+		 * e.g. '1710.01696','Tim','','Lemke' Note no thm index*/
 		private static final String nameRawDataPath = "src/thmp/data/metaDataStringNameDB.txt";
 		/**Path to csv file containing database names data 
 		 * e.g. '5523','1710.01696','Tim','','Lemke'*/

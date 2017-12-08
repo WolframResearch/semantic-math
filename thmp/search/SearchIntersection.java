@@ -54,7 +54,8 @@ public class SearchIntersection {
 
 	private static final Pattern BY_AUTHORS_PATT = Pattern.compile("(.*)\\s*by authors*\\s+(.*?)\\s*");
 	private static final Pattern AND_OR_PATT = Pattern.compile("\\s+(and|or)\\s+");
-	
+
+	private static final boolean profileTiming = false; 
 	private static final Logger logger = LogManager.getLogger(SearchIntersection.class);
 
 	/**
@@ -162,6 +163,77 @@ public class SearchIntersection {
 				return false;
 			return true;
 		}		
+	}
+	/**
+	 * Word and its corresponding theorems list. 
+	 */
+	private static class WordThmsList implements Comparable<WordThmsList>{
+		
+		String word;
+		Collection<IndexPartPair> thmsList;
+		//word score as used in intersection search.
+		int score;
+		//index of word in the thm
+		int wordIndexInThm;
+		
+		WordForms.TokenType tokenType;
+		
+		WordThmsList(String word_, Collection<IndexPartPair> thmsList_, int score_,
+				WordForms.TokenType tokenType_, int wordIndexInThm_){
+			this.word = word_;
+			this.thmsList = thmsList_;
+			this.score = score_;
+			this.tokenType = tokenType_;
+			this.wordIndexInThm = wordIndexInThm_;
+		}
+		
+		/**
+		 * shorter theorem lists are prioritized.
+		 */
+		@Override
+		public int compareTo(WordThmsList other) {
+			int thisSz = thmsList.size();
+			int otherSz = other.thmsList.size();
+			return thisSz > otherSz ? 1 : thisSz < otherSz ? -1 : 
+				//if same size:
+				(this.score < other.score ? 1 : this.score > other.score ? -1 :
+					(this.wordIndexInThm > other.wordIndexInThm ? 1 : 
+							this.wordIndexInThm < other.wordIndexInThm ? -1 : 0)
+					);
+		}
+		
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + this.thmsList.size();
+			result = result * prime + this.score;
+			result = result * prime + this.wordIndexInThm;
+			return result;
+		}
+		
+		@Override
+		public boolean equals(Object obj) {
+			if(!(obj instanceof WordThmsList)) {
+				return false;				
+			}
+			WordThmsList other = (WordThmsList)obj;
+			if(thmsList.size() != other.thmsList.size()) {
+				return false;
+			}
+			if(this.score != other.score) {
+				return false;
+			}
+			if(this.wordIndexInThm != other.wordIndexInThm) {
+				return false;
+			}
+			return true;
+		}
+		
+		@Override
+		public String toString() {
+			return this.word;
+		}
 	}
 	
 	/**
@@ -407,12 +479,13 @@ public class SearchIntersection {
 		Set<ThmScoreSpanPair> thmScoreSpanSet = new HashSet<ThmScoreSpanPair>();
 		Map<Integer, ThmPart> thmPartMap = new HashMap<Integer, ThmPart>();
 		
+		List<WordThmsList> wordThmsListList = new ArrayList<WordThmsList>();
 		// array of words to indicate frequencies that this word was included in
 		// either a singleton or n-gram
-		
 		int[] wordCountArray = new int[inputWordsArSz];
+		
 		for (int i = firstIndex; i < inputWordsArSz; i++) {
-			long time0 = System.nanoTime();
+			//long time0 = System.nanoTime();
 			String word = inputWordsList.get(i);
 			// elicit higher score if wordLong fits
 			// also turn into singular form if applicable			
@@ -423,14 +496,14 @@ public class SearchIntersection {
 				String twoGram = word + " " + nextWord;
 				twoGram = WordForms.normalizeTwoGram(twoGram);
 				// check for 3 grams.
-				long time1 = SimilarThmSearch.printElapsedTime(time0, "time1");
+				//long time1 = SimilarThmSearch.printElapsedTime(time0, "time1");
 				
 				if (i < inputWordsArSz - 2) {
 					String thirdWord = inputWordsList.get(i+2);
 					String threeGram = twoGram + " " + thirdWord;
 					if (threeGramsMap.containsKey(threeGram)) {
 						scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap,// thmWordsMMap, 
-								thmScoreSpanSet, thmPartMap,
+								thmScoreSpanSet, thmPartMap, wordThmsListList, //normalizedWordsSet,
 								threeGram, i, WordForms.TokenType.THREEGRAM,
 								singletonScoresAr, searchWordsSet, dbThmSet, searchState);
 						if (scoreAdded > 0) {
@@ -444,10 +517,10 @@ public class SearchIntersection {
 						}
 					}
 				}
-				long time2 = SimilarThmSearch.printElapsedTime(time1, "time2");
+				//long time2 = SimilarThmSearch.printElapsedTime(time1, "time2");
 				if (twoGramsMap.containsKey(twoGram)) {
 					scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, //thmWordsMMap, 
-							thmScoreSpanSet, thmPartMap, twoGram, //nextWordCombined, 
+							thmScoreSpanSet, thmPartMap, wordThmsListList, twoGram, //nextWordCombined, 
 							i, WordForms.TokenType.TWOGRAM, singletonScoresAr,
 							searchWordsSet, dbThmSet, searchState);
 					if (scoreAdded > 0) {
@@ -467,9 +540,10 @@ public class SearchIntersection {
 			// "closed range" all weigh a lot. 
 			word = inputWordsArUpdated[i];
 			
-			long time3 = System.nanoTime();
+			//long time3 = System.nanoTime();
+			//note many of these 
 			scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, //thmWordsMMap, 
-					thmScoreSpanSet, thmPartMap,
+					thmScoreSpanSet, thmPartMap, wordThmsListList, 
 					word, i, WordForms.TokenType.SINGLETON, singletonScoresAr, searchWordsSet, dbThmSet, searchState);
 			if (scoreAdded > 0) {
 				wordCountArray[i] += 1;
@@ -477,10 +551,60 @@ public class SearchIntersection {
 				searchState.addTokenScore(word, scoreAdded);
 				numWordsAdded++;
 				indexStartingWordsMMap.put(i, word);
+			}			
+			//SimilarThmSearch.printElapsedTime(time3, "time3");
+		}
+		/*sort here to avoid looping over unnecessary thms, since thms lists can be large, e.g. O(10^4) 
+		  or sometimes O(10^5)*/
+		Collections.sort(wordThmsListList);
+		//System.out.println("Sorted wordThmsListList "+wordThmsListList);
+		
+		/*Only count existing thms as soon as current score exceeds half of total score, */		
+		Iterator<WordThmsList> wordThmsListIter = wordThmsListList.iterator();
+		Set<IndexPartPair> selectedThmsSet = new HashSet<IndexPartPair>();
+		int curScore = 0;
+		
+		int halfScore = totalWordsScore / 2;
+		//avoid duplicating words, or parts, e.g. many times subwords
+		//of previous two grams or three grams are check again.  <--maybe don't add them to start with?!
+		//but requested thms might be very large, exceeding that of the two gram.
+		StringBuilder searchedWordsSb = new StringBuilder(100);
+		
+		while(wordThmsListIter.hasNext()) {
+			
+			WordThmsList wordThmsList = wordThmsListIter.next();
+			
+			String word = wordThmsList.word;
+			//If n-gram 
+			//already checked, don't check individual words again. E.g. "simplicial object"
+			//followed by "simplicia" and "object". "relatively prime" then "relativ", "prime".
+			if(searchedWordsSb.toString().contains(word)) {
+				continue;
+			}			
+			searchedWordsSb.append(word).append(" ");
+			
+			int wordScore = wordThmsList.score;
+			Collection<IndexPartPair> wordThms = wordThmsList.thmsList;
+			
+			if(curScore >= halfScore && selectedThmsSet.size() >= numHighest) {
+				//filter out the thms that haven't already been selected
+				Collection<IndexPartPair> updatedWordThms = new ArrayList<IndexPartPair>();
+				for(IndexPartPair pair : wordThms) {
+					if(selectedThmsSet.contains(pair)) {
+						updatedWordThms.add(pair);
+					}
+				}				
+				wordThms = updatedWordThms;
+			}else {
+				selectedThmsSet.addAll(wordThms);
+				curScore += wordScore;
 			}
 			
-			SimilarThmSearch.printElapsedTime(time3, "time3");
+			gatherWordThmsAPosteriori(thmScoreMap, thmWordSpanMMap, thmScoreSpanSet,
+					thmPartMap, wordThmsList.wordIndexInThm, wordThmsList.tokenType,
+					searchWordsSet, dbThmSet, wordScore, wordThms);			
 		}
+		
 		// add bonus points to thms with most number of query words, judging
 		// from size of value set in thmWordSpanMMap
 		if(searchState.allowLiteralSearch()) {
@@ -712,8 +836,7 @@ public class SearchIntersection {
 			}
 			topScorer = false;
 		}		
-		scoreThmMMap.putAll(tempScoreThmMMap);
-		
+		scoreThmMMap.putAll(tempScoreThmMMap);		
 	}
 
 	/**
@@ -762,6 +885,7 @@ public class SearchIntersection {
 	private static int addWordThms(Map<Integer, Integer> thmScoreMap, TreeMultimap<Integer, Integer> scoreThmMMap,
 			Multimap<Integer, Integer> thmWordSpanMMap, //SetMultimap<Integer, String> thmWordsMMap,
 			Set<ThmScoreSpanPair> thmScoreSpanSet, Map<Integer, ThmPart> thmPartMap,
+			List<WordThmsList> wordThmsListList, //Set<String> normalizedWordsSet,
 			//ListMultimap<String, Integer> wordThmIndexAddedMMap, //Multimap<String, IndexPartPair> wordThmIndexMMap,
 			String word, int wordIndexInThm, WordForms.TokenType tokenType,
 			int[] singletonScoresAr, Set<String> searchWordsSet 
@@ -792,9 +916,9 @@ public class SearchIntersection {
 			Integer wordSingFormScore = wordsScoreMap.get(wordSingForm);
 			
 			if (null != wordSingFormScore) {
-				long timeMap = System.nanoTime();
+				//long timeMap = System.nanoTime();
 				wordThms = wordThmsIndexMMap1.get(wordSingForm);	
-				SimilarThmSearch.printElapsedTime(timeMap, "MAP RETRIEVAL TIME");
+				//SimilarThmSearch.printElapsedTime(timeMap, "MAP RETRIEVAL TIME");
 				wordScore = wordSingFormScore;
 				curScoreToAdd = wordScore;
 				word = wordSingForm;
@@ -833,60 +957,28 @@ public class SearchIntersection {
 				}
 			}
 		}
+		if(searchState.tokenAlreadySearched(word)) {
+			return 0;
+		}
 		searchState.addNormalizedSearchToken(word);
+		
 		// removes endings such as -ing, and uses synonym rep.
 		
 		// adjust curScoreToAdd, boost 2, 3-gram scores when applicable
 		curScoreToAdd = tokenType.adjustNGramScore(curScoreToAdd, singletonScoresAr, wordIndexInThm);
-		
+				
 		if (!wordThms.isEmpty() && curScoreToAdd != 0) {
-			long beforeLoop = System.nanoTime();
 			
+			//add thms to list for now
+			wordThmsListList.add(new WordThmsList(word, wordThms, curScoreToAdd, tokenType, wordIndexInThm));
+
 			if (DEBUG) {
 				System.out.println("SearchIntersection-Word added: " + word + ". Score: " + curScoreToAdd);
 			}
 			
-			for (IndexPartPair thmIndex : wordThms) {
-				//note this list could be long, i.e. in hundreds of thousands
-				int index = thmIndex.thmIndex();
-				
-				if(null != dbThmSet && !dbThmSet.contains(index)) {
-					continue;
-				}
-				
-				//wordThmIndexAddedMMap.put(word, index);
-				
-				// skip thm if current word already been covered by previous
-				// 2/3-gram
-				/*if (tokenType.ifAddedToMap(thmWordSpanMMap, index, wordIndexInThm)){
-					continue;
-				}*/
-				Integer prevScore = thmScoreMap.get(index);
-				prevScore = prevScore == null ? 0 : prevScore;
-				//lower score if only occurring in context
-				/*****if(thmIndex.isContextPart()) {
-					int penalty = curScoreToAdd > 5 ? curScoreToAdd / 3 : 1;
-					curScoreToAdd -= penalty;
-				}*/
-				thmIndex.addToMap(thmPartMap);
-				
-				Integer newScore = prevScore + curScoreToAdd;
-				
-				/***Dec 6 scoreThmMMap.remove(prevScore, index);
-				scoreThmMMap.put(newScore, index);*/
-				
-				//thmScorePQ.add(new ThmScoreSpanPair(index, newScore, 0));
-				// put in thmIndex, and the index of word in the query, to
-				// thmWordSpanMMap.
-				tokenType.addToMap(thmWordSpanMMap, index, wordIndexInThm, thmScoreSpanSet, 
-						newScore, prevScore, thmScoreMap);
-				
-				//thmWordsMMap.put(index, word);
-				
-				//thmScoreSet.add(new ThmScoreSpanPair(index, newScore, 0));
-			}
-			SimilarThmSearch.printElapsedTime(beforeLoop, "LOOPING over "+wordThms.size()+" Thms");
-			scoreAdded = curScoreToAdd;
+			/****scoreAdded = gatherWordThmsAPosteriori(thmScoreMap, thmWordSpanMMap, thmScoreSpanSet, thmPartMap, word,
+					wordIndexInThm, tokenType, searchWordsSet, dbThmSet, curScoreToAdd, wordOriginalForm, wordThms);*/
+			
 			// add singletons to searchWordsSet, so
 			// searchWordsSet could be null if not interested in searchWordsSet.
 			if (scoreAdded > 0 && searchWordsSet != null) {
@@ -903,6 +995,80 @@ public class SearchIntersection {
 			addRelatedWordsThms(thmScoreMap, scoreThmMMap, thmScoreSpanSet, thmWordSpanMMap, wordIndexInThm, tokenType, scoreAdded,
 					relatedWordsList, dbThmSet);
 		}
+		//return scoreAdded;
+		return curScoreToAdd;
+	}
+
+	/**
+	 * Add thms corresponding to words to various score-keeping maps.
+	 * @param thmScoreMap
+	 * @param thmWordSpanMMap
+	 * @param thmScoreSpanSet
+	 * @param thmPartMap
+	 * @param word
+	 * @param wordIndexInThm
+	 * @param tokenType
+	 * @param searchWordsSet
+	 * @param dbThmSet
+	 * @param curScoreToAdd
+	 * @param wordOriginalForm
+	 * @param wordThms
+	 * @return score added.
+	 */
+	private static int gatherWordThmsAPosteriori(Map<Integer, Integer> thmScoreMap,
+			Multimap<Integer, Integer> thmWordSpanMMap, Set<ThmScoreSpanPair> thmScoreSpanSet,
+			Map<Integer, ThmPart> thmPartMap, int wordIndexInThm, WordForms.TokenType tokenType,
+			Set<String> searchWordsSet, Set<Integer> dbThmSet, int curScoreToAdd, 
+			Collection<IndexPartPair> wordThms) {
+		
+		int scoreAdded;
+		long beforeLoop = 0;
+		if(profileTiming) {
+			beforeLoop = System.nanoTime();
+		}
+		
+		for (IndexPartPair thmIndex : wordThms) {
+			//note this list could be long, i.e. in hundreds of thousands
+			int index = thmIndex.thmIndex();
+			
+			if(null != dbThmSet && !dbThmSet.contains(index)) {
+				continue;
+			}
+			
+			//wordThmIndexAddedMMap.put(word, index);
+			
+			// skip thm if current word already been covered by previous
+			// 2/3-gram
+			/*if (tokenType.ifAddedToMap(thmWordSpanMMap, index, wordIndexInThm)){
+				continue;
+			}*/
+			Integer prevScore = thmScoreMap.get(index);
+			prevScore = prevScore == null ? 0 : prevScore;
+			//lower score if only occurring in context
+			/*****if(thmIndex.isContextPart()) {
+				int penalty = curScoreToAdd > 5 ? curScoreToAdd / 3 : 1;
+				curScoreToAdd -= penalty;
+			}*/
+			thmIndex.addToMap(thmPartMap);
+			
+			Integer newScore = prevScore + curScoreToAdd;
+			
+			/***Dec 6 scoreThmMMap.remove(prevScore, index);
+			scoreThmMMap.put(newScore, index);*/
+			
+			//thmScorePQ.add(new ThmScoreSpanPair(index, newScore, 0));
+			// put in thmIndex, and the index of word in the query, to
+			// thmWordSpanMMap.
+			tokenType.addToMap(thmWordSpanMMap, index, wordIndexInThm, thmScoreSpanSet, 
+					newScore, prevScore, thmScoreMap);
+			
+			//thmWordsMMap.put(index, word);
+			
+			//thmScoreSet.add(new ThmScoreSpanPair(index, newScore, 0));
+		}
+		if(profileTiming) SimilarThmSearch.printElapsedTime(beforeLoop, "LOOPING over "+wordThms.size()+" Thms");
+		scoreAdded = curScoreToAdd;
+		
 		return scoreAdded;
 	}
 

@@ -105,6 +105,10 @@ public class SearchState {
 		this.normalizedTokenSet.add(tok);
 	}
 	
+	public boolean tokenAlreadySearched(String tok) {
+		return this.normalizedTokenSet.contains(tok);		
+	}
+	
 	/**
 	 * map of thmIndex and their word-weight scores.
 	 * @param scoreMap

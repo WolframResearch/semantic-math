@@ -150,7 +150,9 @@ public class SimilarThmSearch {
 		thmPiecesList.sort(new thmp.utils.DataUtility.StringLenComparator());
 		int listSz = thmPiecesList.size();
 		
-		boolean profileTiming = true;
+		boolean profileTiming = false;
+		
+		Map<Integer, Integer> contextVecMap = TheoremGet.getContextRelationVecFromIndex(thmIndex).contextVecMap();
 		
 		long afterParse = 0;
 		long beforeSearch = 0;
@@ -198,21 +200,21 @@ public class SimilarThmSearch {
 			
 			//replace variables by their names.
 			//** commented out Dec 6, to decrease processing time str = chopThmStr(str, parseState);
-			if(profileTiming) beforeParse = System.nanoTime();
+			/**if(profileTiming) beforeParse = System.nanoTime();
 			
 			//get context vec map entries instead of parsing anew.
 			Map<Integer, Integer> contextVecMap = computeContextVecMap(searchState.normalizedTokenSet,
 					thmIndex);
-			if(profileTiming) afterParse = printElapsedTime(beforeParse, "parsing");
+			if(profileTiming) afterParse = printElapsedTime(beforeParse, "parsing");*/
 			
 		//////
-					boolean isVerbose = false;
+					/****boolean isVerbose = false;
 					ParseStateBuilder parseStateBuilder = new ParseStateBuilder();
 					ParseState parseState = parseStateBuilder.build();
 					
 					//must parse current str *after* symbol replacement, to not replace def in current str.
 					ParseRun.parseInput(str, parseState, isVerbose);
-					System.out.println("Parsed component vec map: " + parseState.getLatestThmContextVecMap());
+					System.out.println("Parsed component vec map: " + parseState.getLatestThmContextVecMap());*/
 					//////
 			
 			/*SearchState searchState = new SearchState();
@@ -292,6 +294,12 @@ public class SimilarThmSearch {
 		}
 	}
 
+	/**
+	 * Don't delete, Dec 8
+	 * @param normalizedTokenSet
+	 * @param thmIndex
+	 * @return
+	 */
 	private static Map<Integer, Integer> computeContextVecMap(Set<String> normalizedTokenSet, int thmIndex) {
 		
 		Map<Integer, Integer> curComponentContextMap = new HashMap<Integer, Integer>();
