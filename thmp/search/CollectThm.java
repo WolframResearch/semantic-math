@@ -133,23 +133,6 @@ public class CollectThm {
 	}
 	
 	/**
-	 * Set list of bufferedReaders, rawFileReaderList.
-	 * Should just set servlet context instead of BufferedReaders!!
-	 * @param srcFileReader
-	 */
-	/*Commented out June 2017
-	 * public static void setResources(//List<BufferedReader> srcFileReaderList, 
-			BufferedReader macrosReader
-			//InputStream parsedExpressionListStream, InputStream allThmWordsSerialIStream
-			) {
-		//rawFileReaderList = srcFileReaderList;
-		macrosDefReader = macrosReader;
-		//parsedExpressionListInputStream = parsedExpressionListStream;
-		//allThmWordsSerialInputStream = allThmWordsSerialIStream;
-		//System.out.print("buffered readers first passed in: " + srcFileReaderList);		
-	}*/
-	
-	/**
 	 * The terms used by the SVD search, which are collected dynamically from the thms,
 	 * are different than the ones used by context and relational vector search, whose
 	 * terms also include the 2/3 grams and lexicon words (not just the ones that show up
@@ -157,33 +140,15 @@ public class CollectThm {
 	 * of search (since these data were serialized).
 	 */
 	public static class ThmWordsMaps{
-		//List of theorems, each of which
-		//contains map of keywords and their frequencies in this theorem. 
-		//the more frequent words in a thm should be weighed up, but the
-		//ones that are frequent in the whole doc weighed down.
-		//private static final ImmutableList<ImmutableMap<String, Integer>> thmWordsFreqList;
-		
-		//document-wide word frequency. Keys are words, values are counts in whole doc.
-		//private static final ImmutableMap<String, Integer> docWordsFreqMap;
 		
 		private static final ImmutableMultimap<String, String> stemToWordsMMap;
-		//file to read from. Thms already extracted, ready to be processed.
-		//private static final File thmFile = new File("src/thmp/data/thmFile5.txt");
-		//list of theorems, in order their keywords are added to thmWordsList
-		//private static final ImmutableList<String> thmList;
-		//Multimap of keywords and the theorems they are in, in particular their indices in thmList
-		//private static final ImmutableMultimap<String, Integer> wordThmsIndexMMap;
-		/**Versions without annotations***/
+		
 		/*words and their document-wide frequencies. These words are normalized, 
 		e.g. "annihilator", "annihiate" all have the single entry "annihilat" */
 		private static final ImmutableMap<String, Integer> docWordsFreqMapNoAnno;
 		//entries are word and the indices of thms that contain that word.
 		private static final ImmutableMultimap<String, IndexPartPair> wordThmsIndexMMapNoAnno;
-		//map serialized for use during search, contains N-grams. Words and their frequencies.
-		/*private static final ImmutableMap<String, Integer> contextVecWordsNextTimeMap;*/
-		//to be used next time, words and their indices.
-		/*private static final ImmutableMap<String, Integer> contextVecWordsIndexNextTimeMap;*/
-		//this size depends on whether currently gathering data or performing search.
+		
 		private static final int CONTEXT_VEC_SIZE;
 		
 		private static final String NAMED_THMS_FILE_STR = "src/thmp/data/thmNames.txt";
@@ -299,21 +264,22 @@ public class CollectThm {
 			}else {
 				wordThmsIndexMMapNoAnno = null;
 			}				
-				 
-				String docWordsFreqMapNoAnnoPath = FileUtils.getPathIfOnServlet(SearchMetaData.wordDocFreqMapPath());
+				 //SearchMetaData.wordDocFreqMapPath()
+				String docWordsFreqMapNoAnnoPath = FileUtils.getPathIfOnServlet(SearchMetaData.allThmWordsFreqListPath());
 				/****@SuppressWarnings("unchecked")
 				Map<String, Integer> docWordsFreqPreMap = ((List<Map<String, Integer>>)
 						FileUtils.deserializeListFromFile(docWordsFreqMapNoAnnoPath)).get(0);*/
 				
 				@SuppressWarnings("unchecked")
-				Map<String, Integer> docWordsFreqPreMap = ((List<Map<String, Integer>>)
-						FileUtils.deserializeListFromFile(docWordsFreqMapNoAnnoPath)).get(0);
-				
+				List<WordFreqPair> docWordsFrePreMapEntryList = (List<WordFreqPair>)
+						FileUtils.deserializeListFromFile(docWordsFreqMapNoAnnoPath);
 				
 				/**construct map from list, since hashmap iteration does not guarantee ordering,
-				//and we need ordering to create context vec map*/
-				//Map<String, Integer> docWordsFreqPreMap
-				
+				//and we need ordering to create context vec map. */
+				Map<String, Integer> docWordsFreqPreMap = new HashMap<String, Integer>();
+				for(WordFreqPair pair : docWordsFrePreMapEntryList) {
+					docWordsFreqPreMap.put(pair.word, pair.freq);
+				}
 				docWordsFreqMapNoAnno = ImmutableMap.copyOf(docWordsFreqPreMap);
 				
 				//compute the average word frequencies for singleton words
@@ -368,6 +334,23 @@ public class CollectThm {
 				String skipGramWordsListFileStr = "src/thmp/data/skipGramWordsList.txt";
 				FileUtils.writeToFile(skipGramWordsList, skipGramWordsListFileStr);
 			}
+		}
+		
+		/**
+		 * Because HashMap$Node is not serializable.
+		 */
+		public static class WordFreqPair implements Serializable{
+			
+			private static final long serialVersionUID = -6594919249191163474L;
+			
+			private String word;
+			private int freq;
+			
+			public WordFreqPair(String word_, int freq_) {
+				this.word = word_;
+				this.freq = freq_;
+			}
+			
 		}
 		
 		/**

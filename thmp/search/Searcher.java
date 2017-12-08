@@ -94,6 +94,8 @@ public interface Searcher<S> {
 		private static final String wordThmIndexMMapSerialFileName = "wordThmIndexMMap.dat";
 		private static final String wordThmIndexMMapSerialFilePath = "src/thmp/data/" + wordThmIndexMMapSerialFileName;
 		private static final String wordDocFreqMapPath = "src/thmp/data/allThmWordsMap.dat";
+		private static final String wordDocFreqPairsPath = "src/thmp/data/allThmWordsFreqList.dat";
+		//allThmWordsMapEntryList
 		private static final String threeGramsFreqMapPath = "src/thmp/data/threeGramsMap.dat";
 		private static final String twoGramsFreqMapPath = "src/thmp/data/twoGramsMap.dat";
 		private static final String trueFluffWordsSetPath = "src/thmp/data/trueFluffWordsSet.dat";
@@ -140,6 +142,14 @@ public interface Searcher<S> {
 		
 		public static String wordDocFreqMapPath(){
 			return wordDocFreqMapPath;
+		}
+		
+		/**
+		 * Path to i.e. allThmWordsFreqList.dat.
+		 * @return
+		 */
+		public static String allThmWordsFreqListPath(){
+			return wordDocFreqPairsPath;
 		}
 		
 		public static String threeGramsFreqMapPath(){

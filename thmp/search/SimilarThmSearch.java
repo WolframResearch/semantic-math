@@ -186,7 +186,7 @@ public class SimilarThmSearch {
 			SearchStateBuilder searchStateBuilder = new SearchStateBuilder();
 			searchStateBuilder.disableLiteralSearch();
 			SearchState searchState = searchStateBuilder.build();
-				
+			
 			//max span amongst any thms amongst returned results.
 			int maxThmSpan = gatherThmFromWords(str, thmIndexList, thmScoreMap, thmSpanMap,
 					searchState);	
