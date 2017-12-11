@@ -1,61 +1,55 @@
 package thmp.runner;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Multiset;
 import com.wolfram.puremath.dbapp.DBUtils;
 import com.wolfram.puremath.dbapp.SimilarThmUtils;
 
 import thmp.search.ThmHypPairGet;
+import thmp.utils.FileUtils;
 
 /**
- * Generate indices of similar thms. Encodes indices to string,
- * Write results to csv file for database.
- * 
+ * Selects n-grams from theorems.
  * @author yihed
  *
  */
-public class GenerateSimilarThms {
+public class SelectThmNGrams {
 
 	//number of thms to serialize at a time
 	private static final int numThmPerBundle = 5000;
+		
+	public static void main(String[] args) {		
+		selectNGrams();
+	}
 	
 	/**
-	 * At least one arg required, for path to tar, optional arg to specify whether to 
-	 * collect msc data, with "msc" option
-	 * @param args
-	 * @throws FileNotFoundException
-	 * @throws IOException
-	 * @throws InterruptedException
+	 * Combines different serialized files, and serializes them.
 	 */
-	public static void main(String[] args) throws FileNotFoundException, IOException, InterruptedException{
+	private static void selectNGrams() {
 		
-		/*int argsLen = args.length;
-		//read in location of source file
-		if(0 == argsLen){
-			System.out.println("Please supply a file to read data sources from!");
-			return;
-		}*/
 		
-		//get all files in thm dir
-		//System.out.println("GenerateSimilarThms-fileNamesList: " + fileNamesList);
-		
-		//run through thm indices
 		int totalThmCount = ThmHypPairGet.totalThmsCount();
 		int totalBundles = (int)Math.ceil(((double)totalThmCount) / numThmPerBundle);
 		
-		for(int j = 60; j < totalBundles; j++) {
+		//1/3 way through, stop adding new ones, for memory purposes, and only add count if already contained
+		
+		for(int j = 0; j < totalBundles; j++) {
+			
+			boolean addNewTerms = j < totalBundles/3;
 			
 			Map<Integer, byte[]> similarThmsMap = new HashMap<Integer, byte[]>();
 			int endingIndex = Math.min(totalThmCount, (j+1)*numThmPerBundle);
 			int startingIndex = j * numThmPerBundle;
 			for(int i = startingIndex; i < endingIndex; i++) {				
 				List<Integer> similarThmList = thmp.search.SimilarThmSearch.preComputeSimilarThm( i );
-				similarThmsMap.put(i, SimilarThmUtils.indexListToByteArray(similarThmList));				
+				similarThmsMap.put(i, SimilarThmUtils.indexListToByteArray(similarThmList));
+				
+				
 			}
 			String path = DBUtils.SimilarThmsTb.similarThmIndexByteArrayPathNoDat + j + ".dat" ;
 			//make map instead of write to file.
@@ -63,6 +57,22 @@ public class GenerateSimilarThms {
 			similarThmsMapList.add(similarThmsMap);
 			thmp.utils.FileUtils.serializeObjToFile(similarThmsMapList, path);
 			System.out.println("Done serializing for bundle " + j);
-		}		
+		}
+		
 	}
+	
+	/**
+	 * account for latex. Select 4 grams given a thm.
+	 * @param thm
+	 * @param nGramMSet set of n grams already gathered
+	 */
+	private static void select4Grams(String thm, Multiset<String> nGramMSet,
+			boolean allowNewWords) {
+		
+		String thmLower = thm.toLowerCase();
+		
+		
+		
+	}
+	
 }

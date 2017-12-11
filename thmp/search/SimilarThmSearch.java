@@ -438,7 +438,7 @@ public class SimilarThmSearch {
 		if( strLen < 26) {
 			return true;
 		}
-		if(strLen < 45 && !inputLower.contains(" then ") 
+		if(strLen < 40 && !inputLower.contains(" then ") 
 				&& HYP_PATTERN.matcher(inputLower).find()){
 			return true;
 		}

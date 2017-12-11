@@ -431,7 +431,7 @@ public class TriggerMathThm2 {
 	 * and according to norm. To be compared to columns 
 	 * of term document matrix.
 	 * @param thm
-	 * @return
+	 * @return Query row vector string.
 	 */
 	public static String createQueryVec(String thm){
 		

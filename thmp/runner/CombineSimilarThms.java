@@ -17,14 +17,12 @@ import thmp.utils.FileUtils;
  */
 public class CombineSimilarThms {
 
-	public static void main(String[] args) {
-		
+	public static void main(String[] args) {		
 		combineSerialFiles();
 	}
 	
 	/**
-	 * Combines different serialized files, and 
-	 * 
+	 * Combines different serialized files, and serializes them.
 	 */
 	private static void combineSerialFiles() {
 		String dirPath = DBUtils.SimilarThmsTb.similarThmIndexByteArrayDirPath;
