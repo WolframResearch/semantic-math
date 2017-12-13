@@ -81,14 +81,21 @@ public class DBDeploy {
 	
 	public static void populateSimilarThmsTb(Connection conn) throws SQLException {
 		
-		/*If creating table, should be created as CREATE TABLE similarThmsTb (index MEDIUMINT, similarThms VARBINARY(252));*/
+		/*If creating table, should be created as 
+		 * CREATE TABLE similarThmsTb (index MEDIUMINT(9) UNSIGNED, similarThms VARBINARY(252));*/
 		
 		PreparedStatement pstm;
 		
 		pstm = conn.prepareStatement("TRUNCATE " + SimilarThmsTb.TB_NAME + ";");		
 		pstm.executeUpdate();
 		
+		//252 ~ 20 * 100 / 8
 		//need to pudate table MEDIUMINT(9) UNSIGNED;  VARBINARY(265)
+		//"ALTER TABLE <table_name> MODIFY <col_name> VARCHAR(65);";		
+		int varbinaryLen = SimilarThmUtils.maxSimilarThmListStrLen();
+		pstm = conn.prepareStatement("ALTER TABLE " + SimilarThmsTb.TB_NAME + " MODIFY " 
+				+ SimilarThmsTb.SIMILAR_THMS_COL + " VARBINARY(" + varbinaryLen + ");");
+		pstm.executeUpdate();
 		
 		pstm = conn.prepareStatement("ALTER TABLE " + SimilarThmsTb.TB_NAME + " DROP PRIMARY KEY;");
 		pstm.executeUpdate();

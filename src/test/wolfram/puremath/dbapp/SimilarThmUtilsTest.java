@@ -17,7 +17,7 @@ public class SimilarThmUtilsTest {
 		String str = SimilarThmUtils.indexListToStr(thmIndexList);
 		
 		//System.out.println("index str: "+str);
-		List<Integer> returnedIndex = SimilarThmUtils.strToIndexList(str);
+		List<Integer> returnedIndex = SimilarThmUtils.strToIndexList(str, SimilarThmUtils.numBitsPerThmIndex());
 		int thmIndexListSz = thmIndexList.size();
 		for(int i = 0; i < thmIndexListSz; i++) {
 			
