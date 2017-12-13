@@ -5,8 +5,10 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -37,13 +39,17 @@ public class ConceptSearch {
 	private static final int NUM_NEAREST_VECS = SearchCombined.NUM_NEAREST;
 	
 	private static final int NUM_BITS_PER_WORD_INDEX;
-	private static final int maxWordsIndexListLen = Searcher.SearchMetaData.maxWordsIndexListLen;
+	private static final int maxWordsIndexListLen = Searcher.SearchMetaData.maxConceptsPerThmNum;
 	
 	private static final int NO_OP = -1;
 	
 	static {
-		//just shift!
-		NUM_BITS_PER_WORD_INDEX = (int)Math.ceil(Math.log(keywordsIndexMap.size())/Math.log(2));
+		int keywordsIndexMapSz = keywordsIndexMap.size();
+		int logBase2 = 0;
+		while((keywordsIndexMapSz >>= 1) != 0) {
+			logBase2++;
+		}
+		NUM_BITS_PER_WORD_INDEX = ++logBase2;
 	}
 	
 	public static List<Integer> getStrictNormalizedWordsThms(String[] keyWordsAr) {
@@ -89,8 +95,7 @@ public class ConceptSearch {
 			if(++thmCount > NUM_NEAREST_VECS) {
 				break;
 			}
-		}
-		
+		}		
 		//sort to have 
 		selectedThmsList.sort(new thmp.utils.DataUtility.CountComparator<Integer>(indexPartMSet));
 		
@@ -139,7 +144,7 @@ public class ConceptSearch {
 		
 		List<String> wordsList = WordForms.splitThmIntoSearchWordsList(thmStr);
 		int wordsListSz = wordsList.size();
-		List<Integer> wordIndexList = new ArrayList<Integer>();
+		Set<Integer> wordIndexSet = new HashSet<Integer>();
 		
 		for (int i = 0; i < wordsListSz; i++) {
 			
@@ -158,28 +163,32 @@ public class ConceptSearch {
 					String threeGram = twoGram + " " + thirdWord;
 					int wordIndex = getNormalizedWordIndex(threeGram);
 					if(wordIndex != NO_OP ) {
-						wordIndexList.add(wordIndex);
+						wordIndexSet.add(wordIndex);
 					}
 				}
 				int wordIndex = getNormalizedWordIndex(twoGram);
 				if(wordIndex != NO_OP ) {
-					wordIndexList.add(wordIndex);
+					wordIndexSet.add(wordIndex);
 				}
 			}
 			int wordIndex = getNormalizedWordIndex(word);
 			if(wordIndex != NO_OP) {
-				wordIndexList.add(wordIndex);
+				wordIndexSet.add(wordIndex);
 			}
-			if(wordIndexList.size() >= maxWordsIndexListLen) {
+			if(wordIndexSet.size() >= maxWordsIndexListLen) {
 				break;
 			}
 		}
 		
-		return SimilarThmUtils.wordsListToByteArray(wordIndexList, NUM_BITS_PER_WORD_INDEX,
+		for(Integer index : wordIndexSet) {
+			System.out.print(keywordsList.get(index) + "\t");
+		}
+		System.out.println();
+		
+		List<Integer> wordIndexList = new ArrayList<Integer>(wordIndexSet);
+ 		return SimilarThmUtils.wordsListToByteArray(wordIndexList, NUM_BITS_PER_WORD_INDEX,
 				maxWordsIndexListLen) ;
 	}
-	
-
 	
 	/**
 	 * Normalizes (singularize, trim endings, etc) word, and get 
@@ -191,28 +200,39 @@ public class ConceptSearch {
 		
 		Integer wordIndex = keywordsIndexMap.get(word);
 		if(null != wordIndex) {
+			System.out.println("chosen: " +word+"\t");
 			return wordIndex;
 		} 
 		String wordSingForm = WordForms.getSingularForm(word);
 			
 		wordIndex = keywordsIndexMap.get(wordSingForm);			
 		if (null != wordIndex) {
-				return wordIndex;		
+			System.out.println("chosen: " +wordSingForm+"\t");
+			return wordIndex;		
 		}
 		
 		String normalizedWord = WordForms.normalizeWordForm(word);
 		wordIndex = keywordsIndexMap.get(normalizedWord);		
 		if (null != wordIndex) {
+			System.out.println("chosen: " +normalizedWord+"\t");
 			return wordIndex;		
 		}
 		
 		normalizedWord = WordForms.normalizeWordForm(wordSingForm);
 		wordIndex = keywordsIndexMap.get(normalizedWord);		
 		if (null != wordIndex) {
+			System.out.println("chosen: " +normalizedWord+"\t");
 			return wordIndex;		
 		}
 		
 		return NO_OP;
 	}
-	
+
+	/**
+	 * Number of bits necessary to store an index to a word in lexicon map.
+	 * @return
+	 */
+	public static int NUM_BITS_PER_WORD_INDEX() {
+		return NUM_BITS_PER_WORD_INDEX;
+	}
 }

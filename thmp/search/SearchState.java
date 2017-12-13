@@ -140,9 +140,10 @@ public class SearchState {
 		return this.contextSearchNumCoincidingMap;
 	}
 	
-	public void setContextScoreIndexTMap(TreeMap<Integer, List<Integer>> scoreMap){
+	/*Commented out Dec 13, 2017
+	 * public void setContextScoreIndexTMap(TreeMap<Integer, List<Integer>> scoreMap){
 		this.contextScoreIndexTMap = scoreMap;
-	}
+	}*/
 	
 	/**
 	 * Score map for context search.
@@ -150,9 +151,10 @@ public class SearchState {
 	 * based on context vectors.
 	 * @return @Nullable The context vec map. 
 	 */
-	public TreeMap<Integer, List<Integer>> contextScoreIndexTMap(){
+	/*Commented out Dec 13, 2017
+	 * public TreeMap<Integer, List<Integer>> contextScoreIndexTMap(){
 		return this.contextScoreIndexTMap;
-	}
+	}*/
 	
 	public boolean allowLiteralSearch() {
 		return allowLiteralSearch;

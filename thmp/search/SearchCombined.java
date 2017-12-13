@@ -403,7 +403,25 @@ public class SearchCombined {
 		}		
 		return reorderedList;
 	}
-
+	
+	/**
+	 * Searches using search as specified by searcher, e.g. relational search, in chunks of size tupleSz from index 0
+	 * through the entire list. 
+	 * @param queryStr The English sentence to be searched.
+	 * @param thmCandidateList List produced by previous methods, to be processed through by searcher.
+	 * @param tupleSz
+	 * @param searcher new search object to be used for searching.
+	 */
+	public static <T> List<Integer> searchVec(String queryStr, List<Integer> thmCandidateList,
+			Searcher<T> searcher, SearchState searchState) {
+		
+		List<Integer> reorderedList = new ArrayList<Integer>();
+		
+		List<Integer> reorderedSublist = searcher.search(queryStr, thmCandidateList, searchState);
+		reorderedList.addAll(reorderedSublist);
+		return reorderedList;
+	}
+	
 	/**
 	 * Search that invokes different layers
 	 * @param args

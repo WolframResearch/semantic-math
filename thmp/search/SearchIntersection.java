@@ -715,8 +715,21 @@ public class SearchIntersection {
 		Searcher<Map<Integer, Integer>> contextSearcher = new ContextSearch();	
 		topScorer = true;*/
 		
-		
-		
+		if(searchState.largestWordSpan() > 1) {
+			//combine with ranking from relational search, reorganize within each tuple
+			//of fixed size. Try relation search first, then context search.
+			/*if(searchRelationalBool){
+				highestThmList = SearchCombined.searchVecWithTuple(input, highestThmList, tupleSz, relationSearcher, searchState);					
+			}*/			
+			// re-order top entries based on context search, if enabled
+			//temporary false - Dec 13
+			boolean b = true;
+			if (b && contextSearchBool) {						
+				Searcher<Map<Integer, Integer>> contextSearcher = new ContextSearch();
+				//contextSearcher.setSearcherState(parseState.con);
+				highestThmList = SearchCombined.searchVec(input, highestThmList, contextSearcher, searchState);
+			}
+		}
 		/******* DON'T delete Dec 6
 		 * outerWhile: for (Entry<Integer, Collection<ThmSpanPair>> entry : scoreThmDescMMap.entrySet()) {		
 			List<Integer> tempHighestThmList = new ArrayList<Integer>();
