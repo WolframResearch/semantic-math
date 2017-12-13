@@ -34,11 +34,10 @@ public class ParseTreeToContextVec {
 	/* Map of words and their *indices* */
 	//private static final Map<String, Integer> contextKeywordIndexQueryDict = CollectThm.ThmWordsMaps.get_CONTEXT_VEC_WORDS_INDEX_MAP();
 	//contextVecWordsNextTimeMMap
-	private static final Map<String, Integer> contextKeywordIndexThmsDataDict = CollectThm.ThmWordsMaps.get_CONTEXT_VEC_WORDS_INDEX_MAP();
+	//private static final Map<String, Integer> contextKeywordIndexThmsDataDict = CollectThm.ThmWordsMaps.get_CONTEXT_VEC_WORDS_INDEX_MAP();
 	//.get_contextVecWordsIndexNextTimeMap();
 	private static final boolean DEBUG = FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : false;
-	/*The current word-index map to use, this *must* be set to contextKeywordIndexThmsDataDict when producing vecs from thm data source. 
-	* e.g. in DetectHypothesis.java. */
+	/*The current word-index map to use. */
 	private static final Map<String, Integer> contextKeywordIndexDict;
 	/*Deliberately not final, since not needed, in fact not created, when gathering data instead of searching.*/
 	private static Map<String, RelatedWords> relatedWordsMap;
@@ -51,7 +50,7 @@ public class ParseTreeToContextVec {
 	
 	static{
 		
-		contextKeywordIndexDict = contextKeywordIndexThmsDataDict;
+		contextKeywordIndexDict = CollectThm.ThmWordsMaps.get_CONTEXT_VEC_WORDS_INDEX_MAP();
 		if(Searcher.SearchMetaData.gatheringDataBool()){
 			/* Sets the dictionary to the mode for producing context vecs from data source to be searched.
 			 * e.g. in DetectHypothesis.java. */			

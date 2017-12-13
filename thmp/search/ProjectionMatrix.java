@@ -22,9 +22,12 @@ import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.SetMultimap;
+import com.wolfram.puremath.dbapp.SimilarThmUtils;
 
 import thmp.parse.ParsedExpression;
 import thmp.parse.DetectHypothesis;
@@ -37,6 +40,7 @@ import thmp.search.Searcher.SearchMetaData;
 import thmp.search.TheoremGet.ContextRelationVecPair;
 import thmp.search.ThmSearch.TermDocumentMatrix;
 import thmp.utils.FileUtils;
+import thmp.utils.WordForms;
 import thmp.utils.MathLinkUtils.WLEvaluationMedium;
 import thmp.utils.WordForms.ThmPart;
 
@@ -57,9 +61,31 @@ public class ProjectionMatrix {
 	private static final String combinedMxRootPath = "src/thmp/data/mx/" 
 			+ TermDocumentMatrix.COMBINED_PROJECTED_TERM_DOCUMENT_MX_NAME; //+ ".mx";
 	private static final int TAR_COUNT_PER_BUNDLE = 5;//<--5 for testing for now, usually 15;
+	//private static final Map<String, Integer> threeGramsMap = ThreeGramSearch.get3GramsMap();
+	//private static final Map<String, Integer> twoGramsMap = NGramSearch.get2GramsMap();
+	/** Map of keywords and their indices in the keywords map. Consistent with keyword indices
+	 * in e.g. context vec maps. */
+	
+	/**
+	 * Map of keywords and their scores in document, the higher freq in doc, the
+	 * lower score, say 1/(log freq + 1) since log 1 = 0.
+	 */
+	private static final ImmutableMap<String, Integer> wordsScoreMap;
+
+	/**
+	 * Multimap of words, and the theorems (their indices) in thmList, the word
+	 * shows up in.
+	 */
+	private static final ImmutableMultimap<String, IndexPartPair> wordThmsIndexMMap;
 	
 	//regex to match strings of form: "'math0702266','Florent','','Baudier'"
 	private static final Pattern NAME_DATA_LINE_PATT = Pattern.compile("'([^']+)'.+");
+	
+	static {
+		wordsScoreMap = CollectThm.ThmWordsMaps.get_wordsScoreMap();
+		wordThmsIndexMMap = CollectThm.ThmWordsMaps.get_wordThmsMMapNoAnno();
+		
+	}
 	
 	/**
 	 * args is list of paths. 
@@ -402,7 +428,8 @@ public class ProjectionMatrix {
 		if(iter.hasNext()) {
 		try {
 			Map.Entry<String, IndexPartPair> p1 = iter.next();
-			IndexPartPair p = p1.getValue();
+			//intentionally not used
+			IndexPartPair pair = p1.getValue();
 		}catch(java.lang.ClassCastException e) {
 			
 			Multimap<String, Integer> wordThmsIntMultimap = ((List<Multimap<String, Integer>>)
@@ -423,22 +450,6 @@ public class ProjectionMatrix {
 			combinedWordThmIndexMMap.putAll(keyWord, updatedIndices);
 		}
 		return startingThmIndex + thmHypPairListSz;
-	}
-
-	//TEMPORARY, for nonuniformized data. June 2017.
-	private static List<ThmHypPair> convertPEToThmHypPairTEMP(List<ParsedExpression> peList){
-		List<ThmHypPair> thmHypPairList = new ArrayList<ThmHypPair>();
-		//int thmIndex = 0;
-		for(ParsedExpression pe : peList){
-			DefinitionListWithThm defListWithThm = pe.getDefListWithThm();
-			String thm = defListWithThm.getThmStr();
-			String def = defListWithThm.getDefinitionStr();
-			String fileName = defListWithThm.getSrcFileName();
-			ThmHypPair pair = new ThmHypPair(thm, def, fileName);
-			thmHypPairList.add(pair);			
-			//CollectThm.ThmWordsMaps.addToWordThmIndexMap(wordThmIndexMMap, def + " " + thm, thmIndex++);
-		}
-		return thmHypPairList;
 	}
 	
 	/**

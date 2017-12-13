@@ -173,6 +173,9 @@ public class CollectThm {
 		 * These words *alone* are used throughout all search algorithms by all maps, to guarantee consistency. 
 		 */
 		private static final Map<String, Integer> CONTEXT_VEC_WORDS_INDEX_MAP;
+		//list in which the index CONTEXT_VEC_WORDS_INDEX_MAP
+		private static final List<String> CONTEXT_VEC_WORDS_LIST;
+		
 		private static final ImmutableMap<String, Integer> CONTEXT_VEC_WORDS_FREQ_MAP;
 		
 		/** Map of (annotated with "hyp" etc) keywords and their scores in document, the higher freq in doc, the lower 
@@ -274,6 +277,10 @@ public class CollectThm {
 				List<WordFreqPair> docWordsFrePreMapEntryList = (List<WordFreqPair>)
 						FileUtils.deserializeListFromFile(docWordsFreqMapNoAnnoPath);
 				
+				List<String> wordsList = new ArrayList<String>();
+				//The underlying map is a tree map, don't create immutable map from it for now.
+				CONTEXT_VEC_WORDS_INDEX_MAP = createContextKeywordIndexDict(docWordsFrePreMapEntryList, wordsList);
+				CONTEXT_VEC_WORDS_LIST = ImmutableList.copyOf(wordsList);
 				/**construct map from list, since hashmap iteration does not guarantee ordering,
 				//and we need ordering to create context vec map. */
 				Map<String, Integer> docWordsFreqPreMap = new HashMap<String, Integer>();
@@ -299,8 +306,7 @@ public class CollectThm {
 				 * already contained in docWordsFreqMapNoAnno.*/
 				relatedWordsMap = deserializeAndProcessRelatedWordsMapFromFile(docWordsFreqMapNoAnno);
 				CONTEXT_VEC_WORDS_FREQ_MAP = docWordsFreqMapNoAnno;
-				//The underlying map is a tree map, don't create immutable map from it for now.
-				CONTEXT_VEC_WORDS_INDEX_MAP = createContextKeywordIndexDict(docWordsFreqMapNoAnno);
+				
 			/*}else{				
 				buildScoreMapNoAnno(wordsScorePreMap, CONTEXT_VEC_WORDS_FREQ_MAP);
 				/*Do *not* re-order map based on frequency, since need to be consistent with word row
@@ -320,16 +326,6 @@ public class CollectThm {
 			 * diverge. The latter contains additional words (N-grams) added below. Note these words
 			 * are used for NGram formation NEXT run (generating ParsedExpressionList)***/ //<--actually now they are the same
 			
-			//Must add the 2 and 3 grams to docWordsFreqPreMapNoAnno. The N-grams that actually occur in 
-			//this corpus of theorems have already been added to docWordsFreqPreMapNoAnno during buildMaps.
-			//docWordsFreqPreMapNoAnno.putAll(twoGramsMap);
-			//docWordsFreqPreMapNoAnno.putAll(threeGramsMap);
-			//map to be serialized, and used for forming context vectors in next run.
-			/* Commented out June 2017.
-			 * contextVecWordsNextTimeMap = docWordsFreqMapNoAnno;
-			//shouldn't need this, since can reconstruct index from immutableMap next time
-			contextVecWordsIndexNextTimeMap = ImmutableMap.copyOf(createContextKeywordIndexDict(contextVecWordsNextTimeMap));*/
-			//write skipGramWordsList to file
 			if(GATHER_SKIP_GRAM_WORDS){
 				String skipGramWordsListFileStr = "src/thmp/data/skipGramWordsList.txt";
 				FileUtils.writeToFile(skipGramWordsList, skipGramWordsListFileStr);
@@ -357,6 +353,8 @@ public class CollectThm {
 		 * Pair of index and component, whether context or main stm
 		 * in thm. To be used to create map of word-thm index, to 
 		 * differentiate scores between hyp and stm.
+		 * Equals and HashCode Only takes into account the index, 
+		 * not the ThmPart.
 		 */
 		public static class IndexPartPair implements Serializable{
 			
@@ -386,6 +384,9 @@ public class CollectThm {
 				return this.thmIndex;
 			}
 			
+			/**
+			 * Only takes into account the index, not the ThmPart.
+			 */
 			@Override
 			public boolean equals(Object other) {
 				if(null == other || !(other instanceof IndexPartPair)) {
@@ -632,13 +633,16 @@ public class CollectThm {
 		 * @param wordsList
 		 * @return Map of words and their indices in wordsList.
 		 */
-		public static Map<String, Integer> createContextKeywordIndexDict(Map<String, Integer> docWordsFreqPreMapNoAnno){
+		public static Map<String, Integer> createContextKeywordIndexDict(List<WordFreqPair> wordFreqPairList, 
+				List<String> wordsList){
 			Map<String, Integer> contextKeywordIndexDict = new HashMap<String, Integer>();
 			//these are ordered based on frequency, more frequent words occur earlier.
-			//Should already been ordered from previous run! 
-			int counter = 0;
-			for(Map.Entry<String, Integer> entry : docWordsFreqPreMapNoAnno.entrySet()){				
-				contextKeywordIndexDict.put(entry.getKey(), counter++);
+			
+			int wordFreqPairsSz = wordFreqPairList.size();
+			for(int i = 0; i < wordFreqPairsSz; i++){		
+				String word = wordFreqPairList.get(i).word;
+				contextKeywordIndexDict.put(word, i);
+				wordsList.add(word);
 			}
 			return contextKeywordIndexDict;
 		}
@@ -667,6 +671,10 @@ public class CollectThm {
 		 */
 		public static Map<String, Integer> get_CONTEXT_VEC_WORDS_INDEX_MAP(){
 			return CONTEXT_VEC_WORDS_INDEX_MAP;
+		}
+		
+		public static List<String> get_CONTEXT_VEC_WORDS_LIST(){
+			return CONTEXT_VEC_WORDS_LIST;
 		}
 		
 		public static int get_CONTEXT_VEC_SIZE(){

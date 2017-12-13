@@ -108,6 +108,8 @@ public interface Searcher<S> {
 		/**Path to csv file containing database names data 
 		 * e.g. '5523','1710.01696','Tim','','Lemke'*/
 		private static final String nameCSVDataPath = "src/thmp/data/metaDataNameDB.csv";
+		/**Max number of words index list, used for search based on exact words*/
+		public static final int maxWordsIndexListLen = 20;
 		
 		public static void set_gatheringDataBoolToTrue(){
 			//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));

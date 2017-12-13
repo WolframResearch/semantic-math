@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.google.common.collect.Multiset;
+
 /**
  * Class for utility functions for manipulating data.
  * @author yihed
@@ -16,6 +18,41 @@ public class DataUtility {
 	//could be math-ph/1315233
 	private static final Pattern FILE_NAME_PATTERN1 = Pattern.compile("([A-Z\\-a-z]+)([\\d]+)");
 	private static final Pattern FILE_NAME_PATTERN2 = Pattern.compile("[\\d]+\\.[\\d]+");
+	
+	/**
+	 * Comparator based on counts in a given Multiset.
+	 * Higher counts in provided Multiset get prioritized.
+	 * @param <T>
+	 */
+	public static class CountComparator<T extends Comparable<T>> implements Comparator<T>{
+		
+		Multiset<T> mset;
+		
+		public CountComparator(Multiset<T > set) {
+			this.mset=set;
+		}
+		
+		@Override
+		public int compare(T a, T b) {
+			
+			boolean contains1 = mset.contains(a);
+			boolean contains2 = mset.contains(b);
+			
+			if(!contains1 && !contains2) {
+				return 0;
+			}
+			
+			if(!contains1) {
+				return 1;
+			}
+			if(!contains2) {
+				return -1;
+			}
+			int count1 = mset.count(a);
+			int count2 = mset.count(b);
+			return count1 < count2 ? 1 : count2 < count1 ? -1 : a.compareTo(b);
+		}
+	}
 	
 	/**
 	 * O(n) time to find the max element of an iterable.

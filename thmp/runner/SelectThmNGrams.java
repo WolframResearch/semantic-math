@@ -1,6 +1,5 @@
 package thmp.runner;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -47,28 +46,6 @@ public class SelectThmNGrams {
 		}	
 	}
 	
-	private static class Comp implements Comparator<String>{
-		
-		Multiset<String> mset;
-		public Comp(Multiset<String > s) {
-			this.mset=s;
-		}
-		
-		@Override
-		public int compare(String a, String b) {
-			
-			if(!mset.contains(a)) {
-				return 1;
-			}
-			if(!mset.contains(b)) {
-				return -1;
-			}
-			int count1 = mset.count(a);
-			int count2 = mset.count(b);
-			return count1 < count2 ? 1 : count2 < count1 ? -1 : 0;
-		}
-	}
-	
 	public static void main(String[] args) {		
 		selectNGrams();
 	}
@@ -81,7 +58,7 @@ public class SelectThmNGrams {
 		int totalThmCount = ThmHypPairGet.totalThmsCount();
 		int totalBundles = (int)Math.ceil(((double)totalThmCount) / numThmPerBundle);
 		//int totalThmCount = 1;
-		//int totalBundles = 1;
+		totalBundles = 1;
 		
 		String rootPath = "src/thmp/data/nGramScrape";
 		//1/3 way through, stop adding new ones, for memory purposes, and only add count if already contained
@@ -103,19 +80,19 @@ public class SelectThmNGrams {
 				ThmHypPair thmHypPair = ThmHypPairGet.retrieveThmHypPairWithThm(i);
 				String thmStr = thmHypPair.getEntireThmStr();
 				//String thmStr = "hi there hdsh wt bunny sf gsg sgrgd dhg sf gsg sgrgd dhg";
-				//thmStr = "hi there hds khl, jkk$ agsg hi there hds khl. hjkh kh hk gh";
+				//String thmStr = "hi there hds khl, jkk$ agsg hi there hds khl. hjkh kh hk gh";
 				select4Grams(thmStr, nGramMSet, addNewTerms);
 				
 			}
 			//System.out.println("nGramMSet "+nGramMSet);
 			
-			TreeMultiset<String> sortedMSet = TreeMultiset.create(new Comp(nGramMSet));
+			Multiset<String> sortedMSet = TreeMultiset.create(new 
+					thmp.utils.DataUtility.CountComparator<String>(nGramMSet));
 			sortedMSet.addAll(nGramMSet);
 			
 			List<String> list = new ArrayList<String>(sortedMSet.elementSet());
 			
-			//list.sort(new Comp(nGramMSet));
-			
+			//list.sort(new Comp(nGramMSet));			
 			//System.out.println("list: " + list);
 			
 			//make map instead of write to file.
@@ -125,10 +102,9 @@ public class SelectThmNGrams {
 			thmp.utils.FileUtils.serializeObjToFile(similarThmsMapList, path);
 			String txtPath = rootPath + j + ".txt";
 			
-			thmp.utils.FileUtils.writeToFile(sortedMSet, txtPath);
+			thmp.utils.FileUtils.writeToFile(sortedMSet.entrySet(), txtPath);
 			
-		}
-		
+		}		
 	}
 	
 	/**
@@ -141,16 +117,15 @@ public class SelectThmNGrams {
 		
 		String thmLower = thm.toLowerCase();
 		List<String> wordsList = Arrays.asList(THM_SCRAPE_PUNCTUATION_PATTERN.split(thmLower));
-		//System.out.println("lineList "+lineList);
-		//gather words, stop at punctuations, stop words, and latex.
-		//Iterator<String> iter = lineList.iterator();
+		
+		//gather words, stop at punctuations, stop words, and latex.		
 		int wordsListSz = wordsList.size();
-		//int startingIndex = 0;
+		
 		int index = 0;
 		
 		outerWhile: for(int startingIndex = 0; startingIndex < wordsListSz; startingIndex++) {
 			
-			StringBuilder sb = new StringBuilder(30);
+			StringBuilder sb = new StringBuilder(35);
 			int wordCount = 0;
 			
 			index = startingIndex;

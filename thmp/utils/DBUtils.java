@@ -280,13 +280,15 @@ public class DBUtils {
 		DataSource ds = FileUtils.getPooledDataSource();
 		Connection connHandle = null;
 		try {
-			Connection conn = ds.getConnection();
+			connHandle = ds.getConnection();
 			/**Interesting fact: conn here has class
 			 * class com.sun.proxy.$Proxy91, generated at runtime,
 			 * that implements both a PooledConnection and a Connection.
 			 * I.e. a java.sql.Connection/javax.sql.PooledConnection reflection proxy.
+			 * One can get the actual connection by 
+			 * ((javax.sql.PooledConnection)connHandle).getConnection();
 			 */
-			connHandle = ((javax.sql.PooledConnection)conn).getConnection();
+			
 		} catch (SQLException e) {
 			logger.error("SQLException when getting pooled connection! " + e);
 		}

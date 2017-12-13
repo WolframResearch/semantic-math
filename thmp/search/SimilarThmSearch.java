@@ -68,7 +68,7 @@ public class SimilarThmSearch {
 		List<Integer> indexList;
 		
 		try {
-			indexList = SimilarThmUtils.getSimilarThmListFromDb(thmIndex, conn);
+			indexList = SimilarThmUtils.getSimilarThmsListFromDb(thmIndex, conn);
 		}catch(SQLException e) {
 			logger.error("SQLException while getting similar thms! " + e);
 			return Collections.emptyList();

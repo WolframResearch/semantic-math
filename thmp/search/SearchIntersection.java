@@ -9,30 +9,28 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.NavigableMap;
 import java.util.PriorityQueue;
 import java.util.Scanner;
 import java.util.Set;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Multiset;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.TreeMultimap;
 
 import thmp.search.CollectThm.ThmWordsMaps.IndexPartPair;
 import thmp.search.SearchCombined.ThmHypPair;
-import thmp.search.SearchIntersection.ThmScoreSpanPair;
 import thmp.search.ThmHypPairGet.ThmHypPairBundle;
 import thmp.utils.DBUtils.AuthorName;
 import thmp.utils.DBUtils.ConjDisjType;
@@ -164,6 +162,7 @@ public class SearchIntersection {
 			return true;
 		}		
 	}
+	
 	/**
 	 * Word and its corresponding theorems list. 
 	 */
@@ -375,7 +374,8 @@ public class SearchIntersection {
 	 * @param num
 	 * @return
 	 */
-	public static SearchState intersectionSearchUseCache(String input, Set<String> searchWordsSet, boolean contextSearchBool,
+	/*Commented out Dec 12, delete a few weeks later.
+	 * public static SearchState intersectionSearchUseCache(String input, Set<String> searchWordsSet, boolean contextSearchBool,
 			int... num) {
 		//retrieves and manages cache
 		Iterator<ThmHypPairBundle> thmCacheIter = ThmHypPairGet.createThmCacheIterator();
@@ -387,7 +387,7 @@ public class SearchIntersection {
 			//use this only if the thmIndexMap is split into multiple parts
 		}
 		return null;		
-	}
+	}*/
 	
 	public static SearchState intersectionSearch(String input, Set<String> searchWordsSet, 
 			SearchState searchState, boolean contextSearchBool, boolean searchRelationalBool,
@@ -426,8 +426,6 @@ public class SearchIntersection {
 		/*Multimap of thmIndex, and the (index of) set of words in query 
 		 that appear in the thm. Important that this is *Hash*Multimap */
 		SetMultimap<Integer, Integer> thmWordSpanMMap = HashMultimap.create();
-		/*To use for pruning probably irrelevant results*/
-		//SetMultimap<Integer, String> thmWordsMMap = HashMultimap.create();
 		
 		List<String> inputWordsList;
 		//take tokens in quotes as literal words
@@ -436,8 +434,6 @@ public class SearchIntersection {
 		}else {		
 			inputWordsList = WordForms.splitThmIntoSearchWordsList(input);
 		}
-		// determines whether to skip first token
-		int firstIndex = 0;
 		
 		/*
 		 * Map of theorems, in particular their indices in thmList, and the
@@ -463,8 +459,7 @@ public class SearchIntersection {
 		// multimap of words, and the list of thm indices that have been added. Words.
 		//ListMultimap<String, Integer> wordThmIndexAddedMMap = ArrayListMultimap.create();
 		
-		// multimap of indices in wrapper list and the words that start at that
-		// index
+		// multimap of indices in wrapper list and the words that start at that index
 		Multimap<Integer, String> indexStartingWordsMMap = ArrayListMultimap.create();
 
 		int inputWordsArSz = inputWordsList.size();
@@ -474,7 +469,6 @@ public class SearchIntersection {
 		// pre-compute the scores for singleton words in query.
 		int totalSingletonAdded = computeSingletonScores(inputWordsList, singletonScoresAr, inputWordsArUpdated);
 		searchState.set_totalWordAdded(totalSingletonAdded);
-		//PQ where words-based score is vacuously 0.
 		
 		Set<ThmScoreSpanPair> thmScoreSpanSet = new HashSet<ThmScoreSpanPair>();
 		Map<Integer, ThmPart> thmPartMap = new HashMap<Integer, ThmPart>();
@@ -484,7 +478,7 @@ public class SearchIntersection {
 		// either a singleton or n-gram
 		int[] wordCountArray = new int[inputWordsArSz];
 		
-		for (int i = firstIndex; i < inputWordsArSz; i++) {
+		for (int i = 0; i < inputWordsArSz; i++) {
 			//long time0 = System.nanoTime();
 			String word = inputWordsList.get(i);
 			// elicit higher score if wordLong fits
@@ -559,7 +553,7 @@ public class SearchIntersection {
 		Collections.sort(wordThmsListList);
 		//System.out.println("Sorted wordThmsListList "+wordThmsListList);
 		
-		/*Only count existing thms as soon as current score exceeds half of total score, */		
+		/*Only count existing thms as soon as current score exceeds half of total score. */		
 		Iterator<WordThmsList> wordThmsListIter = wordThmsListList.iterator();
 		Set<IndexPartPair> selectedThmsSet = new HashSet<IndexPartPair>();
 		int curScore = 0;
@@ -840,8 +834,8 @@ public class SearchIntersection {
 	}
 
 	/**
-	 * // gather the sizes of the value maps for thmWordSpanMMap, and keep
-		// track of order based on scores using a TreeMultimap
+	 * Gather the sizes of the value maps for thmWordSpanMMap, and keep
+	 * track of order based on scores using a TreeMultimap
 	 * @param searchState
 	 * @param thmWordSpanMMap
 	 * @param thmSpanMap
@@ -850,7 +844,7 @@ public class SearchIntersection {
 	private static int computeLargestSpan(SearchState searchState, SetMultimap<Integer, Integer> thmWordSpanMMap,
 			Map<Integer, Integer> thmSpanMap) {
 		int largestWordSpan = 0;
-		//TreeMultimap<Integer, Integer> spanScoreThmMMap = TreeMultimap.create();
+		
 		for (int thmIndex : thmWordSpanMMap.keySet()) {
 			
 			int thmWordsSetSize = thmWordSpanMMap.get(thmIndex).size();
@@ -858,7 +852,6 @@ public class SearchIntersection {
 			if(thmWordsSetSize > largestWordSpan){
 				largestWordSpan = thmWordsSetSize;
 			}
-			//spanScoreThmMMap.put(thmWordsSetSize, thmIndex);
 		}
 		searchState.setLargestWordSpan(largestWordSpan);
 		return largestWordSpan;
@@ -883,10 +876,9 @@ public class SearchIntersection {
 	 * @return scoreAdded
 	 */
 	private static int addWordThms(Map<Integer, Integer> thmScoreMap, TreeMultimap<Integer, Integer> scoreThmMMap,
-			Multimap<Integer, Integer> thmWordSpanMMap, //SetMultimap<Integer, String> thmWordsMMap,
+			Multimap<Integer, Integer> thmWordSpanMMap, 
 			Set<ThmScoreSpanPair> thmScoreSpanSet, Map<Integer, ThmPart> thmPartMap,
-			List<WordThmsList> wordThmsListList, //Set<String> normalizedWordsSet,
-			//ListMultimap<String, Integer> wordThmIndexAddedMMap, //Multimap<String, IndexPartPair> wordThmIndexMMap,
+			List<WordThmsList> wordThmsListList, 
 			String word, int wordIndexInThm, WordForms.TokenType tokenType,
 			int[] singletonScoresAr, Set<String> searchWordsSet 
 			, Set<Integer> dbThmSet, SearchState searchState
@@ -998,7 +990,7 @@ public class SearchIntersection {
 		//return scoreAdded;
 		return curScoreToAdd;
 	}
-
+	
 	/**
 	 * Add thms corresponding to words to various score-keeping maps.
 	 * @param thmScoreMap
