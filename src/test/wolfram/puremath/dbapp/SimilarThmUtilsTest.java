@@ -1,4 +1,4 @@
-package test;
+package test.wolfram.puremath.dbapp;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -43,10 +43,29 @@ public class DBUtils {
 		public static final String similarThmIndexByteArrayPath = "src/thmp/data/similarThmIndexByteArray.dat";
 		//to be used as root path for serialized maps. change the capitalizatio 
 		public static final String similarThmIndexByteArrayPathNoDat = "src/thmp/data/similarThms/similarThmIndexByteArray";
+		public static final String similarThmCombinedIndexByteArrayPath = "src/thmp/data/similarThms/similarThmCombinedIndexByteArray.dat";
+		public static final String similarThmIndexByteArrayDirPath = "src/thmp/data/similarThms/";
 		public static final String TB_NAME = "similarThmsTb";
 		/**thm index*/
 		public static final String INDEX_COL = "thmIndex";
 		public static final String SIMILAR_THMS_COL = "similarThms";
+	}
+	
+	/**
+	 * Table containing concepts.
+	 */
+	public static class ThmConceptsTb{
+		/**relative (to ~/thm) path to serialization file containing thm index, and string of list of 
+		 * indices of similar thms */
+		public static final String thmConceptsByteArrayPath = "src/thmp/data/thmConceptsByteArray.dat";
+		//to be used as root path for serialized maps. change the capitalizatio 
+		//public static final String similarThmIndexByteArrayPathNoDat = "src/thmp/data/similarThms/similarThmIndexByteArray";
+		//public static final String similarThmCombinedIndexByteArrayPath = "src/thmp/data/similarThms/similarThmCombinedIndexByteArray.dat";
+		//public static final String similarThmIndexByteArrayDirPath = "src/thmp/data/similarThms/";
+		public static final String TB_NAME = "thmConceptsTb";
+		/**thm index*/
+		public static final String INDEX_COL = "thmIndex";
+		public static final String CONCEPTS_COL = "thmConcepts";
 	}
 	
 	/**

@@ -114,7 +114,7 @@ public class SimilarThmUtils {
 			System.out.println("zeroOneList "+zeroOneList);
 		}
 		for(byte power : zeroOneList) {			
-			thmIndex += Math.pow(2, power);							
+			thmIndex += 1 << power;					
 		}
 		return thmIndex;
 	}
@@ -237,7 +237,37 @@ public class SimilarThmUtils {
 		
 		for(int i = 0; i < thmIndexListLen; i++) {
 						
-			fillByteArray(indexByteAr, thmIndexList.get(i), i);
+			fillByteArray(indexByteAr, thmIndexList.get(i), i, NUM_BITS_PER_INDEX);
+		}
+		if(DEBUG) System.out.println("indexByteAr "+Arrays.toString(indexByteAr));
+		return indexByteAr;
+	}
+	
+	/**
+	 * 
+	 * @param wordsIndexList
+	 * @param numBitsPerIndex
+	 * @param maxWordsIndexListLen
+	 * @return
+	 */
+	public static byte[] wordsListToByteArray(List<Integer> wordsIndexList, int numBitsPerIndex,
+			int maxWordsIndexListLen
+			) {
+		int thmIndexListLen = wordsIndexList.size();
+		if(thmIndexListLen > maxWordsIndexListLen) {
+			List<Integer> tempList = new ArrayList<Integer>();
+			for(int i = 0; i < maxWordsIndexListLen; i++) {
+				tempList.add(wordsIndexList.get(i));
+			}
+			thmIndexListLen = maxWordsIndexListLen;
+			wordsIndexList = tempList;
+		}
+		//create byte array, then turn byte array into string
+		
+		byte[] indexByteAr = new byte[thmIndexListLen*numBitsPerIndex/NUM_BITS_PER_BYTE+1];
+		
+		for(int i = 0; i < thmIndexListLen; i++) {						
+			fillByteArray(indexByteAr, wordsIndexList.get(i), i, numBitsPerIndex);
 		}
 		if(DEBUG) System.out.println("indexByteAr "+Arrays.toString(indexByteAr));
 		return indexByteAr;
@@ -250,14 +280,15 @@ public class SimilarThmUtils {
 	 * @param thmCount the count of the current thm amongst the similar thms.
 	 * thmCount is 0-based, i.e. starts counting at 0.
 	 */
-	private static void fillByteArray(byte[] indexByteAr, int thmIndex, int thmCount) {
+	private static void fillByteArray(byte[] indexByteAr, int thmIndex, int thmCount, 
+			int numBitsPerIndex) {
 		
 		//higher-indexed bits represent higher powers of 2.
-		byte[] zeroOneAr = new byte[NUM_BITS_PER_INDEX];
+		byte[] zeroOneAr = new byte[numBitsPerIndex];
 		int remainder = thmIndex;
-		for(int p = NUM_BITS_PER_INDEX-1; p > -1; p--) {
+		for(int p = numBitsPerIndex-1; p > -1; p--) {
 			
-			int tempRem = remainder - (int)Math.pow(2, p);
+			int tempRem = remainder - 1 << p;
 			if(tempRem >= 0) {
 				zeroOneAr[p] = 1;
 				remainder = tempRem;
@@ -265,12 +296,11 @@ public class SimilarThmUtils {
 					break;
 				}
 			}			
-		}
-		
-		int inArrayShift = thmCount * NUM_BITS_PER_INDEX / NUM_BITS_PER_BYTE;
+		}	
+		int inArrayShift = thmCount * numBitsPerIndex / NUM_BITS_PER_BYTE;
 		/* amount of shift in the byte partially filled from last index.
 		 * 8 means*/
-		int inByteShift = thmCount * NUM_BITS_PER_INDEX - inArrayShift * NUM_BITS_PER_BYTE;
+		int inByteShift = thmCount * numBitsPerIndex - inArrayShift * NUM_BITS_PER_BYTE;
 		
 		//current bit index between 0 and NUM_BITS_PER_INDEX
 		int curBitIndex = 0;
@@ -282,14 +312,14 @@ public class SimilarThmUtils {
 		byte curByte = indexByteAr[inArrayShift];
 		
 		for(int i = 0; i < 4; i++) {		
-			for(; curBitIndex < firstDivider+NUM_BITS_PER_BYTE*i && curBitIndex < NUM_BITS_PER_INDEX; curBitIndex++) {
+			for(; curBitIndex < firstDivider+NUM_BITS_PER_BYTE*i && curBitIndex < numBitsPerIndex; curBitIndex++) {
 				if(zeroOneAr[curBitIndex] == 1) {
 					curByte |= (1 << (curBitIndex + inByteShift - NUM_BITS_PER_BYTE*i));
 				}
 			}
 			
 			indexByteAr[inArrayShift+i] = curByte;
-			if(curBitIndex >= NUM_BITS_PER_INDEX) {
+			if(curBitIndex >= numBitsPerIndex) {
 				break;
 			}
 			curByte = 0;
@@ -303,16 +333,21 @@ public class SimilarThmUtils {
 	 * @return
 	 * @throws SQLException
 	 */
-	public static List<Integer> getSimilarThmListFromDb(int thmIndex, Connection conn) throws SQLException {
+	public static List<Integer> getSimilarThmsListFromDb(int thmIndex, Connection conn) throws SQLException {
 		
 		StringBuilder sb = new StringBuilder(50);
 		sb.append("SELECT ").append(SimilarThmsTb.SIMILAR_THMS_COL)
 		.append(" FROM ").append(SimilarThmsTb.TB_NAME)
 		.append(" WHERE ").append(SimilarThmsTb.INDEX_COL)
-		.append("=?;");
+		.append("=").append(thmIndex).append(";");
 		
-		PreparedStatement pstm = conn.prepareStatement(sb.toString());
-		pstm.setInt(1, thmIndex);
+		return queryByteArray(conn, sb);
+	}
+
+	public static List<Integer> queryByteArray(Connection conn, StringBuilder querySb) throws SQLException {
+		
+		PreparedStatement pstm = conn.prepareStatement(querySb.toString());
+		//pstm.setInt(1, thmIndex);
 		
 		ResultSet rs = pstm.executeQuery();
 		byte[] indexBytes;

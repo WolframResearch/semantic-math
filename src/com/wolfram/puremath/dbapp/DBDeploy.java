@@ -3,8 +3,10 @@ package com.wolfram.puremath.dbapp;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -25,6 +27,7 @@ public class DBDeploy {
 	/**
 	 * Truncates the table , populates it with data from supplied csv file.
 	 * @param csvFilePath Path to CSV file containing data to populate table with.
+	 * e.g. "metaDataNameDB.csv"
 	 * @throws SQLException 
 	 */
 	public static void populateAuthorTb(String csvFilePath, Connection conn) throws SQLException {
@@ -85,13 +88,15 @@ public class DBDeploy {
 		pstm = conn.prepareStatement("TRUNCATE " + SimilarThmsTb.TB_NAME + ";");		
 		pstm.executeUpdate();
 		
+		//need to pudate table MEDIUMINT(9) UNSIGNED;  VARBINARY(265)
+		
 		pstm = conn.prepareStatement("ALTER TABLE " + SimilarThmsTb.TB_NAME + " DROP PRIMARY KEY;");
 		pstm.executeUpdate();
 		
 		//populate table from serialized similar thms indices
 		@SuppressWarnings("unchecked")
 		List<Map<Integer, byte[]>> similarThmsMapList 
-			= (List<Map<Integer, byte[]>>)FileUtils.deserializeListFromFile(DBUtils.SimilarThmsTb.similarThmIndexByteArrayPath);
+			= (List<Map<Integer, byte[]>>)FileUtils.deserializeListFromFile(DBUtils.SimilarThmsTb.similarThmCombinedIndexByteArrayPath);
 		
 		Map<Integer, byte[]> similarThmsMap = similarThmsMapList.get(0);
 		
@@ -103,24 +108,42 @@ public class DBDeploy {
 		
 		pstm = conn.prepareStatement(sb.toString());
 		pstm.executeUpdate();
+		sb = new StringBuilder(50);
+		sb.append("INSERT INTO " + SimilarThmsTb.TB_NAME + " (")
+		.append(SimilarThmsTb.INDEX_COL)
+		.append(",").append(SimilarThmsTb.SIMILAR_THMS_COL)
+		.append(") VALUES(?, ?);");
 		
-		for(Map.Entry<Integer, byte[]> entry : similarThmsMap.entrySet()) {
+		pstm = conn.prepareStatement(sb.toString());
+		
+		Set<Map.Entry<Integer, byte[]>> entrySet = similarThmsMap.entrySet();
+		Iterator<Map.Entry<Integer, byte[]>> iter = entrySet.iterator();
+		int entrySetSz = entrySet.size();
+		final int batchSz = 30000;
+		System.out.println("Total number of batches: " + Math.ceil(entrySetSz/(double)batchSz));
+		
+		int counter = 0;
+		while(iter.hasNext()) {
 			
+			System.out.println("About to insert batch " + counter++);
+			for(int i = 0; i < batchSz && iter.hasNext(); i++) {
+				Map.Entry<Integer, byte[]> entry = iter.next();
+				int thmIndex = entry.getKey();
+				byte[] similarIndexBytes = entry.getValue();
+				pstm.setInt(1, thmIndex);
+				pstm.setBytes(2, similarIndexBytes);
+				pstm.addBatch();
+			}
+			pstm.executeBatch();			
+		}
+		
+		/*for(Map.Entry<Integer, byte[]> entry : similarThmsMap.entrySet()) {
 			int thmIndex = entry.getKey();
 			byte[] similarIndexBytes = entry.getValue();
-			
-			sb = new StringBuilder(50);
-			sb.append("INSERT INTO " + SimilarThmsTb.TB_NAME + " (")
-			.append(SimilarThmsTb.INDEX_COL)
-			.append(",").append(SimilarThmsTb.SIMILAR_THMS_COL)
-			.append(") VALUES(?, ?);");
-			
-			pstm = conn.prepareStatement(sb.toString());
 			pstm.setInt(1, thmIndex);
 			pstm.setBytes(2, similarIndexBytes);
-			
 			pstm.executeUpdate();
-		}
+		}*/
 	}
 	
 	public static void main(String[] args) throws SQLException {
