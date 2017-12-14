@@ -111,8 +111,8 @@ public class SimilarThmUtils {
 			System.out.println("zeroOneList.size() "+zeroOneList.size());
 			System.out.println("zeroOneList "+zeroOneList);
 		}
-		for(byte power : zeroOneList) {			
-			thmIndex += 1 << power;					
+		for(byte power : zeroOneList) {
+			thmIndex += 1 << power;				
 		}
 		return thmIndex;
 	}
@@ -254,7 +254,8 @@ public class SimilarThmUtils {
 			) {
 		int thmIndexListLen = wordsIndexList.size();
 		if(thmIndexListLen > maxWordsIndexListLen) {
-			wordsIndexList = wordsIndexList.subList(0, maxWordsIndexListLen);
+			//wordsIndexList = wordsIndexList.subList(0, maxWordsIndexListLen);
+			thmIndexListLen = maxWordsIndexListLen;
 		}
 		//create byte array, then turn byte array into string
 		
@@ -281,8 +282,7 @@ public class SimilarThmUtils {
 		byte[] zeroOneAr = new byte[numBitsPerIndex];
 		int remainder = thmIndex;
 		for(int p = numBitsPerIndex-1; p > -1; p--) {
-			
-			int tempRem = remainder - 1 << p;
+			int tempRem = remainder - (1 << p);
 			if(tempRem >= 0) {
 				zeroOneAr[p] = 1;
 				remainder = tempRem;
