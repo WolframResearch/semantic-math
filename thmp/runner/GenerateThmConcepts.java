@@ -39,10 +39,12 @@ public class GenerateThmConcepts {
 	 */
 	public static void main(String[] args) throws FileNotFoundException, IOException, InterruptedException{
 		
-		testConceptsCreation();
-		
-		
 		boolean b = false;
+		if(b) {
+			testConceptsCreation();
+		}
+		
+		b = true;
 		if(b) {
 			generateThmConcepts();
 		}
@@ -65,10 +67,18 @@ public class GenerateThmConcepts {
 			System.out.println(thmHypPair.thmStr());
 			
 			System.out.println("FRESH GENERATED: ");
-			ConceptSearch.getThmWordsIndexByteArray( thmHypPair.thmStr());
+			byte[] byteAr = ConceptSearch.getThmWordsIndexByteArray( thmHypPair.thmStr());
 			
+			System.out.println("THROUGH BYTEARRAY: ");
+			List<Integer> wordsList0 = SimilarThmUtils.byteArrayToIndexList(byteAr, bitsPerWordIndex);
+			System.out.println("wordsList0: "+wordsList0);
+			for(int i = 0; i < wordsList0.size(); i++) {
+				System.out.print(contextWordIndexDict.get(wordsList0.get(i)) +  "\t");
+			}
+			System.out.println();
 			System.out.println("PRECOMPUTED: ");	
 			List<Integer> wordsList = SimilarThmUtils.byteArrayToIndexList(bytes, bitsPerWordIndex);
+			System.out.println("wordsList: "+wordsList);
 			for(int i = 0; i < wordsList.size(); i++) {
 				System.out.print(contextWordIndexDict.get(wordsList.get(i)) +  "\t");
 			}

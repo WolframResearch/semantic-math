@@ -82,7 +82,11 @@ public class WordForms {
 	public static final String QUANTITY_POS = "quant";
 	
 	private static final ImmutableMap<String, String> synonymRepMap;
+	
+	private static final ImmutableMap<String, String> wordToStemMap;	
 	private static final ImmutableMultimap<String, String> stemToWordsMMap;
+	
+	private static final ImmutableMap<String, String> stemToWordRepMap;
 	
 	//pattern for lines to skip any kind of parsing, even hypothesis-detection.
 	//skip examples and bibliographies  
@@ -147,11 +151,15 @@ public class WordForms {
 		readSynonymMapFromFile(synonymsPreMap, synonymsBF);
 		
 		//contains word representatives, e.g. "annihilate", "annihilator", etc all map to "annihilat"
-		Map<String, String> stemWordsMap = deserializeStemWordsMap(servletContext);	
-		synonymsPreMap.putAll(stemWordsMap);
+		wordToStemMap = ImmutableMap.copyOf(deserializeStemWordsMap(servletContext));	
+		
+		synonymsPreMap.putAll(wordToStemMap);
 		synonymRepMap = ImmutableMap.copyOf(synonymsPreMap);
+		Map<String, String> stemToWordRepPremap = new HashMap<String, String>();
 		//create "inverse" Multimap for the different forms for each word stem.
-		stemToWordsMMap = ImmutableMultimap.copyOf(createStemToWordsMMap(stemWordsMap));
+		stemToWordsMMap = ImmutableMultimap.copyOf(createStemToWordsMMap(wordToStemMap, stemToWordRepPremap));
+		//create map that uses the longest word as rep
+		stemToWordRepMap = ImmutableMap.copyOf(stemToWordRepPremap);
 		
 		FileUtils.silentClose(synonymsBF);
 		
@@ -210,12 +218,27 @@ public class WordForms {
 	/**
 	 * Invert the key and value for each pair in stemWordsMap.
 	 * @param stemWordsMap
+	 * @param stemToWordRepPreMap map to fill stem and their reps.
 	 * @return
 	 */
-	private static Multimap<String, String> createStemToWordsMMap(Map<String, String> stemWordsMap){
-		Multimap<String, String> stemToWordsMMap = ArrayListMultimap.create();		
+	private static Multimap<String, String> createStemToWordsMMap(Map<String, String> stemWordsMap,
+			Map<String, String> stemToWordRepPreMap){
+		
+		Multimap<String, String> stemToWordsMMap = ArrayListMultimap.create();	
+		
 		for(Map.Entry<String, String> entry: stemWordsMap.entrySet()){
-			stemToWordsMMap.put(entry.getValue(), entry.getKey());
+			String stem = entry.getValue();
+			String word = entry.getKey();
+			stemToWordsMMap.put(stem, word);
+			String prevWord = stemToWordRepPreMap.get(stem);
+			if(null == prevWord) {
+				stemToWordRepPreMap.put(stem, word);
+			}else {
+				int prevWordLen = prevWord.length();
+				if(word.length() > prevWordLen) {
+					stemToWordRepPreMap.put(stem, word);
+				}
+			}
 		}
 		return stemToWordsMMap;
 	}
@@ -967,10 +990,10 @@ public class WordForms {
 	 * @param tex2 
 	 */
 	public static boolean areTexExprSimilar(String tex1, String tex2){
-		//if(true) throw new IllegalStateException("tex1: " + tex1 + " tex2 " + tex2);
+		
 		Matcher tex1Matcher = LATEX_PATTERN.matcher(tex1);
 		Matcher tex2Matcher = LATEX_PATTERN.matcher(tex2);
-		//if(true) throw new IllegalStateException();
+		
 		//strip $ $ signs.
 		if(tex1Matcher.find() && tex2Matcher.find()){
 			tex1 = tex1Matcher.group(1);
@@ -1030,7 +1053,8 @@ public class WordForms {
 	}
 	
 	/**
-	 * Word Stems to various word forms with that stem.  
+	 * Word Stems to various word forms with that stem. 
+	 * E.g. "annihilat" to "annihilate", "annihilator", etc.
 	 * @return
 	 */
 	public static ImmutableMultimap<String, String> stemToWordsMMap(){
@@ -1038,8 +1062,19 @@ public class WordForms {
 	}
 	
 	/**
-	 * E.g. ".*assume.*|.*denote.*|.*define.*"
-	 * 
+	 * Map of stem and a word rep, where the rep is the longest word with that stem.
+	 * @return
+	 */
+	public static ImmutableMap<String, String> stemToWordRepMap(){
+		return stemToWordRepMap;
+	}
+	
+	public static ImmutableMap<String, String> wordToStemMap(){
+		return wordToStemMap;
+	}
+	
+	/**
+	 * E.g. ".*assume.*|.*denote.*|.*define.*".
 	 * @return
 	 */
 	public static Pattern get_HYP_PATTERN(){

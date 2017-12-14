@@ -40,6 +40,8 @@ public class ConceptSearch {
 	
 	private static final int NUM_BITS_PER_WORD_INDEX;
 	private static final int maxWordsIndexListLen = Searcher.SearchMetaData.maxConceptsPerThmNum;
+	private static final Map<String, String> stemToWordRepMap = WordForms.stemToWordRepMap();
+	private static final Map<String, String> wordToStemMap = WordForms.wordToStemMap();
 	
 	private static final int NO_OP = -1;
 	
@@ -49,11 +51,14 @@ public class ConceptSearch {
 		while((keywordsIndexMapSz >>= 1) != 0) {
 			logBase2++;
 		}
-		NUM_BITS_PER_WORD_INDEX = ++logBase2;
+		NUM_BITS_PER_WORD_INDEX = ++logBase2;		
 	}
 	
 	public static List<Integer> getStrictNormalizedWordsThms(String[] keyWordsAr) {
 		List<String> wordsList = new ArrayList<String>();
+		for(String word : keyWordsAr) {
+			wordsList.add(word);
+		}
 		return getStrictNormalizedWordsThms(wordsList);
 	}
 	
@@ -72,6 +77,11 @@ public class ConceptSearch {
 		
 		int keyWordsListSz = keyWordsList.size();
 		for(String word : keyWordsList) {
+			//actually for display on web, word was converted to full form according to stem map. 
+			String wordStem = wordToStemMap.get(word);
+			if(null != wordStem) {
+				word = wordStem;
+			}
 			Collection<IndexPartPair> wordThms = wordThmsIndexMMap1.get(word);
 			allWordsThms.addAll(wordThms);
 		}
@@ -107,7 +117,8 @@ public class ConceptSearch {
 	 * Finds index list of concepts in a thm by retrieving precomputed
 	 * indices from database. Used at app runtime.
 	 * @param thmIndex
-	 * @return List of concepts in given thm.
+	 * @return List of concepts in given thm. In full form if the stem
+	 * was created with stems map.
 	 */
 	public static List<String> getThmConceptsList(int thmIndex){
 		
@@ -129,7 +140,12 @@ public class ConceptSearch {
 		
 		List<String> wordsList = new ArrayList<String>();
 		for(int i : indexList) {
-			wordsList.add(keywordsList.get(i));
+			String word = keywordsList.get(i);
+			String fullWord = stemToWordRepMap.get(word);
+			if(null != fullWord) {
+				word = fullWord;
+			}
+			wordsList.add(word);
 		}
 		return wordsList;
 	}
@@ -180,10 +196,10 @@ public class ConceptSearch {
 			}
 		}
 		
-		for(Integer index : wordIndexSet) {
+		/*for(Integer index : wordIndexSet) {
 			System.out.print(keywordsList.get(index) + "\t");
 		}
-		System.out.println();
+		System.out.println("Their indices: "+wordIndexSet);*/
 		
 		List<Integer> wordIndexList = new ArrayList<Integer>(wordIndexSet);
  		return SimilarThmUtils.wordsListToByteArray(wordIndexList, NUM_BITS_PER_WORD_INDEX,
@@ -200,28 +216,28 @@ public class ConceptSearch {
 		
 		Integer wordIndex = keywordsIndexMap.get(word);
 		if(null != wordIndex) {
-			System.out.println("chosen: " +word+"\t");
+			//System.out.println("chosen: " +word+"\t");
 			return wordIndex;
 		} 
 		String wordSingForm = WordForms.getSingularForm(word);
 			
 		wordIndex = keywordsIndexMap.get(wordSingForm);			
 		if (null != wordIndex) {
-			System.out.println("chosen: " +wordSingForm+"\t");
+			//System.out.println("chosen: " +wordSingForm+"\t");
 			return wordIndex;		
 		}
 		
 		String normalizedWord = WordForms.normalizeWordForm(word);
 		wordIndex = keywordsIndexMap.get(normalizedWord);		
 		if (null != wordIndex) {
-			System.out.println("chosen: " +normalizedWord+"\t");
+			//System.out.println("chosen: " +normalizedWord+"\t");
 			return wordIndex;		
 		}
 		
 		normalizedWord = WordForms.normalizeWordForm(wordSingForm);
 		wordIndex = keywordsIndexMap.get(normalizedWord);		
 		if (null != wordIndex) {
-			System.out.println("chosen: " +normalizedWord+"\t");
+			//System.out.println("chosen: " +normalizedWord+"\t");
 			return wordIndex;		
 		}
 		
