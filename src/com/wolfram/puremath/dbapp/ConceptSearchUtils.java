@@ -11,6 +11,7 @@ import java.util.Set;
 import com.wolfram.puremath.dbapp.DBUtils.ThmConceptsTb;
 
 import thmp.search.Searcher;
+import thmp.search.Searcher.SearchConfiguration;
 import thmp.utils.FileUtils;
 
 /**
@@ -21,7 +22,26 @@ import thmp.utils.FileUtils;
  */
 public class ConceptSearchUtils {
 	
-	private static final int bitsPerWordIndex = thmp.search.ConceptSearch.NUM_BITS_PER_WORD_INDEX();
+	//private static final int bitsPerWordIndex = thmp.search.ConceptSearch.NUM_BITS_PER_WORD_INDEX();
+	private static final int NUM_BITS_PER_WORD_INDEX;
+	
+	static {
+		SearchConfiguration searchConfig = FileUtils.deserializeSearchConfiguration();
+		
+		int allKeywordsMapSz;
+		try {
+			allKeywordsMapSz = searchConfig.allKeywordsMapSz();
+		}catch(Exception e) {
+			//temporary before next combineMatrix.sh runs.
+			allKeywordsMapSz = 28169;
+		}
+		int keywordsIndexMapSz = allKeywordsMapSz;
+		int logBase2 = 0;
+		while((keywordsIndexMapSz >>= 1) != 0) {
+			logBase2++;
+		}
+		NUM_BITS_PER_WORD_INDEX = ++logBase2;		
+	}
 	
 	//retrieve words from db to show on web FE
 	public static List<Integer> getThmConceptsFromDB(int thmIndex,  Connection conn) throws SQLException{
@@ -31,7 +51,7 @@ public class ConceptSearchUtils {
 		.append(" WHERE ").append(ThmConceptsTb.INDEX_COL)
 		.append("=").append(thmIndex).append(";");
 		
-		return SimilarThmUtils.queryByteArray(conn, sb, bitsPerWordIndex);		
+		return SimilarThmUtils.queryByteArray(conn, sb, NUM_BITS_PER_WORD_INDEX);		
 	}
 	
 	/**
@@ -45,7 +65,7 @@ public class ConceptSearchUtils {
 		 * 20*15/8 = 37.5*/
 		//accomodate changes in number of indices and number of concepts to display!!!
 		
-		int varbinaryLen = Searcher.SearchMetaData.maxConceptsPerThmNum * bitsPerWordIndex / DBUtils.NUM_BITS_PER_BYTE;
+		int varbinaryLen = Searcher.SearchMetaData.maxConceptsPerThmNum * NUM_BITS_PER_WORD_INDEX / DBUtils.NUM_BITS_PER_BYTE;
 		
 		//1 for rounding, 1 extra
 		final int padding = 2;
@@ -108,6 +128,10 @@ public class ConceptSearchUtils {
 			}
 			pstm.executeBatch();			
 		}
+	}
+	
+	public static int NUM_BITS_PER_WORD_INDEX() {
+		return NUM_BITS_PER_WORD_INDEX;
 	}
 	
 	public static void main(String[] args) throws SQLException {
