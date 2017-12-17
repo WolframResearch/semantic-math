@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.wolfram.puremath.dbapp.ConceptSearchUtils;
 import com.wolfram.puremath.dbapp.DBUtils;
 import com.wolfram.puremath.dbapp.SimilarThmUtils;
 
@@ -25,7 +26,7 @@ import thmp.utils.FileUtils;
  */
 public class GenerateThmConcepts {
 	
-	private static final int bitsPerWordIndex = thmp.search.ConceptSearch.NUM_BITS_PER_WORD_INDEX();
+	private static final int bitsPerWordIndex = ConceptSearchUtils.NUM_BITS_PER_WORD_INDEX();
 	private static final List<String> contextWordIndexDict 
 		= CollectThm.ThmWordsMaps.get_CONTEXT_VEC_WORDS_LIST();
 	

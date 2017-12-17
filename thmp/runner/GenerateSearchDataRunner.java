@@ -43,7 +43,7 @@ public class GenerateSearchDataRunner {
 	private static final Pattern CONFIG_PATT = Pattern.compile("([^:]+):(.+)");
 	
 	private static final Pattern TRUE_PATT = Pattern.compile("\\s*(?i)true\\s*");
-	private static final Pattern FALSE_PATT = Pattern.compile("\\s*(?i)false\\s*");
+	//private static final Pattern FALSE_PATT = Pattern.compile("\\s*(?i)false\\s*");
 	
 	static {
 		FILES_TO_KEEP = new HashSet<String>();
@@ -56,8 +56,9 @@ public class GenerateSearchDataRunner {
 	}
 	
 	private static class SearchDataRunnerConfigBuilder{
-		//whether currently generating msc words data
-		private boolean msc;
+		//whether currently generating msc words data.
+		private boolean generateMsc;
+		private boolean generateFuncName;
 		//whether to regenerate Mx files, creating TermDocumentMatrix, etc,
 		//anew, or 
 		private boolean regenerateMxFiles;
@@ -83,7 +84,9 @@ public class GenerateSearchDataRunner {
 		void parseConfigStr(String option, String val) {
 			switch(option) {
 				case "msc":
-					this.msc = getBooleanVal(val);
+					this.generateMsc = getBooleanVal(val);
+				case "generateFuncName":
+					this.generateFuncName = getBooleanVal(val);
 				case "regenerateMx":
 					this.regenerateMxFiles = getBooleanVal(val);
 			}
@@ -104,7 +107,9 @@ public class GenerateSearchDataRunner {
 	
 	public static class SearchDataRunnerConfig{
 		//whether currently generating msc words data
-		private boolean msc;
+		private boolean generateMsc;
+		//whether to generate function names
+		private boolean generateFuncName;
 		//whether to regenerate Mx files, creating TermDocumentMatrix, etc,
 		//anew, or 
 		private boolean regenerateMxFiles;
@@ -114,16 +119,21 @@ public class GenerateSearchDataRunner {
 		}
 		
 		private SearchDataRunnerConfig(SearchDataRunnerConfigBuilder builder){
-			this.msc = builder.msc;
+			this.generateMsc = builder.generateMsc;
 			this.regenerateMxFiles = builder.regenerateMxFiles;
+			this.generateFuncName = builder.generateFuncName;
 		}
 
 		public boolean msc(){
-			return this.msc;
+			return this.generateMsc;
 		}
 		
 		public boolean regenerateMx(){
 			return this.regenerateMxFiles;
+		}
+		
+		public boolean generateFuncName() {
+			return this.generateFuncName;
 		}
 	}
 	
@@ -194,9 +204,9 @@ public class GenerateSearchDataRunner {
 		
 		long beforeTime = System.currentTimeMillis();
 		
-		boolean gatherMscData = runnerConfig.msc;
+		boolean generateMsc = runnerConfig.generateMsc;
 		//already created, and edited that map. Oct 25 2017
-		if(false && gatherMscData) {
+		if(false && generateMsc) {
 			CreateMscVecs.wordsScoreMapToJson();
 		}
 		
@@ -215,11 +225,14 @@ public class GenerateSearchDataRunner {
 			
 			/*the script name must coincide with that in both bash scripts. 
 			 * E.g. UNPACK_SCRIPT_FILE_PATH	*/	
-			if(!gatherMscData) {
-				fileDir = dirNameRoot + "Untarred" + File.separator 
-						+ fileName.substring(fileNameLen-12, fileNameLen-8);
-			}else {
+			if(generateMsc) {
 				fileDir = dirNameRoot + "mscUntarred" + File.separator 
+						+ fileName.substring(fileNameLen-12, fileNameLen-8);				
+			}else if(runnerConfig.generateFuncName) {
+				fileDir = dirNameRoot + "mscUntarred" + File.separator 
+						+ fileName.substring(fileNameLen-12, fileNameLen-8);
+			}else{
+				fileDir = dirNameRoot + "Untarred" + File.separator 
 						+ fileName.substring(fileNameLen-12, fileNameLen-8);
 			}
 			
@@ -234,14 +247,17 @@ public class GenerateSearchDataRunner {
 				/*the script name must coincide with that in both bash scripts.	*/	
 				System.out.println("Done unpacking file " + fileName + ". Starting to generate search data");
 			//}
-			if(!gatherMscData) {
+			if(generateMsc) {
+				//create msc classifier data.
+				CreateMscVecs.processFilesInTar(fileDir, runnerConfig);
+			}else if(runnerConfig.generateFuncName) {
+				//right now generate along with msc data
+				CreateMscVecs.processFilesInTar(fileDir, runnerConfig);
+			}else {					
 				DetectHypothesis.Runner.generateSearchData(new String[]{fileDir, 
 						TermDocumentMatrix.DATA_ROOT_DIR_SLASH + TermDocumentMatrix.PROJECTION_MX_FILE_NAME,
 						Searcher.SearchMetaData.wordDocFreqMapPath()
 					}, runnerConfig);
-			}else {
-				//create msc classifier data.
-				CreateMscVecs.processFilesInTar(fileDir);				
 			}
 			
 			try {

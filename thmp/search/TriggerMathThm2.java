@@ -16,10 +16,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Multiset;
 
 import thmp.parse.Maps;
 import thmp.parse.TheoremContainer;
@@ -305,7 +307,7 @@ public class TriggerMathThm2 {
 	 * @return List<List<String>> list of list of uniformized terms that registered in thm, currently used for 
 	 * building msc classification data.
 	 */
-	public static List<List<String>> gatherTermDocumentMxEntries(List<? extends TheoremContainer> defThmList,
+	public static List<Multiset<String>> gatherTermDocumentMxEntries(List<? extends TheoremContainer> defThmList,
 			List<int[]> coordinatesList, List<Double> weightsList) {
 		//map of annotated words and their scores. Previous run's scores
 		Map<String, Integer> wordsScoreMap = CollectThm.ThmWordsMaps.get_wordsScoreMap();
@@ -327,16 +329,16 @@ public class TriggerMathThm2 {
 	 * @return list of list of uniformized terms that registered in thm, currently used for 
 	 * building msc classification data.
 	 */
-	private static List<List<String>> gatherTermDocumentMxEntries(List<? extends TheoremContainer> defThmList,
+	private static List<Multiset<String>> gatherTermDocumentMxEntries(List<? extends TheoremContainer> defThmList,
 			List<int[]> coordinatesList, List<Double> weightsList, Map<String, Integer> wordsScoreMap) {
 		
 		Iterator<? extends TheoremContainer> defThmListIter = defThmList.iterator();
-		List<List<String>> allTermsList = new ArrayList<List<String>>();
+		List<Multiset<String>> allTermsList = new ArrayList<Multiset<String>>();
 		
 		int thmCounter = 0;
 		while (defThmListIter.hasNext()) {
 			
-			Set<String> termsSet = new HashSet<String>();
+			Multiset<String> termsSet = HashMultiset.create();
 			String thm = defThmListIter.next().getEntireThmStr();
 			//get collection of words.
 			List<String> thmAr = WordForms.splitThmIntoSearchWordsList(thm.toLowerCase());
@@ -392,34 +394,9 @@ public class TriggerMathThm2 {
 				weightsList.add(newScore);
 			}
 			
-			///***********
-			/**** June 2017
-			 * for (String keyword : gatheredWordsList) {
-				Integer keyWordIndex = keywordIndexDict.get(keyword);
-				//keywordIndexDict should contain keyword at this point.
-				if(null == keyWordIndex){
-					//keywordIndexNullCounter++;
-					continue;
-				}
-				Integer wordScore = wordsScoreMap.get(keyword);
-				if(null == wordScore){
-					//wordsScoreMap is now from previous parse run, so might not have this word.
-					//if the dataset has not stabilized across runs.
-					wordScore = 1;
-				}
-				//divide by log of norm
-				//could be very small! ie 0 after rounding.
-				double newScore = ((double)wordScore)/norm;
-				//int newScore = wordScore;
-				if(newScore == 0 && wordScore != 0){
-					newScore = .1;
-				}
-				coordinatesList.add(new int[]{keyWordIndex, thmCounter}) ;
-				weightsList.add(newScore);
-			}*/
-			List<String> termsList = new ArrayList<String>(termsSet);
+			//List<String> termsList = new ArrayList<String>(termsSet);
 			
-			allTermsList.add(termsList);
+			allTermsList.add(termsSet);
 			thmCounter++;
 		}
 		return allTermsList;
@@ -547,7 +524,7 @@ public class TriggerMathThm2 {
 	 * @return
 	 */
 	private static double addToNorm(Map<String, Integer> wordsScoreMap,
-			List<IndexScorePair> indexScorePairList, Collection<String> termCol,
+			List<IndexScorePair> indexScorePairList, Multiset<String> termCol,
 			double norm, int i, String term, int queryVecLen) {
 		Integer termScore = wordsScoreMap.get(term);
 		//get singular forms		

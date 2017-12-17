@@ -39,6 +39,7 @@ import com.wolfram.kernelserver.KernelPoolException;
 import com.wolfram.msp.servlet.MSPManager;
 import com.wolfram.msp.servlet.MSPStatics;
 
+import thmp.search.Searcher.SearchConfiguration;
 import thmp.utils.MathLinkUtils.WLEvaluationMedium;
 import thmp.utils.MathLinkUtils.WLEvaluationMedium.EvaluationMediumType;
 
@@ -705,6 +706,22 @@ public class FileUtils {
 		pr.waitFor();
 		FileUtils.silentClose(inputReader);
 		FileUtils.silentClose(errorReader);
+	}
+	
+	/**
+	 * Deserialize meta data
+	 * @return
+	 */
+	public static SearchConfiguration deserializeSearchConfiguration(){
+		//String path = metaDataFilePath;
+		String path = SearchConfiguration.searchConfigurationSerialPath();
+		if(null != servletContext){
+			path = servletContext.getRealPath(path);
+		}
+		@SuppressWarnings("unchecked")
+		SearchConfiguration searchConfig 
+			= ((List<SearchConfiguration>)FileUtils.deserializeListFromFile(path)).get(0);
+		return searchConfig;
 	}
 	
 	/**

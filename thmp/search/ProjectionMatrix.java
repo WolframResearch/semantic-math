@@ -235,8 +235,10 @@ public class ProjectionMatrix {
 			String path = TheoremGet.ContextRelationVecBundle.BASE_FILE_STR 
 					+ String.valueOf(vecsFileNameCounter);
 			FileUtils.serializeObjToFile(combinedVecsList, path);
-		}		
-		Searcher.SearchConfiguration searchConfig = new Searcher.SearchConfiguration(bundleStartThmIndexList, thmCounter);
+		}
+		int keywordsMapSz = CollectThm.ThmWordsMaps.get_CONTEXT_VEC_SIZE();
+		Searcher.SearchConfiguration searchConfig = new Searcher.SearchConfiguration(bundleStartThmIndexList, thmCounter,
+				keywordsMapSz);
 		List<Searcher.SearchConfiguration> searchConfigList = new ArrayList<Searcher.SearchConfiguration>();
 		searchConfigList.add(searchConfig);
 		FileUtils.serializeObjToFile(searchConfigList, SearchConfiguration.searchConfigurationSerialPath());

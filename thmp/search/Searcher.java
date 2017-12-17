@@ -1,10 +1,8 @@
 package thmp.search;
 
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.List;
 
-import thmp.search.Searcher.QueryVecContainer;
 
 /**
  * Search interface to be implemented by various search methods.
@@ -58,15 +56,18 @@ public interface Searcher<S> {
 		//used in ThmHypPairGet. Containing indices of thms that are the first in a bundle. 
 		private List<Integer> bundleStartThmIndexList;
 		private int totalThmsCount;
+		private int allKeywordsMapSz;
 		
 		/**
 		 * @param bundleStartThmIndexList_ used in ThmHypPairGet. Containing indices of thms 
 		 * that are the first in a bundle. 
 		 * @param totalThmsCount_
 		 */
-		public SearchConfiguration(List<Integer> bundleStartThmIndexList_, int totalThmsCount_){
+		public SearchConfiguration(List<Integer> bundleStartThmIndexList_, int totalThmsCount_,
+				int keywordsMapSz_){
 			this.bundleStartThmIndexList = bundleStartThmIndexList_;
 			this.totalThmsCount = totalThmsCount_;
+			this.allKeywordsMapSz = keywordsMapSz_;
 		}
 		
 		public List<Integer> bundleStartThmIndexList(){
@@ -76,6 +77,15 @@ public interface Searcher<S> {
 		public int totalThmsCount(){
 			return this.totalThmsCount;
 		}
+		
+		/**
+		 * Size of allThmWordsMap, i.e. map used in all search algorithms.
+		 * @return
+		 */
+		public int allKeywordsMapSz() {
+			return this.allKeywordsMapSz;
+		}
+		
 		public static String searchConfigurationSerialPath(){
 			return searchConfigurationSerialPath;
 		}

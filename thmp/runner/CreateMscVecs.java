@@ -10,8 +10,10 @@ import java.util.regex.Pattern;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Multiset;
 
 import thmp.parse.TheoremContainer;
+import thmp.runner.GenerateSearchDataRunner.SearchDataRunnerConfig;
 import thmp.search.CollectThm;
 import thmp.search.Searcher;
 import thmp.search.TriggerMathThm2;
@@ -85,10 +87,6 @@ public class CreateMscVecs {
 		}
 	}
 	
-	/**
-	 * Create TD vectors for entire documents, then project down to 
-	 * 35 dimensions, serialize in mx. 
-	 */
 	public static void main(String[] args) {	
 		
 	}
@@ -98,7 +96,7 @@ public class CreateMscVecs {
 	 * @param dirName Has form e.g. "0208_001Untarred/0208".
 	 * And for msc directory processing, it's "0208_001mscUntarred/0208"
 	 */
-	public static void processFilesInTar(String dirName) {
+	public static void processFilesInTar(String dirName, SearchDataRunnerConfig runnerConfig) {
 		
 		dirName = FileUtils.addIfAbsentTrailingSlashToPath(dirName);
 		
@@ -122,40 +120,39 @@ public class CreateMscVecs {
 			
 			if(null == mscStr) {
 				continue;
-			}
-			//mscPaperPathList.add(fileNameEntry.getKey());
-			paperIdPathMMap.put(paperId, fileNameEntry.getKey());	
-			
+			}			
+			paperIdPathMMap.put(paperId, fileNameEntry.getKey());				
 		}
 		
-		StringBuilder funNameSb = new StringBuilder(500000);
 		
+		StringBuilder funNameSb = new StringBuilder(500000);			
 		for(String paperId : paperIdPathMMap.keySet()) {
-			
+				
 			Collection<String> pathCol = paperIdPathMMap.get(paperId);
 			StringBuilder paperSb = new StringBuilder(5000);
-			
+				
 			for(String path : pathCol) {
-				//each path is absolute path
+					//each path is absolute path
 				paperSb.append(FileUtils.readStrFromFile(path)).append("\n");
 			}
+				
 			String paperStr = paperSb.toString();
 			
-			ScrapeFunctionName.scrapeThmNames(paperStr, funNameSb);
-			
+			if(runnerConfig.generateFuncName()) {
+				ScrapeFunctionName.scrapeFuncNames(paperStr, funNameSb);
+			}
 			Paper paper = new Paper(paperStr);
 			paperList.add(paper);
 			paperIdList.add(paperId);
 		}
-		//create file name
-		String funcFileName = dirName + "funcNames.txt";
-		//write the function names to file
-		FileUtils.writeToFile(funNameSb.toString(), funcFileName);
-		funNameSb = null;
+		if(runnerConfig.generateFuncName()) {
+				//file to hold function names for Michael
+			String funcFileName = dirName + "funcNames.txt";
+			FileUtils.writeToFile(funNameSb.toString(), funcFileName);			
+			funNameSb = null;
+		}
 		
-		processTarDir(dirName, paperList, paperIdList);
-		//File[] fileDirFileAr = new File(fileDir).listFiles();
-		
+		processTarDir(dirName, paperList, paperIdList);		
 	}
 	
 	/**
@@ -187,24 +184,27 @@ public class CreateMscVecs {
 		
 		//the coordinates list contains arrays of size 2, [keyWordIndex, thmCounter], need to increment
 		//thmCounter by current running counter for all tars. Need
-		List<List<String>> allTermsList = TriggerMathThm2.gatherTermDocumentMxEntries(paperList, coordinatesList, weightsList);
+		List<Multiset<String>> allTermsList = TriggerMathThm2.gatherTermDocumentMxEntries(paperList, coordinatesList, weightsList);
 		
 		StringBuilder termSb = new StringBuilder(50000);
 		
+		//create msc data string, e.g. "1504.01535;word1,freq1;word2,freq2; ... ; \n05C,35Q,"
 		for(int i = 0; i < paperListSz; i++) {
 			
-			List<String> paperTermsList = allTermsList.get(i);
-			if(paperTermsList.isEmpty()) {
+			Multiset<String> paperTermsMSet = allTermsList.get(i);
+			if(paperTermsMSet.isEmpty()) {
 				continue;
 			}
 			
 			String paperId = paperIdList.get(i);
 			termSb.append(paperId);
 			
-			int termsListSz = paperTermsList.size();
-			for(int j = 0; j < termsListSz; j++) {
+			//int termsListSz = paperTermsList.size();
+			
+			for(String word : paperTermsMSet.elementSet()) {
 				//append each term
-				termSb.append(",").append(paperTermsList.get(j));
+				termSb.append(";").append(word)
+				.append(",").append(paperTermsMSet.count(word));
 			}
 			//lines have form id, terms \n msc class string
 			termSb.append("\n").append(paperIdMscMap.get(paperId)).append("\n");			
@@ -219,13 +219,15 @@ public class CreateMscVecs {
 			FileUtils.writeToFile(termSb, termsFilePath);
 		}
 		
-		//Need to index by paper, keep counter, need final data with paper id, the actual words that occur.
-		//Create both, map for paper and words, and map for paper and indices.
-		//Also needs words-score map, to json format.
+		/*
+		 * Further Processing on command line: 
+		 * Need to index by paper, keep counter, need final data with paper id, the actual words that occur.
+		 * Create both, map for paper and words, and map for paper and indices.
+		 * Also needs words-score map, to json format.
 		
-		//Can check against map e.g. 0704.0005,42B30,42B35 at runtime to form map.
-		
-		//can cat at the end to combine multiple files: cat file1 file2 ... > mscCombined.txt
+		 * Can check against map e.g. 0704.0005,42B30,42B35 at runtime to form map.		
+		 * can cat at the end to combine multiple files: cat file1 file2 ... > mscCombined.txt		 
+		 */
 	}
 	
 	/**

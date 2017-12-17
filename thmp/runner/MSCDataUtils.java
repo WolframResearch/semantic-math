@@ -14,6 +14,7 @@ import thmp.utils.WordForms;
 /**
  * Utilities to facilitate generation of
  *  classifier data for MSC classes.
+ * Now generating function names for Michael.
  * @author yihed
  *
  */
@@ -30,7 +31,7 @@ public class MSCDataUtils {
 		
 				if(args.length < 1){
 					System.out.println("Enter a file containing root paths to directories containing "
-							+ "parsedExpressionList! E.g. 0208_001Untarred/0208");
+							+ "msc data! E.g. 0208_001Untarred/0208");
 					return;
 				}		
 				String fileName = args[0];

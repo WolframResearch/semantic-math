@@ -153,8 +153,8 @@ public class CollectThm {
 		
 		private static final String NAMED_THMS_FILE_STR = "src/thmp/data/thmNames.txt";
 		private static final Set<String> FLUFF_WORDS_SET = WordForms.getFluffSet();
-		private static final Map<String, Integer> twoGramsMap = NGramsMap.get_twoGramsMap();
-		private static final Map<String, Integer> threeGramsMap = NGramsMap.get_threeGramsMap();	
+		//private static final Map<String, Integer> twoGramsMap = NGramsMap.get_twoGramsMap();
+		//private static final Map<String, Integer> threeGramsMap = NGramsMap.get_threeGramsMap();	
 		private static final List<String> skipGramWordsList;
 		//set that contains the first word of the two and three grams of twoGramsMap and threeGramsMap		
 		//so the n-grams have a chance of being called.

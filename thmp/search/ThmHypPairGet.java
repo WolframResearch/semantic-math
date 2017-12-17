@@ -42,7 +42,7 @@ public class ThmHypPairGet{
 	
 	static{
 		//deserialize the list set during preprocessing,  
-		SearchConfiguration searchConfig = deserializeSearchConfiguration();
+		SearchConfiguration searchConfig = FileUtils.deserializeSearchConfiguration();
 		bundleStartThmIndexList = searchConfig.bundleStartThmIndexList();		
 		System.out.println("ThmHypPairGet - bundleStartThmIndexList:  "+bundleStartThmIndexList );
 		totalThmsCount = searchConfig.totalThmsCount();
@@ -249,21 +249,6 @@ public class ThmHypPairGet{
 		}		
 	}
 	
-	/**
-	 * Deserialize meta data
-	 * @return
-	 */
-	private static SearchConfiguration deserializeSearchConfiguration(){
-		//String path = metaDataFilePath;
-		String path = SearchConfiguration.searchConfigurationSerialPath();
-		if(null != servletContext){
-			path = servletContext.getRealPath(path);
-		}
-		@SuppressWarnings("unchecked")
-		SearchConfiguration searchConfig 
-			= ((List<SearchConfiguration>)FileUtils.deserializeListFromFile(path)).get(0);
-		return searchConfig;
-	}
 	/**
 	 * Total number of bundles or mx files for all tars collected.
 	 * @return

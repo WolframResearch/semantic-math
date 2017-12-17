@@ -35,24 +35,24 @@ public class ConceptSearch {
 		= CollectThm.ThmWordsMaps.get_CONTEXT_VEC_WORDS_INDEX_MAP();
 	private static final List<String> keywordsList = CollectThm.ThmWordsMaps.get_CONTEXT_VEC_WORDS_LIST();
 	private static final ImmutableMultimap<String, IndexPartPair> wordThmsIndexMMap1
-		= CollectThm.ThmWordsMaps.get_wordThmsMMapNoAnno();;
+		= CollectThm.ThmWordsMaps.get_wordThmsMMapNoAnno();
 	private static final int NUM_NEAREST_VECS = SearchCombined.NUM_NEAREST;
 	
-	private static final int NUM_BITS_PER_WORD_INDEX;
+	private static final int NUM_BITS_PER_WORD_INDEX = ConceptSearchUtils.NUM_BITS_PER_WORD_INDEX();
 	private static final int maxWordsIndexListLen = Searcher.SearchMetaData.maxConceptsPerThmNum;
 	private static final Map<String, String> stemToWordRepMap = WordForms.stemToWordRepMap();
 	private static final Map<String, String> wordToStemMap = WordForms.wordToStemMap();
 	
 	private static final int NO_OP = -1;
 	
-	static {
+	/*static {
 		int keywordsIndexMapSz = keywordsIndexMap.size();
 		int logBase2 = 0;
 		while((keywordsIndexMapSz >>= 1) != 0) {
 			logBase2++;
 		}
 		NUM_BITS_PER_WORD_INDEX = ++logBase2;		
-	}
+	}*/
 	
 	public static List<Integer> getStrictNormalizedWordsThms(String[] keyWordsAr) {
 		List<String> wordsList = new ArrayList<String>();
@@ -138,6 +138,7 @@ public class ConceptSearch {
 			DBUtils.closePooledConnection(conn);
 		}
 		
+		//maybe not include ones that 
 		List<String> wordsList = new ArrayList<String>();
 		for(int i : indexList) {
 			String word = keywordsList.get(i);
@@ -147,6 +148,7 @@ public class ConceptSearch {
 			}
 			wordsList.add(word);
 		}
+		
 		return wordsList;
 	}
 	
@@ -248,7 +250,7 @@ public class ConceptSearch {
 	 * Number of bits necessary to store an index to a word in lexicon map.
 	 * @return
 	 */
-	public static int NUM_BITS_PER_WORD_INDEX() {
+	/*public static int NUM_BITS_PER_WORD_INDEX() {
 		return NUM_BITS_PER_WORD_INDEX;
-	}
+	}*/
 }

@@ -47,7 +47,7 @@ public class ScrapeFunctionName {
 		 * @param line line to process from.
 		 * @param thmNameMSet
 		 */
-		public static void scrapeThmNames(String str, StringBuilder sb) {
+		public static void scrapeFuncNames(String str, StringBuilder sb) {
 			
 			String word;
 			Matcher m = FUNCTION_SCRAPE_PATTERN.matcher(str);
