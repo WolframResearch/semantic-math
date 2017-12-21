@@ -70,6 +70,20 @@ public class DBUtils {
 	}
 	
 	/**
+	 * Table containing literal search indices, i.e. words (normalized form)
+	 * and thm indices that contain these words.
+	 */
+	public static class LiteralSearchTb{
+		/**relative (to ~/thm) path to serialization file containing words, and string of list of 
+		 * indices of thm indices */
+		public static final String literalSearchByteArrayPath = "src/thmp/data/literalSearchByteArray.dat";
+		public static final String TB_NAME = "literalSearchTb";
+		/**thm index*/
+		public static final String WORD_COL = "word";
+		public static final String THM_INDICES_COL = "thmIndices";
+	}
+	
+	/**
 	 * Get list of indexes for authorTb. 
 	 * @return
 	 */
