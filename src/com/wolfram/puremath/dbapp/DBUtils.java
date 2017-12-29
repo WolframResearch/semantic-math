@@ -33,6 +33,8 @@ public class DBUtils {
 	public static final String AUTHOR_TB_FIRSTNAME_COL = "firstName";
 	public static final String AUTHOR_TB_MIDDLENAME_COL = "middleName";
 	public static final String AUTHOR_TB_LASTNAME_COL = "lastName";
+	public static final String AUTHOR_TB_CSV_PATH = "src/thmp/data/metaDataNameDB.csv";
+	
 	public static final int NUM_BITS_PER_BYTE = 8;
 	
 	private static final Logger logger = LogManager.getLogger(DBUtils.class);

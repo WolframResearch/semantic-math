@@ -28,14 +28,19 @@ public class DBDeploy {
 	
 	/**
 	 * Truncates the table , populates it with data from supplied csv file.
-	 * @param csvFilePath Path to CSV file containing data to populate table with.
-	 * e.g. "metaDataNameDB.csv"
+	 * @param csvFilePath Path to CSV file containing data to populate table with, resort
+	 * to default file if none supplied. e.g. "metaDataNameDB.csv"
 	 * @throws SQLException 
 	 */
-	public static void populateAuthorTb(String csvFilePath, Connection conn) throws SQLException {
+	public static void populateAuthorTb(Connection conn, String... filePathAr) throws SQLException {
 		
 		PreparedStatement pstm;
-		
+		String csvFilePath;
+		if(filePathAr.length > 0) {
+			csvFilePath = filePathAr[0];
+		}else {
+			csvFilePath = DBUtils.AUTHOR_TB_CSV_PATH;
+		}
 		pstm = conn.prepareStatement("TRUNCATE " + DBUtils.AUTHOR_TB_NAME + ";");		
 		pstm.executeUpdate();
 		
@@ -155,13 +160,23 @@ public class DBDeploy {
 		}*/
 	}
 	
-	public static void main(String[] args) throws SQLException {
-		
+	private static void deployAllTables() throws SQLException{
 		Connection conn = DBUtils.getLocalConnection();
 		
 		populateSimilarThmsTb(conn);
 		
-		boolean b = false;
+		populateAuthorTb(conn);
+		
+		LiteralSearchUtils.populateLiteralSearchTb(conn);
+		
+		conn.close();
+	}
+	
+	public static void main(String[] args) throws SQLException {
+		
+		deployAllTables();
+		/*
+		 * boolean b = false;
 		if(b) {
 			if(args.length < 1) {
 				System.out.println("Please enter the path to a csv file to populate the database.");
@@ -169,9 +184,9 @@ public class DBDeploy {
 			}
 			String filePath = args[0];
 			
-			populateAuthorTb(filePath, conn);
+			populateAuthorTb(conn, filePath);
 		}
-		
+		 */
 	}
 	
 }

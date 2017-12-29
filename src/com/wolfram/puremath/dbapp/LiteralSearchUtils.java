@@ -46,8 +46,9 @@ public class LiteralSearchUtils {
 	public static void getLiteralSearchThmsFromDB(String word,  Connection conn,
 			List<Integer> thmIndexList, List<Integer> wordsIndexArList) throws SQLException{
 		
-		StringBuilder querySb = new StringBuilder(50);
+		StringBuilder querySb = new StringBuilder(60);
 		querySb.append("SELECT ").append(LiteralSearchTb.THM_INDICES_COL)
+		.append(", ").append(LiteralSearchTb.WORD_INDICES_COL)
 		.append(" FROM ").append(LiteralSearchTb.TB_NAME)
 		.append(" WHERE ").append(LiteralSearchTb.WORD_COL)
 		.append("=").append(word).append(";");
@@ -87,8 +88,9 @@ public class LiteralSearchUtils {
 		 * 20*15/8 = 37.5*/
 		//accomodate changes in number of indices and number of concepts to display!!!
 		
+		int maxThmsPerLiteralWord = Searcher.SearchMetaData.maxThmsPerLiteralWord;
 		//number of bytes per list
-		int varbinaryLen = Searcher.SearchMetaData.maxThmsPerLiteralWord * numBitsPerThmIndex / DBUtils.NUM_BITS_PER_BYTE;
+		int varbinaryLen = maxThmsPerLiteralWord * numBitsPerThmIndex / DBUtils.NUM_BITS_PER_BYTE;
 		
 		//1 for rounding, 1 extra
 		final int padding = 2;
@@ -101,7 +103,7 @@ public class LiteralSearchUtils {
 		
 		//need to pudate table MEDIUMINT(9) UNSIGNED;  VARBINARY(265)
 		int wordIndexArTotalLen = LiteralSearchIndex.MAX_WORD_INDEX_AR_LEN; //this value is 2
-		int maxWordsArListLen = Searcher.SearchMetaData.maxThmsPerLiteralWord * wordIndexArTotalLen ;
+		int maxWordsArListLen = maxThmsPerLiteralWord * wordIndexArTotalLen;
 		
 		int wordArVarBinaryLen = maxWordsArListLen * numBitsPerWordIndex / DBUtils.NUM_BITS_PER_BYTE;
 		//"ALTER TABLE <table_name> MODIFY <col_name> VARCHAR(65);";
@@ -130,13 +132,13 @@ public class LiteralSearchUtils {
 		
 		pstm = conn.prepareStatement(sb.toString());
 		pstm.executeUpdate();
+		
 		sb = new StringBuilder(50);
 		sb.append("INSERT INTO " + LiteralSearchTb.TB_NAME + " (")
 		.append(LiteralSearchTb.WORD_COL)
 		.append(",").append(LiteralSearchTb.THM_INDICES_COL)
 		.append(",").append(LiteralSearchTb.WORD_INDICES_COL)
-		.append(") VALUES(?, ?, ?);") ;
-		
+		.append(") VALUES(?, ?, ?);") ;		
 		
 		pstm = conn.prepareStatement(sb.toString());
 		
@@ -156,15 +158,14 @@ public class LiteralSearchUtils {
 		while(iter.hasNext()) {		
 			System.out.println("About to insert batch " + counter0++);
 			for(int i = 0; i < batchSz && iter.hasNext(); i++) {
-				//Map.Entry<String, byte[]> entry = iter.next();				
+				
 				String word = iter.next();
 				Collection<LiteralSearchIndex> searchIndexCol = literalIndexMMap.get(word);
-				//byte[] literalSearchBytes = entry.getValue();
 				
 				//turn list of LiteralSearchIndex's into two lists of Integers, finally a byte array.
 				List<Integer> thmIndexList = new ArrayList<Integer>();
 				List<Integer> wordIndexInThmList = new ArrayList<Integer>();
-				int counter = varbinaryLen;
+				int counter = maxThmsPerLiteralWord;
 				
 				for(LiteralSearchIndex searchIndex : searchIndexCol) {
 					
@@ -188,7 +189,7 @@ public class LiteralSearchUtils {
 					}
 				}
 				byte[] thmIndexBytes = SimilarThmUtils.indexListToByteArray(thmIndexList,
-						numBitsPerThmIndex, Searcher.SearchMetaData.maxThmsPerLiteralWord);
+						numBitsPerThmIndex, maxThmsPerLiteralWord);
 				byte[] wordIndexArBytes = SimilarThmUtils.indexListToByteArray(wordIndexInThmList, 
 						numBitsPerWordIndex, maxWordsArListLen);
 				
