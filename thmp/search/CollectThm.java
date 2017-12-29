@@ -147,7 +147,7 @@ public class CollectThm {
 		e.g. "annihilator", "annihiate" all have the single entry "annihilat" */
 		private static final ImmutableMap<String, Integer> docWordsFreqMapNoAnno;
 		//entries are word and the indices of thms that contain that word.
-		private static final ImmutableMultimap<String, IndexPartPair> wordThmsIndexMMapNoAnno;
+		private static final ImmutableMultimap<String, IndexPartPair> wordThmsIndexMMap;
 		
 		private static final int CONTEXT_VEC_SIZE;
 		
@@ -178,11 +178,9 @@ public class CollectThm {
 		
 		private static final ImmutableMap<String, Integer> CONTEXT_VEC_WORDS_FREQ_MAP;
 		
-		/** Map of (annotated with "hyp" etc) keywords and their scores in document, the higher freq in doc, the lower 
-		 * score, say 1/(log freq + 1) since log 1 = 0.  */
-		//wordsScoreMap should get deprecated! Should use scores of words without annotations.
-		//private static final ImmutableMap<String, Integer> wordsScoreMap;	
-		private static final ImmutableMap<String, Integer> wordsScoreMapNoAnno;	
+		/** Map of keywords and their scores in document, the higher freq in doc, the lower 
+		 * score, along the lines of  1/(log freq + 1) since log 1 = 0.  */		
+		private static final ImmutableMap<String, Integer> wordsScoreMap;	
 		//The number of frequent words to take
 		//private static final int NUM_FREQ_WORDS = 500;
 		//multiplication factors to deflate the frequencies of 2-grams and 3-grams to weigh
@@ -263,9 +261,9 @@ public class CollectThm {
 					}					
 				}
 				
-				wordThmsIndexMMapNoAnno = ImmutableMultimap.copyOf(wordThmsIndexMultimap);
+				wordThmsIndexMMap = ImmutableMultimap.copyOf(wordThmsIndexMultimap);
 			}else {
-				wordThmsIndexMMapNoAnno = null;
+				wordThmsIndexMMap = null;
 			}				
 				 //SearchMetaData.wordDocFreqMapPath()
 				String docWordsFreqMapNoAnnoPath = FileUtils.getPathIfOnServlet(SearchMetaData.allThmWordsFreqListPath());
@@ -317,8 +315,8 @@ public class CollectThm {
 				CONTEXT_VEC_WORDS_INDEX_MAP = createContextKeywordIndexDict(CONTEXT_VEC_WORDS_FREQ_MAP);
 			}*/
 			
-			wordsScoreMapNoAnno = ImmutableMap.copyOf(wordsScorePreMap);
-			System.out.println("*********wordsScoreMapNoAnno.size(): " + wordsScoreMapNoAnno.size());
+			wordsScoreMap = ImmutableMap.copyOf(wordsScorePreMap);
+			System.out.println("*********wordsScoreMapNoAnno.size(): " + wordsScoreMap.size());
 			//should be built separately, and combined at end, 
 			//wordThmsIndexMMapNoAnno = wordThmsMMapBuilderNoAnno.build();
 			CONTEXT_VEC_SIZE = docWordsFreqMapNoAnno.size();
@@ -1241,11 +1239,13 @@ public class CollectThm {
 		}
 		
 		/**
-		 * Retrieves map of scores corresponding to words
+		 * Map of keywords and their scores, the higher freq in doc, the lower 
+		 * score, along the lines of  1/(log freq + 1) since log 1 = 0. 
+		 * Used for all search algorithms.
 		 * @return
 		 */
 		public static ImmutableMap<String, Integer> get_wordsScoreMap(){
-			return wordsScoreMapNoAnno;
+			return wordsScoreMap;
 		}
 		
 		/**
@@ -1263,34 +1263,9 @@ public class CollectThm {
 		public static ImmutableMap<String, Integer> get_docWordsFreqMap(){
 			return docWordsFreqMapNoAnno; 
 		}
-
-		/**
-		 * Retrieves map of words with their document-wide frequencies.
-		 * @return
-		 */
-		/*public static ImmutableMap<String, Integer> get_contextVecWordsNextTimeMap(){
-			return contextVecWordsNextTimeMap; 
-		}*/
 		
-		/**
-		 * Retrieves map of words with their indices in contextVecWordsNextTimeMap.
-		 * @return
-		 */
-		/*public static ImmutableMap<String, Integer> get_contextVecWordsIndexNextTimeMap(){
-			return contextVecWordsIndexNextTimeMap; 
-		}*/
-		
-		/**
-		 * Retrieves ImmutableListMultimap of words and the theorems's indices in thmList
-		 *  they appear in. Indices of thms are 0-based.
-		 * @return
-		 */
-		/*public static ImmutableMultimap<String, Integer> get_wordThmsMMap(){
+		public static ImmutableMultimap<String, IndexPartPair> get_wordThmsMMap(){
 			return wordThmsIndexMMap;
-		}*/
-		
-		public static ImmutableMultimap<String, IndexPartPair> get_wordThmsMMapNoAnno(){
-			return wordThmsIndexMMapNoAnno;
 		}
 	}
 	//***********End of prev class

@@ -27,7 +27,7 @@ public class CreateMscVecs {
 
 	private static final String wordsScoreMapPath = "src/thmp/data/wordsScoreMap.json";
 	//put such a file in each tar directory.
-	private static final String mscTermsFileName = "mscTerms.txt";
+	private static final String mscTermsFileName = "mscTermsDec17.txt";
 	//Map of paperId and classifications.
 	private static final Map<String, String> paperIdMscMap = new HashMap<String, String>();
 	private static final Pattern MSC_LINE_PATT = Pattern.compile("([^,]+),(.+)");

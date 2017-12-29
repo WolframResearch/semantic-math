@@ -35,7 +35,7 @@ public class ConceptSearch {
 		= CollectThm.ThmWordsMaps.get_CONTEXT_VEC_WORDS_INDEX_MAP();
 	private static final List<String> keywordsList = CollectThm.ThmWordsMaps.get_CONTEXT_VEC_WORDS_LIST();
 	private static final ImmutableMultimap<String, IndexPartPair> wordThmsIndexMMap1
-		= CollectThm.ThmWordsMaps.get_wordThmsMMapNoAnno();
+		= CollectThm.ThmWordsMaps.get_wordThmsMMap();
 	private static final int NUM_NEAREST_VECS = SearchCombined.NUM_NEAREST;
 	
 	private static final int NUM_BITS_PER_WORD_INDEX = ConceptSearchUtils.NUM_BITS_PER_WORD_INDEX();
@@ -204,8 +204,8 @@ public class ConceptSearch {
 		System.out.println("Their indices: "+wordIndexSet);*/
 		
 		List<Integer> wordIndexList = new ArrayList<Integer>(wordIndexSet);
- 		return SimilarThmUtils.wordsListToByteArray(wordIndexList, NUM_BITS_PER_WORD_INDEX,
-				maxWordsIndexListLen) ;
+ 		return SimilarThmUtils.indexListToByteArray(wordIndexList, NUM_BITS_PER_WORD_INDEX,
+				maxWordsIndexListLen);
 	}
 	
 	/**

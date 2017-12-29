@@ -109,6 +109,7 @@ public interface Searcher<S> {
 		private static final String threeGramsFreqMapPath = "src/thmp/data/threeGramsMap.dat";
 		private static final String twoGramsFreqMapPath = "src/thmp/data/twoGramsMap.dat";
 		private static final String trueFluffWordsSetPath = "src/thmp/data/trueFluffWordsSet.dat";
+		/**Map of words and their literal search indices, encoded as bytes.*/
 		private static final String literalSearchIndexMapPath = "src/thmp/data/literalSearchIndexMap.dat";
 		public static final String texFilesSerializedListFileName = "texFileNamesSetList.dat";
 		
@@ -120,6 +121,9 @@ public interface Searcher<S> {
 		private static final String nameCSVDataPath = "src/thmp/data/metaDataNameDB.csv";
 		/**Max number of words index list, used for search based on exact words*/
 		public static final int maxConceptsPerThmNum = 20;
+		/**Max number of thm indices per literal search word. 200 should be sufficiently large, 
+		 * since we are mostly interested in rare words that were not included in the lexicon. */
+		public static final int maxThmsPerLiteralWord = 300;
 		
 		public static void set_gatheringDataBoolToTrue(){
 			//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));

@@ -83,7 +83,7 @@ public class ProjectionMatrix {
 	
 	static {
 		wordsScoreMap = CollectThm.ThmWordsMaps.get_wordsScoreMap();
-		wordThmsIndexMMap = CollectThm.ThmWordsMaps.get_wordThmsMMapNoAnno();
+		wordThmsIndexMMap = CollectThm.ThmWordsMaps.get_wordThmsMMap();
 		
 	}
 	
@@ -384,7 +384,7 @@ public class ProjectionMatrix {
 	@SuppressWarnings("unchecked")
 	private static int addExprsToLists(String dirPathStr, String peFilePath, List<ThmHypPair> combinedPEList, String vecsFilePath,
 			List<ContextRelationVecPair> combinedVecsList, String wordThmIndexMMapPath, 
-			Multimap<String, IndexPartPair> combinedWordThmIndexMMap, ListMultimap<String, LiteralSearchIndex> searchIndexMap,
+			Multimap<String, IndexPartPair> combinedWordThmIndexMMap, ListMultimap<String, LiteralSearchIndex> literalSearchIndexMap,
 			List<String> allThmNameScrapeList, int startingThmIndex, StringBuilder nameDBSB,
 			Multimap<String, String> paperIdNameDataMap) {
 		
@@ -403,7 +403,7 @@ public class ProjectionMatrix {
 			ThmHypPair curPair = thmHypPairList.get(i);
 			String thmStr = curPair.getEntireThmStr();
 			int curThmIndex = startingThmIndex+i;
-			LiteralSearch.addThmLiteralSearchIndexToMap(thmStr, curThmIndex, searchIndexMap);
+			LiteralSearch.addThmLiteralSearchIndexToMap(thmStr, curThmIndex, literalSearchIndexMap);
 			String curPairPaperId = curPair.srcFileName();
 			//String paperNameData = paperIdNameDataMap.get(curPairPaperId);
 			Collection<String> paperNameDataCol = paperIdNameDataMap.get(curPairPaperId);
