@@ -469,7 +469,7 @@ public class SearchIntersection {
 		// pre-compute the scores for singleton words in query.
 		int totalSingletonAdded = computeSingletonScores(inputWordsList, singletonScoresAr, inputWordsArUpdated);
 		searchState.set_totalWordAdded(totalSingletonAdded);
-		//map of word in singularized form, with list of thms for that word.
+		//map of word in normalized form, with list of thms for that word. Used for literal search.
 		Map<String, Collection<IndexPartPair>> wordIndexPartPairMap = new HashMap<String, Collection<IndexPartPair>>();
 		
 		Set<ThmScoreSpanPair> thmScoreSpanSet = new HashSet<ThmScoreSpanPair>();
@@ -499,7 +499,7 @@ public class SearchIntersection {
 					String threeGram = twoGram + " " + thirdWord;
 					if (threeGramsMap.containsKey(threeGram)) {
 						scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap,// thmWordsMMap, 
-								thmScoreSpanSet, thmPartMap, wordThmsListList, wordIndexPartPairMap,//normalizedWordsSet,
+								thmScoreSpanSet, thmPartMap, wordThmsListList, wordIndexPartPairMap,
 								threeGram, i, WordForms.TokenType.THREEGRAM,
 								singletonScoresAr, searchWordsSet, dbThmSet, searchState);
 						if (scoreAdded > 0) {
@@ -516,7 +516,7 @@ public class SearchIntersection {
 				//long time2 = SimilarThmSearch.printElapsedTime(time1, "time2");
 				if (twoGramsMap.containsKey(twoGram)) {
 					scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, //thmWordsMMap, 
-							thmScoreSpanSet, thmPartMap, wordThmsListList, wordIndexPartPairMap, twoGram,//nextWordCombined, 
+							thmScoreSpanSet, thmPartMap, wordThmsListList, wordIndexPartPairMap, twoGram,
 							i, WordForms.TokenType.TWOGRAM, singletonScoresAr,
 							searchWordsSet, dbThmSet, searchState);
 					if (scoreAdded > 0) {
@@ -617,7 +617,8 @@ public class SearchIntersection {
 		if(searchState.allowLiteralSearch() && LiteralSearch.spanBelowThreshold(resultWordSpan, inputWordsArSz)) {
 			System.out.println("Initializing literal search...");
 			//here
-			List<Integer> highestThmList = LiteralSearch.literalSearch(input, resultWordSpan, searchWordsSet, numHighest);
+			List<Integer> highestThmList = LiteralSearch.literalSearch(input, resultWordSpan, searchWordsSet, 
+					wordIndexPartPairMap, numHighest);
 			searchState.set_intersectionVecList(highestThmList);
 			return searchState;
 		}
@@ -881,8 +882,7 @@ public class SearchIntersection {
 	 * @param thmScoreMap
 	 * @param scoreThmMMap
 	 * @param wordIndexPartPairMap Map of words and Collections of IndexPartPair's, where words must be 
-	 * in their original forms, i.e. non-normalized, or even singularized (as of Dec 20.) Actually should 
-	 * singularize! Used for literal search.
+	 * in normalized form. Used for literal search.
 	 * @param word current word to add thms for
 	 * @param wordIndices  array of indices of words in query
 	 * @param singletonScoresAr  Array of scores for singleton words
@@ -980,8 +980,8 @@ public class SearchIntersection {
 			
 			//add thms to list for now
 			wordThmsListList.add(new WordThmsList(word, wordThms, curScoreToAdd, tokenType, wordIndexInThm));
-			//used for literal search.
-			wordIndexPartPairMap.put(wordSingForm, wordThms);
+			//use normalized word for literal search.
+			wordIndexPartPairMap.put(word, wordThms);
 			
 			if (DEBUG) {
 				System.out.println("SearchIntersection-Word added: " + word + ". Score: " + curScoreToAdd);

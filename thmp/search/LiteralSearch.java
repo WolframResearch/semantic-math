@@ -5,6 +5,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -18,12 +19,15 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Multiset;
 import com.google.common.collect.TreeMultimap;
 import com.wolfram.puremath.dbapp.DBUtils;
 import com.wolfram.puremath.dbapp.LiteralSearchUtils;
 
+import thmp.search.CollectThm.ThmWordsMaps.IndexPartPair;
 import thmp.search.LiteralSearch.LiteralSearchIndex;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
@@ -49,7 +53,7 @@ public class LiteralSearch {
 	private static final double literalSearchTriggerThreshold2 = 0.4;
 	private static final Set<String> INVALID_SEARCH_WORD_SET;
 	//max word length allowed to be a literal word.
-	private static final int LITERAL_WORD_LEN_MAX = 15;
+	public static final int LITERAL_WORD_LEN_MAX = 15;
 	private static final Pattern DIGIT_PATTERN = Pattern.compile("\\d+");
 	private static final Logger logger = LogManager.getLogger(LiteralSearch.class);
 	/*deliberately includes slash \\*/
@@ -231,14 +235,15 @@ public class LiteralSearch {
 	 * @param query ALl lower-case
 	 * @param priorWordSpan Word span of previous search algorithms wrt user's query words.
 	 * @param searchWordsSet set of words to be used for highlighting on the web FE.
+	 * @param wordIndexPartPairMap map of word and their collection of thms. To take prior found in 
+	 * intersection search into account
 	 * @param maxThmCount the max number of thms that should be returned, optional param.
 	 * @return
 	 * List from literal search. Empty list if literal search doesn't improve word span,
 	 * for e.g. "klfjk module"
 	 */
-	public static List<Integer> literalSearch(String query, int priorWordSpan, Set<String> searchWordsSet, 
-			//need to take prior found word thms from intersection search into account!!
-			
+	public static List<Integer> literalSearch(String query, int priorWordSpan, Set<String> searchWordsSet,
+			Map<String, Collection<IndexPartPair>> wordIndexPartPairMap,
 			int...maxThmCountAr){
 		
 		List<String> queryWordList = WordForms.splitThmIntoSearchWordsList(query);
@@ -248,6 +253,9 @@ public class LiteralSearch {
 		int wordSpan = 0;
 		Connection conn = thmp.utils.DBUtils.getPooledConnection();
 		int wordIndexArLen = LiteralSearchIndex.MAX_WORD_INDEX_AR_LEN;
+		//multiset of thm indices and the count of words for each index, where words
+		//are not found in literal search db, but in lexicon
+		Multiset<Integer> thmWordCountMSet = HashMultiset.create();
 		
 		for(String word : queryWordList) {
 			if(isInValidLiteralWord(word)) {
@@ -269,15 +277,25 @@ public class LiteralSearch {
 				logger.error("SQLException when getting literal search data!" + e);
 				continue;
 			}
-			int thmIndexListSz = thmIndexList.size();
-			//if empty, check list from intersection search!!
-			
+			int thmIndexListSz = thmIndexList.size();			
 			int wordsIndexArListSz = wordsIndexArList.size();
 			if((thmIndexListSz * wordIndexArLen) != wordsIndexArListSz) {
 				throw new IllegalArgumentException("Literal search db table inconsistency: "
 						+ "(thmIndexListSz * maxWordIndexArLen) != wordsIndexArListSz");
 			}
-			
+			 
+			//if empty, check list from intersection search
+			if(0 == thmIndexListSz) {
+				Collection<IndexPartPair> wordIndexPartPairCol = wordIndexPartPairMap.get(word);
+				if(null != wordIndexPartPairCol) {
+					for(IndexPartPair pair : wordIndexPartPairCol) {
+						thmWordCountMSet.add(pair.thmIndex());
+					}
+					wordSpan++;
+				}		
+			}else {
+				wordSpan++;
+			}
 			for(int i = 0; i < thmIndexListSz; i++) {
 				
 				int thmIndex = thmIndexList.get(i);
@@ -295,17 +313,16 @@ public class LiteralSearch {
 					indexWordMap.put(wordIndexInThm, word);
 				}				
 				thmIndexWordMap.put(thmIndex, indexWordMap);
-			}	
-			if(!thmIndexList.isEmpty()) {
-				wordSpan++;
 			}
 		}
+		thmp.utils.DBUtils.closePooledConnection(conn);
+		
 		//need upper bound, since some results for long queries are still meaningful despite low span.
 		final int wordSpanUpperBound = 3;
 		if(wordSpan <= priorWordSpan && wordSpan < wordSpanUpperBound) {
 			return Collections.emptyList();
 		}
-		Map<Integer, Integer> thmScoreMap = createThmScoreMap(thmIndexWordMap);
+		Map<Integer, Integer> thmScoreMap = createThmScoreMap(thmIndexWordMap, thmWordCountMSet);
 		TreeMultimap<Integer, Integer> scoreThmMMap = TreeMultimap.create();
 		for(Map.Entry<Integer, Integer> thmScoreEntry : thmScoreMap.entrySet()) {
 			//negate, so higher scores come first.
@@ -325,6 +342,11 @@ public class LiteralSearch {
 		return thmIndexList;
 	}
 
+	/**
+	 * Singularize and normalize word, to be used for literal search.
+	 * @param word
+	 * @return
+	 */
 	private static String processLiteralSearchWord(String word) {
 		word = WordForms.getSingularForm(word);
 		word = WordForms.normalizeWordForm(word);
@@ -361,17 +383,21 @@ public class LiteralSearch {
 	 * Base point total is number of distinct words. 
 	 * @param thmIndexWordMap Map where keys are thm index, and value are map of word index and word.
 	 * Word indices are relative, i.e. an index can be negative! Add Byte.MAX_VALUE to get absolute index.
-	 * @return
+	 * @param thmWordCountMSet Multiset of thm indices, where the count reflects the number of words for that index.
+	 * @return thm score map of thm index and thm score.
 	 */
-	private static Map<Integer, Integer> createThmScoreMap(Map<Integer, TreeMap<Number, String>> thmIndexWordMMap) {
+	private static Map<Integer, Integer> createThmScoreMap(Map<Integer, TreeMap<Number, String>> thmIndexWordMMap,
+			Multiset<Integer> thmWordCountMSet) {
 		
 		Map<Integer, Integer> thmScoreMap = new HashMap<Integer, Integer>();		
 
 		for(Map.Entry<Integer, TreeMap<Number,String>> thmIndexWordEntry : thmIndexWordMMap.entrySet()) {
 			int thmIndex = thmIndexWordEntry.getKey();
-			//Integer priorScore = thmScoreMap.get(thmIndex);
-			//priorScore = null == priorScore ? 0 : priorScore;
+			
 			int thmScore = computeThmScore(thmIndexWordEntry.getValue());
+			thmScore += thmWordCountMSet.count(thmIndex);
+			
+			//MIN_SCORE if only keyword is generic.
 			if(thmScore > MIN_SCORE) {
 				thmScoreMap.put(thmIndex, thmScore);				
 			}
@@ -382,8 +408,9 @@ public class LiteralSearch {
 
 	/**
 	 * Computes the score for a thm based on the ordering of the words in thm.
-	 * @param indexWordMap
-	 * @return
+	 * @param indexWordMap TreeMap of word index and the word.
+	 * @param map map for thms gathered during intersection search.
+	 * @return MIN_SCORE if contains only generic word
 	 */
 	private static int computeThmScore(TreeMap<Number,String> indexWordMap) {
 		//map of words, and the number of points that word is earning
@@ -401,7 +428,7 @@ public class LiteralSearch {
 				return WORD_BASE_POINT;				
 			}
 		}
-			
+		
 		Number priorWordIndex = wordsList.get(0);
 		String priorWord = indexWordMap.get(priorWordIndex);
 		wordScoreMap.put(priorWord, 0);

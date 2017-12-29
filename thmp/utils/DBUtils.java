@@ -272,6 +272,8 @@ public class DBUtils {
 	/**
 	 * Obtain handle to datasource connection from as provided by web container 
 	 * Connections pool.
+	 * *MUST* call thmp.utils.DBUtils.closePooledConnection to return connection 
+	 * to pool when done!
 	 * @return @Nullable connection from the pool. Null if cannot acquire connection.
 	 * 
 	 */
