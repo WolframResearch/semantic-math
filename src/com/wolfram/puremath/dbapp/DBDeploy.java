@@ -17,6 +17,8 @@ import thmp.utils.FileUtils;
 
 /**
  * Utilities used for deploying DB.
+ * Automatically deploy to multiple tables!
+ * 
  * @author yihed
  *
  */

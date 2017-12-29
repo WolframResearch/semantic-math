@@ -77,10 +77,13 @@ public class DBUtils {
 		/**relative (to ~/thm) path to serialization file containing words, and string of list of 
 		 * indices of thm indices */
 		public static final String literalSearchByteArrayPath = "src/thmp/data/literalSearchByteArray.dat";
+		//multimap of words and the LiteralSearchIndex's for the list of thms containing that word.
+		public static final String literalSearchIndexMMapPath = "src/thmp/data/literalSearchIndexMMap.dat";
 		public static final String TB_NAME = "literalSearchTb";
 		/**thm index*/
 		public static final String WORD_COL = "word";
 		public static final String THM_INDICES_COL = "thmIndices";
+		public static final String WORD_INDICES_COL = "wordIndices";
 	}
 	
 	/**

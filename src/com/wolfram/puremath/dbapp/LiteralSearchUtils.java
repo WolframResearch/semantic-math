@@ -2,21 +2,27 @@ package com.wolfram.puremath.dbapp;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.ListMultimap;
 import com.wolfram.puremath.dbapp.DBUtils.LiteralSearchTb;
-import com.wolfram.puremath.dbapp.DBUtils.ThmConceptsTb;
 
+import thmp.search.LiteralSearch.LiteralSearchIndex;
 import thmp.search.Searcher;
 import thmp.utils.FileUtils;
 
 /**
  * DB utilities class for literal search. Used for encoding
- * literal search indices as bytes.
+ * literal search indices as bytes (rather than having a 600 mb map
+ * in memory).
+ * Table contains 3 columns, word column, byte array col of thm indices,
+ * and col of the row word's index in the thm.
  * Analogous to ConceptSearchUtils.
  * 
  * @author yihed
@@ -24,28 +30,52 @@ import thmp.utils.FileUtils;
 public class LiteralSearchUtils {
 
 	private static final int numBitsPerThmIndex = SimilarThmUtils.numBitsPerThmIndex();
+	/**Number of bits per word index, word index being an element of the word index array for a thm*/
+	private static final int numBitsPerWordIndex = LiteralSearchIndex.NUM_BITS_PER_WORD_INDEX;
 	
 	/**
-	 * Retrieve literal search indices from db to show on web FE.
+	 * Retrieve literal search thm indices, and the indices of that word
+	 * in these thms, from db.
+	 * 
 	 * Use at app runtime.
 	 * @param word, In normalized form.
 	 * @param conn
 	 * @return
 	 * @throws SQLException
 	 */
-	public static List<Integer> getLiteralSearchThmsFromDB(String word,  Connection conn) throws SQLException{
-			StringBuilder sb = new StringBuilder(50);
-			sb.append("SELECT ").append(LiteralSearchTb.THM_INDICES_COL)
-			.append(" FROM ").append(LiteralSearchTb.TB_NAME)
-			.append(" WHERE ").append(LiteralSearchTb.WORD_COL)
-			.append("=").append(word).append(";");
-			
-			return SimilarThmUtils.queryByteArray(conn, sb, numBitsPerThmIndex);
+	public static void getLiteralSearchThmsFromDB(String word,  Connection conn,
+			List<Integer> thmIndexList, List<Integer> wordsIndexArList) throws SQLException{
+		
+		StringBuilder querySb = new StringBuilder(50);
+		querySb.append("SELECT ").append(LiteralSearchTb.THM_INDICES_COL)
+		.append(" FROM ").append(LiteralSearchTb.TB_NAME)
+		.append(" WHERE ").append(LiteralSearchTb.WORD_COL)
+		.append("=").append(word).append(";");
+		
+		PreparedStatement pstm = conn.prepareStatement(querySb.toString());
+		
+		ResultSet rs = pstm.executeQuery();
+		byte[] indexBytes;
+		byte[] wordsIndexArBytes;
+	 	if(rs.next()) {
+			indexBytes = rs.getBytes(DBUtils.LiteralSearchTb.THM_INDICES_COL);
+			wordsIndexArBytes = rs.getBytes(DBUtils.LiteralSearchTb.WORD_INDICES_COL);
+		}else {
+			pstm.close();
+			return;
+		}
+		pstm.close();
+		rs.close();
+		
+		thmIndexList.addAll(SimilarThmUtils.byteArrayToIndexList(indexBytes, numBitsPerThmIndex));
+		thmIndexList.addAll(SimilarThmUtils.byteArrayToIndexList(wordsIndexArBytes, numBitsPerWordIndex));
+		
 	}
 	
 	/**
-	 * Need 3 columns!!!
-	 * 
+	 * Need 3 columns, word column, thm index,
+	 * and col of word indices in thm.
+	 * So each word 
 	 * Deploy to the literal search db table.
 	 * Use before app deployment.
 	 * @param conn
@@ -57,7 +87,8 @@ public class LiteralSearchUtils {
 		 * 20*15/8 = 37.5*/
 		//accomodate changes in number of indices and number of concepts to display!!!
 		
-		int varbinaryLen = 1;//Searcher.SearchMetaData.maxThmsPerLiteralWord * numBitsPerThmIndex / DBUtils.NUM_BITS_PER_BYTE;
+		//number of bytes per list
+		int varbinaryLen = Searcher.SearchMetaData.maxThmsPerLiteralWord * numBitsPerThmIndex / DBUtils.NUM_BITS_PER_BYTE;
 		
 		//1 for rounding, 1 extra
 		final int padding = 2;
@@ -69,24 +100,28 @@ public class LiteralSearchUtils {
 		pstm.executeUpdate();
 		
 		//need to pudate table MEDIUMINT(9) UNSIGNED;  VARBINARY(265)
+		int wordIndexArTotalLen = LiteralSearchIndex.MAX_WORD_INDEX_AR_LEN; //this value is 2
+		int maxWordsArListLen = Searcher.SearchMetaData.maxThmsPerLiteralWord * wordIndexArTotalLen ;
 		
-		//"ALTER TABLE <table_name> MODIFY <col_name> VARCHAR(65);";	
-		pstm = conn.prepareStatement("ALTER TABLE " + LiteralSearchTb.TB_NAME + " MODIFY " 
-				+ LiteralSearchTb.THM_INDICES_COL + " VARBINARY(" + varbinaryLen + ");");
+		int wordArVarBinaryLen = maxWordsArListLen * numBitsPerWordIndex / DBUtils.NUM_BITS_PER_BYTE;
+		//"ALTER TABLE <table_name> MODIFY <col_name> VARCHAR(65);";
+		pstm = conn.prepareStatement("ALTER TABLE " + LiteralSearchTb.TB_NAME 
+				+ " MODIFY " + LiteralSearchTb.THM_INDICES_COL + " VARBINARY(" + varbinaryLen + "),"
+				+ " MODIFY " + LiteralSearchTb.WORD_INDICES_COL + " VARBINARY(" + wordArVarBinaryLen + ");");
 		pstm.executeUpdate();
 		
 		pstm = conn.prepareStatement("ALTER TABLE " + LiteralSearchTb.TB_NAME + " DROP PRIMARY KEY;");
 		pstm.executeUpdate();
 		
-		//Need LiteralSearchIndex!!
-		
 		//populate table from serialized similar thms indices
 		@SuppressWarnings("unchecked")
-		List<Map<String, byte[]>> literalSearchMapList 
-			= (List<Map<String, byte[]>>)FileUtils.deserializeListFromFile(DBUtils.LiteralSearchTb.literalSearchByteArrayPath);
+		List<ListMultimap<String, LiteralSearchIndex>> literalSearchMapList 
+			= (List<ListMultimap<String, LiteralSearchIndex>>)FileUtils
+				.deserializeListFromFile(DBUtils.LiteralSearchTb.literalSearchIndexMMapPath);
 		
-		Map<String, byte[]> literalIndicesMap = literalSearchMapList.get(0);
+		ListMultimap<String, LiteralSearchIndex> literalIndexMMap = literalSearchMapList.get(0);
 		
+		//construct bytes based on 
 		StringBuilder sb = new StringBuilder(50);
 		
 		sb.append("ALTER TABLE ").append(LiteralSearchTb.TB_NAME)
@@ -99,25 +134,68 @@ public class LiteralSearchUtils {
 		sb.append("INSERT INTO " + LiteralSearchTb.TB_NAME + " (")
 		.append(LiteralSearchTb.WORD_COL)
 		.append(",").append(LiteralSearchTb.THM_INDICES_COL)
-		.append(") VALUES(?, ?);");
+		.append(",").append(LiteralSearchTb.WORD_INDICES_COL)
+		.append(") VALUES(?, ?, ?);") ;
+		
 		
 		pstm = conn.prepareStatement(sb.toString());
 		
-		Set<Map.Entry<String, byte[]>> entrySet = literalIndicesMap.entrySet();
-		Iterator<Map.Entry<String, byte[]>> iter = entrySet.iterator();
-		int entrySetSz = entrySet.size();
-		final int batchSz = 30000;
-		System.out.println("Total number of batches: " + Math.ceil(entrySetSz/(double)batchSz));
+		//Set<Map.Entry<String, byte[]>> entrySet = literalIndicesMMap.entrySet();
 		
-		int counter = 0;
+		Set<String> keySet = literalIndexMMap.keySet();
+		
+		//Iterator<Map.Entry<String, byte[]>> iter = entrySet.iterator();
+		Iterator<String> iter = keySet.iterator();
+		int keySetSz = keySet.size();
+		//int entrySetSz = entrySet.size();
+		
+		final int batchSz = 30000;
+		System.out.println("Total number of batches: " + Math.ceil(keySetSz/(double)batchSz));
+		
+		int counter0 = 0;
 		while(iter.hasNext()) {		
-			System.out.println("About to insert batch " + counter++);
+			System.out.println("About to insert batch " + counter0++);
 			for(int i = 0; i < batchSz && iter.hasNext(); i++) {
-				Map.Entry<String, byte[]> entry = iter.next();
-				String word = entry.getKey();
-				byte[] literalSearchBytes = entry.getValue();
+				//Map.Entry<String, byte[]> entry = iter.next();				
+				String word = iter.next();
+				Collection<LiteralSearchIndex> searchIndexCol = literalIndexMMap.get(word);
+				//byte[] literalSearchBytes = entry.getValue();
+				
+				//turn list of LiteralSearchIndex's into two lists of Integers, finally a byte array.
+				List<Integer> thmIndexList = new ArrayList<Integer>();
+				List<Integer> wordIndexInThmList = new ArrayList<Integer>();
+				int counter = varbinaryLen;
+				
+				for(LiteralSearchIndex searchIndex : searchIndexCol) {
+					
+					thmIndexList.add(searchIndex.thmIndex());
+					byte[] wordIndexAr = searchIndex.wordIndexAr();
+					int wordIndexArLen = wordIndexAr.length;
+					int upTo = Math.min(wordIndexArLen, wordIndexArTotalLen);
+					int j = 0;
+					
+					//fill list up to LiteralSearchIndex.MAX_WORD_INDEX_AR_LEN, for words
+					for(; j < upTo; j++) {
+						wordIndexInThmList.add((int)wordIndexAr[j]);
+					}
+					/* Pad up to MAX_WORD_INDEX_AR_LEN number of indices,
+					 * since db retrieval retrieves fixed number of bits at a time. */
+					for(; j < wordIndexArTotalLen; j++ ) {
+						wordIndexInThmList.add(LiteralSearchIndex.PLACEHOLDER_INDEX);
+					}		
+					if(--counter < 1) {
+						break;
+					}
+				}
+				byte[] thmIndexBytes = SimilarThmUtils.indexListToByteArray(thmIndexList,
+						numBitsPerThmIndex, Searcher.SearchMetaData.maxThmsPerLiteralWord);
+				byte[] wordIndexArBytes = SimilarThmUtils.indexListToByteArray(wordIndexInThmList, 
+						numBitsPerWordIndex, maxWordsArListLen);
+				
 				pstm.setString(1, word);
-				pstm.setBytes(2, literalSearchBytes);
+				pstm.setBytes(2, thmIndexBytes);
+				pstm.setBytes(3, wordIndexArBytes);
+				
 				pstm.addBatch();
 			}
 			pstm.executeBatch();			

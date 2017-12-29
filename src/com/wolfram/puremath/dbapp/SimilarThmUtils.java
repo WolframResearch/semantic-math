@@ -213,48 +213,44 @@ public class SimilarThmUtils {
 		return new String(indexByteAr, INDEX_STR_CHAR_SET);
 	}
 
+	public static byte[] indexListToByteArray(List<Integer> indexList) {
+		return indexListToByteArray(indexList, MAX_THM_INDEX_LIST_LEN);
+	}
+	
 	/**
 	 * Encode list of indices to string.
 	 * Total 770k thms, so each index needs log(2,770k) = 20 bits. For
 	 * say top 100 similar thms, need 100*20/8 = 250 bytes/ISO-8859-encoded chars.
-	 * @param thmIndexList
+	 * @param indexList
+	 * @param maxIndexListLen max length of index list to truncate to.
 	 * @return
 	 */
-	public static byte[] indexListToByteArray(List<Integer> thmIndexList) {
-		int thmIndexListLen = thmIndexList.size();
-		if(thmIndexListLen > MAX_THM_INDEX_LIST_LEN) {
-			List<Integer> tempList = new ArrayList<Integer>();
-			for(int i = 0; i < MAX_THM_INDEX_LIST_LEN; i++) {
-				tempList.add(thmIndexList.get(i));
-			}
-			thmIndexListLen = MAX_THM_INDEX_LIST_LEN;
-			thmIndexList = tempList;
-		}
-		//create byte array, then turn byte array into string
+	public static byte[] indexListToByteArray(List<Integer> indexList, int maxIndexListLen) {
 		
+		int thmIndexListLen = indexList.size();
+		thmIndexListLen = thmIndexListLen > maxIndexListLen ? maxIndexListLen : thmIndexListLen;
+		
+		//create byte array, then turn byte array into string		
 		byte[] indexByteAr = new byte[thmIndexListLen*NUM_BITS_PER_THM_INDEX/NUM_BITS_PER_BYTE+1];
 		
-		for(int i = 0; i < thmIndexListLen; i++) {
-						
-			fillByteArray(indexByteAr, thmIndexList.get(i), i, NUM_BITS_PER_THM_INDEX);
+		for(int i = 0; i < thmIndexListLen; i++) {						
+			fillByteArray(indexByteAr, indexList.get(i), i, NUM_BITS_PER_THM_INDEX);
 		}
 		if(DEBUG) System.out.println("indexByteAr "+Arrays.toString(indexByteAr));
 		return indexByteAr;
 	}
 	
 	/**
-	 * 
-	 * @param wordsIndexList
+	 * Turn list of integer indices to byte array. To optimize db storage and performance.
+	 * @param indexList
 	 * @param numBitsPerIndex
 	 * @param maxWordsIndexListLen
 	 * @return
 	 */
-	public static byte[] wordsListToByteArray(List<Integer> wordsIndexList, int numBitsPerIndex,
-			int maxWordsIndexListLen
-			) {
-		int thmIndexListLen = wordsIndexList.size();
+	public static byte[] indexListToByteArray(List<Integer> indexList, int numBitsPerIndex,
+			int maxWordsIndexListLen) {
+		int thmIndexListLen = indexList.size();
 		if(thmIndexListLen > maxWordsIndexListLen) {
-			//wordsIndexList = wordsIndexList.subList(0, maxWordsIndexListLen);
 			thmIndexListLen = maxWordsIndexListLen;
 		}
 		//create byte array, then turn byte array into string
@@ -262,7 +258,7 @@ public class SimilarThmUtils {
 		byte[] indexByteAr = new byte[thmIndexListLen*numBitsPerIndex/NUM_BITS_PER_BYTE+1];
 		
 		for(int i = 0; i < thmIndexListLen; i++) {						
-			fillByteArray(indexByteAr, wordsIndexList.get(i), i, numBitsPerIndex);
+			fillByteArray(indexByteAr, indexList.get(i), i, numBitsPerIndex);
 		}
 		if(DEBUG) System.out.println("indexByteAr "+Arrays.toString(indexByteAr));
 		return indexByteAr;
@@ -338,11 +334,18 @@ public class SimilarThmUtils {
 		return queryByteArray(conn, sb, NUM_BITS_PER_THM_INDEX);
 	}
 
+	/**
+	 * Executes the supplied query using the supplied connection.
+	 * @param conn
+	 * @param querySb
+	 * @param numBitsPerIndex
+	 * @return
+	 * @throws SQLException
+	 */
 	public static List<Integer> queryByteArray(Connection conn, StringBuilder querySb, int numBitsPerIndex) 
 			throws SQLException {
 		
 		PreparedStatement pstm = conn.prepareStatement(querySb.toString());
-		//pstm.setInt(1, thmIndex);
 		
 		ResultSet rs = pstm.executeQuery();
 		byte[] indexBytes;
@@ -356,7 +359,8 @@ public class SimilarThmUtils {
 		rs.close();
 		return byteArrayToIndexList(indexBytes, numBitsPerIndex);
 	}
-			
+	
+	
 	/**
 	 * max length for index string used in db, in units of bytes (not chars). 
 	 * 100 similar thms, need 100*20/8 = 250 bytes/ISO-8859-encoded chars.
