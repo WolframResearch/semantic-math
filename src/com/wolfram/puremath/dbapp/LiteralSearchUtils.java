@@ -13,6 +13,7 @@ import java.util.Set;
 import com.google.common.collect.ListMultimap;
 import com.wolfram.puremath.dbapp.DBUtils.LiteralSearchTb;
 
+import thmp.search.LiteralSearch;
 import thmp.search.LiteralSearch.LiteralSearchIndex;
 import thmp.search.Searcher;
 import thmp.utils.FileUtils;
@@ -84,12 +85,14 @@ public class LiteralSearchUtils {
 	 */
 	public static void populateLiteralSearchTb(Connection conn) throws SQLException {
 		
-		/*If creating table, should be created as CREATE TABLE thmConceptsTb (thmIndex MEDIUMINT(7) UNSIGNED, thmConcepts VARBINARY(39));
+		/*If creating table, should be created as e.g.
+		 * CREATE TABLE literalSearchTb (word VARCHAR(15), thmIndices VARBINARY(789), wordIndices VARBINARY(600))
 		 * 20*15/8 = 37.5*/
 		//accomodate changes in number of indices and number of concepts to display!!!
 		
 		int maxThmsPerLiteralWord = Searcher.SearchMetaData.maxThmsPerLiteralWord;
-		//number of bytes per list
+		//number of bytes per list. As of Dec 29, num bytes for thmIndices is 300*21/8 = 787.5 + 2 ~ 789
+		//For wordIndices it is 300 * 2 * 8/8 = 600
 		int varbinaryLen = maxThmsPerLiteralWord * numBitsPerThmIndex / DBUtils.NUM_BITS_PER_BYTE;
 		
 		//1 for rounding, 1 extra
@@ -108,6 +111,7 @@ public class LiteralSearchUtils {
 		int wordArVarBinaryLen = maxWordsArListLen * numBitsPerWordIndex / DBUtils.NUM_BITS_PER_BYTE;
 		//"ALTER TABLE <table_name> MODIFY <col_name> VARCHAR(65);";
 		pstm = conn.prepareStatement("ALTER TABLE " + LiteralSearchTb.TB_NAME 
+				+ " MODIFY " + LiteralSearchTb.WORD_COL + " VARCHAR(" + LiteralSearch.LITERAL_WORD_LEN_MAX + "),"
 				+ " MODIFY " + LiteralSearchTb.THM_INDICES_COL + " VARBINARY(" + varbinaryLen + "),"
 				+ " MODIFY " + LiteralSearchTb.WORD_INDICES_COL + " VARBINARY(" + wordArVarBinaryLen + ");");
 		pstm.executeUpdate();

@@ -76,7 +76,7 @@ public class DBDeploy {
 		.append(DBUtils.AUTHOR_TB_MIDDLENAME_COL).append(",")
 		.append(DBUtils.AUTHOR_TB_LASTNAME_COL).append(");");
 		pstm = conn.prepareStatement(keySb.toString());
-		//pstm = conn.prepareStatement("ALTER TABLE " + DBUtils.AUTHOR_TB_NAME + " ADD PRIMARY KEY(id  )");
+		
 		pstm.executeUpdate();
 		
 		for(String index : indexList) {
