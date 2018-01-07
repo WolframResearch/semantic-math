@@ -236,6 +236,7 @@ public class SearchIntersection {
 	}
 	
 	/**
+	 * Outward facing function, e.g. to web servlets.
 	 * @param input
 	 * @param contextSearch
 	 *            Whether to use context search.
@@ -281,7 +282,7 @@ public class SearchIntersection {
 			Set<Integer> authorThmSet = null;
 			
 			try {
-				authorThmList = DBSearch.searchByAuthor(authorRelation, conjDisjType);
+				authorThmList = DBSearch.searchByAuthor(authorRelation, searchState, conjDisjType);
 				authorThmSet = new HashSet<Integer>(authorThmList);
 				if(searchAuthorOnly) {
 					searchState.set_intersectionVecList(authorThmList);
@@ -617,7 +618,7 @@ public class SearchIntersection {
 		if(searchState.allowLiteralSearch() && LiteralSearch.spanBelowThreshold(resultWordSpan, inputWordsArSz)) {
 			System.out.println("Initializing literal search...");
 			//here
-			List<Integer> highestThmList = LiteralSearch.literalSearch(input, resultWordSpan, searchWordsSet, 
+			List<Integer> highestThmList = LiteralSearch.literalSearch(input, searchState, resultWordSpan, searchWordsSet, 
 					wordIndexPartPairMap, numHighest);
 			searchState.set_intersectionVecList(highestThmList);
 			return searchState;

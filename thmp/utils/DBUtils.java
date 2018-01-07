@@ -274,6 +274,8 @@ public class DBUtils {
 	 * Connections pool.
 	 * *MUST* call thmp.utils.DBUtils.closePooledConnection to return connection 
 	 * to pool when done!
+	 * Currently (Jan 2018) should be only called from servlet methods to accompany 
+	 * one connection per HTTP request.
 	 * @return @Nullable connection from the pool. Null if cannot acquire connection.
 	 * 
 	 */

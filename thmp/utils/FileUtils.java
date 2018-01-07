@@ -199,6 +199,7 @@ public class FileUtils {
 	
 	/**
 	 * Sets servlet context and datasource for the web container setting.
+	 * This is called during servlet init.
 	 * @param servletContext_
 	 * @param dataSource
 	 */
@@ -235,7 +236,7 @@ public class FileUtils {
 	
 	/**
 	 * DataSource from web container, an implementation that generates pooled connections.
-	 * Can get pooled Connections by calling method in DBUtils.
+	 * Can get pooled Connections by calling method in DBUtils.java.
 	 * @return
 	 */
 	public static javax.sql.DataSource getPooledDataSource(){

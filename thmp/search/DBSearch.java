@@ -537,7 +537,8 @@ public class DBSearch {
 	 * @return List of indices of thms, *not* their ID's!
 	 * @throws SQLException 
 	 */
-	public static List<Integer> searchByAuthor(AuthorRelation authorRelation, DBUtils.ConjDisjType conjDisjType) throws SQLException {
+	public static List<Integer> searchByAuthor(AuthorRelation authorRelation, SearchState searchState, 
+			DBUtils.ConjDisjType conjDisjType) throws SQLException {
 		//should pass in first name last name instead!
 		
 		/*if(authorList.size() == 0) {
@@ -550,7 +551,8 @@ public class DBSearch {
 		//make DB call, get default connection
 		//SELECT t0.thmId FROM (authorTb AS t0, authorTb AS t1) WHERE ( t0.thmId=t1.thmId AND t0.firstName LIKE 't%'  
 		//AND t0.lastName='tao' AND  t1.firstName LIKE 'y%'  AND t1.lastName='shalom' );
-		Connection conn = DBUtils.getPooledConnection();
+		Connection conn = searchState.databaseConnection();
+		//Connection conn = DBUtils.getPooledConnection();
 		boolean abbreviateFirstName = false;
 		boolean abbreviateLastName = false;
 		List<Integer> dbList = queryWithAuthors(authorRelation, conn, abbreviateFirstName, abbreviateLastName);
@@ -572,7 +574,7 @@ public class DBSearch {
 			dbList = queryWithAuthors(authorRelation, conn, abbreviateFirstName, abbreviateLastName);
 		}
 		
-		DBUtils.closePooledConnection(conn);
+		//Jan 7 DBUtils.closePooledConnection(conn);
 		return dbList;
 	}
 

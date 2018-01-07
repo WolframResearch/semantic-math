@@ -106,7 +106,7 @@ public class ConceptSearch {
 				break;
 			}
 		}		
-		//sort to have 
+		
 		selectedThmsList.sort(new thmp.utils.DataUtility.CountComparator<Integer>(indexPartMSet));
 		
 		return selectedThmsList;
@@ -120,9 +120,9 @@ public class ConceptSearch {
 	 * @return List of concepts in given thm. In full form if the stem
 	 * was created with stems map.
 	 */
-	public static List<String> getThmConceptsList(int thmIndex){
+	public static List<String> getThmConceptsList(int thmIndex, Connection conn){
 		
-		Connection conn = DBUtils.getPooledConnection();
+		//Connection conn = DBUtils.getPooledConnection();
 		if(null == conn) {
 			return Collections.emptyList();
 		}
@@ -134,9 +134,9 @@ public class ConceptSearch {
 		}catch(SQLException e) {
 			logger.error("SQLException while getting thm concepts! " + e);
 			return Collections.emptyList();
-		}finally {
+		}/*finally {
 			DBUtils.closePooledConnection(conn);
-		}
+		}*/
 		
 		//maybe not include ones that 
 		List<String> wordsList = new ArrayList<String>();

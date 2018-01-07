@@ -1,11 +1,10 @@
 package thmp.search;
 
-import java.util.Collections;
+import java.sql.Connection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -63,9 +62,14 @@ public class SearchState {
 	//map of thmIndex and their word-weight scores
 	private Map<Integer, Integer> thmScoreMap;
 	
+	/**Database connection for this search state accompanying current
+	 * HTTP request, should be pooled. */
+	private Connection dbConnection;
+	
 	private ParseState parseState;
 	private boolean allowLiteralSearch = true;
 	
+	/*Jan 2018: builder pointless since search state not immutable*/
 	public static class SearchStateBuilder{
 		
 		private boolean allowLiteralSearch = true;
@@ -76,8 +80,7 @@ public class SearchState {
 		
 		public SearchState build() {
 			return new SearchState(this);
-		}
-		
+		}		
 	}
 	
 	public SearchState(SearchStateBuilder builder){
@@ -89,7 +92,14 @@ public class SearchState {
 		this.tokenScoreMap = new HashMap<String, Integer>();
 		this.thmSpanMap = new HashMap<Integer, Integer>();
 		this.normalizedTokenSet = new HashSet<String>();
-		//this.intersectionVecList = Collections.emptyList();
+	}
+	
+	public void setDatabaseConnection(Connection dbConnection_) {
+		this.dbConnection = dbConnection_;
+	}
+	
+	public Connection databaseConnection() {
+		return this.dbConnection;
 	}
 	
 	/**
@@ -139,22 +149,6 @@ public class SearchState {
 	public Map<Integer, Integer> contextVecScoreMap(){
 		return this.contextSearchNumCoincidingMap;
 	}
-	
-	/*Commented out Dec 13, 2017
-	 * public void setContextScoreIndexTMap(TreeMap<Integer, List<Integer>> scoreMap){
-		this.contextScoreIndexTMap = scoreMap;
-	}*/
-	
-	/**
-	 * Score map for context search.
-	 * Keys are thm indices, values are how many relations pairs coincide
-	 * based on context vectors.
-	 * @return @Nullable The context vec map. 
-	 */
-	/*Commented out Dec 13, 2017
-	 * public TreeMap<Integer, List<Integer>> contextScoreIndexTMap(){
-		return this.contextScoreIndexTMap;
-	}*/
 	
 	public boolean allowLiteralSearch() {
 		return allowLiteralSearch;

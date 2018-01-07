@@ -58,9 +58,9 @@ public class SimilarThmSearch {
 	 * @param thmIndex
 	 * @return
 	 */
-	public static List<Integer> getSimilarThms(int thmIndex){
+	public static List<Integer> getSimilarThms(int thmIndex, Connection conn){
 		
-		Connection conn = DBUtils.getPooledConnection();
+		//Connection conn = DBUtils.getPooledConnection();
 		if(null == conn) {
 			return Collections.emptyList();
 		}
@@ -72,9 +72,9 @@ public class SimilarThmSearch {
 		}catch(SQLException e) {
 			logger.error("SQLException while getting similar thms! " + e);
 			return Collections.emptyList();
-		}finally {
+		}/*finally {
 			DBUtils.closePooledConnection(conn);
-		}
+		}*/
 		return indexList;
 	}
 	

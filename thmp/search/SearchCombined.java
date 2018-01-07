@@ -276,17 +276,22 @@ public class SearchCombined {
 	
 	public static List<ThmHypPair> searchCombined(String input, Set<String> searchWordsSet, boolean searchContextBool){
 		
+		SearchState searchState = new SearchState();
 		List<ThmHypPair> bestCommonThmHypPairList 
-			= thmListIndexToThmHypPair(searchCombined(input, searchWordsSet, searchContextBool, false));
+			= thmListIndexToThmHypPair(searchCombined(input, searchState, searchWordsSet, searchContextBool, false));
 		return bestCommonThmHypPairList;
 	}
 	
 	/**
 	 * Search interface to be called externally, eg from servlet.
 	 * Resources should have been set prior to this if called externally.
-	 * @param inputStr search input
+	 * @param inputStr search input.
+	 * @param searchState searchState to record the intersectionVecList, and map of
+	 * tokens and their span scores. And communicate parseState
+	 * among different searchers.
 	 */
-	public static List<Integer> searchCombined(String input, Set<String> searchWordsSet, boolean searchContextBool,
+	public static List<Integer> searchCombined(String input, SearchState searchState,
+			Set<String> searchWordsSet, boolean searchContextBool,
 			boolean searchRelationalBool){
 		
 		if(WordForms.getWhiteEmptySpacePattern().matcher(input).matches()) return Collections.<Integer>emptyList();
@@ -311,12 +316,8 @@ public class SearchCombined {
 		int numCommonVecs = getNumCommonVecs(inputSB, input);
 		input = inputSB.toString();
 		
-		// create searchState to record the intersectionVecList, and map of
-		// tokens and their span scores. And communicate parseState
-		//among different searchers.
-		SearchState searchState = new SearchState();
-		/*SearchIntersection.intersectionSearch(input, searchWordsSet, searchState, searchContextBool, 
-				searchRelationalBool, numCommonVecs);*/		
+		//SearchState searchState = new SearchState();
+			
 		SearchIntersection.getHighestThmStringList(input, searchWordsSet,
 				searchState, searchContextBool, searchRelationalBool);
 		
@@ -439,9 +440,10 @@ public class SearchCombined {
 			boolean searchRelationalBool = false;
 			
 			Set<String> wordsSet = new HashSet<String>();
+			SearchState searchState = new SearchState();
 			//this gives the web-displayed versions. 
 			List<ThmHypPair> bestCommonThmHypPairList 
-				= thmListIndexToThmHypPair(searchCombined(thm, wordsSet, searchContextBool, searchRelationalBool));
+				= thmListIndexToThmHypPair(searchCombined(thm, searchState, wordsSet, searchContextBool, searchRelationalBool));
 			
 			int counter = 0;
 			System.out.println("~ SEARCH RESULTS ~");

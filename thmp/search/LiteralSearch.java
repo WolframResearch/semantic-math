@@ -242,8 +242,8 @@ public class LiteralSearch {
 	 * List from literal search. Empty list if literal search doesn't improve word span,
 	 * for e.g. "klfjk module"
 	 */
-	public static List<Integer> literalSearch(String query, int priorWordSpan, Set<String> searchWordsSet,
-			Map<String, Collection<IndexPartPair>> wordIndexPartPairMap,
+	public static List<Integer> literalSearch(String query, SearchState searchState, int priorWordSpan, 
+			Set<String> searchWordsSet,	Map<String, Collection<IndexPartPair>> wordIndexPartPairMap,
 			int...maxThmCountAr){
 		
 		List<String> queryWordList = WordForms.splitThmIntoSearchWordsList(query);
@@ -251,7 +251,9 @@ public class LiteralSearch {
 		//list of thm indices, and the indices of words in the thm, along with the words.
 		Map<Integer, TreeMap<Number, String>> thmIndexWordMap = new HashMap<Integer, TreeMap<Number, String>>();
 		int wordSpan = 0;
-		Connection conn = thmp.utils.DBUtils.getPooledConnection();
+		
+		Connection conn = searchState.databaseConnection();
+		//Connection conn = thmp.utils.DBUtils.getPooledConnection();
 		int wordIndexArLen = LiteralSearchIndex.MAX_WORD_INDEX_AR_LEN;
 		//multiset of thm indices and the count of words for each index, where words
 		//are not found in literal search db, but in lexicon
@@ -315,7 +317,7 @@ public class LiteralSearch {
 				thmIndexWordMap.put(thmIndex, indexWordMap);
 			}
 		}
-		thmp.utils.DBUtils.closePooledConnection(conn);
+		//Jan 7 thmp.utils.DBUtils.closePooledConnection(conn);
 		
 		//need upper bound, since some results for long queries are still meaningful despite low span.
 		final int wordSpanUpperBound = 3;
