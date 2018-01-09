@@ -100,12 +100,12 @@ public class WordFrequency {
 
 	/**
 	 * Dealing with frequency data as stored in wordFrequency.txt.
-	 * @author yihed
+	 * 
 	 */
 	public static class ComputeFrequencyData{
 		
 		private static final String WORDS_FILE_STR = "src/thmp/data/wordFrequency.txt";
-		//private static BufferedReader wordFrequencyBR;
+		
 		private static final ImmutableMap<String, String> wordPosMap;
 		// map of common words and freq as read in from wordFrequency.txt
 		private static final Map<String, Integer> stockFreqMap = new HashMap<String, Integer>();
@@ -147,8 +147,7 @@ public class WordFrequency {
 				e.printStackTrace();
 				String msg = "IOException while closing buffered reader! " + e.getStackTrace();
 				logger.error(msg);
-				throw new IllegalStateException(msg);
-				
+				throw new IllegalStateException(msg);				
 			}			
 			wordPosMap = ImmutableMap.copyOf(wordPosPreMap);
 			
@@ -157,8 +156,6 @@ public class WordFrequency {
 			Set<String> set = ((List<Set<String>>)FileUtils.deserializeListFromFile(trueFluffWordsSetPath)).get(0);
 			trueFluffWordsSet = set;
 			
-			//build trueFluffWordsSet
-			//buildTrueFluffWordsSet(totalCorpusWordCount, stockFreqMap, wordPosMap, corpusWordFreqMap);
 		}
 		
 		/**
@@ -190,17 +187,20 @@ public class WordFrequency {
 				}*/
 				
 				String line;
+				
 				//read in words and 
 				while ((line = wordsFileBufferedReader.readLine()) != null) {
-					String[] lineAr = line.split("\\s+");					
+					String[] lineAr = WordForms.getWhiteNonEmptySpaceNotAllPattern().split(line);					
 					if(lineAr.length < 4) continue;		
 					
 					// 2nd is word, 4rd is freq
 					String word = lineAr[1].trim();					
 					String wordPos = getPos(word, lineAr[2].trim());					
 					wordPosPreMap.put(word, wordPos);					
-					int wordFreq = Integer.valueOf(lineAr[3].trim());					
-					stockFreqMap.put(word, wordFreq);				
+					int wordFreq = Integer.valueOf(lineAr[3].trim());		
+					
+					stockFreqMap.put(word, wordFreq);
+					
 				}
 				
 			} catch (IOException e) {
@@ -294,24 +294,7 @@ public class WordFrequency {
 		public static Set<String> trueFluffWordsSet() {	
 			return trueFluffWordsSet;
 		}	
-
-		/**
-		 * Retrieves map of true fluff words and their pos. Subset of
-		 * freqWordsPosMap().
-		 * @return
-		 */
-		/*public static ListMultimap<String, String> trueFluffWordsPosMap() {
-			if(trueFluffWordsPosMap == null){
-				synchronized(WordFrequency.class){
-					if(trueFluffWordsPosMap == null){
-						//build trueFluffWordsSet
-						buildTrueFluffWordsSet(stockFreqMap, wordPosMap, corpusWordFreqMap);
-					}
-				}
-			}
-			return trueFluffWordsPosMap;
-		}*/	
-
+		
 		/**
 		 * Retrieves map of true fluff words and their pos. 
 		 * @return

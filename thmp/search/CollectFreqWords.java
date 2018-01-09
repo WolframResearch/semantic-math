@@ -33,7 +33,7 @@ public class CollectFreqWords {
 	// Source file of list containing 5000 most frequent words, ordered by freq.
 	// Oftentimes we need fewer than those,
 	// maybe only top 500, so words such as "ring" don't get screened out.
-	//private static final File wordsFile = new File("src/thmp/data/wordFrequency.txt");
+	
 	private static final String wordsFileStr = "src/thmp/data/wordFrequency.txt";
 	// reader when wordsFile is passed in in a buffer, eg when run from servlet.
 	// intentionally not final. But should be thread-safe, since this resource

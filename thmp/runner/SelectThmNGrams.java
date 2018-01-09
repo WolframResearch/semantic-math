@@ -2,10 +2,7 @@ package thmp.runner;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -14,16 +11,14 @@ import java.util.regex.Pattern;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.TreeMultiset;
-import com.wolfram.puremath.dbapp.DBUtils;
-import com.wolfram.puremath.dbapp.SimilarThmUtils;
 
 import thmp.search.ThmHypPairGet;
+import thmp.search.WordFrequency;
 import thmp.search.SearchCombined.ThmHypPair;
-import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 
 /**
- * Selects n-grams from theorems.
+ * Selects n-grams from theorems. For e.g. building an entity store.
  * @author yihed
  *
  */
@@ -40,7 +35,13 @@ public class SelectThmNGrams {
 	
 	static {
 		String[] beforeStopWordsAR = new String[]{"by", "of","to","above","in", "By", "with", "is", "from",
-				"following", "then", "thus", "this"};
+				"following", "then", "thus", "this", "if", "and", "", "an", "are", "exists", "there", "that",
+				"all", "for", "we", "have", "may", "over", "other", "on", "only", "be", "its", "the", "denote",
+				"under"};
+		//use list of most frequent English words, Modulo the false positives, e.g. map, group, 
+		Map<String, Integer> freqWordsMap = WordFrequency.ComputeFrequencyData.englishStockFreqMap();
+		SCRAPE_STOP_WORDS_BEFORE_SET.addAll(freqWordsMap.keySet());
+		
 		for(String w : beforeStopWordsAR) {
 			SCRAPE_STOP_WORDS_BEFORE_SET.add(w);
 		}	
@@ -74,17 +75,14 @@ public class SelectThmNGrams {
 			int endingIndex = Math.min(totalThmCount, (j+1)*numThmPerBundle);
 			int startingIndex = j * numThmPerBundle;
 			
-			for(int i = startingIndex; i < endingIndex
-					; i++) {
+			for(int i = startingIndex; i < endingIndex; i++) {
 				
 				ThmHypPair thmHypPair = ThmHypPairGet.retrieveThmHypPairWithThm(i);
 				String thmStr = thmHypPair.getEntireThmStr();
 				//String thmStr = "hi there hdsh wt bunny sf gsg sgrgd dhg sf gsg sgrgd dhg";
 				//String thmStr = "hi there hds khl, jkk$ agsg hi there hds khl. hjkh kh hk gh";
-				select4Grams(thmStr, nGramMSet, addNewTerms);
-				
+				select4Grams(thmStr, nGramMSet, addNewTerms);				
 			}
-			//System.out.println("nGramMSet "+nGramMSet);
 			
 			Multiset<String> sortedMSet = TreeMultiset.create(new 
 					thmp.utils.DataUtility.CountComparator<String>(nGramMSet));
