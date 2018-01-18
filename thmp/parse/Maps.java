@@ -1080,7 +1080,7 @@ public class Maps {
 			//adds all words from the stock frequent words. Add these last,
 			//to give conflicting pos the least priority. E.g. "open" should
 			//have pos "adj" and "ent" before "verb"
-			posPreMMap.putAll(Multimaps.forMap(WordFrequency.ComputeFrequencyData.freqWordsPosMap()));
+			posPreMMap.putAll(WordFrequency.ComputeFrequencyData.freqWordsPosMMap());
 			
 			return posPreMMap;
 		}

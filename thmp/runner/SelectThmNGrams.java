@@ -2,6 +2,7 @@ package thmp.runner;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +11,7 @@ import java.util.regex.Pattern;
 
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.TreeMultiset;
 
@@ -36,14 +38,14 @@ public class SelectThmNGrams {
 	//private static final Pattern SLASH_PATTERN = Pattern.compile("\\\\");
 	private static final Set<String> SCRAPE_STOP_WORDS_BEFORE_SET = new HashSet<String>();
 	private static final Set<String> mostCommonWordSet;
-	private static final Map<String, String> freqWordsPosMap = WordFrequency.ComputeFrequencyData.freqWordsPosMap();
+	private static final Multimap<String, String> freqWordsPosMMap = WordFrequency.ComputeFrequencyData.freqWordsPosMMap();
 	private static final ListMultimap<String, String> wordPosMMap = Maps.posMMap();
 	
 	static {
 		String[] beforeStopWordsAr = new String[]{"by", "of", "to","above","in", "By", "with", "is", "from",
 				"following", "then", "thus", "this", "if", "and", "any", "a", "an", "are", "exists", "there", "that",
 				"all", "for", "we", "have", "has", "may", "over", "other", "on", "only", "be", "its", "the", "denote",
-				"under", "et"};
+				"under", "et", "definition"};
 		//use list of most frequent English words, Modulo the false positives, e.g. map, group, 
 		Map<String, Integer> freqWordsMap = WordFrequency.ComputeFrequencyData.englishStockFreqMap();
 		
@@ -214,9 +216,9 @@ public class SelectThmNGrams {
 		
 		String gerundForm = WordForms.getGerundForm(word);
 		if(SCRAPE_STOP_WORDS_BEFORE_SET.contains(gerundForm)) {
-			String wordPos = freqWordsPosMap.get(gerundForm);
+			Collection<String> wordPosCol = freqWordsPosMMap.get(gerundForm);
 			//check with e added as well, e.g. commute vs commuting
-			if("verb".equals(wordPos) || "verb".equals(freqWordsPosMap.get(gerundForm + "e"))) {
+			if(wordPosCol.contains("verb") || freqWordsPosMMap.get(gerundForm+"e").contains("verb")) {
 				return false;				
 			}
 			
@@ -230,8 +232,8 @@ public class SelectThmNGrams {
 			String wordEnding = word.substring(wordLen-2, wordLen);
 			String wordStem = word.substring(0, wordLen-2);
 					
-			if(wordEnding.endsWith("ed") && ("verb".equals(freqWordsPosMap.get(wordStem)) || 
-					"verb".equals(freqWordsPosMap.get(wordStem+"e")) ) ) {				
+			if(wordEnding.endsWith("ed") && (freqWordsPosMMap.get(wordStem).contains("verb") || 
+					freqWordsPosMMap.get(wordStem+"e").contains("verb") ) ) {				
 				return false;
 			}	
 			//e.g. described, etc
@@ -242,8 +244,8 @@ public class SelectThmNGrams {
 		
 		String singularForm = WordForms.getSingularForm(word);
 		if(SCRAPE_STOP_WORDS_BEFORE_SET.contains(singularForm)) {
-			String wordPos = freqWordsPosMap.get(singularForm);
-			if("verb".equals(wordPos)) {
+			
+			if(freqWordsPosMMap.get(singularForm).contains("verb")) {
 				return false;				
 			}
 			if(wordPosMMap.get(singularForm).contains("verb") || wordPosMMap.get(singularForm+"e").contains("verb")) {

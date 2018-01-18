@@ -21,7 +21,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
@@ -106,7 +108,7 @@ public class WordFrequency {
 		
 		private static final String WORDS_FILE_STR = "src/thmp/data/wordFrequency.txt";
 		
-		private static final ImmutableMap<String, String> wordPosMap;
+		private static final ImmutableMultimap<String, String> wordPosMMap;
 		// map of common words and freq as read in from wordFrequency.txt
 		private static final Map<String, Integer> stockFreqMap = new HashMap<String, Integer>();
 		
@@ -122,7 +124,7 @@ public class WordFrequency {
 				};
 		
 		static{
-			Map<String, String> wordPosPreMap = new HashMap<String, String>();
+			Multimap<String, String> wordPosPreMMap = HashMultimap.create();
 			ServletContext servletContext = CollectThm.getServletContext();
 			//wordFrequencyBR = CollectThm.get_wordFrequencyBR();
 			BufferedReader wordsFileBufferedReader = null;
@@ -140,13 +142,13 @@ public class WordFrequency {
 			}
 			
 			//fills in trueFluffWordsSet, based on freq in stockFreqMap. Updates stockFreqMap.
-			getStockFreq(wordsFileBufferedReader, wordPosPreMap);
-			wordPosPreMap.put("has", "verb");
-			wordPosPreMap.put("was", "verb");
-			wordPosPreMap.put("induce", "verb");
-			wordPosPreMap.put("correspond", "verb");
-			wordPosPreMap.put("act", "verb");
-			wordPosPreMap.put("build", "verb");
+			getStockFreq(wordsFileBufferedReader, wordPosPreMMap);
+			wordPosPreMMap.put("has", "verb");
+			wordPosPreMMap.put("was", "verb");
+			wordPosPreMMap.put("induce", "verb");
+			wordPosPreMMap.put("correspond", "verb");
+			wordPosPreMMap.put("act", "verb");
+			wordPosPreMMap.put("build", "verb");
 			//wordPosPreMap.put("commute", "verb");
 			//don't put verbs that are more likely to be specialized math verbs 
 			//rather than common English verbs, use PosMap instead.
@@ -160,13 +162,12 @@ public class WordFrequency {
 				logger.error(msg);
 				throw new IllegalStateException(msg);				
 			}
-			wordPosMap = ImmutableMap.copyOf(wordPosPreMap);
+			wordPosMMap = ImmutableMultimap.copyOf(wordPosPreMMap);
 			
 			String trueFluffWordsSetPath = FileUtils.getPathIfOnServlet(SearchMetaData.trueFluffWordsSetPath());
 			@SuppressWarnings("unchecked")
 			Set<String> set = ((List<Set<String>>)FileUtils.deserializeListFromFile(trueFluffWordsSetPath)).get(0);
-			trueFluffWordsSet = set;
-			
+			trueFluffWordsSet = set;			
 		}
 		
 		/**
@@ -179,15 +180,15 @@ public class WordFrequency {
 		}
 		
 		/**
-		 * computes list of "true" fluff words, ie the ones where
-		// whose freq in math texts are not higher than their freq in English text.
-		// have to be careful for words such as "let", "say"
+		 * Computes list of "true" fluff words, ie the ones where
+		 * whose freq in math texts are not higher than their freq in English text.
+		 * have to be careful for words such as "let", "say"
 		 * 
 		 * @param wordsFileBufferedReader
 		 * @param wordPosPreMap
 		 */
 		private static void getStockFreq(BufferedReader wordsFileBufferedReader,
-				Map<String, String> wordPosPreMap) {
+				Multimap<String, String> wordPosPreMMap) {
 			
 			try {
 				wordsFileBufferedReader.readLine();
@@ -207,11 +208,10 @@ public class WordFrequency {
 					// 2nd is word, 4rd is freq
 					String word = lineAr[1].trim();					
 					String wordPos = getPos(word, lineAr[2].trim());					
-					wordPosPreMap.put(word, wordPos);					
+					wordPosPreMMap.put(word, wordPos);					
 					int wordFreq = Integer.valueOf(lineAr[3].trim());		
 					
-					stockFreqMap.put(word, wordFreq);
-					
+					stockFreqMap.put(word, wordFreq);					
 				}
 				
 			} catch (IOException e) {
@@ -267,7 +267,7 @@ public class WordFrequency {
 		 * @return
 		 */
 		public static ImmutableSet<String> get_nonMathFluffWordsSet2() {
-			Set<String> nonMathFluffWordsSet = new HashSet<String>(wordPosMap.keySet());
+			Set<String> nonMathFluffWordsSet = new HashSet<String>(wordPosMMap.keySet());
 			String[] score1mathWords = CollectThm.scoreAvgMathWords();
 			String[] additionalFluffWords = CollectThm.additionalFluffWords();
 
@@ -288,7 +288,7 @@ public class WordFrequency {
 		 */
 		public static ImmutableSet<String> get_FreqWords() {
 			
-			Set<String> freqWordsSet = new HashSet<String>(wordPosMap.keySet());		
+			Set<String> freqWordsSet = new HashSet<String>(wordPosMMap.keySet());		
 			String[] additionalFluffWords = CollectThm.additionalFluffWords();
 			
 			for (String word : additionalFluffWords) {
@@ -310,8 +310,8 @@ public class WordFrequency {
 		 * Retrieves map of true fluff words and their pos. 
 		 * @return
 		 */
-		public static Map<String, String> freqWordsPosMap() {			
-			return wordPosMap;
+		public static Multimap<String, String> freqWordsPosMMap() {			
+			return wordPosMMap;
 		}
 		
 		/**
