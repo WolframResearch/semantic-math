@@ -74,7 +74,6 @@ public class ConceptSearch {
 		if(keyWordsList.isEmpty()) {
 			return Collections.<Integer>emptyList();
 		}
-		
 		int keyWordsListSz = keyWordsList.size();
 		for(String word : keyWordsList) {
 			//actually for display on web, word was converted to full form according to stem map. 

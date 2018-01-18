@@ -141,6 +141,17 @@ public class WordFrequency {
 			
 			//fills in trueFluffWordsSet, based on freq in stockFreqMap. Updates stockFreqMap.
 			getStockFreq(wordsFileBufferedReader, wordPosPreMap);
+			wordPosPreMap.put("has", "verb");
+			wordPosPreMap.put("was", "verb");
+			wordPosPreMap.put("induce", "verb");
+			wordPosPreMap.put("correspond", "verb");
+			wordPosPreMap.put("act", "verb");
+			wordPosPreMap.put("build", "verb");
+			//wordPosPreMap.put("commute", "verb");
+			//don't put verbs that are more likely to be specialized math verbs 
+			//rather than common English verbs, use PosMap instead.
+			//wordPosPreMap.put("intersect", "verb");
+			
 			try{
 				wordsFileBufferedReader.close();
 			}catch(IOException e){
@@ -148,7 +159,7 @@ public class WordFrequency {
 				String msg = "IOException while closing buffered reader! " + e.getStackTrace();
 				logger.error(msg);
 				throw new IllegalStateException(msg);				
-			}			
+			}
 			wordPosMap = ImmutableMap.copyOf(wordPosPreMap);
 			
 			String trueFluffWordsSetPath = FileUtils.getPathIfOnServlet(SearchMetaData.trueFluffWordsSetPath());
@@ -227,7 +238,7 @@ public class WordFrequency {
 			for(Map.Entry<String, Integer> wordFreqEntry: stockFreqMap.entrySet()){
 				String word = wordFreqEntry.getKey();
 				Integer wordFreq = wordFreqEntry.getValue();
-				String wordPos = wordPosMap.get(word);
+				//String wordPos = wordPosMap.get(word);
 				
 				Integer wordMathCorpusFreq = corpusWordFreqMap.get(word);
 				if(wordMathCorpusFreq != null){					

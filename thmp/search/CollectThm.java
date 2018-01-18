@@ -235,8 +235,6 @@ public class CollectThm {
 			//the values are just the words' indices in wordsList.
 			//this orders the list as well. INDEX map. Can rely on order as map is immutable.
 			
-			//System.out.println("------++++++++-------CONTEXT_VEC_WORDS_MAP.size " + CONTEXT_VEC_WORDS_MAP.size());
-			
 			if(!FileUtils.isOSX()) {
 				//putting in the OS check here, so running locally on OSX does not take forever to load.
 				//
@@ -317,12 +315,8 @@ public class CollectThm {
 			
 			wordsScoreMap = ImmutableMap.copyOf(wordsScorePreMap);
 			System.out.println("*********wordsScoreMapNoAnno.size(): " + wordsScoreMap.size());
-			//should be built separately, and combined at end, 
-			//wordThmsIndexMMapNoAnno = wordThmsMMapBuilderNoAnno.build();
+			
 			CONTEXT_VEC_SIZE = docWordsFreqMapNoAnno.size();
-			/***This is where the set of words used for SVD search and search based on context and relational vectors
-			 * diverge. The latter contains additional words (N-grams) added below. Note these words
-			 * are used for NGram formation NEXT run (generating ParsedExpressionList)***/ //<--actually now they are the same
 			
 			if(GATHER_SKIP_GRAM_WORDS){
 				String skipGramWordsListFileStr = "src/thmp/data/skipGramWordsList.txt";

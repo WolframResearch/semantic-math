@@ -304,7 +304,7 @@ public class WordForms {
 	/**
 	 * Returns the most likely singular form of the word, or
 	 * original word if it doesn't end in s, es, or ies.
-	 * Minimal length of word is 3 chars.
+	 * Minimal length of word is 3 chars. conformally invariant pairing
 	 * @param word
 	 * @return
 	 */
@@ -346,7 +346,7 @@ public class WordForms {
 	}
 	
 	/**
-	 * Remove word endings such as "ly".
+	 * Remove word endings such as "ly", ness, but not "ed" or "ing"
 	 * This does not de-singularize words. 
 	 * @param word
 	 * @return
@@ -381,7 +381,7 @@ public class WordForms {
 	 * @param word
 	 * @return Need to return null
 	 */
-	private static String getGerundForm(String curWord){
+	public static String getGerundForm(String curWord){
 		
 		int wordlen = curWord.length();
 		if(wordlen < 5) return curWord;
