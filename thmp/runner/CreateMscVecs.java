@@ -124,7 +124,6 @@ public class CreateMscVecs {
 			paperIdPathMMap.put(paperId, fileNameEntry.getKey());				
 		}
 		
-		
 		StringBuilder funNameSb = new StringBuilder(500000);			
 		for(String paperId : paperIdPathMMap.keySet()) {
 				
@@ -146,6 +145,7 @@ public class CreateMscVecs {
 			paperIdList.add(paperId);
 		}
 		if(runnerConfig.generateFuncName()) {
+			//this should be separated into own class!!!
 				//file to hold function names for Michael
 			String funcFileName = dirName + "funcNames.txt";
 			FileUtils.writeToFile(funNameSb.toString(), funcFileName);			
@@ -168,6 +168,36 @@ public class CreateMscVecs {
 		int paperListSz = paperList.size();
 		
 		assert paperListSz == paperIdList.size();
+		
+		StringBuilder termSb = buildWordFreqDataStr(paperList, paperIdList, paperListSz);
+		//remove trailing newline
+		int termSbLen = termSb.length();
+		if(termSbLen > 0) {
+			termSb.deleteCharAt(termSbLen-1);
+			//each tar should have own file in its directory
+			//String termsFileName = "mscTerms.txt";
+			String termsFilePath = tarDirPath + mscTermsFileName;
+			FileUtils.writeToFile(termSb, termsFilePath);
+		}
+		
+		/*
+		 * Further Processing on command line: 
+		 * Need to index by paper, keep counter, need final data with paper id, the actual words that occur.
+		 * Create both, map for paper and words, and map for paper and indices.
+		 * Also needs words-score map, to json format.
+		
+		 * Can check against map e.g. 0704.0005,42B30,42B35 at runtime to form map.		
+		 * can cat at the end to combine multiple files: cat file1 file2 ... > mscCombined.txt		 
+		 */
+	}
+	
+	public static StringBuilder buildWordFreqDataStr(List<Paper> paperList) {
+		int paperListSz = paperList.size();
+		return buildWordFreqDataStr(paperList, null, paperListSz);
+	}
+	
+	private static StringBuilder buildWordFreqDataStr(List<Paper> paperList, List<String> paperIdList,
+			int paperListSz) {
 		
 		List<int[]> coordinatesList = new ArrayList<int[]>();
 		List<Double> weightsList = new ArrayList<Double>();
@@ -196,38 +226,23 @@ public class CreateMscVecs {
 				continue;
 			}
 			
-			String paperId = paperIdList.get(i);
-			termSb.append(paperId);
-			
-			//int termsListSz = paperTermsList.size();
-			
+			String paperId = null;
+			if(null != paperIdList) {
+				paperId = paperIdList.get(i);
+				termSb.append(paperId);
+			}
+			//the first semicolon still ok, will get StringSplit' away
 			for(String word : paperTermsMSet.elementSet()) {
 				//append each term
 				termSb.append(";").append(word)
 				.append(",").append(paperTermsMSet.count(word));
 			}
 			//lines have form id, terms \n msc class string
-			termSb.append("\n").append(paperIdMscMap.get(paperId)).append("\n");			
+			if(null != paperId) {
+				termSb.append("\n").append(paperIdMscMap.get(paperId)).append("\n");		
+			}
 		}
-		//remove trailing newline
-		int termSbLen = termSb.length();
-		if(termSbLen > 0) {
-			termSb.deleteCharAt(termSbLen-1);
-			//each tar should have own file in its directory
-			//String termsFileName = "mscTerms.txt";
-			String termsFilePath = tarDirPath + mscTermsFileName;
-			FileUtils.writeToFile(termSb, termsFilePath);
-		}
-		
-		/*
-		 * Further Processing on command line: 
-		 * Need to index by paper, keep counter, need final data with paper id, the actual words that occur.
-		 * Create both, map for paper and words, and map for paper and indices.
-		 * Also needs words-score map, to json format.
-		
-		 * Can check against map e.g. 0704.0005,42B30,42B35 at runtime to form map.		
-		 * can cat at the end to combine multiple files: cat file1 file2 ... > mscCombined.txt		 
-		 */
+		return termSb;
 	}
 	
 	/**

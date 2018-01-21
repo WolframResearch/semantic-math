@@ -40,7 +40,6 @@ import thmp.search.Searcher.SearchMetaData;
 import thmp.search.TheoremGet.ContextRelationVecPair;
 import thmp.search.ThmSearch.TermDocumentMatrix;
 import thmp.utils.FileUtils;
-import thmp.utils.WordForms;
 import thmp.utils.MathLinkUtils.WLEvaluationMedium;
 import thmp.utils.WordForms.ThmPart;
 
