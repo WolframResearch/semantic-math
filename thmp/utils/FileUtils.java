@@ -631,10 +631,10 @@ public class FileUtils {
 			// -mathlink"};
 			String OS_version = System.getProperty("os.version");
 			
-			Path kernelPath = Paths.get("/Developer/Layouts/11.1.1/Executables/MathKernel");
+			Path kernelPath = Paths.get("/Developer/Layouts/11.2.0/Executables/MathKernel");
 			if(Files.exists(kernelPath)){ //e.g. on byblis68
 				ARGV = new String[]{"-linkmode", "launch", "-linkname",
-				"\"/Developer/Layouts/11.1.1/Executables/MathKernel\" -mathlink"};	
+				"\"/Developer/Layouts/11.2.0/Executables/MathKernel\" -mathlink"};	
 			}
 			/*if(OS_version.equals("2.6.32-696.3.1.el6.x86_64")){
 				ARGV = new String[]{"-linkmode", "launch", "-linkname",
