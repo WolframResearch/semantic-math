@@ -3,6 +3,7 @@ package thmp.runner;
 import static thmp.utils.MathLinkUtils.evaluateWLCommand;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 
@@ -12,7 +13,6 @@ import com.wolfram.jlink.ExprFormatException;
 import thmp.utils.FileUtils;
 import thmp.utils.MathLinkUtils.WLEvaluationMedium;
 import thmp.runner.CreateMscVecs.Paper;
-import thmp.search.ThmSearch.TermDocumentMatrix;
 
 /**
  * Classifies MSC based on paper content.
@@ -23,16 +23,40 @@ public class MscClassify {
 
 	private static final String mscContext = "MscClassify`";
 	//"src/thmp/data/"+TermDocumentMatrix.FULL_TERM_DOCUMENT_MX_NAME+".mx";
-	private static final String pathToMscMx = "/home/usr0/yihed/thm/src/thmp/data/mscClassify.mx";
-	private static final String pathToMscPackage = "/home/usr0/yihed/thm/src/thmp/data/MscClassify.m";
+	private static String pathToMscMx = "src/thmp/data/mscClassify.mx";
+	private static String pathToMscPackage = "src/thmp/data/MscClassify.m";
 	
-	private static void findMsc(String filePath, WLEvaluationMedium medium) {
+	static {
+		WLEvaluationMedium medium = FileUtils.acquireWLEvaluationMedium();
 		
-		String fileContent = FileUtils.readStrFromFile(filePath);
+		pathToMscMx = FileUtils.getPathIfOnServlet(pathToMscMx);
+		pathToMscPackage = FileUtils.getPathIfOnServlet(pathToMscPackage);
+		
+		evaluateWLCommand(medium, "<<"+pathToMscMx, false, true);
+		evaluateWLCommand(medium, "<<"+pathToMscPackage, false, true);
+		
+		FileUtils.releaseWLEvaluationMedium(medium);
+	}
+	
+	private static List<String> findMsc(String filePath, WLEvaluationMedium medium) {
+		
+		String fileContent = null;
+		try {
+			fileContent = FileUtils.readStrFromFile(filePath);
+		}catch(IllegalStateException e) {
+			System.out.println("Can't find file at path " + filePath);
+			return Collections.emptyList();
+		}		
+		return findMsc(medium, fileContent);		
+	}
+
+	private static List<String> findMsc(WLEvaluationMedium medium, String fileContent) {
 		List<Paper> paperList = new ArrayList<Paper>();
 		paperList.add(new Paper(fileContent));
 		StringBuilder sb = CreateMscVecs.buildWordFreqDataStr(paperList);
 		System.out.println(sb.toString());
+		
+		List<String> mscList = new ArrayList<String>();
 		
 		Expr mscListExpr = evaluateWLCommand(medium, "Keys["+mscContext+"findNearestClasses[\""+  sb.toString() +"\"]]", true, true);
 		System.out.println("mscListExpr "+mscListExpr);
@@ -41,13 +65,27 @@ public class MscClassify {
 			//System.out.println("mscListLen "+mscListLen);
 			for(int i = 1; i <= mscListLen; i++) {
 				String msc = mscListExpr.part(i).asString();
+				mscList.add(msc);
 				System.out.print(msc + "\t");
 			}
 			
 		}catch(ExprFormatException e){
 			System.out.println("ExprFormatException when interpreting msc class as String! " + e);
+			return Collections.emptyList();
 		}
-		
+		return mscList;
+	}
+	
+	/**
+	 * Classifies MSC based on paper content.
+	 * @param paperContent
+	 * @return List of msc.
+	 */
+	public static List<String> findMsc(String paperContent) {
+		WLEvaluationMedium medium = FileUtils.acquireWLEvaluationMedium();
+		List<String> mscList = findMsc(medium, paperContent);
+		FileUtils.releaseWLEvaluationMedium(medium);
+		return mscList;
 	}
 	
 	public static void main(String[] args) {
@@ -56,6 +94,7 @@ public class MscClassify {
 		WLEvaluationMedium medium = FileUtils.acquireWLEvaluationMedium();
 		//evaluateWLCommand(medium, "Get[\""+pathToMscMx+"\"];", false, true);
 		//evaluateWLCommand(medium, "Get[\""+pathToMscPackage+"\"];", false, true);
+		
 		evaluateWLCommand(medium, "<<"+pathToMscMx, false, true);
 		evaluateWLCommand(medium, "<<"+pathToMscPackage, false, true);
 		
