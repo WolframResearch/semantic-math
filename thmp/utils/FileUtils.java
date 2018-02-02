@@ -573,9 +573,9 @@ public class FileUtils {
 		}else{
 			//running on servlet.
 			assert null != kernelPool;
-			String msg = "acquireWLEvaluationMedium-trying to acquire kernel with stack trace: " 
-					+ Arrays.deepToString(Thread.currentThread().getStackTrace());
-			logger.info(msg);
+			//String msg = "acquireWLEvaluationMedium-trying to acquire kernel with stack trace: " 
+			//		+ Arrays.deepToString(Thread.currentThread().getStackTrace());
+			//logger.info(msg);
 			try {
 				medium = new WLEvaluationMedium(kernelPool.acquireKernel());
 			} catch (KernelPoolException e) {

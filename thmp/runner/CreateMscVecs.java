@@ -25,6 +25,7 @@ import thmp.utils.FileUtils;
  */
 public class CreateMscVecs {
 
+	//These files are not used at servlet runtime.
 	private static final String wordsScoreMapPath = "src/thmp/data/wordsScoreMap.json";
 	//put such a file in each tar directory.
 	private static final String mscTermsFileName = "mscTermsJan27.txt";
@@ -37,6 +38,10 @@ public class CreateMscVecs {
 	static {
 		
 		String paperIdMscPath = "src/thmp/data/mscDataString1.txt";
+		//should never be used on servlet, but due to structure in loop in buildWordFreqDataStr(),
+		//need to ensure that this file is present when run on servlet, for best code modularity.
+		paperIdMscPath = FileUtils.getPathIfOnServlet(paperIdMscPath);
+		
 		List<String> mscLines = FileUtils.readLinesFromFile(paperIdMscPath);
 		//each line has form "0704.0005,42B30,42B35"
 		for(String line : mscLines) {
