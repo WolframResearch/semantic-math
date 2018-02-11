@@ -208,6 +208,7 @@ public class FileUtils {
 		mspManager = (MSPManager)servletContext.getAttribute(MSPStatics.MSP_MANAGER_ATTR);
 		kernelPool = mspManager.getKernelPool(KERNEL_POOL_NAME);
 		dataSource = dataSource_;
+		//See how many kernels and which ones.
 		logger.info("setServletContext - kernelPool.getKernels(): " + kernelPool.getKernels());
 		//IKernel kernel0=null;
 		/*for(Map.Entry<String, IKernel> k : kernelPool.getKernels().entrySet()){

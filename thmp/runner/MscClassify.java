@@ -7,12 +7,16 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.wolfram.jlink.Expr;
 import com.wolfram.jlink.ExprFormatException;
 
 import thmp.utils.FileUtils;
 import thmp.utils.MathLinkUtils.WLEvaluationMedium;
 import thmp.runner.CreateMscVecs.Paper;
+import thmp.search.DBSearch;
 
 /**
  * Classifies MSC based on paper content.
@@ -23,19 +27,37 @@ public class MscClassify {
 
 	private static final String mscContext = "MscClassify`";
 	//"src/thmp/data/"+TermDocumentMatrix.FULL_TERM_DOCUMENT_MX_NAME+".mx";
-	private static String pathToMscMx = "src/thmp/data/mscClassify.mx";
+	//private static String pathToMscMx = "src/thmp/data/mscClassify.mx";
+	private static String pathToMscTxt = "src/thmp/data/mscClassify.txt";
 	private static String pathToMscPackage = "src/thmp/data/MscClassify.m";
+	
+	private static final Logger logger = LogManager.getLogger(MscClassify.class);
 	
 	static {
 		WLEvaluationMedium medium = FileUtils.acquireWLEvaluationMedium();
 		
-		pathToMscMx = FileUtils.getPathIfOnServlet(pathToMscMx);
-		pathToMscPackage = FileUtils.getPathIfOnServlet(pathToMscPackage);
-		
-		evaluateWLCommand(medium, "<<"+pathToMscMx, false, true);
-		evaluateWLCommand(medium, "<<"+pathToMscPackage, false, true);
+		loadResources(medium);
 		
 		FileUtils.releaseWLEvaluationMedium(medium);
+	}
+
+	private static void loadResources(WLEvaluationMedium medium) {
+		pathToMscTxt = FileUtils.getPathIfOnServlet(pathToMscTxt);
+		pathToMscPackage = FileUtils.getPathIfOnServlet(pathToMscPackage);
+		
+		//Note these need to be loaded on *all* kernels!
+		
+		//Expr s = evaluateWLCommand(medium, "<<"+pathToMscMx, true, true);
+		//This order matters!
+		evaluateWLCommand(medium, "{MscClassify`Private`$wordFreqAdjAssoc,MscClassify`Private`$wordIndexAssoc,"
+				+ "MscClassify`Private`$wordScoreMapAssoc,MscClassify`Private`$freqWordsAssoc,MscClassify`Private`$mscListList,"
+				+ "MscClassify`Private`$v,MscClassify`Private`$dInverseUTranspose}="
+				+ "Uncompress[Import[\""+ pathToMscTxt +"\"]]", false, true);
+		
+		//logger.info("Return from getting pathToMscMx: ",s);
+		evaluateWLCommand(medium, "<<"+pathToMscPackage, true, true);
+		//logger.info("Return from getting pathToMscPackage: "+s);
+		//logger.info("Names[\"a`*\"]  "+ evaluateWLCommand(medium, "Names[\"MscClassify`*\"]", true, true));
 	}
 	
 	private static List<String> findMsc(String filePath, WLEvaluationMedium medium) {
@@ -60,6 +82,8 @@ public class MscClassify {
 		
 		Expr mscListExpr = evaluateWLCommand(medium, "Keys["+mscContext+"findNearestClasses[\""+  sb.toString() +"\"]]", true, true);
 		System.out.println("mscListExpr "+mscListExpr);
+		logger.info("mscListExpr "+mscListExpr);
+		
 		try{
 			int mscListLen = mscListExpr.length();
 			//System.out.println("mscListLen "+mscListLen);
@@ -70,7 +94,9 @@ public class MscClassify {
 			}
 			
 		}catch(ExprFormatException e){
-			System.out.println("ExprFormatException when interpreting msc class as String! " + e);
+			String msg = "ExprFormatException when interpreting msc class as String! " + e;
+			System.out.println(msg);
+			logger.error(msg);
 			return Collections.emptyList();
 		}
 		return mscList;
@@ -95,8 +121,9 @@ public class MscClassify {
 		//evaluateWLCommand(medium, "Get[\""+pathToMscMx+"\"];", false, true);
 		//evaluateWLCommand(medium, "Get[\""+pathToMscPackage+"\"];", false, true);
 		
-		evaluateWLCommand(medium, "<<"+pathToMscMx, false, true);
-		evaluateWLCommand(medium, "<<"+pathToMscPackage, false, true);
+		//evaluateWLCommand(medium, "<<"+pathToMscMx, false, true);
+		//evaluateWLCommand(medium, "<<"+pathToMscPackage, false, true);
+		loadResources(medium);
 		
 		System.out.println( evaluateWLCommand(medium,  "$VersionNumber", true, true));
 		/*System.out.println( evaluateWLCommand(medium,  "<<"+pathToMscMx, true, true));

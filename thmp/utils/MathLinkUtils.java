@@ -70,8 +70,11 @@ public class MathLinkUtils {
 	
 	/**
 	 * Executes WL command via JLink.
+	 * 
+	 * @param medium Medium wrapping kernel
 	 * @param cmd Should not contain semicolon at end.
 	 * @param getResultingExpr
+	 * @param throwOnException
 	 */
 	public static Expr evaluateWLCommand(WLEvaluationMedium medium, String cmd, boolean getResultingExpr, boolean throwOnException){
 		
