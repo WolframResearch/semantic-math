@@ -1551,7 +1551,7 @@ public class ThmP1 {
 				if(-1 == wordStartIndex && logger.getLevel().equals(Level.INFO)){
 					String msg = "wordToTag: " + wordToTag + ", not found in taggedSentence: "
 							+ taggedSentence;
-					logger.info(msg);					
+					//logger.info(msg);					
 				}else{				
 					int posIndex = wordStartIndex + wordToTag.length();
 					//pos is 2 characters long.
@@ -1562,7 +1562,6 @@ public class ThmP1 {
 					if (pos.equals("ent")){
 						mathIndexList.add(index);
 					}
-					//System.out.println("!!pairs " + pairs);
 					System.out.println("Using posTagger to tag word: " +  curWord + " with pos: " + pos);
 				}
 			}			

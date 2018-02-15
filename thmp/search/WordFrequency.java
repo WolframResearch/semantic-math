@@ -141,7 +141,7 @@ public class WordFrequency {
 				wordsFileBufferedReader = new BufferedReader(new InputStreamReader(wordsInputStream));				
 			}
 			
-			//fills in trueFluffWordsSet, based on freq in stockFreqMap. Updates stockFreqMap.
+			//fills in stockFreqMap.
 			getStockFreq(wordsFileBufferedReader, wordPosPreMMap);
 			wordPosPreMMap.put("has", "verb");
 			wordPosPreMMap.put("was", "verb");
@@ -171,8 +171,8 @@ public class WordFrequency {
 		}
 		
 		/**
-		 * Common English words and their absolute frequencies in an 
-		 * externally obtained table.
+		 * 5000 Common English words and their absolute frequencies in an 
+		 * externally obtained frequency table.
 		 * @return
 		 */
 		public static Map<String, Integer> englishStockFreqMap(){

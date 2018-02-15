@@ -172,7 +172,7 @@ public class ProjectionMatrix {
 		
 		int loopTotal = argsLen / TAR_COUNT_PER_BUNDLE + 1;
 		int vecsFileNameCounter = 0;
-		//will go up to O(10^6) when all tars are included.
+		//will go up to ~10^6 when all tars are included.
 		int thmCounter = 0;
 		//combined MMap from multiple tars.
 		Multimap<String, IndexPartPair> combinedWordThmIndexMMap = ArrayListMultimap.create();
@@ -267,6 +267,10 @@ public class ProjectionMatrix {
 	}
 
 	/**
+	 * Read lines of file names to memory.
+	 * Also convert /prospectus/crawling/_arxiv/src/arXiv_src_1011_004.tar
+	 * to 1011_004Untarred/1011 if applicable
+	 * 
 	 * @param args
 	 * @return
 	 */
@@ -290,6 +294,12 @@ public class ProjectionMatrix {
 						//e.g. 0405_001Untarred/0405/FullTDMatrix.mx
 						if(lineLen > 3 && line.substring(lineLen-3).equals(".mx")){
 							line = FileUtils.findFilePathDirectory(line);
+						}else if(lineLen > 15 && line.substring(lineLen-4).equals(".tar")) {
+							//get "...1011_004" from "...arXiv_src_1011_004.tar"
+							String fileName = line.substring(lineLen-12, lineLen-4);
+							String fileFirst4 = fileName.substring(0, 4);
+							fileName += "Untarred/" + fileFirst4;
+							line = fileName;
 						}
 						pathsList.add(line);
 					}
@@ -408,7 +418,7 @@ public class ProjectionMatrix {
 			//String paperNameData = paperIdNameDataMap.get(curPairPaperId);
 			Collection<String> paperNameDataCol = paperIdNameDataMap.get(curPairPaperId);
 			if(paperNameDataCol.isEmpty()) {
-				System.out.println("ProjectionnMatrix - Raw data file does not contain name data for "+curPairPaperId);
+				System.out.println("ProjectionMatrix - Raw data file does not contain name data for "+curPairPaperId);
 				continue;
 			}
 			//paperNameDataCol contains all authors for that paper.

@@ -60,7 +60,7 @@ public class GenerateSearchDataRunner {
 		private boolean generateMsc;
 		private boolean generateFuncName;
 		//whether to regenerate Mx files, creating TermDocumentMatrix, etc,
-		//anew, or 
+		//anew, or just copy and use previous ones.
 		private boolean regenerateMxFiles;
 		
 		/**

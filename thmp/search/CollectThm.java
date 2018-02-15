@@ -1,6 +1,7 @@
 package thmp.search;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -192,8 +193,8 @@ public class CollectThm {
 		
 		// \ufffd is unicode representation for the replacement char.
 		private static final Pattern SPECIAL_CHARACTER_PATTERN = 
-				Pattern.compile(".*[-\\\\=$\\{\\}\\[\\]()^_+%&\\./,\"\\d\\/@><*|`�\ufffd].*");
-	             	
+				Pattern.compile("[-\\\\=$\\{\\}\\[\\]()^_+%&\\./,:;.!~\"\\d\\/@><*|`�\ufffd]");
+	    
 		private static final boolean GATHER_SKIP_GRAM_WORDS = ThmList.gather_skip_gram_words();
 		//private static final boolean GATHER_SKIP_GRAM_WORDS = true;
 		/* Related words scraped from wiktionary, etc. 
@@ -204,6 +205,7 @@ public class CollectThm {
 		 * already contained in docWordsFreqMapNoAnno
 		 */
 		private static final Map<String, GatherRelatedWords.RelatedWords> relatedWordsMap;
+		private static final Map<String, Integer> stockFrequencyMap = WordFrequency.ComputeFrequencyData.englishStockFreqMap();
 		
 		static{
 			/*map of words and their representatives, e.g. "annihilate", "annihilator", etc all map to "annihilat"
@@ -411,7 +413,7 @@ public class CollectThm {
 			
 			/**
 			 * Important: Only takes into account the index, not the ThmPart or word index array.
-			 * 
+			 * Since only need for e.g. determining if any previously added indexPair has same index.
 			 */
 			@Override
 			public boolean equals(Object other) {
@@ -426,6 +428,11 @@ public class CollectThm {
 				return this.thmIndex;
 			}
 
+			@Override
+			public String toString() {
+				return thmIndex + " Index Ar: " +Arrays.toString(wordIndexAr);
+			}
+			
 			/**
 			 * Adds to map, only add if thm part.
 			 * @param thmIndexPairMap
@@ -585,7 +592,7 @@ public class CollectThm {
 		private static void adjustWordFreqMapWithStemMultiplicity(Map<String, Integer> docWordsFreqPreMapNoAnno,
 				ImmutableMultimap<String, String> stemToWordsMMap_) {
 			double freqAdjustmentFactor = 3.0/4;
-			Map<String, Integer> stockFrequencyMap = WordFrequency.ComputeFrequencyData.englishStockFreqMap();
+			
 			Map<String, Integer> modifiedWordFreqMap = new HashMap<String, Integer>();
 			Iterator<Map.Entry<String, Integer>> freqMapIter = docWordsFreqPreMapNoAnno.entrySet().iterator();
 			while(freqMapIter.hasNext()){
@@ -833,12 +840,20 @@ public class CollectThm {
 				//number of words to skip if an n gram has been added.
 			//int numFutureWordsToSkip = 0;
 				//split along e.g. "\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:"
-			List<String> thmAr = WordForms.splitThmIntoSearchWordsList(thm.toLowerCase());				
+			List<String> thmAr = WordForms.splitThmIntoSearchWordsList(thm.toLowerCase());
+			List<String> thmList = new ArrayList<String>();
+			
+			for(String word : thmAr) {
+				//preprocess so word index wouldn't get too large.
+				if(!SPECIAL_CHARACTER_PATTERN.matcher(word).find()){
+					thmList.add(word);
+				}
+			}
 				//words and their frequencies.
 				//Map<String, Integer> thmWordsFreqMap = new HashMap<String, Integer>();				
-			int thmArSz = thmAr.size();
+			int thmArSz = thmList.size();
 			for(int j = 0; j < thmArSz; j++){
-				String word = thmAr.get(j);	
+				String word = thmList.get(j);	
 					//only keep words with lengths > 2
 					//System.out.println(word);
 					int lengthCap = 3;
@@ -858,7 +873,7 @@ public class CollectThm {
 					}
 					//check the following word
 					if(j < thmArSz-1){
-						String nextWordCombined = word + " " + thmAr.get(j+1);
+						String nextWordCombined = word + " " + thmList.get(j+1);
 						nextWordCombined = WordForms.normalizeTwoGram(nextWordCombined);
 						Integer twoGramFreq = twoGramsMap.get(nextWordCombined);
 						if(twoGramFreq != null){
@@ -869,13 +884,13 @@ public class CollectThm {
 								//IndexPartPair indexPartPair2 = indexPartPairSet   ;
 								wordIndexMMap.put(nextWordCombined, j);
 								//if(!indexPartPairSet.contains(indexPartPair)) {
-									//HERE 
+									
 								//}								
 							}
 						}
 						//try to see if these three words form a valid 3-gram
 						if(j < thmArSz-2){
-							String threeWordsCombined = nextWordCombined + " " + thmAr.get(j+2);
+							String threeWordsCombined = nextWordCombined + " " + thmList.get(j+2);
 							Integer threeGramFreq = threeGramsMap.get(threeWordsCombined);
 							if(threeGramFreq != null){
 								if(!SPECIAL_CHARACTER_PATTERN.matcher(threeWordsCombined).find()){
@@ -887,15 +902,19 @@ public class CollectThm {
 								}
 							}
 						}
-					}					
-					//removes endings such as -ing, and uses synonym rep.
-					//e.g. "annihilate", "annihilator", etc all map to "annihilat"
-					word = WordForms.normalizeWordForm(word);					
-					//if(!SPECIAL_CHARACTER_PATTERN.matcher(word).find()){
+					}
+									
+					//if(!SPECIAL_CHARACTER_PATTERN.matcher(word).find()){					
+					//HERE FILTER OU  COOMMON ENGLISH WORDS unless they are in map!! 
+					String wordNormalized = null;
 					
-					//HERE FILTER OU  COOMMON ENGLISH WORDS unless they are in map
-					
-					if(!LiteralSearch.isInValidSearchWord(word)) {	
+					if(!LiteralSearch.isInValidSearchWord(word) && (!stockFrequencyMap.containsKey(word) ||
+							wordsScoreMap.containsKey(word) || 
+							wordsScoreMap.containsKey(word=WordForms.normalizeWordForm(word) )) ) {
+						//removes endings such as -ing, and uses synonym rep.
+						//e.g. "annihilate", "annihilator", etc all map to "annihilat"
+						word = wordNormalized == null ? WordForms.normalizeWordForm(word) : wordNormalized;
+						
 						//but maybe should include words only in lexicon?!
 						//this is no different from literal search then.
 						//wordThmsMMap.put(word, indexPartPair);

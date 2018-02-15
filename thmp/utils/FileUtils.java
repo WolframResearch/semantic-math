@@ -82,10 +82,12 @@ public class FileUtils {
 	
 	public static final boolean SCRAPE_THM_NAME_Q = false;
 	
-	/* Do not introduce dependencies on other classes in static initializer. Since many classes
+	/** Do not introduce dependencies on other classes in static initializer. Since many classes
 	 * count on this class as the lowest common denominator */
 	static{
-		String byblis67OsVersion = "2.6.32-573.22.1.el6.x86_64";
+		//note this is fragile!! subject to change in byblis version.
+		//need a way to differentiate byblis from puremath VM, both are amd64 Linux.
+		String byblis67OsVersion = "2.6.32-642.11.1.el6.x86_64";
 		boolean foodDefaultBool = false;
 		if(byblis67OsVersion.equals(System.getProperty("os.version"))){
 			//on byblis, for data processing. Differentiate between that

@@ -637,9 +637,10 @@ public class SearchIntersection {
 						updatedWordThms.add(pair);
 					}
 				}
-				//HERE Why asymmety here, not att to selectedThmsSet?!
+				
 				wordThms = updatedWordThms;
 			}else {
+				//add to selected thms for record keeping to decide if future thms should be added.
 				selectedThmsSet.addAll(wordThms);
 				curScore += wordScore;
 			}
@@ -662,7 +663,8 @@ public class SearchIntersection {
 		searchState.setThmScoreMap(thmScoreMap);
 		int resultWordSpan = searchState.largestWordSpan();
 		/**short circuit if number of token below threshold*/
-		if(searchState.allowLiteralSearch() && LiteralSearch.spanBelowThreshold(resultWordSpan, inputWordsArSz)) {
+		if(!FileUtils.isByblis67 && //********temporary Feb 15. Since can't set up db on byblis
+				searchState.allowLiteralSearch() && LiteralSearch.spanBelowThreshold(resultWordSpan, inputWordsArSz)) {
 			System.out.println("Initializing literal search...");
 			
 			List<Integer> highestThmList = LiteralSearch.literalSearch(input, searchState, resultWordSpan, searchWordsSet, 
@@ -703,8 +705,7 @@ public class SearchIntersection {
 				int penalty = score > 7 ? score / 4 : 1;
 				score -= penalty;
 			}
-			//score based on compare word distances here!
-			//computeThmScore(thmIndexWordEntry.getValue()
+			//score based on compare word distances here
 			TreeMap<Number, String> indexWordTMap = thmWordIndexMap.get(index);
 			int wordDistScore = LiteralSearch.computeThmScore(indexWordTMap);
 			
@@ -714,12 +715,23 @@ public class SearchIntersection {
 			counter++;
 		}
 		
+		pair = thmScorePQ2.poll();
+		firstScore = null == pair ? -1 : pair.score;
+		int halfMaxScore = firstScore/2;
+		int firstSpan = null == pair ? -1 : pair.spanScore;
 		counter = numHighest;
-		while(counter-- > 0 && null != (pair=thmScorePQ2.poll())) {
+		while(counter-- > 0 && null != pair) {
+			
+			score = pair.score;
+			if(score < halfMaxScore && pair.spanScore < firstSpan) {
+				break;
+			}
 			
 			thmScoreSpanList.add(pair);
 			highestThmList.add(pair.thmIndex);
+			pair = thmScorePQ2.poll();
 		}
+		
 		/****Dec 6 outerWhile: while(descendingKeySetIter.hasNext()){
 			int curScore = descendingKeySetIter.next();
 			Collection<Integer> thmIndices = scoreThmMMap.get(curScore);
@@ -785,15 +797,13 @@ public class SearchIntersection {
 				highestThmList = SearchCombined.searchVecWithTuple(input, highestThmList, tupleSz, relationSearcher, searchState);					
 			}*/			
 			// re-order top entries based on context search, if enabled
-			//temporary false - Feb 14
+			//temporary false - Feb 14//now rank the thms here based on word index distances
 			boolean b = false;
 			if (b && contextSearchBool) {						
 				Searcher<Map<Integer, Integer>> contextSearcher = new ContextSearch();
 				//contextSearcher.setSearcherState(parseState.con);
 				highestThmList = SearchCombined.searchVec(input, highestThmList, contextSearcher, searchState);
 			}
-			//rank the thms here based on word index distances!
-			
 			
 		}
 		/******* DON'T delete Dec 6
@@ -1009,16 +1019,22 @@ public class SearchIntersection {
 		}
 		
 		if (wordThms.isEmpty()) {
+			
+			
 			String normalizedWord = WordForms.normalizeWordForm(word);
 			Integer tempWordScore = wordsScoreMap.get(normalizedWord);
-			if(null == tempWordScore){
+			wordThms = wordThmsIndexMMap1.get(normalizedWord);
+			
+			if(wordThms.isEmpty()){				
 				normalizedWord = WordForms.normalizeWordForm(wordSingForm);
 				tempWordScore = wordsScoreMap.get(normalizedWord);
+				wordThms = wordThmsIndexMMap1.get(normalizedWord);
 			}
 			//System.out.println("SEARCHINTERSECTION - normalizedWord "+normalizedWord + " wordThmMMapNoAnno.contains() "
 				//	+ wordThmMMapNoAnno.containsKey(normalizedWord));
-			if (null != tempWordScore) {
-				wordThms = wordThmsIndexMMap1.get(normalizedWord);
+			if (!wordThms.isEmpty()) {
+				
+				tempWordScore = null == tempWordScore ? defaultWordScore : tempWordScore;
 				// wordScore = wordsScoreMap.get(singFormLong);
 				// wordScore = wordsScoreMap.get(word);
 				// wordScore = wordScore == null ? 0 : wordScore;

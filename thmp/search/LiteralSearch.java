@@ -377,6 +377,7 @@ public class LiteralSearch {
 	 * Determines if word should be added as valid literal search word,
 	 * non-valid words include those containing special chars, $, \, etc.
 	 * Need to screen out placeholder char, '\uFFFD', e.g. in "term�"
+	 * This is also used to generate words for intersection search!
 	 * @param word Already singularized and normalized.
 	 * @return True if *in*valid search word
 	 */

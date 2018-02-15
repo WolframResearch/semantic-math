@@ -999,7 +999,7 @@ public class DetectHypothesis {
 			if(scrapedThmNameList.length > 0) {
 				scrapeThmNames(line, scrapedThmNameList[0]);
 			}			
-			//HERE
+			
 			//should skip certain sections, e.g. \begin{proof}
 			Matcher skipMatcher = SKIP_PATTERN.matcher(line);
 			if(skipMatcher.find()){
