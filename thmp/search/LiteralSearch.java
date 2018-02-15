@@ -415,9 +415,10 @@ public class LiteralSearch {
 		for(Map.Entry<Integer, TreeMap<Number,String>> thmIndexWordEntry : thmIndexWordMMap.entrySet()) {
 			int thmIndex = thmIndexWordEntry.getKey();
 			
-			int thmScore = computeThmScore(thmIndexWordEntry.getValue());
+			int thmScore = computeThmWordDistScore(thmIndexWordEntry.getValue());
 			//add word count as base score.
-			thmScore += thmWordCountMSet.count(thmIndex);
+			//thmScore += thmWordCountMSet.count(thmIndex);
+			thmScore += thmIndexWordEntry.getValue().size()*WORD_BASE_POINT;
 			
 			//MIN_SCORE if only keyword is generic.
 			if(thmScore > MIN_SCORE) {
@@ -430,25 +431,21 @@ public class LiteralSearch {
 
 	/**
 	 * Computes the score for a thm based on the ordering of the words in thm.
+	 * Base points are assumed to be added by caller.
 	 * @param indexWordMap TreeMap of word index in thm and the word.
 	 * @param map map for thms gathered during intersection search.
 	 * @return MIN_SCORE if contains only generic word
 	 */
-	public static int computeThmScore(TreeMap<Number,String> indexWordMap) {
+	public static int computeThmWordDistScore(TreeMap<Number,String> indexWordMap) {
 		//map of words, and the number of points that word is earning
 		Map<String, Integer> wordScoreMap = new HashMap<String, Integer>();
 		
 		List<Number> wordsList = new ArrayList<Number>(indexWordMap.keySet());
 		int wordsListSz = wordsList.size();
-		if(1 == wordsListSz) {
-			if(WordForms.genericSearchTermsSet().contains(indexWordMap.get(wordsList.get(0))) ) {
-				//if only contain *one* generic word, count result as 0.
-				//In these cases query must be more than one word, since 
-				//else wouldn't be resorting to index search.	
-				return MIN_SCORE;
-			}else {
-				return WORD_BASE_POINT;				
-			}
+		if(wordsListSz < 2) {
+			//base points (BASE_SCORE*number of words) are assumed to be added by caller.
+			//so don't need to add here.
+			return MIN_SCORE;
 		}
 		
 		Number priorWordIndex = wordsList.get(0);
@@ -464,20 +461,17 @@ public class LiteralSearch {
 			int distToPriorWord = wordIndex.intValue() - priorWordIndex.intValue();
 			int wordScore;
 			switch(distToPriorWord) {
-			case 0:
+			case 1:
 				wordScore = WORD_DIST_1_POINT;
 				break;
-			case 1:
 			case 2:
+			case 3:
 				wordScore = WORD_DIST_2_3_POINT;
 				break;
 			default:
 				wordScore = 0;				
 			}
-			//wordScoreMap must already have priorWord
-			if(wordScoreMap.get(priorWord) < wordScore) {
-				wordScoreMap.put(priorWord, wordScore);
-			}
+			
 			wordScoreMap.put(word, wordScore);
 			
 			priorWordIndex = wordIndex;
@@ -493,9 +487,8 @@ public class LiteralSearch {
 			//else wouldn't be resorting to index search.
 			return MIN_SCORE;
 		}
-
-		//fist count base score
-		int totalScore = WORD_BASE_POINT * wordScoreMapSz;
+		
+		int totalScore = 0; //was: WORD_BASE_POINT * wordScoreMapSz, base score will be added 
 		//add points for the total number of words triggered
 		for(int score : wordScoreMap.values()) {
 			totalScore += score;

@@ -457,7 +457,7 @@ public class ProjectionMatrix {
 			//update the indices of the thms with respect to the tar's position.
 			Collection<IndexPartPair> updatedIndices = new ArrayList<IndexPartPair>();
 			for(IndexPartPair indexPair : wordThmIndexMMap.get(keyWord)){				
-				updatedIndices.add(new IndexPartPair(indexPair.thmIndex() + startingThmIndex, indexPair.thmPart()));				
+				updatedIndices.add(new IndexPartPair(indexPair.thmIndex() + startingThmIndex, indexPair.thmPart(), indexPair.wordIndexAr()));				
 			}
 			combinedWordThmIndexMMap.putAll(keyWord, updatedIndices);
 		}
