@@ -245,6 +245,7 @@ public class ProjectionMatrix {
 		List<ListMultimap<String, LiteralSearchIndex>> literalSearchIndexMapList 
 			= new ArrayList<ListMultimap<String, LiteralSearchIndex>>();
 		literalSearchIndexMapList.add(literalSearchIndexMap);
+		//to be put into database, rather than storing in memory, for access at app runtime
 		FileUtils.serializeObjToFile(literalSearchIndexMapList, SearchMetaData.literalSearchIndexMapPath());
 		//for human inspection purposes, so put path here.
 		final String literalSearchMapKeysPath = "src/thmp/data/literalSearchIndexMapKeys.txt";
@@ -437,12 +438,12 @@ public class ProjectionMatrix {
 					FileUtils.deserializeListFromFile(wordThmIndexMMapPath)).get(0);
 			wordThmIndexMMap = HashMultimap.create();
 			for(Map.Entry<String, Integer> entry : wordThmsIntMultimap.entries()) {
-				wordThmIndexMMap.put(entry.getKey(), new IndexPartPair(entry.getValue(), ThmPart.STM));
+				wordThmIndexMMap.put(entry.getKey(), new IndexPartPair(entry.getValue(), ThmPart.STM, new byte[] {}));
 			}					
 		}
 		}
 		/****/
-		for(String keyWord : wordThmIndexMMap.keySet()){			
+		for(String keyWord : wordThmIndexMMap.keySet()){
 			//update the indices of the thms with respect to the tar's position.
 			Collection<IndexPartPair> updatedIndices = new ArrayList<IndexPartPair>();
 			for(IndexPartPair indexPair : wordThmIndexMMap.get(keyWord)){				

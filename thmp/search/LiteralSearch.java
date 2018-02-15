@@ -97,8 +97,9 @@ public class LiteralSearch {
 		
 		/**number of bytes necessary to store a word index */
 		public static final byte NUM_BITS_PER_WORD_INDEX = DBUtils.NUM_BITS_PER_BYTE;
-		/*Max length allowed for wordIndexAr*/
-		public static final byte MAX_WORD_INDEX_AR_LEN = 2;
+		/**Max length allowed in wordIndexAr, i.e. number of indices to record per word, since
+		 * a word can occur multiple times in thm*/
+		public static final byte MAX_INDEX_COUNT_PER_WORD = 2;
 		
 		public static final int PLACEHOLDER_INDEX = -1;
 		
@@ -141,17 +142,44 @@ public class LiteralSearch {
 		}
 	}	
 	
-	/********Tools for building literal search index map*******/
+	/********Tools for building literal search index map, at data processing time*******/
 
 	/**
 	 * Tokenizes thm into words, create LiteralSearchIndex's, and add to supplied
 	 * index map.
 	 * @param thm
 	 * @param thmIndex
-	 * @param searchIndexMap
+	 * @param searchIndexMap Multimap of word and LiteralSearchIndex objects.
 	 */
 	public static void addThmLiteralSearchIndexToMap (String thm, int thmIndex, 
 			ListMultimap<String, LiteralSearchIndex> searchIndexMap) {
+		
+		ListMultimap<String, Byte> wordsIndexMMap = extractWordIndexMMapFromThm(thm);
+		
+		for(String word : wordsIndexMMap.keys()) {
+			//must wrap in ArrayList, since the List from .get() is a RandomAccessWrappedList, 
+			//which is not serializable
+			List<Byte> wordIndexList = wordsIndexMMap.get(word);
+			int wordIndexListSz = wordIndexList.size();
+			if(LiteralSearchIndex.MAX_INDEX_COUNT_PER_WORD < wordIndexListSz) {
+				wordIndexListSz = LiteralSearchIndex.MAX_INDEX_COUNT_PER_WORD;
+			}
+			byte[] wordIndexAr = new byte[wordIndexListSz];
+			
+			for(int i = 0; i < wordIndexListSz; i++) {
+				wordIndexAr[i] = wordIndexList.get(i).byteValue();
+			}
+			searchIndexMap.put(word, new LiteralSearchIndex(thmIndex, wordIndexAr));
+		}		
+	}
+
+	/**
+	 * Used for extracting word indices in thm, used for scoring in literal search, 
+	 * and intersection search.
+	 * @param thm
+	 * @return
+	 */
+	private static ListMultimap<String, Byte> extractWordIndexMMapFromThm(String thm) {
 		//don't count English fluff words, e.g. "how", "the"
 		ListMultimap<String, Byte> wordsIndexMMap = ArrayListMultimap.create();
 		
@@ -166,7 +194,7 @@ public class LiteralSearch {
 		
 		for(String word : thmWordsSet) {
 			
-			if(isInValidLiteralWord(word)) {
+			if(isInValidSearchWord(word)) {
 				continue;
 			}
 			word = processLiteralSearchWord(word);
@@ -193,22 +221,7 @@ public class LiteralSearch {
 				counter = (byte)(base + increment);
 			}*/			
 		}
-		
-		for(String word : wordsIndexMMap.keys()) {
-			//must wrap in ArrayList, since the List from .get() is a RandomAccessWrappedList, 
-			//which is not serializable
-			List<Byte> wordIndexList = wordsIndexMMap.get(word);
-			int wordIndexListSz = wordIndexList.size();
-			if(LiteralSearchIndex.MAX_WORD_INDEX_AR_LEN < wordIndexListSz) {
-				wordIndexListSz = LiteralSearchIndex.MAX_WORD_INDEX_AR_LEN;
-			}
-			byte[] wordIndexAr = new byte[wordIndexListSz];
-			
-			for(int i = 0; i < wordIndexListSz; i++) {
-				wordIndexAr[i] = wordIndexList.get(i).byteValue();
-			}
-			searchIndexMap.put(word, new LiteralSearchIndex(thmIndex, wordIndexAr));
-		}		
+		return wordsIndexMMap;
 	}
 	
 	private static ListMultimap<String, LiteralSearchIndex> deserializeIndexMap() {
@@ -254,13 +267,15 @@ public class LiteralSearch {
 		
 		Connection conn = searchState.databaseConnection();
 		//Connection conn = thmp.utils.DBUtils.getPooledConnection();
-		int wordIndexArLen = LiteralSearchIndex.MAX_WORD_INDEX_AR_LEN;
+		
+		//Max length allowed for wordIndexAr. E.g. 2.
+		int wordIndexArLen = LiteralSearchIndex.MAX_INDEX_COUNT_PER_WORD;
 		//multiset of thm indices and the count of words for each index, where words
 		//are not found in literal search db, but in lexicon
 		Multiset<Integer> thmWordCountMSet = HashMultiset.create();
 		
 		for(String word : queryWordList) {
-			if(isInValidLiteralWord(word)) {
+			if(isInValidSearchWord(word)) {
 				continue;
 			}
 			word = processLiteralSearchWord(word);
@@ -272,6 +287,7 @@ public class LiteralSearch {
 			//getLiteralSearchThmsFromDB String word,  Connection conn,
 			//List<Integer> thmIndexList, List<Integer> wordsIndexArList
 			List<Integer> thmIndexList = new ArrayList<Integer>();
+			//list of words indices in respective theorems.
 			List<Integer> wordsIndexArList = new ArrayList<Integer>();
 			try {
 				LiteralSearchUtils.getLiteralSearchThmsFromDB(word, conn, thmIndexList, wordsIndexArList);
@@ -298,10 +314,11 @@ public class LiteralSearch {
 			}else {
 				wordSpan++;
 			}
+			//gather maps used for scoring based on word distances.
 			for(int i = 0; i < thmIndexListSz; i++) {
 				
 				int thmIndex = thmIndexList.get(i);
-				//map of index in thm, and word at that index.
+				//map of word index in thm, and that word.
 				TreeMap<Number, String> indexWordMap = thmIndexWordMap.get(thmIndex);
 				
 				indexWordMap = null == indexWordMap ? new TreeMap<Number, String>() : indexWordMap;
@@ -309,6 +326,7 @@ public class LiteralSearch {
 				int endIndex = (i+1) * wordIndexArLen;
 				for(int j = i * wordIndexArLen; j < endIndex; j++) {			
 					int wordIndexInThm = wordsIndexArList.get(j);
+					//PLACEHOLDER_INDEX is a filler. (consecutive)
 					if(wordIndexInThm == LiteralSearchIndex.PLACEHOLDER_INDEX) {
 						break;
 					}
@@ -360,9 +378,9 @@ public class LiteralSearch {
 	 * non-valid words include those containing special chars, $, \, etc.
 	 * Need to screen out placeholder char, '\uFFFD', e.g. in "term�"
 	 * @param word Already singularized and normalized.
-	 * @return
+	 * @return True if *in*valid search word
 	 */
-	private static boolean isInValidLiteralWord (String word) {
+	public static boolean isInValidSearchWord (String word) {
 		if(LITERAL_SPECIAL_CHARS_PATTERN.matcher(word).find()
 				|| DIGIT_PATTERN.matcher(word).find()){
 			return true;
@@ -397,6 +415,7 @@ public class LiteralSearch {
 			int thmIndex = thmIndexWordEntry.getKey();
 			
 			int thmScore = computeThmScore(thmIndexWordEntry.getValue());
+			//add word count as base score.
 			thmScore += thmWordCountMSet.count(thmIndex);
 			
 			//MIN_SCORE if only keyword is generic.
@@ -410,11 +429,11 @@ public class LiteralSearch {
 
 	/**
 	 * Computes the score for a thm based on the ordering of the words in thm.
-	 * @param indexWordMap TreeMap of word index and the word.
+	 * @param indexWordMap TreeMap of word index in thm and the word.
 	 * @param map map for thms gathered during intersection search.
 	 * @return MIN_SCORE if contains only generic word
 	 */
-	private static int computeThmScore(TreeMap<Number,String> indexWordMap) {
+	public static int computeThmScore(TreeMap<Number,String> indexWordMap) {
 		//map of words, and the number of points that word is earning
 		Map<String, Integer> wordScoreMap = new HashMap<String, Integer>();
 		

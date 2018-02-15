@@ -209,7 +209,7 @@ public class WordForms {
 	 * Note that enums are inherently serializable.
 	 */
 	public static enum ThmPart{
-		
+
 		STM, //corresponding to thm main statement 
 		HYP; //contextual hypotheses, shown under "Context" in web
 		
@@ -717,6 +717,7 @@ public class WordForms {
 			}			
 			
 		}
+		
 		
 		/**
 		 * Adjusts the integral word score for N-grams, such that the N-gram's score

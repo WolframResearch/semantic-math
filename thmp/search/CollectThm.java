@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -36,6 +37,7 @@ import com.google.common.collect.Multimap;
 import thmp.parse.Maps;
 import thmp.parse.ParsedExpression;
 import thmp.parse.DetectHypothesis.DefinitionListWithThm;
+import thmp.search.LiteralSearch.LiteralSearchIndex;
 import thmp.search.SearchCombined.ThmHypPair;
 import thmp.search.Searcher.SearchMetaData;
 import thmp.utils.WordForms.ThmPart;
@@ -190,8 +192,8 @@ public class CollectThm {
 		
 		// \ufffd is unicode representation for the replacement char.
 		private static final Pattern SPECIAL_CHARACTER_PATTERN = 
-				Pattern.compile(".*[\\\\=$\\{\\}\\[\\]()^_+%&\\./,\"\\d\\/@><*|`�\ufffd].*");
-				
+				Pattern.compile(".*[-\\\\=$\\{\\}\\[\\]()^_+%&\\./,\"\\d\\/@><*|`�\ufffd].*");
+	             	
 		private static final boolean GATHER_SKIP_GRAM_WORDS = ThmList.gather_skip_gram_words();
 		//private static final boolean GATHER_SKIP_GRAM_WORDS = true;
 		/* Related words scraped from wiktionary, etc. 
@@ -243,7 +245,7 @@ public class CollectThm {
 				@SuppressWarnings("unchecked")
 				Multimap<String, IndexPartPair> wordThmsIndexMultimap = ((List<Multimap<String, IndexPartPair>>)
 						FileUtils.deserializeListFromFile(wordThmIndexMMapPath)).get(0);
-				//temporary ugly conversion code for data migration
+				//temporary ugly conversion code for data migration, Dec 2017.
 				Collection<IndexPartPair> indexPartPairCol = wordThmsIndexMultimap.get("group");
 				Iterator<IndexPartPair> iter = indexPartPairCol.iterator();
 				try {
@@ -255,7 +257,7 @@ public class CollectThm {
 							FileUtils.deserializeListFromFile(wordThmIndexMMapPath)).get(0);
 					wordThmsIndexMultimap = HashMultimap.create();
 					for(Map.Entry<String, Integer> entry : wordThmsIntMultimap.entries()) {
-						wordThmsIndexMultimap.put(entry.getKey(), new IndexPartPair(entry.getValue(), ThmPart.STM));
+						wordThmsIndexMultimap.put(entry.getKey(), new IndexPartPair(entry.getValue(), ThmPart.STM, new byte[] {}));
 					}					
 				}
 				
@@ -342,21 +344,48 @@ public class CollectThm {
 		}
 		
 		/**
-		 * Pair of index and component, whether context or main stm
+		 * Pair of thm index and thm component, whether context/hyp or main stm
 		 * in thm. To be used to create map of word-thm index, to 
 		 * differentiate scores between hyp and stm.
 		 * Equals and HashCode Only takes into account the index, 
 		 * not the ThmPart.
+		 * Each instance corresponds to a particular word
 		 */
 		public static class IndexPartPair implements Serializable{
 			
 			private static final long serialVersionUID = 3243328850026183247L;
+			private static final int initIndexCountPerWord = 3;
+			private static final byte placeholderIndex = LiteralSearchIndex.PLACEHOLDER_INDEX;
+			
+			private transient int curWordIndexLen;			
 			private ThmPart thmPart;
 			private int thmIndex;
+			/**array of indices of the corresponding word in thm*/
+			private byte[] wordIndexAr;
+			
+			public IndexPartPair(int index_, ThmPart thmPart_, byte[] wordIndexAr_) {
+				this.thmIndex = index_;
+				this.thmPart = thmPart_;
+				this.wordIndexAr = wordIndexAr_;
+				
+			}
 			
 			public IndexPartPair(int index_, ThmPart thmPart_) {
 				this.thmIndex = index_;
 				this.thmPart = thmPart_;
+				this.wordIndexAr = new byte[initIndexCountPerWord];
+				for(int i = 0; i < initIndexCountPerWord; i++) {
+					wordIndexAr[i] = placeholderIndex;
+				}
+			}
+			
+			public void addWordIndex(byte index) {
+				//currently don't expand.
+				if(curWordIndexLen >= initIndexCountPerWord) {
+					return;
+				}
+				wordIndexAr[curWordIndexLen] = index;
+				curWordIndexLen++;
 			}
 			
 			/**
@@ -376,15 +405,20 @@ public class CollectThm {
 				return this.thmIndex;
 			}
 			
+			public byte[] wordIndexAr() {
+				return this.wordIndexAr;
+			}
+			
 			/**
-			 * Only takes into account the index, not the ThmPart.
+			 * Important: Only takes into account the index, not the ThmPart or word index array.
+			 * 
 			 */
 			@Override
 			public boolean equals(Object other) {
 				if(null == other || !(other instanceof IndexPartPair)) {
 					return false;
 				}
-				return this.thmIndex == ((IndexPartPair)other).thmIndex;
+				return this.thmIndex == ((IndexPartPair)other).thmIndex;				
 			}
 			
 			@Override
@@ -790,6 +824,9 @@ public class CollectThm {
 			Map<String, Integer> threeGramsMap = NGramsMap.get_threeGramsMap();			
 			//ListMultimap<String, String> posMMap = Maps.posMMap();
 			
+			//multimap of word and lists of integers.
+			ListMultimap<String, Integer> wordIndexMMap = ArrayListMultimap.create();
+			
 			//for(int i = 0; i < thmList.size(); i++){
 				//System.out.println(counter++);
 				//String thm = thmList.get(i);
@@ -827,10 +864,13 @@ public class CollectThm {
 						if(twoGramFreq != null){
 							if(!SPECIAL_CHARACTER_PATTERN.matcher(nextWordCombined).find()){
 								//don't add if present, since Hyp added second
-								Set<IndexPartPair> indexPartPairSet = wordThmsMMap.get(nextWordCombined);
-								if(!indexPartPairSet.contains(indexPartPair)) {
-									wordThmsMMap.put(nextWordCombined, indexPartPair);
-								}								
+								//Set<IndexPartPair> indexPartPairSet = wordThmsMMap.get(nextWordCombined);
+								//HashMultimap, so don't need to check presence
+								//IndexPartPair indexPartPair2 = indexPartPairSet   ;
+								wordIndexMMap.put(nextWordCombined, j);
+								//if(!indexPartPairSet.contains(indexPartPair)) {
+									//HERE 
+								//}								
 							}
 						}
 						//try to see if these three words form a valid 3-gram
@@ -839,10 +879,11 @@ public class CollectThm {
 							Integer threeGramFreq = threeGramsMap.get(threeWordsCombined);
 							if(threeGramFreq != null){
 								if(!SPECIAL_CHARACTER_PATTERN.matcher(threeWordsCombined).find()){
-									Set<IndexPartPair> indexPartPairSet = wordThmsMMap.get(threeWordsCombined);
+									/*Set<IndexPartPair> indexPartPairSet = wordThmsMMap.get(threeWordsCombined);
 									if(!indexPartPairSet.contains(indexPartPair)) {
 										wordThmsMMap.put(threeWordsCombined, indexPartPair);
-									}
+									}*/
+									wordIndexMMap.put(threeWordsCombined, j);
 								}
 							}
 						}
@@ -850,10 +891,38 @@ public class CollectThm {
 					//removes endings such as -ing, and uses synonym rep.
 					//e.g. "annihilate", "annihilator", etc all map to "annihilat"
 					word = WordForms.normalizeWordForm(word);					
-					if(!SPECIAL_CHARACTER_PATTERN.matcher(word).find()){
-						wordThmsMMap.put(word, indexPartPair);
+					//if(!SPECIAL_CHARACTER_PATTERN.matcher(word).find()){
+					
+					//HERE FILTER OU  COOMMON ENGLISH WORDS unless they are in map
+					
+					if(!LiteralSearch.isInValidSearchWord(word)) {	
+						//but maybe should include words only in lexicon?!
+						//this is no different from literal search then.
+						//wordThmsMMap.put(word, indexPartPair);
+						wordIndexMMap.put(word, j);
 					}
 				}
+			//skip irrelevant ones indices?!
+			
+			for(String word : wordIndexMMap.keys()) {
+				Collection<Integer> indexCol = wordIndexMMap.get(word);
+				
+				List<Byte> byteList = new ArrayList<Byte>();
+				for(Integer index : indexCol) {
+					if(index >= Byte.MAX_VALUE) {
+						break;
+					}
+					byteList.add(index.byteValue());
+				}
+				int byteListSz = byteList.size();
+				byte[] byteAr = new byte[byteListSz];
+				for(int i = 0; i < byteListSz; i++) {
+					byteAr[i] = byteList.get(i);
+				}
+				IndexPartPair indexPartPair2 = new IndexPartPair(indexPartPair.thmIndex, 
+						indexPartPair.thmPart, byteAr);
+				wordThmsMMap.put(word, indexPartPair2);				
+			}			
 		}
 		
 		/**

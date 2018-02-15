@@ -847,11 +847,12 @@ public class DetectHypothesis {
 	/**
 	 * Convert list of ParsedExpression's to list of ThmHypPair's for serialization.
 	 * @param peList
-	 * @param wordThmIndexMMap map used for intersection 
+	 * @param wordThmIndexMMap map used for intersection. Keys are words, values are IndexPartPair for word.
 	 * @return
 	 */
 	private static void createWordThmIndexMMap(List<ThmHypPair> peList,
 			HashMultimap<String, IndexPartPair> wordThmIndexMMap){
+		
 		//List<ThmHypPair> thmHypPairList = new ArrayList<ThmHypPair>();
 		int thmIndex = 0;
 		for(ThmHypPair pe : peList){
@@ -947,7 +948,7 @@ public class DetectHypothesis {
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
-	@SafeVarargs
+	@SafeVarargs //check whether null instead!!
 	public static void readAndParseThm(BufferedReader srcFileReader, 
 			ParseState parseState, List<DefinitionListWithThm> definitionListWithThmList,
 			List<ThmHypPair> thmHypPairList,
@@ -998,7 +999,7 @@ public class DetectHypothesis {
 			if(scrapedThmNameList.length > 0) {
 				scrapeThmNames(line, scrapedThmNameList[0]);
 			}			
-			
+			//HERE
 			//should skip certain sections, e.g. \begin{proof}
 			Matcher skipMatcher = SKIP_PATTERN.matcher(line);
 			if(skipMatcher.find()){
