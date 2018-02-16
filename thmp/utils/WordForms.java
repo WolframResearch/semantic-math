@@ -685,7 +685,7 @@ public class WordForms {
 		}
 		
 		/**
-		 * 
+		 * Add this token's data to supplied maps.
 		 * @param thmWordSpanMMap Must be HashMultimap
 		 * @param thmIndex
 		 * @param wordIndex Index of word in thm.

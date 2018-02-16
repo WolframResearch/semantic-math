@@ -351,7 +351,7 @@ public class CollectThm {
 		 * differentiate scores between hyp and stm.
 		 * Equals and HashCode Only takes into account the index, 
 		 * not the ThmPart.
-		 * Each instance corresponds to a particular word
+		 * Each instance corresponds to *one particular* word. Serialized as values of maps.
 		 */
 		public static class IndexPartPair implements Serializable{
 			
@@ -359,7 +359,13 @@ public class CollectThm {
 			private static final int initIndexCountPerWord = 3;
 			private static final byte placeholderIndex = LiteralSearchIndex.PLACEHOLDER_INDEX;
 			
-			private transient int curWordIndexLen;			
+			//current length of wordIndexAr, used for efficient construction.
+			private transient int curWordIndexLen;
+			/*the word for this indexPartPair, used to prune generic-word thms, 
+			 * e.g. ones whose sole word is "equation", "module", etc. Make transient 
+			 * to not bloat up memory when serializing*/
+			//private transient String word;
+			
 			private ThmPart thmPart;
 			private int thmIndex;
 			/**array of indices of the corresponding word in thm*/
@@ -368,8 +374,7 @@ public class CollectThm {
 			public IndexPartPair(int index_, ThmPart thmPart_, byte[] wordIndexAr_) {
 				this.thmIndex = index_;
 				this.thmPart = thmPart_;
-				this.wordIndexAr = wordIndexAr_;
-				
+				this.wordIndexAr = wordIndexAr_;				
 			}
 			
 			public IndexPartPair(int index_, ThmPart thmPart_) {
@@ -398,6 +403,22 @@ public class CollectThm {
 			public boolean isContextPart() {
 				return this.thmPart == ThmPart.HYP;
 			}
+			/**
+			 * Set the word for this indexPartPair, used to prune generic-word thms
+			 * later.
+			 * @param word_
+			 */
+			/*public void setWord(String word_) {
+				this.word = word_;
+			}*/
+			
+			/**
+			 * the word for this indexPartPair, can be used to prune generic-word thms
+			 * @return
+			 */
+			/*public String word() {
+				return this.word;
+			}*/
 			
 			public ThmPart thmPart() {
 				return this.thmPart;
