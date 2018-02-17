@@ -190,6 +190,7 @@ public class CollectThm {
 		//them more
 		private static final double THREE_GRAM_FREQ_REDUCTION_FACTOR = 3.8/5;
 		private static final double TWO_GRAM_FREQ_REDUCTION_FACTOR = 2.3/3;
+		private static final Set<String> skipGramSkipWordsSet;
 		
 		// \ufffd is unicode representation for the replacement char.
 		private static final Pattern SPECIAL_CHARACTER_PATTERN = 
@@ -227,6 +228,11 @@ public class CollectThm {
 			nGramFirstWordsSet.addAll(ThreeGramSearch.get_3GramFirstWordsSet());
 			skipGramWordsList = new ArrayList<String>();
 
+			skipGramSkipWordsSet = new HashSet<String>();
+			String[] skipGramSkipWordsAr = new String[] {"let","then","and","have"};
+			for(String w : skipGramSkipWordsAr) {
+				skipGramSkipWordsSet.add(w);
+			}
 			/** This list is smaller when in gathering data mode, and consists of a representative set 
 			 * of theorems. Much larger in search mode.*/
 			////.....List<String> processedThmList = ThmList.allThmsWithHypList; 
@@ -820,7 +826,7 @@ public class CollectThm {
 		}
 		
 		/**
-		 * Used for building skip gram word list.
+		 * Used for building skip gram word list to create synonyms.
 		 * @param thmList
 		 * @param skipGramWordList_
 		 * @throws IOException
@@ -832,7 +838,7 @@ public class CollectThm {
 			Map<String, Integer> docWordsFreqPreMap = new HashMap<String, Integer>();
 			ImmutableSetMultimap.Builder<String, Integer> wordThmsMMapBuilder 
 				= new ImmutableSetMultimap.Builder<String, Integer>();			
-			buildMapsNoAnno(//thmWordsFreqListBuilder, 
+			buildSkipGramMaps(//thmWordsFreqListBuilder, 
 					docWordsFreqPreMap, wordThmsMMapBuilder, thmList, skipGramWordList_);						
 		}
 		
@@ -1098,8 +1104,8 @@ public class CollectThm {
 		/**
 		 * Same as readThm, except without hyp/concl wrappers.
 		 * Maps contain the same set of words. 
-		 * @deprecated *Note* June 2017: keep this for now for the addition to skipGramWordList.
-		 * Delete a few months later.
+		 * @deprecated *Note* Feb 2018: keep this for now for the addition to skipGramWordList.
+		 * 
 		 * @param thmWordsFreqListBuilder 
 		 * 		List of maps, each of which is a map of word Strings and their frequencies. Used for SVD search.
 		 * @param thmListBuilder
@@ -1108,7 +1114,7 @@ public class CollectThm {
 		 * @throws IOException
 		 * @throws FileNotFoundException
 		 */
-		private static void buildMapsNoAnno(//ImmutableList.Builder<ImmutableMap<String, Integer>> thmWordsFreqListBuilder,
+		private static void buildSkipGramMaps(//ImmutableList.Builder<ImmutableMap<String, Integer>> thmWordsFreqListBuilder,
 				Map<String, Integer> docWordsFreqPreMap,
 				ImmutableSetMultimap.Builder<String, Integer> wordThmsMMapBuilder, List<String> thmList,
 				List<String> skipGramWordList_){
@@ -1140,6 +1146,9 @@ public class CollectThm {
 					int lengthCap = GATHER_SKIP_GRAM_WORDS ? 3 : 3;
 					//word length could change, so no assignment to variable.
 					if(word.length() < lengthCap){
+						continue;
+					}
+					if(skipGramSkipWordsSet.contains(word)) {
 						continue;
 					}
 					
@@ -1195,11 +1204,20 @@ public class CollectThm {
 						//e.g. "annihilate", "annihilator", etc all map to "annihilat"
 						word = WordForms.normalizeWordForm(word);
 					}
-					singletonWordAdded = addWordToMaps(word, i, //wordsFreqMap, //thmWordsFreqListBuilder, 
-							docWordsFreqPreMap);
+					if(!GATHER_SKIP_GRAM_WORDS) {
+						singletonWordAdded = addWordToMaps(word, i, //wordsFreqMap, //thmWordsFreqListBuilder, 
+								docWordsFreqPreMap);
+					}else {
+						if(SPECIAL_CHARACTER_PATTERN.matcher(word).find()){
+							continue;
+						}else {
+							singletonWordAdded = word;
+						}
+					}
 					if(GATHER_SKIP_GRAM_WORDS){
 						//gather list of relevant words used in this thm
-						if(numFutureWordsToSkip > 0){
+						/**only gather singleton words, to get synonyms for singleton words.
+						 * if(numFutureWordsToSkip > 0){
 							numFutureWordsToSkip--;
 						}else if(null != threeGramAdded){
 							skipGramWordList_.add(threeGramAdded);
@@ -1207,11 +1225,14 @@ public class CollectThm {
 						}else if(null != twoGramAdded){
 							skipGramWordList_.add(twoGramAdded);
 							numFutureWordsToSkip = 1;
-						}else if(null != singletonWordAdded){
+						}else */
+						if(null != singletonWordAdded){
 							skipGramWordList_.add(singletonWordAdded);
 						}
 					}
 				}
+				//delimit sentence
+				skipGramWordList_.add("");
 			}
 		}
 		

@@ -481,6 +481,7 @@ public class LiteralSearch {
 		int wordScoreMapSz = wordScoreMap.size();
 		
 		if(1 == wordScoreMapSz
+				//Note genericSearchTermsSet includes 5000 frequent English words.
 				&& WordForms.genericSearchTermsSet().contains(wordScoreMap.keySet().iterator().next())) {
 			//same as above. If only contain *one* generic word, count result as 0.
 			//In these cases query must be more than one word, since 

@@ -119,6 +119,9 @@ public class WordForms {
 	private static final Pattern HYP_PATTERN = Pattern.compile(".*(?:assume|denote|define|let|is said|suppose"
 			+ "|where|is called|if|given).+");
 	private static final Pattern SPLIT_DELIM_PATTERN = Pattern.compile(SPLIT_DELIM);	
+	//add all stock frequency words
+	private static final String[] genericSearchTermsAr = new String[] {"sum", "equation", "polynomial", "function", "basis",
+					"theorem", "group", "ring", "field", "module", "hypothesis", "proposition", "series"};
 	private static final Set<String> GREEK_ALPHA_SET;
 	private static final Map<Character, Character> DIACRITICS_MAP;
 	/**set of common words for search to ignore, if only these words are present, ie nonrelevant words*/
@@ -195,13 +198,8 @@ public class WordForms {
 			DIACRITICS_MAP.put(p[0], p[1]);
 		}
 		
-		//add more!
-		String[] genericSearchTermsAr = new String[] {"sum", "equation", "polynomial", "function", "basis",
-				"theorem", "group", "ring", "field", "module", "hypothesis", "proposition"};
 		GENERIC_SERACH_TERMS = new HashSet<String>();
-		for(String s : genericSearchTermsAr) {
-			GENERIC_SERACH_TERMS.add(s);
-		}
+		
 	}
 	
 	/**
@@ -244,6 +242,7 @@ public class WordForms {
 	}
 	
 	private static Set<String> getFreqWordsSet(){
+		//double-checked synchronization to minimize chance of cyclic dependency.
 		if(freqWordsSet.isEmpty()){
 			synchronized(WordForms.class){
 				if(freqWordsSet.isEmpty()){
@@ -1249,6 +1248,17 @@ public class WordForms {
 	 * ie nonrelevant words
 	 */
 	public static Set<String> genericSearchTermsSet(){
+		if(GENERIC_SERACH_TERMS.isEmpty()) {
+			synchronized(WordForms.class) {
+				if(GENERIC_SERACH_TERMS.isEmpty()) {
+					for(String s : genericSearchTermsAr) {
+						GENERIC_SERACH_TERMS.add(s);
+					}
+					Set<String> stockFreqWordsSet = WordFrequency.ComputeFrequencyData.englishStockFreqMap().keySet();
+					GENERIC_SERACH_TERMS.addAll(stockFreqWordsSet);
+				}
+			}
+		}
 		return GENERIC_SERACH_TERMS;
 	}
 	

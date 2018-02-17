@@ -24,7 +24,9 @@ import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 
 /**
- * Uses CollectThm.ThmWordsMaps.buildMapsNoAnno() to generate synonyms.
+ * Uses CollectThm.ThmWordsMaps.buildMapsNoAnno() to generate synonyms,
+ * using word embeddings, e.g. word2vec. In particular prepare data for 
+ * skip gram model.
  * 
  * @author yihed
  *
@@ -44,12 +46,13 @@ public class GenerateSynonymsWordData {
 		 * ImmutableSetMultimap.Builder<String, Integer> wordThmsMMapBuilder,
 		 * List<String> thmList, List<String> skipGramWordList_)
 		 */
-		// create list of strings, or just one string
-		String skipGramWordsListStr = "src/thmp/data/skipGramWordsList2.txt";
+		// create list of strings from raw file.
+		String skipGramWordsListPath = "src/thmp/data/skipGramWordsList2.txt";
 		List<String> sentenceList = new ArrayList<String>();
 		
 		//String sourceFileStr = "src/thmp/data/Total.txt";
 		String sourceFileStr = "/Users/yihed/Documents/arxivTexSrc/020Total.txt";
+		sourceFileStr = "/Users/yihed/Downloads/test/skipGram2.txt";
 		BufferedReader srcFileReader = null;
 		
 		try {
@@ -102,7 +105,7 @@ public class GenerateSynonymsWordData {
 		List<String> skipGramWordList = new ArrayList<String>();
 		CollectThm.ThmWordsMaps.createSkipGramWordList(sentenceList, skipGramWordList);
 		System.out.println("Writing skipGramWordList to file!");
-		FileUtils.writeToFile(skipGramWordList, skipGramWordsListStr);
+		FileUtils.writeToFile(skipGramWordList, skipGramWordsListPath);
 		//FileUtils.appendObjToFile(skipGramWordList, skipGramWordsListStr);
 	}
 
