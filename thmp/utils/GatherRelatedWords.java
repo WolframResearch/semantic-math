@@ -148,7 +148,8 @@ public class GatherRelatedWords {
 			// this.word = word_;
 			this.combinedList = new ArrayList<String>();
 			if (null == synonymsList_) {
-				this.synonymsList = Collections.<String> emptyList();
+				//currently only synonymslist is expandable.
+				this.synonymsList = new ArrayList<String>();
 			} else {
 				this.synonymsList = synonymsList_;
 				combinedList.addAll(synonymsList_);
@@ -204,6 +205,9 @@ public class GatherRelatedWords {
 			synonymsList.addAll(synonyms);
 		}
 		
+		public void setSynonyms(List<String> synonyms) {
+			this.synonymsList = synonyms;
+		}
 		/**
 		 * @return the antonymsList
 		 */

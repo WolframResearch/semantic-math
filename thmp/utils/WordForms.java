@@ -29,6 +29,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.SetMultimap;
 import com.google.common.reflect.TypeToken;
@@ -151,8 +152,6 @@ public class WordForms {
 		stemToWordsMMap = ImmutableMultimap.copyOf(createStemToWordsMMap(wordToStemMap, stemToWordRepPremap));
 		//create map that uses the longest word as rep
 		stemToWordRepMap = ImmutableMap.copyOf(stemToWordRepPremap);
-		
-		
 		
 		GREEK_ALPHA_SET = new HashSet<String>();
 		String[] GREEK_ALPHA = new String[]{"alpha","beta","gamma","delta","epsilon","omega","iota","theta","phi"};
@@ -433,9 +432,11 @@ public class WordForms {
 	 */
 	public static Multimap<String, String> getSynonymsMap1(){
 		
-		if(synonymMap.isEmpty()) {
+		if(null == synonymMap) {
 			synchronized(WordForms.class) {
-				if(synonymMap.isEmpty()) {
+				if(null == synonymMap) {
+					//List, since the higher ordered, the closer and more relevant.
+					synonymMap = ArrayListMultimap.create();
 					BufferedReader synonymsBF = null;
 					//create synonym map from file	
 					ServletContext servletContext = FileUtils.getServletContext();

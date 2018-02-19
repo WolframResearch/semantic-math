@@ -594,12 +594,18 @@ public class CollectThm {
 				if(!docWordsFreqMapNoAnno.containsKey(word)){
 					word = WordForms.normalizeWordForm(word);
 				}
-				if(!docWordsFreqMapNoAnno.containsKey(word)){
+				/*if(!docWordsFreqMapNoAnno.containsKey(word)){
 					continue;
-				}				
+				}*/				
 				relatedWordsEntrySetIter.remove();
+				//don't deserialize related words, reconstruct anew each time!!
+				RelatedWords relatedWords = relatedWordsEntry.getValue();
+				//hack Feb 18, for GatherRelatedWords$RelatedWords.addToSynonyms(GatherRelatedWords.java:205)
+				if(relatedWords.getSynonymsList().isEmpty()) {
+					relatedWords.setSynonyms(new ArrayList<String>());
+				}
 				RelatedWords normalizedRelatedWords 
-					= relatedWordsEntry.getValue().normalizeFromValidWordSet(docWordsFreqMapNoAnno.keySet());
+					= relatedWords.normalizeFromValidWordSet(docWordsFreqMapNoAnno.keySet());
 				
 				relatedWordsTempMap.put(word, normalizedRelatedWords);
 				relatedWordsUsedCounter++;
@@ -762,7 +768,12 @@ public class CollectThm {
 							if(null == relatedWord) {
 								relatedWordsMap.put(word, new RelatedWords(new ArrayList<String>(synonyms), null, null));
 							}else {
-								relatedWord.addToSynonyms(synonyms);
+								//change this
+								List<String> list = new ArrayList<String>();
+								list.addAll(synonyms);
+								list.addAll(relatedWord.getSynonymsList());
+								relatedWord.setSynonyms(list);
+								
 							}
 						}
 						synonymsAddedToRelatedWordsQ = true;
