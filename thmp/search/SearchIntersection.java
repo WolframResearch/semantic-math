@@ -244,15 +244,16 @@ public class SearchIntersection {
 		}
 		
 		/**
-		 * shorter theorem lists are prioritized.
+		 * Higher scores, and then shorter theorem lists are prioritized.
+		 * 
 		 */
 		@Override
 		public int compareTo(WordThmsList other) {
 			int thisSz = thmsList.size();
 			int otherSz = other.thmsList.size();
-			return thisSz > otherSz ? 1 : thisSz < otherSz ? -1 : 
-				//if same size:
-				(this.score < other.score ? 1 : this.score > other.score ? -1 :
+			return this.score < other.score ? 1 : this.score > other.score ? -1 : 
+				//shorter thm lists rank higher
+				( thisSz > otherSz ? 1 : thisSz < otherSz ? -1 :
 					(this.wordIndexInThm > other.wordIndexInThm ? 1 : 
 							this.wordIndexInThm < other.wordIndexInThm ? -1 : 0)
 					);
@@ -289,6 +290,39 @@ public class SearchIntersection {
 		@Override
 		public String toString() {
 			return this.word;
+		}
+	}
+	
+	/**
+	 * Container for pair of thmPart and TreeMap of word indices in 
+	 * that thm, along with the word.
+	 * Each instance corresponds to a theorem.
+	 */
+	public static class WordDistScoreTMap{
+		//private ThmPart thmPart;
+		/*indices of words in the thm, along with the words.*/
+		private TreeMap<Number, String> hypIndexWordTMap;
+		private TreeMap<Number, String> thmIndexWordTMap;
+		
+		public WordDistScoreTMap() {
+			hypIndexWordTMap = new TreeMap<Number, String>();
+			thmIndexWordTMap = new TreeMap<Number, String>();		
+		}
+		
+		public void addToTreeMap(ThmPart thmPart_, Number index, String word){
+			if(thmPart_ == ThmPart.HYP) {
+				hypIndexWordTMap.put(index, word);
+			}else {
+				thmIndexWordTMap.put(index, word);
+			}
+		}
+		
+		public TreeMap<Number, String> thmIndexWordTMap(){
+			return thmIndexWordTMap;
+		}
+		
+		public TreeMap<Number, String> hypIndexWordTMap(){
+			return hypIndexWordTMap;
 		}
 	}
 	
@@ -619,8 +653,9 @@ public class SearchIntersection {
 		Set<IndexPartPair> selectedThmsSet = new HashSet<IndexPartPair>();
 		int curScore = 0;
 		
+		//here!
 		//list of thm indices, and the indices of words in the thm, along with the words.
-		Map<Integer, TreeMap<Number, String>> thmWordIndexMap = new HashMap<Integer, TreeMap<Number, String>>();
+		Map<Integer, WordDistScoreTMap> thmWordIndexMap = new HashMap<Integer, WordDistScoreTMap>();
 		
 		int halfScore = totalWordsScore / 2;
 		//avoid duplicating words, or parts, e.g. many times subwords
@@ -663,7 +698,7 @@ public class SearchIntersection {
 				selectedThmsSet.addAll(wordThms);
 				curScore += wordScore;
 			}
-					
+			
 			gatherWordThmsAPosteriori(thmScoreMap, thmWordSpanMMap, thmScoreSpanSet,
 					thmPartMap, thmWordIndexMap, wordThmsList, //wordThmsList.wordIndexInThm, wordThmsList.tokenType,
 					searchWordsSet, dbThmSet, wordScore, wordThms, thmPruneWordsMap, word);
@@ -672,8 +707,10 @@ public class SearchIntersection {
 		// add bonus points to thms with most number of query words, judging
 		// from size of value set in thmWordSpanMMap
 		if(searchState.allowLiteralSearch()) {
-			addWordSpanBonus(searchState, thmScoreMap, scoreThmMMap, thmWordSpanMMap, thmSpanMap, numHighest,
-					((double) totalWordsScore) / numWordsAdded, inputWordsArSz);
+			computeLargestSpan(searchState, thmWordSpanMMap, thmSpanMap);
+			
+			///addWordSpanBonus(searchState, thmScoreMap, scoreThmMMap, thmWordSpanMMap, thmSpanMap, numHighest,
+				//	((double) totalWordsScore) / numWordsAdded, inputWordsArSz);
 		}else {
 			computeLargestSpan(searchState, thmWordSpanMMap, thmSpanMap);
 		}
@@ -720,13 +757,23 @@ public class SearchIntersection {
 			int index = pair.thmIndex;
 			score = pair.score;
 			
-			if(ThmPart.HYP == thmPartMap.get(index)) {
-				int penalty = score > 7 ? score / 4 : 1;
-				score -= penalty;
-			}
 			//score based on compare word distances here
-			TreeMap<Number, String> indexWordTMap = thmWordIndexMap.get(index);
+			WordDistScoreTMap indexWordTMap = thmWordIndexMap.get(index);
 			int wordDistScore = LiteralSearch.computeThmWordDistScore(indexWordTMap);
+			//here
+			
+			/*if(index == 424740 || 142067 == index) {
+				//here
+				System.out.println("searchintersection - " + index + ": " + wordDistScore + ": " + indexWordTMap);
+			}*/
+			
+			//don't penalize score, penalize wordDistScore instead, since want to rank
+			//all results containing all keys words above those that contain fewer, and 
+			//result ranks are determined by score foremost.
+			if(ThmPart.HYP == thmPartMap.get(index)) {
+				int penalty = wordDistScore > 7 ? wordDistScore / 4 : 1;
+				wordDistScore -= penalty;
+			}
 			
 			int thmWordSpan = pair.spanScore;
 			//scorePair.setCandidateWord(pair.oneCandidateWord());
@@ -755,13 +802,13 @@ public class SearchIntersection {
 					break;
 				}
 			}
-			//System.out.println(pair.thmIndex+". "+ pair.score+ " SpanScore " + pair.spanScore + " DistScore " + pair.wordDistScore + " "
-			//		+ ThmHypPairGet.retrieveThmHypPairWithThm(pair.thmIndex));
+			System.out.println(counter+ ": +++ " + pair.thmIndex+". "+ pair.score+ " SpanScore " + pair.spanScore + " DistScore " + pair.wordDistScore + " "
+					+ ThmHypPairGet.retrieveThmHypPairWithThm(pair.thmIndex));
 			thmScoreSpanList.add(pair);
 			highestThmList.add(thmIndex);
 			pair = thmScorePQ2.poll();
 		}
-		//System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+		System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
 		
 		/****Dec 6 outerWhile: while(descendingKeySetIter.hasNext()){
 			int curScore = descendingKeySetIter.next();
@@ -935,6 +982,8 @@ public class SearchIntersection {
 				int bonusScore = thmSpanScore*2;
 				//bonusScore = bonusScore == 0 ? 1 : bonusScore;
 				int newThmScore = curScore + bonusScore;
+				
+				//make sure this score in this map is used! not just score from wordThmsList. 
 				
 				tempScoreThmMMap.put(newThmScore, thmIndex);
 				thmScoreMap.put(thmIndex, newThmScore);
@@ -1115,6 +1164,7 @@ public class SearchIntersection {
 				}
 			}
 		}
+		//here
 		if(searchState.allowLiteralSearch()) {
 			curScoreToAdd += addRelatedWordsThms(thmScoreMap, scoreThmMMap, thmScoreSpanSet, thmWordSpanMMap, wordIndexInThm, 
 					tokenType, curScoreToAdd, relatedWordsList, dbThmSet, wordThmsListList, wordIndexPartPairMap,
@@ -1146,7 +1196,7 @@ public class SearchIntersection {
 	 */
 	private static int gatherWordThmsAPosteriori(Map<Integer, Integer> thmScoreMap,
 			Multimap<Integer, Integer> thmWordSpanMMap, Set<ThmScoreSpanPair> thmScoreSpanSet,
-			Map<Integer, ThmPart> thmPartMap, Map<Integer, TreeMap<Number, String>> thmWordIndexMap,
+			Map<Integer, ThmPart> thmPartMap, Map<Integer, WordDistScoreTMap> thmWordIndexMap,
 			WordThmsList wordThmsList,
 			//int wordIndexInThm, WordForms.TokenType tokenType,
 			Set<String> searchWordsSet, Set<Integer> dbThmSet, int curScoreToAdd, 
@@ -1186,14 +1236,15 @@ public class SearchIntersection {
 			}*/
 			thmIndexPair.addToMap(thmPartMap);
 			
-			TreeMap<Number, String> wordIndexTMap = thmWordIndexMap.get(index);
-			wordIndexTMap = null == wordIndexTMap ? new TreeMap<Number, String>() : wordIndexTMap;			
+			WordDistScoreTMap wordIndexTMap = thmWordIndexMap.get(index);
+			wordIndexTMap = null == wordIndexTMap ? new WordDistScoreTMap() : wordIndexTMap;			
 			
+			ThmPart thmPart = thmIndexPair.thmPart();
 			//array of word indices in thm, used for word-distance based scoring.
 			byte[] wordIndexAr = thmIndexPair.wordIndexAr();
 			for(byte b : wordIndexAr) {
 				//limited to 128 because bytes comparison needed in treemap.
-				wordIndexTMap.put(b, word);
+				wordIndexTMap.addToTreeMap(thmPart, b, word);
 			}
 			// used to prune generic-word thms, e.g. ones whose sole word is "equation", "module", etc.
 			/////////thmIndexPair.setWord(word);
@@ -1250,6 +1301,7 @@ public class SearchIntersection {
 			
 			// wordScore = wordsScoreMap.get(word);
 			int relatedWordScore = (int) Math.ceil(scoreAdded * RELATED_WORD_MULTIPLICATION_FACTOR);
+			relatedWordScore = relatedWordScore == scoreAdded && scoreAdded > 0 ? scoreAdded - 1 : relatedWordScore;
 			for (String relatedWord : relatedWordsList) {
 				// Multimap, so return empty collection rather than null, if no
 				// hit.

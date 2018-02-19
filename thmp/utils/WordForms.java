@@ -459,8 +459,11 @@ public class WordForms {
 					//gather related words from skip gram neural net collected words.
 					@SuppressWarnings("serial")
 					//suppress warning for anonymous class.
-					java.lang.reflect.Type typeOfT = new TypeToken<Map<String, List<String>>>(){}.getType();					
-					String json = FileUtils.readStrFromFile("src/thmp/data/synonymsMap.json");					
+					java.lang.reflect.Type typeOfT = new TypeToken<Map<String, List<String>>>(){}.getType();	
+					
+					final String synonymsJsonPath = "src/thmp/data/synonymsMap.json";					
+					String json = FileUtils.readStrFromFile(FileUtils.getPathIfOnServlet(synonymsJsonPath));	
+					
 					Gson gson = new Gson();
 					Map<String, List<String>> neuralNetMap = gson.fromJson(json, typeOfT);
 					for(Map.Entry<String, List<String>> entry : neuralNetMap.entrySet()) {

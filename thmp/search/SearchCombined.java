@@ -108,7 +108,8 @@ public class SearchCombined {
 
 		@Override
 		public String getEntireThmStr() {
-			return this.hypStr + " " + this.thmStr;
+			//thmStr first so literal search can catch words in thmStr first.
+			return this.thmStr + " " + this.hypStr;
 		}
 		
 	}
@@ -329,6 +330,7 @@ public class SearchCombined {
 		
 		List<Integer> bestCommonVecsList = searchState.intersectionVecList();
 		//need good heuristics for when to trigger this, e.g. very few or no results from previous algorithms.
+		//Feb 2018 - don't trigger this on server.
 		if(null == FileUtils.getServletContext() && bestCommonVecsList.isEmpty()){			
 			System.out.println("SVD triggered!");
 			//experiment with this constant!

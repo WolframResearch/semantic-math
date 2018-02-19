@@ -29,6 +29,7 @@ import com.wolfram.puremath.dbapp.LiteralSearchUtils;
 
 import thmp.search.CollectThm.ThmWordsMaps.IndexPartPair;
 import thmp.search.LiteralSearch.LiteralSearchIndex;
+import thmp.search.SearchIntersection.WordDistScoreTMap;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 
@@ -424,8 +425,7 @@ public class LiteralSearch {
 			if(thmScore > MIN_SCORE) {
 				thmScoreMap.put(thmIndex, thmScore);				
 			}
-		}
-		
+		}		
 		return thmScoreMap;
 	}
 
@@ -436,7 +436,25 @@ public class LiteralSearch {
 	 * @param map map for thms gathered during intersection search.
 	 * @return MIN_SCORE if contains only generic word
 	 */
-	public static int computeThmWordDistScore(TreeMap<Number,String> indexWordMap) {
+	public static int computeThmWordDistScore(WordDistScoreTMap wordDistMapContainer) {
+		
+		TreeMap<Number,String> hypIndexWordMap = wordDistMapContainer.hypIndexWordTMap();
+		TreeMap<Number,String> thmIndexWordMap = wordDistMapContainer.thmIndexWordTMap();
+		
+		int totalScore = computeThmWordDistScore(hypIndexWordMap) + computeThmWordDistScore(thmIndexWordMap);
+		
+		return totalScore;
+	}
+	
+	/**
+	 * Computes the score for a thm based on the ordering of the words in thm.
+	 * Base points are assumed to be added by caller.
+	 * @param indexWordMap TreeMap of word index in thm and the word.
+	 * @param map map for thms gathered during intersection search.
+	 * @return MIN_SCORE if contains only generic word
+	 */
+	private static int computeThmWordDistScore(TreeMap<Number, String> indexWordMap) {
+		
 		//map of words, and the number of points that word is earning
 		Map<String, Integer> wordScoreMap = new HashMap<String, Integer>();
 		
@@ -458,6 +476,14 @@ public class LiteralSearch {
 			Number wordIndex = wordsList.get(i);
 			String word = indexWordMap.get(wordIndex);
 			
+			int nGramBonus = 0;
+			//add bonus for each space-separated word
+			for(char c : word.toCharArray()) {
+				if(c == ' ') {
+					nGramBonus += WORD_DIST_1_POINT;
+				}
+			}
+			
 			int distToPriorWord = wordIndex.intValue() - priorWordIndex.intValue();
 			int wordScore;
 			switch(distToPriorWord) {
@@ -471,6 +497,11 @@ public class LiteralSearch {
 			default:
 				wordScore = 0;				
 			}
+			
+			wordScore += nGramBonus;
+			
+			Integer prevWordScore = wordScoreMap.get(word);
+			wordScore = prevWordScore == null ? wordScore : (wordScore > prevWordScore ? wordScore : prevWordScore);
 			
 			wordScoreMap.put(word, wordScore);
 			

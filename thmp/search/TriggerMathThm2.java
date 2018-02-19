@@ -586,10 +586,11 @@ public class TriggerMathThm2 {
 				//the key & related words should have *already* been normalized,
 				//when getting deserialized, to use consistent set of words as keywordIndexDict.
 				Integer relatedWordRowIndex = keywordIndexDict.get(relatedWord);
-				if(relatedWordRowIndex >= queryVecLen){
-					continue;
-				}
+				
 				if(null != relatedWordRowIndex){
+					if(relatedWordRowIndex >= queryVecLen){
+						continue;
+					}
 					indexScorePairList.add(new IndexScorePair(relatedWordRowIndex, relatedWordScore));
 					//commented Oct 2017, continue experimentation
 					//********norm += Math.pow(relatedWordScore, 2);
