@@ -31,6 +31,8 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.SetMultimap;
+import com.google.common.reflect.TypeToken;
+import com.google.gson.Gson;
 
 import thmp.parse.Maps;
 import thmp.parse.Pair;
@@ -81,7 +83,8 @@ public class WordForms {
 	public static final Pattern DIGIT_PATTERN = Pattern.compile("\\d+");
 	public static final String QUANTITY_POS = "quant";
 	
-	private static final ImmutableMap<String, String> synonymRepMap;
+	//
+	private static Multimap<String, String> synonymMap;
 	
 	private static final ImmutableMap<String, String> wordToStemMap;	
 	private static final ImmutableMultimap<String, String> stemToWordsMMap;
@@ -134,37 +137,22 @@ public class WordForms {
 			FLUFF_WORDS_SMALL_SET.add(word);
 		}
 		freqWordsSet = new HashSet<String>();
-		Map<String, String> synonymsPreMap = new HashMap<String, String>();
-		BufferedReader synonymsBF = null;
-		//create synonym map from file	
+		//Multimap<String, String> synonymsPreMMap = HashMultimap.create();
 		ServletContext servletContext = FileUtils.getServletContext();
-		final String synonymsFileStr = "src/thmp/data/synonyms.txt";
-		if(null != servletContext){
-			synonymsBF = new BufferedReader(new InputStreamReader(servletContext.getResourceAsStream(synonymsFileStr)));			
-		}else{
-			try{
-				synonymsBF = new BufferedReader(new FileReader(new File(synonymsFileStr)));
-			}catch(FileNotFoundException e){
-				String msg = "WordForms.java initializer - FileNotFoundException when creating FileReader for synonymsFileStr";
-				logger.error(msg);
-				throw new IllegalStateException(msg);
-			}			
-		}
-		//gather synonyms together from file
-		readSynonymMapFromFile(synonymsPreMap, synonymsBF);
 		
 		//contains word representatives, e.g. "annihilate", "annihilator", etc all map to "annihilat"
 		wordToStemMap = ImmutableMap.copyOf(deserializeStemWordsMap(servletContext));	
 		
-		synonymsPreMap.putAll(wordToStemMap);
-		synonymRepMap = ImmutableMap.copyOf(synonymsPreMap);
+		//synonymsPreMMap.putAll(wordToStemMap);
+		//synonymMap = ImmutableMap.copyOf(synonymsPreMap);
+		
 		Map<String, String> stemToWordRepPremap = new HashMap<String, String>();
 		//create "inverse" Multimap for the different forms for each word stem.
 		stemToWordsMMap = ImmutableMultimap.copyOf(createStemToWordsMMap(wordToStemMap, stemToWordRepPremap));
 		//create map that uses the longest word as rep
 		stemToWordRepMap = ImmutableMap.copyOf(stemToWordRepPremap);
 		
-		FileUtils.silentClose(synonymsBF);
+		
 		
 		GREEK_ALPHA_SET = new HashSet<String>();
 		String[] GREEK_ALPHA = new String[]{"alpha","beta","gamma","delta","epsilon","omega","iota","theta","phi"};
@@ -254,6 +242,11 @@ public class WordForms {
 		return freqWordsSet;
 	}
 	
+	/**
+	 * word representatives, e.g. "annihilate", "annihilator", etc all map to "annihilat"
+	 * @param servletContext
+	 * @return
+	 */
 	@SuppressWarnings("unchecked")
 	public static Map<String, String> deserializeStemWordsMap(ServletContext servletContext) {
 		String stemWordsMapFileStr = "src/thmp/data/stemWordsMap.dat";
@@ -270,19 +263,32 @@ public class WordForms {
 	
 	/**
 	 * Populate synonymsMMap_ with synonyms read in from synonymsBF.
+	 * The skip gram neural net is currently gathering Synonyms for singleton words only - Feb 2018.
+	 * Need to normalize words. 
 	 * @param synonymsmmap2
 	 * @param synonymsBF
 	 */
-	private static void readSynonymMapFromFile(Map<String, String> synonymsMap_, BufferedReader synonymsBF) {
+	private static void readSynonymMapFromFile(Multimap<String, String> synonymsMap_, BufferedReader synonymsBF) {
 		String line;
 		try{
 			while(null != (line = synonymsBF.readLine())){
 				String[] synonymsAr = WordForms.getWhiteNonEmptySpacePattern().split(line);
 				//take first word in array as representative of this synonyms set
-				String wordRep = synonymsAr[0];
+				String word = synonymsAr[0];
+				word = WordForms.normalizeWordForm(word);
+				String synonym;
+				
 				for(int i = 1; i < synonymsAr.length; i++){
-					synonymsMap_.put(synonymsAr[i], wordRep);
-				}
+					synonym = synonymsAr[i];
+					synonym = WordForms.normalizeWordForm(synonym);
+					
+					//sometimes could be same after normalization, 
+					//e.g. "polytope" and "polytopal"
+					if(!word.equals(synonym)) {
+						synonymsMap_.put(synonym, word);						
+					}
+				}				
+				
 				/*Set<String> synonymsSet = new HashSet<String>();
 				for(String word : synonymsAr){
 					synonymsSet.add(word);
@@ -414,16 +420,55 @@ public class WordForms {
 	 * and searching.
 	 * @param word
 	 * @return the representative of the synonym words. null if no synonym rep found.
+	 * @deprecated Feb 18 2018
 	 */
-	public static String findSynonymRepInWordsDict(String word){
-		return synonymRepMap.get(word);
-	}
+	/*public static String findSynonymRepInWordsDict(String word){
+		return synonymMap.get(word);
+	}*/
 	
 	/**
-	 * Retrieves synonyms map.
+	 * Retrieves synonyms multimap, normalized words and their related words,
+	 * not necessarily synonyms, e.g. "noetherian" has "artinian" as related.
+	 * Keys and values are already normalized.
 	 */
-	public static ImmutableMap<String, String> getSynonymsMap(){
-		return synonymRepMap;
+	public static Multimap<String, String> getSynonymsMap1(){
+		
+		if(synonymMap.isEmpty()) {
+			synchronized(WordForms.class) {
+				if(synonymMap.isEmpty()) {
+					BufferedReader synonymsBF = null;
+					//create synonym map from file	
+					ServletContext servletContext = FileUtils.getServletContext();
+					final String synonymsFileStr = "src/thmp/data/synonyms.txt";
+					if(null != servletContext){
+						synonymsBF = new BufferedReader(new InputStreamReader(servletContext.getResourceAsStream(synonymsFileStr)));			
+					}else{
+						try{
+							synonymsBF = new BufferedReader(new FileReader(new File(synonymsFileStr)));
+						}catch(FileNotFoundException e){
+							String msg = "WordForms.java initializer - FileNotFoundException when creating FileReader for synonymsFileStr";
+							logger.error(msg);
+							throw new IllegalStateException(msg);
+						}
+					}
+					//gather synonyms together from file
+					readSynonymMapFromFile(synonymMap, synonymsBF);
+					FileUtils.silentClose(synonymsBF);
+					
+					//gather related words from skip gram neural net collected words.
+					@SuppressWarnings("serial")
+					//suppress warning for anonymous class.
+					java.lang.reflect.Type typeOfT = new TypeToken<Map<String, List<String>>>(){}.getType();					
+					String json = FileUtils.readStrFromFile("src/thmp/data/synonymsMap.json");					
+					Gson gson = new Gson();
+					Map<String, List<String>> neuralNetMap = gson.fromJson(json, typeOfT);
+					for(Map.Entry<String, List<String>> entry : neuralNetMap.entrySet()) {
+						synonymMap.putAll(entry.getKey(), entry.getValue());
+					}
+				}
+			}
+		}		
+		return synonymMap;
 	}
 	
 	/**
@@ -472,8 +517,8 @@ public class WordForms {
 		//also remove -ing, 
 		word = WordForms.getGerundForm(word);
 		
-		//if has synonym rep, use synonym rep instead 
-		String rep = synonymRepMap.get(word);
+		//if has synonym rep, use word rep instead, e.g. "annihilator" to "annihilat"
+		String rep = wordToStemMap.get(word);
 		if(null != rep){
 			word = rep;
 		}

@@ -90,7 +90,7 @@ public class SearchIntersection {
 		wordsScoreMap = CollectThm.ThmWordsMaps.get_wordsScoreMap();
 		wordThmsIndexMMap1 = CollectThm.ThmWordsMaps.get_wordThmsMMap();
 		relatedWordsMap = CollectThm.ThmWordsMaps.getRelatedWordsMap();
-		//
+		
 		int maxCount = 100;
 		int sum = 0;
 		//in case the word scores are sorted
@@ -228,7 +228,8 @@ public class SearchIntersection {
 		Collection<IndexPartPair> thmsList;
 		//word score as used in intersection search.
 		int score;
-		//index of word in the thm
+		//index of word in the thm. To differentiate amongst two WordThmsLists for a query
+		//that are accidentally the equal by previous measures.
 		int wordIndexInThm;
 		
 		WordForms.TokenType tokenType;
@@ -594,13 +595,14 @@ public class SearchIntersection {
 			word = inputWordsArUpdated[i];
 			
 			//long time3 = System.nanoTime();
-			//note many of these 
+			//This score includes words scores for words related to this word.
 			scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, 
 					thmScoreSpanSet, thmPartMap, wordThmsListList, wordIndexPartPairMap,
 					word, i, WordForms.TokenType.SINGLETON, singletonScoresAr, searchWordsSet, dbThmSet, searchState);
 			if (scoreAdded > 0) {
 				wordCountArray[i] += 1;
 				totalWordsScore += scoreAdded;
+				//how is this used later?!
 				searchState.addTokenScore(word, scoreAdded);
 				numWordsAdded++;
 				indexStartingWordsMMap.put(i, word);
@@ -1013,7 +1015,6 @@ public class SearchIntersection {
 		Collection<IndexPartPair> wordThms;
 		wordThms = wordThmsIndexMMap1.get(word);
 		
-		// only going through the no annotation path
 		RelatedWords relatedWords = relatedWordsMap.get(word);
 		if (null != relatedWords) {
 			relatedWordsList = relatedWords.getCombinedList();
@@ -1050,7 +1051,6 @@ public class SearchIntersection {
 		}
 		
 		if (wordThms.isEmpty()) {
-			
 			
 			String normalizedWord = WordForms.normalizeWordForm(word);
 			Integer tempWordScore = wordsScoreMap.get(normalizedWord);
@@ -1092,7 +1092,6 @@ public class SearchIntersection {
 				
 		if (!wordThms.isEmpty() && curScoreToAdd != 0) {
 			
-			//add thms to list for now
 			wordThmsListList.add(new WordThmsList(word, wordThms, curScoreToAdd, tokenType, wordIndexInThm));
 			//use normalized word for literal search.
 			wordIndexPartPairMap.put(word, wordThms);
@@ -1117,8 +1116,9 @@ public class SearchIntersection {
 			}
 		}
 		if(searchState.allowLiteralSearch()) {
-			addRelatedWordsThms(thmScoreMap, scoreThmMMap, thmScoreSpanSet, thmWordSpanMMap, wordIndexInThm, tokenType, curScoreToAdd,
-					relatedWordsList, dbThmSet);
+			curScoreToAdd += addRelatedWordsThms(thmScoreMap, scoreThmMMap, thmScoreSpanSet, thmWordSpanMMap, wordIndexInThm, 
+					tokenType, curScoreToAdd, relatedWordsList, dbThmSet, wordThmsListList, wordIndexPartPairMap,
+					searchWordsSet);
 		}
 		return curScoreToAdd;
 	}
@@ -1126,6 +1126,8 @@ public class SearchIntersection {
 	/**
 	 * Add thms corresponding to a given word to various score-keeping maps.
 	 * Called once per instance of a word and all its theorems.
+	 * Note thms for this word could have been added already, either due to duplicates
+	 * in query, or through earlier related words.
 	 * @param thmScoreMap
 	 * @param thmWordSpanMMap
 	 * @param thmScoreSpanSet
@@ -1229,16 +1231,23 @@ public class SearchIntersection {
 	 * @param scoreAdded
 	 * @param relatedWordsList
 	 */
-	private static void addRelatedWordsThms(Map<Integer, Integer> thmScoreMap,
+	private static int addRelatedWordsThms(Map<Integer, Integer> thmScoreMap,
 			TreeMultimap<Integer, Integer> scoreThmMMap, Set<ThmScoreSpanPair> thmScoreSet,
 			Multimap<Integer, Integer> thmWordSpanMMap, int wordIndexInThm,
-			WordForms.TokenType tokenType, int scoreAdded, List<String> relatedWordsList, Set<Integer> dbThmSet) {
+			WordForms.TokenType tokenType, int scoreAdded, List<String> relatedWordsList, Set<Integer> dbThmSet,
+			List<WordThmsList> wordThmsListList, Map<String, Collection<IndexPartPair>> wordIndexPartPairMap,
+			Set<String> searchWordsSet) {
 		// add thms for related words found, with some reduction factor;
-		// make global after experimentation.
-		double RELATED_WORD_MULTIPLICATION_FACTOR = 4 / 5.0;
+		// make global after experimentation. But *must not* exceed original word score,
+		//to make original hits rank higher.
+		double RELATED_WORD_MULTIPLICATION_FACTOR = 3.7 / 5.0;
 		//int dbThmSetArLen = dbThmSet.length;
+		int totalRelatedScoreAdded = 0;
+		final int maxTotalScoreAdded = scoreAdded;
 		
-		if (null != relatedWordsList) {
+		if (null != relatedWordsList && !relatedWordsList.isEmpty()) {
+			//gradually decrease score?!
+			
 			// wordScore = wordsScoreMap.get(word);
 			int relatedWordScore = (int) Math.ceil(scoreAdded * RELATED_WORD_MULTIPLICATION_FACTOR);
 			for (String relatedWord : relatedWordsList) {
@@ -1249,13 +1258,42 @@ public class SearchIntersection {
 				
 				if (!relatedWordThms.isEmpty() && relatedWordScore == 0) {
 					Integer score = wordsScoreMap.get(relatedWord);
-					if (null == score){
+					/*if (null == score){
 						continue;
-					}					
+					}*/
+					score = null == score ? defaultWordScore : score;
 					relatedWordScore = (int) Math.ceil(score * RELATED_WORD_MULTIPLICATION_FACTOR);
 				}
 				
-				for (IndexPartPair thmIndex : relatedWordThms) {
+				if(!relatedWordThms.isEmpty()) {
+					
+					wordThmsListList.add(new WordThmsList(relatedWord, relatedWordThms, relatedWordScore, tokenType, wordIndexInThm));
+					//use normalized word for literal search.
+					Collection<IndexPartPair> pairCol = wordIndexPartPairMap.get(relatedWord);
+					if(null != pairCol) {
+						pairCol.addAll(relatedWordThms);
+					}else {
+						wordIndexPartPairMap.put(relatedWord, relatedWordThms);
+					}
+					
+					if (DEBUG) {
+						System.out.println("SearchIntersection-RELATED Word added: " + relatedWord + ". Score: " + relatedWordScore);
+					}
+					
+					/****scoreAdded = gatherWordThmsAPosteriori(thmScoreMap, thmWordSpanMMap, thmScoreSpanSet, thmPartMap, word,
+							wordIndexInThm, tokenType, searchWordsSet, dbThmSet, curScoreToAdd, wordOriginalForm, wordThms);*/
+					// add singletons to searchWordsSet, so
+					// searchWordsSet could be null if not interested in searchWordsSet.
+					if (relatedWordScore > 0 && searchWordsSet != null) {
+						String[] wordAr = WordForms.getWhiteNonEmptySpaceNotAllPattern().split(relatedWord);
+						for (String w : wordAr) {
+							searchWordsSet.add(w);
+						}
+					}
+					totalRelatedScoreAdded += relatedWordScore;
+				}				
+				
+				/** Feb 19, 2018 Done later when iterating over thms added for (IndexPartPair thmIndex : relatedWordThms) {
 					
 					int index = thmIndex.thmIndex();
 					if(null != dbThmSet && !dbThmSet.contains(index)) {
@@ -1281,14 +1319,13 @@ public class SearchIntersection {
 								thmScoreSet, newScore, prevScore, thmScoreMap);
 					}
 					
-					// this mapping is not being used in the end right now,
-					// since the top N are picked, regardless of their scores.
 					thmScoreMap.put(index, newScore);
 					//***Dec 6 scoreThmMMap.put(newScore, index);
 					//thmScoreSet.add(new ThmScoreSpanPair(index, newScore, 0));
-				}
+				}*/
 			}
 		}
+		return totalRelatedScoreAdded > maxTotalScoreAdded ? maxTotalScoreAdded : totalRelatedScoreAdded;
 	}
 
 	/**

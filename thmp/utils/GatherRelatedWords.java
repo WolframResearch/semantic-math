@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -137,6 +138,12 @@ public class GatherRelatedWords {
 		private List<String> relatedWordsList;
 		private transient List<String> combinedList;
 
+		/**
+		 * Arguments nullable.
+		 * @param synonymsList_
+		 * @param antonymsList_
+		 * @param relatedWordsList_
+		 */
 		public RelatedWords(List<String> synonymsList_, List<String> antonymsList_, List<String> relatedWordsList_) {
 			// this.word = word_;
 			this.combinedList = new ArrayList<String>();
@@ -192,7 +199,11 @@ public class GatherRelatedWords {
 		public List<String> getSynonymsList() {
 			return synonymsList;
 		}
-
+		
+		public void addToSynonyms(Collection<String> synonyms) {
+			synonymsList.addAll(synonyms);
+		}
+		
 		/**
 		 * @return the antonymsList
 		 */

@@ -191,6 +191,8 @@ public class CollectThm {
 		private static final double THREE_GRAM_FREQ_REDUCTION_FACTOR = 3.8/5;
 		private static final double TWO_GRAM_FREQ_REDUCTION_FACTOR = 2.3/3;
 		private static final Set<String> skipGramSkipWordsSet;
+		//whether synonyms have been added to related words map.
+		private static volatile boolean synonymsAddedToRelatedWordsQ = false;
 		
 		// \ufffd is unicode representation for the replacement char.
 		private static final Pattern SPECIAL_CHARACTER_PATTERN = 
@@ -746,6 +748,27 @@ public class CollectThm {
 		}
 		
 		public static Map<String, RelatedWords> getRelatedWordsMap(){
+			//add synonyms
+			if(!synonymsAddedToRelatedWordsQ) {
+				synchronized(ThmWordsMaps.class) {
+					if(!synonymsAddedToRelatedWordsQ) {
+						//already normalized
+						Multimap<String, String> synonymsMMap = WordForms.getSynonymsMap1();
+						Set<String> wordSet = synonymsMMap.keySet();
+						for(String word : wordSet) {
+							Collection<String> synonyms = synonymsMMap.get(word);
+							
+							RelatedWords relatedWord = relatedWordsMap.get(word);
+							if(null == relatedWord) {
+								relatedWordsMap.put(word, new RelatedWords(new ArrayList<String>(synonyms), null, null));
+							}else {
+								relatedWord.addToSynonyms(synonyms);
+							}
+						}
+						synonymsAddedToRelatedWordsQ = true;
+					}
+				}
+			}
 			return relatedWordsMap;
 		}
 		

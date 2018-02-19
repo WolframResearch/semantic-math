@@ -53,6 +53,13 @@ public class GenerateSynonymsWordData {
 		//String sourceFileStr = "src/thmp/data/Total.txt";
 		String sourceFileStr = "/Users/yihed/Documents/arxivTexSrc/020Total.txt";
 		sourceFileStr = "/Users/yihed/Downloads/test/skipGram2.txt";
+		
+		if(args.length < 1) {
+			System.out.println("No data source path supplied. Using relative path " + sourceFileStr);
+		}else {
+			sourceFileStr = args[0];
+		}
+		
 		BufferedReader srcFileReader = null;
 		
 		try {
