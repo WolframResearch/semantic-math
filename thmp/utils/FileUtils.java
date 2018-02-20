@@ -135,7 +135,7 @@ public class FileUtils {
 				
 				String line;
 				while((line = bReader.readLine()) != null){
-					sb.append(line);
+					sb.append(line).append("\n");
 				}					
 			}finally{
 				silentClose(fileIS);

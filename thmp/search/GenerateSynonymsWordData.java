@@ -33,10 +33,13 @@ import thmp.utils.WordForms;
  */
 public class GenerateSynonymsWordData {
 
+	public static final String skipGramTrainDataFileName = "skipGramTrain.txt";
+	private static final Pattern SINGLE_LINE_SKIP_PATTERN = Pattern.compile("^\\\\.*|^%.*|.*FFFFFF.*|.*fffff.*|\\/.*");
+	private static final Pattern newLinePatt = Pattern.compile("\n");
+	
 	static{
 		CollectThm.ThmList.set_gather_skip_gram_words_toTrue();
 	}
-	private static final Pattern SINGLE_LINE_SKIP_PATTERN = Pattern.compile("^\\\\.*|^%.*|.*FFFFFF.*|.*fffff.*|\\/.*");
 	
 	public static void main(String[] args) {
 		/*
@@ -48,7 +51,7 @@ public class GenerateSynonymsWordData {
 		 */
 		// create list of strings from raw file.
 		String skipGramWordsListPath = "src/thmp/data/skipGramWordsList2.txt";
-		List<String> sentenceList = new ArrayList<String>();
+		
 		
 		//String sourceFileStr = "src/thmp/data/Total.txt";
 		String sourceFileStr = "/Users/yihed/Documents/arxivTexSrc/020Total.txt";
@@ -60,8 +63,7 @@ public class GenerateSynonymsWordData {
 			sourceFileStr = args[0];
 		}
 		
-		BufferedReader srcFileReader = null;
-		
+		/*BufferedReader srcFileReader = null;		
 		try {
 			//new BufferedReader(
 			  //         new InputStreamReader(new FileInputStream(fileDir), "UTF-8"));
@@ -71,14 +73,30 @@ public class GenerateSynonymsWordData {
 			e.printStackTrace();
 			FileUtils.silentClose(srcFileReader);
 			return;
-		}/*catch(UnsupportedEncodingException e){
-			e.printStackTrace();
-			FileUtils.silentClose(srcFileReader);
-			return;
 		}*/
-		try {
-			String line;
-			while ((line = srcFileReader.readLine()) != null) {
+		
+		String sourceStr = FileUtils.readStrFromFile(sourceFileStr);
+		
+		extractSkipGramWords(sourceStr, skipGramWordsListPath);
+	}
+
+	/**
+	 * Extracts skips grams to target file given source data path.
+	 * @param sourceFileStr Source text to extract skip grams from.
+	 * @param skipGramWordsListPath target path to write skip grams to.
+	 */
+	public static void extractSkipGramWords(
+			String sourceStr, String skipGramWordsListPath) {
+		
+		List<String> sentenceList = new ArrayList<String>();
+		//List<String> lines = FileUtils.readLinesFromFile(sourceFileStr);
+		//Training data needs to come in sentences.
+		String[] lines = newLinePatt.split(sourceStr.replace(". ", "\n"));
+		int linesLen = lines.length;
+		
+		//try {
+			for (int i = 0; i < linesLen; i++) {
+				String line = lines[i];
 				if (WordForms.getWhiteEmptySpacePattern().matcher(line).matches()) {
 					continue;
 				}
@@ -90,23 +108,25 @@ public class GenerateSynonymsWordData {
 				//line = new String(lineAr, "UTF-8"); 
 				
 				// should skip certain sections, e.g. \begin{proof}
-				Matcher skipMatcher = WordForms.getSKIP_PATTERN().matcher(line);
+				/*Matcher skipMatcher = WordForms.getSKIP_PATTERN().matcher(line);
 				if (skipMatcher.find()) {
-					while ((line = srcFileReader.readLine()) != null) {
+					while (i < linesLen) {
+						line = lines.get(i);
 						if (WordForms.getEND_SKIP_PATTERN().matcher(line).find()) {
 							break;
 						}
+						i++;
 					}
 					continue;
-				}				
+				}	*/		
 				line = ThmInput.removeTexMarkup(line, null, null);	
 				sentenceList.add(line);
 			}
-		} catch (IOException e) {
+		/*} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
 			FileUtils.silentClose(srcFileReader);
-		}
+		}*/
 		System.out.println("Done with gathering source text!");
 		
 		List<String> skipGramWordList = new ArrayList<String>();

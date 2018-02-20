@@ -1138,7 +1138,7 @@ public class CollectThm {
 		/**
 		 * Same as readThm, except without hyp/concl wrappers.
 		 * Maps contain the same set of words. 
-		 * @deprecated *Note* Feb 2018: keep this for now for the addition to skipGramWordList.
+		 * //@deprecated *Note* Feb 2018: keep this for now for the addition to skipGramWordList.
 		 * 
 		 * @param thmWordsFreqListBuilder 
 		 * 		List of maps, each of which is a map of word Strings and their frequencies. Used for SVD search.
@@ -1153,8 +1153,8 @@ public class CollectThm {
 				ImmutableSetMultimap.Builder<String, Integer> wordThmsMMapBuilder, List<String> thmList,
 				List<String> skipGramWordList_){
 			
-			Map<String, Integer> twoGramsMap = NGramsMap.get_twoGramsMap();
-			Map<String, Integer> threeGramsMap = NGramsMap.get_threeGramsMap();			
+			//Map<String, Integer> twoGramsMap = NGramsMap.get_twoGramsMap();
+			//Map<String, Integer> threeGramsMap = NGramsMap.get_threeGramsMap();			
 			ListMultimap<String, String> posMMap = Maps.posMMap();
 			
 			//processes the theorems, select the words
@@ -1164,10 +1164,11 @@ public class CollectThm {
 				//number of words to skip if an n gram has been added.
 				int numFutureWordsToSkip = 0;
 				//split along e.g. "\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:"
+				
 				List<String> thmAr = WordForms.splitThmIntoSearchWordsList(thm.toLowerCase());
 				
 				//words and their frequencies.
-			//	Map<String, Integer> wordsFreqMap = new HashMap<String, Integer>();				
+				//	Map<String, Integer> wordsFreqMap = new HashMap<String, Integer>();				
 				int thmArSz = thmAr.size();
 				for(int j = 0; j < thmArSz; j++){
 					
@@ -1191,8 +1192,8 @@ public class CollectThm {
 					word = WordForms.getSingularForm(word);	
 					
 					//also don't skip if word is contained in lexicon										
-					boolean skipWordBasedOnPos = true;
-					if(GATHER_SKIP_GRAM_WORDS){
+					//boolean skipWordBasedOnPos = true;
+					/*if(GATHER_SKIP_GRAM_WORDS){
 						skipWordBasedOnPos = false;
 					}else{ 
 						if(WordForms.getFluffSet().contains(word)) continue;
@@ -1204,13 +1205,13 @@ public class CollectThm {
 							//wordPos.equals("verb") <--should have custom verb list
 							//so don't keep irrelevant verbs such as "are", "take"
 						}
-					}
-					if(FreqWordsSet.commonEnglishNonMathWordsSet.contains(word) && !nGramFirstWordsSet.contains(word)
+					}*/
+					/**if(FreqWordsSet.commonEnglishNonMathWordsSet.contains(word) && !nGramFirstWordsSet.contains(word)
 							&& skipWordBasedOnPos){ 
 						continue;					
-					}
+					}*/
 					//check the following word
-					if(j < thmArSz-1){
+					/******don't delete Feb 20 2018 if(j < thmArSz-1){
 						String nextWordCombined = word + " " + thmAr.get(j+1);
 						nextWordCombined = WordForms.normalizeTwoGram(nextWordCombined);
 						Integer twoGramFreq = twoGramsMap.get(nextWordCombined);
@@ -1232,23 +1233,19 @@ public class CollectThm {
 										docWordsFreqPreMap, threeGramFreq);
 							}
 						}
-					}					
-					if(!GATHER_SKIP_GRAM_WORDS){
-						//removes endings such as -ing, and uses synonym rep.
-						//e.g. "annihilate", "annihilator", etc all map to "annihilat"
-						word = WordForms.normalizeWordForm(word);
-					}
-					if(!GATHER_SKIP_GRAM_WORDS) {
+					}		*/			
+					
+					/*if(!GATHER_SKIP_GRAM_WORDS) {
 						singletonWordAdded = addWordToMaps(word, i, //wordsFreqMap, //thmWordsFreqListBuilder, 
 								docWordsFreqPreMap);
-					}else {
+					}else*/ 
 						if(SPECIAL_CHARACTER_PATTERN.matcher(word).find()){
 							continue;
 						}else {
 							singletonWordAdded = word;
 						}
-					}
-					if(GATHER_SKIP_GRAM_WORDS){
+					
+					//if(GATHER_SKIP_GRAM_WORDS){
 						//gather list of relevant words used in this thm
 						/**only gather singleton words, to get synonyms for singleton words.
 						 * if(numFutureWordsToSkip > 0){
@@ -1263,7 +1260,7 @@ public class CollectThm {
 						if(null != singletonWordAdded){
 							skipGramWordList_.add(singletonWordAdded);
 						}
-					}
+					//}
 				}
 				//delimit sentence
 				skipGramWordList_.add("");

@@ -15,6 +15,7 @@ import com.google.common.collect.Multiset;
 import thmp.parse.TheoremContainer;
 import thmp.runner.GenerateSearchDataRunner.SearchDataRunnerConfig;
 import thmp.search.CollectThm;
+import thmp.search.GenerateSynonymsWordData;
 import thmp.search.Searcher;
 import thmp.search.TriggerMathThm2;
 import thmp.utils.FileUtils;
@@ -27,13 +28,19 @@ public class CreateMscVecs {
 
 	//These files are not used at servlet runtime.
 	private static final String wordsScoreMapPath = "src/thmp/data/wordsScoreMap.json";
-	//put such a file in each tar directory.
+	//put such a file in each tar directory. Update name here for easy date-based grep'ing.
 	private static final String mscTermsFileName = "mscTermsJan27.txt";
+	//path for storing TeX sources from papers, without equations, for Michael
+	private static final String noTexTextFileName = "noTexText.txt";
+	private static final Pattern textSplitPatt = Pattern.compile("(\\s+|\'|\"|\\(|\\)|\\{|\\}|-|_|~)");
+	
 	//Map of paperId and classifications.
 	private static final Map<String, String> paperIdMscMap = new HashMap<String, String>();
 	private static final Pattern MSC_LINE_PATT = Pattern.compile("([^,]+),(.+)");
 	private static final Pattern COMMA_PATT = Pattern.compile(",");
 	
+	private static final Pattern noTexTextSpecialCharsPatt 
+		= Pattern.compile("[\\{$\\\\+^*/\\[\\(\\}\\]\\)\\}@-]");
 	
 	static {
 		
@@ -96,6 +103,91 @@ public class CreateMscVecs {
 		
 	}
 	
+	/**
+	 * Generate text data in file only
+	 */
+	public static void generateTextOnly(String dirName, SearchDataRunnerConfig runnerConfig) {
+		
+		if(!runnerConfig.generateTextOnly()) {
+			System.out.println("Configuration mismatch: config file did not specify text generation.");
+			return;
+		}
+		
+		dirName = FileUtils.addIfAbsentTrailingSlashToPath(dirName);
+		
+		System.out.println("CreateMscVecs - dirName " + dirName);
+		String texFileNamesSerialFileStr = dirName + Searcher.SearchMetaData.texFilesSerializedListFileName;
+		
+		//these two maps are sync'd
+		//List<Paper> paperList = new ArrayList<Paper>();
+		//List<String> paperList = new ArrayList<String>();
+		//List<String> paperIdList = new ArrayList<String>();
+		//map of paperId's and all absolute paths of tex files associated to that paper.
+		Multimap<String, String> paperIdPathMMap = ArrayListMultimap.create();
+		
+		@SuppressWarnings("unchecked")
+		Map<String, String> texFileNamesMap = 
+			((List<Map<String, String>>)FileUtils.deserializeListFromFile(texFileNamesSerialFileStr)).get(0);
+		for(Map.Entry<String, String> fileNameEntry : texFileNamesMap.entrySet()){
+			/*each entry has form e.g. /home/usr0/yihed/thm/0201_001Untarred/0201/math0201320/llncs.cls=math0201320,*/
+			//check against names entry of files 
+			String paperId = fileNameEntry.getValue();
+			
+			paperIdPathMMap.put(paperId, fileNameEntry.getKey());				
+		}
+		
+		StringBuilder allPapersSb = new StringBuilder(50000);
+		//StringBuilder funNameSb = new StringBuilder(500000);			
+		for(String paperId : paperIdPathMMap.keySet()) {
+				
+			Collection<String> pathCol = paperIdPathMMap.get(paperId);
+			//StringBuilder paperSb = new StringBuilder(5000);
+				
+			for(String path : pathCol) {
+				//each path is absolute path
+				allPapersSb.append(FileUtils.readStrFromFile(path)).append("\n");
+				
+			}
+			
+			//paperList.add(paperStr);
+			//paperIdList.add(paperId);
+		}
+		
+		String sourceFileName = dirName + "allPapers.txt";
+		
+		String allPaperStr = allPapersSb.toString();
+		FileUtils.writeToFile(allPaperStr, sourceFileName);
+		
+		//directly process text to create words for training.		
+		String skipGramTargetPath = dirName + GenerateSynonymsWordData.skipGramTrainDataFileName;		
+		GenerateSynonymsWordData.extractSkipGramWords(allPaperStr, skipGramTargetPath);
+		
+		//and text without TeX for Michael
+		//texSourceFileName
+		List<String> noTexTextList = new ArrayList<String>();
+		//for(String paper : paperList) {
+			
+			StringBuilder sb = new StringBuilder();
+			String[] paperAr = textSplitPatt.split(allPaperStr);
+			for(String word : paperAr) {
+				
+				if(noTexTextSpecialCharsPatt.matcher(word).find() || word.length() < 2) {
+					continue;
+				}
+				sb.append(word).append(" ");
+			}
+			noTexTextList.add(sb.toString());
+		//}
+		
+		String noTexTextFilePath = dirName + noTexTextFileName;
+		//noTexTextFileName
+		FileUtils.writeToFile(noTexTextList, noTexTextFilePath);	
+		
+		//don't serialize to save space
+		//String funcSerName = dirName + "allPapers.dat";
+		//FileUtils.serializeObjToFile(paperList, funcSerName);		
+	}
+
 	/**
 	 * 
 	 * @param dirName Has form e.g. "0208_001Untarred/0208".

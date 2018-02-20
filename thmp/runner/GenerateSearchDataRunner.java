@@ -58,6 +58,8 @@ public class GenerateSearchDataRunner {
 	private static class SearchDataRunnerConfigBuilder{
 		//whether currently generating msc words data.
 		private boolean generateMsc;
+		//only generate raw TeX text, concatenated into one file.
+		private boolean generateTextOnly;
 		private boolean generateFuncName;
 		//whether to regenerate Mx files, creating TermDocumentMatrix, etc,
 		//anew, or just copy and use previous ones.
@@ -85,6 +87,8 @@ public class GenerateSearchDataRunner {
 			switch(option) {
 				case "msc":
 					this.generateMsc = getBooleanVal(val);
+				case "generateText":
+					this.generateTextOnly = getBooleanVal(val);
 				case "generateFuncName":
 					this.generateFuncName = getBooleanVal(val);
 				case "regenerateMx":
@@ -108,6 +112,8 @@ public class GenerateSearchDataRunner {
 	public static class SearchDataRunnerConfig{
 		//whether currently generating msc words data
 		private boolean generateMsc;
+		//only generate raw TeX text, concatenated into one file.
+		private boolean generateTextOnly;
 		//whether to generate function names
 		private boolean generateFuncName;
 		//whether to regenerate Mx files, creating TermDocumentMatrix, etc,
@@ -118,14 +124,24 @@ public class GenerateSearchDataRunner {
 		private SearchDataRunnerConfig() {			
 		}
 		
+		/**
+		 * Note these settings usually affects the directory name to unpack to,
+		 * i.e. in the script unpack.sh
+		 * @param builder
+		 */
 		private SearchDataRunnerConfig(SearchDataRunnerConfigBuilder builder){
 			this.generateMsc = builder.generateMsc;
+			this.generateTextOnly = builder.generateTextOnly;
 			this.regenerateMxFiles = builder.regenerateMxFiles;
 			this.generateFuncName = builder.generateFuncName;
 		}
 
 		public boolean msc(){
 			return this.generateMsc;
+		}
+		
+		public boolean generateTextOnly(){
+			return this.generateTextOnly;
 		}
 		
 		public boolean regenerateMx(){
@@ -223,11 +239,14 @@ public class GenerateSearchDataRunner {
 			
 			String fileDir;
 			
-			/*the script name must coincide with that in both bash scripts. 
+			/*the file names *must* be consistent with that in both bash scripts. 
 			 * E.g. UNPACK_SCRIPT_FILE_PATH	*/	
 			if(generateMsc) {
 				fileDir = dirNameRoot + "mscUntarred" + File.separator 
 						+ fileName.substring(fileNameLen-12, fileNameLen-8);				
+			}else if(runnerConfig.generateTextOnly) {
+				fileDir = dirNameRoot + "textUntarred" + File.separator 
+						+ fileName.substring(fileNameLen-12, fileNameLen-8);
 			}else if(runnerConfig.generateFuncName) {
 				fileDir = dirNameRoot + "mscUntarred" + File.separator 
 						+ fileName.substring(fileNameLen-12, fileNameLen-8);
@@ -250,6 +269,9 @@ public class GenerateSearchDataRunner {
 			if(generateMsc) {
 				//create msc classifier data.
 				CreateMscVecs.processFilesInTar(fileDir, runnerConfig);
+			}else if(runnerConfig.generateTextOnly) {
+				//right now generate along with msc data
+				CreateMscVecs.generateTextOnly(fileDir, runnerConfig);
 			}else if(runnerConfig.generateFuncName) {
 				//right now generate along with msc data
 				CreateMscVecs.processFilesInTar(fileDir, runnerConfig);

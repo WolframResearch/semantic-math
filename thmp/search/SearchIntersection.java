@@ -719,7 +719,7 @@ public class SearchIntersection {
 		searchState.setThmScoreMap(thmScoreMap);
 		int resultWordSpan = searchState.largestWordSpan();
 		/**short circuit if number of token below threshold*/
-		if(!FileUtils.isByblis67 && //********temporary Feb 15. Since can't set up db on byblis
+		if(false && !FileUtils.isByblis67 && //********temporary Feb 15. Since can't set up db on byblis
 				searchState.allowLiteralSearch() && LiteralSearch.spanBelowThreshold(resultWordSpan, inputWordsArSz)) {
 			System.out.println("Initializing literal search...");
 			
@@ -802,13 +802,14 @@ public class SearchIntersection {
 					break;
 				}
 			}
-			System.out.println(counter+ ": +++ " + pair.thmIndex+". "+ pair.score+ " SpanScore " + pair.spanScore + " DistScore " + pair.wordDistScore + " "
-					+ ThmHypPairGet.retrieveThmHypPairWithThm(pair.thmIndex));
+			//very useful debug print:
+			//System.out.println(counter+ ": +++ " + pair.thmIndex+". "+ pair.score+ " SpanScore " + pair.spanScore + " DistScore " + pair.wordDistScore + " "
+			//		+ ThmHypPairGet.retrieveThmHypPairWithThm(pair.thmIndex));
 			thmScoreSpanList.add(pair);
 			highestThmList.add(thmIndex);
 			pair = thmScorePQ2.poll();
 		}
-		System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+		//System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
 		
 		/****Dec 6 outerWhile: while(descendingKeySetIter.hasNext()){
 			int curScore = descendingKeySetIter.next();
