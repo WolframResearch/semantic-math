@@ -37,7 +37,8 @@ public class UnzipFile2 {
 	//math0208018: LaTeX 2e document text
 	static final Pattern TEX_PATTERN = Pattern.compile(".*(?:tex|TeX) .*");
 	//extensions I don't want, but still get classified as TeX (auxiliary) file by 'file' command
-	static final Pattern NONTEX_EXTENSION_PATTERN = Pattern.compile(".+(?:\\.sty|\\.pstex_t|auxiliary).*");
+	//filter .cls out?
+	static final Pattern NONTEX_EXTENSION_PATTERN = Pattern.compile(".+(?:\\.sty|\\.pstex_t|auxiliary|\\.bst|\\.cls|\\.clo).*");
 	
 	/**
 	 * Retrieves list of filenames in this directory. In this case .gz files to
@@ -121,7 +122,7 @@ public class UnzipFile2 {
 			while((line = fileInfoBF.readLine()) != null){
 				//line could be ... LaTeX, or .tex etc
 				//combine these two into one!
-				if(!TEX_PATTERN.matcher(line).matches() || NONTEX_EXTENSION_PATTERN.matcher(line).matches()){
+				if(!TEX_PATTERN.matcher(line).matches() || NONTEX_EXTENSION_PATTERN.matcher(line).find()){
 					//no String "tex" detected.
 					continue;
 				}

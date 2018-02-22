@@ -39,8 +39,9 @@ public class CreateMscVecs {
 	private static final Pattern MSC_LINE_PATT = Pattern.compile("([^,]+),(.+)");
 	private static final Pattern COMMA_PATT = Pattern.compile(",");
 	
+	/*Request from Michael: don't prune away those with hyphens*/
 	private static final Pattern noTexTextSpecialCharsPatt 
-		= Pattern.compile("[\\{$\\\\+^*/\\[\\(\\}\\]\\)\\}@-]");
+		= Pattern.compile("[\\{$\\\\+^*/\\[\\(\\}\\]\\)\\}@]");
 	
 	static {
 		
@@ -153,10 +154,11 @@ public class CreateMscVecs {
 			//paperIdList.add(paperId);
 		}
 		
-		String sourceFileName = dirName + "allPapers.txt";
+		//String sourceFileName = dirName + "allPapers.txt";
 		
 		String allPaperStr = allPapersSb.toString();
-		FileUtils.writeToFile(allPaperStr, sourceFileName);
+		//don't write to file to conserve disk space.
+		//FileUtils.writeToFile(allPaperStr, sourceFileName);
 		
 		//directly process text to create words for training.		
 		String skipGramTargetPath = dirName + GenerateSynonymsWordData.skipGramTrainDataFileName;		

@@ -1170,6 +1170,8 @@ public class CollectThm {
 				//words and their frequencies.
 				//	Map<String, Integer> wordsFreqMap = new HashMap<String, Integer>();				
 				int thmArSz = thmAr.size();
+				List<String> curSkipGramList = new ArrayList<String>();
+				
 				for(int j = 0; j < thmArSz; j++){
 					
 					String singletonWordAdded = null;
@@ -1258,12 +1260,18 @@ public class CollectThm {
 							numFutureWordsToSkip = 1;
 						}else */
 						if(null != singletonWordAdded){
-							skipGramWordList_.add(singletonWordAdded);
+							//skipGramWordList_.add(singletonWordAdded);
+							curSkipGramList.add(singletonWordAdded);
 						}
 					//}
 				}
-				//delimit sentence
-				skipGramWordList_.add("");
+				
+				//lots of stub sentences, which are not good training data
+				if(curSkipGramList.size() > 4) {
+					skipGramWordList_.addAll(curSkipGramList);
+					//delimit sentence
+					skipGramWordList_.add("");
+				}				
 			}
 		}
 		

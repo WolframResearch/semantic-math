@@ -189,16 +189,12 @@ public class GenerateSearchDataRunner {
 		
 		runScripts(fileNamesList, runnerConfig);
 		
-		/*if(2 == argsLen && args[1].toLowerCase().equals("msc")) {			
-			runScripts(fileNamesList, true);
-		}else {
-			runScripts(fileNamesList);			
-		}*/
 	}
 
 	/**
 	 * A fileName refers to name (including path) of tar file, 
 	 * e.g. /prospectus/crawling/_arxiv/src/arXiv_src_0308_001.tar
+	 * Feb 20 2018
 	 * @param fileNamesList
 	 * @throws IOException
 	 * @throws InterruptedException
