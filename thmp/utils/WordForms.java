@@ -85,7 +85,7 @@ public class WordForms {
 	public static final String QUANTITY_POS = "quant";
 	
 	//
-	private static Multimap<String, String> synonymMap;
+	private static Multimap<String, String> synonymMMap;
 	
 	private static final ImmutableMap<String, String> wordToStemMap;	
 	private static final ImmutableMultimap<String, String> stemToWordsMMap;
@@ -432,11 +432,11 @@ public class WordForms {
 	 */
 	public static Multimap<String, String> getSynonymsMap1(){
 		
-		if(null == synonymMap) {
+		if(null == synonymMMap) {
 			synchronized(WordForms.class) {
-				if(null == synonymMap) {
+				if(null == synonymMMap) {
 					//List, since the higher ordered, the closer and more relevant.
-					synonymMap = ArrayListMultimap.create();
+					synonymMMap = ArrayListMultimap.create();
 					BufferedReader synonymsBF = null;
 					//create synonym map from file	
 					ServletContext servletContext = FileUtils.getServletContext();
@@ -453,7 +453,7 @@ public class WordForms {
 						}
 					}
 					//gather synonyms together from file
-					readSynonymMapFromFile(synonymMap, synonymsBF);
+					readSynonymMapFromFile(synonymMMap, synonymsBF);
 					FileUtils.silentClose(synonymsBF);
 					
 					//gather related words from skip gram neural net collected words.
@@ -467,12 +467,12 @@ public class WordForms {
 					Gson gson = new Gson();
 					Map<String, List<String>> neuralNetMap = gson.fromJson(json, typeOfT);
 					for(Map.Entry<String, List<String>> entry : neuralNetMap.entrySet()) {
-						synonymMap.putAll(entry.getKey(), entry.getValue());
+						synonymMMap.putAll(entry.getKey(), entry.getValue());
 					}
 				}
 			}
 		}		
-		return synonymMap;
+		return synonymMMap;
 	}
 	
 	/**
