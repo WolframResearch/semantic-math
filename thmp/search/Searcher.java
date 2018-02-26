@@ -119,6 +119,9 @@ public interface Searcher<S> {
 		/**Path to csv file containing database names data 
 		 * e.g. '5523','1710.01696','Tim','','Lemke'*/
 		private static final String nameCSVDataPath = "src/thmp/data/metaDataNameDB.csv";
+		
+		private static final String stopWordsPath = "src/thmp/data/stopWords.txt";
+		
 		/**Max number of words index list, used for search based on exact words*/
 		public static final int maxConceptsPerThmNum = 20;
 		/**Max number of thm indices per literal search word. 200 should be sufficiently large, 
@@ -160,6 +163,9 @@ public interface Searcher<S> {
 			return wordDocFreqMapPath;
 		}
 		
+		public static String stopWordsPath() {
+			return stopWordsPath;
+		}
 		/**
 		 * Path to i.e. allThmWordsFreqList.dat.
 		 * @return

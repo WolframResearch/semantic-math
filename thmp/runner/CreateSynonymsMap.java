@@ -59,6 +59,7 @@ public class CreateSynonymsMap {
 			
 			Collection<String> relatedWordsCol = synonymMap.get(w);
 			Set<String> addedWords = new HashSet<String>();
+			addedWords.add(w);
 			
 			for(String word : relatedWordsCol) {
 				if(!wordThmsIndexMultimap.containsKey(word)) {
@@ -80,7 +81,7 @@ public class CreateSynonymsMap {
 		
 		Gson gson = new Gson();
 		String synonymMapJson = gson.toJson(synonymMap2.asMap());
-		FileUtils.writeToFile(synonymMapJson, "src/thmp/data/synonymsMapPruned2.json");
+		FileUtils.writeToFile(synonymMapJson, "src/thmp/data/synonymsMap.json");
 		
 	}
 	

@@ -69,7 +69,7 @@ public class NGramSearch {
 			"polynomial $f$", "over ring", "exist integer", "over field", "many zero"};
 	
 	//should use this to detect fluff in first word.
-	private static final Set<String> fluffWordsSet = WordForms.getFluffSet();
+	private static final Set<String> fluffWordsSet = WordForms.stopWordsSet();
 	//invalid ending for 2nd word
 	private static final Set<String> VALID_ING_WORD_ENDING_SET;
 	//invalid if 2nd word
@@ -160,12 +160,22 @@ public class NGramSearch {
 		
 		// name of two gram data file containing additional 2-grams that should be included. These don't have
 		// frequencies associated with them. Load these into maps first and accumulate their frequencies.
-		private static final String TWO_GRAM_DATA_FILESTR = "src/thmp/data/twoGramData.txt";		
+		private static final String TWO_GRAM_DATA_FILESTR = "src/thmp/data/twoGramData.txt";
+		
+		//two-grams gathered from MathOverflow
+		private static final String TWO_GRAM_DATA_SO_FILESTR = "src/thmp/data/twoGramsSO.txt";
+		//string to split two and three gram data from MO.
+		public static final Pattern TWO_THREE_SO_GRAM_FileStr_SPLIT_PATT = Pattern.compile(",");
+		public static final Pattern TWO_THREE_GRAM_SPLIT_PATT = Pattern.compile("(?:-|\\+|=|\\s+|'s\\s*)");
+		
+		//set of three grams gathered from two-grams data file, e.g. Chevalley-Warning theorem.
+		private static final Set<String> threeGramPreSet;
 		//set that contains the first word of each n-grams.
 		private static final Set<String> twoGramFirstWordsSet;
 		//factor used when the second word occurs with probability higher than 
 		private static final Double SECOND_WORD_PROBA_MULT_FACTOR = 2.5;
 		
+		/*This should not have dependency on ThreeGramSearch, but ThreeGramSearch does use this class in its initialization.*/
 		static{			
 			UNDESIRABLE_POS_COMBO_SET = new HashSet<String>();
 			String[] undesirablePosAr = new String[]{"ent_verb", "ent_vbs", "pre_ent", "poss_ent", "pre_adj", "ent_verbAlone"};
@@ -208,6 +218,55 @@ public class NGramSearch {
 			
 			@SuppressWarnings("unchecked")
 			Map<String, Integer> twoGramPreMap = ((List<Map<String, Integer>>)FileUtils.deserializeListFromFile(twoGramsSerialPath)).get(0);
+			//compute avg score
+			int avgScore = 0;
+			for(int score : twoGramPreMap.values()) {
+				avgScore += score;
+			}
+			avgScore = avgScore / twoGramPreMap.size() + 1;
+			
+			//set of three grams gathered from two-grams data file, e.g. Chevalley-Warning theorem.
+			threeGramPreSet = new HashSet<String>();
+			
+			//add words from MO
+			String twoGramSOStr = FileUtils.readStrFromFile(TWO_GRAM_DATA_SO_FILESTR).toLowerCase();
+			
+			String[] twoGramsSO = TWO_THREE_SO_GRAM_FileStr_SPLIT_PATT.split(twoGramSOStr);
+			
+			for(String twoGram : twoGramsSO) {
+				String[] twoGramAr = TWO_THREE_GRAM_SPLIT_PATT.split(twoGram);
+				int twoGramArLen = twoGramAr.length;
+				if(twoGramArLen == 2){
+					StringBuilder sb = new StringBuilder();
+					for(String w : twoGramAr) {
+						sb.append(w).append(" ");
+					}
+					String twoGram2 = sb.subSequence(0, sb.length()-1).toString();
+					twoGram2 = WordForms.normalizeNGram(twoGram2);
+					twoGramPreMap.put(twoGram2, avgScore);
+					
+				}else if(twoGramArLen == 3) {
+					//e.g. Chevalley-Warning theorem.
+					StringBuilder sb = new StringBuilder();
+					for(String w : twoGramAr) {
+						sb.append(w).append(" ");
+					}					
+					String twoGram2 = sb.subSequence(0, sb.length()-1).toString();
+					twoGram2 = WordForms.normalizeNGram(twoGram2);
+					threeGramPreSet.add(twoGram2);
+					
+					//the last two words are usually good two grams
+					sb = new StringBuilder();
+					for(int i = 1; i < twoGramArLen; i++) {
+						String w = twoGramAr[i];
+						sb.append(w).append(" ");
+					}
+					twoGram2 = sb.subSequence(0, sb.length()-1).toString();
+					twoGram2 = WordForms.normalizeNGram(twoGram2);
+					twoGramPreMap.put(twoGram2, avgScore);
+				}
+			}
+			
 			//remove false positives
 			for(String falseTwoGram : NOT_TWO_GRAMS){
 				twoGramPreMap.remove(falseTwoGram);
@@ -235,6 +294,14 @@ public class NGramSearch {
 			Map<String, Map<String, Integer>> twoGramTotalOccurenceMap 
 				= new HashMap<String, Map<String, Integer>>();
 			return gatherAndBuild2GramsMaps(thmList, twoGramTotalOccurenceMap);
+		}
+		
+		/**
+		 * set of three grams gathered from two-grams data file, e.g. Chevalley-Warning theorem.
+		 * @return
+		 */
+		public static Set<String> threeGramPreSet(){
+			return threeGramPreSet;
 		}
 		
 		/**

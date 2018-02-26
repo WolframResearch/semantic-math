@@ -40,6 +40,7 @@ import thmp.parse.Pair;
 import thmp.parse.ParsedExpression;
 import thmp.parse.Struct;
 import thmp.parse.ThmP1;
+import thmp.search.Searcher;
 import thmp.search.WordFrequency;
 import thmp.search.SearchIntersection.ThmScoreSpanPair;
 
@@ -106,9 +107,9 @@ public class WordForms {
 			+ "|any|as|if|we|suppose|then|which|in|from|this|assume|this|have|just|may|an|every|it|between|given|itself|has"
 			+ "|more|where|but|each|some|et|these|no|all|its|such|can|one|que|de|thus|via|une|only|also|whenever|other|equal|last|"
 			+ "under|both|even|non|always|over|not|so|two|or|le|another|obvious|after|same|est|whose|which|thm|following|defined"
-			+ "|corresponding|furthermore|satisfy|moreover|satisfying|iff|along|hold|above|called|la|three|th|their|des|un|les|new"
-			+ "|exist|at|being|four|was|lem|lax|give|obtained|depending|containing|denote";
-	private static final Set<String> FLUFF_WORDS_SMALL_SET;
+			+ "|corresponding|furthermore|satisfy|moreover|satisfying|iff|along|hold|above|called|la|would|three|th|their|des|un|les|new"
+			+ "|exist|at|being|four|was|lem|lax|give|obtained|depending|containing|denote|show|i|know";
+	private static final Set<String> STOP_WORDS_SET;
 	
 	private static final Set<String> freqWordsSet; 
 	//brackets pattern
@@ -125,18 +126,27 @@ public class WordForms {
 	private static final Pattern SPLIT_DELIM_PATTERN = Pattern.compile(SPLIT_DELIM);	
 	//add all stock frequency words
 	private static final String[] genericSearchTermsAr = new String[] {"sum", "equation", "polynomial", "function", "basis",
-					"theorem", "group", "ring", "field", "module", "hypothesis", "proposition", "series"};
+					"theorem", "group", "ring", "field", "module", "hypothesis", "proposition", "series", "coefficient",
+					"decomposition", "resolution", "problem"};
 	private static final Set<String> GREEK_ALPHA_SET;
 	private static final Map<Character, Character> DIACRITICS_MAP;
 	/**set of common words for search to ignore, if only these words are present, ie nonrelevant words*/
 	private static final Set<String> GENERIC_SERACH_TERMS;
 	
 	static{		
-		FLUFF_WORDS_SMALL_SET = new HashSet<String>();
+		STOP_WORDS_SET = new HashSet<String>();
 		String[] fluffAr = FLUFF_WORDS_SMALL.split("\\|");
 		for(String word : fluffAr){
-			FLUFF_WORDS_SMALL_SET.add(word);
+			STOP_WORDS_SET.add(word);
 		}
+		
+		String stopWordsPath = FileUtils.getPathIfOnServlet(Searcher.SearchMetaData.stopWordsPath());
+		
+		List<String> stopWordsLines = FileUtils.readLinesFromFile(stopWordsPath);
+		for(String stopWord : stopWordsLines) {
+			STOP_WORDS_SET.add(stopWord);
+		}
+		
 		freqWordsSet = new HashSet<String>();
 		//Multimap<String, String> synonymsPreMMap = HashMultimap.create();
 		ServletContext servletContext = FileUtils.getServletContext();
@@ -619,10 +629,19 @@ public class WordForms {
 	}
 	
 	/**
+	 * Centralized method to normalize three grams. Right now
+	 * only desingularize second word, without normalizing to word stem.
+	 * @param twoGram
+	 */
+	public static String normalizeNGram(String threeGram){	
+		return getSingularForm(threeGram);
+	}
+	
+	/**
 	 * Returns words that should be excluded from search.
 	 */
-	public static Set<String> getFluffSet(){
-		return FLUFF_WORDS_SMALL_SET;
+	public static Set<String> stopWordsSet(){
+		return STOP_WORDS_SET;
 	}
 	
 	/**

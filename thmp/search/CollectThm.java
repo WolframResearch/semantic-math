@@ -155,7 +155,7 @@ public class CollectThm {
 		private static final int CONTEXT_VEC_SIZE;
 		
 		private static final String NAMED_THMS_FILE_STR = "src/thmp/data/thmNames.txt";
-		private static final Set<String> FLUFF_WORDS_SET = WordForms.getFluffSet();
+		private static final Set<String> FLUFF_WORDS_SET = WordForms.stopWordsSet();
 		//private static final Map<String, Integer> twoGramsMap = NGramsMap.get_twoGramsMap();
 		//private static final Map<String, Integer> threeGramsMap = NGramsMap.get_threeGramsMap();	
 		private static final List<String> skipGramWordsList;
@@ -249,7 +249,6 @@ public class CollectThm {
 			
 			if(!FileUtils.isOSX()) {
 				//putting in the OS check here, so running locally on OSX does not take forever to load.
-				//
 				//should not build if not searching
 				String wordThmIndexMMapPath = FileUtils.getPathIfOnServlet(SearchMetaData.wordThmIndexMMapSerialFilePath());				
 				@SuppressWarnings("unchecked")
@@ -269,8 +268,7 @@ public class CollectThm {
 					for(Map.Entry<String, Integer> entry : wordThmsIntMultimap.entries()) {
 						wordThmsIndexMultimap.put(entry.getKey(), new IndexPartPair(entry.getValue(), ThmPart.STM, new byte[] {}));
 					}					
-				}
-				
+				}				
 				wordThmsIndexMMap = ImmutableMultimap.copyOf(wordThmsIndexMultimap);
 			}else {
 				wordThmsIndexMMap = null;

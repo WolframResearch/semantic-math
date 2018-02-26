@@ -59,6 +59,9 @@ public class ThreeGramSearch {
 	private static final String THREE_GRAM_DATA_FILESTR = "src/thmp/data/threeGramData.txt";	
 	private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
 	
+	//three-grams gathered from MathOverflow
+	private static final String THREE_GRAM_DATA_SO_FILESTR = "src/thmp/data/threeGramsSO.txt";
+	
 	//map of maps containing first words of 2 grams as keys, and maps of 2nd words and their counts as values
 	//private static final Map<String, Map<String, Integer>> twoGramFreqMap = NGramSearch.twoGramTotalOccurenceMap();
 	private static int averageThreeGramFreqCount;
@@ -72,6 +75,8 @@ public class ThreeGramSearch {
 	private static final Set<String> fluffWordsSet;
 	//private static final String threeGramsMapPath = "src/thmp/data/threeGramsMap.dat";
 	
+	//four grams that are in the three-gram data file.
+	private static final Set<String> fourGramPreSet = new HashSet<String>();
 	//the reciprocal of this is the portion of the map we want to take
 	private static final int MAP_PORTION = 2;
 	private static final double MULTIPLY_BY = 2.0/3;
@@ -86,7 +91,7 @@ public class ThreeGramSearch {
 		for(String word : invalidMiddleWordSet){
 			INVALID_MIDDLE_WORD_SET.add(word);
 		}
-		fluffWordsSet = WordForms.getFluffSet();
+		fluffWordsSet = WordForms.stopWordsSet();
 		//*****
 		/* Commented out June 2017.
 		 * threeGramCountsMap = new HashMap<String, Integer>();		
@@ -129,8 +134,53 @@ public class ThreeGramSearch {
 		//read threeGramMap from serialized file
 		String threeGramsFreqMapPath = FileUtils.getPathIfOnServlet(SearchMetaData.threeGramsFreqMapPath());
 		@SuppressWarnings("unchecked")
-		Map<String, Integer> m = ((List<Map<String, Integer>>)FileUtils.deserializeListFromFile(threeGramsFreqMapPath)).get(0);
-		threeGramFreqMap = ImmutableMap.copyOf(m);
+		Map<String, Integer> threeGramPreMap = ((List<Map<String, Integer>>)FileUtils.deserializeListFromFile(threeGramsFreqMapPath)).get(0);
+		
+		int avgScore = 0;
+		for(int score : threeGramPreMap.values()) {
+			avgScore += score;
+		}
+		avgScore = avgScore / threeGramPreMap.size() + 1;
+		
+		String threeGramSOStr = FileUtils.readStrFromFile(THREE_GRAM_DATA_SO_FILESTR).toLowerCase();
+		
+		String[] threeGramsSO = NGramSearch.TwoGramSearch.TWO_THREE_SO_GRAM_FileStr_SPLIT_PATT.split(threeGramSOStr);
+		
+		for(String threeGram : threeGramsSO) {
+			String[] threeGramAr = NGramSearch.TwoGramSearch.TWO_THREE_GRAM_SPLIT_PATT.split(threeGram);
+			int threeGramArLen = threeGramAr.length;
+			if(threeGramArLen == 3){
+				StringBuilder sb = new StringBuilder();
+				for(String w : threeGramAr) {
+					sb.append(w).append(" ");
+				}
+				String threeGram2 = WordForms.normalizeNGram(sb.subSequence(0, sb.length()-1).toString());
+				threeGramPreMap.put(threeGram2, avgScore);
+			}else if(threeGramAr.length == 4) {
+
+				StringBuilder sb = new StringBuilder();
+				for(String w : threeGramAr) {
+					sb.append(w).append(" ");
+				}
+				String fourGram = WordForms.normalizeNGram(sb.subSequence(0, sb.length()-1).toString());
+				fourGramPreSet.add(fourGram);
+
+				//get last three words, which are usually reasonable three grams.
+				sb = new StringBuilder();
+				for(int i = 1; i < threeGramArLen; i++) {
+					String w = threeGramAr[i];
+					sb.append(w).append(" ");
+				}
+				String threeGram2 = WordForms.normalizeNGram(sb.subSequence(0, sb.length()-1).toString());				
+				threeGramPreMap.put(threeGram2, avgScore);
+			}
+		}
+		
+		for(String prevThreeGram : NGramSearch.TwoGramSearch.threeGramPreSet()) {
+			threeGramPreMap.put(prevThreeGram, avgScore);
+		}
+		
+		threeGramFreqMap = ImmutableMap.copyOf(threeGramPreMap);
 		threeGramFirstWordsSet = WordForms.gatherKeyFirstWordSetFromMap(threeGramFreqMap);
 		//threeGramList = filterThreeGrams(threeGramMap, threeGramFreqMap, initialThreeGramsSet);
 		//*****
