@@ -142,7 +142,8 @@ public class ThreeGramSearch {
 		}
 		avgScore = avgScore / threeGramPreMap.size() + 1;
 		
-		String threeGramSOStr = FileUtils.readStrFromFile(THREE_GRAM_DATA_SO_FILESTR).toLowerCase();
+		String threeGramFileStr = FileUtils.getPathIfOnServlet(THREE_GRAM_DATA_SO_FILESTR);
+		String threeGramSOStr = FileUtils.readStrFromFile(threeGramFileStr).toLowerCase();
 		
 		String[] threeGramsSO = NGramSearch.TwoGramSearch.TWO_THREE_SO_GRAM_FileStr_SPLIT_PATT.split(threeGramSOStr);
 		

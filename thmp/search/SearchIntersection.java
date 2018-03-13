@@ -813,13 +813,13 @@ public class SearchIntersection {
 				}
 			}
 			//very useful debug print:
-			System.out.println(counter+ ": +++ " + pair.thmIndex+". "+ pair.score+ " SpanScore " + pair.spanScore + " DistScore " + pair.wordDistScore + " "
-					+ ThmHypPairGet.retrieveThmHypPairWithThm(pair.thmIndex));
+			//System.out.println(counter+ ": +++ " + pair.thmIndex+". "+ pair.score+ " SpanScore " + pair.spanScore + " DistScore " + pair.wordDistScore + " "
+			//		+ ThmHypPairGet.retrieveThmHypPairWithThm(pair.thmIndex));
 			thmScoreSpanList.add(pair);
 			highestThmList.add(thmIndex);
 			pair = thmScorePQ2.poll();
 		}
-		System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+		//System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
 		
 		/****Dec 6 outerWhile: while(descendingKeySetIter.hasNext()){
 			int curScore = descendingKeySetIter.next();

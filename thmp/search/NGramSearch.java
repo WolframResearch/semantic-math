@@ -228,8 +228,9 @@ public class NGramSearch {
 			//set of three grams gathered from two-grams data file, e.g. Chevalley-Warning theorem.
 			threeGramPreSet = new HashSet<String>();
 			
+			String twoGramFileStr = FileUtils.getPathIfOnServlet(TWO_GRAM_DATA_SO_FILESTR);
 			//add words from MO
-			String twoGramSOStr = FileUtils.readStrFromFile(TWO_GRAM_DATA_SO_FILESTR).toLowerCase();
+			String twoGramSOStr = FileUtils.readStrFromFile(twoGramFileStr).toLowerCase();
 			
 			String[] twoGramsSO = TWO_THREE_SO_GRAM_FileStr_SPLIT_PATT.split(twoGramSOStr);
 			

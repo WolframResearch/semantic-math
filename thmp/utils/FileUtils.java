@@ -584,7 +584,7 @@ public class FileUtils {
 			} catch (KernelPoolException e) {
 				//e.printStackTrace(); //HANDLE, see how Cloud deals with it. Fall back on link?? Not great
 				throw new IllegalStateException("KernelPoolException when trying to acquire kernel: " 
-						+ Arrays.toString(e.getStackTrace()));
+						+ Arrays.toString(e.getStackTrace()) + " Original exception: " + e);
 			} catch (InterruptedException e) {
 				e.printStackTrace(); //HANDLE, should guarantee return is not null.
 				throw new IllegalStateException("KernelPoolException when trying to acquire kernel: "+e.getMessage());
@@ -635,9 +635,13 @@ public class FileUtils {
 			String OS_version = System.getProperty("os.version");
 			
 			Path kernelPath = Paths.get("/Developer/Layouts/11.2.0/Executables/MathKernel");
-			if(Files.exists(kernelPath)){ //e.g. on byblis68
+			//need 11.3 for msc
+			kernelPath = Paths.get("/MathKernel/11.3.0/Linux-x86-64/Secured/2017-12-18/Files/Executables/MathKernel");
+			if(Files.exists(kernelPath)){ //e.g. on byblis67
 				ARGV = new String[]{"-linkmode", "launch", "-linkname",
-				"\"/Developer/Layouts/11.2.0/Executables/MathKernel\" -mathlink"};	
+				"\"/Developer/Layouts/11.2.0/Executables/MathKernel\" -mathlink"};
+				ARGV = new String[]{"-linkmode", "launch", "-linkname",
+				"\"/MathKernel/11.3.0/Linux-x86-64/Secured/2017-12-18/Files/Executables/MathKernel\" -mathlink"};
 			}
 			/*if(OS_version.equals("2.6.32-696.3.1.el6.x86_64")){
 				ARGV = new String[]{"-linkmode", "launch", "-linkname",
@@ -650,7 +654,7 @@ public class FileUtils {
 			}else{
 				ARGV = new String[] { "-linkmode", "launch", "-linkname", "math -mathlink" };
 			}
-			///Developer/Layouts/11.1.1/Executables
+			///e.g. Developer/Layouts/11.3/Executables
 			logger.info("Launching kernel with path: " +Arrays.toString(ARGV));
 		} 
 		try {

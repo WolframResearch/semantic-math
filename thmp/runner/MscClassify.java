@@ -30,6 +30,9 @@ public class MscClassify {
 	//private static String pathToMscMx = "src/thmp/data/mscClassify.mx";
 	private static String pathToMscTxt = "src/thmp/data/mscClassify.txt";
 	private static String pathToMscPackage = "src/thmp/data/MscClassify.m";
+	private static String pathToMscNetMx = "src/thmp/data/MscNet.mx";
+	//dir containing net model, resource files, etc
+	private static String pathToMscDir = "src/thmp/data";
 	
 	private static final Logger logger = LogManager.getLogger(MscClassify.class);
 	
@@ -44,18 +47,25 @@ public class MscClassify {
 	private static void loadResources(WLEvaluationMedium medium) {
 		pathToMscTxt = FileUtils.getPathIfOnServlet(pathToMscTxt);
 		pathToMscPackage = FileUtils.getPathIfOnServlet(pathToMscPackage);
+		pathToMscNetMx = FileUtils.getPathIfOnServlet(pathToMscNetMx);
+		pathToMscDir = FileUtils.getPathIfOnServlet(pathToMscDir);
 		
 		//Note these need to be loaded on *all* kernels!
 		
 		//Expr s = evaluateWLCommand(medium, "<<"+pathToMscMx, true, true);
-		//This order matters!
+		//This order matters! Use this rather than mx, mx version issue here, but should switch to mx, depending on size reduction benefits.
 		evaluateWLCommand(medium, "{MscClassify`Private`$wordFreqAdjAssoc,MscClassify`Private`$wordIndexAssoc,"
 				+ "MscClassify`Private`$wordScoreMapAssoc,MscClassify`Private`$freqWordsAssoc,MscClassify`Private`$mscListList,"
 				+ "MscClassify`Private`$v,MscClassify`Private`$dInverseUTranspose}="
 				+ "Uncompress[Import[\""+ pathToMscTxt +"\"]]", false, true);
 		
 		//logger.info("Return from getting pathToMscMx: ",s);
-		evaluateWLCommand(medium, "<<"+pathToMscPackage, true, true);
+		evaluateWLCommand(medium, "<<"+pathToMscPackage, false, true);
+		evaluateWLCommand(medium, "<<"+pathToMscNetMx, false, true);
+		
+		//load MscNet resources
+		evaluateWLCommand(medium, mscContext+"initialize[\""+pathToMscDir+"\"]", false, true);
+		
 		//logger.info("Return from getting pathToMscPackage: "+s);
 		//logger.info("Names[\"a`*\"]  "+ evaluateWLCommand(medium, "Names[\"MscClassify`*\"]", true, true));
 	}
@@ -80,7 +90,7 @@ public class MscClassify {
 		
 		List<String> mscList = new ArrayList<String>();
 		
-		Expr mscListExpr = evaluateWLCommand(medium, "Keys["+mscContext+"findNearestClasses[\""+  sb.toString() +"\"]]", true, true);
+		Expr mscListExpr = evaluateWLCommand(medium, mscContext+"findNearestClasses[\""+  sb.toString() +"\"]", true, true);
 		System.out.println("mscListExpr "+mscListExpr);
 		logger.info("mscListExpr "+mscListExpr);
 		
@@ -136,7 +146,7 @@ public class MscClassify {
 		while(sc.hasNext()) {
 			
 			findMsc(sc.nextLine(), medium);
-			System.out.println("\nEnter a file path: ");
+			System.out.println("\nEnter path to a tex source file: ");
 		}
 		
 		sc.close();
