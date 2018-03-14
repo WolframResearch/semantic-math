@@ -26,13 +26,11 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Multiset;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.TreeMultimap;
 
 import thmp.search.CollectThm.ThmWordsMaps.IndexPartPair;
 import thmp.search.SearchCombined.ThmHypPair;
-import thmp.search.ThmHypPairGet.ThmHypPairBundle;
 import thmp.utils.DBUtils.AuthorName;
 import thmp.utils.DBUtils.ConjDisjType;
 import thmp.utils.FileUtils;
@@ -78,7 +76,7 @@ public class SearchIntersection {
 	 * already contained in docWordsFreqMapNoAnno. */
 	private static final Map<String, RelatedWords> relatedWordsMap;
 
-	// these maps are not immutable, they are not modified during runtime.
+	// these maps are not immutable.
 	private static final Map<String, Integer> twoGramsMap = NGramSearch.get2GramsMap();
 	private static final Map<String, Integer> threeGramsMap = ThreeGramSearch.get3GramsMap();
 

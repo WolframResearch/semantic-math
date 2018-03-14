@@ -60,7 +60,8 @@ public class ThreeGramSearch {
 	private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
 	
 	//three-grams gathered from MathOverflow
-	private static final String THREE_GRAM_DATA_SO_FILESTR = "src/thmp/data/threeGramsSO.txt";
+	private static final String THREE_GRAM_DATA_SO_FILESTR = "src/thmp/data/arxiv3grams.txt";
+	private static final String FOUR_GRAM_DATA_SO_FILESTR = "src/thmp/data/arxiv4grams.txt";
 	
 	//map of maps containing first words of 2 grams as keys, and maps of 2nd words and their counts as values
 	//private static final Map<String, Map<String, Integer>> twoGramFreqMap = NGramSearch.twoGramTotalOccurenceMap();
@@ -142,13 +143,15 @@ public class ThreeGramSearch {
 		}
 		avgScore = avgScore / threeGramPreMap.size() + 1;
 		
-		String threeGramFileStr = FileUtils.getPathIfOnServlet(THREE_GRAM_DATA_SO_FILESTR);
-		String threeGramSOStr = FileUtils.readStrFromFile(threeGramFileStr).toLowerCase();
-		
-		String[] threeGramsSO = NGramSearch.TwoGramSearch.TWO_THREE_SO_GRAM_FileStr_SPLIT_PATT.split(threeGramSOStr);
+		String threeGramFileStr = FileUtils.getPathIfOnServlet(THREE_GRAM_DATA_SO_FILESTR);		
+		List<String> threeGramsSO = FileUtils.readLinesFromFile(threeGramFileStr);
 		
 		for(String threeGram : threeGramsSO) {
-			String[] threeGramAr = NGramSearch.TwoGramSearch.TWO_THREE_GRAM_SPLIT_PATT.split(threeGram);
+			
+			//each line has form "a b c, 123", word and frequency
+			String threeGram1  = NGramSearch.COMMA_SPACE_PATT.split(threeGram)[0].toLowerCase();
+			
+			String[] threeGramAr = NGramSearch.TwoGramSearch.TWO_THREE_GRAM_SPLIT_PATT.split(threeGram1);
 			int threeGramArLen = threeGramAr.length;
 			if(threeGramArLen == 3){
 				StringBuilder sb = new StringBuilder();
@@ -157,23 +160,57 @@ public class ThreeGramSearch {
 				}
 				String threeGram2 = WordForms.normalizeNGram(sb.subSequence(0, sb.length()-1).toString());
 				threeGramPreMap.put(threeGram2, avgScore);
-			}else if(threeGramAr.length == 4) {
-
-				StringBuilder sb = new StringBuilder();
-				for(String w : threeGramAr) {
-					sb.append(w).append(" ");
-				}
-				String fourGram = WordForms.normalizeNGram(sb.subSequence(0, sb.length()-1).toString());
-				fourGramPreSet.add(fourGram);
+			}else if(threeGramAr.length > 3) {
 
 				//get last three words, which are usually reasonable three grams.
-				sb = new StringBuilder();
-				for(int i = 1; i < threeGramArLen; i++) {
+				StringBuilder sb = new StringBuilder();
+				int startIndex = threeGramAr.length - 3;
+				for(int i = startIndex; i < threeGramArLen; i++) {
 					String w = threeGramAr[i];
 					sb.append(w).append(" ");
 				}
 				String threeGram2 = WordForms.normalizeNGram(sb.subSequence(0, sb.length()-1).toString());				
 				threeGramPreMap.put(threeGram2, avgScore);
+				
+				if(threeGramAr.length == 4) {
+					
+					sb = new StringBuilder();
+					for(String w : threeGramAr) {
+						sb.append(w).append(" ");
+					}
+					String fourGram = WordForms.normalizeNGram(sb.subSequence(0, sb.length()-1).toString());
+					fourGramPreSet.add(fourGram);
+				}
+				
+			}
+		}
+		
+		/*Add first three words of 4-grams. Don't add entire 4-grams, since can already take word distances
+		 * into scoring, not justifying additional search time overhead. Also not 4-gram count allows more flexibility
+		 * in phrasing, e.g. "size of set" vs "set size"*/
+		
+		String fourGramFileStr = FileUtils.getPathIfOnServlet(FOUR_GRAM_DATA_SO_FILESTR);		
+		List<String> fourGramsSO = FileUtils.readLinesFromFile(fourGramFileStr);
+		
+		for(String fourGram : fourGramsSO) {
+			
+			//each line has form "a b c, 123", word and frequency
+			String fourGram1  = NGramSearch.COMMA_SPACE_PATT.split(fourGram)[0].toLowerCase();
+			
+			String[] fourGramAr = NGramSearch.TwoGramSearch.TWO_THREE_GRAM_SPLIT_PATT.split(fourGram1);
+			int fourGramArLen = fourGramAr.length;
+			
+			if(fourGramArLen >= 3){
+				/*get *first* three words, which are usually reasonable three grams.
+				 * First three rather than last three, better by inspection.*/
+				StringBuilder sb = new StringBuilder();
+				int endIndex = 3;
+				for(int i = 0; i < endIndex; i++) {
+					String w = fourGramAr[i];
+					sb.append(w).append(" ");
+				}
+				String threeGram2 = WordForms.normalizeNGram(sb.subSequence(0, sb.length()-1).toString());				
+				threeGramPreMap.put(threeGram2, avgScore);				
 			}
 		}
 		

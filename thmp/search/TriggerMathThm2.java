@@ -655,7 +655,7 @@ public class TriggerMathThm2 {
 		List<Double> weightsList = new ArrayList<Double>();
 		Map<String, Integer> wordsScoreMap = new HashMap<String, Integer>();
 		
-		CollectThm.ThmWordsMaps.buildScoreMapNoAnno(wordsScoreMap, docWordsFreqMap);			
+		CollectThm.ThmWordsMaps.buildScoreMap(wordsScoreMap, docWordsFreqMap);			
 		gatherTermDocumentMxEntries(thmList, coordinatesList, weightsList, wordsScoreMap);
 		
 		/*mathObjMx now presented as sparse array*/	

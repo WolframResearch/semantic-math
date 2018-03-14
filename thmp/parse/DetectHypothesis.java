@@ -168,7 +168,7 @@ public class DetectHypothesis {
 				"following", "then", "thus", "this"};
 		for(String w : beforeStopWordsAR) {
 			SCRAPE_STOP_WORDS_BEFORE_SET.add(w);
-		}		
+		}
 	}
 	
 	public static class Runner{

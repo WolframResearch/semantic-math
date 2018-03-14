@@ -125,12 +125,15 @@ cleanMscList[mscListList_List] :=
 Input: each string contains one line of the words and their freq. The first
 string is the paper string, hence starting at index 2.
 Returns: list of integers (variable length)*)
-createDataIntegerVec[data_String, wordIndexAssoc_:$wordIndexAssoc] := Module[{dataList},
-  (*Each data string has form "0708.0309;scien,2;compatible almost \
-	complex,2;projecti,6;"*)
-  
+createDataIntegerVec[data_String, wordIndexAssoc_:$wordIndexAssoc] := Module[{dataList, 
+	startIndex=2},
+  (*Each data string has form "0708.0309;scien,2;compatible almost
+	complex,2;projecti,6;" Or can start with semicolon: "; ...;"*)
+  If[StringTake[data, 1] === ";",
+  	startIndex = 1;
+  ];  
   dataList = StringSplit[data, commaSemicolonReg];
-  dataList = dataList[[2 ;; -1 ;; 2]];
+  dataList = dataList[[startIndex ;; -1 ;; 2]];
   Map[(
      If[Head[wordIndexAssoc[#]] =!= Missing,
       wordIndexAssoc[#]

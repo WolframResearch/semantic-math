@@ -1694,7 +1694,6 @@ cone of positive semidefinite, 88
 analysis of the data, 88
 total number of variables, 87
 structure of the tree, 87
-size of the dataset, 87
 red and blue points, 87
 rate of the system, 87
 piecewise linear finite element, 87
@@ -3089,7 +3088,6 @@ double equal sign distance, 47
 distribution of the matrix, 47
 distribution of the estimator, 47
 dimension of the signal, 47
-cycle C of G, 47
 cost of the system, 47
 components of the mixture, 47
 compact simple Lie group, 47

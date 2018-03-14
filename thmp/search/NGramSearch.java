@@ -59,6 +59,8 @@ public class NGramSearch {
 	private static final int ADDITIONAL_TWO_GRAM_DEFAULT_COUNT = 7;
 	
 	private static final Pattern WHITESPACE_PATTERN = WordForms.getWhiteEmptySpacePattern();
+	public static final Pattern COMMA_SPACE_PATT = Pattern.compile(", ");
+	
 	//last is Replacement Character �
 	protected static final Pattern INVALID_WORD_PATTERN = Pattern.compile("(?:\\s*|.*[\\|$].*|.*\\d+.*|.*\\uFFFD.*)"); 
 	private static final Pattern SENTENCE_SPACE_PATTERN = Pattern.compile("[-.;:,]");
@@ -162,8 +164,9 @@ public class NGramSearch {
 		// frequencies associated with them. Load these into maps first and accumulate their frequencies.
 		private static final String TWO_GRAM_DATA_FILESTR = "src/thmp/data/twoGramData.txt";
 		
-		//two-grams gathered from MathOverflow
-		private static final String TWO_GRAM_DATA_SO_FILESTR = "src/thmp/data/twoGramsSO.txt";
+		//two-grams gathered from MathOverflow and arXiv, by Michael (mtrott).
+		private static final String TWO_GRAM_DATA_SO_FILESTR = "src/thmp/data/arxiv2grams.txt";
+		
 		//string to split two and three gram data from MO.
 		public static final Pattern TWO_THREE_SO_GRAM_FileStr_SPLIT_PATT = Pattern.compile(",");
 		public static final Pattern TWO_THREE_GRAM_SPLIT_PATT = Pattern.compile("(?:-|\\+|=|\\s+|'s\\s*)");
@@ -228,15 +231,21 @@ public class NGramSearch {
 			//set of three grams gathered from two-grams data file, e.g. Chevalley-Warning theorem.
 			threeGramPreSet = new HashSet<String>();
 			
+			//add words from MO and arXiv
 			String twoGramFileStr = FileUtils.getPathIfOnServlet(TWO_GRAM_DATA_SO_FILESTR);
-			//add words from MO
-			String twoGramSOStr = FileUtils.readStrFromFile(twoGramFileStr).toLowerCase();
 			
-			String[] twoGramsSO = TWO_THREE_SO_GRAM_FileStr_SPLIT_PATT.split(twoGramSOStr);
+			//String twoGramSOStr = FileUtils.readStrFromFile(twoGramFileStr).toLowerCase();
+			
+			List<String> twoGramsSO = FileUtils.readLinesFromFile(twoGramFileStr);
+			//String[] twoGramsSO = TWO_THREE_SO_GRAM_FileStr_SPLIT_PATT.split(twoGramSOStr);
 			
 			for(String twoGram : twoGramsSO) {
-				String[] twoGramAr = TWO_THREE_GRAM_SPLIT_PATT.split(twoGram);
+				//each line has form "a b, 123", word and frequency
+				String twoGram1  = COMMA_SPACE_PATT.split(twoGram)[0].toLowerCase();
+				
+				String[] twoGramAr = TWO_THREE_GRAM_SPLIT_PATT.split(twoGram1);
 				int twoGramArLen = twoGramAr.length;
+				
 				if(twoGramArLen == 2){
 					StringBuilder sb = new StringBuilder();
 					for(String w : twoGramAr) {
@@ -246,25 +255,30 @@ public class NGramSearch {
 					twoGram2 = WordForms.normalizeNGram(twoGram2);
 					twoGramPreMap.put(twoGram2, avgScore);
 					
-				}else if(twoGramArLen == 3) {
-					//e.g. Chevalley-Warning theorem.
-					StringBuilder sb = new StringBuilder();
-					for(String w : twoGramAr) {
-						sb.append(w).append(" ");
-					}					
-					String twoGram2 = sb.subSequence(0, sb.length()-1).toString();
-					twoGram2 = WordForms.normalizeNGram(twoGram2);
-					threeGramPreSet.add(twoGram2);
+				}else if(twoGramArLen > 2) {
 					
 					//the last two words are usually good two grams
-					sb = new StringBuilder();
-					for(int i = 1; i < twoGramArLen; i++) {
+					StringBuilder sb = new StringBuilder();
+					int startIndex = twoGramAr.length - 2;
+					for(int i = startIndex; i < twoGramArLen; i++) {
 						String w = twoGramAr[i];
 						sb.append(w).append(" ");
 					}
-					twoGram2 = sb.subSequence(0, sb.length()-1).toString();
+					String twoGram2 = sb.subSequence(0, sb.length()-1).toString();
 					twoGram2 = WordForms.normalizeNGram(twoGram2);
 					twoGramPreMap.put(twoGram2, avgScore);
+					
+					if(twoGramArLen == 3) {
+						//e.g. Chevalley-Warning theorem.
+						sb = new StringBuilder();
+						for(String w : twoGramAr) {
+							sb.append(w).append(" ");
+						}		
+						twoGram2 = sb.subSequence(0, sb.length()-1).toString();
+						twoGram2 = WordForms.normalizeNGram(twoGram2);
+						threeGramPreSet.add(twoGram2);
+						
+					}
 				}
 			}
 			

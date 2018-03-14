@@ -1134,7 +1134,6 @@ changepoint, 920
 l'espace, 919
 horosphere, 919
 bisimilarity, 919
-mathchar"1234, 918
 J-holomorphic, 918
 citet, 917
 reaction-diffusion, 916
@@ -1208,7 +1207,6 @@ Wishart, 840
 half-plane, 840
 transceiver, 839
 Grothendieck, 839
-City, 839
 2-functor, 838
 minimiser, 836
 Seifert, 835

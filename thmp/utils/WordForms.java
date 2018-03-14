@@ -672,7 +672,7 @@ public class WordForms {
 		for(String word : thmAr) {
 			if(!ALL_WHITE_EMPTY_SPACE_PATTERN.matcher(word).matches()) {
 				wordsList.add(word);
-			}			
+			}
 		}
 		return wordsList;
 	}
@@ -1106,7 +1106,7 @@ public class WordForms {
 	
 	/**
 	 * Retrieves set of first words in the keys of the given map. Used in e.g.
-	 * NGram gathering.
+	 * NGram gathering. Need to keep letters, e.g. "p adic".
 	 * @param map
 	 * @return
 	 */

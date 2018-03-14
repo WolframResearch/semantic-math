@@ -196,14 +196,14 @@ Args: data string, e.g. "er,1;imply,12; maxim, 1".
 model: neural net model to filter classes.
 Returns: nearest classes list.
 *)
-findNearestClasses[dataStr_String, model_:$mscModel, numNearest_Integer:8] := 
- Module[{sparseAr, classList, preList},
+findNearestClasses[dataStr_String, model_:$mscModel, numNearest1_Integer:8] := 
+ Module[{sparseAr, classList, preList, numNearest},
   sparseAr = 
    SparseArray[
     parseEvalWordScorePos[
      dataStr], {Length[$wordIndexAssoc], 1}];
   (*Can be more generous, can use neural net filter later*)
-  numNearest += 4;
+  numNearest = numNearest1 + 4;
   preList = Keys[findNearestClassesForSA[sparseAr, numNearest]];
   (*filter out those that are low on *)
   classList = filterMscListWithNet[preList, model, dataStr];
@@ -216,7 +216,7 @@ findNearestClasses[dataStr_String, model_:$mscModel, numNearest_Integer:8] :=
 Args: classList, list of msc classes from nearest-neighbors.
 Guaranteed to each have 5 digits.
 model: the model to run the predictions on.
-Returns: list of filtered classes
+Returns: list of filtered classes.
 *)
 filterMscListWithNet[classList_List, model_, data_String] := Module[{topN=3,
 	dataVec, predicted},
@@ -233,7 +233,7 @@ filterMscListWithNet[classList_List, model_, data_String] := Module[{topN=3,
 	
 	predicted = vecToTopMsc[predicted, topN];
 	(*Select[classList, (MemberQ[predicted, StringTake[#,2]] )&]***)
-	Join[Select[classList, (MemberQ[predicted, StringTake[#,2]] )&], predicted]
+	Select[classList, (MemberQ[predicted, StringTake[#,2]] )&]
 	
 ]
 
