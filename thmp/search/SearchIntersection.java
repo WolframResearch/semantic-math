@@ -581,20 +581,31 @@ public class SearchIntersection {
 				continue;
 			}
 			
+			//strip away umlauts, which were stripped when gathering theorems.
+			word = WordForms.stripUmlautFromWord(word);
+			
 			// elicit higher score if wordLong fits
 			// also turn into singular form if applicable			
 			int scoreAdded = 0;
 			// check for 2 grams
 			if (i < inputWordsArSz - 1) {
 				String nextWord = inputWordsList.get(i+1);
+				nextWord = WordForms.stripUmlautFromWord(nextWord);
+				
 				String twoGram = word + " " + nextWord;
+				
 				twoGram = WordForms.normalizeTwoGram(twoGram);
 				// check for 3 grams.
 				//long time1 = SimilarThmSearch.printElapsedTime(time0, "time1");
 				
 				if (i < inputWordsArSz - 2) {
 					String thirdWord = inputWordsList.get(i+2);
+					
+					thirdWord = WordForms.stripUmlautFromWord(thirdWord);
 					String threeGram = twoGram + " " + thirdWord;
+					
+					threeGram = WordForms.stripUmlautFromWord(threeGram);
+					
 					if (threeGramsMap.containsKey(threeGram)) {
 						scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap,// thmWordsMMap, 
 								thmScoreSpanSet, thmPartMap, wordThmsListList, wordIndexPartPairMap,
@@ -632,7 +643,7 @@ public class SearchIntersection {
 			// then scale down the overall words? e.g. "linear map with closed
 			// range", "closed", "range",
 			// "closed range" all weigh a lot. 
-			word = inputWordsArUpdated[i];
+			
 			
 			//long time3 = System.nanoTime();
 			//This score includes words scores for words related to this word.

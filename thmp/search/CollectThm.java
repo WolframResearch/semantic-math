@@ -200,15 +200,21 @@ public class CollectThm {
 				Pattern.compile("[-\\\\=$\\{\\}\\[\\]()^_+%&\\./,:;.!~\"\\d\\/@><*|`�\ufffd]");
 		
 	    private static final Set<String> specialCharVocabSet;
+	    /**map of words without umlauts to their version with umlaut. To be used at search runtime.*/
+	    private static final Map<String, String> umlautVocabMap;
+	    
+	    //allow typical chars containing umlauts.
+	    //Pattern.compile("(\\\\\"u|\\\\\"o|\\\\\"a)");
+		private static final Pattern umlautCharPatt = WordForms.umlautTexPatt;
 		
 		private static final boolean GATHER_SKIP_GRAM_WORDS = ThmList.gather_skip_gram_words();
 		//private static final boolean GATHER_SKIP_GRAM_WORDS = true;
 		/* Related words scraped from wiktionary, etc. 
-		 * Related words are *only* used
+		 * Related words are *only* used.
 		 * to process queries, not the corpus; applied to all search algorithms. Therefore
 		 * intentionally *not* final.
 		 * Keys to relatedWordsMap are not necessarily normalized, only normalized if key not 
-		 * already contained in docWordsFreqMapNoAnno
+		 * already contained in docWordsFreqMap
 		 */
 		private static final Map<String, GatherRelatedWords.RelatedWords> relatedWordsMap;
 		private static final Map<String, Integer> stockFrequencyMap = WordFrequency.ComputeFrequencyData.englishStockFreqMap();
@@ -242,13 +248,19 @@ public class CollectThm {
 			 * of theorems. Much larger in search mode.*/
 			////.....List<String> processedThmList = ThmList.allThmsWithHypList; 
 			
+			//anything containing umlautCharPatt don't need to be included here.
 			String[] specialCharVocabAr = new String[] {"l\\\'evy", "k\\\"ahler", "k\\\"ahlerian",
 					"hyperk\\\"ahler", "C*", "C^*", "h\\\"older", "pl\\\"ucker", "lindel\\\"of",
 					"m\\\"obius", "schro\\\"dinger", "l\\\"owner", "schr\\\"oder", "k\"unneth",
 					"szeg\\\"o"};
+			/*create reverse map of elements of specialCharVocabSet without umlaut to the version with umlaut, 
+			  for use during search runtime */
+			umlautVocabMap = new HashMap<String, String>();
+			
 			specialCharVocabSet = new HashSet<String>();
 			for(String w : specialCharVocabAr) {
-				specialCharVocabSet.add(w);
+				specialCharVocabSet.add(w);		
+				umlautVocabMap.put(WordForms.umlautTexPatt.matcher(w).replaceAll(""), w);
 			}
 			
 			Map<String, Integer> wordsScorePreMap = new HashMap<String, Integer>();
@@ -266,7 +278,7 @@ public class CollectThm {
 				@SuppressWarnings("unchecked")
 				Multimap<String, IndexPartPair> wordThmsIndexMultimap = ((List<Multimap<String, IndexPartPair>>)
 						FileUtils.deserializeListFromFile(wordThmIndexMMapPath)).get(0);
-				//temporary ugly conversion code for data migration, Dec 2017.
+				//temporary ugly conversion code for data migration, Dec 2017. Remove one month later.
 				Collection<IndexPartPair> indexPartPairCol = wordThmsIndexMultimap.get("group");
 				Iterator<IndexPartPair> iter = indexPartPairCol.iterator();
 				try {
@@ -763,6 +775,15 @@ public class CollectThm {
 			return CONTEXT_VEC_WORDS_FREQ_MAP;
 		}
 		
+		/**
+		 * Map of words without umlauts to their version with umlaut. 
+		 * To be used at search runtime for user input.
+		 * @return
+		 */
+		public static Map<String, String> umlautVocabMap(){
+			return umlautVocabMap;
+		}
+		
 		public static Map<String, RelatedWords> getRelatedWordsMap(){
 			//add synonyms
 			if(!synonymsAddedToRelatedWordsQ) {
@@ -782,8 +803,7 @@ public class CollectThm {
 								List<String> list = new ArrayList<String>();
 								list.addAll(synonyms);
 								list.addAll(relatedWord.getSynonymsList());
-								relatedWord.setSynonyms(list);
-								
+								relatedWord.setSynonyms(list);								
 							}
 						}
 						synonymsAddedToRelatedWordsQ = true;
@@ -915,8 +935,12 @@ public class CollectThm {
 			List<String> thmList = new ArrayList<String>();
 			
 			for(String word : thmAr) {
+				
 				//preprocess so word index wouldn't get too large, e.g. TeX.
-				if(!SPECIAL_CHARACTER_PATTERN.matcher(word).find() || specialCharVocabSet.contains(word) ){
+				if(!SPECIAL_CHARACTER_PATTERN.matcher(word).find()){
+					thmList.add(word);
+				}else if(umlautCharPatt.matcher(word).find() || specialCharVocabSet.contains(word)) {
+					word = WordForms.stripUmlautFromWord(word);
 					thmList.add(word);
 				}
 			}

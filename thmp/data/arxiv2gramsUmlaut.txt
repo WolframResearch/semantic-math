@@ -183,7 +183,7 @@ finite time, 11731
 limit theorem, 11546
 linear function, 11510
 finite field, 11500
-schrodinger equation, 11442
+schr\"odinger equation, 11442
 Nash equilibrium, 11441
 generating set, 11408
 time evolution, 11359
@@ -607,7 +607,7 @@ master equation, 5213
 asymptotically flat, 5206
 invariant set, 5205
 dominated convergence, 5200
-levy process, 5198
+l\'evy process, 5198
 chain rule, 5188
 local minimum, 5171
 dominating set, 5143
@@ -660,7 +660,7 @@ potential energy, 4881
 energy densities, 4881
 hyperbolic space, 4862
 geodesic flow, 4859
-schrodinger operator, 4856
+schr\"odinger operator, 4856
 relay node, 4850
 square lattice, 4849
 extreme point, 4847
@@ -839,7 +839,7 @@ two-point function, 4011
 relay channel, 4002
 path loss, 3998
 mixture model, 3998
-holder's inequality, 3998
+h\"older's inequality, 3998
 open string, 3993
 lowest order, 3988
 finite order, 3983
@@ -1104,9 +1104,9 @@ Wilson line, 3220
 product structure, 3214
 approximation scheme, 3214
 Poisson distribution, 3213
-levy processes, 3213
+l\'evy processes, 3213
 invariant subspace, 3212
-Kahler manifold, 3211
+K\"ahler manifold, 3211
 Pezzo surface, 3209
 scale factor, 3202
 independent variable, 3200
@@ -1369,7 +1369,7 @@ crossed product, 2665
 regular point, 2664
 Lie groupoid, 2664
 Potts model, 2663
-levy measure, 2663
+l\'evy measure, 2663
 multiple edges, 2662
 finite dimension, 2662
 lexicographic order, 2659
@@ -1554,7 +1554,7 @@ affine transformation, 2390
 bounded degree, 2389
 projective line, 2388
 Euclidean plane, 2385
-mobius transformation, 2384
+m\"obius transformation, 2384
 index theorem, 2384
 grows exponentially, 2383
 binary string, 2382
@@ -1755,7 +1755,7 @@ control strategies, 2129
 energy conservation, 2128
 United Kingdom, 2126
 Kolmogorov complexity, 2122
-Kahler metric, 2122
+K\"ahler metric, 2122
 price process, 2121
 growth condition, 2118
 asymptotic limit, 2118
@@ -2033,7 +2033,7 @@ integer point, 1832
 unknown function, 1831
 projective structure, 1831
 normed space, 1831
-holder inequality, 1831
+h\"older inequality, 1831
 triple point, 1830
 topological type, 1830
 decoding error, 1830
@@ -2086,7 +2086,7 @@ rational coefficients, 1792
 oriented graph, 1792
 centered Gaussian, 1792
 block matrix, 1792
-nonlinear schrodinger, 1788
+nonlinear schr\"odinger, 1788
 internal energy, 1788
 approximation method, 1786
 continuous distribution, 1785
@@ -2323,7 +2323,7 @@ coordinate descent, 1607
 index code, 1606
 quantum code, 1605
 particular value, 1605
-Kahler form, 1605
+K\"ahler form, 1605
 constraint satisfaction, 1605
 infinitely divisible, 1603
 complexity bound, 1603
@@ -3033,7 +3033,7 @@ integration constant, 1190
 projection method, 1189
 positive cone, 1189
 optimal cost, 1189
-mobius function, 1189
+m\"obius function, 1189
 nabla psi, 1188
 domain decomposition, 1187
 exact form, 1186
@@ -3449,7 +3449,7 @@ factor model, 1027
 divisor class, 1027
 type inequalities, 1026
 numerical tests, 1026
-Kahler potential, 1026
+K\"ahler potential, 1026
 Glauber dynamics, 1025
 elliptic regularity, 1025
 descending order, 1025
@@ -3462,7 +3462,7 @@ conformal symmetry, 1024
 atomic formula, 1024
 small subset, 1023
 running coupling, 1023
-holder continuity, 1023
+h\"older continuity, 1023
 Dirichlet condition, 1023
 real matrices, 1022
 interference cancellation, 1022
@@ -4660,7 +4660,7 @@ Fourier mode, 703
 distributed manner, 703
 rigidity matrix, 702
 real applications, 702
-mobius band, 702
+m\"obius band, 702
 hyperbolic relative, 702
 facility location, 702
 cylinder set, 702
@@ -5121,7 +5121,7 @@ label set, 617
 hat phi, 617
 rate loss, 616
 positive side, 616
-holder space, 616
+h\"older space, 616
 higher spin, 616
 dimension four, 616
 braid index, 616
@@ -5149,7 +5149,7 @@ bipartite system, 613
 support points, 612
 rotational invariance, 612
 process algebra, 612
-Kahler structure, 612
+K\"ahler structure, 612
 imaginary time, 612
 holomorphic curves, 612
 function evaluation, 612
@@ -5302,7 +5302,7 @@ optimal objective, 588
 noise distribution, 588
 negative edge, 588
 independent components, 588
-holder regularity, 588
+h\"older regularity, 588
 Fukaya categories, 588
 backhaul link, 588
 asymptotic estimate, 588
@@ -5353,7 +5353,7 @@ leverage score, 580
 inf-sup condition, 580
 Dirichlet character, 580
 compact Riemann, 580
-compact Kahler, 580
+compact K\"ahler, 580
 boundary face, 580
 structure learning, 579
 random perturbation, 579
@@ -5460,7 +5460,7 @@ multipole moments, 566
 maximal regularity, 566
 initial phase, 566
 horizontal direction, 566
-holder exponent, 566
+h\"older exponent, 566
 Fano varieties, 566
 distributive law, 566
 compact representation, 566
@@ -5626,7 +5626,7 @@ continuous state, 540
 uncertainty quantification, 539
 string graph, 539
 streaming algorithm, 539
-Kahler moduli, 539
+K\"ahler moduli, 539
 Hodge filtration, 539
 forgetful map, 539
 fading model, 539
@@ -5821,7 +5821,7 @@ essential surface, 515
 broken line, 515
 receiver side, 514
 principal eigenvalue, 514
-plucker coordinates, 514
+pl\"ucker coordinates, 514
 periodic potential, 514
 near-horizon geometries, 514
 local algorithm, 514
@@ -6367,7 +6367,7 @@ symmetric argument, 453
 output signal, 453
 motivic cohomology, 453
 Mahler measure, 453
-Kahler cone, 453
+K\"ahler cone, 453
 joint law, 453
 hidden state, 453
 generalization bound, 453
@@ -7264,7 +7264,7 @@ oscillatory integral, 372
 nested word, 372
 mass spectrum, 372
 Jacobi matrices, 372
-hyperkahler manifold, 372
+hyperk\"ahler manifold, 372
 gain matrix, 372
 finite area, 372
 carrier frequencies, 372
@@ -7418,7 +7418,7 @@ semidefinite relaxation, 361
 random walker, 361
 program point, 361
 Pachner move, 361
-mobius strip, 361
+m\"obius strip, 361
 layer security, 361
 information diffusion, 361
 geometric model, 361
@@ -8426,7 +8426,7 @@ energy solution, 297
 clique tree, 297
 chiral expansion, 297
 character formula, 297
-Buchi automaton, 297
+B\"uchi automaton, 297
 alignment set, 297
 tube formula, 296
 torsion subgroup, 296
@@ -8877,7 +8877,7 @@ off-diagonal terms, 272
 modular tensor, 272
 minimum height, 272
 Lorentzian signature, 272
-Kahler class, 272
+K\"ahler class, 272
 iterative solver, 272
 interaction picture, 272
 Hadamard space, 272
@@ -9188,7 +9188,7 @@ regular ring, 258
 opposite inequality, 258
 mu+ omega, 258
 modular decomposition, 258
-mobius inversion, 258
+m\"obius inversion, 258
 mean-field model, 258
 mean velocity, 258
 limits exist, 258
@@ -9645,7 +9645,7 @@ process matrix, 239
 Lie theory, 239
 Lie 2-algebra, 239
 Krein space, 239
-Kahler Ricci, 239
+K\"ahler Ricci, 239
 homogeneous pair, 239
 Hawking temperature, 239
 Dark energy, 239
@@ -9868,7 +9868,7 @@ malicious nodes, 230
 line joinround, 230
 inverse monoid, 230
 horizontal distribution, 230
-holder spaces, 230
+h\"older spaces, 230
 heat conduction, 230
 global dynamics, 230
 geometric progression, 230
@@ -9891,7 +9891,7 @@ transportation cost, 229
 spin state, 229
 queueing model, 229
 potential vorticity, 229
-plucker coordinate, 229
+pl\"ucker coordinate, 229
 pebble game, 229
 outage event, 229
 odd period, 229
@@ -11463,7 +11463,7 @@ Bell pair, 182
 Bell measurement, 182
 beamforming design, 182
 background geometry, 182
-almost Kahler, 182
+almost K\"ahler, 182
 0-1 loss, 182
 vertex expansion, 181
 target vector, 181
@@ -11754,7 +11754,7 @@ statistical equilibrium, 174
 state redistribution, 174
 singularity type, 174
 Schwinger function, 174
-Ricci-flat Kahler, 174
+Ricci-flat K\"ahler, 174
 repelling periodic, 174
 relaying scheme, 174
 rational expression, 174
@@ -12042,7 +12042,7 @@ measurement apparatus, 168
 Latin hypercube, 168
 Krawtchouk polynomials, 168
 k-connected graph, 168
-Kahler-Einstein metric, 168
+K\"ahler-Einstein metric, 168
 integer variables, 168
 input stream, 168
 initial function, 168
@@ -12278,7 +12278,7 @@ modern physics, 163
 localization error, 163
 local symmetry, 163
 local memory, 163
-levy area, 163
+l\'evy area, 163
 Laplace's method, 163
 initial population, 163
 Hilbert bimodule, 163
@@ -13112,7 +13112,7 @@ range queries, 148
 quantum bit, 148
 protocol model, 148
 polynomial expansion, 148
-plucker embedding, 148
+pl\"ucker embedding, 148
 Pinsker's inequality, 148
 outer vertices, 148
 multi-valued graph, 148
@@ -13501,7 +13501,7 @@ integer sequences, 142
 graph size, 142
 gluing equations, 142
 giant planets, 142
-generalized Kahler, 142
+generalized K\"ahler, 142
 free vector, 142
 field operations, 142
 external data, 142
@@ -13800,7 +13800,7 @@ fuzzy system, 138
 frac alpha2, 138
 fixed design, 138
 extreme Kerr, 138
-extremal Kahler, 138
+extremal K\"ahler, 138
 Euclidean vector, 138
 effective cone, 138
 differential entropies, 138
@@ -14293,7 +14293,7 @@ minimal idempotent, 131
 macroscopic variables, 131
 logical specification, 131
 Lifshitz theory, 131
-levy density, 131
+l\'evy density, 131
 irreducible elements, 131
 invariant pair, 131
 induced topology, 131
@@ -14489,7 +14489,7 @@ time synchronization, 128
 thermal operations, 128
 strict polynomial, 128
 state splitting, 128
-stable levy, 128
+stable l\'evy, 128
 source transmits, 128
 Skorohod topology, 128
 sharply F-pure, 128
@@ -15127,11 +15127,11 @@ MHV vertices, 121
 logarithmic correction, 121
 local constraint, 121
 limiter function, 121
-levy models, 121
+l\'evy models, 121
 least eigenvalue, 121
 Langlands dual, 121
 Korn's inequality, 121
-Kahler-Ricci flow, 121
+K\"ahler-Ricci flow, 121
 inverse regression, 121
 infected hosts, 121
 inclusion relation, 121
@@ -16218,7 +16218,7 @@ nonzero elements, 109
 non-increasing sequence, 109
 neural activity, 109
 Neumann domain, 109
-negative levy, 109
+negative l\'evy, 109
 multiplier bootstrap, 109
 moment variation, 109
 message chain, 109
@@ -16551,7 +16551,7 @@ Noether point, 106
 neutrosophic set, 106
 monodromy action, 106
 modal formula, 106
-mobius transform, 106
+m\"obius transform, 106
 mobility edge, 106
 matrix elements, 106
 Markovian process, 106
@@ -16646,7 +16646,7 @@ regular vector, 105
 randomized strategies, 105
 quantum vacuum, 105
 quantum trajectories, 105
-productively Lindelof, 105
+productively Lindel\"of, 105
 product neighborhood, 105
 probabilistic analysis, 105
 primitive period, 105
@@ -16689,7 +16689,7 @@ flux surface, 105
 fluid motion, 105
 Floer trajectories, 105
 exponential model, 105
-exponential levy, 105
+exponential l\'evy, 105
 execution tree, 105
 event set, 105
 even values, 105
@@ -16698,7 +16698,7 @@ energy supply, 105
 energy solutions, 105
 elementary gates, 105
 eikonal approximation, 105
-discrete schrodinger, 105
+discrete schr\"odinger, 105
 dimension finie, 105
 Delaunay polytope, 105
 decision region, 105
@@ -17025,7 +17025,7 @@ numerical errors, 102
 NG mode, 102
 n- nhat, 102
 mz- mx_m, 102
-mobius graph, 102
+m\"obius graph, 102
 message point, 102
 mass eigenstates, 102
 loop edge, 102
@@ -17253,7 +17253,7 @@ semistable reduction, 100
 semisimple type, 100
 secure network, 100
 Schro"der path, 100
-reverse holder, 100
+reverse h\"older, 100
 resolution property, 100
 residual graph, 100
 regular simplex, 100
@@ -18140,7 +18140,7 @@ proper Dupin, 93
 proper birational, 93
 primary cell, 93
 popularity profile, 93
-polarized Kahler, 93
+polarized K\"ahler, 93
 phenomenological dynamics, 93
 peeling decoder, 93
 partial dynamical, 93
@@ -18304,7 +18304,7 @@ massive spin-2, 92
 mass generation, 92
 loop charge, 92
 light scalar, 92
-levy net, 92
+l\'evy net, 92
 Lanczos method, 92
 Jordan triple, 92
 joint system, 92
@@ -18442,7 +18442,7 @@ limiting densities, 91
 least absolute, 91
 Laplace's equation, 91
 Kobayashi metric, 91
-Kahler Einstein, 91
+K\"ahler Einstein, 91
 joint typicality, 91
 joint torsion, 91
 interface adapter, 91
@@ -18897,7 +18897,7 @@ multiplicative weights, 88
 Morse decomposition, 88
 monodromy map, 88
 momentum tensor, 88
-mobius number, 88
+m\"obius number, 88
 ML codeword, 88
 minimal extrapolation, 88
 minimal cycle, 88
@@ -19324,7 +19324,7 @@ valid path, 85
 utility company, 85
 uplink rate, 85
 type algorithm, 85
-tropical plucker, 85
+tropical pl\"ucker, 85
 trade-off curve, 85
 topometric space, 85
 thrust axis, 85
@@ -19412,7 +19412,7 @@ Interference channel, 85
 integral identities, 85
 image graph, 85
 homogeneous manifold, 85
-holder estimate, 85
+h\"older estimate, 85
 HK scheme, 85
 helper nodes, 85
 Hasse invariant, 85
@@ -20095,7 +20095,7 @@ negative semidefinite, 81
 ne de'pend, 81
 MUSIC algorithm, 81
 M-T relation, 81
-mobius polynomial, 81
+m\"obius polynomial, 81
 Minkowski measurable, 81
 microwave field, 81
 MHV formalism, 81
@@ -20469,7 +20469,7 @@ mz- my_m, 79
 multiband signal, 79
 MPR capability, 79
 molecular motors, 79
-mobius transformations, 79
+m\"obius transformations, 79
 missing edge, 79
 MI node, 79
 MHD turbulence, 79
@@ -20935,7 +20935,7 @@ composite hypothesis, 77
 complex interpolation, 77
 complete model, 77
 compact structure, 77
-compact hyper-Kahler, 77
+compact hyper-K\"ahler, 77
 commuting Hamiltonians, 77
 commutative R-algebra, 77
 commutative Frobenius, 77
@@ -21272,7 +21272,7 @@ mesh generation, 75
 MBR code, 75
 matrix ensemble, 75
 Maslov class, 75
-Lowner chain, 75
+L\"owner chain, 75
 logarithmic loss, 75
 local type, 75
 local parametrix, 75
@@ -22562,7 +22562,7 @@ seed graph, 69
 security policies, 69
 secondary control, 69
 SDT tensor, 69
-Schroder paths, 69
+Schr\"oder paths, 69
 scalar hair, 69
 round curves, 69
 rough matroid, 69
@@ -22585,7 +22585,7 @@ real particle, 69
 reachability analysis, 69
 rank distribution, 69
 random tensor, 69
-random schrodinger, 69
+random schr\"odinger, 69
 random demodulator, 69
 queue model, 69
 quantum signature, 69
@@ -22911,7 +22911,7 @@ Lipschitz equivalence, 68
 light meson, 68
 Lie integration, 68
 Levi factor, 68
-Kunneth formula, 68
+K\"unneth formula, 68
 K-sets algorithm, 68
 Kronecker coefficient, 68
 Kolmogorov diffusion, 68
@@ -23184,7 +23184,7 @@ Liouville manifold, 67
 line-circle continuity, 67
 limiting factor, 67
 light queue, 67
-levy exponent, 67
+l\'evy exponent, 67
 level expansion, 67
 Legendrian contact, 67
 learning parameter, 67
@@ -23473,7 +23473,7 @@ log schemes, 66
 log Calabi-Yau, 66
 local subsystems, 66
 linear amplifier, 66
-levy basis, 66
+l\'evy basis, 66
 Leamer monoid, 66
 LD distribution, 66
 LBFS ordering, 66
@@ -23969,7 +23969,7 @@ service frequency, 64
 se'rie formelle, 64
 sequential rejection, 64
 semi-standard Young, 64
-schrodinger operators, 64
+schr\"odinger operators, 64
 scattering rate, 64
 satisfying truth, 64
 Rohlin's maximality, 64
@@ -24064,7 +24064,7 @@ Lambda nabla, 64
 Kronecker graph, 64
 Kripke frame, 64
 k-analytic space, 64
-Kahler parameters, 64
+K\"ahler parameters, 64
 Jost solutions, 64
 isolated eigenvalues, 64
 irreducible matrix, 64
@@ -25252,7 +25252,7 @@ terminal endpoint, 60
 tensor unit, 60
 tensor norm, 60
 tame Kuranishi, 60
-Szego kernel, 60
+Szeg\"o kernel, 60
 synthetic database, 60
 symplectic fermion, 60
 Svetlichny discord, 60
@@ -25295,7 +25295,7 @@ service amount, 60
 semigroup ideal, 60
 semi-algebraic region, 60
 Secant conjecture, 60
-schrodinger functional, 60
+schr\"odinger functional, 60
 Scattered wave, 60
 rounded corners2pt, 60
 round number, 60
@@ -25765,7 +25765,7 @@ local components, 59
 link rate, 59
 linear recursion, 59
 linear diffusion, 59
-Lindelof space, 59
+Lindel\"of space, 59
 light traffic, 59
 Lie wedge, 59
 Lichnerowicz equation, 59
@@ -26144,7 +26144,7 @@ Mather set, 58
 Markov interval, 58
 manifestly covariant, 58
 magnetization chain, 58
-magnetic schrodinger, 58
+magnetic schr\"odinger, 58
 magic representation, 58
 LRR model, 58
 location estimation, 58
@@ -26306,7 +26306,7 @@ braid system, 58
 BPI estimator, 58
 bottleneck state, 58
 bosonic channel, 58
-Bochner-Kahler metric, 58
+Bochner-K\"ahler metric, 58
 bm gamma, 58
 Bloom algebra, 58
 bilinear Hilbert, 58
@@ -26765,7 +26765,7 @@ sequence design, 56
 separatrix map, 56
 sensing capacity, 56
 secrecy constraints, 56
-schrodinger picture, 56
+schr\"odinger picture, 56
 scatter matrix, 56
 scalar manifold, 56
 running consensus, 56
@@ -27286,7 +27286,7 @@ impedance function, 55
 image measure, 55
 ideal projector, 55
 hypoth ese, 55
-hyper-Kahler manifold, 55
+hyper-K\"ahler manifold, 55
 hypercomplex structure, 55
 hyperbolic trajectories, 55
 hybrid arc, 55
@@ -27883,7 +27883,7 @@ BS intensity, 54
 Bruck loop, 54
 brane charges, 54
 braid isotopy, 54
-bounded holder, 54
+bounded h\"older, 54
 boundary limit, 54
 bootstrapped DQN, 54
 Bogoliubov transformation, 54
@@ -27970,7 +27970,7 @@ target propagation, 53
 target accuracy, 53
 Tantrix texttrademark, 53
 tangential family, 53
-tangent levy, 53
+tangent l\'evy, 53
 tagged arc, 53
 synchronous systems, 53
 Super Mario, 53
@@ -28621,7 +28621,7 @@ local fields, 52
 linear cycle, 52
 linear collider, 52
 light cylinder, 52
-levy channel, 52
+l\'evy channel, 52
 least support, 52
 lattice symmetries, 52
 lattice constellation, 52
@@ -29098,7 +29098,7 @@ linear capacity, 51
 limiting eigenvalue, 51
 lightlike line, 51
 light edges, 51
-levy flight, 51
+l\'evy flight, 51
 Legendrian foliation, 51
 left-regular graph, 51
 layered permutation, 51
@@ -29419,7 +29419,7 @@ seed state, 50
 secci 'on, 50
 SCR events, 50
 SC-LDPC codes, 50
-schrodinger's equation, 50
+schr\"odinger's equation, 50
 scalar density, 50
 saturated graph, 50
 sampling width, 50
@@ -29561,7 +29561,7 @@ linear polynomials, 50
 line module, 50
 lightest derivation, 50
 lifting cascade, 50
-levy-Khintchine exponent, 50
+l\'evy-Khintchine exponent, 50
 Levy cycle, 50
 learning mechanism, 50
 las funciones, 50
@@ -29823,7 +29823,7 @@ type SWF, 49
 two-step KRR, 49
 twisted square, 49
 Tutte invariant, 49
-truncated levy, 49
+truncated l\'evy, 49
 true support, 49
 trial a-function, 49
 tree realization, 49
@@ -29834,7 +29834,7 @@ transition polynomial, 49
 totally nondegenerate, 49
 total loss, 49
 toric module, 49
-toric Kahler, 49
+toric K\"ahler, 49
 time-varying LECs, 49
 time-varying delays, 49
 threshold graphs, 49
@@ -30080,7 +30080,7 @@ k-noncrossing partitions, 49
 KM dynamics, 49
 kernel SVM, 49
 Kapranov rank, 49
-Kahler-Ricci soliton, 49
+K\"ahler-Ricci soliton, 49
 joint ML, 49
 joint centrality, 49
 Janus point, 49
@@ -30225,7 +30225,7 @@ complemented category, 49
 complementary components, 49
 complementarity constraint, 49
 compatibility domain, 49
-compact hyperkahler, 49
+compact hyperk\"ahler, 49
 compact equivalence, 49
 commit phase, 49
 column span, 49
@@ -30798,7 +30798,7 @@ average rank, 48
 Arnold diffusion, 48
 a-priori estimate, 48
 antipodal symmetry, 48
-anti-canonical Kahler, 48
+anti-canonical K\"ahler, 48
 antenna element, 48
 anomalous sequence, 48
 ancestral lineages, 48
@@ -30941,7 +30941,7 @@ SD method, 47
 Scott topology, 47
 Schnyder realizer, 47
 scene image, 47
-scalar-flat Kahler, 47
+scalar-flat K\"ahler, 47
 sampling variance, 47
 sampling corrector, 47
 sampling bias, 47
@@ -32113,7 +32113,7 @@ separate coding, 45
 seesaw mechanism, 45
 secondary nodes, 45
 screened Coulomb, 45
-schrodinger map, 45
+schr\"odinger map, 45
 scheduling period, 45
 Schatten-p quasi-norm, 45
 SCDMA code, 45
@@ -32961,7 +32961,7 @@ local recovery, 44
 local randomness, 44
 local program, 44
 local Morse, 44
-local holder, 44
+local h\"older, 44
 local functions, 44
 Lipschitz norm, 44
 link weights, 44
@@ -33241,7 +33241,7 @@ annulus twist, 44
 angular spread, 44
 anchored graph, 44
 analytic model, 44
-ambipolar hyperkahler, 44
+ambipolar hyperk\"ahler, 44
 ambient metric, 44
 alternating trail, 44
 algebraically split, 44
@@ -35602,8 +35602,8 @@ Poisson formula, 40
 point vertex, 40
 point measures, 40
 pmb omega, 40
-plucker relations, 40
-plucker relation, 40
+pl\"ucker relations, 40
+pl\"ucker relation, 40
 planar Zappatic, 40
 planar domains, 40
 pipelined CG, 40
@@ -37055,7 +37055,7 @@ second-order derivative, 38
 search path, 38
 Schwinger spin, 38
 Schur-Agler class, 38
-schrodinger representation, 38
+schr\"odinger representation, 38
 schematically dense, 38
 scheduling rule, 38
 Schanuel's conjecture, 38
@@ -38713,7 +38713,7 @@ strip packing, 36
 stringy Ward, 36
 stress-energy VEV, 36
 strategic vote, 36
-stochastic schrodinger, 36
+stochastic schr\"odinger, 36
 stitched Lagrangian, 36
 Stieltjes moment, 36
 stick index, 36
@@ -38987,7 +38987,7 @@ non-uniform Kuramoto, 36
 non-negative bases, 36
 nonfractal connectivity, 36
 non-crossing connectors, 36
-noncompact Kahler, 36
+noncompact K\"ahler, 36
 noncoherent SWIPT, 36
 non ramifie', 36
 noisy chain, 36
@@ -39090,7 +39090,7 @@ limit bound, 36
 light-front wavefunctions, 36
 light splitting, 36
 Lie splitting, 36
-levy model, 36
+l\'evy model, 36
 Levi component, 36
 level automaton, 36
 legal boundary, 36
@@ -39113,7 +39113,7 @@ Khovanov homologies, 36
 key size, 36
 key hierarchy, 36
 Kazhdan-Lusztig bases, 36
-Kahlerian K3, 36
+K\"ahlerian K3, 36
 k+ ell-2, 36
 Jenkins-Strebel differential, 36
 Jb Jb'L, 36
@@ -39934,8 +39934,8 @@ monotone-regular behaviors, 35
 monotone subsequence, 35
 monadic lenses, 35
 modularity matrix, 35
-mobius gyrovector, 35
-mobius addition, 35
+m\"obius gyrovector, 35
+m\"obius addition, 35
 MMP diagrams, 35
 mkern-6mu box, 35
 mixed observations, 35
@@ -40143,7 +40143,7 @@ Gabor systems, 35
 fundamental slide, 35
 fundamental point-circle, 35
 Frobenius element, 35
-free schrodinger, 35
+free schr\"odinger, 35
 fractal geometries, 35
 FQ-legal decomposition, 35
 Fox H-function, 35
@@ -40167,7 +40167,7 @@ fingerprint application, 35
 file diversity, 35
 fictious vertices, 35
 Fibonacci index, 35
-fiberwise Kahler, 35
+fiberwise K\"ahler, 35
 fermionic action, 35
 femtocell service, 35
 feasible SINR, 35
@@ -40936,7 +40936,7 @@ moment-cumulant formula, 34
 modified versions, 34
 modified Belanger's, 34
 model spacetime, 34
-mobius degree, 34
+m\"obius degree, 34
 mixed interval, 34
 mixed commitment, 34
 missing information, 34
@@ -40997,7 +40997,7 @@ lifting factorizations, 34
 Lieb-Wu equations, 34
 LGL grids, 34
 LFM pulse, 34
-levy flights, 34
+l\'evy flights, 34
 level-1 tree, 34
 legal execution, 34
 leg ladder, 34
@@ -41032,7 +41032,7 @@ key ribbon, 34
 k-disjunctive cut, 34
 K-block sparse, 34
 Kaluza-Klein theory, 34
-Kahler geometry, 34
+K\"ahler geometry, 34
 JM elements, 34
 Jack characters, 34
 Iwahori subgroup, 34
@@ -41599,7 +41599,7 @@ topological path, 33
 top-down ftt, 33
 Toeplitz subshifts, 33
 Toda equation, 33
-time-inhomogeneous levy, 33
+time-inhomogeneous l\'evy, 33
 tilde varrho_R, 33
 tidal radius, 33
 ti gp_v, 33
@@ -42020,7 +42020,7 @@ line status, 33
 Lindblad form, 33
 likely path, 33
 likelihood equation, 33
-levy triplet, 33
+l\'evy triplet, 33
 level machine, 33
 Lehmann-Goerisch method, 33
 Lefschetz map, 33
@@ -42274,7 +42274,7 @@ discrete velocity, 33
 discrete spectra, 33
 discrete Lorenz, 33
 Dirac's delta, 33
-Dirac-Kahler fermion, 33
+Dirac-K\"ahler fermion, 33
 Dirac QW, 33
 Dirac bundle, 33
 dimensional spacetime, 33
@@ -42724,7 +42724,7 @@ SDE decomposition, 32
 SD function, 32
 SD fee, 32
 Schur decomposition, 32
-schrodinger module, 32
+schr\"odinger module, 32
 scheduling algorithms, 32
 SCET Lagrangian, 32
 scattering rates, 32
@@ -43051,7 +43051,7 @@ Lie quadric, 32
 libration angle, 32
 lexicographic product, 32
 lex short, 32
-levy kernel, 32
+l\'evy kernel, 32
 lepton energy, 32
 lens model, 32
 lemm characterization, 32
@@ -44049,7 +44049,7 @@ minimal pair, 31
 MIMO regime, 31
 MIMO decoding, 31
 Michel flow, 31
-meromorphic levy, 31
+meromorphic l\'evy, 31
 measured system, 31
 mean response, 31
 mean capacity, 31

@@ -98,6 +98,9 @@ public class WordForms {
 	private static final Pattern SKIP_PATTERN = Pattern.compile("\\\\begin\\{proof\\}.*|\\\\begin\\{exam.*|\\\\begin\\{thebib.*");
 	private static final Pattern END_SKIP_PATTERN = Pattern.compile("\\\\end\\{proof\\}.*|\\\\end\\{exam.*|\\\\end\\{thebib.*");
 		
+	//special umlaut character to replace with version without umlaut. I.e. \\\"
+	public static final Pattern umlautTexPatt = Pattern.compile("(\\\\\"|\\\\\')");
+	
 	//single lines to skip. Such as comments
 	private static final Pattern SINGLE_LINE_SKIP_PATTERN = Pattern.compile("^%.*|\\\\begin\\{bib.*|.*FFFFFF.*|.*fffff.*|\\/.*");
 	
@@ -615,6 +618,14 @@ public class WordForms {
 			return twoGram;
 		}
 		return normalizeTwoGram2(wordAr[0], wordAr[1]);
+	}
+	
+	/**
+	 * Strip away TeX umlaut char. E.g. "\\\"a" -> "a"
+	 * @return
+	 */
+	public static String stripUmlautFromWord(String word) {
+		return umlautTexPatt.matcher(word).replaceAll("");
 	}
 	
 	/**
