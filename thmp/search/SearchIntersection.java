@@ -37,6 +37,7 @@ import thmp.utils.FileUtils;
 import thmp.utils.GatherRelatedWords.RelatedWords;
 import thmp.utils.WordForms;
 import thmp.utils.WordForms.ThmPart;
+import thmp.utils.WordForms.TokenType;
 
 /**
  * Searches by finding intersections in theorems that contain given keywords.
@@ -545,7 +546,7 @@ public class SearchIntersection {
 		// scores of n-grams if to dominant. Approximate, for instance does not
 		// de-singularize.
 		int totalWordsScore = 0;
-		int numWordsAdded = 0;
+		//int numWordsAdded = 0;
 
 		// multimap of words, and the list of thm indices that have been added. Words.
 		//ListMultimap<String, Integer> wordThmIndexAddedMMap = ArrayListMultimap.create();
@@ -594,8 +595,8 @@ public class SearchIntersection {
 				
 				String twoGram = word + " " + nextWord;
 				
-				twoGram = WordForms.normalizeTwoGram(twoGram);
-				// check for 3 grams.
+				//addWordThms() will normalize.
+				//twoGram = WordForms.normalizeTwoGram(twoGram);
 				//long time1 = SimilarThmSearch.printElapsedTime(time0, "time1");
 				
 				if (i < inputWordsArSz - 2) {
@@ -603,10 +604,10 @@ public class SearchIntersection {
 					
 					thirdWord = WordForms.stripUmlautFromWord(thirdWord);
 					String threeGram = twoGram + " " + thirdWord;
+					//threeGram = WordForms.stripUmlautFromWord(threeGram);
 					
-					threeGram = WordForms.stripUmlautFromWord(threeGram);
-					
-					if (threeGramsMap.containsKey(threeGram)) {
+					//if (threeGramsMap.containsKey(threeGram)) {
+					//addWordThms will add if proper n-gram.
 						scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap,// thmWordsMMap, 
 								thmScoreSpanSet, thmPartMap, wordThmsListList, wordIndexPartPairMap,
 								threeGram, i, WordForms.TokenType.THREEGRAM,
@@ -617,10 +618,10 @@ public class SearchIntersection {
 							wordCountArray[i + 2] = wordCountArray[i + 2] + 1;
 							totalWordsScore += scoreAdded;
 							searchState.addTokenScore(threeGram, scoreAdded);
-							numWordsAdded++;
+							//numWordsAdded++;
 							indexStartingWordsMMap.put(i, threeGram);
 						}
-					}
+					//}
 				}
 				//long time2 = SimilarThmSearch.printElapsedTime(time1, "time2");
 				if (twoGramsMap.containsKey(twoGram)) {
@@ -633,17 +634,11 @@ public class SearchIntersection {
 						wordCountArray[i + 1] = wordCountArray[i + 1] + 1;
 						totalWordsScore += scoreAdded;
 						searchState.addTokenScore(twoGram, scoreAdded);
-						numWordsAdded++;
+						//numWordsAdded++;
 						indexStartingWordsMMap.put(i, twoGram);
 					}
 				}
-			}
-			// if the words in a three gram collectively (3 gram + 2 gram +
-			// individual words) weigh a lot,
-			// then scale down the overall words? e.g. "linear map with closed
-			// range", "closed", "range",
-			// "closed range" all weigh a lot. 
-			
+			}		
 			
 			//long time3 = System.nanoTime();
 			//This score includes words scores for words related to this word.
@@ -655,7 +650,7 @@ public class SearchIntersection {
 				totalWordsScore += scoreAdded;
 				//how is this used later?!
 				searchState.addTokenScore(word, scoreAdded);
-				numWordsAdded++;
+				//numWordsAdded++;
 				indexStartingWordsMMap.put(i, word);
 			}			
 			//SimilarThmSearch.printElapsedTime(time3, "time3");
@@ -738,6 +733,7 @@ public class SearchIntersection {
 		searchState.setThmScoreMap(thmScoreMap);
 		int resultWordSpan = searchState.largestWordSpan();
 		/**short circuit if number of token below threshold*/
+		//This is not longer used as of March 2018.
 		if(false && !FileUtils.isByblis67 && //********temporary Feb 15. Since can't set up db on byblis
 				searchState.allowLiteralSearch() && LiteralSearch.spanBelowThreshold(resultWordSpan, inputWordsArSz)) {
 			System.out.println("Initializing literal search...");
@@ -762,7 +758,6 @@ public class SearchIntersection {
 		//***boolean topScorer = true;
 		PriorityQueue<ThmScoreSpanPair> thmScorePQ2 = new PriorityQueue<ThmScoreSpanPair>();
 		List<Integer> highestThmList = new ArrayList<Integer>();
-		//int counter = (int)(numHighest*1.5); //numHighest; //
 		int maxThmCount = 400;
 		int counter = 0;
 		
@@ -779,12 +774,6 @@ public class SearchIntersection {
 			//score based on compare word distances here
 			WordDistScoreTMap indexWordTMap = thmWordIndexMap.get(index);
 			int wordDistScore = LiteralSearch.computeThmWordDistScore(indexWordTMap);
-			//here
-			
-			/*if(index == 424740 || 142067 == index) {
-				//here
-				System.out.println("searchintersection - " + index + ": " + wordDistScore + ": " + indexWordTMap);
-			}*/
 			
 			//don't penalize score, penalize wordDistScore instead, since want to rank
 			//all results containing all keys words above those that contain fewer, and 
@@ -795,7 +784,6 @@ public class SearchIntersection {
 			}
 			
 			int thmWordSpan = pair.spanScore;
-			//scorePair.setCandidateWord(pair.oneCandidateWord());
 			
 			thmScorePQ2.add(new ThmScoreSpanPair(index, score, thmWordSpan, wordDistScore));
 			pair=thmScorePQ.poll();
@@ -1076,34 +1064,40 @@ public class SearchIntersection {
 			int[] singletonScoresAr, Set<String> searchWordsSet, Set<Integer> dbThmSet, SearchState searchState
 			) {
 		
-		// update scores map
 		int curScoreToAdd = 0;
 		String wordOriginalForm = word;
 		List<String> relatedWordsList = null;
-		// for every word, get list of thms containing this word
+		// for every word, get list of thms containing this word. 
 		Collection<IndexPartPair> wordThms;
-		wordThms = wordThmsIndexMMap1.get(word);
+		
+		//Recall words have all been systematically singularized normalized when gathering and processing data,
+		//i.e. when adding to wordThmsMMap
+		if(tokenType.equals(TokenType.SINGLETON)) {
+			word = WordForms.getSingularForm(word);
+		}else {
+			word = WordForms.normalizeNGram(word);
+		}
+		
+		Collection<IndexPartPair> singWordThms = wordThmsIndexMMap1.get(word);
+		wordThms = singWordThms;		
 		
 		RelatedWords relatedWords;
 		//Normalized forms of stop words are usually the same as the original.
 		//these are already skipped when gathering words.
 		//boolean isStopWord = stopWordSet.contains(word);
 		
-		//if(!isStopWord) {
-			relatedWords = relatedWordsMap.get(word);
-			if (null != relatedWords) {
-				relatedWordsList = relatedWords.getCombinedList();
-			}
-		//}
+		relatedWords = relatedWordsMap.get(word);
+		if (null != relatedWords) {
+			relatedWordsList = relatedWords.getCombinedList();
+		}
 		
-		String wordSingForm = word;
 		Integer wordScore = 0;
 		if (!wordThms.isEmpty()) {
 			wordScore = wordsScoreMap.get(word);
 			//should add nonzero score!!!
 			wordScore = wordScore == null ? defaultWordScore : wordScore;
 			curScoreToAdd = wordScore;
-		} else {
+		} /*else {
 			wordSingForm = WordForms.getSingularForm(word);
 			
 			wordThms = wordThmsIndexMMap1.get(wordSingForm);	
@@ -1126,7 +1120,7 @@ public class SearchIntersection {
 					}
 				}				
 			} 
-		}
+		}*/
 		
 		if (wordThms.isEmpty()) {
 			
@@ -1134,13 +1128,6 @@ public class SearchIntersection {
 			Integer tempWordScore = wordsScoreMap.get(normalizedWord);
 			wordThms = wordThmsIndexMMap1.get(normalizedWord);
 			
-			if(wordThms.isEmpty()){				
-				normalizedWord = WordForms.normalizeWordForm(wordSingForm);
-				tempWordScore = wordsScoreMap.get(normalizedWord);
-				wordThms = wordThmsIndexMMap1.get(normalizedWord);
-			}
-			//System.out.println("SEARCHINTERSECTION - normalizedWord "+normalizedWord + " wordThmMMapNoAnno.contains() "
-				//	+ wordThmMMapNoAnno.containsKey(normalizedWord));
 			if (!wordThms.isEmpty()) {
 				
 				tempWordScore = null == tempWordScore ? defaultWordScore : tempWordScore;
@@ -1185,22 +1172,25 @@ public class SearchIntersection {
 			/****scoreAdded = gatherWordThmsAPosteriori(thmScoreMap, thmWordSpanMMap, thmScoreSpanSet, thmPartMap, word,
 					wordIndexInThm, tokenType, searchWordsSet, dbThmSet, curScoreToAdd, wordOriginalForm, wordThms);*/
 			
-			// add singletons to searchWordsSet, so searchWordsSet could be null if not interested in searchWordsSet.
+			// add singletons to searchWordsSet. searchWordsSet could be null if not interested in searchWordsSet.
 			if (searchWordsSet != null) {
-				String[] wordAr = WordForms.getWhiteNonEmptySpaceNotAllPattern().split(word);
+				/*not add individual terms, After discussing with Michael, March 2018. 
+				 * String[] wordAr = WordForms.getWhiteNonEmptySpaceNotAllPattern().split(word);
 				for (String w : wordAr) {
 					searchWordsSet.add(w);
-				}
-				if(!word.equals(wordOriginalForm)){
+				}*/
+				searchWordsSet.add(wordOriginalForm);
+				searchWordsSet.add(word);
+				
+				/*if(!word.equals(wordOriginalForm)){
 					searchWordsSet.add(wordOriginalForm);
-				}
+				}*/
 			}
 		}
 		
 		if(searchState.allowLiteralSearch()) {
 			curScoreToAdd += addRelatedWordsThms(thmScoreMap, scoreThmMMap, thmScoreSpanSet, thmWordSpanMMap, wordIndexInThm, 
-					tokenType, curScoreToAdd, relatedWordsList, dbThmSet, wordThmsListList, wordIndexPartPairMap,
-					searchWordsSet);
+					tokenType, curScoreToAdd, relatedWordsList, dbThmSet, wordThmsListList, wordIndexPartPairMap);
 		}
 		return curScoreToAdd;
 	}
@@ -1319,8 +1309,7 @@ public class SearchIntersection {
 			TreeMultimap<Integer, Integer> scoreThmMMap, Set<ThmScoreSpanPair> thmScoreSet,
 			Multimap<Integer, Integer> thmWordSpanMMap, int wordIndexInThm,
 			WordForms.TokenType tokenType, int scoreAdded, List<String> relatedWordsList, Set<Integer> dbThmSet,
-			List<WordThmsList> wordThmsListList, Map<String, Collection<IndexPartPair>> wordIndexPartPairMap,
-			Set<String> searchWordsSet) {
+			List<WordThmsList> wordThmsListList, Map<String, Collection<IndexPartPair>> wordIndexPartPairMap) {
 		// add thms for related words found, with some reduction factor;
 		// make global after experimentation. But *must not* exceed original word score,
 		//to make original hits rank higher.
@@ -1336,7 +1325,7 @@ public class SearchIntersection {
 			int relatedWordScore = (int) Math.ceil(scoreAdded * RELATED_WORD_MULTIPLICATION_FACTOR);
 			relatedWordScore = relatedWordScore == scoreAdded && scoreAdded > 0 ? scoreAdded - 1 : relatedWordScore;			
 			//if score 0, would give no advantage to thms having more terms related to search terms, if not those search
-			//terms on the nose.
+			//terms on the nose. These are controlled by maxTotalScoreAdded at the end.
 			relatedWordScore = relatedWordScore == 0 ? 1 : relatedWordScore;
 			
 			for (String relatedWord : relatedWordsList) {
@@ -1368,16 +1357,15 @@ public class SearchIntersection {
 						System.out.println("SearchIntersection-RELATED Word added: " + relatedWord + ". Score: " + relatedWordScore);
 					}
 					
-					/****scoreAdded = gatherWordThmsAPosteriori(thmScoreMap, thmWordSpanMMap, thmScoreSpanSet, thmPartMap, word,
-							wordIndexInThm, tokenType, searchWordsSet, dbThmSet, curScoreToAdd, wordOriginalForm, wordThms);*/
 					// add singletons to searchWordsSet, so
 					// searchWordsSet could be null if not interested in searchWordsSet.
-					if (searchWordsSet != null) {
+					/*Don't highlight related words, per Michael. March 2018.
+					 * if (searchWordsSet != null) {
 						String[] wordAr = WordForms.getWhiteNonEmptySpaceNotAllPattern().split(relatedWord);
 						for (String w : wordAr) {
 							searchWordsSet.add(w);
 						}
-					}
+					}*/
 					totalRelatedScoreAdded += relatedWordScore;
 				}				
 				

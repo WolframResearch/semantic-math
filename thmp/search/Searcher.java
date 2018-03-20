@@ -108,7 +108,9 @@ public interface Searcher<S> {
 		//allThmWordsMapEntryList
 		private static final String threeGramsFreqMapPath = "src/thmp/data/threeGramsMap.dat";
 		private static final String twoGramsFreqMapPath = "src/thmp/data/twoGramsMap.dat";
-		private static final String trueFluffWordsSetPath = "src/thmp/data/trueFluffWordsSet.dat";
+		//English fluff words, including many frequent words in stock map
+		private static final String trueFluffWordsSetTxtPath = "src/thmp/data/trueFluffWordsSet.txt";
+		
 		/**Map of words and their literal search indices, encoded as bytes.*/
 		private static final String literalSearchIndexMapPath = "src/thmp/data/literalSearchIndexMap.dat";
 		public static final String texFilesSerializedListFileName = "texFileNamesSetList.dat";
@@ -182,8 +184,8 @@ public interface Searcher<S> {
 			return twoGramsFreqMapPath;
 		}
 		
-		public static String trueFluffWordsSetPath(){
-			return trueFluffWordsSetPath;
+		public static String trueFluffWordsSetTxtPath(){
+			return trueFluffWordsSetTxtPath;
 		}
 		
 		public static String literalSearchIndexMapPath() {

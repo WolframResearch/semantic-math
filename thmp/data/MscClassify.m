@@ -20,6 +20,7 @@ $commaSemicolonRegex = RegularExpression["[;,]"];
 (*Initialize resources, e.g. loads model.*)
 initialize[dirPath_] := Module[{},
 	$mscModel = Import[FileNameJoin[{dirPath, $modelFileName}]];
+	$msc3Model = Import[FileNameJoin[{dirPath, $model3FileName}]];
 ]
 
 (*List version of createPaperListSparseVecPos. 
@@ -90,8 +91,12 @@ cleanMscList[mscListList_List] :=
   ]  
 
 (*filter out trivial vecs with low norm. Not many features, 
-obfuscates classification. Args: mx to remove from, sparse. Rows are 
-features, columns represent samples. Returns indices to pick, i.e. of 
+obfuscates classification. This will narrow down the classes
+to avoid gratuitous classes the nearest-neighbor might happen 
+to produce.
+Args: mx to remove from, sparse. Rows are 
+features, columns represent samples. 
+Returns: indices to pick, i.e. of 
 sufficiently high norm.*)
 getNontrivialIndices[sparseMx_SparseArray, 
   projectionMx_: $dInverseUTranspose] := 
@@ -188,8 +193,8 @@ createSparseVecPosAssoc[wordList_List, freqList_List,
    Range[Length[wordList]]]
   ]
   
-(*Evaluation time*)  
- 
+(****Evaluation time****)
+
 (*This is called by Java servlet in app*)
 (*
 Args: data string, e.g. "er,1;imply,12; maxim, 1".
@@ -203,13 +208,15 @@ findNearestClasses[dataStr_String, model_:$mscModel, numNearest1_Integer:8] :=
     parseEvalWordScorePos[
      dataStr], {Length[$wordIndexAssoc], 1}];
   (*Can be more generous, can use neural net filter later*)
-  numNearest = numNearest1 + 4;
+  numNearest = numNearest1 + 10;
   preList = Keys[findNearestClassesForSA[sparseAr, numNearest]];
   (*filter out those that are low on *)
   classList = filterMscListWithNet[preList, model, dataStr];
   
   (******classList[[1;;Min[Length[classList],numNearest]]]*)
-  Join[preList, {"14A00"}, classList[[1;;Min[Length[classList],numNearest]]]]
+  (*For inspection by hand:*)
+  (*Join[preList, {"14A00"}, classList[[1;;Min[Length[classList],numNearest]]]];*)
+  classList[[1;;Min[Length[classList],numNearest]]]
   ]  
 
 (*Filter out less relevant ones based on neural net results.
@@ -219,9 +226,15 @@ model: the model to run the predictions on.
 Returns: list of filtered classes.
 *)
 filterMscListWithNet[classList_List, model_, data_String] := Module[{topN=3,
-	dataVec, predicted},
+	dataVec, predicted, wordsVecThresh = 50, msc3Model=$msc3Model, predicted3,
+	predicted3Top3, classList3, selected3Top},
 	
 	dataVec = createDataIntegerVec[data, $wordIndexAssoc];
+	If[Length[dataVec < wordsVecThresh]
+		(*this thresh is deliberately lower than the one for nearest-neighbor*)
+		,
+		Return[classList, Module]
+	];
 	predicted = model[dataVec];
 	(*(*or can just take top 3*)
 	preList = Map[(
@@ -232,9 +245,44 @@ filterMscListWithNet[classList_List, model_, data_String] := Module[{topN=3,
 	topN = Length[preList];*)
 	
 	predicted = vecToTopMsc[predicted, topN];
-	(*Select[classList, (MemberQ[predicted, StringTake[#,2]] )&]***)
-	Select[classList, (MemberQ[predicted, StringTake[#,2]] )&]
 	
+	predicted3 = msc3Model[dataVec];
+	predicted3 = vecToTopMsc[predicted3, topN];
+	(*be careful with indices!!*)
+	predicted3Top3 = predicted3[[1;;3]];
+	
+	(*re-arrange rank based on length-3 labels*)
+	
+	predicted = Join[predicted, Map[StringTake[#,2]&, predicted3Top3 ]];
+	classList = Select[classList, (MemberQ[predicted, StringTake[#,2]] )&];
+	classList3 = Select[classList, (MemberQ[predicted3Top3, StringTake[#,3]] )&];
+	
+	classList = Map[(If[MemberQ[classList3, #],
+		Nothing,
+		#
+		];		
+		)&,
+		classList
+	];
+	
+	selected3Top = DeleteDuplicates[Map[StringTake[#, 3]&, classList3]];
+	classList3 = Join[classList3, Map[(If[MemberQ[selected3Top, #],
+		Nothing,
+		(*pad right to size 5 *)
+		StringJoin[#, "XX"]
+		]		
+		)&
+		, classList3
+		]
+	];
+	
+	classList = Join[classList[[1;;3]], classList3, classList[[4;;-1]] ];
+	
+	(*Select[classList, (MemberQ[predicted, StringTake[#,2]] )&] *)
+	(*for inspection:*)
+	(*Join[Select[classList, (MemberQ[predicted, StringTake[#,2]] )&], Map[StringJoin[#, "000"]&, predicted]]*)
+	(*Select[classList, (MemberQ[predicted, StringTake[#,2]] )&];*)
+	classList
 ]
 
 (*Reduces dimension on input vec, a sparse array. Input: sparse

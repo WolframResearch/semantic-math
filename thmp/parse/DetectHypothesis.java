@@ -23,7 +23,6 @@ import java.util.regex.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
@@ -117,7 +116,7 @@ public class DetectHypothesis {
 	//private static final String allThmWordsSerialFileStr = "src/thmp/data/allThmWordsList.dat";
 	//private static final String allThmWordsStringFileStr = "src/thmp/data/allThmWordsList.txt";
 	
-	private static final String statsFileStr = "src/thmp/data/parseStats.txt";
+	//commented out March 2018. private static final String statsFileStr = "src/thmp/data/parseStats.txt";
 	
 	/**used for scraping names**/	
 	private static final String THM_SCRAPE_SER_FILENAME = "thmNameScrape.dat";
@@ -394,8 +393,7 @@ public class DetectHypothesis {
 			int argsLen = args.length;
 			if(argsLen > 0){
 				texFilesDirPath = thmp.utils.FileUtils.addIfAbsentTrailingSlashToPath(args[0]);
-				//inputFile = new File(argsSrcStr);
-				//serializedTexFileNamesFileStr = args[1];
+				
 				serializedTexFileNamesFileStr = texFilesDirPath +texFilesSerializedListFileName;
 				
 				if(argsLen > 2){
@@ -457,7 +455,6 @@ public class DetectHypothesis {
 		Map<String, String> texFileNamesMap = null;
 		String texFileNamesSerialFileStr = inputParams.serializedTexFileNamesFileStr;
 		if(texFileNamesSerialFileStr != null){
-			//String argsSrcStr = args[0];
 			String texFilesDirPath = inputParams.texFilesDirPath;
 			inputFile = new File(texFilesDirPath);
 			//set of *absolute* path names.
@@ -530,18 +527,16 @@ public class DetectHypothesis {
 						FileUtils.appendObjToFile(msg, parserErrorLogPath);
 						logger.error(msg);
 						System.out.println(msg);
-						//if(true)throw e;
 					}finally {
 						FileUtils.silentClose(inputBF);						
 					}
 				}
-				//serialize
+				
 				if(!thmNameList.isEmpty()) {
-					
 					FileUtils.serializeObjToFile(thmNameList, inputParams.texFilesDirPath + THM_SCRAPE_SER_FILENAME);					
 					FileUtils.writeToFile(thmNameList, inputParams.texFilesDirPath + THM_SCRAPE_TXT_FILENAME);
 				}
-					//serialize, so don't discard the items already parsed.
+				//serialize, so don't discard the items already parsed.
 				//serialization only applicable when running on byblis
 				if(!FileUtils.isOSX()){
 					serializeDataToFile(stats, thmHypPairList, inputParams, runnerConfig);		
@@ -697,18 +692,8 @@ public class DetectHypothesis {
 		return ((List<Map<String, String>>)FileUtils.deserializeListFromFile(texFileNamesSerialFileStr)).get(0);
 	}
 
-	/**
-	 * Entry point to extract thms given a file.
-	 * @param inputBF
-	 * @param defThmList empty list.
-	 * @param thmHypPairList Emoty list.
-	 * @param stats
-	 * @param fileName name of file, to append to parsed thms.
-	 * @param scraped thm name list.
-	 */
-	@SafeVarargs
 	private static void extractThmsFromFiles(BufferedReader inputBF, List<DefinitionListWithThm> defThmList, 
-			List<ThmHypPair> thmHypPairList, Stats stats, String fileName, List<String>...scrapedThmNameList) {
+			List<ThmHypPair> thmHypPairList, Stats stats, String fileName, List<String> scrapedThmNameList) {
 
 		ParseStateBuilder parseStateBuilder = new ParseStateBuilder();		
 		ParseState parseState = parseStateBuilder.build();		
@@ -720,7 +705,23 @@ public class DetectHypothesis {
 		}		
 		DefinitionListWithThmStrList.add(defThmList.toString()+ "\n");
 	}
+	
+	/**
+	 * Entry point to extract thms given a file.
+	 * @param inputBF
+	 * @param defThmList empty list.
+	 * @param thmHypPairList Emoty list.
+	 * @param stats
+	 * @param fileName name of file, to append to parsed thms.
+	 * @param scraped thm name list.
+	 */
+	private static void extractThmsFromFiles(BufferedReader inputBF, List<DefinitionListWithThm> defThmList, 
+			List<ThmHypPair> thmHypPairList, Stats stats, String fileName) {
 
+		List<String> scrapedThmNameList = null;
+		extractThmsFromFiles(inputBF, defThmList, thmHypPairList, stats, fileName, scrapedThmNameList);
+	}
+	
 	/**
 	 * Serialize collected data to persistent storage, such as lists of ThmHypPair's.
 	 * The serializations done in this method should remain atomic, i.e. do *not* perform 
@@ -743,7 +744,6 @@ public class DetectHypothesis {
 		String allThmsStringFileStr = inputParams.allThmsStringFileStr;
 		//texFilesDirPath already contains trailing file separator
 		String curTexFilesDirPath = inputParams.texFilesDirPath;
-		//inputParams.allThmWordsStringFileStr;
 		
 		boolean projectionPathsNotNull = (null != pathToProjectionMx && null != pathToWordFreqMap);		
 		logger.info("Serializing parsedExpressionList, etc, to file...");
@@ -769,9 +769,6 @@ public class DetectHypothesis {
 			
 			FileUtils.serializeObjToFile(contextRelationVecPairList, contextRelationPairSerialFileStr);
 			
-			//serialize words used for context vecs
-			//FileUtils.serializeObjToFile(ALL_THM_WORDS_LIST, allThmWordsSerialFileStr);
-			
 			List<Map<String, Integer>> wordMapToSerializeList = new ArrayList<Map<String, Integer>>();
 			wordMapToSerializeList.add(ALL_THM_WORDS_FREQ_MAP);
 			FileUtils.serializeObjToFile(wordMapToSerializeList, allThmWordsMapSerialFileStr);
@@ -785,7 +782,6 @@ public class DetectHypothesis {
 			//append to stats file!
 			//FileUtils.appendObjToFile(stats, statsFileStr); <--cmmented out Dec 2017
 			
-			//FileUtils.writeToFile(ALL_THM_WORDS_LIST, allThmWordsStringFileStr);
 		}catch(Throwable e){
 			logger.error("Error occurred when writing and serializing to file! " + e);
 			throw e;
@@ -851,26 +847,20 @@ public class DetectHypothesis {
 	 * @return
 	 */
 	private static void createWordThmIndexMMap(List<ThmHypPair> peList,
-			HashMultimap<String, IndexPartPair> wordThmIndexMMap){
+			HashMultimap<String, IndexPartPair> wordThmIndexMMap){		
 		
-		//List<ThmHypPair> thmHypPairList = new ArrayList<ThmHypPair>();
 		int thmIndex = 0;
 		for(ThmHypPair pe : peList){
 			IndexPartPair indexPartPair = new IndexPartPair(thmIndex, ThmPart.STM);
 			String stm = pe.thmStr();
-			/*String thm = defListWithThm.thmStr;
-			String def = defListWithThm.definitionStr;
-			String fileName = defListWithThm.srcFileName;
-			ThmHypPair pair = new ThmHypPair(thm, def, fileName);
-			thmHypPairList.add(pair);	*/		
+				
 			CollectThm.ThmWordsMaps.addToWordThmIndexMap(wordThmIndexMMap, stm, indexPartPair);
 			
 			indexPartPair = new IndexPartPair(thmIndex, ThmPart.HYP);
 			String hyp = pe.hypStr();
 			CollectThm.ThmWordsMaps.addToWordThmIndexMap(wordThmIndexMMap, hyp, indexPartPair);
 			thmIndex++;
-		}
-		//return thmHypPairList;
+		}		
 	}
 	
 	private static String replaceFullTDMxName(String fullTermDocumentMxPath, String projectedMxName){
@@ -948,16 +938,13 @@ public class DetectHypothesis {
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
-	@SafeVarargs //check whether null instead!!
 	public static void readAndParseThm(BufferedReader srcFileReader, 
 			ParseState parseState, List<DefinitionListWithThm> definitionListWithThmList,
 			List<ThmHypPair> thmHypPairList,
-			Stats stats, String fileName, List<String>...scrapedThmNameList) throws IOException{
+			Stats stats, String fileName, List<String> scrapedThmNameList) throws IOException{
 		
 		//print to indicate progress, since all other outputs are suppressed during processing.
 		System.out.print("...Processing "+fileName);
-		//Pattern thmStartPattern = ThmInput.THM_START_PATTERN;
-		//Pattern thmEndPattern = ThmInput.THM_END_PATTERN;
 		List<String> customBeginThmList = new ArrayList<String>();
 		
 		MacrosTrieBuilder macrosTrieBuilder = new MacrosTrieBuilder();
@@ -981,7 +968,6 @@ public class DetectHypothesis {
 		
 		if(null != line){
 			matcher = thmStartPattern.matcher(line);
-			//use find(), not matches(), to look for any matching substring
 			if (matcher.find()) {			
 				inThm = true;
 				parseState.setInThmFlag(true);
@@ -996,8 +982,8 @@ public class DetectHypothesis {
 				continue;
 			}
 			//scrape theorem names. - temporary for Michael, Sept 19.
-			if(scrapedThmNameList.length > 0) {
-				scrapeThmNames(line, scrapedThmNameList[0]);
+			if(null != scrapedThmNameList) {
+				scrapeThmNames(line, scrapedThmNameList);
 			}			
 			
 			//should skip certain sections, e.g. \begin{proof}
@@ -1020,7 +1006,7 @@ public class DetectHypothesis {
 				// don't strip.
 				// replace enumerate and \item with *
 				//thmWebDisplayList, and bareThmList should both be null
-				//HERE
+				
 				String contextStr;
 				int contextSBLen = contextSB.length();
 				if(contextSBLen > CONTEXT_SB_LENGTH_THRESHOLD){

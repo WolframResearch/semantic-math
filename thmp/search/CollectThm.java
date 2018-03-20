@@ -935,7 +935,6 @@ public class CollectThm {
 			List<String> thmList = new ArrayList<String>();
 			
 			for(String word : thmAr) {
-				
 				//preprocess so word index wouldn't get too large, e.g. TeX.
 				if(!SPECIAL_CHARACTER_PATTERN.matcher(word).find()){
 					thmList.add(word);
@@ -970,41 +969,45 @@ public class CollectThm {
 					//check the following word
 					if(j < thmArSz-1){
 						String nextWordCombined = word + " " + thmList.get(j+1);
-						nextWordCombined = WordForms.normalizeTwoGram(nextWordCombined);
+						String twoGramNormal = WordForms.normalizeTwoGram(nextWordCombined);
+						
 						Integer twoGramFreq = twoGramsMap.get(nextWordCombined);
-						if(twoGramFreq != null){
-							if(!SPECIAL_CHARACTER_PATTERN.matcher(nextWordCombined).find()){
-								//don't add if present, since Hyp added second
-								//Set<IndexPartPair> indexPartPairSet = wordThmsMMap.get(nextWordCombined);
-								//HashMultimap, so don't need to check presence
-								//IndexPartPair indexPartPair2 = indexPartPairSet   ;
-								wordIndexMMap.put(nextWordCombined, j);
-								//if(!indexPartPairSet.contains(indexPartPair)) {
-									
-								//}								
+						Integer twoGramNormalFreq = twoGramsMap.get(twoGramNormal);
+						
+						if(twoGramFreq != null || twoGramNormalFreq != null){
+							if(!SPECIAL_CHARACTER_PATTERN.matcher(twoGramNormal).find()){
+								wordIndexMMap.put(twoGramNormal, j);
 							}
 						}
 						//try to see if these three words form a valid 3-gram
 						if(j < thmArSz-2){
 							String threeWordsCombined = nextWordCombined + " " + thmList.get(j+2);
+							String threeGramNormal = WordForms.normalizeNGram(threeWordsCombined);
+							
 							Integer threeGramFreq = threeGramsMap.get(threeWordsCombined);
-							if(threeGramFreq != null){
-								if(!SPECIAL_CHARACTER_PATTERN.matcher(threeWordsCombined).find()){
-									/*Set<IndexPartPair> indexPartPairSet = wordThmsMMap.get(threeWordsCombined);
-									if(!indexPartPairSet.contains(indexPartPair)) {
-										wordThmsMMap.put(threeWordsCombined, indexPartPair);
-									}*/
-									wordIndexMMap.put(threeWordsCombined, j);
+							Integer threeGramNormalFreq = threeGramsMap.get(threeGramNormal);
+							
+							if(threeGramFreq != null || threeGramNormalFreq != null){
+								if(!SPECIAL_CHARACTER_PATTERN.matcher(threeGramNormal).find()){									
+									wordIndexMMap.put(threeGramNormal, j);
 								}
 							}
 						}
 					}
 					
 					String wordNormalized = null;
+					String wordSingularized = null;
 					
+					//recall umlaut has been stripped.
 					if(!LiteralSearch.isInValidSearchWord(word) && (!stockFrequencyMap.containsKey(word) ||
 							wordsScoreMap.containsKey(word) || 
-							wordsScoreMap.containsKey(word=WordForms.normalizeWordForm(word) )) ) {
+							wordsScoreMap.containsKey(wordNormalized=WordForms.normalizeWordForm(word) ) ||
+							wordsScoreMap.containsKey(wordSingularized=WordForms.getSingularForm(word) ) ) ) {
+						
+						//singularize all words full stop, making lookup faster as well, so don't need to play games 
+						//in checking.
+						word = wordSingularized == null ? WordForms.getSingularForm(word) : wordSingularized;
+						
 						//removes endings such as -ing, and uses synonym rep.
 						//e.g. "annihilate", "annihilator", etc all map to "annihilat"
 						word = wordNormalized == null ? WordForms.normalizeWordForm(word) : wordNormalized;
@@ -1015,7 +1018,6 @@ public class CollectThm {
 						wordIndexMMap.put(word, j);
 					}
 				}
-			//skip irrelevant ones indices?!
 			
 			for(String word : wordIndexMMap.keys()) {
 				Collection<Integer> indexCol = wordIndexMMap.get(word);

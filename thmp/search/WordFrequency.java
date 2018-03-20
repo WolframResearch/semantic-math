@@ -112,21 +112,19 @@ public class WordFrequency {
 		// map of common words and freq as read in from wordFrequency.txt
 		private static final Map<String, Integer> stockFreqMap = new HashMap<String, Integer>();
 		
-		//subset of words and their pos from the stock file that only stores word and its pos of true fluff words
-		//***private static ListMultimap<String, String> trueFluffWordsPosMap;
-		
+		//subset of words from the stock file
 		private static final Set<String> trueFluffWordsSet;
 
 		//words that should be included in trueFluffWordsSet, but were left out by algorithm.
 		private static final String[] ADDITIONAL_FLUFF_WORDS = new String[]{"an", "are", "has", "tex", "between",
-				"call", "does", "do", "equation"/*equation because we don't strip \begin{equation} during preprocessing
+				"call", "does", "do", "equation", /*equation because we don't strip \begin{equation} during preprocessing
 				which inflates this word, and incorrectly displays it in the web frontend*/
+				 "theorem", "proposition", "lemma"
 				};
 		
 		static{
 			Multimap<String, String> wordPosPreMMap = HashMultimap.create();
 			ServletContext servletContext = CollectThm.getServletContext();
-			//wordFrequencyBR = CollectThm.get_wordFrequencyBR();
 			BufferedReader wordsFileBufferedReader = null;
 			if(null == servletContext){
 				try {
@@ -164,10 +162,12 @@ public class WordFrequency {
 			}
 			wordPosMMap = ImmutableMultimap.copyOf(wordPosPreMMap);
 			
-			String trueFluffWordsSetPath = FileUtils.getPathIfOnServlet(SearchMetaData.trueFluffWordsSetPath());
-			@SuppressWarnings("unchecked")
-			Set<String> set = ((List<Set<String>>)FileUtils.deserializeListFromFile(trueFluffWordsSetPath)).get(0);
-			trueFluffWordsSet = set;			
+			String trueFluffWordsSetPath = FileUtils.getPathIfOnServlet(SearchMetaData.trueFluffWordsSetTxtPath());
+			//@SuppressWarnings("unchecked")
+			//Set<String> set = ((List<Set<String>>)FileUtils.deserializeListFromFile(trueFluffWordsSetPath)).get(0);
+			Set<String> fluffWordsSet = new HashSet<String>(FileUtils.readLinesFromFile(trueFluffWordsSetPath));
+			
+			trueFluffWordsSet = fluffWordsSet;			
 		}
 		
 		/**

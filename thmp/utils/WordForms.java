@@ -613,11 +613,12 @@ public class WordForms {
 	 * @param twoGram
 	 */
 	public static String normalizeTwoGram(String twoGram){
-		String[] wordAr = WordForms.WHITE_NONEMPTY_SPACE_PATTERN.split(twoGram);		
+		/*String[] wordAr = WordForms.WHITE_NONEMPTY_SPACE_PATTERN.split(twoGram);		
 		if(wordAr.length < 2){
 			return twoGram;
 		}
-		return normalizeTwoGram2(wordAr[0], wordAr[1]);
+		return normalizeTwoGram2(wordAr[0], wordAr[1]);*/
+		return normalizeNGram(twoGram);
 	}
 	
 	/**
