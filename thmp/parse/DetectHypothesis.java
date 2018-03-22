@@ -463,7 +463,7 @@ public class DetectHypothesis {
 				return;
 			}
 		}
-		//resort to default file if no arg supplied
+		//resort to default file if no arg supplied. Useful to for testing locally.
 		else{
 				/*put file here if testing locally on developer machine*/
 				inputFile = new File("src/thmp/data/Total.txt");
@@ -476,6 +476,7 @@ public class DetectHypothesis {
 				inputFile = new File("src/thmp/data/test1.txt");
 				inputFile = new File("/Users/yihed/Downloads/testJavaNov.tex");
 				inputFile = new File("/Users/yihed/Downloads/testJava2.tex");
+				inputFile = new File("/Users/yihed/Downloads/0709.2001.tex");
 		}		
 		List<DefinitionListWithThm> defThmList = new ArrayList<DefinitionListWithThm>();
 		List<ThmHypPair> thmHypPairList = new ArrayList<ThmHypPair>();
@@ -559,7 +560,6 @@ public class DetectHypothesis {
 			}finally {
 				FileUtils.silentClose(inputBF);
 			}
-			
 			if(!FileUtils.isOSX()){
 				serializeDataToFile(stats, thmHypPairList, inputParams, runnerConfig);	
 			}
@@ -567,7 +567,7 @@ public class DetectHypothesis {
 		System.out.println("STATS -- percentage of non-trivial ParseStruct heads: " + stats.getNonNullPercentage() 
 			+ " out of total " + stats.getTotalThmsNum() + "thms");
 		//should actually make these local vars, so no need to clear at end
-		parsedExpressionStrList.clear() ;
+		parsedExpressionStrList.clear();
 		contextRelationVecPairList.clear();
 		DefinitionListWithThmStrList.clear();
 		allThmsStrWithSpaceList.clear();
@@ -1041,12 +1041,10 @@ public class DetectHypothesis {
 				if(0 == newThmSB.length()){
 					continue;
 				}
-				//System.out.println("newThmSB: " + newThmSB);
-				//System.out.println("!---------! line: " + line+" thmEndPattern: " + thmEndPattern);
 				
 				//Need to read in until \end{cor} etc
 				newThmSB.append(" ").append(line);
-				//
+				
 				if(newThmSB.length() > THM_MAX_CHAR_SIZE){
 					logger.info("thm length exceeds maximum allowable size!");
 					continue;
@@ -1091,6 +1089,15 @@ public class DetectHypothesis {
 		}
 	}
 
+	public static void readAndParseThm(BufferedReader srcFileReader, 
+			ParseState parseState, List<DefinitionListWithThm> definitionListWithThmList,
+			List<ThmHypPair> thmHypPairList,
+			Stats stats, String fileName) throws IOException{
+		
+		List<String> scrapedThmNameList = null;
+		readAndParseThm(srcFileReader, parseState, definitionListWithThmList,
+				thmHypPairList, stats, fileName, scrapedThmNameList);
+	}
 	/**
 	 * Processes (e.g. remove tex markup) and parses a theorem after it has been read in.
 	 * @param newThmSB StringBuilder containing the theorem.
@@ -1268,7 +1275,6 @@ public class DetectHypothesis {
 		}catch(Throwable e){
 			String msg = "\nThrowable thrown when parsing thm: " + Arrays.toString(e.getStackTrace());
 			System.out.println(msg);
-			////throw e;
 		}
 		
 		//remove if(false) after testing!

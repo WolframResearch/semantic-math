@@ -65,9 +65,12 @@ public class CreatePlaceholderLists {
 		tList.add(threeMap);
 		FileUtils.serializeObjToFile(tList, threeGramsMapFile);
 	
-		String fluffSetPath = SearchMetaData.trueFluffWordsSetPath();
+		String fluffSetPath = SearchMetaData.trueFluffWordsSetTxtPath();
+		
 		Set<String> set = new HashSet<String>();
 		set.add("is");
+		fluffSetPath = fluffSetPath.replace(".txt", ".dat");
+		
 		List<Set<String>> list = new ArrayList<Set<String>>(); 
 		list.add(set);
 		FileUtils.serializeObjToFile(list, fluffSetPath);

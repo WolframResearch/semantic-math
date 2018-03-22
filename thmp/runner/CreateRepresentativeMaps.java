@@ -236,7 +236,8 @@ public class CreateRepresentativeMaps {
 		WordFrequency.ComputeFrequencyData.buildTrueFluffWordsSet(trueFluffWordsSet, 
 				corpusWordFreqMap, TOTAL_CORPUS_WORD_COUNT);
 		
-		String trueFluffWordsSetPath = FileUtils.getPathIfOnServlet(SearchMetaData.trueFluffWordsSetPath());
+		String trueFluffWordsSetPath = FileUtils.getPathIfOnServlet(SearchMetaData.trueFluffWordsSetTxtPath());
+		trueFluffWordsSetPath = trueFluffWordsSetPath.replace(".txt", ".dat");
 		List<Set<String>> trueFluffWordsSetList = new ArrayList<Set<String>>();
 		trueFluffWordsSetList.add(trueFluffWordsSet);
 		

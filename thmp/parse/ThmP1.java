@@ -1412,9 +1412,10 @@ public class ThmP1 {
 		for (Pair pair : pairs) {
 			String pos = pair.pos();
 			String word = pair.word();
-			//should denote whether latex pair!! just like latex struct
-			if(pair.pos().equals("ent") || pos.equals("symb")
-					|| pos.equals("")){
+			//but ent also includes non pure-tex pairs, e.g. "interval", 
+			//so shouldn't just use "ent" to judge if too much tex.
+			if(word.contains("$") && (pair.pos().equals("ent") || pos.equals("symb")
+					|| pos.equals(""))){
 				texEntCount++;
 				texCharCount += word.length();
 			}else{
@@ -1423,16 +1424,21 @@ public class ThmP1 {
 			totalCharCount+= word.length();
 		}		
 		double pairs_sz = pairs.size();
+		//Threshold determined after much experimentation - March 2018.
+		final double texCharPercentThresh = 0.85;
+		final double texCharCountThresh = 55;
+		final double texCharCountUpperThresh = 102;
+		final int texEntCountThresh = 12;
 		//return if no meaningful parse could be extracted. This happens for 
 		//if all expressions are latex. Heuristic for detecting sentences that are just
 		//conglomerates of latex expressions, but that are not enclosed in "$" or "\begin{equation}", etc
 		//this is relevant for eliminating all-tex thms in search corpus as well.
-		if((containsOnlySymbEnt && pairs_sz > 1) /*<--so single-token $x>1$ can still get parsed*/
-				//extract these constants after experimentation! June 2017.
+		if((containsOnlySymbEnt && pairs_sz > 1) /*<--so single-token $x>1$ can still get parsed*/				
 				//Need to be careful, e.g. in enumerate, those could have high tex percentages, but still meaningful.
-				|| ( ((double)texCharCount)/totalCharCount > 0.8 && texCharCount > 55 || texCharCount > 102 )
+				|| ( ((double)texCharCount)/totalCharCount > texCharPercentThresh && texCharCount > texCharCountThresh 
+						|| texCharCount > texCharCountUpperThresh )
 				|| (((double)texEntCount)/pairs_sz > MAX_ALLOWED_ENT_PERCENTAGE && pairs_sz > MIN_PAIRS_SIZE_THRESHOLD_FOR_FLUFF)
-				|| texEntCount > 12){
+				|| texEntCount > texEntCountThresh){
 			//set trivial structlist, so that previous structlist doesn't get parsed again.
 			parseState.setTokenList(new ArrayList<Struct>());
 			parseState.setCurParseExcessiveLatex(true);

@@ -55,8 +55,6 @@ public class Pair {
 	 * @return Additional parts of speech
 	 */
 	public Set<String> extraPosSet(){
-		//System.out.println("!Getting extraPosList for pair" + this + " " + extraPosSet);
-		//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
 		return this.extraPosSet;
 	}
 	

@@ -202,21 +202,24 @@ model: neural net model to filter classes.
 Returns: nearest classes list.
 *)
 findNearestClasses[dataStr_String, model_:$mscModel, numNearest1_Integer:8] := 
- Module[{sparseAr, classList, preList, numNearest},
+ Module[{sparseAr, classList, preList, numNearest, pred3List},
   sparseAr = 
    SparseArray[
     parseEvalWordScorePos[
      dataStr], {Length[$wordIndexAssoc], 1}];
   (*Can be more generous, can use neural net filter later*)
   numNearest = numNearest1 + 10;
+  
   preList = Keys[findNearestClassesForSA[sparseAr, numNearest]];
   (*filter out those that are low on *)
-  classList = filterMscListWithNet[preList, model, dataStr];
+  {classList, pred3List} = filterMscListWithNet[preList, model, dataStr];
   
   (******classList[[1;;Min[Length[classList],numNearest]]]*)
   (*For inspection by hand:*)
   (*Join[preList, {"14A00"}, classList[[1;;Min[Length[classList],numNearest]]]];*)
-  classList[[1;;Min[Length[classList],numNearest]]]
+  
+  Join[classList[[1;;Min[Length[classList],numNearest1]]], {"14A00"}, pred3List];
+  (*classList[[1;;Min[Length[classList],numNearest1]]]*******)
   ]  
 
 (*Filter out less relevant ones based on neural net results.
@@ -227,7 +230,7 @@ Returns: list of filtered classes.
 *)
 filterMscListWithNet[classList_List, model_, data_String] := Module[{topN=3,
 	dataVec, predicted, wordsVecThresh = 50, msc3Model=$msc3Model, predicted3,
-	predicted3Top3, classList3, selected3Top},
+	classList3, selected3Top},
 	
 	dataVec = createDataIntegerVec[data, $wordIndexAssoc];
 	If[Length[dataVec < wordsVecThresh]
@@ -247,42 +250,56 @@ filterMscListWithNet[classList_List, model_, data_String] := Module[{topN=3,
 	predicted = vecToTopMsc[predicted, topN];
 	
 	predicted3 = msc3Model[dataVec];
-	predicted3 = vecToTopMsc[predicted3, topN];
+	predicted3 = vecToTopMsc[predicted3, 3];
 	(*be careful with indices!!*)
-	predicted3Top3 = predicted3[[1;;3]];
+	(*predicted3Top3 = predicted3[[1;;3]];*)
 	
-	(*re-arrange rank based on length-3 labels*)
+	(*adjust rank based on length-3 labels*)
 	
-	predicted = Join[predicted, Map[StringTake[#,2]&, predicted3Top3 ]];
-	classList = Select[classList, (MemberQ[predicted, StringTake[#,2]] )&];
-	classList3 = Select[classList, (MemberQ[predicted3Top3, StringTake[#,3]] )&];
+	(*predicted = Join[predicted, Map[StringTake[#,2]&, predicted3Top3 ]];*)
+	(*classList = Select[classList, (MemberQ[predicted, StringTake[#,2]] )&];*)
+	(*classList3 = Select[classList, (MemberQ[predicted3Top3, StringTake[#,3]] )&];*)	
 	
-	classList = Map[(If[MemberQ[classList3, #],
-		Nothing,
-		#
-		];		
-		)&,
-		classList
+	classList3 = Reap[
+		classList = Map[(
+			If[MemberQ[predicted3, StringTake[#, 3]],
+			    Sow[#, "length3"];
+			    Nothing
+			    ,
+			    If[MemberQ[predicted, StringTake[#, 2]],
+				#
+				];		
+			];			
+			)&,
+			classList
+		];
+	, "length3"];	
+	
+	classList3 = If[classList3[[2]] =!= {},
+		classList3[[2]][[1]],
+		{}
 	];
 	
+	(*Add top 3 classes that weren't picked already*)
 	selected3Top = DeleteDuplicates[Map[StringTake[#, 3]&, classList3]];
+	
 	classList3 = Join[classList3, Map[(If[MemberQ[selected3Top, #],
 		Nothing,
 		(*pad right to size 5 *)
 		StringJoin[#, "XX"]
-		]		
+		]
 		)&
-		, classList3
+		, predicted3
 		]
 	];
 	
-	classList = Join[classList[[1;;3]], classList3, classList[[4;;-1]] ];
+	classList = Join[classList[[1;;2]], classList3, classList[[3;;-1]] ];
 	
 	(*Select[classList, (MemberQ[predicted, StringTake[#,2]] )&] *)
 	(*for inspection:*)
 	(*Join[Select[classList, (MemberQ[predicted, StringTake[#,2]] )&], Map[StringJoin[#, "000"]&, predicted]]*)
 	(*Select[classList, (MemberQ[predicted, StringTake[#,2]] )&];*)
-	classList
+	{classList, predicted3}
 ]
 
 (*Reduces dimension on input vec, a sparse array. Input: sparse
