@@ -99,7 +99,7 @@ public class WordForms {
 	private static final Pattern END_SKIP_PATTERN = Pattern.compile("\\\\end\\{proof\\}.*|\\\\end\\{exam.*|\\\\end\\{thebib.*");
 		
 	//special umlaut character to replace with version without umlaut. I.e. \\\"
-	public static final Pattern umlautTexPatt = Pattern.compile("(\\\\\"|\\\\\')");
+	public static final Pattern umlautTexPatt = Pattern.compile("(\\\\\"|\\\\\'|\\\\`)");
 	
 	//single lines to skip. Such as comments
 	private static final Pattern SINGLE_LINE_SKIP_PATTERN = Pattern.compile("^%.*|\\\\begin\\{bib.*|.*FFFFFF.*|.*fffff.*|\\/.*");

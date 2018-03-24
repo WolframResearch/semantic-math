@@ -925,10 +925,8 @@ public class CollectThm {
 			//multimap of word and lists of integers.
 			ListMultimap<String, Integer> wordIndexMMap = ArrayListMultimap.create();
 			
-			//for(int i = 0; i < thmList.size(); i++){
-				//System.out.println(counter++);
-				//String thm = thmList.get(i);
-				//number of words to skip if an n gram has been added.
+			
+			//number of words to skip if an n gram has been added.
 			//int numFutureWordsToSkip = 0;
 				//split along e.g. "\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:"
 			List<String> thmAr = WordForms.splitThmIntoSearchWordsList(thm.toLowerCase());
@@ -955,9 +953,13 @@ public class CollectThm {
 					//word in n-grams. E.g. "p-adic", "C* algebra".
 					if(word.length() < lengthCap && !isNGramFirstWord){
 						continue;
-					}					
-					//get singular forms if plural, put singular form in map
-					//Should be more careful on some words that shouldn't be singular-ized!					
+					}
+					String wordOriginal = word;
+					
+					/*This processing pipeline needs to *exactly* match the one when searching.
+					 * In SearchIntersection.intersectionSearch()*/
+					
+					//get singular forms if plural, put singular form in map.					
 					word = WordForms.getSingularForm(word);						
 					//also don't skip if word is contained in lexicon					
 					if(FLUFF_WORDS_SET.contains(word)){ 
@@ -968,7 +970,7 @@ public class CollectThm {
 					}
 					//check the following word
 					if(j < thmArSz-1){
-						String nextWordCombined = word + " " + thmList.get(j+1);
+						String nextWordCombined = wordOriginal + " " + thmList.get(j+1);
 						String twoGramNormal = WordForms.normalizeTwoGram(nextWordCombined);
 						
 						Integer twoGramFreq = twoGramsMap.get(nextWordCombined);

@@ -581,7 +581,8 @@ public class SearchIntersection {
 			if(stopWordSet.contains(word)) {
 				continue;
 			}
-			
+			/*This processing pipeline needs to *exactly* match the one when scraping data.
+			 * In CollectThm.ThmWordsMaps.addToWordThmIndexMap()*/
 			//strip away umlauts, which were stripped when gathering theorems.
 			word = WordForms.stripUmlautFromWord(word);
 			
