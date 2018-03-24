@@ -477,6 +477,8 @@ public class DetectHypothesis {
 				inputFile = new File("/Users/yihed/Downloads/testJavaNov.tex");
 				inputFile = new File("/Users/yihed/Downloads/testJava2.tex");
 				inputFile = new File("/Users/yihed/Downloads/0709.2001.tex");
+				inputFile = new File("/Users/yihed/Downloads/1406.6713.tex");
+				inputFile = new File("/Users/yihed/Downloads/test/testThm.txt");
 		}		
 		List<DefinitionListWithThm> defThmList = new ArrayList<DefinitionListWithThm>();
 		List<ThmHypPair> thmHypPairList = new ArrayList<ThmHypPair>();
@@ -560,6 +562,9 @@ public class DetectHypothesis {
 			}finally {
 				FileUtils.silentClose(inputBF);
 			}
+			/////here March 23
+			//System.out.println("thmHypPairList Sz: "+thmHypPairList.size());
+			//System.out.println("thmHypPairList! "+thmHypPairList);
 			if(!FileUtils.isOSX()){
 				serializeDataToFile(stats, thmHypPairList, inputParams, runnerConfig);	
 			}
@@ -567,7 +572,7 @@ public class DetectHypothesis {
 		System.out.println("STATS -- percentage of non-trivial ParseStruct heads: " + stats.getNonNullPercentage() 
 			+ " out of total " + stats.getTotalThmsNum() + "thms");
 		//should actually make these local vars, so no need to clear at end
-		parsedExpressionStrList.clear();
+		parsedExpressionStrList.clear() ;
 		contextRelationVecPairList.clear();
 		DefinitionListWithThmStrList.clear();
 		allThmsStrWithSpaceList.clear();

@@ -207,6 +207,7 @@ public class ThmInput {
 		}
 		//Pattern p = Pattern.compile("\\\\xra");
 		//System.out.println("------macrosMap: "+ macrosMap);
+		
 		StringBuilder newThmSB = new StringBuilder();
 		boolean inThm = false;
 		Matcher matcher = thmStartPattern.matcher(line);

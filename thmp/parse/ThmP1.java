@@ -1425,7 +1425,7 @@ public class ThmP1 {
 		}		
 		double pairs_sz = pairs.size();
 		//Threshold determined after much experimentation - March 2018.
-		final double texCharPercentThresh = 0.85;
+		final double texCharPercentThresh = 0.9;
 		final double texCharCountThresh = 55;
 		final double texCharCountUpperThresh = 102;
 		final int texEntCountThresh = 12;
@@ -3608,15 +3608,19 @@ public class ThmP1 {
 		
 		//build relation vector for the highest-ranked parse, set relation vector to parseState.
 		Multimap<ParseStructType, ParsedPair> topParsedPairMMap = sortedParsedPairMMapList.get(0);
-		Set<Integer> relationVec;
-		if(!FOOD_PARSE){			
-			//doing temporarily on local machine, so parsing does not take forever because of map initializations.
-			relationVec = new HashSet<Integer>();//new BigInteger("0");			
-		}else{
-			relationVec = RelationVec.buildRelationVec(topParsedPairMMap);
+		
+		boolean createRelationVec = false; //March 23, 2018. To Speed up data processing.
+		if(createRelationVec) {
+			Set<Integer> relationVec;		
+			if(!FOOD_PARSE){			
+				//doing temporarily on local machine, so parsing does not take forever because of map initializations.
+				relationVec = new HashSet<Integer>();//new BigInteger("0");			
+			}else{
+				relationVec = RelationVec.buildRelationVec(topParsedPairMMap);
+			}
+			//if(true) throw new IllegalStateException("ThmP1 - bestParseStruct "+bestParseStruct.getWLCommandWrapperMMap());
+			parseState.setRelationalContextVec(relationVec);
 		}
-		//if(true) throw new IllegalStateException("ThmP1 - bestParseStruct "+bestParseStruct.getWLCommandWrapperMMap());
-		parseState.setRelationalContextVec(relationVec);
 		//System.out.println("-+++++++++++best head!!! " + headParseStructList);
 		//set head for this run of current part that triggered the command.
 		if(null == parseState.getHeadParseStruct()){ 
@@ -3728,11 +3732,13 @@ public class ThmP1 {
 			//enabling temporarily on local machine, so parsing does not take forever because of map initializations.
 			contextVecConstructed = true;
 		}*/
+		boolean createContextVec = false; //March 23, 2018
+		if(createContextVec) {
 		contextVecConstructed = ParseToWLTree.collectCommandsDfs(parseStructMMap, curParseStruct, uHeadStruct, wlSB, 
 				curStructContextVecMap, contextVecConstructed, parseState);
 		//System.out.println(">>>>>>>>>>uHeadStruct.WLCommandWrapperList()" + uHeadStruct.WLCommandWrapperList()); //DEBUG
-	 	
-		if(!contextVecConstructed){
+		}
+		if(createContextVec && !contextVecConstructed){
 			ParseTreeToContextVec.tree2vec(uHeadStruct, curStructContextVecMap);
 		}
 		
