@@ -3,7 +3,6 @@ package thmp.parse;
 import static thmp.parse.ThmP1AuxiliaryClass.posListContains;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -45,7 +44,6 @@ import thmp.parse.Struct.ChildRelationType;
 import thmp.parse.Struct.NodeType;
 import thmp.parse.ThmP1AuxiliaryClass.ConjDisjVerbphrase;
 import thmp.parse.ThmP1AuxiliaryClass.ConjDisjVerbphrase.ConjDisjType;
-import thmp.search.CollectThm;
 import thmp.search.NGramSearch;
 import thmp.search.ThreeGramSearch;
 import thmp.utils.FileUtils;
@@ -118,6 +116,9 @@ public class ThmP1 {
 	
 	private static final Map<String, Integer> twoGramMap = NGramSearch.get2GramsMap();
 	private static final Map<String, Integer> threeGramMap = ThreeGramSearch.get3GramsMap();
+	
+	//use during data processing to avoid certain time-consuming steps. March 25, 2018.
+	private static final boolean PARSE_MINIMAL = true;
 	
 	/**
 	 * List of Stringified Map of parts used to build up a theorem/def etc.  
@@ -1528,7 +1529,9 @@ public class ThmP1 {
 			//does incur overhead.			
 			//Only try to find pos for words that don't contain "\" 
 			//Don't run on byblis for now, since slows down data processing
+			boolean usePosTagger = false; //<-March 25
 			if(//FileUtils.isOSX() && 
+					usePosTagger &&
 					curpair.pos().equals("") &&
 					!FileUtils.isByblis67 
 					){
@@ -2345,8 +2348,10 @@ public class ThmP1 {
 			return parseState;
 		}
 		int inputStructListSize = inputStructList.size();
+		//avoid excessive structs during data processing - March 25, 2018.
+		final int structListSzThresh = 50;
 		
-		if(null == inputStructList || 0 == inputStructListSize){
+		if(null == inputStructList || 0 == inputStructListSize || inputStructListSize > structListSzThresh){
 			return parseState;
 		}
 		
@@ -3052,9 +3057,6 @@ public class ThmP1 {
 			}
 			longFormParsedPairList.add(new ParsedPair(longFormStr, null, combinedScore, "long"));
 			
-			//defer these to ordered addition in orderPairsAndPutToLists!
-			//parsedExpr.add(new ParsedPair(parsedSB.toString(), totalScore, "long"));						
-
 			//get total number of commandNumUnits that belong to parsedPairs with "NONE" as head, e.g. NONE :> [vbs[is] 1.0  1  1],
 			//add up the e.g. 1's at the end. If the sum is below a certain percentage of inputStructList.size(), 
 			//which means the rest span well, don't spend time doing second parse.
@@ -3093,7 +3095,7 @@ public class ThmP1 {
 			//if commandNumUnitsWithHeadNoneSum sufficiently low: so sufficiently few parses
 			//with NONE, don't parse again. Half is a good threshold
 			final int REPARSE_DIVISION_FACTOR = 2;
-			if(commandNumUnitsWithHeadNoneSum > inputStructList.size()/REPARSE_DIVISION_FACTOR){
+			if(!PARSE_MINIMAL && commandNumUnitsWithHeadNoneSum > inputStructList.size()/REPARSE_DIVISION_FACTOR){
 				//parse again.
 				//form new structList, so don't temper with original one.
 				List<Struct> newStructList = new ArrayList<Struct>();				
@@ -3102,8 +3104,7 @@ public class ThmP1 {
 					//get something besides 0th??
 					newStructList.add(structList_i.get(0));					
 				}
-				//System.out.println("ThmP1 (right before parseAgain() " + parseState.getTokenList());
-				//don't set here! Set in parseAgain -> parseState.setTokenList(newStructList);
+				
 				/*parseAgain() defluffs based on tokens that are not connected to neighbors.*/
 				ParseAgain.parseAgain(newStructList, structCoordinates, parseState, mx, originalNonSpanningParseStructList);
 				

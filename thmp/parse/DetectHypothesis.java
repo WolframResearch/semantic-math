@@ -479,6 +479,7 @@ public class DetectHypothesis {
 				inputFile = new File("/Users/yihed/Downloads/0709.2001.tex");
 				inputFile = new File("/Users/yihed/Downloads/1406.6713.tex");
 				inputFile = new File("/Users/yihed/Downloads/test/testThm.txt");
+				inputFile = new File("/Users/yihed/Downloads/stuchMarch25.tex");
 		}		
 		List<DefinitionListWithThm> defThmList = new ArrayList<DefinitionListWithThm>();
 		List<ThmHypPair> thmHypPairList = new ArrayList<ThmHypPair>();

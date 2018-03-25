@@ -43,6 +43,11 @@ public class ParseAgain {
 		int[] indicesToExclude = new int[structList.size()];
 		
 		int structListSz = structList.size();	
+		final int structListSzThresh = 30;
+		if(structListSz > structListSzThresh) {
+			//this is to avoid those with large number of structs during data processing - March 25, 2018
+			return;
+		}
 		
 		//don't need to deal with of first and last elements,
 		//since determining whether they are connected to their neighbors
