@@ -114,7 +114,9 @@ public class WordFrequency {
 		
 		//subset of words from the stock file
 		private static final Set<String> trueFluffWordsSet;
-
+		//English words with top stock frequency, used as stop words.
+		private static final Set<String> topFreqEnglishWords;
+		
 		//words that should be included in trueFluffWordsSet, but were left out by algorithm.
 		private static final String[] ADDITIONAL_FLUFF_WORDS = new String[]{"an", "are", "has", "tex", "between",
 				"call", "does", "do", "equation", /*equation because we don't strip \begin{equation} during preprocessing
@@ -139,8 +141,10 @@ public class WordFrequency {
 				wordsFileBufferedReader = new BufferedReader(new InputStreamReader(wordsInputStream));				
 			}
 			
+			topFreqEnglishWords = new HashSet<String>();
+			
 			//fills in stockFreqMap.
-			getStockFreq(wordsFileBufferedReader, wordPosPreMMap);
+			getStockFreq(wordsFileBufferedReader, wordPosPreMMap, topFreqEnglishWords);
 			wordPosPreMMap.put("has", "verb");
 			wordPosPreMMap.put("was", "verb");
 			wordPosPreMMap.put("induce", "verb");
@@ -180,15 +184,27 @@ public class WordFrequency {
 		}
 		
 		/**
+		 * Most frequent amongst the stock frequency words.
+		 * @return
+		 */
+		public static Set<String> mostFreqEnglishWords(){
+			return topFreqEnglishWords;
+		}
+		
+		/**
 		 * Computes list of "true" fluff words, ie the ones where
 		 * whose freq in math texts are not higher than their freq in English text.
 		 * have to be careful for words such as "let", "say"
 		 * 
 		 * @param wordsFileBufferedReader
 		 * @param wordPosPreMap
+		 * @param topFreqEnglishWords most frequent words.
 		 */
 		private static void getStockFreq(BufferedReader wordsFileBufferedReader,
-				Multimap<String, String> wordPosPreMMap) {
+				Multimap<String, String> wordPosPreMMap, Set<String> topFreqEnglishWords) {
+			
+			//experimentally determined.
+			int topMostN = 109;
 			
 			try {
 				wordsFileBufferedReader.readLine();
@@ -211,6 +227,9 @@ public class WordFrequency {
 					wordPosPreMMap.put(word, wordPos);					
 					int wordFreq = Integer.valueOf(lineAr[3].trim());		
 					
+					if(topMostN-- > 0) {
+						topFreqEnglishWords.add(word);
+					}
 					stockFreqMap.put(word, wordFreq);					
 				}
 				
@@ -299,12 +318,13 @@ public class WordFrequency {
 		}
 		
 		/**
-		 * Retrieves set of true fluff words.
+		 * Retrieves set of fluff words. Note this contains the English 
+		 * stock frequent words.
 		 * @return
 		 */
 		public static Set<String> trueFluffWordsSet() {	
 			return trueFluffWordsSet;
-		}	
+		}
 		
 		/**
 		 * Retrieves map of true fluff words and their pos. 

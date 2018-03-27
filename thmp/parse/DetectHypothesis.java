@@ -480,6 +480,7 @@ public class DetectHypothesis {
 				inputFile = new File("/Users/yihed/Downloads/1406.6713.tex");
 				inputFile = new File("/Users/yihed/Downloads/test/testThm.txt");
 				inputFile = new File("/Users/yihed/Downloads/stuchMarch25.tex");
+				inputFile = new File("/Users/yihed/Downloads/1703.08650");
 		}		
 		List<DefinitionListWithThm> defThmList = new ArrayList<DefinitionListWithThm>();
 		List<ThmHypPair> thmHypPairList = new ArrayList<ThmHypPair>();
@@ -569,6 +570,11 @@ public class DetectHypothesis {
 			if(!FileUtils.isOSX()){
 				serializeDataToFile(stats, thmHypPairList, inputParams, runnerConfig);	
 			}
+			
+			//March 26: temporary to debug kahler
+			//HashMultimap<String, IndexPartPair> wordThmIndexMMap = HashMultimap.create();
+			//createWordThmIndexMMap(thmHypPairList, wordThmIndexMMap);
+			//System.out.println("wordThmIndexMMap: "+wordThmIndexMMap);
 		}
 		System.out.println("STATS -- percentage of non-trivial ParseStruct heads: " + stats.getNonNullPercentage() 
 			+ " out of total " + stats.getTotalThmsNum() + "thms");
@@ -761,6 +767,7 @@ public class DetectHypothesis {
 			//actually turn ParsedExpression's into ThmHypPair's. To facilitate deserialization
 			//into cache at runtime with minimal processing.
 			createWordThmIndexMMap(thmHypPairList, wordThmIndexMMap);
+			
 			List<Multimap<String, IndexPartPair>> wordThmIndexMMapList = new ArrayList<Multimap<String, IndexPartPair>>();
 			wordThmIndexMMapList.add(wordThmIndexMMap);
 			

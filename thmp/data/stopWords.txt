@@ -76,10 +76,8 @@ each
 eg
 eight
 either
-eleven
 else
 elsewhere
-empty
 enough
 etc
 even
@@ -96,13 +94,11 @@ fill
 find
 fire
 first
-five
 for
 former
 formerly
 forty
 found
-four
 from
 front
 full

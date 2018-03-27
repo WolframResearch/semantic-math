@@ -43,6 +43,7 @@ macaulay local
 complementary subspace
 inseparable degree
 see section
+green function
 ascending chain
 unramified locally
 smaller space
@@ -378,6 +379,7 @@ module where
 semi inner
 algebra compris
 object free
+continued fraction
 finite basis
 nr root
 smallest convex

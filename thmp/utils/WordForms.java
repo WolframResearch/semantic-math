@@ -47,8 +47,9 @@ import thmp.search.SearchIntersection.ThmScoreSpanPair;
 public class WordForms {
 
 	private static final Logger logger = LogManager.getLogger(WordForms.class);
-	//delimiters to split on when making words out of input
-	private static final String SPLIT_DELIM = "\\s+|\'|\"|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:|-|_|~|!|\\+";
+	//delimiters to split on when making words out of input. Any special chars involved with unlaut needs to be 
+	private static final String SPLIT_DELIM = "(\\s+|(?<!\\\\)\'|(?<!\\\\)\"|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:|-|_|~|!|\\+)";
+	
 	private static final Pattern BACKSLASH_PATTERN = Pattern.compile("(?<!\\\\)\\\\(?!\\\\)");
 	private static final Pattern ALL_WHITE_EMPTY_SPACE_PATTERN = Pattern.compile("^\\s*$");
 	private static final Pattern ALL_WHITE_NONEMPTY_SPACE_PATTERN = Pattern.compile("^\\s+$");
@@ -104,14 +105,14 @@ public class WordForms {
 	//single lines to skip. Such as comments
 	private static final Pattern SINGLE_LINE_SKIP_PATTERN = Pattern.compile("^%.*|\\\\begin\\{bib.*|.*FFFFFF.*|.*fffff.*|\\/.*");
 	
-	//small lists of fluff words, used in, e.g., n gram extraction.
-	//*don't* put "of" here, will interfere with 3 gram collection
+	//small lists of fluff words, used in, e.g., in search, and n gram extraction. This needs to include plural forms if applicable.
 	private static final String FLUFF_WORDS_SMALL = "a|the|tex|of|and|on|let|lemma|for|to|that|with|is|be|are|there|by"
 			+ "|any|as|if|we|suppose|then|which|in|from|this|assume|this|have|just|may|an|every|it|between|given|itself|has"
 			+ "|more|where|but|each|some|et|these|no|all|its|such|can|one|que|de|thus|via|une|only|also|whenever|other|equal|last|"
 			+ "under|both|even|non|always|over|not|so|two|or|le|another|obvious|after|same|est|whose|which|thm|following|defined"
 			+ "|corresponding|furthermore|satisfy|moreover|satisfying|iff|along|hold|above|called|la|would|three|th|their|des|un|les|new"
-			+ "|exist|at|being|four|was|lem|lax|give|obtained|depending|containing|denote|show|i|know";
+			+ "|exist|exists|at|being|four|was|lem|lax|give|obtained|depending|containing|denote|show|i|know|theorem|theorems|about|than"
+			+ "|example|examples|s";
 	private static final Set<String> STOP_WORDS_SET;
 	
 	private static final Set<String> freqWordsSet; 
@@ -130,11 +131,12 @@ public class WordForms {
 	//add all stock frequency words
 	private static final String[] genericSearchTermsAr = new String[] {"sum", "equation", "polynomial", "function", "basis",
 					"theorem", "group", "ring", "field", "module", "hypothesis", "proposition", "series", "coefficient",
-					"decomposition", "resolution", "problem"};
+					"decomposition", "resolution", "problem", "example"};
 	private static final Set<String> GREEK_ALPHA_SET;
 	private static final Map<Character, Character> DIACRITICS_MAP;
 	/**set of common words for search to ignore, if only these words are present, ie nonrelevant words*/
 	private static final Set<String> GENERIC_SERACH_TERMS;
+	private static final Set<String> searchStopWords;
 	
 	static{		
 		STOP_WORDS_SET = new HashSet<String>();
@@ -165,6 +167,7 @@ public class WordForms {
 		stemToWordsMMap = ImmutableMultimap.copyOf(createStemToWordsMMap(wordToStemMap, stemToWordRepPremap));
 		//create map that uses the longest word as rep
 		stemToWordRepMap = ImmutableMap.copyOf(stemToWordRepPremap);
+		searchStopWords = new HashSet<String>();
 		
 		GREEK_ALPHA_SET = new HashSet<String>();
 		String[] GREEK_ALPHA = new String[]{"alpha","beta","gamma","delta","epsilon","omega","iota","theta","phi"};
@@ -321,7 +324,8 @@ public class WordForms {
 	/**
 	 * Returns the most likely singular form of the word, or
 	 * original word if it doesn't end in s, es, or ies.
-	 * Minimal length of word is 3 chars. conformally invariant pairing
+	 * Minimal length of word is 3 chars. conformally invariant pairing.
+	 * Also check two-s-endings, e.g. gauss!
 	 * @param word
 	 * @return
 	 */
@@ -1340,6 +1344,26 @@ public class WordForms {
 			}
 		}
 		return GENERIC_SERACH_TERMS;
+	}
+	
+
+	/**
+	 * This is trueFluffWordsSet, without the less frequent English
+	 * stock frequency words. To be used for gathering words for search.
+	 * 
+	 * @return
+	 */
+	public static Set<String> searchStopWords() {	
+		
+		if(searchStopWords.isEmpty()) {
+			synchronized(WordForms.class) {
+				if(searchStopWords.isEmpty()) {
+					searchStopWords.addAll(STOP_WORDS_SET);
+					searchStopWords.addAll(WordFrequency.ComputeFrequencyData.mostFreqEnglishWords());
+				}
+			}
+		}
+		return searchStopWords;
 	}
 	
 	/**

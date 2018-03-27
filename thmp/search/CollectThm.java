@@ -115,7 +115,7 @@ public class CollectThm {
 		
 		static{
 			//only get the top N words
-			commonEnglishNonMathWordsSet = WordFrequency.ComputeFrequencyData.trueFluffWordsSet();
+			commonEnglishNonMathWordsSet = WordForms.searchStopWords();
 		}
 		
 		public static Set<String> commonEnglishNonMathWordsSet(){
@@ -918,13 +918,11 @@ public class CollectThm {
 		public static void addToWordThmIndexMap(HashMultimap<String, IndexPartPair> wordThmsMMap,
 				String thm, IndexPartPair indexPartPair){
 			
-			Map<String, Integer> twoGramsMap = NGramsMap.get_twoGramsMap();
-			Map<String, Integer> threeGramsMap = NGramsMap.get_threeGramsMap();			
-			//ListMultimap<String, String> posMMap = Maps.posMMap();
+			final Map<String, Integer> twoGramsMap = NGramsMap.get_twoGramsMap();
+			final Map<String, Integer> threeGramsMap = NGramsMap.get_threeGramsMap();			
 			
 			//multimap of word and lists of integers.
 			ListMultimap<String, Integer> wordIndexMMap = ArrayListMultimap.create();
-			
 			
 			//number of words to skip if an n gram has been added.
 			//int numFutureWordsToSkip = 0;
@@ -942,8 +940,8 @@ public class CollectThm {
 				}
 			}
 			
-			int thmArSz = thmList.size();
-			for(int j = 0; j < thmArSz; j++){
+			int thmListSz = thmList.size();
+			for(int j = 0; j < thmListSz; j++){
 				String word = thmList.get(j);	
 					//only keep words with lengths > threshold
 					int lengthCap = 3;
@@ -957,7 +955,7 @@ public class CollectThm {
 					String wordOriginal = word;
 					
 					/*This processing pipeline needs to *exactly* match the one when searching.
-					 * In SearchIntersection.intersectionSearch()*/
+					 * In SearchIntersection.intersectionSearch*/
 					
 					//get singular forms if plural, put singular form in map.					
 					word = WordForms.getSingularForm(word);						
@@ -969,7 +967,7 @@ public class CollectThm {
 						continue;					
 					}
 					//check the following word
-					if(j < thmArSz-1){
+					if(j < thmListSz-1){
 						String nextWordCombined = wordOriginal + " " + thmList.get(j+1);
 						String twoGramNormal = WordForms.normalizeTwoGram(nextWordCombined);
 						
@@ -982,7 +980,7 @@ public class CollectThm {
 							}
 						}
 						//try to see if these three words form a valid 3-gram
-						if(j < thmArSz-2){
+						if(j < thmListSz-2){
 							String threeWordsCombined = nextWordCombined + " " + thmList.get(j+2);
 							String threeGramNormal = WordForms.normalizeNGram(threeWordsCombined);
 							

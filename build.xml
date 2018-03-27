@@ -7,8 +7,6 @@
 	<property name="builddir" value="${basedir}/build/" />
 	<property name="srcdir" value="${basedir}/src/thmp/" />
 	<property name="fooddir" value="${basedir}/src/food/" />
-	<property name="search_srcdir" value="${basedir}/src/thmp/search" />
-	<property name="utils_srcdir" value="${basedir}/src/thmp/utils" />
 	<property name="datadir" value="${basedir}/src/thmp/data" />
 	<property name="server_datadir" value="/Users/yihed/Documents/workspaceEE/ThmpServlet/WebContent/src/thmp/data" />
 	<property name="server_libdir" value="/Users/yihed/Documents/workspaceEE/ThmpServlet/WebContent/WEB-INF/lib" />

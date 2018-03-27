@@ -159,7 +159,8 @@ public class NGramSearch {
 		//additional two grams not in serialized data file. After the last two-gram-gathering operation.
 		//This is added at *each* app runtime. 
 		private static final String[] ADDITIONAL_TWO_GRAMS_RUNTIME = new String[]{"stone weierstrass", 
-				"fundamental lemma"};
+				"fundamental lemma", "continued fraction", "green function", "time series", "dg category",
+				"four color"};
 		
 		// name of two gram data file containing additional 2-grams that should be included. These don't have
 		// frequencies associated with them. Load these into maps first and accumulate their frequencies.
