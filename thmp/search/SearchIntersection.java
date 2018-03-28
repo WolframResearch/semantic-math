@@ -111,7 +111,7 @@ public class SearchIntersection {
 		
 		//at least 2, so related words can have an integral score value that's 1 less
 		//but non-zero.
-		final int minScore = 3;
+		final int minScore = WordForms.MIN_WORD_SCORE;
 		avgScore = avgScore > 0 ? avgScore : minScore;
 		defaultWordScore = avgScore;
 	}
@@ -1313,11 +1313,13 @@ public class SearchIntersection {
 			List<WordThmsList> wordThmsListList, Map<String, Collection<IndexPartPair>> wordIndexPartPairMap) {
 		// add thms for related words found, with some reduction factor;
 		// make global after experimentation. But *must not* exceed original word score,
-		//to make original hits rank higher.
-		double RELATED_WORD_MULTIPLICATION_FACTOR = 3.7 / 5.0;
+		//to make original hits rank higher. Want score for input word to be 3 or higher.
+		final double RELATED_WORD_MULTIPLICATION_FACTOR = 3.1 / 5.0;
 		//int dbThmSetArLen = dbThmSet.length;
 		int totalRelatedScoreAdded = 0;
 		final int maxTotalScoreAdded = scoreAdded;
+		//prevent words e.g. "gaussian" having too many related words.
+		int maxRelatedWords = 4;
 		
 		if (null != relatedWordsList && !relatedWordsList.isEmpty()) {
 			//gradually decrease score?!
@@ -1331,7 +1333,9 @@ public class SearchIntersection {
 			
 			for (String relatedWord : relatedWordsList) {
 				// Multimap, so return empty collection rather than null, if no hit.
-				
+				if(maxRelatedWords-- < 1) {
+					break;
+				}
 				//need to create new Set each time, due to immutability of wordThmsIndexMMap1 
 				Collection<IndexPartPair> relatedWordThms = new HashSet<IndexPartPair>(wordThmsIndexMMap1.get(relatedWord));
 				

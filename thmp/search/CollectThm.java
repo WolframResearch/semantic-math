@@ -97,7 +97,7 @@ public class CollectThm {
 			"complex", "combination", "regular", "domain", "local", "smooth", "definition", "map", "standard", "prime",
 			"injective", "surjective", "commut", "word", "act", "second", "every", "fppf"};
 	//could be included, if already included, adjust the score to 1. If not, don't add.
-	private static final String[] SCORE1MATH_WORDS = new String[]{"show","have","any", "many", "suppose","end","psl",
+	private static final String[] MIN_SCORE_MATH_WORDS = new String[]{"show","have","any", "many", "suppose","end","psl",
 			"is"
 	};
 	//don't use this to affect building words map, since need entry for vital terms such as "is" (despite its insignificance
@@ -1373,14 +1373,16 @@ public class CollectThm {
 		}
 		
 		/**
-		 * Fills up wordsScorePreMap
+		 * Fills up wordsScorePreMap. Minimum score is 3, to be consistent with related words search
+		 * algorithm in SearchIntersection.java.
 		 * @param wordsScorePreMap empty map to be filled.
-		 * @param docWordsFreqPreMapNoAnno Map of words and their document-wide frequencies.
+		 * @param docWordsFreqPreMap Map of words and their document-wide frequencies.
 		 */
 		public static void buildScoreMap(Map<String, Integer> wordsScorePreMap,
-				Map<String, Integer> docWordsFreqPreMapNoAnno){		
+				Map<String, Integer> docWordsFreqPreMap){		
 			
-			int avgScore = addWordScoresFromMap(wordsScorePreMap, docWordsFreqPreMapNoAnno);
+			int avgScore = addWordScoresFromMap(wordsScorePreMap, docWordsFreqPreMap);
+			
 			//System.out.println("docWordsFreqMapNoAnno "+docWordsFreqMapNoAnno);
 			//put 2 grams in, freq map should already contain 2 grams
 			//addWordScoresFromMap(wordsScorePreMap, twoGramsMap);
@@ -1388,14 +1390,16 @@ public class CollectThm {
 			//put 1 for math words that occur more frequently than the cutoff, but should still be counted, like "ring"	
 			//right now (June 2017) avg still high, around 18.
 			avgScore = (int)(avgScore * 2./3);
-			avgScore = avgScore == 0 ? 2 : avgScore;
+			//avgScore = avgScore == 0 ? 2 : avgScore;
+			avgScore = avgScore < WordForms.MIN_WORD_SCORE ? WordForms.MIN_WORD_SCORE : avgScore;
+			
 			for(String word : SCORE_AVG_MATH_WORDS){ 
 				wordsScorePreMap.put(word, avgScore);
 			}
 			
-			for(String word : SCORE1MATH_WORDS){
+			for(String word : MIN_SCORE_MATH_WORDS){
 				if(wordsScorePreMap.containsKey(word)){
-					wordsScorePreMap.put(word, 1);
+					wordsScorePreMap.put(word, WordForms.MIN_WORD_SCORE);
 				}
 			}
 			

@@ -48,7 +48,7 @@ public class WordForms {
 
 	private static final Logger logger = LogManager.getLogger(WordForms.class);
 	//delimiters to split on when making words out of input. Any special chars involved with unlaut needs to be 
-	private static final String SPLIT_DELIM = "(\\s+|(?<!\\\\)\'|(?<!\\\\)\"|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:|-|_|~|!|\\+)";
+	private static final String SPLIT_DELIM = "(\\s+|\'s|(?<!\\\\)\'|(?<!\\\\)\"|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:|-|_|~|!|\\+)";
 	
 	private static final Pattern BACKSLASH_PATTERN = Pattern.compile("(?<!\\\\)\\\\(?!\\\\)");
 	private static final Pattern ALL_WHITE_EMPTY_SPACE_PATTERN = Pattern.compile("^\\s*$");
@@ -85,6 +85,10 @@ public class WordForms {
 	public static final Pattern QUANT_DIGIT_PATTERN = Pattern.compile("\\d+/*\\d*");
 	public static final Pattern DIGIT_PATTERN = Pattern.compile("\\d+");
 	public static final String QUANTITY_POS = "quant";
+	/*at least 2, so related words can have an integral score value that's 1 less
+	  but non-zero. 3 to be still nonzero when multiplied with the fraction
+	  in related search algorithm*/
+	public static final int MIN_WORD_SCORE = 3;
 	
 	//
 	private static Multimap<String, String> synonymMMap;
