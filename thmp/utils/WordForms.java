@@ -90,7 +90,6 @@ public class WordForms {
 	  in related search algorithm*/
 	public static final int MIN_WORD_SCORE = 3;
 	
-	//
 	private static Multimap<String, String> synonymMMap;
 	
 	private static final ImmutableMap<String, String> wordToStemMap;	
@@ -103,14 +102,16 @@ public class WordForms {
 	private static final Pattern SKIP_PATTERN = Pattern.compile("\\\\begin\\{proof\\}.*|\\\\begin\\{exam.*|\\\\begin\\{thebib.*");
 	private static final Pattern END_SKIP_PATTERN = Pattern.compile("\\\\end\\{proof\\}.*|\\\\end\\{exam.*|\\\\end\\{thebib.*");
 		
-	//special umlaut character to replace with version without umlaut. I.e. \\\"
+	//special umlaut character to replace with version without umlaut. I.e. \\\". *Don't* put braces { } around.
 	public static final Pattern umlautTexPatt = Pattern.compile("(\\\\\"|\\\\\'|\\\\`)");
-	
+	//e.g. "k\"{a}hler"
+	public static final Pattern umlautParenTexPatt = Pattern.compile("\\{([A-Za-z])\\}");
 	//single lines to skip. Such as comments
 	private static final Pattern SINGLE_LINE_SKIP_PATTERN = Pattern.compile("^%.*|\\\\begin\\{bib.*|.*FFFFFF.*|.*fffff.*|\\/.*");
 	
 	//small lists of fluff words, used in, e.g., in search, and n gram extraction. This needs to include plural forms if applicable.
-	private static final String FLUFF_WORDS_SMALL = "a|the|tex|of|and|on|let|lemma|for|to|that|with|is|be|are|there|by"
+	//don't include "lemma", valid uses e.g. "closing lemma, but false positives e.g. "by lemma..."
+	private static final String FLUFF_WORDS_SMALL = "a|the|tex|of|and|on|let|for|to|that|with|is|be|are|there|by"
 			+ "|any|as|if|we|suppose|then|which|in|from|this|assume|this|have|just|may|an|every|it|between|given|itself|has"
 			+ "|more|where|but|each|some|et|these|no|all|its|such|can|one|que|de|thus|via|une|only|also|whenever|other|equal|last|"
 			+ "under|both|even|non|always|over|not|so|two|or|le|another|obvious|after|same|est|whose|which|thm|following|defined"
@@ -630,11 +631,15 @@ public class WordForms {
 	}
 	
 	/**
-	 * Strip away TeX umlaut char. E.g. "\\\"a" -> "a"
+	 * Strip away TeX umlaut char. E.g. "\\\"a" -> "a".
+	 * And schr\"{o}dinger -> schrodinger.
 	 * @return
 	 */
 	public static String stripUmlautFromWord(String word) {
-		return umlautTexPatt.matcher(word).replaceAll("");
+		
+		String wordRepl = umlautTexPatt.matcher(word).replaceAll("");
+		wordRepl = umlautParenTexPatt.matcher(wordRepl).replaceAll("$1");
+		return wordRepl;
 	}
 	
 	/**

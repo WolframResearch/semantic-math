@@ -117,11 +117,11 @@ public class WordFrequency {
 		//English words with top stock frequency, used as stop words.
 		private static final Set<String> topFreqEnglishWords;
 		
-		//words that should be included in trueFluffWordsSet, but were left out by algorithm.
+		//words that should be included in trueFluffWordsSet, but were left out by data.
 		private static final String[] ADDITIONAL_FLUFF_WORDS = new String[]{"an", "are", "has", "tex", "between",
 				"call", "does", "do", "equation", /*equation because we don't strip \begin{equation} during preprocessing
-				which inflates this word, and incorrectly displays it in the web frontend*/
-				 "theorem", "proposition", "lemma"
+				which inflates this word, and incorrectly displays it in the web frontend. Don't include "lemma", e.g. "closing lemma"*/
+				 "theorem", "proposition"
 				};
 		
 		static{

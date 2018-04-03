@@ -14,7 +14,7 @@ vecToTopMsc::usage = "Given model vec, predict top mscs";
 
 predictMsc::usage = "Given path containing data line, predict msc";
 
-$modelFileName = "msc2March12.wlnet";
+$modelFileName = "msc2March21.wlnet";
 (*nme of model with label length 3*)
 $model3FileName = "msc3March14.wlnet";
 
@@ -40,14 +40,14 @@ createMscListAssoc[mscClassList_List] := Module[{counter = 1},
   ]
   
 (***assocs for length-2 Labels***)
-$mscIndexAssoc := $mscClassAssoc = createMscListAssoc[$mscClassList];
+$mscIndexAssoc := $mscIndexAssoc = createMscListAssoc[$mscClassList];
 $mscIndexAssocLen := $mscIndexAssocLen = Length[$mscIndexAssoc];
 
 $indexMscAssoc := $indexMscAssoc =
  AssociationMap[(Values[#] -> Keys[#]) &, $mscIndexAssoc];
  
 (***assocs for length-3 Labels***)
-$mscIndexAssoc3 := $mscClassAssoc3 = createMscListAssoc[$mscClassList3];
+$mscIndexAssoc3 := $mscIndexAssoc3 = createMscListAssoc[$mscClassList3];
 $mscIndexAssocLen3 := $mscIndexAssocLen3 = Length[$mscIndexAssoc3];
 
 $indexMscAssoc3 := $indexMscAssoc3 =

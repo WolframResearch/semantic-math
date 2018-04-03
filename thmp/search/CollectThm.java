@@ -222,7 +222,6 @@ public class CollectThm {
 		static{
 			/*map of words and their representatives, e.g. "annihilate", "annihilator", etc all map to "annihilat"
 			i.e. word of maps to their stems. */
-			//synonymRepMap = WordForms.getSynonymsMap();
 			stemToWordsMMap = WordForms.stemToWordsMMap();
 			
 			/**Versions with no annotation, eg "hyp"/"stm" **/
@@ -935,6 +934,7 @@ public class CollectThm {
 				if(!SPECIAL_CHARACTER_PATTERN.matcher(word).find()){
 					thmList.add(word);
 				}else if(umlautCharPatt.matcher(word).find() || specialCharVocabSet.contains(word)) {
+					//note that umlauts can also be written with { } e.g. schr\"{o}dinger.					
 					word = WordForms.stripUmlautFromWord(word);
 					thmList.add(word);
 				}
@@ -1388,9 +1388,8 @@ public class CollectThm {
 			//addWordScoresFromMap(wordsScorePreMap, twoGramsMap);
 			
 			//put 1 for math words that occur more frequently than the cutoff, but should still be counted, like "ring"	
-			//right now (June 2017) avg still high, around 18.
+			//right now (June 2017) avg still high, around 18, due to the prevalence of n-grams, which have high scores.
 			avgScore = (int)(avgScore * 2./3);
-			//avgScore = avgScore == 0 ? 2 : avgScore;
 			avgScore = avgScore < WordForms.MIN_WORD_SCORE ? WordForms.MIN_WORD_SCORE : avgScore;
 			
 			for(String word : SCORE_AVG_MATH_WORDS){ 

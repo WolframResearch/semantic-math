@@ -294,7 +294,7 @@ public class ThmInput {
 		thmStr = matcher.replaceAll("");
 		//System.out.println("ThmInput - eliminateBeginEndThmPattern "+eliminateBeginEndThmPattern );
 		/*comment out this line if want to retain "\begin{theorem}", etc*/
-		thmStr = eliminateBeginEndThmPattern.matcher(thmStr).replaceAll("");//taking forever, inf loop?!?
+		thmStr = eliminateBeginEndThmPattern.matcher(thmStr).replaceAll("");
 		//System.out.println("Think inf loop is matching right before this, shouldn't get to this point");
 		matcher = ITEM_PATTERN.matcher(thmStr);
 		//replace \item with bullet points (*)
@@ -334,8 +334,7 @@ public class ThmInput {
 		matcher = LABEL_PATTERN.matcher(thmStr);
 		if (matcher.matches()) {
 			wordsThmStr = matcher.replaceAll("$1$2");			
-			thmStr = wordsThmStr;
-			
+			thmStr = wordsThmStr;			
 			//this is only executed when getting theorems for context parsing.
 			if(getBareThmList){	
 				bareThmStr = wordsThmStr;

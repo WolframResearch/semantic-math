@@ -481,6 +481,7 @@ public class DetectHypothesis {
 				inputFile = new File("/Users/yihed/Downloads/test/testThm.txt");
 				inputFile = new File("/Users/yihed/Downloads/stuchMarch25.tex");
 				inputFile = new File("/Users/yihed/Downloads/1703.08650");
+				inputFile = new File("/Users/yihed/Downloads/test/capitalLem.tex");
 		}		
 		List<DefinitionListWithThm> defThmList = new ArrayList<DefinitionListWithThm>();
 		List<ThmHypPair> thmHypPairList = new ArrayList<ThmHypPair>();
@@ -564,9 +565,7 @@ public class DetectHypothesis {
 			}finally {
 				FileUtils.silentClose(inputBF);
 			}
-			/////here March 23
-			//System.out.println("thmHypPairList Sz: "+thmHypPairList.size());
-			//System.out.println("thmHypPairList! "+thmHypPairList);
+			
 			if(!FileUtils.isOSX()){
 				serializeDataToFile(stats, thmHypPairList, inputParams, runnerConfig);	
 			}
@@ -1054,7 +1053,6 @@ public class DetectHypothesis {
 				if(0 == newThmSB.length()){
 					continue;
 				}
-				
 				//Need to read in until \end{cor} etc
 				newThmSB.append(" ").append(line);
 				
@@ -1143,13 +1141,14 @@ public class DetectHypothesis {
 		//sentences to be parsed twice, unless these sentences are marked so they don't get parsed again.
 		//<--really?! June 2017
 		detectAndParseHypothesis(thm, parseState, stats);
+		
 		//if contained in local map, should be careful about when to append map.		
 		//append to newThmSB additional hypotheses that are applicable to the theorem.				
 		DefinitionListWithThm thmDef = appendHypothesesAndParseThm(thm, parseState, thmHypPairList, stats, srcFileName,
-				macrosTrie, eliminateBeginEndThmPattern);
+				macrosTrie, eliminateBeginEndThmPattern);		
 		
 		if(thmDef != DefinitionListWithThm.PLACEHOLDER_DEF_LIST_WITH_THM){
-			definitionListWithThmList.add(thmDef);			
+			definitionListWithThmList.add(thmDef);
 		}
 		
 		//should parse the theorem.
@@ -1180,8 +1179,9 @@ public class DetectHypothesis {
 				if(ThmInput.THM_START_PATTERN.matcher("\\begin{" + macro).matches()){
 					continue;
 				}
-				startBuilder.append("|.*\\\\begin\\s*\\{").append(macro).append(".*");				
-				endBuilder.append("|.*\\\\end\\s*\\{").append(macro).append(".*");
+				startBuilder.append("|.*\\\\begin\\s*\\{").append(macro).append(".*");
+				//endBuilder.append("|.*\\\\end\\s*\\{").append(macro).append(".*");, only match white spaces.
+				endBuilder.append("|\\s*\\\\end\\s*\\{").append(macro).append(".*");
 				//e.g. "\\begin{lemma*} if no numbering needed"
 				eliminateBuilder.append("|\\\\begin\\s*\\{").append(macro).append("\\**\\}\\s*");
 				eliminateBuilder.append("|\\\\end\\s*\\{").append(macro).append("\\**\\}\\s*");

@@ -218,9 +218,10 @@ findNearestClasses[dataStr_String, model_:$mscModel, numNearest1_Integer:8] :=
   (*For inspection by hand:*)
   (*Join[preList, {"14A00"}, classList[[1;;Min[Length[classList],numNearest]]]];*)
   
-  Join[classList[[1;;Min[Length[classList],numNearest1]]], {"14A00"}, pred3List];
+  (*April 2: Join[classList[[1;;Min[Length[classList],numNearest1]]], {"14A00"}, pred3List];*)
   (*classList[[1;;Min[Length[classList],numNearest1]]]*******)
-  ]  
+  classList[[1;;Min[Length[classList],numNearest1]]]
+  ]
 
 (*Filter out less relevant ones based on neural net results.
 Args: classList, list of msc classes from nearest-neighbors.

@@ -15,6 +15,7 @@ import com.wolfram.jlink.ExprFormatException;
 
 import thmp.utils.FileUtils;
 import thmp.utils.MathLinkUtils.WLEvaluationMedium;
+import thmp.utils.WordForms;
 import thmp.runner.CreateMscVecs.Paper;
 import thmp.search.DBSearch;
 
@@ -96,11 +97,13 @@ public class MscClassify {
 		
 		try{
 			int mscListLen = mscListExpr.length();
-			//System.out.println("mscListLen "+mscListLen);
 			for(int i = 1; i <= mscListLen; i++) {
 				String msc = mscListExpr.part(i).asString();
-				mscList.add(msc);
-				System.out.print(msc + "\t");
+				if( WordForms.DIGIT_PATTERN.matcher(msc.substring(0, 1)).matches() ) {
+					//avoid e.g. "PRIMA" that the model sometimes predicts.
+					mscList.add(msc);
+					//System.out.print(msc + "\t");
+				}				
 			}
 			
 		}catch(ExprFormatException e){
