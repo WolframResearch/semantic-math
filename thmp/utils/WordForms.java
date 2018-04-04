@@ -733,8 +733,7 @@ public class WordForms {
 		}
 		if(sb.length() > 0) {
 			tokenList.addAll(splitThmIntoSearchWordsList(sb.toString()));
-		}
-		
+		}		
 		return tokenList;
 	}
 	

@@ -482,6 +482,8 @@ public class DetectHypothesis {
 				inputFile = new File("/Users/yihed/Downloads/stuchMarch25.tex");
 				inputFile = new File("/Users/yihed/Downloads/1703.08650");
 				inputFile = new File("/Users/yihed/Downloads/test/capitalLem.tex");
+				inputFile = new File("/Users/yihed/Downloads/teoTest1.txt");
+				
 		}		
 		List<DefinitionListWithThm> defThmList = new ArrayList<DefinitionListWithThm>();
 		List<ThmHypPair> thmHypPairList = new ArrayList<ThmHypPair>();
@@ -1180,7 +1182,7 @@ public class DetectHypothesis {
 					continue;
 				}
 				startBuilder.append("|.*\\\\begin\\s*\\{").append(macro).append(".*");
-				//endBuilder.append("|.*\\\\end\\s*\\{").append(macro).append(".*");, only match white spaces.
+				//should only match white spaces instead of starting with "|.*\\\...":
 				endBuilder.append("|\\s*\\\\end\\s*\\{").append(macro).append(".*");
 				//e.g. "\\begin{lemma*} if no numbering needed"
 				eliminateBuilder.append("|\\\\begin\\s*\\{").append(macro).append("\\**\\}\\s*");
