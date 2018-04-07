@@ -20,16 +20,11 @@ import javax.servlet.ServletContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 
-import thmp.parse.ProcessInput;
-import thmp.search.CollectThm.ThmList;
 import thmp.search.Searcher.SearchMetaData;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;

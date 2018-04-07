@@ -143,6 +143,27 @@ public class LiteralSearch {
 		}
 	}	
 	
+	/**
+	 * Used for returning pairs of literal search scores.
+	 */
+	public static class LiteralSearchIndexPair{
+		int wordDistScore;
+		int firstStartScore;
+		
+		public LiteralSearchIndexPair(int wordDistScore_, int firstIndexScore_) {
+			this.wordDistScore = wordDistScore_;
+			this.firstStartScore = firstIndexScore_;
+		}
+		
+		public int wordDistScore() {
+			return this.wordDistScore;
+		}
+		
+		public int firstStartScore() {
+			return this.firstStartScore;
+		}
+	}
+	
 	/********Tools for building literal search index map, at data processing time*******/
 
 	/**
@@ -417,7 +438,9 @@ public class LiteralSearch {
 		for(Map.Entry<Integer, TreeMap<Number,String>> thmIndexWordEntry : thmIndexWordMMap.entrySet()) {
 			int thmIndex = thmIndexWordEntry.getKey();
 			
-			int thmScore = computeThmWordDistScore(thmIndexWordEntry.getValue());
+			LiteralSearchIndexPair scorePair = computeThmWordDistScore(thmIndexWordEntry.getValue());
+			
+			int thmScore = scorePair.wordDistScore;
 			//add word count as base score.
 			//thmScore += thmWordCountMSet.count(thmIndex);
 			thmScore += thmIndexWordEntry.getValue().size()*WORD_BASE_POINT;
@@ -437,14 +460,22 @@ public class LiteralSearch {
 	 * @param map map for thms gathered during intersection search.
 	 * @return MIN_SCORE if contains only generic word
 	 */
-	public static int computeThmWordDistScore(WordDistScoreTMap wordDistMapContainer) {
+	public static LiteralSearchIndexPair computeThmWordDistScore(WordDistScoreTMap wordDistMapContainer) {
 		
 		TreeMap<Number,String> hypIndexWordMap = wordDistMapContainer.hypIndexWordTMap();
 		TreeMap<Number,String> thmIndexWordMap = wordDistMapContainer.thmIndexWordTMap();
 		
-		int totalScore = computeThmWordDistScore(hypIndexWordMap) + computeThmWordDistScore(thmIndexWordMap);
+		LiteralSearchIndexPair hypPair = computeThmWordDistScore(hypIndexWordMap);
+		LiteralSearchIndexPair thmPair = computeThmWordDistScore(thmIndexWordMap);
 		
-		return totalScore;
+		//int totalScore = computeThmWordDistScore(hypIndexWordMap) + computeThmWordDistScore(thmIndexWordMap);
+		//could penalize hypPair wordDistScore to lower ranking, but they are already effectively punished by 
+		//their firstStartScore defaulting to the max.
+		LiteralSearchIndexPair wholePair = new LiteralSearchIndexPair(hypPair.wordDistScore + thmPair.wordDistScore, 
+				thmPair.firstStartScore);
+		
+		//only count the firstWordScore for thmIndexMap
+		return wholePair;
 	}
 	
 	/**
@@ -454,17 +485,21 @@ public class LiteralSearch {
 	 * @param map map for thms gathered during intersection search.
 	 * @return MIN_SCORE if contains only generic word
 	 */
-	private static int computeThmWordDistScore(TreeMap<Number, String> indexWordMap) {
+	private static LiteralSearchIndexPair computeThmWordDistScore(TreeMap<Number, String> indexWordMap) {
 		
 		//map of words, and the number of points that word is earning
 		Map<String, Integer> wordScoreMap = new HashMap<String, Integer>();
 		
 		List<Number> wordsList = new ArrayList<Number>(indexWordMap.keySet());
 		int wordsListSz = wordsList.size();
+		//just giving lowest position suffices. Used to give preference to results
+		//containing matched words at the beginning.
+		int lowestIndex = LiteralSearchIndex.MAX_WORD_INDEX_AR_VAL;
+		
 		if(wordsListSz < 2) {
 			//base points (BASE_SCORE*number of words) are assumed to be added by caller.
 			//so don't need to add here.
-			return MIN_SCORE;
+			return new LiteralSearchIndexPair(MIN_SCORE, lowestIndex);
 		}
 		
 		Number priorWordIndex = wordsList.get(0);
@@ -485,7 +520,12 @@ public class LiteralSearch {
 				}
 			}
 			
-			int distToPriorWord = wordIndex.intValue() - priorWordIndex.intValue();
+			int curIndex = wordIndex.intValue();
+			if(curIndex < lowestIndex) {
+				lowestIndex = curIndex;
+			}
+			
+			int distToPriorWord = curIndex - priorWordIndex.intValue();
 			int wordScore;
 			switch(distToPriorWord) {
 			case 1:
@@ -507,7 +547,7 @@ public class LiteralSearch {
 			wordScoreMap.put(word, wordScore);
 			
 			priorWordIndex = wordIndex;
-			priorWord = word;
+			//priorWord = word;
 		}
 
 		int wordScoreMapSz = wordScoreMap.size();
@@ -518,7 +558,7 @@ public class LiteralSearch {
 			//same as above. If only contain *one* generic word, count result as 0.
 			//In these cases query must be more than one word, since 
 			//else wouldn't be resorting to index search.
-			return MIN_SCORE;
+			return new LiteralSearchIndexPair(MIN_SCORE, lowestIndex);
 		}
 		
 		int totalScore = 0; //was: WORD_BASE_POINT * wordScoreMapSz, base score will be added 
@@ -526,7 +566,7 @@ public class LiteralSearch {
 		for(int score : wordScoreMap.values()) {
 			totalScore += score;
 		}
-		return totalScore;
+		return new LiteralSearchIndexPair(totalScore, lowestIndex);
 	}
 	
 	public static boolean spanBelowThreshold(int curSpan, int maxPossibleSpan) {

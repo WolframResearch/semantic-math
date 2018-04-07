@@ -31,6 +31,7 @@ import com.google.common.collect.SetMultimap;
 import com.google.common.collect.TreeMultimap;
 
 import thmp.search.CollectThm.ThmWordsMaps.IndexPartPair;
+import thmp.search.LiteralSearch.LiteralSearchIndexPair;
 import thmp.search.SearchCombined.ThmHypPair;
 import thmp.utils.DBUtils.AuthorName;
 import thmp.utils.DBUtils.ConjDisjType;
@@ -129,12 +130,16 @@ public class SearchIntersection {
 		//score based on how closely clustered the words are. The closer the better, the 
 		//higher the closer.
 		private int wordDistScore;
+		//starting index of first matched word from query.
+		private int firstStartScore;// = LiteralSearch.LiteralSearchIndex.MAX_WORD_INDEX_AR_VAL;
 		
-		public ThmScoreSpanPair(int index_, int score_, int spanScore_, int wordDistScore_) {
+		public ThmScoreSpanPair(int index_, int score_, int spanScore_, int wordDistScore_,
+				int firstStartScore_) {
 			this.thmIndex = index_;
 			this.score = score_;
 			this.spanScore = spanScore_;
 			this.wordDistScore = wordDistScore_;
+			this.firstStartScore = firstStartScore_;
 		}
 
 		public ThmScoreSpanPair(int index_, int score_, int spanScore_) {
@@ -172,14 +177,25 @@ public class SearchIntersection {
 			return this.spanScore > other.spanScore ? -1
 					//: (this.spanScore < other.spanScore ? 1 : (this == other ? 0 : -1));
 					//need explicit equals, so not all instances are recognized to be the same in map.
-					: (this.spanScore < other.spanScore ? 1 : (this.equals(other) ? 0 : tieBreakWithWordDist(other)));
+					//Already checked whether this.equals(other). But need to put back in in case this tie breaker
+					//is called by anything other than the previous tiebreaker!
+					: (this.spanScore < other.spanScore ? 1 : tieBreakWithWordDist(other));
 		}
 		
 		private int tieBreakWithWordDist(ThmScoreSpanPair other) {
 			// reverse because treemap naturally has ascending order
 			return this.wordDistScore > other.wordDistScore ? -1
-					//need explicit equals, so not all instances are recognized to be the same in map.
-					: (this.wordDistScore < other.wordDistScore ? 1 : (this.equals(other) ? 0 : -1));
+					//same comment as above applies here.
+					: (this.wordDistScore < other.wordDistScore ? 1 : tieBreakWithFirstWordScore(other));
+		}
+		
+		//Tie break with the starting point, favors earlier starting point, per discussion with Michael.
+		//since earlier correlates with word being more important.
+		private int tieBreakWithFirstWordScore(ThmScoreSpanPair other) {
+			// favor lower starting index 
+			return this.firstStartScore < other.firstStartScore ? -1
+					//same comment as above applies here.
+					: (this.firstStartScore > other.firstStartScore ? 1 : -1);
 		}
 		
 		@Override
@@ -238,6 +254,7 @@ public class SearchIntersection {
 			this.word = word_;
 			this.thmsList = thmsList_;
 			this.score = score_;
+			this.originalScore = score_;
 			this.tokenType = tokenType_;
 			this.wordIndexInThm = wordIndexInThm_;
 		}
@@ -680,8 +697,6 @@ public class SearchIntersection {
 		//Collections.sort(wordThmsListList);
 		//this is reversed, words with higher number of thms come first.
 		Collections.sort(originalWordsList, new WordForms.WordFreqComparator(wordThmCountMap));
-		
-		//System.out.println("Sorted wordThmsListList "+wordThmsListList);		
 				
 		//Iterator<WordThmsList> wordThmsListIter = wordThmsListList.iterator();
 		//Iterator<String> wordThmsListKeyIter = wordThmsListList.keySet().iterator();
@@ -818,7 +833,11 @@ public class SearchIntersection {
 			
 			//score based on compare word distances here
 			WordDistScoreTMap indexWordTMap = thmWordIndexMap.get(index);
-			int wordDistScore = LiteralSearch.computeThmWordDistScore(indexWordTMap);
+			LiteralSearchIndexPair literalSearchScorePair = LiteralSearch.computeThmWordDistScore(indexWordTMap);
+			
+			int wordDistScore = literalSearchScorePair.wordDistScore();
+			//favor results where query words come first.
+			int firstStartScore = literalSearchScorePair.firstStartScore;
 			
 			//don't penalize score, penalize wordDistScore instead, since want to rank
 			//all results containing all keys words above those that contain fewer, and 
@@ -830,7 +849,7 @@ public class SearchIntersection {
 			
 			int thmWordSpan = pair.spanScore;
 			
-			thmScorePQ2.add(new ThmScoreSpanPair(index, score, thmWordSpan, wordDistScore));
+			thmScorePQ2.add(new ThmScoreSpanPair(index, score, thmWordSpan, wordDistScore, firstStartScore));
 			pair=thmScorePQ.poll();
 			counter++;
 		}
@@ -840,7 +859,7 @@ public class SearchIntersection {
 		int halfMaxScore = firstScore/2;
 		int firstSpan = null == pair ? -1 : pair.spanScore;
 		counter = numHighest;
-		System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+		//System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
 		while(counter-- > 0 && null != pair) {
 			
 			int thmIndex = pair.thmIndex;
@@ -856,7 +875,7 @@ public class SearchIntersection {
 			}
 			//very useful debug print. Don't delete - April 2018.
 			System.out.println(counter+ ": +++ " + pair.thmIndex+". score: "+ pair.score+ " SpanScore " + pair.spanScore + " DistScore " + pair.wordDistScore + " "
-					+ ThmHypPairGet.retrieveThmHypPairWithThm(pair.thmIndex));
+					+ " firstStartScore " + pair.firstStartScore + " " + ThmHypPairGet.retrieveThmHypPairWithThm(pair.thmIndex));
 			thmScoreSpanList.add(pair);
 			highestThmList.add(thmIndex);
 			pair = thmScorePQ2.poll();
@@ -1367,7 +1386,6 @@ public class SearchIntersection {
 			tokenType.addToMap(thmWordSpanMMap, index, wordIndexInThm, thmScoreSpanSet, 
 					newScore, prevScore, thmScoreMap);			
 			
-			//thmScoreSet.add(new ThmScoreSpanPair(index, newScore, 0));
 		}
 		//}
 		if(profileTiming) SimilarThmSearch.printElapsedTime(beforeLoop, "LOOPING over "+wordThms.size()+" Thms");

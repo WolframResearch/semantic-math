@@ -797,7 +797,7 @@ public class WordForms {
 			int newSpanScore = thmSpanCol.size();
 			
 			if(newSpanScore > prevColSz) {
-				
+				//word dist score and first word score haven't been determined yet.
 				thmScoreSet.remove(new ThmScoreSpanPair(thmIndex, prevScore, prevColSz));				
 				//int newSpanScore = thmWordSpanMMap.get(thmIndex).size();
 				thmScoreSet.add(new ThmScoreSpanPair(thmIndex, newScore, newSpanScore));		
@@ -805,10 +805,9 @@ public class WordForms {
 				return true;
 			}else {				
 				return false;
-			}			
+			}		
 			
 		}
-		
 		
 		/**
 		 * Adjusts the integral word score for N-grams, such that the N-gram's score
