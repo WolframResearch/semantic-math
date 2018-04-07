@@ -57,9 +57,9 @@ public class LiteralSearch {
 	public static final int LITERAL_WORD_LEN_MAX = 15;
 	private static final Pattern DIGIT_PATTERN = Pattern.compile("\\d+");
 	private static final Logger logger = LogManager.getLogger(LiteralSearch.class);
-	/*deliberately includes slash \\*/
+	/*deliberately includes slash \\. Allows umlaut chars that are preceded by slash.*/
 	private static final Pattern LITERAL_SPECIAL_CHARS_PATTERN 
-		= Pattern.compile("[-\\{\\[\\)\\(\\}\\]\\\\$%/|?@*.;,:_~!+^&\"\'`+<>=#]");
+		= Pattern.compile("([-\\{\\[\\)\\(\\}\\]$%/|?@*.;,:_~!+^&+<>=#]|\\\\(?![\"\'`])|(?<!\\\\)\"|(?<!\\\\)\'|(?<!\\\\)`)");
 	private static final int MIN_SCORE = 0;
 
 	static {		
@@ -72,6 +72,10 @@ public class LiteralSearch {
 		String[] invalidSearchWordAr = new String[] {"with","then","those","there","their",
 				"let","for"};
 		for(String fluffWord : invalidSearchWordAr) {
+			INVALID_SEARCH_WORD_SET.add(fluffWord);
+		}
+		Set<String> stopWordsSet = WordForms.stopWordsSet();
+		for(String fluffWord : stopWordsSet) {
 			INVALID_SEARCH_WORD_SET.add(fluffWord);
 		}
 	}
@@ -219,6 +223,7 @@ public class LiteralSearch {
 			if(isInValidSearchWord(word)) {
 				continue;
 			}
+			//need to undergo exact same processing as when indexing thms or searching for queries.
 			word = processLiteralSearchWord(word);
 			//don't count those already in lexicon map, since they are already counted by the lexicon-thm map.
 			if(wordsScoreMap.containsKey(word)) {
@@ -390,6 +395,7 @@ public class LiteralSearch {
 	 * @return
 	 */
 	private static String processLiteralSearchWord(String word) {
+		word = WordForms.stripUmlautFromWord(word);
 		word = WordForms.getSingularForm(word);
 		word = WordForms.normalizeWordForm(word);
 		return word;
@@ -409,7 +415,7 @@ public class LiteralSearch {
 				|| DIGIT_PATTERN.matcher(word).find()){
 			return true;
 		}
-		if(trueFluffWordsSet.contains(word) || INVALID_SEARCH_WORD_SET.contains(word)
+		if(INVALID_SEARCH_WORD_SET.contains(word)
 				|| word.contains("\uFFFD")) {
 			return true;
 		}
@@ -503,6 +509,9 @@ public class LiteralSearch {
 		}
 		
 		Number priorWordIndex = wordsList.get(0);
+		//list is ordered from smallest to largest.
+		lowestIndex = priorWordIndex.intValue();
+		
 		String priorWord = indexWordMap.get(priorWordIndex);
 		wordScoreMap.put(priorWord, 0);
 		
@@ -520,12 +529,7 @@ public class LiteralSearch {
 				}
 			}
 			
-			int curIndex = wordIndex.intValue();
-			if(curIndex < lowestIndex) {
-				lowestIndex = curIndex;
-			}
-			
-			int distToPriorWord = curIndex - priorWordIndex.intValue();
+			int distToPriorWord = wordIndex.intValue() - priorWordIndex.intValue();
 			int wordScore;
 			switch(distToPriorWord) {
 			case 1:
