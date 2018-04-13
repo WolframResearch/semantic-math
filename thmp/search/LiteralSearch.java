@@ -61,7 +61,7 @@ public class LiteralSearch {
 	private static final Pattern LITERAL_SPECIAL_CHARS_PATTERN 
 		= Pattern.compile("([-\\{\\[\\)\\(\\}\\]$%/|?@*.;,:_~!+^&+<>=#]|\\\\(?![\"\'`])|(?<!\\\\)\"|(?<!\\\\)\'|(?<!\\\\)`)");
 	private static final int MIN_SCORE = 0;
-
+	
 	static {		
 		//logger.info("LiteralSearchIndex.class.getClassLoader(): "+LiteralSearchIndex.class.getClassLoader());
 		//move to db!
@@ -226,7 +226,11 @@ public class LiteralSearch {
 			//need to undergo exact same processing as when indexing thms or searching for queries.
 			word = processLiteralSearchWord(word);
 			//don't count those already in lexicon map, since they are already counted by the lexicon-thm map.
-			if(wordsScoreMap.containsKey(word)) {
+			//<--but need the maps to compute dist scores
+			/*if(wordsScoreMap.containsKey(word)) {
+				continue;
+			}*/
+			if(INVALID_SEARCH_WORD_SET.contains(word)) {
 				continue;
 			}
 			
@@ -551,13 +555,11 @@ public class LiteralSearch {
 			wordScoreMap.put(word, wordScore);
 			
 			priorWordIndex = wordIndex;
-			//priorWord = word;
 		}
 
 		int wordScoreMapSz = wordScoreMap.size();
 		
 		if(1 == wordScoreMapSz
-				//Note genericSearchTermsSet includes 5000 frequent English words.
 				&& WordForms.genericSearchTermsSet().contains(wordScoreMap.keySet().iterator().next())) {
 			//same as above. If only contain *one* generic word, count result as 0.
 			//In these cases query must be more than one word, since 

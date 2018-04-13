@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -4972,13 +4973,19 @@ public class ThmP1 {
 		return span;
 	}
 
+	
+	public static String[] preprocess(String inputStr) {
+		return preprocess(inputStr, null);
+	}
+	
 	/**
 	 * Preprocess.
 	 * @param str
 	 *            is string of all input to be processed, including punctuations.
+	 * @param List of strings to be filled, with original-cased words, not lower. Could be null    
 	 * @return array of period-separated sentence Strings.
 	 */
-	public static String[] preprocess(String inputStr) {
+	public static String[] preprocess(String inputStr, List<String> originalCaseSentenceList) {
 		
 		if(logger.getLevel().equals(Level.INFO)){
 			logger.info("Input: " + inputStr);
@@ -4987,6 +4994,10 @@ public class ThmP1 {
 		clearParsedExpr();
 		
 		ArrayList<String> sentenceList = new ArrayList<String>();
+		//ArrayList<String> originalCaseSentenceList = new ArrayList<String>();
+		if(null == originalCaseSentenceList) {
+			originalCaseSentenceList = new ArrayList<String>();
+		}
 		
 		//separate out punctuations, separate out words away from punctuations.
 		//Note this also changes the tex, be more careful!
@@ -4996,6 +5007,7 @@ public class ThmP1 {
 		int wordsArrayLen = wordsArray.length;
 
 		StringBuilder sentenceBuilder = new StringBuilder();
+		StringBuilder originalCaseBuilder = new StringBuilder();
 		// String newSentence = "";
 		String curWord;
 		// whether in latex expression
@@ -5054,19 +5066,25 @@ public class ThmP1 {
 			if(curWord.equals("\\begin{enumerate}")){
 				if(sentenceBuilder.length() > 0){
 					sentenceList.add(sentenceBuilder.toString());
-					sentenceBuilder.setLength(0);
+					sentenceBuilder.setLength(0);					
+					originalCaseSentenceList.add(originalCaseBuilder.toString());
+					originalCaseBuilder.setLength(0);
 				}
 				while(i < wordsArrayLen && !curWord.equals("\\end{enumerate}")){
 					curWord = wordsArray[i];
 					sentenceBuilder.append(" ").append(curWord);
+					originalCaseBuilder.append(" ").append(curWord);
 					i++;
 				}				
 				if(curWord.equals("\\end{enumerate}")){
 					sentenceBuilder.append(" ").append(curWord);
+					originalCaseBuilder.append(" ").append(curWord);
 				}				
 				sentenceList.add(sentenceBuilder.toString().trim());
 				sentenceBuilder.setLength(0);
 				
+				originalCaseSentenceList.add(originalCaseBuilder.toString().trim());
+				originalCaseBuilder.setLength(0);
 				if(i == wordsArrayLen){					
 					return sentenceList.toArray(new String[0]);
 				}
@@ -5092,6 +5110,7 @@ public class ThmP1 {
 					String replacement = fluffMap.get(tempWord.toLowerCase());
 					if (replacement != null) {
 						sentenceBuilder.append(" ").append(replacement);
+						originalCaseBuilder.append(" ").append(replacement);
 						lastWordAdded = replacement;
 						madeReplacement = true;
 						i = j;
@@ -5107,13 +5126,16 @@ public class ThmP1 {
 					char char0 = curWord.charAt(0);			
 					//those are tokens used to earlier to split sentence. 
 					if(char0 == ',' || char0 == '.' || char0 == ':' || char0 == ';'){
-						sentenceBuilder.append(curWord);						
+						sentenceBuilder.append(curWord);	
+						originalCaseBuilder.append(curWord);
 					}else{
 						sentenceBuilder.append(" ").append(curWord);
+						originalCaseBuilder.append(" ").append(curWord);
 					}
 					lastWordAdded = curWord;
 					toLowerCase = true;
-				}else{					
+				}else{				
+					originalCaseBuilder.append(" ").append(curWord);
 					String wordToAdd = curWord.toLowerCase();
 					sentenceBuilder.append(" ").append(wordToAdd);
 					lastWordAdded = wordToAdd;
@@ -5135,6 +5157,7 @@ public class ThmP1 {
 							if(WordForms.areTexExprSimilar(lastWordAdded, texExpr)){
 								//substitute the comma with "and"
 								sentenceBuilder.append(" and ");
+								originalCaseBuilder.append(" and ");
 								continue;
 							}
 						}
@@ -5173,37 +5196,46 @@ public class ThmP1 {
 								//if different type, skip the conjunction/disjunction token.
 								i++;
 							}
-						}
-												
+						}												
 					}
 					//add the punctuation to use later
 					sentenceBuilder.append(" ").append(curWord);
-					//System.out.println("curWord: " +curWord+". sentence to append " + sentenceBuilder.toString());
+					originalCaseBuilder.append(" ").append(curWord);
 					
 					prevSentence = sentenceBuilder.toString();
 					sentenceList.add(prevSentence);
 					
-					sentenceBuilder.setLength(0);
+					originalCaseSentenceList.add(originalCaseBuilder.toString());
 					
+					sentenceBuilder.setLength(0);
+					originalCaseBuilder.setLength(0);
 				} else { //in Latex
 					lastWordAdded = curWord;
 					sentenceBuilder.append(" ").append(curWord);
+					originalCaseBuilder.append(" ").append(curWord);
 					if(i == wordsArrayLen - 1){ 
 						//could also throw IllegalSyntax exception here
 						sentenceList.add(sentenceBuilder.toString());
 						sentenceBuilder.setLength(0);
+						originalCaseSentenceList.add(originalCaseBuilder.toString());
+						originalCaseBuilder.setLength(0);
 					}
 				}
 			}
 			else if(i == wordsArrayLen - 1){ 
 				sentenceList.add(sentenceBuilder.toString());
 				sentenceBuilder.setLength(0);
+				
+				originalCaseSentenceList.add(originalCaseBuilder.toString());
+				originalCaseBuilder.setLength(0);
 			}
 		}
 		if(sentenceList.isEmpty()){
 			sentenceList.add(sentenceBuilder.toString());
+			originalCaseSentenceList.add(originalCaseBuilder.toString());
 		}		
-		//System.out.println("sentenceList " + sentenceList);
+		//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
+		//System.out.println("ORIGINAL CASE " + originalCaseSentenceList);
 		return sentenceList.toArray(new String[0]);
 	}
 	

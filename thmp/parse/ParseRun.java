@@ -1,7 +1,6 @@
 package thmp.parse;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -94,14 +93,17 @@ public class ParseRun {
 		
 		List<Set<Integer>> relationalContextVecList = new ArrayList<Set<Integer>>();			
 		parseState.resetNumNonTexTokens();
+		List<String> originalCaseInputList = new ArrayList<String>();
 		
 		String[] strAr;	
 		if(doPreprocess.length > 0 && !doPreprocess[0]){
 			strAr = new String[]{st};
 		}else{
-			strAr = ThmP1.preprocess(st);
+			strAr = ThmP1.preprocess(st, originalCaseInputList);
 			//System.out.println("Result of PREPROCESSING " + Arrays.toString(strAr));
 		}
+		System.out.println("originalCaseInputList.get(i) "+originalCaseInputList);
+		boolean inputListsSameLen = originalCaseInputList.size() == strAr.length;
 		
 		for(int i = 0; i < strAr.length; i++){
 			if(WordForms.getWhiteEmptySpacePattern().matcher(strAr[i]).find()){
@@ -112,6 +114,10 @@ public class ParseRun {
 			String curStrTrimmed = strAr[i].trim();
 			try {
 				parseState = ThmP1.tokenize(curStrTrimmed, parseState);
+				if(inputListsSameLen) {
+					parseState.setCurrentInputStr(originalCaseInputList.get(i).trim());
+				}
+				System.out.println("originalCaseInputList.get(i) "+originalCaseInputList);
 			} catch (IllegalSyntaxException e) {
 				//Don't fill up logs with this, not helpful.
 				//System.out.println("ParseRun - Input contains illegal syntax!");

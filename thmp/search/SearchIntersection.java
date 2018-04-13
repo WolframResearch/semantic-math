@@ -820,6 +820,8 @@ public class SearchIntersection {
 		List<Integer> highestThmList = new ArrayList<Integer>();
 		int maxThmCount = 400;
 		int counter = 0;
+		//number of original query words, *without* related words.
+		//int queryWordsCount = wordThmCountMap.keySet().size();
 		
 		ThmScoreSpanPair pair = thmScorePQ.poll();
 		//if pair is null, then score won't be used.
@@ -859,19 +861,24 @@ public class SearchIntersection {
 		int halfMaxScore = firstScore/2;
 		int firstSpan = null == pair ? -1 : pair.spanScore;
 		counter = numHighest;
+		Set<String> genericSearchTermsSet = WordForms.genericSearchTermsSet();
 		//System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+		
 		while(counter-- > 0 && null != pair) {
 			
 			int thmIndex = pair.thmIndex;
 			score = pair.score;
+		 	boolean isWordGeneric = genericSearchTermsSet.contains(thmPruneWordsMap.get(thmIndex));
 			//prune irrelevant results.
 			if(pair.spanScore < firstSpan) {
 				if(score < halfMaxScore) {
 					break;
-				}else if(pair.spanScore == 1 
-						&& WordForms.genericSearchTermsSet().contains(thmPruneWordsMap.get(thmIndex)) ) {
+				}else if(pair.spanScore == 1 && isWordGeneric) {
 					break;
 				}
+			}else if(firstSpan == 1 && inputWordsArSz > 1 && isWordGeneric) { //check search set size
+				//e.g. "Banachoid space", where "Banachoid" doesn't yield any hits, so didn't contribute to span.
+				break;
 			}
 			//very useful debug print. Don't delete - April 2018.
 			System.out.println(counter+ ": +++ " + pair.thmIndex+". score: "+ pair.score+ " SpanScore " + pair.spanScore + " DistScore " + pair.wordDistScore + " "

@@ -735,7 +735,8 @@ public class ParseState {
 			//include the entire string
 			VariableName variableName = createVariableName(name);
 			//should check if contains entry.
-			VariableDefinition def = new VariableDefinition(variableName, entStruct, this.currentInputStr);	
+			//VariableDefinition def = new VariableDefinition(variableName, entStruct, this.currentInputStr);
+			VariableDefinition def = new VariableDefinition(variableName, entStruct, this.currentInputStr);
 			if(!variableMMapToAddTo.containsEntry(variableName, def)){
 				variableMMapToAddTo.put(variableName, def);	
 			}	

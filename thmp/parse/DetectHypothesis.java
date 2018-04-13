@@ -482,7 +482,7 @@ public class DetectHypothesis {
 				inputFile = new File("/Users/yihed/Downloads/stuchMarch25.tex");
 				inputFile = new File("/Users/yihed/Downloads/1703.08650");
 				inputFile = new File("/Users/yihed/Downloads/test/capitalLem.tex");
-				inputFile = new File("/Users/yihed/Downloads/teoTest1.txt");
+				inputFile = new File("/Users/yihed/Downloads/teoTest2.txt");
 				
 		}		
 		List<DefinitionListWithThm> defThmList = new ArrayList<DefinitionListWithThm>();
@@ -1139,9 +1139,7 @@ public class DetectHypothesis {
 		parseState.setCurParseStruct(null);
 		parseState.setHeadParseStruct(null);
 		
-		//first gather hypotheses in the theorem. <--Note that this will cause the hypothetical
-		//sentences to be parsed twice, unless these sentences are marked so they don't get parsed again.
-		//<--really?! June 2017
+		//first gather hypotheses in the theorem.
 		detectAndParseHypothesis(thm, parseState, stats);
 		
 		//if contained in local map, should be careful about when to append map.		
@@ -1247,13 +1245,15 @@ public class DetectHypothesis {
 		
 		//split on punctuations precede a space, but keep the punctuation.
 		//String[] contextStrAr = PUNCTUATION_PATTERN.split(contextStr);
-		String[] contextStrAr = ThmP1.preprocess(contextStr);
+		List<String> originalCaseInputList = new ArrayList<String>();
+		String[] contextStrAr = ThmP1.preprocess(contextStr, originalCaseInputList);
+		boolean inputsSameLen = contextStrAr.length == originalCaseInputList.size();
 		for(int i = 0; i < contextStrAr.length; i++){
 			String sentence = contextStrAr[i];
-			if(isHypothesis(sentence)){	
-				//System.out.println("isHypothesis! " + sentence);			
+			if(isHypothesis(sentence)){			
 				parseState.setCurParseStruct(null);
 				parseState.setHeadParseStruct(null);
+				sentence = inputsSameLen ? originalCaseInputList.get(i) : sentence;
 				ParseRun.parseInput(sentence, parseState, PARSE_INPUT_VERBOSE, stats);
 			}
 		}
@@ -1417,8 +1417,7 @@ public class DetectHypothesis {
 			
 			if(DEBUG) {
 				System.out.println("^^^ local variableNamesMMap: "+ parseState.getLocalVariableNamesMMap());
-				System.out.println("^^^ global variableNamesMMap: "+ parseState.getGlobalVariableNamesMMap());
-				
+				System.out.println("^^^ global variableNamesMMap: "+ parseState.getGlobalVariableNamesMMap());				
 			}
 			
 			//if empty, check to see if bracket pattern, if so, check just the name without the brackets.

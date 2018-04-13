@@ -136,7 +136,7 @@ public class WordForms {
 	//add all stock frequency words
 	private static final String[] genericSearchTermsAr = new String[] {"sum", "equation", "polynomial", "function", "basis",
 					"theorem", "group", "ring", "field", "module", "hypothesis", "proposition", "series", "coefficient",
-					"decomposition", "resolution", "problem", "example"};
+					"decomposition", "resolution", "problem", "example", "space"};
 	private static final Set<String> GREEK_ALPHA_SET;
 	private static final Map<Character, Character> DIACRITICS_MAP;
 	/**set of common words for search to ignore, if only these words are present, ie nonrelevant words*/
@@ -1344,6 +1344,7 @@ public class WordForms {
 				if(GENERIC_SERACH_TERMS.isEmpty()) {
 					for(String s : genericSearchTermsAr) {
 						GENERIC_SERACH_TERMS.add(s);
+						GENERIC_SERACH_TERMS.add(s+"s");
 					}
 					Set<String> stockFreqWordsSet = WordFrequency.ComputeFrequencyData.englishStockFreqMap().keySet();
 					GENERIC_SERACH_TERMS.addAll(stockFreqWordsSet);
