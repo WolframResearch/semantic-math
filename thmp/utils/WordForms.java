@@ -137,6 +137,8 @@ public class WordForms {
 	private static final String[] genericSearchTermsAr = new String[] {"sum", "equation", "polynomial", "function", "basis",
 					"theorem", "group", "ring", "field", "module", "hypothesis", "proposition", "series", "coefficient",
 					"decomposition", "resolution", "problem", "example", "space"};
+	//file already contain plural forms
+	private static final String genericSearchTermsPath = "src/thmp/data/genericSearchTerms.txt";
 	private static final Set<String> GREEK_ALPHA_SET;
 	private static final Map<Character, Character> DIACRITICS_MAP;
 	/**set of common words for search to ignore, if only these words are present, ie nonrelevant words*/
@@ -1336,7 +1338,7 @@ public class WordForms {
 	
 	/**
 	 * Set of common words for search to ignore, if only these words are present, 
-	 * ie nonrelevant words
+	 * ie nonrelevant words. 
 	 */
 	public static Set<String> genericSearchTermsSet(){
 		if(GENERIC_SERACH_TERMS.isEmpty()) {
@@ -1346,8 +1348,15 @@ public class WordForms {
 						GENERIC_SERACH_TERMS.add(s);
 						GENERIC_SERACH_TERMS.add(s+"s");
 					}
-					Set<String> stockFreqWordsSet = WordFrequency.ComputeFrequencyData.englishStockFreqMap().keySet();
-					GENERIC_SERACH_TERMS.addAll(stockFreqWordsSet);
+					//Set<String> stockFreqWordsSet = WordFrequency.ComputeFrequencyData.englishStockFreqMap().keySet();
+					//GENERIC_SERACH_TERMS.addAll(stockFreqWordsSet);
+					//add terms from file.
+					String termsPath = FileUtils.getPathIfOnServlet(genericSearchTermsPath);
+					List<String> lines = FileUtils.readLinesFromFile(termsPath);
+					for(String term : lines) {
+						//these already contain plural forms
+						GENERIC_SERACH_TERMS.add(term);
+					}
 				}
 			}
 		}
