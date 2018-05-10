@@ -62,7 +62,7 @@ public class ThmInput {
 	/*e.g. \def\X{{\cal X}};  \def \author {William {\sc Smith}}; 
 	 * Need to support e.g. \def\G{\hbox{\boldmath{}$G$\ unboldmath}}
 	 *Currently not covering: \def <command> <parameter-text>{<replacement-text>} e.g. \def\testonearg[#1]{\typeout{Testing one arg: '#1'}} */
-	static final Pattern NEW_THM_PATTERN3 = Pattern.compile("\\s*\\\\def\\s*([^{]+?)\\s*\\{(.+?)\\}\\s*");
+	public static final Pattern NEW_THM_PATTERN3 = Pattern.compile("\\s*\\\\def\\s*([^{]+?)\\s*\\{(.+?)\\}\\s*");
 	
 	static final Pattern THM_TERMS_PATTERN = Pattern.compile("Theorem|Proposition|Lemma|Corollary|Conjecture|Definition|Claim");
 	
@@ -306,8 +306,11 @@ public class ThmInput {
 				thmStr = macroEntry.getKey().matcher(thmStr).replaceAll(macroEntry.getValue());				
 			}
 		}*/
+		
 		if(null != macrosTrie){
+			System.out.println("thmStr BEFORE "+thmStr);
 			thmStr = macrosTrie.replaceMacrosInThmStr(thmStr);
+			System.out.println("thmStr AFTER "+thmStr);
 		}
 		// containing the words inside \label and \index etc, but not the words
 		// "\label", "\index",

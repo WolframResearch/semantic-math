@@ -890,8 +890,8 @@ public class ThmP1TestRun {
 			st = "Cauchy problems with compactly supported initial data starting from the space of compactly supported sections";
 			st = "Now we can use fundamental solutions and their properties to define a pair of operators that will allow us to "
 					+ "obtain the full set of solutions of the homogeneous Cauchy problems with compactly supported initial data starting from the space of compactly supported sections";
-			st = "let $f$ be a : function. $f$ is smooth";
-			
+			st = "let $f$ be a function. $f$ is smooth";
+			st = "the topological group $G$ is extremely amenable";
 			//st = "that will allow us to obtain the full set of solutions of the homogeneous Cauchy problems with compactly supported initial";
 //of the homogeneous Cauchy problems with compactly supported initial
 //data starting from the space of compactly supported sections.";

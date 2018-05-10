@@ -87,7 +87,7 @@ public class MscClassify {
 		List<Paper> paperList = new ArrayList<Paper>();
 		paperList.add(new Paper(fileContent));
 		StringBuilder sb = CreateMscVecs.buildWordFreqDataStr(paperList);
-		System.out.println(sb.toString());
+		//System.out.println(sb.toString());
 		
 		List<String> mscList = new ArrayList<String>();
 		

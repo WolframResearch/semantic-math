@@ -483,6 +483,7 @@ public class DetectHypothesis {
 				inputFile = new File("/Users/yihed/Downloads/1703.08650");
 				inputFile = new File("/Users/yihed/Downloads/test/capitalLem.tex");
 				inputFile = new File("/Users/yihed/Downloads/teoTest2.txt");
+				inputFile = new File("/Users/yihed/Downloads/test/thmp/preambleTest1.txt");
 				
 		}		
 		List<DefinitionListWithThm> defThmList = new ArrayList<DefinitionListWithThm>();
@@ -1062,10 +1063,10 @@ public class DetectHypothesis {
 					logger.info("thm length exceeds maximum allowable size!");
 					continue;
 				}
+				
 				//parse hyp and thm.
 				processParseHypThm(newThmSB, parseState, stats, definitionListWithThmList, thmHypPairList, fileName, macrosTrie,
-						eliminateBeginEndThmPattern);
-				
+						eliminateBeginEndThmPattern);				
 				continue;
 			}else if(END_DOCUMENT_PATTERN.matcher(line).matches()){
 				parseState.parseRunGlobalCleanUp();
@@ -1124,13 +1125,13 @@ public class DetectHypothesis {
 			String srcFileName, MacrosTrie macrosTrie,
 			Pattern eliminateBeginEndThmPattern){
 		
-		// process here, return two versions, one for bag of words, one
+		// Replace Tex in text with macro expansions.
+		//process here, return two versions, one for bag of words, one
 		// for display
 		// strip \df, \empf. Index followed by % strip, not percent
 		// don't strip.
 		// replace enumerate and \item with *
 		//thmWebDisplayList, and bareThmList should both be null
-		//String contextStr = ThmInput.removeTexMarkup(contextSB.toString(), null, null, macrosTrie);
 		String thm = ThmInput.removeTexMarkup(newThmSB.toString(), null, null, macrosTrie,
 				eliminateBeginEndThmPattern);
 		

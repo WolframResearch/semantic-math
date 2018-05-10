@@ -214,21 +214,19 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 		for(int i = 0; i < thmStrLen; i++){
 			char c = thmStr.charAt(i);	
 			thmSB.append(c);
-			//String replacementStr;
-			//Iterator<MacrosTrieNode> trieNodeListIter = trieNodeList.iterator();			
+						
 			//add all newly-triggered commands to nodeList
 			if(this.rootNode.nodeMap.containsKey(c)){
 				trieNodeList.add(this.rootNode);
 			}
 			int futureIndex = i;
 			for(int j = 0; j < trieNodeList.size(); j++){
-				//MacrosTrieNode curNode = trieNodeListIter.next();
 				MacrosTrieNode curNode = trieNodeList.get(j);
 				if(null == curNode) continue;
+				int thmSBLen = thmSB.length();
 				MacrosTrieNode nextNode = curNode.getTrieNode(c);
-				if(null == nextNode){
+				if(null == nextNode || (nextNode.commandStr != null && thmSB.charAt(thmSBLen - nextNode.commandStr.length()) != '\\')){
 					//node cannot correspond to any known macro
-					//trieNodeListIter.remove();
 					trieNodeList.set(j, null);
 					continue;
 				}else if(null == nextNode.replacementStr){	
@@ -238,21 +236,29 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 					//go down to see if a longer command can be satisfied
 					int k = i+1;
 					MacrosTrieNode futureNode = null;
-					MacrosTrieNode runningNode = null;
-					//int futureIndex = i;
-					while(k < thmStrLen && null != (runningNode = nextNode.getTrieNode(thmStr.charAt(k)))){
+					MacrosTrieNode runningNode = nextNode;					
+					while(k < thmStrLen && null != (runningNode = runningNode.getTrieNode(thmStr.charAt(k)))){
 						if(null != runningNode.commandStr && null != runningNode.replacementStr){
-							futureNode = runningNode;
-							futureIndex = k;
+							int runningNodeCommandStrLen = runningNode.commandStr.length();
+							//+1 because runningNodeCommandStrLen includes the slash, e.g. \eq, and thmSB
+							//does not include char at index k yet.
+							int slashIndex = k - runningNodeCommandStrLen + 1;
+							//thmStr and not thmSB, since thmSB
+							if(slashIndex > -1 && thmStr.charAt(slashIndex) == '\\') {								
+								futureNode = runningNode;
+								futureIndex = k;	
+							}
 						}
 						k++;
 					}
 					
 					if(null != futureNode){
+						//The remaining part of the commandStr. i+1, because k started at i+1 when searching for futureNode
 						String longerCommandStr = thmStr.substring(i+1, futureIndex+1);
-						thmSB.append(longerCommandStr);
-						//i = futureIndex;
+						thmSB.append(longerCommandStr);		
+									
 						nextNode = futureNode;
+						i = futureIndex;	
 					}
 					//form the replacement String. Returns updated index (in original thmStr) to start further examination.
 					futureIndex = formReplacementString(thmStr, futureIndex, nextNode, commandStrSB);	
@@ -271,14 +277,15 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 				if(futureIndex < thmStrLen-1){
 					nextCharStr = String.valueOf(thmStr.charAt(futureIndex+1));
 				}
-				//System.out.println("nextCharStr "+nextCharStr);
-				if(!WordForms.ALPHABET_PATTERN.matcher(nextCharStr).matches()){
-					i = futureIndex;
-					int thmSBLen = thmSB.length();
+				int commandStrTriggeredLen = commandStrTriggered.length();
+				int thmSBLen = thmSB.length();
+				//don't want to replace if not full command. E.g. don't replace "a" with {a} in \omega. 
+				if(!WordForms.ALPHABET_PATTERN.matcher(nextCharStr).matches() && thmSB.charAt(thmSBLen - commandStrTriggeredLen) == '\\'){
+					i = futureIndex;				
 					//System.out.println("commandStrTriggered: " + commandStrTriggered + " thmSB: " + thmSB + " thmStr "+thmStr);
-					thmSB.delete(thmSBLen - commandStrTriggered.length(), thmSBLen); 
+					thmSB.delete(thmSBLen - commandStrTriggeredLen, thmSBLen); 
 					thmSB.append(commandStrSB);
-					commandStrSB.setLength(0);
+					//commandStrSB.setLength(0);
 					trieNodeList = new ArrayList<MacrosTrieNode>();
 				}
 				commandStrSB.setLength(0);
@@ -290,7 +297,7 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 	/**
 	 * Return how many places to skip ahead. Look for args inside braces {...}
 	 * @param thmStr
-	 * @param i
+	 * @param curIndex
 	 * @param replacementSB SB to be filled in.
 	 * @return updated index (in original thmStr) to start further examination at.
 	 */

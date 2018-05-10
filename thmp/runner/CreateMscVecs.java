@@ -100,10 +100,6 @@ public class CreateMscVecs {
 		}
 	}
 	
-	public static void main(String[] args) {	
-		
-	}
-	
 	/**
 	 * Generate text data in file only
 	 */
@@ -362,4 +358,5 @@ public class CreateMscVecs {
 						//String wordsScoreMapPath = "src/thmp/data/wordsScoreMap.json";
 				FileUtils.writeToFile(wordsScoreSb, wordsScoreMapPath);
 	}
+	
 }

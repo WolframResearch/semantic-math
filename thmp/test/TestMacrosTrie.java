@@ -27,6 +27,7 @@ public class TestMacrosTrie {
 
 		String commandStr = "\\In";
 		String replacementStr = "\\mathrm{in}\\,";
+		
 		//String slotCountStr = newThmMatcher.group(2);
 		int slotCount = 0;
 		macrosTrieBuilder.addTrieNode(commandStr, replacementStr, slotCount);
@@ -42,7 +43,7 @@ public class TestMacrosTrie {
 	public void test1() {
 		String commandStr = "\\wh";
 		String replacementStr = "\\widehat{#1}";
-		
+		System.out.println(parseMacros());
 	}
 
 }
