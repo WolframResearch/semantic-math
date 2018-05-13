@@ -484,6 +484,7 @@ public class DetectHypothesis {
 				inputFile = new File("/Users/yihed/Downloads/test/capitalLem.tex");
 				inputFile = new File("/Users/yihed/Downloads/teoTest2.txt");
 				inputFile = new File("/Users/yihed/Downloads/test/thmp/preambleTest1.txt");
+				inputFile = new File("/Users/yihed/Downloads/test/thmp/preambleTest1ca.txt");
 				
 		}		
 		List<DefinitionListWithThm> defThmList = new ArrayList<DefinitionListWithThm>();
@@ -1200,7 +1201,8 @@ public class DetectHypothesis {
 
 	/**
 	 * Read in custom macros, break as soon as \begin{...} encountered, 
-	 * in particular \begin{document}. There are no \begin{...} in the preamble
+	 * in particular \begin{document}. There are no \begin{...} in the preamble.
+	 * But some authors use the bad practice of defining macros after \begin{document}.
 	 * @param srcFileReader
 	 * @param thmMacrosList *Only* macros to indicate begin of new theorems, propositions, etc.
 	 * @throws IOException
@@ -1212,8 +1214,8 @@ public class DetectHypothesis {
 		while ((line = srcFileReader.readLine()) != null) {
 			//should also extract those defined with \def{} patterns.
 			Matcher newThmMatcher;	
-			
-			if(ThmInput.BEGIN_PATTERN.matcher(line).matches()){
+			//break on any other begin, just not \begin{document}, which could have macros following it.
+			if(ThmInput.BEGIN_PATTERN.matcher(line).find()){
 				break;
 			}else if((newThmMatcher = ThmInput.NEW_THM_PATTERN.matcher(line)).matches()){
 				//should be a proposition, hypothesis, etc. E.g. don't look through proofs.

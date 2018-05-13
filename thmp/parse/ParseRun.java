@@ -100,9 +100,7 @@ public class ParseRun {
 			strAr = new String[]{st};
 		}else{
 			strAr = ThmP1.preprocess(st, originalCaseInputList);
-			//System.out.println("Result of PREPROCESSING " + Arrays.toString(strAr));
 		}
-		System.out.println("originalCaseInputList.get(i) "+originalCaseInputList);
 		boolean inputListsSameLen = originalCaseInputList.size() == strAr.length;
 		
 		for(int i = 0; i < strAr.length; i++){
@@ -117,7 +115,6 @@ public class ParseRun {
 				if(inputListsSameLen) {
 					parseState.setCurrentInputStr(originalCaseInputList.get(i).trim());
 				}
-				System.out.println("originalCaseInputList.get(i) "+originalCaseInputList);
 			} catch (IllegalSyntaxException e) {
 				//Don't fill up logs with this, not helpful.
 				//System.out.println("ParseRun - Input contains illegal syntax!");

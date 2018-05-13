@@ -204,7 +204,7 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 	public String replaceMacrosInThmStr(String thmStr){
 		
 		List<MacrosTrieNode> trieNodeList = new ArrayList<MacrosTrieNode>();
-		//trieNodeList.add(this.rootNode);
+		
 		StringBuilder thmSB = new StringBuilder();
 		
 		String commandStrTriggered = "";
@@ -255,18 +255,13 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 					if(null != futureNode){
 						//The remaining part of the commandStr. i+1, because k started at i+1 when searching for futureNode
 						String longerCommandStr = thmStr.substring(i+1, futureIndex+1);
-						thmSB.append(longerCommandStr);		
-									
+						thmSB.append(longerCommandStr);	
 						nextNode = futureNode;
 						i = futureIndex;	
 					}
 					//form the replacement String. Returns updated index (in original thmStr) to start further examination.
 					futureIndex = formReplacementString(thmStr, futureIndex, nextNode, commandStrSB);	
-					//System.out.println("updated index" + futureIndex +" commandStrSB " + commandStrSB);
-					//i = nextStartingIndex-1;
 					commandStrTriggered = nextNode.commandStr;
-					//trieNodeListIter.remove();
-					//System.out.println("commandStrSB " + commandStrSB);
 					//don't clear trieNodeList to allow for nested macros.
 					break;
 				}
@@ -285,7 +280,6 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 					//System.out.println("commandStrTriggered: " + commandStrTriggered + " thmSB: " + thmSB + " thmStr "+thmStr);
 					thmSB.delete(thmSBLen - commandStrTriggeredLen, thmSBLen); 
 					thmSB.append(commandStrSB);
-					//commandStrSB.setLength(0);
 					trieNodeList = new ArrayList<MacrosTrieNode>();
 				}
 				commandStrSB.setLength(0);

@@ -51,7 +51,7 @@ public class ThmInput {
 	static final Pattern THM_END_PATTERN = Pattern.compile(THM_END_STR);
 	
 	//begin of latex expression
-	static final Pattern BEGIN_PATTERN = Pattern.compile("[^\\\\]*\\\\begin.*");
+	static final Pattern BEGIN_PATTERN = Pattern.compile("[^\\\\]*\\\\begin(?!\\{document)");
 	
 	//new theorem pattern. E.g. \newtheorem{corollary}[theorem]{Corollary}
 	static final Pattern NEW_THM_PATTERN = Pattern.compile("\\\\newtheorem\\**\\s*\\{([^}]+)\\}(?:[^{]*)\\{([^}]+).*");
@@ -308,9 +308,9 @@ public class ThmInput {
 		}*/
 		
 		if(null != macrosTrie){
-			System.out.println("thmStr BEFORE "+thmStr);
+			//System.out.println("thmStr BEFORE "+thmStr);
 			thmStr = macrosTrie.replaceMacrosInThmStr(thmStr);
-			System.out.println("thmStr AFTER "+thmStr);
+			//System.out.println("thmStr AFTER "+thmStr);
 		}
 		// containing the words inside \label and \index etc, but not the words
 		// "\label", "\index",
