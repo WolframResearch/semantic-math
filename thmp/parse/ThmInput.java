@@ -70,15 +70,19 @@ public class ThmInput {
 	//private static final Pattern DIGIT_PATTERN = Pattern.compile(".*\\d+.*");
 
 	/* Boldface typesetting. \cat{} refers to category. *MUST Update* DF_EMPH_PATTERN_REPLACEMENT when updating this!
-	   e.g. {\em lll\/} */
-	private static final Pattern DF_EMPH_PATTERN = Pattern
+	   e.g. {\em lll\/}. These are deprecated as of May 2018. But keep for reference.*/
+	/*private static final Pattern DF_EMPH_PATTERN = Pattern
 			.compile("\\\\df\\{([^\\}]*)\\}|\\\\emph\\{([^\\}]*)\\}|\\{\\\\em\\s+([^\\}]+)[\\\\/]*\\}|\\\\cat\\{([^}]*)\\}|\\{\\\\it\\s*([^}]*)\\}"
 					+ "|\\\\(?:eq)*ref\\{([^}]*)\\}|\\\\subsection\\{([^}]*)\\}|\\\\section\\{([^}]*)\\}|\\\\bf\\{([^}]*)\\}"
-					+ "|\\\\ensuremath\\{([^}]+)\\}|\\\\(?:textbf|textsl|textsc)\\{([^}]+)\\}");
+					+ "|\\\\ensuremath\\{([^}]+)\\}|\\\\(?:textbf|textsl|textsc)\\{([^}]+)\\}");*/
 	/* Replacement for DF_EMPH_PATTERN, should have same number of groups as
 	   number of patterns in DF_EMPH_PATTERN. */
-	private static final String DF_EMPH_PATTERN_REPLACEMENT = "$1$2$3$4$5$6$7$8$9$10$11";
-
+	/*private static final String DF_EMPH_PATTERN_REPLACEMENT = "$1$2$3$4$5$6$7$8$9$10$11";*/
+	
+	//replace \begin or \end {equation} with \[ or \], since MathJax does not seem to render them correctly on web
+	private static final Pattern beginEqnPatt = Pattern.compile("\\\\begin\\{equation\\**\\}");
+	private static final Pattern endEqnPatt = Pattern.compile("\\\\end\\{equation\\**\\}");
+	
 	/*private static Pattern[] GROUP1_PATTERN_ARRAY = new Pattern[] { Pattern.compile("\\\\df\\{([^\\}]*)\\}"),
 			Pattern.compile("\\\\emph\\{([^}]*)\\}"), Pattern.compile("\\\\cat\\{([^}]*)\\}"),
 			Pattern.compile("\\{\\\\it\\s*([^}]*)\\}") // \\{\\\\it([^}]*)\\}
@@ -86,17 +90,20 @@ public class ThmInput {
 	private static final Pattern INDEX_PATTERN = Pattern.compile(".*\\\\index\\{([^\\}]*)\\}%*.*");
 	// pattern for eliminating the command completely for web display. E.g. \fml. How about \begin or \end everything?
 	private static final Pattern ELIMINATE_PATTERN = Pattern
-			.compile("\\\\fml|\\\\ofml|\\\\(?:begin|end)\\{enumerate\\}|\\\\(?:begin|end)\\{(?:sub)*section\\**\\}"					
+			.compile("\\\\df|\\\\emph|\\\\em|\\\\cat|\\\\it|\\\\(?:eq)*ref|\\\\subsection|\\\\section|\\\\bf"
+					+ "|\\\\ensuremath|\\\\(?:textbf|textsl|textsc)"
+					+ "|\\\\fml|\\\\ofml|\\\\(?:begin|end)\\{enumerate\\}|\\\\(?:begin|end)\\{(?:sub)*section\\**\\}"					
 					+ "|\\\\begin\\{slogan\\}|\\\\end\\{slogan\\}|\\\\sbsb|\\\\cat|\\\\bs|\\\\maketitle"
 					+ "|\\\\section\\**\\{(?:[^}]*)\\}\\s*|\\\\noindent" 
 					//don't eliminate \begin{aligned}: |\\\\begin\\{a(?:[^}]*)\\}|\\\\end\\{a(?:[^}]*)\\}\\s*"
 					+ "|\\\\cite\\{[^}]+\\}|\\\\cite\\[[^\\]]+\\]|\\\\par\\s|\\\\(?:begin|end)\\{displaymath\\}",
 					Pattern.CASE_INSENSITIVE);
+	//Eliminate begin/end{align*} as well, for better display on web frontend.
 	static final String ELIMINATE_BEGIN_END_THM_STR = "\\\\begin\\{def(?:[^}]*)\\}\\s*|\\\\begin\\{lem(?:[^}]*)\\}\\s*|\\\\begin\\{th(?:[^}]*)\\}\\s*"
 					+ "|\\\\begin\\{pr(?:[^}]*)\\}\\s*|\\\\begin\\{proclaim(?:[^}]*)\\}\\s*|\\\\begin\\{co(?:[^}]*)\\}\\s*"
 					+ "|\\\\end\\{def(?:[^}]*)\\}\\s*|\\\\end\\{lem(?:[^}]*)\\}\\s*|\\\\end\\{th(?:[^}]*)\\}\\s*"
 					+ "|\\\\end\\{pr(?:[^}]*)\\}\\s*|\\\\end\\{proclaim(?:[^}]*)\\}\\s*|\\\\end\\{co(?:[^}]*)\\}\\s*"
-					+ "|\\\\(?:begin|end)\\{re(?:[^}]*)\\}\\s*";
+					+ "|\\\\(?:begin|end)\\{re(?:[^}]*)\\}\\s*|\\\\begin\\{align(?:[^}]*)\\}\\s*|\\\\end\\{align(?:[^}]*)\\}\\s*";
 	static final Pattern ELIMINATE_BEGIN_END_THM_PATTERN = Pattern
 			.compile(ELIMINATE_BEGIN_END_THM_STR, Pattern.CASE_INSENSITIVE);
 	
@@ -285,12 +292,20 @@ public class ThmInput {
 		boolean getWebDisplayList = thmWebDisplayList == null ? false : true;
 		boolean getBareThmList = bareThmList == null ? false : true;		
 		
-		/* replace \df{} and \emph{} with their content */
-		Matcher matcher = DF_EMPH_PATTERN.matcher(thmStr);
-		thmStr = matcher.replaceAll(DF_EMPH_PATTERN_REPLACEMENT);
-
+		/* replace \df{} and \emph{} with their content.<-- Can't just replace, since can result in mismatching
+		 * braces. Better to remove the \emph without updating the enclosing content. Commented out May 2018*/
+		/*Matcher matcher = DF_EMPH_PATTERN.matcher(thmStr);
+		thmStr = matcher.replaceAll(DF_EMPH_PATTERN_REPLACEMENT);*/
+		
+		Matcher matcher = beginEqnPatt.matcher(thmStr);
+		if(matcher.find()) {			
+			thmStr = matcher.replaceAll("\\\\[");
+			matcher = endEqnPatt.matcher(thmStr);
+			thmStr = matcher.replaceAll("\\\\]");
+		}
+		
 		// eliminate symbols such as \fml
-		matcher = ELIMINATE_PATTERN.matcher(thmStr);
+		 matcher = ELIMINATE_PATTERN.matcher(thmStr);
 		thmStr = matcher.replaceAll("");
 		//System.out.println("ThmInput - eliminateBeginEndThmPattern "+eliminateBeginEndThmPattern );
 		/*comment out this line if want to retain "\begin{theorem}", etc*/
