@@ -31,7 +31,7 @@ public class MSCDataUtils {
 		
 				if(args.length < 1){
 					System.out.println("Enter a file containing root paths to directories containing "
-							+ "msc data! E.g. 0208_001Untarred/0208");
+							+ "msc data! Path are of form: 0208_001Untarred/0208");
 					return;
 				}		
 				String fileName = args[0];

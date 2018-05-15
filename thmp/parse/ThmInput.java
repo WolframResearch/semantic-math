@@ -95,7 +95,7 @@ public class ThmInput {
 					+ "|\\\\fml|\\\\ofml|\\\\(?:begin|end)\\{enumerate\\}|\\\\(?:begin|end)\\{(?:sub)*section\\**\\}"					
 					+ "|\\\\begin\\{slogan\\}|\\\\end\\{slogan\\}|\\\\sbsb|\\\\cat|\\\\bs|\\\\maketitle"
 					+ "|\\\\section\\**\\{(?:[^}]*)\\}\\s*|\\\\noindent" 
-					//don't eliminate \begin{aligned}: |\\\\begin\\{a(?:[^}]*)\\}|\\\\end\\{a(?:[^}]*)\\}\\s*"
+					//eliminate \begin{aligned} later. |\\\\begin\\{a(?:[^}]*)\\}|\\\\end\\{a(?:[^}]*)\\}\\s*"
 					+ "|\\\\cite\\{[^}]+\\}|\\\\cite\\[[^\\]]+\\]|\\\\par\\s|\\\\(?:begin|end)\\{displaymath\\}",
 					Pattern.CASE_INSENSITIVE);
 	//Eliminate begin/end{align*} as well, for better display on web frontend.
@@ -300,8 +300,10 @@ public class ThmInput {
 		Matcher matcher = beginEqnPatt.matcher(thmStr);
 		if(matcher.find()) {			
 			thmStr = matcher.replaceAll("\\\\[");
+			//thmStr = matcher.replaceAll("\\$");
 			matcher = endEqnPatt.matcher(thmStr);
 			thmStr = matcher.replaceAll("\\\\]");
+			//thmStr = matcher.replaceAll("\\$");
 		}
 		
 		// eliminate symbols such as \fml

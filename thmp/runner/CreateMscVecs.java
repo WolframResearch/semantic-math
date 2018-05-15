@@ -29,7 +29,7 @@ public class CreateMscVecs {
 	//These files are not used at servlet runtime.
 	private static final String wordsScoreMapPath = "src/thmp/data/wordsScoreMap.json";
 	//put such a file in each tar directory. Update name here for easy date-based grep'ing.
-	private static final String mscTermsFileName = "mscTermsJan27.txt";
+	private static final String mscTermsFileName = "mscTermsMay15.txt";
 	//path for storing TeX sources from papers, without equations, for Michael
 	private static final String noTexTextFileName = "noTexText.txt";
 	private static final Pattern textSplitPatt = Pattern.compile("(\\s+|\'|\"|\\(|\\)|\\{|\\}|-|_|~)");
