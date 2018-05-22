@@ -125,7 +125,9 @@ public class DetectHypothesis {
 	private static final Set<String> SCRAPE_STOP_WORDS_BEFORE_SET = new HashSet<String>();
 	private static final Pattern THM_SCRAPE_ELIM_PATTERN = Pattern.compile("(?:from|proof|prove[sd]*|next)");
 	private static final Pattern WHITE_SPACE_PATTERN = Pattern.compile("\\s*");
-	
+	//replace $$ with $, so context vecs can close any opened begin math delimiters
+	static final Pattern doubleDollarPatt = Pattern.compile("\\$\\$");
+		
 	//serialize the words as well, to bootstrap up after iterations of processing. The math words are going to 
 	//stabilize.
 	//This is ordered based on word frequencies.
@@ -486,6 +488,8 @@ public class DetectHypothesis {
 				inputFile = new File("/Users/yihed/Downloads/test/thmp/preambleTest1.txt");
 				inputFile = new File("/Users/yihed/Downloads/test/thmp/preambleTest1ca.txt");
 				inputFile = new File("/Users/yihed/Downloads/test/thmp/alignTest.txt");
+				inputFile = new File("/Users/yihed/Downloads/test/thmp/may21_0.txt");
+				inputFile = new File("/Users/yihed/Downloads/test/thmp/may22_1.txt");
 		}		
 		List<DefinitionListWithThm> defThmList = new ArrayList<DefinitionListWithThm>();
 		List<ThmHypPair> thmHypPairList = new ArrayList<ThmHypPair>();
@@ -1027,7 +1031,8 @@ public class DetectHypothesis {
 				int contextSBLen = contextSB.length();
 				if(contextSBLen > CONTEXT_SB_LENGTH_THRESHOLD){
 					//if length exceeds certain threshold, the pattern replacements below can choke,
-					//e.g. observed with length that's greater than 200,000.
+					//e.g. observed with length that's greater than 200,000. Note this will cut off
+					//in middle of sentences.
 					int strStart = contextSBLen - CONTEXT_SB_LENGTH_THRESHOLD;
 					//grab the most recent substring
 					contextStr = contextSB.substring(strStart);
@@ -1038,6 +1043,8 @@ public class DetectHypothesis {
 				//contextStr = ThmInput.removeTexMarkup(contextStr, null, null, macrosTrie,
 				//		eliminateBeginEndThmPattern);
 				
+				contextStr = ThmInput.removeTexMarkup(contextStr, null, null, macrosTrie,
+						eliminateBeginEndThmPattern);
 				//scan contextSB for assumptions and definitions
 				//and parse the definitions
 				detectAndParseHypothesis(contextStr, parseState, stats);	
@@ -1210,14 +1217,21 @@ public class DetectHypothesis {
 	private static String extractMacros(BufferedReader srcFileReader, List<String> thmMacrosList, 
 			MacrosTrieBuilder macrosTrieBuilder) throws IOException {
 		
-		String line = null;		
+		String line = null;
+		boolean documentBegan = false;
 		while ((line = srcFileReader.readLine()) != null) {
 			//should also extract those defined with \def{} patterns.
 			Matcher newThmMatcher;	
-			//break on any other begin, just not \begin{document}, which could have macros following it.
+			//break on any other begin, *after* but not including \begin{document}. Some authors follow the 
+			//bad practice of defining macros after \begin{document}.			
 			if(ThmInput.BEGIN_PATTERN.matcher(line).find()){
-				break;
-			}else if((newThmMatcher = ThmInput.NEW_THM_PATTERN.matcher(line)).matches()){
+				if(ThmInput.BEGIN_DOC_PATTERN.matcher(line).find()) {
+					documentBegan = true;
+				}else if(documentBegan) {
+					break;					
+				}
+			} 
+			if((newThmMatcher = ThmInput.NEW_THM_PATTERN.matcher(line)).matches()){
 				//should be a proposition, hypothesis, etc. E.g. don't look through proofs.
 				if(ThmInput.THM_TERMS_PATTERN.matcher(newThmMatcher.group(2)).find()){
 					thmMacrosList.add(newThmMatcher.group(1));	
@@ -1253,7 +1267,7 @@ public class DetectHypothesis {
 		boolean inputsSameLen = contextStrAr.length == originalCaseInputList.size();
 		for(int i = 0; i < contextStrAr.length; i++){
 			String sentence = contextStrAr[i];
-			if(isHypothesis(sentence)){			
+			if(isHypothesis(sentence)){	
 				parseState.setCurParseStruct(null);
 				parseState.setHeadParseStruct(null);
 				sentence = inputsSameLen ? originalCaseInputList.get(i) : sentence;
@@ -1335,8 +1349,7 @@ public class DetectHypothesis {
 				latexExpr.append(curChar);
 			}			
 		}
-
-		//System.out.println("Adding " + thmWithDefSB + " to theorem " + thmStr);
+		
 		String definitionStr = definitionSB.toString();
 		//postprocess thm string, to better display on web
 		thmStr = postProcessThmForSearch(thmStr);
@@ -1348,7 +1361,7 @@ public class DetectHypothesis {
 		
 		if(null == relationalContextVec){
 			//write placeholder
-			relationalContextVec = new HashSet<Integer>();//new BigInteger(1, new byte[1]);
+			relationalContextVec = new HashSet<Integer>();
 		}
 		Map<Integer, Integer> combinedContextVecMap = parseState.getCurThmCombinedContextVecMap();
 		if(null == combinedContextVecMap){
@@ -1439,14 +1452,68 @@ public class DetectHypothesis {
 				if(!varDefSet.contains(possibleVarDef)){
 					varDefSet.add(possibleVarDef);
 					varDefList.add(possibleVarDef);
-					
+					boolean isContextStr = true;
 					String defSentence = ThmInput.removeTexMarkup(possibleVarDef.getOriginalDefinitionSentence(), 
-							null, null, macrosTrie, eliminateBeginEndThmPattern);
+							null, null, macrosTrie, eliminateBeginEndThmPattern, isContextStr);
+					//close any starting delimiters, e.g. "$", \[, etc					
+					defSentence = closeMathDelim(defSentence);					
 					thmDefSB.append(defSentence).append(" ");
 				}
 			}			
 		}
 		return varDefList;
+	}
+	
+	/**
+	 * Close opening math delimiters that may not be closed at end of context sentence.
+	 *  e.g. "$", \[, etc. Note could have close without opening, if start was cut off.
+	 *  This is after \begin{align}, etc have been substituted, so only need to check 
+	 *  $ and \[. <-what about \begin{equation}?
+	 * @param contextStr
+	 * @return
+	 */
+	public static String closeMathDelim(String contextStr) {
+		//iterate backwards 
+		boolean closed = false;
+		boolean opened = false;
+		int strLen = contextStr.length();
+		if(strLen == 0) {
+			return contextStr;
+		}
+		int dollarCount = 0;
+		for(int i = strLen-1; i > 0; i--) {
+			
+			if(contextStr.charAt(i-1) == '\\') {				
+				if(!closed && contextStr.charAt(i) == '[') {
+					opened = true;
+				}else if(contextStr.charAt(i) == ']') {
+					closed = true;
+				}		
+			}
+			//now contextStr.charAt(i-1) != '\\'			
+			else if(contextStr.charAt(i) == '$'){
+				dollarCount++;				
+			}
+		}
+		if(opened) {
+			contextStr += "\\]";
+		}
+		//use else here, since can't append both \] and $
+		else {
+			if(contextStr.charAt(0) == '$') {
+				dollarCount++;
+			}			
+			//look for odd
+			if((dollarCount & 1) == 1) {
+				//replace "$$" with "$", so 
+				Matcher matcher = doubleDollarPatt.matcher(contextStr);
+				matcher.replaceAll("\\$");
+				//note this is not fool-proof: might not be the right one being closed.
+				//e.g. "s_1$ text $ s $"
+				contextStr += "$";
+			}
+		}		
+		return contextStr;
 	}
 	
 	/**

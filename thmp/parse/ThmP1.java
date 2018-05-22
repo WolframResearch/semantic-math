@@ -53,11 +53,7 @@ import thmp.utils.WordForms;
 import thmp.utils.WordForms.TokenType;
 
 public class ThmP1 {
-
-	// should all be StructH's, since these are ent's. 
-	//private static final ListMultimap<String, Struct> variableNamesMap;
-	// private static HashMap<String, ArrayList<String>> entityMap =
-	// Maps.entityMap;
+	
 	// map of structures, for all, disj, etc
 	private static final Multimap<String, Rule> structMap;
 	private static final Map<String, String> anchorMap;
@@ -666,6 +662,8 @@ public class ThmP1 {
 		if(WordForms.getWhiteEmptySpacePattern().matcher(sentence).matches()){
 			return parseState;
 		}
+		//Note that this sentence does not necessarily have closed \begin{align}, etc.
+		//preprocess() should have closed math delimiters such as $ and \[ if input contains the closing.
 		parseState.setCurrentInputStr(sentence);
 		
 		//check for punctuation, set parseState to reflect punctuation.
@@ -1923,7 +1921,7 @@ public class ThmP1 {
 				}else if(curPos.equals("symb")){
 					//if has pos "symb", then try to look for definitions that stand for this symbol.
 					Struct definingStruct = parseState.getVariableDefinition(curWord);
-					//System.out.println("getGlobalVariableNamesMMap: " + parseState.getGlobalVariableNamesMMap().toString());
+					
 					if(null != definingStruct){
 						prev2 = definingStruct.nameStr();						
 					}
@@ -4844,10 +4842,8 @@ public class ThmP1 {
 				conjDisjVerbphrase.setConjDisjType(ConjDisjType.findConjDisjType(structType));
 			}
 			
-			//System.out.print(struct.type());
 			parsedLongFormSB.append(struct.type());
 			
-			//System.out.print("[");
 			parsedLongFormSB.append("[");
 			
 			if (struct.prev1NodeType().isTypeStruct()) {
@@ -4863,7 +4859,7 @@ public class ThmP1 {
 			}			
 
 			if (struct.prev1NodeType().equals(NodeType.STR)) {
-				//System.out.print(struct.prev1());
+				
 				parsedLongFormSB.append(struct.prev1());
 				//don't include prepositions for spanning purposes, since prepositions are almost 
 				//always counted if its subsequent entity is, but counting it gives false high span
@@ -4873,13 +4869,10 @@ public class ThmP1 {
 					span++;
 				}
 			}			
-
-			// if(struct.prev2() != null && !struct.prev2().equals(""))
-			// System.out.print(", ");
+			
 			if (struct.prev2NodeType().isTypeStruct()) {
 				// avoid printing is[is], ie case when parent has same type as
 				// child
-				//System.out.print(", ");
 				parsedLongFormSB.append(", ");
 				Struct prev2Struct = (Struct) struct.prev2();
 				prev2Struct.set_dfsDepth(structDepth + 1);
@@ -4893,13 +4886,11 @@ public class ThmP1 {
 			
 			if (struct.prev2NodeType().equals(NodeType.STR)) {
 				if (!struct.prev2().equals("")){
-					//System.out.print(", ");
 					parsedLongFormSB.append(", ");	
 					if(!struct.type().equals("pre")){
 						span++;
 					}
-				}				
-				//System.out.print(struct.prev2());
+				}		
 				parsedLongFormSB.append(struct.prev2());
 			}
 			
@@ -4909,11 +4900,11 @@ public class ThmP1 {
 				span = appendChildrenStringToLongForm(struct, parsedLongFormSB, span, conjDisjVerbphrase, isRightChild,
 						structDepth, children);
 			}
-			//System.out.print("]");
+			
 			parsedLongFormSB.append("]");
 		} else {
 			String structStr = struct.toString();
-			//System.out.print(structStr);
+			
 			parsedLongFormSB.append(structStr);
 			span++;
 
@@ -4973,13 +4964,14 @@ public class ThmP1 {
 		return span;
 	}
 
-	
 	public static String[] preprocess(String inputStr) {
 		return preprocess(inputStr, null);
 	}
 	
 	/**
-	 * Preprocess.
+	 * Preprocess. Produces array of sentence components, each to be tokenized.
+	 * Will not divide within math begin delimiters such as $ if inputStr contains both the beginning
+	 * and closing delimiters.
 	 * @param str
 	 *            is string of all input to be processed, including punctuations.
 	 * @param List of strings to be filled, with original-cased words, not lower. Could be null    

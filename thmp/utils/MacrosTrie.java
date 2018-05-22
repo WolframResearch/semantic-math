@@ -289,7 +289,8 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 	}
 
 	/**
-	 * Return how many places to skip ahead. Look for args inside braces {...}
+	 * Return how many places to skip ahead. Look for args inside braces {...}.
+	 * Note that some authors don't explicitly use braces, e.g. $\\rr d$ instead of $\\rr{d}$.
 	 * @param thmStr
 	 * @param curIndex
 	 * @param replacementSB SB to be filled in.
@@ -369,6 +370,11 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 		int i = index;
 		
 		while(i < thmStrLen && ((c=thmStr.charAt(i)) != '{')){
+			//Because some authors don't explicitly use braces, e.g. $\\rr d$ instead of $\\rr{d}$.
+			if(c == '$' && i > index && thmStr.charAt(i-1) != '\\') {
+				bracesArgs[bracesArgsIndex] = thmStr.substring(index+1, i);
+				return i+1;
+			}
 			i++;
 		}
 		//skipe brace, so openBraceCount is 1

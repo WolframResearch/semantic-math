@@ -688,6 +688,7 @@ public class ParseState {
 			
 			String latexName = textLatexMatcher.group(1);
 			VariableName latexVariableName = createVariableName(latexName);
+			//use currentInputStr as originalDefinitionStr
 			VariableDefinition latexDef = new VariableDefinition(latexVariableName, entStruct, this.currentInputStr);
 			
 			if(!variableMMapToAddTo.containsEntry(latexVariableName, latexDef)){				

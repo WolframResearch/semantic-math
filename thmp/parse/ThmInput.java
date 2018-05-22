@@ -51,7 +51,9 @@ public class ThmInput {
 	static final Pattern THM_END_PATTERN = Pattern.compile(THM_END_STR);
 	
 	//begin of latex expression
-	static final Pattern BEGIN_PATTERN = Pattern.compile("[^\\\\]*\\\\begin(?!\\{document)");
+	//static final Pattern BEGIN_PATTERN = Pattern.compile("[^\\\\]*\\\\begin(?!\\{document)");
+	static final Pattern BEGIN_PATTERN = Pattern.compile("[^\\\\]*\\\\begin");
+	static final Pattern BEGIN_DOC_PATTERN = Pattern.compile("\\\\begin\\s*\\{\\s*document");
 	
 	//new theorem pattern. E.g. \newtheorem{corollary}[theorem]{Corollary}
 	static final Pattern NEW_THM_PATTERN = Pattern.compile("\\\\newtheorem\\**\\s*\\{([^}]+)\\}(?:[^{]*)\\{([^}]+).*");
@@ -87,10 +89,14 @@ public class ThmInput {
 			Pattern.compile("\\\\emph\\{([^}]*)\\}"), Pattern.compile("\\\\cat\\{([^}]*)\\}"),
 			Pattern.compile("\\{\\\\it\\s*([^}]*)\\}") // \\{\\\\it([^}]*)\\}
 	};*/
+	//
+	private static Pattern lessThanGreaterThanPatt = Pattern.compile("(<(?!\\s)|(?<!\\s)>)");
+	//private static String lessThanGreaterThanPatt = "";
+	
 	private static final Pattern INDEX_PATTERN = Pattern.compile(".*\\\\index\\{([^\\}]*)\\}%*.*");
 	// pattern for eliminating the command completely for web display. E.g. \fml. How about \begin or \end everything?
 	private static final Pattern ELIMINATE_PATTERN = Pattern
-			.compile("\\\\df|\\\\emph|\\\\em|\\\\cat|\\\\it|\\\\(?:eq)*ref|\\\\subsection|\\\\section|\\\\bf"
+			.compile("\\\\df|\\\\emph|\\\\em|\\\\cat|\\\\it|\\\\(?:eq)*ref|\\\\subsection|\\\\section|\\\\bf|\\\\vspace"
 					+ "|\\\\ensuremath|\\\\(?:textbf|textsl|textsc)"
 					+ "|\\\\fml|\\\\ofml|\\\\(?:begin|end)\\{enumerate\\}|\\\\(?:begin|end)\\{(?:sub)*section\\**\\}"					
 					+ "|\\\\begin\\{slogan\\}|\\\\end\\{slogan\\}|\\\\sbsb|\\\\cat|\\\\bs|\\\\maketitle"
@@ -276,6 +282,12 @@ public class ThmInput {
 			List<String> bareThmList) {
 		return removeTexMarkup(thmStr, thmWebDisplayList, bareThmList, null, ELIMINATE_BEGIN_END_THM_PATTERN);
 	}
+	
+	public static String removeTexMarkup(String thmStr, List<String> thmWebDisplayList,
+			List<String> bareThmList, MacrosTrie macrosTrie, Pattern eliminateBeginEndThmPattern) {
+		boolean isContextStr = false;
+		return removeTexMarkup(thmStr, thmWebDisplayList, bareThmList, macrosTrie, eliminateBeginEndThmPattern, isContextStr);
+	}
 	/**
 	 * Processes Latex input, e.g. by removing syntax used purely for display and not
 	 * useful for parsing, such as \textit{ }.
@@ -284,10 +296,12 @@ public class ThmInput {
 	 * @param newThmSB 
 	 * @param thmWebDisplayList Can be null. 
 	 * @param bareThmList Can be null. 
+	 * @boolean whether current input str is context string.
 	 * @return Thm without the "\begin{lemma}", "\label{}", etc parts.
 	 */	
 	public static String removeTexMarkup(String thmStr, List<String> thmWebDisplayList,
-			List<String> bareThmList, MacrosTrie macrosTrie, Pattern eliminateBeginEndThmPattern) {
+			List<String> bareThmList, MacrosTrie macrosTrie, Pattern eliminateBeginEndThmPattern, 
+			boolean isContextStr) {
 
 		boolean getWebDisplayList = thmWebDisplayList == null ? false : true;
 		boolean getBareThmList = bareThmList == null ? false : true;		
@@ -298,17 +312,30 @@ public class ThmInput {
 		thmStr = matcher.replaceAll(DF_EMPH_PATTERN_REPLACEMENT);*/
 		
 		Matcher matcher = beginEqnPatt.matcher(thmStr);
-		if(matcher.find()) {			
-			thmStr = matcher.replaceAll("\\\\[");
-			//thmStr = matcher.replaceAll("\\$");
-			matcher = endEqnPatt.matcher(thmStr);
-			thmStr = matcher.replaceAll("\\\\]");
-			//thmStr = matcher.replaceAll("\\$");
+		if(matcher.find()) {	
+			if(isContextStr) {
+				//make inline math, to be smaller.
+				thmStr = matcher.replaceAll("\\$");
+				matcher = endEqnPatt.matcher(thmStr);
+				thmStr = matcher.replaceAll("\\$");
+			}else {
+				thmStr = matcher.replaceAll("\\\\[");
+				//thmStr = matcher.replaceAll("\\$");
+				matcher = endEqnPatt.matcher(thmStr);
+				thmStr = matcher.replaceAll("\\\\]");
+				//thmStr = matcher.replaceAll("\\$");
+			}
 		}
 		
 		// eliminate symbols such as \fml
-		 matcher = ELIMINATE_PATTERN.matcher(thmStr);
+		matcher = ELIMINATE_PATTERN.matcher(thmStr);
 		thmStr = matcher.replaceAll("");
+		
+		//place space around < and >, so browser doesn't interpret these as opening and closing HTML tags.
+		//Note browser processes text before MathJax.
+		matcher = lessThanGreaterThanPatt.matcher(thmStr);
+		thmStr = matcher.replaceAll(" $1 ");
+		
 		//System.out.println("ThmInput - eliminateBeginEndThmPattern "+eliminateBeginEndThmPattern );
 		/*comment out this line if want to retain "\begin{theorem}", etc*/
 		thmStr = eliminateBeginEndThmPattern.matcher(thmStr).replaceAll("");
