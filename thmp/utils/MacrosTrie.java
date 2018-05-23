@@ -1,6 +1,7 @@
 package thmp.utils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -315,7 +316,7 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 		for(int i = 0; i < slotCount; i++){
 			startingIndex = retrieveBracesContent(thmStr, startingIndex, args, i);
 		}		
-		//System.out.println("args: " + Arrays.toString(args));
+		//System.out.println("+++++++++macros replacement args: " + Arrays.toString(args));
 		int templateReplacementStringLen = templateReplacementString.length();
 		Matcher digitMatcher;
 		//fill in #i with its respective replacement string.
@@ -372,12 +373,21 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 		while(i < thmStrLen && ((c=thmStr.charAt(i)) != '{')){
 			//Because some authors don't explicitly use braces, e.g. $\\rr d$ instead of $\\rr{d}$.
 			if(c == '$' && i > index && thmStr.charAt(i-1) != '\\') {
-				bracesArgs[bracesArgsIndex] = thmStr.substring(index+1, i);
-				return i+1;
+				int j = i-1;
+				while(j > index && thmStr.charAt(j) == ')') {
+					j--;
+				}
+				//ugly code to take care of bad TeX.
+				if(j < i-1) {
+					bracesArgs[bracesArgsIndex] = thmStr.substring(index+1, j+1);
+				}else {
+					bracesArgs[bracesArgsIndex] = thmStr.substring(index+1, i);
+				}
+				return i;				
 			}
 			i++;
 		}
-		//skipe brace, so openBraceCount is 1
+		//skip brace, so openBraceCount is 1
 		i++;
 		int openBraceCount = 1;
 		if(i >= thmStrLen){

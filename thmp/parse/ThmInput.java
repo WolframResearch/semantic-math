@@ -104,12 +104,12 @@ public class ThmInput {
 					//eliminate \begin{aligned} later. |\\\\begin\\{a(?:[^}]*)\\}|\\\\end\\{a(?:[^}]*)\\}\\s*"
 					+ "|\\\\cite\\{[^}]+\\}|\\\\cite\\[[^\\]]+\\]|\\\\par\\s|\\\\(?:begin|end)\\{displaymath\\}",
 					Pattern.CASE_INSENSITIVE);
-	//Eliminate begin/end{align*} as well, for better display on web frontend.
+	//Eliminate begin/end{align*} as well, for better display on web frontend. <--don't eliminate begin/end{align}!
 	static final String ELIMINATE_BEGIN_END_THM_STR = "\\\\begin\\{def(?:[^}]*)\\}\\s*|\\\\begin\\{lem(?:[^}]*)\\}\\s*|\\\\begin\\{th(?:[^}]*)\\}\\s*"
 					+ "|\\\\begin\\{pr(?:[^}]*)\\}\\s*|\\\\begin\\{proclaim(?:[^}]*)\\}\\s*|\\\\begin\\{co(?:[^}]*)\\}\\s*"
 					+ "|\\\\end\\{def(?:[^}]*)\\}\\s*|\\\\end\\{lem(?:[^}]*)\\}\\s*|\\\\end\\{th(?:[^}]*)\\}\\s*"
 					+ "|\\\\end\\{pr(?:[^}]*)\\}\\s*|\\\\end\\{proclaim(?:[^}]*)\\}\\s*|\\\\end\\{co(?:[^}]*)\\}\\s*"
-					+ "|\\\\(?:begin|end)\\{re(?:[^}]*)\\}\\s*|\\\\begin\\{align(?:[^}]*)\\}\\s*|\\\\end\\{align(?:[^}]*)\\}\\s*";
+					+ "|\\\\(?:begin|end)\\{re(?:[^}]*)\\}\\s*";
 	static final Pattern ELIMINATE_BEGIN_END_THM_PATTERN = Pattern
 			.compile(ELIMINATE_BEGIN_END_THM_STR, Pattern.CASE_INSENSITIVE);
 	
@@ -311,22 +311,26 @@ public class ThmInput {
 		/*Matcher matcher = DF_EMPH_PATTERN.matcher(thmStr);
 		thmStr = matcher.replaceAll(DF_EMPH_PATTERN_REPLACEMENT);*/
 		
-		Matcher matcher = beginEqnPatt.matcher(thmStr);
-		if(matcher.find()) {	
-			if(isContextStr) {
-				//make inline math, to be smaller.
-				thmStr = matcher.replaceAll("\\$");
-				matcher = endEqnPatt.matcher(thmStr);
-				thmStr = matcher.replaceAll("\\$");
-			}else {
-				thmStr = matcher.replaceAll("\\\\[");
-				//thmStr = matcher.replaceAll("\\$");
-				matcher = endEqnPatt.matcher(thmStr);
-				thmStr = matcher.replaceAll("\\\\]");
-				//thmStr = matcher.replaceAll("\\$");
+		Matcher matcher;
+		
+		if(isContextStr) {
+			//only replace within context, MathJax should take begin equation.
+			matcher = beginEqnPatt.matcher(thmStr);
+			if(matcher.find()) {	
+				if(isContextStr) {
+					//make inline math, to be smaller.
+					thmStr = matcher.replaceAll("\\$");
+					matcher = endEqnPatt.matcher(thmStr);
+					thmStr = matcher.replaceAll("\\$");
+				}/*else {
+					thmStr = matcher.replaceAll("\\\\[");
+					//thmStr = matcher.replaceAll("\\$");
+					matcher = endEqnPatt.matcher(thmStr);
+					thmStr = matcher.replaceAll("\\\\]");
+					//thmStr = matcher.replaceAll("\\$");
+				}*/
 			}
 		}
-		
 		// eliminate symbols such as \fml
 		matcher = ELIMINATE_PATTERN.matcher(thmStr);
 		thmStr = matcher.replaceAll("");

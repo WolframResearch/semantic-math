@@ -490,6 +490,7 @@ public class DetectHypothesis {
 				inputFile = new File("/Users/yihed/Downloads/test/thmp/alignTest.txt");
 				inputFile = new File("/Users/yihed/Downloads/test/thmp/may21_0.txt");
 				inputFile = new File("/Users/yihed/Downloads/test/thmp/may22_1.txt");
+				inputFile = new File("/Users/yihed/Downloads/test/thmp/may23_0.txt");
 		}		
 		List<DefinitionListWithThm> defThmList = new ArrayList<DefinitionListWithThm>();
 		List<ThmHypPair> thmHypPairList = new ArrayList<ThmHypPair>();
