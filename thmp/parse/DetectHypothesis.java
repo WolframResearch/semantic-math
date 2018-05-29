@@ -127,7 +127,11 @@ public class DetectHypothesis {
 	private static final Pattern WHITE_SPACE_PATTERN = Pattern.compile("\\s*");
 	//replace $$ with $, so context vecs can close any opened begin math delimiters
 	static final Pattern doubleDollarPatt = Pattern.compile("\\$\\$");
-		
+	//max number of variables to retrieve context strings for.
+	private static final int variableDefinitionListThresh = 3;
+	//max length for definition sentence.
+	private static final int defSentenceLenThresh = 270;
+	
 	//serialize the words as well, to bootstrap up after iterations of processing. The math words are going to 
 	//stabilize.
 	//This is ordered based on word frequencies.
@@ -1320,7 +1324,10 @@ public class DetectHypothesis {
 		}
 		
 		//filter through text and try to pick up definitions.
-		for(int i = 0; i < thmStrLen; i++){			
+		for(int i = 0; i < thmStrLen; i++){
+			if(variableDefinitionList.size() >= variableDefinitionListThresh) {
+				break;
+			}
 			char curChar = thmStr.charAt(i);			
 			//go through thm, get the variables that need to be defined
 			//once inside Latex, use delimiters, should also take into account
@@ -1449,12 +1456,17 @@ public class DetectHypothesis {
 				}
 			}
 			//if some variable found.
-			if(!isLocalVar && null != possibleVarDef.getDefiningStruct()){			
+			if(!isLocalVar && null != possibleVarDef.getDefiningStruct()){
+				
+				String defSentence = possibleVarDef.getOriginalDefinitionSentence();
+				if(defSentence.length() > defSentenceLenThresh) {					
+					continue;
+				}
 				if(!varDefSet.contains(possibleVarDef)){
 					varDefSet.add(possibleVarDef);
 					varDefList.add(possibleVarDef);
 					boolean isContextStr = true;
-					String defSentence = ThmInput.removeTexMarkup(possibleVarDef.getOriginalDefinitionSentence(), 
+					defSentence = ThmInput.removeTexMarkup(defSentence, 
 							null, null, macrosTrie, eliminateBeginEndThmPattern, isContextStr);
 					//close any starting delimiters, e.g. "$", \[, etc					
 					defSentence = closeMathDelim(defSentence);					

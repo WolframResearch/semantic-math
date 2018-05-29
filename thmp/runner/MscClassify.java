@@ -17,7 +17,6 @@ import thmp.utils.FileUtils;
 import thmp.utils.MathLinkUtils.WLEvaluationMedium;
 import thmp.utils.WordForms;
 import thmp.runner.CreateMscVecs.Paper;
-import thmp.search.DBSearch;
 
 /**
  * Classifies MSC based on paper content.

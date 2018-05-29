@@ -4933,7 +4933,6 @@ public class ThmP1 {
 			ConjDisjVerbphrase conjDisjVerbphrase, boolean isRightChild, int structDepth, List<Struct> children) {
 		List<ChildRelation> childRelation = struct.childRelationList();
 		
-		//System.out.print("[");
 		parsedLongFormSB.append("[");
 		
 		StringBuilder childrenSB = new StringBuilder(40);
@@ -4959,7 +4958,6 @@ public class ThmP1 {
 		//already printed out in dfs! System.out.print(childrenStr);
 		parsedLongFormSB.append(childrenStr);
 		
-		//System.out.print("]");
 		parsedLongFormSB.append("]");
 		return span;
 	}

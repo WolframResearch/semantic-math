@@ -81,6 +81,10 @@ public class ThmInput {
 	   number of patterns in DF_EMPH_PATTERN. */
 	/*private static final String DF_EMPH_PATTERN_REPLACEMENT = "$1$2$3$4$5$6$7$8$9$10$11";*/
 	
+	//*MUST Update* groupReplacePattStr when updating this!
+	private static Pattern groupReplacePatt = Pattern.compile("\\\\(?:eq)*ref\\s*\\{([^}]+)\\}");
+	private static String groupReplacePattStr = "$1";
+	
 	//replace \begin or \end {equation} with \[ or \], since MathJax does not seem to render them correctly on web
 	private static final Pattern beginEqnPatt = Pattern.compile("\\\\begin\\{equation\\**\\}");
 	private static final Pattern endEqnPatt = Pattern.compile("\\\\end\\{equation\\**\\}");
@@ -91,13 +95,14 @@ public class ThmInput {
 	};*/
 	//
 	private static Pattern lessThanGreaterThanPatt = Pattern.compile("(<(?!\\s)|(?<!\\s)>)");
-	//private static String lessThanGreaterThanPatt = "";
 	
 	private static final Pattern INDEX_PATTERN = Pattern.compile(".*\\\\index\\{([^\\}]*)\\}%*.*");
-	// pattern for eliminating the command completely for web display. E.g. \fml. How about \begin or \end everything?
+	/* pattern for eliminating the command completely for web display. E.g. \fml. How about \begin or \end everything?
+	//patterns such as \\rm are deprecated in TeX, but (new) authors still use them, and MathJax doesn't render them.
+	Space after \rm intentional*/
 	private static final Pattern ELIMINATE_PATTERN = Pattern
-			.compile("\\\\df|\\\\emph|\\\\em|\\\\cat|\\\\it|\\\\(?:eq)*ref|\\\\subsection|\\\\section|\\\\bf|\\\\vspace"
-					+ "|\\\\ensuremath|\\\\(?:textbf|textsl|textsc)"
+			.compile("\\\\df|\\\\emph|\\\\em|\\\\rm |\\\\cat|\\\\it|\\\\(?:eq)*ref|\\\\subsection|\\\\section|\\\\bf|\\\\vspace"
+					+ "|\\\\ensuremath|\\\\(?:textbf|textsl|textsc)|\\\\footnote|\\\\linebreak|(?<!\\\\)%"
 					+ "|\\\\fml|\\\\ofml|\\\\(?:begin|end)\\{enumerate\\}|\\\\(?:begin|end)\\{(?:sub)*section\\**\\}"					
 					+ "|\\\\begin\\{slogan\\}|\\\\end\\{slogan\\}|\\\\sbsb|\\\\cat|\\\\bs|\\\\maketitle"
 					+ "|\\\\section\\**\\{(?:[^}]*)\\}\\s*|\\\\noindent" 
@@ -331,6 +336,9 @@ public class ThmInput {
 				}*/
 			}
 		}
+		
+		thmStr = groupReplacePatt.matcher(thmStr).replaceAll(groupReplacePattStr);
+		
 		// eliminate symbols such as \fml
 		matcher = ELIMINATE_PATTERN.matcher(thmStr);
 		thmStr = matcher.replaceAll("");
