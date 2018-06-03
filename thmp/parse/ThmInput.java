@@ -316,6 +316,13 @@ public class ThmInput {
 		/*Matcher matcher = DF_EMPH_PATTERN.matcher(thmStr);
 		thmStr = matcher.replaceAll(DF_EMPH_PATTERN_REPLACEMENT);*/
 		
+		/*Replace macros first, since they can contain symbols such as \\ensuremath, which are to be removed.*/
+		if(null != macrosTrie){
+			//System.out.println("thmStr BEFORE "+thmStr);
+			thmStr = macrosTrie.replaceMacrosInThmStr(thmStr);
+			//System.out.println("thmStr AFTER "+thmStr);
+		}
+		
 		Matcher matcher;
 		
 		if(isContextStr) {
@@ -363,11 +370,6 @@ public class ThmInput {
 			}
 		}*/
 		
-		if(null != macrosTrie){
-			//System.out.println("thmStr BEFORE "+thmStr);
-			thmStr = macrosTrie.replaceMacrosInThmStr(thmStr);
-			//System.out.println("thmStr AFTER "+thmStr);
-		}
 		// containing the words inside \label and \index etc, but not the words
 		// "\label", "\index",
 		// for bag-of-words searching.
