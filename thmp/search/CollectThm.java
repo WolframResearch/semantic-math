@@ -364,7 +364,7 @@ public class CollectThm {
 			
 			private static final long serialVersionUID = -6594919249191163474L;
 			
-			private String word;
+			public String word;
 			private int freq;
 			
 			public WordFreqPair(String word_, int freq_) {

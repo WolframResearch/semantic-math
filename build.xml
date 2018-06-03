@@ -11,7 +11,6 @@
 	<property name="server_datadir" value="/Users/yihed/Documents/workspaceEE/ThmpServlet/WebContent/src/thmp/data" />
 	<property name="server_libdir" value="/Users/yihed/Documents/workspaceEE/ThmpServlet/WebContent/WEB-INF/lib" />
 	<property name="server_srcdir" value="/Users/yihed/Documents/workspaceEE/ThmpServlet/WebContent/src" />
-	<property name="exceptionsSrcdir" value="${basedir}/src/thmp/exceptions/" />
 	
 	<!-- main lib containing jar such as JLink, Guava etc -->
 	<property name="libdir" value="${basedir}/lib/" />

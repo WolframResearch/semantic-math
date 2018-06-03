@@ -410,7 +410,7 @@ public class FileUtils {
 			}catch(ClassNotFoundException e){
 				objectInputStream.close();				
 				if(serialFileStr.length > 0) {
-					
+					//need the right class loader, in case class can't be resolved.
 					objectInputStream = new ObjectInputStream(new FileInputStream(serialFileStr[0])) {					
 						@Override
 		                protected Class resolveClass(ObjectStreamClass objectStreamClass)

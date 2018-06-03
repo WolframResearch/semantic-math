@@ -443,6 +443,7 @@ public class TriggerMathThm2 {
 				
 				if(i < thmArSz-2){
 					String threeTermsCombined = nextTermCombined + " " + thmAr.get(i+2);
+					//note no normalization here. Done in addToNorm
 					newNorm = addToNorm(wordsScoreMap, indexScorePairList, null, newNorm, i, threeTermsCombined, queryVecLen);
 				}
 			}						

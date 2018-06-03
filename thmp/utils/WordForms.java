@@ -48,7 +48,7 @@ public class WordForms {
 
 	private static final Logger logger = LogManager.getLogger(WordForms.class);
 	// delimiters to split on when making words out of input. Any special chars
-	// involved with unlaut needs to be
+	// involved with unlaut needs to be.
 	private static final String SPLIT_DELIM = "(\\s+|\'s|(?<!\\\\)\'|(?<!\\\\)\"|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:|-|_|~|!|\\+)";
 
 	private static final Pattern BACKSLASH_PATTERN = Pattern.compile("(?<!\\\\)\\\\(?!\\\\)");
@@ -543,14 +543,15 @@ public class WordForms {
 	 * @return Array of singular forms, of size 3. Default val must be null.
 	 */
 	public static String[] getSingularForms(String curWord) {
+		
+		int wordlen = curWord.length();
 		// primitive way to handle plural forms: if ends in "s"
-		if (curWord.length() < 4)
+		if (wordlen < 4)
 			return new String[] { curWord, curWord, curWord };
 
 		// default val must be null.
 		String[] singularForms = new String[3];
-		int wordlen = curWord.length();
-
+		
 		if (wordlen > 0 && curWord.charAt(wordlen - 1) == 's') {
 			// don't strip 's' if belongs to common endings with 's', e.g. "homogeneous",
 			// "basis"
@@ -559,11 +560,11 @@ public class WordForms {
 				singularForms[0] = curWord.substring(0, wordlen - 1);
 			}
 		}
-
+		
 		if (wordlen > 2 && curWord.substring(wordlen - 2, wordlen).equals("es")) {
 			singularForms[1] = curWord.substring(0, wordlen - 2);
 		}
-
+		
 		if (wordlen > 3 && curWord.substring(wordlen - 3, wordlen).equals("ies")) {
 			singularForms[2] = curWord.substring(0, wordlen - 3) + 'y';
 		}
