@@ -14,13 +14,14 @@ import thmp.utils.FileUtils;
 /**
  * Process arXiv metadata scrape, create and serialize resulting map. 
  * Metadata such as author, date, etc. 
+ * This NEEDS to be run to produce updated title and author info to display on the web!
  * @author yihed
  *
  */
 public class ProcessMetadataScrape {
 	
 	private static final String paperMetaDataMapSerFileStr = "src/thmp/data/paperMetaDataMap.dat";
-	private static final String paperMetaDataMapTxtFileStr = "src/thmp/data/paperMetaDataMap.txt";
+	//private static final String paperMetaDataMapTxtFileStr = "src/thmp/data/paperMetaDataMap.txt";
 	//e.g. "quant-ph/9905093"
 	private static final Pattern PAPER_ID_PATT = Pattern.compile("(.+?)/([\\d.]+)");
 	
@@ -74,8 +75,8 @@ public class ProcessMetadataScrape {
 					List<Map<String, PaperMetaData>> metaDataList = new ArrayList<Map<String,PaperMetaData>>();
 					metaDataList.add(metaDataMap);
 					FileUtils.serializeObjToFile(metaDataList, paperMetaDataMapSerFileStr);
-					//for human inspection purposes
-					FileUtils.writeToFile(metaDataMap, paperMetaDataMapTxtFileStr);
+					//for human inspection purposes. 
+					//Deserialize if you want to see. FileUtils.writeToFile(metaDataMap, paperMetaDataMapTxtFileStr);
 		}
 	}
 	
@@ -103,7 +104,8 @@ public class ProcessMetadataScrape {
 			String title = metaDataLines.get(curIndex+2);
 			String authors = metaDataLines.get(curIndex+3);
 			int authorsLen = authors.length();
-			if(authors.charAt(authorsLen-2) == ','){
+			//authorsLen should always be naturally > 2, if not, likely a bug.
+			if(authorsLen > 2 && authors.charAt(authorsLen-2) == ','){
 				authors = authors.substring(0, authorsLen-2);
 			}			
 			metaDataMap.put(paperId, new PaperMetaData(date, title, authors));			
