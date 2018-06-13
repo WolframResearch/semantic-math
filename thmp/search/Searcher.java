@@ -112,7 +112,7 @@ public interface Searcher<S> {
 		private static final String trueFluffWordsSetTxtPath = "src/thmp/data/trueFluffWordsSet.txt";
 		
 		/**Map of words and their literal search indices, encoded as bytes.*/
-		private static final String literalSearchIndexMapPath = "src/thmp/data/literalSearchIndexMap.dat";
+		//***June 13 private static final String literalSearchIndexMapPath = "src/thmp/data/literalSearchIndexMap.dat";
 		public static final String texFilesSerializedListFileName = "texFileNamesSetList.dat";
 		
 		/**Path to file containing database names data 
@@ -188,9 +188,9 @@ public interface Searcher<S> {
 			return trueFluffWordsSetTxtPath;
 		}
 		
-		public static String literalSearchIndexMapPath() {
+		/***June 13 public static String literalSearchIndexMapPath() {
 			return literalSearchIndexMapPath;
-		}
+		}*/
 		
 		/** Used to separate the case when gatheringDataBool, where in fact want maps collected
 		 * in previous runs, e.g. when using a pre-computed projection matrix for SVD.*/

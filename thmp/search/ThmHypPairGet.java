@@ -49,7 +49,7 @@ public class ThmHypPairGet{
 		totalBundleNum = bundleStartThmIndexList.size();
 		//318 total as of Sept 16
 		thmBundleCache = CacheBuilder.newBuilder()
-				.maximumSize(500) //~2mb x 500 = 1050 mb
+				.maximumSize(500) //~5mb x 500 = 2500 mb
 				//.removalListener( null)
 				.build(
 						new CacheLoader<Integer, ThmHypPairBundle>() {
@@ -133,8 +133,6 @@ public class ThmHypPairGet{
 		protected static final String BASE_FILE_STR = "src/thmp/data/pe/" 
 				+ ThmSearch.TermDocumentMatrix.COMBINED_PARSEDEXPRESSION_LIST_FILE_NAME_ROOT;
 		//private static final String BASE_FILE_EXT_STR = ".dat";
-		//Name of serialized file. 
-		//private String serialFileStr; <--how is this used??
 		//indicates which file to load in memory. Keys are consecutive, 1, 2,...
 		//*not* theorem starting indices in bundles!
 		private int bundleKey;

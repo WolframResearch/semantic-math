@@ -21,14 +21,12 @@ import org.apache.logging.log4j.Logger;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.TreeMultimap;
 import com.wolfram.puremath.dbapp.DBUtils;
 import com.wolfram.puremath.dbapp.LiteralSearchUtils;
 
 import thmp.search.CollectThm.ThmWordsMaps.IndexPartPair;
-import thmp.search.LiteralSearch.LiteralSearchIndex;
 import thmp.search.SearchIntersection.WordDistScoreTMap;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
@@ -44,7 +42,7 @@ public class LiteralSearch {
 
 	private static final Set<String> trueFluffWordsSet = WordFrequency.ComputeFrequencyData.trueFluffWordsSet();
 	private static final Map<String, Integer> wordsScoreMap = CollectThm.ThmWordsMaps.get_wordsScoreMap();
-	private static final ListMultimap<String, LiteralSearchIndex> literalSearchIndexMap;
+	//***June 13 private static final ListMultimap<String, LiteralSearchIndex> literalSearchIndexMap;
 	private static final int WORD_BASE_POINT = 1;
 	//point when word is right next to another word
 	private static final int WORD_DIST_1_POINT = 2;
@@ -65,7 +63,7 @@ public class LiteralSearch {
 	static {		
 		//logger.info("LiteralSearchIndex.class.getClassLoader(): "+LiteralSearchIndex.class.getClassLoader());
 		//move to db!
-		literalSearchIndexMap = deserializeIndexMap();
+		//***June 13 literalSearchIndexMap = deserializeIndexMap();
 		
 		INVALID_SEARCH_WORD_SET = new HashSet<String>();
 		//fluff words that not in trueFluffWordsSet
@@ -255,7 +253,7 @@ public class LiteralSearch {
 		return wordsIndexMMap;
 	}
 	
-	private static ListMultimap<String, LiteralSearchIndex> deserializeIndexMap() {
+	/***June 13 private static ListMultimap<String, LiteralSearchIndex> deserializeIndexMap() {
 		String path = FileUtils.getPathIfOnServlet(Searcher.SearchMetaData.literalSearchIndexMapPath());
 		
 		@SuppressWarnings("unchecked")
@@ -263,7 +261,7 @@ public class LiteralSearch {
 				.deserializeListFromFile(path)).get(0);
 		
 		return indexMap;
-	}
+	}*/
 
 	/********Tools for searching*******/
 	
@@ -598,11 +596,6 @@ public class LiteralSearch {
 		//printIndexMap();
 		//System.out.println(WordFrequency.ComputeFrequencyData.trueFluffWordsSet());
 		//System.out.println(Arrays.toString(WordForms.splitThmIntoSearchWords("this r(8e3 se . 4")));
-	}
-	
-	private static void printIndexMap() {
-		
-		FileUtils.writeToFile(literalSearchIndexMap.keySet(), "src/thmp/data/literalSearchIndexMapKeys.txt");
 	}
 	
 	private static void serializeIndexMap() {

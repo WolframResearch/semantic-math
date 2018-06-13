@@ -242,14 +242,14 @@ public class ProjectionMatrix {
 		searchConfigList.add(searchConfig);
 		FileUtils.serializeObjToFile(searchConfigList, SearchConfiguration.searchConfigurationSerialPath());
 		
-		List<ListMultimap<String, LiteralSearchIndex>> literalSearchIndexMapList 
+		/***June 13 List<ListMultimap<String, LiteralSearchIndex>> literalSearchIndexMapList 
 			= new ArrayList<ListMultimap<String, LiteralSearchIndex>>();
 		literalSearchIndexMapList.add(literalSearchIndexMap);
 		//to be put into database, rather than storing in memory, for access at app runtime
 		FileUtils.serializeObjToFile(literalSearchIndexMapList, SearchMetaData.literalSearchIndexMapPath());
 		//for human inspection purposes, so put path here.
 		final String literalSearchMapKeysPath = "src/thmp/data/literalSearchIndexMapKeys.txt";
-		FileUtils.writeToFile(literalSearchIndexMap.keySet(), literalSearchMapKeysPath);
+		FileUtils.writeToFile(literalSearchIndexMap.keySet(), literalSearchMapKeysPath);*/
 		
 		//serialize scraped thm names
 		FileUtils.serializeObjToFile(allThmNameScrapeList, DetectHypothesis.allThmNameScrapeSerStr);
