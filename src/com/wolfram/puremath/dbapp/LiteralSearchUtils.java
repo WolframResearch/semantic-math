@@ -70,7 +70,7 @@ public class LiteralSearchUtils {
 		rs.close();
 		
 		thmIndexList.addAll(SimilarThmUtils.byteArrayToIndexList(indexBytes, numBitsPerThmIndex));
-		thmIndexList.addAll(SimilarThmUtils.byteArrayToIndexList(wordsIndexArBytes, numBitsPerWordIndex));
+		wordsIndexArList.addAll(SimilarThmUtils.byteArrayToIndexList(wordsIndexArBytes, numBitsPerWordIndex));
 		
 	}
 	
@@ -104,8 +104,8 @@ public class LiteralSearchUtils {
 		pstm = conn.prepareStatement("TRUNCATE " + LiteralSearchTb.TB_NAME + ";");		
 		pstm.executeUpdate();
 		
-		//need to pudate table MEDIUMINT(9) UNSIGNED;  VARBINARY(265)
-		int wordIndexArTotalLen = LiteralSearchIndex.MAX_WORD_INDEX_AR_LEN; //this value is 2
+		//need to update table MEDIUMINT(9) UNSIGNED;  VARBINARY(265)
+		int wordIndexArTotalLen = LiteralSearchIndex.MAX_INDEX_COUNT_PER_WORD; //this value is 2
 		int maxWordsArListLen = maxThmsPerLiteralWord * wordIndexArTotalLen;
 		
 		int wordArVarBinaryLen = maxWordsArListLen * numBitsPerWordIndex / DBUtils.NUM_BITS_PER_BYTE;
