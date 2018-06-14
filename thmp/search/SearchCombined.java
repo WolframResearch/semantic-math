@@ -1,6 +1,7 @@
 package thmp.search;
 
 import java.io.Serializable;
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -23,6 +24,7 @@ import com.google.common.collect.TreeMultimap;
 
 import thmp.parse.ProcessInput;
 import thmp.parse.TheoremContainer;
+import thmp.utils.DBUtils;
 import thmp.utils.DataUtility;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
@@ -49,7 +51,7 @@ public class SearchCombined {
 	private static final Pattern INPUT_PATTERN = Pattern.compile("(\\d+)\\s+(.+)");
 	private static final Pattern CONTEXT_INPUT_PATTERN = Pattern.compile("(context|relation)\\s+(.*)");
 	protected static final int CONTEXT_SEARCH_TUPLE_SIZE = 10;
-	private static final Logger logger = LogManager.getLogger(SearchCombined.class);
+	//private static final Logger logger = LogManager.getLogger(SearchCombined.class);
 	
 	/**
 	 * Thm and hyp pair, used to display on web separately.
@@ -118,17 +120,16 @@ public class SearchCombined {
 	
 	/**
 	 * Turn list of indices of thms into list of String's.
-	 * Does *NOT* include hyp in returned results!
+	 * Does *NOT* include hyp in returned results! Avoid using this, since slower.
 	 * @param highestThms
 	 * @return
 	 */
 	public static List<String> thmListIndexToString(List<Integer> highestThms){
 		List<String> foundThmList = new ArrayList<String>();
-		for(Integer thmIndex : highestThms){
-					//the list thmList as good for web display as the original webDisplayThmList,
-					//because removeTexMarkup() has been applied.
-			//foundThmList.add(getThmList().get(thmIndex));
-			foundThmList.add(ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex).thmStr());			
+		
+		List<ThmHypPair> thmHypPairList = thmListIndexToThmHypPair(highestThms);
+		for(ThmHypPair pair : thmHypPairList) {
+			foundThmList.add(pair.thmStr());
 		}
 		return foundThmList;
 	}
@@ -139,14 +140,19 @@ public class SearchCombined {
 	 * @return
 	 */
 	public static List<ThmHypPair> thmListIndexToThmHypPair(List<Integer> highestThms){
-		List<ThmHypPair> bestCommonThmHypPairList = new ArrayList<ThmHypPair>();
-		for(Integer thmIndex : highestThms){
+		//List<ThmHypPair> bestCommonThmHypPairList = new ArrayList<ThmHypPair>();
+		Connection conn = DBUtils.getPooledConnection();
+		/*for(Integer thmIndex : highestThms){
 			//ThmHypPair thmHypPair = TriggerMathThm2.getWedDisplayThmHypPair(thmIndex);
 			//Looks for thm with thmIndex in bundle. Load bundle in not already in memory.
-			ThmHypPair thmHypPair = ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex);
+			ThmHypPair thmHypPair = ThmHypPairGet.retrieveThmHypPairWithThm(highestThms, conn);
 			bestCommonThmHypPairList.add(thmHypPair);			
+		}*/
+		try {
+			return ThmHypPairGet.retrieveThmHypPairWithThm(highestThms, conn);
+		}finally {
+			DBUtils.closePooledConnection(conn);
 		}
-		return bestCommonThmHypPairList;
 	}
 	
 	/**

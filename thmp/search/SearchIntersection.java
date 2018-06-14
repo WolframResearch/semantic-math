@@ -780,14 +780,8 @@ public class SearchIntersection {
 		//System.out.println("SearchIntersection - thmWordIndexMap "+thmWordIndexMap);
 		// add bonus points to thms with most number of query words, judging
 		// from size of value set in thmWordSpanMMap
-		if(searchState.allowLiteralSearch()) {
-			computeLargestSpan(searchState, thmWordSpanMMap, thmSpanMap);
-			
-			///addWordSpanBonus(searchState, thmScoreMap, scoreThmMMap, thmWordSpanMMap, thmSpanMap, numHighest,
-				//	((double) totalWordsScore) / numWordsAdded, inputWordsArSz);
-		}else {
-			computeLargestSpan(searchState, thmWordSpanMMap, thmSpanMap);
-		}
+		
+		computeLargestSpan(searchState, thmWordSpanMMap, thmSpanMap);
 		
 		searchState.addThmSpan(thmSpanMap);	
 		searchState.setThmScoreMap(thmScoreMap);

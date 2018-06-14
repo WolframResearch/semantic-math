@@ -1,6 +1,8 @@
 package thmp.search;
 
 import java.io.Serializable;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -14,6 +16,7 @@ import org.apache.logging.log4j.Logger;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.wolfram.puremath.dbapp.ThmHypUtils;
 
 import thmp.search.SearchCombined.ThmHypPair;
 import thmp.search.Searcher.SearchConfiguration;
@@ -204,7 +207,7 @@ public class ThmHypPairGet{
 	 * @param thmIndex
 	 * @return
 	 */
-	public static ThmHypPair retrieveThmHypPairWithThm(int thmIndex){
+	public static ThmHypPair retrieveThmHypPairWithThmFromBundle(int thmIndex){
 		
 		//index inside the bundleStartThmIndexList, to get the index of the starting thm in bundle.
 		int bundleStartThmIndexListIndex = findBundleBeginIndex(thmIndex);
@@ -220,6 +223,36 @@ public class ThmHypPairGet{
 			logger.error(msg);
 		}
 		return ThmHypPair.PLACEHOLDER_PAIR();
+	}
+	
+	/**
+	 * Return the ThmHypPair with index thmIndex
+	 * @param thmIndex
+	 * @return
+	 */
+	public static ThmHypPair retrieveThmHypPairWithThm(int thmIndex, Connection conn){
+		
+		try {
+			return ThmHypUtils.getThmHypFromDB(thmIndex, conn);
+		} catch (SQLException e) {
+			logger.error("SQLException while retrieving ThmHypPair! " + e);
+			return ThmHypPair.PLACEHOLDER_PAIR();
+		}
+	}
+	
+	/**
+	 * Return the ThmHypPair with list of indices.
+	 * @param list of thm indices.
+	 * @return
+	 */
+	public static List<ThmHypPair> retrieveThmHypPairWithThm(List<Integer> thmIndexList, Connection conn){
+		
+		try {
+			return ThmHypUtils.getThmHypFromDB(thmIndexList, conn);
+		} catch (SQLException e) {
+			logger.error("SQLException while retrieving ThmHypPair! " + e);
+			return Collections.emptyList();
+		}
 	}
 	
 	/**
