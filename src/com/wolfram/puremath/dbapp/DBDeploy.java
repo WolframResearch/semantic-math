@@ -167,7 +167,7 @@ public class DBDeploy {
 		
 		populateAuthorTb(conn);
 		
-		LiteralSearchUtils.populateLiteralSearchTb(conn);
+		//June13: don't deploy to DB, redundant wrt wordmap LiteralSearchUtils.populateLiteralSearchTb(conn);
 		
 		conn.close();
 	}

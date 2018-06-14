@@ -91,7 +91,7 @@ public class LiteralSearchUtils {
 		//accomodate changes in number of indices and number of concepts to display!!!
 		
 		int maxThmsPerLiteralWord = Searcher.SearchMetaData.maxThmsPerLiteralWord;
-		//number of bytes per list. As of Dec 29, num bytes for thmIndices is 300*21/8 = 787.5 + 2 ~ 789
+		//number of bytes per list. As of Dec 29, 2017, num bytes for thmIndices is 300*21/8 = 787.5 + 2 ~ 789
 		//For wordIndices it is 300 * 2 * 8/8 = 600
 		int varbinaryLen = maxThmsPerLiteralWord * numBitsPerThmIndex / DBUtils.NUM_BITS_PER_BYTE;
 		

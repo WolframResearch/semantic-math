@@ -80,12 +80,40 @@ public class DBUtils {
 		 * indices of thm indices */
 		public static final String literalSearchByteArrayPath = "src/thmp/data/literalSearchByteArray.dat";
 		//multimap of words and the LiteralSearchIndex's for the list of thms containing that word.
+		//June 13, 2018, don't use literal search to save on memory.
 		public static final String literalSearchIndexMMapPath = "src/thmp/data/literalSearchIndexMMap.dat";
 		public static final String TB_NAME = "literalSearchTb";
 		/**thm index*/
 		public static final String WORD_COL = "word";
 		public static final String THM_INDICES_COL = "thmIndices";
 		public static final String WORD_INDICES_COL = "wordIndices";
+	}
+	
+	/**
+	 * Table containing literal search indices, i.e. words (normalized form)
+	 * and thm indices that contain these words.
+	 */
+	public static class ThmHypTb{
+		/**relative (to ~/thm) path to serialization file containing words, and string of list of 
+		 * indices of thm indices */
+		//public static final String literalSearchByteArrayPath = "src/thmp/data/literalSearchByteArray.dat";
+		//multimap of words and the LiteralSearchIndex's for the list of thms containing that word.
+		public static final String thmHypPairsDirPath = "src/thmp/data/pe/";
+		//these purposefully don't have file extension
+		public static final String thmHypPairsNameRoot = "combinedParsedExpressionList";
+		
+		public static final String TB_NAME = "thmHypTb";
+		/**thm index*/		
+		public static final String THM_INDEX_COL = "thmIndex";
+		public static final String THM_COL = "thm";
+		public static final String HYP_COL = "hyp";
+		public static final String FILE_NAME_COL = "fileName";
+		//32767 is 55535/2. A thm or hyp of this length has not been observed, not to mention 
+		//both having this length.
+		public static final int maxThmColLen = 32767;
+		public static final int maxHypColLen = 32767;
+		//max file name length, arXiv file, as characters.
+		public static final int maxFileNameLen = 100;
 	}
 	
 	/**
