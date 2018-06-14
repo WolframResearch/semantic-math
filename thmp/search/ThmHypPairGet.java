@@ -203,11 +203,13 @@ public class ThmHypPairGet{
 	}
 
 	/**
-	 * Return the ThmHypPair with index thmIndex
+	 * Return the ThmHypPair with index thmIndex.
+	 * This is no longer used by main search after moving data to DB. But is still
+	 * used by similar thm computation. Also very useful for debugging on byblis. 
 	 * @param thmIndex
 	 * @return
 	 */
-	public static ThmHypPair retrieveThmHypPairWithThmFromBundle(int thmIndex){
+	public static ThmHypPair retrieveThmHypPairWithThmFromCache(int thmIndex){
 		
 		//index inside the bundleStartThmIndexList, to get the index of the starting thm in bundle.
 		int bundleStartThmIndexListIndex = findBundleBeginIndex(thmIndex);

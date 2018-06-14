@@ -874,9 +874,9 @@ public class SearchIntersection {
 				//e.g. "Banachoid space", where "Banachoid" doesn't yield any hits, so didn't contribute to span.
 				break;
 			}
-			//very useful debug print. Don't delete - April 2018.
+			//very useful debug print. Don't delete - April 2018. Need to debug on byblis.
 			System.out.println(counter+ ": +++ " + pair.thmIndex+". score: "+ pair.score+ " SpanScore " + pair.spanScore + " DistScore " + pair.wordDistScore + " "
-					+ " firstStartScore " + pair.firstStartScore + " " + ThmHypPairGet.retrieveThmHypPairWithThm(pair.thmIndex));
+					+ " firstStartScore " + pair.firstStartScore + " " + ThmHypPairGet.retrieveThmHypPairWithThmFromCache(pair.thmIndex));
 			thmScoreSpanList.add(pair);
 			highestThmList.add(thmIndex);
 			pair = thmScorePQ2.poll();
@@ -1061,7 +1061,7 @@ public class SearchIntersection {
 				tempScoreThmMMap.put(newThmScore, thmIndex);
 				thmScoreMap.put(thmIndex, newThmScore);
 				if (DEBUG) {
-					ThmHypPair thmHypPair = ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex);
+					ThmHypPair thmHypPair = ThmHypPairGet.retrieveThmHypPairWithThmFromCache(thmIndex);
 					String thm = thmHypPair.thmStr();
 					String hyp = thmHypPair.hypStr();
 					System.out.println("Adding bonus " + bonusScore + ". num words hit: " + thmSpanScore
@@ -1560,7 +1560,7 @@ public class SearchIntersection {
 			int counter = 0;
 			System.out.println("~~~~~~~~~~~~~~~~~~~~~~ SEARCH RESULTS ~~~~~~~~~~~~~~~~~~~~~~");
 			for (Integer thmIndex : highestThms) {
-				System.out.println(counter++ + " ++ " + thmIndex + " " + ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex));
+				System.out.println(counter++ + " ++ " + thmIndex + " " + ThmHypPairGet.retrieveThmHypPairWithThmFromCache(thmIndex));
 			}
 		}
 		sc.close();

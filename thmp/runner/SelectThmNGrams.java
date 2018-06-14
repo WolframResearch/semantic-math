@@ -89,7 +89,7 @@ public class SelectThmNGrams {
 			
 			for(int i = startingIndex; i < endingIndex; i++) {
 				
-				ThmHypPair thmHypPair = ThmHypPairGet.retrieveThmHypPairWithThm(i);
+				ThmHypPair thmHypPair = ThmHypPairGet.retrieveThmHypPairWithThmFromCache(i);
 				String thmStr = thmHypPair.getEntireThmStr();
 				//String thmStr = "hi there hdsh wt bunny sf gsg sgrgd dhg sf gsg sgrgd dhg";
 				//String thmStr = "hi there hds khl, jkk$ agsg hi there hds khl. hjkh kh hk gh";

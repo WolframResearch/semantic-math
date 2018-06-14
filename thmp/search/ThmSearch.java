@@ -1,5 +1,6 @@
 package thmp.search;
 
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -17,6 +18,7 @@ import com.wolfram.jlink.*;
 
 import thmp.parse.TheoremContainer;
 import thmp.search.ThmHypPairGet.MxBundleKeyIterator;
+import thmp.utils.DBUtils;
 import thmp.utils.FileUtils;
 import thmp.utils.MathLinkUtils.WLEvaluationMedium;
 import thmp.utils.WordForms;
@@ -430,14 +432,19 @@ public class ThmSearch {
 		}finally{
 			FileUtils.releaseWLEvaluationMedium(medium);
 		}
+		
+		Connection conn = DBUtils.getPooledConnection();
+		
 		System.out.println("Thms with hyp: ");
 		List<Integer> nearestVecList = new ArrayList<Integer>();
 		for(Map.Entry<Double, Integer> entry : distanceIndexMap.entrySet()){
 			int thmIndex = entry.getValue();
 			System.out.print("Dist: " + entry.getKey() + " thmIndex: " + thmIndex + "  ");
-			System.out.println(ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex));
+			System.out.println(ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex, conn));
+			
 			nearestVecList.add(thmIndex);
 		}
+		DBUtils.closePooledConnection(conn);
 		/*for(int i = 0; i < nearestVecList.size(); i++){
 			int thmIndex = nearestVecList.get(i);
 			System.out.println(ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex));

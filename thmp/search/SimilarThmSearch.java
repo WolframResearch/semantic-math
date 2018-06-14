@@ -86,7 +86,7 @@ public class SimilarThmSearch {
 	 */
 	public static List<Integer> preComputeSimilarThm(int thmIndex) {
 		
-		ThmHypPair thmHypPair = ThmHypPairGet.retrieveThmHypPairWithThm(thmIndex);
+		ThmHypPair thmHypPair = ThmHypPairGet.retrieveThmHypPairWithThmFromCache(thmIndex);
 		
 		String thmStr = thmHypPair.thmStr();
 		if(DEBUG) System.out.println("QUERY THM: " + thmHypPair.getEntireThmStr());

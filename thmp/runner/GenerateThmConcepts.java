@@ -63,7 +63,7 @@ public class GenerateThmConcepts {
 		
 		while(counter++ < 10) {
 			byte[] bytes = thmConceptsMap.get(counter);
-			ThmHypPair thmHypPair = ThmHypPairGet.retrieveThmHypPairWithThm(counter);
+			ThmHypPair thmHypPair = ThmHypPairGet.retrieveThmHypPairWithThmFromCache(counter);
 			
 			System.out.println(thmHypPair.thmStr());
 			
@@ -94,7 +94,7 @@ public class GenerateThmConcepts {
 		int totalThmCount = ThmHypPairGet.totalThmsCount();
 		
 		for(int i = 0; i < totalThmCount; i++) {				
-			ThmHypPair thmHypPair = ThmHypPairGet.retrieveThmHypPairWithThm(i);			
+			ThmHypPair thmHypPair = ThmHypPairGet.retrieveThmHypPairWithThmFromCache(i);			
 			String thmStr = thmHypPair.thmStr();
 			
 			thmConceptsMap.put(i, ConceptSearch.getThmWordsIndexByteArray(thmStr));				

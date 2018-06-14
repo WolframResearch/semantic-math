@@ -85,7 +85,7 @@ public class RelationalSearch implements Searcher<Set<Integer>>{
 			int count = NUM_NEAREST;
 			for(int d : bestCommonVecs){
 				if(count < 1) break;
-				System.out.println(ThmHypPairGet.retrieveThmHypPairWithThm(d));
+				System.out.println(ThmHypPairGet.retrieveThmHypPairWithThmFromCache(d));
 				count--;
 			}
 		}
