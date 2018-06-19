@@ -160,16 +160,6 @@ public class SimilarThmUtils {
 		
 		curBitCounter += bitDivider;
 		
-		/*for( ; curBitCounter < bitDivider ; curBitCounter++) {			
-			byte tempRem = (byte)(Math.log(curByte) / Math.log(2)); //HERE
-			if(tempRem >= 0) {
-				zeroOneAr[8 - curBitCounter] = 1;
-				remainder = tempRem;
-				if(tempRem == 0) {
-					break;
-				}
-			}
-		}*/
 		final int maxNumBytesSpan = (int)Math.ceil(((double)numBitsPerIndex)/NUM_BITS_PER_BYTE);
 		//4 because 3 is the maximal number of bytes NUM_BITS_PER_INDEX spans
 		outerFor: for(int i = 1; i <= maxNumBytesSpan && curBitCounter < numBitsPerIndex; i++) {

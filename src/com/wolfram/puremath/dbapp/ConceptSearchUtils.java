@@ -89,7 +89,7 @@ public class ConceptSearchUtils {
 		//populate table from serialized similar thms indices
 		@SuppressWarnings("unchecked")
 		List<Map<Integer, byte[]>> thmConceptsMapList 
-			= (List<Map<Integer, byte[]>>)FileUtils.deserializeListFromFile(DBUtils.ThmConceptsTb.thmConceptsByteArrayPath);
+			= (List<Map<Integer, byte[]>>)DBUtils.deserializeListFromFile(DBUtils.ThmConceptsTb.thmConceptsByteArrayPath);
 		
 		Map<Integer, byte[]> thmConceptsMap = thmConceptsMapList.get(0);
 		

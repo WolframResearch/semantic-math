@@ -16,7 +16,6 @@ import com.wolfram.puremath.dbapp.DBUtils.LiteralSearchTb;
 import thmp.search.LiteralSearch;
 import thmp.search.LiteralSearch.LiteralSearchIndex;
 import thmp.search.Searcher;
-import thmp.utils.FileUtils;
 
 /**
  * DB utilities class for literal search. Used for encoding
@@ -122,7 +121,7 @@ public class LiteralSearchUtils {
 		//populate table from serialized similar thms indices
 		@SuppressWarnings("unchecked")
 		List<ListMultimap<String, LiteralSearchIndex>> literalSearchMapList 
-			= (List<ListMultimap<String, LiteralSearchIndex>>)FileUtils
+			= (List<ListMultimap<String, LiteralSearchIndex>>)DBUtils
 				.deserializeListFromFile(DBUtils.LiteralSearchTb.literalSearchIndexMMapPath);
 		
 		ListMultimap<String, LiteralSearchIndex> literalIndexMMap = literalSearchMapList.get(0);

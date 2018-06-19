@@ -1,5 +1,12 @@
 package com.wolfram.puremath.dbapp;
 
+import java.io.Closeable;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -33,7 +40,12 @@ public class DBUtils {
 	public static final String AUTHOR_TB_FIRSTNAME_COL = "firstName";
 	public static final String AUTHOR_TB_MIDDLENAME_COL = "middleName";
 	public static final String AUTHOR_TB_LASTNAME_COL = "lastName";
-	public static final String AUTHOR_TB_CSV_PATH = "src/thmp/data/metaDataNameDB.csv";
+	//public static final String AUTHOR_TB_CSV_PATH = "src/thmp/data/metaDataNameDB.csv";
+	///home/usr0/yihed/thm
+	public static final String AUTHOR_TB_CSV_REL_PATH = "           src/thmp/data/metaDataNameDB.csv";
+	//default directory path
+	public static final String defaultDirPath = "/home/usr0/yihed/thm";
+	//public static final Path defaultDirPath = Paths.get(defaultDirPathStr);
 	
 	public static final int NUM_BITS_PER_BYTE = 8;
 	
@@ -98,7 +110,8 @@ public class DBUtils {
 		 * indices of thm indices */
 		//public static final String literalSearchByteArrayPath = "src/thmp/data/literalSearchByteArray.dat";
 		//multimap of words and the LiteralSearchIndex's for the list of thms containing that word.
-		public static final String thmHypPairsDirPath = "src/thmp/data/pe/";
+		public static final String thmHypPairsDirRelPath = "src/thmp/data/pe/";
+		
 		//these purposefully don't have file extension
 		public static final String thmHypPairsNameRoot = "combinedParsedExpressionList";
 		
@@ -110,10 +123,10 @@ public class DBUtils {
 		public static final String FILE_NAME_COL = "fileName";
 		//32767 is 55535/2. A thm or hyp of this length has not been observed, not to mention 
 		//both having this length.
-		public static final int maxThmColLen = 32767;
-		public static final int maxHypColLen = 32767;
+		public static final int maxThmColLen = 32700; //32767;
+		public static final int maxHypColLen = 32700; //32767;
 		//max file name length, arXiv file, as characters.
-		public static final int maxFileNameLen = 100;
+		public static final int maxFileNameLen = 50;
 	}
 	
 	/**
@@ -254,4 +267,53 @@ public class DBUtils {
 		ds.setDatabaseName(dbName);		
 		return ds;
 	}
+	
+	/**
+	 * Deserialize objects from file supplied by serialFileStr.
+	 * **Don't forget to ensure that
+	 * path must include servlet path! I.e. real path on machine.
+	 * 
+	 * @param serialFileStr
+	 * @return *List* of objects from the file.
+	 */
+	public static Object deserializeListFromFile(String serialFileStr) {
+		FileInputStream fileInputStream = null;
+		try {
+			fileInputStream = new FileInputStream(serialFileStr);
+		} catch (FileNotFoundException e) {
+			String msg = "Serialization data file not found! " + serialFileStr;
+			logger.error(msg);
+			throw new IllegalStateException(msg);
+		}
+
+		ObjectInputStream objectInputStream = null;
+		try {
+			objectInputStream = new ObjectInputStream(fileInputStream);
+			return objectInputStream.readObject();
+		} catch (ClassNotFoundException | IOException e) {
+			String msg = "Exception while opening ObjectOutputStream " + e;
+			logger.error(msg);
+			throw new IllegalStateException(msg);
+		} finally {
+			silentClose(fileInputStream);
+		}
+	}
+	
+	/**
+	 * Closing resource, loggin possible IOException, without clobbering existing
+	 * Exceptions if any has been thrown.
+	 * 
+	 * @param fileInputStream
+	 */
+	private static void silentClose(Closeable resource) {
+		if (null == resource)
+			return;
+		try {
+			resource.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+			logger.error("IOException while closing resource: " + resource);
+		}
+	}
+	
 }

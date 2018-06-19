@@ -1,5 +1,7 @@
 package com.wolfram.puremath.dbapp;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -8,12 +10,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.wolfram.puremath.dbapp.DBUtils.SimilarThmsTb;
-
-import thmp.utils.FileUtils;
 
 /**
  * Utilities used for deploying DB.
@@ -32,15 +37,12 @@ public class DBDeploy {
 	 * to default file if none supplied. e.g. "metaDataNameDB.csv"
 	 * @throws SQLException 
 	 */
-	public static void populateAuthorTb(Connection conn, String... filePathAr) throws SQLException {
+	public static void populateAuthorTb(Connection conn, String dataRootDirPath) throws SQLException {
 		
 		PreparedStatement pstm;
-		String csvFilePath;
-		if(filePathAr.length > 0) {
-			csvFilePath = filePathAr[0];
-		}else {
-			csvFilePath = DBUtils.AUTHOR_TB_CSV_PATH;
-		}
+		//don't like using .toString(), but only option!
+		String authorTbCsvAbsPath = Paths.get(dataRootDirPath, DBUtils.AUTHOR_TB_CSV_REL_PATH).toString();
+		
 		pstm = conn.prepareStatement("TRUNCATE " + DBUtils.AUTHOR_TB_NAME + ";");		
 		pstm.executeUpdate();
 		
@@ -60,8 +62,9 @@ public class DBDeploy {
 		 * INTO TABLE authorTb COLUMNS TERMINATED BY "," OPTIONALLY ENCLOSED BY "'" ESCAPED BY "\\";
 		 */		
 		pstm = conn.prepareStatement("LOAD DATA INFILE ? INTO TABLE " + DBUtils.AUTHOR_TB_NAME 
-				+ " COLUMNS TERMINATED BY ',' OPTIONALLY ENCLOSED BY ''' ESCAPED BY '\\';");
-		pstm.setString(1, csvFilePath);
+				+ " COLUMNS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\'' ESCAPED BY '\\';");
+		
+		pstm.setString(1, authorTbCsvAbsPath);
 		
 		int rowsCount = pstm.executeUpdate();
 		logger.info("ResultSet from loading csv data: "+rowsCount);
@@ -110,7 +113,7 @@ public class DBDeploy {
 		//populate table from serialized similar thms indices
 		@SuppressWarnings("unchecked")
 		List<Map<Integer, byte[]>> similarThmsMapList 
-			= (List<Map<Integer, byte[]>>)FileUtils.deserializeListFromFile(DBUtils.SimilarThmsTb.similarThmCombinedIndexByteArrayPath);
+			= (List<Map<Integer, byte[]>>)DBUtils.deserializeListFromFile(DBUtils.SimilarThmsTb.similarThmCombinedIndexByteArrayPath);
 		
 		Map<Integer, byte[]> similarThmsMap = similarThmsMapList.get(0);
 		
@@ -160,21 +163,55 @@ public class DBDeploy {
 		}*/
 	}
 	
-	private static void deployAllTables() throws SQLException{
+	/**
+	 * Deploys db tables. 
+	 * @param absolute path to directory containing data parent directory src/thmp/data.
+	 * @throws SQLException
+	 */
+	private static void deployAllTables(String dirpath) throws SQLException{
 		Connection conn = DBUtils.getLocalConnection();
 		
-		populateSimilarThmsTb(conn);
+		//June18: don't deploy to DB, populateSimilarThmsTb(conn);
 		
-		populateAuthorTb(conn);
+		//temporary comment out!! June populateAuthorTb(conn);
+		//ThmHypUtils.createThmHypTb(conn);
+		ThmHypUtils.populateThmHypTb(conn, dirpath);
 		
 		//June13: don't deploy to DB, redundant wrt wordmap LiteralSearchUtils.populateLiteralSearchTb(conn);
 		
 		conn.close();
 	}
 	
-	public static void main(String[] args) throws SQLException {
+	/**
+	 * sets command-line option values
+	 * 
+	 * @return CommandLine object to 
+	 * @throws ParseException 
+	 */
+	private static CommandLine parseOpt(String[] args) throws ParseException {
+		Options opt = new Options();
+		opt.addOption("dirpath", false, 
+				"absolute path to directory containing data parent directory src/thmp/data");
 		
-		deployAllTables();
+		CommandLineParser parser = new DefaultParser();
+		return parser.parse(opt, args);		
+	}
+	
+	public static void main(String[] args) throws SQLException, ParseException {
+		
+		CommandLine cmd = null;
+		String dirPath;
+		
+		try {
+			cmd = parseOpt(args);
+			dirPath = cmd.getOptionValue("dirpath");
+		}catch(ParseException e) {
+			System.out.println("Can't parse options. Using default values. Path: " + DBUtils.defaultDirPath);
+			dirPath = DBUtils.defaultDirPath;
+		}
+		
+		deployAllTables(dirPath);
+		
 		/*
 		 * boolean b = false;
 		if(b) {

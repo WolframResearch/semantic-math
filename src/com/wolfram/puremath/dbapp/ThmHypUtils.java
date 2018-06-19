@@ -8,11 +8,10 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import com.wolfram.puremath.dbapp.DBUtils.LiteralSearchTb;
+
 import com.wolfram.puremath.dbapp.DBUtils.ThmHypTb;
 
 import thmp.search.SearchCombined.ThmHypPair;
-import thmp.utils.FileUtils;
 
 /**
  * This class creates and deploys DB for storing thm and hyp strings, 
@@ -142,7 +141,7 @@ public class ThmHypUtils {
 	 * @param conn
 	 * @throws SQLException
 	 */
-	public static void populateLiteralSearchTb(Connection conn) throws SQLException {
+	public static void populateThmHypTb(Connection conn, String dataRootDirPath) throws SQLException {
 		
 		/*If creating table, should be created as e.g.
 		 * CREATE TABLE literalSearchTb (word VARCHAR(15), thmIndices VARBINARY(789), wordIndices VARBINARY(600))
@@ -176,11 +175,12 @@ public class ThmHypUtils {
 				+ " MODIFY " + ThmHypTb.FILE_NAME_COL + " VARCHAR(" + ThmHypTb.maxFileNameLen + ");");
 		pstm.executeUpdate();
 		
-		pstm = conn.prepareStatement("ALTER TABLE " + LiteralSearchTb.TB_NAME + " DROP PRIMARY KEY;");
+		pstm = conn.prepareStatement("ALTER TABLE " + ThmHypTb.TB_NAME + " DROP PRIMARY KEY;");
 		pstm.executeUpdate();
 		
 		//populate table from serialized thmhyp pairs
-		File[] thmHypPairsFiles = new File(ThmHypTb.thmHypPairsDirPath).listFiles();
+		
+		File[] thmHypPairsFiles = new File(dataRootDirPath, ThmHypTb.thmHypPairsDirRelPath).listFiles();
 		//all files take form combinedParsedExpressionList + index
 		int thmHypPairsFilesSz = thmHypPairsFiles.length;
 		
@@ -207,7 +207,7 @@ public class ThmHypUtils {
 		.append(",").append(ThmHypTb.THM_COL)
 		.append(",").append(ThmHypTb.HYP_COL)
 		.append(",").append(ThmHypTb.FILE_NAME_COL)
-		.append(") VALUES(?, ?, ?);") ;	
+		.append(") VALUES(?, ?, ?, ?);") ;	
 		
 		pstm = conn.prepareStatement(sb.toString());
 		
@@ -226,8 +226,8 @@ public class ThmHypUtils {
 		for(int j = 0; j < thmHypPairsFilesSz; j++) {
 			
 			@SuppressWarnings("unchecked")
-			List<ThmHypPair> thmHypPairList = (List<ThmHypPair>)FileUtils
-				.deserializeListFromFile(ThmHypTb.thmHypPairsDirPath + ThmHypTb.thmHypPairsNameRoot+j);
+			List<ThmHypPair> thmHypPairList = (List<ThmHypPair>)DBUtils
+				.deserializeListFromFile(ThmHypTb.thmHypPairsDirRelPath + ThmHypTb.thmHypPairsNameRoot+j);
 			
 			System.out.println("About to insert batch " + j);
 			for(ThmHypPair thmHypPair : thmHypPairList) {
@@ -243,14 +243,80 @@ public class ThmHypUtils {
 				int counter = maxThmsPerLiteralWord;*/
 				
 				pstm.setInt(1, thmIndex);
-				pstm.setString(1, thmStr);
-				pstm.setString(1, hypStr);
-				pstm.setString(3, fileName);
+				pstm.setString(2, thmStr);
+				pstm.setString(3, hypStr);
+				pstm.setString(4, fileName);
 				
 				pstm.addBatch();
 			}
 			pstm.executeBatch();			
 		}
 	}
+
+	/**
+	 * Create the ThmHypTb table.
+	 * @param conn
+	 * @throws SQLException
+	 */
+	public static void createThmHypTb(Connection conn) throws SQLException {
+		
+		PreparedStatement pstm;
+		StringBuilder sb = new StringBuilder(50);
+		
+		//don't create if table already exists:
+		sb.append("SELECT 1 FROM ").append(ThmHypTb.TB_NAME).append(" LIMIT 1;");
+		pstm = conn.prepareStatement(sb.toString());
+		
+		ResultSet rs = null;
+		try {
+			rs = pstm.executeQuery();
+		}catch(SQLException e) {
+			System.out.println("!!e "+e);
+			//pass, E.g. is table does not already exist.			
+		}finally {
+			System.out.println("!!rs "+rs);
+			if(rs != null && rs.next()) {
+				return;
+			}	
+		}
+		//CREATE TABLE pet (name VARCHAR(20), owner VARCHAR(20),
+		//	    -> species VARCHAR(20), sex CHAR(1), birth DATE, death DATE);
+		//CREATE TABLE literalSearchTb (word VARCHAR(15), thmIndices VARBINARY(789), wordIndices VARBINARY(600))
+		
+		sb.setLength(0);
+		sb.append("CREATE TABLE ").append(ThmHypTb.TB_NAME)
+		.append(" (").append(ThmHypTb.THM_INDEX_COL).append(" INTEGER, ")
+		.append(ThmHypTb.THM_COL).append(" VARCHAR(" + ThmHypTb.maxThmColLen + "),")
+		.append(ThmHypTb.HYP_COL).append(" VARCHAR(" + ThmHypTb.maxHypColLen + "),")
+		.append(ThmHypTb.FILE_NAME_COL).append(" VARCHAR(" + ThmHypTb.maxFileNameLen + "));");
+		
+		pstm = conn.prepareStatement(sb.toString());
+		pstm.executeUpdate();
+		
+		sb = new StringBuilder(50);
+		
+		sb.append("ALTER TABLE ").append(ThmHypTb.TB_NAME)
+		.append(" ADD PRIMARY KEY (")
+		.append(ThmHypTb.THM_INDEX_COL).append(");");
+		
+		pstm = conn.prepareStatement(sb.toString());
+		pstm.executeUpdate();
+		
+	}
+	
+	/** Deletes the ThmHypTb table.
+	 * @param conn
+	 * @throws SQLException
+	 */
+	public static void dropThmHypTb(Connection conn) throws SQLException {
+		
+		//DROP [TEMPORARY] TABLE [IF EXISTS]
+	    //tbl_name
+		PreparedStatement pstm;
+		
+		pstm = conn.prepareStatement("DROP TABLE IF EXISTS " + ThmHypTb.TB_NAME + ";");		
+		pstm.executeUpdate();		
+	}
+	
 	
 }
