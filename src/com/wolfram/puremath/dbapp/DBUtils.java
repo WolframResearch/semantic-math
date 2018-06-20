@@ -33,16 +33,9 @@ public class DBUtils {
 	public static final String DEFAULT_SERVER = "localhost";
 	public static final int DEFAULT_PORT = 3306;	
 	public static final String DEFAULT_DB_NAME = "thmDB";
-	public static final String AUTHOR_TB_NAME = "authorTb";
+	//public static final String AUTHOR_TB_NAME = "authorTb";
 	//public static final String AUTHOR_TB_PRIMARY_KEY = "PRIMARY";
-	public static final String AUTHOR_TB_THMID_COL = "thmId";
-	//names of columns to create index on 
-	public static final String AUTHOR_TB_FIRSTNAME_COL = "firstName";
-	public static final String AUTHOR_TB_MIDDLENAME_COL = "middleName";
-	public static final String AUTHOR_TB_LASTNAME_COL = "lastName";
-	//public static final String AUTHOR_TB_CSV_PATH = "src/thmp/data/metaDataNameDB.csv";
-	///home/usr0/yihed/thm
-	public static final String AUTHOR_TB_CSV_REL_PATH = "           src/thmp/data/metaDataNameDB.csv";
+	
 	//default directory path
 	public static final String defaultDirPath = "/home/usr0/yihed/thm";
 	//public static final Path defaultDirPath = Paths.get(defaultDirPathStr);
@@ -51,6 +44,23 @@ public class DBUtils {
 	
 	private static final Logger logger = LogManager.getLogger(DBUtils.class);
 	private static final int STM_EXECUTATION_FAILURE = -1;
+	
+	public static class AuthorTb{
+		
+		public static final String TB_NAME = "authorTb";
+		
+		public static final String THMID_COL = "thmId";
+		//names of columns to create index on 
+		public static final String FIRSTNAME_COL = "firstName";
+		public static final String MIDDLENAME_COL = "middleName";
+		public static final String LASTNAME_COL = "lastName";
+		//public static final String AUTHOR_TB_CSV_PATH = "src/thmp/data/metaDataNameDB.csv";
+		///home/usr0/yihed/thm
+		/**relative (to ~/thm) path to serialization file containing thm index, and string of list of 
+		 * indices of similar thms */
+		public static final String CSV_REL_PATH = "src/thmp/data/metaDataNameDB.csv";
+			
+	}
 	
 	public static class SimilarThmsTb{
 		/**relative (to ~/thm) path to serialization file containing thm index, and string of list of 
@@ -137,9 +147,9 @@ public class DBUtils {
 		
 		List<String> indexes = new ArrayList<String>();
 		//AUTHOR_TB_FIRSTNAME_Index;
-		indexes.add(AUTHOR_TB_FIRSTNAME_COL);
-		indexes.add(AUTHOR_TB_MIDDLENAME_COL);
-		indexes.add(AUTHOR_TB_LASTNAME_COL);
+		indexes.add(AuthorTb.FIRSTNAME_COL);
+		indexes.add(AuthorTb.MIDDLENAME_COL);
+		indexes.add(AuthorTb.LASTNAME_COL);
 		return indexes;
 	}
 	
@@ -314,6 +324,11 @@ public class DBUtils {
 			e.printStackTrace();
 			logger.error("IOException while closing resource: " + resource);
 		}
+	}
+	
+	public static void renameTable(Connection conn, String fromName, String toName) {
+		//RENAME TABLE `group` TO `member`;
+		
 	}
 	
 }

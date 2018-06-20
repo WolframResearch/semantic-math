@@ -1,6 +1,5 @@
 package com.wolfram.puremath.dbapp;
 
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -30,64 +29,6 @@ import com.wolfram.puremath.dbapp.DBUtils.SimilarThmsTb;
 public class DBDeploy {
 
 	private static final Logger logger = LogManager.getLogger(DBDeploy.class);
-	
-	/**
-	 * Truncates the table , populates it with data from supplied csv file.
-	 * @param csvFilePath Path to CSV file containing data to populate table with, resort
-	 * to default file if none supplied. e.g. "metaDataNameDB.csv"
-	 * @throws SQLException 
-	 */
-	public static void populateAuthorTb(Connection conn, String dataRootDirPath) throws SQLException {
-		
-		PreparedStatement pstm;
-		//don't like using .toString(), but only option!
-		String authorTbCsvAbsPath = Paths.get(dataRootDirPath, DBUtils.AUTHOR_TB_CSV_REL_PATH).toString();
-		
-		pstm = conn.prepareStatement("TRUNCATE " + DBUtils.AUTHOR_TB_NAME + ";");		
-		pstm.executeUpdate();
-		
-		//ALTER TABLE user_customer_permission DROP PRIMARY KEY;
-		pstm = conn.prepareStatement("ALTER TABLE " + DBUtils.AUTHOR_TB_NAME + " DROP PRIMARY KEY;");
-		pstm.executeUpdate();
-		
-		List<String> indexList = DBUtils.getAuthorTbIndexes();
-		for(String index : indexList) {
-			//including quotes result in syntax error. Do not setting string.
-			pstm = conn.prepareStatement("DROP INDEX " + index + " ON " + DBUtils.AUTHOR_TB_NAME + ";");		
-			pstm.executeUpdate();
-		}		
-				
-		/*LOAD DATA INFILE  command
-		 * mysql> LOAD DATA INFILE "/usr/share/tomcat/webapps/theoremSearchTest/src/thmp/data/metaDataNameDB.csv" 
-		 * INTO TABLE authorTb COLUMNS TERMINATED BY "," OPTIONALLY ENCLOSED BY "'" ESCAPED BY "\\";
-		 */		
-		pstm = conn.prepareStatement("LOAD DATA INFILE ? INTO TABLE " + DBUtils.AUTHOR_TB_NAME 
-				+ " COLUMNS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\'' ESCAPED BY '\\';");
-		
-		pstm.setString(1, authorTbCsvAbsPath);
-		
-		int rowsCount = pstm.executeUpdate();
-		logger.info("ResultSet from loading csv data: "+rowsCount);
-		
-		//add keys back
-		//CREATE INDEX authorIndex ON authorTb (author);
-		StringBuilder keySb = new StringBuilder(200);
-		keySb.append("ALTER TABLE ").append(DBUtils.AUTHOR_TB_NAME)
-		.append(" ADD PRIMARY KEY (")
-		.append(DBUtils.AUTHOR_TB_THMID_COL).append(",")
-		.append(DBUtils.AUTHOR_TB_FIRSTNAME_COL).append(",")
-		.append(DBUtils.AUTHOR_TB_MIDDLENAME_COL).append(",")
-		.append(DBUtils.AUTHOR_TB_LASTNAME_COL).append(");");
-		pstm = conn.prepareStatement(keySb.toString());
-		
-		pstm.executeUpdate();
-		
-		for(String index : indexList) {
-			pstm = conn.prepareStatement("CREATE INDEX " + index + " ON " + DBUtils.AUTHOR_TB_NAME 
-					+ " (" + DBUtils.AUTHOR_TB_NAME + ");");	
-			pstm.executeUpdate();
-		}		
-	}
 	
 	public static void populateSimilarThmsTb(Connection conn) throws SQLException {
 		
@@ -178,6 +119,23 @@ public class DBDeploy {
 		ThmHypUtils.populateThmHypTb(conn, dirpath);
 		
 		//June13: don't deploy to DB, redundant wrt wordmap LiteralSearchUtils.populateLiteralSearchTb(conn);
+		
+		conn.close();
+	}
+	
+	//deploy tables, check for exception, if none, rename, and delete previous table.
+	//
+	public static void deploy( ) {
+		
+		Connection conn = DBUtils.getLocalConnection();
+		try {
+			AuthorUtils.createAuthorTb( , conn);
+		}catch() {
+			
+			//delete tables that were created 
+			
+		}
+		//rename at end, so all tables consistent
 		
 		conn.close();
 	}
