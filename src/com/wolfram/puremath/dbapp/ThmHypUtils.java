@@ -253,18 +253,23 @@ public class ThmHypUtils {
 		}
 	}
 
+	
+	public static void createThmHypTb(Connection conn) throws SQLException {
+		createThmHypTb(conn, ThmHypTb.TB_NAME);
+	}
+	
 	/**
 	 * Create the ThmHypTb table.
 	 * @param conn
 	 * @throws SQLException
 	 */
-	public static void createThmHypTb(Connection conn) throws SQLException {
+	public static void createThmHypTb(Connection conn, String tableName) throws SQLException {
 		
 		PreparedStatement pstm;
 		StringBuilder sb = new StringBuilder(50);
 		
 		//don't create if table already exists:
-		sb.append("SELECT 1 FROM ").append(ThmHypTb.TB_NAME).append(" LIMIT 1;");
+		sb.append("SELECT 1 FROM ").append(tableName).append(" LIMIT 1;");
 		pstm = conn.prepareStatement(sb.toString());
 		
 		ResultSet rs = null;
@@ -284,7 +289,7 @@ public class ThmHypUtils {
 		//CREATE TABLE literalSearchTb (word VARCHAR(15), thmIndices VARBINARY(789), wordIndices VARBINARY(600))
 		
 		sb.setLength(0);
-		sb.append("CREATE TABLE ").append(ThmHypTb.TB_NAME)
+		sb.append("CREATE TABLE ").append(tableName)
 		.append(" (").append(ThmHypTb.THM_INDEX_COL).append(" INTEGER, ")
 		.append(ThmHypTb.THM_COL).append(" VARCHAR(" + ThmHypTb.maxThmColLen + "),")
 		.append(ThmHypTb.HYP_COL).append(" VARCHAR(" + ThmHypTb.maxHypColLen + "),")
@@ -295,7 +300,7 @@ public class ThmHypUtils {
 		
 		sb = new StringBuilder(50);
 		
-		sb.append("ALTER TABLE ").append(ThmHypTb.TB_NAME)
+		sb.append("ALTER TABLE ").append(tableName)
 		.append(" ADD PRIMARY KEY (")
 		.append(ThmHypTb.THM_INDEX_COL).append(");");
 		

@@ -4,6 +4,8 @@ import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -17,7 +19,9 @@ import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.wolfram.puremath.dbapp.DBUtils.AuthorTb;
 import com.wolfram.puremath.dbapp.DBUtils.SimilarThmsTb;
+import com.wolfram.puremath.dbapp.DBUtils.ThmHypTb;
 
 /**
  * Utilities used for deploying DB.
@@ -128,16 +132,64 @@ public class DBDeploy {
 	public static void deploy( ) {
 		
 		Connection conn = DBUtils.getLocalConnection();
-		try {
-			AuthorUtils.createAuthorTb( , conn);
-		}catch() {
-			
-			//delete tables that were created 
-			
-		}
-		//rename at end, so all tables consistent
+		List<String> tablesCreated = new ArrayList<String>();
+		//keys are temp names the prev working tables moved to, values are actual names.
+		Map<String, String> tempNameRealNameMap = new HashMap<String, String>();
 		
-		conn.close();
+		
+			try{
+				String authorTbName = AuthorTb.TB_NAME + DBUtils.newNameSuffix;
+				AuthorUtils.createAuthorTb(conn, authorTbName);
+				//can add for deletion, even though won't exist at the end, since deletion
+				//only happens if table exists. This needs to be added in case subsequent 
+				//ops get interrupted.
+				tablesCreated.add(authorTbName);	
+				
+				String thmHypTbName = ThmHypTb.TB_NAME + DBUtils.newNameSuffix;
+				ThmHypUtils.createThmHypTb(conn, thmHypTbName);
+				tablesCreated.add(thmHypTbName);	
+				
+				/***Done creating new tables, now rename***/
+				//rename at end, so all tables consistent
+				String tempName = AuthorTb.TB_NAME + "temp";
+				
+				DBUtils.renameTable(conn, AuthorTb.TB_NAME, tempName);
+				tablesCreated.add(tempName);
+				
+				tempNameRealNameMap.put(tempName, AuthorTb.TB_NAME);
+				DBUtils.renameTable(conn, authorTbName, AuthorTb.TB_NAME);
+				
+				//changing thmHypTabl 
+				tempName = ThmHypTb.TB_NAME + "temp";
+				DBUtils.renameTable(conn, ThmHypTb.TB_NAME, tempName);
+				tablesCreated.add(tempName);	
+				tempNameRealNameMap.put(tempName, ThmHypTb.TB_NAME);
+				DBUtils.renameTable(conn, thmHypTbName, ThmHypTb.TB_NAME);
+				
+			}catch(SQLException e) {
+				//only need to do something if the previous working table got named to name+temp.
+				//in which case restore these tables.
+				for(Map.Entry<String, String> entry : tempNameRealNameMap.entrySet()) {
+					try {
+						DBUtils.renameTable(conn, entry.getKey(), entry.getValue());
+					}catch(SQLException e1) {
+						//pass
+					}
+				}
+				
+			}finally {
+				//delete tables that were created 
+				for(String tableName : tablesCreated) {
+					try {
+						DBUtils.dropTableIfExists(conn, tableName);
+					}catch(SQLException e) {
+						//pass these since these are Exceptions during cleanup phase
+						
+					}
+				}				
+				DBUtils.silentCloseConn(conn);
+			}
+					
 	}
 	
 	/**

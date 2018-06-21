@@ -5,8 +5,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -33,8 +31,8 @@ public class DBUtils {
 	public static final String DEFAULT_SERVER = "localhost";
 	public static final int DEFAULT_PORT = 3306;	
 	public static final String DEFAULT_DB_NAME = "thmDB";
-	//public static final String AUTHOR_TB_NAME = "authorTb";
-	//public static final String AUTHOR_TB_PRIMARY_KEY = "PRIMARY";
+	//string to append to 
+	public static String newNameSuffix = "new";
 	
 	//default directory path
 	public static final String defaultDirPath = "/home/usr0/yihed/thm";
@@ -140,7 +138,8 @@ public class DBUtils {
 	}
 	
 	/**
-	 * Get list of indexes for authorTb. 
+	 * Get list of indexes for authorTb. The index names are also 
+	 * column names, so can be used to add that index.
 	 * @return
 	 */
 	public static final List<String> getAuthorTbIndexes(){
@@ -326,9 +325,41 @@ public class DBUtils {
 		}
 	}
 	
-	public static void renameTable(Connection conn, String fromName, String toName) {
+	public static void renameTable(Connection conn, String fromName, String toName) throws SQLException {
 		//RENAME TABLE `group` TO `member`;
+		PreparedStatement pstm;
 		
+		pstm = conn.prepareStatement("RENAME TABLE `?` TO `?`;");
+		pstm.setString(1, "fromName");
+		pstm.setString(2, "toName");
+		pstm.executeUpdate();	
+	}
+	
+	/** Removes the named table if exists.
+	 * @param conn
+	 * @param tableName table to drop.
+	 * @throws SQLException
+	 */
+	public static void dropTableIfExists(Connection conn, String tableName) throws SQLException {
+		
+		//DROP [TEMPORARY] TABLE [IF EXISTS] tbl_name
+		PreparedStatement pstm;
+		
+		pstm = conn.prepareStatement("DROP TABLE IF EXISTS " + tableName + ";");		
+		pstm.executeUpdate();		
+	}
+	
+	/**
+	 * Close connection without throwing SQLException.
+	 * @param conn
+	 */
+	public static void silentCloseConn(Connection conn) {
+		try {
+			conn.close();
+		}catch(SQLException e) {
+			String msg = "SQLException while closing connection " + e;
+			logger.error(msg);
+		}
 	}
 	
 }

@@ -43,6 +43,7 @@ public class AuthorUtils {
 		pstm = conn.prepareStatement("ALTER TABLE " + AuthorTb.TB_NAME + " DROP PRIMARY KEY;");
 		pstm.executeUpdate();
 		
+		//the indexes are also column names.
 		List<String> indexList = DBUtils.getAuthorTbIndexes();
 		for(String index : indexList) {
 			//including quotes result in syntax error. Do not setting string.
@@ -76,8 +77,9 @@ public class AuthorUtils {
 		pstm.executeUpdate();
 		
 		for(String index : indexList) {
-			pstm = conn.prepareStatement("CREATE INDEX " + index + " ON " + DBUtils.AUTHOR_TB_NAME 
-					+ " (" + DBUtils.AUTHOR_TB_NAME + ");");
+			//ON tbl_name (index_col_name,...), the indexes are also column names.
+			pstm = conn.prepareStatement("CREATE INDEX " + index + " ON " + AuthorTb.TB_NAME 
+					+ " (" + index + ");");
 			pstm.executeUpdate();
 		}		
 	}
@@ -94,10 +96,10 @@ public class AuthorUtils {
 		StringBuilder sb = new StringBuilder(50);
 		
 		//just drop table instead of checking.
-		dropAuthorTb(conn, tableName);
+		DBUtils.dropTableIfExists(conn, tableName);
 		
 		//don't create if table already exists:
-		sb.append("SELECT 1 FROM ").append(AuthorTb.TB_NAME).append(" LIMIT 1;");
+		/*sb.append("SELECT 1 FROM ").append(AuthorTb.TB_NAME).append(" LIMIT 1;");
 		pstm = conn.prepareStatement(sb.toString());
 		
 		ResultSet rs = null;
@@ -107,11 +109,12 @@ public class AuthorUtils {
 			System.out.println("!!e "+e);
 			//pass, E.g. is table does not already exist.			
 		}finally {
-			System.out.println("!!rs "+rs);
+			
 			if(rs != null && rs.next()) {
 				return;
 			}	
-		}
+		}*/
+		
 		//CREATE TABLE pet (name VARCHAR(20), owner VARCHAR(20),
 		//	    -> species VARCHAR(20), sex CHAR(1), birth DATE, death DATE);
 		//CREATE TABLE literalSearchTb (word VARCHAR(15), thmIndices VARBINARY(789), wordIndices VARBINARY(600))
@@ -136,22 +139,6 @@ public class AuthorUtils {
 		pstm.executeUpdate();
 		
 	}
-	
-	/** Deletes the ThmHypTb table.
-	 * @param conn
-	 * @param tableName table to drop.
-	 * @throws SQLException
-	 */
-	public static void dropAuthorTb(Connection conn, String tableName) throws SQLException {
-		
-		//DROP [TEMPORARY] TABLE [IF EXISTS]
-	    //tbl_name
-		PreparedStatement pstm;
-		
-		pstm = conn.prepareStatement("DROP TABLE IF EXISTS " + AuthorTb.TB_NAME + ";");		
-		pstm.executeUpdate();		
-	}
-	
 	
 	
 }
