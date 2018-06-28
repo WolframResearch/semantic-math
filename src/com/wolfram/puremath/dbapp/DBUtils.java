@@ -191,11 +191,9 @@ public class DBUtils {
 	 */
 	public static ResultSet executeSqlStatement(PreparedStatement pstm, Connection conn) {
 		
-		try {
-			
+		try {			
 			//e.g. CREATE TABLE authorTb (thmId INT(20), author VARCHAR(20), content VARCHAR(200))
-			//or INSERT INTO authorTb (thmId, author, content) VALUES (1, 's', 'content')
-			
+			//or INSERT INTO authorTb (thmId, author, content) VALUES (1, 's', 'content')			
 			ResultSet rs = pstm.executeQuery();
 			return rs;
 		} catch (SQLException e) {			
@@ -236,7 +234,7 @@ public class DBUtils {
 	}
 	
 	/**
-	 * Get connection to local (e.g. test-machine) databse. 
+	 * Get connection to local (e.g. test-machine) database. 
 	 * @return
 	 */
 	public static Connection getLocalConnection() {
@@ -330,8 +328,31 @@ public class DBUtils {
 		PreparedStatement pstm;
 		
 		pstm = conn.prepareStatement("RENAME TABLE `?` TO `?`;");
-		pstm.setString(1, "fromName");
-		pstm.setString(2, "toName");
+		pstm.setString(1, fromName);
+		pstm.setString(2, toName);
+		pstm.executeUpdate();	
+	}
+	
+	/**
+	 * Rename two tables atomically. Useful e.g. updating a PRD table.
+	 * @param conn
+	 * @param fromName1
+	 * @param toName1
+	 * @param fromName2
+	 * @param toName2
+	 * @throws SQLException
+	 */
+	public static void renameTwoTableAtomic(Connection conn, String fromName1, String toName1,
+			String fromName2, String toName2) throws SQLException {
+		//RENAME TABLE `group` TO `member`;
+		PreparedStatement pstm;
+		
+		pstm = conn.prepareStatement("RENAME TABLE `?` TO `?`, `?` TO `?`;");
+		pstm.setString(1, fromName1);
+		pstm.setString(2, toName1);
+		pstm.setString(3, fromName2);
+		pstm.setString(4, toName2);
+		
 		pstm.executeUpdate();	
 	}
 	

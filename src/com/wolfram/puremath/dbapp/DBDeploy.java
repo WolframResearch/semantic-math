@@ -127,9 +127,12 @@ public class DBDeploy {
 		conn.close();
 	}
 	
-	//deploy tables, check for exception, if none, rename, and delete previous table.
-	//
-	public static void deploy( ) {
+	/**
+	 * Atomically deploys all necessary tables.
+	 * Atomicity is achived by creating the new table with updated data with temp name, then rename the 
+	 * old table to another temp name, finally rename the updated table to prd name, and delete old table.
+	 */
+	public static void deployAllTables( ) {
 		
 		Connection conn = DBUtils.getLocalConnection();
 		List<String> tablesCreated = new ArrayList<String>();
@@ -150,21 +153,25 @@ public class DBDeploy {
 				tablesCreated.add(thmHypTbName);	
 				
 				/***Done creating new tables, now rename***/
-				//rename at end, so all tables consistent
+				/*rename at end, so all tables consistent. Outdated PRD table will not be renamed, unless the updated
+				 * table can be successfully renamed to the PRD name.*/
+				/*author table*/
 				String tempName = AuthorTb.TB_NAME + "temp";
+				DBUtils.renameTwoTableAtomic(conn, AuthorTb.TB_NAME, tempName, authorTbName, AuthorTb.TB_NAME);
 				
-				DBUtils.renameTable(conn, AuthorTb.TB_NAME, tempName);
-				tablesCreated.add(tempName);
-				
+				//DBUtils.renameTable(conn, AuthorTb.TB_NAME, tempName);
+				tablesCreated.add(tempName);				
 				tempNameRealNameMap.put(tempName, AuthorTb.TB_NAME);
-				DBUtils.renameTable(conn, authorTbName, AuthorTb.TB_NAME);
+				//DBUtils.renameTable(conn, authorTbName, AuthorTb.TB_NAME);
 				
-				//changing thmHypTabl 
+				/*thmHypTable*/
 				tempName = ThmHypTb.TB_NAME + "temp";
-				DBUtils.renameTable(conn, ThmHypTb.TB_NAME, tempName);
+				DBUtils.renameTwoTableAtomic(conn, ThmHypTb.TB_NAME, tempName, thmHypTbName, ThmHypTb.TB_NAME);
+				
+				//DBUtils.renameTable(conn, ThmHypTb.TB_NAME, tempName);
 				tablesCreated.add(tempName);	
 				tempNameRealNameMap.put(tempName, ThmHypTb.TB_NAME);
-				DBUtils.renameTable(conn, thmHypTbName, ThmHypTb.TB_NAME);
+				//DBUtils.renameTable(conn, thmHypTbName, ThmHypTb.TB_NAME);
 				
 			}catch(SQLException e) {
 				//only need to do something if the previous working table got named to name+temp.

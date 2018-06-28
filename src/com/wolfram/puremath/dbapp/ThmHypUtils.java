@@ -252,7 +252,6 @@ public class ThmHypUtils {
 			pstm.executeBatch();			
 		}
 	}
-
 	
 	public static void createThmHypTb(Connection conn) throws SQLException {
 		createThmHypTb(conn, ThmHypTb.TB_NAME);
@@ -268,22 +267,8 @@ public class ThmHypUtils {
 		PreparedStatement pstm;
 		StringBuilder sb = new StringBuilder(50);
 		
-		//don't create if table already exists:
-		sb.append("SELECT 1 FROM ").append(tableName).append(" LIMIT 1;");
-		pstm = conn.prepareStatement(sb.toString());
+		DBUtils.dropTableIfExists(conn, tableName);
 		
-		ResultSet rs = null;
-		try {
-			rs = pstm.executeQuery();
-		}catch(SQLException e) {
-			System.out.println("!!e "+e);
-			//pass, E.g. is table does not already exist.			
-		}finally {
-			System.out.println("!!rs "+rs);
-			if(rs != null && rs.next()) {
-				return;
-			}	
-		}
 		//CREATE TABLE pet (name VARCHAR(20), owner VARCHAR(20),
 		//	    -> species VARCHAR(20), sex CHAR(1), birth DATE, death DATE);
 		//CREATE TABLE literalSearchTb (word VARCHAR(15), thmIndices VARBINARY(789), wordIndices VARBINARY(600))
