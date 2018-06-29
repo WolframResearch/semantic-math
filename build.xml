@@ -10,6 +10,8 @@
 	
 	<!-- main lib containing jar such as JLink, Guava etc -->
 	<property name="libdir" value="/Users/yihed/Documents/workspace/SemanticMath/lib/" />
+	<property name="db_libdir" value="/Users/yihed/Documents/workspace/DatabaseApp/lib/" />
+	
 	<property name="server_libdir" value="/Users/yihed/Documents/workspaceEE/ThmpServlet/WebContent/WEB-INF/lib" />
 	
 	<property name="semanticMathJarDir" value="/Users/yihed/Documents/workspace/SemanticMath/" />
@@ -31,6 +33,9 @@
 					<include name="*.jar" />
 				</fileset>
 				<fileset dir="${libdir}">
+					<include name="**/*.jar" />
+				</fileset>
+				<fileset dir="${db_libdir}">
 					<include name="**/*.jar" />
 				</fileset>
 				
