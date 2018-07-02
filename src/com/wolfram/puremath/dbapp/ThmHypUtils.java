@@ -222,35 +222,63 @@ public class ThmHypUtils {
 		System.out.println("Total number of batches: " + thmHypPairsFilesSz);
 		
 		int thmCounter = 0;
-		
-		for(int j = 0; j < thmHypPairsFilesSz; j++) {
+		int thmHypPairsFilesSzHalf = thmHypPairsFilesSz/2;
+		int j = 0;
+		for(; j < thmHypPairsFilesSzHalf; j++) {
 			
+			List<ThmHypPair> thmHypPairList = new ArrayList<ThmHypPair>();
+			//add two at a time, to save time in deployment
 			@SuppressWarnings("unchecked")
-			List<ThmHypPair> thmHypPairList = (List<ThmHypPair>)DBUtils
-				.deserializeListFromFile(ThmHypTb.thmHypPairsDirRelPath + ThmHypTb.thmHypPairsNameRoot+j);
+			List<ThmHypPair> thmHypPairList1 = (List<ThmHypPair>)DBUtils
+				.deserializeListFromFile(ThmHypTb.thmHypPairsDirRelPath + ThmHypTb.thmHypPairsNameRoot + 2*j);
+			
+			thmHypPairList.addAll(thmHypPairList1);
+			
+			if(2*j + 1 < thmHypPairsFilesSz) {
+				@SuppressWarnings("unchecked")
+				List<ThmHypPair> thmHypPairList2 = (List<ThmHypPair>)DBUtils
+					.deserializeListFromFile(ThmHypTb.thmHypPairsDirRelPath + ThmHypTb.thmHypPairsNameRoot + (2*j+1));
+				thmHypPairList.addAll(thmHypPairList2);
+			}
 			
 			System.out.println("About to insert batch " + j);
-			for(ThmHypPair thmHypPair : thmHypPairList) {
-				
-				int thmIndex = thmCounter++;
-				String thmStr = thmHypPair.thmStr();
-				String hypStr = thmHypPair.hypStr();
-				String fileName = thmHypPair.srcFileName();
-				
-				//turn list of LiteralSearchIndex's into two lists of Integers, finally a byte array.
-				/*List<Integer> thmIndexList = new ArrayList<Integer>();
-				List<Integer> wordIndexInThmList = new ArrayList<Integer>();
-				int counter = maxThmsPerLiteralWord;*/
-				
-				pstm.setInt(1, thmIndex);
-				pstm.setString(2, thmStr);
-				pstm.setString(3, hypStr);
-				pstm.setString(4, fileName);
-				
-				pstm.addBatch();
-			}
-			pstm.executeBatch();			
+			thmCounter = deployThmHypBatch(pstm, thmCounter, thmHypPairList);			
 		}
+		
+		//in case thmHypPairsFilesSz is odd
+		if(2*j < thmHypPairsFilesSz) {
+			@SuppressWarnings("unchecked")
+			List<ThmHypPair> thmHypPairList = (List<ThmHypPair>)DBUtils
+				.deserializeListFromFile(ThmHypTb.thmHypPairsDirRelPath + ThmHypTb.thmHypPairsNameRoot + (2*j));
+			System.out.println("About to insert batch " + (j));
+			deployThmHypBatch(pstm, thmCounter, thmHypPairList);	
+		}
+		
+	}
+
+	private static int deployThmHypBatch(PreparedStatement pstm, int thmCounter, List<ThmHypPair> thmHypPairList)
+			throws SQLException {
+		for(ThmHypPair thmHypPair : thmHypPairList) {
+			
+			int thmIndex = thmCounter++;
+			String thmStr = thmHypPair.thmStr();
+			String hypStr = thmHypPair.hypStr();
+			String fileName = thmHypPair.srcFileName();
+			
+			//turn list of LiteralSearchIndex's into two lists of Integers, finally a byte array.
+			/*List<Integer> thmIndexList = new ArrayList<Integer>();
+			List<Integer> wordIndexInThmList = new ArrayList<Integer>();
+			int counter = maxThmsPerLiteralWord;*/
+			
+			pstm.setInt(1, thmIndex);
+			pstm.setString(2, thmStr);
+			pstm.setString(3, hypStr);
+			pstm.setString(4, fileName);
+			
+			pstm.addBatch();
+		}
+		pstm.executeBatch();
+		return thmCounter;
 	}
 	
 	public static void createThmHypTb(Connection conn) throws SQLException {

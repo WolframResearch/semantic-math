@@ -54,7 +54,7 @@ public class DBDeploy {
 		pstm = conn.prepareStatement("ALTER TABLE " + SimilarThmsTb.TB_NAME + " DROP PRIMARY KEY;");
 		pstm.executeUpdate();
 		
-		//populate table from serialized similar thms indices
+		//populate table from serialized similar thms indices. Similar 
 		@SuppressWarnings("unchecked")
 		List<Map<Integer, byte[]>> similarThmsMapList 
 			= (List<Map<Integer, byte[]>>)DBUtils.deserializeListFromFile(DBUtils.SimilarThmsTb.similarThmCombinedIndexByteArrayPath);
