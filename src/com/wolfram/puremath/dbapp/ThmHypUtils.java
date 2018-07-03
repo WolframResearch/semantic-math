@@ -7,7 +7,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import com.wolfram.puremath.dbapp.DBUtils.ThmHypTb;
 
@@ -84,8 +88,8 @@ public class ThmHypUtils {
 			return Collections.emptyList();
 		}
 		
-		StringBuilder thmIndexSb = new StringBuilder(200);
-		
+		StringBuilder thmIndexSb = new StringBuilder(400);
+		//note this query result does not preserve the order as in thmIndexList!
 		for(int thmIndex : thmIndexList) {
 			thmIndexSb.append(ThmHypTb.THM_INDEX_COL)
 			.append("=")
@@ -95,7 +99,8 @@ public class ThmHypUtils {
 		thmIndexSb.delete(thmIndexSb.length()-4, thmIndexSb.length());
 		
 		StringBuilder querySb = new StringBuilder(60);
-		querySb.append("SELECT ").append(ThmHypTb.THM_COL)
+		querySb.append("SELECT ").append(ThmHypTb.THM_INDEX_COL)
+		.append(ThmHypTb.THM_COL)
 		.append(", ").append(ThmHypTb.HYP_COL)
 		.append(", ").append(ThmHypTb.FILE_NAME_COL)
 		.append(" FROM ").append(ThmHypTb.TB_NAME)
@@ -106,23 +111,29 @@ public class ThmHypUtils {
 		
 		//byte[] indexBytes;
 		//byte[] wordsIndexArBytes;
-		
+		int thmIndex = 0;
 		String thmStr = "";
 		String hypStr = "";
 		String fileNameStr = "";
 		
 		ResultSet rs = pstm.executeQuery();
 		List<ThmHypPair> thmHypPairList = new ArrayList<ThmHypPair>();
+		ThmHypPairComparator comp = new ThmHypPairComparator(thmIndexList) ;
+		TreeMap<Integer, ThmHypPair> thmHypPairMap = new TreeMap<Integer, ThmHypPair>(comp);
 		
 	 	while(rs.next()) {
 			//indexBytes = rs.getBytes(DBUtils.LiteralSearchTb.THM_INDICES_COL);
 			//wordsIndexArBytes = rs.getBytes(DBUtils.LiteralSearchTb.WORD_INDICES_COL);
-			
+			thmIndex = rs.getInt(ThmHypTb.THM_INDEX_COL);
 			thmStr = rs.getString(ThmHypTb.THM_COL);
 			hypStr = rs.getString(ThmHypTb.HYP_COL);
 			fileNameStr = rs.getString(ThmHypTb.FILE_NAME_COL);
-			thmHypPairList.add(new ThmHypPair(thmStr, hypStr, fileNameStr));
+			
+			thmHypPairMap.put(thmIndex, new ThmHypPair(thmStr, hypStr, fileNameStr));			
 		}
+	 	
+	 	thmHypPairList.addAll(thmHypPairMap.values());
+	 	
 		pstm.close();
 		rs.close();
 		
@@ -130,6 +141,35 @@ public class ThmHypUtils {
 		//wordsIndexArList.addAll(SimilarThmUtils.byteArrayToIndexList(wordsIndexArBytes, numBitsPerWordIndex));
 		
 		return thmHypPairList;
+	}
+	
+	private static class ThmHypPairComparator implements Comparator<Integer>{
+		
+		//map of thm indices and their ranking, lower means higher-ranked.
+		Map<Integer, Integer> indexOrderMap = new HashMap<Integer, Integer>();
+		ThmHypPairComparator(List<Integer> indexList){
+			int ranking = 0;
+			for(int index : indexList) {
+				indexOrderMap.put(index, ranking++);
+			}
+		}
+		
+		//want lower ranks to have priority.
+		@Override
+		public int compare(Integer pair1, Integer pair2) {
+			Integer rank1 = indexOrderMap.get(pair1);
+			Integer rank2 = indexOrderMap.get(pair2);
+			
+			if(rank1 == null) {
+				return 1;
+			}
+			if(rank2 == null) {
+				return -1;
+			}
+			
+			return Integer.compare(rank1, rank2);			
+		}		
+		
 	}
 	
 	/**
@@ -219,10 +259,12 @@ public class ThmHypUtils {
 		//int entrySetSz = entrySet.size();
 		
 		//final int batchSz = 15000;
-		System.out.println("Total number of batches: " + thmHypPairsFilesSz);
+		int thmHypPairsFilesSzHalf = thmHypPairsFilesSz/2;
+		
+		System.out.println("Total number of batches: " + Math.ceil(thmHypPairsFilesSz/2.));
 		
 		int thmCounter = 0;
-		int thmHypPairsFilesSzHalf = thmHypPairsFilesSz/2;
+		
 		int j = 0;
 		for(; j < thmHypPairsFilesSzHalf; j++) {
 			
