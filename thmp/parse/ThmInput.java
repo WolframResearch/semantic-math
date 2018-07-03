@@ -31,7 +31,7 @@ public class ThmInput {
 	//factor out the \begin! shouldn't need the [^\\\\]* if using matcher.find()
 	static String THM_START_STR = ".*\\\\begin\\s*\\{def(?:.*)|.*\\\\begin\\s*\\{lem(?:.*)"
 			//<--{prop.. instead of {pro.., since need to skip parsing proofs.
-			+ "|.*\\\\begin\\s*\\{th(?:.*)|.*\\\\begin\\s*\\{prop(?:.*)" 
+			+ "|.*\\\\begin\\s*\\{theo(?:.*)|.*\\\\begin\\s*\\{thm(?:.*)|.*\\\\begin\\s*\\{prop(?:.*)" 
 			+ "|.*\\{proclaim(?:.*)|.*\\\\begin\\s*\\{cor(?:.*)|.*\\\\begin\\s*\\{conj(?:.*)";
 	
 	static final Pattern THM_START_PATTERN = Pattern.compile(THM_START_STR);	
@@ -44,7 +44,7 @@ public class ThmInput {
 	 * );
 	 */	
 	static String THM_END_STR = ".*(?:\\\\end\\s*\\{def(?:.*)|\\\\end\\s*\\{lem(?:.*)"
-			+ "|\\\\end\\s*\\{th(?:.*)|\\\\end\\s*\\{prop.*|end\\s*\\{proclaim(?:.*)"
+			+ "|\\\\end\\s*\\{theo(?:.*)|\\\\end\\s*\\{thm(?:.*)|\\\\end\\s*\\{prop.*|end\\s*\\{proclaim(?:.*)"
 			+ "|\\\\endproclaim(?:.*)|\\\\end\\s*\\{cor(?:.*)|\\\\end\\s*\\{conj(?:.*))";
 	//static String THM_END_STR = "\\\\end\\{def(?:.*)|\\\\end\\{lem(?:.*)|\\\\end\\{th(?:.*)|\\\\end\\{pro(?:.*)|\\\\endproclaim(?:.*)"
 			//+ "|\\\\end\\{cor(?:.*)";

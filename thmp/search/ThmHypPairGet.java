@@ -3,6 +3,7 @@ package thmp.search;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -237,7 +238,7 @@ public class ThmHypPairGet{
 		try {
 			return ThmHypUtils.getThmHypFromDB(thmIndex, conn);
 		} catch (SQLException e) {
-			logger.error("SQLException while retrieving ThmHypPair! " + e);
+			logger.error("SQLException while retrieving ThmHypPair! " + Arrays.toString(e.getStackTrace()));
 			return ThmHypPair.PLACEHOLDER_PAIR();
 		}
 	}
@@ -252,7 +253,7 @@ public class ThmHypPairGet{
 		try {
 			return ThmHypUtils.getThmHypFromDB(thmIndexList, conn);
 		} catch (SQLException e) {
-			logger.error("SQLException while retrieving ThmHypPair! " + e);
+			logger.error("SQLException while retrieving ThmHypPair! " + Arrays.toString(e.getStackTrace()));
 			return Collections.emptyList();
 		}
 	}
@@ -262,7 +263,7 @@ public class ThmHypPairGet{
 	 * containing thm with thmIndex. Index in bundleStartThmIndexList.
 	 */
 	public static int findBundleBeginIndex(int thmIndex){
-		//
+		
 		int low = 0;
 		int high = bundleStartThmIndexList.size();
 		int mid = (low+high)/2;

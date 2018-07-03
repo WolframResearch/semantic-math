@@ -875,8 +875,10 @@ public class SearchIntersection {
 				break;
 			}
 			//very useful debug print. Don't delete - April 2018. Need to debug on byblis.
-			System.out.println(counter+ ": +++ " + pair.thmIndex+". score: "+ pair.score+ " SpanScore " + pair.spanScore + " DistScore " + pair.wordDistScore + " "
-					+ " firstStartScore " + pair.firstStartScore + " " + ThmHypPairGet.retrieveThmHypPairWithThmFromCache(pair.thmIndex));
+			if(DEBUG) {
+				System.out.println(counter+ ": +++ " + pair.thmIndex+". score: "+ pair.score+ " SpanScore " + pair.spanScore + " DistScore " + pair.wordDistScore + " "
+						+ " firstStartScore " + pair.firstStartScore + " " + ThmHypPairGet.retrieveThmHypPairWithThmFromCache(pair.thmIndex));
+			}
 			thmScoreSpanList.add(pair);
 			highestThmList.add(thmIndex);
 			pair = thmScorePQ2.poll();
