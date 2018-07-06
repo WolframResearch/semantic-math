@@ -1121,6 +1121,7 @@ public class SearchIntersection {
 	 * @param thmWordsScoreMMap Multimap of thm indices, and the set of the words in them.
 	 * @param wordThmIndexAddedMMap Thms that have already been added for the input.
 	 * @param wordThmCountMap map of word and the count of thms without related words thms.
+	 * @param searchWordsSet set of words searched, used for highlighting terms in web FE.
 	 * @param wordThmIndexMMap MMap created from tars used to look up thms containing words.
 	 * @return scoreAdded
 	 */

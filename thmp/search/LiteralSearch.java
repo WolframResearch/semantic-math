@@ -19,6 +19,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multiset;
@@ -131,12 +132,38 @@ public class LiteralSearch {
 			this.wordIndexAr = wordIndexAr_;
 		}
 		
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + thmIndex;
+			result = prime * result + Arrays.hashCode(wordIndexAr);
+			return result;
+		}
+
 		public int thmIndex() {
 			return this.thmIndex;
 		}
 		
 		public byte[] wordIndexAr() {
 			return this.wordIndexAr;
+		}
+		
+		@Override
+		public boolean equals(Object o) {
+			if (this == o)
+				return true;
+			if(!(o instanceof LiteralSearchIndex)) {
+				return false;
+			}
+			LiteralSearchIndex other = (LiteralSearchIndex)o;
+			if(this.thmIndex != other.thmIndex) {
+				return false;
+			}
+			if(!Arrays.equals(this.wordIndexAr, other.wordIndexAr)) {
+				return false;
+			}
+			return true;
 		}
 		
 		@Override
@@ -170,13 +197,13 @@ public class LiteralSearch {
 
 	/**
 	 * Tokenizes thm into words, create LiteralSearchIndex's, and add to supplied
-	 * index map.
+	 * index map. 
 	 * @param thm
 	 * @param thmIndex
-	 * @param searchIndexMap Multimap of word and LiteralSearchIndex objects.
+	 * @param searchIndexMap Multimap of word and LiteralSearchIndex objects. To fill up.
 	 */
 	public static void addThmLiteralSearchIndexToMap (String thm, int thmIndex, 
-			ListMultimap<String, LiteralSearchIndex> searchIndexMap) {
+			HashMultimap<String, LiteralSearchIndex> searchIndexMap) {
 		
 		ListMultimap<String, Byte> wordsIndexMMap = extractWordIndexMMapFromThm(thm);
 		
@@ -193,13 +220,14 @@ public class LiteralSearch {
 			for(int i = 0; i < wordIndexListSz; i++) {
 				wordIndexAr[i] = wordIndexList.get(i).byteValue();
 			}
+			
 			searchIndexMap.put(word, new LiteralSearchIndex(thmIndex, wordIndexAr));
 		}		
 	}
 
 	/**
 	 * Used for extracting word indices in thm, used for scoring in literal search, 
-	 * and intersection search.
+	 * and intersection search (more importantly).
 	 * @param thm
 	 * @return
 	 */
@@ -310,7 +338,7 @@ public class LiteralSearch {
 			word = processLiteralSearchWord(word);
 			searchWordsSet.add(word);
 			
-			//list of thm indices for given word. Request indices from db!!
+			//list of thm indices for given word. Request indices from db!! Don't delete yet
 			//List<LiteralSearchIndex> thmIndexList = literalSearchIndexMap.get(word);
 			
 			//getLiteralSearchThmsFromDB String word,  Connection conn,
@@ -584,6 +612,7 @@ public class LiteralSearch {
 		return curSpan <= maxPossibleSpan * literalSearchTriggerThreshold;
 	}
 	
+	//Don't remove -- July 2018.
 	public static void main(String[] args) {
 		//check out the "real fluff words"
 		/*ListMultimap<String, LiteralSearchIndex> literalSearchIndexMap 
@@ -591,6 +620,15 @@ public class LiteralSearch {
 		
 		addThmLiteralSearchIndexToMap ("quadratic field extension", 1, 
 				literalSearchIndexMap);***********/
+		
+		HashMultimap<String, LiteralSearchIndex> literalSearchIndexMap 
+		= HashMultimap.create();
+	
+		addThmLiteralSearchIndexToMap ("[Abstract GIUT for maximal coactions] Let $(A, \\delta)$ "
+				+ "be a maximal coaction and $\\pi:A\\to B$  coaction a surjective homomorphism.", 1, 
+			literalSearchIndexMap);
+		
+		System.out.println(literalSearchIndexMap);
 		
 		//g();
 		//printIndexMap();

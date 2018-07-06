@@ -152,8 +152,8 @@ public class ProjectionMatrix {
 		List<Integer> bundleStartThmIndexList = new ArrayList<Integer>();
 		List<String> allThmNameScrapeList = new ArrayList<String>();
 		
-		ListMultimap<String, LiteralSearchIndex> literalSearchIndexMap 
-			= ArrayListMultimap.create();
+		HashMultimap<String, LiteralSearchIndex> literalSearchIndexMap 
+			= HashMultimap.create();
 		
 		String thmsStringListDestPath = TermDocumentMatrix.DATA_ROOT_DIR_SLASH + TermDocumentMatrix.ALL_THM_STRING_FILE_NAME;
 		FileUtils.runtimeExec("rm " + thmsStringListDestPath);
@@ -242,14 +242,15 @@ public class ProjectionMatrix {
 		searchConfigList.add(searchConfig);
 		FileUtils.serializeObjToFile(searchConfigList, SearchConfiguration.searchConfigurationSerialPath());
 		
-		/***June 13 List<ListMultimap<String, LiteralSearchIndex>> literalSearchIndexMapList 
-			= new ArrayList<ListMultimap<String, LiteralSearchIndex>>();
+		/***June 13 comment out if use database*/
+		List<HashMultimap<String, LiteralSearchIndex>> literalSearchIndexMapList 
+			= new ArrayList<HashMultimap<String, LiteralSearchIndex>>();
 		literalSearchIndexMapList.add(literalSearchIndexMap);
 		//to be put into database, rather than storing in memory, for access at app runtime
 		FileUtils.serializeObjToFile(literalSearchIndexMapList, SearchMetaData.literalSearchIndexMapPath());
 		//for human inspection purposes, so put path here.
 		final String literalSearchMapKeysPath = "src/thmp/data/literalSearchIndexMapKeys.txt";
-		FileUtils.writeToFile(literalSearchIndexMap.keySet(), literalSearchMapKeysPath);*/
+		FileUtils.writeToFile(literalSearchIndexMap.keySet(), literalSearchMapKeysPath);
 		
 		//serialize scraped thm names
 		FileUtils.serializeObjToFile(allThmNameScrapeList, DetectHypothesis.allThmNameScrapeSerStr);
@@ -394,7 +395,7 @@ public class ProjectionMatrix {
 	@SuppressWarnings("unchecked")
 	private static int addExprsToLists(String dirPathStr, String peFilePath, List<ThmHypPair> combinedPEList, String vecsFilePath,
 			List<ContextRelationVecPair> combinedVecsList, String wordThmIndexMMapPath, 
-			Multimap<String, IndexPartPair> combinedWordThmIndexMMap, ListMultimap<String, LiteralSearchIndex> literalSearchIndexMap,
+			Multimap<String, IndexPartPair> combinedWordThmIndexMMap, HashMultimap<String, LiteralSearchIndex> literalSearchIndexMap,
 			List<String> allThmNameScrapeList, int startingThmIndex, StringBuilder nameDBSB,
 			Multimap<String, String> paperIdNameDataMap) {
 		

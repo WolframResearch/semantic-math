@@ -154,7 +154,6 @@ public class SimilarThmSearch {
 		
 		Map<Integer, Integer> contextVecMap = TheoremGet.getContextRelationVecFromIndex(thmIndex).contextVecMap();
 		
-		long afterParse = 0;
 		long beforeSearch = 0;
 		long beforeAddingComponent = 0;
 		int countCap = (int)(maxSimilarThmCount * 1.5);
