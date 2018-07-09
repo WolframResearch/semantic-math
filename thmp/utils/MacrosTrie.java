@@ -50,8 +50,9 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 		 * @param node
 		 * @param slotCount E.g. the count #1 in \newcommand{\\un}[1]{\\underline{#1}}. 
 		 * slotCount = 0 if no count present.
+		 * @param optArgDefault: default value for optional arg, usually for arg #1.
 		 */
-		public void addTrieNode(String commandStr, String replacementStr, int slotCount){
+		public void addTrieNode(String commandStr, String replacementStr, int slotCount, String...optArgDefault){
 			
 			MacrosTrieNode curNode = this.rootNode;
 			char c;
@@ -61,8 +62,9 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 				curNode = curNode.addOrRetrievePassingNode(c);			
 			}
 			c = commandStr.charAt(commandStrLen-1);
-			curNode.addTrieNodeToNodeMap(c, commandStr, replacementStr, slotCount);		
+			curNode.addTrieNodeToNodeMap(c, commandStr, replacementStr, slotCount, optArgDefault);		
 		}
+		
 	}
 	
 	public static class MacrosTrieNode /*extends WordTrieNode*/{
@@ -71,6 +73,9 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 		//e.g. \xrightarrow, or \\underline{#1}
 		private String replacementStr;
 		private int slotCount;
+		//default value for optional argument, only applicable for some commands,
+		//e.g. newcommand{cmd}[2][default]{a}
+		private String optArgVal;
 		private Map<Character, MacrosTrieNode> nodeMap;
 		
 		public static class ImmutableMacrosTrieNode extends MacrosTrieNode{
@@ -80,6 +85,7 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 				super.commandStr = trieNode.commandStr;
 				super.replacementStr = trieNode.replacementStr;
 				super.slotCount = trieNode.slotCount;
+				super.optArgVal = trieNode.optArgVal;
 				/*make map immutable*/
 				super.nodeMap = immutableNodeMap;
 			}			
@@ -90,7 +96,8 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 			}
 			
 			@Override
-			public void addTrieNodeToNodeMap(char c, String commandStr_, String replacementStr_, int slotCount_){
+			public void addTrieNodeToNodeMap(char c, String commandStr_, String replacementStr_, int slotCount_,
+					String...optArgDefault_){
 				throw new UnsupportedOperationException("ImmutableMacrosTrieNode cannot be modified!");
 			}
 			
@@ -105,6 +112,11 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 			this.replacementStr = replacementStr_;
 			this.slotCount = slotCount_;
 			this.nodeMap = new HashMap<Character, MacrosTrieNode>();
+		}
+		
+		public MacrosTrieNode(String commandStr_, String replacementStr_, int slotCount_, String optArgDefault_){
+			this(commandStr_, replacementStr_, slotCount_);
+			this.optArgVal = optArgDefault_;
 		}
 		
 		/**
@@ -156,8 +168,12 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 		 * @param c
 		 * @param node
 		 */
-		public void addTrieNodeToNodeMap(char c, String commandStr_, String replacementStr_, int slotCount_){
+		public void addTrieNodeToNodeMap(char c, String commandStr_, String replacementStr_, int slotCount_, String...optArgDefaultAr){
 			MacrosTrieNode node = this.nodeMap.get(c);
+			String optArgDefault = null;
+			if(optArgDefaultAr.length > 0) {
+				optArgDefault = optArgDefaultAr[0];
+			}
 			if(null != node){
 				if(null != node.commandStr && null != node.replacementStr){
 					logger.info(node.commandStr + " command already exists!");
@@ -165,7 +181,7 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 				}
 				node.setCommandAndReplacementStr(commandStr_, replacementStr_);				
 			}else{
-				this.nodeMap.put(c, new MacrosTrieNode(commandStr_, replacementStr_, slotCount_));
+				this.nodeMap.put(c, new MacrosTrieNode(commandStr_, replacementStr_, slotCount_, optArgDefault));
 			}	
 			commandAndReplacementStrMap.put(commandStr_, replacementStr_);
 		}		
@@ -311,11 +327,28 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 		
 		String[] args = new String[slotCount];
 		
-		//capture the arguments, fill in args, one at a time;
+		//capture the arguments, fill in args in the next few braces, one at a time; 
+		//e.g. \cmd{1}{2}
 		int startingIndex = curIndex;
-		for(int i = 0; i < slotCount; i++){
-			startingIndex = retrieveBracesContent(thmStr, startingIndex, args, i);
-		}		
+		
+		//if optional argument not specified (i.e. use default), make slot count lower
+		int toSlotCount = slotCount;
+		//e.g. \cmd[optVal]{b}
+		if(null != trieNode.optArgVal && thmStr.charAt(startingIndex+1) != '[') {
+			toSlotCount--;
+		}
+		for(int j = 0; j < toSlotCount; j++){
+			startingIndex = retrieveBracesContent(thmStr, startingIndex, args, j);			
+		}
+		if(toSlotCount < slotCount) {
+			//shift all args in args one down, if optional arg default was supplied at macro definition
+			//String[] tempArgs = new String[slotCount+1];			
+			for(int k = slotCount-1; k > 0; k--) {
+				args[k] = args[k-1];
+			}
+			args[0] = trieNode.optArgVal;
+		}
+		
 		//System.out.println("+++++++++macros replacement args: " + Arrays.toString(args));
 		int templateReplacementStringLen = templateReplacementString.length();
 		Matcher digitMatcher;
@@ -355,7 +388,8 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 	}
 
 	/**
-	 * Retrieves the content in braces down the stream.
+	 * Retrieves the content in braces down the stream, to fill up slots for replacing
+	 * #1 in macros.
 	 * @param thmStr
 	 * @param index
 	 * @param bracesArgs array of args to be filled in for #1
@@ -369,8 +403,8 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 		int thmStrLen = thmStr.length();
 		char c;
 		int i = index;
-		
-		while(i < thmStrLen && ((c=thmStr.charAt(i)) != '{')){
+		//optional arg comes in brackets [
+		while(i < thmStrLen && ((c=thmStr.charAt(i)) != '{') && c != '['){
 			//Because some authors don't explicitly use braces, e.g. $\\rr d$ instead of $\\rr{d}$.
 			if(c == '$' && i > index && thmStr.charAt(i-1) != '\\') {
 				int j = i-1;
@@ -396,12 +430,12 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 		char prevChar = ' ';
 		StringBuilder braceContentSB = new StringBuilder(15);
 		
-		while(i < thmStr.length() && ((c=thmStr.charAt(i)) != '}' || prevChar == '\\' || openBraceCount>0 ) ){
+		while(i < thmStr.length() && (((c=thmStr.charAt(i)) != '}' && c != ']') || prevChar == '\\' || openBraceCount>0 ) ){
 			/* if braces don't all match, compile error. Unless escaped.*/	
 			if(prevChar != '\\'){
-				if(c == '{'){
+				if(c == '{' || c == '['){
 					openBraceCount++;
-				}else if(c == '}'){
+				}else if(c == '}' || c == ']'){
 					openBraceCount--;
 				}			
 			}

@@ -623,6 +623,7 @@ public class SearchIntersection {
 			// elicit higher score if wordLong fits
 			// also turn into singular form if applicable			
 			int scoreAdded = 0;
+			
 			// check for 2 grams
 			if (i < inputWordsArSz - 1) {
 				String nextWord = inputWordsList.get(i+1);
@@ -883,8 +884,9 @@ public class SearchIntersection {
 			highestThmList.add(thmIndex);
 			pair = thmScorePQ2.poll();
 		}
-		System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-		
+		if(DEBUG) {
+			System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+		}
 		/****Dec 6 outerWhile: while(descendingKeySetIter.hasNext()){
 			int curScore = descendingKeySetIter.next();
 			Collection<Integer> thmIndices = scoreThmMMap.get(curScore);
@@ -1214,6 +1216,7 @@ public class SearchIntersection {
 				}
 			}
 		}
+		//whether (the normalized form of) word has already been searched, to avoid duplicate work.
 		if(searchState.tokenAlreadySearched(word)) {
 			return 0;
 		}

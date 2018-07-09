@@ -167,7 +167,9 @@ public class WordForms {
 	 */
 	private static final Set<String> GENERIC_SERACH_TERMS;
 	private static final Set<String> searchStopWords;
-
+	//word-stem pairs to be excluded from generated data. E.g. functional->funct.
+	private static final Map<String, String> nonStemWordsMap;
+	
 	static {
 		STOP_WORDS_SET = new HashSet<String>();
 		String[] fluffAr = FLUFF_WORDS_SMALL.split("\\|");
@@ -186,6 +188,8 @@ public class WordForms {
 		// Multimap<String, String> synonymsPreMMap = HashMultimap.create();
 		ServletContext servletContext = FileUtils.getServletContext();
 
+		nonStemWordsMap = new HashMap<String, String>();
+		nonStemWordsMap.put("functional", "funct");
 		// contains word representatives, e.g. "annihilate", "annihilator", etc all map
 		// to "annihilat"
 		wordToStemMap = ImmutableMap.copyOf(deserializeStemWordsMap(servletContext));
@@ -306,6 +310,11 @@ public class WordForms {
 		} else {
 			stemWordsMap = ((List<Map<String, String>>) FileUtils.deserializeListFromFile(stemWordsMapFileStr)).get(0);
 		}
+		//remove certain step representatives, e.g. functional->funct
+		//per discussion with Michael.
+		for(Map.Entry<String, String> entry : nonStemWordsMap.entrySet()) {
+			stemWordsMap.remove(entry.getKey(), entry.getValue());
+		}		
 		return stemWordsMap;
 	}
 

@@ -496,7 +496,8 @@ public class DetectHypothesis {
 				inputFile = new File("/Users/yihed/Downloads/test/thmp/may22_1.txt");
 				inputFile = new File("/Users/yihed/Downloads/test/thmp/may23_0.txt");
 				inputFile = new File("/Users/yihed/Downloads/test/thmp/july3_0.txt");
-				
+				inputFile = new File("/Users/yihed/Downloads/test/thmp/july9_0.txt");
+				inputFile = new File("/Users/yihed/Downloads/test/thmp/july3_1.txt");
 		}		
 		List<DefinitionListWithThm> defThmList = new ArrayList<DefinitionListWithThm>();
 		List<ThmHypPair> thmHypPairList = new ArrayList<ThmHypPair>();
@@ -1243,13 +1244,16 @@ public class DetectHypothesis {
 				if(ThmInput.THM_TERMS_PATTERN.matcher(newThmMatcher.group(2)).find()){
 					thmMacrosList.add(newThmMatcher.group(1));	
 				}
-			}else if((newThmMatcher = ThmInput.NEW_THM_PATTERN2.matcher(line)).matches()){
+			}else if((newThmMatcher = ThmInput.NEW_CMD_PATTERN.matcher(line)).matches()){
 				String commandStr = newThmMatcher.group(1);
-				String replacementStr = newThmMatcher.group(3);
+				String replacementStr = newThmMatcher.group(4);
 				String slotCountStr = newThmMatcher.group(2);
 				int slotCount = null == slotCountStr ? 0 : Integer.valueOf(slotCountStr);
-				macrosTrieBuilder.addTrieNode(commandStr, replacementStr, slotCount);
-			}else if((newThmMatcher = ThmInput.NEW_THM_PATTERN3.matcher(line)).matches()){
+				//default argument for optional parameters. The default for this default value
+				// is null, so no need to check for null.
+				String optArgDefault = newThmMatcher.group(3);				
+				macrosTrieBuilder.addTrieNode(commandStr, replacementStr, slotCount, optArgDefault);
+			}else if((newThmMatcher = ThmInput.NEW_DEF_PATTERN.matcher(line)).matches()){
 				//case of \def\X{{\cal X}}
 				String commandStr = newThmMatcher.group(1);
 				String replacementStr = newThmMatcher.group(2);

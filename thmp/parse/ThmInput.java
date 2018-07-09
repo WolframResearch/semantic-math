@@ -59,12 +59,12 @@ public class ThmInput {
 	static final Pattern NEW_THM_PATTERN = Pattern.compile("\\\\newtheorem\\**\\s*\\{([^}]+)\\}(?:[^{]*)\\{([^}]+).*");
 	/*another custom definition specification, \newcommand{\xra}  {\xrightarrow}
 	  Need to be smart about e.g. \newcommand{\\un}[1]{\\underline{#1}} !*/
-	//Should also support \newcommand{cmd}[args][opt]{def} with optional terms
-	static final Pattern NEW_THM_PATTERN2 = Pattern.compile("\\s*\\\\(?:re){0,1}newcommand\\{*([^}{\\[]+)\\}*\\s*(?:\\[(\\d)\\])*\\s*\\{(.+?)\\}\\s*");
+	//Should also support \newcommand{cmd}[args][opt]{def} with default val for optional terms
+	static final Pattern NEW_CMD_PATTERN = Pattern.compile("\\s*\\\\(?:re){0,1}newcommand\\{*([^}{\\[]+)\\}*\\s*(?:\\[(\\d)\\])*(?:\\[([^]]+)\\])*\\s*\\{(.+?)\\}\\s*");
 	/*e.g. \def\X{{\cal X}};  \def \author {William {\sc Smith}}; 
 	 * Need to support e.g. \def\G{\hbox{\boldmath{}$G$\ unboldmath}}
 	 *Currently not covering: \def <command> <parameter-text>{<replacement-text>} e.g. \def\testonearg[#1]{\typeout{Testing one arg: '#1'}} */
-	public static final Pattern NEW_THM_PATTERN3 = Pattern.compile("\\s*\\\\def\\s*([^{]+?)\\s*\\{(.+?)\\}\\s*");
+	public static final Pattern NEW_DEF_PATTERN = Pattern.compile("\\s*\\\\def\\s*([^{]+?)\\s*\\{(.+?)\\}\\s*");
 	
 	static final Pattern THM_TERMS_PATTERN = Pattern.compile("Theorem|Proposition|Lemma|Corollary|Conjecture|Definition|Claim");
 	
@@ -101,7 +101,7 @@ public class ThmInput {
 	//patterns such as \\rm are deprecated in TeX, but (new) authors still use them, and MathJax doesn't render them.
 	Space after \rm intentional*/
 	private static final Pattern ELIMINATE_PATTERN = Pattern
-			.compile("\\\\df|\\\\emph|\\\\em|\\\\rm |\\\\cat|\\\\it|\\\\(?:eq)*ref|\\\\subsection|\\\\section|\\\\bf|\\\\vspace"
+			.compile("\\\\df|\\\\emph|\\\\em|\\\\rm |\\\\cat|\\\\it(?!e)|\\\\(?:eq)*ref|\\\\subsection|\\\\section|\\\\bf|\\\\vspace"
 					+ "|\\\\ensuremath|\\\\(?:textbf|textsl|textsc)|\\\\footnote|\\\\linebreak|(?<!\\\\)%"
 					+ "|\\\\fml|\\\\ofml|\\\\(?:begin|end)\\{enumerate\\}|\\\\(?:begin|end)\\{(?:sub)*section\\**\\}"					
 					+ "|\\\\begin\\{slogan\\}|\\\\end\\{slogan\\}|\\\\sbsb|\\\\cat|\\\\bs|\\\\maketitle"
@@ -194,7 +194,7 @@ public class ThmInput {
 				if(THM_TERMS_PATTERN.matcher(newThmMatcher.group(2)).find()){
 					customBeginThmList.add(newThmMatcher.group(1));		
 				}
-			}else if((newThmMatcher = NEW_THM_PATTERN2.matcher(line)).matches()){
+			}else if((newThmMatcher = NEW_CMD_PATTERN.matcher(line)).matches()){
 				//macrosList.add(newThmMatcher)
 				String commandStr = newThmMatcher.group(1);
 				String replacementStr = newThmMatcher.group(3);

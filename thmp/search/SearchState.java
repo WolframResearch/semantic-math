@@ -115,6 +115,11 @@ public class SearchState {
 		this.normalizedTokenSet.add(tok);
 	}
 	
+	/**
+	 * Returns whether tok is contained in Set of *normalized* tokens, 
+	 * i.e. word forms that were actually used
+	 * in search, and have valid entries in wordScoreMap.
+	 */
 	public boolean tokenAlreadySearched(String tok) {
 		return this.normalizedTokenSet.contains(tok);		
 	}
