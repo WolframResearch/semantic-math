@@ -60,11 +60,13 @@ public class ThmInput {
 	/*another custom definition specification, \newcommand{\xra}  {\xrightarrow}
 	  Need to be smart about e.g. \newcommand{\\un}[1]{\\underline{#1}} !*/
 	//Should also support \newcommand{cmd}[args][opt]{def} with default val for optional terms
-	static final Pattern NEW_CMD_PATTERN = Pattern.compile("\\s*\\\\(?:re){0,1}newcommand\\{*([^}{\\[]+)\\}*\\s*(?:\\[(\\d)\\])*(?:\\[([^]]+)\\])*\\s*\\{(.+?)\\}\\s*");
+	static final Pattern NEW_CMD_PATTERN = Pattern.compile("\\s*\\\\(?:renew|new|provide)command\\{*([^}{\\[]+)\\}*\\s*(?:\\[(\\d)\\])*(?:\\[([^]]+)\\])*\\s*\\{(.+?)\\}\\s*");
 	/*e.g. \def\X{{\cal X}};  \def \author {William {\sc Smith}}; 
 	 * Need to support e.g. \def\G{\hbox{\boldmath{}$G$\ unboldmath}}
 	 *Currently not covering: \def <command> <parameter-text>{<replacement-text>} e.g. \def\testonearg[#1]{\typeout{Testing one arg: '#1'}} */
 	public static final Pattern NEW_DEF_PATTERN = Pattern.compile("\\s*\\\\def\\s*([^{]+?)\\s*\\{(.+?)\\}\\s*");
+	//define math operator a la \DeclareMathOperator{\sin}{sin}, \DeclareMathOperator*{\spec}{Spec}
+	public static final Pattern MATH_OP_PATTERN = Pattern.compile("\\s*\\\\DeclareMathOperator\\**\\s*\\{([^}]+)\\}\\s*\\{(.+?)\\}\\s*");
 	
 	static final Pattern THM_TERMS_PATTERN = Pattern.compile("Theorem|Proposition|Lemma|Corollary|Conjecture|Definition|Claim");
 	
@@ -101,7 +103,7 @@ public class ThmInput {
 	//patterns such as \\rm are deprecated in TeX, but (new) authors still use them, and MathJax doesn't render them.
 	Space after \rm intentional*/
 	private static final Pattern ELIMINATE_PATTERN = Pattern
-			.compile("\\\\df|\\\\emph|\\\\em|\\\\rm |\\\\cat|\\\\it(?!e)|\\\\(?:eq)*ref|\\\\subsection|\\\\section|\\\\bf|\\\\vspace"
+			.compile("\\\\df(?!rac)|\\\\emph|\\\\em|\\\\rm |\\\\cat|\\\\it(?!e)|\\\\(?:eq)*ref|\\\\subsection|\\\\section|\\\\bf|\\\\vspace"
 					+ "|\\\\ensuremath|\\\\(?:textbf|textsl|textsc)|\\\\footnote|\\\\linebreak|(?<!\\\\)%"
 					+ "|\\\\fml|\\\\ofml|\\\\(?:begin|end)\\{enumerate\\}|\\\\(?:begin|end)\\{(?:sub)*section\\**\\}"					
 					+ "|\\\\begin\\{slogan\\}|\\\\end\\{slogan\\}|\\\\sbsb|\\\\cat|\\\\bs|\\\\maketitle"

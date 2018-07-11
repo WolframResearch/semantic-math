@@ -498,6 +498,8 @@ public class DetectHypothesis {
 				inputFile = new File("/Users/yihed/Downloads/test/thmp/july3_0.txt");
 				inputFile = new File("/Users/yihed/Downloads/test/thmp/july9_0.txt");
 				inputFile = new File("/Users/yihed/Downloads/test/thmp/july3_1.txt");
+				inputFile = new File("/Users/yihed/Downloads/test/thmp/july10_0.txt");
+				
 		}		
 		List<DefinitionListWithThm> defThmList = new ArrayList<DefinitionListWithThm>();
 		List<ThmHypPair> thmHypPairList = new ArrayList<ThmHypPair>();
@@ -1258,7 +1260,14 @@ public class DetectHypothesis {
 				String commandStr = newThmMatcher.group(1);
 				String replacementStr = newThmMatcher.group(2);
 				macrosTrieBuilder.addTrieNode(commandStr, replacementStr, 0);
-			}		
+			}else if((newThmMatcher = ThmInput.MATH_OP_PATTERN.matcher(line)).matches()){
+				//case of \DeclareMathOperator{\sin}{sin}
+				String commandStr = newThmMatcher.group(1);
+				String replacementStr = newThmMatcher.group(2);
+				//typeset "sin x" non-italicized, and with space after op.
+				replacementStr = "\\text{" + replacementStr + " }";
+				macrosTrieBuilder.addTrieNode(commandStr, replacementStr, 0);
+			}	
 		}
 		//if(true)throw new IllegalStateException("macros: "+macrosList);
 		return line;
