@@ -88,8 +88,8 @@ public class ThmInput {
 	private static String groupReplacePattStr = "$1";
 	
 	//replace \begin or \end {equation} with \[ or \], since MathJax does not seem to render them correctly on web
-	private static final Pattern beginEqnPatt = Pattern.compile("\\\\begin\\{equation\\**\\}");
-	private static final Pattern endEqnPatt = Pattern.compile("\\\\end\\{equation\\**\\}");
+	private static final Pattern beginEqnPatt = Pattern.compile("\\\\begin\\s*\\{equation\\**\\}");
+	private static final Pattern endEqnPatt = Pattern.compile("\\\\end\\s*\\{equation\\**\\}");
 	
 	/*private static Pattern[] GROUP1_PATTERN_ARRAY = new Pattern[] { Pattern.compile("\\\\df\\{([^\\}]*)\\}"),
 			Pattern.compile("\\\\emph\\{([^}]*)\\}"), Pattern.compile("\\\\cat\\{([^}]*)\\}"),
@@ -123,7 +123,7 @@ public class ThmInput {
 	
 	private static final Pattern ITEM_PATTERN = Pattern.compile("\\\\item");
 
-	public static void main(String[] args) throws IOException {
+	public static void main1(String[] args) throws IOException {
 		boolean writeToFile = false;
 
 		// File file = new File("src/thmp/data/commAlg5.txt");
@@ -311,7 +311,7 @@ public class ThmInput {
 	public static String removeTexMarkup(String thmStr, List<String> thmWebDisplayList,
 			List<String> bareThmList, MacrosTrie macrosTrie, Pattern eliminateBeginEndThmPattern, 
 			boolean isContextStr) {
-
+		
 		boolean getWebDisplayList = thmWebDisplayList == null ? false : true;
 		boolean getBareThmList = bareThmList == null ? false : true;		
 		
@@ -332,7 +332,7 @@ public class ThmInput {
 		if(isContextStr) {
 			//only replace within context, MathJax should take begin equation.
 			matcher = beginEqnPatt.matcher(thmStr);
-			if(matcher.find()) {	
+			//if(matcher.find()) {	
 				if(isContextStr) {
 					//make inline math, to be smaller.
 					thmStr = matcher.replaceAll("\\$");
@@ -345,12 +345,11 @@ public class ThmInput {
 					thmStr = matcher.replaceAll("\\\\]");
 					//thmStr = matcher.replaceAll("\\$");
 				}*/
-			}
+			//}
 		}
 		
 		//parse to remove \footnote{...} from theorems, to not have those interjections.
 		thmStr = cleanTex(thmStr);
-		System.out.println("!! thmStr "+thmStr);
 		
 		thmStr = groupReplacePatt.matcher(thmStr).replaceAll(groupReplacePattStr);
 		
@@ -366,6 +365,7 @@ public class ThmInput {
 		//System.out.println("ThmInput - eliminateBeginEndThmPattern "+eliminateBeginEndThmPattern );
 		/*comment out this line if want to retain "\begin{theorem}", etc*/
 		thmStr = eliminateBeginEndThmPattern.matcher(thmStr).replaceAll("");
+		
 		//System.out.println("Think inf loop is matching right before this, shouldn't get to this point");
 		matcher = ITEM_PATTERN.matcher(thmStr);
 		//replace \item with bullet points (*)
@@ -432,8 +432,9 @@ public class ThmInput {
 		int footnoteStrLen = footnoteStr.length();
 		int thmLen = thm.length();
 		int endIndex = thmLen - footnoteStrLen - 3;
+		int i = 0;
 		
-		for(int i = 0; i < endIndex; i++) {
+		for(; i < endIndex; i++) {
 			
 			if(footnoteStr.equals(thm.substring(i, i+footnoteStrLen))) {
 				//don't check for escapes.
@@ -463,9 +464,9 @@ public class ThmInput {
 				
 			}else {
 				sb.append(thm.charAt(i));
-			}
-			
+			}			
 		}
+		sb.append(thm.substring(i, thmLen));
 		return sb.toString();
 		
 	}

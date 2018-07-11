@@ -68,17 +68,29 @@ public class TestMacrosTrie {
 
 	@Test
 	public void test3() {
-		String commandStr = "\\In";
-		String replacementStr = "\\mathrm{in}";
+		//\\newcommand{\\Xb}{\\textbf{\\upshape X}}
+		String commandStr = "\\Xb";
+		String replacementStr = "\\textbf{\\upshape X}";
 		int slotCount = 0;
-		String thm = "hi \\In{content} there";
-		String expected = "hi \\mathrm{in}{content} there";
+		String thm = "this is \\Xb";
+		String expected = "this is \\textbf{\\upshape X}";
 		
 		//System.out.println(parseMacros(commandStr, replacementStr, slotCount, thm));
 		String actual = parseMacros(commandStr, replacementStr, slotCount, thm);
 		
 		Assert.assertTrue(expected.equals(actual));		
 	}
+	
+	
 	//\newcommand\ol[1]{\overline{#1}}
 	
+	/* 
+	 * Test nested macros!!
+	 * \newcommand{\spc}{sp}
+
+\DeclareMathOperator{\ess}{ess}
+
+\newcommand{\speess}{\spc_{\eps,\ess}}
+\speess A
+	 */
 }

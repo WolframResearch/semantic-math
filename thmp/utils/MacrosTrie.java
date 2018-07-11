@@ -242,7 +242,8 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 				if(null == curNode) continue;
 				int thmSBLen = thmSB.length();
 				MacrosTrieNode nextNode = curNode.getTrieNode(c);
-				if(null == nextNode || (nextNode.commandStr != null && thmSB.charAt(thmSBLen - nextNode.commandStr.length()) != '\\')){
+				if(null == nextNode || (nextNode.commandStr != null 
+						&& thmSB.charAt(thmSBLen - nextNode.commandStr.length()) != '\\')){
 					//node cannot correspond to any known macro
 					trieNodeList.set(j, null);
 					continue;
@@ -278,6 +279,7 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 					}
 					//form the replacement String. Returns updated index (in original thmStr) to start further examination.
 					futureIndex = formReplacementString(thmStr, futureIndex, nextNode, commandStrSB);	
+					
 					commandStrTriggered = nextNode.commandStr;
 					//don't clear trieNodeList to allow for nested macros.
 					break;
@@ -320,6 +322,9 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 		int slotCount = trieNode.slotCount;
 		String templateReplacementString = trieNode.replacementStr;
 		if(slotCount == 0){
+			//some macros contain nested macros.
+			templateReplacementString = replaceMacrosInThmStr(templateReplacementString);
+			
 			replacementSB.append(templateReplacementString);
 			//System.out.println("replacementSB " + templateReplacementString);
 			return curIndex;
@@ -379,6 +384,12 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 		if(lastSlotEndIndex < templateReplacementStringLen-1){
 			replacementSB.append(templateReplacementString.charAt(templateReplacementStringLen-1));
 		}
+		//*Uncomment this if need to replace content in nested macros.
+		 //* //some macros contain nested macros.
+		String deepToStr = replaceMacrosInThmStr(replacementSB.toString());
+		replacementSB.setLength(0);
+		replacementSB.append(deepToStr);
+		
 		//System.out.println("replacementSB " + replacementSB + " templateReplacementString "+ templateReplacementString);
 		if(slotCount > 0 && startingIndex > curIndex){
 			//to counter the i++ in the loop, but only if there is nontrivial parameter to command.
