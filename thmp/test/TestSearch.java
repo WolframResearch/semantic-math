@@ -3,18 +3,11 @@ package thmp.test;
 
 import static org.junit.Assert.*;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
 
-import thmp.parse.Maps;
-import thmp.parse.ThmP1;
-import thmp.parse.ThmP1.ParsedPair;
 import thmp.search.SearchCombined;
 import thmp.search.SearchCombined.ThmHypPair;
 import thmp.search.SearchIntersection;

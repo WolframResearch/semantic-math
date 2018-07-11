@@ -2,16 +2,18 @@ package thmp.test;
 
 import org.junit.Test;
 
+import org.junit.Assert;
 import thmp.utils.MacrosTrie;
 import thmp.utils.MacrosTrie.MacrosTrieBuilder;
 
 public class TestMacrosTrie {
 
-	public static void main(String[] args) {
+	/*public static void main(String[] args) {
 		parseMacros();
-	}
+	}*/
 	
-	private static String parseMacros() {
+	private static String parseMacros(String commandStr, String replacementStr, int slotCount,
+			String thm) {
 		
 		MacrosTrieBuilder macrosTrieBuilder = new MacrosTrieBuilder();
 		/*
@@ -24,16 +26,13 @@ public class TestMacrosTrie {
 \newcommand{\In}{\mathrm{in}\,}
 \newcommand\m{\mathrm{m}}
 		 */
-
-		String commandStr = "\\In";
-		String replacementStr = "\\mathrm{in}\\,";
 		
 		//String slotCountStr = newThmMatcher.group(2);
-		int slotCount = 0;
+		
 		macrosTrieBuilder.addTrieNode(commandStr, replacementStr, slotCount);
 		
 		MacrosTrie macrosTrie = macrosTrieBuilder.build();
-		String replacedStr = macrosTrie.replaceMacrosInThmStr("hi \\In{content} there");
+		String replacedStr = macrosTrie.replaceMacrosInThmStr(thm);
 		System.out.println("replacedStr "+replacedStr);
 		
 		return replacedStr;
@@ -43,7 +42,43 @@ public class TestMacrosTrie {
 	public void test1() {
 		String commandStr = "\\wh";
 		String replacementStr = "\\widehat{#1}";
-		System.out.println(parseMacros());
+		int slotCount = 1;
+		String thm = "a \\wh {b}";
+		String expected = "a \\widehat{b}";
+		
+		//System.out.println(parseMacros(commandStr, replacementStr, slotCount, thm));
+		
+		String actual = parseMacros(commandStr, replacementStr, slotCount, thm);
+		Assert.assertTrue(expected.equals(actual));
 	}
 
+	@Test
+	public void test2() {
+		String commandStr = "\\In";
+		String replacementStr = "\\mathrm{in}";
+		int slotCount = 0;
+		String thm = "hi \\In{content} there";
+		String expected = "hi \\mathrm{in}{content} there";
+		
+		//System.out.println(parseMacros(commandStr, replacementStr, slotCount, thm));
+		String actual = parseMacros(commandStr, replacementStr, slotCount, thm);
+		
+		Assert.assertTrue(expected.equals(actual));		
+	}
+
+	@Test
+	public void test3() {
+		String commandStr = "\\In";
+		String replacementStr = "\\mathrm{in}";
+		int slotCount = 0;
+		String thm = "hi \\In{content} there";
+		String expected = "hi \\mathrm{in}{content} there";
+		
+		//System.out.println(parseMacros(commandStr, replacementStr, slotCount, thm));
+		String actual = parseMacros(commandStr, replacementStr, slotCount, thm);
+		
+		Assert.assertTrue(expected.equals(actual));		
+	}
+	//\newcommand\ol[1]{\overline{#1}}
+	
 }

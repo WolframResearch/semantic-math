@@ -101,10 +101,11 @@ public class ThmInput {
 	private static final Pattern INDEX_PATTERN = Pattern.compile(".*\\\\index\\{([^\\}]*)\\}%*.*");
 	/* pattern for eliminating the command completely for web display. E.g. \fml. How about \begin or \end everything?
 	//patterns such as \\rm are deprecated in TeX, but (new) authors still use them, and MathJax doesn't render them.
-	Space after \rm intentional*/
+	Space after \rm intentional. 
+	*/
 	private static final Pattern ELIMINATE_PATTERN = Pattern
 			.compile("\\\\df(?!rac)|\\\\emph|\\\\em|\\\\rm |\\\\cat|\\\\it(?!e)|\\\\(?:eq)*ref|\\\\subsection|\\\\section|\\\\bf|\\\\vspace"
-					+ "|\\\\ensuremath|\\\\(?:textbf|textsl|textsc)|\\\\footnote|\\\\linebreak|(?<!\\\\)%"
+					+ "|\\\\ensuremath|\\\\(?:textbf|textsl|textsc)|\\\\linebreak|(?<!\\\\)%"
 					+ "|\\\\fml|\\\\ofml|\\\\(?:begin|end)\\{enumerate\\}|\\\\(?:begin|end)\\{(?:sub)*section\\**\\}"					
 					+ "|\\\\begin\\{slogan\\}|\\\\end\\{slogan\\}|\\\\sbsb|\\\\cat|\\\\bs|\\\\maketitle"
 					+ "|\\\\section\\**\\{(?:[^}]*)\\}\\s*|\\\\noindent" 
@@ -300,6 +301,7 @@ public class ThmInput {
 	 * useful for parsing, such as \textit{ }.
 	 * Also remove markups such as "\begin{theorem}"
 	 * But enumerate should not always be turned off.
+	 * Remove footnotes.
 	 * @param newThmSB 
 	 * @param thmWebDisplayList Can be null. 
 	 * @param bareThmList Can be null. 
@@ -345,6 +347,10 @@ public class ThmInput {
 				}*/
 			}
 		}
+		
+		//parse to remove \footnote{...} from theorems, to not have those interjections.
+		thmStr = cleanTex(thmStr);
+		System.out.println("!! thmStr "+thmStr);
 		
 		thmStr = groupReplacePatt.matcher(thmStr).replaceAll(groupReplacePattStr);
 		
@@ -414,5 +420,54 @@ public class ThmInput {
 		//wordsThmStr is good for web display
 		return wordsThmStr;
 	}
-
+	
+	/**
+	 * Parse the given thm to clean up TeX, e.g. remove \footnote{...}
+	 * @param thm
+	 * @return
+	 */
+	private static String cleanTex(String thm) {
+		StringBuilder sb = new StringBuilder(200);
+		String footnoteStr = "\\footnote";
+		int footnoteStrLen = footnoteStr.length();
+		int thmLen = thm.length();
+		int endIndex = thmLen - footnoteStrLen - 3;
+		
+		for(int i = 0; i < endIndex; i++) {
+			
+			if(footnoteStr.equals(thm.substring(i, i+footnoteStrLen))) {
+				//don't check for escapes.
+				//There exist variations such as \footnote[10]{...}
+				i += footnoteStrLen;
+				while(i < thmLen && thm.charAt(i) != '{') {
+					i++;
+				}
+				i++;
+				int braceCounter = 1;
+				char c;
+				int prevChar = ' ';
+				while(i < thmLen && ((c=thm.charAt(i)) != '}' || braceCounter > 0)) {
+					if(prevChar != '\\') {
+						if(c == '{') {
+							braceCounter++;
+						}else if(c == '}') {
+							braceCounter--;
+							if(braceCounter == 0) {
+								break;
+							}
+						}
+					}
+					prevChar = c;
+					i++;
+				}
+				
+			}else {
+				sb.append(thm.charAt(i));
+			}
+			
+		}
+		return sb.toString();
+		
+	}
+	
 }
