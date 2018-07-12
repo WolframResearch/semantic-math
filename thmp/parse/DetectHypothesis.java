@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -127,6 +128,7 @@ public class DetectHypothesis {
 	private static final Pattern WHITE_SPACE_PATTERN = Pattern.compile("\\s*");
 	//replace $$ with $, so context vecs can close any opened begin math delimiters
 	static final Pattern doubleDollarPatt = Pattern.compile("\\$\\$");
+	static final String defaultThmType = "Theorem";
 	//max number of variables to retrieve context strings for.
 	private static final int variableDefinitionListThresh = 3;
 	//max length for definition sentence.
@@ -982,7 +984,9 @@ public class DetectHypothesis {
 		//definitions, and parse those definitions. Reset between theorems.
 		StringBuilder contextSB = new StringBuilder();
 		
-		String line = extractMacros(srcFileReader, customBeginThmList, macrosTrieBuilder);
+		Map<String, String> thmTypeMap = new HashMap<String, String>(ThmInput.defaultThmTypeMap);
+		
+		String line = extractMacros(srcFileReader, customBeginThmList, macrosTrieBuilder, thmTypeMap);
 		MacrosTrie macrosTrie = macrosTrieBuilder.build();
 		
 		//append list of macros to THM_START_STR and THM_END_STR
@@ -995,11 +999,25 @@ public class DetectHypothesis {
 		StringBuilder newThmSB = new StringBuilder();
 		Matcher matcher;
 		boolean inThm = false;
+		String curThmType = defaultThmType;
 		
 		if(null != line){
+			
 			matcher = thmStartPattern.matcher(line);
 			if (matcher.find()) {			
 				inThm = true;
+				String thmTypeKey = matcher.group(1);
+				
+				if(null != thmTypeKey) {
+					String thmType = thmTypeMap.get(thmTypeKey);
+					if(null != thmType) {
+						curThmType = thmType;
+					}else {
+						curThmType = defaultThmType;
+					}
+				}else {
+					curThmType = defaultThmType;
+				}
 				parseState.setInThmFlag(true);
 			}
 		}
@@ -1029,13 +1047,20 @@ public class DetectHypothesis {
 			
 			boolean appendedToThm = false;
 			matcher = thmStartPattern.matcher(line);
-			if (matcher.matches()) {				
-				// process here, return two versions, one for bag of words, one
-				// for display
-				// strip \df, \empf. Index followed by % strip, not percent
-				// don't strip.
-				// replace enumerate and \item with *
-				//thmWebDisplayList, and bareThmList should both be null
+			if (matcher.matches()) {		
+				
+				String thmTypeKey = matcher.group(1);
+				
+				if(null != thmTypeKey) {
+					String thmType = thmTypeMap.get(thmTypeKey);
+					if(null != thmType) {
+						curThmType = thmType;
+					}else {
+						curThmType = defaultThmType;
+					}
+				}else {
+					curThmType = defaultThmType;
+				}
 				
 				String contextStr;
 				int contextSBLen = contextSB.length();
@@ -1084,7 +1109,7 @@ public class DetectHypothesis {
 				
 				//parse hyp and thm.
 				processParseHypThm(newThmSB, parseState, stats, definitionListWithThmList, thmHypPairList, fileName, macrosTrie,
-						eliminateBeginEndThmPattern);				
+						curThmType, eliminateBeginEndThmPattern);				
 				continue;
 			}else if(END_DOCUMENT_PATTERN.matcher(line).matches()){
 				parseState.parseRunGlobalCleanUp();
@@ -1101,9 +1126,10 @@ public class DetectHypothesis {
 				//If multiple latex documents gathered together in one file.				
 				macrosTrieBuilder = new MacrosTrieBuilder();
 				customBeginThmList = new ArrayList<String>();
-				line = extractMacros(srcFileReader, customBeginThmList, macrosTrieBuilder);
+				line = extractMacros(srcFileReader, customBeginThmList, macrosTrieBuilder, thmTypeMap);
 				macrosTrie = macrosTrieBuilder.build();
-				//append list of macros to THM_START_STR and THM_END_STR
+				//append list of macros to THM_START_STR and THM_END_STR, for the *next* document in case 
+				//multiple are concatenated together.
 				customPatternAr = addMacrosToThmBeginEndPatterns(customBeginThmList);				
 				continue;
 			}
@@ -1136,11 +1162,12 @@ public class DetectHypothesis {
 	 * @param parseState
 	 * @param stats
 	 * @param definitionListWithThmList
+	 * @param thmType, e.g. Theorem, Conjecture, Lemma, etc.
 	 * @return thm, just thm, no hyp
 	 */
 	private static String processParseHypThm(StringBuilder newThmSB, ParseState parseState, Stats stats, 
 			List<DefinitionListWithThm> definitionListWithThmList, List<ThmHypPair> thmHypPairList,
-			String srcFileName, MacrosTrie macrosTrie,
+			String srcFileName, MacrosTrie macrosTrie, String thmType,
 			Pattern eliminateBeginEndThmPattern){
 		
 		// Replace Tex in text with macro expansions.
@@ -1164,7 +1191,7 @@ public class DetectHypothesis {
 		//if contained in local map, should be careful about when to append map.		
 		//append to newThmSB additional hypotheses that are applicable to the theorem.				
 		DefinitionListWithThm thmDef = appendHypothesesAndParseThm(thm, parseState, thmHypPairList, stats, srcFileName,
-				macrosTrie, eliminateBeginEndThmPattern);		
+				macrosTrie, thmType, eliminateBeginEndThmPattern);		
 		
 		if(thmDef != DefinitionListWithThm.PLACEHOLDER_DEF_LIST_WITH_THM){
 			definitionListWithThmList.add(thmDef);
@@ -1192,22 +1219,25 @@ public class DetectHypothesis {
 			StringBuilder startBuilder = new StringBuilder();
 			StringBuilder endBuilder = new StringBuilder();
 			StringBuilder eliminateBuilder = new StringBuilder();
+			
 			for(String macro : macrosList){
 				//create start and end macros  .*\\\\begin\\s*\\{def(?:.*)
 				//but only if isn't already included in THM_START_PATTERN \\\\begin\\{def(?:[^}]*)\\}\\s*
 				if(ThmInput.THM_START_PATTERN.matcher("\\begin{" + macro).matches()){
 					continue;
 				}
-				startBuilder.append("|.*\\\\begin\\s*\\{").append(macro).append(".*");
+				//capture the macro for thm start, to find theorem type, for display on website.
+				startBuilder.append(macro).append("|");
+				
 				//should only match white spaces instead of starting with "|.*\\\...":
-				endBuilder.append("|\\s*\\\\end\\s*\\{").append(macro).append(".*");
+				endBuilder.append(macro).append("|");
 				//e.g. "\\begin{lemma*} if no numbering needed"
 				eliminateBuilder.append("|\\\\begin\\s*\\{").append(macro).append("\\**\\}\\s*");
 				eliminateBuilder.append("|\\\\end\\s*\\{").append(macro).append("\\**\\}\\s*");
 			}
 			if(startBuilder.length() > 0){
-				customPatternAr[0] = Pattern.compile(ThmInput.THM_START_STR + startBuilder);
-				customPatternAr[1] = Pattern.compile(ThmInput.THM_END_STR + endBuilder);
+				customPatternAr[0] = Pattern.compile(ThmInput.THM_START_STR0 + startBuilder + ThmInput.THM_START_STR1);
+				customPatternAr[1] = Pattern.compile(ThmInput.THM_END_STR0 + endBuilder + ThmInput.THM_END_STR1);
 				customPatternAr[2] = Pattern.compile(ThmInput.ELIMINATE_BEGIN_END_THM_STR + endBuilder, 
 						Pattern.CASE_INSENSITIVE);
 			}
@@ -1222,10 +1252,11 @@ public class DetectHypothesis {
 	 * But some authors use the bad practice of defining macros after \begin{document}.
 	 * @param srcFileReader
 	 * @param thmMacrosList *Only* macros to indicate begin of new theorems, propositions, etc.
+	 * @param thmTypeMap Map of thm macro, and the thm type, i.e. {key: thm, value: Theorem}.
 	 * @throws IOException
 	 */
 	private static String extractMacros(BufferedReader srcFileReader, List<String> thmMacrosList, 
-			MacrosTrieBuilder macrosTrieBuilder) throws IOException {
+			MacrosTrieBuilder macrosTrieBuilder, Map<String, String> thmTypeMap) throws IOException {
 		
 		String line = null;
 		boolean documentBegan = false;
@@ -1243,8 +1274,15 @@ public class DetectHypothesis {
 			} 
 			if((newThmMatcher = ThmInput.NEW_THM_PATTERN.matcher(line)).matches()){
 				//should be a proposition, hypothesis, etc. E.g. don't look through proofs.
-				if(ThmInput.THM_TERMS_PATTERN.matcher(newThmMatcher.group(2)).find()){
-					thmMacrosList.add(newThmMatcher.group(1));	
+				//Keep whether it's thm, def, conjecture, etc, to label on the website.
+				Matcher m;
+				if((m=ThmInput.THM_TERMS_PATTERN.matcher(newThmMatcher.group(2))).find()){
+					//e.g. thm, conj, def.
+					String thmMacro = newThmMatcher.group(1);
+					//describe whether it's thm, hyp, etc.
+					String thmType = m.group(1);
+					thmTypeMap.put(thmMacro, thmType);
+					thmMacrosList.add(thmMacro);	
 				}
 			}else if((newThmMatcher = ThmInput.NEW_CMD_PATTERN.matcher(line)).matches()){
 				String commandStr = newThmMatcher.group(1);
@@ -1305,7 +1343,7 @@ public class DetectHypothesis {
 	 */
 	private static DefinitionListWithThm appendHypothesesAndParseThm(String thmStr, ParseState parseState, 
 			List<ThmHypPair> thmHypPairList, Stats stats, String srcFileName,
-			MacrosTrie macrosTrie, Pattern eliminateBeginEndThmPattern){
+			MacrosTrie macrosTrie, String thmType, Pattern eliminateBeginEndThmPattern){
 		
 		StringBuilder definitionSB = new StringBuilder();		
 		StringBuilder latexExpr = new StringBuilder();
@@ -1396,7 +1434,7 @@ public class DetectHypothesis {
 		/*** June 2017 ParsedExpression parsedExpression = new ParsedExpression(thmStr, parseState.getHeadParseStruct(),
 						defListWithThm);*/		
 		//parsedExpressionList.add(parsedExpression);
-		ThmHypPair thmHypPair = new ThmHypPair(thmStr, definitionStr, srcFileName);
+		ThmHypPair thmHypPair = new ThmHypPair(thmStr, definitionStr, srcFileName, thmType);
 		thmHypPairList.add(thmHypPair);
 		if(DEBUG) System.out.println("DetectHypothesis - thmHypPair "+ thmHypPair);
 		
@@ -1408,6 +1446,7 @@ public class DetectHypothesis {
 		//return this to supply to search later
 		return defListWithThm;
 	}
+	
 	/**
 	 * Post process thm string for search.
 	 * @param thmStr

@@ -64,6 +64,9 @@ public class SearchCombined {
 		//srcFileName two possible forms, e.g. math0211002, or 4387.86213.
 		private String srcFileName;
 		private String arxivURL;
+		//the type of thm, e.g. theorem, lemma, proposition, conjecture
+		private String thmType = "Theorem"; 
+		
 		private static final ThmHypPair PLACEHOLDER_PAIR = new ThmHypPair("", "", "");
 		
 		public ThmHypPair(String thmStr_, String hypStr_, String srcFileName_){
@@ -73,13 +76,19 @@ public class SearchCombined {
 			this.arxivURL = DataUtility.createArxivURLFromFileName(srcFileName_);
 		}
 		
+		public ThmHypPair(String thmStr_, String hypStr_, String srcFileName_, String thmType_){
+			this(thmStr_, hypStr_, srcFileName_);
+			this.thmType = thmType_;
+		}
+		
 		@Override
 		public String toString(){
 			StringBuilder sb = new StringBuilder(thmStr);
-			sb.append(" [").append(srcFileName).append("]");
+			sb.append(" [").append(srcFileName).append("] ");
+			sb.append(thmType);
 			if(!WordForms.getWhiteEmptySpacePattern().matcher(hypStr).matches()){
-				sb.append("\nHYP: ").append(hypStr);
-			}
+				sb.append(" \nHYP: ").append(hypStr);
+			}			
 			return sb.toString();
 		}
 		
@@ -89,6 +98,14 @@ public class SearchCombined {
 		
 		public String hypStr(){
 			return this.hypStr;
+		}
+		
+		/**
+		 * the type of thm, e.g. theorem, lemma, proposition, conjecture
+		 * @return
+		 */
+		public String thmType() {
+			return this.thmType;
 		}
 		
 		/**

@@ -9,7 +9,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -29,10 +31,22 @@ public class ThmInput {
 
 	//Intentionally *not* final, as must append custom author-defined macros and compile the pattern
 	//factor out the \begin! shouldn't need the [^\\\\]* if using matcher.find()
-	static String THM_START_STR = ".*\\\\begin\\s*\\{def(?:.*)|.*\\\\begin\\s*\\{lem(?:.*)"
+	/*static String THM_START_STR = ".*\\\\begin\\s*\\{(def)(?:.*)|.*\\\\begin\\s*\\{(lem)(?:.*)"
 			//<--{prop.. instead of {pro.., since need to skip parsing proofs.
-			+ "|.*\\\\begin\\s*\\{theo(?:.*)|.*\\\\begin\\s*\\{thm(?:.*)|.*\\\\begin\\s*\\{prop(?:.*)" 
-			+ "|.*\\{proclaim(?:.*)|.*\\\\begin\\s*\\{cor(?:.*)|.*\\\\begin\\s*\\{conj(?:.*)";
+			+ "|.*\\\\begin\\s*\\{(theo)(?:.*)|.*\\\\begin\\s*\\{(thm)(?:.*)|.*\\\\begin\\s*\\{(prop)(?:.*)" 
+			+ "|.*\\{(proclaim)(?:.*)|.*\\\\begin\\s*\\{(cor)(?:.*)|.*\\\\begin\\s*\\{(conj)(?:.*)";*/
+	
+	private static String THM_START_STR = ".*\\\\begin\\s*\\{(def|lem|theo|thm|prop|cor|conj).*"
+			//<--{prop.. instead of {pro.., since need to skip parsing proofs.
+			//not capturing the proclaim.
+			+ "|.*\\{proclaim(?:.*)";
+	static String THM_START_STR0 = ".*\\\\begin\\s*\\{(";
+	static String THM_START_STR1 = "def|lem|theo|thm|prop|cor|conj).*"
+			//<--{prop.. instead of {pro.., since need to skip parsing proofs.
+			//not capturing the proclaim.
+			+ "|.*\\{proclaim(?:.*)";	
+	//default map of thm types and their full type names, e.g. thm->Theorem.
+	static final Map<String, String> defaultThmTypeMap;
 	
 	static final Pattern THM_START_PATTERN = Pattern.compile(THM_START_STR);	
 	// start of theorem, to remove words such as \begin[prop]
@@ -43,9 +57,16 @@ public class ThmInput {
 	 * "|^\\\\begin\\{prop(?:[^}]*)\\}\\s*|^\\\\begin\\{proclaim(?:[^}]*)\\}\\s*"
 	 * );
 	 */	
-	static String THM_END_STR = ".*(?:\\\\end\\s*\\{def(?:.*)|\\\\end\\s*\\{lem(?:.*)"
+	/*static String THM_END_STR = ".*(?:\\\\end\\s*\\{def(?:.*)|\\\\end\\s*\\{lem(?:.*)"
 			+ "|\\\\end\\s*\\{theo(?:.*)|\\\\end\\s*\\{thm(?:.*)|\\\\end\\s*\\{prop.*|end\\s*\\{proclaim(?:.*)"
-			+ "|\\\\endproclaim(?:.*)|\\\\end\\s*\\{cor(?:.*)|\\\\end\\s*\\{conj(?:.*))";
+			+ "|\\\\endproclaim(?:.*)|\\\\end\\s*\\{cor(?:.*)|\\\\end\\s*\\{conj(?:.*))";*/
+
+	static String THM_END_STR0 = ".*\\\\end\\s*\\{(";
+	static String THM_END_STR1 = "def|lem|theo|thm|prop|proclaim|cor|conj).*"
+			+ "|\\\\endproclaim.*";
+	
+	static String THM_END_STR = ".*\\\\end\\s*\\{(def|lem|theo|thm|prop|proclaim|cor|conj).*"
+			+ "|\\\\endproclaim.*";
 	//static String THM_END_STR = "\\\\end\\{def(?:.*)|\\\\end\\{lem(?:.*)|\\\\end\\{th(?:.*)|\\\\end\\{pro(?:.*)|\\\\endproclaim(?:.*)"
 			//+ "|\\\\end\\{cor(?:.*)";
 	static final Pattern THM_END_PATTERN = Pattern.compile(THM_END_STR);
@@ -68,7 +89,7 @@ public class ThmInput {
 	//define math operator a la \DeclareMathOperator{\sin}{sin}, \DeclareMathOperator*{\spec}{Spec}
 	public static final Pattern MATH_OP_PATTERN = Pattern.compile("\\s*\\\\DeclareMathOperator\\**\\s*\\{([^}]+)\\}\\s*\\{(.+?)\\}\\s*");
 	
-	static final Pattern THM_TERMS_PATTERN = Pattern.compile("Theorem|Proposition|Lemma|Corollary|Conjecture|Definition|Claim");
+	static final Pattern THM_TERMS_PATTERN = Pattern.compile("(Theorem|Proposition|Lemma|Corollary|Conjecture|Definition|Claim)");
 	
 	private static final Pattern LABEL_PATTERN = Pattern.compile("(.*?)\\\\label\\{(?:[^}]*)\\}\\s*(.*?)");
 	//private static final Pattern DIGIT_PATTERN = Pattern.compile(".*\\d+.*");
@@ -123,6 +144,14 @@ public class ThmInput {
 	
 	private static final Pattern ITEM_PATTERN = Pattern.compile("\\\\item");
 
+	static {
+		Map<String, String> defaultThmTypeMap0 = new HashMap<String, String>();
+		defaultThmTypeMap0.put("thm", "Theorem");
+		defaultThmTypeMap0.put("prop", "Proposition");
+		
+		defaultThmTypeMap = new HashMap<String, String>(defaultThmTypeMap0);
+	}
+	
 	public static void main1(String[] args) throws IOException {
 		boolean writeToFile = false;
 
