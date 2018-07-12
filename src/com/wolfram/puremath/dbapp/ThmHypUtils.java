@@ -39,6 +39,7 @@ public class ThmHypUtils {
 		querySb.append("SELECT ").append(ThmHypTb.THM_COL)
 		.append(", ").append(ThmHypTb.HYP_COL)
 		.append(", ").append(ThmHypTb.FILE_NAME_COL)
+		.append(", ").append(ThmHypTb.THM_TYPE_COL)
 		.append(" FROM ").append(ThmHypTb.TB_NAME)
 		.append(" WHERE ").append(ThmHypTb.THM_INDEX_COL)
 		.append("=").append(thmIndex).append(";");
@@ -52,6 +53,7 @@ public class ThmHypUtils {
 		String thmStr = "";
 		String hypStr = "";
 		String fileNameStr = "";
+		String thmTypeStr = "";
 		
 	 	if(rs.next()) {
 			//indexBytes = rs.getBytes(DBUtils.LiteralSearchTb.THM_INDICES_COL);
@@ -60,6 +62,7 @@ public class ThmHypUtils {
 			thmStr = rs.getString(ThmHypTb.THM_COL);
 			hypStr = rs.getString(ThmHypTb.HYP_COL);
 			fileNameStr = rs.getString(ThmHypTb.FILE_NAME_COL);
+			thmTypeStr = rs.getString(ThmHypTb.THM_TYPE_COL);
 		}else {
 			pstm.close();
 			return ThmHypPair.PLACEHOLDER_PAIR();
@@ -70,7 +73,7 @@ public class ThmHypUtils {
 		//thmIndexList.addAll(SimilarThmUtils.byteArrayToIndexList(indexBytes, numBitsPerThmIndex));
 		//wordsIndexArList.addAll(SimilarThmUtils.byteArrayToIndexList(wordsIndexArBytes, numBitsPerWordIndex));
 		
-		return new ThmHypPair(thmStr, hypStr, fileNameStr);
+		return new ThmHypPair(thmStr, hypStr, fileNameStr, thmTypeStr);
 	}
 	
 	/**
@@ -100,9 +103,10 @@ public class ThmHypUtils {
 		
 		StringBuilder querySb = new StringBuilder(60);
 		querySb.append("SELECT ").append(ThmHypTb.THM_INDEX_COL)
-		.append(ThmHypTb.THM_COL)
+		.append(", ").append(ThmHypTb.THM_COL)
 		.append(", ").append(ThmHypTb.HYP_COL)
 		.append(", ").append(ThmHypTb.FILE_NAME_COL)
+		.append(", ").append(ThmHypTb.THM_TYPE_COL)
 		.append(" FROM ").append(ThmHypTb.TB_NAME)
 		.append(" WHERE ").append(thmIndexSb)
 		.append(";");
@@ -115,6 +119,7 @@ public class ThmHypUtils {
 		String thmStr = "";
 		String hypStr = "";
 		String fileNameStr = "";
+		String thmTypeStr = "";
 		
 		ResultSet rs = pstm.executeQuery();
 		List<ThmHypPair> thmHypPairList = new ArrayList<ThmHypPair>();
@@ -128,8 +133,9 @@ public class ThmHypUtils {
 			thmStr = rs.getString(ThmHypTb.THM_COL);
 			hypStr = rs.getString(ThmHypTb.HYP_COL);
 			fileNameStr = rs.getString(ThmHypTb.FILE_NAME_COL);
+			thmTypeStr = rs.getString(ThmHypTb.THM_TYPE_COL);
 			
-			thmHypPairMap.put(thmIndex, new ThmHypPair(thmStr, hypStr, fileNameStr));			
+			thmHypPairMap.put(thmIndex, new ThmHypPair(thmStr, hypStr, fileNameStr, thmTypeStr));			
 		}
 	 	
 	 	thmHypPairList.addAll(thmHypPairMap.values());
@@ -212,7 +218,9 @@ public class ThmHypUtils {
 				+ " MODIFY " + ThmHypTb.THM_INDEX_COL + " INTEGER,"
 				+ " MODIFY " + ThmHypTb.THM_COL + " VARCHAR(" + ThmHypTb.maxThmColLen + "),"
 				+ " MODIFY " + ThmHypTb.HYP_COL + " VARCHAR(" + ThmHypTb.maxHypColLen + "),"
-				+ " MODIFY " + ThmHypTb.FILE_NAME_COL + " VARCHAR(" + ThmHypTb.maxFileNameLen + ");");
+				+ " MODIFY " + ThmHypTb.FILE_NAME_COL + " VARCHAR(" + ThmHypTb.maxFileNameLen + "),"
+				+ " MODIFY " + ThmHypTb.THM_TYPE_COL + " VARCHAR(" + ThmHypTb.maxThmTypeLen + ");");
+		
 		pstm.executeUpdate();
 		
 		pstm = conn.prepareStatement("ALTER TABLE " + ThmHypTb.TB_NAME + " DROP PRIMARY KEY;");
@@ -247,7 +255,8 @@ public class ThmHypUtils {
 		.append(",").append(ThmHypTb.THM_COL)
 		.append(",").append(ThmHypTb.HYP_COL)
 		.append(",").append(ThmHypTb.FILE_NAME_COL)
-		.append(") VALUES(?, ?, ?, ?);") ;	
+		.append(",").append(ThmHypTb.THM_TYPE_COL)
+		.append(") VALUES(?, ?, ?, ?, ?);") ;	
 		
 		pstm = conn.prepareStatement(sb.toString());
 		
@@ -306,6 +315,7 @@ public class ThmHypUtils {
 			String thmStr = thmHypPair.thmStr();
 			String hypStr = thmHypPair.hypStr();
 			String fileName = thmHypPair.srcFileName();
+			String thmType = thmHypPair.thmType();
 			
 			//turn list of LiteralSearchIndex's into two lists of Integers, finally a byte array.
 			/*List<Integer> thmIndexList = new ArrayList<Integer>();
@@ -316,6 +326,7 @@ public class ThmHypUtils {
 			pstm.setString(2, thmStr);
 			pstm.setString(3, hypStr);
 			pstm.setString(4, fileName);
+			pstm.setString(5, thmType);
 			
 			pstm.addBatch();
 		}

@@ -129,12 +129,16 @@ public class DBUtils {
 		public static final String THM_COL = "thm";
 		public static final String HYP_COL = "hyp";
 		public static final String FILE_NAME_COL = "fileName";
+		//type of thm, e.g. Conjecture, Definition, etc.
+		public static final String THM_TYPE_COL = "thmType";
+		
 		//32767 is 55535/2. A thm or hyp of this length has not been observed, not to mention 
 		//both having this length.
 		public static final int maxThmColLen = 32700; //32767;
 		public static final int maxHypColLen = 32700; //32767;
 		//max file name length, arXiv file, as characters.
 		public static final int maxFileNameLen = 50;
+		public static final int maxThmTypeLen = 15;
 	}
 	
 	/**

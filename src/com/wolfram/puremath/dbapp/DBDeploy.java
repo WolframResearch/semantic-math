@@ -121,7 +121,7 @@ public class DBDeploy {
 		//ThmHypUtils.createThmHypTb(conn);
 		ThmHypUtils.populateThmHypTb(conn, dirpath);
 		
-		//June13: don't deploy to DB, redundant wrt wordmap LiteralSearchUtils.populateLiteralSearchTb(conn);
+		LiteralSearchUtils.populateLiteralSearchTb(conn);
 		
 		conn.close();
 	}
