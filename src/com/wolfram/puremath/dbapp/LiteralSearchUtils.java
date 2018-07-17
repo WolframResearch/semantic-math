@@ -6,9 +6,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ListMultimap;
@@ -34,7 +37,7 @@ public class LiteralSearchUtils {
 	private static final int numBitsPerThmIndex = SimilarThmUtils.numBitsPerThmIndex();
 	/**Number of bits per word index, word index being an element of the word index array for a thm*/
 	private static final int numBitsPerWordIndex = LiteralSearchIndex.NUM_BITS_PER_WORD_INDEX;
-	
+		
 	/**
 	 * Retrieve literal search thm indices, and the indices of that word
 	 * in these thms, from db.
@@ -112,11 +115,14 @@ public class LiteralSearchUtils {
 		int maxWordsArListLen = maxThmsPerLiteralWord * wordIndexArTotalLen;
 		
 		int wordArVarBinaryLen = maxWordsArListLen * numBitsPerWordIndex / DBUtils.NUM_BITS_PER_BYTE;
+		wordArVarBinaryLen += padding;
+		
 		//"ALTER TABLE <table_name> MODIFY <col_name> VARCHAR(65);";
 		pstm = conn.prepareStatement("CREATE TABLE " + LiteralSearchTb.TB_NAME 
 				+ " (" + LiteralSearchTb.WORD_COL + " VARCHAR(" + LiteralSearch.LITERAL_WORD_LEN_MAX + "),"
 				+ LiteralSearchTb.THM_INDICES_COL + " VARBINARY(" + varbinaryLen + "),"
-				+ LiteralSearchTb.WORD_INDICES_COL + " VARBINARY(" + wordArVarBinaryLen + "));");
+				+ LiteralSearchTb.WORD_INDICES_COL + " VARBINARY(" + wordArVarBinaryLen 
+				+ ")) COLLATE utf8_bin;");
 		pstm.executeUpdate();
 		
 		/*pstm = conn.prepareStatement("ALTER TABLE " + LiteralSearchTb.TB_NAME + " DROP PRIMARY KEY;");
@@ -145,7 +151,7 @@ public class LiteralSearchUtils {
 		.append(LiteralSearchTb.WORD_COL)
 		.append(",").append(LiteralSearchTb.THM_INDICES_COL)
 		.append(",").append(LiteralSearchTb.WORD_INDICES_COL)
-		.append(") VALUES(?, ?, ?);") ;		
+		.append(") VALUES(?, ?, ?);");	
 		
 		pstm = conn.prepareStatement(sb.toString());
 		
@@ -157,6 +163,7 @@ public class LiteralSearchUtils {
 		Iterator<String> iter = keySet.iterator();
 		int keySetSz = keySet.size();
 		//int entrySetSz = entrySet.size();
+		//Set<String> insertedWords = new HashSet<String>();
 		
 		final int batchSz = 30000;
 		System.out.println("Total number of batches: " + Math.ceil(keySetSz/(double)batchSz));
@@ -167,6 +174,7 @@ public class LiteralSearchUtils {
 			for(int i = 0; i < batchSz && iter.hasNext(); i++) {
 				
 				String word = iter.next();
+				
 				Collection<LiteralSearchIndex> searchIndexCol = literalIndexMMap.get(word);
 				
 				//turn list of LiteralSearchIndex's into two lists of Integers, finally a byte array.
@@ -206,7 +214,7 @@ public class LiteralSearchUtils {
 				
 				pstm.addBatch();
 			}
-			pstm.executeBatch();			
+			pstm.executeBatch();	
 		}
 	}
 	
