@@ -119,6 +119,7 @@ public class DBDeploy {
 		
 		//temporary comment out!! June populateAuthorTb(conn);
 		//ThmHypUtils.createThmHypTb(conn);
+		ThmHypUtils.createThmHypTb(conn);
 		ThmHypUtils.populateThmHypTb(conn, dirpath);
 		
 		LiteralSearchUtils.populateLiteralSearchTb(conn);

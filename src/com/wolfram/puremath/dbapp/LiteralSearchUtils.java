@@ -10,8 +10,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ListMultimap;
 import com.wolfram.puremath.dbapp.DBUtils.LiteralSearchTb;
+import com.wolfram.puremath.dbapp.DBUtils.ThmHypTb;
 
 import thmp.search.LiteralSearch;
 import thmp.search.LiteralSearch.LiteralSearchIndex;
@@ -100,8 +102,10 @@ public class LiteralSearchUtils {
 		
 		PreparedStatement pstm;
 		
-		pstm = conn.prepareStatement("TRUNCATE " + LiteralSearchTb.TB_NAME + ";");		
-		pstm.executeUpdate();
+		DBUtils.dropTableIfExists(conn, LiteralSearchTb.TB_NAME);
+		
+		/*pstm = conn.prepareStatement("TRUNCATE " + LiteralSearchTb.TB_NAME + ";");		
+		pstm.executeUpdate();*/
 		
 		//need to update table MEDIUMINT(9) UNSIGNED;  VARBINARY(265)
 		int wordIndexArTotalLen = LiteralSearchIndex.MAX_INDEX_COUNT_PER_WORD; //this value is 2
@@ -109,22 +113,22 @@ public class LiteralSearchUtils {
 		
 		int wordArVarBinaryLen = maxWordsArListLen * numBitsPerWordIndex / DBUtils.NUM_BITS_PER_BYTE;
 		//"ALTER TABLE <table_name> MODIFY <col_name> VARCHAR(65);";
-		pstm = conn.prepareStatement("ALTER TABLE " + LiteralSearchTb.TB_NAME 
-				+ " MODIFY " + LiteralSearchTb.WORD_COL + " VARCHAR(" + LiteralSearch.LITERAL_WORD_LEN_MAX + "),"
-				+ " MODIFY " + LiteralSearchTb.THM_INDICES_COL + " VARBINARY(" + varbinaryLen + "),"
-				+ " MODIFY " + LiteralSearchTb.WORD_INDICES_COL + " VARBINARY(" + wordArVarBinaryLen + ");");
+		pstm = conn.prepareStatement("CREATE TABLE " + LiteralSearchTb.TB_NAME 
+				+ " (" + LiteralSearchTb.WORD_COL + " VARCHAR(" + LiteralSearch.LITERAL_WORD_LEN_MAX + "),"
+				+ LiteralSearchTb.THM_INDICES_COL + " VARBINARY(" + varbinaryLen + "),"
+				+ LiteralSearchTb.WORD_INDICES_COL + " VARBINARY(" + wordArVarBinaryLen + "));");
 		pstm.executeUpdate();
 		
-		pstm = conn.prepareStatement("ALTER TABLE " + LiteralSearchTb.TB_NAME + " DROP PRIMARY KEY;");
-		pstm.executeUpdate();
+		/*pstm = conn.prepareStatement("ALTER TABLE " + LiteralSearchTb.TB_NAME + " DROP PRIMARY KEY;");
+		pstm.executeUpdate();*/
 		
 		//populate table from serialized similar thms indices
 		@SuppressWarnings("unchecked")
-		List<ListMultimap<String, LiteralSearchIndex>> literalSearchMapList 
-			= (List<ListMultimap<String, LiteralSearchIndex>>)DBUtils
+		List<HashMultimap<String, LiteralSearchIndex>> literalSearchMapList 
+			= (List<HashMultimap<String, LiteralSearchIndex>>)DBUtils
 				.deserializeListFromFile(DBUtils.LiteralSearchTb.literalSearchIndexMMapPath);
 		
-		ListMultimap<String, LiteralSearchIndex> literalIndexMMap = literalSearchMapList.get(0);
+		HashMultimap<String, LiteralSearchIndex> literalIndexMMap = literalSearchMapList.get(0);
 		
 		//construct bytes based on 
 		StringBuilder sb = new StringBuilder(50);

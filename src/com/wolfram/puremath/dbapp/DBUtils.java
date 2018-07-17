@@ -101,7 +101,7 @@ public class DBUtils {
 		public static final String literalSearchByteArrayPath = "src/thmp/data/literalSearchByteArray.dat";
 		//multimap of words and the LiteralSearchIndex's for the list of thms containing that word.
 		//June 13, 2018, don't use literal search to save on memory.
-		public static final String literalSearchIndexMMapPath = "src/thmp/data/literalSearchIndexMMap.dat";
+		public static final String literalSearchIndexMMapPath = "src/thmp/data/literalSearchIndexMap.dat";
 		public static final String TB_NAME = "literalSearchTb";
 		/**thm index*/
 		public static final String WORD_COL = "word";

@@ -359,7 +359,8 @@ public class ThmHypUtils {
 		.append(" (").append(ThmHypTb.THM_INDEX_COL).append(" INTEGER, ")
 		.append(ThmHypTb.THM_COL).append(" VARCHAR(" + ThmHypTb.maxThmColLen + "),")
 		.append(ThmHypTb.HYP_COL).append(" VARCHAR(" + ThmHypTb.maxHypColLen + "),")
-		.append(ThmHypTb.FILE_NAME_COL).append(" VARCHAR(" + ThmHypTb.maxFileNameLen + "));");
+		.append(ThmHypTb.FILE_NAME_COL).append(" VARCHAR(" + ThmHypTb.maxFileNameLen + "),")
+		.append(ThmHypTb.THM_TYPE_COL).append(" VARCHAR(" + ThmHypTb.maxThmTypeLen + "));");
 		
 		pstm = conn.prepareStatement(sb.toString());
 		pstm.executeUpdate();
