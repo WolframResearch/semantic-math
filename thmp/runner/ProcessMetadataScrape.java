@@ -14,14 +14,16 @@ import thmp.utils.FileUtils;
 /**
  * Process arXiv metadata scrape, create and serialize resulting map. 
  * Metadata such as author, date, etc. 
- * This NEEDS to be run to produce updated title and author info to display on the web!
+ * This MUST to be run to produce updated title and author info to display on the web!
+ * To produce a .txt file containing data such as '1506.01325','Christina','W','Tonnesen-Friedman',
+ * all on one line.
  * @author yihed
  *
  */
 public class ProcessMetadataScrape {
 	
 	private static final String paperMetaDataMapSerFileStr = "src/thmp/data/paperMetaDataMap.dat";
-	//private static final String paperMetaDataMapTxtFileStr = "src/thmp/data/paperMetaDataMap.txt";
+	private static final String paperMetaDataMapTxtFileStr = "src/thmp/data/paperMetaDataMap.txt";
 	//e.g. "quant-ph/9905093"
 	private static final Pattern PAPER_ID_PATT = Pattern.compile("(.+?)/([\\d.]+)");
 	
@@ -76,7 +78,8 @@ public class ProcessMetadataScrape {
 					metaDataList.add(metaDataMap);
 					FileUtils.serializeObjToFile(metaDataList, paperMetaDataMapSerFileStr);
 					//for human inspection purposes. 
-					//Deserialize if you want to see. FileUtils.writeToFile(metaDataMap, paperMetaDataMapTxtFileStr);
+					//Deserialize if you want to see. 
+					FileUtils.writeToFile(metaDataMap, paperMetaDataMapTxtFileStr);
 		}
 	}
 	

@@ -30,6 +30,7 @@ public class DBSearch {
 	public static final String FIRST_NAME_COL = "firstName";
 	public static final String MIDDLE_NAME_COL = "middleName";
 	public static final String LAST_NAME_COL = "lastName";	
+	//right now paper id column not used (? July 2018)
 	public static final String PAPER_ID_COL = "paperId";
 	
 	public static final String AUTHOR_CSV_FILE = Searcher.SearchMetaData.nameCSVDataPath();

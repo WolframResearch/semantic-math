@@ -185,6 +185,7 @@ public class DBUtils {
 	 * Repopulates data in author table, with updated data
 	 * on thm indices. 
 	 * Will delete existing author table and everything on it!
+	 * @deprecated July 2018. Use 
 	 */
 	public static void reloadAuthorTable(Connection conn) {
 		
