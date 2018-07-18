@@ -219,6 +219,16 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 	 * @return thmStr with macros replaced with macros defined in this MacrosTrie.
 	 */
 	public String replaceMacrosInThmStr(String thmStr){
+		return replaceMacrosInThmStr(thmStr, true);
+	}
+	
+	/**
+	 * Used during data extraction process after trie is built.
+	 * @param thmStr
+	 * @param checkNested: whether to check for nested macros, e.g. \newcommand{\s}{\sp_e}
+	 * @return thmStr with macros replaced with macros defined in this MacrosTrie.
+	 */
+	private String replaceMacrosInThmStr(String thmStr, boolean checkNested){
 		
 		List<MacrosTrieNode> trieNodeList = new ArrayList<MacrosTrieNode>();
 		
@@ -278,7 +288,7 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 						i = futureIndex;	
 					}
 					//form the replacement String. Returns updated index (in original thmStr) to start further examination.
-					futureIndex = formReplacementString(thmStr, futureIndex, nextNode, commandStrSB);	
+					futureIndex = formReplacementString(thmStr, futureIndex, nextNode, commandStrSB, checkNested);	
 					
 					commandStrTriggered = nextNode.commandStr;
 					//don't clear trieNodeList to allow for nested macros.
@@ -313,18 +323,20 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 	 * @param thmStr
 	 * @param curIndex
 	 * @param replacementSB SB to be filled in.
+	 * @param checkNested: whether to check for nested macros.
 	 * @return updated index (in original thmStr) to start further examination at.
 	 */
-	private int formReplacementString(String thmStr, int curIndex, MacrosTrieNode trieNode, StringBuilder replacementSB
-			) {
+	private int formReplacementString(String thmStr, int curIndex, MacrosTrieNode trieNode, StringBuilder replacementSB,
+			boolean checkNested) {
 		//replace #...		
 		//int indexToSkip = 0;
 		int slotCount = trieNode.slotCount;
 		String templateReplacementString = trieNode.replacementStr;
 		if(slotCount == 0){
 			//some macros contain nested macros.
-			templateReplacementString = replaceMacrosInThmStr(templateReplacementString);
-			
+			if(checkNested) {
+				templateReplacementString = replaceMacrosInThmStr(templateReplacementString, false);
+			}
 			replacementSB.append(templateReplacementString);
 			//System.out.println("replacementSB " + templateReplacementString);
 			return curIndex;
@@ -386,9 +398,12 @@ public class MacrosTrie/*<MacrosTrieNode> extends WordTrie<WordTrieNode>*/ {
 		}
 		//*Uncomment this if need to replace content in nested macros.
 		 //* //some macros contain nested macros.
+		/*
+		if(checkNested){
 		String deepToStr = replaceMacrosInThmStr(replacementSB.toString());
 		replacementSB.setLength(0);
 		replacementSB.append(deepToStr);
+		}*/
 		
 		//System.out.println("replacementSB " + replacementSB + " templateReplacementString "+ templateReplacementString);
 		if(slotCount > 0 && startingIndex > curIndex){

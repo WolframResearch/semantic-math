@@ -90,10 +90,12 @@ public class ThmInput {
 	public static final Pattern MATH_OP_PATTERN = Pattern.compile("\\s*\\\\DeclareMathOperator\\**\\s*\\{([^}]+)\\}\\s*\\{(.+?)\\}\\s*");
 	
 	static final Pattern THM_TERMS_PATTERN = Pattern.compile("(Theorem|Proposition|Lemma|Corollary|Conjecture|Definition|Claim)");
-	
-	private static final Pattern LABEL_PATTERN = Pattern.compile("(.*?)\\\\label\\{(?:[^}]*)\\}\\s*(.*?)");
+	//deliberately not including eqref
+	private static final Pattern LABEL_PATTERN = Pattern.compile("(.*?)\\\\(?:label|ref)\\{(?:[^}$]*)\\}\\s*(.*?)");
 	//private static final Pattern DIGIT_PATTERN = Pattern.compile(".*\\d+.*");
-
+	static final Pattern endAnyPattern = Pattern.compile("(.*?)\\\\end.*");
+	static final Pattern beginAnyPattern = Pattern.compile("(.*?)\\\\begin.*");
+	
 	/* Boldface typesetting. \cat{} refers to category. *MUST Update* DF_EMPH_PATTERN_REPLACEMENT when updating this!
 	   e.g. {\em lll\/}. These are deprecated as of May 2018. But keep for reference.*/
 	/*private static final Pattern DF_EMPH_PATTERN = Pattern
@@ -128,12 +130,13 @@ public class ThmInput {
 			.compile("\\\\df(?!rac)|\\\\emph|\\\\em|\\\\rm |\\\\cat|\\\\it(?!e)|\\\\(?:eq)*ref|\\\\subsection|\\\\section|\\\\bf|\\\\vspace"
 					+ "|\\\\ensuremath|\\\\(?:textbf|textsl|textsc)|\\\\linebreak|(?<!\\\\)%"
 					+ "|\\\\fml|\\\\ofml|\\\\(?:begin|end)\\{enumerate\\}|\\\\(?:begin|end)\\{(?:sub)*section\\**\\}"					
-					+ "|\\\\begin\\{slogan\\}|\\\\end\\{slogan\\}|\\\\sbsb|\\\\cat|\\\\bs|\\\\maketitle"
-					+ "|\\\\section\\**\\{(?:[^}]*)\\}\\s*|\\\\noindent" 
+					+ "|\\\\begin\\{slogan\\}|\\\\end\\{slogan\\}|\\\\sbsb|\\\\cat|\\\\bs|\\\\maketitle|\\\\textup"
+					+ "|\\\\section\\**\\{(?:[^}]*)\\}\\s*|\\\\noindent|\\\\(?:small|big)skip" 
 					//eliminate \begin{aligned} later. |\\\\begin\\{a(?:[^}]*)\\}|\\\\end\\{a(?:[^}]*)\\}\\s*"
 					+ "|\\\\cite\\{[^}]+\\}|\\\\cite\\[[^\\]]+\\]|\\\\par\\s|\\\\(?:begin|end)\\{displaymath\\}",
 					Pattern.CASE_INSENSITIVE);
 	//Eliminate begin/end{align*} as well, for better display on web frontend. <--don't eliminate begin/end{align}!
+	//Note this string is used to dynamically compile Patterns in DetectHypothesis.java, so must edit with caution.
 	static final String ELIMINATE_BEGIN_END_THM_STR = "\\\\begin\\{def(?:[^}]*)\\}\\s*|\\\\begin\\{lem(?:[^}]*)\\}\\s*|\\\\begin\\{th(?:[^}]*)\\}\\s*"
 					+ "|\\\\begin\\{pr(?:[^}]*)\\}\\s*|\\\\begin\\{proclaim(?:[^}]*)\\}\\s*|\\\\begin\\{co(?:[^}]*)\\}\\s*"
 					+ "|\\\\end\\{def(?:[^}]*)\\}\\s*|\\\\end\\{lem(?:[^}]*)\\}\\s*|\\\\end\\{th(?:[^}]*)\\}\\s*"
@@ -147,7 +150,13 @@ public class ThmInput {
 	static {
 		Map<String, String> defaultThmTypeMap0 = new HashMap<String, String>();
 		defaultThmTypeMap0.put("thm", "Theorem");
+		defaultThmTypeMap0.put("theo", "Theorem");
 		defaultThmTypeMap0.put("prop", "Proposition");
+		defaultThmTypeMap0.put("lem", "Lemma");
+		defaultThmTypeMap0.put("proclaim", "Claim");
+		defaultThmTypeMap0.put("cor", "Corollary");
+		defaultThmTypeMap0.put("conj", "Conjecture");
+		defaultThmTypeMap0.put("def", "Definition");
 		
 		defaultThmTypeMap = new HashMap<String, String>(defaultThmTypeMap0);
 	}
@@ -310,8 +319,6 @@ public class ThmInput {
 		}
 
 		// srcFileReader.close();
-		// System.out.println("Inside ThmInput, thmsList " + thms);
-		// System.out.println("thmWebDisplayList " + thmWebDisplayList);
 		return thms;
 	}
 

@@ -474,6 +474,8 @@ public class Maps {
 			
 			posPreMMap.put("disjoint", "adj");
 			posPreMMap.put("perfect", "adj");
+			//deliberate spelling for C^* algebra. No dash
+			posPreMMap.put("c algebra", "ent");
 			posPreMMap.put("equivalent", "adj");
 			posPreMMap.put("finite", "adj_comp");
 			posPreMMap.put("linear", "adj");

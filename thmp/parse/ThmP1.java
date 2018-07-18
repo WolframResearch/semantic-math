@@ -652,19 +652,31 @@ public class ThmP1 {
 	
 	/**
 	 * Tokenizes input by splitting into comma-separated strings
-	 * @param sentence string to be tokenized
+	 * @param sentence string to be tokenized.
 	 * @param parseState current state of the parse.
 	 * @return List of Struct's
 	 * @throws IllegalSyntaxException 
 	 */
 	public static ParseState tokenize(String sentence, ParseState parseState) throws IllegalSyntaxException{
+		return tokenize(sentence, null, parseState);
+	}
+	
+	/**
+	 * Tokenizes input by splitting into comma-separated strings
+	 * @param sentence string to be tokenized.
+	 * @param originalCaseSentence sentence in original case, so definitions attached to variables can have original case.
+	 * @param parseState current state of the parse.
+	 * @return List of Struct's
+	 * @throws IllegalSyntaxException 
+	 */
+	public static ParseState tokenize(String sentence, String originalCaseSentence, ParseState parseState) throws IllegalSyntaxException{
 		
 		if(WordForms.getWhiteEmptySpacePattern().matcher(sentence).matches()){
 			return parseState;
 		}
 		//Note that this sentence does not necessarily have closed \begin{align}, etc.
 		//preprocess() should have closed math delimiters such as $ and \[ if input contains the closing.
-		parseState.setCurrentInputStr(sentence);
+		parseState.setCurrentInputStr(originalCaseSentence == null ? "" : originalCaseSentence);
 		
 		//check for punctuation, set parseState to reflect punctuation.
 		int sentenceLen = sentence.length();
@@ -5225,7 +5237,7 @@ public class ThmP1 {
 			originalCaseSentenceList.add(originalCaseBuilder.toString());
 		}		
 		//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
-		//System.out.println("ORIGINAL CASE " + originalCaseSentenceList);
+		//System.out.println("!! ORIGINAL CASE " + originalCaseSentenceList);
 		return sentenceList.toArray(new String[0]);
 	}
 	

@@ -81,8 +81,12 @@ public class SearchIntersection {
 
 	// these maps are not immutable.
 	private static final Map<String, Integer> twoGramsMap = NGramSearch.get2GramsMap();
-	private static final Map<String, Integer> threeGramsMap = ThreeGramSearch.get3GramsMap();
+	//private static final Map<String, Integer> threeGramsMap = ThreeGramSearch.get3GramsMap();
 
+	//can assume input string already lower-cased. 
+	private static final Pattern queryPreprocessPatt = Pattern.compile("(\\s+|^)(?:c\\^*\\*[\\s\\-]algebra)");
+	private static final String queryPreprocessReplStr = "$1c-algebra";
+	
 	// debug flag for development. Prints out the words used and their scores.
 	private static final boolean DEBUG = FileUtils.isOSX();
 	
@@ -544,7 +548,17 @@ public class SearchIntersection {
 		if (WordForms.getWhiteEmptySpacePattern().matcher(input).matches()){
 			return null;
 		}
+		
 		input = input.toLowerCase();
+		
+		/*preprocessing for special handling of terms, such as turning "C^* algebra"
+		 * to C-algebra, which is the case harvested by the scrape.
+		 * Call this after lower-casing.
+		 */
+		Matcher matcher = queryPreprocessPatt.matcher(input);
+		if(matcher.find()) {
+			input = matcher.replaceAll(queryPreprocessReplStr);
+		}
 		
 		/*Multimap of thmIndex, and the (index of) set of words in query 
 		 that appear in the thm. Important that this is *Hash*Multimap */
@@ -1264,7 +1278,8 @@ public class SearchIntersection {
 		if(searchState.allowLiteralSearch()) {
 			//don't add related words score to total word score, i.e. curScoreToAdd
 			addRelatedWordsThms(thmScoreMap, scoreThmMMap, //thmScoreSpanSet, 
-					thmWordSpanMMap, wordIndexInThm, word, tokenType, curScoreToAdd, relatedWordsList, dbThmSet, wordThmsListList, wordIndexPartPairMap);
+					thmWordSpanMMap, wordIndexInThm, word, tokenType, curScoreToAdd, relatedWordsList, 
+					dbThmSet, wordThmsListList, wordIndexPartPairMap);
 		}
 		return curScoreToAdd;
 	}

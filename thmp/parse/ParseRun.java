@@ -101,7 +101,7 @@ public class ParseRun {
 		}else{
 			strAr = ThmP1.preprocess(st, originalCaseInputList);
 		}
-		boolean inputListsSameLen = originalCaseInputList.size() == strAr.length;
+		//boolean inputListsSameLen = originalCaseInputList.size() == strAr.length;
 		
 		for(int i = 0; i < strAr.length; i++){
 			if(WordForms.getWhiteEmptySpacePattern().matcher(strAr[i]).find()){
@@ -111,10 +111,10 @@ public class ParseRun {
 			//ThmP1.parse(ThmP1.tokenize(TexConverter.convert(strAr[i].trim()) ));
 			String curStrTrimmed = strAr[i].trim();
 			try {
-				parseState = ThmP1.tokenize(curStrTrimmed, parseState);
-				if(inputListsSameLen) {
+				parseState = ThmP1.tokenize(curStrTrimmed, originalCaseInputList.get(i).trim(), parseState);
+				/*if(inputListsSameLen) {
 					parseState.setCurrentInputStr(originalCaseInputList.get(i).trim());
-				}
+				}*/
 			} catch (IllegalSyntaxException e) {
 				//Don't fill up logs with this, not helpful.
 				//System.out.println("ParseRun - Input contains illegal syntax!");

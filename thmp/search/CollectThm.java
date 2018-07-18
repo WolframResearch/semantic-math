@@ -278,7 +278,7 @@ public class CollectThm {
 				Multimap<String, IndexPartPair> wordThmsIndexMultimap = ((List<Multimap<String, IndexPartPair>>)
 						FileUtils.deserializeListFromFile(wordThmIndexMMapPath)).get(0);
 				//temporary ugly conversion code for data migration, Dec 2017. Remove one month later.
-				Collection<IndexPartPair> indexPartPairCol = wordThmsIndexMultimap.get("group");
+				/*Collection<IndexPartPair> indexPartPairCol = wordThmsIndexMultimap.get("group");
 				Iterator<IndexPartPair> iter = indexPartPairCol.iterator();
 				try {
 					IndexPartPair p = iter.next();					
@@ -291,7 +291,7 @@ public class CollectThm {
 					for(Map.Entry<String, Integer> entry : wordThmsIntMultimap.entries()) {
 						wordThmsIndexMultimap.put(entry.getKey(), new IndexPartPair(entry.getValue(), ThmPart.STM, new byte[] {}));
 					}					
-				}				
+				}*/		
 				wordThmsIndexMMap = ImmutableMultimap.copyOf(wordThmsIndexMultimap);
 			}else {
 				wordThmsIndexMMap = null;
@@ -923,10 +923,17 @@ public class CollectThm {
 			//multimap of word and lists of integers.
 			ListMultimap<String, Integer> wordIndexMMap = ArrayListMultimap.create();
 			
+			thm = thm.toLowerCase();
+			
+			Matcher matcher = WordForms.queryCStarPatt.matcher(thm);
+			if(matcher.find()) {
+				thm = matcher.replaceAll(WordForms.queryCStarReplStr);
+			}
+			
 			//number of words to skip if an n gram has been added.
 			//int numFutureWordsToSkip = 0;
 				//split along e.g. "\\s+|\'|\\(|\\)|\\{|\\}|\\[|\\]|\\.|\\;|\\,|:"
-			List<String> thmAr = WordForms.splitThmIntoSearchWordsList(thm.toLowerCase());
+			List<String> thmAr = WordForms.splitThmIntoSearchWordsList(thm);
 			List<String> thmList = new ArrayList<String>();
 			
 			for(String word : thmAr) {

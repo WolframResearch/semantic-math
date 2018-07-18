@@ -97,6 +97,11 @@ public class WordForms {
 	public static final Pattern QUANT_DIGIT_PATTERN = Pattern.compile("\\d+/*\\d*");
 	public static final Pattern DIGIT_PATTERN = Pattern.compile("\\d+");
 	public static final String QUANTITY_POS = "quant";
+	
+	//C^* algebra, uniformizing $\mathrm{C}^*$-algebra, C*-algebra, C* algebra, etc all to C-algebra. Assume input lower-case.
+	public static final Pattern queryCStarPatt = Pattern.compile("(\\s+|^)(?:\\$\\\\mathrm\\{c\\}\\^\\*\\$|\\$*c\\^*\\*\\$*)[\\-\\s]algebra");	
+	public static final String queryCStarReplStr = "$1c-algebra";
+	
 	/*
 	 * at least 2, so related words can have an integral score value that's 1 less
 	 * but non-zero. 3 to be still nonzero when multiplied with the fraction in
@@ -105,7 +110,8 @@ public class WordForms {
 	public static final int MIN_WORD_SCORE = 3;
 
 	private static Multimap<String, String> synonymMMap;
-
+	private static final Map<String, String> additionalSynonyms;
+	
 	private static final ImmutableMap<String, String> wordToStemMap;
 	private static final ImmutableMultimap<String, String> stemToWordsMMap;
 
@@ -161,6 +167,7 @@ public class WordForms {
 	private static final String genericSearchTermsPath = "src/thmp/data/genericSearchTerms.txt";
 	private static final Set<String> GREEK_ALPHA_SET;
 	private static final Map<Character, Character> DIACRITICS_MAP;
+	
 	/**
 	 * set of common words for search to ignore, if only these words are present, ie
 	 * nonrelevant words
@@ -204,6 +211,11 @@ public class WordForms {
 		stemToWordRepMap = ImmutableMap.copyOf(stemToWordRepPremap);
 		searchStopWords = new HashSet<String>();
 
+		//Additional synonyms that are made sure to be included.
+		additionalSynonyms = new HashMap<String, String>();
+		additionalSynonyms.put("sheffer stroke", "nand");
+		additionalSynonyms.put("abelian", "commutative");
+		
 		GREEK_ALPHA_SET = new HashSet<String>();
 		String[] GREEK_ALPHA = new String[] { "alpha", "beta", "gamma", "delta", "epsilon", "omega", "iota", "theta",
 				"phi" };
@@ -504,6 +516,11 @@ public class WordForms {
 				if (null == synonymMMap) {
 					// List, since the higher ordered, the closer and more relevant.
 					synonymMMap = ArrayListMultimap.create();
+					
+					for(Map.Entry<String, String> entry: additionalSynonyms.entrySet()) {
+						synonymMMap.put(entry.getKey(), entry.getValue());
+						synonymMMap.put(entry.getValue(), entry.getKey());						
+					}
 					BufferedReader synonymsBF = null;
 					// create synonym map from file
 					ServletContext servletContext = FileUtils.getServletContext();

@@ -501,6 +501,9 @@ public class DetectHypothesis {
 				inputFile = new File("/Users/yihed/Downloads/test/thmp/july9_0.txt");
 				inputFile = new File("/Users/yihed/Downloads/test/thmp/july3_1.txt");
 				inputFile = new File("/Users/yihed/Downloads/test/thmp/july10_0.txt");
+				inputFile = new File("/Users/yihed/Downloads/test/thmp/july13_0.txt");				
+				inputFile = new File("/Users/yihed/Downloads/test/thmp/july17_0.txt");
+				inputFile = new File("/Users/yihed/Downloads/test/thmp/july18_0.txt");
 				
 		}		
 		List<DefinitionListWithThm> defThmList = new ArrayList<DefinitionListWithThm>();
@@ -1019,6 +1022,11 @@ public class DetectHypothesis {
 					curThmType = defaultThmType;
 				}
 				parseState.setInThmFlag(true);
+				
+				matcher = ThmInput.beginAnyPattern.matcher(line);
+				if(matcher.matches()) {
+					newThmSB.append(line.substring(matcher.end(1), line.length()));
+				}
 			}
 		}
 		while ((line = srcFileReader.readLine()) != null) {
@@ -1099,8 +1107,15 @@ public class DetectHypothesis {
 				if(0 == newThmSB.length()){
 					continue;
 				}
+				
+				matcher = ThmInput.endAnyPattern.matcher(line);
 				//Need to read in until \end{cor} etc
-				newThmSB.append(" ").append(line);
+				//but not beyond that.				
+				if(matcher.matches()) {
+					newThmSB.append(" ").append(matcher.group(1));
+				}else {
+					newThmSB.append(" ").append(line);
+				}
 				
 				if(newThmSB.length() > THM_MAX_CHAR_SIZE){
 					logger.info("thm length exceeds maximum allowable size!");
@@ -1523,7 +1538,7 @@ public class DetectHypothesis {
 					defSentence = ThmInput.removeTexMarkup(defSentence, 
 							null, null, macrosTrie, eliminateBeginEndThmPattern, isContextStr);
 					//close any starting delimiters, e.g. "$", \[, etc					
-					defSentence = closeMathDelim(defSentence);					
+					defSentence = closeMathDelim(defSentence);
 					thmDefSB.append(defSentence).append(" ");
 				}
 			}			
