@@ -185,6 +185,7 @@ public class ThmHypUtils {
 	 * Use before app runtime.
 	 * 
 	 * @param conn
+	 * @param dataRootDirPath Absolute path to directory containing src/thmp/data.
 	 * @throws SQLException
 	 */
 	public static void populateThmHypTb(Connection conn, String dataRootDirPath) throws SQLException {

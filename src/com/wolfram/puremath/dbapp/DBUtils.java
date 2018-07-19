@@ -47,11 +47,15 @@ public class DBUtils {
 		
 		public static final String TB_NAME = "authorTb";
 		
-		public static final String THMID_COL = "thmId";
+		public static final String THMID_COL = "thmId";		
+		public static final String PAPER_ID_COL = "paperId";
+		
 		//names of columns to create index on 
 		public static final String FIRSTNAME_COL = "firstName";
 		public static final String MIDDLENAME_COL = "middleName";
 		public static final String LASTNAME_COL = "lastName";
+		
+		public static final int maxNameLen = 25;
 		//public static final String AUTHOR_TB_CSV_PATH = "src/thmp/data/metaDataNameDB.csv";
 		///home/usr0/yihed/thm
 		/**relative (to ~/thm) path to serialization file containing thm index, and string of list of 
@@ -385,6 +389,15 @@ public class DBUtils {
 			String msg = "SQLException while closing connection " + e;
 			logger.error(msg);
 		}
+	}
+	
+	/**
+	 * Set global mysql mode to be nonstrict, e.g. so rows are truncated if they exceed maximal length.
+	 * @param conn
+	 */
+	public static void setNonStrictMode(Connection conn) {
+		String s = "SET @@global.sql_mode = 'NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'";
+		manipulateData(s, conn);
 	}
 	
 }

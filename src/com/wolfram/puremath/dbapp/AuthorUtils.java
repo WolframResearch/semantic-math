@@ -11,11 +11,15 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.wolfram.puremath.dbapp.DBUtils.AuthorTb;
+import com.wolfram.puremath.dbapp.DBUtils.LiteralSearchTb;
 import com.wolfram.puremath.dbapp.DBUtils.ThmHypTb;
+
+import thmp.search.LiteralSearch;
 
 
 /**
  * Utilities class for deploying and querying author table.
+ * Used for author search.
  * 
  * @author yihed
  *
@@ -26,8 +30,10 @@ public class AuthorUtils {
 	
 	/**
 	 * Truncates the table , populates it with data from supplied csv file.
-	 * @param csvFilePath Path to CSV file containing data to populate table with, resort
-	 * to default file if none supplied. e.g. "metaDataNameDB.csv"
+	 * Note this assumes primary key exists. Call createAuthorTb() beforehand if unsure.
+	 * @param dataRootDirPath Path to ancestor director to CSV file containing data to 
+	 * populate table with, e.g. "metaDataNameDB.csv".
+	 * Path should be to directory containing src/thmp/data/metaDataNameDB.csv.
 	 * @throws SQLException 
 	 */
 	public static void populateAuthorTb(Connection conn, String dataRootDirPath) throws SQLException {
@@ -36,7 +42,7 @@ public class AuthorUtils {
 		//don't like using .toString(), but only option!
 		String authorTbCsvAbsPath = Paths.get(dataRootDirPath, AuthorTb.CSV_REL_PATH).toString();
 		
-		pstm = conn.prepareStatement("TRUNCATE " + AuthorTb.TB_NAME + ";");		
+		pstm = conn.prepareStatement("TRUNCATE " + AuthorTb.TB_NAME + ";");
 		pstm.executeUpdate();
 		
 		//ALTER TABLE user_customer_permission DROP PRIMARY KEY;
@@ -45,18 +51,20 @@ public class AuthorUtils {
 		
 		//the indexes are also column names.
 		List<String> indexList = DBUtils.getAuthorTbIndexes();
-		for(String index : indexList) {
+		/*for(String index : indexList) {
 			//including quotes result in syntax error. Do not setting string.
 			pstm = conn.prepareStatement("DROP INDEX " + index + " ON " + AuthorTb.TB_NAME + ";");		
 			pstm.executeUpdate();
-		}		
+		}*/		
 				
 		/*LOAD DATA INFILE  command
 		 * mysql> LOAD DATA INFILE "/usr/share/tomcat/webapps/theoremSearchTest/src/thmp/data/metaDataNameDB.csv" 
 		 * INTO TABLE authorTb COLUMNS TERMINATED BY "," OPTIONALLY ENCLOSED BY "'" ESCAPED BY "\\";
+		 * Each line in csv file has form 2,'1209.1247','hirokazu','','nishimura'
+			3,'1209.1247','hirokazu','','nishimura'.
 		 */		
 		pstm = conn.prepareStatement("LOAD DATA INFILE ? INTO TABLE " + AuthorTb.TB_NAME 
-				+ " COLUMNS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\'' ESCAPED BY '\\';");
+				+ " COLUMNS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\\'' ESCAPED BY '\\\\';");
 		
 		pstm.setString(1, authorTbCsvAbsPath);
 		
@@ -82,6 +90,16 @@ public class AuthorUtils {
 					+ " (" + index + ");");
 			pstm.executeUpdate();
 		}		
+	}
+	
+	/**
+	 * Create the ThmHypTb table.
+	 * @param conn
+	 * @param tableName tableName required since name could be different.
+	 * @throws SQLException
+	 */
+	public static void createAuthorTb(Connection conn) throws SQLException {
+		createAuthorTb(conn, DBUtils.AuthorTb.TB_NAME);
 	}
 	
 	/**
@@ -118,27 +136,46 @@ public class AuthorUtils {
 		//CREATE TABLE pet (name VARCHAR(20), owner VARCHAR(20),
 		//	    -> species VARCHAR(20), sex CHAR(1), birth DATE, death DATE);
 		//CREATE TABLE literalSearchTb (word VARCHAR(15), thmIndices VARBINARY(789), wordIndices VARBINARY(600))
-		
+		//each line in csv has form 2,'1209.1247','hirokazu','','nishimura'.
 		sb.setLength(0);
-		sb.append("CREATE TABLE ").append(ThmHypTb.TB_NAME)
-		.append(" (").append(ThmHypTb.THM_INDEX_COL).append(" INTEGER, ")
-		.append(ThmHypTb.THM_COL).append(" VARCHAR(" + ThmHypTb.maxThmColLen + "),")
-		.append(ThmHypTb.HYP_COL).append(" VARCHAR(" + ThmHypTb.maxHypColLen + "),")
-		.append(ThmHypTb.FILE_NAME_COL).append(" VARCHAR(" + ThmHypTb.maxFileNameLen + "));");
+		sb.append("CREATE TABLE ").append(AuthorTb.TB_NAME)
+		.append(" (").append(AuthorTb.THMID_COL).append(" INT(10), ")
+		.append(AuthorTb.PAPER_ID_COL).append(" VARCHAR(15),")
+		
+		.append(AuthorTb.FIRSTNAME_COL).append(" VARCHAR(" + AuthorTb.maxNameLen + "),")
+		.append(AuthorTb.MIDDLENAME_COL).append(" VARCHAR(" + AuthorTb.maxNameLen + "),")
+		.append(AuthorTb.LASTNAME_COL).append(" VARCHAR(" + AuthorTb.maxNameLen + "));");
+		
+		/*.append(AuthorTb.FIRSTNAME_COL).append(" VARCHAR(" + ThmHypTb.maxThmColLen + "),")
+		.append(AuthorTb.MIDDLENAME_COL).append(" VARCHAR(" + ThmHypTb.maxHypColLen + "),")
+		.append(AuthorTb.LASTNAME_COL   ThmHypTb.HYP_COL).append(" VARCHAR(" + ThmHypTb.maxHypColLen + "),")
+		.append(ThmHypTb.FILE_NAME_COL).append(" VARCHAR(" + ThmHypTb.maxFileNameLen + "));");*/
+		
+		/*
+		 * .append(AuthorTb.THMID_COL).append(",")
+		.append(AuthorTb.FIRSTNAME_COL).append(",")
+		.append(AuthorTb.MIDDLENAME_COL).append(",")
+		.append(AuthorTb.LASTNAME_COL).append(");");
+		pstm = conn.prepareStatement(keySb.toString());
+		
+		pstm = conn.prepareStatement("CREATE TABLE " + LiteralSearchTb.TB_NAME 
+				+ " (" + LiteralSearchTb.WORD_COL + " VARCHAR(" + LiteralSearch.LITERAL_WORD_LEN_MAX + "),"
+				+ LiteralSearchTb.THM_INDICES_COL + " VARBINARY(" + varbinaryLen + "),"
+				+ LiteralSearchTb.WORD_INDICES_COL + " VARBINARY(" + wordArVarBinaryLen 
+				+ ")) COLLATE utf8_bin;");
+		 */
 		
 		pstm = conn.prepareStatement(sb.toString());
 		pstm.executeUpdate();
 		
 		sb = new StringBuilder(50);
 		
-		sb.append("ALTER TABLE ").append(ThmHypTb.TB_NAME)
+		sb.append("ALTER TABLE ").append(AuthorTb.TB_NAME)
 		.append(" ADD PRIMARY KEY (")
-		.append(ThmHypTb.THM_INDEX_COL).append(");");
+		.append(AuthorTb.THMID_COL).append(");");
 		
 		pstm = conn.prepareStatement(sb.toString());
-		pstm.executeUpdate();
-		
+		pstm.executeUpdate();		
 	}
-	
-	
+		
 }

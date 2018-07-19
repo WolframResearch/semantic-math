@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -109,22 +110,26 @@ public class DBDeploy {
 	
 	/**
 	 * Deploys db tables. 
-	 * @param absolute path to directory containing data parent directory src/thmp/data.
+	 * @param dirpath absolute path to directory containing data parent directory src/thmp/data.
 	 * @throws SQLException
 	 */
 	private static void deployAllTables(String dirpath) throws SQLException{
 		Connection conn = DBUtils.getLocalConnection();
 		
+		DBUtils.setNonStrictMode(conn);
+		
 		//June18: don't deploy to DB, populateSimilarThmsTb(conn);
 		
-		//temporary comment out!! June populateAuthorTb(conn);
-		//ThmHypUtils.createThmHypTb(conn);
+		AuthorUtils.createAuthorTb(conn);
+		AuthorUtils.populateAuthorTb(conn, dirpath);
+		
 		ThmHypUtils.createThmHypTb(conn);
 		ThmHypUtils.populateThmHypTb(conn, dirpath);
 		
 		LiteralSearchUtils.populateLiteralSearchTb(conn);
 		
 		conn.close();
+		System.out.println("Done deploying all tables!");
 	}
 	
 	/**
@@ -220,13 +225,18 @@ public class DBDeploy {
 		String dirPath;
 		
 		try {
+			/*Pass options like so: -Ddirpath="/home/usr0/yihed/thm" */
 			cmd = parseOpt(args);
 			dirPath = cmd.getOptionValue("dirpath");
 		}catch(ParseException e) {
-			System.out.println("Can't parse options. Using default values. Path: " + DBUtils.defaultDirPath);
+			System.out.println("Can't parse options:  Using default values. Path: " + DBUtils.defaultDirPath 
+					+ Arrays.toString(e.getStackTrace())
+				);
 			dirPath = DBUtils.defaultDirPath;
 		}
-		
+		if(null == dirPath) {
+			dirPath = DBUtils.defaultDirPath;
+		}
 		deployAllTables(dirPath);
 		
 		/*

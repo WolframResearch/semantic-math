@@ -6,17 +6,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ListMultimap;
 import com.wolfram.puremath.dbapp.DBUtils.LiteralSearchTb;
-import com.wolfram.puremath.dbapp.DBUtils.ThmHypTb;
 
 import thmp.search.LiteralSearch;
 import thmp.search.LiteralSearch.LiteralSearchIndex;
