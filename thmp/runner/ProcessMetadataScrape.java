@@ -23,7 +23,7 @@ import thmp.utils.FileUtils;
 public class ProcessMetadataScrape {
 	
 	private static final String paperMetaDataMapSerFileStr = "src/thmp/data/paperMetaDataMap.dat";
-	private static final String paperMetaDataMapTxtFileStr = "src/thmp/data/paperMetaDataMap.txt";
+	//private static final String paperMetaDataMapTxtFileStr = "src/thmp/data/paperMetaDataMap.txt";
 	//e.g. "quant-ph/9905093"
 	private static final Pattern PAPER_ID_PATT = Pattern.compile("(.+?)/([\\d.]+)");
 	
@@ -78,8 +78,8 @@ public class ProcessMetadataScrape {
 					metaDataList.add(metaDataMap);
 					FileUtils.serializeObjToFile(metaDataList, paperMetaDataMapSerFileStr);
 					//for human inspection purposes. 
-					//Deserialize if you want to see. 
-					FileUtils.writeToFile(metaDataMap, paperMetaDataMapTxtFileStr);
+					//Deserialize if you want to see. These are not human-readable, no meaningful toString should be written.
+					//FileUtils.writeToFile(metaDataMap, paperMetaDataMapTxtFileStr);
 		}
 	}
 	

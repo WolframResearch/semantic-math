@@ -404,8 +404,13 @@ public class ThmInput {
 		
 		//System.out.println("Think inf loop is matching right before this, shouldn't get to this point");
 		matcher = ITEM_PATTERN.matcher(thmStr);
-		//replace \item with bullet points (*)
-		thmStr = matcher.replaceAll(" (*)");
+		//replace \item with bullet points (*), but only if next place is not e.g. (ii)
+		if(thmStr.contains("enumerate")) {
+			//i.e. \\begin{enumerate}
+			thmStr = matcher.replaceAll("");
+		}else {
+			thmStr = matcher.replaceAll(" -");
+		}
 		
 		/*custom macros*/
 		/*if(null != macrosMap){

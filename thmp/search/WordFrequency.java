@@ -164,6 +164,7 @@ public class WordFrequency {
 			String trueFluffWordsSetPath = FileUtils.getPathIfOnServlet(SearchMetaData.trueFluffWordsSetTxtPath());
 			//@SuppressWarnings("unchecked")
 			//Set<String> set = ((List<Set<String>>)FileUtils.deserializeListFromFile(trueFluffWordsSetPath)).get(0);
+			//read instead of deserialize, for more transparent data, and to be able to edit.
 			Set<String> fluffWordsSet = new HashSet<String>(FileUtils.readLinesFromFile(trueFluffWordsSetPath));
 			
 			trueFluffWordsSet = fluffWordsSet;			

@@ -87,6 +87,9 @@ public class SearchIntersection {
 	private static final Pattern queryPreprocessPatt = Pattern.compile("(\\s+|^)(?:c\\^*\\*[\\s\\-]algebra)");
 	private static final String queryPreprocessReplStr = "$1c-algebra";
 	
+	//queries that start with "theorem/lemma/etc"  "hypothesis", "proposition",
+	private static final Pattern genericThmPatt = Pattern.compile("\\s*(?:theorem|lemma||hypothesis|proposition)(.+)");
+	
 	// debug flag for development. Prints out the words used and their scores.
 	private static final boolean DEBUG = FileUtils.isOSX();
 	
@@ -555,10 +558,7 @@ public class SearchIntersection {
 		 * to C-algebra, which is the case harvested by the scrape.
 		 * Call this after lower-casing.
 		 */
-		Matcher matcher = queryPreprocessPatt.matcher(input);
-		if(matcher.find()) {
-			input = matcher.replaceAll(queryPreprocessReplStr);
-		}
+		input = queryPreprocess(input);
 		
 		/*Multimap of thmIndex, and the (index of) set of words in query 
 		 that appear in the thm. Important that this is *Hash*Multimap */
@@ -878,11 +878,12 @@ public class SearchIntersection {
 			int thmIndex = pair.thmIndex;
 			score = pair.score;
 		 	boolean isWordGeneric = genericSearchTermsSet.contains(thmPruneWordsMap.get(thmIndex));
-			//prune irrelevant results.
+			//prune irrelevant results, e.g. results containing just "theorem" and no other query term.
 			if(pair.spanScore < firstSpan) {
 				if(score < halfMaxScore) {
 					break;
 				}else if(pair.spanScore == 1 && isWordGeneric) {
+					//singleton-word and a generic word.
 					break;
 				}
 			}else if(firstSpan == 1 && inputWordsArSz > 1 && isWordGeneric) { //check search set size
@@ -1025,6 +1026,26 @@ public class SearchIntersection {
 		searchState.set_thmScoreSpanList(thmScoreSpanList);
 		
 		return searchState;
+	}
+
+	/** 
+	 * preprocessing for special handling of terms, such as turning "C^* algebra"
+	 * to C-algebra, which is the case harvested by the scrape.
+	 * @param input can assume input lower-cased.
+	 * 
+	 */
+	private static String queryPreprocess(String input) {
+		Matcher matcher = queryPreprocessPatt.matcher(input);
+		if(matcher.find()) {
+			input = matcher.replaceAll(queryPreprocessReplStr);
+		}
+		//strip theorem, conjecture, etc, that appear as first word,
+		//e.g. "theorems on calculus", but not otherwise, e.g. "Bayes' theorem"
+		
+		if((matcher=genericThmPatt.matcher(input)).matches()) {
+			input = matcher.group(1);
+		}
+		return input;
 	}
 	
 	/**

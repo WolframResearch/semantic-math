@@ -220,6 +220,10 @@ public class ThreeGramSearch {
 		
 		threeGramFreqMap = ImmutableMap.copyOf(threeGramPreMap);
 		threeGramFirstWordsSet = WordForms.gatherKeyFirstWordSetFromMap(threeGramFreqMap);
+		for(String threeGram : ADDITIONAL_THREE_GRAMS) {
+			threeGramFirstWordsSet.add(WordForms.getWhiteNonEmptySpaceNotAllPattern().split(threeGram)[0]);
+		}
+		
 		//threeGramList = filterThreeGrams(threeGramMap, threeGramFreqMap, initialThreeGramsSet);
 		//*****
 		//System.out.println(threeGramFreqMap);		

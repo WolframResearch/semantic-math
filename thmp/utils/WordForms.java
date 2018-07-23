@@ -136,13 +136,13 @@ public class WordForms {
 	// small lists of fluff words, used in, e.g., in search, and n gram extraction.
 	// This needs to include plural forms if applicable.
 	// don't include "lemma", valid uses e.g. "closing lemma, but false positives
-	// e.g. "by lemma..."
+	// e.g. "by lemma...", or theorem|theorems
 	private static final String FLUFF_WORDS_SMALL = "a|the|tex|of|and|on|let|for|to|that|with|is|be|are|there|by"
 			+ "|any|as|if|we|suppose|then|which|in|from|this|assume|this|have|just|may|an|every|it|between|given|itself|has"
 			+ "|more|where|but|each|some|et|these|no|all|its|such|can|one|que|de|thus|via|une|only|also|whenever|other|equal|last|"
 			+ "under|both|even|non|always|over|not|so|two|or|le|another|obvious|after|same|est|whose|which|thm|following|defined"
 			+ "|corresponding|furthermore|satisfy|moreover|satisfying|iff|along|hold|above|called|la|would|three|th|their|des|un|les|new"
-			+ "|exist|exists|at|being|four|was|lem|lax|give|obtained|depending|containing|denote|show|i|know|theorem|theorems|about|than"
+			+ "|exist|exists|at|being|four|was|lem|lax|give|obtained|depending|containing|denote|show|i|know|about|than"
 			+ "|example|examples|s";
 	private static final Set<String> STOP_WORDS_SET;
 
@@ -159,9 +159,10 @@ public class WordForms {
 	private static final Pattern HYP_PATTERN = Pattern
 			.compile(".*(?:assume|denote|define|let|is said|suppose" + "|where|is called|if|given).+");
 	private static final Pattern SPLIT_DELIM_PATTERN = Pattern.compile(SPLIT_DELIM);
-	// add all stock frequency words
+	// add all stock frequency words. Deliberately don't include "theorem", "lemma", etc. Handled
+	//in query pre-processing.
 	private static final String[] genericSearchTermsAr = new String[] { "sum", "equation", "polynomial", "function",
-			"basis", "theorem", "group", "ring", "field", "module", "hypothesis", "proposition", "series",
+			"basis", "group", "ring", "field", "module", "series",
 			"coefficient", "decomposition", "resolution", "problem", "example", "space" };
 	// file already contain plural forms
 	private static final String genericSearchTermsPath = "src/thmp/data/genericSearchTerms.txt";
@@ -1227,7 +1228,7 @@ public class WordForms {
 	 * Retrieves set of first words in the keys of the given map. Used in e.g. NGram
 	 * gathering. Need to keep letters, e.g. "p adic".
 	 * 
-	 * @param map
+	 * @param map. Don't make immutable
 	 * @return
 	 */
 	public static Set<String> gatherKeyFirstWordSetFromMap(Map<String, Integer> map) {
