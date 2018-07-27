@@ -4,6 +4,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -125,6 +126,53 @@ public class SearchIntersection {
 		defaultWordScore = avgScore;
 	}
 
+	public static class ThmScoreSpanPairDefComparator implements Comparator<ThmScoreSpanPair>{
+		
+		@Override
+		public int compare(ThmScoreSpanPair pair1, ThmScoreSpanPair pair2) {
+			int tieBreakWithSpan(ThmScoreSpanPair pair1, ThmScoreSpanPair other);
+			
+		}
+	}
+	
+	/**
+	 * 
+	 * @param pair1
+	 * @param other
+	 * @param thmType Thm type char, can be 'T', 'P', etc.
+	 * @return
+	 */
+	private static int tieBreakWithSpan(ThmScoreSpanPair pair1, ThmScoreSpanPair other, char thmType) {
+		// reverse because treemap naturally has ascending order
+		return pair1.spanScore > other.spanScore ? -1
+				//: (this.spanScore < other.spanScore ? 1 : (this == other ? 0 : -1));
+				//need explicit equals, so not all instances are recognized to be the same in map.
+				//Already checked whether this.equals(other). But need to put back in in case this tie breaker
+				//is called by anything other than the previous tiebreaker!
+				: (pair1.spanScore < other.spanScore ? 1 : tieBreakWithWordDist(pair1, other));
+	}
+	
+	private static int tieBreakWithSpan(ThmScoreSpanPair pair1, ThmScoreSpanPair other) {
+		//defaults type to "theorem"
+		return tieBreakWithSpan(pair1, other, 'T');
+	}
+	
+	private static int tieBreakWithWordDist(ThmScoreSpanPair pair1, ThmScoreSpanPair other) {
+		// reverse because treemap naturally has ascending order
+		return pair1.wordDistScore > other.wordDistScore ? -1
+				//same comment as above applies here.
+				: (pair1.wordDistScore < other.wordDistScore ? 1 : tieBreakWithFirstWordScore(pair1, other));
+	}
+	
+	//Tie break with the starting point, favors earlier starting point, per discussion with Michael.
+	//since earlier correlates with word being more important.
+	private static int tieBreakWithFirstWordScore(ThmScoreSpanPair pair1, ThmScoreSpanPair other) {
+		// favor lower starting index 
+		return pair1.firstStartScore < other.firstStartScore ? -1
+				//same comment as above applies here.
+				: (pair1.firstStartScore > other.firstStartScore ? 1 : -1);
+	}
+	
 	/**
 	 * Pair of theorem index and its span score.
 	 */
@@ -139,6 +187,8 @@ public class SearchIntersection {
 		private int wordDistScore;
 		//starting index of first matched word from query.
 		private int firstStartScore;// = LiteralSearch.LiteralSearchIndex.MAX_WORD_INDEX_AR_VAL;
+		//defaults to 'T' for theorem.
+		private char thmTypeChar = 'T';
 		
 		public ThmScoreSpanPair(int index_, int score_, int spanScore_, int wordDistScore_,
 				int firstStartScore_) {
@@ -149,10 +199,11 @@ public class SearchIntersection {
 			this.firstStartScore = firstStartScore_;
 		}
 
-		public ThmScoreSpanPair(int index_, int score_, int spanScore_) {
+		public ThmScoreSpanPair(int index_, int score_, int spanScore_, char thmTypeChar_) {
 			this.thmIndex = index_;
 			this.score = score_;
 			this.spanScore = spanScore_;
+			this.thmTypeChar = thmTypeChar_;
 		}
 		
 		public int thmIndex() {
@@ -166,7 +217,7 @@ public class SearchIntersection {
 		public int score() {
 			return score;
 		}
-
+		//custom comparator!!
 		/**
 		 * First uses intersection word scores to rank, then use span scores to tiebreak.
 		 */
@@ -179,31 +230,7 @@ public class SearchIntersection {
 					: (this.score < other.score ? 1 : (this.equals(other) ? 0 : tieBreakWithSpan(other)));
 		}
 
-		private int tieBreakWithSpan(ThmScoreSpanPair other) {
-			// reverse because treemap naturally has ascending order
-			return this.spanScore > other.spanScore ? -1
-					//: (this.spanScore < other.spanScore ? 1 : (this == other ? 0 : -1));
-					//need explicit equals, so not all instances are recognized to be the same in map.
-					//Already checked whether this.equals(other). But need to put back in in case this tie breaker
-					//is called by anything other than the previous tiebreaker!
-					: (this.spanScore < other.spanScore ? 1 : tieBreakWithWordDist(other));
-		}
 		
-		private int tieBreakWithWordDist(ThmScoreSpanPair other) {
-			// reverse because treemap naturally has ascending order
-			return this.wordDistScore > other.wordDistScore ? -1
-					//same comment as above applies here.
-					: (this.wordDistScore < other.wordDistScore ? 1 : tieBreakWithFirstWordScore(other));
-		}
-		
-		//Tie break with the starting point, favors earlier starting point, per discussion with Michael.
-		//since earlier correlates with word being more important.
-		private int tieBreakWithFirstWordScore(ThmScoreSpanPair other) {
-			// favor lower starting index 
-			return this.firstStartScore < other.firstStartScore ? -1
-					//same comment as above applies here.
-					: (this.firstStartScore > other.firstStartScore ? 1 : -1);
-		}
 		
 		@Override
 		public int hashCode() {
@@ -892,7 +919,8 @@ public class SearchIntersection {
 			}
 			//very useful debug print. Don't delete - April 2018. Need to debug on byblis.
 			if(DEBUG) {
-				System.out.println(counter+ ": +++ " + pair.thmIndex+". score: "+ pair.score+ " SpanScore " + pair.spanScore + " DistScore " + pair.wordDistScore + " "
+				System.out.println(counter+ ": +++ " + pair.thmIndex+". score: "+ pair.score+ " SpanScore " 
+						+ pair.spanScore + " DistScore " + pair.wordDistScore
 						+ " firstStartScore " + pair.firstStartScore + " " + ThmHypPairGet.retrieveThmHypPairWithThmFromCache(pair.thmIndex));
 			}
 			thmScoreSpanList.add(pair);
@@ -1422,12 +1450,13 @@ public class SearchIntersection {
 			
 			/***Dec 6 scoreThmMMap.remove(prevScore, index);
 			scoreThmMMap.put(newScore, index);*/
+			char thmTypeChar = thmIndexPair.thmType();
 			
 			//thmScorePQ.add(new ThmScoreSpanPair(index, newScore, 0));
 			// put in thmIndex, and the index of word in the query, to
 			// thmWordSpanMMap.
 			tokenType.addToMap(thmWordSpanMMap, index, wordIndexInThm, thmScoreSpanSet, 
-					newScore, prevScore, thmScoreMap);			
+					newScore, prevScore, thmScoreMap, thmTypeChar);			
 			
 		}
 		//}

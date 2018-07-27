@@ -399,6 +399,8 @@ public class CollectThm {
 			private int thmIndex;
 			/**array of indices of the corresponding word in thm*/
 			private byte[] wordIndexAr;
+			//default to "Theorem". All descripter chars Upper-case, e.g. 'C', 'L', 'P'
+			private char thmType = 'T';
 			
 			public IndexPartPair(int index_, ThmPart thmPart_, byte[] wordIndexAr_) {
 				this.thmIndex = index_;
@@ -406,9 +408,10 @@ public class CollectThm {
 				this.wordIndexAr = wordIndexAr_;				
 			}
 			
-			public IndexPartPair(int index_, ThmPart thmPart_) {
+			public IndexPartPair(int index_, ThmPart thmPart_, char thmType_) {
 				this.thmIndex = index_;
 				this.thmPart = thmPart_;
+				this.thmType = thmType_;
 				this.wordIndexAr = new byte[initIndexCountPerWord];
 				for(int i = 0; i < initIndexCountPerWord; i++) {
 					wordIndexAr[i] = placeholderIndex;
@@ -448,6 +451,10 @@ public class CollectThm {
 			/*public String word() {
 				return this.word;
 			}*/
+			
+			public char thmType() {
+				return this.thmType;
+			}
 			
 			public ThmPart thmPart() {
 				return this.thmPart;

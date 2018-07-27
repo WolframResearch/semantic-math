@@ -886,12 +886,15 @@ public class DetectHypothesis {
 		
 		int thmIndex = 0;
 		for(ThmHypPair pe : peList){
-			IndexPartPair indexPartPair = new IndexPartPair(thmIndex, ThmPart.STM);
+			char thmType = pe.thmType().charAt(0);
+			
+			IndexPartPair indexPartPair = new IndexPartPair(thmIndex, ThmPart.STM, thmType);
 			String stm = pe.thmStr();
-				
+			pe.thmType();
+			
 			CollectThm.ThmWordsMaps.addToWordThmIndexMap(wordThmIndexMMap, stm, indexPartPair);
 			
-			indexPartPair = new IndexPartPair(thmIndex, ThmPart.HYP);
+			indexPartPair = new IndexPartPair(thmIndex, ThmPart.HYP,  thmType);
 			String hyp = pe.hypStr();
 			CollectThm.ThmWordsMaps.addToWordThmIndexMap(wordThmIndexMMap, hyp, indexPartPair);
 			thmIndex++;

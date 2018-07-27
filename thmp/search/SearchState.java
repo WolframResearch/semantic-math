@@ -15,7 +15,10 @@ import thmp.search.SearchIntersection.ThmScoreSpanPair;
  * Information on the state of the current query. E.g. list
  * of relevant tokens, including 2/3-grams, 
  * Useful for e.g. combined search ranking in CombinedSearch.
- * One SearchState instance per query, therefore intentionally
+ * Also records state of the query such as whether it's looking 
+ * for a definition.
+ * 
+ * One SearchState instance *per* query, therefore intentionally
  * not meant to be used by multiple threads.
  * 
  * @author yihed

@@ -868,10 +868,12 @@ public class WordForms {
 		 * @param thmIndex
 		 * @param wordIndex
 		 *            Index of word in thm.
+		 * @param thmTypeChar Char denoting type of theorem, e.g. 'T', 'C'
 		 * @return boolean whether any slot corresponding to token has been added.
 		 */
 		public boolean addToMap(Multimap<Integer, Integer> thmWordSpanMMap, int thmIndex, int wordIndex,
-				Set<ThmScoreSpanPair> thmScoreSet, int newScore, int prevScore, Map<Integer, Integer> thmScoreMap) {
+				Set<ThmScoreSpanPair> thmScoreSet, int newScore, int prevScore, Map<Integer, Integer> thmScoreMap,
+				char thmTypeChar) {
 
 			Collection<Integer> thmSpanCol = thmWordSpanMMap.get(thmIndex);
 			int prevColSz = thmSpanCol.size();
@@ -885,9 +887,9 @@ public class WordForms {
 
 			if (newSpanScore > prevColSz) {
 				// word dist score and first word score haven't been determined yet.
-				thmScoreSet.remove(new ThmScoreSpanPair(thmIndex, prevScore, prevColSz));
+				thmScoreSet.remove(new ThmScoreSpanPair(thmIndex, prevScore, prevColSz, thmTypeChar));
 				// int newSpanScore = thmWordSpanMMap.get(thmIndex).size();
-				thmScoreSet.add(new ThmScoreSpanPair(thmIndex, newScore, newSpanScore));
+				thmScoreSet.add(new ThmScoreSpanPair(thmIndex, newScore, newSpanScore, thmTypeChar));
 				thmScoreMap.put(thmIndex, newScore);
 				return true;
 			} else {
