@@ -71,6 +71,8 @@ public class SearchState {
 	
 	private ParseState parseState;
 	private boolean allowLiteralSearch = true;
+	//whether to rank definitions up, e.g. when query contains "definition of ..."
+	private boolean defFirst = false;
 	
 	/*Jan 2018: builder pointless since search state not immutable*/
 	public static class SearchStateBuilder{
@@ -103,6 +105,14 @@ public class SearchState {
 	
 	public Connection databaseConnection() {
 		return this.dbConnection;
+	}
+	
+	public void setDefFirst(boolean defFirst) {
+		this.defFirst = defFirst;
+	}
+	
+	public boolean defFirst() {
+		return this.defFirst;
 	}
 	
 	/**

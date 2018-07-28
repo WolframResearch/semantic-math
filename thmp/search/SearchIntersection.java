@@ -13,6 +13,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.print.attribute.standard.MediaSize.Other;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -90,6 +92,10 @@ public class SearchIntersection {
 	
 	//queries that start with "theorem/lemma/etc"  "hypothesis", "proposition",
 	private static final Pattern genericThmPatt = Pattern.compile("\\s*(?:theorem|lemma||hypothesis|proposition)(.+)");
+	//whether query contains definition
+	private static final Pattern definitionPatt = Pattern.compile("(.*)(?:definition|define)(.*)");
+	
+	private static final char defaultThmTypeChar = 'T';
 	
 	// debug flag for development. Prints out the words used and their scores.
 	private static final boolean DEBUG = FileUtils.isOSX();
@@ -126,13 +132,29 @@ public class SearchIntersection {
 		defaultWordScore = avgScore;
 	}
 
+	/**
+	 * 
+	 */
 	public static class ThmScoreSpanPairDefComparator implements Comparator<ThmScoreSpanPair>{
+		
+		private boolean defFirst = false;
+		
+		/**
+		 * @param defFirst whether to use thmType to rank, if so, rank definitions higher.
+		 */
+		public ThmScoreSpanPairDefComparator(boolean defFirst_) {
+			this.defFirst = defFirst_;
+		}
 		
 		@Override
 		public int compare(ThmScoreSpanPair pair1, ThmScoreSpanPair pair2) {
-			int tieBreakWithSpan(ThmScoreSpanPair pair1, ThmScoreSpanPair other);
-			
+			return tieBreakWithSpan(pair1, pair2, defFirst);
 		}
+	}
+	
+	private static int tieBreakWithSpan(ThmScoreSpanPair pair1, ThmScoreSpanPair other) {
+		//defaults type to "theorem"
+		return tieBreakWithSpan(pair1, other, false);
 	}
 	
 	/**
@@ -142,35 +164,54 @@ public class SearchIntersection {
 	 * @param thmType Thm type char, can be 'T', 'P', etc.
 	 * @return
 	 */
-	private static int tieBreakWithSpan(ThmScoreSpanPair pair1, ThmScoreSpanPair other, char thmType) {
+	private static int tieBreakWithSpan(ThmScoreSpanPair pair1, ThmScoreSpanPair other, boolean defFirst) {
 		// reverse because treemap naturally has ascending order
 		return pair1.spanScore > other.spanScore ? -1
 				//: (this.spanScore < other.spanScore ? 1 : (this == other ? 0 : -1));
 				//need explicit equals, so not all instances are recognized to be the same in map.
 				//Already checked whether this.equals(other). But need to put back in in case this tie breaker
 				//is called by anything other than the previous tiebreaker!
-				: (pair1.spanScore < other.spanScore ? 1 : tieBreakWithWordDist(pair1, other));
+				: (pair1.spanScore < other.spanScore ? 1 : tieBreakWithWordDist(pair1, other, false));
 	}
 	
-	private static int tieBreakWithSpan(ThmScoreSpanPair pair1, ThmScoreSpanPair other) {
-		//defaults type to "theorem"
-		return tieBreakWithSpan(pair1, other, 'T');
+	/**
+	 * 
+	 * @param pair1
+	 * @param pair2
+	 * @param defFirst whether to use thmType to rank, if so, rank definitions higher.
+	 * @return
+	 */
+	private static int tieBreakWithWordDist(ThmScoreSpanPair pair1, ThmScoreSpanPair pair2, boolean defFirst) {
+		if(defFirst == true) {
+			boolean pair2Def = pair2.thmTypeChar == 'D';
+			return pair1.thmTypeChar == 'D' ? (pair2Def ? tieBreakWithFirstWordScore(pair1, pair2, defFirst) : -1)
+					//if pair1 is not definition
+					: (pair2Def ? 1 : tieBreakWithFirstWordScore(pair1, pair2, defFirst));
+		}
+		// reverse because treemap naturally has ascending order
+		return pair1.wordDistScore > pair2.wordDistScore ? -1
+				//same comment as above applies here.
+				: (pair1.wordDistScore < pair2.wordDistScore ? 1 : tieBreakWithFirstWordScore(pair1, pair2, false));
 	}
 	
 	private static int tieBreakWithWordDist(ThmScoreSpanPair pair1, ThmScoreSpanPair other) {
-		// reverse because treemap naturally has ascending order
-		return pair1.wordDistScore > other.wordDistScore ? -1
-				//same comment as above applies here.
-				: (pair1.wordDistScore < other.wordDistScore ? 1 : tieBreakWithFirstWordScore(pair1, other));
+		return tieBreakWithWordDist(pair1, other, false);
 	}
 	
+	//return tieBreakWithFirstWordScore(pair1, other, 'T');
 	//Tie break with the starting point, favors earlier starting point, per discussion with Michael.
 	//since earlier correlates with word being more important.
-	private static int tieBreakWithFirstWordScore(ThmScoreSpanPair pair1, ThmScoreSpanPair other) {
+	private static int tieBreakWithFirstWordScore(ThmScoreSpanPair pair1, ThmScoreSpanPair other, boolean defFirst) {
 		// favor lower starting index 
 		return pair1.firstStartScore < other.firstStartScore ? -1
 				//same comment as above applies here.
 				: (pair1.firstStartScore > other.firstStartScore ? 1 : -1);
+	}
+	
+	//Tie break with the starting point, favors earlier starting point, per discussion with Michael.
+		//since earlier correlates with word being more important.
+	private static int tieBreakWithFirstWordScore(ThmScoreSpanPair pair1, ThmScoreSpanPair other) {
+		return tieBreakWithFirstWordScore(pair1, other, false);
 	}
 	
 	/**
@@ -227,11 +268,9 @@ public class SearchIntersection {
 			return this.score > other.score ? -1
 					//: (this.spanScore < other.spanScore ? 1 : (this == other ? 0 : -1));
 					//need explicit equals, so not all instances are recognized to be the same in map.
-					: (this.score < other.score ? 1 : (this.equals(other) ? 0 : tieBreakWithSpan(other)));
+					: (this.score < other.score ? 1 : (this.equals(other) ? 0 : tieBreakWithSpan(this, other)));
 		}
 
-		
-		
 		@Override
 		public int hashCode() {
 			final int prime = 31;
@@ -585,7 +624,7 @@ public class SearchIntersection {
 		 * to C-algebra, which is the case harvested by the scrape.
 		 * Call this after lower-casing.
 		 */
-		input = queryPreprocess(input);
+		input = queryPreprocess(input, searchState);
 		
 		/*Multimap of thmIndex, and the (index of) set of words in query 
 		 that appear in the thm. Important that this is *Hash*Multimap */
@@ -848,7 +887,10 @@ public class SearchIntersection {
 		Iterator<Integer> descendingKeySetIter = descendingKeySet.iterator(); */
 		
 		//add all at once to heapify, should be faster than inserting individually, hopefully O(n)
-		PriorityQueue<ThmScoreSpanPair> thmScorePQ = new PriorityQueue<ThmScoreSpanPair>(thmScoreSpanSet);
+		PriorityQueue<ThmScoreSpanPair> thmScorePQ = new PriorityQueue<ThmScoreSpanPair>(
+				new ThmScoreSpanPairDefComparator(searchState.defFirst()));
+		
+		thmScorePQ.addAll(thmScoreSpanSet);
 		
 		List<ThmScoreSpanPair> thmScoreSpanList = new ArrayList<ThmScoreSpanPair>();
 		//***boolean topScorer = true;
@@ -1062,17 +1104,24 @@ public class SearchIntersection {
 	 * @param input can assume input lower-cased.
 	 * 
 	 */
-	private static String queryPreprocess(String input) {
+	private static String queryPreprocess(String input, SearchState searchState) {
 		Matcher matcher = queryPreprocessPatt.matcher(input);
 		if(matcher.find()) {
 			input = matcher.replaceAll(queryPreprocessReplStr);
 		}
+		
 		//strip theorem, conjecture, etc, that appear as first word,
 		//e.g. "theorems on calculus", but not otherwise, e.g. "Bayes' theorem"
-		
 		if((matcher=genericThmPatt.matcher(input)).matches()) {
 			input = matcher.group(1);
 		}
+		
+		//see if query specifies looking for definition. Then drop "definition" or "define".
+		if((matcher=definitionPatt.matcher(input)).matches()) {
+			input = matcher.group(1) + matcher.group(2);
+			searchState.setDefFirst(true);
+		}
+		
 		return input;
 	}
 	
