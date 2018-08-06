@@ -29,6 +29,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 
 /**
@@ -83,6 +84,10 @@ public class ParseState {
 	private SyntaxnetQuery syntaxnetQuery;
 	private boolean curParseExcessiveLatex;
 	private boolean writeUnknownWordsToFileBool;
+	
+	//Map of thm reference names and the full thms. E.g. for \ref{ab}, the content of \label{ab}
+	//To be cleared after \end{document}
+	private Map<String, String> labelThmMap = new HashMap<String, String>();
 	
 	//punctuation at end of current parse segment, segments are separated
 	//by punctuations.
@@ -381,6 +386,18 @@ public class ParseState {
 		this.globalVariableNamesMMap = ArrayListMultimap.create();
 		this.localVariableNamesMMap = ArrayListMultimap.create();
 		this.writeUnknownWordsToFileBool = builder.writeUnknownWordsToFile;		
+	}
+	
+	/**
+	 * @param labelName Name of label.
+	 * @param thm full thm.
+	 */
+	public void addRefThm(String labelName, String thm) {
+		labelThmMap.put(labelName, thm);
+	}
+	
+	public Map<String, String> labelThmMap() {
+		return this.labelThmMap;
 	}
 	
 	/**
@@ -1065,6 +1082,7 @@ public class ParseState {
 		this.tokenList = null;
 		this.recentEnt = null;
 		this.globalVariableNamesMMap = ArrayListMultimap.create();
+		this.labelThmMap = new HashMap<String, String>();
 	}
 	
 	public void setParseErrorCode(ParseErrorCode errorCode){

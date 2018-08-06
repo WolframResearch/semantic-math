@@ -504,7 +504,7 @@ public class DetectHypothesis {
 				inputFile = new File("/Users/yihed/Downloads/test/thmp/july13_0.txt");				
 				inputFile = new File("/Users/yihed/Downloads/test/thmp/july17_0.txt");
 				inputFile = new File("/Users/yihed/Downloads/test/thmp/july18_0.txt");
-				inputFile = new File("/Users/yihed/Downloads/test/thmp/aug6_0.txt");
+				inputFile = new File("/Users/yihed/Downloads/test/thmp/aug6_1.txt");
 				
 		}		
 		List<DefinitionListWithThm> defThmList = new ArrayList<DefinitionListWithThm>();
@@ -1196,21 +1196,26 @@ public class DetectHypothesis {
 		// don't strip.
 		// replace enumerate and \item with *
 		//thmWebDisplayList, and bareThmList should both be null
+		
+		//list of referenced theorems, as specified in \ref{...}, corresponding to earlier
+		//\label{...}.
+		List<String> refThms = new ArrayList<String>();
+		
 		String thm = ThmInput.removeTexMarkup(newThmSB.toString(), null, null, macrosTrie,
-				eliminateBeginEndThmPattern);
+				eliminateBeginEndThmPattern, refThms, parseState);
 		
 		//Must clear headParseStruct and curParseStruct of parseState, so newThm
 		//has its own stand-alone parse tree.
 		parseState.setCurParseStruct(null);
 		parseState.setHeadParseStruct(null);
 		
-		//first gather hypotheses in the theorem.
+		//first gather hypotheses called for in the theorem.
 		detectAndParseHypothesis(thm, parseState, stats);
 		
-		//if contained in local map, should be careful about when to append map.		
-		//append to newThmSB additional hypotheses that are applicable to the theorem.				
+		//If contained in local map, should be careful about when to append map.		
+		//Append to newThmSB additional hypotheses that are applicable to the theorem.			
 		DefinitionListWithThm thmDef = appendHypothesesAndParseThm(thm, parseState, thmHypPairList, stats, srcFileName,
-				macrosTrie, thmType, eliminateBeginEndThmPattern);		
+				macrosTrie, thmType, eliminateBeginEndThmPattern, refThms);		
 		
 		if(thmDef != DefinitionListWithThm.PLACEHOLDER_DEF_LIST_WITH_THM){
 			definitionListWithThmList.add(thmDef);
@@ -1331,7 +1336,7 @@ public class DetectHypothesis {
 	}
 	
 	/**
-	 * detect hypotheses and definitions, and add definitions to parseState.
+	 * Detect hypotheses and definitions, and add definitions to parseState. 
 	 * @param contextSB
 	 * @param parseState
 	 */
@@ -1355,14 +1360,15 @@ public class DetectHypothesis {
 	
 	/**
 	 * Append hypotheses and definition statements in front of thmSB, 
-	 * for the variables that do appear in thmSB.
+	 * for the variables that appear in thmSB.
 	 * 
-	 * @param thmSB
+	 * @param thmStr Already processed of TeX, e.g. macros replaced.
 	 * @param parseState
+	 * @param refThms List of referenced theorems, as specified in \ref{...}, corresponding to earlier \label{...}.
 	 */
 	private static DefinitionListWithThm appendHypothesesAndParseThm(String thmStr, ParseState parseState, 
 			List<ThmHypPair> thmHypPairList, Stats stats, String srcFileName,
-			MacrosTrie macrosTrie, String thmType, Pattern eliminateBeginEndThmPattern){
+			MacrosTrie macrosTrie, String thmType, Pattern eliminateBeginEndThmPattern, List<String> refThms){
 		
 		StringBuilder definitionSB = new StringBuilder();		
 		StringBuilder latexExpr = new StringBuilder();
@@ -1428,6 +1434,11 @@ public class DetectHypothesis {
 			}else if(mathMode){
 				latexExpr.append(curChar);
 			}			
+		}
+		
+		//prepend potential referenced theorems, or eqns
+		for(String refThm : refThms) {
+			definitionSB.insert(0, " ").insert(0, refThm);
 		}
 		
 		String definitionStr = definitionSB.toString();

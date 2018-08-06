@@ -90,8 +90,10 @@ public class ThmInput {
 	public static final Pattern MATH_OP_PATTERN = Pattern.compile("\\s*\\\\DeclareMathOperator\\**\\s*\\{([^}]+)\\}\\s*\\{(.+?)\\}\\s*");
 	
 	static final Pattern THM_TERMS_PATTERN = Pattern.compile("(Theorem|Proposition|Lemma|Corollary|Conjecture|Definition|Claim)");
+	
+	private static final Pattern LABEL_PATTERN = Pattern.compile("(.*?)\\\\(?:label)\\{([^}$]*)\\}\\s*(.*?)");
 	//deliberately not including eqref
-	private static final Pattern LABEL_PATTERN = Pattern.compile("(.*?)\\\\(?:label|ref)\\{(?:[^}$]*)\\}\\s*(.*?)");
+	private static final Pattern REF_PATTERN = Pattern.compile("\\\\(?:ref)\\{([^}$]*)\\}");
 	//private static final Pattern DIGIT_PATTERN = Pattern.compile(".*\\d+.*");
 	static final Pattern endAnyPattern = Pattern.compile("(.*?)\\\\end.*");
 	static final Pattern beginAnyPattern = Pattern.compile("(.*?)\\\\begin.*");
@@ -124,10 +126,10 @@ public class ThmInput {
 	private static final Pattern INDEX_PATTERN = Pattern.compile(".*\\\\index\\{([^\\}]*)\\}%*.*");
 	/* pattern for eliminating the command completely for web display. E.g. \fml. How about \begin or \end everything?
 	//patterns such as \\rm are deprecated in TeX, but (new) authors still use them, and MathJax doesn't render them.
-	Space after \rm intentional. 
+	Space after \rm intentional. Don't include \ref.
 	*/
 	private static final Pattern ELIMINATE_PATTERN = Pattern
-			.compile("\\\\df(?!rac)|\\\\emph|\\\\em|\\\\rm |\\\\cat|\\\\it(?!e)|\\\\(?:eq)*ref|\\\\subsection|\\\\section|\\\\bf|\\\\vspace"
+			.compile("\\\\df(?!rac)|\\\\emph|\\\\em|\\\\rm |\\\\cat|\\\\it(?!e)|\\\\eqref|\\\\subsection|\\\\section|\\\\bf|\\\\vspace"//\\\\(?:eq)*ref
 					+ "|\\\\ensuremath|\\\\(?:textbf|textsl|textsc|textnormal)|\\\\linebreak|(?<!\\\\)%"
 					+ "|\\\\fml|\\\\ofml|\\\\(?:begin|end)\\{enumerate\\}|\\\\(?:begin|end)\\{(?:sub)*section\\**\\}"					
 					+ "|\\\\begin\\{slogan\\}|\\\\end\\{slogan\\}|\\\\sbsb|\\\\cat|\\\\bs|\\\\maketitle|\\\\textup"
@@ -334,21 +336,30 @@ public class ThmInput {
 		return removeTexMarkup(thmStr, thmWebDisplayList, bareThmList, macrosTrie, eliminateBeginEndThmPattern, isContextStr);
 	}
 	
+	public static String removeTexMarkup(String thmStr, List<String> thmWebDisplayList,
+			List<String> bareThmList, MacrosTrie macrosTrie, Pattern eliminateBeginEndThmPattern, 
+			boolean isContextStr) {
+		
+	}
+	
 	/**
 	 * Processes Latex input, e.g. by removing syntax used purely for display and not
 	 * useful for parsing, such as \textit{ }.
 	 * Also remove markups such as "\begin{theorem}"
 	 * But enumerate should not always be turned off.
 	 * Remove footnotes.
+	 * Pass in collection to gather hypotheses, to collect hyp if \ref for precious \label shows up.
+	 * And to gather labels.
 	 * @param newThmSB 
 	 * @param thmWebDisplayList Can be null. 
 	 * @param bareThmList Can be null. 
+	 * @param refThms List of referenced theorems. To be included in the context string of this thmStr.
 	 * @boolean whether current input str is context string.
 	 * @return Thm without the "\begin{lemma}", "\label{}", etc parts.
 	 */	
 	public static String removeTexMarkup(String thmStr, List<String> thmWebDisplayList,
 			List<String> bareThmList, MacrosTrie macrosTrie, Pattern eliminateBeginEndThmPattern, 
-			boolean isContextStr) {
+			boolean isContextStr, List<String> refThms, ParseState parseState) {
 		
 		boolean getWebDisplayList = thmWebDisplayList == null ? false : true;
 		boolean getBareThmList = bareThmList == null ? false : true;		
@@ -391,7 +402,24 @@ public class ThmInput {
 		
 		thmStr = groupReplacePatt.matcher(thmStr).replaceAll(groupReplacePattStr);
 		
-		// eliminate symbols such as \fml
+		//look for \ref{...} inside thmStr, find referenced thms, to be added to refThms list,
+		//to be prepended to context string.
+		
+		matcher = REF_PATTERN.matcher(thmStr);
+		
+		while(matcher.find()) {
+			//e.g. ab is name for \ref{ab}
+			String labelName = matcher.group(1);
+			//check parseState
+			String thm = parseState.labelThmMap().get(labelName);
+			if(null != thm) {
+				refThms.add(thm);
+			}
+			//modify string!
+			s
+		}
+		
+		// eliminate symbols such as \fm
 		matcher = ELIMINATE_PATTERN.matcher(thmStr);
 		thmStr = matcher.replaceAll("");
 		
@@ -441,16 +469,18 @@ public class ThmInput {
 
 		//bare thm string with no label content at the beginning.
 		String bareThmStr = thmStr;
+		// Record label to be included in hypotheses later, if a thm includes \ref for this label.
 		// remove label. Need to be careful, since label can occur in middle of sentence,
 		// shouldn't strip away everything before label.
 		matcher = LABEL_PATTERN.matcher(thmStr);
 		if (matcher.matches()) {
-			wordsThmStr = matcher.replaceAll("$1$2");			
+			wordsThmStr = matcher.replaceAll("$1$3");			
 			thmStr = wordsThmStr;			
 			//this is only executed when getting theorems for context parsing.
 			if(getBareThmList){	
 				bareThmStr = wordsThmStr;
 			}
+			parseState.addRefThm(matcher.group(2), thmStr);
 		}
 		
 		if(getBareThmList){
