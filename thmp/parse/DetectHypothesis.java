@@ -504,6 +504,7 @@ public class DetectHypothesis {
 				inputFile = new File("/Users/yihed/Downloads/test/thmp/july13_0.txt");				
 				inputFile = new File("/Users/yihed/Downloads/test/thmp/july17_0.txt");
 				inputFile = new File("/Users/yihed/Downloads/test/thmp/july18_0.txt");
+				inputFile = new File("/Users/yihed/Downloads/test/thmp/aug6_0.txt");
 				
 		}		
 		List<DefinitionListWithThm> defThmList = new ArrayList<DefinitionListWithThm>();
@@ -1256,7 +1257,7 @@ public class DetectHypothesis {
 			if(startBuilder.length() > 0){
 				customPatternAr[0] = Pattern.compile(ThmInput.THM_START_STR0 + startBuilder + ThmInput.THM_START_STR1);
 				customPatternAr[1] = Pattern.compile(ThmInput.THM_END_STR0 + endBuilder + ThmInput.THM_END_STR1);
-				customPatternAr[2] = Pattern.compile(ThmInput.ELIMINATE_BEGIN_END_THM_STR + endBuilder, 
+				customPatternAr[2] = Pattern.compile(ThmInput.ELIMINATE_BEGIN_END_THM_STR + eliminateBuilder, 
 						Pattern.CASE_INSENSITIVE);
 			}
 		}

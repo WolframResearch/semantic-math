@@ -128,7 +128,7 @@ public class ThmInput {
 	*/
 	private static final Pattern ELIMINATE_PATTERN = Pattern
 			.compile("\\\\df(?!rac)|\\\\emph|\\\\em|\\\\rm |\\\\cat|\\\\it(?!e)|\\\\(?:eq)*ref|\\\\subsection|\\\\section|\\\\bf|\\\\vspace"
-					+ "|\\\\ensuremath|\\\\(?:textbf|textsl|textsc)|\\\\linebreak|(?<!\\\\)%"
+					+ "|\\\\ensuremath|\\\\(?:textbf|textsl|textsc|textnormal)|\\\\linebreak|(?<!\\\\)%"
 					+ "|\\\\fml|\\\\ofml|\\\\(?:begin|end)\\{enumerate\\}|\\\\(?:begin|end)\\{(?:sub)*section\\**\\}"					
 					+ "|\\\\begin\\{slogan\\}|\\\\end\\{slogan\\}|\\\\sbsb|\\\\cat|\\\\bs|\\\\maketitle|\\\\textup"
 					+ "|\\\\section\\**\\{(?:[^}]*)\\}\\s*|\\\\noindent|\\\\(?:small|big)skip" 
@@ -142,6 +142,7 @@ public class ThmInput {
 					+ "|\\\\end\\{def(?:[^}]*)\\}\\s*|\\\\end\\{lem(?:[^}]*)\\}\\s*|\\\\end\\{th(?:[^}]*)\\}\\s*"
 					+ "|\\\\end\\{pr(?:[^}]*)\\}\\s*|\\\\end\\{proclaim(?:[^}]*)\\}\\s*|\\\\end\\{co(?:[^}]*)\\}\\s*"
 					+ "|\\\\(?:begin|end)\\{re(?:[^}]*)\\}\\s*";
+	
 	static final Pattern ELIMINATE_BEGIN_END_THM_PATTERN = Pattern
 			.compile(ELIMINATE_BEGIN_END_THM_STR, Pattern.CASE_INSENSITIVE);
 	
@@ -332,6 +333,7 @@ public class ThmInput {
 		boolean isContextStr = false;
 		return removeTexMarkup(thmStr, thmWebDisplayList, bareThmList, macrosTrie, eliminateBeginEndThmPattern, isContextStr);
 	}
+	
 	/**
 	 * Processes Latex input, e.g. by removing syntax used purely for display and not
 	 * useful for parsing, such as \textit{ }.
