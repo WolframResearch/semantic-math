@@ -472,7 +472,7 @@ public class ThmInput {
 						
 				//check parseState for the theorem referenced.
 				String thm = parseState.labelThmMap().get(labelName);
-				System.out.println("!! refCounter thm" + labelName + " ! "  + thm);
+				System.out.println("!! refCounter thm" + labelName + " parseState.labelThmMap() "  + parseState.labelThmMap());
 				if(null != thm) {
 					refThms.add(thm);
 				} 

@@ -162,10 +162,12 @@ public class DetectHypothesis {
 	//this path is only used in this class, for inspection, so not in SearchMetadata
 	private static final String parserErrorLogPath = "src/thmp/data/parserErrorLog.txt";
 	private static final boolean DEBUG = FileUtils.isOSX() ? InitParseWithResources.isDEBUG() : false;
-	private static final int CONTEXT_SB_LENGTH_THRESHOLD = 10000;
+	private static final int CONTEXT_SB_LENGTH_THRESHOLD = 15000;
 	private static final Pattern ENUMERATE_PATTERN = Pattern.compile("(?:\\\\(?:begin|end)\\{enumerate\\}"
 			+ "|\\\\(?:begin|end)\\{itemize\\})");
-
+	private static final Pattern LABEL_PATTERN = Pattern.compile("\\\\label\\{([^}$]*)\\}");
+	private static int maxLabelBlockLen = 250;
+	
 	static{
 		FileUtils.set_dataGenerationMode();	
 		ALL_THM_WORDS_FREQ_MAP = CollectThm.ThmWordsMaps.get_docWordsFreqMap();
@@ -506,6 +508,7 @@ public class DetectHypothesis {
 				inputFile = new File("/Users/yihed/Downloads/test/thmp/july18_0.txt");
 				inputFile = new File("/Users/yihed/Downloads/test/thmp/aug6_1.txt");
 				inputFile = new File("/Users/yihed/Downloads/test/thmp/aug7.txt");
+				inputFile = new File("/Users/yihed/Downloads/test/thmp/aug7_1.txt");
 				
 		}		
 		List<DefinitionListWithThm> defThmList = new ArrayList<DefinitionListWithThm>();
@@ -559,7 +562,7 @@ public class DetectHypothesis {
 						logger.error(msg);
 						System.out.println(msg);
 					}finally {
-						FileUtils.silentClose(inputBF);						
+						FileUtils.silentClose(inputBF);
 					}
 				}
 				
@@ -1032,8 +1035,11 @@ public class DetectHypothesis {
 				if(matcher.matches()) {
 					newThmSB.append(line.substring(matcher.end(1), line.length()));
 				}
+			}else {
+				contextSB.append(line);
 			}
 		}
+		
 		while ((line = srcFileReader.readLine()) != null) {
 			if (WordForms.getWhiteEmptySpacePattern().matcher(line).matches()){
 				continue;
@@ -1080,7 +1086,7 @@ public class DetectHypothesis {
 				if(contextSBLen > CONTEXT_SB_LENGTH_THRESHOLD){
 					//if length exceeds certain threshold, the pattern replacements below can choke,
 					//e.g. observed with length that's greater than 200,000. Note this will cut off
-					//in middle of sentences.
+					//in middle of sentences, possibly in middle of tex.
 					int strStart = contextSBLen - CONTEXT_SB_LENGTH_THRESHOLD;
 					//grab the most recent substring
 					contextStr = contextSB.substring(strStart);
@@ -1090,6 +1096,9 @@ public class DetectHypothesis {
 				//don't need to remove Tex Markup and expand macros here, later after setence has been picked
 				//contextStr = ThmInput.removeTexMarkup(contextStr, null, null, macrosTrie,
 				//		eliminateBeginEndThmPattern);
+				
+				//find and record label blocks 
+				findLabelBlock(contextStr, parseState);	
 				
 				contextStr = ThmInput.removeTexMarkup(contextStr, null, null, macrosTrie,
 						eliminateBeginEndThmPattern);
@@ -1341,7 +1350,8 @@ public class DetectHypothesis {
 	}
 	
 	/**
-	 * Detect hypotheses and definitions, and add definitions to parseState. 
+	 * Detect hypotheses and definitions in text preceding the theorem, and add definitions to parseState. 
+	 * Also look for \label{...} to be used later.
 	 * @param contextSB
 	 * @param parseState
 	 */
@@ -1361,6 +1371,69 @@ public class DetectHypothesis {
 				ParseRun.parseInput(sentence, parseState, PARSE_INPUT_VERBOSE, stats);
 			}
 		}
+	}
+	
+	/**
+	 * Check for \label{...}, e.g. \label{eq1} and look for nearest e.g. \begin{equation}, and then \end{equation}.
+		  E.g. \begin{equation}\label{eqn: def funct palle}
+	 * @param contextStr
+	 * @param parseState
+	 */
+	private static void findLabelBlock(String contextStr, ParseState parseState){
+		
+		Matcher matcher = LABEL_PATTERN.matcher(contextStr);
+		
+		while(matcher.find()) {
+			int labelStartPos = matcher.start();
+			String labelName = matcher.group(1);
+			findLabelBlock(contextStr, labelName, labelStartPos, parseState);
+		}		
+	}
+	
+	/**
+	 * Finds block that a label is referring to. First find the \begin{} immediately prior,
+	 * then find matching \end{}
+	 * @param str String to find label block in. Already processed of TeX.
+	 * @param labelStartPos start of \\lable{...}
+	 * @return null if no adequate block found.
+	 */
+	private static void findLabelBlock(String str, String labelName, int labelStartPos, ParseState parseState) {
+		
+		//the item that begun, e.g. equation as in \begin{equation}
+		String beginName;
+		int strLen = str.length();
+		
+		for(int i = labelStartPos; i > 6; i--) {
+			if("\\begin{".equals(str.subSequence(i-7, i))) {
+				boolean blockMaxReached = false;
+				int blockStartPos = i-7;
+				int j = i;
+				while(str.charAt(j) != '}' && str.charAt(j-1) != '\\') {
+					j++;
+				}
+				beginName = str.substring(i, j);
+				beginName = WordForms.stripSurroundingWhiteSpace(beginName);
+				
+				int beginNameLen = beginName.length();
+				//look for matching \end{...}
+				String endName = "\\end{" + beginName +"}";
+				
+				j = i + beginNameLen;
+				int counter = 0;
+				int endNameLen = endName.length();
+				int endingPos = strLen - endNameLen;
+				while(j < endingPos && !endName.equals(str.substring(j, j + endNameLen))) {
+					if(counter++ > maxLabelBlockLen) {
+						blockMaxReached = true;
+					}
+					j++;
+				}
+				if(!blockMaxReached) {
+					String labelBlock = str.substring(blockStartPos, j + endNameLen);					
+					parseState.addRefThm(labelName, labelBlock);		
+				}
+			}
+		}		
 	}
 	
 	/**
