@@ -505,6 +505,7 @@ public class DetectHypothesis {
 				inputFile = new File("/Users/yihed/Downloads/test/thmp/july17_0.txt");
 				inputFile = new File("/Users/yihed/Downloads/test/thmp/july18_0.txt");
 				inputFile = new File("/Users/yihed/Downloads/test/thmp/aug6_1.txt");
+				inputFile = new File("/Users/yihed/Downloads/test/thmp/aug7.txt");
 				
 		}		
 		List<DefinitionListWithThm> defThmList = new ArrayList<DefinitionListWithThm>();
@@ -1200,9 +1201,13 @@ public class DetectHypothesis {
 		//list of referenced theorems, as specified in \ref{...}, corresponding to earlier
 		//\label{...}.
 		List<String> refThms = new ArrayList<String>();
-		
+		/*
+		 * String thmStr, List<String> thmWebDisplayList,
+			List<String> bareThmList, MacrosTrie macrosTrie, Pattern eliminateBeginEndThmPattern, 
+			boolean isContextStr, List<String> refThms, ParseState parseState
+		 */
 		String thm = ThmInput.removeTexMarkup(newThmSB.toString(), null, null, macrosTrie,
-				eliminateBeginEndThmPattern, refThms, parseState);
+				eliminateBeginEndThmPattern, false, refThms, parseState);
 		
 		//Must clear headParseStruct and curParseStruct of parseState, so newThm
 		//has its own stand-alone parse tree.
@@ -1437,8 +1442,17 @@ public class DetectHypothesis {
 		}
 		
 		//prepend potential referenced theorems, or eqns
-		for(String refThm : refThms) {
-			definitionSB.insert(0, " ").insert(0, refThm);
+		if(!refThms.isEmpty()) {
+			int refCounter = 1;
+			StringBuilder refSb = new StringBuilder(500);
+			for(String refThm : refThms) {
+				//insert counter
+				refSb.append("[").append(refCounter++).append("] ").append(refThm).append("\n");
+			}
+			if(definitionSB.length() == 0) {
+				refSb.deleteCharAt(refSb.length()-1);
+			}
+			definitionSB.insert(0, refSb);			
 		}
 		
 		String definitionStr = definitionSB.toString();

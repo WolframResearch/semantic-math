@@ -108,8 +108,8 @@ public class ThmInput {
 	   number of patterns in DF_EMPH_PATTERN. */
 	/*private static final String DF_EMPH_PATTERN_REPLACEMENT = "$1$2$3$4$5$6$7$8$9$10$11";*/
 	
-	//*MUST Update* groupReplacePattStr when updating this!
-	private static Pattern groupReplacePatt = Pattern.compile("\\\\(?:eq)*ref\\s*\\{([^}]+)\\}");
+	//*MUST Update* groupReplacePattStr when updating this! Include eqref but not ref
+	private static Pattern groupReplacePatt = Pattern.compile("\\\\eqref\\s*\\{([^}]+)\\}");
 	private static String groupReplacePattStr = "$1";
 	
 	//replace \begin or \end {equation} with \[ or \], since MathJax does not seem to render them correctly on web
@@ -338,8 +338,9 @@ public class ThmInput {
 	
 	public static String removeTexMarkup(String thmStr, List<String> thmWebDisplayList,
 			List<String> bareThmList, MacrosTrie macrosTrie, Pattern eliminateBeginEndThmPattern, 
-			boolean isContextStr) {
-		
+			boolean isContextStr) {		
+		return removeTexMarkup(thmStr,thmWebDisplayList, bareThmList, macrosTrie, eliminateBeginEndThmPattern, 
+				isContextStr, null, null);
 	}
 	
 	/**
@@ -402,23 +403,6 @@ public class ThmInput {
 		
 		thmStr = groupReplacePatt.matcher(thmStr).replaceAll(groupReplacePattStr);
 		
-		//look for \ref{...} inside thmStr, find referenced thms, to be added to refThms list,
-		//to be prepended to context string.
-		
-		matcher = REF_PATTERN.matcher(thmStr);
-		
-		while(matcher.find()) {
-			//e.g. ab is name for \ref{ab}
-			String labelName = matcher.group(1);
-			//check parseState
-			String thm = parseState.labelThmMap().get(labelName);
-			if(null != thm) {
-				refThms.add(thm);
-			}
-			//modify string!
-			s
-		}
-		
 		// eliminate symbols such as \fm
 		matcher = ELIMINATE_PATTERN.matcher(thmStr);
 		thmStr = matcher.replaceAll("");
@@ -452,15 +436,15 @@ public class ThmInput {
 		// containing the words inside \label and \index etc, but not the words
 		// "\label", "\index",
 		// for bag-of-words searching.
-		String wordsThmStr = thmStr;
+		//String wordsThmStr = thmStr;
 		
 		// replace \index{...} with its content for wordsThmStr and nothing for
 		// web display version
-		matcher = INDEX_PATTERN.matcher(wordsThmStr);
+		matcher = INDEX_PATTERN.matcher(thmStr);
 		if (matcher.matches()) {
-			wordsThmStr = matcher.replaceAll("$1");
+			thmStr = matcher.replaceAll("$1");
 			// replace a!b!c inside \index with spaced-out versions
-			wordsThmStr = wordsThmStr.replaceAll("!", " ");
+			thmStr = thmStr.replaceAll("!", " ");
 		}
 		if(getWebDisplayList || getBareThmList){
 			matcher = INDEX_PATTERN.matcher(thmStr);
@@ -469,18 +453,50 @@ public class ThmInput {
 
 		//bare thm string with no label content at the beginning.
 		String bareThmStr = thmStr;
+		
+		//look for \ref{...} inside thmStr, find referenced thms, to be added to refThms list,
+				//to be prepended to context string.				
+		matcher = REF_PATTERN.matcher(thmStr);
+		
+		if(null != parseState && null != refThms) {
+					//counter for displaying references
+			int refCounter = 1;
+			String tempStr = thmStr;
+			while(matcher.find()) {
+				//e.g. ab is name for \ref{ab}
+				String labelName = matcher.group(1);
+				int matchStartPos = matcher.start();
+				int matchEndPos = matcher.end();
+				String labelStr = "[" + refCounter++ + "]";
+				tempStr = thmStr.substring(0, matchStartPos ) + labelStr + thmStr.substring(matchEndPos, thmStr.length());
+						
+				//check parseState for the theorem referenced.
+				String thm = parseState.labelThmMap().get(labelName);
+				System.out.println("!! refCounter thm" + labelName + " ! "  + thm);
+				if(null != thm) {
+					refThms.add(thm);
+				} 
+			}
+			thmStr = tempStr;
+		}
+		
 		// Record label to be included in hypotheses later, if a thm includes \ref for this label.
 		// remove label. Need to be careful, since label can occur in middle of sentence,
-		// shouldn't strip away everything before label.
+		// shouldn't strip away everything before label.		
 		matcher = LABEL_PATTERN.matcher(thmStr);
 		if (matcher.matches()) {
-			wordsThmStr = matcher.replaceAll("$1$3");			
-			thmStr = wordsThmStr;			
+			//replaceAll changes the state of the matcher, so need to get the group here.
+			String labelName = matcher.group(2);
+			
+			thmStr = matcher.replaceAll("$1$3");	
 			//this is only executed when getting theorems for context parsing.
 			if(getBareThmList){	
-				bareThmStr = wordsThmStr;
+				bareThmStr = thmStr;
 			}
-			parseState.addRefThm(matcher.group(2), thmStr);
+			if(null != parseState) {
+				//thmStr must be added *after* all processing has been done.
+				parseState.addRefThm(labelName, thmStr);
+			}
 		}
 		
 		if(getBareThmList){
@@ -491,7 +507,7 @@ public class ThmInput {
 			thmWebDisplayList.add(thmStr);
 		}
 		//wordsThmStr is good for web display
-		return wordsThmStr;
+		return thmStr;
 	}
 	
 	/**
