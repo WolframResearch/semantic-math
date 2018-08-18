@@ -50,7 +50,8 @@ public class DBUtils {
 			logger.error(msg);
 		}*/
 		DEFAULT_DATASOURCE = pooledDS;
-		globalDBSettings = new String[] {"SET GLOBAL MAX_EXECUTION_TIME=1000;", "SET GLOBAL wait_timeout=31536000;"};
+		//"SET GLOBAL wait_timeout=31536000;" Non-global actually sets it, but not set if contains global.
+		globalDBSettings = new String[] {"SET GLOBAL MAX_EXECUTION_TIME=1000;", "SET wait_timeout=31536000;"};
 		setGlobalDBSettings();
 		//DEFAULT_CONNECTION = defaultConn;
 	}

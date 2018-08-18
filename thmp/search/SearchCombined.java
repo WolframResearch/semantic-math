@@ -83,11 +83,14 @@ public class SearchCombined {
 		
 		@Override
 		public String toString(){
-			StringBuilder sb = new StringBuilder(thmStr);
-			sb.append(" [").append(srcFileName).append("] ");
+			StringBuilder sb = new StringBuilder(500);
+			
+			sb.append("[").append(srcFileName).append("] ");
+			sb.append(thmStr);
+			//leave thmType here!
 			sb.append(thmType);
 			if(!WordForms.getWhiteEmptySpacePattern().matcher(hypStr).matches()){
-				sb.append(" \nHYP: ").append(hypStr);
+				sb.append(" HYP: ").append(hypStr).append("\n");
 			}			
 			return sb.toString();
 		}
