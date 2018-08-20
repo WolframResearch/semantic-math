@@ -55,7 +55,7 @@ public class DBUtils {
 		public static final String MIDDLENAME_COL = "middleName";
 		public static final String LASTNAME_COL = "lastName";
 		
-		public static final int maxNameLen = 25;
+		public static final int maxNameLen = 30;
 		//public static final String AUTHOR_TB_CSV_PATH = "src/thmp/data/metaDataNameDB.csv";
 		///home/usr0/yihed/thm
 		/**relative (to ~/thm) path to serialization file containing thm index, and string of list of 

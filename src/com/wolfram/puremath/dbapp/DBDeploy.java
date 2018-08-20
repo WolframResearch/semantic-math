@@ -116,19 +116,19 @@ public class DBDeploy {
 	private static void deployAllTables(String dirpath) throws SQLException{
 		Connection conn = DBUtils.getLocalConnection();
 		
-		DBUtils.setNonStrictMode(conn);
-		
 		//June18: don't deploy to DB, populateSimilarThmsTb(conn);
-		
-		AuthorUtils.createAuthorTb(conn);
-		AuthorUtils.populateAuthorTb(conn, dirpath);
-		
-		ThmHypUtils.createThmHypTb(conn);
-		ThmHypUtils.populateThmHypTb(conn, dirpath);
-		
-		LiteralSearchUtils.populateLiteralSearchTb(conn);
-		
-		conn.close();
+		try {
+			DBUtils.setNonStrictMode(conn);
+			AuthorUtils.createAuthorTb(conn);
+			AuthorUtils.populateAuthorTb(conn, dirpath);
+			
+			ThmHypUtils.createThmHypTb(conn);
+			ThmHypUtils.populateThmHypTb(conn, dirpath);
+			
+			LiteralSearchUtils.populateLiteralSearchTb(conn);
+		}finally {
+			conn.close();
+		}
 		System.out.println("Done deploying all tables!");
 	}
 	

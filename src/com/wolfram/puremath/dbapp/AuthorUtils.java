@@ -143,7 +143,8 @@ public class AuthorUtils {
 		.append(AuthorTb.PAPER_ID_COL).append(" VARCHAR(15),")
 		
 		.append(AuthorTb.FIRSTNAME_COL).append(" VARCHAR(" + AuthorTb.maxNameLen + "),")
-		.append(AuthorTb.MIDDLENAME_COL).append(" VARCHAR(" + AuthorTb.maxNameLen + "),")
+		//temporary due to a bug in data given 
+		.append(AuthorTb.MIDDLENAME_COL).append(" VARCHAR(" + 101 + "),")
 		.append(AuthorTb.LASTNAME_COL).append(" VARCHAR(" + AuthorTb.maxNameLen + "));");
 		
 		/*.append(AuthorTb.FIRSTNAME_COL).append(" VARCHAR(" + ThmHypTb.maxThmColLen + "),")

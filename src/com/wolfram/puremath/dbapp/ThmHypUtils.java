@@ -391,5 +391,64 @@ public class ThmHypUtils {
 		pstm.executeUpdate();		
 	}
 	
+	/*************Utilities functions to get data for Michael. Usually one-offs.*************/
+	
+	/**
+	 * Retrieve theorem statement and theorem type for Michael. Writes data to file.
+	 * @param conn
+	 * @param dataRootDirPath
+	 * @throws SQLException
+	 */
+	public static void retrieveSelectData(Connection conn, String dataRootDirPath) throws SQLException {
+		
+		File[] thmHypPairsFiles = new File(dataRootDirPath, ThmHypTb.thmHypPairsDirRelPath).listFiles();
+		//all files take form combinedParsedExpressionList + index
+		int thmHypPairsFilesSz = thmHypPairsFiles.length;
+		
+		/*@SuppressWarnings("unchecked")
+		List<ListMultimap<String, LiteralSearchIndex>> literalSearchMapList 
+			= (List<ListMultimap<String, LiteralSearchIndex>>)FileUtils
+				.deserializeListFromFile(DBUtils.LiteralSearchTb.literalSearchIndexMMapPath);*/
+		
+		//ListMultimap<String, LiteralSearchIndex> literalIndexMMap = literalSearchMapList.get(0);
+		
+		int thmHypPairsFilesSzHalf = thmHypPairsFilesSz/2;
+		
+		System.out.println("Total number of batches: " + Math.ceil(thmHypPairsFilesSz/2.));
+		
+		int thmCounter = 0;
+		
+		int j = 0;
+		for(; j < thmHypPairsFilesSzHalf; j++) {
+			
+			List<ThmHypPair> thmHypPairList = new ArrayList<ThmHypPair>();
+			//add two at a time, to save time in deployment
+			@SuppressWarnings("unchecked")
+			List<ThmHypPair> thmHypPairList1 = (List<ThmHypPair>)DBUtils
+				.deserializeListFromFile(ThmHypTb.thmHypPairsDirRelPath + ThmHypTb.thmHypPairsNameRoot + 2*j);
+			
+			thmHypPairList.addAll(thmHypPairList1);
+			
+			if(2*j + 1 < thmHypPairsFilesSz) {
+				@SuppressWarnings("unchecked")
+				List<ThmHypPair> thmHypPairList2 = (List<ThmHypPair>)DBUtils
+					.deserializeListFromFile(ThmHypTb.thmHypPairsDirRelPath + ThmHypTb.thmHypPairsNameRoot + (2*j+1));
+				thmHypPairList.addAll(thmHypPairList2);
+			}
+			
+			System.out.println("About to insert batch " + j);
+			thmCounter = deployThmHypBatch(null, thmCounter, thmHypPairList);			
+		}
+		
+		//in case thmHypPairsFilesSz is odd
+		if(2*j < thmHypPairsFilesSz) {
+			@SuppressWarnings("unchecked")
+			List<ThmHypPair> thmHypPairList = (List<ThmHypPair>)DBUtils
+				.deserializeListFromFile(ThmHypTb.thmHypPairsDirRelPath + ThmHypTb.thmHypPairsNameRoot + (2*j));
+			System.out.println("About to insert batch " + (j));
+			deployThmHypBatch(null, thmCounter, thmHypPairList);	
+		}
+		
+	}
 	
 }
