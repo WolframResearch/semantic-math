@@ -1,0 +1,11 @@
+
+#configuration for GenerateSearchDataRunner class
+#one config per line, value specified by colon :
+
+#generate data and labels for msc classifier
+msc:false
+#generate text for Michael
+generateText:false
+regenerateMx:false
+#function names for Michael
+generateFuncName:false

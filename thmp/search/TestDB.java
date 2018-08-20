@@ -14,8 +14,9 @@ import javax.sql.DataSource;
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
 
 import thmp.search.SearchCombined.ThmHypPair;
-import thmp.utils.DBUtils;
 import thmp.utils.FileUtils;
+
+import com.wolfram.puremath.dbapp.DBUtils;
 
 /**
  * Class used for testing various DB functions.
@@ -70,7 +71,6 @@ public class TestDB {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		
 	}
 	
 	private static void g() {
@@ -94,35 +94,6 @@ public class TestDB {
 			}			
 		}*/		
 		//FileUtils.writeToFile(m.get(0), "src/thmp/data/bigWordFreqPrunedMap1.txt");
-	}
-	
-	private static void createDatabase() {
-		MysqlDataSource ds = new MysqlDataSource();
-		ds.setUser("root");
-		//ds.setPassword("Lzft+utkk5q2");
-		ds.setPassword("wolfram");
-		ds.setServerName("localhost");
-		ds.setPortNumber(3306);
-		ds.setCreateDatabaseIfNotExist(true);
-		System.out.println("ds.getCreateDatabaseIfNotExist() "+ds.getCreateDatabaseIfNotExist());
-		
-		ds.setDatabaseName("thmDB");
-		Connection conn = null;
-		try {
-			conn = ds.getConnection();
-			PreparedStatement stm = conn.prepareStatement("CREATE TABLE authorTb (thmId INT(20),"
-					+ "author VARCHAR(20), content VARCHAR(200))");
-			int rs = stm.executeUpdate();
-			System.out.println("restultSet "+rs);
-			stm = conn.prepareStatement("INSERT INTO authorTb (thmId, author, content)"
-					+ "VALUES (1, 's', 'content')");
-			rs = stm.executeUpdate();
-			System.out.println("restultSet "+rs);
-		} catch (SQLException e) {
-			
-			e.printStackTrace();
-		}
-		
 	}
 	
 	private static void fillTable() {

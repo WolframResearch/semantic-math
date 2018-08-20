@@ -5,13 +5,10 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Scanner;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.regex.Pattern;
 
 import org.apache.logging.log4j.LogManager;
@@ -21,16 +18,12 @@ import com.wolfram.puremath.dbapp.SimilarThmUtils;
 
 import thmp.parse.DetectHypothesis;
 import thmp.parse.InitParseWithResources;
-import thmp.parse.ParseRun;
 import thmp.parse.ParseState;
 import thmp.parse.ThmP1;
-import thmp.parse.ParseState.ParseStateBuilder;
 import thmp.search.SearchCombined.ThmHypPair;
 import thmp.search.SearchIntersection.ThmScoreSpanPair;
 import thmp.search.SearchState.SearchStateBuilder;
-import thmp.search.Searcher.QueryVecContainer;
 import thmp.search.TheoremGet.ContextRelationVecPair;
-import thmp.utils.DBUtils;
 import thmp.utils.FileUtils;
 import thmp.utils.WordForms;
 

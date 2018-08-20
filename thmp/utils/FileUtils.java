@@ -194,8 +194,7 @@ public class FileUtils {
 				throw new IllegalStateException("FileNotFoundException while reading lines from file", e);
 			} catch (IOException e) {
 				throw new IllegalStateException("IOException while reading lines from file", e);
-			}			
-		
+			}		
 		return lines;
 	}
 	

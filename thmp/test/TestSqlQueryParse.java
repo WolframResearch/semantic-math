@@ -8,10 +8,8 @@ import javax.sql.DataSource;
 
 import org.junit.Test;
 
-import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
-
 import thmp.search.DBSearch;
-import thmp.utils.DBUtils;
+import com.wolfram.puremath.dbapp.DBUtils;
 
 /**
  * Test SQL query parsing.

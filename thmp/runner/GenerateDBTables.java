@@ -6,17 +6,17 @@ import java.util.Map;
 import javax.sql.DataSource;
 
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import thmp.runner.ProcessMetadataScrape.PaperMetaData;
-import thmp.utils.DBUtils;
+import com.wolfram.puremath.dbapp.DBUtils;
 import thmp.utils.FileUtils;
 
 /**
  * Generate database tables.
+ * Superceeded by separate dbapp package.
+ * @deprecated
  * @author yihed
- *
  */
 public class GenerateDBTables {	
 	
@@ -34,8 +34,6 @@ public class GenerateDBTables {
 				DBUtils.DEFAULT_SERVER, DBUtils.DEFAULT_PORT);
 		Connection conn = ds.getConnection();
 		
-		//"CREATE TABLE authorTb (thmId INT(20),"
-		//"CREATE TABLE a (thmId INT(20) author VARCHAR(20), content )"
 		int counter = 0;
 		//insert these into database
 		for(Map.Entry<String, PaperMetaData> entry : idPaperMetaDataMap.entrySet()) {
@@ -60,8 +58,6 @@ public class GenerateDBTables {
 			}
 			
 		}
-		
-		
 	}
 	
 }

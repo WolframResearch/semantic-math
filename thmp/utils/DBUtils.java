@@ -22,13 +22,7 @@ import thmp.search.Searcher.SearchMetaData;
  */
 public class DBUtils {
 
-	public static final String DEFAULT_USER = "root";
-	//public static final String DEFAULT_PW = "Wolframwolfram0*";
-	public static final String DEFAULT_PW = "wolfram";
-	public static final String DEFAULT_SERVER = "localhost";
-	public static final int DEFAULT_PORT = 3306;	
-	public static final String DEFAULT_DB_NAME = "thmDB";
-	
+	//public static final String DEFAULT_DB_NAME = "thmDB";
 	
 	private static final DataSource DEFAULT_DATASOURCE;
 	private static final String[] globalDBSettings;
@@ -50,10 +44,10 @@ public class DBUtils {
 			logger.error(msg);
 		}*/
 		DEFAULT_DATASOURCE = pooledDS;
-		//"SET GLOBAL wait_timeout=31536000;" Non-global actually sets it, but not set if contains global.
-		globalDBSettings = new String[] {"SET GLOBAL MAX_EXECUTION_TIME=1000;", "SET wait_timeout=31536000;"};
+		//need to set both global and session timeout. Recall session trumps global.
+		globalDBSettings = new String[] {"SET GLOBAL MAX_EXECUTION_TIME=1000;", "SET wait_timeout=31536000;",
+				"SET GLOBAL wait_timeout=31536000;"};
 		setGlobalDBSettings();
-		//DEFAULT_CONNECTION = defaultConn;
 	}
 	
 	/**
@@ -348,11 +342,10 @@ public class DBUtils {
 	
 	private static void createDatabase() {
 		MysqlDataSource ds = new MysqlDataSource();
-		ds.setUser("root");
-		//ds.setPassword("Lzft+utkk5q2");
-		ds.setPassword("wolfram");
-		ds.setServerName("localhost");
-		ds.setPortNumber(3306);
+		ds.setUser(com.wolfram.puremath.dbapp.DBUtils.DEFAULT_USER);
+		ds.setPassword(com.wolfram.puremath.dbapp.DBUtils.DEFAULT_PW);
+		ds.setServerName(com.wolfram.puremath.dbapp.DBUtils.DEFAULT_SERVER);
+		ds.setPortNumber(com.wolfram.puremath.dbapp.DBUtils.DEFAULT_PORT);
 		ds.setCreateDatabaseIfNotExist(true);
 		System.out.println("ds.getCreateDatabaseIfNotExist() "+ds.getCreateDatabaseIfNotExist());
 		
