@@ -11,6 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import javax.sql.DataSource;
 
@@ -26,8 +27,15 @@ import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
  */
 public class DBUtils {
 
-	public static final String DEFAULT_USER = "root";
-	public static final String DEFAULT_PW = "Wolframwolfram0*";
+	//Read user data from configuration file. This path is relative to base directory.
+	private static final String dbConfigPath = "dbConfig.properties";
+	//public static final String DEFAULT_USER;
+	public static final String DEFAULT_PW;
+	
+	//account data for query user, with only select privilege, but none for modifying table.
+	public static final String QUERY_USER;
+	public static final String QUERY_PW;
+	
 	public static final String DEFAULT_SERVER = "localhost";
 	public static final int DEFAULT_PORT = 3306;	
 	public static final String DEFAULT_DB_NAME = "thmDB";
@@ -35,13 +43,21 @@ public class DBUtils {
 	public static String newNameSuffix = "new";
 	
 	//default directory path
-	public static final String defaultDirPath = "/home/usr0/yihed/thm";
-	//public static final Path defaultDirPath = Paths.get(defaultDirPathStr);
-	
+	public static final String defaultDirPath;
 	public static final int NUM_BITS_PER_BYTE = 8;
 	
 	private static final Logger logger = LogManager.getLogger(DBUtils.class);
 	private static final int STM_EXECUTATION_FAILURE = -1;
+	
+	static {
+		Properties dbppt = parseConfig(dbConfigPath);
+		DEFAULT_USER = dbppt.getProperty("username");
+		DEFAULT_PW = dbppt.getProperty("password");
+		defaultDirPath = dbppt.getProperty("defaultDirPath");
+		
+		QUERY_USER = dbppt.getProperty("query_username");
+		QUERY_PW = dbppt.getProperty("query_password");
+	}
 	
 	public static class AuthorTb{
 		
@@ -398,6 +414,28 @@ public class DBUtils {
 	public static void setNonStrictMode(Connection conn) {
 		String s = "SET @@global.sql_mode = 'NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'";
 		manipulateData(s, conn);
+	}
+	
+	/**
+	 * Read in configuration settings from file, and parse.
+	 * @param path
+	 * @throws IllegalStateException when file not found or other IOException,
+	 * since these properties are crucial.
+	 */
+	public static Properties parseConfig(String configPath) {
+		Properties ppt = new Properties();
+		FileInputStream inStrm = null;
+		try {
+			inStrm = new FileInputStream(configPath);
+			ppt.load(inStrm);
+			return ppt;
+		} catch (FileNotFoundException e) {
+			throw new IllegalStateException("Config file not found for path " + configPath);
+		} catch (IOException e) {
+			throw new IllegalStateException("IOException while loading config file on path " + configPath);
+		}finally {
+			silentClose(inStrm);
+		}
 	}
 	
 }

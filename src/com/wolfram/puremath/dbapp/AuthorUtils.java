@@ -3,7 +3,6 @@ package com.wolfram.puremath.dbapp;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -11,11 +10,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.wolfram.puremath.dbapp.DBUtils.AuthorTb;
-import com.wolfram.puremath.dbapp.DBUtils.LiteralSearchTb;
-import com.wolfram.puremath.dbapp.DBUtils.ThmHypTb;
-
-import thmp.search.LiteralSearch;
-
 
 /**
  * Utilities class for deploying and querying author table.
