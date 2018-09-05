@@ -22,6 +22,8 @@ An example of the parse tree is
 
 for the statement "Given any function $f$, there are infinitely many roots in $g(zeta(f))$".
 
+To generate search data as demo, one can add the desired text file to be processed under an inputFile variable in the `readAndProcessInputData` function in `DetectHypothesis.java`. Then running the `main` function in `DetectHypothesis.java` will produce the desired data files used for search.
+
 # Theorem Search
 
 The theorem search component includes both data processing and runtime retrieval.
@@ -60,4 +62,18 @@ within `thmp.search.SearchCombined`.
 # Build 
 To build the project, run the ant script with the default target: `ant run`.
 
+# Dependencies
 
+On any platform, Java 8 is required to run the application. If the Wolfram Language component for search is enabled, a Mathematica 11.1+ kernel is also required.
+
+# Directory description
+
+This directory contains several related components, here is an overview:
+
+* *thmp*: main codebase for parsing and search.
+
+* *thmpAux*: auxiliary scripts for data processing. 
+
+* *dbapp*: utilities for deploying and querying the search database.
+
+* *food*: experimental code for parsing recipes using the main parser frameworks.

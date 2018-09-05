@@ -1,4 +1,4 @@
-## DB Deployment:
+Some notes on database deployment:
 
 If the theorem data are recompiled, i.e. the second stage above is rerun, hence affecting theorem indexing, the database needs to be redeployed with the update data. The data include:
 
