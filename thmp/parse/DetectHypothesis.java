@@ -475,24 +475,7 @@ public class DetectHypothesis {
 		}
 		//resort to default file if no arg supplied. Useful to for testing locally.
 		else{
-				/*put file here if testing locally on developer machine*/
-				inputFile = new File("src/thmp/data/Total.txt");
-				inputFile = new File("/Users/yihed/Downloads/math0011136");
-				inputFile = new File("src/thmp/data/math0210227");
-				
-				inputFile = new File("/Users/yihed/Downloads/0704.2030");
-				inputFile = new File("src/thmp/data/0704.2030");
-				inputFile = new File("/Users/yihed/Downloads/test/1605.01240");
-				inputFile = new File("src/thmp/data/test1.txt");
-				inputFile = new File("/Users/yihed/Downloads/testJavaNov.tex");
-				inputFile = new File("/Users/yihed/Downloads/testJava2.tex");
-				inputFile = new File("/Users/yihed/Downloads/0709.2001.tex");
-				inputFile = new File("/Users/yihed/Downloads/1406.6713.tex");
-				inputFile = new File("/Users/yihed/Downloads/test/testThm.txt");
-				inputFile = new File("/Users/yihed/Downloads/stuchMarch25.tex");
-				inputFile = new File("/Users/yihed/Downloads/1703.08650");
-				inputFile = new File("/Users/yihed/Downloads/test/capitalLem.tex");
-				inputFile = new File("/Users/yihed/Downloads/teoTest2.txt");
+				/*put file here if testing locally on developer machine or for demo*/
 				inputFile = new File("/Users/yihed/Downloads/test/thmp/preambleTest1.txt");
 				inputFile = new File("/Users/yihed/Downloads/test/thmp/preambleTest1ca.txt");
 				inputFile = new File("/Users/yihed/Downloads/test/thmp/alignTest.txt");
