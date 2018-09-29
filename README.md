@@ -1,7 +1,7 @@
 
 # Semantic Math Project
 
-The semantic math project consists of two components: *semantic math parser*, which converts mathematical statements into parse trees; and *theorem search*, which is a retrieval system for key statements from the arXiv corpus.
+The Semantic Math Project consists of two components: *semantic math parser*, which converts mathematical statements into parse trees; and *theorem search*, which is a retrieval system for key statements from the arXiv corpus.
 
 # Semantic Math Parser
 
@@ -77,3 +77,10 @@ This directory contains several related components, here is an overview:
 * *dbapp*: utilities for deploying and querying the search database.
 
 * *food*: experimental code for parsing recipes using the main parser frameworks.
+
+# More...
+
+See the following files for more information:
+
+* [COPYING.md](COPYING.md) - Semantic Math Project license
+* [CONTRIBUTING.md](CONTRIBUTING.md) - Guidelines for contributing to the Semantic Math Project
