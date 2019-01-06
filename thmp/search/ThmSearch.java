@@ -375,11 +375,13 @@ public class ThmSearch {
 				//Now evaluate loadMx[mxIndex_Integer, cacheBag_, timeBag_]
 				evaluateWLCommand(medium, "loadMx["+nextMxKey + ","+ CACHE_BAG_NAME + "," + TIME_BAG_NAME +"]", false, true);
 				
-				/*System.out.println("Length[nextMxName]: " +evaluateWLCommand(medium, "Length["+nextMxName+"]",true, true));
-				System.out.println("nextMxName[[1;;10]]: " +evaluateWLCommand(medium, nextMxName+"[[1;;10]]",true, true));
-				System.out.println("CACHE_BAG_NAME: " +evaluateWLCommand(medium, CACHE_BAG_NAME,true, true));
-				System.out.println("cacheExceedsCapacity[cacheBag]: " +evaluateWLCommand(medium, "cacheExceedsCapacity[cacheBag]",true, true));*/
-				
+				boolean localDebug = false;
+				if(localDebug) {
+					System.out.println("Length[nextMxName]: " +evaluateWLCommand(medium, "Length["+nextMxName+"]",true, true));
+					System.out.println("nextMxName[[1;;10]]: " +evaluateWLCommand(medium, nextMxName+"[[1;;10]]",true, true));
+					System.out.println("CACHE_BAG_NAME: " +evaluateWLCommand(medium, CACHE_BAG_NAME,true, true));
+					System.out.println("cacheExceedsCapacity[cacheBag]: " +evaluateWLCommand(medium, "cacheExceedsCapacity[cacheBag]",true, true));
+				}
 				//Function signature: findNearest[combinedTDMx_, queryVec_, threshold_Real, numNearest_Integer]
 				//get distance, and only those indices that fall below a distance threshold.
 				//  factor out numNearest/2!
@@ -390,7 +392,7 @@ public class ThmSearch {
 				/*Note that this relies on distance option introduced in 11.1*/
 				Expr nearestVec = evaluateWLCommand(medium, "findNearestDist[" + nextMxName + ",qT,"+ DISTANCE_THRESHOLD +","
 						+numNearest/3 +"]", true, true);
-				//System.out.println("ThmSearch-DISTANCES: "+(double[])nearestVec.part(2).asArray(Expr.REAL, 1));
+				
 				if(DEBUG) {
 					System.out.println("ThmSearch-DISTANCES: "+nearestVec.part(2));
 				}
@@ -411,14 +413,14 @@ public class ThmSearch {
 				//ml.evaluate("Nearest["+V_MX+"->"+ combinedTDMatrixRangeListName +", First@Transpose[q],"+numNearest+", Method->\"Scan\"] - " 
 					//	+ LIST_INDEX_SHIFT);
 				
-				msg = "SVD returned nearestVec! "+ nearestVec.part(1);
-				System.out.println(msg);
-				logger.info(msg);
+				if(localDebug) {
+					msg = "SVD returned nearestVec! "+ nearestVec.part(1);
+					System.out.println(msg);
+					logger.info(msg);
+				}
 				//use this when using Nearest
 				//int[] nearestVecArray = (int[])nearestVec.part(1).asArray(Expr.INTEGER, 1);
 				 //<--this line generates exprFormatException if sucessive entries are quickly entered.
-				//System.out.println("resulting Expr nearestVec: " + nearestVec);
-				//logger.info("ThmSearch - nearestVec: " + nearestVec);
 				/***nearestVecArray = (int[])nearestVec.asArray(Expr.INTEGER, 1);
 				Integer[] nearestVecArrayBoxed = ArrayUtils.toObject(nearestVecArray);
 				nearestVecList.addAll(Arrays.asList(nearestVecArrayBoxed));*/		

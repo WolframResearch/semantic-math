@@ -1544,7 +1544,7 @@ public class ThmP1 {
 			if(//FileUtils.isOSX() && 
 					usePosTagger &&
 					curpair.pos().equals("") &&
-					!FileUtils.isByblis67 
+					!FileUtils.isB67 
 					){
 				//tag the whole sentence to find the most accurate tag, since the tagger
 				//uses contextual tags to maximize entropy.

@@ -13,7 +13,6 @@ import java.util.List;
 public interface Searcher<S> {
 
 	/**
-	 * 
 	 * @param thm
 	 * @param list List of top candidates already found
 	 * @param searchState
@@ -98,7 +97,6 @@ public interface Searcher<S> {
 		private static boolean gatheringDataBool;
 		/* Used to separate the case when gatheringDataBool, where in fact want maps collected
 		 * in previous runs, e.g. when using a pre-computed projection matrix for SVD.*/
-		//private static boolean usePreviousWordDocFreqMaps;
 		private static String previousWordDocFreqMapsPath;
 		//one is created for each tar, then combined for multiple tars, in ProjectionMatrix.java.
 		private static final String wordThmIndexMMapSerialFileName = "wordThmIndexMMap.dat";
@@ -112,7 +110,6 @@ public interface Searcher<S> {
 		private static final String trueFluffWordsSetTxtPath = "src/thmp/data/trueFluffWordsSet.txt";
 		
 		/**Map of words and their literal search indices, encoded as bytes.*/
-		//***June 13 
 		private static final String literalSearchIndexMapPath = "src/thmp/data/literalSearchIndexMap.dat";
 		public static final String texFilesSerializedListFileName = "texFileNamesSetList.dat";
 		

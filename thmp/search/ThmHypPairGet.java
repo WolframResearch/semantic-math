@@ -131,7 +131,7 @@ public class ThmHypPairGet{
 		
 		private static final long serialVersionUID = 536853474970343329L;
 		//Need to re-partition serialized data, if this number changes!
-		//private static final int NUM_THMS_IN_BUNDLE = 10000;//10000;
+		//private static final int NUM_THMS_IN_BUNDLE = 10000;
 		
 		//need to create these directories
 		protected static final String BASE_FILE_STR = "src/thmp/data/pe/" 
@@ -214,8 +214,6 @@ public class ThmHypPairGet{
 		
 		//index inside the bundleStartThmIndexList, to get the index of the starting thm in bundle.
 		int bundleStartThmIndexListIndex = findBundleBeginIndex(thmIndex);
-		//System.out.println("ThmHypPairGet thmIndex: "+thmIndex);
-		//System.out.println("ThmHypPairGet bundleStartThmIndexListIndex: "+bundleStartThmIndexListIndex);
 		try {
 			return thmBundleCache.get(bundleStartThmIndexListIndex)
 					.thmPairList.get(thmIndex - bundleStartThmIndexList.get(bundleStartThmIndexListIndex));
