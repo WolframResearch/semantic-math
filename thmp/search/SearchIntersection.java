@@ -132,9 +132,6 @@ public class SearchIntersection {
 		defaultWordScore = avgScore;
 	}
 
-	/**
-	 * 
-	 */
 	public static class ThmScoreSpanPairDefComparator implements Comparator<ThmScoreSpanPair>{
 		
 		private boolean defFirst = false;
@@ -722,7 +719,6 @@ public class SearchIntersection {
 					String threeGram = twoGram + " " + thirdWord;
 					//threeGram = WordForms.stripUmlautFromWord(threeGram);
 					
-					//if (threeGramsMap.containsKey(threeGram)) {
 					//addWordThms will add if proper n-gram.
 						scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap,// thmWordsMMap, thmScoreSpanSet, 
 								thmPartMap, wordThmsListList, wordIndexPartPairMap,
@@ -734,10 +730,10 @@ public class SearchIntersection {
 							wordCountArray[i + 2] = wordCountArray[i + 2] + 1;
 							totalWordsScore += scoreAdded;
 							searchState.addTokenScore(threeGram, scoreAdded);
-							//numWordsAdded++;
+						
 							indexStartingWordsMMap.put(i, threeGram);
 						}
-					//}
+					
 				}
 				//long time2 = SimilarThmSearch.printElapsedTime(time1, "time2");
 				if (twoGramsMap.containsKey(twoGram)) {
@@ -750,13 +746,11 @@ public class SearchIntersection {
 						wordCountArray[i + 1] = wordCountArray[i + 1] + 1;
 						totalWordsScore += scoreAdded;
 						searchState.addTokenScore(twoGram, scoreAdded);
-						//numWordsAdded++;
 						indexStartingWordsMMap.put(i, twoGram);
 					}
 				}
 			}		
 			
-			//long time3 = System.nanoTime();
 			//This score includes words scores for words related to this word.
 			scoreAdded = addWordThms(thmScoreMap, scoreThmMMap, thmWordSpanMMap, //thmScoreSpanSet,
 					thmPartMap, wordThmsListList, wordIndexPartPairMap,
@@ -764,9 +758,8 @@ public class SearchIntersection {
 			if (scoreAdded > 0) {
 				wordCountArray[i] += 1;
 				totalWordsScore += scoreAdded;
-				//how is this used later?!
+
 				searchState.addTokenScore(word, scoreAdded);
-				//numWordsAdded++;
 				indexStartingWordsMMap.put(i, word);
 			}
 		}
