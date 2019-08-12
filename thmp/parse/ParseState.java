@@ -297,8 +297,6 @@ public class ParseState {
 		 */
 		public void setDefiningStruct(Struct definingStruct) {
 			this.definingStruct = definingStruct;
-			//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
-			//System.out.println("SETTING definingStruct: " + definingStruct);
 		}
 
 		/**
@@ -309,8 +307,6 @@ public class ParseState {
 		}
 
 		public VariableDefinition(VariableName variableName, Struct definingStruct, String originalDefinitionStr){
-			//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
-			//System.out.println("definingStruct: " + definingStruct);
 			this.variableName = variableName;
 			this.definingStruct = definingStruct;
 			this.originalDefinitionSentence = originalDefinitionStr;
@@ -378,10 +374,11 @@ public class ParseState {
 
 	}
 	
-	//waiting WLCommandWrapper map on deck, waiting to be added. Necessary 
-	//because don't know if need to add to next logic layer, or to current
-	//layer, until the entire tree is read.
-	//private Multimap<ParseStructType, WLCommandWrapper> waitingWrapperMMap;	
+        /** waiting WLCommandWrapper map on deck, waiting to be added. Necessary 
+	 * because don't know if need to add to next logic layer, or to current
+	 * layer, until the entire tree is read.
+	 * private Multimap<ParseStructType, WLCommandWrapper> waitingWrapperMMap;	
+	 */
 	private ParseState(ParseStateBuilder builder){
 		this.globalVariableNamesMMap = ArrayListMultimap.create();
 		this.localVariableNamesMMap = ArrayListMultimap.create();
@@ -439,8 +436,7 @@ public class ParseState {
 	 * @param word
 	 * @param pos
 	 */
-	public void addUnknownWordPosToMap(String word, String pos){
-		//extrapolatedPosMMap
+	public void addUnknownWordPosToMap(String word, String pos){		
 		extrapolatedPosMMap.put(word, pos);		
 	}
 	
@@ -543,7 +539,6 @@ public class ParseState {
 		
 		private boolean writeUnknownWordsToFile;
 		
-		//fill in something...
 		public ParseStateBuilder(){			
 		}
 		
@@ -610,7 +605,6 @@ public class ParseState {
 			List<VariableDefinition> variableDefList){
 		
 		boolean isLocalVar = false;
-		//List<VariableDefinition> varDefList = new ArrayList<VariableDefinition>();		
 		//localVariableNamesMMap can be empty, but should not be null. When outside theorem, inThmFlag is
 		//false, so should not be getting theorem-local variables outside of theorems.
 		if(inThmFlag){
@@ -622,7 +616,7 @@ public class ParseState {
 		}else if(inThmFlag){
 			isLocalVar = true;
 		}
-		//System.out.println("ParseState - " +varName + "  " + this.globalVariableNamesMMap + "  "+this.globalVariableNamesMMap.containsKey(varName));
+		
 		return isLocalVar;
 	}
 	
@@ -659,12 +653,12 @@ public class ParseState {
 	 * @param entStruct Entity to be added with name entStruct.
 	 */
 	public void addLocalVariableStructPair(String name, Struct entStruct){
-		//if(true)throw new RuntimeException(name + " " + entStruct);
+		
 		if(WordForms.getWhiteEmptySpacePattern().matcher(name).matches()) return;
 		
 		Matcher latexContentMatcher = LATEX_DOLLARS_PATTERN.matcher(name);
 		Matcher textLatexMatcher;
-		//System.out.println("adding name: " +name +Arrays.toString(Thread.currentThread().getStackTrace()));
+		if(DEBUG) System.out.println("adding name: " +name +Arrays.toString(Thread.currentThread().getStackTrace()));
 		ListMultimap<VariableName, VariableDefinition> variableMMapToAddTo = inThmFlag 
 				? localVariableNamesMMap : globalVariableNamesMMap;
 		boolean varAdded = false;
@@ -676,11 +670,10 @@ public class ParseState {
 			//as the entire expression
 			Matcher colonMatcher = COLON_EQUAL_PATTERN.matcher(name);
 			Matcher subsetMatcher = SUBSET_PATTERN.matcher(name);
-			//make this more systematic!
+			
 			String latexName = colonMatcher.find() ? colonMatcher.group(1) : (subsetMatcher.find() ? subsetMatcher.group(1) : "");
 			//findTexName(name);
-			if(!"".equals(latexName)){
-				//String latexName = colonMatcher.group(1);
+			if(!"".equals(latexName)){				
 				//define a VariableName of the right type. 
 				VariableName latexVariableName = createVariableName(latexName);
 				VariableDefinition latexDef = new VariableDefinition(latexVariableName, entStruct, this.currentInputStr);
@@ -699,7 +692,8 @@ public class ParseState {
 					varAdded = true;
 				}				
 			}
-		}//if name contains text and latex, e.g. "winding number $W_{ii'} (y)$"
+		}
+		//if name contains text and latex, e.g. "winding number $W_{ii'} (y)$"
 		//create a separate entry with just the latex part.
 		else if( (textLatexMatcher = TEXT_LATEX_PATTERN.matcher(name)).find() ){
 			
@@ -726,13 +720,13 @@ public class ParseState {
 			while(i < nameLen && (!WordForms.SPECIAL_CHARS_PATTERN.matcher((iCharStr=String.valueOf(name.charAt(i++)))).matches())){
 				varSB.append(iCharStr);
 			}
-			///if(true ) System.out.println("varSB.toString() "+varSB.toString());
+			
 			name = varSB.length() == 0 ? name : varSB.toString();
 			// e.g. $\\alpha$
 			if(varSB.length() == 0 && WordForms.getTexCommandBeginPattern().matcher(iCharStr).matches()){
 				StringBuilder nextCommandSB = new StringBuilder(10);
 				while(i < nameLen && (!WordForms.getTexCommandEndPattern().matcher((iCharStr=String.valueOf(name.charAt(i)))).matches()
-						//|| iCharStr.equals(" ")
+						
 						)){
 					nextCommandSB.append(iCharStr);
 					i++;
@@ -752,8 +746,7 @@ public class ParseState {
 			}			
 			//include the entire string
 			VariableName variableName = createVariableName(name);
-			//should check if contains entry.
-			//VariableDefinition def = new VariableDefinition(variableName, entStruct, this.currentInputStr);
+			
 			VariableDefinition def = new VariableDefinition(variableName, entStruct, this.currentInputStr);
 			if(!variableMMapToAddTo.containsEntry(variableName, def)){
 				variableMMapToAddTo.put(variableName, def);	
@@ -769,8 +762,7 @@ public class ParseState {
 	public static String getNextParenthesizedToken(String name, int i){
 		StringBuilder sb = new StringBuilder();
 		int nameLen = name.length();
-		String curStr = String.valueOf(name.charAt(0));
-		//while(i < nameLen && !TexToTree.DESCEND_STRING().contains(String.valueOf(name.charAt(i++))));
+		String curStr = String.valueOf(name.charAt(0));		
 		
 		while(i < nameLen && !TexToTree.ASCEND_STRING().contains((curStr=String.valueOf(name.charAt(i))))){
 			sb.append(curStr);
@@ -780,7 +772,6 @@ public class ParseState {
 				){
 			sb.append(curStr);
 		}
-		//System.out.println("sb  "+sb);
 		return sb.toString();
 	}
 	/**
@@ -808,7 +799,7 @@ public class ParseState {
 				variableNameType = VariableName.VariableNameType
 						.getVariableNameTypeFromString(parenMatcher.group(2));				
 			}
-			//throw new IllegalStateException(variableNameType + " " + name);
+			
 		}
 		else if((dashMatcher = VARIABLE_NAME_DASH_PATTERN.matcher(name)).matches()){	
 			//e.g. K-algebra 
@@ -913,7 +904,7 @@ public class ParseState {
 	 * @param curParseStruct the curParseStruct to set
 	 */
 	public void setCurParseStruct(ParseStruct curParseStruct) {
-		//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
+		
 		this.curParseStruct = curParseStruct;
 		if(null == headParseStruct && null != curParseStruct){
 			synchronized(ParseState.class){
@@ -994,8 +985,7 @@ public class ParseState {
 	/**
 	 * @return the tokenList
 	 */
-	public void setHeadParseStruct(ParseStruct parseStruct) {
-		//System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
+	public void setHeadParseStruct(ParseStruct parseStruct) {		
 		this.headParseStruct = parseStruct;
 	}
 	
